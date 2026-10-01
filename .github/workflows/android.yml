@@ -47,6 +47,20 @@ jobs:
           fi
           ./build.sh release
 
+      # Google Play App Bundle: the release build without the self-updater and donation
+      # links, signed with the same key (Play's upload key). Kept out of the GitHub release.
+      - name: Build Play bundle
+        env:
+          TALOS_KEYSTORE_BASE64: ${{ secrets.TALOS_KEYSTORE_BASE64 }}
+          TALOS_KEYSTORE_PASSWORD: ${{ secrets.TALOS_KEYSTORE_PASSWORD }}
+          TALOS_KEY_ALIAS: ${{ secrets.TALOS_KEY_ALIAS }}
+        run: |
+          if [ -n "$TALOS_KEYSTORE_BASE64" ]; then
+            echo "$TALOS_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export TALOS_KEYSTORE="$RUNNER_TEMP/release.jks"
+          fi
+          ./build.sh play
+
       # talosdev-mobile-v<version>-<abi>.apk; the in-app updater only picks signed ones,
       # so unsigned builds get an explicit -unsigned suffix.
       - name: Name release APKs
@@ -75,6 +89,13 @@ jobs:
         with:
           name: android-mapping
           path: app/build/outputs/mapping/release/mapping.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-play
+          path: |
+            app/build/outputs/bundle/play/*.aab
+            app/build/outputs/mapping/play/mapping.txt
 
       - uses: actions/upload-artifact@v4
         with:

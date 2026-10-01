@@ -72,8 +72,8 @@ class MainActivity : FragmentActivity() {
             deepLink.value = intent.deepLink()
             openCluster.value = intent.clusterFingerprint()
         }
-        app.updateManager.maybeAutoCheck(lifecycleScope)
-        if (savedInstanceState == null) app.supportPrompt.onLaunch()
+        if (BuildConfig.SELF_UPDATE) app.updateManager.maybeAutoCheck(lifecycleScope)
+        if (BuildConfig.DONATIONS && savedInstanceState == null) app.supportPrompt.onLaunch()
 
         setContent {
             val themeMode by app.uiPreferences.themeMode.collectAsStateWithLifecycle()

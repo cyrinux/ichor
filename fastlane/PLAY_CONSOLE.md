@@ -6,31 +6,41 @@ feature graphic, screenshots) lives in `fastlane/metadata/android/`, in the layo
 
 Paste-in values for the Console forms that fastlane cannot upload follow.
 
-## Before the first upload: blockers
+## The Play build
 
-These would get the release rejected or the app suspended.
+`./build.sh play` (or `just build-play`) builds `app/build/outputs/bundle/play/app-play.aab`:
+the `play` build type, i.e. the release build with
 
-1. **Self-updater (Device and Network Abuse policy).** An app distributed on Play may not
-   update itself by any other means than Play. A Play build must leave out
-   `update/UpdateManager`, the Settings → Updates section, and the
-   `REQUEST_INSTALL_PACKAGES` permission, which on its own also needs a declaration Play
-   only grants to app stores, file managers and the like. A `play` product flavor that strips
-   them, with a manifest overlay using `tools:node="remove"`, keeps the GitHub build as it is.
-2. **Android App Bundle.** Play only accepts AABs for new apps. `build.sh` produces per-ABI
-   APKs; add a `./gradlew bundlePlayRelease` path (the ABI `splits` block is ignored for
-   bundles, and Play splits by ABI itself).
-3. **Play App Signing.** Play re-signs with its own key, so Play installs and GitHub/Obtainium
-   installs cannot update each other. Uploading the existing release key as the app signing
-   key ("Use existing key" when enrolling) keeps them compatible.
-4. **Donation links (Payments policy), a risk rather than a certain rejection.** Play
-   exempts donations to registered charities from Play Billing. Reviewers have rejected
-   open-source apps whose in-app "donate to the developer" links and wallet addresses go
-   around it. The safe route is to hide `DonateDialog`, the crypto QR codes and the GitHub
-   Sponsors link in the `play` flavor, and keep them on the website.
-5. **Reviewer access.** The app does nothing without a talosconfig, and Play reviewers
-   reject apps they cannot get into. See **App access** below.
-6. **New personal developer account.** It needs a closed test with at least 12 testers opted
-   in for 14 days in a row before production access can be requested.
+- **no self-updater** (Play's Device and Network Abuse policy): `BuildConfig.SELF_UPDATE` is
+  false, so there is no Settings → Updates section, no update banner and no daily check, and
+  `src/play/AndroidManifest.xml` removes `REQUEST_INSTALL_PACKAGES` and the install receiver;
+- **no donation links** (Payments policy: only charities may take donations outside Play
+  Billing): `BuildConfig.DONATIONS` is false, so the support card, the Sponsors link and the
+  crypto addresses are hidden. The website keeps them.
+
+CI builds it on every push (artifact `android-play`, with its R8 mapping). On a `v*` tag,
+`release.yml` uploads it with the listing and release notes to the **internal** track as a
+**draft**, once the `PLAY_SERVICE_ACCOUNT_JSON` secret is set.
+
+## One-time setup
+
+1. **Create the app** in the Play Console (App name `Talosdev Mobile`, App, Free) and fill in
+   the forms below.
+2. **Play App Signing: choose "Use existing app signing key"** and upload the release key
+   (Play's PEPK tool encrypts it). Play installs and GitHub/Obtainium installs then share one
+   signature, so a user can move between them without uninstalling. With a Play-generated
+   key, they could not. The same key also serves as the upload key, which the CI already
+   signs with.
+3. **Upload the first AAB by hand** (`android-play` artifact of the tag's run, or
+   `TALOS_KEYSTORE=… just build-play`): the API cannot create the first release.
+4. **Service account for CI uploads:** Google Cloud → create a service account and a JSON
+   key; Play Console → Users and permissions → invite its email with *Release to testing
+   tracks* and *Manage store presence* for this app. Then:
+   `gh secret set PLAY_SERVICE_ACCOUNT_JSON < play-service-account.json`.
+5. **Closed test** (new personal developer accounts): at least 12 testers opted in for 14
+   days in a row before production access can be requested.
+6. **Reviewer access:** the app does nothing without a talosconfig, and reviewers reject apps
+   they cannot get into. See **App access** below.
 
 ## Main store listing
 
@@ -164,23 +174,26 @@ Everything else: **not collected**. Reasoning for the borderline cases:
 |---|---|---|
 | `INTERNET`, `POST_NOTIFICATIONS` | No | |
 | `CAMERA` | No form; covered by the privacy policy | QR code import |
-| `REQUEST_INSTALL_PACKAGES` | **Remove from the Play build** | see Blockers |
+| `REQUEST_INSTALL_PACKAGES` | No | removed from the Play build |
 | `<queries>` for `io.kubenav.kubenav` | No | a single named package, not `QUERY_ALL_PACKAGES` |
 
 ### Foreground services
 
-None declared in the manifest. The background checks run as WorkManager jobs, so no
-foreground service type declaration is needed.
+None of the app's own. WorkManager merges `FOREGROUND_SERVICE` and its
+`SystemForegroundService`, without a `foregroundServiceType` or any `FOREGROUND_SERVICE_*`
+permission, and the background checks never run in the foreground, so the Console asks for
+no foreground service declaration.
 
 ## Release
 
 - Release name: `0.6.0`, versionCode `56` (the commit count at the tag; `scripts/version.sh`).
 - Release notes: `fastlane/metadata/android/<locale>/changelogs/56.txt`. For each later
   release, add `<versionCode>.txt` per locale (500 characters max).
-- Upload with fastlane, after creating the app and its first release by hand in the Console:
+- Every tag: CI uploads the bundle as a draft on the internal track; promote it to closed
+  testing or production in the Console. By hand, the same upload is:
 
 ```sh
 fastlane supply --package_name name.levis.talosmobile --json_key play-service-account.json \
-  --aab app/build/outputs/bundle/playRelease/app-play-release.aab --track internal \
+  --aab app/build/outputs/bundle/play/app-play.aab --track internal --release_status draft \
   --metadata_path fastlane/metadata/android
 ```
