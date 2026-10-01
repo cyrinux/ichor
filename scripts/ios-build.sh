@@ -51,7 +51,7 @@ case "$MODE" in
     xcodebuild "${common[@]}" -configuration Release -destination 'generic/platform=iOS' build
     rm -rf build/ipa && mkdir -p build/ipa/Payload
     cp -R build/Build/Products/Release-iphoneos/TalosViewer.app build/ipa/Payload/
-    ipa="TalosViewer-${TALOS_VIEWER_VERSION//+/-}-unsigned.ipa"
+    ipa="talosdev-mobile-v${TALOS_VIEWER_VERSION//+/-}-unsigned.ipa"
     (cd build/ipa && zip -qry "../$ipa" Payload)
     echo "$ROOT/ios/build/$ipa"
     ;;

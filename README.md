@@ -21,7 +21,7 @@ proxying behave exactly like `talosctl`.
 - **[Obtainium](https://obtainium.imranr.dev)** installs and updates the app straight from this
   repository's GitHub releases. The button above pre-fills it, with a filter that skips
   unsigned APKs.
-- **Manually:** download `talos-viewer-v<version>-<abi>.apk` from the
+- **Manually:** download `talosdev-mobile-v<version>-<abi>.apk` from the
   [latest release](https://github.com/cyrinux/talosdev-mobile/releases/latest); `arm64-v8a`
   fits almost all phones.
 
@@ -152,7 +152,7 @@ the `TALOS_KEYSTORE*` secrets set. A **debug** build, signed with your machine's
 cannot be replaced by a release. To switch once:
 
 1. uninstall the debug build;
-2. install `talos-viewer-vX.Y.Z-<abi>.apk` from a release;
+2. install `talosdev-mobile-vX.Y.Z-<abi>.apk` from a release;
 3. re-import the talosconfig.
 
 There is no self-update on iOS, where sideloaded apps are reinstalled with Sideloadly or AltStore.
@@ -239,7 +239,7 @@ instead, set `TALOS_IOS_TEAM_ID` before `xcodegen generate`.
 - **`.github/workflows/ios.yml`** (macOS 15): core tests, simulator build, unsigned IPA.
 
 Both run on pushes to `main` and on pull requests. Release APKs are named
-`talos-viewer-v<version>-<abi>.apk`, or `…-unsigned.apk` when no keystore secrets are set;
+`talosdev-mobile-v<version>-<abi>.apk`, or `…-unsigned.apk` when no keystore secrets are set;
 the updater ignores unsigned ones. On a `v*` tag (`just release-tag 0.1.0`,
 then `git push origin v0.1.0`), they attach the release APK and the IPA to the GitHub release.
 

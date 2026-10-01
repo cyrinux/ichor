@@ -57,4 +57,16 @@ class ReleaseTest {
         assertEquals("https://x/arm32", selectUpdate(release, "0.1.0", listOf("armeabi-v7a", "armeabi"))?.apkUrl)
         assertNull("no APK for x86_64 in this release", selectUpdate(release, "0.1.0", listOf("x86_64")))
     }
+
+    @Test
+    fun fileNamePrefixDoesNotMatter() {
+        val renamed = """
+            {"tag_name":"v0.4.0","assets":[
+              {"name":"talosdev-mobile-v0.4.0-unsigned.ipa","browser_download_url":"https://x/ipa","size":9},
+              {"name":"talosdev-mobile-v0.4.0-arm64-v8a-unsigned.apk","browser_download_url":"https://x/unsigned","size":1},
+              {"name":"talosdev-mobile-v0.4.0-arm64-v8a.apk","browser_download_url":"https://x/new","size":16}]}
+        """.trimIndent()
+        val update = selectUpdate(TalosJson.decodeFromString(GitHubRelease.serializer(), renamed), "0.3.0", arm64)
+        assertEquals("https://x/new", update?.apkUrl)
+    }
 }
