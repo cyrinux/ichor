@@ -21,12 +21,12 @@ func TestMaskIPv4(t *testing.T) {
 	enableMask(t, "")
 
 	for _, tc := range []struct{ in, want string }{
-		{"node 192.168.1.10 up", "node 10.0.0.1 up"},
-		{"192.168.1.10/24", "10.0.0.1/24"},
-		{"192.168.1.10:50000", "10.0.0.1:50000"},
+		{"node 192.0.2.20 up", "node 10.0.0.1 up"},
+		{"192.0.2.20/24", "10.0.0.1/24"},
+		{"192.0.2.20:50000", "10.0.0.1:50000"},
 		{"https://192.168.1.11:6443/version", "https://10.0.0.2:6443/version"},
-		{"via 192.168.1.11, 192.168.1.10.", "via 10.0.0.2, 10.0.0.1."},
-		{"::ffff:192.168.1.10", "::ffff:10.0.0.1"},
+		{"via 192.168.1.11, 192.0.2.20.", "via 10.0.0.2, 10.0.0.1."},
+		{"::ffff:192.0.2.20", "::ffff:10.0.0.1"},
 		{`dial tcp 8.8.8.8:53: i/o timeout`, `dial tcp 10.0.0.3:53: i/o timeout`},
 		// Not addresses, or not worth hiding.
 		{"talos v1.14.1", "talos v1.14.1"},
@@ -126,13 +126,13 @@ func TestMaskContexts(t *testing.T) {
 	privacy.learnConfig(`context: cyril@acme
 contexts:
   cyril@acme:
-    endpoints: [192.168.1.10]
+    endpoints: [192.0.2.20]
   admin@lab2:
-    endpoints: ["https://192.168.2.10:50000"]
+    endpoints: ["https://192.0.2.10:50000"]
   default:
     endpoints: [talos.example.org]
   homelab-3:
-    endpoints: [192.168.3.10]
+    endpoints: [192.0.2.30]
 `)
 
 	// Sorted: admin@lab2, cyril@acme, default, homelab-3. "homelab-3" is a real name, so no
@@ -154,7 +154,7 @@ contexts:
 
 	// Addresses are numbered in config order; context parts are hidden in text too.
 	for _, tc := range []struct{ in, want string }{
-		{"192.168.2.10 192.168.1.10 192.168.3.10", "10.0.0.1 10.0.0.2 10.0.0.3"},
+		{"192.0.2.10 192.0.2.20 192.0.2.30", "10.0.0.1 10.0.0.2 10.0.0.3"},
 		{"namespace cyril-apps on acme", "namespace user-apps on homelab-2"},
 		{"prod", "prod"},
 		{"default via 10.0.0.1", "default via 10.0.0.4"},
@@ -214,10 +214,10 @@ func TestMaskJSONKeepsStructure(t *testing.T) {
 		"node1x":  "node1x",
 		"num":     192.168,
 		"big":     uint64(1) << 60,
-		"ip":      "192.168.1.10",
+		"ip":      "192.0.2.20",
 		"quoted":  `say "node1x" <b>`,
 		"list":    []string{"10.1.2.3/24", "v1.14.1"},
-		"escaped": "line\nnode1x\t192.168.1.10",
+		"escaped": "line\nnode1x\t192.0.2.20",
 	}
 
 	raw, err := json.Marshal(in)
@@ -306,7 +306,7 @@ func TestSetPrivacyMaskResets(t *testing.T) {
 func TestMaskErrAndListeners(t *testing.T) {
 	enableMask(t, "")
 
-	err := errors.New(`node "192.168.1.10" is not part of this context`)
+	err := errors.New(`node "192.0.2.20" is not part of this context`)
 	maskErr(&err)
 
 	if err.Error() != `node "10.0.0.1" is not part of this context` {
@@ -315,8 +315,8 @@ func TestMaskErrAndListeners(t *testing.T) {
 
 	rec := &recordingEvents{}
 	l := maskedEventListener{rec}
-	l.OnEvent(`{"node":"192.168.1.10","message":"192.168.1.11"}`)
-	l.OnDone("unreachable: 192.168.1.10")
+	l.OnEvent(`{"node":"192.0.2.20","message":"192.168.1.11"}`)
+	l.OnDone("unreachable: 192.0.2.20")
 
 	if rec.events[0] != `{"node":"10.0.0.1","message":"10.0.0.2"}` || rec.done != "unreachable: 10.0.0.1" {
 		t.Errorf("listener got %q / %q", rec.events, rec.done)
