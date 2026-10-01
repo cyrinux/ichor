@@ -1,0 +1,37 @@
+name: Release
+
+# One release per tag, created once with every file: the Android and iOS builds used to
+# create it concurrently and could replace each other's release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    uses: ./.github/workflows/android.yml
+    secrets: inherit
+
+  ios:
+    uses: ./.github/workflows/ios.yml
+
+  publish:
+    needs: [android, ios]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-release"
+          path: dist
+          merge-multiple: true
+
+      - name: List files
+        run: ls -l dist
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*

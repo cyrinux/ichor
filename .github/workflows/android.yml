@@ -3,11 +3,19 @@ name: Android
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
+  # Tags: release.yml calls this, then publishes the release once with all files.
+  workflow_call:
+    secrets:
+      TALOS_KEYSTORE_BASE64:
+        required: false
+      TALOS_KEYSTORE_PASSWORD:
+        required: false
+      TALOS_KEY_ALIAS:
+        required: false
 
 permissions:
-  contents: write # attach APKs to releases on tags
+  contents: read
 
 jobs:
   build:
@@ -55,13 +63,10 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: talos-viewer-android
-          path: |
-            dist/*.apk
-            app/build/outputs/apk/debug/*.apk
+          name: android-release
+          path: dist/*.apk
 
-      - name: Attach to release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+      - uses: actions/upload-artifact@v4
         with:
-          files: dist/*.apk
+          name: android-debug
+          path: app/build/outputs/apk/debug/*.apk
