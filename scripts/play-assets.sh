@@ -5,8 +5,9 @@ set -euo pipefail
 #
 #   icon.png                512x512, the launcher mark on its adaptive-icon background
 #   featureGraphic.png      1024x500, headline + the overview screenshot
-#   phoneScreenshots/N_*.png  the website screenshots (docs/screenshots/*.webp) as PNG,
-#                           which Play requires (it rejects WebP)
+#
+# The phone screenshots in images/phoneScreenshots/ are captured, not generated: the
+# feature graphic reads the overview from there. Their N_ prefix sets the Play order.
 #
 # Needs ImageMagick 7 with the librsvg delegate (`magick -list format | grep RSVG`).
 # Uses IBM Plex Sans/Mono (the website's fonts) when PLEX_DIR points at them or nix can
@@ -16,12 +17,9 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 out="$repo_root/fastlane/metadata/android/en-US/images"
-shots="$repo_root/docs/screenshots"
+overview="$out/phoneScreenshots/1_overview.png"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-
-# Same order as the website: what a first look should show first.
-SCREENS=(overview node-services logs events graphs capture upgrade)
 
 # Brand, from docs/index.html and the launcher icon.
 BG_ICON="#101418"   # @color/ic_launcher_background
@@ -71,24 +69,15 @@ render_icon() {
   $(mark)
 </svg>
 EOF
-    magick -background none "$work/icon.svg" -depth 8 "PNG32:$out/icon.png"
-}
-
-render_screenshots() {
-    rm -rf "$out/phoneScreenshots"
-    mkdir -p "$out/phoneScreenshots"
-    local i=1 name
-    for name in "${SCREENS[@]}"; do
-        magick "$shots/$name.webp" -strip "PNG24:$out/phoneScreenshots/${i}_${name}.png"
-        i=$((i + 1))
-    done
+    magick -background none "$work/icon.svg" -define png:exclude-chunks=date,time -depth 8 "PNG32:$out/icon.png"
 }
 
 render_feature_graphic() {
     # The phone on the right shows the top of the overview and bleeds off the bottom edge.
     local phone_w=300 phone_x=664 phone_y=64
-    local phone_h=$(( phone_w * 1045 / 540 ))
-    magick "$shots/overview.webp" -resize "${phone_w}x" "$work/overview.png"
+    magick "$overview" -resize "${phone_w}x" "$work/overview.png"
+    local phone_h
+    phone_h="$(magick identify -format '%h' "$work/overview.png")"
 
     cat > "$work/feature.svg" <<EOF
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
@@ -121,13 +110,12 @@ EOF
         -alpha set -compose DstIn -composite "$work/overview-rounded.png"
     magick "$work/feature.svg" -background "$PHONE" -flatten \
         "$work/overview-rounded.png" -geometry "+${phone_x}+${phone_y}" -compose Over -composite \
-        -depth 8 "PNG24:$out/featureGraphic.png"
+        -define png:exclude-chunks=date,time -depth 8 "PNG24:$out/featureGraphic.png"
 }
 
 command -v magick >/dev/null || { echo "ImageMagick 7 (magick) is required" >&2; exit 1; }
-mkdir -p "$out"
+[[ -f "$overview" ]] || { echo "missing $overview" >&2; exit 1; }
 setup_fonts
 render_icon
-render_screenshots
 render_feature_graphic
 magick identify -format '%f %wx%h\n' "$out/icon.png" "$out/featureGraphic.png" "$out"/phoneScreenshots/*.png

@@ -40,13 +40,13 @@ These would get the release rejected or the app suspended.
 | Short / full description | `fastlane/metadata/android/<locale>/` |
 | App icon | `images/icon.png` (512×512) |
 | Feature graphic | `images/featureGraphic.png` (1024×500) |
-| Phone screenshots | `images/phoneScreenshots/` (7, 540×1045 PNG) |
+| Phone screenshots | `images/phoneScreenshots/` (7, 1200×2322 PNG) |
 | Default language | English (United States), en-US |
 | Translations | fr-FR, de-DE, es-ES, it-IT, uk |
 
-The screenshots meet Play's minimum (320 px, ratio under 2:1). To be eligible for featuring
-and recommendations Play wants at least 1080 px on each side, so recapture them at full
-resolution (in screenshot mode) when convenient.
+The screenshots (ratio 1.94, under Play's 2:1 limit, and at least 1080 px wide) qualify for
+featuring and recommendations. Their `N_` prefix sets the order `fastlane supply` uploads
+them in. Locales without their own images use the en-US ones.
 
 ## Store settings
 
