@@ -1,6 +1,6 @@
 // Command probe exercises the talosmobile API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai
 package main
 
 import (
@@ -61,7 +61,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases"))
+		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai"))
 	}
 
 	raw, err := os.ReadFile(*configPath)
@@ -151,6 +151,16 @@ func main() {
 		out, err = talosmobile.UpgradePlan(cfg, *contextName, flag.Arg(1))
 	case "talos-releases":
 		out, err = talosmobile.TalosReleases()
+	case "diagnose-report":
+		// What the AI diagnosis would send, anonymized; nothing is sent.
+		var d *talosmobile.Diagnosis
+		if d, err = talosmobile.CollectDiagnosis(cfg, *contextName, true); err == nil {
+			out = d.Report()
+		}
+	case "diagnose":
+		err = diagnose(cfg, *contextName, flag.Arg(1), flag.Arg(2))
+	case "ai-models":
+		out, err = talosmobile.AIModels(flag.Arg(1), aiKey(flag.Arg(1)), os.Getenv("TALOSDEV_AI_BASE_URL"))
 	case "health":
 		p := printer{done: make(chan string, 1)}
 		talosmobile.StartClusterHealth(cfg, *contextName, p)
@@ -171,6 +181,49 @@ func main() {
 	}
 
 	fmt.Println(out)
+}
+
+// answerPrinter prints the answer as it grows.
+type answerPrinter struct {
+	printed int
+	done    chan string
+}
+
+func (p *answerPrinter) OnAnswer(text string) {
+	if len(text) > p.printed {
+		fmt.Print(text[p.printed:])
+		p.printed = len(text)
+	}
+}
+
+func (p *answerPrinter) OnDone(errMessage string) { p.done <- errMessage }
+
+// aiKey reads the provider's API key from the environment, never from the command line.
+func aiKey(provider string) string {
+	if provider == "openai" {
+		return os.Getenv("OPENAI_API_KEY")
+	}
+
+	return os.Getenv("ANTHROPIC_API_KEY")
+}
+
+// diagnose sends the report as collected (real names, so the printed answer reads like the
+// cluster) and prints the model's answer. Unlike the rest of the probe, it sends cluster
+// data to the provider.
+func diagnose(cfg, contextName, provider, model string) error {
+	d, err := talosmobile.CollectDiagnosis(cfg, contextName, false)
+	if err != nil {
+		return err
+	}
+
+	p := &answerPrinter{done: make(chan string, 1)}
+	d.Ask(provider, aiKey(provider), model, os.Getenv("TALOSDEV_AI_BASE_URL"), "en", "", p)
+
+	if msg := <-p.done; msg != "" {
+		return fmt.Errorf("diagnosis failed: %s", msg)
+	}
+
+	return nil
 }
 
 func fail(err error) {

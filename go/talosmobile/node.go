@@ -107,25 +107,34 @@ func NodeResources(configYAML, contextName, node string) (out string, err error)
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		nodeCtx := client.WithNode(ctx, node)
-		mc := s.client.MachineClient
-		empty := &emptypb.Empty{}
-
-		mem, memErr := s.client.Memory(nodeCtx)
-		load, loadErr := mc.LoadAvg(nodeCtx, empty)
-		stat, statErr := mc.SystemStat(nodeCtx, empty)
-		cpu, cpuErr := mc.CPUInfo(nodeCtx, empty)
-		mounts, mountsErr := s.client.Mounts(nodeCtx)
-
-		if memErr != nil && loadErr != nil && statErr != nil && cpuErr != nil && mountsErr != nil {
-			return "", fmt.Errorf("node %s: %s", node, friendlyError(memErr))
+		r, err := fetchNodeResources(ctx, s.client, node)
+		if err != nil {
+			return "", err
 		}
 
-		return toJSON(buildNodeResources(
-			first(mem.GetMessages()), first(load.GetMessages()), first(stat.GetMessages()),
-			first(cpu.GetMessages()), first(mounts.GetMessages()),
-		))
+		return toJSON(r)
 	})
+}
+
+func fetchNodeResources(ctx context.Context, c *client.Client, node string) (nodeResources, error) {
+	nodeCtx := client.WithNode(ctx, node)
+	mc := c.MachineClient
+	empty := &emptypb.Empty{}
+
+	mem, memErr := c.Memory(nodeCtx)
+	load, loadErr := mc.LoadAvg(nodeCtx, empty)
+	stat, statErr := mc.SystemStat(nodeCtx, empty)
+	cpu, cpuErr := mc.CPUInfo(nodeCtx, empty)
+	mounts, mountsErr := c.Mounts(nodeCtx)
+
+	if memErr != nil && loadErr != nil && statErr != nil && cpuErr != nil && mountsErr != nil {
+		return nodeResources{}, fmt.Errorf("node %s: %s", node, friendlyError(memErr))
+	}
+
+	return buildNodeResources(
+		first(mem.GetMessages()), first(load.GetMessages()), first(stat.GetMessages()),
+		first(cpu.GetMessages()), first(mounts.GetMessages()),
+	), nil
 }
 
 func buildNodeResources(

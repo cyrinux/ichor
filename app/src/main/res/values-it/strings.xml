@@ -776,4 +776,37 @@
         <item quantity="one">%1$d nodo con una versione precedente</item>
         <item quantity="other">%1$d nodi con versioni precedenti</item>
     </plurals>
+
+    <!-- AI diagnosis -->
+    <string name="ai_title">Diagnosi IA</string>
+    <string name="ai_enable_desc">Facoltativo. Chiedi a un modello di IA cosa non va nel cluster e come risolverlo. Non viene inviato nulla finché non lo chiedi.</string>
+    <string name="ai_provider">Fornitore</string>
+    <string name="ai_api_key">Chiave API</string>
+    <string name="ai_api_key_hint">Salvata cifrata su questo dispositivo. Serve solo per leggere la risposta nell’app.</string>
+    <string name="ai_get_key">Ottieni una chiave API</string>
+    <string name="ai_model">Modello</string>
+    <string name="ai_model_default">Predefinito: %1$s</string>
+    <string name="ai_model_list">Elenca i modelli</string>
+    <string name="ai_model_none">Nessun modello trovato</string>
+    <string name="ai_base_url">URL del server (facoltativo)</string>
+    <string name="ai_base_url_hint">Solo per un gateway o un modello locale. Lascia vuoto per usare l’API del fornitore.</string>
+    <string name="ai_anonymize">Nascondi nomi e indirizzi</string>
+    <string name="ai_anonymize_desc">Nomi, indirizzi IP e dominio dei nodi vengono sostituiti con segnaposto prima dell’invio del rapporto. Il resto dei log, come i nomi dei pod e altri nomi host, viene inviato così com’è.</string>
+    <string name="ai_collecting">Lettura dello stato del cluster…</string>
+    <string name="ai_report_title">Rapporto (%1$s)</string>
+    <string name="ai_report_show">Mostra</string>
+    <string name="ai_report_hide">Nascondi</string>
+    <string name="ai_notice_anonymized">Questo rapporto è ciò che viene inviato, e solo quando lo chiedi. Nomi, indirizzi IP e dominio dei nodi sono sostituiti da segnaposto; il resto dei log, come i nomi dei pod e altri nomi host, viene inviato così com’è.</string>
+    <string name="ai_notice_real">Questo rapporto è ciò che viene inviato, e solo quando lo chiedi. Contiene i veri nomi dei nodi e indirizzi IP.</string>
+    <string name="ai_note_label">Cosa non funziona? (facoltativo)</string>
+    <string name="ai_ask">Chiedi a %1$s</string>
+    <string name="ai_share">Condividi con un’app assistente</string>
+    <string name="ai_share_hint">Invia la domanda e il rapporto a un’app a tua scelta, come Claude, ChatGPT o Gemini. Non serve una chiave API.</string>
+    <string name="ai_no_key">Per leggere la risposta qui, aggiungi una chiave API nelle impostazioni.</string>
+    <string name="ai_answer_title">Risposta</string>
+    <string name="ai_asking">In attesa di %1$s…</string>
+    <string name="ai_stop">Interrompi</string>
+    <string name="ai_copy">Copia</string>
+    <string name="ai_disclaimer">Le risposte dell’IA possono essere sbagliate. Controlla un comando prima di eseguirlo, soprattutto se reimposta un nodo o modifica etcd.</string>
+    <string name="ai_health_diagnose">Diagnostica con l’IA</string>
 </resources>

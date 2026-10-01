@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Settings
@@ -30,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -97,10 +99,12 @@ fun OverviewScreen(
     onSettings: () -> Unit,
     onIssueConfig: () -> Unit,
     onUpgrade: (NodeOverview, String) -> Unit,
+    onDiagnose: () -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val ai by (LocalContext.current.applicationContext as TalosApp).aiPreferences.settings.collectAsStateWithLifecycle()
     val timeState by timeVm.state.collectAsStateWithLifecycle()
     val config by vm.configs.config.collectAsStateWithLifecycle()
     val invalidations by vm.talos.invalidations.collectAsStateWithLifecycle()
@@ -113,6 +117,14 @@ fun OverviewScreen(
 
     Scaffold(
         bottomBar = { DataFreshness(state) },
+        // The AI diagnosis is optional: no trace of it unless it was turned on in Settings.
+        floatingActionButton = {
+            if (ai.enabled) {
+                SmallFloatingActionButton(onClick = onDiagnose) {
+                    Icon(Icons.Outlined.AutoAwesome, stringResource(R.string.ai_title))
+                }
+            }
+        },
         topBar = {
             TopAppBar(
                 title = {

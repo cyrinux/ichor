@@ -65,53 +65,59 @@ func EtcdStatus(configYAML, contextName string) (out string, err error) {
 			return "", errors.New("no reachable control-plane node found in this context")
 		}
 
-		probes := make([]etcdProbe, len(cps))
-
-		var wg sync.WaitGroup
-
-		for i, node := range cps {
-			wg.Go(func() {
-				probes[i] = etcdProbe{node: node}
-
-				resp, err := s.client.EtcdStatus(client.WithNode(ctx, node))
-				if err != nil {
-					probes[i].err = err
-
-					return
-				}
-
-				if m := first(resp.GetMessages()); m != nil {
-					probes[i].status = m.GetMemberStatus()
-				}
-			})
-		}
-
-		wg.Wait()
-
-		cpCtx := client.WithNode(ctx, cps[0])
-
-		var members *machineapi.EtcdMembers
-
-		membersResp, membersErr := s.client.EtcdMemberList(cpCtx, &machineapi.EtcdMemberListRequest{QueryLocal: false})
-		if membersErr == nil {
-			members = first(membersResp.GetMessages())
-		}
-
-		var alarms []*machineapi.EtcdMemberAlarm
-
-		if alarmResp, err := s.client.EtcdAlarmList(cpCtx); err == nil {
-			if m := first(alarmResp.GetMessages()); m != nil {
-				alarms = m.GetMemberAlarms()
-			}
-		}
-
-		out := buildEtcdOverview(members, membersErr, probes, alarms)
+		out := fetchEtcd(ctx, s.client, cps)
 		for _, m := range out.Members {
 			privacy.learnHost(m.Hostname, "controlplane")
 		}
 
 		return toJSON(out)
 	})
+}
+
+// fetchEtcd asks every control-plane node for its etcd status, and the first one for the
+// member list and the alarms.
+func fetchEtcd(ctx context.Context, c *client.Client, cps []string) etcdOverview {
+	probes := make([]etcdProbe, len(cps))
+
+	var wg sync.WaitGroup
+
+	for i, node := range cps {
+		wg.Go(func() {
+			probes[i] = etcdProbe{node: node}
+
+			resp, err := c.EtcdStatus(client.WithNode(ctx, node))
+			if err != nil {
+				probes[i].err = err
+
+				return
+			}
+
+			if m := first(resp.GetMessages()); m != nil {
+				probes[i].status = m.GetMemberStatus()
+			}
+		})
+	}
+
+	wg.Wait()
+
+	cpCtx := client.WithNode(ctx, cps[0])
+
+	var members *machineapi.EtcdMembers
+
+	membersResp, membersErr := c.EtcdMemberList(cpCtx, &machineapi.EtcdMemberListRequest{QueryLocal: false})
+	if membersErr == nil {
+		members = first(membersResp.GetMessages())
+	}
+
+	var alarms []*machineapi.EtcdMemberAlarm
+
+	if alarmResp, err := c.EtcdAlarmList(cpCtx); err == nil {
+		if m := first(alarmResp.GetMessages()); m != nil {
+			alarms = m.GetMemberAlarms()
+		}
+	}
+
+	return buildEtcdOverview(members, membersErr, probes, alarms)
 }
 
 func buildEtcdOverview(

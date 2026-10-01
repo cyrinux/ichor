@@ -776,4 +776,37 @@
         <item quantity="one">%1$d nœud sur une version antérieure</item>
         <item quantity="other">%1$d nœuds sur des versions antérieures</item>
     </plurals>
+
+    <!-- AI diagnosis -->
+    <string name="ai_title">Diagnostic IA</string>
+    <string name="ai_enable_desc">Facultatif. Demandez à un modèle d’IA ce qui ne va pas dans le cluster et comment le réparer. Rien n’est envoyé tant que vous ne le demandez pas.</string>
+    <string name="ai_provider">Fournisseur</string>
+    <string name="ai_api_key">Clé d’API</string>
+    <string name="ai_api_key_hint">Stockée chiffrée sur cet appareil. Nécessaire uniquement pour lire la réponse dans l’application.</string>
+    <string name="ai_get_key">Obtenir une clé d’API</string>
+    <string name="ai_model">Modèle</string>
+    <string name="ai_model_default">Par défaut : %1$s</string>
+    <string name="ai_model_list">Lister les modèles</string>
+    <string name="ai_model_none">Aucun modèle trouvé</string>
+    <string name="ai_base_url">URL du serveur (facultatif)</string>
+    <string name="ai_base_url_hint">Uniquement pour une passerelle ou un modèle local. Laissez vide pour utiliser l’API du fournisseur.</string>
+    <string name="ai_anonymize">Masquer les noms et les adresses</string>
+    <string name="ai_anonymize_desc">Les noms, adresses IP et domaine des nœuds sont remplacés par des noms génériques avant l’envoi du rapport. Le reste des journaux, comme les noms de pods et d’autres noms d’hôtes, est envoyé tel quel.</string>
+    <string name="ai_collecting">Lecture de l’état du cluster…</string>
+    <string name="ai_report_title">Rapport (%1$s)</string>
+    <string name="ai_report_show">Afficher</string>
+    <string name="ai_report_hide">Masquer</string>
+    <string name="ai_notice_anonymized">Ce rapport est ce qui est envoyé, et seulement quand vous le demandez. Les noms, adresses IP et domaine des nœuds sont remplacés par des noms génériques ; le reste des journaux, comme les noms de pods et d’autres noms d’hôtes, est envoyé tel quel.</string>
+    <string name="ai_notice_real">Ce rapport est ce qui est envoyé, et seulement quand vous le demandez. Il contient les vrais noms de nœuds et adresses IP.</string>
+    <string name="ai_note_label">Qu’est-ce qui ne va pas ? (facultatif)</string>
+    <string name="ai_ask">Demander à %1$s</string>
+    <string name="ai_share">Partager avec une application d’assistant</string>
+    <string name="ai_share_hint">Envoie la question et le rapport à l’application de votre choix, comme Claude, ChatGPT ou Gemini. Aucune clé d’API nécessaire.</string>
+    <string name="ai_no_key">Pour lire la réponse ici, ajoutez une clé d’API dans les réglages.</string>
+    <string name="ai_answer_title">Réponse</string>
+    <string name="ai_asking">En attente de %1$s…</string>
+    <string name="ai_stop">Arrêter</string>
+    <string name="ai_copy">Copier</string>
+    <string name="ai_disclaimer">Les réponses de l’IA peuvent être fausses. Vérifiez une commande avant de l’exécuter, surtout si elle réinitialise un nœud ou modifie etcd.</string>
+    <string name="ai_health_diagnose">Diagnostiquer avec l’IA</string>
 </resources>

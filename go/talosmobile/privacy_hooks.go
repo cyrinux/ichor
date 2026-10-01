@@ -71,6 +71,16 @@ func (l maskedHealthListener) OnDone(errMessage string) {
 	l.HealthListener.OnDone(privacy.maskPlain(errMessage))
 }
 
+type maskedDiagnosisListener struct{ DiagnosisListener }
+
+func (l maskedDiagnosisListener) OnAnswer(text string) {
+	l.DiagnosisListener.OnAnswer(privacy.maskPlain(text))
+}
+
+func (l maskedDiagnosisListener) OnDone(errMessage string) {
+	l.DiagnosisListener.OnDone(privacy.maskPlain(errMessage))
+}
+
 // maskedSnapshotListener masks only the error: the path is the app's own file and the
 // snapshot bytes are written unmasked (it is a backup).
 type maskedSnapshotListener struct{ SnapshotListener }
@@ -88,7 +98,12 @@ func learnClusterHosts(ctx context.Context, c *client.Client, nodes []nodeOvervi
 	}
 
 	privacy.learnDomains(domains...)
+	privacy.learnHosts(clusterHostEntries(ctx, c, nodes))
+}
 
+// clusterHostEntries lists the hosts of the cluster: the overview nodes plus the members
+// discovered through the first reachable one.
+func clusterHostEntries(ctx context.Context, c *client.Client, nodes []nodeOverview) []hostEntry {
 	entries := make([]hostEntry, 0, len(nodes))
 	via := ""
 
@@ -106,7 +121,7 @@ func learnClusterHosts(ctx context.Context, c *client.Client, nodes []nodeOvervi
 		entries = append(entries, clusterMembers(ctx, c, via)...)
 	}
 
-	privacy.learnHosts(entries)
+	return entries
 }
 
 func clusterMembers(ctx context.Context, c *client.Client, node string) []hostEntry {

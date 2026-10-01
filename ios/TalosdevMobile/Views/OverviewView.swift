@@ -7,6 +7,7 @@ struct OverviewView: View {
 
     @Environment(AppModel.self) private var model
     @Environment(SupportPrompt.self) private var support
+    @Environment(AISettings.self) private var ai
     @State private var state: LoadState<ClusterOverview> = .loading
     @State private var update: TalosUpdateInfo?
 
@@ -97,6 +98,11 @@ struct OverviewView: View {
                 }
             }
             ToolbarItemGroup(placement: .primaryAction) {
+                // Optional: only once turned on in the settings.
+                if ai.enabled {
+                    NavigationLink(value: Route.diagnosis(note: "")) { Image(systemName: "sparkles") }
+                        .accessibilityLabel(Text("AI diagnosis"))
+                }
                 if model.allows(.health) {
                     NavigationLink(value: Route.health) { Image(systemName: "heart.text.square") }
                 }

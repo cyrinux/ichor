@@ -105,6 +105,7 @@ fun SettingsScreen(
             SecuritySection(appLock, uiPreferences)
             PrivacySection(LocalContext.current.applicationContext as TalosApp)
             MonitoringSection(LocalContext.current.applicationContext as TalosApp)
+            AiSection(LocalContext.current.applicationContext as TalosApp)
             UpdateSection((LocalContext.current.applicationContext as TalosApp).updateManager)
             config?.activeSummary?.takeIf { it.allows(Feature.KUBECONFIG) }?.let { KubeconfigSection(talos, appLock, it) }
             SectionTitle(stringResource(R.string.settings_section_config))

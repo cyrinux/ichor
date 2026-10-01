@@ -776,4 +776,37 @@
         <item quantity="one">%1$d Knoten mit älterer Version</item>
         <item quantity="other">%1$d Knoten mit älteren Versionen</item>
     </plurals>
+
+    <!-- AI diagnosis -->
+    <string name="ai_title">KI-Diagnose</string>
+    <string name="ai_enable_desc">Optional. Fragen Sie ein KI-Modell, was im Cluster nicht stimmt und wie es sich beheben lässt. Nichts wird gesendet, bevor Sie fragen.</string>
+    <string name="ai_provider">Anbieter</string>
+    <string name="ai_api_key">API-Schlüssel</string>
+    <string name="ai_api_key_hint">Wird verschlüsselt auf diesem Gerät gespeichert. Nur nötig, um die Antwort in der App zu lesen.</string>
+    <string name="ai_get_key">API-Schlüssel erstellen</string>
+    <string name="ai_model">Modell</string>
+    <string name="ai_model_default">Standard: %1$s</string>
+    <string name="ai_model_list">Modelle auflisten</string>
+    <string name="ai_model_none">Kein Modell gefunden</string>
+    <string name="ai_base_url">Server-URL (optional)</string>
+    <string name="ai_base_url_hint">Nur für ein Gateway oder ein lokales Modell. Leer lassen, um die API des Anbieters zu nutzen.</string>
+    <string name="ai_anonymize">Namen und Adressen verbergen</string>
+    <string name="ai_anonymize_desc">Namen, IP-Adressen und Domain der Knoten werden vor dem Senden des Berichts durch Platzhalter ersetzt. Der Rest der Logs, etwa Pod-Namen und andere Hostnamen, wird unverändert gesendet.</string>
+    <string name="ai_collecting">Clusterzustand wird gelesen…</string>
+    <string name="ai_report_title">Bericht (%1$s)</string>
+    <string name="ai_report_show">Anzeigen</string>
+    <string name="ai_report_hide">Ausblenden</string>
+    <string name="ai_notice_anonymized">Dieser Bericht wird gesendet, und nur, wenn Sie fragen. Namen, IP-Adressen und Domain der Knoten sind durch Platzhalter ersetzt; der Rest der Logs, etwa Pod-Namen und andere Hostnamen, wird unverändert gesendet.</string>
+    <string name="ai_notice_real">Dieser Bericht wird gesendet, und nur, wenn Sie fragen. Er enthält die echten Knotennamen und IP-Adressen.</string>
+    <string name="ai_note_label">Was läuft schief? (optional)</string>
+    <string name="ai_ask">%1$s fragen</string>
+    <string name="ai_share">Mit einer Assistenten-App teilen</string>
+    <string name="ai_share_hint">Sendet die Frage und den Bericht an eine App Ihrer Wahl, etwa Claude, ChatGPT oder Gemini. Kein API-Schlüssel nötig.</string>
+    <string name="ai_no_key">Um die Antwort hier zu lesen, fügen Sie in den Einstellungen einen API-Schlüssel hinzu.</string>
+    <string name="ai_answer_title">Antwort</string>
+    <string name="ai_asking">Warten auf %1$s…</string>
+    <string name="ai_stop">Stoppen</string>
+    <string name="ai_copy">Kopieren</string>
+    <string name="ai_disclaimer">KI-Antworten können falsch sein. Prüfen Sie einen Befehl, bevor Sie ihn ausführen, besonders wenn er einen Knoten zurücksetzt oder etcd verändert.</string>
+    <string name="ai_health_diagnose">Mit KI diagnostizieren</string>
 </resources>
