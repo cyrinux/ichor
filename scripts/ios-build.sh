@@ -8,7 +8,7 @@
 #   scripts/ios-build.sh ipa    # unsigned Release build packaged as an IPA (default)
 #
 # The unsigned IPA can be re-signed and installed with your Apple ID by Sideloadly or
-# AltStore. Set TALOS_IOS_TEAM_ID and drop CODE_SIGNING_ALLOWED=NO to sign in Xcode instead.
+# AltStore. Set ICHOR_IOS_TEAM_ID and drop CODE_SIGNING_ALLOWED=NO to sign in Xcode instead.
 set -euo pipefail
 
 MODE="${1:-ipa}"

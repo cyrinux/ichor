@@ -214,7 +214,7 @@ The Android app updates itself from this repository's GitHub releases (Settings 
   "Install unknown apps" for Ichor.
 
 Updates only work between builds signed with the same key, which means CI release builds with
-the `TALOS_KEYSTORE*` secrets set. A **debug** build, signed with your machine's debug key,
+the `ICHOR_KEYSTORE*` secrets set. A **debug** build, signed with your machine's debug key,
 cannot be replaced by a release. To switch once:
 
 1. uninstall the debug build;
@@ -230,7 +230,7 @@ compressed native libraries. A release APK is about 16 MB.
 
 ```sh
 ./build.sh            # debug APKs -> app/build/outputs/apk/debug/app-<abi>-debug.apk
-./build.sh release    # needs TALOS_KEYSTORE, TALOS_KEYSTORE_PASSWORD, TALOS_KEY_ALIAS, TALOS_KEY_PASSWORD
+./build.sh release    # needs ICHOR_KEYSTORE, ICHOR_KEYSTORE_PASSWORD, ICHOR_KEY_ALIAS, ICHOR_KEY_PASSWORD
 just install           # builds, then installs the APK matching the connected device's ABI
 ```
 
@@ -296,7 +296,7 @@ just ios-build        # macOS: unsigned IPA in ios/build/
 
 **Installing:** CI produces an unsigned IPA. Sideloadly or AltStore re-sign it with your Apple
 ID: a free account means reinstalling every 7 days, a paid one lasts a year. To sign in Xcode
-instead, set `TALOS_IOS_TEAM_ID` before `xcodegen generate`.
+instead, set `ICHOR_IOS_TEAM_ID` before `xcodegen generate`.
 
 ## CI (GitHub Actions)
 
@@ -312,7 +312,7 @@ then `git push origin v0.1.0`), they attach the release APK and the IPA to the G
 To sign the release APK in CI, generate a key once and upload it as repository secrets:
 
 ```sh
-just android-keystore-gen       # then export TALOS_KEYSTORE, TALOS_KEYSTORE_PASSWORD, TALOS_KEY_ALIAS
+just android-keystore-gen       # then export ICHOR_KEYSTORE, ICHOR_KEYSTORE_PASSWORD, ICHOR_KEY_ALIAS
 just github-secrets             # sets the three secrets below with gh (values via stdin)
 ```
 
@@ -320,9 +320,9 @@ The secrets it sets:
 
 | Secret | Value |
 |---|---|
-| `TALOS_KEYSTORE_BASE64` | `base64 -w0 ~/talosdev-mobile-release.jks` |
-| `TALOS_KEYSTORE_PASSWORD` | the keystore password |
-| `TALOS_KEY_ALIAS` | the key alias, e.g. `talosdev-mobile` |
+| `ICHOR_KEYSTORE_BASE64` | `base64 -w0 ~/ichor-release.jks` |
+| `ICHOR_KEYSTORE_PASSWORD` | the keystore password |
+| `ICHOR_KEY_ALIAS` | the key alias, e.g. `ichor` |
 
 Without them, the release APK is unsigned.
 

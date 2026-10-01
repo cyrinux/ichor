@@ -23,15 +23,15 @@ android {
     }
 
     // Release signing comes from env vars so CI (Forgejo) can inject secrets.
-    val keystorePath = System.getenv("TALOS_KEYSTORE")
+    val keystorePath = System.getenv("ICHOR_KEYSTORE")
     signingConfigs {
         if (keystorePath != null) {
             create("release") {
                 storeFile = file(keystorePath)
-                storePassword = System.getenv("TALOS_KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("TALOS_KEY_ALIAS")
+                storePassword = System.getenv("ICHOR_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ICHOR_KEY_ALIAS")
                 // Like lectarr: the key password defaults to the store password.
-                keyPassword = System.getenv("TALOS_KEY_PASSWORD") ?: System.getenv("TALOS_KEYSTORE_PASSWORD")
+                keyPassword = System.getenv("ICHOR_KEY_PASSWORD") ?: System.getenv("ICHOR_KEYSTORE_PASSWORD")
             }
         }
     }

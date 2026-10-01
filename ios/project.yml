@@ -12,8 +12,8 @@ settings:
     SWIFT_VERSION: "5.0"
     MARKETING_VERSION: "0.0.0"
     CURRENT_PROJECT_VERSION: "1"
-    # Signing is optional: CI builds unsigned (CODE_SIGNING_ALLOWED=NO); set TALOS_IOS_TEAM_ID to sign.
-    DEVELOPMENT_TEAM: ${TALOS_IOS_TEAM_ID}
+    # Signing is optional: CI builds unsigned (CODE_SIGNING_ALLOWED=NO); set ICHOR_IOS_TEAM_ID to sign.
+    DEVELOPMENT_TEAM: ${ICHOR_IOS_TEAM_ID}
 packages:
   IchorCore:
     path: IchorCore
