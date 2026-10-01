@@ -25,14 +25,3 @@ public func appendCapped<T>(_ lines: [T], _ new: [T], cap: Int) -> [T] {
     let all = lines + new
     return all.count > cap ? Array(all.suffix(cap)) : all
 }
-
-/// A followed log line with a stable id (positions shift once old lines are dropped).
-public struct LogLine: Equatable, Identifiable, Sendable {
-    public let id: Int
-    public let text: String
-
-    public init(id: Int, text: String) {
-        self.id = id
-        self.text = text
-    }
-}

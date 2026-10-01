@@ -159,6 +159,18 @@ public struct EtcdAlarm: Decodable, Equatable, Hashable, Sendable {
 public struct LogTail: Decodable, Equatable, Sendable {
     public let lines: [String]
     public let truncated: Bool
+    /// Parsed `lines` (same order and count); nil from an older core or when they do not
+    /// decode, see logEntries.
+    public let entries: [LogEntry]?
+
+    private enum CodingKeys: String, CodingKey { case lines, truncated, entries }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        lines = try c.decodeIfPresent([String].self, forKey: .lines) ?? []
+        truncated = try c.decodeIfPresent(Bool.self, forKey: .truncated) ?? false
+        entries = try? c.decodeIfPresent([LogEntry].self, forKey: .entries)
+    }
 }
 
 /// Features gated by Talos RBAC (rules from Talos v1.14 machined.go).

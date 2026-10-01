@@ -144,7 +144,12 @@ data class EtcdNodeStatus(
 data class EtcdAlarm(val memberId: String, val alarm: String)
 
 @Serializable
-data class LogTail(val lines: List<String> = emptyList(), val truncated: Boolean = false)
+data class LogTail(
+    val lines: List<String> = emptyList(),
+    val truncated: Boolean = false,
+    /** Structured [lines], same order and count; empty from older cores. */
+    val entries: List<LogEntry> = emptyList(),
+)
 
 /** Node health as shown in the UI, derived from the Go overview. */
 enum class NodeHealth { READY, NOT_READY, UNREACHABLE }

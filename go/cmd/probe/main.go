@@ -1,6 +1,6 @@
 // Command probe exercises the talosmobile API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|etcd|health|parse
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|etcd|health|parse
 package main
 
 import (
@@ -61,7 +61,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|stats NODE|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|etcd|health|parse"))
+		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|etcd|health|parse"))
 	}
 
 	raw, err := os.ReadFile(*configPath)
@@ -92,6 +92,8 @@ func main() {
 		out, err = talosmobile.ServiceLogs(cfg, *contextName, flag.Arg(1), flag.Arg(2), 20)
 	case "dmesg":
 		out, err = talosmobile.KernelLogs(cfg, *contextName, flag.Arg(1), 20)
+	case "logstats":
+		out = logStats(cfg, *contextName, flag.Arg(1), flag.Args()[2:])
 	case "kubeconfig":
 		// Never print the credential itself.
 		var kc string

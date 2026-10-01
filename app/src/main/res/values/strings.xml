@@ -494,6 +494,12 @@
     <string name="logs_follow">Follow</string>
     <string name="logs_jump_latest">Jump to latest</string>
     <string name="logs_waiting">Waiting for new lines…</string>
+    <string name="logs_level_all">All (%1$d)</string>
+    <string name="logs_level_warnings">Warnings+ (%1$d)</string>
+    <string name="logs_level_errors">Errors (%1$d)</string>
+    <string name="logs_raw">Raw lines</string>
+    <string name="logs_no_level_match">No entries at this level.</string>
+    <string name="logs_repeated">Repeated %1$d times</string>
     <string name="service_actions">Service actions</string>
     <string name="service_action_restart">Restart</string>
     <string name="service_action_stop">Stop</string>

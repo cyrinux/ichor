@@ -113,6 +113,8 @@ func TestMaskHostnames(t *testing.T) {
 		{"search example.com", "search homelab.lan"},
 		{"svc.cluster.local", "svc.cluster.local"},
 		{"talos-cp2 at 192.168.1.12", "cp-2 at 10.0.0.2"},
+		{"dns names [talos-w1 talos.tail1a2b.ts.net]", "dns names [worker-1 talos.homelab.lan]"},
+		{"TALOS.Tail1A2B.TS.NET", "TALOS.homelab.lan"},
 	} {
 		if got := privacy.maskPlain(tc.in); got != tc.want {
 			t.Errorf("mask(%q) = %q, want %q", tc.in, got, tc.want)

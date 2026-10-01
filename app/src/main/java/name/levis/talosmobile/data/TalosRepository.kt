@@ -11,7 +11,9 @@ import name.levis.talosmobile.Talosmobile
 import name.levis.talosmobile.model.ClusterOverview
 import name.levis.talosmobile.model.EtcdOverview
 import name.levis.talosmobile.model.KubeSpanOverview
+import name.levis.talosmobile.model.LogEntry
 import name.levis.talosmobile.model.LogTail
+import name.levis.talosmobile.model.decodeLogTail
 import name.levis.talosmobile.model.NodeStats
 import name.levis.talosmobile.model.NodeResources
 import name.levis.talosmobile.model.ServiceInfo
@@ -238,8 +240,18 @@ class TalosRepository(private val configs: ConfigRepository) {
     suspend fun logs(node: String, service: String?, lines: Int = 500): LogTail = call { cfg, ctx ->
         val json = if (service == null) Talosmobile.kernelLogs(cfg, ctx, node, lines.toLong())
         else Talosmobile.serviceLogs(cfg, ctx, node, service, lines.toLong())
-        TalosJson.decodeFromString(LogTail.serializer(), json)
+        decodeLogTail(TalosJson, json)
     }
+
+    /**
+     * One followed log line as a structured entry (parsed locally by the Go core, no network);
+     * the plain line if it cannot be decoded. Call off the main thread.
+     */
+    fun parseLogLine(line: String): LogEntry =
+        runCatching { TalosJson.decodeFromString(LogEntry.serializer(), Talosmobile.parseLogLine(line)) }
+            .getOrNull()
+            ?.let { if (it.raw.isEmpty()) it.copy(raw = line) else it }
+            ?: LogEntry.plain(line)
 
     /** Admin kubeconfig (os:admin role). A credential: only hand it to where the user chose. */
     suspend fun kubeconfig(): String = call { cfg, ctx -> Talosmobile.kubeconfig(cfg, ctx) }

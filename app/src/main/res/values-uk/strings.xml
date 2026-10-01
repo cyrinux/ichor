@@ -542,6 +542,12 @@
     <string name="logs_follow">Стежити</string>
     <string name="logs_jump_latest">До останніх рядків</string>
     <string name="logs_waiting">Очікування нових рядків…</string>
+    <string name="logs_level_all">Усі (%1$d)</string>
+    <string name="logs_level_warnings">Попередження+ (%1$d)</string>
+    <string name="logs_level_errors">Помилки (%1$d)</string>
+    <string name="logs_raw">Сирі рядки</string>
+    <string name="logs_no_level_match">Немає записів цього рівня.</string>
+    <string name="logs_repeated">Повторено %1$d разів</string>
     <string name="service_actions">Дії зі службою</string>
     <string name="service_action_restart">Перезапустити</string>
     <string name="service_action_stop">Зупинити</string>

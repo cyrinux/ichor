@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"regexp"
 	"slices"
 	"strings"
 	"sync"
@@ -40,6 +41,10 @@ var genericNames = []string{
 
 // Domains that say nothing about the user.
 var publicDomains = []string{"local", "localdomain", "localhost", "cluster.local", "home.arpa"}
+
+// privateDomain matches domains that name the user wherever they appear, even when no
+// node reported them (e.g. a Tailscale tailnet in certificate SANs): "<tailnet>.ts.net".
+var privateDomain = regexp.MustCompile(`(?i)\b[a-z0-9][a-z0-9-]*\.ts\.net\b`)
 
 type privacyMask struct {
 	mu sync.Mutex
@@ -161,6 +166,7 @@ func (m *privacyMask) maskPlain(s string) string {
 }
 
 func (m *privacyMask) maskLocked(s string) string {
+	m.learnPrivateDomainsLocked(s)
 	s = replaceTerms(s, m.termsLocked())
 	s = replaceIPv4(s, m.fakeIPv4Locked)
 
@@ -532,6 +538,17 @@ func (m *privacyMask) learnDomains(domains ...string) {
 	}
 
 	for _, d := range domains {
+		m.learnDomainLocked(d)
+	}
+}
+
+// learnPrivateDomainsLocked learns the private domains found in s before it is masked.
+func (m *privacyMask) learnPrivateDomainsLocked(s string) {
+	if !strings.Contains(strings.ToLower(s), ".ts.net") {
+		return
+	}
+
+	for _, d := range privateDomain.FindAllString(s, -1) {
 		m.learnDomainLocked(d)
 	}
 }

@@ -492,6 +492,12 @@
     <string name="logs_follow">Segui</string>
     <string name="logs_jump_latest">Vai alle ultime righe</string>
     <string name="logs_waiting">In attesa di nuove righe…</string>
+    <string name="logs_level_all">Tutti (%1$d)</string>
+    <string name="logs_level_warnings">Avvisi+ (%1$d)</string>
+    <string name="logs_level_errors">Errori (%1$d)</string>
+    <string name="logs_raw">Righe grezze</string>
+    <string name="logs_no_level_match">Nessuna voce a questo livello.</string>
+    <string name="logs_repeated">Ripetuto %1$d volte</string>
     <string name="service_actions">Azioni del servizio</string>
     <string name="service_action_restart">Riavvia</string>
     <string name="service_action_stop">Arresta</string>

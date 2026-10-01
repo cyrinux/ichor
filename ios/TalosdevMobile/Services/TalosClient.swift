@@ -184,6 +184,12 @@ struct TalosClient: Sendable {
         }
     }
 
+    /// Level, time, source, message and fields of a followed log line (Go ParseLogLine; an
+    /// unparsed entry when it gives nothing usable). Blocking: call it off the main actor.
+    static func parseLogLine(_ line: String) -> LogEntry {
+        parseLogEntry(json: TalosmobileParseLogLine(line), line: line)
+    }
+
     /// Kubernetes containers on node with cumulative CPU time (os:reader), see containerRows.
     func containers(node: String) async throws -> ContainerSample {
         try await Self.json { [config, context] in TalosmobileNodeContainers(config, context, node, $0) }

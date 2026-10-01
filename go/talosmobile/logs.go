@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/api/common"
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -17,8 +18,9 @@ const (
 )
 
 type logTail struct {
-	Lines     []string `json:"lines"`
-	Truncated bool     `json:"truncated"` // older lines were dropped
+	Lines     []string   `json:"lines"`
+	Entries   []logEntry `json:"entries"`   // lines parsed, same order and count
+	Truncated bool       `json:"truncated"` // older lines were dropped
 }
 
 // ServiceLogs returns the last tailLines lines of a Talos service log (e.g. "kubelet", "etcd")
@@ -146,5 +148,7 @@ func (t *tailLines) result() logTail {
 		t.partial.Reset()
 	}
 
-	return logTail{Lines: append([]string{}, t.lines...), Truncated: t.truncated}
+	lines := append([]string{}, t.lines...)
+
+	return logTail{Lines: lines, Entries: parseLogLines(lines, time.Now()), Truncated: t.truncated}
 }
