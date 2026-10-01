@@ -309,7 +309,7 @@
     <string name="settings_import_new">Додати кластер (імпортувати talosconfig)</string>
     <string name="settings_delete_config">Видалити збережений talosconfig</string>
     <string name="settings_delete_title">Видалити talosconfig?</string>
-    <string name="settings_delete_body">Зашифровану конфігурацію та її клієнтський ключ буде видалено з цього пристрою.</string>
+    <string name="settings_delete_body">Зашифровану конфігурацію всіх кластерів разом із їхніми клієнтськими ключами буде вилучено з цього пристрою.</string>
 
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Моніторинг</string>

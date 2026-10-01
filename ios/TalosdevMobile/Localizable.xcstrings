@@ -14771,37 +14771,37 @@
         }
       }
     },
-    "The config and its client key will be removed from this device." : {
+    "The config of every cluster, with their client keys, will be removed from this device." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die Konfiguration und ihr Client-Schlüssel werden von diesem Gerät entfernt."
+            "value" : "Die Konfiguration aller Cluster wird samt ihren Client-Schlüsseln von diesem Gerät entfernt."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La configuración y su clave de cliente se eliminarán de este dispositivo."
+            "value" : "La configuración de todos los clústeres, con sus claves de cliente, se eliminará de este dispositivo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La configuration et sa clé client seront supprimées de cet appareil."
+            "value" : "La configuration de tous les clusters, avec leurs clés client, sera supprimée de cet appareil."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La configurazione e la sua chiave client verranno rimosse da questo dispositivo."
+            "value" : "La configurazione di tutti i cluster, con le loro chiavi client, verrà rimossa da questo dispositivo."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Конфігурацію та її клієнтський ключ буде видалено з цього пристрою."
+            "value" : "Конфігурацію всіх кластерів разом із їхніми клієнтськими ключами буде вилучено з цього пристрою."
           }
         }
       }

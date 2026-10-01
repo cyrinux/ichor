@@ -38,6 +38,9 @@ public func assignClusterColors(saved: [String: Int], fingerprints: [String]) ->
 public let lightAccentTone = 40.0
 public let darkAccentTone = 75.0
 
+/// Below this HSL saturation a main color counts as grey.
+private let greySaturation = 0.1
+
 /// Hue (degrees), saturation and lightness (0...1) of a 0xRRGGBB color.
 public func hsl(_ rgb: Int) -> (hue: Double, saturation: Double, lightness: Double) {
     let r = Double(rgb >> 16 & 0xFF) / 255, g = Double(rgb >> 8 & 0xFF) / 255, b = Double(rgb & 0xFF) / 255
@@ -106,7 +109,8 @@ public func tonalColor(seed: Int, tone target: Double) -> Int {
     if target <= 0 { return 0x000000 }
     if target >= 100 { return 0xFFFFFF }
     let (hue, saturation, _) = hsl(seed)
-    let clamped = min(max(saturation, 0.45), 0.9)
+    // A grey (iOS's color picker offers them) stays grey: its hue is meaningless.
+    let clamped = saturation < greySaturation ? 0 : min(max(saturation, 0.45), 0.9)
     var low = 0.0, high = 1.0
     for _ in 0..<16 {
         let mid = (low + high) / 2

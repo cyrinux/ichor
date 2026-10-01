@@ -277,7 +277,7 @@
     <string name="settings_import_new">Cluster hinzufügen (talosconfig importieren)</string>
     <string name="settings_delete_config">Gespeicherte talosconfig löschen</string>
     <string name="settings_delete_title">talosconfig löschen?</string>
-    <string name="settings_delete_body">Die verschlüsselte Konfiguration und ihr Client-Schlüssel werden von diesem Gerät entfernt.</string>
+    <string name="settings_delete_body">Die verschlüsselte Konfiguration aller Cluster wird samt ihren Client-Schlüsseln von diesem Gerät entfernt.</string>
 
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Überwachung</string>

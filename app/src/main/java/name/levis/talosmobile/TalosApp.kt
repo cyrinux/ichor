@@ -73,12 +73,29 @@ class TalosApp : Application() {
     fun selectCluster(name: String) {
         if (name == configRepository.config.value?.activeContext) return
         configRepository.selectContext(name)
-        launchSync(runNow = true)
+        forgetShownCluster()
     }
 
     /** Removes a cluster from the stored config; false when it was the last one (nothing is stored anymore). */
-    suspend fun removeCluster(name: String): Boolean =
-        configRepository.removeContext(name).also { launchSync(runNow = true) }
+    suspend fun removeCluster(name: String): Boolean {
+        val wasShown = name == configRepository.config.value?.activeContext
+        val remains = configRepository.removeContext(name)
+        if (wasShown) forgetShownCluster() else launchSync(runNow = true)
+        return remains
+    }
+
+    /**
+     * Another cluster is on screen: the widget drops the previous one's nodes right away
+     * (the next check may not reach the new cluster, and would then keep them) and a check
+     * of the new one runs.
+     */
+    private fun forgetShownCluster() {
+        monitorStore.clearSnapshot()
+        ProcessLifecycleOwner.get().lifecycleScope.launch {
+            ClusterWidget().updateAll(this@TalosApp)
+            syncMonitoring(this@TalosApp, runNow = true)
+        }
+    }
 
     /**
      * Turns screenshot mode on or off. Everything fetched under the previous setting is
