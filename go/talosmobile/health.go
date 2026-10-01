@@ -63,7 +63,10 @@ func runHealth(ctx context.Context, configYAML, contextName string, listener Hea
 
 	runner := info.GetControlPlaneNodes()[0]
 
-	stream, err := s.client.ClusterHealthCheck(client.WithNode(ctx, runner), healthWaitTimeout, info)
+	// An empty ClusterInfo makes Talos check the discovered cluster members, like
+	// `talosctl health` without flags. Passing the talosconfig's node list instead would make
+	// it wait for nodes that are not (or no longer) members, and report the cluster unhealthy.
+	stream, err := s.client.ClusterHealthCheck(client.WithNode(ctx, runner), healthWaitTimeout, &clusterapi.ClusterInfo{})
 	if err != nil {
 		return friendlyError(err)
 	}
@@ -104,8 +107,8 @@ func healthFailure(lastProgress string, err error) string {
 	return "not healthy after " + healthWaitTimeout.String() + ": " + lastProgress
 }
 
-// classifyNodes splits context nodes into control plane and workers. Nodes whose role
-// cannot be read are treated as workers so the health check still waits for them.
+// classifyNodes splits context nodes into control plane and workers (unreadable roles count
+// as workers). Used to pick a control-plane node to run checks on and to find etcd members.
 func classifyNodes(ctx context.Context, c *client.Client, nodes []string) *clusterapi.ClusterInfo {
 	isCP := make([]bool, len(nodes))
 
