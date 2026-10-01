@@ -208,7 +208,7 @@ func main() {
 	case "diagnose":
 		err = diagnose(cfg, *contextName, flag.Arg(1), flag.Arg(2))
 	case "ai-models":
-		out, err = talosmobile.AIModels(flag.Arg(1), aiKey(flag.Arg(1)), os.Getenv("TALOSDEV_AI_BASE_URL"))
+		out, err = talosmobile.AIModels(flag.Arg(1), aiKey(flag.Arg(1)), os.Getenv("ICHOR_AI_BASE_URL"))
 	case "health":
 		p := printer{done: make(chan string, 1)}
 		talosmobile.StartClusterHealth(cfg, *contextName, p)
@@ -265,7 +265,7 @@ func diagnose(cfg, contextName, provider, model string) error {
 	}
 
 	p := &answerPrinter{done: make(chan string, 1)}
-	d.Ask(provider, aiKey(provider), model, os.Getenv("TALOSDEV_AI_BASE_URL"), "en", "", p)
+	d.Ask(provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", "", p)
 
 	if msg := <-p.done; msg != "" {
 		return fmt.Errorf("diagnosis failed: %s", msg)

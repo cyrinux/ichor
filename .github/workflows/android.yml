@@ -47,7 +47,7 @@ jobs:
           fi
           ./build.sh release
 
-      # talosdev-mobile-v<version>-<abi>.apk; the in-app updater only picks signed ones,
+      # ichor-v<version>-<abi>.apk; the in-app updater only picks signed ones,
       # so unsigned builds get an explicit -unsigned suffix.
       - name: Name release APKs
         run: |
@@ -57,7 +57,7 @@ jobs:
             file="$(basename "$apk")"
             abi="${file#app-}"; abi="${abi%%-release*}"
             suffix=""; [[ "$file" == *unsigned* ]] && suffix="-unsigned"
-            cp "$apk" "dist/talosdev-mobile-v${version}-${abi}${suffix}.apk"
+            cp "$apk" "dist/ichor-v${version}-${abi}${suffix}.apk"
           done
           # Published with the release, so installed apps can show what an update brings.
           scripts/changelog.py --limit 30 -o dist/changelog.json

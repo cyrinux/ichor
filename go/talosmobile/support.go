@@ -315,7 +315,7 @@ func (w *bundleWriter) runStep(ctx context.Context, dir string, step bundleStep)
 func (w *bundleWriter) summary(sections []bundleSection) []byte {
 	var b strings.Builder
 
-	fmt.Fprintf(&b, "Talosdev Mobile support bundle\ncollected: %s\nfiles: %d\n\n", w.now.UTC().Format(time.RFC3339), w.files)
+	fmt.Fprintf(&b, "Ichor support bundle\ncollected: %s\nfiles: %d\n\n", w.now.UTC().Format(time.RFC3339), w.files)
 
 	for _, sec := range sections {
 		if sec.node != "" {

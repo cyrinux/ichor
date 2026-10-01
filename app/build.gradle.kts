@@ -5,20 +5,20 @@ plugins {
 }
 
 android {
-    namespace = "name.levis.talosmobile"
+    namespace = "name.levis.ichor"
     compileSdk = 37
     buildToolsVersion = "37.0.0"
 
     defaultConfig {
-        applicationId = "name.levis.talosmobile"
+        applicationId = "name.levis.ichor"
         minSdk = 26
         targetSdk = 37
         // From scripts/version.sh (exported by build.sh); fallbacks for IDE builds.
-        versionCode = System.getenv("TALOSDEV_MOBILE_BUILD_NUMBER")?.toIntOrNull() ?: 1
-        versionName = System.getenv("TALOSDEV_MOBILE_VERSION") ?: "0.0.0-unknown"
+        versionCode = System.getenv("ICHOR_BUILD_NUMBER")?.toIntOrNull() ?: 1
+        versionName = System.getenv("ICHOR_VERSION") ?: "0.0.0-unknown"
 
         // GitHub repository the self-updater reads releases from (set by GitHub Actions).
-        val updateRepo = System.getenv("GITHUB_REPOSITORY") ?: "cyrinux/talosdev-mobile"
+        val updateRepo = System.getenv("GITHUB_REPOSITORY") ?: "cyrinux/ichor"
         buildConfigField("String", "UPDATE_REPO", "\"$updateRepo\"")
     }
 

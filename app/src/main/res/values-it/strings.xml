@@ -77,8 +77,8 @@
     </plurals>
     <string name="overview_node_actions">Azioni sul nodo</string>
     <string name="overview_role_control_plane">control plane</string>
-    <string name="overview_update_banner">È disponibile Talosdev Mobile %1$s: tocca per aggiornare</string>
-    <string name="overview_support_title">Ti piace Talosdev Mobile?</string>
+    <string name="overview_update_banner">È disponibile Ichor %1$s: tocca per aggiornare</string>
+    <string name="overview_support_title">Ti piace Ichor?</string>
     <string name="overview_support_body">È gratuita e open source. Se ti fa risparmiare tempo, puoi sostenerne lo sviluppo.</string>
     <string name="overview_support_never">Non chiedere più</string>
     <string name="overview_support_later">Non ora</string>
@@ -315,12 +315,12 @@
     <string name="update_auto_check">Cerca aggiornamenti ogni giorno</string>
     <string name="update_auto_check_desc">Dalle release su GitHub (%1$s). Il checksum e la chiave di firma dell\'APK vengono verificati e Android ti chiede di confermare l\'installazione.</string>
     <string name="update_checking">Verifica in corso…</string>
-    <string name="update_up_to_date">Talosdev Mobile %1$s è aggiornata.</string>
+    <string name="update_up_to_date">Ichor %1$s è aggiornata.</string>
     <string name="update_available">È disponibile la versione %1$s (%2$s).</string>
     <string name="update_download_install">Scarica e installa</string>
     <string name="update_debug_build">Questa è una build di debug, firmata con una chiave locale: gli APK di release non possono sostituirla. Disinstallala e installa una volta un APK di release per ricevere gli aggiornamenti.</string>
     <string name="update_downloading">Download di %1$s…</string>
-    <string name="update_needs_permission">Consenti a Talosdev Mobile di installare app, poi riprova.</string>
+    <string name="update_needs_permission">Consenti a Ichor di installare app, poi riprova.</string>
     <string name="update_open_permission">Apri autorizzazione di installazione</string>
     <string name="update_try_again">Riprova</string>
     <string name="update_installing">Installazione… conferma nella finestra di sistema.</string>
@@ -337,7 +337,7 @@
 
     <!-- About -->
     <string name="about_section">Informazioni</string>
-    <string name="about_version">Talosdev Mobile %1$s (%2$d)</string>
+    <string name="about_version">Ichor %1$s (%2$d)</string>
     <string name="about_source">Codice sorgente su GitHub</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="about_sponsor">Sostieni su GitHub</string>
@@ -401,8 +401,8 @@
     <string name="debug_connecting">Connessione…</string>
 
     <!-- App lock -->
-    <string name="lock_prompt">Sblocca Talosdev Mobile</string>
-    <string name="lock_locked">Talosdev Mobile è bloccata</string>
+    <string name="lock_prompt">Sblocca Ichor</string>
+    <string name="lock_locked">Ichor è bloccata</string>
     <string name="lock_unlock">Sblocca</string>
     <string name="lock_no_auth">Questo dispositivo non ha più un\'impronta o un blocco schermo, quindi il blocco app non può verificare la tua identità.</string>
     <string name="lock_delete_config">Elimina il talosconfig salvato</string>
@@ -566,7 +566,7 @@
     <string name="issue_renewed_body">Il nuovo certificato per «%1$s» è salvato e valido fino al %2$s.</string>
     <string name="issue_result_warning">Questa config concede accesso %2$s a «%1$s» fino al %3$s e non può essere revocata. Trattala come una password: mostra il codice QR solo al dispositivo a cui è destinato.</string>
     <string name="issue_qr_description">Codice QR del talosconfig</string>
-    <string name="issue_qr_hint">Sull\'altro dispositivo apri Talosdev Mobile, poi Importa → Codice QR.</string>
+    <string name="issue_qr_hint">Sull\'altro dispositivo apri Ichor, poi Importa → Codice QR.</string>
     <string name="issue_qr_too_large">Questa config è troppo grande per un codice QR (%1$d byte, al massimo %2$d). Salvala invece in un file.</string>
     <string name="issue_save_file">Salva in un file</string>
     <string name="issue_saved">Salvato. Elimina il file dopo averlo importato sull\'altro dispositivo.</string>

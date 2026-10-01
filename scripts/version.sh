@@ -6,7 +6,7 @@ set -euo pipefail
 # The APK's versionName/versionCode derive from this script, so an installed build can
 # always be traced back to one commit. Resolution order:
 #
-#   1. TALOSDEV_MOBILE_VERSION in the environment (CI, releases).
+#   1. ICHOR_VERSION in the environment (CI, releases).
 #   2. `git describe` against the vMAJOR.MINOR.PATCH release tags.
 #   3. The commit SHA alone, when the checkout has no tags yet.
 #   4. A literal "unknown", when there is no git or no commit at all.
@@ -58,15 +58,15 @@ resolve() {
         if [[ "$version" == *+* ]]; then version="${version}.dirty"; else version="${version}+dirty"; fi
     fi
 
-    if [[ -n "${TALOSDEV_MOBILE_VERSION:-}" ]]; then
-        version="$TALOSDEV_MOBILE_VERSION"
+    if [[ -n "${ICHOR_VERSION:-}" ]]; then
+        version="$ICHOR_VERSION"
         [[ "$version" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+) ]] && base="${BASH_REMATCH[1]}"
     fi
 
     VERSION="$version"
     VERSION_BASE="$base"
     # versionCode must be >= 1, even before the first commit.
-    BUILD_NUMBER="${TALOSDEV_MOBILE_BUILD_NUMBER:-$(( build_number > 0 ? build_number : 1 ))}"
+    BUILD_NUMBER="${ICHOR_BUILD_NUMBER:-$(( build_number > 0 ? build_number : 1 ))}"
     GIT_SHA="$sha"
     GIT_DESCRIBE="$describe"
     GIT_BRANCH="$branch"
@@ -74,13 +74,13 @@ resolve() {
 }
 
 emit_env() {
-    printf 'TALOSDEV_MOBILE_VERSION=%q\n' "$VERSION"
-    printf 'TALOSDEV_MOBILE_VERSION_BASE=%q\n' "$VERSION_BASE"
-    printf 'TALOSDEV_MOBILE_BUILD_NUMBER=%q\n' "$BUILD_NUMBER"
-    printf 'TALOSDEV_MOBILE_GIT_SHA=%q\n' "$GIT_SHA"
-    printf 'TALOSDEV_MOBILE_GIT_DESCRIBE=%q\n' "$GIT_DESCRIBE"
-    printf 'TALOSDEV_MOBILE_GIT_BRANCH=%q\n' "$GIT_BRANCH"
-    printf 'TALOSDEV_MOBILE_GIT_DIRTY=%q\n' "$GIT_DIRTY"
+    printf 'ICHOR_VERSION=%q\n' "$VERSION"
+    printf 'ICHOR_VERSION_BASE=%q\n' "$VERSION_BASE"
+    printf 'ICHOR_BUILD_NUMBER=%q\n' "$BUILD_NUMBER"
+    printf 'ICHOR_GIT_SHA=%q\n' "$GIT_SHA"
+    printf 'ICHOR_GIT_DESCRIBE=%q\n' "$GIT_DESCRIBE"
+    printf 'ICHOR_GIT_BRANCH=%q\n' "$GIT_BRANCH"
+    printf 'ICHOR_GIT_DIRTY=%q\n' "$GIT_DIRTY"
 }
 
 emit_json() {

@@ -1,0 +1,35 @@
+Your Talos cluster, from your phone.
+
+Ichor is a free, open-source client for Talos Linux clusters. Check node health, read logs, watch etcd and get notified the moment a node goes down, without opening a laptop. It talks to the Talos API with the same Go client as talosctl, so there is nothing to install on the cluster and no server in between.
+
+<b>See everything at a glance</b>
+• Cluster overview: every node ready, not ready or unreachable, with unmet conditions, clock drift and available Talos upgrades
+• Services and logs: service and kernel logs colored by level, repeats folded, live follow mode
+• Events timeline: service changes, boot phases and address changes as they happen
+• Live graphs: CPU, memory, network, disk and load every two seconds, plus the process list
+• Pods, network interfaces, routes, DNS, open connections, disks and hardware
+• etcd: members, leader, size and alarms, defragmentation and snapshots
+• KubeSpan peers: state, endpoint, last handshake and traffic
+
+<b>Alerts without a server</b>
+The phone itself checks your cluster in the background and notifies you when a node or etcd is unhealthy. A home-screen widget shows the state of the cluster at a glance.
+
+<b>Act when you need to</b>
+• Restart a service, reboot or shut down a node, after typing its hostname to confirm
+• Upgrade Talos one node at a time, refused when etcd would lose quorum
+• Packet capture saved as a .pcap for Wireshark
+• Debug shell on a node, cluster health check, machine config viewer
+• Issue a read-only talosconfig for another device as a QR code, and export a kubeconfig
+
+<b>Least privilege by design</b>
+Ichor reads the roles of your talosconfig certificate and only shows what it is allowed to do. Give your phone an os:reader certificate and it stays strictly read-only. The config is encrypted with a key held in the phone's security chip (StrongBox or TEE), behind an optional fingerprint or PIN lock. Screenshot mode hides addresses and node names when you share your screen.
+
+<b>Several clusters</b>
+Import as many talosconfigs as you like, switch from the header, give each cluster its own name and color, and open any of them straight from the app icon.
+
+<b>Private and open source</b>
+Apache-2.0, no account, no ads, no analytics. Your talosconfig only talks to your nodes. An optional AI diagnosis can explain what is wrong and how to fix it: it is off by default, shows you the exact report first, and sends nothing until you ask.
+
+Available in English, French, Spanish, Ukrainian, German and Italian.
+
+Ichor is an independent community project. It is not affiliated with or endorsed by Sidero Labs. Talos is a trademark of Sidero Labs, Inc.
