@@ -29,6 +29,17 @@ class WidgetStatusTest {
     )
 
     @Test
+    fun staleRefreshIsDueJustAfterTheSnapshotTurnsStale() {
+        val delay = staleInMillis(snap(READY, takenAt = now - 1_000), now)!!
+        assertEquals(WIDGET_STALE_AFTER_MS - 1_000 + 1, delay)
+        assertFalse(isStale(snap(READY, takenAt = now - 1_000), now + delay - 1))
+        assertTrue(isStale(snap(READY, takenAt = now - 1_000), now + delay))
+
+        assertEquals(null, staleInMillis(snap(READY, takenAt = now - WIDGET_STALE_AFTER_MS - 1), now))
+        assertEquals(null, staleInMillis(null, now))
+    }
+
+    @Test
     fun allReadyThenEtcd() {
         assertEquals(
             listOf(StatusItem.AllReady, StatusItem.Etcd(0)),

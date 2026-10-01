@@ -32,11 +32,20 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val now = System.currentTimeMillis()
         val evaluation = evaluate(store.snapshot(), snapshotOf(overview, etcd, certNotAfter, now), now)
         store.saveSnapshot(evaluation.next)
+        scheduleWidgetStaleRefresh(applicationContext, evaluation.next, now)
 
         if (store.alertsEnabled.value) {
             val hide = app.appLock.enabled.value
             evaluation.alerts.forEach { postAlert(applicationContext, it, hideOnLockScreen = hide) }
         }
+        ClusterWidget().updateAll(applicationContext)
+        return Result.success()
+    }
+}
+
+/** Redraws the widget from the stored snapshot, without any network call. */
+class WidgetRefreshWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
         ClusterWidget().updateAll(applicationContext)
         return Result.success()
     }

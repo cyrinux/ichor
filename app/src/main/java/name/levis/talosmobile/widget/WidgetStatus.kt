@@ -15,6 +15,13 @@ sealed interface StatusItem {
 
 fun isStale(s: ClusterSnapshot?, now: Long): Boolean = s == null || now - s.takenAt > WIDGET_STALE_AFTER_MS
 
+/**
+ * How long until [s] turns stale, or null when it already is: nothing redraws the widget by
+ * then unless a refresh is scheduled (the monitor does not run without network).
+ */
+fun staleInMillis(s: ClusterSnapshot?, now: Long): Long? =
+    if (s == null || isStale(s, now)) null else s.takenAt + WIDGET_STALE_AFTER_MS - now + 1
+
 /** Problems first, then etcd (only when it was checked); at most [max] items. */
 fun statusItems(s: ClusterSnapshot, max: Int = 2): List<StatusItem> {
     val health = buildList {
