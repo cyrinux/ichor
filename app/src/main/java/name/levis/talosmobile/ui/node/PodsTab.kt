@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -80,7 +81,11 @@ class PodsViewModel(private val talos: TalosRepository, private val node: String
                     last = sample
                     _state.value = PodsState(rows = rows)
                 },
-                onFailure = { _state.value = _state.value.copy(error = it.userMessage()) },
+                onFailure = {
+                    // Leaving the tab cancels the call: that is not an error to show on return.
+                    if (it is CancellationException) throw it
+                    _state.value = _state.value.copy(error = it.userMessage())
+                },
             )
             delay(PODS_POLL_SECONDS * 1000)
         }
