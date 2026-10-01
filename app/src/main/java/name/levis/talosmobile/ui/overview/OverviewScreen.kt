@@ -36,9 +36,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.platform.LocalContext
 import name.levis.talosmobile.TalosApp
+import androidx.compose.material3.TextButton
 import name.levis.talosmobile.data.ConfigRepository
+import name.levis.talosmobile.data.SPONSOR_URL
+import name.levis.talosmobile.ui.settings.openUrl
+import name.levis.talosmobile.data.activeSummary
+import name.levis.talosmobile.model.Feature
+import name.levis.talosmobile.model.accessLabel
+import name.levis.talosmobile.model.allows
 import name.levis.talosmobile.update.UpdateState
 import name.levis.talosmobile.data.TalosRepository
+import name.levis.talosmobile.data.OVERVIEW
 import name.levis.talosmobile.model.ClusterOverview
 import name.levis.talosmobile.model.NodeHealth
 import name.levis.talosmobile.model.NodeOverview
@@ -56,6 +64,7 @@ class OverviewViewModel(
     private val talos: TalosRepository,
     val configs: ConfigRepository,
 ) : LoadingViewModel<ClusterOverview>() {
+    override fun cached(): ClusterOverview? = talos.cached(OVERVIEW)
     override suspend fun fetch() = talos.overview()
 }
 
@@ -72,7 +81,7 @@ fun OverviewScreen(
     val config by vm.configs.config.collectAsStateWithLifecycle()
 
     // Reload whenever the active context changes (including first composition).
-    LaunchedEffect(config?.activeContext) { vm.refresh() }
+    LaunchedEffect(config?.activeContext) { vm.refresh(reset = true) }
 
     Scaffold(
         topBar = {
@@ -80,13 +89,21 @@ fun OverviewScreen(
                 title = {
                     Column {
                         Text("Cluster")
-                        config?.activeContext?.let {
-                            Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                        config?.let { stored ->
+                            val access = stored.activeSummary?.accessLabel
+                            Text(
+                                listOfNotNull(stored.activeContext, access).joinToString(" · "),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
                         }
                     }
                 },
                 actions = {
-                    IconButton(onClick = onHealth) { Icon(Icons.Outlined.Favorite, "Cluster health") }
+                    // Only offered when the config's role can run it.
+                    if (config?.activeSummary?.allows(Feature.HEALTH) == true) {
+                        IconButton(onClick = onHealth) { Icon(Icons.Outlined.Favorite, "Cluster health") }
+                    }
                     IconButton(onClick = onEtcd) { Icon(Icons.Outlined.Storage, "etcd") }
                     IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, "Settings") }
                 },
@@ -116,6 +133,7 @@ private fun NodeList(overview: ClusterOverview, onNode: (NodeOverview) -> Unit, 
         modifier = Modifier.fillMaxSize(),
     ) {
         item { UpdateBanner(onClick = onSettings) }
+        item { SupportCard() }
         item { Summary(overview.nodes) }
         items(nodes, key = { it.node }) { node ->
             NodeCard(node, onClick = { onNode(node) })
@@ -210,5 +228,32 @@ private fun UpdateBanner(onClick: () -> Unit) {
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(16.dp),
         )
+    }
+}
+
+/** Occasional, dismissable ask to support the project (see SupportPrompt for the timing). */
+@Composable
+private fun SupportCard() {
+    val context = LocalContext.current
+    val prompt = (context.applicationContext as TalosApp).supportPrompt
+    val visible by prompt.visible.collectAsStateWithLifecycle()
+    if (!visible) return
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text("Enjoying Talos Viewer?", style = MaterialTheme.typography.titleSmall)
+            Text(
+                "It is free and open source. If it saves you time, you can support its development.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = prompt::never) { Text("Don't ask again") }
+                TextButton(onClick = prompt::later) { Text("Not now") }
+                TextButton(onClick = {
+                    prompt.later()
+                    openUrl(context, SPONSOR_URL)
+                }) { Text("Sponsor") }
+            }
+        }
     }
 }

@@ -19,6 +19,7 @@ struct ImportView: View {
     @State private var preview: (yaml: String, summary: ConfigSummary)?
     @State private var error: String?
     @State private var busy = false
+    @State private var showingHelp = false
 
     enum Source: String, CaseIterable, Identifiable {
         case file = "File", paste = "Paste", qr = "QR code"
@@ -36,6 +37,15 @@ struct ImportView: View {
             }
         }
         .navigationTitle("Import talosconfig")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button { showingHelp = true } label: { Image(systemName: "questionmark.circle") }
+                    .accessibilityLabel("How to create a talosconfig")
+            }
+        }
+        .sheet(isPresented: $showingHelp) { HelpSheet() }
+        // First run (nothing imported yet): explain how to create a talosconfig right away.
+        .onAppear { if model.yaml == nil { showingHelp = true } }
         .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.yaml, .plainText, .data, .item]) { result in
             switch result {
             case .success(let url): readFile(url)

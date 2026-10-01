@@ -23,11 +23,21 @@ val StoredConfig.activeSummary: ContextSummary?
 
 class ConfigRepository(context: Context) {
 
-    private val store = SecureStore(File(context.filesDir, "talosconfig.enc"))
+    private val store = SecureStore(
+        File(context.filesDir, "talosconfig.enc"),
+        strongBoxAvailable = hasStrongBox(context.packageManager),
+    )
+
+    /** Where the key protecting the stored config lives (null before the first import). */
+    fun keyProtection(): KeyProtection? = runCatching { store.protection() }.getOrNull()
     private val prefs = context.getSharedPreferences("talos-viewer", Context.MODE_PRIVATE)
 
     private val _config = MutableStateFlow<StoredConfig?>(null)
     val config: StateFlow<StoredConfig?> = _config.asStateFlow()
+
+    /** Bumped on import/delete, so caches keyed on it drop data from an older config. */
+    private val _generation = MutableStateFlow(0)
+    val generation: StateFlow<Int> = _generation.asStateFlow()
 
     /** Loads the stored config, if any. Returns null when nothing was imported yet. */
     suspend fun load(): StoredConfig? = withContext(Dispatchers.IO) {
@@ -47,6 +57,7 @@ class ConfigRepository(context: Context) {
         store.write(yaml.encodeToByteArray())
         prefs.edit().putString(KEY_CONTEXT, summary.current).apply()
         _config.value = StoredConfig(yaml, summary, summary.current)
+        _generation.value++
     }
 
     fun selectContext(name: String) {
@@ -60,6 +71,7 @@ class ConfigRepository(context: Context) {
         store.clear()
         prefs.edit().clear().apply()
         _config.value = null
+        _generation.value++
     }
 
     private fun parse(yaml: String): ConfigSummary =

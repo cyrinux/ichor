@@ -5,6 +5,7 @@ import name.levis.talosmobile.Talosmobile
 import name.levis.talosmobile.model.ClusterOverview
 import name.levis.talosmobile.model.EtcdOverview
 import name.levis.talosmobile.model.LogTail
+import name.levis.talosmobile.model.NodeStats
 import name.levis.talosmobile.model.NodeResources
 import name.levis.talosmobile.model.ServiceInfo
 import kotlinx.coroutines.Dispatchers
@@ -27,19 +28,50 @@ class NoConfigException : IllegalStateException("No talosconfig imported")
 /** Read-only access to the Talos API through the Go core. All calls are blocking in Go, so run on IO. */
 class TalosRepository(private val configs: ConfigRepository) {
 
-    suspend fun overview(): ClusterOverview = call { cfg, ctx ->
+    /**
+     * Last successful results, in memory only (cluster data is never written to disk), so
+     * screens can show them instantly while refreshing. Keys include the config generation
+     * and context, so importing or switching invalidates them.
+     */
+    private val cache = java.util.concurrent.ConcurrentHashMap<String, Any>()
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T> cached(key: String): T? = cache[scoped(key)] as T?
+
+    private fun scoped(key: String): String {
+        val stored = configs.config.value
+        return "${configs.generation.value}|${stored?.activeContext}|$key"
+    }
+
+    private suspend fun <T : Any> remember(key: String, block: suspend () -> T): T =
+        block().also { cache[scoped(key)] = it }
+
+    /** One sample of node counters for the live graphs (not cached: always fresh). */
+    suspend fun stats(node: String): NodeStats = call { cfg, ctx ->
+        TalosJson.decodeFromString(NodeStats.serializer(), Talosmobile.nodeStats(cfg, ctx, node))
+    }
+
+    suspend fun overview(): ClusterOverview = remember(OVERVIEW) { overviewUncached() }
+
+    private suspend fun overviewUncached(): ClusterOverview = call { cfg, ctx ->
         TalosJson.decodeFromString(ClusterOverview.serializer(), Talosmobile.clusterOverview(cfg, ctx))
     }
 
-    suspend fun services(node: String): List<ServiceInfo> = call { cfg, ctx ->
+    suspend fun services(node: String): List<ServiceInfo> = remember(servicesKey(node)) { servicesUncached(node) }
+
+    private suspend fun servicesUncached(node: String): List<ServiceInfo> = call { cfg, ctx ->
         TalosJson.decodeFromString(ListSerializer(ServiceInfo.serializer()), Talosmobile.nodeServices(cfg, ctx, node))
     }
 
-    suspend fun resources(node: String): NodeResources = call { cfg, ctx ->
+    suspend fun resources(node: String): NodeResources = remember(resourcesKey(node)) { resourcesUncached(node) }
+
+    private suspend fun resourcesUncached(node: String): NodeResources = call { cfg, ctx ->
         TalosJson.decodeFromString(NodeResources.serializer(), Talosmobile.nodeResources(cfg, ctx, node))
     }
 
-    suspend fun etcd(): EtcdOverview = call { cfg, ctx ->
+    suspend fun etcd(): EtcdOverview = remember(ETCD) { etcdUncached() }
+
+    private suspend fun etcdUncached(): EtcdOverview = call { cfg, ctx ->
         TalosJson.decodeFromString(EtcdOverview.serializer(), Talosmobile.etcdStatus(cfg, ctx))
     }
 
@@ -84,3 +116,8 @@ class TalosRepository(private val configs: ConfigRepository) {
         return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) }
     }
 }
+
+const val OVERVIEW = "overview"
+const val ETCD = "etcd"
+fun servicesKey(node: String) = "services|$node"
+fun resourcesKey(node: String) = "resources|$node"

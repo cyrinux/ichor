@@ -44,6 +44,11 @@ struct TalosClient: Sendable {
         }
     }
 
+    /// One sample of counters for the live graphs.
+    func stats(node: String) async throws -> NodeStats {
+        try await Self.json { [config, context] in TalosmobileNodeStats(config, context, node, $0) }
+    }
+
     func etcd() async throws -> EtcdOverview {
         try await Self.json { [config, context] in TalosmobileEtcdStatus(config, context, $0) }
     }

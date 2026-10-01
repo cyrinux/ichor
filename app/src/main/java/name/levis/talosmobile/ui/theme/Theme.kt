@@ -63,6 +63,19 @@ private val LightStatus = StatusColors(
 
 val LocalStatusColors = staticCompositionLocalOf { DarkStatus }
 
+/**
+ * Chart series colors: categorical slots 1-2 (blue, orange) of the dataviz reference palette,
+ * light and dark steps, validated (CVD and contrast) against the light, dark and true-black
+ * surfaces. Single-series charts use [first].
+ */
+@Immutable
+data class ChartColors(val first: Color, val second: Color, val grid: Color)
+
+private val LightChart = ChartColors(first = Color(0xFF2A78D6), second = Color(0xFFEB6834), grid = Color(0x1F000000))
+private val DarkChart = ChartColors(first = Color(0xFF3987E5), second = Color(0xFFD95926), grid = Color(0x29FFFFFF))
+
+val LocalChartColors = staticCompositionLocalOf { DarkChart }
+
 @Composable
 fun TalosTheme(mode: ThemeMode = ThemeMode.AUTO, content: @Composable () -> Unit) {
     val context = LocalContext.current
@@ -76,7 +89,10 @@ fun TalosTheme(mode: ThemeMode = ThemeMode.AUTO, content: @Composable () -> Unit
     }
     val colors = if (mode == ThemeMode.BLACK) base.trueBlack() else base
 
-    CompositionLocalProvider(LocalStatusColors provides if (dark) DarkStatus else LightStatus) {
+    CompositionLocalProvider(
+        LocalStatusColors provides if (dark) DarkStatus else LightStatus,
+        LocalChartColors provides if (dark) DarkChart else LightChart,
+    ) {
         MaterialTheme(colorScheme = colors, content = content)
     }
 }

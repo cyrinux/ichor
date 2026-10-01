@@ -40,6 +40,8 @@ import name.levis.talosmobile.TalosApp
 import name.levis.talosmobile.data.ConfigRepository
 import name.levis.talosmobile.data.TalosRepository
 import name.levis.talosmobile.data.activeSummary
+import name.levis.talosmobile.model.Feature
+import name.levis.talosmobile.model.allows
 import name.levis.talosmobile.data.UiPreferences
 import name.levis.talosmobile.security.AppLock
 import name.levis.talosmobile.ui.components.InfoRow
@@ -100,18 +102,16 @@ fun SettingsScreen(
             SecuritySection(appLock, uiPreferences)
             MonitoringSection(LocalContext.current.applicationContext as TalosApp)
             UpdateSection((LocalContext.current.applicationContext as TalosApp).updateManager)
-            config?.activeSummary?.let { KubeconfigSection(talos, appLock, it) }
+            config?.activeSummary?.takeIf { it.allows(Feature.KUBECONFIG) }?.let { KubeconfigSection(talos, appLock, it) }
             SectionTitle("Config")
+            configs.keyProtection()?.let {
+                InfoRow("Encryption key", "AES-256-GCM in the ${it.label}")
+            }
             OutlinedButton(onClick = onReimport, modifier = Modifier.fillMaxWidth()) { Text("Import a new talosconfig") }
             OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
                 Text("Delete stored talosconfig")
             }
-            Text(
-                "Talos Viewer ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp),
-            )
+            AboutSection()
         }
     }
 

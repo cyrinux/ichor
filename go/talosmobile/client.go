@@ -13,21 +13,26 @@ const (
 	callTimeout   = 20 * time.Second
 	nodeTimeout   = 8 * time.Second
 	healthTimeout = 2 * time.Minute
+	// Connections are reused across calls (live graphs poll every few seconds) and closed
+	// after this long without use.
+	sessionIdle = 2 * time.Minute
 )
 
 // session is an open connection to a talosconfig context's endpoints.
 type session struct {
 	client  *client.Client
 	context *clientconfig.Context
+	onClose func() // test hook
 }
 
-func openSession(ctx context.Context, configYAML, contextName string) (*session, error) {
+func openSession(configYAML, contextName string) (*session, error) {
 	_, cfgCtx, err := resolveContext(configYAML, contextName)
 	if err != nil {
 		return nil, err
 	}
 
-	c, err := client.New(ctx, client.WithConfigContext(cfgCtx))
+	// client.New only dials lazily, so no context is needed here.
+	c, err := client.New(context.Background(), client.WithConfigContext(cfgCtx))
 	if err != nil {
 		return nil, fmt.Errorf("create Talos client: %w", err)
 	}
@@ -36,22 +41,30 @@ func openSession(ctx context.Context, configYAML, contextName string) (*session,
 }
 
 func (s *session) Close() {
-	_ = s.client.Close() //nolint:errcheck
+	if s.client != nil {
+		_ = s.client.Close() //nolint:errcheck
+	}
+
+	if s.onClose != nil {
+		s.onClose()
+	}
 }
 
-// withSession runs fn with a fresh session bounded by timeout.
-func withSession[T any](configYAML, contextName string, timeout time.Duration, fn func(context.Context, *session) (T, error)) (T, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
+var sessions = newSessionCache(sessionIdle, openSession)
 
-	s, err := openSession(ctx, configYAML, contextName)
+// withSession runs fn with a (reused) session, bounded by timeout.
+func withSession[T any](configYAML, contextName string, timeout time.Duration, fn func(context.Context, *session) (T, error)) (T, error) {
+	s, release, err := sessions.acquire(configYAML, contextName)
 	if err != nil {
 		var zero T
 
 		return zero, err
 	}
 
-	defer s.Close()
+	defer release()
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
 	return fn(ctx, s)
 }

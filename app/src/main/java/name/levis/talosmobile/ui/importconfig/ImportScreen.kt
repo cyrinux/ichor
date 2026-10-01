@@ -22,6 +22,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.ui.platform.LocalContext
+import name.levis.talosmobile.TalosApp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -62,6 +66,9 @@ fun ImportScreen(
     vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    // First run (nothing imported yet): explain how to create a talosconfig right away.
+    val firstRun = app().configRepository.config.collectAsStateWithLifecycle().value == null
+    var showHelp by rememberSaveable { mutableStateOf(firstRun) }
     // Hoisted so the chosen tab and pasted text survive the Validating -> Invalid round trip.
     var tab by rememberSaveable { mutableIntStateOf(0) }
     // Not saveable: it may contain the client private key, which must not land in saved instance state.
@@ -71,7 +78,20 @@ fun ImportScreen(
         if (state is ImportState.Saved) onImported()
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Import talosconfig") }) }) { padding ->
+    if (showHelp) TalosconfigHelpDialog(onDismiss = { showHelp = false })
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Import talosconfig") },
+                actions = {
+                    IconButton(onClick = { showHelp = true }) {
+                        Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "How to create a talosconfig")
+                    }
+                },
+            )
+        },
+    ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (val s = state) {
                 is ImportState.Preview -> PreviewCard(s.summary, onConfirm = vm::confirm, onCancel = vm::reset)
@@ -215,3 +235,6 @@ fun certExpiry(notAfter: Long): String {
     val days = daysUntil(notAfter)
     return if (days < 0) "expired ${-days} days ago" else "in $days days"
 }
+
+@Composable
+private fun app(): TalosApp = LocalContext.current.applicationContext as TalosApp

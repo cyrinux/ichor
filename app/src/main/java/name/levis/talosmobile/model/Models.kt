@@ -32,6 +32,14 @@ enum class Feature(val label: String, val roles: Set<String>) {
 
 fun ContextSummary.allows(feature: Feature): Boolean = roles.any { it in feature.roles }
 
+/** Short access level for the UI: "admin", "operator" or "read-only". */
+val ContextSummary.accessLabel: String
+    get() = when {
+        "os:admin" in roles -> "admin"
+        "os:operator" in roles -> "operator"
+        else -> "read-only"
+    }
+
 @Serializable
 data class ClusterOverview(
     val context: String,

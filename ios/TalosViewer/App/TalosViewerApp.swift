@@ -3,11 +3,14 @@ import SwiftUI
 @main
 struct TalosViewerApp: App {
     @State private var model = AppModel()
+    @State private var support = SupportPrompt()
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(model)
+                .environment(support)
+                .task { support.onLaunch() }
                 .preferredColorScheme(model.theme.colorScheme)
         }
     }

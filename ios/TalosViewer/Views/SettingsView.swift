@@ -38,12 +38,13 @@ struct SettingsView: View {
                 Text("Face ID / Touch ID, or the device passcode, to open the app and before reboot or shutdown. Also hides the app in the app switcher.")
             }
             Section("Config") {
+                if let protection = SecureConfigStore.protection {
+                    LabeledContent("Encryption key", value: protection.rawValue)
+                }
                 NavigationLink("Import a new talosconfig", value: Route.importConfig)
                 Button("Delete stored talosconfig", role: .destructive) { confirmDelete = true }
             }
-            Section {
-                LabeledContent("Version", value: version)
-            }
+            AboutSection()
         }
         .themedBackground()
         .navigationTitle("Settings")
@@ -68,12 +69,5 @@ struct SettingsView: View {
                 model.setLockEnabled(enabled)
             }
         }
-    }
-
-    private var version: String {
-        let info = Bundle.main.infoDictionary
-        let short = info?["CFBundleShortVersionString"] as? String ?? "?"
-        let build = info?["CFBundleVersion"] as? String ?? "?"
-        return "\(short) (\(build))"
     }
 }

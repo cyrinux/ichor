@@ -49,12 +49,12 @@ func StartClusterHealth(configYAML, contextName string, listener HealthListener)
 }
 
 func runHealth(ctx context.Context, configYAML, contextName string, listener HealthListener) string {
-	s, err := openSession(ctx, configYAML, contextName)
+	s, release, err := sessions.acquire(configYAML, contextName)
 	if err != nil {
 		return err.Error()
 	}
 
-	defer s.Close()
+	defer release()
 
 	info := classifyNodes(ctx, s.client, targetNodes(s.context))
 	if len(info.GetControlPlaneNodes()) == 0 {

@@ -1,12 +1,17 @@
 package name.levis.talosmobile
 
+import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Surface
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,7 +35,6 @@ import kotlinx.coroutines.launch
 class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         val app = application as TalosApp
 
         // With the lock on, keep cluster data out of the recents thumbnail and screenshots,
@@ -46,9 +50,26 @@ class MainActivity : FragmentActivity() {
         }
 
         app.updateManager.maybeAutoCheck(lifecycleScope)
+        if (savedInstanceState == null) app.supportPrompt.onLaunch()
 
         setContent {
             val themeMode by app.uiPreferences.themeMode.collectAsStateWithLifecycle()
+            val dark = themeMode.isDark(isSystemInDarkTheme())
+            // System bars follow the app theme (not just the system one): transparent over
+            // the app background, with icons contrasting with it.
+            DisposableEffect(dark) {
+                val style = if (dark) {
+                    SystemBarStyle.dark(Color.TRANSPARENT)
+                } else {
+                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                }
+                enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    // No grey scrim behind 3-button navigation: true black stays black.
+                    window.isNavigationBarContrastEnforced = false
+                }
+                onDispose {}
+            }
             TalosTheme(themeMode) {
                 Surface {
                     LockGate(app, onWiped = ::recreate)

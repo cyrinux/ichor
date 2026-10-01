@@ -9,6 +9,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import name.levis.talosmobile.data.ConfigRepository
 import name.levis.talosmobile.data.TalosRepository
+import name.levis.talosmobile.data.SupportPrompt
 import name.levis.talosmobile.data.UiPreferences
 import name.levis.talosmobile.monitor.MonitorStore
 import name.levis.talosmobile.monitor.syncMonitoring
@@ -29,6 +30,7 @@ class TalosApp : Application() {
         )
     }
 
+    val supportPrompt by lazy { SupportPrompt(getSharedPreferences("talos-viewer-support", Context.MODE_PRIVATE)) }
     val updateManager by lazy { UpdateManager(this, getSharedPreferences("talos-viewer-update", Context.MODE_PRIVATE)) }
     val monitorStore by lazy { MonitorStore(getSharedPreferences("talos-viewer-monitor", Context.MODE_PRIVATE)) }
 

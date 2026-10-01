@@ -14,7 +14,6 @@ enum ThemeMode: String, CaseIterable, Identifiable {
 @MainActor
 final class AppModel {
     private enum Keys {
-        static let config = "talosconfig"
         static let context = "activeContext"
         static let theme = "themeMode"
         static let lock = "appLockEnabled"
@@ -44,24 +43,25 @@ final class AppModel {
 
     var activeSummary: ContextSummary? { summary?.context(named: activeContext) }
 
-    func allows(_ feature: Feature) -> Bool { activeSummary?.allows(feature) ?? true }
+    /// Privileged actions are only shown when the imported config's role allows them.
+    func allows(_ feature: Feature) -> Bool { activeSummary?.allows(feature) ?? false }
 
     /// Loads the stored config (Keychain); nothing is read before the first unlock.
     func load() async {
         defer { loaded = true }
-        guard let data = Keychain.read(Keys.config), let stored = String(data: data, encoding: .utf8),
+        guard let data = SecureConfigStore.load(), let stored = String(data: data, encoding: .utf8),
               let parsed = try? await TalosClient.parse(stored) else { return }
         apply(yaml: stored, summary: parsed, preferred: UserDefaults.standard.string(forKey: Keys.context))
     }
 
     func save(yaml newYAML: String) async throws {
         let parsed = try await TalosClient.parse(newYAML)
-        try Keychain.write(Data(newYAML.utf8), account: Keys.config)
+        try SecureConfigStore.save(Data(newYAML.utf8))
         apply(yaml: newYAML, summary: parsed, preferred: parsed.current)
     }
 
     func clear() {
-        Keychain.delete(Keys.config)
+        SecureConfigStore.delete()
         yaml = nil
         summary = nil
     }

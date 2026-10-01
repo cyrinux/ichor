@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.talosmobile.data.TalosRepository
+import name.levis.talosmobile.data.servicesKey
+import name.levis.talosmobile.data.resourcesKey
 import name.levis.talosmobile.model.NodeResources
 import name.levis.talosmobile.model.ServiceInfo
 import name.levis.talosmobile.ui.LoadingViewModel
@@ -68,6 +70,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import name.levis.talosmobile.TalosApp
+import name.levis.talosmobile.ui.live.LiveStatsTab
 import name.levis.talosmobile.data.activeSummary
 import name.levis.talosmobile.model.Feature
 import name.levis.talosmobile.model.allows
@@ -77,10 +80,12 @@ import name.levis.talosmobile.security.findFragmentActivity
 import kotlinx.coroutines.launch
 
 class ServicesViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<List<ServiceInfo>>() {
+    override fun cached(): List<ServiceInfo>? = talos.cached(servicesKey(node))
     override suspend fun fetch() = talos.services(node)
 }
 
 class ResourcesViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<NodeResources>() {
+    override fun cached(): NodeResources? = talos.cached(resourcesKey(node))
     override suspend fun fetch() = talos.resources(node)
 }
 
@@ -165,17 +170,20 @@ fun NodeDetailScreen(
                                     onLogs(null)
                                 },
                             )
-                            HorizontalDivider()
-                            PowerAction.entries.forEach { action ->
-                                DropdownMenuItem(
-                                    text = { Text(if (canPower) action.title else "${action.title} (needs ${Feature.POWER.minimumRole})") },
-                                    leadingIcon = { Icon(Icons.Outlined.PowerSettingsNew, contentDescription = null) },
-                                    enabled = canPower && powerState !is PowerState.Running,
-                                    onClick = {
-                                        menuOpen = false
-                                        confirming = action
-                                    },
-                                )
+                            // Power actions only exist for configs whose role allows them.
+                            if (canPower) {
+                                HorizontalDivider()
+                                PowerAction.entries.forEach { action ->
+                                    DropdownMenuItem(
+                                        text = { Text(action.title) },
+                                        leadingIcon = { Icon(Icons.Outlined.PowerSettingsNew, contentDescription = null) },
+                                        enabled = powerState !is PowerState.Running,
+                                        onClick = {
+                                            menuOpen = false
+                                            confirming = action
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
@@ -187,8 +195,13 @@ fun NodeDetailScreen(
             TabRow(selectedTabIndex = tab) {
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Services") })
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Resources") })
+                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text("Live") })
             }
-            if (tab == 0) ServicesTab(node, onService = { onLogs(it) }) else ResourcesTab(node)
+            when (tab) {
+                0 -> ServicesTab(node, onService = { onLogs(it) })
+                1 -> ResourcesTab(node)
+                else -> LiveStatsTab(node)
+            }
         }
     }
 

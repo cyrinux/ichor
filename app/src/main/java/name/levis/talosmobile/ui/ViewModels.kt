@@ -27,10 +27,17 @@ abstract class LoadingViewModel<T> : ViewModel() {
 
     protected abstract suspend fun fetch(): T
 
-    fun refresh() {
+    /** Last cached value to show instantly while [fetch] runs (stale-while-revalidate). */
+    protected open fun cached(): T? = null
+
+    /** [reset] drops the current data first, e.g. when the data source (context) changed. */
+    fun refresh(reset: Boolean = false) {
         job?.cancel()
         val previous = _state.value
-        _state.value = if (previous is UiState.Loaded) previous.copy(refreshing = true) else UiState.Loading
+        _state.value = when {
+            !reset && previous is UiState.Loaded -> previous.copy(refreshing = true)
+            else -> cached()?.let { UiState.Loaded(it, refreshing = true) } ?: UiState.Loading
+        }
         job = viewModelScope.launch {
             _state.value = try {
                 UiState.Loaded(fetch())

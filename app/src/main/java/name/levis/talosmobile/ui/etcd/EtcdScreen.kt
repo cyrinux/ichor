@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.talosmobile.data.TalosRepository
+import name.levis.talosmobile.data.ETCD
 import name.levis.talosmobile.model.EtcdMember
 import name.levis.talosmobile.model.EtcdNodeStatus
 import name.levis.talosmobile.model.EtcdOverview
@@ -47,6 +48,7 @@ import name.levis.talosmobile.ui.theme.LocalStatusColors
 import name.levis.talosmobile.util.formatBytes
 
 class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdOverview>() {
+    override fun cached(): EtcdOverview? = talos.cached(ETCD)
     override suspend fun fetch() = talos.etcd()
 }
 

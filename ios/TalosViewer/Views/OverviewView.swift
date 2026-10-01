@@ -3,12 +3,18 @@ import TalosViewerCore
 
 struct OverviewView: View {
     @Environment(AppModel.self) private var model
+    @Environment(SupportPrompt.self) private var support
     @State private var state: LoadState<ClusterOverview> = .loading
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
             List {
-                Section { Summary(nodes: overview.nodes) }
+                if support.visible { Section { SupportCard(prompt: support) } }
+                Section {
+                    Summary(nodes: overview.nodes)
+                } header: {
+                    if let access = model.activeSummary?.accessLabel { Text(access) }
+                }
                 Section {
                     ForEach(sorted(overview.nodes)) { node in
                         if node.reachable {
@@ -27,7 +33,9 @@ struct OverviewView: View {
         .navigationTitle(model.activeContext)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
-                NavigationLink(value: Route.health) { Image(systemName: "heart.text.square") }
+                if model.allows(.health) {
+                    NavigationLink(value: Route.health) { Image(systemName: "heart.text.square") }
+                }
                 NavigationLink(value: Route.etcd) { Image(systemName: "cylinder.split.1x2") }
                 NavigationLink(value: Route.settings) { Image(systemName: "gearshape") }
             }

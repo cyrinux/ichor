@@ -19,7 +19,9 @@ struct NodeDetailView: View {
         self.ref = ref
     }
 
-    enum Tab: String, CaseIterable { case services = "Services", resources = "Resources" }
+    @State private var live = LiveStats()
+
+    enum Tab: String, CaseIterable { case services = "Services", resources = "Resources", live = "Live" }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -45,6 +47,8 @@ struct NodeDetailView: View {
                 LoadStateView(state: resources, retry: loadResources) { ResourcesList(resources: $0) }
                     .refreshable { await loadResources() }
                     .task { if case .loading = resources { await loadResources() } }
+            case .live:
+                LiveView(node: ref.address, stats: live)
             }
         }
         .navigationTitle(ref.hostname)
@@ -59,15 +63,14 @@ struct NodeDetailView: View {
                         Button { showingKernelLog = true } label: {
                             Label("Kernel log", systemImage: "terminal")
                         }
-                        Divider()
-                        ForEach(PowerAction.allCases) { action in
-                            Button(role: .destructive) { powerAction = action } label: {
-                                Label(
-                                    model.allows(.power) ? action.title : "\(action.title) (needs \(Feature.power.minimumRole))",
-                                    systemImage: "power"
-                                )
+                        // Power actions only exist for configs whose role allows them.
+                        if model.allows(.power) {
+                            Divider()
+                            ForEach(PowerAction.allCases) { action in
+                                Button(role: .destructive) { powerAction = action } label: {
+                                    Label(action.title, systemImage: "power")
+                                }
                             }
-                            .disabled(!model.allows(.power))
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
