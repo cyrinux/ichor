@@ -1,0 +1,17 @@
+.cache/
+.gradle/
+**/build/
+!/build/
+/build/*
+!/build/Dockerfile
+*.aar
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+local.properties
+*.apk
+*.keystore
+*.jks
+talosconfig
+**/talosconfig*
+.idea/
+.serena/

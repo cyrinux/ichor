@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Talos Viewer</string>
+    <string name="widget_description">Cluster status from the last background check</string>
+</resources>
