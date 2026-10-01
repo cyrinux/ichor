@@ -50,7 +50,7 @@ func StartDebugShell(configYAML, contextName, node, image, args string, cols, ro
 
 	ctx, cancel := context.WithCancel(context.Background())
 	d := &DebugSession{
-		listener: listener,
+		listener: maskedDebugListener{listener},
 		send:     make(chan *machineapi.DebugContainerRunRequest, 256),
 		cancel:   cancel,
 	}
@@ -112,7 +112,8 @@ func (d *DebugSession) run(ctx context.Context, configYAML, contextName, node, i
 
 	nodeCtx := client.WithNode(ctx, node)
 
-	d.listener.OnStatus("Pulling " + image + " on " + node + "…")
+	// Masked here: the scanner leaves an address glued to the ellipsis alone.
+	d.listener.OnStatus("Pulling " + image + " on " + privacy.maskPlain(node) + "…")
 
 	imageName, err := pullImage(nodeCtx, s.client, image)
 	if err != nil {
@@ -228,6 +229,18 @@ func pullImage(ctx context.Context, c *client.Client, ref string) (string, error
 			name = n
 		}
 	}
+}
+
+// maskedDebugListener masks the status and exit messages, which may name the real node.
+// The terminal bytes pass through unmasked (see StartDebugShell).
+type maskedDebugListener struct{ DebugListener }
+
+func (l maskedDebugListener) OnStatus(message string) {
+	l.DebugListener.OnStatus(privacy.maskPlain(message))
+}
+
+func (l maskedDebugListener) OnExit(code int, errMessage string) {
+	l.DebugListener.OnExit(code, privacy.maskPlain(errMessage))
 }
 
 func debugArgs(args string) []string {
