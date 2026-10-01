@@ -1,0 +1,21 @@
+package name.levis.talosmobile.model
+
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class LogFollowTest {
+
+    @Test
+    fun appendKeepsTheLastLines() {
+        assertEquals(listOf("a", "b", "c"), listOf("a").appendCapped(listOf("b", "c"), cap = 5))
+        assertEquals(listOf("c", "d", "e"), listOf("a", "b", "c").appendCapped(listOf("d", "e"), cap = 3))
+        assertEquals(MAX_FOLLOW_LINES, List(MAX_FOLLOW_LINES) { "x" }.appendCapped(listOf("y")).size)
+    }
+
+    @Test
+    fun filterIsCaseInsensitive() {
+        val lines = listOf("INFO ok", "error: boom", "Error again")
+        assertEquals(lines, lines.matching(" "))
+        assertEquals(listOf("error: boom", "Error again"), lines.matching("ERROR"))
+    }
+}

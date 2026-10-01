@@ -3,7 +3,9 @@ package name.levis.talosmobile.data
 import name.levis.talosmobile.ui.UiText
 import name.levis.talosmobile.ui.LocalizedException
 import name.levis.talosmobile.R
+import name.levis.talosmobile.EventListener
 import name.levis.talosmobile.HealthListener
+import name.levis.talosmobile.LogListener
 import name.levis.talosmobile.SnapshotListener
 import name.levis.talosmobile.Talosmobile
 import name.levis.talosmobile.model.ClusterOverview
@@ -14,6 +16,9 @@ import name.levis.talosmobile.model.NodeStats
 import name.levis.talosmobile.model.NodeResources
 import name.levis.talosmobile.model.ServiceInfo
 import name.levis.talosmobile.model.ProcessSample
+import name.levis.talosmobile.model.ContainerSample
+import name.levis.talosmobile.model.ServiceAction
+import name.levis.talosmobile.model.TalosEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -34,6 +39,12 @@ sealed interface SnapshotEvent {
     data class Progress(val bytes: Long) : SnapshotEvent
     data class Done(val path: String, val size: Long, val sha256: String) : SnapshotEvent
     data class Failed(val message: String) : SnapshotEvent
+}
+
+/** Items of a live stream (events, followed log). [Done] ends it; [error] null when cancelled. */
+sealed interface StreamItem<out T> {
+    data class Item<T>(val value: T) : StreamItem<T>
+    data class Done(val error: String?) : StreamItem<Nothing>
 }
 
 class NoConfigException : LocalizedException(UiText.Res(R.string.common_no_config))
@@ -78,6 +89,68 @@ class TalosRepository(private val configs: ConfigRepository) {
     suspend fun processes(node: String): ProcessSample = call { cfg, ctx ->
         TalosJson.decodeFromString(ProcessSample.serializer(), Talosmobile.nodeProcesses(cfg, ctx, node))
     }
+
+    /** One sample of the node's CRI containers for the Pods tab (not cached: always fresh). */
+    suspend fun containers(node: String): ContainerSample = call { cfg, ctx ->
+        TalosJson.decodeFromString(ContainerSample.serializer(), Talosmobile.nodeContainers(cfg, ctx, node))
+    }
+
+    /** `talosctl -n NODE service ID start|stop|restart` (os:operator or os:admin). */
+    suspend fun serviceAction(node: String, service: String, action: ServiceAction) = call { cfg, ctx ->
+        Talosmobile.serviceAction(cfg, ctx, node, service, action.cli)
+    }
+
+    /**
+     * Streams machine events (`talosctl events --tail`) from [nodes] (empty: all context
+     * nodes), replaying the last [tail] per node. Cancelling the collector stops the stream.
+     */
+    fun events(nodes: List<String>, tail: Int): Flow<StreamItem<TalosEvent>> = callbackFlow {
+        val stored = configs.config.value ?: throw NoConfigException()
+        val run = Talosmobile.startEvents(
+            stored.yaml,
+            stored.activeContext,
+            nodes.joinToString(","),
+            tail.toLong(),
+            object : EventListener {
+                override fun onEvent(json: String) {
+                    runCatching { TalosJson.decodeFromString(TalosEvent.serializer(), json) }
+                        .onSuccess { trySend(StreamItem.Item(it)) }
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED)
+
+    /**
+     * Follows a service log (kernel log when [service] is null) like `talosctl logs -f
+     * --tail`, starting with the last [tailLines]. Cancelling the collector stops it.
+     */
+    fun followLogs(node: String, service: String?, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
+        val stored = configs.config.value ?: throw NoConfigException()
+        val run = Talosmobile.startLogFollow(
+            stored.yaml,
+            stored.activeContext,
+            node,
+            service.orEmpty(),
+            tailLines.toLong(),
+            object : LogListener {
+                override fun onLine(line: String) {
+                    trySend(StreamItem.Item(line))
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED)
 
     /**
      * The node's active machine config as YAML (os:admin). Secrets are masked unless

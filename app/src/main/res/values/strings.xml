@@ -448,4 +448,57 @@
     <string name="etcd_disarm_confirm_body">Disarming only clears the alarms. Free space or defragment first: a NOSPACE alarm comes straight back while the database is still over its quota, and etcd stays read-only until then.</string>
     <string name="etcd_disarm">Disarm</string>
     <string name="etcd_snapshot_sha256" translatable="false">SHA-256</string>
+    <string name="common_live">Live</string>
+    <string name="common_stream_failed">Stopped: %1$s</string>
+    <string name="common_stream_stopped">Stopped</string>
+    <string name="common_feature_service_control">Service control</string>
+    <string name="overview_action_events">Events</string>
+    <string name="node_menu_events">Events</string>
+    <string name="node_tab_pods">Pods</string>
+    <plurals name="node_pods_summary">
+        <item quantity="one">%1$d container · %2$s in memory</item>
+        <item quantity="other">%1$d containers · %2$s in memory</item>
+    </plurals>
+    <string name="node_pods_filter">Filter by namespace, pod, container or image</string>
+    <string name="node_pods_empty">No containers.</string>
+    <string name="node_pods_no_match">No container matches “%1$s”.</string>
+    <string name="node_pods_details">%1$s · PID %2$d</string>
+    <string name="events_title">Events</string>
+    <string name="events_all_nodes">All nodes</string>
+    <string name="events_filter_all">All</string>
+    <string name="events_filter_problems">Problems</string>
+    <string name="events_filter_services">Services</string>
+    <string name="events_filter_boot">Boot</string>
+    <string name="events_empty">No events yet.</string>
+    <string name="events_empty_filtered">No events match this filter.</string>
+    <plurals name="events_repeated">
+        <item quantity="one">Repeated %1$d time</item>
+        <item quantity="other">Repeated %1$d times</item>
+    </plurals>
+    <string name="events_severity_warning">Warning</string>
+    <string name="events_severity_error">Error</string>
+    <string name="events_kind_service">Service</string>
+    <string name="events_kind_sequence">Sequence</string>
+    <string name="events_kind_phase">Phase</string>
+    <string name="events_kind_task">Task</string>
+    <string name="events_kind_machine">Machine</string>
+    <string name="events_kind_config">Configuration</string>
+    <string name="events_kind_address">Address</string>
+    <string name="events_kind_restart">Restart</string>
+    <string name="events_kind_other">Other</string>
+    <string name="logs_follow">Follow</string>
+    <string name="logs_jump_latest">Jump to latest</string>
+    <string name="logs_waiting">Waiting for new lines…</string>
+    <string name="service_actions">Service actions</string>
+    <string name="service_action_restart">Restart</string>
+    <string name="service_action_stop">Stop</string>
+    <string name="service_action_start">Start</string>
+    <string name="service_confirm_restart">Restart %1$s on %2$s?</string>
+    <string name="service_confirm_stop">Stop %1$s on %2$s?</string>
+    <string name="service_confirm_start">Start %1$s on %2$s?</string>
+    <string name="service_critical_warning">%1$s is a critical service: this may disconnect the app or affect the node.</string>
+    <string name="service_done_restart">Restart of %1$s requested on %2$s.</string>
+    <string name="service_done_stop">Stop of %1$s requested on %2$s.</string>
+    <string name="service_done_start">Start of %1$s requested on %2$s.</string>
+    <string name="service_action_failed">%1$s %2$s failed: %3$s</string>
 </resources>

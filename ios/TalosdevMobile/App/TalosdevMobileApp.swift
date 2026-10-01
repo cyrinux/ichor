@@ -100,6 +100,8 @@ enum Route: Hashable {
     case settings
     case importConfig
     case debugShell(node: String, hostname: String)
+    /// Events timeline for one node, or all of them (node nil); hostnames by address.
+    case events(node: String?, hostnames: [String: String])
 }
 
 struct NodeRef: Hashable {
@@ -127,6 +129,7 @@ struct MainNavigation: View {
                     case .settings: SettingsView()
                     case .importConfig: ImportView { path.removeAll() }
                     case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)
+                    case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
                     }
                 }
         }

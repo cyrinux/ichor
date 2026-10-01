@@ -72,3 +72,7 @@ private fun agoText(age: Age): String = when (age.unit) {
     AgeUnit.HOURS -> pluralStringResource(R.plurals.common_hours_ago, age.count, age.count)
     AgeUnit.DAYS -> pluralStringResource(R.plurals.common_days_ago, age.count, age.count)
 }
+
+/** "just now", "5 min ago", … for something that happened [millis] ago. */
+@Composable
+fun agoLabel(millis: Long): String = agoText(age(millis))

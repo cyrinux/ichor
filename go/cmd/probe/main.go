@@ -1,6 +1,6 @@
 // Command probe exercises the talosmobile API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|kubeconfig|etcd|health|parse
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|etcd|health|parse
 package main
 
 import (
@@ -15,6 +15,40 @@ import (
 
 type printer struct{ done chan string }
 
+// eventPrinter prints the first max events, then cancels.
+type eventPrinter struct {
+	run  *talosmobile.EventsRun
+	done chan string
+	max  int
+}
+
+func (p *eventPrinter) OnEvent(json string) {
+	fmt.Println(json)
+	if p.max--; p.max == 0 && p.run != nil {
+		p.run.Cancel()
+	}
+}
+
+func (p *eventPrinter) OnDone(errMessage string) { p.done <- errMessage }
+
+// snapshotProbe cancels the snapshot after 20 MiB: it proves streaming works without
+// leaving a copy of the cluster's secrets on disk.
+type snapshotProbe struct {
+	run  *talosmobile.SnapshotRun
+	done chan string
+}
+
+func (p *snapshotProbe) OnProgress(n int64) {
+	if n >= 20<<20 && p.run != nil {
+		fmt.Printf("received %d MiB, cancelling\n", n>>20)
+		p.run.Cancel()
+	}
+}
+
+func (p *snapshotProbe) OnDone(path string, size int64, sum, errMessage string) {
+	p.done <- fmt.Sprintf("done path=%q size=%d err=%q", path, size, errMessage)
+}
+
 func (p printer) OnProgress(node, message string) { fmt.Printf("[%s] %s\n", node, message) }
 func (p printer) OnDone(errMessage string)        { p.done <- errMessage }
 
@@ -25,7 +59,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|stats NODE|processes NODE|machineconfig NODE|kubespan|kubeconfig|etcd|health|parse"))
+		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|stats NODE|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|etcd|health|parse"))
 	}
 
 	raw, err := os.ReadFile(*configPath)
@@ -59,8 +93,41 @@ func main() {
 	case "machineconfig":
 		// Redacted: never print secrets from the probe.
 		out, err = talosmobile.NodeMachineConfig(cfg, *contextName, flag.Arg(1), false)
+	case "snapshot-probe":
+		dest := filepath.Join(os.TempDir(), "etcd-probe.snapshot")
+		p := &snapshotProbe{done: make(chan string, 1)}
+		p.run = talosmobile.StartEtcdSnapshot(cfg, *contextName, flag.Arg(1), dest, p)
+		out = <-p.done
+		if _, statErr := os.Stat(dest + ".part"); statErr == nil {
+			out += " (partial file left!)"
+		}
+	case "containers":
+		out, err = talosmobile.NodeContainers(cfg, *contextName, flag.Arg(1))
+	case "events":
+		l := &eventPrinter{done: make(chan string, 1), max: 15}
+		l.run = talosmobile.StartEvents(cfg, *contextName, flag.Arg(1), 10, l)
+		out = "done: " + <-l.done
 	case "processes":
 		out, err = talosmobile.NodeProcesses(cfg, *contextName, flag.Arg(1))
+	case "talosconfig-probe":
+		// Issue a short-lived read-only config, print only its summary (no key material) and
+		// discard it.
+		var tc string
+		if tc, err = talosmobile.GenerateTalosconfig(cfg, *contextName, "os:reader", 1); err == nil {
+			out, err = talosmobile.ParseConfig(tc)
+		}
+	case "network":
+		out, err = talosmobile.NodeNetwork(cfg, *contextName, flag.Arg(1))
+	case "connections":
+		out, err = talosmobile.NodeConnections(cfg, *contextName, flag.Arg(1))
+	case "time":
+		out, err = talosmobile.NodeTime(cfg, *contextName, flag.Arg(1))
+	case "cluster-time":
+		out, err = talosmobile.ClusterTime(cfg, *contextName)
+	case "hardware":
+		out, err = talosmobile.NodeHardware(cfg, *contextName, flag.Arg(1))
+	case "images":
+		out, err = talosmobile.NodeImages(cfg, *contextName, flag.Arg(1))
 	case "kubespan":
 		out, err = talosmobile.KubeSpanStatus(cfg, *contextName)
 	case "stats":

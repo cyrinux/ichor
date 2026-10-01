@@ -11,6 +11,7 @@ import androidx.navigation.navArgument
 import name.levis.talosmobile.TalosApp
 import name.levis.talosmobile.ui.debug.DebugShellScreen
 import name.levis.talosmobile.ui.etcd.EtcdScreen
+import name.levis.talosmobile.ui.events.EventsScreen
 import name.levis.talosmobile.ui.health.HealthScreen
 import name.levis.talosmobile.ui.importconfig.ImportScreen
 import name.levis.talosmobile.ui.kubespan.KubeSpanScreen
@@ -32,6 +33,11 @@ private object Routes {
     const val DEBUG = "debug?addr={addr}&host={host}"
     const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}"
 
+    /** Empty addr: events of every node of the context. */
+    const val EVENTS = "events?addr={addr}&host={host}"
+
+    fun events(addr: String = "", host: String = "") = "events?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
+
     fun machineConfig(addr: String, host: String) = "machineconfig?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
     fun debug(addr: String, host: String) = "debug?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
@@ -42,7 +48,7 @@ private object Routes {
     fun logs(addr: String, host: String, service: String?) =
         "logs?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&service=${Uri.encode(service.orEmpty())}"
 
-    /** [tab]: 0 services, 1 resources, 2 live, 3 processes; [action]: "reboot"/"shutdown" opens its confirmation. */
+    /** [tab]: 0 services, 1 resources, 2 live, 3 processes, 4 pods; [action]: "reboot"/"shutdown" opens its confirmation. */
     fun node(addr: String, host: String, role: String, tab: Int = 0, action: String = "") =
         "node?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&role=${Uri.encode(role)}&tab=$tab&action=$action"
 }
@@ -74,6 +80,7 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
                 onEtcd = { nav.navigate(Routes.ETCD) },
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
                 onHealth = { nav.navigate(Routes.HEALTH) },
+                onEvents = { nav.navigate(Routes.events()) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
             )
         }
@@ -102,6 +109,7 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
                 onLogs = { service -> nav.navigate(Routes.logs(addr, entry.arguments?.getString("host") ?: addr, service)) },
                 onDebugShell = { nav.navigate(Routes.debug(addr, entry.arguments?.getString("host") ?: addr)) },
                 onMachineConfig = { nav.navigate(Routes.machineConfig(addr, entry.arguments?.getString("host") ?: addr)) },
+                onEvents = { nav.navigate(Routes.events(addr, entry.arguments?.getString("host") ?: addr)) },
             )
         }
         composable(
@@ -139,6 +147,20 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
         ) { entry ->
             val addr = entry.arguments?.getString("addr").orEmpty()
             DebugShellScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
+        }
+        composable(
+            Routes.EVENTS,
+            arguments = listOf(
+                navArgument("addr") { type = NavType.StringType; defaultValue = "" },
+                navArgument("host") { type = NavType.StringType; defaultValue = "" },
+            ),
+        ) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty().ifEmpty { null }
+            EventsScreen(
+                node = addr,
+                hostname = addr?.let { entry.arguments?.getString("host")?.ifEmpty { null } ?: it },
+                onBack = { nav.popBackStack() },
+            )
         }
         composable(Routes.KUBESPAN) { KubeSpanScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.ETCD) { EtcdScreen(onBack = { nav.popBackStack() }) }

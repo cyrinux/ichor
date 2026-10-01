@@ -43,6 +43,10 @@ type mountUsage struct {
 // NodeServices returns the JSON list of Talos services on node.
 func NodeServices(configYAML, contextName, node string) (string, error) {
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
+		if err := validatePowerTarget(s.context, node); err != nil {
+			return "", err
+		}
+
 		resp, err := s.client.ServiceList(client.WithNode(ctx, node))
 		if err != nil {
 			return "", errors.New(friendlyError(err))

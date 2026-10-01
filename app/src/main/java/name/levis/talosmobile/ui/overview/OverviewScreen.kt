@@ -21,6 +21,7 @@ import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -85,6 +86,7 @@ fun OverviewScreen(
     onEtcd: () -> Unit,
     onKubeSpan: () -> Unit,
     onHealth: () -> Unit,
+    onEvents: () -> Unit,
     onSettings: () -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
 ) {
@@ -116,6 +118,7 @@ fun OverviewScreen(
                     if (config?.activeSummary?.allows(Feature.HEALTH) == true) {
                         IconButton(onClick = onHealth) { Icon(Icons.Outlined.Favorite, stringResource(R.string.overview_action_health)) }
                     }
+                    IconButton(onClick = onEvents) { Icon(Icons.Outlined.Timeline, stringResource(R.string.overview_action_events)) }
                     IconButton(onClick = onKubeSpan) { Icon(Icons.Outlined.Hub, "KubeSpan") }
                     IconButton(onClick = onEtcd) { Icon(Icons.Outlined.Storage, "etcd") }
                     IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, stringResource(R.string.overview_action_settings)) }

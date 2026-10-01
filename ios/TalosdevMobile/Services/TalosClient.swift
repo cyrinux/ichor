@@ -12,6 +12,16 @@ enum HealthEvent: Sendable {
     case done(error: String?)
 }
 
+enum EventStreamItem: Sendable {
+    case event(NodeEvent)
+    case done(error: String?)
+}
+
+enum LogFollowItem: Sendable {
+    case line(String)
+    case done(error: String?)
+}
+
 enum SnapshotEvent: Sendable {
     case progress(bytes: Int64)
     case finished(path: String, size: Int64, sha256: String)
@@ -113,6 +123,55 @@ struct TalosClient: Sendable {
         }
     }
 
+    /// `talosctl events` from nodes (nil = the context's nodes), replaying the last `tail` per
+    /// node first (os:reader); cancelling the consuming task cancels the stream.
+    func events(node: String?, tail: Int = 50) -> AsyncStream<EventStreamItem> {
+        AsyncStream { continuation in
+            let bridge = EventsBridge(
+                event: { continuation.yield(.event($0)) },
+                done: {
+                    continuation.yield(.done(error: $0))
+                    continuation.finish()
+                }
+            )
+            let run = TalosmobileStartEvents(config, context, node ?? "", tail, bridge)
+            continuation.onTermination = { _ in
+                run?.cancel()
+                _ = bridge // keep the listener alive for the whole stream
+            }
+        }
+    }
+
+    /// `talosctl logs -f` (kernel log when `service` is nil), starting with the last `tailLines`.
+    func followLogs(node: String, service: String?, tailLines: Int = 200) -> AsyncStream<LogFollowItem> {
+        AsyncStream { continuation in
+            let bridge = LogBridge(
+                line: { continuation.yield(.line($0)) },
+                done: {
+                    continuation.yield(.done(error: $0))
+                    continuation.finish()
+                }
+            )
+            let run = TalosmobileStartLogFollow(config, context, node, service ?? "", tailLines, bridge)
+            continuation.onTermination = { _ in
+                run?.cancel()
+                _ = bridge // keep the listener alive for the whole stream
+            }
+        }
+    }
+
+    /// Kubernetes containers on node with cumulative CPU time (os:reader), see containerRows.
+    func containers(node: String) async throws -> ContainerSample {
+        try await Self.json { [config, context] in TalosmobileNodeContainers(config, context, node, $0) }
+    }
+
+    /// `talosctl service SERVICE start|stop|restart` (os:operator or os:admin).
+    func serviceAction(_ action: ServiceAction, service: String, node: String) async throws {
+        try await Self.run { [config, context] error -> Void in
+            _ = TalosmobileServiceAction(config, context, node, service, action.rawValue, error)
+        }
+    }
+
     func etcd() async throws -> EtcdOverview {
         try await Self.json { [config, context] in TalosmobileEtcdStatus(config, context, $0) }
     }
@@ -198,5 +257,42 @@ private final class SnapshotBridge: NSObject, TalosmobileSnapshotListenerProtoco
         } else {
             done(.finished(path: path ?? "", size: size, sha256: sha256 ?? ""))
         }
+    }
+}
+
+private final class EventsBridge: NSObject, TalosmobileEventListenerProtocol, @unchecked Sendable {
+    private let event: @Sendable (NodeEvent) -> Void
+    private let done: @Sendable (String?) -> Void
+
+    init(event: @escaping @Sendable (NodeEvent) -> Void, done: @escaping @Sendable (String?) -> Void) {
+        self.event = event
+        self.done = done
+    }
+
+    func onEvent(_ json: String?) {
+        guard let json, let decoded = try? TalosJSON.decode(NodeEvent.self, from: json) else { return }
+        event(decoded)
+    }
+
+    func onDone(_ errMessage: String?) {
+        done(errMessage.flatMap { $0.isEmpty ? nil : $0 })
+    }
+}
+
+private final class LogBridge: NSObject, TalosmobileLogListenerProtocol, @unchecked Sendable {
+    private let line: @Sendable (String) -> Void
+    private let done: @Sendable (String?) -> Void
+
+    init(line: @escaping @Sendable (String) -> Void, done: @escaping @Sendable (String?) -> Void) {
+        self.line = line
+        self.done = done
+    }
+
+    func onLine(_ line: String?) {
+        self.line(line ?? "")
+    }
+
+    func onDone(_ errMessage: String?) {
+        done(errMessage.flatMap { $0.isEmpty ? nil : $0 })
     }
 }

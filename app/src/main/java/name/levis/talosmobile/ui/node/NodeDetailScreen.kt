@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
@@ -21,7 +20,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material.icons.outlined.Timeline
+import kotlinx.coroutines.delay
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -31,7 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -50,10 +50,8 @@ import name.levis.talosmobile.ui.components.ErrorBox
 import name.levis.talosmobile.ui.components.InfoRow
 import name.levis.talosmobile.ui.components.LoadingBox
 import name.levis.talosmobile.ui.components.SectionTitle
-import name.levis.talosmobile.ui.components.StatusPill
 import name.levis.talosmobile.ui.components.UsageBar
 import name.levis.talosmobile.ui.factory
-import name.levis.talosmobile.ui.theme.LocalStatusColors
 import name.levis.talosmobile.util.formatBytes
 import name.levis.talosmobile.ui.components.localizedDuration
 import name.levis.talosmobile.util.usedFraction
@@ -84,6 +82,9 @@ import name.levis.talosmobile.security.authenticate
 import name.levis.talosmobile.security.findFragmentActivity
 import kotlinx.coroutines.launch
 
+/** How long after a service action the list is fetched again, once the state settled. */
+private const val SERVICE_SETTLE_MILLIS = 2_500L
+
 class ServicesViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<List<ServiceInfo>>() {
     override fun cached(): TalosRepository.Timed<List<ServiceInfo>>? = talos.cached(servicesKey(node))
     override suspend fun fetch() = talos.services(node)
@@ -106,6 +107,7 @@ fun NodeDetailScreen(
     onLogs: (service: String?) -> Unit,
     onDebugShell: () -> Unit,
     onMachineConfig: () -> Unit,
+    onEvents: () -> Unit,
     power: PowerViewModel = viewModel(key = "power-$node", factory = factory { PowerViewModel(app.talosRepository, node) }),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(initialTab) }
@@ -127,6 +129,58 @@ fun NodeDetailScreen(
     val canPower = config?.activeSummary?.allows(Feature.POWER) ?: false
     val canDebug = config?.activeSummary?.allows(Feature.DEBUG_SHELL) ?: false
     val canMachineConfig = config?.activeSummary?.allows(Feature.MACHINE_CONFIG) ?: false
+    val canControlServices = config?.activeSummary?.allows(Feature.SERVICE_CONTROL) ?: false
+    val serviceControl: ServiceControlViewModel = viewModel(
+        key = "service-control-$node",
+        factory = factory { ServiceControlViewModel(app.talosRepository, node) },
+    )
+    val services: ServicesViewModel = viewModel(key = "services-$node", factory = factory { ServicesViewModel(app.talosRepository, node) })
+    val controlState by serviceControl.state.collectAsStateWithLifecycle()
+    var confirmingService by remember { mutableStateOf<ServiceRequest?>(null) }
+
+    LaunchedEffect(controlState) {
+        when (val s = controlState) {
+            is ServiceControlState.Done -> {
+                serviceControl.dismiss()
+                services.refresh()
+                // Talos applies the action asynchronously: look again once it had time to settle.
+                launch {
+                    delay(SERVICE_SETTLE_MILLIS)
+                    services.refresh()
+                }
+                snackbar.showSnackbar(context.getString(s.request.action.done, s.request.service, hostname))
+            }
+            is ServiceControlState.Failed -> {
+                serviceControl.dismiss()
+                snackbar.showSnackbar(
+                    context.getString(
+                        R.string.service_action_failed,
+                        context.getString(s.request.action.label),
+                        s.request.service,
+                        s.message.resolve(context),
+                    ),
+                )
+            }
+            else -> Unit
+        }
+    }
+
+    // Like power actions: with the app lock on, a fresh fingerprint/PIN first.
+    fun serviceConfirmed(request: ServiceRequest) {
+        confirmingService = null
+        val activity = context.findFragmentActivity()
+        if (!appLock.enabled.value || activity == null) {
+            serviceControl.run(request)
+            return
+        }
+        scope.launch {
+            val title = context.getString(request.action.label)
+            when (val auth = authenticate(activity, title, "${request.service} · $hostname")) {
+                AuthResult.Success -> serviceControl.run(request)
+                is AuthResult.Failure -> snackbar.showSnackbar(auth.message)
+            }
+        }
+    }
 
     LaunchedEffect(powerState) {
         when (val s = powerState) {
@@ -173,7 +227,7 @@ fun NodeDetailScreen(
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
                 },
                 actions = {
-                    if (powerState is PowerState.Running) {
+                    if (powerState is PowerState.Running || controlState is ServiceControlState.Running) {
                         CircularProgressIndicator(Modifier.size(20.dp).padding(end = 4.dp), strokeWidth = 2.dp)
                     }
                     Box {
@@ -185,6 +239,14 @@ fun NodeDetailScreen(
                                 onClick = {
                                     menuOpen = false
                                     onLogs(null)
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.node_menu_events)) },
+                                leadingIcon = { Icon(Icons.Outlined.Timeline, contentDescription = null) },
+                                onClick = {
+                                    menuOpen = false
+                                    onEvents()
                                 },
                             )
                             if (canDebug) {
@@ -229,19 +291,36 @@ fun NodeDetailScreen(
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            TabRow(selectedTabIndex = tab) {
+            PrimaryScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.node_tab_services)) })
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.node_tab_resources)) })
                 Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.node_tab_live)) })
                 Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text(stringResource(R.string.node_tab_processes)) })
+                Tab(selected = tab == 4, onClick = { tab = 4 }, text = { Text(stringResource(R.string.node_tab_pods)) })
             }
             when (tab) {
-                0 -> ServicesTab(node, onService = { onLogs(it) })
+                0 -> ServicesTab(
+                    node,
+                    onService = { onLogs(it) },
+                    onAction = if (canControlServices) ({ confirmingService = it }) else null,
+                    busy = controlState is ServiceControlState.Running,
+                    vm = services,
+                )
                 1 -> ResourcesTab(node)
                 2 -> LiveStatsTab(node)
-                else -> ProcessesTab(node)
+                3 -> ProcessesTab(node)
+                else -> PodsTab(node)
             }
         }
+    }
+
+    confirmingService?.let { request ->
+        ServiceConfirmDialog(
+            request = request,
+            hostname = hostname,
+            onConfirm = { serviceConfirmed(request) },
+            onDismiss = { confirmingService = null },
+        )
     }
 
     confirming?.let { action ->
@@ -252,59 +331,6 @@ fun NodeDetailScreen(
             onConfirm = ::confirmed,
             onDismiss = { confirming = null },
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ServicesTab(
-    node: String,
-    onService: (String) -> Unit,
-    vm: ServicesViewModel = viewModel(key = "services-$node", factory = factory { ServicesViewModel(app.talosRepository, node) }),
-) {
-    val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
-
-    when (val s = state) {
-        UiState.Loading -> LoadingBox()
-        is UiState.Failed -> ErrorBox(s.message, vm::refresh)
-        is UiState.Loaded -> Column(Modifier.fillMaxSize()) {
-            PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(s.data, key = { it.id }) { ServiceRow(it, onClick = { onService(it.id) }) }
-                }
-            }
-            DataFreshness(s, edgeToEdge = false)
-        }
-    }
-}
-
-@Composable
-private fun ServiceRow(svc: ServiceInfo, onClick: () -> Unit) {
-    val colors = LocalStatusColors.current
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(svc.id, style = MaterialTheme.typography.titleSmall)
-                    Text(svc.state, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                when (svc.health) {
-                    "healthy" -> StatusPill(stringResource(R.string.common_status_healthy), colors.ok)
-                    "unhealthy" -> StatusPill(stringResource(R.string.common_status_unhealthy), colors.bad)
-                    else -> StatusPill(stringResource(R.string.node_service_no_check), colors.muted)
-                }
-            }
-            val detail = svc.message?.takeIf { svc.health == "unhealthy" } ?: svc.lastEvent
-            detail?.takeIf { it.isNotBlank() }?.let {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (svc.health == "unhealthy") colors.bad else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 6.dp),
-                )
-            }
-        }
     }
 }
 

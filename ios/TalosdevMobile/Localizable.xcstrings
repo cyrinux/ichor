@@ -106,6 +106,41 @@
         }
       }
     },
+    "%@ is a critical system service: stopping or restarting it can make the node unreachable or disrupt the cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist ein kritischer Systemdienst: Ihn zu stoppen oder neu zu starten kann den Knoten unerreichbar machen oder den Cluster stören."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ es un servicio crítico del sistema: detenerlo o reiniciarlo puede dejar el nodo inaccesible o afectar al clúster."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ est un service système critique : l’arrêter ou le redémarrer peut rendre le nœud injoignable ou perturber le cluster."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ è un servizio di sistema critico: fermarlo o riavviarlo può rendere il nodo irraggiungibile o disturbare il cluster."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ — критична системна служба: її зупинка або перезапуск може зробити вузол недоступним або порушити роботу кластера."
+          }
+        }
+      }
+    },
     "%@ is not ready" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -347,6 +382,111 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@: запит надіслано (%@)"
+          }
+        }
+      }
+    },
+    "%@: %@ restart requested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: Neustart von %@ angefordert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: reinicio de %@ solicitado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ : redémarrage de %@ demandé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: riavvio di %@ richiesto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: запит на перезапуск %@ надіслано"
+          }
+        }
+      }
+    },
+    "%@: %@ start requested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: Start von %@ angefordert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: inicio de %@ solicitado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ : démarrage de %@ demandé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: avvio di %@ richiesto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: запит на запуск %@ надіслано"
+          }
+        }
+      }
+    },
+    "%@: %@ stop requested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: Stopp von %@ angefordert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: detención de %@ solicitada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ : arrêt de %@ demandé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: arresto di %@ richiesto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: запит на зупинку %@ надіслано"
           }
         }
       }
@@ -1571,6 +1711,41 @@
         }
       }
     },
+    "All" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі"
+          }
+        }
+      }
+    },
     "All checks passed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1917,6 +2092,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Чорна"
+          }
+        }
+      }
+    },
+    "Boot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arranque"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrage"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантаження"
           }
         }
       }
@@ -2372,6 +2582,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Підключення…"
+          }
+        }
+      }
+    },
+    "Containers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Container"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenedores"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conteneurs"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Container"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контейнери"
           }
         }
       }
@@ -4236,6 +4481,76 @@
         }
       }
     },
+    "Events" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ereignisse"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eventos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Événements"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eventi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Події"
+          }
+        }
+      }
+    },
+    "Events · %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ereignisse · %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eventos · %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Événements · %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eventi · %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Події · %@"
+          }
+        }
+      }
+    },
     "Everything read-only, plus reboot and shutdown." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4711,6 +5026,41 @@
         }
       }
     },
+    "Follow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folgen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivre"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segui"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стежити"
+          }
+        }
+      }
+    },
     "Follower" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4742,6 +5092,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Послідовник"
+          }
+        }
+      }
+    },
+    "Following…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live-Verfolgung…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siguiendo…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivi en direct…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In diretta…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стеження…"
           }
         }
       }
@@ -5127,6 +5512,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Як створити talosconfig"
+          }
+        }
+      }
+    },
+    "Identical consecutive events are shown once with a count." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gleiche aufeinanderfolgende Ereignisse werden einmal mit Anzahl angezeigt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los eventos idénticos consecutivos se muestran una vez con su número."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les événements identiques consécutifs sont regroupés avec leur nombre."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli eventi identici consecutivi sono mostrati una volta con il loro numero."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Однакові послідовні події показано один раз із кількістю."
           }
         }
       }
@@ -6061,6 +6481,41 @@
         }
       }
     },
+    "Loading pods…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pods werden geladen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando pods…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chargement des pods…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caricamento dei pod…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантаження подів…"
+          }
+        }
+      }
+    },
     "Loading processes…" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6481,6 +6936,41 @@
         }
       }
     },
+    "Namespace, pod, container or image" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespace, Pod, Container oder Image"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespace, pod, contenedor o imagen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespace, pod, conteneur ou image"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespace, pod, container o immagine"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Простір імен, под, контейнер або образ"
+          }
+        }
+      }
+    },
     "Network" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6512,6 +7002,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Мережа"
+          }
+        }
+      }
+    },
+    "New events appear here as they happen." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Ereignisse erscheinen hier, sobald sie auftreten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los nuevos eventos aparecen aquí en cuanto ocurren."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les nouveaux événements s’affichent ici dès qu’ils surviennent."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I nuovi eventi compaiono qui non appena si verificano."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нові події з’являтимуться тут, щойно вони стаються."
           }
         }
       }
@@ -6586,6 +7111,76 @@
         }
       }
     },
+    "No events" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Ereignisse"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin eventos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun événement"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun evento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає подій"
+          }
+        }
+      }
+    },
+    "No Kubernetes containers run on this node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf diesem Knoten laufen keine Kubernetes-Container."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay contenedores de Kubernetes en este nodo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun conteneur Kubernetes ne tourne sur ce nœud."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun container Kubernetes in esecuzione su questo nodo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На цьому вузлі не працює жоден контейнер Kubernetes."
+          }
+        }
+      }
+    },
     "no link down" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6617,6 +7212,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "усі з'єднання активні"
+          }
+        }
+      }
+    },
+    "No pods" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Pods"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin pods"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun pod"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun pod"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає подів"
           }
         }
       }
@@ -7111,6 +7741,41 @@
         }
       }
     },
+    "Pods" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pods"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pods"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pods"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pod"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поди"
+          }
+        }
+      }
+    },
     "Power cycle" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7142,6 +7807,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Цикл живлення"
+          }
+        }
+      }
+    },
+    "Problems" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probleme"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problemas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problèmes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problemi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проблеми"
           }
         }
       }
@@ -7636,6 +8336,41 @@
         }
       }
     },
+    "Refreshed every 3s. CPU is a percentage of one core." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle 3 s aktualisiert. CPU ist ein Prozentsatz eines Kerns."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se actualiza cada 3 s. La CPU es un porcentaje de un núcleo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualisé toutes les 3 s. Le CPU est un pourcentage d’un cœur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornato ogni 3 s. La CPU è una percentuale di un core."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлюється кожні 3 с. CPU — відсоток одного ядра."
+          }
+        }
+      }
+    },
     "Request failed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7702,6 +8437,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ресурси"
+          }
+        }
+      }
+    },
+    "Restart" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu starten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redémarrer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riavvia"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапустити"
+          }
+        }
+      }
+    },
+    "Restart %@ on %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ auf %@ neu starten?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Reiniciar %@ en %@?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redémarrer %@ sur %@ ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riavviare %@ su %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапустити %@ на %@?"
           }
         }
       }
@@ -8231,6 +9036,41 @@
         }
       }
     },
+    "Scroll to the newest line" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zur neuesten Zeile"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ir a la línea más reciente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aller à la ligne la plus récente"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vai alla riga più recente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До найновішого рядка"
+          }
+        }
+      }
+    },
     "Secrets are shown in clear: CA keys and tokens give full control of the cluster. Don't share screenshots." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8441,6 +9281,41 @@
         }
       }
     },
+    "Service control" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dienststeuerung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control de servicios"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contrôle des services"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controllo dei servizi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Керування службами"
+          }
+        }
+      }
+    },
     "Services" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8616,6 +9491,41 @@
         }
       }
     },
+    "Show" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати"
+          }
+        }
+      }
+    },
     "Shut down" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8717,6 +9627,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вимкнути…"
+          }
+        }
+      }
+    },
+    "since %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "seit %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "desde %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "depuis %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "da %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "з %@"
           }
         }
       }
@@ -9001,6 +9946,76 @@
         }
       }
     },
+    "Start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvia"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити"
+          }
+        }
+      }
+    },
+    "Start %@ on %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ auf %@ starten?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Iniciar %@ en %@?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer %@ sur %@ ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avviare %@ su %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити %@ на %@?"
+          }
+        }
+      }
+    },
     "Start shell" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9032,6 +10047,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Запустити оболонку"
+          }
+        }
+      }
+    },
+    "Starts the service on this node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startet den Dienst auf diesem Knoten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia el servicio en este nodo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarre le service sur ce nœud."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvia il servizio su questo nodo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запускає службу на цьому вузлі."
           }
         }
       }
@@ -9071,6 +10121,41 @@
         }
       }
     },
+    "Stop %@ on %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ auf %@ stoppen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Detener %@ en %@?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter %@ sur %@ ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fermare %@ su %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинити %@ на %@?"
+          }
+        }
+      }
+    },
     "Stop pods and services, then reboot (kexec fast reboot when available)." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9102,6 +10187,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Зупиняє поди й сервіси, потім перезавантажує (швидке перезавантаження kexec, якщо доступне)."
+          }
+        }
+      }
+    },
+    "Stops and starts the service on this node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppt und startet den Dienst auf diesem Knoten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detiene e inicia de nuevo el servicio en este nodo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrête puis redémarre le service sur ce nœud."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ferma e riavvia il servizio su questo nodo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупиняє та знову запускає службу на цьому вузлі."
+          }
+        }
+      }
+    },
+    "Stops the service on this node until it is started again or the node reboots." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppt den Dienst auf diesem Knoten, bis er wieder gestartet wird oder der Knoten neu startet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detiene el servicio en este nodo hasta que se vuelva a iniciar o el nodo se reinicie."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrête le service sur ce nœud jusqu’à ce qu’il soit redémarré ou que le nœud redémarre."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ferma il servizio su questo nodo finché non viene riavviato o il nodo non si riavvia."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупиняє службу на цьому вузлі, доки її не запустять знову або вузол не перезавантажиться."
           }
         }
       }

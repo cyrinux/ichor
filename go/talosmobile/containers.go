@@ -33,6 +33,10 @@ type containerInfo struct {
 // CPU time, like `talosctl containers -k` + `talosctl stats -k` (os:reader).
 func NodeContainers(configYAML, contextName, node string) (string, error) {
 	return withSession(configYAML, contextName, statsTimeout, func(ctx context.Context, s *session) (string, error) {
+		if err := validatePowerTarget(s.context, node); err != nil {
+			return "", err
+		}
+
 		nodeCtx := withNode(ctx, node)
 
 		list, err := s.client.Containers(nodeCtx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI)

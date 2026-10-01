@@ -30,6 +30,10 @@ type processInfo struct {
 // NodeProcesses lists node's processes, like `talosctl processes` (os:reader).
 func NodeProcesses(configYAML, contextName, node string) (string, error) {
 	return withSession(configYAML, contextName, statsTimeout, func(ctx context.Context, s *session) (string, error) {
+		if err := validatePowerTarget(s.context, node); err != nil {
+			return "", err
+		}
+
 		resp, err := s.client.Processes(client.WithNode(ctx, node))
 		if err != nil {
 			return "", errors.New(friendlyError(err))

@@ -110,6 +110,10 @@ func healthFailure(lastProgress string, err error) string {
 // classifyNodes splits context nodes into control plane and workers (unreadable roles count
 // as workers). Used to pick a control-plane node to run checks on and to find etcd members.
 func classifyNodes(ctx context.Context, c *client.Client, nodes []string) *clusterapi.ClusterInfo {
+	// Bound the role lookup so one unresponsive node cannot eat the whole call budget.
+	ctx, cancel := context.WithTimeout(ctx, nodeTimeout)
+	defer cancel()
+
 	isCP := make([]bool, len(nodes))
 
 	var wg sync.WaitGroup

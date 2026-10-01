@@ -25,9 +25,13 @@ struct NodeDetailView: View {
     @State private var showingDebugShell = false
     @State private var showingMachineConfig = false
     @State private var processes = ProcessMonitor()
+    @State private var pods = PodMonitor()
+    @State private var showingEvents = false
+    /// Service start/stop/restart waiting for confirmation.
+    @State private var serviceRequest: ServiceRequest?
 
     enum Tab: String, CaseIterable {
-        case services = "Services", resources = "Resources", live = "Live", processes = "Processes"
+        case services = "Services", resources = "Resources", live = "Live", processes = "Processes", pods = "Pods"
 
         var label: String {
             switch self {
@@ -35,6 +39,7 @@ struct NodeDetailView: View {
             case .resources: String(localized: "Resources")
             case .live: String(localized: "Live")
             case .processes: String(localized: "Processes")
+            case .pods: String(localized: "Pods")
             }
         }
     }
@@ -50,11 +55,7 @@ struct NodeDetailView: View {
             switch tab {
             case .services:
                 LoadStateView(state: services, retry: loadServices) { list in
-                    List(list) { svc in
-                        NavigationLink(value: Route.logs(node: ref.address, hostname: ref.hostname, service: svc.id)) {
-                            ServiceRow(service: svc)
-                        }
-                    }
+                    List(list) { svc in serviceRow(svc) }
                     .refreshable { await loadServices() }
                     .themedBackground()
                 }
@@ -67,6 +68,8 @@ struct NodeDetailView: View {
                 LiveView(node: ref.address, stats: live)
             case .processes:
                 ProcessesView(node: ref.address, monitor: processes)
+            case .pods:
+                PodsView(node: ref.address, monitor: pods)
             }
         }
         .navigationTitle(ref.hostname)
@@ -80,6 +83,9 @@ struct NodeDetailView: View {
                         // A NavigationLink inside a Menu does not navigate.
                         Button { showingKernelLog = true } label: {
                             Label("Kernel log", systemImage: "terminal")
+                        }
+                        Button { showingEvents = true } label: {
+                            Label("Events", systemImage: "list.bullet.rectangle")
                         }
                         if model.allows(.debugShell) {
                             // NavigationLink does not navigate from inside a Menu.
@@ -110,6 +116,9 @@ struct NodeDetailView: View {
         .navigationDestination(isPresented: $showingKernelLog) {
             LogsView(node: ref.address, hostname: ref.hostname, service: nil)
         }
+        .navigationDestination(isPresented: $showingEvents) {
+            EventsView(node: ref.address, hostnames: [ref.address: ref.hostname])
+        }
         .navigationDestination(isPresented: $showingDebugShell) {
             DebugShellView(node: ref.address, hostname: ref.hostname)
         }
@@ -120,6 +129,21 @@ struct NodeDetailView: View {
             PowerSheet(action: action, hostname: ref.hostname, role: ref.role) { request in
                 powerAction = nil
                 Task { await perform(request) }
+            }
+        }
+        .confirmationDialog(serviceRequest.map { confirmationTitle($0) } ?? "",
+                            isPresented: Binding(get: { serviceRequest != nil }, set: { if !$0 { serviceRequest = nil } }),
+                            titleVisibility: .visible,
+                            presenting: serviceRequest) { request in
+            Button(request.action.localizedTitle, role: request.action == .start ? nil : ButtonRole.destructive) {
+                Task { await perform(request) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { request in
+            if isCriticalService(request.service) && request.action != .start {
+                Text("\(request.service) is a critical system service: stopping or restarting it can make the node unreachable or disrupt the cluster.")
+            } else {
+                Text(request.action.localizedDetails)
             }
         }
         .alert(resultMessage ?? "", isPresented: Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })) {
@@ -154,6 +178,88 @@ struct NodeDetailView: View {
         } catch {
             succeeded = false
             resultMessage = error.localizedDescription
+        }
+    }
+}
+
+struct ServiceRequest: Identifiable {
+    let service: String
+    let action: ServiceAction
+
+    var id: String { "\(service)/\(action.rawValue)" }
+}
+
+extension NodeDetailView {
+    /// A service row: opens its log; swipe or long press for start/stop/restart when allowed.
+    private func serviceRow(_ svc: ServiceInfo) -> some View {
+        NavigationLink(value: Route.logs(node: ref.address, hostname: ref.hostname, service: svc.id)) {
+            ServiceRow(service: svc)
+        }
+        .swipeActions(edge: .trailing) {
+            if model.allows(.serviceControl) && !running {
+                ForEach(serviceActions(state: svc.state)) { action in
+                    Button { serviceRequest = ServiceRequest(service: svc.id, action: action) } label: {
+                        Label(action.localizedTitle, systemImage: action.symbol)
+                    }
+                    .tint(action.tint)
+                }
+            }
+        }
+        .contextMenu {
+            if model.allows(.serviceControl) && !running {
+                ForEach(serviceActions(state: svc.state)) { action in
+                    Button(role: action == .start ? nil : ButtonRole.destructive) {
+                        serviceRequest = ServiceRequest(service: svc.id, action: action)
+                    } label: {
+                        Label(action.localizedTitle, systemImage: action.symbol)
+                    }
+                }
+            }
+        }
+    }
+
+    private func confirmationTitle(_ request: ServiceRequest) -> String {
+        request.action.confirmationTitle(service: request.service, hostname: ref.hostname)
+    }
+
+    /// Asks for Face ID / passcode when the app lock is on, runs the action, then reloads the list.
+    private func perform(_ request: ServiceRequest) async {
+        serviceRequest = nil
+        guard let client = model.client else { return }
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: confirmationTitle(request)) {
+            succeeded = false
+            resultMessage = failure
+            return
+        }
+        running = true
+        do {
+            try await client.serviceAction(request.action, service: request.service, node: ref.address)
+            // Not `succeeded`: that dismisses the screen (power actions); the node stays usable here.
+            succeeded = false
+            resultMessage = request.action.requestedMessage(service: request.service, hostname: ref.hostname)
+        } catch {
+            succeeded = false
+            resultMessage = error.localizedDescription
+        }
+        running = false
+        await loadServices()
+    }
+}
+
+extension ServiceAction {
+    var symbol: String {
+        switch self {
+        case .start: "play.fill"
+        case .stop: "stop.fill"
+        case .restart: "arrow.clockwise"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .start: .green
+        case .stop: .red
+        case .restart: .orange
         }
     }
 }

@@ -15,6 +15,7 @@ extension Feature {
         case .etcdDefrag: String(localized: "etcd defragmentation")
         case .machineConfig: String(localized: "Machine config")
         case .etcdSnapshot: String(localized: "etcd snapshot")
+        case .serviceControl: String(localized: "Service control")
         }
     }
 }
@@ -24,6 +25,42 @@ extension PowerAction {
         switch self {
         case .reboot: String(localized: "Reboot")
         case .shutdown: String(localized: "Shut down")
+        }
+    }
+}
+
+extension ServiceAction {
+    var localizedTitle: String {
+        switch self {
+        case .start: String(localized: "Start")
+        case .stop: String(localized: "Stop")
+        case .restart: String(localized: "Restart")
+        }
+    }
+
+    var localizedDetails: String {
+        switch self {
+        case .start: String(localized: "Starts the service on this node.")
+        case .stop: String(localized: "Stops the service on this node until it is started again or the node reboots.")
+        case .restart: String(localized: "Stops and starts the service on this node.")
+        }
+    }
+
+    /// "Restart kubelet on cp-1?"
+    func confirmationTitle(service: String, hostname: String) -> String {
+        switch self {
+        case .start: String(localized: "Start \(service) on \(hostname)?")
+        case .stop: String(localized: "Stop \(service) on \(hostname)?")
+        case .restart: String(localized: "Restart \(service) on \(hostname)?")
+        }
+    }
+
+    /// "cp-1: kubelet restart requested"
+    func requestedMessage(service: String, hostname: String) -> String {
+        switch self {
+        case .start: String(localized: "\(hostname): \(service) start requested")
+        case .stop: String(localized: "\(hostname): \(service) stop requested")
+        case .restart: String(localized: "\(hostname): \(service) restart requested")
         }
     }
 }

@@ -84,12 +84,22 @@ struct OverviewView: View {
                 if model.allows(.health) {
                     NavigationLink(value: Route.health) { Image(systemName: "heart.text.square") }
                 }
+                NavigationLink(value: Route.events(node: nil, hostnames: hostnames)) {
+                    Image(systemName: "list.bullet.rectangle")
+                }
+                .accessibilityLabel(Text("Events"))
                 NavigationLink(value: Route.kubespan) { Image(systemName: "point.3.connected.trianglepath.dotted") }
                 NavigationLink(value: Route.etcd) { Image(systemName: "cylinder.split.1x2") }
                 NavigationLink(value: Route.settings) { Image(systemName: "gearshape") }
             }
         }
         .task(id: model.activeContext) { await load() }
+    }
+
+    /// Address → hostname of the loaded nodes, for the events timeline.
+    private var hostnames: [String: String] {
+        guard case .loaded(let overview, _) = state else { return [:] }
+        return Dictionary(overview.nodes.map { ($0.node, $0.hostname) }, uniquingKeysWith: { first, _ in first })
     }
 
     private func load() async {
