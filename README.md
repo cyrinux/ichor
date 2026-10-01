@@ -1,4 +1,4 @@
-# Talos Viewer
+# Talos.dev mobile
 
 Website: <https://cyrinux.github.io/talosdev-mobile/>
 
