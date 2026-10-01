@@ -110,7 +110,7 @@ struct OverviewView: View {
             }
         }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
-        .task(id: "\(model.activeContext)#\(model.dataGeneration)") { await load() }
+        .task(id: loadID) { await load() }
         .onChange(of: model.dataGeneration) { state = .loading }
     }
 
@@ -125,12 +125,22 @@ struct OverviewView: View {
         return nil
     }
 
+    /// What the loaded overview belongs to: the context and the screenshot mode generation.
+    private var loadID: String { "\(model.activeContext)#\(model.dataGeneration)" }
+
     private func load() async {
         guard let client = model.client else { return }
         if case .loaded = state {} else { state = .loading }
-        state = await .from { try await client.overview() }
-        if case .loaded(let overview, _) = state {
-            update = await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
+        // The call is not cancelled with its task: a slow load of the previous context can
+        // end after the new one's, and must not replace it.
+        let id = loadID
+        let loaded: LoadState<ClusterOverview> = await .from { try await client.overview() }
+        guard id == loadID else { return }
+        state = loaded
+        if case .loaded(let overview, _) = loaded {
+            let info = await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
+            guard id == loadID else { return }
+            update = info
         }
     }
 
