@@ -4,7 +4,7 @@ default:
 # adb target. Empty = the only connected device; "ip:port" = wireless adb (connected first).
 DEVICE := env_var_or_default("TALOS_VIEWER_DEVICE", "")
 
-APP_ID := "dev.talos.viewer"
+APP_ID := "name.levis.talosmobile"
 # Per-ABI APKs: app/build/outputs/apk/<buildType>/app-<abi>-<buildType>.apk
 APK_DIR := "app/build/outputs/apk"
 

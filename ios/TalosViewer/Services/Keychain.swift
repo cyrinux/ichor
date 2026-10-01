@@ -9,7 +9,7 @@ struct KeychainError: LocalizedError {
 /// The talosconfig (with its private key) lives in the Keychain: encrypted by the Secure
 /// Enclave-backed data protection, this device only, never synced or backed up.
 enum Keychain {
-    private static let service = "dev.talos.viewer"
+    private static let service = "name.levis.talosmobile"
 
     static func read(_ account: String) -> Data? {
         var query = base(account)

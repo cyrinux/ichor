@@ -1,7 +1,7 @@
 # XcodeGen spec: `xcodegen generate` (scripts/ios-build.sh does it) creates TalosViewer.xcodeproj.
 name: TalosViewer
 options:
-  bundleIdPrefix: dev.talos
+  bundleIdPrefix: name.levis
   deploymentTarget:
     iOS: "17.0"
 settings:
@@ -28,7 +28,7 @@ targets:
         embed: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.talos.viewer
+        PRODUCT_BUNDLE_IDENTIFIER: name.levis.talosmobile
         TARGETED_DEVICE_FAMILY: "1,2"
         # The Go runtime's resolver needs libresolv.
         OTHER_LDFLAGS: [-lresolv]

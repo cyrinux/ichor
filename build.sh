@@ -76,7 +76,7 @@ build_inside() {
   # app/libs only holds this generated (gitignored) AAR, so a fresh checkout lacks it.
   mkdir -p "$ROOT/app/libs"
   # One APK per ABI is split from this AAR (see splits in app/build.gradle.kts).
-  gomobile bind -v -target=android/arm64,android/arm,android/amd64 -androidapi 26 -javapkg=dev.talos \
+  gomobile bind -v -target=android/arm64,android/arm,android/amd64 -androidapi 26 -javapkg=name.levis \
     -ldflags="-s -w -extldflags=-Wl,-z,max-page-size=16384" -o "$ROOT/app/libs/talosmobile.aar" ./talosmobile
   cd "$ROOT"
   gradle --no-daemon "${GRADLE_TASKS[@]}"

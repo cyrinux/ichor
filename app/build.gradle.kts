@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "dev.talos.viewer"
+    namespace = "name.levis.talosmobile"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "dev.talos.viewer"
+        applicationId = "name.levis.talosmobile"
         minSdk = 26
         targetSdk = 35
         // From scripts/version.sh (exported by build.sh); fallbacks for IDE builds.
