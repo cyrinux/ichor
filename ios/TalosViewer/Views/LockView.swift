@@ -11,7 +11,7 @@ struct LockView: View {
         VStack(spacing: 16) {
             Image(systemName: "lock.fill").font(.system(size: 44))
             if available {
-                Text("Talos Viewer is locked").font(.headline)
+                Text("Talosdev Mobile is locked").font(.headline)
                 if let error { Text(error).foregroundStyle(.red).multilineTextAlignment(.center) }
                 Button("Unlock") { Task { await unlock() } }.buttonStyle(.borderedProminent)
             } else {
@@ -30,7 +30,7 @@ struct LockView: View {
     }
 
     private func unlock() async {
-        if let message = await Authenticator.authenticate(reason: "Unlock Talos Viewer") {
+        if let message = await Authenticator.authenticate(reason: "Unlock Talosdev Mobile") {
             error = message
         } else {
             model.unlock()

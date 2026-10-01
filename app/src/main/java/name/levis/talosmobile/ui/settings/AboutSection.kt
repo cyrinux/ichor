@@ -34,7 +34,7 @@ fun AboutSection() {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             Text(
-                "Talos Viewer ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                "Talosdev Mobile ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )

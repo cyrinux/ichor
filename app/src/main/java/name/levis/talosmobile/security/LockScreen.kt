@@ -44,7 +44,7 @@ fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit) {
     fun prompt() {
         val activity = context.findFragmentActivity() ?: return
         scope.launch {
-            when (val result = authenticate(activity, "Unlock Talos Viewer")) {
+            when (val result = authenticate(activity, "Unlock Talosdev Mobile")) {
                 AuthResult.Success -> onUnlocked()
                 is AuthResult.Failure -> error = result.message
             }
@@ -64,7 +64,7 @@ fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit) {
             Icon(Icons.Outlined.Lock, contentDescription = null, modifier = Modifier.size(48.dp))
             Spacer(Modifier.height(16.dp))
             if (available) {
-                Text("Talos Viewer is locked", style = MaterialTheme.typography.titleMedium)
+                Text("Talosdev Mobile is locked", style = MaterialTheme.typography.titleMedium)
                 error?.let {
                     Spacer(Modifier.height(8.dp))
                     Text(it, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)

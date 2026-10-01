@@ -201,7 +201,7 @@ class UpdateManager(private val context: Context, private val prefs: SharedPrefe
             connectTimeout = 15_000
             readTimeout = 30_000
             instanceFollowRedirects = true // release assets redirect to GitHub's object storage
-            setRequestProperty("User-Agent", "talos-viewer/${BuildConfig.VERSION_NAME}")
+            setRequestProperty("User-Agent", "talosdev-mobile/${BuildConfig.VERSION_NAME}")
         }
 
     private companion object {

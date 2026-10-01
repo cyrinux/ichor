@@ -66,7 +66,7 @@ struct SupportCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Enjoying Talos Viewer?").font(.headline)
+            Text("Enjoying Talosdev Mobile?").font(.headline)
             Text("It is free and open source. If it saves you time, you can support its development.")
                 .font(.footnote).foregroundStyle(.secondary)
             HStack {

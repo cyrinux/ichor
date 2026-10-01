@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "talos-viewer"
+rootProject.name = "talosdev-mobile"
 include(":app")

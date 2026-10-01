@@ -1,5 +1,5 @@
 {
-  description = "Talos Viewer: Android build environment";
+  description = "Talosdev Mobile: Android build environment";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 

@@ -60,7 +60,7 @@ fun UpdateSection(updates: UpdateManager) {
             when (val s = state) {
                 UpdateState.Idle -> Unit
                 UpdateState.Checking -> Text("Checking…")
-                UpdateState.UpToDate -> Text("Talos Viewer ${BuildConfig.VERSION_NAME} is up to date.")
+                UpdateState.UpToDate -> Text("Talosdev Mobile ${BuildConfig.VERSION_NAME} is up to date.")
                 is UpdateState.Available -> {
                     Text("Version ${s.info.version} is available (${formatBytes(s.info.apkSize)}).", style = MaterialTheme.typography.titleSmall)
                     if (s.info.notes.isNotBlank()) {
@@ -82,7 +82,7 @@ fun UpdateSection(updates: UpdateManager) {
                     LinearProgressIndicator(progress = { s.progress }, modifier = Modifier.fillMaxWidth())
                 }
                 is UpdateState.NeedsInstallPermission -> {
-                    Text("Allow Talos Viewer to install apps, then try again.", style = MaterialTheme.typography.bodySmall)
+                    Text("Allow Talosdev Mobile to install apps, then try again.", style = MaterialTheme.typography.bodySmall)
                     OutlinedButton(onClick = {
                         context.startActivity(
                             Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}")),

@@ -46,14 +46,14 @@ targets:
     info:
       path: TalosViewer/Info.plist
       properties:
-        CFBundleDisplayName: Talos Viewer
+        CFBundleDisplayName: Talosdev Mobile
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
         UIApplicationSupportsIndirectInputEvents: true
         ITSAppUsesNonExemptEncryption: false
         NSCameraUsageDescription: Scan a talosconfig QR code to import it.
-        NSFaceIDUsageDescription: Unlock Talos Viewer and confirm reboot or shutdown.
+        NSFaceIDUsageDescription: Unlock Talosdev Mobile and confirm reboot or shutdown.
         UIBackgroundModes: [fetch]
         BGTaskSchedulerPermittedIdentifiers: [name.levis.talosmobile.refresh]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
@@ -83,7 +83,7 @@ targets:
     info:
       path: TalosWidget/Info.plist
       properties:
-        CFBundleDisplayName: Talos Viewer
+        CFBundleDisplayName: Talosdev Mobile
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:

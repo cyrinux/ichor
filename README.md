@@ -145,7 +145,7 @@ The Android app updates itself from this repository's GitHub releases (Settings 
   2. the package name;
   3. that it is signed with exactly the installed app's key.
 - **Installing:** Android shows its own confirmation, and asks once to allow
-  "Install unknown apps" for Talos Viewer.
+  "Install unknown apps" for Talosdev Mobile.
 
 Updates only work between builds signed with the same key, which means CI release builds with
 the `TALOS_KEYSTORE*` secrets set. A **debug** build, signed with your machine's debug key,
@@ -254,9 +254,9 @@ The secrets it sets:
 
 | Secret | Value |
 |---|---|
-| `TALOS_KEYSTORE_BASE64` | `base64 -w0 ~/talos-viewer-release.jks` |
+| `TALOS_KEYSTORE_BASE64` | `base64 -w0 ~/talosdev-mobile-release.jks` |
 | `TALOS_KEYSTORE_PASSWORD` | the keystore password |
-| `TALOS_KEY_ALIAS` | the key alias, e.g. `talos-viewer` |
+| `TALOS_KEY_ALIAS` | the key alias, e.g. `talosdev-mobile` |
 
 Without them, the release APK is unsigned.
 

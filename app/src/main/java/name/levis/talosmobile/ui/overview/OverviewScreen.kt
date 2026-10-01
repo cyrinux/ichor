@@ -226,7 +226,7 @@ private fun UpdateBanner(onClick: () -> Unit) {
     val available = state as? UpdateState.Available ?: return
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Text(
-            "Talos Viewer ${available.info.version} is available — tap to update",
+            "Talosdev Mobile ${available.info.version} is available — tap to update",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(16.dp),
@@ -243,7 +243,7 @@ private fun SupportCard() {
     if (!visible) return
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
-            Text("Enjoying Talos Viewer?", style = MaterialTheme.typography.titleSmall)
+            Text("Enjoying Talosdev Mobile?", style = MaterialTheme.typography.titleSmall)
             Text(
                 "It is free and open source. If it saves you time, you can support its development.",
                 style = MaterialTheme.typography.bodySmall,

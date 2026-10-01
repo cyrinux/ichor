@@ -24,7 +24,7 @@ struct MonitoringSection: View {
     private func set(_ on: Bool) {
         Task {
             if on, !(await BackgroundMonitor.requestPermission()) {
-                message = "Notifications are off for Talos Viewer: allow them in the Settings app."
+                message = "Notifications are off for Talosdev Mobile: allow them in the Settings app."
                 return
             }
             BackgroundMonitor.alertsEnabled = on

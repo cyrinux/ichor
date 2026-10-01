@@ -42,7 +42,7 @@ release-tag version:
     previous="$(git describe --tags --match 'v[0-9]*' --abbrev=0 2>/dev/null || true)"
     range="${previous:+${previous}..}HEAD"
     {
-        echo "Talos Viewer v${version}"
+        echo "Talosdev Mobile v${version}"
         echo
         git log --no-merges --format='- %s' "$range"
     } | git tag -s "v${version}" -F - # signed, like the commits
@@ -72,7 +72,7 @@ probe *args:
 
 # Generate the release signing key. Back it up: an app signed with another key
 # cannot update the installed one.
-android-keystore-gen path=env_var_or_default("TALOS_KEYSTORE", home_directory() + "/talos-viewer-release.jks") alias=env_var_or_default("TALOS_KEY_ALIAS", "talos-viewer"):
+android-keystore-gen path=env_var_or_default("TALOS_KEYSTORE", home_directory() + "/talosdev-mobile-release.jks") alias=env_var_or_default("TALOS_KEY_ALIAS", "talosdev-mobile"):
     #!/usr/bin/env bash
     set -euo pipefail
     if [ -e "{{ path }}" ]; then
@@ -82,7 +82,7 @@ android-keystore-gen path=env_var_or_default("TALOS_KEYSTORE", home_directory() 
     # keytool comes with the JDK in the Nix dev shell.
     nix develop --command keytool -genkeypair -v -keystore "{{ path }}" -alias "{{ alias }}" \
         -keyalg RSA -keysize 4096 -validity 10000 \
-        -dname "CN=Talos Viewer, O=Talos Viewer"
+        -dname "CN=talosdev-mobile, OU=Android release, O=Cyril Levis, C=FR"
     echo
     echo "Created {{ path }}. Add to .envrc:"
     echo "  export TALOS_KEYSTORE=\"{{ path }}\""
@@ -97,7 +97,7 @@ android-keystore-info:
     : "${TALOS_KEYSTORE:?TALOS_KEYSTORE is not set (see just android-keystore-gen)}"
     : "${TALOS_KEYSTORE_PASSWORD:?TALOS_KEYSTORE_PASSWORD is not set}"
     nix develop --command keytool -list -v -keystore "$TALOS_KEYSTORE" -storepass "$TALOS_KEYSTORE_PASSWORD" \
-        -alias "${TALOS_KEY_ALIAS:-talos-viewer}" | grep -E "Alias name|SHA256"
+        -alias "${TALOS_KEY_ALIAS:-talosdev-mobile}" | grep -E "Alias name|Owner|SHA256"
 
 # Upload the release signing key to GitHub Actions secrets (what android.yml signs with),
 # from the same env as android-keystore-info. Values go through stdin, never argv.
@@ -108,7 +108,7 @@ github-secrets repo="":
     : "${TALOS_KEYSTORE:?TALOS_KEYSTORE is not set (see just android-keystore-gen)}"
     : "${TALOS_KEYSTORE_PASSWORD:?TALOS_KEYSTORE_PASSWORD is not set}"
     [[ -f "$TALOS_KEYSTORE" ]] || { echo "$TALOS_KEYSTORE does not exist" >&2; exit 1; }
-    alias="${TALOS_KEY_ALIAS:-talos-viewer}"
+    alias="${TALOS_KEY_ALIAS:-talosdev-mobile}"
     repo=({{ if repo == "" { "" } else { "--repo " + repo } }})
     # Fail early on a wrong password/alias rather than in CI.
     nix develop --command keytool -list -keystore "$TALOS_KEYSTORE" -alias "$alias" \
