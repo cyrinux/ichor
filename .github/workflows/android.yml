@@ -7,11 +7,11 @@ on:
   # Tags: release.yml calls this, then publishes the release once with all files.
   workflow_call:
     secrets:
-      TALOS_KEYSTORE_BASE64:
+      ICHOR_KEYSTORE_BASE64:
         required: false
-      TALOS_KEYSTORE_PASSWORD:
+      ICHOR_KEYSTORE_PASSWORD:
         required: false
-      TALOS_KEY_ALIAS:
+      ICHOR_KEY_ALIAS:
         required: false
 
 permissions:
@@ -33,17 +33,17 @@ jobs:
       - name: Build debug APK
         run: ./build.sh debug
 
-      # Signed when the TALOS_KEYSTORE_BASE64 / TALOS_KEYSTORE_PASSWORD / TALOS_KEY_ALIAS
+      # Signed when the ICHOR_KEYSTORE_BASE64 / ICHOR_KEYSTORE_PASSWORD / ICHOR_KEY_ALIAS
       # secrets are set (base64 of the .jks from `just android-keystore-gen`), else unsigned.
       - name: Build release APK
         env:
-          TALOS_KEYSTORE_BASE64: ${{ secrets.TALOS_KEYSTORE_BASE64 }}
-          TALOS_KEYSTORE_PASSWORD: ${{ secrets.TALOS_KEYSTORE_PASSWORD }}
-          TALOS_KEY_ALIAS: ${{ secrets.TALOS_KEY_ALIAS }}
+          ICHOR_KEYSTORE_BASE64: ${{ secrets.ICHOR_KEYSTORE_BASE64 }}
+          ICHOR_KEYSTORE_PASSWORD: ${{ secrets.ICHOR_KEYSTORE_PASSWORD }}
+          ICHOR_KEY_ALIAS: ${{ secrets.ICHOR_KEY_ALIAS }}
         run: |
-          if [ -n "$TALOS_KEYSTORE_BASE64" ]; then
-            echo "$TALOS_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
-            export TALOS_KEYSTORE="$RUNNER_TEMP/release.jks"
+          if [ -n "$ICHOR_KEYSTORE_BASE64" ]; then
+            echo "$ICHOR_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export ICHOR_KEYSTORE="$RUNNER_TEMP/release.jks"
           fi
           ./build.sh release
 
@@ -51,17 +51,17 @@ jobs:
       # links, signed with the same key (Play's upload key). Kept out of the GitHub release.
       - name: Build Play bundle
         env:
-          TALOS_KEYSTORE_BASE64: ${{ secrets.TALOS_KEYSTORE_BASE64 }}
-          TALOS_KEYSTORE_PASSWORD: ${{ secrets.TALOS_KEYSTORE_PASSWORD }}
-          TALOS_KEY_ALIAS: ${{ secrets.TALOS_KEY_ALIAS }}
+          ICHOR_KEYSTORE_BASE64: ${{ secrets.ICHOR_KEYSTORE_BASE64 }}
+          ICHOR_KEYSTORE_PASSWORD: ${{ secrets.ICHOR_KEYSTORE_PASSWORD }}
+          ICHOR_KEY_ALIAS: ${{ secrets.ICHOR_KEY_ALIAS }}
         run: |
-          if [ -n "$TALOS_KEYSTORE_BASE64" ]; then
-            echo "$TALOS_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
-            export TALOS_KEYSTORE="$RUNNER_TEMP/release.jks"
+          if [ -n "$ICHOR_KEYSTORE_BASE64" ]; then
+            echo "$ICHOR_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export ICHOR_KEYSTORE="$RUNNER_TEMP/release.jks"
           fi
           ./build.sh play
 
-      # talosdev-mobile-v<version>-<abi>.apk; the in-app updater only picks signed ones,
+      # ichor-v<version>-<abi>.apk; the in-app updater only picks signed ones,
       # so unsigned builds get an explicit -unsigned suffix.
       - name: Name release APKs
         run: |
@@ -71,7 +71,7 @@ jobs:
             file="$(basename "$apk")"
             abi="${file#app-}"; abi="${abi%%-release*}"
             suffix=""; [[ "$file" == *unsigned* ]] && suffix="-unsigned"
-            cp "$apk" "dist/talosdev-mobile-v${version}-${abi}${suffix}.apk"
+            cp "$apk" "dist/ichor-v${version}-${abi}${suffix}.apk"
           done
           # Published with the release, so installed apps can show what an update brings.
           scripts/changelog.py --limit 30 -o dist/changelog.json

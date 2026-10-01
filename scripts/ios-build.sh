@@ -8,7 +8,7 @@
 #   scripts/ios-build.sh ipa    # unsigned Release build packaged as an IPA (default)
 #
 # The unsigned IPA can be re-signed and installed with your Apple ID by Sideloadly or
-# AltStore. Set TALOS_IOS_TEAM_ID and drop CODE_SIGNING_ALLOWED=NO to sign in Xcode instead.
+# AltStore. Set ICHOR_IOS_TEAM_ID and drop CODE_SIGNING_ALLOWED=NO to sign in Xcode instead.
 set -euo pipefail
 
 MODE="${1:-ipa}"
@@ -20,9 +20,9 @@ command -v xcodegen >/dev/null || { echo "xcodegen is missing (brew install xcod
 set -a
 eval "$("$ROOT/scripts/version.sh" --env)"
 set +a
-echo "version $TALOSDEV_MOBILE_VERSION (build $TALOSDEV_MOBILE_BUILD_NUMBER)"
+echo "version $ICHOR_VERSION (build $ICHOR_BUILD_NUMBER)"
 # Release notes bundled in the app, for the "what's new" shown after an update.
-python3 "$ROOT/scripts/changelog.py" --limit 30 -o "$ROOT/ios/TalosdevMobile/changelog.json"
+python3 "$ROOT/scripts/changelog.py" --limit 30 -o "$ROOT/ios/Ichor/changelog.json"
 
 # gomobile/gobind versions are pinned by the tool directive in go/go.mod.
 cd "$ROOT/go"
@@ -33,14 +33,14 @@ gomobile bind -target=ios,iossimulator -iosversion=17.0 -ldflags="-s -w" \
   -o "$ROOT/ios/Frameworks/Talosmobile.xcframework" ./talosmobile
 
 python3 "$ROOT/scripts/check-translations.py"
-(cd "$ROOT/ios/TalosdevMobileCore" && swift test)
+(cd "$ROOT/ios/IchorCore" && swift test)
 
 cd "$ROOT/ios"
 xcodegen generate
 # iOS only accepts numeric x.y.z marketing versions; the full string is in the IPA name.
 common=(
-  -project TalosdevMobile.xcodeproj -scheme TalosdevMobile -derivedDataPath build
-  MARKETING_VERSION="$TALOSDEV_MOBILE_VERSION_BASE" CURRENT_PROJECT_VERSION="$TALOSDEV_MOBILE_BUILD_NUMBER"
+  -project Ichor.xcodeproj -scheme Ichor -derivedDataPath build
+  MARKETING_VERSION="$ICHOR_VERSION_BASE" CURRENT_PROJECT_VERSION="$ICHOR_BUILD_NUMBER"
   CODE_SIGNING_ALLOWED=NO
   # SwiftTerm ships a build-tool plugin; CI cannot click "Trust & Enable".
   -skipPackagePluginValidation -skipMacroValidation
@@ -53,8 +53,8 @@ case "$MODE" in
   ipa)
     xcodebuild "${common[@]}" -configuration Release -destination 'generic/platform=iOS' build
     rm -rf build/ipa && mkdir -p build/ipa/Payload
-    cp -R build/Build/Products/Release-iphoneos/TalosdevMobile.app build/ipa/Payload/
-    ipa="talosdev-mobile-v${TALOSDEV_MOBILE_VERSION//+/-}-unsigned.ipa"
+    cp -R build/Build/Products/Release-iphoneos/Ichor.app build/ipa/Payload/
+    ipa="ichor-v${ICHOR_VERSION//+/-}-unsigned.ipa"
     (cd build/ipa && zip -qry "../$ipa" Payload)
     echo "$ROOT/ios/build/$ipa"
     ;;

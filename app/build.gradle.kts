@@ -5,20 +5,20 @@ plugins {
 }
 
 android {
-    namespace = "name.levis.talosmobile"
+    namespace = "name.levis.ichor"
     compileSdk = 37
     buildToolsVersion = "37.0.0"
 
     defaultConfig {
-        applicationId = "name.levis.talosmobile"
+        applicationId = "name.levis.ichor"
         minSdk = 26
         targetSdk = 37
         // From scripts/version.sh (exported by build.sh); fallbacks for IDE builds.
-        versionCode = System.getenv("TALOSDEV_MOBILE_BUILD_NUMBER")?.toIntOrNull() ?: 1
-        versionName = System.getenv("TALOSDEV_MOBILE_VERSION") ?: "0.0.0-unknown"
+        versionCode = System.getenv("ICHOR_BUILD_NUMBER")?.toIntOrNull() ?: 1
+        versionName = System.getenv("ICHOR_VERSION") ?: "0.0.0-unknown"
 
         // GitHub repository the self-updater reads releases from (set by GitHub Actions).
-        val updateRepo = System.getenv("GITHUB_REPOSITORY") ?: "cyrinux/talosdev-mobile"
+        val updateRepo = System.getenv("GITHUB_REPOSITORY") ?: "cyrinux/ichor"
         buildConfigField("String", "UPDATE_REPO", "\"$updateRepo\"")
         // Off in the Play build: Play forbids self-updates and in-app donations outside its billing.
         buildConfigField("boolean", "SELF_UPDATE", "true")
@@ -26,15 +26,15 @@ android {
     }
 
     // Release signing comes from env vars so CI (Forgejo) can inject secrets.
-    val keystorePath = System.getenv("TALOS_KEYSTORE")
+    val keystorePath = System.getenv("ICHOR_KEYSTORE")
     signingConfigs {
         if (keystorePath != null) {
             create("release") {
                 storeFile = file(keystorePath)
-                storePassword = System.getenv("TALOS_KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("TALOS_KEY_ALIAS")
+                storePassword = System.getenv("ICHOR_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ICHOR_KEY_ALIAS")
                 // Like lectarr: the key password defaults to the store password.
-                keyPassword = System.getenv("TALOS_KEY_PASSWORD") ?: System.getenv("TALOS_KEYSTORE_PASSWORD")
+                keyPassword = System.getenv("ICHOR_KEY_PASSWORD") ?: System.getenv("ICHOR_KEYSTORE_PASSWORD")
             }
         }
     }

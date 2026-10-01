@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "talosdev-mobile"
+rootProject.name = "ichor"
 include(":app")

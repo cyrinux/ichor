@@ -93,8 +93,8 @@
     </plurals>
     <string name="overview_node_actions">Дії з вузлом</string>
     <string name="overview_role_control_plane">панель керування</string>
-    <string name="overview_update_banner">Доступна версія Talosdev Mobile %1$s — торкніться, щоб оновити</string>
-    <string name="overview_support_title">Подобається Talosdev Mobile?</string>
+    <string name="overview_update_banner">Доступна версія Ichor %1$s — торкніться, щоб оновити</string>
+    <string name="overview_support_title">Подобається Ichor?</string>
     <string name="overview_support_body">Це безкоштовний застосунок з відкритим кодом. Якщо він заощаджує вам час, ви можете підтримати його розробку.</string>
     <string name="overview_support_never">Більше не питати</string>
     <string name="overview_support_later">Не зараз</string>
@@ -351,12 +351,12 @@
     <string name="update_auto_check">Щодня перевіряти оновлення</string>
     <string name="update_auto_check_desc">З релізів на GitHub (%1$s). Контрольну суму й ключ підпису APK буде перевірено, а Android попросить вас підтвердити встановлення.</string>
     <string name="update_checking">Перевірка…</string>
-    <string name="update_up_to_date">Talosdev Mobile %1$s — остання версія.</string>
+    <string name="update_up_to_date">Ichor %1$s — остання версія.</string>
     <string name="update_available">Доступна версія %1$s (%2$s).</string>
     <string name="update_download_install">Завантажити та встановити</string>
     <string name="update_debug_build">Це налагоджувальна збірка, підписана локальним ключем: релізні APK не можуть її замінити. Видаліть її та один раз встановіть релізний APK, щоб отримувати оновлення.</string>
     <string name="update_downloading">Завантаження %1$s…</string>
-    <string name="update_needs_permission">Дозвольте Talosdev Mobile встановлювати застосунки, а потім спробуйте ще раз.</string>
+    <string name="update_needs_permission">Дозвольте Ichor встановлювати застосунки, а потім спробуйте ще раз.</string>
     <string name="update_open_permission">Відкрити дозвіл на встановлення</string>
     <string name="update_try_again">Спробувати ще раз</string>
     <string name="update_installing">Встановлення… підтвердьте в системному вікні.</string>
@@ -373,7 +373,7 @@
 
     <!-- About -->
     <string name="about_section">Про застосунок</string>
-    <string name="about_version">Talosdev Mobile %1$s (%2$d)</string>
+    <string name="about_version">Ichor %1$s (%2$d)</string>
     <string name="about_source">Вихідний код на GitHub</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="about_sponsor">Підтримати на GitHub</string>
@@ -437,8 +437,8 @@
     <string name="debug_connecting">Під\'єднання…</string>
 
     <!-- App lock -->
-    <string name="lock_prompt">Розблокуйте Talosdev Mobile</string>
-    <string name="lock_locked">Talosdev Mobile заблоковано</string>
+    <string name="lock_prompt">Розблокуйте Ichor</string>
+    <string name="lock_locked">Ichor заблоковано</string>
     <string name="lock_unlock">Розблокувати</string>
     <string name="lock_no_auth">На цьому пристрої більше немає відбитка пальця чи блокування екрана, тому блокування застосунку не може вас перевірити.</string>
     <string name="lock_delete_config">Видалити збережений talosconfig</string>
@@ -616,7 +616,7 @@
     <string name="issue_renewed_body">Новий сертифікат для «%1$s» збережено, він дійсний до %2$s.</string>
     <string name="issue_result_warning">Ця конфігурація надає доступ %2$s до «%1$s» до %3$s і не може бути відкликана. Поводьтеся з нею як з паролем: показуйте QR-код лише пристрою, для якого він призначений.</string>
     <string name="issue_qr_description">QR-код talosconfig</string>
-    <string name="issue_qr_hint">На іншому пристрої відкрийте Talosdev Mobile, потім Імпорт → QR-код.</string>
+    <string name="issue_qr_hint">На іншому пристрої відкрийте Ichor, потім Імпорт → QR-код.</string>
     <string name="issue_qr_too_large">Ця конфігурація завелика для QR-коду (%1$d байт, максимум %2$d). Збережіть її у файл.</string>
     <string name="issue_save_file">Зберегти у файл</string>
     <string name="issue_saved">Збережено. Видаліть файл після імпорту на іншому пристрої.</string>

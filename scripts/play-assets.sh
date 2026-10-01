@@ -92,7 +92,7 @@ render_feature_graphic() {
   <g transform="translate(64,62) scale(0.62)">
     <g transform="translate(-33,-30)">$(mark)</g>
   </g>
-  <text x="114" y="99" fill="$INK" font-family="IBM Plex Sans, DejaVu Sans" font-weight="600" font-size="26">Talosdev Mobile</text>
+  <text x="114" y="99" fill="$INK" font-family="IBM Plex Sans, DejaVu Sans" font-weight="600" font-size="26">Ichor<tspan dx="9" fill="$INK_2" font-weight="400">for Talos Linux</tspan></text>
 
   <text fill="$INK" font-family="IBM Plex Sans, DejaVu Sans" font-weight="600" font-size="56" letter-spacing="-1.2">
     <tspan x="64" y="218">Your Talos cluster,</tspan>

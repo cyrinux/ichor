@@ -1,11 +1,7 @@
-# gomobile bindings are called through JNI. With -javapkg=name.levis they share the app's
-# root package, so keep only the generated classes, not the whole package.
+# gomobile bindings are called through JNI. The Go core binds to name.levis.talosmobile
+# (-javapkg=name.levis), apart from the app's own name.levis.ichor, so keep that whole package.
 -keep class go.** { *; }
--keep class name.levis.talosmobile.Talosmobile { *; }
--keep class name.levis.talosmobile.HealthListener { *; }
--keep class name.levis.talosmobile.HealthRun { *; }
--keep class name.levis.talosmobile.DebugListener { *; }
--keep class name.levis.talosmobile.DebugSession { *; }
+-keep class name.levis.talosmobile.** { *; }
 
 # ML Kit (QR import) instantiates its components by reflection from manifest metadata; R8 full
 # mode stripped what it needed and BarcodeScanning.getClient() crashed in release builds only.
@@ -14,9 +10,3 @@
 -keep class com.google.android.gms.internal.mlkit_vision_barcode.** { *; }
 -keep class com.google.android.gms.internal.mlkit_vision_common.** { *; }
 -keep class com.google.android.gms.internal.mlkit_common.** { *; }
-
-# Batch 4 bindings (packet capture, upgrade): Go calls back into these through JNI.
--keep class name.levis.talosmobile.CaptureListener { *; }
--keep class name.levis.talosmobile.CaptureRun { *; }
--keep class name.levis.talosmobile.UpgradeListener { *; }
--keep class name.levis.talosmobile.UpgradeRun { *; }
