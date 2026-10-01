@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import name.levis.talosmobile.TalosApp
+import name.levis.talosmobile.ui.debug.DebugShellScreen
 import name.levis.talosmobile.ui.etcd.EtcdScreen
 import name.levis.talosmobile.ui.health.HealthScreen
 import name.levis.talosmobile.ui.importconfig.ImportScreen
@@ -25,6 +26,9 @@ private object Routes {
     const val LOGS = "logs?addr={addr}&host={host}&service={service}"
     const val ETCD = "etcd"
     const val KUBESPAN = "kubespan"
+    const val DEBUG = "debug?addr={addr}&host={host}"
+
+    fun debug(addr: String, host: String) = "debug?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
     const val HEALTH = "health"
     const val SETTINGS = "settings"
 
@@ -71,6 +75,7 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
                 role = entry.arguments?.getString("role") ?: "unknown",
                 onBack = { nav.popBackStack() },
                 onLogs = { service -> nav.navigate(Routes.logs(addr, entry.arguments?.getString("host") ?: addr, service)) },
+                onDebugShell = { nav.navigate(Routes.debug(addr, entry.arguments?.getString("host") ?: addr)) },
             )
         }
         composable(
@@ -88,6 +93,16 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
                 service = entry.arguments?.getString("service")?.takeIf { it.isNotEmpty() },
                 onBack = { nav.popBackStack() },
             )
+        }
+        composable(
+            Routes.DEBUG,
+            arguments = listOf(
+                navArgument("addr") { type = NavType.StringType },
+                navArgument("host") { type = NavType.StringType },
+            ),
+        ) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty()
+            DebugShellScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
         }
         composable(Routes.KUBESPAN) { KubeSpanScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.ETCD) { EtcdScreen(onBack = { nav.popBackStack() }) }

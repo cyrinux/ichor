@@ -23,6 +23,7 @@ class FeatureTest {
         assertTrue(op.allows(Feature.POWER))
         assertFalse(op.allows(Feature.HEALTH))
         assertFalse(op.allows(Feature.KUBECONFIG))
+        assertFalse(op.allows(Feature.DEBUG_SHELL))
     }
 
     @Test

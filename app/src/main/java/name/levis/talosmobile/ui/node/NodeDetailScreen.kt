@@ -97,6 +97,7 @@ fun NodeDetailScreen(
     role: String,
     onBack: () -> Unit,
     onLogs: (service: String?) -> Unit,
+    onDebugShell: () -> Unit,
     power: PowerViewModel = viewModel(key = "power-$node", factory = factory { PowerViewModel(app.talosRepository, node) }),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -109,7 +110,8 @@ fun NodeDetailScreen(
     val app = context.applicationContext as TalosApp
     val appLock = app.appLock
     val config by app.configRepository.config.collectAsStateWithLifecycle()
-    val canPower = config?.activeSummary?.allows(Feature.POWER) ?: true
+    val canPower = config?.activeSummary?.allows(Feature.POWER) ?: false
+    val canDebug = config?.activeSummary?.allows(Feature.DEBUG_SHELL) ?: false
 
     LaunchedEffect(powerState) {
         when (val s = powerState) {
@@ -170,6 +172,16 @@ fun NodeDetailScreen(
                                     onLogs(null)
                                 },
                             )
+                            if (canDebug) {
+                                DropdownMenuItem(
+                                    text = { Text("Debug shell") },
+                                    leadingIcon = { Icon(Icons.Outlined.Terminal, contentDescription = null) },
+                                    onClick = {
+                                        menuOpen = false
+                                        onDebugShell()
+                                    },
+                                )
+                            }
                             // Power actions only exist for configs whose role allows them.
                             if (canPower) {
                                 HorizontalDivider()

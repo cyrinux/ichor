@@ -18,7 +18,7 @@ android {
         versionName = System.getenv("TALOS_VIEWER_VERSION") ?: "0.0.0-unknown"
 
         // GitHub repository the self-updater reads releases from (set by GitHub Actions).
-        val updateRepo = System.getenv("GITHUB_REPOSITORY") ?: "cyrinux/talosctl-mobile"
+        val updateRepo = System.getenv("GITHUB_REPOSITORY") ?: "cyrinux/talosdev-mobile"
         buildConfigField("String", "UPDATE_REPO", "\"$updateRepo\"")
     }
 

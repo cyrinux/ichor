@@ -25,6 +25,8 @@ enum class Feature(val label: String, val roles: Set<String>) {
     // The server-side health check fetches a Kubernetes admin kubeconfig with the caller's role.
     HEALTH("Cluster health check", setOf("os:admin")),
     KUBECONFIG("Kubeconfig export", setOf("os:admin")),
+    // DebugService/ContainerRun is admin-only in Talos.
+    DEBUG_SHELL("Debug shell", setOf("os:admin")),
     ;
 
     val minimumRole: String get() = if ("os:operator" in roles) "os:operator" else "os:admin"

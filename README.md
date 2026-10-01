@@ -1,6 +1,6 @@
 # Talos Viewer
 
-Website: <https://cyrinux.github.io/talosctl-mobile/>
+Website: <https://cyrinux.github.io/talosdev-mobile/>
 
 Android and iOS app for a [Talos](https://www.talos.dev) cluster:
 
@@ -14,7 +14,7 @@ The Talos API layer is the official Go client (`siderolabs/talos/pkg/machinery`,
 `talosctl`) compiled with gomobile, so talosconfig parsing, Ed25519 mTLS and endpoint→node
 proxying behave exactly like `talosctl`.
 
-[<img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="54">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.talosmobile%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Ftalosctl-mobile%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Talos%20Viewer%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D)
+[<img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="54">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.talosmobile%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Ftalosdev-mobile%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Talos%20Viewer%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D)
 
 **Install on Android:**
 
@@ -22,7 +22,7 @@ proxying behave exactly like `talosctl`.
   repository's GitHub releases. The button above pre-fills it, with a filter that skips
   unsigned APKs.
 - **Manually:** download `talos-viewer-v<version>-<abi>.apk` from the
-  [latest release](https://github.com/cyrinux/talosctl-mobile/releases/latest); `arm64-v8a`
+  [latest release](https://github.com/cyrinux/talosdev-mobile/releases/latest); `arm64-v8a`
   fits almost all phones.
 
 **F-Droid:** not listed yet. The planned route is [IzzyOnDroid](https://apt.izzysoft.de/fdroid/),

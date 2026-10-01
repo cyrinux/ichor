@@ -2,7 +2,7 @@ import SwiftUI
 import TalosViewerCore
 
 enum ProjectLinks {
-    static let repo = URL(string: "https://github.com/cyrinux/talosctl-mobile")!
+    static let repo = URL(string: "https://github.com/cyrinux/talosdev-mobile")!
     static let talos = URL(string: "https://www.talos.dev")!
     static let sponsor = URL(string: "https://github.com/sponsors/cyrinux")!
 }

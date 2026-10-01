@@ -4,3 +4,5 @@
 -keep class name.levis.talosmobile.Talosmobile { *; }
 -keep class name.levis.talosmobile.HealthListener { *; }
 -keep class name.levis.talosmobile.HealthRun { *; }
+-keep class name.levis.talosmobile.DebugListener { *; }
+-keep class name.levis.talosmobile.DebugSession { *; }

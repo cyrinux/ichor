@@ -101,7 +101,7 @@ android-keystore-info:
 
 # Upload the release signing key to GitHub Actions secrets (what android.yml signs with),
 # from the same env as android-keystore-info. Values go through stdin, never argv.
-# Defaults to the current repository; e.g. `just github-secrets cyrinux/talosctl-mobile`.
+# Defaults to the current repository; e.g. `just github-secrets cyrinux/talosdev-mobile`.
 github-secrets repo="":
     #!/usr/bin/env bash
     set -euo pipefail
