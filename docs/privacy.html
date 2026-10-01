@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy policy · Talosdev Mobile</title>
+<meta name="description" content="What Talosdev Mobile stores on your phone, what it sends, and to whom.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z' fill='none' stroke='%23FF7A45' stroke-width='2' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='12' r='3' fill='%23FF7A45'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #E9EEF2;
+    --surface: #F6F8FA;
+    --ink: #14243B;
+    --ink-2: #51627A;
+    --line: #C9D3DD;
+    --accent: #FF7A45;
+    --measure: 68ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101823;
+      --surface: #16212F;
+      --ink: #E4EAF1;
+      --ink-2: #9AABC0;
+      --line: #2A3A4E;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 1.0625rem/1.6 "IBM Plex Sans", system-ui, sans-serif;
+  }
+  a { color: inherit; }
+  a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+  code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .92em; }
+  .wrap { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem; }
+  .top { display: flex; align-items: center; padding: 1.25rem 0; }
+  .brand { display: flex; align-items: center; gap: .6rem; font-weight: 600; text-decoration: none; }
+  .brand svg { width: 28px; height: 28px; }
+  main { max-width: var(--measure); padding: 2rem 0 4rem; }
+  h1 { font-weight: 600; font-size: clamp(2rem, 4vw, 2.6rem); line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 .5rem; }
+  h2 { font-weight: 600; font-size: 1.3rem; margin: 2.5rem 0 .5rem; }
+  .meta { color: var(--ink-2); margin: 0 0 2rem; }
+  .summary { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1rem 1.25rem; }
+  .summary p { margin: 0; }
+  li { margin-bottom: .4rem; }
+  footer { border-top: 1px solid var(--line); padding: 2rem 0 3rem; color: var(--ink-2); font-size: .92rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" fill="none" stroke="#FF7A45" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="#FF7A45"/></svg>
+      Talosdev Mobile
+    </a>
+  </header>
+
+  <main>
+    <h1>Privacy policy</h1>
+    <p class="meta">Effective 2 October 2026. Applies to the Talosdev Mobile apps for Android and iOS.</p>
+
+    <div class="summary">
+      <p>Talosdev Mobile has no server, no account and no ads. The developer receives none of your
+      data. The app talks to your own Talos clusters and, only for the features listed below, to
+      GitHub, to Google's on-device barcode library, and to an AI provider you choose yourself.</p>
+    </div>
+
+    <h2>What stays on your phone</h2>
+    <ul>
+      <li><strong>Talos configurations</strong> (talosconfig: endpoints, client certificate and
+        private key). Encrypted with a key held in the Android Keystore (StrongBox or TEE) or
+        the iOS Secure Enclave/Keychain, and excluded from device backups.</li>
+      <li><strong>AI provider API keys</strong>, if you add one. Encrypted the same way.</li>
+      <li><strong>Settings and the last cluster check</strong>, used by background alerts and the
+        home-screen widget.</li>
+      <li><strong>Files you save</strong>, such as packet captures, etcd snapshots or a
+        kubeconfig, are written only where you choose.</li>
+    </ul>
+    <p>Removing a cluster in the app deletes its credentials. Uninstalling the app on Android
+      deletes everything it stored. On iOS, Keychain items can survive uninstalling, so use
+      Settings → Delete in the app first.</p>
+
+    <h2>What the app sends, and to whom</h2>
+    <ul>
+      <li><strong>Your Talos clusters.</strong> The app connects directly to the endpoints in
+        your talosconfig, over mutually authenticated TLS, as <code>talosctl</code> does. The
+        developer is not involved in this connection.</li>
+      <li><strong>GitHub</strong> (<code>api.github.com</code>). The app reads the public list of
+        Talos releases to tell you when an upgrade is available, and the app's own release notes
+        from its source repository. Builds installed from GitHub releases also check that
+        repository for app updates. GitHub sees your IP address, as for
+        any web request, and its <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">privacy statement</a> applies.
+        Nothing about your cluster is sent.</li>
+      <li><strong>Google ML Kit</strong> (QR code import). Camera frames are decoded on the
+        phone and are neither stored nor sent. The library itself sends Google diagnostics and
+        usage data: device model and OS version, the app's package name and version, a
+        per-installation identifier that does not identify you or your device, performance
+        metrics and error codes. See
+        <a href="https://developers.google.com/ml-kit/android-data-disclosure">Google's ML Kit data disclosure</a>.</li>
+      <li><strong>AI diagnosis, only if you turn it on.</strong> It is off by default. When you
+        tap <em>Ask</em>, a report of the cluster state (node readiness, services, resource
+        usage, etcd status, recent events and the last lines of unhealthy services' logs) is
+        sent over HTTPS, with your own API key, to the provider you picked: Anthropic, OpenAI,
+        or a server whose address you entered. Node names, addresses and the cluster domain are
+        replaced with placeholders by default, but other text in the logs is sent as it is. The
+        report never contains the talosconfig, a machine configuration or a kubeconfig. That
+        provider's own privacy policy then applies:
+        <a href="https://www.anthropic.com/legal/privacy">Anthropic</a>,
+        <a href="https://openai.com/policies/privacy-policy">OpenAI</a>.</li>
+      <li><strong>Apps you share with.</strong> When you use the share sheet (an AI report, a
+        packet capture, a talosconfig QR code), the content goes to the app you pick, and only
+        then.</li>
+    </ul>
+
+    <h2>Permissions</h2>
+    <ul>
+      <li><strong>Camera:</strong> only to scan a talosconfig QR code, and only while the scanner
+        is open.</li>
+      <li><strong>Notifications:</strong> cluster alerts and certificate-expiry reminders. With the
+        app lock on, lock-screen notifications show only a generic text.</li>
+      <li><strong>Biometrics:</strong> the optional app lock uses the system prompt. The app never
+        sees your fingerprint or face data.</li>
+      <li><strong>Network:</strong> the connections listed above.</li>
+    </ul>
+
+    <h2>What the app does not do</h2>
+    <ul>
+      <li>No account, no sign-in, no developer server.</li>
+      <li>No advertising, no advertising identifier, no tracking across apps or websites.</li>
+      <li>No sale or transfer of personal data. The developer never receives it.</li>
+    </ul>
+
+    <h2>Children</h2>
+    <p>The app is a tool for administering server clusters and is not directed at children.</p>
+
+    <h2>Changes</h2>
+    <p>Changes to this policy are published on this page, with a new effective date. Its history is
+      in the <a href="https://github.com/cyrinux/talosdev-mobile/commits/main/docs/privacy.html">source repository</a>.</p>
+
+    <h2>Contact</h2>
+    <p>Questions or requests: open an issue at
+      <a href="https://github.com/cyrinux/talosdev-mobile/issues">github.com/cyrinux/talosdev-mobile/issues</a>.</p>
+  </main>
+
+  <footer>
+    <p>Talosdev Mobile is an independent project, not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.</p>
+  </footer>
+</div>
+</body>
+</html>

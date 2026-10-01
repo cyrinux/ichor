@@ -1,0 +1,5 @@
+Erste Version auf Google Play.
+
+• Mehrere Cluster: Jeder talosconfig-Kontext ist ein Cluster; zum Wechseln die obere Leiste der Übersicht wischen oder für die Liste auf den Titel tippen
+• Jeder Cluster hat seine eigene Farbe, und die Farbpalette der App folgt dem angezeigten Cluster
+• Eine erneuerte talosconfig zu importieren aktualisiert den bestehenden Cluster

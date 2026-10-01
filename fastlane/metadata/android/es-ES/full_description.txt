@@ -1,0 +1,45 @@
+Talosdev Mobile lleva tu clúster Talos Linux en el bolsillo. La aplicación habla con la API de Talos mediante el cliente Go oficial, el mismo código que talosctl: los contextos de talosconfig, mTLS y el proxy de endpoint a nodo se comportan exactamente igual que en tu equipo.
+
+Trae tu propio clúster: la aplicación necesita un talosconfig de un clúster Talos Linux que administres. No tiene servidor ni cuenta propios.
+
+<b>Lo que ves</b>
+• Vista del clúster: cada nodo listo, no listo o inaccesible, con las condiciones pendientes, la desviación del reloj y las actualizaciones de Talos disponibles
+• Servicios y registros: estado de los servicios, registros de servicios y del kernel coloreados por nivel, repeticiones agrupadas, seguimiento en vivo
+• Eventos: cambios de servicios, fases de arranque y cambios de dirección en tiempo real
+• Gráficas en vivo: CPU, memoria, red, disco y carga cada dos segundos, y la lista de procesos
+• Pods: contenedores agrupados por pod, con CPU y memoria
+• Red: interfaces, direcciones, rutas, DNS, servidores de hora y conexiones abiertas
+• etcd: miembros, líder, tamaño y alarmas, desfragmentación y snapshots
+• KubeSpan: los pares de cada nodo, su estado, último handshake y tráfico
+
+<b>Lo que puedes hacer, con el rol adecuado</b>
+• Iniciar, detener o reiniciar un servicio
+• Reiniciar (normal, power cycle o forzado) o apagar un nodo, tras escribir su nombre para confirmar
+• Capturar paquetes en vivo y guardar un .pcap para Wireshark
+• Actualizar Talos nodo a nodo, rechazado si etcd perdiera el quórum
+• Ejecutar el health check del clúster, leer la configuración de la máquina, abrir un shell de depuración
+• Emitir un talosconfig, renovar el certificado del teléfono, exportar un kubeconfig
+
+<b>El teléfono solo tiene el acceso que tú le das</b>
+Genera un talosconfig dedicado al teléfono; os:reader es la opción recomendada. La aplicación lee los roles del certificado y solo ofrece lo que permiten. La configuración se cifra con una clave del Keystore de Android y se excluye de las copias de seguridad. Impórtala desde un archivo, pegándola o escaneando un código QR.
+
+<b>Sabe siempre en qué clúster estás</b>
+Importa varios clústeres y cambia entre ellos deslizando. Cada uno tiene su color y toda la aplicación lo adopta: un reinicio nunca va al clúster equivocado.
+
+<b>Alertas y widget</b>
+Las comprobaciones en segundo plano te avisan cuando un nodo cae o el certificado del teléfono está a punto de caducar, y un widget de pantalla de inicio muestra el clúster de un vistazo.
+
+<b>Privacidad y seguridad</b>
+• Bloqueo de la aplicación opcional con huella o PIN, al abrir y antes de cada reinicio, apagado y exportación del kubeconfig
+• El modo captura de pantalla sustituye direcciones y nombres de nodos por sustitutos
+• Las notificaciones son genéricas en la pantalla de bloqueo mientras el bloqueo de la aplicación está activo
+• Sin anuncios, sin rastreo, sin cuenta
+
+<b>Diagnóstico con IA opcional</b>
+Desactivado por defecto e invisible hasta que lo actives. Genera un informe del estado del clúster y te lo muestra; solo al tocar Preguntar se envía a Anthropic (Claude), a OpenAI o a tu propio servidor compatible, con tu propia clave de API. Los nombres de los nodos, las direcciones y el dominio se anonimizan por defecto. Sin clave de API, puedes pasar el informe a una aplicación de asistente desde el menú de compartir.
+
+Libre y de código abierto (Apache-2.0): https://github.com/cyrinux/talosdev-mobile
+
+Disponible en español, inglés, francés, alemán, italiano y ucraniano.
+
+Talosdev Mobile es un proyecto independiente, sin relación con Sidero Labs. Talos es una marca de Sidero Labs, Inc.

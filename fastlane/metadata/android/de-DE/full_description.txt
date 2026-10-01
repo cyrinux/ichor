@@ -1,0 +1,45 @@
+Talosdev Mobile bringt Ihren Talos-Linux-Cluster aufs Smartphone. Die App spricht mit der Talos-API über den offiziellen Go-Client, denselben Code wie talosctl: talosconfig-Kontexte, mTLS und das Weiterleiten vom Endpoint zum Node verhalten sich genau wie an Ihrem Arbeitsplatz.
+
+Bringen Sie Ihren eigenen Cluster mit: Die App braucht eine talosconfig für einen Talos-Linux-Cluster, den Sie betreiben. Sie hat weder einen eigenen Server noch ein Konto.
+
+<b>Was Sie sehen</b>
+• Cluster-Übersicht: jeder Node bereit, nicht bereit oder nicht erreichbar, mit offenen Bedingungen, Uhrzeitabweichung und verfügbaren Talos-Upgrades
+• Dienste und Logs: Zustand der Dienste, Dienst- und Kernel-Logs nach Level eingefärbt, Wiederholungen zusammengefasst, Live-Verfolgung
+• Ereignisse: Dienständerungen, Boot-Phasen und Adressänderungen in Echtzeit
+• Live-Graphen: CPU, Speicher, Netzwerk, Datenträger und Last alle zwei Sekunden, dazu die Prozessliste
+• Pods: Container nach Pod gruppiert, mit CPU und Speicher
+• Netzwerk: Schnittstellen, Adressen, Routen, DNS, Zeitserver und offene Verbindungen
+• etcd: Mitglieder, Leader, Größe und Alarme, Defragmentierung und Snapshots
+• KubeSpan: die Peers jedes Nodes, Status, letzter Handshake und Datenverkehr
+
+<b>Was Sie tun können, mit der passenden Rolle</b>
+• Dienste starten, stoppen oder neu starten
+• Einen Node neu starten (normal, Power-Cycle oder erzwungen) oder herunterfahren, nach Eingabe seines Hostnamens
+• Pakete live mitschneiden und als .pcap für Wireshark speichern
+• Talos Node für Node aktualisieren, abgelehnt wenn etcd das Quorum verlieren würde
+• Cluster-Health-Check ausführen, Maschinenkonfiguration lesen, Debug-Shell öffnen
+• Eine talosconfig ausstellen, das Zertifikat des Telefons erneuern, eine kubeconfig exportieren
+
+<b>Das Telefon bekommt nur den Zugriff, den Sie ihm geben</b>
+Erzeugen Sie eine eigene talosconfig für das Telefon; empfohlen ist os:reader. Die App liest die Rollen des Zertifikats und bietet nur an, was sie erlauben. Die Konfiguration ist mit einem Schlüssel aus dem Android Keystore verschlüsselt und von Backups ausgeschlossen. Import per Datei, durch Einfügen oder per QR-Code.
+
+<b>Immer wissen, auf welchem Cluster Sie sind</b>
+Importieren Sie mehrere Cluster und wechseln Sie per Wischgeste. Jeder hat seine eigene Farbe, die die ganze App übernimmt: Ein Neustart trifft nie den falschen Cluster.
+
+<b>Benachrichtigungen und Widget</b>
+Hintergrundprüfungen melden, wenn ein Node ausfällt oder das Zertifikat des Telefons bald abläuft, und ein Startbildschirm-Widget zeigt den Cluster auf einen Blick.
+
+<b>Datenschutz und Sicherheit</b>
+• Optionale App-Sperre per Fingerabdruck oder PIN, beim Öffnen und vor jedem Neustart, Herunterfahren und kubeconfig-Export
+• Der Screenshot-Modus ersetzt Adressen und Node-Namen durch Platzhalter
+• Benachrichtigungen bleiben auf dem Sperrbildschirm neutral, solange die App-Sperre aktiv ist
+• Keine Werbung, kein Tracking, kein Konto
+
+<b>Optionale KI-Diagnose</b>
+Standardmäßig aus und unsichtbar, bis Sie sie einschalten. Sie erstellt einen Bericht über den Clusterzustand und zeigt ihn Ihnen; erst wenn Sie auf Fragen tippen, wird er an Anthropic (Claude), OpenAI oder Ihren eigenen kompatiblen Server gesendet, mit Ihrem eigenen API-Schlüssel. Node-Namen, Adressen und Domain werden standardmäßig anonymisiert. Ohne API-Schlüssel können Sie den Bericht über das Teilen-Menü an eine Assistenten-App übergeben.
+
+Frei und quelloffen (Apache-2.0): https://github.com/cyrinux/talosdev-mobile
+
+Verfügbar auf Deutsch, Englisch, Französisch, Spanisch, Italienisch und Ukrainisch.
+
+Talosdev Mobile ist ein unabhängiges Projekt und steht in keiner Verbindung zu Sidero Labs. Talos ist eine Marke von Sidero Labs, Inc.
