@@ -124,6 +124,7 @@ func TestBuildTalosconfig(t *testing.T) {
 		Current: "lab",
 		Contexts: []contextSummary{{
 			Name:         "lab",
+			Fingerprint:  got.Contexts[0].Fingerprint, // covered by TestContextFingerprint
 			Endpoints:    src.Endpoints,
 			Nodes:        src.Nodes,
 			Roles:        []string{"os:reader"},

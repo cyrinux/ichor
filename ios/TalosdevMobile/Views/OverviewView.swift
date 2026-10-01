@@ -90,6 +90,25 @@ struct OverviewView: View {
             .themedBackground()
         }
         .navigationTitle(model.activeContext)
+        // Shown by the title once it is inline (scrolled); the bar below is always there.
+        .toolbarTitleMenu {
+            ForEach(model.summary?.contexts ?? []) { context in
+                Button { model.activeContext = context.name } label: {
+                    if context.name == model.activeContext {
+                        Label(context.name, systemImage: "checkmark")
+                    } else {
+                        Text(context.name)
+                    }
+                }
+            }
+            Divider()
+            Button { path.append(.clusters) } label: { Label("Manage clusters…", systemImage: "square.stack.3d.up") }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if (model.summary?.contexts.count ?? 0) > 1 {
+                ClusterBar { path.append(.clusters) }
+            }
+        }
         .toolbar {
             if model.privacyMask {
                 ToolbarItem(placement: .topBarLeading) {
@@ -121,6 +140,8 @@ struct OverviewView: View {
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
         .onChange(of: model.dataGeneration) { state = .loading }
+        // Another cluster: never its name over the previous one's nodes.
+        .onChange(of: model.activeContext) { state = .loading }
         // After an update (and the unlock: the overview is not shown before): what changed
         // since the build launched last time. The build is remembered once the notes are closed.
         .task {

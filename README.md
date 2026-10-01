@@ -97,7 +97,8 @@ The `talosconfig*` filenames are gitignored in this repository.
 
 **Renewal:** the certificate lasts `--crt-ttl` (default one year). Settings shows the expiry
 date. When background alerts are on, the app notifies daily from 14 days before expiry. To
-renew, generate a new file and import it (Settings → Import a new talosconfig).
+renew, generate a new file and import it (Settings → Add a cluster): a cluster already
+imported, i.e. the same context name and CA, is updated in place.
 
 ### Importing it
 
@@ -110,6 +111,21 @@ Pick one of these:
 
 Delete `talosconfig.png` and the copy in `Download/` afterwards; both contain the private key.
 The app stores the config AES-GCM encrypted with an Android Keystore key, excluded from backups.
+
+### Several clusters
+
+Every context of a talosconfig is a cluster in the app, and importing another talosconfig
+adds its contexts to the ones already there (like `talosctl config merge`: a context whose
+name is taken by another cluster is added as `name-1`). To switch cluster:
+
+- **Android:** swipe the overview's top bar left or right, or tap its title for the list.
+- **iOS:** swipe the row of dots under the overview's title, or tap it for the list.
+
+The list is also where a cluster is removed (its credentials are deleted from the device) and
+where its color is chosen. Each cluster gets a color of its own, and the app's palette (light,
+dark and true black alike) is generated from the color of the cluster on screen, so it is
+always clear which cluster a reboot is about to hit. Background alerts and the widget follow
+the cluster on screen.
 
 ## Safety features
 

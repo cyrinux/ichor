@@ -22,10 +22,28 @@ public struct ConfigSummary: Decodable, Equatable, Sendable {
         if let index, contexts.indices.contains(index) { return contexts[index].name }
         return name.flatMap { context(named: $0)?.name } ?? current
     }
+
+    /// The context `step` positions after `active` (before it when negative), nil past
+    /// either end. Same rule as Android.
+    public func adjacentContext(to active: String, step: Int) -> String? {
+        guard step != 0, let index = contexts.firstIndex(where: { $0.name == active }),
+              contexts.indices.contains(index + step) else { return nil }
+        return contexts[index + step].name
+    }
+
+    /// Where the active context is once the one at `removed` is gone, among the `remaining`
+    /// ones: it keeps showing the same context, or the removed one's neighbour.
+    public static func activeIndexAfterRemoval(active: Int, removed: Int, remaining: Int) -> Int {
+        if active > removed { return active - 1 }
+        if active == removed { return min(removed, remaining - 1) }
+        return active
+    }
 }
 
 public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     public let name: String
+    /// Identifies the cluster whatever the screenshot mode does to `name`; keys its color.
+    public let fingerprint: String
     public let endpoints: [String]
     public let nodes: [String]
     public let roles: [String]
@@ -33,20 +51,22 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { name }
 
-    public init(name: String, endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0) {
+    public init(name: String, fingerprint: String = "", endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0) {
         self.name = name
+        self.fingerprint = fingerprint
         self.endpoints = endpoints
         self.nodes = nodes
         self.roles = roles
         self.certNotAfter = certNotAfter
     }
 
-    private enum CodingKeys: String, CodingKey { case name, endpoints, nodes, roles, certNotAfter }
+    private enum CodingKeys: String, CodingKey { case name, fingerprint, endpoints, nodes, roles, certNotAfter }
 
     // Go encodes empty (nil) slices as null here.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         name = try c.decode(String.self, forKey: .name)
+        fingerprint = try c.decodeIfPresent(String.self, forKey: .fingerprint) ?? ""
         endpoints = try c.decodeIfPresent([String].self, forKey: .endpoints) ?? []
         nodes = try c.decodeIfPresent([String].self, forKey: .nodes) ?? []
         roles = try c.decodeIfPresent([String].self, forKey: .roles) ?? []

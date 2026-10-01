@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import java.io.File
 
-/** The imported talosconfig plus the context the user is looking at. */
+/** The stored talosconfig (a context per imported cluster) plus the context the user is looking at. */
 data class StoredConfig(
     val yaml: String,
     val summary: ConfigSummary,
@@ -52,12 +52,46 @@ class ConfigRepository(context: Context) {
     /** Validates without storing; throws with a readable message when invalid. */
     suspend fun validate(yaml: String): ConfigSummary = withContext(Dispatchers.IO) { parse(yaml) }
 
+    /**
+     * Stores [yaml]. With a config already stored its contexts are added to it (one stored
+     * talosconfig, a context per cluster): a context of an already imported cluster (same
+     * name and CA) is updated, any other gets its own entry. The imported config's current
+     * context becomes the one shown.
+     */
     suspend fun save(yaml: String) = withContext(Dispatchers.IO) {
-        val summary = parse(yaml)
-        store.write(yaml.encodeToByteArray())
-        prefs.edit().putString(KEY_CONTEXT, summary.current).putInt(KEY_CONTEXT_INDEX, summary.indexOf(summary.current)).apply()
-        _config.value = StoredConfig(yaml, summary, summary.current)
+        val merged = _config.value?.let { Talosmobile.mergeConfig(it.yaml, yaml) } ?: yaml
+        val summary = parse(merged)
+        store.write(merged.encodeToByteArray())
+        saveActive(summary, summary.current)
+        _config.value = StoredConfig(merged, summary, summary.current)
         _generation.value++
+    }
+
+    /**
+     * Removes the cluster [name] (a context and its credentials) from the stored config,
+     * showing its neighbour if it was the active one. Removing the last one deletes the
+     * stored config. Returns whether a config is still stored.
+     */
+    suspend fun removeContext(name: String): Boolean = withContext(Dispatchers.IO) {
+        val current = _config.value ?: return@withContext false
+        val removed = current.summary.indexOf(name)
+        if (removed < 0) return@withContext true
+        if (current.summary.contexts.size == 1) {
+            clear()
+            return@withContext false
+        }
+        val remaining = Talosmobile.removeContext(current.yaml, name)
+        val summary = parse(remaining)
+        // By position: the masked names of screenshot mode may change with the set of contexts.
+        val active = contextAt(
+            summary,
+            activeIndexAfterRemoval(current.summary.indexOf(current.activeContext), removed, summary.contexts.size),
+        )
+        store.write(remaining.encodeToByteArray())
+        saveActive(summary, active)
+        _config.value = StoredConfig(remaining, summary, active)
+        _generation.value++
+        true
     }
 
     /**
@@ -78,9 +112,12 @@ class ConfigRepository(context: Context) {
     fun selectContext(name: String) {
         val current = _config.value ?: return
         if (current.summary.contexts.none { it.name == name }) return
-        prefs.edit().putString(KEY_CONTEXT, name).putInt(KEY_CONTEXT_INDEX, current.summary.indexOf(name)).apply()
+        saveActive(current.summary, name)
         _config.value = current.copy(activeContext = name)
     }
+
+    private fun saveActive(summary: ConfigSummary, name: String) =
+        prefs.edit().putString(KEY_CONTEXT, name).putInt(KEY_CONTEXT_INDEX, summary.indexOf(name)).apply()
 
     /**
      * Parses the stored config again, keeping the selected context. Screenshot mode masks
@@ -124,3 +161,20 @@ internal fun resolveActive(summary: ConfigSummary, savedName: String?, savedInde
     summary.contexts.getOrNull(savedIndex)?.name
         ?: savedName?.takeIf { name -> summary.contexts.any { it.name == name } }
         ?: summary.current
+
+/** The context [step] positions after [active] (before it when negative), or null past either end. */
+internal fun adjacentContext(summary: ConfigSummary, active: String, step: Int): String? {
+    val index = summary.indexOf(active)
+    if (index < 0 || step == 0) return null
+    return summary.contexts.getOrNull(index + step)?.name
+}
+
+/**
+ * Where the active context is once the one at [removed] is gone, among the [remaining]
+ * ones: it keeps showing the same context, or the removed one's neighbour.
+ */
+internal fun activeIndexAfterRemoval(active: Int, removed: Int, remaining: Int): Int = when {
+    active > removed -> active - 1
+    active == removed -> minOf(removed, remaining - 1)
+    else -> active
+}

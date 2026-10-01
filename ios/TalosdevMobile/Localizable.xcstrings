@@ -1886,6 +1886,76 @@
         }
       }
     },
+    "Add a cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir un clúster"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un cluster"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi un cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати кластер"
+          }
+        }
+      }
+    },
+    "Add a cluster (import a talosconfig)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster hinzufügen (talosconfig importieren)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir un clúster (importar un talosconfig)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un cluster (importer un talosconfig)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi un cluster (importa un talosconfig)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати кластер (імпортувати talosconfig)"
+          }
+        }
+      }
+    },
     "Address, port, process or PID" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3236,6 +3306,41 @@
         }
       }
     },
+    "Clusters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clústeres"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clusters"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кластери"
+          }
+        }
+      }
+    },
     "Collecting samples every 2s…" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3267,6 +3372,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Збирання вимірів кожні 2 с…"
+          }
+        }
+      }
+    },
+    "Color of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbe von %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color de %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couleur de %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colore di %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Колір %@"
           }
         }
       }
@@ -7516,41 +7656,6 @@
         }
       }
     },
-    "Import a new talosconfig" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neue talosconfig importieren"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Importar un nuevo talosconfig"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Importer un nouveau talosconfig"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Importa un nuovo talosconfig"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Імпортувати новий talosconfig"
-          }
-        }
-      }
-    },
     "Import talosconfig" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7952,6 +8057,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Він надає доступ до кластера з %@ до %@, і відкликати його можна лише заміною CA кластера."
+          }
+        }
+      }
+    },
+    "It is added to the clusters already on this device. A cluster imported before (same name and CA) is updated." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sie wird zu den Clustern auf diesem Gerät hinzugefügt. Ein bereits importierter Cluster (gleicher Name und gleiche CA) wird aktualisiert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se añade a los clústeres que ya están en este dispositivo. Un clúster ya importado (mismo nombre y misma CA) se actualiza."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il s’ajoute aux clusters déjà présents sur cet appareil. Un cluster déjà importé (même nom et même CA) est mis à jour."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viene aggiunto ai cluster già presenti su questo dispositivo. Un cluster già importato (stesso nome e stessa CA) viene aggiornato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його буде додано до кластерів, які вже є на цьому пристрої. Уже імпортований кластер (та сама назва й той самий CA) буде оновлено."
           }
         }
       }
@@ -8792,6 +8932,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Config. macchina"
+          }
+        }
+      }
+    },
+    "Manage clusters…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster verwalten…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestionar clústeres…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les clusters…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gestisci i cluster…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Керувати кластерами…"
           }
         }
       }
@@ -11312,6 +11487,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Оновлюється кожні 3 с. CPU — відсоток одного ядра."
+          }
+        }
+      }
+    },
+    "Remove %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ entfernen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quitar %@?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer %@ ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovere %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити %@?"
           }
         }
       }
@@ -13891,6 +14101,41 @@
         }
       }
     },
+    "Switch cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster wechseln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar de clúster"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer de cluster"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити кластер"
+          }
+        }
+      }
+    },
     "System" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14237,6 +14482,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Talosdev Mobile заблоковано"
+          }
+        }
+      }
+    },
+    "The app takes the colors of the cluster on screen." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die App übernimmt die Farben des angezeigten Clusters."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La aplicación toma los colores del clúster en pantalla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’application prend les couleurs du cluster affiché."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’app prende i colori del cluster visualizzato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застосунок набуває кольорів кластера на екрані."
           }
         }
       }
@@ -14697,6 +14977,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Тема"
+          }
+        }
+      }
+    },
+    "This cluster's config and client key will be removed from this device. The other clusters are kept." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Konfiguration und der Client-Schlüssel dieses Clusters werden von diesem Gerät entfernt. Die anderen Cluster bleiben erhalten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuración y la clave de cliente de este clúster se eliminarán de este dispositivo. Los demás clústeres se conservan."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuration et la clé client de ce cluster seront supprimées de cet appareil. Les autres clusters sont conservés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configurazione e la chiave client di questo cluster verranno rimosse da questo dispositivo. Gli altri cluster vengono mantenuti."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конфігурацію та клієнтський ключ цього кластера буде вилучено з цього пристрою. Інші кластери залишаться."
           }
         }
       }

@@ -50,6 +50,17 @@ struct TalosClient: Sendable {
         try await run { TalosmobileReplaceContextCredentials(stored, generated, context, $0) }
     }
 
+    /// `stored` with the contexts of `added` added: a context per cluster. One already there
+    /// (same name and CA) is updated, another one of that name is added as name-1.
+    static func mergeConfig(stored: String, added: String) async throws -> String {
+        try await run { TalosmobileMergeConfig(stored, added, $0) }
+    }
+
+    /// `stored` without `context` (not the last one: the stored config is deleted instead).
+    static func removeContext(stored: String, context: String) async throws -> String {
+        try await run { TalosmobileRemoveContext(stored, context, $0) }
+    }
+
     /// Screenshot mode: Go masks IPs, hostnames, context names and `extraWords`
     /// (comma-separated) in everything it returns, and unmasks what it is given back.
     static func setPrivacyMask(enabled: Bool, extraWords: String) {

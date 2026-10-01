@@ -227,9 +227,19 @@
     <string name="health_all_passed">Tutti i controlli superati</string>
     <string name="health_rerun">Esegui di nuovo</string>
 
+    <!-- Clusters -->
+    <string name="clusters_title">Cluster</string>
+    <string name="clusters_switch">Cambia cluster</string>
+    <string name="clusters_add">Aggiungi un cluster</string>
+    <string name="clusters_swipe_hint">Scorri la barra in alto verso sinistra o destra per cambiare cluster.</string>
+    <string name="clusters_remove">Rimuovi %1$s</string>
+    <string name="clusters_remove_title">Rimuovere %1$s?</string>
+    <string name="clusters_remove_body">La configurazione e la chiave client di questo cluster verranno rimosse da questo dispositivo. Gli altri cluster vengono mantenuti.</string>
+    <string name="clusters_color">Colore di %1$s</string>
+    <string name="clusters_color_hint">L\'app prende i colori del cluster visualizzato.</string>
+
     <!-- Settings -->
     <string name="settings_title">Impostazioni</string>
-    <string name="settings_section_context">Contesto</string>
     <string name="settings_section_appearance">Aspetto</string>
     <string name="settings_theme_auto">Automatico</string>
     <string name="settings_theme_light">Chiaro</string>
@@ -264,7 +274,7 @@
     <string name="settings_key_strongbox">chip di sicurezza StrongBox</string>
     <string name="settings_key_tee">Trusted Execution Environment</string>
     <string name="settings_key_software">keystore software</string>
-    <string name="settings_import_new">Importa un nuovo talosconfig</string>
+    <string name="settings_import_new">Aggiungi un cluster (importa un talosconfig)</string>
     <string name="settings_delete_config">Elimina il talosconfig salvato</string>
     <string name="settings_delete_title">Eliminare il talosconfig?</string>
     <string name="settings_delete_body">La configurazione crittografata e la relativa chiave client verranno rimosse da questo dispositivo.</string>
@@ -352,6 +362,7 @@
     <string name="import_context_current">%1$s (attuale)</string>
     <string name="import_nodes_endpoints">endpoint</string>
     <string name="import_stored_encrypted">La configurazione è salvata crittografata su questo dispositivo (Android Keystore) ed esclusa dai backup.</string>
+    <string name="import_adds_cluster">Viene aggiunto ai cluster già presenti su questo dispositivo. Un cluster già importato (stesso nome e stessa CA) viene aggiornato.</string>
     <string name="import_import">Importa</string>
     <string name="import_camera_needed">Serve l\'autorizzazione della fotocamera per scansionare il codice QR di un talosconfig.</string>
     <string name="import_grant_camera">Consenti accesso alla fotocamera</string>

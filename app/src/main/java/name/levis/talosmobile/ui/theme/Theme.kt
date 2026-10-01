@@ -1,34 +1,16 @@
 package name.levis.talosmobile.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import name.levis.talosmobile.data.ThemeMode
-
-private val TalosOrange = Color(0xFFFF7A45)
-
-private val DarkColors = darkColorScheme(
-    primary = TalosOrange,
-    onPrimary = Color(0xFF2B1000),
-    background = Color(0xFF101418),
-    surface = Color(0xFF101418),
-    surfaceContainer = Color(0xFF1A1F24),
-)
-
-private val LightColors = lightColorScheme(
-    primary = Color(0xFFB8461B),
-)
+import name.levis.talosmobile.model.DEFAULT_CLUSTER_SEED
 
 /** OLED "true black": pure black backgrounds, cards lifted just enough to stay distinct. */
 private fun ColorScheme.trueBlack(): ColorScheme = copy(
@@ -76,18 +58,17 @@ private val DarkChart = ChartColors(first = Color(0xFF3987E5), second = Color(0x
 
 val LocalChartColors = staticCompositionLocalOf { DarkChart }
 
+/**
+ * The app's theme: [mode] decides light, dark or true black; the colors are generated from
+ * [seed], the main color of the cluster on screen.
+ */
 @Composable
-fun TalosTheme(mode: ThemeMode = ThemeMode.AUTO, content: @Composable () -> Unit) {
-    val context = LocalContext.current
+fun TalosTheme(mode: ThemeMode = ThemeMode.AUTO, seed: Int = DEFAULT_CLUSTER_SEED, content: @Composable () -> Unit) {
     val dark = mode.isDark(isSystemInDarkTheme())
-    val dynamic = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    val base = when {
-        dynamic && dark -> dynamicDarkColorScheme(context).copy(primary = TalosOrange)
-        dynamic -> dynamicLightColorScheme(context)
-        dark -> DarkColors
-        else -> LightColors
+    val colors = remember(seed, dark, mode) {
+        val base = seedColorScheme(seed, dark)
+        if (mode == ThemeMode.BLACK) base.trueBlack() else base
     }
-    val colors = if (mode == ThemeMode.BLACK) base.trueBlack() else base
 
     CompositionLocalProvider(
         LocalStatusColors provides if (dark) DarkStatus else LightStatus,

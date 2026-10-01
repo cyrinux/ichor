@@ -1,6 +1,7 @@
 package talosmobile
 
 import (
+	"crypto/sha256"
 	"crypto/x509"
 	"errors"
 	"fmt"
@@ -19,7 +20,10 @@ type configSummary struct {
 }
 
 type contextSummary struct {
-	Name         string   `json:"name"`
+	Name string `json:"name"`
+	// Fingerprint identifies the context whatever screenshot mode does to its name, so the
+	// app can attach settings (its color) to a cluster.
+	Fingerprint  string   `json:"fingerprint"`
 	Endpoints    []string `json:"endpoints"`
 	Nodes        []string `json:"nodes"`
 	Roles        []string `json:"roles"`
@@ -92,12 +96,29 @@ func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, e
 
 	return contextSummary{
 		Name:         name,
+		Fingerprint:  contextFingerprint(name, ctx),
 		Endpoints:    slices.Clone(ctx.Endpoints),
 		Nodes:        slices.Clone(ctx.Nodes),
 		Roles:        slices.Clone(leaf.Subject.Organization),
 		CertNotAfter: leaf.NotAfter.Unix(),
 	}, nil
 }
+
+// contextFingerprint is stable for a context name within a cluster (its CA): it survives a
+// renewed certificate and moved endpoints. Letters only, so that masking, which rewrites
+// names and addresses, never touches it.
+func contextFingerprint(name string, ctx *clientconfig.Context) string {
+	sum := sha256.Sum256([]byte(name + "\x00" + ctx.CA))
+
+	out := make([]byte, fingerprintLength)
+	for i := range out {
+		out[i] = 'a' + sum[i]%26
+	}
+
+	return string(out)
+}
+
+const fingerprintLength = 16
 
 // resolveContext returns the named context, or the config's current one when name is empty.
 func resolveContext(configYAML, name string) (string, *clientconfig.Context, error) {

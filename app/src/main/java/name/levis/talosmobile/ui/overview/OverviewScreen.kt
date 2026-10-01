@@ -1,5 +1,6 @@
 package name.levis.talosmobile.ui.overview
 
+import android.widget.Toast
 import androidx.annotation.PluralsRes
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -40,11 +41,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -56,7 +57,6 @@ import name.levis.talosmobile.data.SPONSOR_URL
 import name.levis.talosmobile.ui.settings.openUrl
 import name.levis.talosmobile.data.activeSummary
 import name.levis.talosmobile.model.Feature
-import name.levis.talosmobile.model.accessLabel
 import name.levis.talosmobile.model.allows
 import name.levis.talosmobile.model.TalosFeature
 import name.levis.talosmobile.model.clusterSupport
@@ -80,6 +80,8 @@ import name.levis.talosmobile.ui.components.ErrorBox
 import name.levis.talosmobile.ui.components.LoadingBox
 import name.levis.talosmobile.ui.components.NodeHealthPill
 import name.levis.talosmobile.ui.factory
+import name.levis.talosmobile.ui.userMessage
+import kotlinx.coroutines.launch
 import name.levis.talosmobile.ui.theme.LocalStatusColors
 
 class OverviewViewModel(
@@ -103,11 +105,18 @@ fun OverviewScreen(
     onIssueConfig: () -> Unit,
     onUpgrade: (NodeOverview, String) -> Unit,
     onDiagnose: () -> Unit,
+    onAddCluster: () -> Unit,
+    onClustersCleared: () -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val ai by (LocalContext.current.applicationContext as TalosApp).aiPreferences.settings.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val app = context.applicationContext as TalosApp
+    val ai by app.aiPreferences.settings.collectAsStateWithLifecycle()
+    val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    var showClusters by remember { mutableStateOf(false) }
     val timeState by timeVm.state.collectAsStateWithLifecycle()
     val config by vm.configs.config.collectAsStateWithLifecycle()
     val invalidations by vm.talos.invalidations.collectAsStateWithLifecycle()
@@ -130,24 +139,10 @@ fun OverviewScreen(
         },
         topBar = {
             TopAppBar(
+                // Swipe the bar sideways for the previous/next cluster, tap the title for the list.
+                modifier = Modifier.clusterSwipe(config, app::selectCluster),
                 title = {
-                    Column {
-                        Text(stringResource(R.string.overview_title))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            ScreenshotModeIcon()
-                            config?.let { stored ->
-                                val access = stored.activeSummary?.accessLabel?.let { stringResource(it) }
-                                Text(
-                                    listOfNotNull(stored.activeContext, access).joinToString(" · "),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f, fill = false).padding(end = 6.dp),
-                                )
-                            }
-                        }
-                    }
+                    ClusterTitle(config, clusterColors, onOpen = { showClusters = true }) { ScreenshotModeIcon() }
                 },
                 actions = {
                     // Only offered when the config's role can run it.
@@ -171,6 +166,30 @@ fun OverviewScreen(
             )
         },
     ) { padding ->
+        config?.takeIf { showClusters }?.let { stored ->
+            ClusterSheet(
+                config = stored,
+                colors = clusterColors,
+                onSelect = {
+                    showClusters = false
+                    app.selectCluster(it)
+                },
+                onColor = { cluster, color -> app.clusterColors.set(cluster.fingerprint, color) },
+                onAdd = {
+                    showClusters = false
+                    onAddCluster()
+                },
+                onRemove = { name ->
+                    scope.launch {
+                        runCatching { app.removeCluster(name) }.fold(
+                            onSuccess = { remains -> if (!remains) onClustersCleared() },
+                            onFailure = { Toast.makeText(context, it.userMessage(), Toast.LENGTH_LONG).show() },
+                        )
+                    }
+                },
+                onDismiss = { showClusters = false },
+            )
+        }
         when (val s = state) {
             UiState.Loading -> LoadingBox(Modifier.padding(padding))
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.padding(padding))

@@ -228,9 +228,19 @@
     <string name="health_all_passed">All checks passed</string>
     <string name="health_rerun">Re-run</string>
 
+    <!-- Clusters -->
+    <string name="clusters_title">Clusters</string>
+    <string name="clusters_switch">Switch cluster</string>
+    <string name="clusters_add">Add a cluster</string>
+    <string name="clusters_swipe_hint">Swipe the top bar left or right to switch cluster.</string>
+    <string name="clusters_remove">Remove %1$s</string>
+    <string name="clusters_remove_title">Remove %1$s?</string>
+    <string name="clusters_remove_body">This cluster\'s config and client key will be removed from this device. The other clusters are kept.</string>
+    <string name="clusters_color">Color of %1$s</string>
+    <string name="clusters_color_hint">The app takes the colors of the cluster on screen.</string>
+
     <!-- Settings -->
     <string name="settings_title">Settings</string>
-    <string name="settings_section_context">Context</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_theme_auto">Auto</string>
     <string name="settings_theme_light">Light</string>
@@ -265,7 +275,7 @@
     <string name="settings_key_strongbox">StrongBox security chip</string>
     <string name="settings_key_tee">Trusted Execution Environment</string>
     <string name="settings_key_software">software keystore</string>
-    <string name="settings_import_new">Import a new talosconfig</string>
+    <string name="settings_import_new">Add a cluster (import a talosconfig)</string>
     <string name="settings_delete_config">Delete stored talosconfig</string>
     <string name="settings_delete_title">Delete talosconfig?</string>
     <string name="settings_delete_body">The encrypted config and its client key will be removed from this device.</string>
@@ -353,6 +363,7 @@
     <string name="import_context_current">%1$s (current)</string>
     <string name="import_nodes_endpoints">endpoints</string>
     <string name="import_stored_encrypted">The config is stored encrypted on this device (Android Keystore) and excluded from backups.</string>
+    <string name="import_adds_cluster">It is added to the clusters already on this device. A cluster imported before (same name and CA) is updated.</string>
     <string name="import_import">Import</string>
     <string name="import_camera_needed">Camera permission is needed to scan a talosconfig QR code.</string>
     <string name="import_grant_camera">Grant camera access</string>
