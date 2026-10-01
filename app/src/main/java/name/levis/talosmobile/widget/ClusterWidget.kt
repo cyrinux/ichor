@@ -5,14 +5,19 @@ import name.levis.talosmobile.i18n.AppLocale
 import name.levis.talosmobile.R
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.GlanceTheme
+import androidx.glance.ColorFilter
+import androidx.glance.Image
+import androidx.glance.ImageProvider
+import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
@@ -24,6 +29,7 @@ import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -32,76 +38,99 @@ import androidx.glance.unit.ColorProvider
 import name.levis.talosmobile.MainActivity
 import name.levis.talosmobile.TalosApp
 import name.levis.talosmobile.monitor.ClusterSnapshot
-import java.text.DateFormat
 import java.util.Date
 
-private val Ok = androidx.compose.ui.graphics.Color(0xFF5BD18B)
-private val Warn = androidx.compose.ui.graphics.Color(0xFFF2C14E)
-private val Bad = androidx.compose.ui.graphics.Color(0xFFFF6B6B)
+private val Card = Color(0xFF18263A)
+private val Primary = Color(0xFFE8EEF5)
+private val Secondary = Color(0xFF93A3B8)
+private val Ok = Color(0xFF5BD18B)
+private val Warn = Color(0xFFF2C14E)
+private val Bad = Color(0xFFF0716B)
+
+/** Below this height (one launcher cell) only the context and the count fit. */
+private val CompactHeight = 90.dp
 
 /**
  * Home-screen summary from the last background check. Shows counts only (no hostnames), as it
- * stays visible when the app lock is on.
+ * stays visible when the app lock is on. Always the dark card of the website mockup.
  */
 class ClusterWidget : GlanceAppWidget() {
+    override val sizeMode: SizeMode = SizeMode.Exact
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val snapshot = (context.applicationContext as TalosApp).monitorStore.snapshot()
-        provideContent { GlanceTheme { WidgetContent(snapshot) } }
+        provideContent { WidgetContent(snapshot, System.currentTimeMillis()) }
     }
 }
 
 @Composable
-private fun WidgetContent(s: ClusterSnapshot?) {
+private fun WidgetContent(s: ClusterSnapshot?, now: Long) {
     // Glance's context is the application's; below API 33 apply the in-app language to it.
     val res = AppLocale.wrap(LocalContext.current)
-    val onSurface = GlanceTheme.colors.onSurface
+    val stale = isStale(s, now)
+    val compact = LocalSize.current.height < CompactHeight
     Column(
-        modifier = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.widgetBackground)
-            .cornerRadius(20.dp).padding(14.dp).clickable(actionStartActivity<MainActivity>()),
+        modifier = GlanceModifier.fillMaxSize().background(Card).cornerRadius(16.dp)
+            .padding(horizontal = 14.dp, vertical = 12.dp).clickable(actionStartActivity<MainActivity>()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (s == null) {
-            Text("Talos", style = TextStyle(color = onSurface, fontWeight = FontWeight.Bold))
-            Text(res.getString(R.string.widget_waiting), style = TextStyle(color = onSurface, fontSize = 12.sp))
-            return@Column
-        }
-        Text(s.context, style = TextStyle(color = onSurface, fontSize = 12.sp))
         Text(
-            res.getString(R.string.widget_ready_count, s.readyCount, s.nodes.size),
+            s?.context ?: "Talos",
+            style = TextStyle(color = ColorProvider(Secondary), fontSize = 12.sp),
+            maxLines = 1,
+        )
+        Text(
+            if (s == null) "–" else res.getString(R.string.widget_ready_count, s.readyCount, s.nodes.size),
             style = TextStyle(
-                color = ColorProvider(if (s.readyCount == s.nodes.size) Ok else Warn),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
+                color = ColorProvider(if (stale) Primary.copy(alpha = 0.5f) else Primary),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Medium,
             ),
+            maxLines = 1,
         )
-        Spacer(GlanceModifier.height(2.dp))
-        Row {
-            Count(res.resources.getQuantityString(R.plurals.widget_not_ready, s.notReadyCount, s.notReadyCount), s.notReadyCount, Warn)
-            Spacer(GlanceModifier.width(10.dp))
-            Count(res.resources.getQuantityString(R.plurals.widget_down, s.unreachableCount, s.unreachableCount), s.unreachableCount, Bad)
+        if (compact) return@Column
+        Spacer(GlanceModifier.height(4.dp))
+        when {
+            s == null -> Label(res.getString(R.string.widget_setup))
+            stale -> Label(
+                res.getString(R.string.widget_updated_at, android.text.format.DateFormat.getTimeFormat(res).format(Date(s.takenAt))),
+            )
+            else -> Row(verticalAlignment = Alignment.CenterVertically) {
+                statusItems(s).forEachIndexed { i, item ->
+                    if (i > 0) Spacer(GlanceModifier.width(12.dp))
+                    StatusChip(res, item)
+                }
+            }
         }
-        val etcd = when {
-            !s.etcdChecked -> res.getString(R.string.widget_etcd_unknown)
-            s.etcdAlarms.isEmpty() -> res.getString(R.string.widget_etcd_no_alarms)
-            else -> res.resources.getQuantityString(R.plurals.widget_etcd_alarms, s.etcdAlarms.size, s.etcdAlarms.size)
-        }
-        Text(etcd, style = TextStyle(color = onSurface, fontSize = 12.sp))
-        Text(
-            res.getString(R.string.widget_updated, DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(s.takenAt))),
-            style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
-        )
     }
 }
 
 @Composable
-private fun Count(text: String, n: Int, color: androidx.compose.ui.graphics.Color) {
-    Text(
-        text,
-        style = TextStyle(
-            color = if (n > 0) ColorProvider(color) else GlanceTheme.colors.onSurfaceVariant,
-            fontSize = 12.sp,
-        ),
+private fun StatusChip(res: Context, item: StatusItem) {
+    val plural = res.resources
+    val (color, text) = when (item) {
+        is StatusItem.NotReady -> Warn to plural.getQuantityString(R.plurals.widget_not_ready, item.count, item.count)
+        is StatusItem.Unreachable -> Bad to plural.getQuantityString(R.plurals.widget_unreachable, item.count, item.count)
+        StatusItem.AllReady -> Ok to res.getString(R.string.widget_all_ready)
+        is StatusItem.Etcd -> if (item.alarms == 0) {
+            Ok to res.getString(R.string.widget_etcd_no_alarms)
+        } else {
+            Bad to plural.getQuantityString(R.plurals.widget_etcd_alarms, item.alarms, item.alarms)
+        }
+    }
+    Image(
+        provider = ImageProvider(R.drawable.widget_dot),
+        contentDescription = null,
+        modifier = GlanceModifier.size(7.dp),
+        colorFilter = ColorFilter.tint(ColorProvider(color)),
     )
+    Spacer(GlanceModifier.width(5.dp))
+    Label(text)
+}
+
+@Composable
+private fun Label(text: String) {
+    Text(text, style = TextStyle(color = ColorProvider(Secondary), fontSize = 12.sp), maxLines = 1)
 }
 
 class ClusterWidgetReceiver : GlanceAppWidgetReceiver() {

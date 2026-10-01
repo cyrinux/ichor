@@ -284,6 +284,16 @@ just i18n-check   # also part of `just check` and the iOS CI build
 It fails on a missing translation, or when placeholders (`%1$s`, `%@`, `%lld`) differ from
 English.
 
+## Support the project
+
+Talosdev Mobile is free, with no ads or tracking. To help keep it going:
+
+- [GitHub Sponsors](https://github.com/sponsors/cyrinux)
+- Bitcoin: `bc1qc0dhqrgw6z08du94rkfequk8n5r3lgcr5lnxtl`
+- Ethereum: `0xb32676301F9c4abD35Eb2e4c7C8cdA754BA29804`
+
+The app's About section and the [website](https://cyrinux.github.io/talosdev-mobile/#support) show them as QR codes.
+
 ## License
 
 Apache License 2.0; see [LICENSE](LICENSE) and [NOTICE](NOTICE) for third-party components.

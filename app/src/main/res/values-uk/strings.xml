@@ -363,6 +363,13 @@
     <string name="about_source">Вихідний код на GitHub</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="about_sponsor">Підтримати на GitHub</string>
+    <string name="about_donate_btc">Пожертвувати в Bitcoin</string>
+    <string name="about_donate_eth">Пожертвувати в Ethereum</string>
+    <string name="about_donate_copy">Копіювати адресу</string>
+    <string name="about_donate_open_wallet">Відкрити в гаманці</string>
+    <string name="about_donate_copied">Скопійовано</string>
+    <string name="about_donate_no_wallet">Не знайдено застосунку-гаманця</string>
+    <string name="about_donate_qr">QR-код адреси</string>
     <string name="about_disclaimer">Не пов\'язано з Sidero Labs. Talos — торговельна марка Sidero Labs, Inc.</string>
 
     <!-- Import -->
@@ -423,7 +430,7 @@
 
     <!-- Home-screen widget -->
     <string name="widget_description">Стан кластера за останньою фоновою перевіркою</string>
-    <string name="widget_waiting">Очікування першої перевірки…</string>
+    <string name="widget_setup">Відкрийте застосунок, щоб налаштувати</string>
     <string name="widget_ready_count">%1$d/%2$d готові</string>
     <plurals name="widget_not_ready">
         <item quantity="one">%1$d не готовий</item>
@@ -431,13 +438,13 @@
         <item quantity="many">%1$d не готових</item>
         <item quantity="other">%1$d не готових</item>
     </plurals>
-    <plurals name="widget_down">
-        <item quantity="one">%1$d не працює</item>
-        <item quantity="few">%1$d не працюють</item>
-        <item quantity="many">%1$d не працюють</item>
-        <item quantity="other">%1$d не працює</item>
+    <plurals name="widget_unreachable">
+        <item quantity="one">%1$d недоступний</item>
+        <item quantity="few">%1$d недоступні</item>
+        <item quantity="many">%1$d недоступних</item>
+        <item quantity="other">%1$d недоступних</item>
     </plurals>
-    <string name="widget_etcd_unknown">etcd: невідомо</string>
+    <string name="widget_all_ready">усі готові</string>
     <string name="widget_etcd_no_alarms">etcd: тривог немає</string>
     <plurals name="widget_etcd_alarms">
         <item quantity="one">etcd: %1$d тривога</item>
@@ -445,7 +452,7 @@
         <item quantity="many">etcd: %1$d тривог</item>
         <item quantity="other">etcd: %1$d тривоги</item>
     </plurals>
-    <string name="widget_updated">оновлено %1$s</string>
+    <string name="widget_updated_at">Оновлено %1$s</string>
     <!-- Processes, machine config, etcd snapshot and alarms -->
     <string name="common_feature_machine_config">Конфігурація машини</string>
     <string name="common_feature_etcd_snapshot">Знімок etcd</string>

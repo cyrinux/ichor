@@ -195,6 +195,14 @@
   .shots figcaption { margin-top: 0.6rem; font-size: 0.9rem; color: var(--ink-2); }
   .shots figcaption strong { display: block; color: var(--ink); font-weight: 600; }
   .shots:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .donate { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; margin-top: 2rem; }
+  .donate > div { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1.25rem; }
+  .donate h3 { margin: 0 0 .75rem; font-size: 1rem; }
+  .donate img { display: block; width: 148px; height: 148px; background: #fff; border-radius: 8px; padding: 6px; }
+  .donate code { display: block; margin: .9rem 0 .6rem; font-family: "IBM Plex Mono", monospace; font-size: .8rem; word-break: break-all; color: var(--ink); }
+  .donate .row { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .donate button, .donate .wallet { font: inherit; font-size: .85rem; padding: .4rem .8rem; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; text-decoration: none; }
+  .donate button:focus-visible, .donate .wallet:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -364,16 +372,51 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
         </div>
       </div>
     </section>
+    <section id="support" aria-labelledby="support-title">
+      <h2 id="support-title">Support the project</h2>
+      <p class="intro">Talosdev Mobile is free and has no ads or tracking. If it saves you a trip to the laptop, you can help keep it going through <a href="https://github.com/sponsors/cyrinux">GitHub Sponsors</a> or in crypto.</p>
+      <div class="donate">
+        <div>
+          <h3>Bitcoin</h3>
+          <img src="donate/bitcoin.svg" width="148" height="148" alt="QR code of the Bitcoin donation address">
+          <code id="btc-address">bc1qc0dhqrgw6z08du94rkfequk8n5r3lgcr5lnxtl</code>
+          <div class="row">
+            <button type="button" data-copy="btc-address">Copy address</button>
+            <a class="wallet" href="bitcoin:bc1qc0dhqrgw6z08du94rkfequk8n5r3lgcr5lnxtl">Open in wallet</a>
+          </div>
+        </div>
+        <div>
+          <h3>Ethereum</h3>
+          <img src="donate/ethereum.svg" width="148" height="148" alt="QR code of the Ethereum donation address">
+          <code id="eth-address">0xb32676301F9c4abD35Eb2e4c7C8cdA754BA29804</code>
+          <div class="row">
+            <button type="button" data-copy="eth-address">Copy address</button>
+            <a class="wallet" href="ethereum:0xb32676301F9c4abD35Eb2e4c7C8cdA754BA29804">Open in wallet</a>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer>
     <div class="links">
       <a href="https://github.com/cyrinux/talosdev-mobile">Source on GitHub</a>
       <a href="https://www.talos.dev">Talos Linux</a>
-      <a href="https://github.com/sponsors/cyrinux">Sponsor</a>
+      <a href="#support">Support the project</a>
     </div>
     <p>Apache-2.0. Not affiliated with Sidero Labs; Talos is a trademark of Sidero Labs, Inc.</p>
   </footer>
 </div>
+<script>
+  document.querySelectorAll('[data-copy]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var text = document.getElementById(button.dataset.copy).textContent;
+      var done = function () { button.textContent = 'Copied'; setTimeout(function () { button.textContent = 'Copy address'; }, 1500); };
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(done, function () {});
+      }
+    });
+  });
+</script>
 </body>
 </html>

@@ -319,7 +319,7 @@ private struct IssuedConfigSection: View {
 
 /// QR code (error correction L, the densest level the importer scans reliably) as a crisp
 /// bitmap; nil if CoreImage cannot encode it.
-private func makeQRCode(_ text: String) -> UIImage? {
+func makeQRCode(_ text: String) -> UIImage? {
     guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
     filter.setValue(Data(text.utf8), forKey: "inputMessage")
     filter.setValue("L", forKey: "inputCorrectionLevel")

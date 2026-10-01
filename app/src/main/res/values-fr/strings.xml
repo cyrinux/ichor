@@ -327,6 +327,13 @@
     <string name="about_source">Code source sur GitHub</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="about_sponsor">Soutenir sur GitHub</string>
+    <string name="about_donate_btc">Faire un don en Bitcoin</string>
+    <string name="about_donate_eth">Faire un don en Ethereum</string>
+    <string name="about_donate_copy">Copier l\'adresse</string>
+    <string name="about_donate_open_wallet">Ouvrir dans un portefeuille</string>
+    <string name="about_donate_copied">Copié</string>
+    <string name="about_donate_no_wallet">Aucune application de portefeuille trouvée</string>
+    <string name="about_donate_qr">QR code de l\'adresse</string>
     <string name="about_disclaimer">Non affilié à Sidero Labs. Talos est une marque de Sidero Labs, Inc.</string>
 
     <!-- Import -->
@@ -387,23 +394,23 @@
 
     <!-- Home-screen widget -->
     <string name="widget_description">État du cluster lors de la dernière vérification en arrière-plan</string>
-    <string name="widget_waiting">En attente de la première vérification…</string>
+    <string name="widget_setup">Ouvrez l\'app pour la configurer</string>
     <string name="widget_ready_count">%1$d/%2$d prêts</string>
     <plurals name="widget_not_ready">
         <item quantity="one">%1$d non prêt</item>
         <item quantity="other">%1$d non prêts</item>
     </plurals>
-    <plurals name="widget_down">
-        <item quantity="one">%1$d hors ligne</item>
-        <item quantity="other">%1$d hors ligne</item>
+    <plurals name="widget_unreachable">
+        <item quantity="one">%1$d injoignable</item>
+        <item quantity="other">%1$d injoignables</item>
     </plurals>
-    <string name="widget_etcd_unknown">etcd&#160;: inconnu</string>
+    <string name="widget_all_ready">tous prêts</string>
     <string name="widget_etcd_no_alarms">etcd&#160;: aucune alarme</string>
     <plurals name="widget_etcd_alarms">
         <item quantity="one">etcd&#160;: %1$d alarme</item>
         <item quantity="other">etcd&#160;: %1$d alarmes</item>
     </plurals>
-    <string name="widget_updated">mis à jour %1$s</string>
+    <string name="widget_updated_at">Mis à jour à %1$s</string>
     <!-- Processes, machine config, etcd snapshot and alarms -->
     <string name="common_feature_machine_config">Configuration machine</string>
     <string name="common_feature_etcd_snapshot">Sauvegarde etcd</string>

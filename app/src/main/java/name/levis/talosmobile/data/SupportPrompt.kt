@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 const val REPO_URL_BASE = "https://github.com/"
 const val TALOS_URL = "https://www.talos.dev"
 const val SPONSOR_URL = "https://github.com/sponsors/cyrinux"
+const val BTC_ADDRESS = "bc1qc0dhqrgw6z08du94rkfequk8n5r3lgcr5lnxtl"
+const val ETH_ADDRESS = "0xb32676301F9c4abD35Eb2e4c7C8cdA754BA29804"
 
 data class SupportState(val firstSeen: Long, val launches: Int, val lastAsked: Long, val never: Boolean) {
     /** Only after real use (2 weeks, 10 launches), at most every 90 days, never if declined for good. */

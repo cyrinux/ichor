@@ -1,131 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%lld down" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld nicht erreichbar"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld nicht erreichbar"
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld down"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld down"
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld inaccesible"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld inaccesibles"
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld injoignable"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld injoignables"
-                }
-              }
-            }
-          }
-        },
-        "it" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld irraggiungibile"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld irraggiungibili"
-                }
-              }
-            }
-          }
-        },
-        "uk" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld недоступний"
-                }
-              },
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld недоступні"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld недоступних"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld недоступного"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "%lld not ready" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -251,6 +126,131 @@
         }
       }
     },
+    "%lld unreachable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld unreachable"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld unreachable"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld injoignable"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld injoignables"
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld inaccesible"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld inaccesibles"
+                }
+              }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld nicht erreichbar"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld nicht erreichbar"
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld irraggiungibile"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld irraggiungibili"
+                }
+              }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld недоступний"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld недоступні"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld недоступних"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld недоступного"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld/%lld ready" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -282,6 +282,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld/%lld готові"
+          }
+        }
+      }
+    },
+    "all ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tous prêts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "todos listos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "alle bereit"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tutti pronti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "усі готові"
           }
         }
       }
@@ -481,41 +516,6 @@
         }
       }
     },
-    "etcd: unknown" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "etcd: unbekannt"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "etcd: desconocido"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "etcd : inconnu"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "etcd: sconosciuto"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "etcd: невідомо"
-          }
-        }
-      }
-    },
     "Nodes ready and etcd alarms from the last check." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -551,72 +551,72 @@
         }
       }
     },
-    "Open the app and run a check to fill this widget." : {
+    "Open the app to set up" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Öffne die App und starte eine Prüfung, um dieses Widget zu füllen."
+            "value" : "Ouvrez l’app pour la configurer"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abre la app y haz una comprobación para llenar este widget."
+            "value" : "Abre la app para configurarla"
           }
         },
-        "fr" : {
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvrez l'app et lancez une vérification pour remplir ce widget."
+            "value" : "App öffnen zum Einrichten"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apri l'app ed esegui un controllo per riempire questo widget."
+            "value" : "Apri l’app per configurarla"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Відкрийте застосунок і запустіть перевірку, щоб заповнити цей віджет."
+            "value" : "Відкрийте застосунок для налаштування"
           }
         }
       }
     },
-    "updated %@" : {
+    "Updated %@" : {
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "aktualisiert um %@"
+            "value" : "Mis à jour à %@"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "actualizado a las %@"
+            "value" : "Actualizado a las %@"
           }
         },
-        "fr" : {
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "mis à jour à %@"
+            "value" : "Aktualisiert um %@"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "aggiornato alle %@"
+            "value" : "Aggiornato alle %@"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "оновлено о %@"
+            "value" : "Оновлено о %@"
           }
         }
       }

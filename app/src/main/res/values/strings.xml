@@ -328,6 +328,13 @@
     <string name="about_source">Source code on GitHub</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="about_sponsor">Sponsor on GitHub</string>
+    <string name="about_donate_btc">Donate in Bitcoin</string>
+    <string name="about_donate_eth">Donate in Ethereum</string>
+    <string name="about_donate_copy">Copy address</string>
+    <string name="about_donate_open_wallet">Open in wallet</string>
+    <string name="about_donate_copied">Copied</string>
+    <string name="about_donate_no_wallet">No wallet app found</string>
+    <string name="about_donate_qr">QR code of the address</string>
     <string name="about_disclaimer">Not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.</string>
 
     <!-- Import -->
@@ -388,23 +395,23 @@
 
     <!-- Home-screen widget -->
     <string name="widget_description">Cluster status from the last background check</string>
-    <string name="widget_waiting">Waiting for the first check…</string>
+    <string name="widget_setup">Open the app to set up</string>
     <string name="widget_ready_count">%1$d/%2$d ready</string>
     <plurals name="widget_not_ready">
         <item quantity="one">%1$d not ready</item>
         <item quantity="other">%1$d not ready</item>
     </plurals>
-    <plurals name="widget_down">
-        <item quantity="one">%1$d down</item>
-        <item quantity="other">%1$d down</item>
+    <plurals name="widget_unreachable">
+        <item quantity="one">%1$d unreachable</item>
+        <item quantity="other">%1$d unreachable</item>
     </plurals>
-    <string name="widget_etcd_unknown">etcd: unknown</string>
+    <string name="widget_all_ready">all ready</string>
     <string name="widget_etcd_no_alarms">etcd: no alarms</string>
     <plurals name="widget_etcd_alarms">
         <item quantity="one">etcd: %1$d alarm</item>
         <item quantity="other">etcd: %1$d alarms</item>
     </plurals>
-    <string name="widget_updated">updated %1$s</string>
+    <string name="widget_updated_at">Updated %1$s</string>
     <!-- Processes, machine config, etcd snapshot and alarms -->
     <string name="common_feature_machine_config">Machine config</string>
     <string name="common_feature_etcd_snapshot">etcd snapshot</string>
