@@ -7,8 +7,11 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import name.levis.talosmobile.data.AiPreferences
 import name.levis.talosmobile.data.CaptureRepository
 import name.levis.talosmobile.data.ChangelogRepository
+import name.levis.talosmobile.data.DiagnosisRepository
+import name.levis.talosmobile.data.SecureStore
 import name.levis.talosmobile.data.ConfigRepository
 import name.levis.talosmobile.data.TalosUpdateChecker
 import name.levis.talosmobile.data.UpgradeManager
@@ -49,6 +52,15 @@ class TalosApp : Application() {
         UpdateManager(this, getSharedPreferences("talosdev-mobile-update", Context.MODE_PRIVATE), changelogRepository)
     }
     val monitorStore by lazy { MonitorStore(getSharedPreferences("talosdev-mobile-monitor", Context.MODE_PRIVATE)) }
+
+    /** The optional AI diagnosis: off until enabled in Settings. API keys get their own Keystore keys. */
+    val diagnosisRepository by lazy { DiagnosisRepository(configRepository) }
+    val aiPreferences by lazy {
+        AiPreferences(
+            getSharedPreferences(AiPreferences.FILE, Context.MODE_PRIVATE),
+            diagnosisRepository.providers.map { it.id },
+        ) { provider -> SecureStore(java.io.File(filesDir, "ai-key-$provider.enc"), keyAlias = "ai-key-$provider") }
+    }
 
     /** Re-evaluates whether background monitoring should run (alerts on or widget placed). */
     fun launchSync(runNow: Boolean = false) {

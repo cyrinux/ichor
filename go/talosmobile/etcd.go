@@ -73,12 +73,19 @@ func EtcdStatus(configYAML, contextName string) (out string, err error) {
 	})
 }
 
+// gatherEtcdOverview finds the context's control-plane nodes and reads etcd through them.
 func gatherEtcdOverview(ctx context.Context, s *session) (etcdOverview, error) {
 	cps := classifyNodes(ctx, s.client, targetNodes(s.context)).GetControlPlaneNodes()
 	if len(cps) == 0 {
 		return etcdOverview{}, errors.New("no reachable control-plane node found in this context")
 	}
 
+	return fetchEtcd(ctx, s.client, cps), nil
+}
+
+// fetchEtcd asks every control-plane node for its etcd status, and the first one for the
+// member list and the alarms.
+func fetchEtcd(ctx context.Context, c *client.Client, cps []string) etcdOverview {
 	probes := make([]etcdProbe, len(cps))
 
 	var wg sync.WaitGroup
@@ -87,7 +94,7 @@ func gatherEtcdOverview(ctx context.Context, s *session) (etcdOverview, error) {
 		wg.Go(func() {
 			probes[i] = etcdProbe{node: node}
 
-			resp, err := s.client.EtcdStatus(client.WithNode(ctx, node))
+			resp, err := c.EtcdStatus(client.WithNode(ctx, node))
 			if err != nil {
 				probes[i].err = err
 
@@ -106,20 +113,20 @@ func gatherEtcdOverview(ctx context.Context, s *session) (etcdOverview, error) {
 
 	var members *machineapi.EtcdMembers
 
-	membersResp, membersErr := s.client.EtcdMemberList(cpCtx, &machineapi.EtcdMemberListRequest{QueryLocal: false})
+	membersResp, membersErr := c.EtcdMemberList(cpCtx, &machineapi.EtcdMemberListRequest{QueryLocal: false})
 	if membersErr == nil {
 		members = first(membersResp.GetMessages())
 	}
 
 	var alarms []*machineapi.EtcdMemberAlarm
 
-	if alarmResp, err := s.client.EtcdAlarmList(cpCtx); err == nil {
+	if alarmResp, err := c.EtcdAlarmList(cpCtx); err == nil {
 		if m := first(alarmResp.GetMessages()); m != nil {
 			alarms = m.GetMemberAlarms()
 		}
 	}
 
-	return buildEtcdOverview(members, membersErr, probes, alarms), nil
+	return buildEtcdOverview(members, membersErr, probes, alarms)
 }
 
 func buildEtcdOverview(

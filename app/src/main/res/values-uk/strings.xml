@@ -948,4 +948,37 @@
     <string name="storage_usage_measuring">Вимірювання %1$s…</string>
     <string name="storage_mounts_show_all">Показати всі точки монтування (%1$d)</string>
     <string name="support_bundle_role_note">Частини, які роль вашого talosconfig не може прочитати, пропускаються, і це зазначається в пакеті (конфігурація машини потребує os:admin, стан etcd — os:operator).</string>
+
+    <!-- AI diagnosis -->
+    <string name="ai_title">Діагностика ШІ</string>
+    <string name="ai_enable_desc">Необов’язково. Запитайте модель ШІ, що не так із кластером і як це виправити. Нічого не надсилається, доки ви не попросите.</string>
+    <string name="ai_provider">Постачальник</string>
+    <string name="ai_api_key">Ключ API</string>
+    <string name="ai_api_key_hint">Зберігається зашифрованим на цьому пристрої. Потрібен лише для того, щоб читати відповідь у застосунку.</string>
+    <string name="ai_get_key">Отримати ключ API</string>
+    <string name="ai_model">Модель</string>
+    <string name="ai_model_default">Типова: %1$s</string>
+    <string name="ai_model_list">Показати моделі</string>
+    <string name="ai_model_none">Моделей не знайдено</string>
+    <string name="ai_base_url">URL сервера (необов’язково)</string>
+    <string name="ai_base_url_hint">Лише для шлюзу або локальної моделі. Залиште порожнім, щоб використовувати API постачальника.</string>
+    <string name="ai_anonymize">Приховувати імена й адреси</string>
+    <string name="ai_anonymize_desc">Імена, IP-адреси й домен вузлів замінюються умовними перед надсиланням звіту. Решта журналів, як-от імена подів та інші імена хостів, надсилається як є.</string>
+    <string name="ai_collecting">Зчитування стану кластера…</string>
+    <string name="ai_report_title">Звіт (%1$s)</string>
+    <string name="ai_report_show">Показати</string>
+    <string name="ai_report_hide">Сховати</string>
+    <string name="ai_notice_anonymized">Надсилається саме цей звіт, і лише коли ви попросите. Імена, IP-адреси й домен вузлів замінено умовними; решта журналів, як-от імена подів та інші імена хостів, надсилається як є.</string>
+    <string name="ai_notice_real">Надсилається саме цей звіт, і лише коли ви попросите. Він містить справжні імена вузлів та IP-адреси.</string>
+    <string name="ai_note_label">Що саме не так? (необов’язково)</string>
+    <string name="ai_ask">Запитати %1$s</string>
+    <string name="ai_share">Поділитися із застосунком-асистентом</string>
+    <string name="ai_share_hint">Надсилає запитання і звіт у вибраний вами застосунок, як-от Claude, ChatGPT чи Gemini. Ключ API не потрібен.</string>
+    <string name="ai_no_key">Щоб читати відповідь тут, додайте ключ API в налаштуваннях.</string>
+    <string name="ai_answer_title">Відповідь</string>
+    <string name="ai_asking">Очікування відповіді від %1$s…</string>
+    <string name="ai_stop">Зупинити</string>
+    <string name="ai_copy">Копіювати</string>
+    <string name="ai_disclaimer">Відповіді ШІ можуть бути хибними. Перевіряйте команду перед виконанням, особливо якщо вона скидає вузол або змінює etcd.</string>
+    <string name="ai_health_diagnose">Діагностувати за допомогою ШІ</string>
 </resources>

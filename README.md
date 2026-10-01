@@ -9,6 +9,8 @@ Android and iOS app for a [Talos](https://www.talos.dev) cluster:
 - **Kubernetes:** export a kubeconfig to open the cluster in kubenav.
 - **Background:** alerts and a home-screen widget.
 - **Protection:** optional fingerprint/PIN lock.
+- **AI diagnosis:** optional, off by default: ask Claude or an OpenAI model what is wrong and
+  how to fix it, or hand the question to an assistant app (see [AI diagnosis](#ai-diagnosis-optional)).
 
 The Talos API layer is the official Go client (`siderolabs/talos/pkg/machinery`, same code as
 `talosctl`) compiled with gomobile, so talosconfig parsing, Ed25519 mTLS and endpoint→node
@@ -49,6 +51,7 @@ reads those roles and explains up front when a feature needs more.
 | Service logs and kernel log (dmesg) | `Logs`, `Dmesg` | `os:reader` |
 | etcd members, leader, DB size, alarms | `EtcdMemberList`, `EtcdStatus`, `EtcdAlarmList` | `os:reader` |
 | Background alerts and widget | same as the overview and etcd | `os:reader` |
+| AI diagnosis report (optional) | the calls above, `Time`, `Events`, `Containers`, `NodeStatus`, `StaticPodStatus` | `os:reader` |
 | **Reboot (`-m default\|powercycle\|force`) / shutdown (`--force`)** | `Reboot`, `Shutdown` | **`os:operator`** |
 | **Cluster health check** | `ClusterService/HealthCheck` | **`os:admin`** |
 | **Kubeconfig export** | `Kubeconfig` | **`os:admin`** |
@@ -133,6 +136,46 @@ The app stores the config AES-GCM encrypted with an Android Keystore key, exclud
   The widget shows counts only, no hostnames.
 - **Kubeconfig export:** the kubeconfig is written only to the file you choose. kubenav has no
   app-to-app import, so add the cluster from that file in kubenav, then delete the file.
+
+## AI diagnosis (optional)
+
+Off by default. Turn it on in Settings → AI diagnosis; until then the app shows no trace of it
+and never contacts a model provider.
+
+- **What it does:** it reads the cluster state into a report, shows you that report, and only
+  when you tap *Ask* sends it to the model you chose. The answer names the likely cause, the
+  evidence and the steps to fix it, and is written as it arrives.
+- **The report:** node readiness and stage, Talos services, memory, disks, clock offset, etcd,
+  control-plane static pods, pods without a running container, recent warning and error events,
+  and the last 40 log lines of services that are not healthy. It never contains the
+  talosconfig, a machine configuration or a kubeconfig.
+- **Anonymized by default:** the nodes' names, IP addresses and domain are replaced with
+  placeholders (`cp-1`, `10.0.0.7`, `homelab.lan`) before the report leaves the phone, and the
+  real ones are put back in the answer on the phone. The mask only knows the cluster's own
+  names: the rest of the log lines (pod names, other host names such as a registry or an API
+  endpoint) is sent as it is, so read the report first if your logs are sensitive.
+- **Providers:** Anthropic (Claude, default `claude-opus-5-5`) or OpenAI (default
+  `gpt-6-astra`), with your own API key; any model can be typed or picked from the provider's
+  list. The key is stored encrypted (Android Keystore, iOS Keychain) and is only sent over
+  HTTPS, to the provider or to the server URL you set for it.
+- **Your own server:** set *Server URL* to a gateway or a local model speaking the Anthropic
+  Messages API (`https://host`) or the OpenAI Chat Completions API (`http://host:11434/v1`).
+  A server that needs no key may use plain HTTP; the report then crosses your network in
+  clear, so keep that to a network you trust.
+- **Without an API key:** *Share with an assistant app* hands the same question and report to
+  the Claude, ChatGPT or Gemini app (or any app taking text) through the system share sheet.
+- **Check the answer:** a model can be wrong. Read a command before running it, especially one
+  that resets a node or changes etcd membership.
+
+From a workstation, the same code runs against a real cluster:
+
+```sh
+cd go
+go run ./cmd/probe diagnose-report        # the anonymized report; nothing is sent
+# These two send the report with the real names (not anonymized) and print the answer:
+ANTHROPIC_API_KEY=... go run ./cmd/probe diagnose anthropic
+OPENAI_API_KEY=... go run ./cmd/probe diagnose openai gpt-6-astra
+```
 
 ## Updates
 

@@ -6,6 +6,7 @@ import UserNotifications
 struct TalosdevMobileApp: App {
     @State private var model = AppModel()
     @State private var support = SupportPrompt()
+    @State private var ai = AISettings()
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -22,6 +23,7 @@ struct TalosdevMobileApp: App {
             RootView()
                 .environment(model)
                 .environment(support)
+                .environment(ai)
                 .task { support.onLaunch() }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .background, BackgroundMonitor.alertsEnabled { BackgroundMonitor.schedule() }
@@ -114,6 +116,8 @@ enum Route: Hashable {
     case events(node: String?, hostnames: [String: String])
     /// Issue a talosconfig (os:admin): renew this device's certificate, or one for another device.
     case issueConfig(renew: Bool)
+    /// AI diagnosis (optional, see AISettings); note: what the opening screen already knows.
+    case diagnosis(note: String)
 }
 
 struct NodeRef: Hashable {
@@ -144,6 +148,7 @@ struct MainNavigation: View {
                     case .kubespan: KubeSpanView()
                     case .health: HealthView()
                     case .settings: SettingsView()
+                    case .diagnosis(let note): DiagnosisView(initialNote: note)
                     case .importConfig: ImportView { path.removeAll() }
                     case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)
                     case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)

@@ -37,8 +37,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.platform.LocalContext
 import name.levis.talosmobile.TalosApp
+import androidx.compose.material3.OutlinedButton
 import name.levis.talosmobile.data.HealthEvent
 import name.levis.talosmobile.data.activeSummary
+import name.levis.talosmobile.data.healthCheckNote
 import name.levis.talosmobile.model.Feature
 import name.levis.talosmobile.model.allows
 import name.levis.talosmobile.ui.components.RoleNotice
@@ -90,10 +92,13 @@ class HealthViewModel(private val talos: TalosRepository) : ViewModel() {
 @Composable
 fun HealthScreen(
     onBack: () -> Unit,
+    onDiagnose: (note: String) -> Unit,
     vm: HealthViewModel = viewModel(factory = factory { HealthViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val config by (LocalContext.current.applicationContext as TalosApp).configRepository.config.collectAsStateWithLifecycle()
+    val app = LocalContext.current.applicationContext as TalosApp
+    val config by app.configRepository.config.collectAsStateWithLifecycle()
+    val ai by app.aiPreferences.settings.collectAsStateWithLifecycle()
     val summary = config?.activeSummary
     val allowed = summary?.allows(Feature.HEALTH) ?: true
     LaunchedEffect(allowed) { if (allowed && !state.running && !state.finished) vm.start() }
@@ -117,6 +122,12 @@ fun HealthScreen(
                 return@Column
             }
             HealthHeader(state, onRerun = vm::start)
+            // Only when the optional AI diagnosis is on, and there is a failure to explain.
+            state.error?.takeIf { ai.enabled }?.let { error ->
+                OutlinedButton(onClick = { onDiagnose(healthCheckNote(error)) }, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.ai_health_diagnose))
+                }
+            }
             Card(Modifier.fillMaxWidth().weight(1f)) {
                 LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     itemsIndexed(state.lines) { _, line ->

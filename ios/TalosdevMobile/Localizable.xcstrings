@@ -23505,6 +23505,986 @@
           }
         }
       }
+    },
+    "AI diagnosis" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KI-Diagnose"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnóstico con IA"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnostic IA"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnosi IA"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Діагностика ШІ"
+          }
+        }
+      }
+    },
+    "Optional. Ask an AI model what is wrong with the cluster and how to fix it. Nothing is sent until you ask." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optional. Fragen Sie ein KI-Modell, was im Cluster nicht stimmt und wie es sich beheben lässt. Nichts wird gesendet, bevor Sie fragen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opcional. Pregunta a un modelo de IA qué falla en el clúster y cómo arreglarlo. No se envía nada hasta que lo pidas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Facultatif. Demandez à un modèle d’IA ce qui ne va pas dans le cluster et comment le réparer. Rien n’est envoyé tant que vous ne le demandez pas."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Facoltativo. Chiedi a un modello di IA cosa non va nel cluster e come risolverlo. Non viene inviato nulla finché non lo chiedi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Необов’язково. Запитайте модель ШІ, що не так із кластером і як це виправити. Нічого не надсилається, доки ви не попросите."
+          }
+        }
+      }
+    },
+    "Provider" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anbieter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proveedor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fournisseur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fornitore"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Постачальник"
+          }
+        }
+      }
+    },
+    "API key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API-Schlüssel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clave de API"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clé d’API"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiave API"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключ API"
+          }
+        }
+      }
+    },
+    "Stored encrypted on this device. Only needed to read the answer inside the app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird verschlüsselt auf diesem Gerät gespeichert. Nur nötig, um die Antwort in der App zu lesen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se guarda cifrada en este dispositivo. Solo hace falta para leer la respuesta dentro de la aplicación."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stockée chiffrée sur cet appareil. Nécessaire uniquement pour lire la réponse dans l’application."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvata cifrata su questo dispositivo. Serve solo per leggere la risposta nell’app."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігається зашифрованим на цьому пристрої. Потрібен лише для того, щоб читати відповідь у застосунку."
+          }
+        }
+      }
+    },
+    "Get an API key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API-Schlüssel erstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtener una clave de API"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtenir une clé d’API"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ottieni una chiave API"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримати ключ API"
+          }
+        }
+      }
+    },
+    "Model" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modell"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modèle"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modello"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Модель"
+          }
+        }
+      }
+    },
+    "Default: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Predeterminado: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par défaut : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Predefinito: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Типова: %@"
+          }
+        }
+      }
+    },
+    "List models" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelle auflisten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listar modelos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lister les modèles"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elenca i modelli"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати моделі"
+          }
+        }
+      }
+    },
+    "No model found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Modell gefunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontró ningún modelo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun modèle trouvé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun modello trovato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Моделей не знайдено"
+          }
+        }
+      }
+    },
+    "Server URL (optional)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server-URL (optional)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL del servidor (opcional)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL du serveur (facultatif)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL del server (facoltativo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL сервера (необов’язково)"
+          }
+        }
+      }
+    },
+    "Only for a gateway or a local model. Leave empty to use the provider’s own API." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur für ein Gateway oder ein lokales Modell. Leer lassen, um die API des Anbieters zu nutzen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo para una pasarela o un modelo local. Déjalo vacío para usar la API del proveedor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uniquement pour une passerelle ou un modèle local. Laissez vide pour utiliser l’API du fournisseur."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo per un gateway o un modello locale. Lascia vuoto per usare l’API del fornitore."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лише для шлюзу або локальної моделі. Залиште порожнім, щоб використовувати API постачальника."
+          }
+        }
+      }
+    },
+    "Hide names and addresses" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namen und Adressen verbergen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar nombres y direcciones"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masquer les noms et les adresses"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nascondi nomi e indirizzi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приховувати імена й адреси"
+          }
+        }
+      }
+    },
+    "The nodes’ names, IP addresses and domain are replaced with placeholders before the report is sent. The rest of the logs, such as pod names and other host names, is sent as it is." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namen, IP-Adressen und Domain der Knoten werden vor dem Senden des Berichts durch Platzhalter ersetzt. Der Rest der Logs, etwa Pod-Namen und andere Hostnamen, wird unverändert gesendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los nombres, las direcciones IP y el dominio de los nodos se sustituyen por nombres genéricos antes de enviar el informe. El resto de los registros, como los nombres de pods y otros nombres de host, se envía tal cual."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les noms, adresses IP et domaine des nœuds sont remplacés par des noms génériques avant l’envoi du rapport. Le reste des journaux, comme les noms de pods et d’autres noms d’hôtes, est envoyé tel quel."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nomi, indirizzi IP e dominio dei nodi vengono sostituiti con segnaposto prima dell’invio del rapporto. Il resto dei log, come i nomi dei pod e altri nomi host, viene inviato così com’è."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імена, IP-адреси й домен вузлів замінюються умовними перед надсиланням звіту. Решта журналів, як-от імена подів та інші імена хостів, надсилається як є."
+          }
+        }
+      }
+    },
+    "Reading the cluster state…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clusterzustand wird gelesen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leyendo el estado del clúster…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture de l’état du cluster…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lettura dello stato del cluster…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зчитування стану кластера…"
+          }
+        }
+      }
+    },
+    "Report (%@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informe (%@)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapport (%@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rapporto (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіт (%@)"
+          }
+        }
+      }
+    },
+    "Hide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masquer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nascondi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сховати"
+          }
+        }
+      }
+    },
+    "This report is what gets sent, and only when you ask. The nodes’ names, IP addresses and domain are replaced with placeholders; the rest of the logs, such as pod names and other host names, is sent as it is." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Bericht wird gesendet, und nur, wenn Sie fragen. Namen, IP-Adressen und Domain der Knoten sind durch Platzhalter ersetzt; der Rest der Logs, etwa Pod-Namen und andere Hostnamen, wird unverändert gesendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este informe es lo que se envía, y solo cuando lo pides. Los nombres, las direcciones IP y el dominio de los nodos se sustituyen por nombres genéricos; el resto de los registros, como los nombres de pods y otros nombres de host, se envía tal cual."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce rapport est ce qui est envoyé, et seulement quand vous le demandez. Les noms, adresses IP et domaine des nœuds sont remplacés par des noms génériques ; le reste des journaux, comme les noms de pods et d’autres noms d’hôtes, est envoyé tel quel."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo rapporto è ciò che viene inviato, e solo quando lo chiedi. Nomi, indirizzi IP e dominio dei nodi sono sostituiti da segnaposto; il resto dei log, come i nomi dei pod e altri nomi host, viene inviato così com’è."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надсилається саме цей звіт, і лише коли ви попросите. Імена, IP-адреси й домен вузлів замінено умовними; решта журналів, як-от імена подів та інші імена хостів, надсилається як є."
+          }
+        }
+      }
+    },
+    "This report is what gets sent, and only when you ask. It contains the real node names and IP addresses." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Bericht wird gesendet, und nur, wenn Sie fragen. Er enthält die echten Knotennamen und IP-Adressen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este informe es lo que se envía, y solo cuando lo pides. Contiene los nombres de nodos y las direcciones IP reales."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce rapport est ce qui est envoyé, et seulement quand vous le demandez. Il contient les vrais noms de nœuds et adresses IP."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo rapporto è ciò che viene inviato, e solo quando lo chiedi. Contiene i veri nomi dei nodi e indirizzi IP."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надсилається саме цей звіт, і лише коли ви попросите. Він містить справжні імена вузлів та IP-адреси."
+          }
+        }
+      }
+    },
+    "What is going wrong? (optional)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was läuft schief? (optional)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Qué está fallando? (opcional)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qu’est-ce qui ne va pas ? (facultatif)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cosa non funziona? (facoltativo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Що саме не так? (необов’язково)"
+          }
+        }
+      }
+    },
+    "Ask %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ fragen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preguntar a %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demander à %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiedi a %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запитати %@"
+          }
+        }
+      }
+    },
+    "Share with an assistant app" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit einer Assistenten-App teilen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir con una aplicación de asistente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partager avec une application d’assistant"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Condividi con un’app assistente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поділитися із застосунком-асистентом"
+          }
+        }
+      }
+    },
+    "Sends the question and the report to an app you choose, such as Claude, ChatGPT or Gemini. No API key needed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sendet die Frage und den Bericht an eine App Ihrer Wahl, etwa Claude, ChatGPT oder Gemini. Kein API-Schlüssel nötig."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envía la pregunta y el informe a la aplicación que elijas, como Claude, ChatGPT o Gemini. No hace falta clave de API."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoie la question et le rapport à l’application de votre choix, comme Claude, ChatGPT ou Gemini. Aucune clé d’API nécessaire."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia la domanda e il rapporto a un’app a tua scelta, come Claude, ChatGPT o Gemini. Non serve una chiave API."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надсилає запитання і звіт у вибраний вами застосунок, як-от Claude, ChatGPT чи Gemini. Ключ API не потрібен."
+          }
+        }
+      }
+    },
+    "To read the answer here, add an API key in Settings." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um die Antwort hier zu lesen, fügen Sie in den Einstellungen einen API-Schlüssel hinzu."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para leer la respuesta aquí, añade una clave de API en Ajustes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour lire la réponse ici, ajoutez une clé d’API dans les réglages."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per leggere la risposta qui, aggiungi una chiave API nelle impostazioni."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щоб читати відповідь тут, додайте ключ API в налаштуваннях."
+          }
+        }
+      }
+    },
+    "Answer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwort"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respuesta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réponse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Risposta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відповідь"
+          }
+        }
+      }
+    },
+    "Waiting for %@…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf %@…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando a %@…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente de %@…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa di %@…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очікування відповіді від %@…"
+          }
+        }
+      }
+    },
+    "AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "KI-Antworten können falsch sein. Prüfen Sie einen Befehl, bevor Sie ihn ausführen, besonders wenn er einen Knoten zurücksetzt oder etcd verändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las respuestas de la IA pueden ser erróneas. Comprueba un comando antes de ejecutarlo, sobre todo si restablece un nodo o modifica etcd."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les réponses de l’IA peuvent être fausses. Vérifiez une commande avant de l’exécuter, surtout si elle réinitialise un nœud ou modifie etcd."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le risposte dell’IA possono essere sbagliate. Controlla un comando prima di eseguirlo, soprattutto se reimposta un nodo o modifica etcd."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відповіді ШІ можуть бути хибними. Перевіряйте команду перед виконанням, особливо якщо вона скидає вузол або змінює etcd."
+          }
+        }
+      }
+    },
+    "Diagnose with AI" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit KI diagnostizieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnosticar con IA"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnostiquer avec l’IA"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnostica con l’IA"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Діагностувати за допомогою ШІ"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

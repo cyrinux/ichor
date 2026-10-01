@@ -874,4 +874,37 @@
     <string name="storage_usage_measuring">Midiendo %1$s…</string>
     <string name="storage_mounts_show_all">Mostrar todos los montajes (%1$d)</string>
     <string name="support_bundle_role_note">Las partes que el rol de tu talosconfig no puede leer se omiten y se indican en el paquete (la configuración de la máquina requiere os:admin, el estado de etcd os:operator).</string>
+
+    <!-- AI diagnosis -->
+    <string name="ai_title">Diagnóstico con IA</string>
+    <string name="ai_enable_desc">Opcional. Pregunta a un modelo de IA qué falla en el clúster y cómo arreglarlo. No se envía nada hasta que lo pidas.</string>
+    <string name="ai_provider">Proveedor</string>
+    <string name="ai_api_key">Clave de API</string>
+    <string name="ai_api_key_hint">Se guarda cifrada en este dispositivo. Solo hace falta para leer la respuesta dentro de la aplicación.</string>
+    <string name="ai_get_key">Obtener una clave de API</string>
+    <string name="ai_model">Modelo</string>
+    <string name="ai_model_default">Predeterminado: %1$s</string>
+    <string name="ai_model_list">Listar modelos</string>
+    <string name="ai_model_none">No se encontró ningún modelo</string>
+    <string name="ai_base_url">URL del servidor (opcional)</string>
+    <string name="ai_base_url_hint">Solo para una pasarela o un modelo local. Déjalo vacío para usar la API del proveedor.</string>
+    <string name="ai_anonymize">Ocultar nombres y direcciones</string>
+    <string name="ai_anonymize_desc">Los nombres, las direcciones IP y el dominio de los nodos se sustituyen por nombres genéricos antes de enviar el informe. El resto de los registros, como los nombres de pods y otros nombres de host, se envía tal cual.</string>
+    <string name="ai_collecting">Leyendo el estado del clúster…</string>
+    <string name="ai_report_title">Informe (%1$s)</string>
+    <string name="ai_report_show">Mostrar</string>
+    <string name="ai_report_hide">Ocultar</string>
+    <string name="ai_notice_anonymized">Este informe es lo que se envía, y solo cuando lo pides. Los nombres, las direcciones IP y el dominio de los nodos se sustituyen por nombres genéricos; el resto de los registros, como los nombres de pods y otros nombres de host, se envía tal cual.</string>
+    <string name="ai_notice_real">Este informe es lo que se envía, y solo cuando lo pides. Contiene los nombres de nodos y las direcciones IP reales.</string>
+    <string name="ai_note_label">¿Qué está fallando? (opcional)</string>
+    <string name="ai_ask">Preguntar a %1$s</string>
+    <string name="ai_share">Compartir con una aplicación de asistente</string>
+    <string name="ai_share_hint">Envía la pregunta y el informe a la aplicación que elijas, como Claude, ChatGPT o Gemini. No hace falta clave de API.</string>
+    <string name="ai_no_key">Para leer la respuesta aquí, añade una clave de API en Ajustes.</string>
+    <string name="ai_answer_title">Respuesta</string>
+    <string name="ai_asking">Esperando a %1$s…</string>
+    <string name="ai_stop">Detener</string>
+    <string name="ai_copy">Copiar</string>
+    <string name="ai_disclaimer">Las respuestas de la IA pueden ser erróneas. Comprueba un comando antes de ejecutarlo, sobre todo si restablece un nodo o modifica etcd.</string>
+    <string name="ai_health_diagnose">Diagnosticar con IA</string>
 </resources>

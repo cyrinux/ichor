@@ -54,6 +54,7 @@ struct SettingsView: View {
             }
             PrivacySection()
             MonitoringSection()
+            AISection()
             if model.allows(.kubeconfig) { KubeconfigSection() }
             Section("Config") {
                 if let protection = SecureConfigStore.protection {

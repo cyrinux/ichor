@@ -877,4 +877,37 @@
     <string name="storage_usage_measuring">Measuring %1$s…</string>
     <string name="storage_mounts_show_all">Show all mounts (%1$d)</string>
     <string name="support_bundle_role_note">Parts your talosconfig role cannot read are left out and noted in the bundle (machine config needs os:admin, etcd status os:operator).</string>
+
+    <!-- AI diagnosis -->
+    <string name="ai_title">AI diagnosis</string>
+    <string name="ai_enable_desc">Optional. Ask an AI model what is wrong with the cluster and how to fix it. Nothing is sent until you ask.</string>
+    <string name="ai_provider">Provider</string>
+    <string name="ai_api_key">API key</string>
+    <string name="ai_api_key_hint">Stored encrypted on this device. Only needed to read the answer inside the app.</string>
+    <string name="ai_get_key">Get an API key</string>
+    <string name="ai_model">Model</string>
+    <string name="ai_model_default">Default: %1$s</string>
+    <string name="ai_model_list">List models</string>
+    <string name="ai_model_none">No model found</string>
+    <string name="ai_base_url">Server URL (optional)</string>
+    <string name="ai_base_url_hint">Only for a gateway or a local model. Leave empty to use the provider’s own API.</string>
+    <string name="ai_anonymize">Hide names and addresses</string>
+    <string name="ai_anonymize_desc">The nodes’ names, IP addresses and domain are replaced with placeholders before the report is sent. The rest of the logs, such as pod names and other host names, is sent as it is.</string>
+    <string name="ai_collecting">Reading the cluster state…</string>
+    <string name="ai_report_title">Report (%1$s)</string>
+    <string name="ai_report_show">Show</string>
+    <string name="ai_report_hide">Hide</string>
+    <string name="ai_notice_anonymized">This report is what gets sent, and only when you ask. The nodes’ names, IP addresses and domain are replaced with placeholders; the rest of the logs, such as pod names and other host names, is sent as it is.</string>
+    <string name="ai_notice_real">This report is what gets sent, and only when you ask. It contains the real node names and IP addresses.</string>
+    <string name="ai_note_label">What is going wrong? (optional)</string>
+    <string name="ai_ask">Ask %1$s</string>
+    <string name="ai_share">Share with an assistant app</string>
+    <string name="ai_share_hint">Sends the question and the report to an app you choose, such as Claude, ChatGPT or Gemini. No API key needed.</string>
+    <string name="ai_no_key">To read the answer here, add an API key in Settings.</string>
+    <string name="ai_answer_title">Answer</string>
+    <string name="ai_asking">Waiting for %1$s…</string>
+    <string name="ai_stop">Stop</string>
+    <string name="ai_copy">Copy</string>
+    <string name="ai_disclaimer">AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd.</string>
+    <string name="ai_health_diagnose">Diagnose with AI</string>
 </resources>

@@ -49,6 +49,9 @@ var privateDomain = regexp.MustCompile(`(?i)\b[a-z0-9][a-z0-9-]*\.ts\.net\b`)
 type privacyMask struct {
 	mu sync.Mutex
 	maskState
+	// resets counts how often the mapping was forgotten (mask switched, words changed), so
+	// text masked before a reset can be told from text masked after.
+	resets int
 }
 
 type maskState struct {
@@ -73,6 +76,10 @@ type maskState struct {
 	domains map[string]bool // lowercase
 	configs map[string]bool // cacheKey of talosconfigs already learned
 	terms   []maskTerm      // built lazily from the maps above, longest first
+
+	// avoid is text no fake may be found in. It makes the fakes unambiguous where they are
+	// turned back into the real values (reveal): a fake never equals something real.
+	avoid string
 }
 
 var privacy = &privacyMask{}
@@ -120,6 +127,7 @@ func (m *privacyMask) set(enabled bool, words []string) {
 }
 
 func (m *privacyMask) resetLocked() {
+	m.resets++
 	m.maskState = maskState{
 		ips: map[string]string{}, ipsBack: map[string]string{},
 		hosts: map[string]string{}, hostsBack: map[string]string{}, targets: map[string]string{}, roleCount: map[string]int{},
@@ -133,6 +141,27 @@ func (m *privacyMask) isEnabled() bool {
 	defer m.mu.Unlock()
 
 	return m.enabled
+}
+
+// state tells whether the mask is on and which mapping it holds (see resets).
+func (m *privacyMask) state() (enabled bool, resets int) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	return m.enabled, m.resets
+}
+
+// setAvoid makes the mask pick its fakes outside text (see maskState.avoid).
+func (m *privacyMask) setAvoid(text string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.avoid = strings.ToLower(text)
+}
+
+// takenLocked tells whether a candidate fake already means something.
+func (m *privacyMask) takenLocked(fake string) bool {
+	return m.avoid != "" && strings.Contains(m.avoid, strings.ToLower(fake))
 }
 
 // --- masking ---
@@ -183,11 +212,15 @@ func (m *privacyMask) fakeIPv4Locked(ip string) (string, bool) {
 		return fake, true
 	}
 
-	n := m.nextV4
-	m.nextV4++
-	// 10.0.0.1 ... 10.0.0.254, then 10.0.1.1 ... (never .0 or .255).
-	third := n / 254
-	fake := fmt.Sprintf("10.%d.%d.%d", third/256%256, third%256, n%254+1)
+	var fake string
+
+	for fake == "" || m.takenLocked(fake) {
+		n := m.nextV4
+		m.nextV4++
+		// 10.0.0.1 ... 10.0.0.254, then 10.0.1.1 ... (never .0 or .255).
+		third := n / 254
+		fake = fmt.Sprintf("10.%d.%d.%d", third/256%256, third%256, n%254+1)
+	}
 
 	m.ips[ip], m.ipsBack[fake] = fake, ip
 
@@ -222,8 +255,12 @@ func (m *privacyMask) fakeIPv6Locked(candidate string) (string, bool) {
 		return fake, true
 	}
 
-	m.nextV6++
-	fake := fmt.Sprintf("fd00::%x", m.nextV6)
+	var fake string
+
+	for fake == "" || m.takenLocked(fake) {
+		m.nextV6++
+		fake = fmt.Sprintf("fd00::%x", m.nextV6)
+	}
 
 	m.ips[key], m.ipsBack[fake] = fake, candidate
 
@@ -546,8 +583,12 @@ func (m *privacyMask) learnHostLocked(hostname, role string) {
 		prefix = "worker"
 	}
 
-	m.roleCount[prefix]++
-	fake := fmt.Sprintf("%s-%d", prefix, m.roleCount[prefix])
+	var fake string
+
+	for fake == "" || m.takenLocked(fake) {
+		m.roleCount[prefix]++
+		fake = fmt.Sprintf("%s-%d", prefix, m.roleCount[prefix])
+	}
 
 	m.hosts[hostname], m.hostsBack[fake] = fake, hostname
 	m.terms = nil

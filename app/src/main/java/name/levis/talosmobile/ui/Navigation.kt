@@ -16,6 +16,7 @@ import name.levis.talosmobile.ui.changelog.WhatsNewHost
 import name.levis.talosmobile.ui.capture.CaptureScreen
 import name.levis.talosmobile.ui.capture.CapturesScreen
 import name.levis.talosmobile.ui.debug.DebugShellScreen
+import name.levis.talosmobile.ui.diagnosis.DiagnosisScreen
 import name.levis.talosmobile.ui.etcd.EtcdScreen
 import name.levis.talosmobile.ui.events.EventsScreen
 import name.levis.talosmobile.ui.hardware.HardwareScreen
@@ -110,6 +111,10 @@ private object Routes {
     fun debug(addr: String, host: String) = "debug?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
     const val HEALTH = "health"
     const val SETTINGS = "settings"
+    const val DIAGNOSIS = "diagnosis?note={note}"
+
+    /** [note]: what to tell the model up front, e.g. a failed health check. */
+    fun diagnosis(note: String = "") = "diagnosis?note=${Uri.encode(note)}"
 
     /** Empty [service] means the kernel log. */
     fun logs(addr: String, host: String, service: String?) =
@@ -165,6 +170,7 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
                 onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
+                onDiagnose = { nav.navigate(Routes.diagnosis()) },
             )
             // After an update: what changed since the build that ran before.
             WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
@@ -356,7 +362,19 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
         }
         composable(Routes.KUBESPAN) { KubeSpanScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.ETCD) { EtcdScreen(onBack = { nav.popBackStack() }) }
-        composable(Routes.HEALTH) { HealthScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.HEALTH) {
+            HealthScreen(onBack = { nav.popBackStack() }, onDiagnose = { note -> nav.navigate(Routes.diagnosis(note)) })
+        }
+        composable(
+            Routes.DIAGNOSIS,
+            arguments = listOf(navArgument("note") { type = NavType.StringType; defaultValue = "" }),
+        ) { entry ->
+            DiagnosisScreen(
+                initialNote = entry.arguments?.getString("note").orEmpty(),
+                onBack = { nav.popBackStack() },
+                onSettings = { nav.navigate(Routes.SETTINGS) },
+            )
+        }
         composable(Routes.SETTINGS) {
             SettingsScreen(
                 configs = app.configRepository,

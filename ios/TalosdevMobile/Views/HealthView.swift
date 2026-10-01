@@ -4,6 +4,7 @@ import TalosdevMobileCore
 /// Server-side cluster health check (`talosctl health`); needs os:admin.
 struct HealthView: View {
     @Environment(AppModel.self) private var model
+    @Environment(AISettings.self) private var ai
     @State private var lines: [String] = []
     @State private var running = false
     @State private var finished = false
@@ -31,7 +32,13 @@ struct HealthView: View {
                         Spacer()
                         if !running { Button("Re-run") { runID += 1 } }
                     }
-                    if let error { Text(error).foregroundStyle(.red) }
+                    if let error {
+                        Text(error).foregroundStyle(.red)
+                        // Only with the optional AI diagnosis turned on in the settings.
+                        if finished, ai.enabled {
+                            NavigationLink("Diagnose with AI", value: Route.diagnosis(note: healthFailureNote(error)))
+                        }
+                    }
                 }
                 Section {
                     ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
