@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +35,7 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -60,7 +62,9 @@ import name.levis.talosmobile.R
 import name.levis.talosmobile.data.StoredConfig
 import name.levis.talosmobile.data.activeSummary
 import name.levis.talosmobile.data.adjacentContext
+import name.levis.talosmobile.model.CLUSTER_NAME_MAX
 import name.levis.talosmobile.model.CLUSTER_SEEDS
+import name.levis.talosmobile.model.ClusterLabels
 import name.levis.talosmobile.model.ContextSummary
 import name.levis.talosmobile.model.accessLabel
 import name.levis.talosmobile.model.hueOf
@@ -112,10 +116,12 @@ fun Modifier.clusterSwipe(config: StoredConfig?, onSelect: (String) -> Unit): Mo
 fun ClusterTitle(
     config: StoredConfig?,
     colors: Map<String, Int>,
+    labels: ClusterLabels,
     onOpen: () -> Unit,
     badge: @Composable () -> Unit,
 ) {
     val contexts = config?.summary?.contexts.orEmpty()
+    val active = contexts.indexOfFirst { it.name == config?.activeContext }
     Column(
         Modifier
             .clip(MaterialTheme.shapes.small)
@@ -129,16 +135,17 @@ fun ClusterTitle(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             AnimatedContent(
-                targetState = config?.activeContext ?: stringResource(R.string.overview_title),
+                // Position and name: a renamed cluster stays in place, another one slides in.
+                targetState = active to (config?.activeSummary?.let(labels::of) ?: stringResource(R.string.overview_title)),
                 transitionSpec = {
                     // The name slides the way the swipe goes: the next cluster comes from the end.
-                    val forward = contexts.indexOfFirst { it.name == targetState } >= contexts.indexOfFirst { it.name == initialState }
+                    val forward = targetState.first >= initialState.first
                     val towards = if (forward) SlideDirection.Start else SlideDirection.End
                     (slideIntoContainer(towards) + fadeIn()) togetherWith (slideOutOfContainer(towards) + fadeOut())
                 },
                 label = "cluster",
                 modifier = Modifier.weight(1f, fill = false),
-            ) { name ->
+            ) { (_, name) ->
                 Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             if (config != null) {
@@ -162,7 +169,7 @@ fun ClusterTitle(
                     modifier = Modifier.weight(1f, fill = false).padding(end = 8.dp),
                 )
             }
-            ClusterPosition(contexts, contexts.indexOfFirst { it.name == config?.activeContext }, colors)
+            ClusterPosition(contexts, active, colors)
         }
     }
 }
@@ -192,21 +199,24 @@ private fun ClusterPosition(contexts: List<ContextSummary>, active: Int, colors:
 }
 
 /**
- * The imported clusters: pick the one to show, change its color, remove it, or add one.
- * Removing asks first; [onRemove] then drops the cluster's credentials from the device.
+ * The imported clusters: pick the one to show, rename it, change its color, remove it, or
+ * add one. Removing asks first; [onRemove] then drops the cluster's credentials from the device.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClusterSheet(
     config: StoredConfig,
     colors: Map<String, Int>,
+    labels: ClusterLabels,
     onSelect: (String) -> Unit,
+    onRename: (ContextSummary, String) -> Unit,
     onColor: (ContextSummary, Int) -> Unit,
     onAdd: () -> Unit,
     onRemove: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var removing by remember { mutableStateOf<String?>(null) }
+    var removing by remember { mutableStateOf<ContextSummary?>(null) }
+    var renaming by remember { mutableStateOf<ContextSummary?>(null) }
     var coloring by remember { mutableStateOf<ContextSummary?>(null) }
     val contexts = config.summary.contexts
 
@@ -220,11 +230,14 @@ fun ClusterSheet(
             contexts.forEach { context ->
                 ClusterRow(
                     context = context,
+                    labels = labels,
                     selected = context.name == config.activeContext,
                     color = Color(colors.seedOf(context)),
                     onSelect = { onSelect(context.name) },
+                    // Not in screenshot mode: the dialog would show the given name.
+                    onRename = { renaming = context }.takeIf { !labels.masked && context.fingerprint.isNotBlank() },
                     onColor = { coloring = context },
-                    onRemove = { removing = context.name },
+                    onRemove = { removing = context },
                 )
             }
             if (contexts.size > 1) {
@@ -242,24 +255,36 @@ fun ClusterSheet(
         }
     }
 
-    removing?.let { name ->
+    removing?.let { context ->
         AlertDialog(
             onDismissRequest = { removing = null },
-            title = { Text(stringResource(R.string.clusters_remove_title, name)) },
+            title = { Text(stringResource(R.string.clusters_remove_title, labels.of(context))) },
             text = { Text(stringResource(R.string.clusters_remove_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     removing = null
-                    onRemove(name)
+                    onRemove(context.name)
                 }) { Text(stringResource(R.string.common_delete)) }
             },
             dismissButton = { TextButton(onClick = { removing = null }) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
 
+    renaming?.let { context ->
+        ClusterNameDialog(
+            context = context,
+            given = labels.given(context).orEmpty(),
+            onRename = {
+                onRename(context, it)
+                renaming = null
+            },
+            onDismiss = { renaming = null },
+        )
+    }
+
     coloring?.let { context ->
         ClusterColorDialog(
-            name = context.name,
+            name = labels.of(context),
             color = colors.seedOf(context),
             onPick = {
                 onColor(context, it)
@@ -273,16 +298,23 @@ fun ClusterSheet(
 @Composable
 private fun ClusterRow(
     context: ContextSummary,
+    labels: ClusterLabels,
     selected: Boolean,
     color: Color,
     onSelect: () -> Unit,
+    onRename: (() -> Unit)?,
     onColor: () -> Unit,
     onRemove: () -> Unit,
 ) {
+    val label = labels.of(context)
     ListItem(
-        headlineContent = { Text(context.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        headlineContent = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = {
             Column {
+                // Renamed: which talosconfig context that is.
+                if (labels.given(context) != null) {
+                    Text(context.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
                 Text(
                     listOfNotNull(context.endpoints.firstOrNull(), stringResource(context.accessLabel)).joinToString(" · "),
                     maxLines = 1,
@@ -300,11 +332,14 @@ private fun ClusterRow(
         leadingContent = { RadioButton(selected = selected, onClick = null) },
         trailingContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                onRename?.let {
+                    IconButton(onClick = it) { Icon(Icons.Outlined.Edit, stringResource(R.string.clusters_rename, label)) }
+                }
                 IconButton(onClick = onColor) {
-                    Swatch(color, contentDescription = stringResource(R.string.clusters_color, context.name))
+                    Swatch(color, contentDescription = stringResource(R.string.clusters_color, label))
                 }
                 IconButton(onClick = onRemove) {
-                    Icon(Icons.Outlined.Delete, stringResource(R.string.clusters_remove, context.name))
+                    Icon(Icons.Outlined.Delete, stringResource(R.string.clusters_remove, label))
                 }
             }
         },
@@ -322,6 +357,34 @@ private fun Swatch(color: Color, contentDescription: String?, selected: Boolean 
             .background(color, CircleShape)
             .then(if (selected) Modifier.border(2.dp, outline, CircleShape) else Modifier)
             .semantics { contentDescription?.let { this.contentDescription = it } },
+    )
+}
+
+/**
+ * The name to show for [context] instead of its talosconfig one, [given] so far. Left
+ * empty, the context name comes back. Only on this device: the talosconfig is unchanged.
+ */
+@Composable
+private fun ClusterNameDialog(context: ContextSummary, given: String, onRename: (String) -> Unit, onDismiss: () -> Unit) {
+    var name by remember { mutableStateOf(given) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.clusters_rename, given.ifEmpty { context.name })) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it.take(CLUSTER_NAME_MAX) },
+                    label = { Text(stringResource(R.string.clusters_rename_label)) },
+                    placeholder = { Text(context.name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text(stringResource(R.string.clusters_rename_hint, context.name), style = MaterialTheme.typography.bodySmall)
+            }
+        },
+        confirmButton = { TextButton(onClick = { onRename(name) }) { Text(stringResource(R.string.common_ok)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 

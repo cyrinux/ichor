@@ -269,6 +269,10 @@
     <string name="clusters_remove_body">Конфігурацію та клієнтський ключ цього кластера буде вилучено з цього пристрою. Інші кластери залишаться.</string>
     <string name="clusters_color">Колір %1$s</string>
     <string name="clusters_color_hint">Застосунок набуває кольорів кластера на екрані.</string>
+    <string name="clusters_rename">Перейменувати %1$s</string>
+    <string name="clusters_rename_label">Назва</string>
+    <string name="clusters_rename_hint">Показується лише на цьому пристрої, talosconfig зберігає %1$s. Залиште порожнім, щоб повернути її.</string>
+    <string name="shortcut_cluster_removed">Цей кластер видалено</string>
 
     <!-- Settings -->
     <string name="settings_title">Налаштування</string>

@@ -1,5 +1,6 @@
 package name.levis.talosmobile.ui.settings
 
+import name.levis.talosmobile.ui.components.rememberClusterLabels
 import name.levis.talosmobile.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
@@ -88,6 +89,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             SectionTitle(stringResource(R.string.clusters_title))
+            val clusterLabels = rememberClusterLabels()
             config?.summary?.contexts?.forEach { ctx ->
                 val selected = ctx.name == config?.activeContext
                 Card(
@@ -100,7 +102,8 @@ fun SettingsScreen(
                     Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
                         RadioButton(selected = selected, onClick = null)
                         Column(Modifier.padding(start = 12.dp)) {
-                            Text(ctx.name, style = MaterialTheme.typography.titleMedium)
+                            Text(clusterLabels.of(ctx), style = MaterialTheme.typography.titleMedium)
+                            clusterLabels.given(ctx)?.let { Text(ctx.name, style = MaterialTheme.typography.bodySmall) }
                             InfoRow(stringResource(R.string.common_label_endpoints), ctx.endpoints.joinToString("\n"), mono = true)
                             InfoRow(stringResource(R.string.common_label_nodes), "${ctx.nodes.size.takeIf { it > 0 } ?: ctx.endpoints.size}")
                             InfoRow(stringResource(R.string.common_label_roles), ctx.roles.joinToString())

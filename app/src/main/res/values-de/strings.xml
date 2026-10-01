@@ -237,6 +237,10 @@
     <string name="clusters_remove_body">Die Konfiguration und der Client-Schlüssel dieses Clusters werden von diesem Gerät entfernt. Die anderen Cluster bleiben erhalten.</string>
     <string name="clusters_color">Farbe von %1$s</string>
     <string name="clusters_color_hint">Die App übernimmt die Farben des angezeigten Clusters.</string>
+    <string name="clusters_rename">%1$s umbenennen</string>
+    <string name="clusters_rename_label">Name</string>
+    <string name="clusters_rename_hint">Nur auf diesem Gerät angezeigt, die talosconfig behält %1$s. Leer lassen, um ihn wieder zu verwenden.</string>
+    <string name="shortcut_cluster_removed">Dieser Cluster wurde entfernt</string>
 
     <!-- Settings -->
     <string name="settings_title">Einstellungen</string>

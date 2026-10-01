@@ -2,8 +2,8 @@ import Foundation
 import Observation
 import UserNotifications
 
-/// Where a tapped notification should lead; MainNavigation consumes it once the app is open
-/// (and unlocked).
+/// Where a tapped notification or Home Screen quick action should lead; MainNavigation
+/// consumes it once the app is open (and unlocked).
 @Observable
 @MainActor
 final class NotificationRouter {
@@ -11,6 +11,9 @@ final class NotificationRouter {
 
     /// The certificate-expiry alert was tapped: open the renewal screen.
     var pendingRenewal = false
+
+    /// A cluster's quick action was chosen: its fingerprint, to show that cluster.
+    var pendingCluster: String?
 }
 
 /// Notification taps (the center keeps its delegate weakly, hence the shared instance).

@@ -60,18 +60,23 @@ class ClusterWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val store = (context.applicationContext as TalosApp).monitorStore
+        val app = context.applicationContext as TalosApp
+        val store = app.monitorStore
         // Read in the composition: provideGlance is not run again while a session is alive,
         // so a snapshot captured here would hide the one saved seconds after the widget is placed.
         provideContent {
             val snapshot by store.snapshotState.collectAsState()
-            WidgetContent(snapshot, System.currentTimeMillis())
+            val names by app.clusterNames.names.collectAsState()
+            val mask by app.uiPreferences.privacyMask.collectAsState()
+            // The name the user gave the cluster, as in the app (not in screenshot mode).
+            val label = snapshot?.let { s -> names[s.fingerprint].takeIf { !mask.enabled && s.fingerprint.isNotBlank() } ?: s.context }
+            WidgetContent(snapshot, label, System.currentTimeMillis())
         }
     }
 }
 
 @Composable
-private fun WidgetContent(s: ClusterSnapshot?, now: Long) {
+private fun WidgetContent(s: ClusterSnapshot?, label: String?, now: Long) {
     // Glance's context is the application's; below API 33 apply the in-app language to it.
     val res = AppLocale.wrap(LocalContext.current)
     val stale = isStale(s, now)
@@ -82,7 +87,7 @@ private fun WidgetContent(s: ClusterSnapshot?, now: Long) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            s?.context ?: "Talos",
+            label ?: "Talos",
             style = TextStyle(color = ColorProvider(Secondary), fontSize = 12.sp),
             maxLines = 1,
         )

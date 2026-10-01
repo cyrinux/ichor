@@ -4,6 +4,7 @@ import UserNotifications
 
 @main
 struct TalosdevMobileApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var model = AppModel()
     @State private var support = SupportPrompt()
     @State private var ai = AISettings()
@@ -164,7 +165,20 @@ struct MainNavigation: View {
         .onChange(of: NotificationRouter.shared.pendingRenewal) { _, pending in
             if pending { openRenewal() }
         }
-        .onAppear { if NotificationRouter.shared.pendingRenewal { openRenewal() } }
+        .onChange(of: NotificationRouter.shared.pendingCluster) { _, pending in
+            if pending != nil { openCluster() }
+        }
+        .onAppear {
+            if NotificationRouter.shared.pendingRenewal { openRenewal() }
+            if NotificationRouter.shared.pendingCluster != nil { openCluster() }
+        }
+    }
+
+    /// From a quick action: that cluster's overview, no screen of the previous one over it.
+    private func openCluster() {
+        guard let fingerprint = NotificationRouter.shared.pendingCluster else { return }
+        NotificationRouter.shared.pendingCluster = nil
+        if model.selectCluster(fingerprint: fingerprint) { path = [] }
     }
 
     /// From the certificate-expiry alert: the renewal screen, or the settings (which show the

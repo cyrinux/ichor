@@ -8,6 +8,8 @@ Android and iOS app for a [Talos](https://www.talos.dev) cluster:
 - **Actions:** reboot or shut down a node.
 - **Kubernetes:** export a kubeconfig to open the cluster in kubenav.
 - **Background:** alerts and a home-screen widget.
+- **Several clusters:** switch from the header, give each one a color and a name of your own, and
+  open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
 - **Protection:** optional fingerprint/PIN lock.
 - **AI diagnosis:** optional, off by default: ask Claude or an OpenAI model what is wrong and
   how to fix it, or hand the question to an assistant app (see [AI diagnosis](#ai-diagnosis-optional)).

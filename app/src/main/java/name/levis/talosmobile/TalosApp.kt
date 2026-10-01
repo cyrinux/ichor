@@ -29,6 +29,16 @@ import name.levis.talosmobile.monitor.syncMonitoring
 import name.levis.talosmobile.security.AppLock
 import name.levis.talosmobile.security.PrefsLockSettings
 import name.levis.talosmobile.update.UpdateManager
+import name.levis.talosmobile.data.ClusterNames
+import name.levis.talosmobile.model.ClusterLabels
+import name.levis.talosmobile.shortcuts.ClusterShortcuts
+import name.levis.talosmobile.shortcuts.ShortcutSpec
+import name.levis.talosmobile.shortcuts.clusterShortcutIds
+import name.levis.talosmobile.shortcuts.clusterShortcuts
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
 /** Holds app-wide singletons (manual DI; the app is small). */
@@ -41,6 +51,7 @@ class TalosApp : Application() {
     val talosUpdateChecker by lazy { TalosUpdateChecker() }
     val uiPreferences by lazy { UiPreferences(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
     val clusterColors by lazy { ClusterColors(getSharedPreferences(ClusterColors.FILE, Context.MODE_PRIVATE)) }
+    val clusterNames by lazy { ClusterNames(getSharedPreferences(ClusterNames.FILE, Context.MODE_PRIVATE)) }
     val appLock by lazy {
         AppLock(
             PrefsLockSettings(getSharedPreferences("talosdev-mobile-security", Context.MODE_PRIVATE)),
@@ -74,6 +85,12 @@ class TalosApp : Application() {
         if (name == configRepository.config.value?.activeContext) return
         configRepository.selectContext(name)
         forgetShownCluster()
+    }
+
+    /** Gives the cluster [fingerprint] the name [name] (blank: its context name again); the widget follows. */
+    fun renameCluster(fingerprint: String, name: String) {
+        clusterNames.set(fingerprint, name)
+        ProcessLifecycleOwner.get().lifecycleScope.launch { ClusterWidget().updateAll(this@TalosApp) }
     }
 
     /** Removes a cluster from the stored config; false when it was the last one (nothing is stored anymore). */
@@ -129,13 +146,50 @@ class TalosApp : Application() {
         launchSync()
         // Every cluster of the stored config gets a color of its own, as soon as it shows up.
         ProcessLifecycleOwner.get().lifecycleScope.launch {
-            configRepository.config.collect { stored -> stored?.let { clusterColors.sync(it.summary) } }
+            configRepository.config.collect { stored ->
+                stored?.let {
+                    clusterColors.sync(it.summary)
+                    clusterNames.sync(it.summary)
+                }
+            }
         }
+        publishClusterShortcuts()
         // Process-wide foreground/background, so moving between our own screens never relocks.
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) = appLock.onForeground()
             override fun onStop(owner: LifecycleOwner) = appLock.onBackground()
         })
+    }
+
+    /**
+     * Keeps a launcher shortcut per cluster, labelled and colored like in the app. Until the
+     * config is loaded (generation 0, e.g. before the first unlock) the previous ones stay;
+     * once every cluster is removed, so are they.
+     */
+    private fun publishClusterShortcuts() {
+        val sources = combine(
+            configRepository.config,
+            configRepository.generation,
+            clusterColors.colors,
+            clusterNames.names,
+            uiPreferences.privacyMask,
+        ) { stored, generation, colors, names, mask ->
+            when {
+                stored != null -> clusterShortcuts(
+                    stored.summary,
+                    ClusterLabels(names, mask.enabled),
+                    colors,
+                    ClusterShortcuts.max(this),
+                ) to clusterShortcutIds(stored.summary)
+                generation > 0 -> emptyList<ShortcutSpec>() to emptySet()
+                else -> null
+            }
+        }
+        ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.Default) {
+            sources.filterNotNull().distinctUntilChanged().collect { (specs, known) ->
+                ClusterShortcuts.publish(this@TalosApp, specs, known)
+            }
+        }
     }
 
     /**

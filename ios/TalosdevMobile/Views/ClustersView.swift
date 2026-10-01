@@ -66,7 +66,7 @@ struct ClusterBar: View {
         .animation(.snappy, value: model.activeContext)
         .accessibilityElement()
         .accessibilityLabel(Text("Switch cluster"))
-        .accessibilityValue(Text(model.activeContext))
+        .accessibilityValue(Text(model.activeLabel))
         .accessibilityAddTraits(.isButton)
         .accessibilityAdjustableAction { direction in
             model.selectAdjacentCluster(step: direction == .increment ? 1 : -1)
@@ -74,10 +74,12 @@ struct ClusterBar: View {
     }
 }
 
-/// The imported clusters: pick the one on screen, give it a color, remove it, add one.
+/// The imported clusters: pick the one on screen, rename it, give it a color, remove it, add one.
 struct ClustersView: View {
     @Environment(AppModel.self) private var model
     @State private var removing: ContextSummary?
+    @State private var renaming: ContextSummary?
+    @State private var newName = ""
     @State private var error: String?
 
     var body: some View {
@@ -99,7 +101,7 @@ struct ClustersView: View {
         .themedBackground()
         .navigationTitle("Clusters")
         .confirmationDialog(
-            removing.map { String(localized: "Remove \($0.name)?") } ?? "",
+            removing.map { String(localized: "Remove \(model.labels.of($0))?") } ?? "",
             isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
             titleVisibility: .visible,
             presenting: removing
@@ -108,6 +110,22 @@ struct ClustersView: View {
         } message: { _ in
             Text("This cluster's config and client key will be removed from this device. The other clusters are kept.")
         }
+        .alert(
+            renaming.map { String(localized: "Rename \(model.labels.of($0))") } ?? "",
+            isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } }),
+            presenting: renaming
+        ) { context in
+            TextField(context.name, text: $newName)
+            Button("OK") { model.rename(context, to: newName) }
+            Button("Cancel", role: .cancel) {}
+        } message: { context in
+            Text("Shown on this device only, the talosconfig keeps \(context.name). Leave empty to use it again.")
+        }
+    }
+
+    private func startRenaming(_ context: ContextSummary) {
+        newName = model.labels.given(context) ?? ""
+        renaming = context
     }
 
     private func row(_ context: ContextSummary) -> some View {
@@ -118,7 +136,11 @@ struct ClustersView: View {
                     Image(systemName: active ? "checkmark.circle.fill" : "circle")
                         .foregroundStyle(active ? Color.accentColor : Color.secondary)
                     VStack(alignment: .leading) {
-                        Text(context.name).foregroundStyle(Color.primary)
+                        Text(model.labels.of(context)).foregroundStyle(Color.primary)
+                        // Renamed: which talosconfig context that is.
+                        if model.labels.given(context) != nil {
+                            Text(context.name).font(.caption).foregroundStyle(Color.secondary)
+                        }
                         Text([context.endpoints.first, context.localizedAccessLabel].compactMap { $0 }.joined(separator: " · "))
                             .font(.caption)
                             .foregroundStyle(Color.secondary)
@@ -128,13 +150,17 @@ struct ClustersView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            ColorPicker(String(localized: "Color of \(context.name)"), selection: color(of: context), supportsOpacity: false)
+            ColorPicker(String(localized: "Color of \(model.labels.of(context))"), selection: color(of: context), supportsOpacity: false)
                 .labelsHidden()
         }
         .swipeActions(edge: .trailing) {
             // Not a destructive-role button: the row must stay until the removal is confirmed.
             Button { removing = context } label: { Label("Delete", systemImage: "trash") }
                 .tint(.red)
+            // Not in the screenshot mode: the field would show the given name.
+            if !model.labels.masked && !context.fingerprint.isEmpty {
+                Button { startRenaming(context) } label: { Label("Rename", systemImage: "pencil") }
+            }
         }
     }
 

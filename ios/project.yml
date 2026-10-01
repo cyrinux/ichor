@@ -56,6 +56,9 @@ targets:
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [en, fr, es, uk, de, it]
         UILaunchScreen: {}
+        # One scene; its delegate (QuickActions.swift) receives the Home Screen quick actions.
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
         UIApplicationSupportsIndirectInputEvents: true
         ITSAppUsesNonExemptEncryption: false
         NSCameraUsageDescription: Scan a talosconfig QR code to import it.
