@@ -12,7 +12,7 @@ struct SettingsView: View {
         @Bindable var model = model
         Form {
             if let contexts = model.summary?.contexts {
-                Section("Context") {
+                Section("Clusters") {
                     Picker("Active context", selection: $model.activeContext) {
                         ForEach(contexts) { Text($0.name).tag($0.name) }
                     }
@@ -25,6 +25,7 @@ struct SettingsView: View {
                             certificateWarning(ctx)
                         }
                     }
+                    NavigationLink("Manage clusters…", value: Route.clusters)
                 }
             }
             Section {
@@ -60,7 +61,7 @@ struct SettingsView: View {
                 if let protection = SecureConfigStore.protection {
                     LabeledContent("Encryption key", value: protection.label)
                 }
-                NavigationLink("Import a new talosconfig", value: Route.importConfig)
+                NavigationLink("Add a cluster (import a talosconfig)", value: Route.importConfig)
                 if model.allows(.issueConfig) {
                     NavigationLink("Renew my certificate…", value: Route.issueConfig(renew: true))
                     NavigationLink("Create a config for another device…", value: Route.issueConfig(renew: false))

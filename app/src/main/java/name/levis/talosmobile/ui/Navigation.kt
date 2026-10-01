@@ -145,10 +145,14 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
 
     NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW) {
         composable(Routes.IMPORT) {
-            ImportScreen(onImported = {
-                app.launchSync(runNow = true)
-                nav.resetTo(Routes.OVERVIEW)
-            })
+            ImportScreen(
+                onImported = {
+                    app.launchSync(runNow = true)
+                    nav.resetTo(Routes.OVERVIEW)
+                },
+                // Adding a cluster comes from the overview or the settings: one can go back.
+                onBack = if (nav.previousBackStackEntry != null) ({ nav.popBackStack() }) else null,
+            )
         }
         composable(Routes.OVERVIEW) {
             OverviewScreen(
@@ -171,6 +175,8 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
                 onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
                 onDiagnose = { nav.navigate(Routes.diagnosis()) },
+                onAddCluster = { nav.navigate(Routes.IMPORT) },
+                onClustersCleared = { nav.resetTo(Routes.IMPORT) },
             )
             // After an update: what changed since the build that ran before.
             WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })

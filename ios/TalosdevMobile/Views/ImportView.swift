@@ -37,7 +37,7 @@ struct ImportView: View {
     var body: some View {
         Group {
             if let preview {
-                PreviewList(summary: preview.summary, busy: busy, onCancel: { self.preview = nil }) {
+                PreviewList(summary: preview.summary, adding: model.yaml != nil, busy: busy, onCancel: { self.preview = nil }) {
                     Task { await save(preview.yaml) }
                 }
             } else {
@@ -137,6 +137,8 @@ struct ImportView: View {
 
 private struct PreviewList: View {
     let summary: ConfigSummary
+    /// A config is already stored: this one is added to it.
+    let adding: Bool
     let busy: Bool
     let onCancel: () -> Void
     let onImport: () -> Void
@@ -152,6 +154,12 @@ private struct PreviewList: View {
                     LabeledContent("Nodes", value: ctx.nodes.isEmpty ? String(localized: "endpoints") : "\(ctx.nodes.count)")
                     LabeledContent("Roles", value: ctx.roles.joined(separator: ", "))
                     LabeledContent("Cert expires", value: localizedCertExpiry(ctx.certNotAfter))
+                }
+            }
+            if adding {
+                Section {
+                    Text("It is added to the clusters already on this device. A cluster imported before (same name and CA) is updated.")
+                        .font(.footnote)
                 }
             }
             Section {

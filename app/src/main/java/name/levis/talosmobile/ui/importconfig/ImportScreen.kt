@@ -29,6 +29,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.ui.platform.LocalContext
 import name.levis.talosmobile.TalosApp
@@ -69,6 +70,7 @@ private const val MAX_CONFIG_BYTES = 256 * 1024
 @Composable
 fun ImportScreen(
     onImported: () -> Unit,
+    onBack: (() -> Unit)? = null,
     vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -90,6 +92,11 @@ fun ImportScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.import_title)) },
+                navigationIcon = {
+                    onBack?.let {
+                        IconButton(onClick = it) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
+                    }
+                },
                 actions = {
                     IconButton(onClick = { showHelp = true }) {
                         Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = stringResource(R.string.import_help))
@@ -100,7 +107,7 @@ fun ImportScreen(
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (val s = state) {
-                is ImportState.Preview -> PreviewCard(s.summary, onConfirm = vm::confirm, onCancel = vm::reset)
+                is ImportState.Preview -> PreviewCard(s.summary, adding = !firstRun, onConfirm = vm::confirm, onCancel = vm::reset)
                 ImportState.Validating, ImportState.Saved -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator()
                 }
@@ -212,7 +219,7 @@ private fun PasteSource(text: String, onText: (String) -> Unit, onYaml: (String)
 }
 
 @Composable
-private fun PreviewCard(summary: ConfigSummary, onConfirm: () -> Unit, onCancel: () -> Unit) {
+private fun PreviewCard(summary: ConfigSummary, adding: Boolean, onConfirm: () -> Unit, onCancel: () -> Unit) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -230,6 +237,8 @@ private fun PreviewCard(summary: ConfigSummary, onConfirm: () -> Unit, onCancel:
                 }
             }
         }
+        // The clusters already imported stay: say what this import does to them.
+        if (adding) Text(stringResource(R.string.import_adds_cluster), style = MaterialTheme.typography.bodyMedium)
         Text(
             stringResource(R.string.import_stored_encrypted),
             style = MaterialTheme.typography.bodySmall,

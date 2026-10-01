@@ -259,9 +259,19 @@
     <string name="health_all_passed">Усі перевірки пройдено</string>
     <string name="health_rerun">Запустити знову</string>
 
+    <!-- Clusters -->
+    <string name="clusters_title">Кластери</string>
+    <string name="clusters_switch">Змінити кластер</string>
+    <string name="clusters_add">Додати кластер</string>
+    <string name="clusters_swipe_hint">Проведіть по верхній панелі ліворуч або праворуч, щоб змінити кластер.</string>
+    <string name="clusters_remove">Вилучити %1$s</string>
+    <string name="clusters_remove_title">Вилучити %1$s?</string>
+    <string name="clusters_remove_body">Конфігурацію та клієнтський ключ цього кластера буде вилучено з цього пристрою. Інші кластери залишаться.</string>
+    <string name="clusters_color">Колір %1$s</string>
+    <string name="clusters_color_hint">Застосунок набуває кольорів кластера на екрані.</string>
+
     <!-- Settings -->
     <string name="settings_title">Налаштування</string>
-    <string name="settings_section_context">Контекст</string>
     <string name="settings_section_appearance">Вигляд</string>
     <string name="settings_theme_auto">Автоматично</string>
     <string name="settings_theme_light">Світла</string>
@@ -296,7 +306,7 @@
     <string name="settings_key_strongbox">чип безпеки StrongBox</string>
     <string name="settings_key_tee">довірене середовище виконання (TEE)</string>
     <string name="settings_key_software">програмне сховище ключів</string>
-    <string name="settings_import_new">Імпортувати новий talosconfig</string>
+    <string name="settings_import_new">Додати кластер (імпортувати talosconfig)</string>
     <string name="settings_delete_config">Видалити збережений talosconfig</string>
     <string name="settings_delete_title">Видалити talosconfig?</string>
     <string name="settings_delete_body">Зашифровану конфігурацію та її клієнтський ключ буде видалено з цього пристрою.</string>
@@ -388,6 +398,7 @@
     <string name="import_context_current">%1$s (поточний)</string>
     <string name="import_nodes_endpoints">кінцеві точки</string>
     <string name="import_stored_encrypted">Конфігурація зберігається на цьому пристрої в зашифрованому вигляді (Android Keystore) і не потрапляє в резервні копії.</string>
+    <string name="import_adds_cluster">Його буде додано до кластерів, які вже є на цьому пристрої. Уже імпортований кластер (та сама назва й той самий CA) буде оновлено.</string>
     <string name="import_import">Імпортувати</string>
     <string name="import_camera_needed">Для сканування QR-коду talosconfig потрібен дозвіл на доступ до камери.</string>
     <string name="import_grant_camera">Надати доступ до камери</string>

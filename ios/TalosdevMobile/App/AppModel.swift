@@ -27,6 +27,7 @@ final class AppModel {
         static let contextIndex = "activeContextIndex"
         static let theme = "themeMode"
         static let lock = "appLockEnabled"
+        static let clusterColors = "clusterColors"
     }
 
     private(set) var yaml: String?
@@ -43,6 +44,10 @@ final class AppModel {
             }
         }
     }
+
+    /// Main color (0xRRGGBB) of each cluster, by context fingerprint (not its name, which the
+    /// screenshot mode masks). The accent color is the one of the cluster on screen.
+    private(set) var clusterColors: [String: Int]
 
     var theme: ThemeMode {
         didSet { UserDefaults.standard.set(theme.rawValue, forKey: Keys.theme) }
@@ -64,6 +69,7 @@ final class AppModel {
         privacyMask = UserDefaults.standard.bool(forKey: PrivacyKeys.enabled)
         privacyWords = UserDefaults.standard.string(forKey: PrivacyKeys.words) ?? ""
         lock = AppLockState(enabled: UserDefaults.standard.bool(forKey: Keys.lock))
+        clusterColors = UserDefaults.standard.dictionary(forKey: Keys.clusterColors) as? [String: Int] ?? [:]
     }
 
     var client: TalosClient? {
@@ -71,6 +77,27 @@ final class AppModel {
     }
 
     var activeSummary: ContextSummary? { summary?.context(named: activeContext) }
+
+    /// A cluster's main color (0xRRGGBB); the default one while it has none.
+    func seed(of context: ContextSummary?) -> Int {
+        context.flatMap { clusterColors[$0.fingerprint] } ?? defaultClusterSeed
+    }
+
+    func setColor(_ rgb: Int, for context: ContextSummary) {
+        guard !context.fingerprint.isEmpty else { return }
+        storeColors(clusterColors.merging([context.fingerprint: rgb]) { _, new in new })
+    }
+
+    private func storeColors(_ colors: [String: Int]) {
+        guard colors != clusterColors else { return }
+        clusterColors = colors
+        UserDefaults.standard.set(colors, forKey: Keys.clusterColors)
+    }
+
+    /// Shows the cluster `step` positions after the active one (before it when negative).
+    func selectAdjacentCluster(step: Int) {
+        if let next = summary?.adjacentContext(to: activeContext, step: step) { activeContext = next }
+    }
 
     /// Privileged actions are only shown when the imported config's role allows them.
     func allows(_ feature: Feature) -> Bool { activeSummary?.allows(feature) ?? false }
@@ -126,10 +153,40 @@ final class AppModel {
         apply(yaml: stored, summary: parsed, preferred: parsed.selectedContext(index: Self.savedContextIndex, name: UserDefaults.standard.string(forKey: Keys.context)))
     }
 
+    /// Stores `newYAML`. With a config already stored its contexts are added to it (one
+    /// stored talosconfig, a context per cluster): a context of an already imported cluster
+    /// (same name and CA) is updated, any other gets its own entry. The imported config's
+    /// current context becomes the one shown.
     func save(yaml newYAML: String) async throws {
-        let parsed = try await TalosClient.parse(newYAML)
-        try SecureConfigStore.save(Data(newYAML.utf8))
-        apply(yaml: newYAML, summary: parsed, preferred: parsed.current)
+        let merged: String
+        if let stored = yaml {
+            merged = try await TalosClient.mergeConfig(stored: stored, added: newYAML)
+        } else {
+            merged = newYAML
+        }
+        let parsed = try await TalosClient.parse(merged)
+        try SecureConfigStore.save(Data(merged.utf8))
+        apply(yaml: merged, summary: parsed, preferred: parsed.current)
+    }
+
+    /// Removes the cluster `name` (a context and its credentials) from the stored config,
+    /// showing its neighbour if it was the active one. Removing the last one deletes the
+    /// stored config.
+    func removeCluster(_ name: String) async throws {
+        guard let current = yaml, let before = summary,
+              let removed = before.contexts.firstIndex(where: { $0.name == name }) else { return }
+        guard before.contexts.count > 1 else {
+            clear()
+            return
+        }
+        let remaining = try await TalosClient.removeContext(stored: current, context: name)
+        let parsed = try await TalosClient.parse(remaining)
+        let active = before.contexts.firstIndex { $0.name == activeContext } ?? removed
+        // By position: the masked names of the screenshot mode may change with the set of contexts.
+        let index = ConfigSummary.activeIndexAfterRemoval(active: active, removed: removed, remaining: parsed.contexts.count)
+        try SecureConfigStore.save(Data(remaining.utf8))
+        if active == removed { SharedStore.save(nil) } // the widget stops showing the removed cluster
+        apply(yaml: remaining, summary: parsed, preferred: parsed.selectedContext(index: index, name: nil))
     }
 
     /// Replaces the active context's ca/crt/key with those of `generated` (a renewed
@@ -211,5 +268,7 @@ final class AppModel {
         yaml = newYAML
         summary = newSummary
         activeContext = preferred.flatMap { newSummary.context(named: $0)?.name } ?? newSummary.current
+        // Every cluster gets a color of its own; removed ones are forgotten.
+        storeColors(assignClusterColors(saved: clusterColors, fingerprints: newSummary.contexts.map(\.fingerprint)))
     }
 }

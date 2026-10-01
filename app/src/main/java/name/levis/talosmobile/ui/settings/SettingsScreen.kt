@@ -71,6 +71,7 @@ fun SettingsScreen(
     onCleared: () -> Unit,
 ) {
     val config by configs.config.collectAsStateWithLifecycle()
+    val app = LocalContext.current.applicationContext as TalosApp
     val scope = rememberCoroutineScope()
     var confirmDelete by remember { mutableStateOf(false) }
 
@@ -86,14 +87,14 @@ fun SettingsScreen(
             Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            SectionTitle(stringResource(R.string.settings_section_context))
+            SectionTitle(stringResource(R.string.clusters_title))
             config?.summary?.contexts?.forEach { ctx ->
                 val selected = ctx.name == config?.activeContext
                 Card(
                     Modifier.fillMaxWidth().selectable(
                         selected = selected,
                         role = Role.RadioButton,
-                        onClick = { configs.selectContext(ctx.name) },
+                        onClick = { app.selectCluster(ctx.name) },
                     ),
                 ) {
                     Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {

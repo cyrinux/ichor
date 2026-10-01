@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import name.levis.talosmobile.data.AiPreferences
 import name.levis.talosmobile.data.CaptureRepository
 import name.levis.talosmobile.data.ChangelogRepository
+import name.levis.talosmobile.data.ClusterColors
 import name.levis.talosmobile.data.DiagnosisRepository
 import name.levis.talosmobile.data.SecureStore
 import name.levis.talosmobile.data.ConfigRepository
@@ -39,6 +40,7 @@ class TalosApp : Application() {
     val upgradeManager by lazy { UpgradeManager(configRepository, onFinished = talosRepository::forgetFeatures) }
     val talosUpdateChecker by lazy { TalosUpdateChecker() }
     val uiPreferences by lazy { UiPreferences(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
+    val clusterColors by lazy { ClusterColors(getSharedPreferences(ClusterColors.FILE, Context.MODE_PRIVATE)) }
     val appLock by lazy {
         AppLock(
             PrefsLockSettings(getSharedPreferences("talosdev-mobile-security", Context.MODE_PRIVATE)),
@@ -66,6 +68,17 @@ class TalosApp : Application() {
     fun launchSync(runNow: Boolean = false) {
         ProcessLifecycleOwner.get().lifecycleScope.launch { syncMonitoring(this@TalosApp, runNow) }
     }
+
+    /** Shows another cluster (a context of the stored config); the widget and the alerts follow it. */
+    fun selectCluster(name: String) {
+        if (name == configRepository.config.value?.activeContext) return
+        configRepository.selectContext(name)
+        launchSync(runNow = true)
+    }
+
+    /** Removes a cluster from the stored config; false when it was the last one (nothing is stored anymore). */
+    suspend fun removeCluster(name: String): Boolean =
+        configRepository.removeContext(name).also { launchSync(runNow = true) }
 
     /**
      * Turns screenshot mode on or off. Everything fetched under the previous setting is
@@ -97,6 +110,10 @@ class TalosApp : Application() {
         // Before any Talos call: the monitor worker and the widget run in this process too.
         applyPrivacyMask(uiPreferences.privacyMask.value)
         launchSync()
+        // Every cluster of the stored config gets a color of its own, as soon as it shows up.
+        ProcessLifecycleOwner.get().lifecycleScope.launch {
+            configRepository.config.collect { stored -> stored?.let { clusterColors.sync(it.summary) } }
+        }
         // Process-wide foreground/background, so moving between our own screens never relocks.
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) = appLock.onForeground()

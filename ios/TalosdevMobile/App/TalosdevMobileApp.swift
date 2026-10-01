@@ -29,6 +29,8 @@ struct TalosdevMobileApp: App {
                     if phase == .background, BackgroundMonitor.alertsEnabled { BackgroundMonitor.schedule() }
                 }
                 .preferredColorScheme(model.theme.colorScheme)
+                // The accent color follows the cluster on screen.
+                .tint(model.accent)
         }
     }
 }
@@ -111,6 +113,8 @@ enum Route: Hashable {
     case health
     case settings
     case importConfig
+    /// The imported clusters: switch, color, remove, add.
+    case clusters
     case debugShell(node: String, hostname: String)
     /// Events timeline for one node, or all of them (node nil); hostnames by address.
     case events(node: String?, hostnames: [String: String])
@@ -150,6 +154,7 @@ struct MainNavigation: View {
                     case .settings: SettingsView()
                     case .diagnosis(let note): DiagnosisView(initialNote: note)
                     case .importConfig: ImportView { path.removeAll() }
+                    case .clusters: ClustersView()
                     case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)
                     case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
                     case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)

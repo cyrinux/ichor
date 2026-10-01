@@ -27,6 +27,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import name.levis.talosmobile.i18n.AppLocale
 import name.levis.talosmobile.security.LockScreen
+import name.levis.talosmobile.data.activeSummary
+import name.levis.talosmobile.model.seedOf
 import name.levis.talosmobile.ui.DeepLink
 import name.levis.talosmobile.ui.Navigation
 import name.levis.talosmobile.ui.components.LoadingBox
@@ -83,7 +85,10 @@ class MainActivity : FragmentActivity() {
                 }
                 onDispose {}
             }
-            TalosTheme(themeMode) {
+            // The palette follows the cluster on screen (its main color, see ClusterColors).
+            val stored by app.configRepository.config.collectAsStateWithLifecycle()
+            val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
+            TalosTheme(themeMode, seed = clusterColors.seedOf(stored?.activeSummary)) {
                 Surface {
                     LockGate(app, deepLink, onWiped = ::recreate)
                 }
