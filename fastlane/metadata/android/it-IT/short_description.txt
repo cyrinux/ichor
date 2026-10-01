@@ -1,0 +1,1 @@
+Monitora e gestisci il tuo cluster Talos Linux: nodi, log, etcd, avvisi

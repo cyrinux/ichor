@@ -1,0 +1,5 @@
+Prima versione su Google Play.
+
+• Più cluster: ogni contesto del talosconfig è un cluster; scorri la barra superiore della panoramica per cambiare, o tocca il titolo per l'elenco
+• Ogni cluster ha il suo colore, e la palette dell'app segue il cluster mostrato
+• Importare un talosconfig rinnovato aggiorna il cluster esistente

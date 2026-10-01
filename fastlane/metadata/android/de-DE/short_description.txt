@@ -1,0 +1,1 @@
+Talos-Linux-Cluster überwachen und steuern: Nodes, Logs, etcd, Alarme
