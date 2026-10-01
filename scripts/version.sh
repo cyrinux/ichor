@@ -6,7 +6,7 @@ set -euo pipefail
 # The APK's versionName/versionCode derive from this script, so an installed build can
 # always be traced back to one commit. Resolution order:
 #
-#   1. TALOS_VIEWER_VERSION in the environment (CI, releases).
+#   1. TALOSDEV_MOBILE_VERSION in the environment (CI, releases).
 #   2. `git describe` against the vMAJOR.MINOR.PATCH release tags.
 #   3. The commit SHA alone, when the checkout has no tags yet.
 #   4. A literal "unknown", when there is no git or no commit at all.
@@ -58,15 +58,15 @@ resolve() {
         if [[ "$version" == *+* ]]; then version="${version}.dirty"; else version="${version}+dirty"; fi
     fi
 
-    if [[ -n "${TALOS_VIEWER_VERSION:-}" ]]; then
-        version="$TALOS_VIEWER_VERSION"
+    if [[ -n "${TALOSDEV_MOBILE_VERSION:-}" ]]; then
+        version="$TALOSDEV_MOBILE_VERSION"
         [[ "$version" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+) ]] && base="${BASH_REMATCH[1]}"
     fi
 
     VERSION="$version"
     VERSION_BASE="$base"
     # versionCode must be >= 1, even before the first commit.
-    BUILD_NUMBER="${TALOS_VIEWER_BUILD_NUMBER:-$(( build_number > 0 ? build_number : 1 ))}"
+    BUILD_NUMBER="${TALOSDEV_MOBILE_BUILD_NUMBER:-$(( build_number > 0 ? build_number : 1 ))}"
     GIT_SHA="$sha"
     GIT_DESCRIBE="$describe"
     GIT_BRANCH="$branch"
@@ -74,13 +74,13 @@ resolve() {
 }
 
 emit_env() {
-    printf 'TALOS_VIEWER_VERSION=%q\n' "$VERSION"
-    printf 'TALOS_VIEWER_VERSION_BASE=%q\n' "$VERSION_BASE"
-    printf 'TALOS_VIEWER_BUILD_NUMBER=%q\n' "$BUILD_NUMBER"
-    printf 'TALOS_VIEWER_GIT_SHA=%q\n' "$GIT_SHA"
-    printf 'TALOS_VIEWER_GIT_DESCRIBE=%q\n' "$GIT_DESCRIBE"
-    printf 'TALOS_VIEWER_GIT_BRANCH=%q\n' "$GIT_BRANCH"
-    printf 'TALOS_VIEWER_GIT_DIRTY=%q\n' "$GIT_DIRTY"
+    printf 'TALOSDEV_MOBILE_VERSION=%q\n' "$VERSION"
+    printf 'TALOSDEV_MOBILE_VERSION_BASE=%q\n' "$VERSION_BASE"
+    printf 'TALOSDEV_MOBILE_BUILD_NUMBER=%q\n' "$BUILD_NUMBER"
+    printf 'TALOSDEV_MOBILE_GIT_SHA=%q\n' "$GIT_SHA"
+    printf 'TALOSDEV_MOBILE_GIT_DESCRIBE=%q\n' "$GIT_DESCRIBE"
+    printf 'TALOSDEV_MOBILE_GIT_BRANCH=%q\n' "$GIT_BRANCH"
+    printf 'TALOSDEV_MOBILE_GIT_DIRTY=%q\n' "$GIT_DIRTY"
 }
 
 emit_json() {

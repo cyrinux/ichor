@@ -30,7 +30,7 @@ an F-Droid repository that ships the signed release APKs.
 
 ```
 app/            Android: Kotlin + Jetpack Compose UI
-ios/            iOS: SwiftUI app (XcodeGen) + TalosViewerCore Swift package
+ios/            iOS: SwiftUI app (XcodeGen) + TalosdevMobileCore Swift package
 go/talosmobile  Go core exposed to Kotlin and Swift (JSON in/out)
 go/cmd/probe    desktop CLI calling the same Go functions
 flake.nix       Nix build environment (default)
@@ -192,7 +192,7 @@ go run ./cmd/probe -config ../talosconfig-phone overview   # test a role-limited
 ## iOS
 
 The iOS app (`ios/`) reuses the same Go core, built as `Talosmobile.xcframework` with
-gomobile, around a SwiftUI UI. The pure logic lives in the `TalosViewerCore` Swift package:
+gomobile, around a SwiftUI UI. The pure logic lives in the `TalosdevMobileCore` Swift package:
 models, formatting, lock state and power-request rules.
 
 **Feature parity with Android:**

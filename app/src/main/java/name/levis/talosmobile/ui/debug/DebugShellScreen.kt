@@ -112,7 +112,7 @@ fun DebugShellScreen(
 private fun SetupForm(hostname: String, onStart: (String, String) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val prefs = remember { context.getSharedPreferences("talos-viewer-debug", Context.MODE_PRIVATE) }
+    val prefs = remember { context.getSharedPreferences("talosdev-mobile-debug", Context.MODE_PRIVATE) }
     var image by rememberSaveable { mutableStateOf(prefs.getString("image", DEFAULT_IMAGE) ?: DEFAULT_IMAGE) }
     var args by rememberSaveable { mutableStateOf(prefs.getString("args", DEFAULT_ARGS) ?: DEFAULT_ARGS) }
     var error by remember { mutableStateOf<String?>(null) }

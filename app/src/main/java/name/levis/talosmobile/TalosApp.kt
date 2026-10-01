@@ -22,17 +22,17 @@ import kotlinx.coroutines.launch
 class TalosApp : Application() {
     val configRepository by lazy { ConfigRepository(this) }
     val talosRepository by lazy { TalosRepository(configRepository) }
-    val uiPreferences by lazy { UiPreferences(getSharedPreferences("talos-viewer-ui", Context.MODE_PRIVATE)) }
+    val uiPreferences by lazy { UiPreferences(getSharedPreferences("talosdev-mobile-ui", Context.MODE_PRIVATE)) }
     val appLock by lazy {
         AppLock(
-            PrefsLockSettings(getSharedPreferences("talos-viewer-security", Context.MODE_PRIVATE)),
+            PrefsLockSettings(getSharedPreferences("talosdev-mobile-security", Context.MODE_PRIVATE)),
             clock = SystemClock::elapsedRealtime,
         )
     }
 
-    val supportPrompt by lazy { SupportPrompt(getSharedPreferences("talos-viewer-support", Context.MODE_PRIVATE)) }
-    val updateManager by lazy { UpdateManager(this, getSharedPreferences("talos-viewer-update", Context.MODE_PRIVATE)) }
-    val monitorStore by lazy { MonitorStore(getSharedPreferences("talos-viewer-monitor", Context.MODE_PRIVATE)) }
+    val supportPrompt by lazy { SupportPrompt(getSharedPreferences("talosdev-mobile-support", Context.MODE_PRIVATE)) }
+    val updateManager by lazy { UpdateManager(this, getSharedPreferences("talosdev-mobile-update", Context.MODE_PRIVATE)) }
+    val monitorStore by lazy { MonitorStore(getSharedPreferences("talosdev-mobile-monitor", Context.MODE_PRIVATE)) }
 
     /** Re-evaluates whether background monitoring should run (alerts on or widget placed). */
     fun launchSync(runNow: Boolean = false) {
@@ -41,11 +41,24 @@ class TalosApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        migrateLegacyPreferences()
         launchSync()
         // Process-wide foreground/background, so moving between our own screens never relocks.
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) = appLock.onForeground()
             override fun onStop(owner: LifecycleOwner) = appLock.onBackground()
         })
+    }
+
+    /**
+     * v0.3.x stored settings under "talos-viewer*" names (before the Talosdev Mobile rebrand).
+     * Rename the files once, before any SharedPreferences is opened, so nothing is lost.
+     */
+    private fun migrateLegacyPreferences() {
+        val dir = java.io.File(applicationInfo.dataDir, "shared_prefs")
+        dir.listFiles { f -> f.name.startsWith("talos-viewer") && f.name.endsWith(".xml") }?.forEach { old ->
+            val renamed = java.io.File(dir, old.name.replaceFirst("talos-viewer", "talosdev-mobile"))
+            if (!renamed.exists()) old.renameTo(renamed)
+        }
     }
 }

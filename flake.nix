@@ -47,7 +47,7 @@
         let pkgs = import nixpkgs { inherit system; };
         in {
           default = shellFor system;
-          # Swift on Linux for the iOS core package tests (ios/TalosViewerCore/test-linux.sh).
+          # Swift on Linux for the iOS core package tests (ios/TalosdevMobileCore/test-linux.sh).
           swift = (pkgs.mkShell.override { stdenv = pkgs.swift.stdenv; }) {
             packages = [ pkgs.swift pkgs.swiftPackages.Foundation pkgs.swiftPackages.XCTest pkgs.swiftPackages.Dispatch ];
             LD_LIBRARY_PATH = "${pkgs.swiftPackages.Dispatch}/lib:${pkgs.swiftPackages.XCTest}/lib";

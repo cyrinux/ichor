@@ -30,7 +30,7 @@ class ConfigRepository(context: Context) {
 
     /** Where the key protecting the stored config lives (null before the first import). */
     fun keyProtection(): KeyProtection? = runCatching { store.protection() }.getOrNull()
-    private val prefs = context.getSharedPreferences("talos-viewer", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences("talosdev-mobile", Context.MODE_PRIVATE)
 
     private val _config = MutableStateFlow<StoredConfig?>(null)
     val config: StateFlow<StoredConfig?> = _config.asStateFlow()

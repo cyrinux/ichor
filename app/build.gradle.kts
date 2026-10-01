@@ -14,8 +14,8 @@ android {
         minSdk = 26
         targetSdk = 37
         // From scripts/version.sh (exported by build.sh); fallbacks for IDE builds.
-        versionCode = System.getenv("TALOS_VIEWER_BUILD_NUMBER")?.toIntOrNull() ?: 1
-        versionName = System.getenv("TALOS_VIEWER_VERSION") ?: "0.0.0-unknown"
+        versionCode = System.getenv("TALOSDEV_MOBILE_BUILD_NUMBER")?.toIntOrNull() ?: 1
+        versionName = System.getenv("TALOSDEV_MOBILE_VERSION") ?: "0.0.0-unknown"
 
         // GitHub repository the self-updater reads releases from (set by GitHub Actions).
         val updateRepo = System.getenv("GITHUB_REPOSITORY") ?: "cyrinux/talosdev-mobile"

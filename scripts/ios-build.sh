@@ -20,7 +20,7 @@ command -v xcodegen >/dev/null || { echo "xcodegen is missing (brew install xcod
 set -a
 eval "$("$ROOT/scripts/version.sh" --env)"
 set +a
-echo "version $TALOS_VIEWER_VERSION (build $TALOS_VIEWER_BUILD_NUMBER)"
+echo "version $TALOSDEV_MOBILE_VERSION (build $TALOSDEV_MOBILE_BUILD_NUMBER)"
 
 # gomobile/gobind versions are pinned by the tool directive in go/go.mod.
 cd "$ROOT/go"
@@ -30,14 +30,14 @@ rm -rf "$ROOT/ios/Frameworks/Talosmobile.xcframework"
 gomobile bind -target=ios,iossimulator -iosversion=17.0 -ldflags="-s -w" \
   -o "$ROOT/ios/Frameworks/Talosmobile.xcframework" ./talosmobile
 
-(cd "$ROOT/ios/TalosViewerCore" && swift test)
+(cd "$ROOT/ios/TalosdevMobileCore" && swift test)
 
 cd "$ROOT/ios"
 xcodegen generate
 # iOS only accepts numeric x.y.z marketing versions; the full string is in the IPA name.
 common=(
-  -project TalosViewer.xcodeproj -scheme TalosViewer -derivedDataPath build
-  MARKETING_VERSION="$TALOS_VIEWER_VERSION_BASE" CURRENT_PROJECT_VERSION="$TALOS_VIEWER_BUILD_NUMBER"
+  -project TalosdevMobile.xcodeproj -scheme TalosdevMobile -derivedDataPath build
+  MARKETING_VERSION="$TALOSDEV_MOBILE_VERSION_BASE" CURRENT_PROJECT_VERSION="$TALOSDEV_MOBILE_BUILD_NUMBER"
   CODE_SIGNING_ALLOWED=NO
   # SwiftTerm ships a build-tool plugin; CI cannot click "Trust & Enable".
   -skipPackagePluginValidation -skipMacroValidation
@@ -50,8 +50,8 @@ case "$MODE" in
   ipa)
     xcodebuild "${common[@]}" -configuration Release -destination 'generic/platform=iOS' build
     rm -rf build/ipa && mkdir -p build/ipa/Payload
-    cp -R build/Build/Products/Release-iphoneos/TalosViewer.app build/ipa/Payload/
-    ipa="talosdev-mobile-v${TALOS_VIEWER_VERSION//+/-}-unsigned.ipa"
+    cp -R build/Build/Products/Release-iphoneos/TalosdevMobile.app build/ipa/Payload/
+    ipa="talosdev-mobile-v${TALOSDEV_MOBILE_VERSION//+/-}-unsigned.ipa"
     (cd build/ipa && zip -qry "../$ipa" Payload)
     echo "$ROOT/ios/build/$ipa"
     ;;

@@ -2,7 +2,7 @@ default:
     @just --list
 
 # adb target. Empty = the only connected device; "ip:port" = wireless adb (connected first).
-DEVICE := env_var_or_default("TALOS_VIEWER_DEVICE", "")
+DEVICE := env_var_or_default("TALOSDEV_MOBILE_DEVICE", "")
 
 APP_ID := "name.levis.talosmobile"
 # Per-ABI APKs: app/build/outputs/apk/<buildType>/app-<abi>-<buildType>.apk
@@ -34,9 +34,9 @@ release-tag version:
         echo "Tag v${version} already exists." >&2
         exit 1
     fi
-    # A tag ships: gate it on the same checks CI runs. TALOS_VIEWER_RELEASE_SKIP_GATE=1
+    # A tag ships: gate it on the same checks CI runs. TALOSDEV_MOBILE_RELEASE_SKIP_GATE=1
     # skips them for a hotfix whose commit already passed CI.
-    if [[ "${TALOS_VIEWER_RELEASE_SKIP_GATE:-}" != 1 ]]; then
+    if [[ "${TALOSDEV_MOBILE_RELEASE_SKIP_GATE:-}" != 1 ]]; then
         just check
     fi
     previous="$(git describe --tags --match 'v[0-9]*' --abbrev=0 2>/dev/null || true)"
@@ -165,7 +165,7 @@ _adb-install device build_type:
 
 # iOS core package tests on Linux (models, formatting, lock, power rules).
 ios-test-linux:
-    nix develop .#swift --command ios/TalosViewerCore/test-linux.sh
+    nix develop .#swift --command ios/TalosdevMobileCore/test-linux.sh
 
 # macOS only: Go xcframework, core tests and a simulator build.
 ios-test:

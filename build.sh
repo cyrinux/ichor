@@ -58,7 +58,7 @@ build_inside() {
   set -a
   eval "$("$ROOT/scripts/version.sh" --env)"
   set +a
-  echo "version $TALOS_VIEWER_VERSION (code $TALOS_VIEWER_BUILD_NUMBER)"
+  echo "version $TALOSDEV_MOBILE_VERSION (code $TALOSDEV_MOBILE_BUILD_NUMBER)"
 
   cd "$ROOT/go"
   if [[ "$VARIANT" == "check" ]]; then
@@ -116,6 +116,6 @@ docker run --rm --platform linux/amd64 \
   -e GOMODCACHE=/cache/gomod -e GOCACHE=/cache/gobuild -e GRADLE_USER_HOME=/cache/gradle \
   -e GOFLAGS=-buildvcs=false \
   -e TALOS_KEYSTORE -e TALOS_KEYSTORE_PASSWORD -e TALOS_KEY_ALIAS -e TALOS_KEY_PASSWORD \
-  -e TALOS_VIEWER_VERSION -e TALOS_VIEWER_BUILD_NUMBER \
+  -e TALOSDEV_MOBILE_VERSION -e TALOSDEV_MOBILE_BUILD_NUMBER \
   -v "$ROOT:/src" -v "$ROOT/.cache:/cache" \
   "$IMAGE" bash -c 'mkdir -p /tmp/home && /src/build.sh '"$VARIANT"

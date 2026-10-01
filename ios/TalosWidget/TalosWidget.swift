@@ -1,5 +1,5 @@
 import SwiftUI
-import TalosViewerCore
+import TalosdevMobileCore
 import WidgetKit
 
 /// Home-screen summary of the last background check. Counts only, no hostnames: it stays

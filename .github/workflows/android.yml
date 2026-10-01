@@ -66,6 +66,12 @@ jobs:
           name: android-release
           path: dist/*.apk
 
+      # R8 mapping, to decode obfuscated stack traces from release builds.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-mapping
+          path: app/build/outputs/mapping/release/mapping.txt
+
       - uses: actions/upload-artifact@v4
         with:
           name: android-debug

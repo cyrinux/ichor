@@ -35,7 +35,7 @@ data class UpdateInfo(
 /**
  * The update to offer, or null: the release must be newer than [currentVersion] and carry a
  * signed APK for one of the device's [abis], in preference order (`Build.SUPPORTED_ABIS`).
- * CI attaches "talosdev-mobile-<tag>-<abi>.apk" (older releases: "talos-viewer-…"); "-unsigned" builds cannot be installed.
+ * CI attaches "talosdev-mobile-<tag>-<abi>.apk" (older releases: "talosdev-mobile-…"); "-unsigned" builds cannot be installed.
  */
 fun selectUpdate(release: GitHubRelease, currentVersion: String, abis: List<String>): UpdateInfo? {
     if (release.draft || release.prerelease) return null
