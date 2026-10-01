@@ -218,7 +218,14 @@ Both run on pushes to `main` and on pull requests. Release APKs are named
 the updater ignores unsigned ones. On a `v*` tag (`just release-tag 0.1.0`,
 then `git push origin v0.1.0`), they attach the release APK and the IPA to the GitHub release.
 
-To sign the release APK in CI, add these repository secrets:
+To sign the release APK in CI, generate a key once and upload it as repository secrets:
+
+```sh
+just android-keystore-gen       # then export TALOS_KEYSTORE, TALOS_KEYSTORE_PASSWORD, TALOS_KEY_ALIAS
+just github-secrets             # sets the three secrets below with gh (values via stdin)
+```
+
+The secrets it sets:
 
 | Secret | Value |
 |---|---|

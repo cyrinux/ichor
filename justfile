@@ -99,6 +99,25 @@ android-keystore-info:
     nix develop --command keytool -list -v -keystore "$TALOS_KEYSTORE" -storepass "$TALOS_KEYSTORE_PASSWORD" \
         -alias "${TALOS_KEY_ALIAS:-talos-viewer}" | grep -E "Alias name|SHA256"
 
+# Upload the release signing key to GitHub Actions secrets (what android.yml signs with),
+# from the same env as android-keystore-info. Values go through stdin, never argv.
+# Defaults to the current repository; e.g. `just github-secrets cyrinux/talosctl-mobile`.
+github-secrets repo="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    : "${TALOS_KEYSTORE:?TALOS_KEYSTORE is not set (see just android-keystore-gen)}"
+    : "${TALOS_KEYSTORE_PASSWORD:?TALOS_KEYSTORE_PASSWORD is not set}"
+    [[ -f "$TALOS_KEYSTORE" ]] || { echo "$TALOS_KEYSTORE does not exist" >&2; exit 1; }
+    alias="${TALOS_KEY_ALIAS:-talos-viewer}"
+    repo=({{ if repo == "" { "" } else { "--repo " + repo } }})
+    # Fail early on a wrong password/alias rather than in CI.
+    nix develop --command keytool -list -keystore "$TALOS_KEYSTORE" -alias "$alias" \
+        -storepass:env TALOS_KEYSTORE_PASSWORD >/dev/null
+    base64 -w0 "$TALOS_KEYSTORE" | gh secret set TALOS_KEYSTORE_BASE64 "${repo[@]}"
+    printf '%s' "$TALOS_KEYSTORE_PASSWORD" | gh secret set TALOS_KEYSTORE_PASSWORD "${repo[@]}"
+    printf '%s' "$alias" | gh secret set TALOS_KEY_ALIAS "${repo[@]}"
+    gh secret list "${repo[@]}"
+
 # Build and install the debug APK, e.g. `just install` or `just install 192.168.1.50:37000`.
 install device=DEVICE: build
     @just _adb-install "{{ device }}" debug
