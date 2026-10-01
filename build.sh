@@ -73,6 +73,8 @@ build_inside() {
     install_gomobile_linux_arm64
     use_native_ndk_linux_arm64
   fi
+  # app/libs only holds this generated (gitignored) AAR, so a fresh checkout lacks it.
+  mkdir -p "$ROOT/app/libs"
   gomobile bind -v -target=android/arm64,android/amd64 -androidapi 26 -javapkg=dev.talos \
     -ldflags="-s -w -extldflags=-Wl,-z,max-page-size=16384" -o "$ROOT/app/libs/talosmobile.aar" ./talosmobile
   cd "$ROOT"

@@ -101,8 +101,9 @@ case "${1:-}" in
     --json) emit_json ;;
     --field)
         name="${2:?--field needs a NAME}"
-        var="${name^^}"
-        [[ -v "$var" ]] || { echo "unknown field: $name" >&2; exit 2; }
+        # Portable to macOS's bash 3.2 (no ${x^^} or [[ -v ]]).
+        var="$(printf '%s' "$name" | tr '[:lower:]' '[:upper:]')"
+        [[ -n "${!var+set}" ]] || { echo "unknown field: $name" >&2; exit 2; }
         printf '%s\n' "${!var}"
         ;;
     *) echo "usage: $0 [--env|--json|--field NAME]" >&2; exit 2 ;;
