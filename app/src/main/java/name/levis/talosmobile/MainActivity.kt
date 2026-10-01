@@ -19,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
@@ -113,17 +112,14 @@ private fun Intent.deepLink(): DeepLink? =
 @Composable
 private fun LockGate(app: TalosApp, deepLink: MutableStateFlow<DeepLink?>, onWiped: () -> Unit) {
     val locked by app.appLock.locked.collectAsStateWithLifecycle()
-    var everUnlocked by rememberSaveable { mutableStateOf(!locked) }
+    val everUnlocked by app.appLock.everUnlocked.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     Box {
         if (everUnlocked) Root(app, deepLink)
         if (locked) {
             LockScreen(
-                onUnlocked = {
-                    everUnlocked = true
-                    app.appLock.unlock()
-                },
+                onUnlocked = { app.appLock.unlock() },
                 onWipe = {
                     scope.launch {
                         app.configRepository.clear()

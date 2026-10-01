@@ -37,16 +37,25 @@ class AppLock(
     private val _locked = MutableStateFlow(settings.lockEnabled)
     val locked: StateFlow<Boolean> = _locked.asStateFlow()
 
+    /**
+     * Whether the app was unlocked (or needed no unlock) since the process started. Held here,
+     * not in saved instance state: that is restored after a process death, when [locked] is
+     * true again and nothing may load before the user authenticates.
+     */
+    private val _everUnlocked = MutableStateFlow(!settings.lockEnabled)
+    val everUnlocked: StateFlow<Boolean> = _everUnlocked.asStateFlow()
+
     private var backgroundedAt: Long? = null
 
     /** Callers must have authenticated the user before changing this. */
     fun setEnabled(enabled: Boolean) {
         settings.lockEnabled = enabled
         _enabled.value = enabled
-        if (!enabled) _locked.value = false
+        if (!enabled) unlock()
     }
 
     fun unlock() {
+        _everUnlocked.value = true
         _locked.value = false
     }
 
