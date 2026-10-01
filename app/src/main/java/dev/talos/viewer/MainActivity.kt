@@ -45,6 +45,8 @@ class MainActivity : FragmentActivity() {
             }
         }
 
+        app.updateManager.maybeAutoCheck(lifecycleScope)
+
         setContent {
             val themeMode by app.uiPreferences.themeMode.collectAsStateWithLifecycle()
             TalosTheme(themeMode) {

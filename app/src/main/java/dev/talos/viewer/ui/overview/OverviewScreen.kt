@@ -34,7 +34,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
+import dev.talos.viewer.TalosApp
 import dev.talos.viewer.data.ConfigRepository
+import dev.talos.viewer.update.UpdateState
 import dev.talos.viewer.data.TalosRepository
 import dev.talos.viewer.model.ClusterOverview
 import dev.talos.viewer.model.NodeHealth
@@ -98,20 +101,21 @@ fun OverviewScreen(
                 onRefresh = vm::refresh,
                 modifier = Modifier.padding(padding).fillMaxSize(),
             ) {
-                NodeList(s.data, onNode)
+                NodeList(s.data, onNode, onSettings)
             }
         }
     }
 }
 
 @Composable
-private fun NodeList(overview: ClusterOverview, onNode: (NodeOverview) -> Unit) {
+private fun NodeList(overview: ClusterOverview, onNode: (NodeOverview) -> Unit, onSettings: () -> Unit) {
     val nodes = overview.nodes.sortedWith(compareBy({ it.role != "controlplane" }, { it.hostname }))
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
+        item { UpdateBanner(onClick = onSettings) }
         item { Summary(overview.nodes) }
         items(nodes, key = { it.node }) { node ->
             NodeCard(node, onClick = { onNode(node) })
@@ -191,4 +195,20 @@ private fun NodeCard(node: NodeOverview, onClick: () -> Unit) {
 private fun roleLabel(role: String) = when (role) {
     "controlplane" -> "control plane"
     else -> role
+}
+
+/** Shown when the daily check found a newer release; opens Settings → Updates. */
+@Composable
+private fun UpdateBanner(onClick: () -> Unit) {
+    val updates = (LocalContext.current.applicationContext as TalosApp).updateManager
+    val state by updates.state.collectAsStateWithLifecycle()
+    val available = state as? UpdateState.Available ?: return
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Text(
+            "Talos Viewer ${available.info.version} is available — tap to update",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(16.dp),
+        )
+    }
 }

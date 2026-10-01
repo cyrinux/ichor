@@ -14,6 +14,7 @@ import dev.talos.viewer.monitor.MonitorStore
 import dev.talos.viewer.monitor.syncMonitoring
 import dev.talos.viewer.security.AppLock
 import dev.talos.viewer.security.PrefsLockSettings
+import dev.talos.viewer.update.UpdateManager
 import kotlinx.coroutines.launch
 
 /** Holds app-wide singletons (manual DI; the app is small). */
@@ -28,6 +29,7 @@ class TalosApp : Application() {
         )
     }
 
+    val updateManager by lazy { UpdateManager(this, getSharedPreferences("talos-viewer-update", Context.MODE_PRIVATE)) }
     val monitorStore by lazy { MonitorStore(getSharedPreferences("talos-viewer-monitor", Context.MODE_PRIVATE)) }
 
     /** Re-evaluates whether background monitoring should run (alerts on or widget placed). */

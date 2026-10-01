@@ -17,10 +17,9 @@ android {
         versionCode = System.getenv("TALOS_VIEWER_BUILD_NUMBER")?.toIntOrNull() ?: 1
         versionName = System.getenv("TALOS_VIEWER_VERSION") ?: "0.0.0-unknown"
 
-        // The Go core is only built for these ABIs (see build.sh).
-        ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
-        }
+        // GitHub repository the self-updater reads releases from (set by GitHub Actions).
+        val updateRepo = System.getenv("GITHUB_REPOSITORY") ?: "cyrinux/talosctl-mobile"
+        buildConfigField("String", "UPDATE_REPO", "\"$updateRepo\"")
     }
 
     // Release signing comes from env vars so CI (Forgejo) can inject secrets.
@@ -43,6 +42,24 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("release")
         }
+    }
+
+    // One APK per ABI (app-<abi>-<buildType>.apk), each with only its own native libraries.
+    // The list must match the Go core targets in build.sh.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = false
+        }
+    }
+
+    // Compress native libraries in the APK (extracted at install). The Go core shrinks from
+    // ~35 MB to ~10 MB, which matters for a sideloaded/self-updated APK; ELF segments stay
+    // 16 KB-aligned, so the Android 15+ page-size requirement still holds.
+    packaging {
+        jniLibs { useLegacyPackaging = true }
     }
 
     compileOptions {

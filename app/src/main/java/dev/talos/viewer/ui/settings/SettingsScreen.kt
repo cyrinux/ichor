@@ -99,6 +99,7 @@ fun SettingsScreen(
             AppearanceSection(uiPreferences)
             SecuritySection(appLock, uiPreferences)
             MonitoringSection(LocalContext.current.applicationContext as TalosApp)
+            UpdateSection((LocalContext.current.applicationContext as TalosApp).updateManager)
             config?.activeSummary?.let { KubeconfigSection(talos, appLock, it) }
             SectionTitle("Config")
             OutlinedButton(onClick = onReimport, modifier = Modifier.fillMaxWidth()) { Text("Import a new talosconfig") }

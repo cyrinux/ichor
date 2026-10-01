@@ -39,13 +39,29 @@ jobs:
           fi
           ./build.sh release
 
+      # talos-viewer-<version>-<abi>.apk; the in-app updater only picks signed ones,
+      # so unsigned builds get an explicit -unsigned suffix.
+      - name: Name release APKs
+        run: |
+          version="$(scripts/version.sh)"
+          mkdir -p dist
+          for apk in app/build/outputs/apk/release/app-*-release*.apk; do
+            file="$(basename "$apk")"
+            abi="${file#app-}"; abi="${abi%%-release*}"
+            suffix=""; [[ "$file" == *unsigned* ]] && suffix="-unsigned"
+            cp "$apk" "dist/talos-viewer-v${version}-${abi}${suffix}.apk"
+          done
+          ls -l dist
+
       - uses: actions/upload-artifact@v4
         with:
           name: talos-viewer-android
-          path: app/build/outputs/apk/**/*.apk
+          path: |
+            dist/*.apk
+            app/build/outputs/apk/debug/*.apk
 
       - name: Attach to release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: app/build/outputs/apk/release/*.apk
+          files: dist/*.apk

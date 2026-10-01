@@ -118,12 +118,38 @@ The app stores the config AES-GCM encrypted with an Android Keystore key, exclud
 - **Kubeconfig export:** the kubeconfig is written only to the file you choose. kubenav has no
   app-to-app import, so add the cluster from that file in kubenav, then delete the file.
 
+## Updates
+
+The Android app updates itself from this repository's GitHub releases (Settings → Updates):
+
+- **When it checks:** once a day, or when you tap "Check now".
+- **What it downloads:** the signed APK for the phone's ABI, after you confirm.
+- **Verification before installing:**
+  1. the SHA-256 checksum GitHub publishes for the file;
+  2. the package name;
+  3. that it is signed with exactly the installed app's key.
+- **Installing:** Android shows its own confirmation, and asks once to allow
+  "Install unknown apps" for Talos Viewer.
+
+Updates only work between builds signed with the same key, which means CI release builds with
+the `TALOS_KEYSTORE*` secrets set. A **debug** build, signed with your machine's debug key,
+cannot be replaced by a release. To switch once:
+
+1. uninstall the debug build;
+2. install `talos-viewer-vX.Y.Z-<abi>.apk` from a release;
+3. re-import the talosconfig.
+
+There is no self-update on iOS, where sideloaded apps are reinstalled with Sideloadly or AltStore.
+
 ## Build
 
+APKs are split per ABI (`arm64-v8a` for almost all phones, `armeabi-v7a`, `x86_64`), with
+compressed native libraries. A release APK is about 16 MB.
+
 ```sh
-./build.sh            # debug APK  -> app/build/outputs/apk/debug/app-debug.apk
+./build.sh            # debug APKs -> app/build/outputs/apk/debug/app-<abi>-debug.apk
 ./build.sh release    # needs TALOS_KEYSTORE, TALOS_KEYSTORE_PASSWORD, TALOS_KEY_ALIAS, TALOS_KEY_PASSWORD
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+just install           # builds, then installs the APK matching the connected device's ABI
 ```
 
 - **Default toolchain:** Nix (`flake.nix`). `BUILDER=docker ./build.sh` uses `build/Dockerfile`
@@ -187,7 +213,9 @@ instead, set `TALOS_IOS_TEAM_ID` before `xcodegen generate`.
   and release APKs.
 - **`.github/workflows/ios.yml`** (macOS 15): core tests, simulator build, unsigned IPA.
 
-Both run on pushes to `main` and on pull requests. On a `v*` tag (`just release-tag 0.1.0`,
+Both run on pushes to `main` and on pull requests. Release APKs are named
+`talos-viewer-v<version>-<abi>.apk`, or `…-unsigned.apk` when no keystore secrets are set;
+the updater ignores unsigned ones. On a `v*` tag (`just release-tag 0.1.0`,
 then `git push origin v0.1.0`), they attach the release APK and the IPA to the GitHub release.
 
 To sign the release APK in CI, add these repository secrets:

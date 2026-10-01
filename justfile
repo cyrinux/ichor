@@ -5,8 +5,8 @@ default:
 DEVICE := env_var_or_default("TALOS_VIEWER_DEVICE", "")
 
 APP_ID := "dev.talos.viewer"
-DEBUG_APK := "app/build/outputs/apk/debug/app-debug.apk"
-RELEASE_APK := "app/build/outputs/apk/release/app-release.apk"
+# Per-ABI APKs: app/build/outputs/apk/<buildType>/app-<abi>-<buildType>.apk
+APK_DIR := "app/build/outputs/apk"
 
 # Show the build identity every APK built from this checkout will carry:
 # the release tag when HEAD is one, the tag plus commit distance and SHA when
@@ -101,11 +101,11 @@ android-keystore-info:
 
 # Build and install the debug APK, e.g. `just install` or `just install 192.168.1.50:37000`.
 install device=DEVICE: build
-    @just _adb-install "{{ device }}" "{{ DEBUG_APK }}"
+    @just _adb-install "{{ device }}" debug
 
 # Build and install the release APK.
 install-release device=DEVICE: build-release
-    @just _adb-install "{{ device }}" "{{ RELEASE_APK }}"
+    @just _adb-install "{{ device }}" release
 
 # Install the debug APK and start the app.
 run device=DEVICE: (install device)
@@ -130,13 +130,19 @@ clean:
     rm -rf app/build build/reports .gradle .cache/ndk .cache/x-mobile .cache/gobin app/libs/talosmobile.aar
 
 [private]
-_adb-install device apk:
+_adb-install device build_type:
     #!/usr/bin/env bash
     set -euo pipefail
     if [[ "{{ device }}" == *:* ]]; then
         adb connect "{{ device }}" >/dev/null
     fi
-    adb {{ if device == "" { "" } else { "-s " + device } }} install -r "{{ apk }}"
+    adb=(adb {{ if device == "" { "" } else { "-s " + device } }})
+    # Pick the APK matching the device's preferred ABI.
+    abi="$("${adb[@]}" shell getprop ro.product.cpu.abi | tr -d '\r')"
+    apk="$(ls {{ APK_DIR }}/{{ build_type }}/app-"$abi"-{{ build_type }}*.apk 2>/dev/null | head -1)"
+    [[ -n "$apk" ]] || { echo "no {{ build_type }} APK for ABI $abi in {{ APK_DIR }}/{{ build_type }}" >&2; exit 1; }
+    echo "installing $apk"
+    "${adb[@]}" install -r "$apk"
 
 # iOS core package tests on Linux (models, formatting, lock, power rules).
 ios-test-linux:
