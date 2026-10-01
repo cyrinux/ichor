@@ -60,6 +60,9 @@ import java.util.Locale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.NetworkCheck
+import androidx.compose.material.icons.outlined.SystemUpdateAlt
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Memory
@@ -115,6 +118,9 @@ fun NodeDetailScreen(
     onNetwork: () -> Unit,
     onHardware: () -> Unit,
     onImages: () -> Unit,
+    onCapture: () -> Unit,
+    onCaptures: () -> Unit,
+    onUpgrade: () -> Unit,
     power: PowerViewModel = viewModel(key = "power-$node", factory = factory { PowerViewModel(app.talosRepository, node) }),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(initialTab) }
@@ -137,6 +143,11 @@ fun NodeDetailScreen(
     val canDebug = config?.activeSummary?.allows(Feature.DEBUG_SHELL) ?: false
     val canMachineConfig = config?.activeSummary?.allows(Feature.MACHINE_CONFIG) ?: false
     val canControlServices = config?.activeSummary?.allows(Feature.SERVICE_CONTROL) ?: false
+    val canCapture = config?.activeSummary?.allows(Feature.PACKET_CAPTURE) ?: false
+    val canUpgrade = config?.activeSummary?.allows(Feature.UPGRADE) ?: false
+    // One upgrade at a time in the app: the entry stays open for the node being upgraded.
+    val upgrading by app.upgradeManager.current.collectAsStateWithLifecycle()
+    val upgradeBusyElsewhere = upgrading?.let { it.running && it.node != node } ?: false
     val serviceControl: ServiceControlViewModel = viewModel(
         key = "service-control-$node",
         factory = factory { ServiceControlViewModel(app.talosRepository, node) },
@@ -290,6 +301,24 @@ fun NodeDetailScreen(
                                     },
                                 )
                             }
+                            if (canCapture) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.node_menu_capture)) },
+                                    leadingIcon = { Icon(Icons.Outlined.NetworkCheck, contentDescription = null) },
+                                    onClick = {
+                                        menuOpen = false
+                                        onCapture()
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.node_menu_captures)) },
+                                    leadingIcon = { Icon(Icons.Outlined.FolderOpen, contentDescription = null) },
+                                    onClick = {
+                                        menuOpen = false
+                                        onCaptures()
+                                    },
+                                )
+                            }
                             if (canMachineConfig) {
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.node_menu_machine_config)) },
@@ -297,6 +326,17 @@ fun NodeDetailScreen(
                                     onClick = {
                                         menuOpen = false
                                         onMachineConfig()
+                                    },
+                                )
+                            }
+                            if (canUpgrade) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.node_menu_upgrade)) },
+                                    leadingIcon = { Icon(Icons.Outlined.SystemUpdateAlt, contentDescription = null) },
+                                    enabled = !upgradeBusyElsewhere,
+                                    onClick = {
+                                        menuOpen = false
+                                        onUpgrade()
                                     },
                                 )
                             }

@@ -14,3 +14,9 @@
 -keep class com.google.android.gms.internal.mlkit_vision_barcode.** { *; }
 -keep class com.google.android.gms.internal.mlkit_vision_common.** { *; }
 -keep class com.google.android.gms.internal.mlkit_common.** { *; }
+
+# Batch 4 bindings (packet capture, upgrade): Go calls back into these through JNI.
+-keep class name.levis.talosmobile.CaptureListener { *; }
+-keep class name.levis.talosmobile.CaptureRun { *; }
+-keep class name.levis.talosmobile.UpgradeListener { *; }
+-keep class name.levis.talosmobile.UpgradeRun { *; }

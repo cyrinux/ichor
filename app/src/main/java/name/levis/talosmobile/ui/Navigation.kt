@@ -10,6 +10,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import name.levis.talosmobile.TalosApp
+import name.levis.talosmobile.ui.capture.CaptureFileScreen
+import name.levis.talosmobile.ui.capture.CaptureScreen
+import name.levis.talosmobile.ui.capture.CapturesScreen
 import name.levis.talosmobile.ui.debug.DebugShellScreen
 import name.levis.talosmobile.ui.etcd.EtcdScreen
 import name.levis.talosmobile.ui.events.EventsScreen
@@ -27,6 +30,7 @@ import name.levis.talosmobile.ui.node.PowerAction
 import name.levis.talosmobile.ui.overview.NodeAction
 import name.levis.talosmobile.ui.overview.OverviewScreen
 import name.levis.talosmobile.ui.settings.SettingsScreen
+import name.levis.talosmobile.ui.upgrade.UpgradeScreen
 
 private object Routes {
     const val IMPORT = "import"
@@ -41,6 +45,18 @@ private object Routes {
     const val HARDWARE = "hardware?addr={addr}&host={host}"
     const val IMAGES = "images?addr={addr}&host={host}"
     const val ISSUE_CONFIG = "issueconfig"
+    const val CAPTURE = "capture?addr={addr}&host={host}"
+    const val CAPTURES = "captures"
+    const val CAPTURE_FILE = "capturefile?name={name}"
+    const val UPGRADE = "upgrade?addr={addr}&host={host}&version={version}"
+
+    fun capture(addr: String, host: String) = "capture?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
+
+    fun captureFile(name: String) = "capturefile?name=${Uri.encode(name)}"
+
+    /** [version]: target version to preselect (empty: none). */
+    fun upgrade(addr: String, host: String, version: String = "") =
+        "upgrade?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&version=${Uri.encode(version)}"
 
     fun network(addr: String, host: String) = "network?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
@@ -112,6 +128,7 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
                 onEvents = { nav.navigate(Routes.events()) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
+                onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
             )
         }
         composable(
@@ -143,6 +160,9 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
                 onNetwork = { nav.navigate(Routes.network(addr, entry.arguments?.getString("host") ?: addr)) },
                 onHardware = { nav.navigate(Routes.hardware(addr, entry.arguments?.getString("host") ?: addr)) },
                 onImages = { nav.navigate(Routes.images(addr, entry.arguments?.getString("host") ?: addr)) },
+                onCapture = { nav.navigate(Routes.capture(addr, entry.arguments?.getString("host") ?: addr)) },
+                onCaptures = { nav.navigate(Routes.CAPTURES) },
+                onUpgrade = { nav.navigate(Routes.upgrade(addr, entry.arguments?.getString("host") ?: addr)) },
             )
         }
         composable(
@@ -166,6 +186,33 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
         composable(Routes.IMAGES, arguments = nodeArguments()) { entry ->
             val addr = entry.arguments?.getString("addr").orEmpty()
             ImagesScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.CAPTURE, arguments = nodeArguments()) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty()
+            CaptureScreen(
+                node = addr,
+                hostname = entry.arguments?.getString("host") ?: addr,
+                onBack = { nav.popBackStack() },
+                onCaptures = { nav.navigate(Routes.CAPTURES) },
+            )
+        }
+        composable(Routes.CAPTURES) {
+            CapturesScreen(onBack = { nav.popBackStack() }, onOpen = { nav.navigate(Routes.captureFile(it)) })
+        }
+        composable(Routes.CAPTURE_FILE, arguments = listOf(navArgument("name") { type = NavType.StringType })) { entry ->
+            CaptureFileScreen(name = entry.arguments?.getString("name").orEmpty(), onBack = { nav.popBackStack() })
+        }
+        composable(
+            Routes.UPGRADE,
+            arguments = nodeArguments() + navArgument("version") { type = NavType.StringType; defaultValue = "" },
+        ) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty()
+            UpgradeScreen(
+                node = addr,
+                hostname = entry.arguments?.getString("host") ?: addr,
+                initialVersion = entry.arguments?.getString("version").orEmpty(),
+                onBack = { nav.popBackStack() },
+            )
         }
         composable(Routes.ISSUE_CONFIG) { IssueConfigScreen(onBack = { nav.popBackStack() }) }
         composable(

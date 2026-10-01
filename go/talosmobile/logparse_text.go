@@ -39,9 +39,27 @@ func parseKernel(s string) (logEntry, bool) {
 	if talos, ok := strings.CutPrefix(msg, "[talos] "); ok {
 		e.Source = "talos"
 		e.Msg, e.Fields = splitTrailingJSON(talos)
+		e.Level = talosKernelLevel(e.Level, e.Fields)
 	}
 
 	return e, true
+}
+
+// talosKernelLevel corrects the level of a Talos message in the kernel log. Talos writes
+// all of them at one priority (warning), so it says nothing: a message with an error
+// field is a warning, any other one is info. Levels above warning are kept.
+func talosKernelLevel(level string, fields []logField) string {
+	if level == "error" {
+		return level
+	}
+
+	for _, f := range fields {
+		if f.K == "error" || f.K == "err" {
+			return "warn"
+		}
+	}
+
+	return "info"
 }
 
 var kernelLevels = map[string]string{

@@ -8,6 +8,7 @@ struct OverviewView: View {
     @Environment(AppModel.self) private var model
     @Environment(SupportPrompt.self) private var support
     @State private var state: LoadState<ClusterOverview> = .loading
+    @State private var update: TalosUpdateInfo?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -15,6 +16,7 @@ struct OverviewView: View {
                 if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
                     Section { CertExpiryBanner(notAfter: ctx.certNotAfter) }
                 }
+                if let update { TalosUpdateSection(info: update, nodes: overview.nodes) }
                 if support.visible { Section { SupportCard(prompt: support) } }
                 Section {
                     Summary(nodes: overview.nodes)
@@ -127,6 +129,9 @@ struct OverviewView: View {
         guard let client = model.client else { return }
         if case .loaded = state {} else { state = .loading }
         state = await .from { try await client.overview() }
+        if case .loaded(let overview, _) = state {
+            update = await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
+        }
     }
 
     private func sorted(_ nodes: [NodeOverview]) -> [NodeOverview] {

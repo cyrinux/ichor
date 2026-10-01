@@ -59,7 +59,12 @@ func TestParseLogLine(t *testing.T) {
 		{
 			name: "kernel talos broken json stays in msg",
 			line: `user: warning: [2026-10-01T16:47:32Z]: [talos] odd {"a": }`,
-			want: logEntry{TS: ms("2026-10-01T16:47:32Z"), Level: "warn", Source: "talos", Msg: `odd {"a": }`, Fields: kv()},
+			want: logEntry{TS: ms("2026-10-01T16:47:32Z"), Level: "info", Source: "talos", Msg: `odd {"a": }`, Fields: kv()},
+		},
+		{
+			name: "kernel talos warning without error field is info",
+			line: `user: warning: [2026-10-01T16:47:32Z]: [talos] rendered new static pod {"component": "controller-runtime", "id": "kube-apiserver"}`,
+			want: logEntry{TS: ms("2026-10-01T16:47:32Z"), Level: "info", Source: "talos", Msg: "rendered new static pod", Fields: kv("component", "controller-runtime", "id", "kube-apiserver")},
 		},
 		{
 			name: "klog json kubelet error",

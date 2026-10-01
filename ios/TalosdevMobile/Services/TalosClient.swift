@@ -269,12 +269,12 @@ struct TalosClient: Sendable {
         }
     }
 
-    private static func json<T: Decodable>(_ call: @escaping @Sendable (NSErrorPointer) -> String) async throws -> T {
+    static func json<T: Decodable>(_ call: @escaping @Sendable (NSErrorPointer) -> String) async throws -> T {
         let output = try await run(call)
         return try TalosJSON.decode(T.self, from: output)
     }
 
-    private static func run<T: Sendable>(_ call: @escaping @Sendable (NSErrorPointer) -> T) async throws -> T {
+    static func run<T: Sendable>(_ call: @escaping @Sendable (NSErrorPointer) -> T) async throws -> T {
         try await Task.detached(priority: .userInitiated) {
             var error: NSError?
             let result = call(&error)

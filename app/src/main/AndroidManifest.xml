@@ -33,6 +33,17 @@
             </intent-filter>
         </activity>
 
+        <!-- Shares saved packet captures with the app the user picks. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/capture_paths" />
+        </provider>
+
         <receiver
             android:name=".update.InstallResultReceiver"
             android:exported="false" />

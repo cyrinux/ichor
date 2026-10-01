@@ -178,3 +178,7 @@ ios-test:
 # macOS only: unsigned Release IPA in ios/build/ (re-sign with Sideloadly/AltStore).
 ios-build:
     scripts/ios-build.sh ipa
+
+# Capture the phone's current screen for the website and store (turn on screenshot mode first)
+screenshot name:
+    scripts/screenshot.sh {{name}}

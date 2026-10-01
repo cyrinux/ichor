@@ -3,23 +3,17 @@ package name.levis.talosmobile.ui.node
 import androidx.annotation.StringRes
 import androidx.compose.ui.res.stringResource
 import name.levis.talosmobile.R
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,8 +22,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -108,10 +100,7 @@ class PowerViewModel(private val talos: TalosRepository, private val node: Strin
     }
 }
 
-/**
- * Options (reboot mode / force shutdown) plus a confirmation that requires typing the
- * hostname, GitHub-style, to avoid accidental taps.
- */
+/** Options (reboot mode / force shutdown) plus the typed-hostname confirmation. */
 @Composable
 fun PowerConfirmDialog(
     action: PowerAction,
@@ -120,56 +109,37 @@ fun PowerConfirmDialog(
     onConfirm: (PowerRequest) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var typed by remember { mutableStateOf("") }
     var mode by remember { mutableStateOf(RebootMode.DEFAULT) }
     var forceShutdown by remember { mutableStateOf(false) }
     val request = PowerRequest(action, mode, forceShutdown)
-    val matches = typed.trim() == hostname
     val colors = LocalStatusColors.current
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.power_confirm_title, stringResource(action.title), hostname)) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                when (action) {
-                    PowerAction.REBOOT -> RebootModePicker(mode) { mode = it }
-                    PowerAction.SHUTDOWN -> ForceShutdownSwitch(forceShutdown) { forceShutdown = it }
-                }
-                if (role == "controlplane") {
-                    Text(
-                        stringResource(R.string.power_controlplane_warning),
-                        color = colors.warn,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-                if (action == PowerAction.SHUTDOWN) {
-                    Text(
-                        stringResource(R.string.power_shutdown_stays_off),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-                Text(stringResource(R.string.power_type_to_confirm, hostname), style = MaterialTheme.typography.bodyMedium)
-                OutlinedTextField(
-                    value = typed,
-                    onValueChange = { typed = it },
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(request) }, enabled = matches) {
-                Text(
-                    stringResource(request.title),
-                    color = if (matches) colors.bad else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = if (request.forced) FontWeight.Bold else null,
-                )
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
-    )
+    HostnameConfirmDialog(
+        title = stringResource(R.string.power_confirm_title, stringResource(action.title), hostname),
+        hostname = hostname,
+        confirmLabel = stringResource(request.title),
+        onConfirm = { onConfirm(request) },
+        onDismiss = onDismiss,
+        emphasized = request.forced,
+    ) {
+        when (action) {
+            PowerAction.REBOOT -> RebootModePicker(mode) { mode = it }
+            PowerAction.SHUTDOWN -> ForceShutdownSwitch(forceShutdown) { forceShutdown = it }
+        }
+        if (role == "controlplane") {
+            Text(
+                stringResource(R.string.power_controlplane_warning),
+                color = colors.warn,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+        if (action == PowerAction.SHUTDOWN) {
+            Text(
+                stringResource(R.string.power_shutdown_stays_off),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+    }
 }
 
 @Composable

@@ -175,7 +175,7 @@ public struct LogTail: Decodable, Equatable, Sendable {
 
 /// Features gated by Talos RBAC (rules from Talos v1.14 machined.go).
 public enum Feature: CaseIterable, Sendable {
-    case power, health, kubeconfig, debugShell, etcdDefrag, machineConfig, etcdSnapshot, serviceControl, issueConfig
+    case power, health, kubeconfig, debugShell, etcdDefrag, machineConfig, etcdSnapshot, serviceControl, issueConfig, packetCapture, upgrade
 
     public var label: String {
         switch self {
@@ -188,17 +188,20 @@ public enum Feature: CaseIterable, Sendable {
         case .etcdSnapshot: "etcd snapshot"
         case .serviceControl: "Service control"
         case .issueConfig: "Issue talosconfig"
+        case .packetCapture: "Packet capture"
+        case .upgrade: "Talos upgrade"
         }
     }
 
     public var roles: Set<String> {
         switch self {
-        case .power, .etcdDefrag, .serviceControl: ["os:admin", "os:operator"]
+        case .power, .etcdDefrag, .serviceControl, .packetCapture: ["os:admin", "os:operator"]
         // The server-side health check fetches a Kubernetes admin kubeconfig with the caller's role.
         // DebugService/ContainerRun is admin-only too.
         // The machine config holds the cluster secrets (CA keys, tokens).
         // Issuing a client certificate (GenerateClientConfiguration) is admin-only.
-        case .health, .kubeconfig, .debugShell, .machineConfig, .issueConfig: ["os:admin"]
+        // MachineService/Upgrade is admin-only.
+        case .health, .kubeconfig, .debugShell, .machineConfig, .issueConfig, .upgrade: ["os:admin"]
         // A snapshot holds every Kubernetes Secret; Talos has a dedicated role for it.
         case .etcdSnapshot: ["os:admin", "os:operator", "os:etcd:backup"]
         }

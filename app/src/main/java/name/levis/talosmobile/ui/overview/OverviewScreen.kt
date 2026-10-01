@@ -96,6 +96,7 @@ fun OverviewScreen(
     onEvents: () -> Unit,
     onSettings: () -> Unit,
     onIssueConfig: () -> Unit,
+    onUpgrade: (NodeOverview, String) -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
 ) {
@@ -167,6 +168,8 @@ fun OverviewScreen(
                     onNodeAction = onNodeAction,
                     canPower = config?.activeSummary?.allows(Feature.POWER) == true,
                     canShell = config?.activeSummary?.allows(Feature.DEBUG_SHELL) == true,
+                    canUpgrade = config?.activeSummary?.allows(Feature.UPGRADE) == true,
+                    onUpgrade = onUpgrade,
                 )
             }
         }
@@ -184,6 +187,8 @@ private fun NodeList(
     onNodeAction: (NodeOverview, NodeAction) -> Unit,
     canPower: Boolean,
     canShell: Boolean,
+    canUpgrade: Boolean,
+    onUpgrade: (NodeOverview, String) -> Unit,
 ) {
     var sheetFor by remember { mutableStateOf<NodeOverview?>(null) }
     sheetFor?.let { node ->
@@ -204,6 +209,7 @@ private fun NodeList(
         item { UpdateBanner(onClick = onSettings) }
         item { SupportCard() }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
+        item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
         item { Summary(overview.nodes) }
         items(nodes, key = { it.node }) { node ->
             SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {

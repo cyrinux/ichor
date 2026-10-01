@@ -1,6 +1,6 @@
 // Command probe exercises the talosmobile API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|etcd|health|parse
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases
 package main
 
 import (
@@ -61,7 +61,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|etcd|health|parse"))
+		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases"))
 	}
 
 	raw, err := os.ReadFile(*configPath)
@@ -144,6 +144,13 @@ func main() {
 		out, err = talosmobile.NodeStats(cfg, *contextName, flag.Arg(1))
 	case "etcd":
 		out, err = talosmobile.EtcdStatus(cfg, *contextName)
+	case "pcap":
+		out = pcapProbe(cfg, *contextName, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), *mask)
+	case "upgrade-plan":
+		// Read-only: never calls the upgrade itself.
+		out, err = talosmobile.UpgradePlan(cfg, *contextName, flag.Arg(1))
+	case "talos-releases":
+		out, err = talosmobile.TalosReleases()
 	case "health":
 		p := printer{done: make(chan string, 1)}
 		talosmobile.StartClusterHealth(cfg, *contextName, p)

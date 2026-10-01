@@ -32,6 +32,8 @@ struct NodeDetailView: View {
     @State private var showingNetwork = false
     @State private var showingHardware = false
     @State private var showingImages = false
+    @State private var showingCapture = false
+    @State private var showingUpgrade = false
     /// Service start/stop/restart waiting for confirmation.
     @State private var serviceRequest: ServiceRequest?
 
@@ -112,6 +114,16 @@ struct NodeDetailView: View {
                                 Label("Machine config", systemImage: "doc.text")
                             }
                         }
+                        if model.allows(.packetCapture) {
+                            Button { showingCapture = true } label: {
+                                Label("Capture packets", systemImage: "antenna.radiowaves.left.and.right")
+                            }
+                        }
+                        if model.allows(.upgrade) {
+                            Button { showingUpgrade = true } label: {
+                                Label("Upgrade Talos…", systemImage: "arrow.up.circle")
+                            }
+                        }
                         // Power actions only exist for configs whose role allows them.
                         if model.allows(.power) {
                             Divider()
@@ -147,6 +159,12 @@ struct NodeDetailView: View {
         }
         .navigationDestination(isPresented: $showingMachineConfig) {
             MachineConfigView(node: ref.address, hostname: ref.hostname)
+        }
+        .navigationDestination(isPresented: $showingCapture) {
+            CaptureView(node: ref.address, hostname: ref.hostname)
+        }
+        .navigationDestination(isPresented: $showingUpgrade) {
+            UpgradeView(node: ref.address, hostname: ref.hostname)
         }
         .sheet(item: $powerAction) { action in
             PowerSheet(action: action, hostname: ref.hostname, role: ref.role) { request in

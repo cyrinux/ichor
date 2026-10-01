@@ -26,6 +26,8 @@ class FeatureTest {
         assertFalse(op.allows(Feature.DEBUG_SHELL))
         assertTrue(op.allows(Feature.SERVICE_CONTROL))
         assertFalse(op.allows(Feature.ISSUE_CONFIG))
+        assertTrue(op.allows(Feature.PACKET_CAPTURE))
+        assertFalse(op.allows(Feature.UPGRADE))
     }
 
     @Test
@@ -39,5 +41,7 @@ class FeatureTest {
         assertEquals("os:admin", Feature.HEALTH.minimumRole)
         assertEquals("os:operator", Feature.SERVICE_CONTROL.minimumRole)
         assertEquals("os:admin", Feature.ISSUE_CONFIG.minimumRole)
+        assertEquals("os:operator", Feature.PACKET_CAPTURE.minimumRole)
+        assertEquals("os:admin", Feature.UPGRADE.minimumRole)
     }
 }

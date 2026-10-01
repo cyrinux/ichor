@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only packet captures can be shared (see CaptureRepository). -->
+<paths>
+    <files-path name="captures" path="captures/" />
+</paths>

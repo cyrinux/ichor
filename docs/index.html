@@ -212,11 +212,11 @@
         <h1>Your Talos cluster, from your phone.</h1>
         <p class="lede">Node status, logs, etcd, KubeSpan and live graphs for Talos Linux, with alerts when a node goes down. It talks to the Talos API with the same client as talosctl.</p>
         <div class="actions">
-          <a class="button primary" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.talosmobile%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Ftalosdev-mobile%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Talos%20Viewer%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D">Add to Obtainium</a>
+          <a class="button primary" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.talosmobile%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Ftalosdev-mobile%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Talosdev%20Mobile%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D">Add to Obtainium</a>
           <a class="button" href="https://github.com/cyrinux/talosdev-mobile/releases/latest">Download the APK</a>
           <a class="button" href="#ios">iPhone</a>
         </div>
-        <p class="note">Free and open source, Apache-2.0. Read-only by default.</p>
+        <p class="note">Free and open source, Apache-2.0. Read-only by default. Screenshot mode hides your addresses and node names when you share your screen.</p>
       </div>
 
       <div class="phone" role="img" aria-label="A phone lock screen showing a Talosdev Mobile alert: cp-2 is not ready, etcd not healthy. Below, a widget shows 7 of 8 nodes ready.">
@@ -246,12 +246,20 @@
       <table class="map">
         <thead><tr><th scope="col">Instead of</th><th scope="col">Open</th><th scope="col">Role</th></tr></thead>
         <tbody>
-          <tr><td class="cmd">talosctl get machinestatus</td><td class="what"><strong>Cluster overview</strong><span>Every node: ready, not ready or unreachable, with the unmet conditions.</span></td><td class="role">reader</td></tr>
-          <tr><td class="cmd">talosctl services, talosctl logs</td><td class="what"><strong>Services and logs</strong><span>Service health, the last 500 log lines with a filter, and the kernel log.</span></td><td class="role">reader</td></tr>
-          <tr><td class="cmd">talosctl dashboard</td><td class="what"><strong>Live graphs</strong><span>CPU, memory, network, disk and load, sampled every two seconds.</span></td><td class="role">reader</td></tr>
-          <tr><td class="cmd">talosctl etcd status</td><td class="what"><strong>etcd</strong><span>Members, leader, database size, raft term and alarms.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl get machinestatus</td><td class="what"><strong>Cluster overview</strong><span>Every node: ready, not ready or unreachable, with the unmet conditions, clock drift and available Talos upgrades.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl services, talosctl logs -f</td><td class="what"><strong>Services and logs</strong><span>Service health, and service or kernel logs colored by level, with repeats folded and a live follow mode.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl events</td><td class="what"><strong>Events timeline</strong><span>Service changes, boot phases and address changes across the cluster, as they happen.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl dashboard, talosctl processes</td><td class="what"><strong>Live graphs and processes</strong><span>CPU, memory, network, disk and load every two seconds, and the process list sorted by CPU or memory.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl containers -k</td><td class="what"><strong>Pods</strong><span>Containers grouped by pod, with CPU and memory.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl get links, talosctl netstat</td><td class="what"><strong>Network</strong><span>Interfaces, addresses, routes, DNS and time servers, and open connections.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl get machineconfig</td><td class="what"><strong>Machine config</strong><span>The node's configuration, secrets hidden unless you reveal them.</span></td><td class="role">admin</td></tr>
+          <tr><td class="cmd">talosctl etcd status, etcd snapshot</td><td class="what"><strong>etcd</strong><span>Members, leader, size and alarms, defragmentation, and a snapshot saved to the phone.</span></td><td class="role">reader / backup</td></tr>
           <tr><td class="cmd">talosctl get kubespanpeerstatuses</td><td class="what"><strong>KubeSpan</strong><span>Each node's peers: state, endpoint, last handshake and traffic.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl service restart</td><td class="what"><strong>Service control</strong><span>Start, stop or restart a service, with a warning for critical ones.</span></td><td class="role">operator</td></tr>
           <tr><td class="cmd">talosctl reboot -m powercycle</td><td class="what"><strong>Reboot and shutdown</strong><span>Graceful, power cycle or force, after you type the hostname to confirm.</span></td><td class="role">operator</td></tr>
+          <tr><td class="cmd">talosctl pcap</td><td class="what"><strong>Packet capture</strong><span>A live packet list with decoded details, saved as a .pcap to open in Wireshark.</span></td><td class="role">operator</td></tr>
+          <tr><td class="cmd">talosctl upgrade</td><td class="what"><strong>Talos upgrade</strong><span>One node at a time, refused if etcd would lose quorum, with progress until the node is back.</span></td><td class="role">admin</td></tr>
+          <tr><td class="cmd">talosctl config new</td><td class="what"><strong>Issue a talosconfig</strong><span>Renew this phone's certificate, or create a read-only one for another device as a QR code.</span></td><td class="role">admin</td></tr>
           <tr><td class="cmd">talosctl health</td><td class="what"><strong>Cluster health check</strong><span>The server-side checks, streamed as they run.</span></td><td class="role">admin</td></tr>
           <tr><td class="cmd">talosctl debug</td><td class="what"><strong>Debug shell</strong><span>Run an image such as nicolaka/netshoot on a node and get a terminal.</span></td><td class="role">admin</td></tr>
         </tbody>
@@ -265,17 +273,17 @@
         <div class="recommended">
           <h3>Read-only</h3>
           <code>os:reader</code>
-          <p>Monitoring, logs, etcd, KubeSpan, graphs and alerts. The right default for a phone.</p>
+          <p>Monitoring, logs, events, pods, network, etcd, KubeSpan, graphs and alerts. The right default for a phone.</p>
         </div>
         <div>
           <h3>Operator</h3>
           <code>os:operator</code>
-          <p>Everything read-only, plus reboot and shutdown.</p>
+          <p>Everything read-only, plus reboot, shutdown, service restarts and packet capture.</p>
         </div>
         <div>
           <h3>Admin</h3>
           <code>os:admin</code>
-          <p>Adds the health check, kubeconfig export and debug shells.</p>
+          <p>Adds the health check, machine config, Talos upgrades, issuing talosconfigs, kubeconfig export and debug shells.</p>
         </div>
       </div>
       <p class="intro" style="margin-top:2rem">The talosconfig is encrypted with a key held in the phone's security chip: StrongBox or the TEE on Android, the Secure Enclave on iPhone. An optional fingerprint, Face ID or PIN lock guards the app and every reboot.</p>
@@ -292,7 +300,7 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
         </li>
         <li>
           <h3>Install the app</h3>
-          <p>On Android, add it to <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.talosmobile%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Ftalosdev-mobile%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Talos%20Viewer%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D">Obtainium</a> to get updates, or download the APK for your phone (arm64-v8a for almost all of them) from the <a href="https://github.com/cyrinux/talosdev-mobile/releases/latest">latest release</a>.</p>
+          <p>On Android, add it to <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.talosmobile%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Ftalosdev-mobile%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Talosdev%20Mobile%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D">Obtainium</a> to get updates, or download the APK for your phone (arm64-v8a for almost all of them) from the <a href="https://github.com/cyrinux/talosdev-mobile/releases/latest">latest release</a>.</p>
         </li>
         <li>
           <h3>Import the config</h3>

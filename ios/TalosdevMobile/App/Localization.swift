@@ -17,6 +17,8 @@ extension Feature {
         case .etcdSnapshot: String(localized: "etcd snapshot")
         case .serviceControl: String(localized: "Service control")
         case .issueConfig: String(localized: "Issue talosconfig")
+        case .packetCapture: String(localized: "Packet capture")
+        case .upgrade: String(localized: "Talos upgrade")
         }
     }
 }

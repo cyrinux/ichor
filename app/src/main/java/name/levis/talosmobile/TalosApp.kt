@@ -7,7 +7,10 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import name.levis.talosmobile.data.CaptureRepository
 import name.levis.talosmobile.data.ConfigRepository
+import name.levis.talosmobile.data.TalosUpdateChecker
+import name.levis.talosmobile.data.UpgradeManager
 import name.levis.talosmobile.data.TalosRepository
 import name.levis.talosmobile.data.SupportPrompt
 import name.levis.talosmobile.data.PrivacyMask
@@ -26,6 +29,9 @@ import kotlinx.coroutines.launch
 class TalosApp : Application() {
     val configRepository by lazy { ConfigRepository(this) }
     val talosRepository by lazy { TalosRepository(configRepository) }
+    val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
+    val upgradeManager by lazy { UpgradeManager(configRepository) }
+    val talosUpdateChecker by lazy { TalosUpdateChecker() }
     val uiPreferences by lazy { UiPreferences(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
     val appLock by lazy {
         AppLock(
