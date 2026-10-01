@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Timeline
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -72,7 +74,6 @@ import name.levis.talosmobile.ui.components.DataFreshness
 import name.levis.talosmobile.ui.components.ErrorBox
 import name.levis.talosmobile.ui.components.LoadingBox
 import name.levis.talosmobile.ui.components.NodeHealthPill
-import name.levis.talosmobile.ui.components.StatusPill
 import name.levis.talosmobile.ui.factory
 import name.levis.talosmobile.ui.theme.LocalStatusColors
 
@@ -117,6 +118,7 @@ fun OverviewScreen(
                     Column {
                         Text(stringResource(R.string.overview_title))
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            ScreenshotModeIcon()
                             config?.let { stored ->
                                 val access = stored.activeSummary?.accessLabel?.let { stringResource(it) }
                                 Text(
@@ -128,7 +130,6 @@ fun OverviewScreen(
                                     modifier = Modifier.weight(1f, fill = false).padding(end = 6.dp),
                                 )
                             }
-                            ScreenshotModeChip()
                         }
                     }
                 },
@@ -326,15 +327,20 @@ private fun CertificateBanner(summary: ContextSummary, onIssueConfig: () -> Unit
     else Card(Modifier.fillMaxWidth()) { content() }
 }
 
-/** Reminds that screenshot mode is on, i.e. names and addresses on screen are not the real ones. */
+/**
+ * Reminds that screenshot mode is on, i.e. names and addresses on screen are not the real
+ * ones. A small icon rather than a label, so it stays out of the way in the screenshots.
+ */
 @Composable
-private fun ScreenshotModeChip() {
+private fun ScreenshotModeIcon() {
     val prefs = (LocalContext.current.applicationContext as TalosApp).uiPreferences
     val mask by prefs.privacyMask.collectAsStateWithLifecycle()
     if (!mask.enabled) return
-    StatusPill(
-        stringResource(R.string.settings_screenshot_mode),
-        MaterialTheme.colorScheme.tertiary,
+    Icon(
+        Icons.Outlined.VisibilityOff,
+        contentDescription = stringResource(R.string.settings_screenshot_mode),
+        tint = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(end = 4.dp).size(14.dp),
     )
 }
 

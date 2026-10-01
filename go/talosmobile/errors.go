@@ -19,6 +19,10 @@ func friendlyError(err error) string {
 		return "timed out (is the endpoint reachable from this network?)"
 	}
 
+	if reason := dialFailure(err.Error()); reason != "" {
+		return "unreachable: " + reason
+	}
+
 	st, ok := status.FromError(err)
 	if !ok {
 		return err.Error()
@@ -44,4 +48,31 @@ func friendlyError(err error) string {
 	default:
 		return st.Code().String() + ": " + msg
 	}
+}
+
+// dialFailures maps the cause of a failed gRPC dial to a short reason; the raw transport
+// message ("connection error: desc = \"transport: Error while dialing: dial tcp ...\"") is
+// unreadable on a phone.
+var dialFailures = []struct{ needle, reason string }{
+	{"i/o timeout", "no answer (timed out)"},
+	{"connection refused", "connection refused"},
+	{"no route to host", "no route to host"},
+	{"network is unreachable", "network unreachable"},
+	{"no such host", "unknown host name"},
+	{"connection reset", "connection reset"},
+}
+
+// dialFailure returns a short reason when msg is a transport dial error, or "".
+func dialFailure(msg string) string {
+	if !strings.Contains(msg, "Error while dialing") && !strings.Contains(msg, "dial tcp") {
+		return ""
+	}
+
+	for _, f := range dialFailures {
+		if strings.Contains(msg, f.needle) {
+			return f.reason
+		}
+	}
+
+	return "connection failed"
 }

@@ -87,7 +87,11 @@ struct OverviewView: View {
         .toolbar {
             if model.privacyMask {
                 ToolbarItem(placement: .topBarLeading) {
-                    StatusPill(label: String(localized: "Screenshot mode"), color: .purple)
+                    // A small icon rather than a label, so it stays out of the way in screenshots.
+                    Image(systemName: "eye.slash")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .accessibilityLabel(Text("Screenshot mode"))
                 }
             }
             ToolbarItemGroup(placement: .primaryAction) {
