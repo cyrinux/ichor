@@ -1,0 +1,5 @@
+Primera versión en Google Play.
+
+• Varios clústeres: cada contexto del talosconfig es un clúster; desliza la barra superior de la vista para cambiar, o toca su título para ver la lista
+• Cada clúster tiene su color, y la paleta de la aplicación sigue al clúster en pantalla
+• Importar un talosconfig renovado actualiza el clúster existente

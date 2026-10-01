@@ -20,6 +20,9 @@ android {
         // GitHub repository the self-updater reads releases from (set by GitHub Actions).
         val updateRepo = System.getenv("GITHUB_REPOSITORY") ?: "cyrinux/ichor"
         buildConfigField("String", "UPDATE_REPO", "\"$updateRepo\"")
+        // Off in the Play build: Play forbids self-updates and in-app donations outside its billing.
+        buildConfigField("boolean", "SELF_UPDATE", "true")
+        buildConfigField("boolean", "DONATIONS", "true")
     }
 
     // Release signing comes from env vars so CI (Forgejo) can inject secrets.
@@ -41,6 +44,14 @@ android {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("release")
+        }
+        // Google Play: the release build without the self-updater and donation links, shipped
+        // as an App Bundle (`bundlePlay`). src/play/AndroidManifest.xml drops the install
+        // permission. Signed with the release key, which doubles as the Play upload key.
+        create("play") {
+            initWith(getByName("release"))
+            buildConfigField("boolean", "SELF_UPDATE", "false")
+            buildConfigField("boolean", "DONATIONS", "false")
         }
     }
 

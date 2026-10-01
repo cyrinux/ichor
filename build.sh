@@ -3,6 +3,7 @@
 #
 #   ./build.sh            # debug APK, toolchain from the Nix flake if nix exists, else Docker
 #   ./build.sh release    # release APK (needs signing env, see app/build.gradle.kts)
+#   ./build.sh play       # Google Play App Bundle: release without self-update/donations
 #   ./build.sh check      # formatting, vet and all unit tests (Go + Kotlin), no APK
 #   BUILDER=docker ./build.sh   # force the container toolchain
 #   IN_CONTAINER=1 ./build.sh   # tools already on PATH (CI runner using build/Dockerfile)
@@ -16,8 +17,9 @@ case "$VARIANT" in
   debug) GRADLE_TASKS=(testDebugUnitTest assembleDebug) ;;
   # AGP 9 only creates unit-test tasks for debug; check/debug already run them.
   release) GRADLE_TASKS=(assembleRelease) ;;
+  play) GRADLE_TASKS=(bundlePlay) ;;
   check) GRADLE_TASKS=(testDebugUnitTest) ;;
-  *) echo "unknown variant: $VARIANT (debug|release|check)" >&2; exit 2 ;;
+  *) echo "unknown variant: $VARIANT (debug|release|play|check)" >&2; exit 2 ;;
 esac
 
 # gomobile panics on linux/arm64 hosts although NDK r24+ keeps its (x86_64, emulated)
@@ -84,7 +86,11 @@ build_inside() {
     -ldflags="-s -w -extldflags=-Wl,-z,max-page-size=16384" -o "$ROOT/app/libs/talosmobile.aar" ./talosmobile
   cd "$ROOT"
   gradle --no-daemon "${GRADLE_TASKS[@]}"
-  [[ "$VARIANT" == "check" ]] || find "$ROOT/app/build/outputs/apk/$VARIANT" -name '*.apk' -printf '%s\t%p\n' | sort -n
+  case "$VARIANT" in
+    check) ;;
+    play) find "$ROOT/app/build/outputs/bundle/play" -name '*.aab' -printf '%s\t%p\n' ;;
+    *) find "$ROOT/app/build/outputs/apk/$VARIANT" -name '*.apk' -printf '%s\t%p\n' | sort -n ;;
+  esac
 }
 
 if [[ "${IN_CONTAINER:-0}" == "1" ]]; then

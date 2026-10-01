@@ -232,7 +232,12 @@ compressed native libraries. A release APK is about 16 MB.
 ./build.sh            # debug APKs -> app/build/outputs/apk/debug/app-<abi>-debug.apk
 ./build.sh release    # needs ICHOR_KEYSTORE, ICHOR_KEYSTORE_PASSWORD, ICHOR_KEY_ALIAS, ICHOR_KEY_PASSWORD
 just install           # builds, then installs the APK matching the connected device's ABI
+./build.sh play       # Google Play App Bundle -> app/build/outputs/bundle/play/app-play.aab
 ```
+
+The Play build is the release build without the self-updater (Play delivers updates) and
+without the donation links. Its store listing, privacy policy and Console answers are in
+`fastlane/` (see [fastlane/PLAY_CONSOLE.md](fastlane/PLAY_CONSOLE.md)).
 
 - **Default toolchain:** Nix (`flake.nix`). `BUILDER=docker ./build.sh` uses `build/Dockerfile`
   instead, and `IN_CONTAINER=1 ./build.sh` runs inside that image (CI, e.g. a Forgejo runner).

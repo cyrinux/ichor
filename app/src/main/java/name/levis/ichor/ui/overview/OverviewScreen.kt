@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.BuildConfig
 import name.levis.ichor.ui.components.rememberClusterLabels
 import android.widget.Toast
 import androidx.annotation.PluralsRes
@@ -255,8 +256,8 @@ private fun NodeList(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
-        item { UpdateBanner(onClick = onSettings) }
-        item { SupportCard() }
+        if (BuildConfig.SELF_UPDATE) item { UpdateBanner(onClick = onSettings) }
+        if (BuildConfig.DONATIONS) item { SupportCard() }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
         item { Summary(overview.nodes) }

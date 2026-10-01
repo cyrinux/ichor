@@ -1,35 +1,47 @@
 Your Talos cluster, from your phone.
 
-Ichor is a free, open-source client for Talos Linux clusters. Check node health, read logs, watch etcd and get notified the moment a node goes down, without opening a laptop. It talks to the Talos API with the same Go client as talosctl, so there is nothing to install on the cluster and no server in between.
+Ichor puts your Talos Linux cluster in your pocket. It talks to the Talos API with the official Go client, the same code as talosctl, so talosconfig contexts, mTLS and endpoint-to-node proxying behave exactly as they do on your workstation.
 
-<b>See everything at a glance</b>
+Bring your own cluster: the app needs a talosconfig for a Talos Linux cluster you run. It has no server and no account of its own.
+
+<b>What you see</b>
 • Cluster overview: every node ready, not ready or unreachable, with unmet conditions, clock drift and available Talos upgrades
-• Services and logs: service and kernel logs colored by level, repeats folded, live follow mode
-• Events timeline: service changes, boot phases and address changes as they happen
-• Live graphs: CPU, memory, network, disk and load every two seconds, plus the process list
-• Pods, network interfaces, routes, DNS, open connections, disks and hardware
+• Services and logs: service health, service and kernel logs colored by level, repeats folded, live follow
+• Events: service changes, boot phases and address changes as they happen
+• Live graphs: CPU, memory, network, disk and load every two seconds, and the process list
+• Pods: containers grouped by pod, with CPU and memory
+• Network: interfaces, addresses, routes, DNS, time servers and open connections
 • etcd: members, leader, size and alarms, defragmentation and snapshots
-• KubeSpan peers: state, endpoint, last handshake and traffic
+• KubeSpan: each node's peers, state, last handshake and traffic
 
-<b>Alerts without a server</b>
-The phone itself checks your cluster in the background and notifies you when a node or etcd is unhealthy. A home-screen widget shows the state of the cluster at a glance.
+<b>What you can do, with the right role</b>
+• Start, stop or restart a service
+• Reboot (graceful, power cycle or force) or shut down a node, after typing its hostname to confirm
+• Capture packets live and save a .pcap for Wireshark
+• Upgrade Talos one node at a time, refused if etcd would lose quorum
+• Run the cluster health check, read the machine config, open a debug shell
+• Issue a talosconfig, renew this phone's certificate, export a kubeconfig
 
-<b>Act when you need to</b>
-• Restart a service, reboot or shut down a node, after typing its hostname to confirm
-• Upgrade Talos one node at a time, refused when etcd would lose quorum
-• Packet capture saved as a .pcap for Wireshark
-• Debug shell on a node, cluster health check, machine config viewer
-• Issue a read-only talosconfig for another device as a QR code, and export a kubeconfig
+<b>Your phone gets only the access you give it</b>
+Generate a dedicated talosconfig for the phone: os:reader is the recommended default. The app reads the certificate's roles and only offers what they allow. The config is encrypted with a key held in the Android Keystore and excluded from backups. Import it from a file, by pasting it, or by scanning a QR code.
 
-<b>Least privilege by design</b>
-Ichor reads the roles of your talosconfig certificate and only shows what it is allowed to do. Give your phone an os:reader certificate and it stays strictly read-only. The config is encrypted with a key held in the phone's security chip (StrongBox or TEE), behind an optional fingerprint or PIN lock. Screenshot mode hides addresses and node names when you share your screen.
+<b>Always know which cluster you are on</b>
+Import several clusters and swipe between them. Each one has its own color and the whole app takes it on, so a reboot never hits the wrong cluster.
 
-<b>Several clusters</b>
-Import as many talosconfigs as you like, switch from the header, give each cluster its own name and color, and open any of them straight from the app icon.
+<b>Alerts and widget</b>
+Background checks notify you when a node goes down or the phone's certificate is about to expire, and a home-screen widget shows the cluster at a glance.
 
-<b>Private and open source</b>
-Apache-2.0, no account, no ads, no analytics. Your talosconfig only talks to your nodes. An optional AI diagnosis can explain what is wrong and how to fix it: it is off by default, shows you the exact report first, and sends nothing until you ask.
+<b>Privacy and safety</b>
+• Optional fingerprint or PIN lock, at launch and before every reboot, shutdown and kubeconfig export
+• Screenshot mode replaces addresses and node names with stand-ins
+• Lock-screen notifications stay generic while the app lock is on
+• No ads, no tracking, no account
 
-Available in English, French, Spanish, Ukrainian, German and Italian.
+<b>Optional AI diagnosis</b>
+Off by default, and hidden until you turn it on. It builds a report of the cluster state and shows it to you; only when you tap Ask is it sent to Anthropic (Claude), OpenAI or your own compatible server, with your own API key. Node names, addresses and the domain are anonymized by default. Without an API key, you can hand the report to an assistant app through the share sheet.
 
-Ichor is an independent community project. It is not affiliated with or endorsed by Sidero Labs. Talos is a trademark of Sidero Labs, Inc.
+Free and open source (Apache-2.0): https://github.com/cyrinux/ichor
+
+Available in English, French, German, Spanish, Italian and Ukrainian.
+
+Ichor is an independent community project, not affiliated with or endorsed by Sidero Labs. Talos is a trademark of Sidero Labs, Inc.

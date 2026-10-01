@@ -50,9 +50,11 @@ fun AboutSection(onChangelog: () -> Unit) {
             Link(Icons.Outlined.NewReleases, stringResource(R.string.changelog_title), onChangelog)
             Link(Icons.Outlined.Code, stringResource(R.string.about_source)) { openUrl(context, REPO_URL_BASE + BuildConfig.UPDATE_REPO) }
             Link(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.about_talos)) { openUrl(context, TALOS_URL) }
-            Link(Icons.Outlined.FavoriteBorder, stringResource(R.string.about_sponsor)) { openUrl(context, SPONSOR_URL) }
-            DonationRow(Donation.Bitcoin) { donating = Donation.Bitcoin }
-            DonationRow(Donation.Ethereum) { donating = Donation.Ethereum }
+            if (BuildConfig.DONATIONS) {
+                Link(Icons.Outlined.FavoriteBorder, stringResource(R.string.about_sponsor)) { openUrl(context, SPONSOR_URL) }
+                DonationRow(Donation.Bitcoin) { donating = Donation.Bitcoin }
+                DonationRow(Donation.Ethereum) { donating = Donation.Ethereum }
+            }
             Text(
                 stringResource(R.string.about_disclaimer),
                 style = MaterialTheme.typography.bodySmall,

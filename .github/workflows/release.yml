@@ -17,6 +17,40 @@ jobs:
   ios:
     uses: ./.github/workflows/ios.yml
 
+  # Uploads the App Bundle, the store listing and the release notes (fastlane/metadata/android)
+  # to Play's internal track as a draft, to promote by hand in the Play Console. Skipped
+  # until the PLAY_SERVICE_ACCOUNT_JSON secret is set (see fastlane/PLAY_CONSOLE.md).
+  play:
+    needs: [android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-play
+          path: play
+
+      - name: Upload to Google Play (internal track, draft)
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "PLAY_SERVICE_ACCOUNT_JSON is not set: skipping the Play upload."
+            exit 0
+          fi
+          printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/play.json"
+          gem install --no-document fastlane
+          aab="$(find play -name '*.aab' | head -1)"
+          fastlane supply \
+            --package_name name.levis.talosmobile \
+            --json_key "$RUNNER_TEMP/play.json" \
+            --aab "$aab" \
+            --mapping play/mapping/play/mapping.txt \
+            --track internal \
+            --release_status draft \
+            --metadata_path fastlane/metadata/android
+
   publish:
     needs: [android, ios]
     runs-on: ubuntu-latest

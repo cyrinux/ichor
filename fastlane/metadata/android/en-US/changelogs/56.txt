@@ -1,0 +1,5 @@
+First release on Google Play.
+
+• Several clusters: every talosconfig context is a cluster; swipe the overview's top bar to switch, or tap its title for the list
+• Each cluster has its own color, and the app's palette follows the cluster on screen
+• Importing a renewed talosconfig updates the cluster in place

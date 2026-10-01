@@ -57,6 +57,11 @@ build:
 build-release:
     ./build.sh release
 
+# Google Play App Bundle (app/build/outputs/bundle/play/app-play.aab): the release build
+# without the self-updater and donation links, signed with the ICHOR_KEYSTORE* upload key.
+build-play:
+    ./build.sh play
+
 # Formatting, vet and every unit test (Go + Kotlin), without packaging an APK.
 check:
     ./build.sh check

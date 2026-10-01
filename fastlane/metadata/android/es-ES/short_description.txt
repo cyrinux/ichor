@@ -1,0 +1,1 @@
+Supervisa y gestiona tu clúster Talos Linux: nodos, registros, etcd, alertas

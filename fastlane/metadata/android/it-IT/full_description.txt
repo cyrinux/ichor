@@ -1,0 +1,45 @@
+Ichor porta il tuo cluster Talos Linux in tasca. L'app comunica con l'API di Talos tramite il client Go ufficiale, lo stesso codice di talosctl: contesti talosconfig, mTLS e proxy da endpoint a nodo funzionano esattamente come sulla tua workstation.
+
+Porta il tuo cluster: l'app richiede un talosconfig di un cluster Talos Linux che gestisci. Non ha un server né un account propri.
+
+<b>Cosa vedi</b>
+• Panoramica del cluster: ogni nodo pronto, non pronto o irraggiungibile, con le condizioni non soddisfatte, la deriva dell'orologio e gli aggiornamenti di Talos disponibili
+• Servizi e log: stato dei servizi, log dei servizi e del kernel colorati per livello, ripetizioni raggruppate, aggiornamento in tempo reale
+• Eventi: cambi di servizio, fasi di avvio e cambi di indirizzo in tempo reale
+• Grafici in tempo reale: CPU, memoria, rete, disco e carico ogni due secondi, e l'elenco dei processi
+• Pod: container raggruppati per pod, con CPU e memoria
+• Rete: interfacce, indirizzi, route, DNS, server dell'ora e connessioni aperte
+• etcd: membri, leader, dimensione e allarmi, deframmentazione e snapshot
+• KubeSpan: i peer di ogni nodo, stato, ultimo handshake e traffico
+
+<b>Cosa puoi fare, con il ruolo giusto</b>
+• Avviare, fermare o riavviare un servizio
+• Riavviare (normale, power cycle o forzato) o spegnere un nodo, dopo averne digitato il nome per conferma
+• Catturare pacchetti in tempo reale e salvare un .pcap per Wireshark
+• Aggiornare Talos un nodo alla volta, rifiutato se etcd perderebbe il quorum
+• Eseguire l'health check del cluster, leggere la configurazione della macchina, aprire una shell di debug
+• Emettere un talosconfig, rinnovare il certificato del telefono, esportare un kubeconfig
+
+<b>Il telefono ha solo l'accesso che gli dai</b>
+Genera un talosconfig dedicato al telefono; os:reader è la scelta consigliata. L'app legge i ruoli del certificato e propone solo ciò che consentono. La configurazione è cifrata con una chiave dell'Android Keystore ed esclusa dai backup. Importala da un file, incollandola o scansionando un codice QR.
+
+<b>Sai sempre su quale cluster sei</b>
+Importa più cluster e passa dall'uno all'altro con uno swipe. Ognuno ha il suo colore, che tutta l'app adotta: un riavvio non colpisce mai il cluster sbagliato.
+
+<b>Avvisi e widget</b>
+I controlli in background ti avvisano quando un nodo cade o il certificato del telefono sta per scadere, e un widget per la schermata Home mostra il cluster a colpo d'occhio.
+
+<b>Privacy e sicurezza</b>
+• Blocco app opzionale con impronta o PIN, all'apertura e prima di ogni riavvio, spegnimento ed esportazione del kubeconfig
+• La modalità screenshot sostituisce indirizzi e nomi dei nodi con segnaposto
+• Le notifiche restano generiche sulla schermata di blocco quando il blocco app è attivo
+• Niente pubblicità, nessun tracciamento, nessun account
+
+<b>Diagnosi IA opzionale</b>
+Disattivata per impostazione predefinita e invisibile finché non la attivi. Crea un rapporto sullo stato del cluster e te lo mostra; solo quando tocchi Chiedi viene inviato ad Anthropic (Claude), a OpenAI o al tuo server compatibile, con la tua chiave API. Nomi dei nodi, indirizzi e dominio sono anonimizzati per impostazione predefinita. Senza chiave API, puoi passare il rapporto a un'app assistente dal menu di condivisione.
+
+Libero e open source (Apache-2.0): https://github.com/cyrinux/ichor
+
+Disponibile in italiano, inglese, francese, tedesco, spagnolo e ucraino.
+
+Ichor è un progetto indipendente, non affiliato a Sidero Labs. Talos è un marchio di Sidero Labs, Inc.
