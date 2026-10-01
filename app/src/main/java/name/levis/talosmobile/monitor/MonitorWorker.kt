@@ -27,10 +27,11 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
 
         val overview = runCatching { app.talosRepository.overview() }.getOrNull() ?: return Result.success()
         val etcd = runCatching { app.talosRepository.etcd() }.getOrNull()
-        val certNotAfter = stored.summary.contexts.firstOrNull { it.name == stored.activeContext }?.certNotAfter ?: 0
+        val active = stored.summary.contexts.firstOrNull { it.name == stored.activeContext }
+        val certNotAfter = active?.certNotAfter ?: 0
 
         val now = System.currentTimeMillis()
-        val evaluation = evaluate(store.snapshot(), snapshotOf(overview, etcd, certNotAfter, now), now)
+        val evaluation = evaluate(store.snapshot(), snapshotOf(overview, etcd, certNotAfter, now, active?.fingerprint.orEmpty()), now)
         store.saveSnapshot(evaluation.next)
         scheduleWidgetStaleRefresh(applicationContext, evaluation.next, now)
 

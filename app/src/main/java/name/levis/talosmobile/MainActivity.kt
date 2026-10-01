@@ -42,6 +42,9 @@ class MainActivity : FragmentActivity() {
     /** A screen to open from a notification tap, consumed once by Navigation. */
     private val deepLink = MutableStateFlow<DeepLink?>(null)
 
+    /** The fingerprint of a cluster to show, from a launcher shortcut; consumed once by Navigation. */
+    private val openCluster = MutableStateFlow<String?>(null)
+
     // Below API 33, the in-app language is applied here (API 33+ uses LocaleManager).
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(AppLocale.wrap(newBase))
@@ -63,7 +66,12 @@ class MainActivity : FragmentActivity() {
             }
         }
 
-        if (savedInstanceState == null) deepLink.value = intent.deepLink()
+        // Reopened from Recents, the task's first intent comes again: already handled then.
+        val fromHistory = intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0
+        if (savedInstanceState == null && !fromHistory) {
+            deepLink.value = intent.deepLink()
+            openCluster.value = intent.clusterFingerprint()
+        }
         app.updateManager.maybeAutoCheck(lifecycleScope)
         if (savedInstanceState == null) app.supportPrompt.onLaunch()
 
@@ -90,22 +98,31 @@ class MainActivity : FragmentActivity() {
             val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
             TalosTheme(themeMode, seed = clusterColors.seedOf(stored?.activeSummary)) {
                 Surface {
-                    LockGate(app, deepLink, onWiped = ::recreate)
+                    LockGate(app, LaunchTargets(deepLink, openCluster), onWiped = ::recreate)
                 }
             }
         }
     }
 
-    // A notification tapped while the activity is kept (otherwise onCreate reads the intent).
+    // A notification or shortcut tapped while the activity is kept (otherwise onCreate reads the intent).
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         intent.deepLink()?.let { deepLink.value = it }
+        intent.clusterFingerprint()?.let { openCluster.value = it }
     }
 
     companion object {
         const val EXTRA_OPEN = "name.levis.talosmobile.OPEN"
+
+        /** The fingerprint of the cluster a launcher shortcut opens. */
+        const val EXTRA_CLUSTER = "name.levis.talosmobile.CLUSTER"
     }
 }
+
+/** What the intent that launched the app asks to show: a screen, a cluster. */
+private class LaunchTargets(val deepLink: MutableStateFlow<DeepLink?>, val cluster: MutableStateFlow<String?>)
+
+private fun Intent.clusterFingerprint(): String? = getStringExtra(MainActivity.EXTRA_CLUSTER)?.takeIf { it.isNotBlank() }
 
 private fun Intent.deepLink(): DeepLink? =
     getStringExtra(MainActivity.EXTRA_OPEN)?.let { name -> DeepLink.entries.firstOrNull { it.name == name } }
@@ -115,13 +132,13 @@ private fun Intent.deepLink(): DeepLink? =
  * draw over the app so navigation state survives.
  */
 @Composable
-private fun LockGate(app: TalosApp, deepLink: MutableStateFlow<DeepLink?>, onWiped: () -> Unit) {
+private fun LockGate(app: TalosApp, targets: LaunchTargets, onWiped: () -> Unit) {
     val locked by app.appLock.locked.collectAsStateWithLifecycle()
     val everUnlocked by app.appLock.everUnlocked.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     Box {
-        if (everUnlocked) Root(app, deepLink)
+        if (everUnlocked) Root(app, targets)
         if (locked) {
             LockScreen(
                 onUnlocked = { app.appLock.unlock() },
@@ -138,14 +155,22 @@ private fun LockGate(app: TalosApp, deepLink: MutableStateFlow<DeepLink?>, onWip
 }
 
 @Composable
-private fun Root(app: TalosApp, deepLink: MutableStateFlow<DeepLink?>) {
-    val link by deepLink.collectAsStateWithLifecycle()
+private fun Root(app: TalosApp, targets: LaunchTargets) {
+    val link by targets.deepLink.collectAsStateWithLifecycle()
+    val cluster by targets.cluster.collectAsStateWithLifecycle()
     // null = still loading the stored config; then whether one exists.
     var hasConfig by remember { mutableStateOf<Boolean?>(null) }
     LaunchedEffect(Unit) { hasConfig = app.configRepository.load() != null }
 
     when (val ready = hasConfig) {
         null -> LoadingBox()
-        else -> Navigation(app, startWithImport = !ready, deepLink = link, onDeepLinkHandled = { deepLink.value = null })
+        else -> Navigation(
+            app,
+            startWithImport = !ready,
+            deepLink = link,
+            onDeepLinkHandled = { targets.deepLink.value = null },
+            openCluster = cluster,
+            onClusterOpened = { targets.cluster.value = null },
+        )
     }
 }

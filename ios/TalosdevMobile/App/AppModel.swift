@@ -28,6 +28,7 @@ final class AppModel {
         static let theme = "themeMode"
         static let lock = "appLockEnabled"
         static let clusterColors = "clusterColors"
+        static let clusterNames = "clusterNames"
     }
 
     private(set) var yaml: String?
@@ -48,6 +49,11 @@ final class AppModel {
     /// Main color (0xRRGGBB) of each cluster, by context fingerprint (not its name, which the
     /// screenshot mode masks). The accent color is the one of the cluster on screen.
     private(set) var clusterColors: [String: Int]
+
+    /// Names the user gave clusters, by context fingerprint, when the talosconfig context
+    /// name is not a nice one. Only on this device: the talosconfig is left as it is, so
+    /// importing it again still updates the same cluster.
+    private(set) var clusterNames: [String: String]
 
     var theme: ThemeMode {
         didSet { UserDefaults.standard.set(theme.rawValue, forKey: Keys.theme) }
@@ -70,6 +76,7 @@ final class AppModel {
         privacyWords = UserDefaults.standard.string(forKey: PrivacyKeys.words) ?? ""
         lock = AppLockState(enabled: UserDefaults.standard.bool(forKey: Keys.lock))
         clusterColors = UserDefaults.standard.dictionary(forKey: Keys.clusterColors) as? [String: Int] ?? [:]
+        clusterNames = UserDefaults.standard.dictionary(forKey: Keys.clusterNames) as? [String: String] ?? [:]
     }
 
     var client: TalosClient? {
@@ -86,6 +93,34 @@ final class AppModel {
     func setColor(_ rgb: Int, for context: ContextSummary) {
         guard !context.fingerprint.isEmpty else { return }
         storeColors(clusterColors.merging([context.fingerprint: rgb]) { _, new in new })
+    }
+
+    /// How clusters are called on screen (given names, unless the screenshot mode is on).
+    var labels: ClusterLabels { ClusterLabels(names: clusterNames, masked: privacyMask) }
+
+    /// The name of the cluster on screen.
+    var activeLabel: String { activeSummary.map(labels.of) ?? activeContext }
+
+    /// Names `context` `input`; a blank one goes back to its context name.
+    func rename(_ context: ContextSummary, to input: String) {
+        guard !context.fingerprint.isEmpty else { return }
+        var names = clusterNames
+        names[context.fingerprint] = normalizeClusterName(input)
+        storeNames(names)
+    }
+
+    private func storeNames(_ names: [String: String]) {
+        guard names != clusterNames else { return }
+        clusterNames = names
+        UserDefaults.standard.set(names, forKey: Keys.clusterNames)
+        QuickActions.update(summary: summary, labels: labels)
+    }
+
+    /// Shows the cluster a quick action stands for; false when it is no longer imported.
+    func selectCluster(fingerprint: String) -> Bool {
+        guard let context = summary?.contexts.first(where: { $0.fingerprint == fingerprint }) else { return false }
+        activeContext = context.name
+        return true
     }
 
     private func storeColors(_ colors: [String: Int]) {
@@ -213,6 +248,7 @@ final class AppModel {
         forgetFeatures()
         yaml = nil
         summary = nil
+        QuickActions.update(summary: nil, labels: labels)
     }
 
     /// Callers must have authenticated the user first.
@@ -270,5 +306,7 @@ final class AppModel {
         activeContext = preferred.flatMap { newSummary.context(named: $0)?.name } ?? newSummary.current
         // Every cluster gets a color of its own; removed ones are forgotten.
         storeColors(assignClusterColors(saved: clusterColors, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        storeNames(keepClusterNames(saved: clusterNames, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        QuickActions.update(summary: newSummary, labels: labels)
     }
 }

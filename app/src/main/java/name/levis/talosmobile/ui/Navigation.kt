@@ -128,10 +128,32 @@ private object Routes {
 /** Screens a notification can open directly (see MainActivity.EXTRA_OPEN). */
 enum class DeepLink { ISSUE_CONFIG }
 
-/** [deepLink]: a screen to open once over the overview; [onDeepLinkHandled] then clears it. */
+/**
+ * [deepLink]: a screen to open once over the overview; [onDeepLinkHandled] then clears it.
+ * [openCluster]: the fingerprint of a cluster to show (a launcher shortcut), cleared by [onClusterOpened].
+ */
 @Composable
-fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = null, onDeepLinkHandled: () -> Unit = {}) {
+fun Navigation(
+    app: TalosApp,
+    startWithImport: Boolean,
+    deepLink: DeepLink? = null,
+    onDeepLinkHandled: () -> Unit = {},
+    openCluster: String? = null,
+    onClusterOpened: () -> Unit = {},
+) {
     val nav = rememberNavController()
+
+    // Back on that cluster's overview: a screen of the previous one must not stay open over it.
+    LaunchedEffect(openCluster) {
+        if (openCluster == null) return@LaunchedEffect
+        app.configRepository.config.value?.summary?.contexts
+            ?.firstOrNull { it.fingerprint == openCluster }
+            ?.let { cluster ->
+                app.selectCluster(cluster.name)
+                nav.resetTo(Routes.OVERVIEW)
+            }
+        onClusterOpened()
+    }
 
     LaunchedEffect(deepLink) {
         if (deepLink == null) return@LaunchedEffect

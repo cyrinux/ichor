@@ -17,6 +17,8 @@ data class ClusterSnapshot(
     val certNotAfter: Long = 0,
     /** Epoch day of the last certificate-expiry warning, so it fires at most once a day. */
     val lastCertWarnDay: Long = -1,
+    /** The cluster's context fingerprint: the widget shows the name the user gave it. */
+    val fingerprint: String = "",
 ) {
     val readyCount: Int get() = nodes.values.count { it.health == NodeHealth.READY }
     val notReadyCount: Int get() = nodes.values.count { it.health == NodeHealth.NOT_READY }
@@ -38,8 +40,10 @@ fun snapshotOf(
     etcd: EtcdOverview?,
     certNotAfter: Long,
     takenAt: Long,
+    fingerprint: String = "",
 ): ClusterSnapshot = ClusterSnapshot(
     context = overview.context,
+    fingerprint = fingerprint,
     takenAt = takenAt,
     nodes = overview.nodes.associate { n ->
         val reason = n.error ?: n.unmetConditions.joinToString("; ") { "${it.name}: ${it.reason}" }

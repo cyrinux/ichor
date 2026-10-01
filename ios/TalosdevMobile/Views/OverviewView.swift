@@ -89,15 +89,15 @@ struct OverviewView: View {
             .refreshable { await load() }
             .themedBackground()
         }
-        .navigationTitle(model.activeContext)
+        .navigationTitle(model.activeLabel)
         // Shown by the title once it is inline (scrolled); the bar below is always there.
         .toolbarTitleMenu {
             ForEach(model.summary?.contexts ?? []) { context in
                 Button { model.activeContext = context.name } label: {
                     if context.name == model.activeContext {
-                        Label(context.name, systemImage: "checkmark")
+                        Label(model.labels.of(context), systemImage: "checkmark")
                     } else {
-                        Text(context.name)
+                        Text(model.labels.of(context))
                     }
                 }
             }

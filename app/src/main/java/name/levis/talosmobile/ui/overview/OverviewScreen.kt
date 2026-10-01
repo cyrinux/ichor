@@ -1,5 +1,6 @@
 package name.levis.talosmobile.ui.overview
 
+import name.levis.talosmobile.ui.components.rememberClusterLabels
 import android.widget.Toast
 import androidx.annotation.PluralsRes
 import androidx.compose.ui.res.pluralStringResource
@@ -115,6 +116,7 @@ fun OverviewScreen(
     val app = context.applicationContext as TalosApp
     val ai by app.aiPreferences.settings.collectAsStateWithLifecycle()
     val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
+    val clusterLabels = rememberClusterLabels()
     val scope = rememberCoroutineScope()
     var showClusters by remember { mutableStateOf(false) }
     val timeState by timeVm.state.collectAsStateWithLifecycle()
@@ -142,7 +144,7 @@ fun OverviewScreen(
                 // Swipe the bar sideways for the previous/next cluster, tap the title for the list.
                 modifier = Modifier.clusterSwipe(config, app::selectCluster),
                 title = {
-                    ClusterTitle(config, clusterColors, onOpen = { showClusters = true }) { ScreenshotModeIcon() }
+                    ClusterTitle(config, clusterColors, clusterLabels, onOpen = { showClusters = true }) { ScreenshotModeIcon() }
                 },
                 actions = {
                     // Only offered when the config's role can run it.
@@ -170,10 +172,12 @@ fun OverviewScreen(
             ClusterSheet(
                 config = stored,
                 colors = clusterColors,
+                labels = clusterLabels,
                 onSelect = {
                     showClusters = false
                     app.selectCluster(it)
                 },
+                onRename = { cluster, name -> app.renameCluster(cluster.fingerprint, name) },
                 onColor = { cluster, color -> app.clusterColors.set(cluster.fingerprint, color) },
                 onAdd = {
                     showClusters = false
