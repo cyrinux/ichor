@@ -1,6 +1,6 @@
 package name.levis.talosmobile.ui.overview
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,6 +29,9 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
@@ -74,6 +77,7 @@ class OverviewViewModel(
 @Composable
 fun OverviewScreen(
     onNode: (NodeOverview) -> Unit,
+    onNodeAction: (NodeOverview, NodeAction) -> Unit,
     onEtcd: () -> Unit,
     onKubeSpan: () -> Unit,
     onHealth: () -> Unit,
@@ -123,14 +127,38 @@ fun OverviewScreen(
                 onRefresh = vm::refresh,
                 modifier = Modifier.padding(padding).fillMaxSize(),
             ) {
-                NodeList(s.data, onNode, onSettings)
+                NodeList(
+                    overview = s.data,
+                    onNode = onNode,
+                    onSettings = onSettings,
+                    onNodeAction = onNodeAction,
+                    canPower = config?.activeSummary?.allows(Feature.POWER) == true,
+                    canShell = config?.activeSummary?.allows(Feature.DEBUG_SHELL) == true,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun NodeList(overview: ClusterOverview, onNode: (NodeOverview) -> Unit, onSettings: () -> Unit) {
+private fun NodeList(
+    overview: ClusterOverview,
+    onNode: (NodeOverview) -> Unit,
+    onSettings: () -> Unit,
+    onNodeAction: (NodeOverview, NodeAction) -> Unit,
+    canPower: Boolean,
+    canShell: Boolean,
+) {
+    var sheetFor by remember { mutableStateOf<NodeOverview?>(null) }
+    sheetFor?.let { node ->
+        NodeActionsSheet(
+            node = node,
+            canPower = canPower,
+            canShell = canShell,
+            onAction = { onNodeAction(node, it) },
+            onDismiss = { sheetFor = null },
+        )
+    }
     val nodes = overview.nodes.sortedWith(compareBy({ it.role != "controlplane" }, { it.hostname }))
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
@@ -141,7 +169,9 @@ private fun NodeList(overview: ClusterOverview, onNode: (NodeOverview) -> Unit, 
         item { SupportCard() }
         item { Summary(overview.nodes) }
         items(nodes, key = { it.node }) { node ->
-            NodeCard(node, onClick = { onNode(node) })
+            SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {
+                NodeCard(node, onClick = { onNode(node) }, onLongClick = { sheetFor = node })
+            }
         }
     }
 }
@@ -170,8 +200,14 @@ private fun SummaryCount(count: Int, label: String, color: androidx.compose.ui.g
 }
 
 @Composable
-private fun NodeCard(node: NodeOverview, onClick: () -> Unit) {
-    Card(Modifier.fillMaxWidth().clickable(enabled = node.reachable, onClick = onClick)) {
+private fun NodeCard(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> Unit) {
+    Card(
+        Modifier.fillMaxWidth().combinedClickable(
+            onClick = { if (node.reachable) onClick() },
+            onLongClick = onLongClick,
+            onLongClickLabel = "Node actions",
+        ),
+    ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {

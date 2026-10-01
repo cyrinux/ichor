@@ -1,4 +1,5 @@
 import SwiftUI
+import TalosdevMobileCore
 
 @main
 struct TalosdevMobileApp: App {
@@ -89,6 +90,9 @@ private struct PrivacyCover: View {
 
 enum Route: Hashable {
     case node(NodeRef)
+    /// Node screen opened on a tab, or with a reboot/shutdown confirmation (from row swipes).
+    case nodeLive(NodeRef)
+    case nodePower(NodeRef, PowerAction)
     case logs(node: String, hostname: String, service: String?)
     case etcd
     case kubespan
@@ -109,10 +113,12 @@ struct MainNavigation: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            OverviewView()
+            OverviewView(path: $path)
                 .navigationDestination(for: Route.self) { route in
                     switch route {
                     case .node(let ref): NodeDetailView(ref: ref)
+                    case .nodeLive(let ref): NodeDetailView(ref: ref, initialTab: .live)
+                    case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
                     case .logs(let node, let hostname, let service):
                         LogsView(node: node, hostname: hostname, service: service)
                     case .etcd: EtcdView()

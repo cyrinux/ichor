@@ -97,13 +97,21 @@ fun NodeDetailScreen(
     hostname: String,
     role: String,
     onBack: () -> Unit,
+    initialTab: Int = 0,
+    initialAction: PowerAction? = null,
     onLogs: (service: String?) -> Unit,
     onDebugShell: () -> Unit,
     power: PowerViewModel = viewModel(key = "power-$node", factory = factory { PowerViewModel(app.talosRepository, node) }),
 ) {
-    var tab by rememberSaveable { mutableIntStateOf(0) }
+    var tab by rememberSaveable { mutableIntStateOf(initialTab) }
     var menuOpen by remember { mutableStateOf(false) }
     var confirming by remember { mutableStateOf<PowerAction?>(null) }
+    // A reboot/shutdown started from the overview opens its confirmation once (not again on rotation).
+    var initialActionShown by rememberSaveable { mutableStateOf(false) }
+    if (!initialActionShown && initialAction != null) {
+        initialActionShown = true
+        confirming = initialAction
+    }
     val powerState by power.state.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
     val context = LocalContext.current

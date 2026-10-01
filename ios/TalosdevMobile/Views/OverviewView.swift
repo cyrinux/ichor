@@ -2,6 +2,9 @@ import SwiftUI
 import TalosdevMobileCore
 
 struct OverviewView: View {
+    /// The navigation path, so row swipes can open screens directly.
+    @Binding var path: [Route]
+
     @Environment(AppModel.self) private var model
     @Environment(SupportPrompt.self) private var support
     @State private var state: LoadState<ClusterOverview> = .loading
@@ -17,12 +20,57 @@ struct OverviewView: View {
                 }
                 Section {
                     ForEach(sorted(overview.nodes)) { node in
-                        if node.reachable {
-                            NavigationLink(value: Route.node(NodeRef(address: node.node, hostname: node.hostname, role: node.role))) {
+                        let ref = NodeRef(address: node.node, hostname: node.hostname, role: node.role)
+                        Group {
+                            if node.reachable {
+                                NavigationLink(value: Route.node(ref)) { NodeRow(node: node) }
+                            } else {
                                 NodeRow(node: node)
                             }
-                        } else {
-                            NodeRow(node: node)
+                        }
+                        // Swipe right: live graphs. Swipe left: logs, shell, reboot (which only opens
+                        // its confirmation). Long press: everything, plus Copy IP.
+                        .swipeActions(edge: .leading) {
+                            if node.reachable {
+                                Button { path.append(.nodeLive(ref)) } label: { Label("Live", systemImage: "chart.xyaxis.line") }
+                                    .tint(.blue)
+                            }
+                        }
+                        .swipeActions(edge: .trailing) {
+                            if node.reachable {
+                                if model.allows(.power) {
+                                    Button { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot", systemImage: "power") }
+                                        .tint(.red)
+                                }
+                                if model.allows(.debugShell) {
+                                    Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
+                                        Label("Shell", systemImage: "apple.terminal")
+                                    }
+                                    .tint(.indigo)
+                                }
+                                Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
+                                    Label("Logs", systemImage: "text.alignleft")
+                                }
+                            }
+                        }
+                        .contextMenu {
+                            if node.reachable {
+                                Button { path.append(.nodeLive(ref)) } label: { Label("Live graphs", systemImage: "chart.xyaxis.line") }
+                                Button { path.append(.node(ref)) } label: { Label("Services and logs", systemImage: "list.bullet") }
+                                Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
+                                    Label("Kernel log", systemImage: "text.alignleft")
+                                }
+                                if model.allows(.debugShell) {
+                                    Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
+                                        Label("Debug shell", systemImage: "apple.terminal")
+                                    }
+                                }
+                                if model.allows(.power) {
+                                    Button(role: .destructive) { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot…", systemImage: "power") }
+                                    Button(role: .destructive) { path.append(.nodePower(ref, .shutdown)) } label: { Label("Shut down…", systemImage: "power") }
+                                }
+                            }
+                            Button { UIPasteboard.general.string = node.node } label: { Label("Copy IP", systemImage: "doc.on.doc") }
                         }
                     }
                 }

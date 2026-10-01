@@ -16,13 +16,15 @@ import name.levis.talosmobile.ui.importconfig.ImportScreen
 import name.levis.talosmobile.ui.kubespan.KubeSpanScreen
 import name.levis.talosmobile.ui.logs.LogsScreen
 import name.levis.talosmobile.ui.node.NodeDetailScreen
+import name.levis.talosmobile.ui.node.PowerAction
+import name.levis.talosmobile.ui.overview.NodeAction
 import name.levis.talosmobile.ui.overview.OverviewScreen
 import name.levis.talosmobile.ui.settings.SettingsScreen
 
 private object Routes {
     const val IMPORT = "import"
     const val OVERVIEW = "overview"
-    const val NODE = "node?addr={addr}&host={host}&role={role}"
+    const val NODE = "node?addr={addr}&host={host}&role={role}&tab={tab}&action={action}"
     const val LOGS = "logs?addr={addr}&host={host}&service={service}"
     const val ETCD = "etcd"
     const val KUBESPAN = "kubespan"
@@ -36,8 +38,9 @@ private object Routes {
     fun logs(addr: String, host: String, service: String?) =
         "logs?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&service=${Uri.encode(service.orEmpty())}"
 
-    fun node(addr: String, host: String, role: String) =
-        "node?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&role=${Uri.encode(role)}"
+    /** [tab]: 0 services, 1 resources, 2 live; [action]: "reboot"/"shutdown" opens its confirmation. */
+    fun node(addr: String, host: String, role: String, tab: Int = 0, action: String = "") =
+        "node?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&role=${Uri.encode(role)}&tab=$tab&action=$action"
 }
 
 @Composable
@@ -54,6 +57,16 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
         composable(Routes.OVERVIEW) {
             OverviewScreen(
                 onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
+                onNodeAction = { n, action ->
+                    when (action) {
+                        NodeAction.LIVE -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab = 2))
+                        NodeAction.SERVICES -> nav.navigate(Routes.node(n.node, n.hostname, n.role))
+                        NodeAction.KERNEL_LOG -> nav.navigate(Routes.logs(n.node, n.hostname, null))
+                        NodeAction.SHELL -> nav.navigate(Routes.debug(n.node, n.hostname))
+                        NodeAction.REBOOT -> nav.navigate(Routes.node(n.node, n.hostname, n.role, action = "reboot"))
+                        NodeAction.SHUTDOWN -> nav.navigate(Routes.node(n.node, n.hostname, n.role, action = "shutdown"))
+                    }
+                },
                 onEtcd = { nav.navigate(Routes.ETCD) },
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
                 onHealth = { nav.navigate(Routes.HEALTH) },
@@ -66,6 +79,8 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
                 navArgument("addr") { type = NavType.StringType },
                 navArgument("host") { type = NavType.StringType },
                 navArgument("role") { type = NavType.StringType; defaultValue = "unknown" },
+                navArgument("tab") { type = NavType.IntType; defaultValue = 0 },
+                navArgument("action") { type = NavType.StringType; defaultValue = "" },
             ),
         ) { entry ->
             val addr = entry.arguments?.getString("addr").orEmpty()
@@ -73,6 +88,12 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
                 node = addr,
                 hostname = entry.arguments?.getString("host") ?: addr,
                 role = entry.arguments?.getString("role") ?: "unknown",
+                initialTab = entry.arguments?.getInt("tab") ?: 0,
+                initialAction = when (entry.arguments?.getString("action")) {
+                    "reboot" -> PowerAction.REBOOT
+                    "shutdown" -> PowerAction.SHUTDOWN
+                    else -> null
+                },
                 onBack = { nav.popBackStack() },
                 onLogs = { service -> nav.navigate(Routes.logs(addr, entry.arguments?.getString("host") ?: addr, service)) },
                 onDebugShell = { nav.navigate(Routes.debug(addr, entry.arguments?.getString("host") ?: addr)) },
