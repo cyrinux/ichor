@@ -180,3 +180,30 @@ public enum TalosJSON {
         try JSONDecoder().decode(type, from: Data(json.utf8))
     }
 }
+
+public struct KubeSpanOverview: Decodable, Equatable, Sendable {
+    public let nodes: [KubeSpanNode]
+}
+
+public struct KubeSpanNode: Decodable, Equatable, Identifiable, Sendable {
+    public let node: String
+    public let error: String?
+    public let enabled: Bool
+    public let up: Int
+    public let down: Int
+    public let peers: [KubeSpanPeer]
+
+    public var id: String { node }
+}
+
+public struct KubeSpanPeer: Decodable, Equatable, Identifiable, Sendable {
+    public let publicKey: String
+    public let label: String
+    public let state: String // up | down | unknown
+    public let endpoint: String
+    public let rx: Int64
+    public let tx: Int64
+    public let lastHandshake: Int64
+
+    public var id: String { publicKey }
+}

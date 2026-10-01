@@ -82,6 +82,7 @@ enum Route: Hashable {
     case node(NodeRef)
     case logs(node: String, hostname: String, service: String?)
     case etcd
+    case kubespan
     case health
     case settings
     case importConfig
@@ -105,6 +106,7 @@ struct MainNavigation: View {
                     case .logs(let node, let hostname, let service):
                         LogsView(node: node, hostname: hostname, service: service)
                     case .etcd: EtcdView()
+                    case .kubespan: KubeSpanView()
                     case .health: HealthView()
                     case .settings: SettingsView()
                     case .importConfig: ImportView { path.removeAll() }

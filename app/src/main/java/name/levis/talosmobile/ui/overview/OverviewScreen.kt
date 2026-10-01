@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material3.Card
@@ -73,6 +74,7 @@ class OverviewViewModel(
 fun OverviewScreen(
     onNode: (NodeOverview) -> Unit,
     onEtcd: () -> Unit,
+    onKubeSpan: () -> Unit,
     onHealth: () -> Unit,
     onSettings: () -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
@@ -104,6 +106,7 @@ fun OverviewScreen(
                     if (config?.activeSummary?.allows(Feature.HEALTH) == true) {
                         IconButton(onClick = onHealth) { Icon(Icons.Outlined.Favorite, "Cluster health") }
                     }
+                    IconButton(onClick = onKubeSpan) { Icon(Icons.Outlined.Hub, "KubeSpan") }
                     IconButton(onClick = onEtcd) { Icon(Icons.Outlined.Storage, "etcd") }
                     IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, "Settings") }
                 },

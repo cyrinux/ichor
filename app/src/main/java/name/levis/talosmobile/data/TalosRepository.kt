@@ -4,6 +4,7 @@ import name.levis.talosmobile.HealthListener
 import name.levis.talosmobile.Talosmobile
 import name.levis.talosmobile.model.ClusterOverview
 import name.levis.talosmobile.model.EtcdOverview
+import name.levis.talosmobile.model.KubeSpanOverview
 import name.levis.talosmobile.model.LogTail
 import name.levis.talosmobile.model.NodeStats
 import name.levis.talosmobile.model.NodeResources
@@ -45,6 +46,10 @@ class TalosRepository(private val configs: ConfigRepository) {
 
     private suspend fun <T : Any> remember(key: String, block: suspend () -> T): T =
         block().also { cache[scoped(key)] = it }
+
+    suspend fun kubespan(): KubeSpanOverview = remember(KUBESPAN) {
+        call { cfg, ctx -> TalosJson.decodeFromString(KubeSpanOverview.serializer(), Talosmobile.kubeSpanStatus(cfg, ctx)) }
+    }
 
     /** One sample of node counters for the live graphs (not cached: always fresh). */
     suspend fun stats(node: String): NodeStats = call { cfg, ctx ->
@@ -119,5 +124,6 @@ class TalosRepository(private val configs: ConfigRepository) {
 
 const val OVERVIEW = "overview"
 const val ETCD = "etcd"
+const val KUBESPAN = "kubespan"
 fun servicesKey(node: String) = "services|$node"
 fun resourcesKey(node: String) = "resources|$node"

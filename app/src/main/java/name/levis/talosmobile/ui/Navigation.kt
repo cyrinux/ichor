@@ -12,6 +12,7 @@ import name.levis.talosmobile.TalosApp
 import name.levis.talosmobile.ui.etcd.EtcdScreen
 import name.levis.talosmobile.ui.health.HealthScreen
 import name.levis.talosmobile.ui.importconfig.ImportScreen
+import name.levis.talosmobile.ui.kubespan.KubeSpanScreen
 import name.levis.talosmobile.ui.logs.LogsScreen
 import name.levis.talosmobile.ui.node.NodeDetailScreen
 import name.levis.talosmobile.ui.overview.OverviewScreen
@@ -23,6 +24,7 @@ private object Routes {
     const val NODE = "node?addr={addr}&host={host}&role={role}"
     const val LOGS = "logs?addr={addr}&host={host}&service={service}"
     const val ETCD = "etcd"
+    const val KUBESPAN = "kubespan"
     const val HEALTH = "health"
     const val SETTINGS = "settings"
 
@@ -49,6 +51,7 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
             OverviewScreen(
                 onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
                 onEtcd = { nav.navigate(Routes.ETCD) },
+                onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
                 onHealth = { nav.navigate(Routes.HEALTH) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
             )
@@ -86,6 +89,7 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
                 onBack = { nav.popBackStack() },
             )
         }
+        composable(Routes.KUBESPAN) { KubeSpanScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.ETCD) { EtcdScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.HEALTH) { HealthScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.SETTINGS) {

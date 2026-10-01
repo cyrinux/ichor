@@ -36,6 +36,7 @@ struct OverviewView: View {
                 if model.allows(.health) {
                     NavigationLink(value: Route.health) { Image(systemName: "heart.text.square") }
                 }
+                NavigationLink(value: Route.kubespan) { Image(systemName: "point.3.connected.trianglepath.dotted") }
                 NavigationLink(value: Route.etcd) { Image(systemName: "cylinder.split.1x2") }
                 NavigationLink(value: Route.settings) { Image(systemName: "gearshape") }
             }

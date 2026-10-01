@@ -59,4 +59,11 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(Feature.power.minimumRole, "os:operator")
         XCTAssertEqual(Feature.kubeconfig.minimumRole, "os:admin")
     }
+
+    func testKubeSpan() throws {
+        let json = #"{"nodes":[{"node":"10.0.0.2","enabled":true,"up":1,"down":0,"peers":[{"publicKey":"pk","label":"cp-2","state":"up","endpoint":"10.0.0.3:51820","rx":10,"tx":20,"lastHandshake":1800000000}]},{"node":"10.0.0.9","error":"timed out","enabled":false,"up":0,"down":0,"peers":[]}]}"#
+        let ks = try TalosJSON.decode(KubeSpanOverview.self, from: json)
+        XCTAssertEqual(ks.nodes[0].peers[0].state, "up")
+        XCTAssertEqual(ks.nodes[1].error, "timed out")
+    }
 }

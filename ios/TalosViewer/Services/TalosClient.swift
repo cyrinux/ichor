@@ -44,6 +44,10 @@ struct TalosClient: Sendable {
         }
     }
 
+    func kubespan() async throws -> KubeSpanOverview {
+        try await Self.json { [config, context] in TalosmobileKubeSpanStatus(config, context, $0) }
+    }
+
     /// One sample of counters for the live graphs.
     func stats(node: String) async throws -> NodeStats {
         try await Self.json { [config, context] in TalosmobileNodeStats(config, context, node, $0) }

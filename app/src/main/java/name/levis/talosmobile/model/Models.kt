@@ -143,3 +143,27 @@ val NodeOverview.health: NodeHealth
         ready -> NodeHealth.READY
         else -> NodeHealth.NOT_READY
     }
+
+@Serializable
+data class KubeSpanOverview(val nodes: List<KubeSpanNode> = emptyList())
+
+@Serializable
+data class KubeSpanNode(
+    val node: String,
+    val error: String? = null,
+    val enabled: Boolean = false,
+    val up: Int = 0,
+    val down: Int = 0,
+    val peers: List<KubeSpanPeer> = emptyList(),
+)
+
+@Serializable
+data class KubeSpanPeer(
+    val publicKey: String,
+    val label: String,
+    val state: String,
+    val endpoint: String = "",
+    val rx: Long = 0,
+    val tx: Long = 0,
+    val lastHandshake: Long = 0,
+)
