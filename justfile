@@ -45,7 +45,7 @@ release-tag version:
         echo "Talos Viewer v${version}"
         echo
         git log --no-merges --format='- %s' "$range"
-    } | git tag --no-sign -a "v${version}" -F -
+    } | git tag -s "v${version}" -F - # signed, like the commits
     echo "Tagged v${version}$( [[ -n "$previous" ]] && echo " (changes since ${previous})" )."
     echo "Push it with: git push origin v${version}"
 
