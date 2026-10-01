@@ -10,11 +10,8 @@ import (
 	"time"
 
 	"github.com/cosi-project/runtime/pkg/safe"
-	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
 	"github.com/siderolabs/talos/pkg/machinery/client"
 	"github.com/siderolabs/talos/pkg/machinery/resources/runtime"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -72,9 +69,9 @@ var errStoppedFollowing = errors.New("stopped following: the upgrade itself cann
 // reboots (Talos's --stage, for nodes with files in use). Talos cordons and drains the node,
 // installs, then reboots it.
 //
-// It uses MachineService.Upgrade, which Talos 1.14 still serves but deprecates for its
-// LifecycleService (removal planned in 1.18): the new API needs the client to drain the node
-// through Kubernetes and has no server-side etcd checks.
+// It uses MachineService.Upgrade while the node serves it (planned removal: Talos 1.18) and
+// falls back to the LifecycleService when the node answers Unimplemented: see requestUpgrade
+// for what differs.
 func StartUpgrade(configYAML, contextName, node, image string, stage, force bool, listener UpgradeListener) *UpgradeRun {
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
@@ -142,11 +139,21 @@ func runUpgrade(
 	reqCtx, reqCancel := context.WithTimeout(context.Background(), upgradeRequestTimeout)
 	defer reqCancel()
 
-	if err := requestUpgrade(withNode(reqCtx, node), s.client, image, stage, force); err != nil {
+	emit := func(phase, msg string) { emitProgress(listener, phase, msg) }
+
+	// The node is about to change version: what the session cached about it is void.
+	defer func() {
+		s.versions.Delete(node)
+		s.definitions.Delete(node)
+	}()
+
+	if err := requestUpgrade(withNode(reqCtx, node), talosUpgrader{s.client}, image, stage, force, func() error { return upgradeRefusal(plan, false) }, emit); err != nil {
+		if isUnavailableAPI(err) {
+			return "", errors.New("upgrade: " + s.friendly(node, err))
+		}
+
 		return "", err
 	}
-
-	emitProgress(listener, phaseInstall, "upgrade accepted: draining and installing")
 
 	_, tag := splitImageRef(image)
 	tracker := &upgradeTracker{
@@ -177,25 +184,6 @@ func upgradeRefusal(plan upgradePlan, force bool) error {
 	}
 
 	return errors.New("upgrade refused: " + strings.Join(blockers, "; "))
-}
-
-func requestUpgrade(ctx context.Context, c *client.Client, image string, stage, force bool) error {
-	//nolint:staticcheck // see StartUpgrade: the LifecycleService path lacks drain and etcd checks
-	_, err := c.UpgradeWithOptions(ctx,
-		client.WithUpgradeImage(image),
-		client.WithUpgradeRebootMode(machineapi.UpgradeRequest_DEFAULT),
-		client.WithUpgradeStage(stage),
-		client.WithUpgradeForce(force),
-	)
-	if err == nil {
-		return nil
-	}
-
-	if status.Code(err) == codes.Unimplemented {
-		return errors.New("this node does not offer the legacy upgrade API: upgrade it with talosctl")
-	}
-
-	return errors.New("upgrade request failed: " + friendlyError(err))
 }
 
 // upgradeObservation is one poll of the node during the upgrade.

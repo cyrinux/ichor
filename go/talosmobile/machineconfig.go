@@ -28,21 +28,30 @@ func NodeMachineConfig(configYAML, contextName, node string, revealSecrets bool)
 			return "", err
 		}
 
-		mc, err := safe.StateGetByID[*config.MachineConfig](client.WithNode(ctx, node), s.client.COSI, config.ActiveID)
+		out, err := machineConfigYAML(ctx, s, node, revealSecrets)
 		if err != nil {
-			return "", errors.New(friendlyError(err))
-		}
-
-		provider := mc.Provider()
-		if !revealSecrets {
-			provider = provider.RedactSecrets(redacted)
-		}
-
-		out, err := provider.EncodeString(encoder.WithComments(encoder.CommentsDisabled))
-		if err != nil {
-			return "", fmt.Errorf("encode machine config: %w", err)
+			return "", err
 		}
 
 		return out, nil
 	})
+}
+
+func machineConfigYAML(ctx context.Context, s *session, node string, revealSecrets bool) (string, error) {
+	mc, err := safe.StateGetByID[*config.MachineConfig](client.WithNode(ctx, node), s.client.COSI, config.ActiveID)
+	if err != nil {
+		return "", errors.New(s.friendly(node, err))
+	}
+
+	provider := mc.Provider()
+	if !revealSecrets {
+		provider = provider.RedactSecrets(redacted)
+	}
+
+	out, err := provider.EncodeString(encoder.WithComments(encoder.CommentsDisabled))
+	if err != nil {
+		return "", fmt.Errorf("encode machine config: %w", err)
+	}
+
+	return out, nil
 }

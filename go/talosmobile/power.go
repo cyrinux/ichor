@@ -63,7 +63,7 @@ func powerAction(configYAML, contextName, node string, action func(context.Conte
 		}
 
 		if err := action(client.WithNode(ctx, node), s.client); err != nil {
-			return struct{}{}, errors.New(friendlyError(err))
+			return struct{}{}, errors.New(s.friendly(node, err))
 		}
 
 		return struct{}{}, nil

@@ -8,10 +8,12 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import name.levis.talosmobile.data.CaptureRepository
+import name.levis.talosmobile.data.ChangelogRepository
 import name.levis.talosmobile.data.ConfigRepository
 import name.levis.talosmobile.data.TalosUpdateChecker
 import name.levis.talosmobile.data.UpgradeManager
 import name.levis.talosmobile.data.TalosRepository
+import name.levis.talosmobile.data.SupportBundleRepository
 import name.levis.talosmobile.data.SupportPrompt
 import name.levis.talosmobile.data.PrivacyMask
 import name.levis.talosmobile.data.UiPreferences
@@ -30,7 +32,8 @@ class TalosApp : Application() {
     val configRepository by lazy { ConfigRepository(this) }
     val talosRepository by lazy { TalosRepository(configRepository) }
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
-    val upgradeManager by lazy { UpgradeManager(configRepository) }
+    val supportBundleRepository by lazy { SupportBundleRepository(configRepository, filesDir) }
+    val upgradeManager by lazy { UpgradeManager(configRepository, onFinished = talosRepository::forgetFeatures) }
     val talosUpdateChecker by lazy { TalosUpdateChecker() }
     val uiPreferences by lazy { UiPreferences(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
     val appLock by lazy {
@@ -41,7 +44,10 @@ class TalosApp : Application() {
     }
 
     val supportPrompt by lazy { SupportPrompt(getSharedPreferences("talosdev-mobile-support", Context.MODE_PRIVATE)) }
-    val updateManager by lazy { UpdateManager(this, getSharedPreferences("talosdev-mobile-update", Context.MODE_PRIVATE)) }
+    val changelogRepository by lazy { ChangelogRepository(this, getSharedPreferences(ChangelogRepository.PREFS, Context.MODE_PRIVATE)) }
+    val updateManager by lazy {
+        UpdateManager(this, getSharedPreferences("talosdev-mobile-update", Context.MODE_PRIVATE), changelogRepository)
+    }
     val monitorStore by lazy { MonitorStore(getSharedPreferences("talosdev-mobile-monitor", Context.MODE_PRIVATE)) }
 
     /** Re-evaluates whether background monitoring should run (alerts on or widget placed). */

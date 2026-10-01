@@ -41,7 +41,7 @@ struct ProcessesView: View {
         List {
             Section {
                 if let error = monitor.error {
-                    Text(error).font(.footnote).foregroundStyle(.red)
+                    ErrorOrNoticeText(message: error)
                 }
                 if let sample = monitor.sample {
                     LabeledContent("Processes", value: "\(sample.processes.count)")

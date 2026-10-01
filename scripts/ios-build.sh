@@ -21,6 +21,8 @@ set -a
 eval "$("$ROOT/scripts/version.sh" --env)"
 set +a
 echo "version $TALOSDEV_MOBILE_VERSION (build $TALOSDEV_MOBILE_BUILD_NUMBER)"
+# Release notes bundled in the app, for the "what's new" shown after an update.
+python3 "$ROOT/scripts/changelog.py" --limit 30 -o "$ROOT/ios/TalosdevMobile/changelog.json"
 
 # gomobile/gobind versions are pinned by the tool directive in go/go.mod.
 cd "$ROOT/go"

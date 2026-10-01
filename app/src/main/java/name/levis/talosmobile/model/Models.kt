@@ -41,9 +41,21 @@ enum class Feature(@StringRes val label: Int, val roles: Set<String>) {
     PACKET_CAPTURE(R.string.common_feature_packet_capture, setOf("os:admin", "os:operator")),
     // MachineService/Upgrade (and LifecycleService/Upgrade) are admin-only in Talos.
     UPGRADE(R.string.common_feature_upgrade, setOf("os:admin")),
+    // MachineService/EtcdForfeitLeadership and EtcdRemoveMemberByID are admin-only in Talos.
+    ETCD_MEMBER_ACTIONS(R.string.common_feature_etcd_member_actions, setOf("os:admin")),
+    // Non-sensitive resources are readable by every role; sensitive ones answer "permission denied".
+    RESOURCE_BROWSER(R.string.common_feature_resource_browser, setOf("os:admin", "os:operator", "os:reader")),
+    // Every role can collect a bundle; what it cannot read (machine config: os:admin, etcd
+    // status: os:operator) is left out and noted in the bundle.
+    SUPPORT_BUNDLE(R.string.common_feature_support_bundle, setOf("os:admin", "os:operator", "os:reader")),
     ;
 
-    val minimumRole: String get() = if ("os:operator" in roles) "os:operator" else "os:admin"
+    val minimumRole: String
+        get() = when {
+            "os:reader" in roles -> "os:reader"
+            "os:operator" in roles -> "os:operator"
+            else -> "os:admin"
+        }
 }
 
 fun ContextSummary.allows(feature: Feature): Boolean = roles.any { it in feature.roles }

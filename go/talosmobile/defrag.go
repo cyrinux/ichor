@@ -24,7 +24,7 @@ func EtcdDefragment(configYAML, contextName, node string) (err error) {
 		}
 
 		if _, err := s.client.EtcdDefragment(client.WithNode(ctx, node)); err != nil {
-			return struct{}{}, errors.New(friendlyError(err))
+			return struct{}{}, errors.New(s.friendly(node, err))
 		}
 
 		return struct{}{}, nil

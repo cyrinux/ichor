@@ -25,12 +25,17 @@ struct LoadStateView<T, Content: View>: View {
         case .loading:
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
         case .failed(let message):
-            ContentUnavailableView {
-                Label("Request failed", systemImage: "exclamationmark.triangle")
-            } description: {
-                Text(message)
-            } actions: {
-                Button("Retry") { Task { await retry() } }
+            // "This node's Talos version cannot do that" is information, not a failure.
+            if let notice = versionNotice(message) {
+                VersionNoticeView(notice: notice, detail: message, retry: retry)
+            } else {
+                ContentUnavailableView {
+                    Label("Request failed", systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Retry") { Task { await retry() } }
+                }
             }
         case .loaded(let value, let at):
             content(value)
@@ -79,6 +84,36 @@ struct UsageBar: View {
     var body: some View {
         ProgressView(value: min(max(fraction, 0), 1))
             .tint(fraction >= 0.9 ? .red : fraction >= 0.75 ? .orange : .green)
+    }
+}
+
+/// Usage bar with the storage thresholds: orange from 80 %, red from 90 %.
+struct UsageLevelBar: View {
+    let fraction: Double
+    let level: UsageLevel
+
+    init(percent: Double) {
+        fraction = usageFraction(percent: percent)
+        level = usageLevel(percent: percent)
+    }
+
+    init(fraction: Double, level: UsageLevel) {
+        self.fraction = fraction
+        self.level = level
+    }
+
+    var body: some View {
+        ProgressView(value: min(max(fraction, 0), 1)).tint(level.color)
+    }
+}
+
+extension UsageLevel {
+    var color: Color {
+        switch self {
+        case .normal: .green
+        case .warning: .orange
+        case .critical: .red
+        }
     }
 }
 

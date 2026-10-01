@@ -40,7 +40,7 @@ func NodeConnections(configYAML, contextName, node string) (out string, err erro
 			Netns:   &machineapi.NetstatRequest_NetNS{Hostnetwork: true},
 		})
 		if err != nil {
-			return "", errors.New(friendlyError(err))
+			return "", errors.New(s.friendly(node, err))
 		}
 
 		return toJSON(mapConnections(first(resp.GetMessages()).GetConnectrecord()))

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Only packet captures can be shared (see CaptureRepository). -->
+<!-- Only packet captures (see CaptureRepository) and support bundles (see SupportBundleRepository) can be shared. -->
 <paths>
     <files-path name="captures" path="captures/" />
+    <files-path name="support" path="support/" />
 </paths>

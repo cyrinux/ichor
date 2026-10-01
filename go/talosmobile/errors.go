@@ -23,6 +23,10 @@ func friendlyError(err error) string {
 		return "unreachable: " + reason
 	}
 
+	if isUnavailableAPI(err) {
+		return notAvailable
+	}
+
 	st, ok := status.FromError(err)
 	if !ok {
 		return err.Error()
@@ -48,6 +52,45 @@ func friendlyError(err error) string {
 	default:
 		return st.Code().String() + ": " + msg
 	}
+}
+
+// notAvailable is the message for an API or resource type the node's Talos version lacks.
+const notAvailable = "not available on this node's Talos version"
+
+// notAvailableOn is notAvailable naming the node's version when it is known.
+func notAvailableOn(version string) string {
+	if version == "" {
+		return notAvailable
+	}
+
+	return notAvailable + " (" + version + ")"
+}
+
+// isUnavailableAPI tells whether err means the server does not know the gRPC service or
+// method (older or newer Talos than this client), or the COSI resource type.
+func isUnavailableAPI(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if status.Code(err) == codes.Unimplemented {
+		return true
+	}
+
+	msg := err.Error()
+
+	for _, needle := range []string{
+		"unknown service", "unknown method", // grpc-go's Unimplemented text, kept when the code is lost in wrapping
+		"is not registered",          // client.ResolveResourceKind / COSI: unknown resource type
+		"unknown resource type",      //
+		"resource type is not known", //
+	} {
+		if strings.Contains(msg, needle) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // dialFailures maps the cause of a failed gRPC dial to a short reason; the raw transport

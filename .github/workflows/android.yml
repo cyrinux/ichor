@@ -59,12 +59,16 @@ jobs:
             suffix=""; [[ "$file" == *unsigned* ]] && suffix="-unsigned"
             cp "$apk" "dist/talosdev-mobile-v${version}-${abi}${suffix}.apk"
           done
+          # Published with the release, so installed apps can show what an update brings.
+          scripts/changelog.py --limit 30 -o dist/changelog.json
           ls -l dist
 
       - uses: actions/upload-artifact@v4
         with:
           name: android-release
-          path: dist/*.apk
+          path: |
+            dist/*.apk
+            dist/changelog.json
 
       # R8 mapping, to decode obfuscated stack traces from release builds.
       - uses: actions/upload-artifact@v4

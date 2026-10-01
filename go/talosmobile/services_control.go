@@ -37,7 +37,7 @@ func ServiceAction(configYAML, contextName, node, service, action string) (err e
 		}
 
 		if err != nil {
-			return struct{}{}, errors.New(friendlyError(err))
+			return struct{}{}, errors.New(s.friendly(node, err))
 		}
 
 		return struct{}{}, nil

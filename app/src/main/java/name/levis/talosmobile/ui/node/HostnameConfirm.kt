@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import name.levis.talosmobile.R
+import name.levis.talosmobile.model.confirmationMatches
 import name.levis.talosmobile.ui.theme.LocalStatusColors
 
 /**
@@ -36,10 +37,12 @@ fun HostnameConfirmDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     emphasized: Boolean = false,
+    enabled: Boolean = true,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
     var typed by remember { mutableStateOf("") }
-    val matches = typed.trim() == hostname
+    // [enabled] false: something forbids the action whatever is typed (e.g. a blocker).
+    val matches = enabled && confirmationMatches(typed, hostname)
     val colors = LocalStatusColors.current
 
     AlertDialog(

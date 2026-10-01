@@ -24,7 +24,7 @@ struct EventsView: View {
         List {
             if let error {
                 Section {
-                    Text(error).font(.footnote).foregroundStyle(.red)
+                    ErrorOrNoticeText(message: error)
                     Button("Retry") { runID += 1 }
                 }
             }

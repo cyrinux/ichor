@@ -345,7 +345,7 @@ private final class EventsBridge: NSObject, TalosmobileEventListenerProtocol, @u
     }
 }
 
-private final class LogBridge: NSObject, TalosmobileLogListenerProtocol, @unchecked Sendable {
+final class LogBridge: NSObject, TalosmobileLogListenerProtocol, @unchecked Sendable {
     private let line: @Sendable (String) -> Void
     private let done: @Sendable (String?) -> Void
 

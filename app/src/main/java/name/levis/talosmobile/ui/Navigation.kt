@@ -11,6 +11,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import name.levis.talosmobile.TalosApp
 import name.levis.talosmobile.ui.capture.CaptureFileScreen
+import name.levis.talosmobile.ui.changelog.ChangelogScreen
+import name.levis.talosmobile.ui.changelog.WhatsNewHost
 import name.levis.talosmobile.ui.capture.CaptureScreen
 import name.levis.talosmobile.ui.capture.CapturesScreen
 import name.levis.talosmobile.ui.debug.DebugShellScreen
@@ -25,7 +27,19 @@ import name.levis.talosmobile.ui.importconfig.ImportScreen
 import name.levis.talosmobile.ui.kubespan.KubeSpanScreen
 import name.levis.talosmobile.ui.logs.LogsScreen
 import name.levis.talosmobile.ui.machineconfig.MachineConfigScreen
+import androidx.navigation.NavBackStackEntry
+import name.levis.talosmobile.model.LogSource
+import name.levis.talosmobile.model.containerLogSubtitle
+import name.levis.talosmobile.model.containerLogTitle
+import name.levis.talosmobile.model.sensitive
 import name.levis.talosmobile.ui.node.NodeDetailScreen
+import name.levis.talosmobile.ui.node.NodeMenuEntry
+import name.levis.talosmobile.ui.resources.ResourceDetailScreen
+import name.levis.talosmobile.ui.resources.ResourceListScreen
+import name.levis.talosmobile.ui.resources.ResourceRef
+import name.levis.talosmobile.ui.resources.ResourceTypesScreen
+import name.levis.talosmobile.ui.storage.StorageScreen
+import name.levis.talosmobile.ui.support.SupportBundleScreen
 import name.levis.talosmobile.ui.node.PowerAction
 import name.levis.talosmobile.ui.overview.NodeAction
 import name.levis.talosmobile.ui.overview.OverviewScreen
@@ -36,7 +50,29 @@ private object Routes {
     const val IMPORT = "import"
     const val OVERVIEW = "overview"
     const val NODE = "node?addr={addr}&host={host}&role={role}&tab={tab}&action={action}"
-    const val LOGS = "logs?addr={addr}&host={host}&service={service}"
+    const val LOGS = "logs?addr={addr}&host={host}&service={service}&container={container}&title={title}&subtitle={subtitle}"
+    const val STORAGE = "storage?addr={addr}&host={host}"
+    const val RESOURCES = "resources?addr={addr}&host={host}"
+    const val RESOURCE_LIST = "resourcelist?addr={addr}&host={host}&ns={ns}&type={type}&sensitive={sensitive}"
+    const val RESOURCE = "resource?addr={addr}&host={host}&ns={ns}&type={type}&id={id}&sensitive={sensitive}"
+    const val SUPPORT_BUNDLE = "supportbundle"
+    const val CHANGELOG = "changelog"
+
+    fun storage(addr: String, host: String) = "storage?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
+
+    fun resources(addr: String, host: String) = "resources?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
+
+    fun resourceList(addr: String, host: String, namespace: String, type: String, sensitive: Boolean) =
+        "resourcelist?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&ns=${Uri.encode(namespace)}&type=${Uri.encode(type)}&sensitive=$sensitive"
+
+    fun resource(addr: String, host: String, ref: ResourceRef, id: String) =
+        "resource?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&ns=${Uri.encode(ref.namespace)}&type=${Uri.encode(ref.type)}" +
+            "&id=${Uri.encode(id)}&sensitive=${ref.sensitive}"
+
+    /** The log of a CRI container: [title] its name, [subtitle] its "namespace/pod". */
+    fun containerLogs(addr: String, host: String, container: String, title: String, subtitle: String) =
+        "logs?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&container=${Uri.encode(container)}" +
+            "&title=${Uri.encode(title)}&subtitle=${Uri.encode(subtitle)}"
     const val ETCD = "etcd"
     const val KUBESPAN = "kubespan"
     const val DEBUG = "debug?addr={addr}&host={host}"
@@ -130,6 +166,8 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
                 onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
             )
+            // After an update: what changed since the build that ran before.
+            WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
         }
         composable(
             Routes.NODE,
@@ -142,9 +180,10 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
             ),
         ) { entry ->
             val addr = entry.arguments?.getString("addr").orEmpty()
+            val host = entry.arguments?.getString("host") ?: addr
             NodeDetailScreen(
                 node = addr,
-                hostname = entry.arguments?.getString("host") ?: addr,
+                hostname = host,
                 role = entry.arguments?.getString("role") ?: "unknown",
                 initialTab = entry.arguments?.getInt("tab") ?: 0,
                 initialAction = when (entry.arguments?.getString("action")) {
@@ -153,16 +192,28 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
                     else -> null
                 },
                 onBack = { nav.popBackStack() },
-                onLogs = { service -> nav.navigate(Routes.logs(addr, entry.arguments?.getString("host") ?: addr, service)) },
-                onDebugShell = { nav.navigate(Routes.debug(addr, entry.arguments?.getString("host") ?: addr)) },
-                onMachineConfig = { nav.navigate(Routes.machineConfig(addr, entry.arguments?.getString("host") ?: addr)) },
-                onEvents = { nav.navigate(Routes.events(addr, entry.arguments?.getString("host") ?: addr)) },
-                onNetwork = { nav.navigate(Routes.network(addr, entry.arguments?.getString("host") ?: addr)) },
-                onHardware = { nav.navigate(Routes.hardware(addr, entry.arguments?.getString("host") ?: addr)) },
-                onImages = { nav.navigate(Routes.images(addr, entry.arguments?.getString("host") ?: addr)) },
-                onCapture = { nav.navigate(Routes.capture(addr, entry.arguments?.getString("host") ?: addr)) },
-                onCaptures = { nav.navigate(Routes.CAPTURES) },
-                onUpgrade = { nav.navigate(Routes.upgrade(addr, entry.arguments?.getString("host") ?: addr)) },
+                onLogs = { service -> nav.navigate(Routes.logs(addr, host, service)) },
+                onContainerLogs = { c ->
+                    nav.navigate(Routes.containerLogs(addr, host, c.id, containerLogTitle(c), containerLogSubtitle(c)))
+                },
+                onMenu = { item ->
+                    nav.navigate(
+                        when (item) {
+                            NodeMenuEntry.KERNEL_LOG -> Routes.logs(addr, host, null)
+                            NodeMenuEntry.EVENTS -> Routes.events(addr, host)
+                            NodeMenuEntry.NETWORK -> Routes.network(addr, host)
+                            NodeMenuEntry.HARDWARE -> Routes.hardware(addr, host)
+                            NodeMenuEntry.IMAGES -> Routes.images(addr, host)
+                            NodeMenuEntry.STORAGE -> Routes.storage(addr, host)
+                            NodeMenuEntry.RESOURCES -> Routes.resources(addr, host)
+                            NodeMenuEntry.DEBUG_SHELL -> Routes.debug(addr, host)
+                            NodeMenuEntry.CAPTURE -> Routes.capture(addr, host)
+                            NodeMenuEntry.CAPTURES -> Routes.CAPTURES
+                            NodeMenuEntry.MACHINE_CONFIG -> Routes.machineConfig(addr, host)
+                            NodeMenuEntry.UPGRADE -> Routes.upgrade(addr, host)
+                        },
+                    )
+                },
             )
         }
         composable(
@@ -221,16 +272,64 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
                 navArgument("addr") { type = NavType.StringType },
                 navArgument("host") { type = NavType.StringType },
                 navArgument("service") { type = NavType.StringType; defaultValue = "" },
+                navArgument("container") { type = NavType.StringType; defaultValue = "" },
+                navArgument("title") { type = NavType.StringType; defaultValue = "" },
+                navArgument("subtitle") { type = NavType.StringType; defaultValue = "" },
             ),
         ) { entry ->
             val addr = entry.arguments?.getString("addr").orEmpty()
+            val container = entry.arguments?.getString("container").orEmpty()
             LogsScreen(
                 node = addr,
                 hostname = entry.arguments?.getString("host") ?: addr,
-                service = entry.arguments?.getString("service")?.takeIf { it.isNotEmpty() },
+                source = if (container.isEmpty()) {
+                    LogSource.Service(entry.arguments?.getString("service")?.takeIf { it.isNotEmpty() })
+                } else {
+                    LogSource.Container(
+                        id = container,
+                        title = entry.arguments?.getString("title").orEmpty().ifEmpty { container.take(12) },
+                        subtitle = entry.arguments?.getString("subtitle").orEmpty(),
+                    )
+                },
                 onBack = { nav.popBackStack() },
             )
         }
+        composable(Routes.STORAGE, arguments = nodeArguments()) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty()
+            StorageScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.RESOURCES, arguments = nodeArguments()) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty()
+            val host = entry.arguments?.getString("host") ?: addr
+            ResourceTypesScreen(
+                node = addr,
+                hostname = host,
+                onBack = { nav.popBackStack() },
+                onType = { nav.navigate(Routes.resourceList(addr, host, it.namespace, it.type, it.sensitive)) },
+            )
+        }
+        composable(Routes.RESOURCE_LIST, arguments = resourceArguments()) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty()
+            val host = entry.arguments?.getString("host") ?: addr
+            val ref = entry.resourceRef(addr)
+            ResourceListScreen(
+                ref = ref,
+                hostname = host,
+                onBack = { nav.popBackStack() },
+                // The item's own namespace when the list spans several.
+                onItem = { nav.navigate(Routes.resource(addr, host, ref.copy(namespace = it.namespace.ifEmpty { ref.namespace }), it.id)) },
+            )
+        }
+        composable(Routes.RESOURCE, arguments = resourceArguments() + navArgument("id") { type = NavType.StringType }) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty()
+            ResourceDetailScreen(
+                ref = entry.resourceRef(addr),
+                id = entry.arguments?.getString("id").orEmpty(),
+                onBack = { nav.popBackStack() },
+            )
+        }
+        composable(Routes.CHANGELOG) { ChangelogScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.SUPPORT_BUNDLE) { SupportBundleScreen(onBack = { nav.popBackStack() }) }
         composable(
             Routes.DEBUG,
             arguments = listOf(
@@ -267,6 +366,8 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
                 onBack = { nav.popBackStack() },
                 onReimport = { nav.navigate(Routes.IMPORT) },
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
+                onSupportBundle = { nav.navigate(Routes.SUPPORT_BUNDLE) },
+                onChangelog = { nav.navigate(Routes.CHANGELOG) },
                 onCleared = {
                     app.launchSync(runNow = true)
                     nav.resetTo(Routes.IMPORT)
@@ -280,6 +381,20 @@ fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = nu
 private fun nodeArguments() = listOf(
     navArgument("addr") { type = NavType.StringType },
     navArgument("host") { type = NavType.StringType },
+)
+
+/** The arguments of the resource browser's list and detail screens. */
+private fun resourceArguments() = nodeArguments() + listOf(
+    navArgument("ns") { type = NavType.StringType; defaultValue = "" },
+    navArgument("type") { type = NavType.StringType },
+    navArgument("sensitive") { type = NavType.BoolType; defaultValue = false },
+)
+
+private fun NavBackStackEntry.resourceRef(addr: String) = ResourceRef(
+    node = addr,
+    namespace = arguments?.getString("ns").orEmpty(),
+    type = arguments?.getString("type").orEmpty(),
+    sensitive = arguments?.getBoolean("sensitive") ?: false,
 )
 
 /** Navigates to [route] and drops everything else from the back stack. */

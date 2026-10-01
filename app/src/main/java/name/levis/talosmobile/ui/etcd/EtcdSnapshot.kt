@@ -50,6 +50,9 @@ import name.levis.talosmobile.TalosApp
 import name.levis.talosmobile.data.SnapshotEvent
 import name.levis.talosmobile.data.TalosRepository
 import name.levis.talosmobile.model.EtcdOverview
+import name.levis.talosmobile.model.VersionNotice
+import name.levis.talosmobile.ui.components.InfoNotice
+import name.levis.talosmobile.ui.components.text
 import name.levis.talosmobile.model.snapshotCandidates
 import name.levis.talosmobile.model.snapshotFileName
 import name.levis.talosmobile.security.AuthResult
@@ -259,7 +262,7 @@ private fun MemberPickerDialog(members: List<SnapshotTarget>, onPick: (SnapshotT
 }
 
 @Composable
-fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit, onDismiss: () -> Unit) {
+fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit, onDismiss: () -> Unit, notice: VersionNotice? = null) {
     val colors = LocalStatusColors.current
     val context = LocalContext.current
     Card(Modifier.fillMaxWidth()) {
@@ -272,7 +275,10 @@ fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    OutlinedButton(onClick = onSave, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.etcd_snapshot_save)) }
+                    OutlinedButton(onClick = onSave, enabled = notice == null, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.etcd_snapshot_save))
+                    }
+                    notice?.let { InfoNotice(it.text()) }
                 }
                 is SnapshotState.Running -> {
                     Text(

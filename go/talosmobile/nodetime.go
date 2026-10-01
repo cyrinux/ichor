@@ -36,7 +36,7 @@ func NodeTime(configYAML, contextName, node string) (out string, err error) {
 
 		resp, err := s.client.Time(withNode(ctx, node))
 		if err != nil {
-			return "", errors.New(friendlyError(err))
+			return "", errors.New(s.friendly(node, err))
 		}
 
 		return toJSON(mapNodeTime(node, first(resp.GetMessages())))

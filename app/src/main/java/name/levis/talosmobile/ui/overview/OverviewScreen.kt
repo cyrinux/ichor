@@ -56,6 +56,9 @@ import name.levis.talosmobile.data.activeSummary
 import name.levis.talosmobile.model.Feature
 import name.levis.talosmobile.model.accessLabel
 import name.levis.talosmobile.model.allows
+import name.levis.talosmobile.model.TalosFeature
+import name.levis.talosmobile.model.clusterSupport
+import name.levis.talosmobile.ui.components.rememberClusterFeatures
 import name.levis.talosmobile.update.UpdateState
 import name.levis.talosmobile.data.TalosRepository
 import name.levis.talosmobile.data.OVERVIEW
@@ -139,9 +142,18 @@ fun OverviewScreen(
                     if (config?.activeSummary?.allows(Feature.HEALTH) == true) {
                         IconButton(onClick = onHealth) { Icon(Icons.Outlined.Favorite, stringResource(R.string.overview_action_health)) }
                     }
-                    IconButton(onClick = onEvents) { Icon(Icons.Outlined.Timeline, stringResource(R.string.overview_action_events)) }
-                    IconButton(onClick = onKubeSpan) { Icon(Icons.Outlined.Hub, "KubeSpan") }
-                    IconButton(onClick = onEtcd) { Icon(Icons.Outlined.Storage, "etcd") }
+                    // Cluster-wide screens: only disabled when no reachable node's Talos has them.
+                    val reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node }
+                    val features = rememberClusterFeatures(reachable)
+                    IconButton(onClick = onEvents, enabled = clusterSupport(features, TalosFeature.EVENTS).supported) {
+                        Icon(Icons.Outlined.Timeline, stringResource(R.string.overview_action_events))
+                    }
+                    IconButton(onClick = onKubeSpan, enabled = clusterSupport(features, TalosFeature.KUBESPAN).supported) {
+                        Icon(Icons.Outlined.Hub, "KubeSpan")
+                    }
+                    IconButton(onClick = onEtcd, enabled = clusterSupport(features, TalosFeature.ETCD).supported) {
+                        Icon(Icons.Outlined.Storage, "etcd")
+                    }
                     IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, stringResource(R.string.overview_action_settings)) }
                 },
             )
@@ -153,6 +165,8 @@ fun OverviewScreen(
             is UiState.Loaded -> PullToRefreshBox(
                 isRefreshing = s.refreshing,
                 onRefresh = {
+                    // A node may have been upgraded since: ask again what each one supports.
+                    vm.talos.forgetFeatures()
                     vm.refresh()
                     timeVm.refresh()
                 },

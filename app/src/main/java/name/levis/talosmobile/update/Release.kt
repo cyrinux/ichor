@@ -2,6 +2,7 @@ package name.levis.talosmobile.update
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import name.levis.talosmobile.model.ChangelogRelease
 
 /** Subset of GitHub's "latest release" API response. */
 @Serializable
@@ -30,6 +31,8 @@ data class UpdateInfo(
     val apkUrl: String,
     val apkSize: Long,
     val sha256: String?,
+    /** Structured notes of the releases newer than this build; empty when not fetched. */
+    val changes: List<ChangelogRelease> = emptyList(),
 )
 
 /**

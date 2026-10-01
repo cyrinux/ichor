@@ -42,7 +42,7 @@ func NodeStats(configYAML, contextName, node string) (out string, err error) {
 
 		stat, err := mc.SystemStat(nodeCtx, empty)
 		if err != nil {
-			return "", errors.New(friendlyError(err))
+			return "", errors.New(s.friendly(node, err))
 		}
 
 		// The rest is best effort: a missing section just stays zero.

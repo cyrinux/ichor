@@ -66,6 +66,24 @@ struct SettingsView: View {
                 }
                 Button("Delete stored talosconfig", role: .destructive) { confirmDelete = true }
             }
+            if model.allows(.supportBundle) {
+                let support = model.clusterSupport(.supportBundle)
+                Section {
+                    NavigationLink(value: Route.supportBundle) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Create a support bundle…")
+                            if let notice = support.localizedNotice {
+                                Text(notice).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .disabled(!support.supported)
+                } header: {
+                    Text("Troubleshooting")
+                } footer: {
+                    Text("Collect logs and cluster details of the nodes into a zip, like talosctl support.")
+                }
+            }
             AboutSection()
         }
         .themedBackground()

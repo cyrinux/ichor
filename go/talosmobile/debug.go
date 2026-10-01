@@ -117,7 +117,7 @@ func (d *DebugSession) run(ctx context.Context, configYAML, contextName, node, i
 
 	imageName, err := pullImage(nodeCtx, s.client, image)
 	if err != nil {
-		d.exit(-1, "pull failed: "+friendlyError(err))
+		d.exit(-1, "pull failed: "+s.friendly(node, err))
 
 		return
 	}
@@ -127,7 +127,7 @@ func (d *DebugSession) run(ctx context.Context, configYAML, contextName, node, i
 	stream, err := s.client.DebugClient.ContainerRun(nodeCtx,
 		grpc.MaxCallRecvMsgSize(4*1024*1024), grpc.MaxCallSendMsgSize(4*1024*1024))
 	if err != nil {
-		d.exit(-1, friendlyError(err))
+		d.exit(-1, s.friendly(node, err))
 
 		return
 	}
@@ -142,7 +142,7 @@ func (d *DebugSession) run(ctx context.Context, configYAML, contextName, node, i
 		}},
 	})
 	if err != nil {
-		d.exit(-1, friendlyError(err))
+		d.exit(-1, s.friendly(node, err))
 
 		return
 	}

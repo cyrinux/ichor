@@ -51,7 +51,7 @@ struct LiveView: View {
 
     var body: some View {
         List {
-            if let error = stats.error { Text(error).font(.footnote).foregroundStyle(.red) }
+            if let error = stats.error { ErrorOrNoticeText(message: error) }
             if stats.points.isEmpty { Text("Collecting samples every 2s…").foregroundStyle(.secondary) }
             LiveChart(title: cpuTitle,
                       points: stats.points, series: [(String(localized: "CPU"), ChartPalette.first, \.cpuPercent)],

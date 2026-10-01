@@ -11,6 +11,7 @@ struct TalosdevMobileApp: App {
     init() {
         // Before any Talos call, including the background refresh task registered below.
         TalosClient.applyStoredPrivacyMask()
+        SupportBundleStore.removeStaleParts()
         BackgroundMonitor.register()
         BackgroundMonitor.registerCategories()
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
@@ -98,6 +99,11 @@ enum Route: Hashable {
     case nodeLive(NodeRef)
     case nodePower(NodeRef, PowerAction)
     case logs(node: String, hostname: String, service: String?)
+    /// Log of one Kubernetes container (from the Pods tab).
+    case containerLogs(node: String, hostname: String, container: LogContainer)
+    case supportBundle
+    /// The bundled release history.
+    case changelog
     case etcd
     case kubespan
     case health
@@ -130,6 +136,10 @@ struct MainNavigation: View {
                     case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
                     case .logs(let node, let hostname, let service):
                         LogsView(node: node, hostname: hostname, service: service)
+                    case .containerLogs(let node, let hostname, let container):
+                        LogsView(node: node, hostname: hostname, service: nil, container: container)
+                    case .supportBundle: SupportBundleView()
+                    case .changelog: ChangelogView()
                     case .etcd: EtcdView()
                     case .kubespan: KubeSpanView()
                     case .health: HealthView()

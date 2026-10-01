@@ -106,19 +106,19 @@ func NodeHardware(configYAML, contextName, node string) (out string, err error) 
 		}
 
 		if si, err := safe.StateGetByID[*hardware.SystemInformation](nodeCtx, st, hardware.SystemInformationID); err != nil {
-			out.Errors["system"] = friendlyError(err)
+			out.Errors["system"] = s.friendly(node, err)
 		} else {
 			out.System = mapSystemInfo(si.TypedSpec())
 		}
 
 		if cpus, err := safe.StateListAll[*hardware.Processor](nodeCtx, st); err != nil {
-			out.Errors["processors"] = friendlyError(err)
+			out.Errors["processors"] = s.friendly(node, err)
 		} else {
 			out.Processors = mapProcessors(safe.ToSlice(cpus, identity))
 		}
 
 		if mem, err := safe.StateListAll[*hardware.MemoryModule](nodeCtx, st); err != nil {
-			out.Errors["memory"] = friendlyError(err)
+			out.Errors["memory"] = s.friendly(node, err)
 		} else {
 			out.Memory = mapMemoryModules(safe.ToSlice(mem, identity))
 		}
@@ -129,17 +129,17 @@ func NodeHardware(configYAML, contextName, node string) (out string, err error) 
 			// Newer Talos versions dropped the Disks API in favor of the block.Disk resource.
 			out.Disks = mapBlockDisks(safe.ToSlice(cosiDisks, identity))
 		} else {
-			out.Errors["disks"] = friendlyError(err)
+			out.Errors["disks"] = s.friendly(node, err)
 		}
 
 		if exts, err := safe.StateListAll[*runtime.ExtensionStatus](nodeCtx, st); err != nil {
-			out.Errors["extensions"] = friendlyError(err)
+			out.Errors["extensions"] = s.friendly(node, err)
 		} else {
 			out.Extensions = mapExtensions(safe.ToSlice(exts, identity))
 		}
 
 		if sec, err := safe.StateGetByID[*runtime.SecurityState](nodeCtx, st, runtime.SecurityStateID); err != nil {
-			out.Errors["security"] = friendlyError(err)
+			out.Errors["security"] = s.friendly(node, err)
 		} else {
 			out.Security = mapSecurity(sec.TypedSpec())
 		}

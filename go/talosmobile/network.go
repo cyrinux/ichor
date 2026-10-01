@@ -75,7 +75,7 @@ func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
 		}
 
 		if links, err := safe.StateListAll[*network.LinkStatus](nodeCtx, st); err != nil {
-			out.Errors["links"] = friendlyError(err)
+			out.Errors["links"] = s.friendly(node, err)
 		} else {
 			out.Links = mapLinks(safe.ToSlice(links, identity))
 		}
@@ -83,19 +83,19 @@ func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
 		virtual := virtualLinkNames(out.Links)
 
 		if addrs, err := safe.StateListAll[*network.AddressStatus](nodeCtx, st); err != nil {
-			out.Errors["addresses"] = friendlyError(err)
+			out.Errors["addresses"] = s.friendly(node, err)
 		} else {
 			out.Addresses = mapAddresses(safe.ToSlice(addrs, identity), virtual)
 		}
 
 		if routes, err := safe.StateListAll[*network.RouteStatus](nodeCtx, st); err != nil {
-			out.Errors["routes"] = friendlyError(err)
+			out.Errors["routes"] = s.friendly(node, err)
 		} else {
 			out.Routes = mapRoutes(safe.ToSlice(routes, identity), virtual)
 		}
 
 		if res, err := safe.StateListAll[*network.ResolverStatus](nodeCtx, st); err != nil {
-			out.Errors["resolvers"] = friendlyError(err)
+			out.Errors["resolvers"] = s.friendly(node, err)
 		} else {
 			resolvers := safe.ToSlice(res, identity)
 			out.Resolvers = mapResolvers(resolvers)
@@ -103,7 +103,7 @@ func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
 		}
 
 		if ts, err := safe.StateListAll[*network.TimeServerStatus](nodeCtx, st); err != nil {
-			out.Errors["timeServers"] = friendlyError(err)
+			out.Errors["timeServers"] = s.friendly(node, err)
 		} else {
 			out.TimeServers = mapTimeServers(safe.ToSlice(ts, identity))
 		}

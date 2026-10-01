@@ -1,6 +1,6 @@
 // Command probe exercises the talosmobile API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]
 package main
 
 import (
@@ -8,7 +8,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"sync/atomic"
+	"time"
 
 	"github.com/cyrinux/talosdev-apk/go/talosmobile"
 )
@@ -49,6 +52,15 @@ func (p *snapshotProbe) OnDone(path string, size int64, sum, errMessage string) 
 	p.done <- fmt.Sprintf("done path=%q size=%d err=%q", path, size, errMessage)
 }
 
+// lineCounter counts followed log lines.
+type lineCounter struct {
+	lines atomic.Int64
+	done  chan string
+}
+
+func (l *lineCounter) OnLine(string)            { l.lines.Add(1) }
+func (l *lineCounter) OnDone(errMessage string) { l.done <- errMessage }
+
 func (p printer) OnProgress(node, message string) { fmt.Printf("[%s] %s\n", node, message) }
 func (p printer) OnDone(errMessage string)        { p.done <- errMessage }
 
@@ -61,7 +73,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases"))
+		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]"))
 	}
 
 	raw, err := os.ReadFile(*configPath)
@@ -151,6 +163,42 @@ func main() {
 		out, err = talosmobile.UpgradePlan(cfg, *contextName, flag.Arg(1))
 	case "talos-releases":
 		out, err = talosmobile.TalosReleases()
+	case "container-logs":
+		out, err = talosmobile.ContainerLogs(cfg, *contextName, flag.Arg(1), flag.Arg(2), 20)
+	case "container-follow":
+		// Follows for a few seconds and prints only how many lines came.
+		l := &lineCounter{done: make(chan string, 1)}
+		run := talosmobile.StartContainerLogFollow(cfg, *contextName, flag.Arg(1), flag.Arg(2), 10, l)
+
+		select {
+		case msg := <-l.done:
+			out = fmt.Sprintf("ended by itself after %d lines: %q", l.lines.Load(), msg)
+		case <-time.After(5 * time.Second):
+			run.Cancel()
+			out = fmt.Sprintf("%d lines in 5 s, then cancelled: %q", l.lines.Load(), <-l.done)
+		}
+	case "mounts":
+		out, err = talosmobile.NodeMounts(cfg, *contextName, flag.Arg(1))
+	case "volumes":
+		out, err = talosmobile.NodeVolumes(cfg, *contextName, flag.Arg(1))
+	case "usage":
+		depth, _ := strconv.Atoi(flag.Arg(3)) //nolint:errcheck
+		out, err = talosmobile.NodeDiskUsage(cfg, *contextName, flag.Arg(1), flag.Arg(2), depth)
+	case "resource-types":
+		out, err = talosmobile.ResourceTypes(cfg, *contextName, flag.Arg(1))
+	case "resource-list":
+		out, err = talosmobile.ResourceList(cfg, *contextName, flag.Arg(1), flag.Arg(3), flag.Arg(2))
+	case "resource-get":
+		out, err = talosmobile.ResourceGet(cfg, *contextName, flag.Arg(1), flag.Arg(4), flag.Arg(2), flag.Arg(3))
+	case "disk-health":
+		out, err = talosmobile.NodeDiskHealth(cfg, *contextName, flag.Arg(1))
+	case "features":
+		out, err = talosmobile.NodeFeatures(cfg, *contextName, flag.Arg(1))
+	case "etcd-member-plan":
+		// Read-only: never removes a member.
+		out, err = talosmobile.EtcdMemberPlan(cfg, *contextName, flag.Arg(1))
+	case "support-probe":
+		out = supportProbe(cfg, *contextName, flag.Arg(1))
 	case "health":
 		p := printer{done: make(chan string, 1)}
 		talosmobile.StartClusterHealth(cfg, *contextName, p)

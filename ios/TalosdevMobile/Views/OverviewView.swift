@@ -9,6 +9,9 @@ struct OverviewView: View {
     @Environment(SupportPrompt.self) private var support
     @State private var state: LoadState<ClusterOverview> = .loading
     @State private var update: TalosUpdateInfo?
+    /// Release notes to present after an app update.
+    @State private var whatsNew: WhatsNewContent?
+    @State private var openChangelog = false
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -112,6 +115,24 @@ struct OverviewView: View {
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
         .onChange(of: model.dataGeneration) { state = .loading }
+        // After an update (and the unlock: the overview is not shown before): what changed
+        // since the build launched last time. The build is remembered once the notes are closed.
+        .task {
+            let releases = ChangelogStore.pendingWhatsNew()
+            if !releases.isEmpty { whatsNew = WhatsNewContent(releases: releases) }
+        }
+        .sheet(item: $whatsNew, onDismiss: {
+            ChangelogStore.storeCurrentBuild()
+            if openChangelog {
+                openChangelog = false
+                path.append(.changelog)
+            }
+        }) { content in
+            WhatsNewSheet(content: content) {
+                openChangelog = true
+                whatsNew = nil
+            }
+        }
     }
 
     /// Address → hostname of the loaded nodes, for the events timeline.
@@ -141,6 +162,8 @@ struct OverviewView: View {
             let info = await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
             guard id == loadID else { return }
             update = info
+            // What each node's Talos version can do, cached per version: gates menus and screens.
+            await model.loadFeatures(of: overview.nodes)
         }
     }
 

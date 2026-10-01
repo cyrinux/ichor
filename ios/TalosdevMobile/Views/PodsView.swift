@@ -30,6 +30,7 @@ final class PodMonitor {
 /// two polls, memory as reported by the runtime.
 struct PodsView: View {
     let node: String
+    let hostname: String
     let monitor: PodMonitor
 
     @Environment(AppModel.self) private var model
@@ -40,9 +41,7 @@ struct PodsView: View {
         let shown = sortPods(filterPods(monitor.pods, query: query), by: sort)
         List {
             Section {
-                if let error = monitor.error {
-                    Text(error).font(.footnote).foregroundStyle(.red)
-                }
+                if let error = monitor.error { ErrorOrNoticeText(message: error) }
                 if let sample = monitor.sample {
                     LabeledContent("Pods", value: "\(monitor.pods.count)")
                     LabeledContent("Containers", value: "\(sample.containers.count)")
@@ -59,11 +58,16 @@ struct PodsView: View {
                 }
                 .pickerStyle(.segmented)
             } footer: {
-                Text("Refreshed every 3s. CPU is a percentage of one core.")
+                Text("Refreshed every 3s. CPU is a percentage of one core.") + Text(verbatim: " ") + Text("Tap a container to read its log.")
             }
             ForEach(shown) { pod in
                 Section {
-                    ForEach(pod.containers) { ContainerRowView(row: $0) }
+                    // A container row opens its log.
+                    ForEach(pod.containers) { row in
+                        NavigationLink(value: Route.containerLogs(node: node, hostname: hostname, container: logContainer(row.container))) {
+                            ContainerRowView(row: row)
+                        }
+                    }
                 } header: {
                     PodHeader(pod: pod)
                 }
@@ -87,6 +91,12 @@ struct PodsView: View {
             await monitor.poll(client, node: node)
         }
     }
+}
+
+/// "pod/container" for the log screen's title.
+private func logContainer(_ container: NodeContainer) -> LogContainer {
+    let name = container.name.isEmpty ? container.id : container.name
+    return LogContainer(id: container.id, name: container.pod.isEmpty ? name : "\(container.pod)/\(name)")
 }
 
 private struct PodHeader: View {

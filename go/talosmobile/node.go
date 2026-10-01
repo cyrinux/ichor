@@ -53,7 +53,7 @@ func NodeServices(configYAML, contextName, node string) (out string, err error) 
 
 		resp, err := s.client.ServiceList(client.WithNode(ctx, node))
 		if err != nil {
-			return "", errors.New(friendlyError(err))
+			return "", errors.New(s.friendly(node, err))
 		}
 
 		msgs := resp.GetMessages()

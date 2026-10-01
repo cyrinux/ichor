@@ -236,7 +236,7 @@ func gatherEtcdHealth(ctx context.Context, c *client.Client, via []string, node,
 	return h
 }
 
-func etcdMembers(ctx context.Context, c *client.Client, node string) ([]*machineapi.EtcdMember, error) {
+func etcdMembers(ctx context.Context, c etcdReader, node string) ([]*machineapi.EtcdMember, error) {
 	ctx, cancel := context.WithTimeout(ctx, etcdListTimeout)
 	defer cancel()
 
@@ -258,7 +258,7 @@ func memberAddress(m *machineapi.EtcdMember) string {
 	return ""
 }
 
-func memberHealthy(ctx context.Context, c *client.Client, addr string) bool {
+func memberHealthy(ctx context.Context, c etcdReader, addr string) bool {
 	resp, err := c.EtcdStatus(client.WithNode(ctx, addr))
 	if err != nil {
 		return false
@@ -325,6 +325,12 @@ func computePlan(in planInput) upgradePlan {
 	}
 
 	plan.Forceable = len(plan.Blockers) > 0 && len(plan.etcdBlockers) == len(plan.Blockers)
+
+	// Without the legacy upgrade API the node neither drains nor checks etcd: see requestUpgrade.
+	if t.version != "" && compareMinor(t.version, legacyUpgradeRemoved) >= 0 {
+		plan.Warnings = append(plan.Warnings, noDrainWarning+": its pods stop when it reboots")
+		plan.Forceable = false
+	}
 
 	return plan
 }

@@ -3,6 +3,7 @@ package talosmobile
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -23,6 +24,9 @@ type session struct {
 	client  *client.Client
 	context *clientconfig.Context
 	onClose func() // test hook
+
+	versions    sync.Map // node -> Talos version tag, see nodeVersion
+	definitions sync.Map // node -> *resourceTypes, see resourceDefinitions
 }
 
 func openSession(configYAML, contextName string) (*session, error) {

@@ -34,6 +34,8 @@ struct NodeDetailView: View {
     @State private var showingImages = false
     @State private var showingCapture = false
     @State private var showingUpgrade = false
+    @State private var showingStorage = false
+    @State private var showingResources = false
     /// Service start/stop/restart waiting for confirmation.
     @State private var serviceRequest: ServiceRequest?
 
@@ -74,66 +76,25 @@ struct NodeDetailView: View {
             case .live:
                 LiveView(node: ref.address, stats: live)
             case .processes:
-                ProcessesView(node: ref.address, monitor: processes)
+                FeatureGated(support: support(.processes)) {
+                    ProcessesView(node: ref.address, monitor: processes)
+                }
             case .pods:
-                PodsView(node: ref.address, monitor: pods)
+                FeatureGated(support: support(.containers)) {
+                    PodsView(node: ref.address, hostname: ref.hostname, monitor: pods)
+                }
             }
         }
         .navigationTitle(ref.hostname)
         .navigationBarTitleDisplayMode(.inline)
+        // What this node's Talos version can do: gates the menu and the tabs once known.
+        .task { await model.loadFeatures(node: ref.address) }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 if running {
                     ProgressView()
                 } else {
-                    Menu {
-                        // A NavigationLink inside a Menu does not navigate.
-                        Button { showingKernelLog = true } label: {
-                            Label("Kernel log", systemImage: "terminal")
-                        }
-                        Button { showingEvents = true } label: {
-                            Label("Events", systemImage: "list.bullet.rectangle")
-                        }
-                        Button { showingNetwork = true } label: {
-                            Label("Network", systemImage: "network")
-                        }
-                        Button { showingImages = true } label: {
-                            Label("Images", systemImage: "shippingbox")
-                        }
-                        Button { showingHardware = true } label: {
-                            Label("About this node", systemImage: "info.circle")
-                        }
-                        if model.allows(.debugShell) {
-                            // NavigationLink does not navigate from inside a Menu.
-                            Button { showingDebugShell = true } label: {
-                                Label("Debug shell", systemImage: "apple.terminal")
-                            }
-                        }
-                        if model.allows(.machineConfig) {
-                            Button { showingMachineConfig = true } label: {
-                                Label("Machine config", systemImage: "doc.text")
-                            }
-                        }
-                        if model.allows(.packetCapture) {
-                            Button { showingCapture = true } label: {
-                                Label("Capture packets", systemImage: "antenna.radiowaves.left.and.right")
-                            }
-                        }
-                        if model.allows(.upgrade) {
-                            Button { showingUpgrade = true } label: {
-                                Label("Upgrade Talos…", systemImage: "arrow.up.circle")
-                            }
-                        }
-                        // Power actions only exist for configs whose role allows them.
-                        if model.allows(.power) {
-                            Divider()
-                            ForEach(PowerAction.allCases) { action in
-                                Button(role: .destructive) { powerAction = action } label: {
-                                    Label(action.localizedTitle, systemImage: "power")
-                                }
-                            }
-                        }
-                    } label: {
+                    Menu { menuItems } label: {
                         Image(systemName: "ellipsis.circle")
                     }
                 }
@@ -165,6 +126,12 @@ struct NodeDetailView: View {
         }
         .navigationDestination(isPresented: $showingUpgrade) {
             UpgradeView(node: ref.address, hostname: ref.hostname)
+        }
+        .navigationDestination(isPresented: $showingStorage) {
+            StorageView(node: ref.address, hostname: ref.hostname)
+        }
+        .navigationDestination(isPresented: $showingResources) {
+            ResourceTypesView(node: ref.address, hostname: ref.hostname)
         }
         .sheet(item: $powerAction) { action in
             PowerSheet(action: action, hostname: ref.hostname, role: ref.role) { request in
@@ -229,6 +196,75 @@ struct NodeDetailView: View {
     }
 }
 
+extension NodeDetailView {
+    private func support(_ feature: NodeFeature) -> FeatureSupport {
+        model.support(feature, node: ref.address)
+    }
+
+    /// The node menu. Entries the role does not allow are hidden; entries this node's Talos
+    /// version lacks stay, disabled, saying which version they need. Buttons, since a
+    /// NavigationLink inside a Menu does not navigate.
+    @ViewBuilder
+    private var menuItems: some View {
+        Button { showingKernelLog = true } label: {
+            Label("Kernel log", systemImage: "terminal")
+        }
+        FeatureButton(title: String(localized: "Events"), systemImage: "list.bullet.rectangle", support: support(.events)) {
+            showingEvents = true
+        }
+        FeatureButton(title: String(localized: "Network"), systemImage: "network", support: support(.network)) {
+            showingNetwork = true
+        }
+        FeatureButton(title: String(localized: "Storage"), systemImage: "internaldrive", support: support(.mounts)) {
+            showingStorage = true
+        }
+        FeatureButton(title: String(localized: "Images"), systemImage: "shippingbox", support: support(.images)) {
+            showingImages = true
+        }
+        if model.allows(.resourceBrowser) {
+            FeatureButton(title: String(localized: "Resources browser"), systemImage: "square.stack.3d.up", support: support(.resourceBrowser)) {
+                showingResources = true
+            }
+        }
+        FeatureButton(title: String(localized: "About this node"), systemImage: "info.circle", support: support(.hardware)) {
+            showingHardware = true
+        }
+        // A Group: a view builder takes at most ten views.
+        Group {
+            if model.allows(.debugShell) {
+                FeatureButton(title: String(localized: "Debug shell"), systemImage: "apple.terminal", support: support(.debugShell)) {
+                    showingDebugShell = true
+                }
+            }
+            if model.allows(.machineConfig) {
+                FeatureButton(title: String(localized: "Machine config"), systemImage: "doc.text", support: support(.machineConfig)) {
+                    showingMachineConfig = true
+                }
+            }
+            if model.allows(.packetCapture) {
+                FeatureButton(title: String(localized: "Capture packets"), systemImage: "antenna.radiowaves.left.and.right",
+                              support: support(.packetCapture)) {
+                    showingCapture = true
+                }
+            }
+            if model.allows(.upgrade) {
+                FeatureButton(title: String(localized: "Upgrade Talos…"), systemImage: "arrow.up.circle", support: support(.upgrade)) {
+                    showingUpgrade = true
+                }
+            }
+        }
+        // Power actions only exist for configs whose role allows them.
+        if model.allows(.power) {
+            Divider()
+            ForEach(PowerAction.allCases) { action in
+                Button(role: .destructive) { powerAction = action } label: {
+                    Label(action.localizedTitle, systemImage: "power")
+                }
+            }
+        }
+    }
+}
+
 struct ServiceRequest: Identifiable {
     let service: String
     let action: ServiceAction
@@ -243,7 +279,7 @@ extension NodeDetailView {
             ServiceRow(service: svc)
         }
         .swipeActions(edge: .trailing) {
-            if model.allows(.serviceControl) && !running {
+            if model.allows(.serviceControl) && support(.serviceControl).supported && !running {
                 ForEach(serviceActions(state: svc.state)) { action in
                     Button { serviceRequest = ServiceRequest(service: svc.id, action: action) } label: {
                         Label(action.localizedTitle, systemImage: action.symbol)
@@ -255,10 +291,9 @@ extension NodeDetailView {
         .contextMenu {
             if model.allows(.serviceControl) && !running {
                 ForEach(serviceActions(state: svc.state)) { action in
-                    Button(role: action == .start ? nil : ButtonRole.destructive) {
+                    FeatureButton(title: action.localizedTitle, systemImage: action.symbol, support: support(.serviceControl),
+                                  role: action == .start ? nil : ButtonRole.destructive) {
                         serviceRequest = ServiceRequest(service: svc.id, action: action)
-                    } label: {
-                        Label(action.localizedTitle, systemImage: action.symbol)
                     }
                 }
             }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/siderolabs/talos/pkg/machinery/api/common"
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
+	"github.com/siderolabs/talos/pkg/machinery/client"
 )
 
 type imageInfo struct {
@@ -29,33 +30,71 @@ func NodeImages(configYAML, contextName, node string) (out string, err error) {
 			return "", err
 		}
 
-		stream, err := s.client.ImageList(withNode(ctx, node), common.ContainerdNamespace_NS_CRI) //nolint:staticcheck // the ImageService replacement is not in every supported Talos version
-		if err != nil {
-			return "", errors.New(friendlyError(err))
+		msgs, err := listImagesLegacy(withNode(ctx, node), s.client)
+		if isUnavailableAPI(err) {
+			// MachineService.ImageList is deprecated for the ImageService (Talos 1.13+) and will go.
+			msgs, err = listImagesService(withNode(ctx, node), s.client)
 		}
 
-		var msgs []*machineapi.ImageListResponse
-
-		for {
-			msg, err := stream.Recv()
-			if errors.Is(err, io.EOF) {
-				break
-			}
-
-			if err != nil {
-				return "", errors.New(friendlyError(err))
-			}
-
-			// The one-to-many proxy reports a node failure as metadata on a message.
-			if e := msg.GetMetadata().GetError(); e != "" {
-				return "", errors.New(e)
-			}
-
-			msgs = append(msgs, msg)
+		if err != nil {
+			return "", errors.New(s.friendly(node, err))
 		}
 
 		return toJSON(mapImages(msgs))
 	})
+}
+
+func listImagesLegacy(ctx context.Context, c *client.Client) ([]*machineapi.ImageListResponse, error) {
+	stream, err := c.ImageList(ctx, common.ContainerdNamespace_NS_CRI) //nolint:staticcheck // the ImageService replacement is not in every supported Talos version
+	if err != nil {
+		return nil, err
+	}
+
+	var msgs []*machineapi.ImageListResponse
+
+	for {
+		msg, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			return msgs, nil
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		// The one-to-many proxy reports a node failure as metadata on a message.
+		if e := msg.GetMetadata().GetError(); e != "" {
+			return nil, errors.New(e)
+		}
+
+		msgs = append(msgs, msg)
+	}
+}
+
+func listImagesService(ctx context.Context, c *client.Client) ([]*machineapi.ImageListResponse, error) {
+	stream, err := c.ImageClient.List(ctx, &machineapi.ImageServiceListRequest{
+		Containerd: &common.ContainerdInstance{Driver: common.ContainerDriver_CRI, Namespace: common.ContainerdNamespace_NS_CRI},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var msgs []*machineapi.ImageListResponse
+
+	for {
+		msg, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			return msgs, nil
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		msgs = append(msgs, &machineapi.ImageListResponse{
+			Name: msg.GetName(), Digest: msg.GetDigest(), Size: msg.GetSize(), CreatedAt: msg.GetCreatedAt(),
+		})
+	}
 }
 
 func mapImages(in []*machineapi.ImageListResponse) []imageInfo {

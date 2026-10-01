@@ -182,3 +182,7 @@ ios-build:
 # Capture the phone's current screen for the website and store (turn on screenshot mode first)
 screenshot name:
     scripts/screenshot.sh {{name}}
+
+# The release history as JSON, from the release tags and conventional commits
+changelog *args:
+    @scripts/changelog.py {{args}}

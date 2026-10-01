@@ -166,7 +166,7 @@ func runCapture(
 	})
 
 	if err != nil {
-		return captureResult{}, "", errors.New(friendlyError(err))
+		return captureResult{}, "", errors.New(s.friendly(node, err))
 	}
 
 	opts.match = match

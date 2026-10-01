@@ -15,7 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.outlined.Info
 import name.levis.talosmobile.R
+import name.levis.talosmobile.model.versionNotice
 import name.levis.talosmobile.ui.theme.LocalStatusColors
 
 /**
@@ -25,8 +27,11 @@ import name.levis.talosmobile.ui.theme.LocalStatusColors
 @Composable
 fun LiveIndicator(streaming: Boolean, error: String?, modifier: Modifier = Modifier) {
     val colors = LocalStatusColors.current
+    // "This Talos version cannot stream that" is information, not a failure.
+    val notice = error?.let(::versionNotice)
     val (icon, color, text) = when {
         streaming -> Triple(Icons.Outlined.Sensors, colors.ok, stringResource(R.string.common_live))
+        notice != null -> Triple(Icons.Outlined.Info, colors.muted, notice.text())
         error != null -> Triple(Icons.Outlined.ErrorOutline, colors.bad, stringResource(R.string.common_stream_failed, error))
         else -> Triple(Icons.Outlined.SensorsOff, colors.muted, stringResource(R.string.common_stream_stopped))
     }

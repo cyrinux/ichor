@@ -43,6 +43,11 @@ import name.levis.talosmobile.data.ConfigRepository
 import name.levis.talosmobile.data.TalosRepository
 import name.levis.talosmobile.data.activeSummary
 import name.levis.talosmobile.model.Feature
+import name.levis.talosmobile.model.TalosFeature
+import name.levis.talosmobile.model.notice
+import name.levis.talosmobile.ui.components.InfoNotice
+import name.levis.talosmobile.ui.components.rememberClusterSupport
+import name.levis.talosmobile.ui.components.text
 import name.levis.talosmobile.model.allows
 import name.levis.talosmobile.data.UiPreferences
 import name.levis.talosmobile.security.AppLock
@@ -61,6 +66,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onReimport: () -> Unit,
     onIssueConfig: () -> Unit,
+    onSupportBundle: () -> Unit,
+    onChangelog: () -> Unit,
     onCleared: () -> Unit,
 ) {
     val config by configs.config.collectAsStateWithLifecycle()
@@ -115,7 +122,11 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                OutlinedButton(onClick = onIssueConfig, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_issue_open)) }
+                val issue = rememberClusterSupport(TalosFeature.ISSUE_CONFIG)
+                OutlinedButton(onClick = onIssueConfig, enabled = issue.supported, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.settings_issue_open))
+                }
+                issue.notice?.let { InfoNotice(it.text()) }
             }
             configs.keyProtection()?.let {
                 InfoRow(stringResource(R.string.settings_encryption_key), stringResource(R.string.settings_encryption_value, stringResource(it.label)))
@@ -124,7 +135,21 @@ fun SettingsScreen(
             OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.settings_delete_config))
             }
-            AboutSection()
+            // `talosctl support` reads logs and resources of every chosen node (any role).
+            if (config?.activeSummary?.allows(Feature.SUPPORT_BUNDLE) == true) {
+                SectionTitle(stringResource(R.string.support_bundle_title))
+                Text(
+                    stringResource(R.string.settings_support_bundle_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                val support = rememberClusterSupport(TalosFeature.SUPPORT_BUNDLE)
+                OutlinedButton(onClick = onSupportBundle, enabled = support.supported, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.settings_support_bundle_open))
+                }
+                support.notice?.let { InfoNotice(it.text()) }
+            }
+            AboutSection(onChangelog)
         }
     }
 
