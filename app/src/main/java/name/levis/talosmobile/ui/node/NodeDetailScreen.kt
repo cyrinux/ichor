@@ -82,7 +82,13 @@ import androidx.compose.ui.platform.LocalContext
 import name.levis.talosmobile.TalosApp
 import name.levis.talosmobile.ui.live.LiveStatsTab
 import name.levis.talosmobile.data.activeSummary
+import name.levis.talosmobile.model.ContainerInfo
 import name.levis.talosmobile.model.Feature
+import name.levis.talosmobile.model.TalosFeature
+import name.levis.talosmobile.model.notice
+import name.levis.talosmobile.model.support
+import name.levis.talosmobile.ui.components.FeatureGate
+import name.levis.talosmobile.ui.components.rememberNodeFeatures
 import name.levis.talosmobile.model.allows
 import name.levis.talosmobile.security.AuthResult
 import name.levis.talosmobile.security.authenticate
@@ -112,15 +118,8 @@ fun NodeDetailScreen(
     initialTab: Int = 0,
     initialAction: PowerAction? = null,
     onLogs: (service: String?) -> Unit,
-    onDebugShell: () -> Unit,
-    onMachineConfig: () -> Unit,
-    onEvents: () -> Unit,
-    onNetwork: () -> Unit,
-    onHardware: () -> Unit,
-    onImages: () -> Unit,
-    onCapture: () -> Unit,
-    onCaptures: () -> Unit,
-    onUpgrade: () -> Unit,
+    onContainerLogs: (ContainerInfo) -> Unit,
+    onMenu: (NodeMenuEntry) -> Unit,
     power: PowerViewModel = viewModel(key = "power-$node", factory = factory { PowerViewModel(app.talosRepository, node) }),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(initialTab) }
@@ -140,11 +139,8 @@ fun NodeDetailScreen(
     val appLock = app.appLock
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val canPower = config?.activeSummary?.allows(Feature.POWER) ?: false
-    val canDebug = config?.activeSummary?.allows(Feature.DEBUG_SHELL) ?: false
-    val canMachineConfig = config?.activeSummary?.allows(Feature.MACHINE_CONFIG) ?: false
     val canControlServices = config?.activeSummary?.allows(Feature.SERVICE_CONTROL) ?: false
-    val canCapture = config?.activeSummary?.allows(Feature.PACKET_CAPTURE) ?: false
-    val canUpgrade = config?.activeSummary?.allows(Feature.UPGRADE) ?: false
+    val features = rememberNodeFeatures(node)
     // One upgrade at a time in the app: the entry stays open for the node being upgraded.
     val upgrading by app.upgradeManager.current.collectAsStateWithLifecycle()
     val upgradeBusyElsewhere = upgrading?.let { it.running && it.node != node } ?: false
@@ -156,20 +152,21 @@ fun NodeDetailScreen(
     val controlState by serviceControl.state.collectAsStateWithLifecycle()
     var confirmingService by remember { mutableStateOf<ServiceRequest?>(null) }
 
+    // dismiss() comes last: it changes the effect's key, which cancels whatever still runs here.
     LaunchedEffect(controlState) {
         when (val s = controlState) {
             is ServiceControlState.Done -> {
-                serviceControl.dismiss()
                 services.refresh()
-                // Talos applies the action asynchronously: look again once it had time to settle.
-                launch {
+                // Talos applies the action asynchronously: look again once it had time to settle
+                // (in the screen's scope, so another action does not cancel it).
+                scope.launch {
                     delay(SERVICE_SETTLE_MILLIS)
                     services.refresh()
                 }
                 snackbar.showSnackbar(context.getString(s.request.action.done, s.request.service, hostname))
+                serviceControl.dismiss()
             }
             is ServiceControlState.Failed -> {
-                serviceControl.dismiss()
                 snackbar.showSnackbar(
                     context.getString(
                         R.string.service_action_failed,
@@ -178,6 +175,7 @@ fun NodeDetailScreen(
                         s.message.resolve(context),
                     ),
                 )
+                serviceControl.dismiss()
             }
             else -> Unit
         }
@@ -251,95 +249,16 @@ fun NodeDetailScreen(
                     Box {
                         IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.common_more)) }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.node_menu_kernel_log)) },
-                                leadingIcon = { Icon(Icons.Outlined.Terminal, contentDescription = null) },
-                                onClick = {
+                            NodeMenuItems(
+                                summary = config?.activeSummary,
+                                features = features,
+                                // One upgrade at a time in the app.
+                                busy = if (upgradeBusyElsewhere) setOf(NodeMenuEntry.UPGRADE) else emptySet(),
+                                onPick = { entry ->
                                     menuOpen = false
-                                    onLogs(null)
+                                    onMenu(entry)
                                 },
                             )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.node_menu_events)) },
-                                leadingIcon = { Icon(Icons.Outlined.Timeline, contentDescription = null) },
-                                onClick = {
-                                    menuOpen = false
-                                    onEvents()
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.node_menu_network)) },
-                                leadingIcon = { Icon(Icons.Outlined.Lan, contentDescription = null) },
-                                onClick = {
-                                    menuOpen = false
-                                    onNetwork()
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.node_menu_hardware)) },
-                                leadingIcon = { Icon(Icons.Outlined.Memory, contentDescription = null) },
-                                onClick = {
-                                    menuOpen = false
-                                    onHardware()
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.node_menu_images)) },
-                                leadingIcon = { Icon(Icons.Outlined.Layers, contentDescription = null) },
-                                onClick = {
-                                    menuOpen = false
-                                    onImages()
-                                },
-                            )
-                            if (canDebug) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.node_menu_debug_shell)) },
-                                    leadingIcon = { Icon(Icons.Outlined.Terminal, contentDescription = null) },
-                                    onClick = {
-                                        menuOpen = false
-                                        onDebugShell()
-                                    },
-                                )
-                            }
-                            if (canCapture) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.node_menu_capture)) },
-                                    leadingIcon = { Icon(Icons.Outlined.NetworkCheck, contentDescription = null) },
-                                    onClick = {
-                                        menuOpen = false
-                                        onCapture()
-                                    },
-                                )
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.node_menu_captures)) },
-                                    leadingIcon = { Icon(Icons.Outlined.FolderOpen, contentDescription = null) },
-                                    onClick = {
-                                        menuOpen = false
-                                        onCaptures()
-                                    },
-                                )
-                            }
-                            if (canMachineConfig) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.node_menu_machine_config)) },
-                                    leadingIcon = { Icon(Icons.Outlined.Description, contentDescription = null) },
-                                    onClick = {
-                                        menuOpen = false
-                                        onMachineConfig()
-                                    },
-                                )
-                            }
-                            if (canUpgrade) {
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.node_menu_upgrade)) },
-                                    leadingIcon = { Icon(Icons.Outlined.SystemUpdateAlt, contentDescription = null) },
-                                    enabled = !upgradeBusyElsewhere,
-                                    onClick = {
-                                        menuOpen = false
-                                        onUpgrade()
-                                    },
-                                )
-                            }
                             // Power actions only exist for configs whose role allows them.
                             if (canPower) {
                                 HorizontalDivider()
@@ -366,8 +285,20 @@ fun NodeDetailScreen(
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.node_tab_services)) })
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.node_tab_resources)) })
                 Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.node_tab_live)) })
-                Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text(stringResource(R.string.node_tab_processes)) })
-                Tab(selected = tab == 4, onClick = { tab = 4 }, text = { Text(stringResource(R.string.node_tab_pods)) })
+                // Tabs this Talos version lacks stay reachable (dimmed): they say what they need.
+                val dimmed = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                Tab(
+                    selected = tab == 3,
+                    onClick = { tab = 3 },
+                    text = { Text(stringResource(R.string.node_tab_processes)) },
+                    unselectedContentColor = if (features.support(TalosFeature.PROCESSES).supported) MaterialTheme.colorScheme.onSurfaceVariant else dimmed,
+                )
+                Tab(
+                    selected = tab == 4,
+                    onClick = { tab = 4 },
+                    text = { Text(stringResource(R.string.node_tab_pods)) },
+                    unselectedContentColor = if (features.support(TalosFeature.CONTAINERS).supported) MaterialTheme.colorScheme.onSurfaceVariant else dimmed,
+                )
             }
             when (tab) {
                 0 -> ServicesTab(
@@ -375,12 +306,13 @@ fun NodeDetailScreen(
                     onService = { onLogs(it) },
                     onAction = if (canControlServices) ({ confirmingService = it }) else null,
                     busy = controlState is ServiceControlState.Running,
+                    actionsNotice = features.support(TalosFeature.SERVICE_CONTROL).notice,
                     vm = services,
                 )
                 1 -> ResourcesTab(node)
                 2 -> LiveStatsTab(node)
-                3 -> ProcessesTab(node)
-                else -> PodsTab(node)
+                3 -> FeatureGate(features.support(TalosFeature.PROCESSES)) { ProcessesTab(node) }
+                else -> FeatureGate(features.support(TalosFeature.CONTAINERS)) { PodsTab(node, onContainer = onContainerLogs) }
             }
         }
     }

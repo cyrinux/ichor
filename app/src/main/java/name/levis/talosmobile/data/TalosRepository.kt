@@ -27,7 +27,20 @@ import name.levis.talosmobile.model.ImageInfo
 import name.levis.talosmobile.model.NodeHardware
 import name.levis.talosmobile.model.NodeNetwork
 import name.levis.talosmobile.model.NodeTime
+import name.levis.talosmobile.model.DiskHealthReport
+import name.levis.talosmobile.model.DiskUsage
+import name.levis.talosmobile.model.EtcdForfeitResult
+import name.levis.talosmobile.model.EtcdMemberPlan
+import name.levis.talosmobile.model.MountList
+import name.levis.talosmobile.model.NodeFeatures
+import name.levis.talosmobile.model.ResourceDetail
+import name.levis.talosmobile.model.ResourceList
+import name.levis.talosmobile.model.ResourceType
+import name.levis.talosmobile.model.VolumeList
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -176,6 +189,29 @@ class TalosRepository(private val configs: ConfigRepository) {
         awaitClose { run.cancel() }
     }.buffer(Channel.UNLIMITED)
 
+    /** Like [followLogs] for one CRI container (`talosctl logs -k -f`). */
+    fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
+        val stored = configs.config.value ?: throw NoConfigException()
+        val run = Talosmobile.startContainerLogFollow(
+            stored.yaml,
+            stored.activeContext,
+            node,
+            containerId,
+            tailLines.toLong(),
+            object : LogListener {
+                override fun onLine(line: String) {
+                    trySend(StreamItem.Item(line))
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED)
+
     /**
      * The node's active machine config as YAML (os:admin). Secrets are masked unless
      * [revealSecrets]. Never cached: it may hold secrets.
@@ -241,6 +277,11 @@ class TalosRepository(private val configs: ConfigRepository) {
         val json = if (service == null) Talosmobile.kernelLogs(cfg, ctx, node, lines.toLong())
         else Talosmobile.serviceLogs(cfg, ctx, node, service, lines.toLong())
         decodeLogTail(TalosJson, json)
+    }
+
+    /** Last [lines] lines of a CRI container's log (`talosctl logs -k`). */
+    suspend fun containerLogs(node: String, containerId: String, lines: Int = 500): LogTail = call { cfg, ctx ->
+        decodeLogTail(TalosJson, Talosmobile.containerLogs(cfg, ctx, node, containerId, lines.toLong()))
     }
 
     /**
@@ -316,6 +357,87 @@ class TalosRepository(private val configs: ConfigRepository) {
         Talosmobile.generateTalosconfig(cfg, ctx, roles, ttlHours.toLong())
     }
 
+    /**
+     * What [node]'s Talos version supports. Cached: it only changes with an upgrade, and
+     * [invalidate] (or pull-to-refresh of the overview) drops it.
+     */
+    suspend fun features(node: String): NodeFeatures = cached<NodeFeatures>(featuresKey(node))?.value
+        ?: remember(featuresKey(node)) {
+            call { cfg, ctx -> TalosJson.decodeFromString(NodeFeatures.serializer(), Talosmobile.nodeFeatures(cfg, ctx, node)) }
+        }
+
+    /** [features] of each of [nodes], in parallel; nodes that do not answer are left out. */
+    suspend fun clusterFeatures(nodes: List<String>): List<NodeFeatures> = coroutineScope {
+        nodes.map { node -> async { runCatching { features(node) }.getOrNull() } }.awaitAll().filterNotNull()
+    }
+
+    /** Bumped by [forgetFeatures]; whoever shows features asks for them again. */
+    private val _featureChanges = MutableStateFlow(0)
+    val featureChanges: StateFlow<Int> = _featureChanges.asStateFlow()
+
+    /**
+     * Forgets the cached [features] of [node] (null: of every node), e.g. after an upgrade
+     * or when the overview is refreshed.
+     */
+    fun forgetFeatures(node: String? = null) {
+        if (node == null) {
+            cache.keys.removeAll { FEATURES_PREFIX in it }
+        } else {
+            cache.remove(scoped(featuresKey(node)))
+        }
+        _featureChanges.value++
+    }
+
+    /** Mounted filesystems with their usage, like `talosctl mounts`. */
+    suspend fun mounts(node: String): MountList = call { cfg, ctx ->
+        TalosJson.decodeFromString(MountList.serializer(), Talosmobile.nodeMounts(cfg, ctx, node))
+    }
+
+    /** Volume status (`talosctl get volumestatus`); [VolumeList.supported] false on older Talos. */
+    suspend fun volumes(node: String): VolumeList = call { cfg, ctx ->
+        TalosJson.decodeFromString(VolumeList.serializer(), Talosmobile.nodeVolumes(cfg, ctx, node))
+    }
+
+    /** `talosctl usage PATH -d DEPTH`. */
+    suspend fun diskUsage(node: String, path: String, depth: Int): DiskUsage = call { cfg, ctx ->
+        TalosJson.decodeFromString(DiskUsage.serializer(), Talosmobile.nodeDiskUsage(cfg, ctx, node, path, depth.toLong()))
+    }
+
+    /** SMART/NVMe health per disk; [DiskHealthReport.supported] false on older Talos. */
+    suspend fun diskHealth(node: String): DiskHealthReport = call { cfg, ctx ->
+        TalosJson.decodeFromString(DiskHealthReport.serializer(), Talosmobile.nodeDiskHealth(cfg, ctx, node))
+    }
+
+    /** `talosctl -n NODE etcd forfeit-leadership` (os:admin); [node] must be the leader. */
+    suspend fun etcdForfeitLeadership(node: String): EtcdForfeitResult = call { cfg, ctx ->
+        TalosJson.decodeFromString(EtcdForfeitResult.serializer(), Talosmobile.etcdForfeitLeadership(cfg, ctx, node))
+    }
+
+    /** `talosctl -n NODE etcd remove-member MEMBER` (os:admin), asked to another member's [node]. */
+    suspend fun etcdRemoveMember(node: String, memberId: String) = call { cfg, ctx ->
+        Talosmobile.etcdRemoveMember(cfg, ctx, node, memberId)
+    }
+
+    /** What removing [memberId] would leave (members, quorum) and what forbids it. Read-only. */
+    suspend fun etcdMemberPlan(memberId: String): EtcdMemberPlan = call { cfg, ctx ->
+        TalosJson.decodeFromString(EtcdMemberPlan.serializer(), Talosmobile.etcdMemberPlan(cfg, ctx, memberId))
+    }
+
+    /** Resource types the node knows (`talosctl get rd`). */
+    suspend fun resourceTypes(node: String): List<ResourceType> = remember(resourceTypesKey(node)) {
+        call { cfg, ctx -> TalosJson.decodeFromString(ListSerializer(ResourceType.serializer()), Talosmobile.resourceTypes(cfg, ctx, node)) }
+    }
+
+    /** `talosctl get TYPE -n NODE --namespace NAMESPACE` (never cached: may be sensitive). */
+    suspend fun resourceList(node: String, namespace: String, type: String): ResourceList = call { cfg, ctx ->
+        TalosJson.decodeFromString(ResourceList.serializer(), Talosmobile.resourceList(cfg, ctx, node, namespace, type))
+    }
+
+    /** `talosctl get TYPE ID -o yaml` (never cached: may hold secrets). */
+    suspend fun resourceGet(node: String, namespace: String, type: String, id: String): String = call { cfg, ctx ->
+        TalosJson.decodeFromString(ResourceDetail.serializer(), Talosmobile.resourceGet(cfg, ctx, node, namespace, type, id)).yaml
+    }
+
     private suspend fun <T> call(block: (config: String, context: String) -> T): T {
         val stored = configs.config.value ?: throw NoConfigException()
         return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) }
@@ -331,3 +453,7 @@ const val CLUSTER_TIME = "clustertime"
 fun networkKey(node: String) = "network|$node"
 fun hardwareKey(node: String) = "hardware|$node"
 fun imagesKey(node: String) = "images|$node"
+
+private const val FEATURES_PREFIX = "|features|"
+fun featuresKey(node: String) = "features|$node"
+fun resourceTypesKey(node: String) = "resourcetypes|$node"

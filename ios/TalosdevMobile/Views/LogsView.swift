@@ -17,13 +17,16 @@ final class LogFollower {
     private var pending: [String] = []
     private var nextID = 0
 
-    func run(_ client: TalosClient, node: String, service: String?) async {
+    /// Follows a Kubernetes container's log when `containerID` is set, else the service's (the
+    /// kernel log when `service` is nil).
+    func run(_ client: TalosClient, node: String, service: String?, containerID: String? = nil) async {
         document = LogDocument()
         pending = []
         error = nil
         active = true
         defer { active = false }
-        let stream = client.followLogs(node: node, service: service, tailLines: Self.tailLines)
+        let stream = containerID.map { client.followContainerLogs(node: node, containerID: $0, tailLines: Self.tailLines) }
+            ?? client.followLogs(node: node, service: service, tailLines: Self.tailLines)
         let interval = Self.flushMillis
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.consume(stream) }
@@ -70,12 +73,19 @@ struct LogDisplay {
     var raw = false
 }
 
-/// Last 500 lines of a service log, or the kernel log (dmesg) when `service` is nil; "Follow"
-/// streams new lines instead.
+/// A Kubernetes container whose log is shown: its CRI id and the name for the title.
+struct LogContainer: Hashable {
+    let id: String
+    let name: String
+}
+
+/// Last 500 lines of a service log, of a container's log, or the kernel log (dmesg) when
+/// both are nil; "Follow" streams new lines instead.
 struct LogsView: View {
     let node: String
     let hostname: String
     let service: String?
+    let container: LogContainer?
 
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<LogDocument> = .loading
@@ -83,10 +93,11 @@ struct LogsView: View {
     @State private var following = false
     @State private var follower = LogFollower()
 
-    init(node: String, hostname: String, service: String?) {
+    init(node: String, hostname: String, service: String?, container: LogContainer? = nil) {
         self.node = node
         self.hostname = hostname
         self.service = service
+        self.container = container
     }
 
     var body: some View {
@@ -100,7 +111,7 @@ struct LogsView: View {
             }
         }
         .searchable(text: $display.search, prompt: "Filter")
-        .navigationTitle(service ?? String(localized: "Kernel log"))
+        .navigationTitle(container?.name ?? service ?? String(localized: "Kernel log"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
@@ -124,7 +135,7 @@ struct LogsView: View {
         .task(id: following) {
             if following {
                 guard let client = model.client else { return }
-                await follower.run(client, node: node, service: service)
+                await follower.run(client, node: node, service: service, containerID: container?.id)
             } else {
                 await load()
             }
@@ -135,7 +146,12 @@ struct LogsView: View {
         guard let client = model.client else { return }
         state = .loading
         state = await .from {
-            let tail = try await client.logs(node: node, service: service)
+            let tail: LogTail
+            if let container {
+                tail = try await client.containerLogs(node: node, containerID: container.id)
+            } else {
+                tail = try await client.logs(node: node, service: service)
+            }
             return await Task.detached(priority: .userInitiated) { LogDocument(tail) }.value
         }
     }
@@ -237,9 +253,7 @@ private struct FollowList: View {
         let content = LogListContent(document, display)
         ScrollViewReader { proxy in
             List {
-                if let error = follower.error {
-                    Text(error).font(.footnote).foregroundStyle(.red)
-                }
+                if let error = follower.error { ErrorOrNoticeText(message: error) }
                 LogListRows(content: content, texts: document.texts, expanded: $expanded)
                 HStack(spacing: 8) {
                     if follower.active {

@@ -41,6 +41,12 @@ struct UpgradeView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadPlan() }
         .task { await loadReleases() }
+        // The node runs another Talos version now: what it can do is asked again.
+        .onChange(of: job.outcome) { _, outcome in
+            if case .succeeded? = outcome, let target = job.target {
+                Task { await model.reloadFeatures(node: target.node) }
+            }
+        }
         .task(id: [version, loadedPlan?.currentImage ?? ""]) { await computeImage() }
     }
 

@@ -39,7 +39,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.talosmobile.R
 import name.levis.talosmobile.model.ServiceAction
+import name.levis.talosmobile.model.FeatureSupport
 import name.levis.talosmobile.model.ServiceInfo
+import name.levis.talosmobile.model.VersionNotice
+import name.levis.talosmobile.ui.components.FeatureMenuItem
 import name.levis.talosmobile.model.offeredActions
 import name.levis.talosmobile.ui.UiState
 import name.levis.talosmobile.ui.app
@@ -58,6 +61,7 @@ fun ServicesTab(
     onService: (String) -> Unit,
     onAction: ((ServiceRequest) -> Unit)?,
     busy: Boolean,
+    actionsNotice: VersionNotice? = null,
     vm: ServicesViewModel = viewModel(key = "services-$node", factory = factory { ServicesViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -75,6 +79,7 @@ fun ServicesTab(
                             onClick = { onService(svc.id) },
                             actions = if (onAction == null || busy) emptyList() else svc.offeredActions(),
                             onAction = { action -> onAction?.invoke(ServiceRequest(svc.id, action)) },
+                            actionsNotice = actionsNotice,
                         )
                     }
                 }
@@ -92,7 +97,13 @@ private val ServiceAction.icon
     }
 
 @Composable
-private fun ServiceRow(svc: ServiceInfo, onClick: () -> Unit, actions: List<ServiceAction>, onAction: (ServiceAction) -> Unit) {
+private fun ServiceRow(
+    svc: ServiceInfo,
+    onClick: () -> Unit,
+    actions: List<ServiceAction>,
+    onAction: (ServiceAction) -> Unit,
+    actionsNotice: VersionNotice?,
+) {
     val colors = LocalStatusColors.current
     var menuOpen by remember { mutableStateOf(false) }
     Card(
@@ -122,9 +133,10 @@ private fun ServiceRow(svc: ServiceInfo, onClick: () -> Unit, actions: List<Serv
                         }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             actions.forEach { action ->
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(action.label)) },
-                                    leadingIcon = { Icon(action.icon, contentDescription = null) },
+                                FeatureMenuItem(
+                                    label = stringResource(action.label),
+                                    icon = action.icon,
+                                    support = FeatureSupport(supported = actionsNotice == null, minVersion = actionsNotice?.minVersion.orEmpty()),
                                     onClick = {
                                         menuOpen = false
                                         onAction(action)

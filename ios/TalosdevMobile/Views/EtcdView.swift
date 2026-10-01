@@ -11,12 +11,16 @@ struct EtcdView: View {
     @State private var confirmDisarm = false
     @State private var disarming = false
     @State private var alarmMessage: String?
+    @State private var forfeit: EtcdNodeStatus?
+    @State private var removing: EtcdMember?
+    @State private var memberBusy = false
+    @State private var memberMessage: String?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { etcd in
             let hostnames = Dictionary(etcd.members.map { ($0.id, $0.hostname) }, uniquingKeysWith: { first, _ in first })
             List {
-                if let error = etcd.error { Text(error).foregroundStyle(.red) }
+                if let error = etcd.error { ErrorOrNoticeText(message: error) }
                 if model.allows(.etcdDefrag) {
                     let order = defragOrder(etcd.statuses)
                     let reclaimable = order.reduce(Int64(0)) { $0 + $1.reclaimable }
@@ -52,6 +56,11 @@ struct EtcdView: View {
                         }
                     }
                 }
+                if model.allows(.etcdMemberActions) {
+                    EtcdMemberActionsSection(etcd: etcd, support: model.clusterSupport(.etcdMemberActions),
+                                             busy: memberBusy, message: memberMessage,
+                                             onForfeit: { forfeit = $0 }, onRemove: { removing = $0 })
+                }
                 Section("Members (\(etcd.members.count))") {
                     ForEach(etcd.statuses) { status in
                         MemberStatusRow(status: status, hostname: hostnames[status.memberId] ?? status.node)
@@ -72,6 +81,23 @@ struct EtcdView: View {
             Button("Disarm alarms", role: .destructive) { Task { await disarm() } }
         } message: {
             Text("Disarming does not fix the cause. For a NOSPACE alarm, free disk space and defragment first, or the alarm comes back. Once disarmed, etcd accepts writes again.")
+        }
+        .confirmationDialog(Text("Forfeit leadership?"),
+                            isPresented: Binding(get: { forfeit != nil }, set: { if !$0 { forfeit = nil } }),
+                            titleVisibility: .visible, presenting: forfeit) { leader in
+            Button("Forfeit leadership", role: .destructive) { Task { await forfeitLeadership(leader) } }
+        } message: { leader in
+            Text("\(memberName(leader)) gives up etcd leadership and another member is elected. Writes pause briefly during the election.")
+        }
+        .sheet(item: $removing) { member in
+            if let client = model.client, case .loaded(let etcd, _) = state {
+                EtcdRemoveMemberSheet(member: member, throughNode: etcdRemovalNode(memberId: member.id, statuses: etcd.statuses),
+                                      client: client, lockEnabled: model.lock.enabled) { name in
+                    removing = nil
+                    memberMessage = String(localized: "\(name) was removed from etcd")
+                    Task { await load() }
+                }
+            }
         }
         .fileMover(isPresented: Binding(get: { snapshot.moving }, set: { snapshot.moving = $0 }), file: snapshot.file,
                    onCompletion: { snapshot.moved($0) }, onCancellation: { snapshot.moveCancelled() })
@@ -125,6 +151,38 @@ struct EtcdView: View {
     private func load() async {
         guard let client = model.client else { return }
         state = await .from { try await client.etcd() }
+        // Which Talos versions the members run decides whether the member actions exist.
+        if model.allows(.etcdMemberActions), case .loaded(let etcd, _) = state {
+            for status in etcd.statuses where status.error == nil { await model.loadFeatures(node: status.node) }
+        }
+    }
+
+    /// The hostname of a status' member, its node address when the member list does not have it.
+    private func memberName(_ status: EtcdNodeStatus) -> String {
+        guard case .loaded(let etcd, _) = state,
+              let member = etcd.members.first(where: { $0.id == status.memberId }), !member.hostname.isEmpty else { return status.node }
+        return member.hostname
+    }
+
+    /// Face ID first when the lock is on, then the leader steps down and the list reloads.
+    private func forfeitLeadership(_ leader: EtcdNodeStatus) async {
+        guard let client = model.client else { return }
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Forfeit etcd leadership")) {
+            memberMessage = failure
+            return
+        }
+        memberBusy = true
+        defer { memberBusy = false }
+        do {
+            let result = try await client.etcdForfeitLeadership(node: leader.node)
+            // No new leader named: the node was not the leader (any more) and nothing changed.
+            memberMessage = result.member.isEmpty
+                ? String(localized: "\(memberName(leader)) was not the leader; nothing changed")
+                : String(localized: "\(memberName(leader)) gave up leadership")
+        } catch {
+            memberMessage = error.localizedDescription
+        }
+        await load()
     }
 
     /// Alarms are cluster-wide; any reachable member can disarm them.

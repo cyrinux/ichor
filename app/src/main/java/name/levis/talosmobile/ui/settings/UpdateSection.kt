@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.talosmobile.BuildConfig
+import name.levis.talosmobile.ui.changelog.ReleaseNotesList
 import name.levis.talosmobile.ui.components.SectionTitle
 import name.levis.talosmobile.ui.theme.LocalStatusColors
 import name.levis.talosmobile.update.UpdateInfo
@@ -65,7 +66,9 @@ fun UpdateSection(updates: UpdateManager) {
                 UpdateState.UpToDate -> Text(stringResource(R.string.update_up_to_date, BuildConfig.VERSION_NAME))
                 is UpdateState.Available -> {
                     Text(stringResource(R.string.update_available, s.info.version, formatBytes(s.info.apkSize)), style = MaterialTheme.typography.titleSmall)
-                    if (s.info.notes.isNotBlank()) {
+                    if (s.info.changes.isNotEmpty()) {
+                        ReleaseNotesList(s.info.changes)
+                    } else if (s.info.notes.isNotBlank()) {
                         Text(s.info.notes.lines().take(8).joinToString("\n"), style = MaterialTheme.typography.bodySmall)
                     }
                     if (updates.canInstall) {

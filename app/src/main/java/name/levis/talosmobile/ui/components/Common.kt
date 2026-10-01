@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import name.levis.talosmobile.model.NodeHealth
+import name.levis.talosmobile.model.versionNotice
 import name.levis.talosmobile.ui.theme.LocalStatusColors
 
 @Composable
@@ -45,6 +46,13 @@ fun LoadingBox(modifier: Modifier = Modifier) {
 
 @Composable
 fun ErrorBox(message: UiText, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+    val text = message.asString()
+    // "This node's Talos version cannot do that" is information, not a failure. Retry stays:
+    // a node that is still booting may answer the same before its API is complete.
+    versionNotice(text)?.let {
+        InfoBox(it.text(), modifier, onRetry)
+        return
+    }
     Column(
         modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.Center,
@@ -57,7 +65,7 @@ fun ErrorBox(message: UiText, onRetry: () -> Unit, modifier: Modifier = Modifier
             modifier = Modifier.size(40.dp),
         )
         Spacer(Modifier.height(12.dp))
-        Text(message.asString(), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium)
+        Text(text, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(16.dp))
         Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
     }
@@ -114,11 +122,11 @@ fun InfoRow(label: String, value: String, mono: Boolean = false) {
 
 /** Usage bar coloured by how full it is. */
 @Composable
-fun UsageBar(fraction: Float, modifier: Modifier = Modifier) {
+fun UsageBar(fraction: Float, modifier: Modifier = Modifier, warnAt: Float = 0.75f) {
     val colors = LocalStatusColors.current
     val color = when {
         fraction >= 0.9f -> colors.bad
-        fraction >= 0.75f -> colors.warn
+        fraction >= warnAt -> colors.warn
         else -> colors.ok
     }
     LinearProgressIndicator(

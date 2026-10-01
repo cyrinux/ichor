@@ -74,6 +74,8 @@ func ClusterOverview(configYAML, contextName string) (out string, err error) {
 			wg.Go(func() {
 				p := probeNode(ctx, s.client, node)
 				result.Nodes[i], domains[i] = buildNodeOverview(node, p), p.domain
+
+				s.rememberVersion(node, result.Nodes[i].Version)
 			})
 		}
 

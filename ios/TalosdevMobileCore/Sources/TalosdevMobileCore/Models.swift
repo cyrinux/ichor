@@ -176,6 +176,7 @@ public struct LogTail: Decodable, Equatable, Sendable {
 /// Features gated by Talos RBAC (rules from Talos v1.14 machined.go).
 public enum Feature: CaseIterable, Sendable {
     case power, health, kubeconfig, debugShell, etcdDefrag, machineConfig, etcdSnapshot, serviceControl, issueConfig, packetCapture, upgrade
+    case etcdMemberActions, resourceBrowser, supportBundle
 
     public var label: String {
         switch self {
@@ -190,6 +191,9 @@ public enum Feature: CaseIterable, Sendable {
         case .issueConfig: "Issue talosconfig"
         case .packetCapture: "Packet capture"
         case .upgrade: "Talos upgrade"
+        case .etcdMemberActions: "etcd member actions"
+        case .resourceBrowser: "Resources browser"
+        case .supportBundle: "Support bundle"
         }
     }
 
@@ -201,13 +205,22 @@ public enum Feature: CaseIterable, Sendable {
         // The machine config holds the cluster secrets (CA keys, tokens).
         // Issuing a client certificate (GenerateClientConfiguration) is admin-only.
         // MachineService/Upgrade is admin-only.
-        case .health, .kubeconfig, .debugShell, .machineConfig, .issueConfig, .upgrade: ["os:admin"]
+        // Forfeiting leadership and removing a member (EtcdForfeitLeadership, EtcdRemoveMemberByID)
+        // are admin-only.
+        case .health, .kubeconfig, .debugShell, .machineConfig, .issueConfig, .upgrade, .etcdMemberActions: ["os:admin"]
+        // Reading resources (COSI state) is open to every role; Talos itself filters what a
+        // reader may see of the sensitive ones. A support bundle too: the parts the role cannot
+        // read (machine config: os:admin, etcd status: os:operator) are left out and noted in it.
+        case .resourceBrowser, .supportBundle: ["os:admin", "os:operator", "os:reader"]
         // A snapshot holds every Kubernetes Secret; Talos has a dedicated role for it.
         case .etcdSnapshot: ["os:admin", "os:operator", "os:etcd:backup"]
         }
     }
 
-    public var minimumRole: String { roles.contains("os:operator") ? "os:operator" : "os:admin" }
+    public var minimumRole: String {
+        if roles.contains("os:reader") { return "os:reader" }
+        return roles.contains("os:operator") ? "os:operator" : "os:admin"
+    }
 }
 
 public extension ContextSummary {

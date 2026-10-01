@@ -5,6 +5,8 @@ import name.levis.talosmobile.i18n.AppLocale
 import name.levis.talosmobile.R
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,8 +60,13 @@ class ClusterWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val snapshot = (context.applicationContext as TalosApp).monitorStore.snapshot()
-        provideContent { WidgetContent(snapshot, System.currentTimeMillis()) }
+        val store = (context.applicationContext as TalosApp).monitorStore
+        // Read in the composition: provideGlance is not run again while a session is alive,
+        // so a snapshot captured here would hide the one saved seconds after the widget is placed.
+        provideContent {
+            val snapshot by store.snapshotState.collectAsState()
+            WidgetContent(snapshot, System.currentTimeMillis())
+        }
     }
 }
 

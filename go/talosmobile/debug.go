@@ -50,7 +50,7 @@ func StartDebugShell(configYAML, contextName, node, image, args string, cols, ro
 
 	ctx, cancel := context.WithCancel(context.Background())
 	d := &DebugSession{
-		listener: listener,
+		listener: maskedDebugListener{listener},
 		send:     make(chan *machineapi.DebugContainerRunRequest, 256),
 		cancel:   cancel,
 	}
@@ -112,11 +112,12 @@ func (d *DebugSession) run(ctx context.Context, configYAML, contextName, node, i
 
 	nodeCtx := client.WithNode(ctx, node)
 
-	d.listener.OnStatus("Pulling " + image + " on " + node + "…")
+	// Masked here: the scanner leaves an address glued to the ellipsis alone.
+	d.listener.OnStatus("Pulling " + image + " on " + privacy.maskPlain(node) + "…")
 
 	imageName, err := pullImage(nodeCtx, s.client, image)
 	if err != nil {
-		d.exit(-1, "pull failed: "+friendlyError(err))
+		d.exit(-1, "pull failed: "+s.friendly(node, err))
 
 		return
 	}
@@ -126,7 +127,7 @@ func (d *DebugSession) run(ctx context.Context, configYAML, contextName, node, i
 	stream, err := s.client.DebugClient.ContainerRun(nodeCtx,
 		grpc.MaxCallRecvMsgSize(4*1024*1024), grpc.MaxCallSendMsgSize(4*1024*1024))
 	if err != nil {
-		d.exit(-1, friendlyError(err))
+		d.exit(-1, s.friendly(node, err))
 
 		return
 	}
@@ -141,7 +142,7 @@ func (d *DebugSession) run(ctx context.Context, configYAML, contextName, node, i
 		}},
 	})
 	if err != nil {
-		d.exit(-1, friendlyError(err))
+		d.exit(-1, s.friendly(node, err))
 
 		return
 	}
@@ -228,6 +229,18 @@ func pullImage(ctx context.Context, c *client.Client, ref string) (string, error
 			name = n
 		}
 	}
+}
+
+// maskedDebugListener masks the status and exit messages, which may name the real node.
+// The terminal bytes pass through unmasked (see StartDebugShell).
+type maskedDebugListener struct{ DebugListener }
+
+func (l maskedDebugListener) OnStatus(message string) {
+	l.DebugListener.OnStatus(privacy.maskPlain(message))
+}
+
+func (l maskedDebugListener) OnExit(code int, errMessage string) {
+	l.DebugListener.OnExit(code, privacy.maskPlain(errMessage))
 }
 
 func debugArgs(args string) []string {

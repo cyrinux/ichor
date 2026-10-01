@@ -19,6 +19,9 @@ extension Feature {
         case .issueConfig: String(localized: "Issue talosconfig")
         case .packetCapture: String(localized: "Packet capture")
         case .upgrade: String(localized: "Talos upgrade")
+        case .etcdMemberActions: String(localized: "etcd member actions")
+        case .resourceBrowser: String(localized: "Resources browser")
+        case .supportBundle: String(localized: "Support bundle")
         }
     }
 }
@@ -137,6 +140,19 @@ extension ConnectionFilter {
         switch self {
         case .listening: String(localized: "Listening")
         case .all: String(localized: "All")
+        }
+    }
+}
+
+extension ChangelogSection {
+    /// The heading of a known kind in the user's language; an unknown kind keeps its JSON title.
+    var localizedTitle: String {
+        switch knownKind {
+        case .new?: String(localized: "New")
+        case .fixed?: String(localized: "Fixed")
+        case .faster?: String(localized: "Faster")
+        case .breaking?: String(localized: "Breaking changes")
+        case nil: englishTitle
         }
     }
 }

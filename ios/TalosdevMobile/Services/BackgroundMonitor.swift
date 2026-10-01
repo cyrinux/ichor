@@ -123,10 +123,11 @@ enum BackgroundMonitor {
     }
 
     /// Registers the "private" category: its previews stay hidden until the device is unlocked.
+    /// The title is hidden with the body (no `.hiddenPreviewsShowTitle`): it names the node.
     static func registerCategories() {
         let category = UNNotificationCategory(identifier: "private", actions: [], intentIdentifiers: [],
                                               hiddenPreviewsBodyPlaceholder: String(localized: "Talos cluster alert"),
-                                              options: [.hiddenPreviewsShowTitle])
+                                              options: [])
         UNUserNotificationCenter.current().setNotificationCategories([category])
     }
 }

@@ -40,6 +40,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import name.levis.talosmobile.model.NodeOverview
+import name.levis.talosmobile.model.TalosFeature
+import name.levis.talosmobile.model.notice
+import name.levis.talosmobile.model.support
+import name.levis.talosmobile.ui.components.rememberNodeFeatures
+import name.levis.talosmobile.ui.components.text
 import name.levis.talosmobile.ui.theme.LocalStatusColors
 
 /** What a node row can lead to; destructive ones only ever open their confirmation. */
@@ -103,6 +108,7 @@ fun NodeActionsSheet(
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
+    val shell = rememberNodeFeatures(node.node).support(TalosFeature.DEBUG_SHELL).notice
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(bottom = 24.dp)) {
             Text(
@@ -118,7 +124,9 @@ fun NodeActionsSheet(
                 Item(Icons.Outlined.ShowChart, stringResource(R.string.overview_action_live_graphs)) { pick(NodeAction.LIVE) }
                 Item(Icons.Outlined.ListAlt, stringResource(R.string.overview_action_services_logs)) { pick(NodeAction.SERVICES) }
                 Item(Icons.Outlined.Terminal, stringResource(R.string.overview_action_kernel_log)) { pick(NodeAction.KERNEL_LOG) }
-                if (canShell) Item(Icons.Outlined.Terminal, stringResource(R.string.overview_action_debug_shell)) { pick(NodeAction.SHELL) }
+                if (canShell) {
+                    Item(Icons.Outlined.Terminal, stringResource(R.string.overview_action_debug_shell), disabled = shell?.text()) { pick(NodeAction.SHELL) }
+                }
                 if (canPower) {
                     Item(Icons.Outlined.PowerSettingsNew, stringResource(R.string.overview_action_reboot), danger = true) { pick(NodeAction.REBOOT) }
                     Item(Icons.Outlined.PowerSettingsNew, stringResource(R.string.overview_action_shutdown), danger = true) { pick(NodeAction.SHUTDOWN) }
@@ -140,12 +148,18 @@ fun NodeActionsSheet(
 }
 
 @Composable
-private fun Item(icon: ImageVector, label: String, danger: Boolean = false, onClick: () -> Unit) {
-    val color = if (danger) LocalStatusColors.current.bad else MaterialTheme.colorScheme.onSurface
+private fun Item(icon: ImageVector, label: String, danger: Boolean = false, disabled: String? = null, onClick: () -> Unit) {
+    val color = when {
+        disabled != null -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+        danger -> LocalStatusColors.current.bad
+        else -> MaterialTheme.colorScheme.onSurface
+    }
     ListItem(
         headlineContent = { Text(label, color = color) },
+        // [disabled]: why the action is unavailable (e.g. "Needs Talos v1.x or newer").
+        supportingContent = disabled?.let { { Text(it) } },
         leadingContent = { Icon(icon, contentDescription = null, tint = color) },
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().clickable(enabled = disabled == null, onClick = onClick),
     )
 }
 

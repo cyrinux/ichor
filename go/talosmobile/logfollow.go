@@ -37,13 +37,36 @@ func StartLogFollow(configYAML, contextName, node, service string, tailLines int
 	go func() {
 		defer cancel()
 
-		listener.OnDone(followLog(ctx, configYAML, contextName, node, strings.TrimSpace(service), clampTail(tailLines), listener))
+		listener.OnDone(followLog(ctx, configYAML, contextName, node, serviceLogOpener(strings.TrimSpace(service), clampTail(tailLines)), listener))
 	}()
 
 	return &LogRun{cancel: cancel}
 }
 
-func followLog(ctx context.Context, configYAML, contextName, node, service string, tail int, listener LogListener) string {
+// logOpener opens a log stream on node (already set in ctx).
+type logOpener func(ctx context.Context, s *session) (func() (*common.Data, error), error)
+
+func serviceLogOpener(service string, tail int) logOpener {
+	return func(ctx context.Context, s *session) (func() (*common.Data, error), error) {
+		if service == "" {
+			stream, err := s.client.Dmesg(ctx, true, true)
+			if err != nil {
+				return nil, err
+			}
+
+			return stream.Recv, nil
+		}
+
+		stream, err := s.client.Logs(ctx, constants.SystemContainerdNamespace, common.ContainerDriver_CONTAINERD, service, true, int32(tail))
+		if err != nil {
+			return nil, err
+		}
+
+		return stream.Recv, nil
+	}
+}
+
+func followLog(ctx context.Context, configYAML, contextName, node string, open logOpener, listener LogListener) string {
 	s, release, err := sessions.acquire(configYAML, contextName)
 	if err != nil {
 		return err.Error()
@@ -51,24 +74,9 @@ func followLog(ctx context.Context, configYAML, contextName, node, service strin
 
 	defer release()
 
-	nodeCtx := withNode(ctx, node)
-
-	var recv func() (*common.Data, error)
-
-	if service == "" {
-		stream, err := s.client.Dmesg(nodeCtx, true, true)
-		if err != nil {
-			return friendlyError(err)
-		}
-
-		recv = stream.Recv
-	} else {
-		stream, err := s.client.Logs(nodeCtx, constants.SystemContainerdNamespace, common.ContainerDriver_CONTAINERD, service, true, int32(tail))
-		if err != nil {
-			return friendlyError(err)
-		}
-
-		recv = stream.Recv
+	recv, err := open(withNode(ctx, node), s)
+	if err != nil {
+		return s.friendly(node, err)
 	}
 
 	lines := newLineSplitter(listener.OnLine)

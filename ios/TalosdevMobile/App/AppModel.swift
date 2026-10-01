@@ -36,6 +36,7 @@ final class AppModel {
 
     var activeContext = "" {
         didSet {
+            if activeContext != oldValue { forgetFeatures() }
             UserDefaults.standard.set(activeContext, forKey: Keys.context)
             if let index = summary?.contexts.firstIndex(where: { $0.name == activeContext }) {
                 UserDefaults.standard.set(index, forKey: Keys.contextIndex)
@@ -53,6 +54,11 @@ final class AppModel {
     /// Bumped when the screenshot mode changes, so screens reload instead of showing old data.
     private(set) var dataGeneration = 0
 
+    /// What each node's Talos version can do (Go NodeFeatures), by node address; loaded once
+    /// per node and Talos version, see loadFeatures.
+    private(set) var nodeFeatures: [String: NodeFeatures] = [:]
+    @ObservationIgnored private var featuresGeneration = 0
+
     init() {
         theme = ThemeMode(rawValue: UserDefaults.standard.string(forKey: Keys.theme) ?? "") ?? .auto
         privacyMask = UserDefaults.standard.bool(forKey: PrivacyKeys.enabled)
@@ -68,6 +74,49 @@ final class AppModel {
 
     /// Privileged actions are only shown when the imported config's role allows them.
     func allows(_ feature: Feature) -> Bool { activeSummary?.allows(feature) ?? false }
+
+    /// Whether node's Talos version has `feature`; supported while its features are unknown.
+    func support(_ feature: NodeFeature, node: String) -> FeatureSupport {
+        featureSupport(nodeFeatures[node], feature)
+    }
+
+    /// Support of a cluster-wide feature across the nodes whose features are known.
+    func clusterSupport(_ feature: NodeFeature) -> FeatureSupport {
+        TalosdevMobileCore.clusterSupport(Array(nodeFeatures.values), feature)
+    }
+
+    /// Loads node's features unless they are cached for `version` (the node's Talos version
+    /// when the caller knows it: an upgraded node is asked again). Failures are silent: an
+    /// unknown node counts as supporting everything and answers for itself.
+    func loadFeatures(node: String, version: String = "") async {
+        if let cached = nodeFeatures[node], version.isEmpty || cached.version.isEmpty
+            || compareTalosVersions(cached.version, version) == 0 { return }
+        guard let client else { return }
+        let generation = featuresGeneration
+        guard let loaded = try? await client.features(node: node), generation == featuresGeneration else { return }
+        nodeFeatures[node] = loaded
+    }
+
+    /// Drops node's cached features and asks again: its Talos version just changed (upgrade).
+    func reloadFeatures(node: String) async {
+        nodeFeatures[node] = nil
+        await loadFeatures(node: node)
+    }
+
+    /// The features of every reachable node of an overview, in parallel.
+    func loadFeatures(of nodes: [NodeOverview]) async {
+        await withTaskGroup(of: Void.self) { group in
+            for node in nodes where node.reachable {
+                group.addTask { await self.loadFeatures(node: node.node, version: node.version) }
+            }
+        }
+    }
+
+    /// Other context, other config or other (masked) node names: the cache no longer applies.
+    private func forgetFeatures() {
+        featuresGeneration += 1
+        nodeFeatures = [:]
+    }
 
     /// Loads the stored config (Keychain); nothing is read before the first unlock.
     func load() async {
@@ -104,6 +153,7 @@ final class AppModel {
     func clear() {
         SecureConfigStore.delete()
         SharedStore.save(nil) // the widget stops showing the old cluster
+        forgetFeatures()
         yaml = nil
         summary = nil
     }
@@ -128,6 +178,7 @@ final class AppModel {
         guard affectsData else { return }
         // Also resets the alert diff, which would otherwise see every node renamed.
         SharedStore.save(nil)
+        forgetFeatures()
         await reparse()
         dataGeneration += 1
     }
@@ -156,6 +207,7 @@ final class AppModel {
     }
 
     private func apply(yaml newYAML: String, summary newSummary: ConfigSummary, preferred: String?) {
+        forgetFeatures()
         yaml = newYAML
         summary = newSummary
         activeContext = preferred.flatMap { newSummary.context(named: $0)?.name } ?? newSummary.current

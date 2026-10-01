@@ -1,4 +1,5 @@
 import SwiftUI
+import TalosdevMobileCore
 
 /// The reboot sheet's confirmation for other risky node actions: the button only works once
 /// the hostname is typed.
@@ -21,7 +22,8 @@ struct HostnameConfirmationSheet: View {
         self.onConfirm = onConfirm
     }
 
-    private var matches: Bool { typed.trimmingCharacters(in: .whitespaces) == hostname }
+    /// A blank hostname is never confirmed, least of all by an empty field.
+    private var matches: Bool { typedConfirmationMatches(typed, token: hostname) }
 
     var body: some View {
         NavigationStack {

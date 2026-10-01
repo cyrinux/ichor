@@ -57,7 +57,12 @@ import name.levis.talosmobile.data.StreamItem
 import name.levis.talosmobile.data.TalosRepository
 import name.levis.talosmobile.model.FOLLOW_TAIL_LINES
 import name.levis.talosmobile.model.LogLevelFilter
+import name.levis.talosmobile.model.LogSource
 import name.levis.talosmobile.model.LogTail
+import name.levis.talosmobile.model.TalosFeature
+import name.levis.talosmobile.model.support
+import name.levis.talosmobile.ui.components.rememberNodeFeatures
+import androidx.compose.ui.text.style.TextOverflow
 import name.levis.talosmobile.model.SeqLogEntry
 import name.levis.talosmobile.model.appendCapped
 import name.levis.talosmobile.model.numbered
@@ -72,13 +77,15 @@ import name.levis.talosmobile.ui.components.LoadingBox
 import name.levis.talosmobile.ui.factory
 import name.levis.talosmobile.ui.userMessage
 
-/** [service] null means the kernel log (dmesg). */
 class LogsViewModel(
     private val talos: TalosRepository,
     private val node: String,
-    private val service: String?,
+    private val source: LogSource,
 ) : LoadingViewModel<LogTail>() {
-    override suspend fun fetch() = talos.logs(node, service)
+    override suspend fun fetch() = when (source) {
+        is LogSource.Service -> talos.logs(node, source.name)
+        is LogSource.Container -> talos.containerLogs(node, source.id)
+    }
 }
 
 data class FollowState(
@@ -96,7 +103,7 @@ private const val FOLLOW_BATCH_MS = 100L
 class LogFollowViewModel(
     private val talos: TalosRepository,
     private val node: String,
-    private val service: String?,
+    private val source: LogSource,
 ) : ViewModel() {
     private val _state = MutableStateFlow(FollowState())
     val state: StateFlow<FollowState> = _state.asStateFlow()
@@ -106,7 +113,11 @@ class LogFollowViewModel(
         _state.value = FollowState(streaming = true)
         try {
             coroutineScope {
-                val items = talos.followLogs(node, service, FOLLOW_TAIL_LINES).produceIn(this)
+                val lines = when (source) {
+                    is LogSource.Service -> talos.followLogs(node, source.name, FOLLOW_TAIL_LINES)
+                    is LogSource.Container -> talos.followContainerLogs(node, source.id, FOLLOW_TAIL_LINES)
+                }
+                val items = lines.produceIn(this)
                 while (true) {
                     val next = items.receiveCatching()
                     next.exceptionOrNull()?.let { throw it }
@@ -149,17 +160,18 @@ class LogFollowViewModel(
 fun LogsScreen(
     node: String,
     hostname: String,
-    service: String?,
+    source: LogSource,
     onBack: () -> Unit,
     vm: LogsViewModel = viewModel(
-        key = "logs-$node-${service ?: "kernel"}",
-        factory = factory { LogsViewModel(app.talosRepository, node, service) },
+        key = "logs-$node-${source.key}",
+        factory = factory { LogsViewModel(app.talosRepository, node, source) },
     ),
     followVm: LogFollowViewModel = viewModel(
-        key = "logfollow-$node-${service ?: "kernel"}",
-        factory = factory { LogFollowViewModel(app.talosRepository, node, service) },
+        key = "logfollow-$node-${source.key}",
+        factory = factory { LogFollowViewModel(app.talosRepository, node, source) },
     ),
 ) {
+    val canFollow = rememberNodeFeatures(node).support(TalosFeature.LOG_FOLLOW).supported
     val state by vm.state.collectAsStateWithLifecycle()
     val followState by followVm.state.collectAsStateWithLifecycle()
     var filter by rememberSaveable { mutableStateOf("") }
@@ -192,14 +204,28 @@ fun LogsScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(service ?: stringResource(R.string.logs_kernel_log))
-                        Text(hostname, style = MaterialTheme.typography.labelMedium)
+                        when (source) {
+                            is LogSource.Service -> {
+                                Text(source.name ?: stringResource(R.string.logs_kernel_log))
+                                Text(hostname, style = MaterialTheme.typography.labelMedium)
+                            }
+                            is LogSource.Container -> {
+                                Text(source.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(
+                                    source.subtitle.ifEmpty { hostname },
+                                    style = MaterialTheme.typography.labelMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
                     }
                 },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
                 actions = {
                     FilterChip(
                         selected = follow,
+                        enabled = canFollow || follow,
                         onClick = {
                             follow = !follow
                             if (!follow) vm.refresh()

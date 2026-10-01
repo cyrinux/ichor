@@ -45,7 +45,7 @@ func NodeContainers(configYAML, contextName, node string) (out string, err error
 
 		list, err := s.client.Containers(nodeCtx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI)
 		if err != nil {
-			return "", errors.New(friendlyError(err))
+			return "", errors.New(s.friendly(node, err))
 		}
 
 		stats, _ := s.client.Stats(nodeCtx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI) //nolint:errcheck

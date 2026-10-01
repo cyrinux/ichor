@@ -18,6 +18,29 @@ class AppLockTest {
     }
 
     @Test
+    fun nothingCountsAsUnlockedBeforeTheFirstUnlock() {
+        // A new process (cold start, or restored after a process death) starts from here.
+        val lock = lock(enabled = true)
+        assertFalse(lock.everUnlocked.value)
+
+        lock.unlock()
+        assertTrue(lock.everUnlocked.value)
+
+        // A later relock draws over the app: it stays loaded.
+        lock.onBackground()
+        now += 30_000
+        lock.onForeground()
+        assertTrue(lock.locked.value)
+        assertTrue(lock.everUnlocked.value)
+    }
+
+    @Test
+    fun withoutLockTheAppLoadsAtOnce() {
+        assertTrue(lock(enabled = false).everUnlocked.value)
+        assertTrue(lock(enabled = true).apply { setEnabled(false) }.everUnlocked.value)
+    }
+
+    @Test
     fun relocksAfterGracePeriodInBackground() {
         val lock = lock(enabled = true).apply { unlock() }
 

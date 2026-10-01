@@ -8,6 +8,7 @@ import android.content.SharedPreferences
 import android.content.pm.PackageInstaller
 import android.os.Build
 import name.levis.talosmobile.BuildConfig
+import name.levis.talosmobile.data.ChangelogRepository
 import name.levis.talosmobile.data.TalosJson
 import name.levis.talosmobile.ui.LocalizedException
 import name.levis.talosmobile.ui.UiText
@@ -17,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -40,7 +42,11 @@ sealed interface UpdateState {
  * installing: SHA-256 against the digest GitHub publishes, and the signing certificate must
  * be exactly the installed app's. Android's installer still asks the user to confirm.
  */
-class UpdateManager(private val context: Context, private val prefs: SharedPreferences) {
+class UpdateManager(
+    private val context: Context,
+    private val prefs: SharedPreferences,
+    private val changelog: ChangelogRepository,
+) {
     private val _state = MutableStateFlow<UpdateState>(UpdateState.Idle)
     val state: StateFlow<UpdateState> = _state.asStateFlow()
 
@@ -64,13 +70,24 @@ class UpdateManager(private val context: Context, private val prefs: SharedPrefe
 
     suspend fun check() {
         _state.value = UpdateState.Checking
-        _state.value = try {
+        val info = try {
             val release = withContext(Dispatchers.IO) { fetchLatestRelease() }
             prefs.edit().putLong(KEY_LAST_CHECK, System.currentTimeMillis()).apply()
-            val info = release?.let { selectUpdate(it, BuildConfig.VERSION_NAME, Build.SUPPORTED_ABIS.toList()) }
-            if (info == null) UpdateState.UpToDate else UpdateState.Available(info)
+            release?.let { selectUpdate(it, BuildConfig.VERSION_NAME, Build.SUPPORTED_ABIS.toList()) }
         } catch (e: Exception) {
-            UpdateState.Failed(UiText.Res(R.string.update_check_failed, e.uiText()))
+            _state.value = UpdateState.Failed(UiText.Res(R.string.update_check_failed, e.uiText()))
+            return
+        }
+        if (info == null) {
+            _state.value = UpdateState.UpToDate
+            return
+        }
+        // Offer the update at once; what it brings is added when the changelog published
+        // with the release arrives (best effort, at most 10 s).
+        _state.value = UpdateState.Available(info)
+        val changes = changelog.publishedSinceThisBuild()
+        if (changes.isNotEmpty()) {
+            _state.update { if (it is UpdateState.Available && it.info == info) UpdateState.Available(info.copy(changes = changes)) else it }
         }
     }
 

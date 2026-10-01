@@ -60,18 +60,27 @@ func EtcdStatus(configYAML, contextName string) (out string, err error) {
 	contextName = unmaskContext(configYAML, contextName)
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		cps := classifyNodes(ctx, s.client, targetNodes(s.context)).GetControlPlaneNodes()
-		if len(cps) == 0 {
-			return "", errors.New("no reachable control-plane node found in this context")
+		out, err := gatherEtcdOverview(ctx, s)
+		if err != nil {
+			return "", err
 		}
 
-		out := fetchEtcd(ctx, s.client, cps)
 		for _, m := range out.Members {
 			privacy.learnHost(m.Hostname, "controlplane")
 		}
 
 		return toJSON(out)
 	})
+}
+
+// gatherEtcdOverview finds the context's control-plane nodes and reads etcd through them.
+func gatherEtcdOverview(ctx context.Context, s *session) (etcdOverview, error) {
+	cps := classifyNodes(ctx, s.client, targetNodes(s.context)).GetControlPlaneNodes()
+	if len(cps) == 0 {
+		return etcdOverview{}, errors.New("no reachable control-plane node found in this context")
+	}
+
+	return fetchEtcd(ctx, s.client, cps), nil
 }
 
 // fetchEtcd asks every control-plane node for its etcd status, and the first one for the

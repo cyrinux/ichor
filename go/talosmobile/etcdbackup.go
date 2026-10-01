@@ -74,7 +74,7 @@ func runSnapshot(ctx context.Context, configYAML, contextName, node, destPath st
 
 	r, err := s.client.EtcdSnapshot(client.WithNode(ctx, node), &machineapi.EtcdSnapshotRequest{})
 	if err != nil {
-		return 0, "", errors.New(friendlyError(err))
+		return 0, "", errors.New(s.friendly(node, err))
 	}
 
 	defer r.Close() //nolint:errcheck
@@ -169,7 +169,7 @@ func EtcdAlarmDisarm(configYAML, contextName, node string) (err error) {
 		}
 
 		if _, err := s.client.EtcdAlarmDisarm(client.WithNode(ctx, node)); err != nil {
-			return struct{}{}, errors.New(friendlyError(err))
+			return struct{}{}, errors.New(s.friendly(node, err))
 		}
 
 		return struct{}{}, nil

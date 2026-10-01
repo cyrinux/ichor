@@ -33,7 +33,7 @@ data class UpgradeRunState(
  * leaving the progress screen keeps following it and no second upgrade can start meanwhile.
  * An upgrade cannot be cancelled once requested: [stopFollowing] only stops watching it.
  */
-class UpgradeManager(private val configs: ConfigRepository) {
+class UpgradeManager(private val configs: ConfigRepository, private val onFinished: (node: String) -> Unit = {}) {
     private val _current = MutableStateFlow<UpgradeRunState?>(null)
     val current: StateFlow<UpgradeRunState?> = _current.asStateFlow()
     private var run: UpgradeRun? = null
@@ -81,6 +81,8 @@ class UpgradeManager(private val configs: ConfigRepository) {
                     it
                 }
             }
+            // The node may run another Talos version now (what it supports changed).
+            onFinished(node)
         }
     }
 

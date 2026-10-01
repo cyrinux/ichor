@@ -52,13 +52,19 @@ final class ModelsTests: XCTestCase {
         let reader = ContextSummary(name: "r", roles: ["os:reader"])
         let operatorCtx = ContextSummary(name: "o", roles: ["os:operator"])
         let admin = ContextSummary(name: "a", roles: ["os:admin"])
-        XCTAssertTrue(Feature.allCases.allSatisfy { !reader.allows($0) })
+        // Reading resources and collecting a support bundle are open to a reader.
+        XCTAssertEqual(Feature.allCases.filter { reader.allows($0) }, [.resourceBrowser, .supportBundle])
         XCTAssertTrue(operatorCtx.allows(.power))
         XCTAssertFalse(operatorCtx.allows(.health))
         XCTAssertFalse(operatorCtx.allows(.debugShell))
         XCTAssertTrue(Feature.allCases.allSatisfy { admin.allows($0) })
         XCTAssertEqual(Feature.power.minimumRole, "os:operator")
         XCTAssertEqual(Feature.kubeconfig.minimumRole, "os:admin")
+        XCTAssertEqual(Feature.resourceBrowser.minimumRole, "os:reader")
+        XCTAssertFalse(operatorCtx.allows(.etcdMemberActions))
+        XCTAssertTrue(operatorCtx.allows(.supportBundle))
+        XCTAssertEqual(Feature.supportBundle.minimumRole, "os:reader")
+        XCTAssertTrue(operatorCtx.allows(.resourceBrowser))
     }
 
     func testKubeSpan() throws {

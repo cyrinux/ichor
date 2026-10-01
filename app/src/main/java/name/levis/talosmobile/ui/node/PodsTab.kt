@@ -40,12 +40,15 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import name.levis.talosmobile.R
 import name.levis.talosmobile.data.TalosRepository
+import androidx.compose.foundation.clickable
+import name.levis.talosmobile.model.ContainerInfo
 import name.levis.talosmobile.model.ContainerRow
 import name.levis.talosmobile.model.ContainerSample
 import name.levis.talosmobile.model.ContainerSort
@@ -80,7 +83,11 @@ class PodsViewModel(private val talos: TalosRepository, private val node: String
                     last = sample
                     _state.value = PodsState(rows = rows)
                 },
-                onFailure = { _state.value = _state.value.copy(error = it.userMessage()) },
+                onFailure = {
+                    // Leaving the tab cancels the call: that is not an error to show on return.
+                    if (it is CancellationException) throw it
+                    _state.value = _state.value.copy(error = it.userMessage())
+                },
             )
             delay(PODS_POLL_SECONDS * 1000)
         }
@@ -90,6 +97,7 @@ class PodsViewModel(private val talos: TalosRepository, private val node: String
 @Composable
 fun PodsTab(
     node: String,
+    onContainer: (ContainerInfo) -> Unit,
     vm: PodsViewModel = viewModel(key = "pods-$node", factory = factory { PodsViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -150,7 +158,7 @@ fun PodsTab(
             groups.forEach { group ->
                 item(key = "pod|${group.namespace}|${group.pod}") { PodHeader(group) }
                 items(group.containers, key = { "c|${it.info.id}" }) { row ->
-                    ContainerItem(row)
+                    ContainerItem(row, onClick = { onContainer(row.info) })
                     HorizontalDivider()
                 }
             }
@@ -192,11 +200,12 @@ private fun PodHeader(group: PodGroup) {
 }
 
 @Composable
-private fun ContainerItem(row: ContainerRow) {
+private fun ContainerItem(row: ContainerRow, onClick: () -> Unit) {
     val c = row.info
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val warn = LocalStatusColors.current.warn
-    Column(Modifier.fillMaxWidth().padding(start = 28.dp, end = 16.dp, top = 6.dp, bottom = 6.dp)) {
+    // Tapping a container opens its log.
+    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(start = 28.dp, end = 16.dp, top = 6.dp, bottom = 6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 c.name.ifEmpty { c.id.take(12) },

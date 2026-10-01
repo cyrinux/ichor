@@ -24,16 +24,25 @@ class MonitorStore(private val prefs: SharedPreferences) {
         _intervalMinutes.value = minutes
     }
 
-    fun snapshot(): ClusterSnapshot? = prefs.getString(KEY_SNAPSHOT, null)?.let {
-        runCatching { TalosJson.decodeFromString(ClusterSnapshot.serializer(), it) }.getOrNull()
-    }
+    private val _snapshotState = MutableStateFlow(readSnapshot())
+
+    /** The last snapshot, observable: the widget redraws from it while its session is alive. */
+    val snapshotState: StateFlow<ClusterSnapshot?> = _snapshotState.asStateFlow()
+
+    fun snapshot(): ClusterSnapshot? = _snapshotState.value
 
     fun saveSnapshot(snapshot: ClusterSnapshot) {
         prefs.edit().putString(KEY_SNAPSHOT, TalosJson.encodeToString(ClusterSnapshot.serializer(), snapshot)).apply()
+        _snapshotState.value = snapshot
     }
 
     fun clearSnapshot() {
         prefs.edit().remove(KEY_SNAPSHOT).apply()
+        _snapshotState.value = null
+    }
+
+    private fun readSnapshot(): ClusterSnapshot? = prefs.getString(KEY_SNAPSHOT, null)?.let {
+        runCatching { TalosJson.decodeFromString(ClusterSnapshot.serializer(), it) }.getOrNull()
     }
 
     companion object {

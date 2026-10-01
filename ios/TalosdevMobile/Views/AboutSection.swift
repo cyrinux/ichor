@@ -15,6 +15,7 @@ struct AboutSection: View {
     var body: some View {
         Section {
             LabeledContent("Version", value: Self.version)
+            NavigationLink(value: Route.changelog) { Label("What's new", systemImage: "sparkles") }
             Link(destination: ProjectLinks.repo) { Label("Source code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right") }
             Link(destination: ProjectLinks.talos) { Label("Talos Linux (talos.dev)", systemImage: "arrow.up.right.square") }
             Link(destination: ProjectLinks.sponsor) { Label("Sponsor on GitHub", systemImage: "heart") }

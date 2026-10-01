@@ -59,6 +59,8 @@ build_inside() {
   eval "$("$ROOT/scripts/version.sh" --env)"
   set +a
   echo "version $TALOSDEV_MOBILE_VERSION (code $TALOSDEV_MOBILE_BUILD_NUMBER)"
+  # Release notes bundled in the app, for the "what's new" shown after an update.
+  python3 "$ROOT/scripts/changelog.py" --limit 30 -o "$ROOT/app/src/main/assets/changelog.json"
 
   cd "$ROOT/go"
   if [[ "$VARIANT" == "check" ]]; then

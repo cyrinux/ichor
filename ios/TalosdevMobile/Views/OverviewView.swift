@@ -10,6 +10,9 @@ struct OverviewView: View {
     @Environment(AISettings.self) private var ai
     @State private var state: LoadState<ClusterOverview> = .loading
     @State private var update: TalosUpdateInfo?
+    /// Release notes to present after an app update.
+    @State private var whatsNew: WhatsNewContent?
+    @State private var openChangelog = false
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -116,8 +119,26 @@ struct OverviewView: View {
             }
         }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
-        .task(id: "\(model.activeContext)#\(model.dataGeneration)") { await load() }
+        .task(id: loadID) { await load() }
         .onChange(of: model.dataGeneration) { state = .loading }
+        // After an update (and the unlock: the overview is not shown before): what changed
+        // since the build launched last time. The build is remembered once the notes are closed.
+        .task {
+            let releases = ChangelogStore.pendingWhatsNew()
+            if !releases.isEmpty { whatsNew = WhatsNewContent(releases: releases) }
+        }
+        .sheet(item: $whatsNew, onDismiss: {
+            ChangelogStore.storeCurrentBuild()
+            if openChangelog {
+                openChangelog = false
+                path.append(.changelog)
+            }
+        }) { content in
+            WhatsNewSheet(content: content) {
+                openChangelog = true
+                whatsNew = nil
+            }
+        }
     }
 
     /// Address → hostname of the loaded nodes, for the events timeline.
@@ -131,12 +152,24 @@ struct OverviewView: View {
         return nil
     }
 
+    /// What the loaded overview belongs to: the context and the screenshot mode generation.
+    private var loadID: String { "\(model.activeContext)#\(model.dataGeneration)" }
+
     private func load() async {
         guard let client = model.client else { return }
         if case .loaded = state {} else { state = .loading }
-        state = await .from { try await client.overview() }
-        if case .loaded(let overview, _) = state {
-            update = await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
+        // The call is not cancelled with its task: a slow load of the previous context can
+        // end after the new one's, and must not replace it.
+        let id = loadID
+        let loaded: LoadState<ClusterOverview> = await .from { try await client.overview() }
+        guard id == loadID else { return }
+        state = loaded
+        if case .loaded(let overview, _) = loaded {
+            let info = await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
+            guard id == loadID else { return }
+            update = info
+            // What each node's Talos version can do, cached per version: gates menus and screens.
+            await model.loadFeatures(of: overview.nodes)
         }
     }
 

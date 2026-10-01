@@ -9,7 +9,8 @@ import name.levis.talosmobile.widget.ClusterWidget
 
 /**
  * Periodic check: overview + etcd, diffed against the previous snapshot. If the cluster is
- * unreachable as a whole (e.g. off VPN) nothing changes, so you are not spammed.
+ * unreachable as a whole (e.g. off VPN) the previous snapshot is kept (see [evaluate]), so
+ * you are not spammed.
  */
 class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
@@ -31,11 +32,20 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val now = System.currentTimeMillis()
         val evaluation = evaluate(store.snapshot(), snapshotOf(overview, etcd, certNotAfter, now), now)
         store.saveSnapshot(evaluation.next)
+        scheduleWidgetStaleRefresh(applicationContext, evaluation.next, now)
 
         if (store.alertsEnabled.value) {
             val hide = app.appLock.enabled.value
             evaluation.alerts.forEach { postAlert(applicationContext, it, hideOnLockScreen = hide) }
         }
+        ClusterWidget().updateAll(applicationContext)
+        return Result.success()
+    }
+}
+
+/** Redraws the widget from the stored snapshot, without any network call. */
+class WidgetRefreshWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+    override suspend fun doWork(): Result {
         ClusterWidget().updateAll(applicationContext)
         return Result.success()
     }
