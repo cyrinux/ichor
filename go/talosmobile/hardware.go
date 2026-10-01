@@ -88,7 +88,11 @@ const hardwareSections = 6
 // NodeHardware returns node's SMBIOS system/CPU/memory info, disks, system extensions
 // and security state (os:reader). Each section is best-effort: a failure leaves it empty
 // and is recorded in errors; only a total failure is an error.
-func NodeHardware(configYAML, contextName, node string) (string, error) {
+func NodeHardware(configYAML, contextName, node string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err

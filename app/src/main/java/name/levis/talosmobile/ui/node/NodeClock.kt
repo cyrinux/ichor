@@ -18,6 +18,7 @@ import name.levis.talosmobile.model.formatOffset
 import name.levis.talosmobile.ui.LoadingViewModel
 import name.levis.talosmobile.ui.UiState
 import name.levis.talosmobile.ui.overview.driftColor
+import name.levis.talosmobile.ui.theme.LocalStatusColors
 
 /** The node's clock offset against its NTP server (not cached: it goes stale fast). */
 class NodeTimeViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<NodeTime>() {
@@ -45,7 +46,10 @@ fun ClockOffsetRow(state: UiState<NodeTime>) {
             value,
             style = MaterialTheme.typography.bodyMedium,
             fontFamily = FontFamily.Monospace,
-            color = time?.let { driftColor(it.drift) } ?: MaterialTheme.colorScheme.onSurface,
+            color = when {
+                time == null -> MaterialTheme.colorScheme.onSurface
+                else -> time.drift?.let { driftColor(it) } ?: LocalStatusColors.current.bad
+            },
             modifier = Modifier.weight(0.6f),
         )
     }

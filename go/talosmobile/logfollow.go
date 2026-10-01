@@ -28,6 +28,10 @@ func (r *LogRun) Cancel() { r.cancel() }
 // StartLogFollow streams a service log (or the kernel log when service is empty) from node,
 // like `talosctl logs -f SERVICE --tail N` / `talosctl dmesg -f` (os:reader).
 func StartLogFollow(configYAML, contextName, node, service string, tailLines int, listener LogListener) *LogRun {
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	listener = maskedLogListener{listener}
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {

@@ -6,8 +6,21 @@ public struct ConfigSummary: Decodable, Equatable, Sendable {
     public let current: String
     public let contexts: [ContextSummary]
 
+    public init(current: String, contexts: [ContextSummary]) {
+        self.current = current
+        self.contexts = contexts
+    }
+
     public func context(named name: String) -> ContextSummary? {
         contexts.first { $0.name == name }
+    }
+
+    /// The context to open: the saved position first (names differ while the screenshot mode
+    /// masks them; Go keeps the order), then the saved name (installs from before the
+    /// position was saved), then the config's current context. Same rule as Android.
+    public func selectedContext(index: Int?, name: String?) -> String {
+        if let index, contexts.indices.contains(index) { return contexts[index].name }
+        return name.flatMap { context(named: $0)?.name } ?? current
     }
 }
 

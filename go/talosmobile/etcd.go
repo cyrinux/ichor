@@ -54,7 +54,11 @@ type etcdProbe struct {
 }
 
 // EtcdStatus discovers control-plane nodes in the context and returns JSON etcdOverview.
-func EtcdStatus(configYAML, contextName string) (string, error) {
+func EtcdStatus(configYAML, contextName string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		cps := classifyNodes(ctx, s.client, targetNodes(s.context)).GetControlPlaneNodes()
 		if len(cps) == 0 {
@@ -101,7 +105,12 @@ func EtcdStatus(configYAML, contextName string) (string, error) {
 			}
 		}
 
-		return toJSON(buildEtcdOverview(members, membersErr, probes, alarms))
+		out := buildEtcdOverview(members, membersErr, probes, alarms)
+		for _, m := range out.Members {
+			privacy.learnHost(m.Hostname, "controlplane")
+		}
+
+		return toJSON(out)
 	})
 }
 

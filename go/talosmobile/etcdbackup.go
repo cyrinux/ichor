@@ -38,6 +38,10 @@ func (r *SnapshotRun) Cancel() {
 // The file is written to destPath.part and renamed when complete, so destPath only ever
 // holds a whole snapshot. It contains every Kubernetes Secret: treat it accordingly.
 func StartEtcdSnapshot(configYAML, contextName, node, destPath string, listener SnapshotListener) *SnapshotRun {
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	listener = maskedSnapshotListener{listener}
+
 	ctx, cancel := context.WithTimeout(context.Background(), snapshotTimeout)
 
 	go func() {
@@ -154,8 +158,12 @@ func abort(f *os.File, part string, err error) (int64, string, error) {
 // EtcdAlarmDisarm clears etcd alarms (e.g. NOSPACE after freeing space), like
 // `talosctl etcd alarm disarm` (os:operator or os:admin). Alarms are cluster-wide;
 // the call goes through node.
-func EtcdAlarmDisarm(configYAML, contextName, node string) error {
-	_, err := withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (struct{}, error) {
+func EtcdAlarmDisarm(configYAML, contextName, node string) (err error) {
+	defer maskErr(&err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	_, err = withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (struct{}, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return struct{}{}, err
 		}

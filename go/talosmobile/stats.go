@@ -30,7 +30,11 @@ type nodeStats struct {
 }
 
 // NodeStats samples CPU, memory, load, network and disk counters of node for live graphs.
-func NodeStats(configYAML, contextName, node string) (string, error) {
+func NodeStats(configYAML, contextName, node string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, statsTimeout, func(ctx context.Context, s *session) (string, error) {
 		nodeCtx := client.WithNode(ctx, node)
 		mc := s.client.MachineClient

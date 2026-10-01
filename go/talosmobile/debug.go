@@ -44,6 +44,10 @@ var debugContainerd = &common.ContainerdInstance{
 // `talosctl debug -n NODE IMAGE --args ARGS` (os:admin). The container gets the
 // privileged profile, as talosctl does. Pull progress and output go to listener.
 func StartDebugShell(configYAML, contextName, node, image, args string, cols, rows int, listener DebugListener) *DebugSession {
+	// Only the target is unmasked: the terminal byte stream is not masked (escape
+	// sequences may split an address anywhere), so screenshot mode does not cover the shell.
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	d := &DebugSession{
 		listener: listener,

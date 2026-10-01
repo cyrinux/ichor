@@ -27,6 +27,16 @@ enum class ThemeMode(@StringRes val label: Int) {
     }
 }
 
+/**
+ * Screenshot mode: the Go core replaces IPs, hostnames, context names and [extraWords] in
+ * everything it returns, so screens can be shared without leaking the cluster's identity.
+ */
+data class PrivacyMask(val enabled: Boolean = false, val extraWords: String = "") {
+    /** [extraWords] as the Go core takes them: trimmed, comma-separated, no empty entries. */
+    val words: String
+        get() = extraWords.split(',').map { it.trim() }.filter { it.isNotEmpty() }.distinct().joinToString(",")
+}
+
 class UiPreferences(private val prefs: SharedPreferences) {
     private val _themeMode = MutableStateFlow(ThemeMode.parse(prefs.getString(KEY_THEME, null)))
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
@@ -38,6 +48,17 @@ class UiPreferences(private val prefs: SharedPreferences) {
     /** In-app language as a BCP-47 tag; "" follows the system. */
     private val _language = MutableStateFlow(prefs.getString(KEY_LANGUAGE, "").orEmpty())
     val language: StateFlow<String> = _language.asStateFlow()
+
+    private val _privacyMask = MutableStateFlow(
+        PrivacyMask(prefs.getBoolean(KEY_PRIVACY_MASK, false), prefs.getString(KEY_PRIVACY_WORDS, "").orEmpty()),
+    )
+    val privacyMask: StateFlow<PrivacyMask> = _privacyMask.asStateFlow()
+
+    /** Committed synchronously: the worker and widget read it back at process start. */
+    fun setPrivacyMask(mask: PrivacyMask) {
+        prefs.edit().putBoolean(KEY_PRIVACY_MASK, mask.enabled).putString(KEY_PRIVACY_WORDS, mask.extraWords).commit()
+        _privacyMask.value = mask
+    }
 
     fun setAllowScreenshots(allow: Boolean) {
         prefs.edit().putBoolean(KEY_SCREENSHOTS, allow).apply()
@@ -60,6 +81,8 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_THEME = "theme_mode"
         private const val KEY_SCREENSHOTS = "allow_screenshots"
         private const val KEY_LANGUAGE = "language"
+        private const val KEY_PRIVACY_MASK = "privacy_mask"
+        private const val KEY_PRIVACY_WORDS = "privacy_mask_words"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */
         fun storedLanguage(context: Context): String =

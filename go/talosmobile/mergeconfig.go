@@ -11,7 +11,12 @@ import (
 // replaced by those of generatedYAML's single context (as GenerateTalosconfig returns).
 // Other contexts, and contextName's endpoints and nodes, are kept. Used to renew the
 // stored config's certificate in place.
-func ReplaceContextCredentials(storedYAML, generatedYAML, contextName string) (string, error) {
+func ReplaceContextCredentials(storedYAML, generatedYAML, contextName string) (out string, err error) {
+	// The result is a talosconfig the user saves: only the error is masked.
+	defer maskErr(&err)
+
+	contextName = unmaskContext(storedYAML, contextName)
+
 	stored, err := clientconfig.FromString(storedYAML)
 	if err != nil {
 		return "", fmt.Errorf("stored talosconfig: %w", err)
@@ -55,10 +60,10 @@ func ReplaceContextCredentials(storedYAML, generatedYAML, contextName string) (s
 	merged := *stored
 	merged.Contexts = contexts
 
-	out, err := merged.Bytes()
+	encoded, err := merged.Bytes()
 	if err != nil {
 		return "", fmt.Errorf("encode talosconfig: %w", err)
 	}
 
-	return string(out), nil
+	return string(encoded), nil
 }

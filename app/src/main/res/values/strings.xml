@@ -246,6 +246,11 @@
     <string name="settings_app_lock_desc">Fingerprint, or device PIN/pattern as fallback, to open the app and before reboot, shutdown and kubeconfig export. Blocks screenshots unless allowed below.</string>
     <string name="settings_allow_screenshots">Allow screenshots</string>
     <string name="settings_allow_screenshots_desc">Also shows the app content in recent apps.</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_screenshot_mode">Screenshot mode</string>
+    <string name="settings_screenshot_mode_desc">Hide IP addresses and node names, e.g. for screenshots or screen sharing</string>
+    <string name="settings_screenshot_mode_words">Also hide these words</string>
+    <string name="settings_screenshot_mode_words_hint">Comma-separated, e.g. a domain or a customer name</string>
     <string name="settings_kube_section">Kubernetes</string>
     <string name="settings_kube_auth">Export kubeconfig</string>
     <string name="settings_kube_desc">Export an admin kubeconfig (needs an os:admin talosconfig). Anyone with this file has full access to the Kubernetes cluster: keep it private.</string>
@@ -551,6 +556,22 @@
     <string name="time_drift_drifting">Drifting</string>
     <string name="time_drift_bad">Out of sync</string>
     <string name="time_drift_error">error</string>
+    <string name="time_drift_unreachable">unreachable</string>
+    <string name="time_drift_max">max %1$s</string>
+    <string name="time_drift_expand">Show nodes</string>
+    <string name="time_drift_collapse">Hide nodes</string>
+    <plurals name="time_drift_summary_in_sync">
+        <item quantity="one">%d node in sync</item>
+        <item quantity="other">%d nodes in sync</item>
+    </plurals>
+    <plurals name="time_drift_summary_drifting">
+        <item quantity="one">%d node drifting</item>
+        <item quantity="other">%d nodes drifting</item>
+    </plurals>
+    <plurals name="time_drift_unreachable_count">
+        <item quantity="one">%d unreachable</item>
+        <item quantity="other">%d unreachable</item>
+    </plurals>
     <string name="network_title">Network</string>
     <string name="network_tab_interfaces">Interfaces</string>
     <string name="network_tab_connections">Connections</string>

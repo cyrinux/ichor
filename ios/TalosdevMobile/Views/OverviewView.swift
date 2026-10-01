@@ -85,6 +85,11 @@ struct OverviewView: View {
         }
         .navigationTitle(model.activeContext)
         .toolbar {
+            if model.privacyMask {
+                ToolbarItem(placement: .topBarLeading) {
+                    StatusPill(label: String(localized: "Screenshot mode"), color: .purple)
+                }
+            }
             ToolbarItemGroup(placement: .primaryAction) {
                 if model.allows(.health) {
                     NavigationLink(value: Route.health) { Image(systemName: "heart.text.square") }
@@ -98,7 +103,9 @@ struct OverviewView: View {
                 NavigationLink(value: Route.settings) { Image(systemName: "gearshape") }
             }
         }
-        .task(id: model.activeContext) { await load() }
+        // Reloads with the screenshot mode too, dropping what was loaded with the old names.
+        .task(id: "\(model.activeContext)#\(model.dataGeneration)") { await load() }
+        .onChange(of: model.dataGeneration) { state = .loading }
     }
 
     /// Address → hostname of the loaded nodes, for the events timeline.

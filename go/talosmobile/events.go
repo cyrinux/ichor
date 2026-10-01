@@ -43,6 +43,10 @@ type nodeEvent struct {
 // StartEvents streams events from nodes (comma-separated; empty = the context's nodes),
 // like `talosctl events`, replaying the last tail events per node first (os:reader).
 func StartEvents(configYAML, contextName, nodes string, tail int, listener EventListener) *EventsRun {
+	contextName, nodes = unmaskTargets(configYAML, contextName, nodes)
+
+	listener = maskedEventListener{listener}
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
@@ -67,12 +71,15 @@ func runEvents(ctx context.Context, configYAML, contextName, nodes string, tail 
 		targets = strings.Split(nodes, ",")
 	}
 
-	ch := make(chan client.EventResult)
+	ch := make(chan eventItem)
 
 	go func() {
-		err := s.client.EventsWatchV2(client.WithNodes(ctx, targets...), ch, client.WithTailEvents(int32(tail)))
+		err := watchEvents(client.WithNodes(ctx, targets...), s.client, tail, ch)
 		if err != nil && ctx.Err() == nil {
-			ch <- client.EventResult{Error: err}
+			select {
+			case ch <- eventItem{err: err}:
+			case <-ctx.Done():
+			}
 		}
 	}()
 
@@ -81,15 +88,20 @@ func runEvents(ctx context.Context, configYAML, contextName, nodes string, tail 
 		case <-ctx.Done():
 			return ""
 		case res := <-ch:
-			if res.Error != nil {
+			if res.err != nil {
 				if ctx.Err() != nil {
 					return ""
 				}
 
-				return friendlyError(res.Error)
+				return friendlyError(res.err)
 			}
 
-			out, err := toJSON(describeEvent(res.Event, time.Now()))
+			ev := res.event
+			if ev.Kind == "address" {
+				privacy.learnHost(ev.Subject, "node")
+			}
+
+			out, err := toJSON(ev)
 			if err == nil {
 				listener.OnEvent(out)
 			}
@@ -183,3 +195,82 @@ func xidTime(id string) (time.Time, bool) {
 }
 
 var errUnsupportedAction = errors.New("unsupported service action")
+
+type eventItem struct {
+	event nodeEvent
+	err   error
+}
+
+// watchEvents streams events like client.EventsWatchV2, but keeps going where that ends the
+// whole stream: events of a type this client can't decode are skipped, and a node that fails
+// (offline, say) is reported as an error event while the other nodes keep streaming.
+func watchEvents(ctx context.Context, c *client.Client, tail int, ch chan<- eventItem) error {
+	stream, err := c.Events(ctx, client.WithTailEvents(int32(tail)))
+	if err != nil {
+		return fmt.Errorf("error fetching events: %w", err)
+	}
+
+	if err = stream.CloseSend(); err != nil {
+		return err
+	}
+
+	defaultNode := client.RemotePeer(stream.Context())
+
+	for {
+		msg, err := stream.Recv()
+		if err != nil {
+			return err
+		}
+
+		var ev nodeEvent
+
+		if md := msg.GetMetadata(); md.GetError() != "" {
+			node := md.GetHostname()
+			if node == "" {
+				node = defaultNode
+			}
+
+			ev = nodeFailedEvent(node, md.GetError(), time.Now())
+		} else {
+			decoded, err := client.UnmarshalEvent(msg)
+			if err != nil {
+				var unsupported client.EventNotSupportedError
+				if errors.As(err, &unsupported) {
+					continue
+				}
+
+				return err
+			}
+
+			if decoded == nil {
+				continue
+			}
+
+			if decoded.Node == "" {
+				decoded.Node = defaultNode
+			}
+
+			ev = describeEvent(*decoded, time.Now())
+		}
+
+		select {
+		case ch <- eventItem{event: ev}:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+}
+
+// nodeFailedEvent tells that node's event stream failed (offline, say).
+func nodeFailedEvent(node, message string, at time.Time) nodeEvent {
+	return nodeEvent{
+		Node:     node,
+		ID:       "error-" + node,
+		At:       at.UnixMilli(),
+		Kind:     "other",
+		Subject:  "events",
+		Action:   "unreachable",
+		Message:  friendlyError(errors.New(message)),
+		Severity: "error",
+	}
+}

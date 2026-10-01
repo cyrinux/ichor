@@ -1,6 +1,6 @@
 // Command probe exercises the talosmobile API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|etcd|health|parse
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|etcd|health|parse
 package main
 
 import (
@@ -56,6 +56,8 @@ func main() {
 	home, _ := os.UserHomeDir() //nolint:errcheck
 	configPath := flag.String("config", filepath.Join(home, ".talos", "config"), "talosconfig path")
 	contextName := flag.String("context", "", "context name (default: current)")
+	mask := flag.Bool("mask", false, "screenshot mode: mask IPs, hostnames, domains and context names")
+	maskWords := flag.String("mask-words", "", "with -mask: comma-separated extra words to hide")
 	flag.Parse()
 
 	if flag.NArg() == 0 {
@@ -68,6 +70,12 @@ func main() {
 	}
 
 	cfg := string(raw)
+
+	if *mask {
+		talosmobile.SetPrivacyMask(true, *maskWords)
+		// Like the app, which shows the overview first: it teaches the mask the hostnames.
+		_, _ = talosmobile.ClusterOverview(cfg, *contextName) //nolint:errcheck
+	}
 
 	var out string
 

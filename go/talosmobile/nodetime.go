@@ -24,7 +24,11 @@ type clusterTime struct {
 }
 
 // NodeTime compares node's clock with its NTP server, like `talosctl time` (os:reader).
-func NodeTime(configYAML, contextName, node string) (string, error) {
+func NodeTime(configYAML, contextName, node string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err
@@ -41,7 +45,11 @@ func NodeTime(configYAML, contextName, node string) (string, error) {
 
 // ClusterTime runs NodeTime on every node of the context in parallel (os:reader), so the
 // UI can flag clock drift. Failing nodes are reported per node.
-func ClusterTime(configYAML, contextName string) (string, error) {
+func ClusterTime(configYAML, contextName string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		name, _, err := resolveContext(configYAML, contextName)
 		if err != nil {

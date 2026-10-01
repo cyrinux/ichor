@@ -31,7 +31,11 @@ type containerInfo struct {
 
 // NodeContainers lists the Kubernetes containers on node with their memory and cumulative
 // CPU time, like `talosctl containers -k` + `talosctl stats -k` (os:reader).
-func NodeContainers(configYAML, contextName, node string) (string, error) {
+func NodeContainers(configYAML, contextName, node string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, statsTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err

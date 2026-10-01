@@ -44,7 +44,7 @@ class ConfigRepository(context: Context) {
         val bytes = runCatching { store.read() }.getOrNull() ?: return@withContext null
         val yaml = bytes.decodeToString()
         val summary = runCatching { parse(yaml) }.getOrNull() ?: return@withContext null
-        val stored = StoredConfig(yaml, summary, resolveActive(summary, prefs.getString(KEY_CONTEXT, null)))
+        val stored = StoredConfig(yaml, summary, resolveActive(summary, prefs.getString(KEY_CONTEXT, null), savedIndex()))
         _config.value = stored
         stored
     }
@@ -55,7 +55,7 @@ class ConfigRepository(context: Context) {
     suspend fun save(yaml: String) = withContext(Dispatchers.IO) {
         val summary = parse(yaml)
         store.write(yaml.encodeToByteArray())
-        prefs.edit().putString(KEY_CONTEXT, summary.current).apply()
+        prefs.edit().putString(KEY_CONTEXT, summary.current).putInt(KEY_CONTEXT_INDEX, summary.indexOf(summary.current)).apply()
         _config.value = StoredConfig(yaml, summary, summary.current)
         _generation.value++
     }
@@ -78,9 +78,21 @@ class ConfigRepository(context: Context) {
     fun selectContext(name: String) {
         val current = _config.value ?: return
         if (current.summary.contexts.none { it.name == name }) return
-        prefs.edit().putString(KEY_CONTEXT, name).apply()
+        prefs.edit().putString(KEY_CONTEXT, name).putInt(KEY_CONTEXT_INDEX, current.summary.indexOf(name)).apply()
         _config.value = current.copy(activeContext = name)
     }
+
+    /**
+     * Parses the stored config again, keeping the selected context. Screenshot mode masks
+     * the summary (context names, endpoints), so it is re-read when the mask changes.
+     */
+    suspend fun reparse() = withContext(Dispatchers.IO) {
+        val current = _config.value ?: return@withContext
+        val summary = parse(current.yaml)
+        _config.value = StoredConfig(current.yaml, summary, contextAt(summary, current.summary.indexOf(current.activeContext)))
+    }
+
+    private fun savedIndex(): Int = prefs.getInt(KEY_CONTEXT_INDEX, -1)
 
     suspend fun clear() = withContext(Dispatchers.IO) {
         store.clear()
@@ -92,10 +104,23 @@ class ConfigRepository(context: Context) {
     private fun parse(yaml: String): ConfigSummary =
         TalosJson.decodeFromString(ConfigSummary.serializer(), Talosmobile.parseConfig(yaml))
 
-    private fun resolveActive(summary: ConfigSummary, saved: String?): String =
-        saved?.takeIf { name -> summary.contexts.any { it.name == name } } ?: summary.current
-
     private companion object {
         const val KEY_CONTEXT = "active_context"
+        const val KEY_CONTEXT_INDEX = "active_context_index"
     }
 }
+
+private fun ConfigSummary.indexOf(name: String): Int = contexts.indexOfFirst { it.name == name }
+
+/** The context at [index] (contexts keep their order whether masked or not), else the config's current one. */
+internal fun contextAt(summary: ConfigSummary, index: Int): String =
+    summary.contexts.getOrNull(index)?.name ?: summary.current
+
+/**
+ * The context to show on load. The saved name may be a masked one (selected in screenshot
+ * mode), so the saved position wins; the name covers configs saved before positions were.
+ */
+internal fun resolveActive(summary: ConfigSummary, savedName: String?, savedIndex: Int): String =
+    summary.contexts.getOrNull(savedIndex)?.name
+        ?: savedName?.takeIf { name -> summary.contexts.any { it.name == name } }
+        ?: summary.current

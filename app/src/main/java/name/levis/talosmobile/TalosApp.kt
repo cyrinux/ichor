@@ -10,7 +10,10 @@ import androidx.lifecycle.lifecycleScope
 import name.levis.talosmobile.data.ConfigRepository
 import name.levis.talosmobile.data.TalosRepository
 import name.levis.talosmobile.data.SupportPrompt
+import name.levis.talosmobile.data.PrivacyMask
 import name.levis.talosmobile.data.UiPreferences
+import androidx.glance.appwidget.updateAll
+import name.levis.talosmobile.widget.ClusterWidget
 import name.levis.talosmobile.i18n.AppLocale
 import name.levis.talosmobile.monitor.MonitorStore
 import name.levis.talosmobile.monitor.syncMonitoring
@@ -40,10 +43,35 @@ class TalosApp : Application() {
         ProcessLifecycleOwner.get().lifecycleScope.launch { syncMonitoring(this@TalosApp, runNow) }
     }
 
+    /**
+     * Turns screenshot mode on or off. Everything fetched under the previous setting is
+     * dropped (in-memory results, the monitor snapshot behind the widget) and refetched,
+     * so no real name or address lingers on screen or on the home screen.
+     */
+    fun setPrivacyMask(mask: PrivacyMask) {
+        if (mask == uiPreferences.privacyMask.value) return
+        uiPreferences.setPrivacyMask(mask)
+        applyPrivacyMask(mask)
+        // Keys differ masked vs unmasked: diffing across the switch would alert on every node.
+        monitorStore.clearSnapshot()
+        ProcessLifecycleOwner.get().lifecycleScope.launch {
+            // The config summary (context names, endpoints) is masked too, and the Go side
+            // forgets its previous mapping: re-read it, then reload with the new names.
+            runCatching { configRepository.reparse() }
+            talosRepository.invalidate()
+            ClusterWidget().updateAll(this@TalosApp)
+            syncMonitoring(this@TalosApp, runNow = true)
+        }
+    }
+
+    private fun applyPrivacyMask(mask: PrivacyMask) = Talosmobile.setPrivacyMask(mask.enabled, mask.words)
+
     override fun onCreate() {
         super.onCreate()
         migrateLegacyPreferences()
         syncLanguage()
+        // Before any Talos call: the monitor worker and the widget run in this process too.
+        applyPrivacyMask(uiPreferences.privacyMask.value)
         launchSync()
         // Process-wide foreground/background, so moving between our own screens never relocks.
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {

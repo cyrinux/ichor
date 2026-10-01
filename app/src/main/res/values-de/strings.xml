@@ -245,6 +245,11 @@
     <string name="settings_app_lock_desc">Fingerabdruck oder ersatzweise Geräte-PIN/-Muster zum Öffnen der App sowie vor Neustart, Herunterfahren und kubeconfig-Export. Blockiert Screenshots, sofern unten nicht erlaubt.</string>
     <string name="settings_allow_screenshots">Screenshots erlauben</string>
     <string name="settings_allow_screenshots_desc">Zeigt den App-Inhalt auch in den letzten Apps an.</string>
+    <string name="settings_section_privacy">Datenschutz</string>
+    <string name="settings_screenshot_mode">Screenshot-Modus</string>
+    <string name="settings_screenshot_mode_desc">Blendet IP-Adressen und Node-Namen aus, z. B. für Screenshots oder Bildschirmfreigabe</string>
+    <string name="settings_screenshot_mode_words">Auch diese Wörter ausblenden</string>
+    <string name="settings_screenshot_mode_words_hint">Durch Kommas getrennt, z. B. eine Domain oder ein Kundenname</string>
     <string name="settings_kube_section">Kubernetes</string>
     <string name="settings_kube_auth">kubeconfig exportieren</string>
     <string name="settings_kube_desc">Eine Admin-kubeconfig exportieren (erfordert eine os:admin-talosconfig). Wer diese Datei besitzt, hat vollen Zugriff auf den Kubernetes-Cluster: Halte sie geheim.</string>
@@ -549,6 +554,22 @@
     <string name="time_drift_drifting">Driftet</string>
     <string name="time_drift_bad">Nicht synchron</string>
     <string name="time_drift_error">Fehler</string>
+    <string name="time_drift_unreachable">nicht erreichbar</string>
+    <string name="time_drift_max">max. %1$s</string>
+    <string name="time_drift_expand">Nodes anzeigen</string>
+    <string name="time_drift_collapse">Nodes ausblenden</string>
+    <plurals name="time_drift_summary_in_sync">
+        <item quantity="one">%d Node synchron</item>
+        <item quantity="other">%d Nodes synchron</item>
+    </plurals>
+    <plurals name="time_drift_summary_drifting">
+        <item quantity="one">%d Node weicht ab</item>
+        <item quantity="other">%d Nodes weichen ab</item>
+    </plurals>
+    <plurals name="time_drift_unreachable_count">
+        <item quantity="one">%d nicht erreichbar</item>
+        <item quantity="other">%d nicht erreichbar</item>
+    </plurals>
     <string name="network_title">Netzwerk</string>
     <string name="network_tab_interfaces">Schnittstellen</string>
     <string name="network_tab_connections">Verbindungen</string>

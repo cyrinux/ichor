@@ -25,7 +25,12 @@ var allowedRoles = []string{"os:admin", "os:operator", "os:reader", "os:etcd:bac
 // (os:admin). The returned talosconfig YAML has a single context with the same name,
 // endpoints and nodes as contextName, but with the newly issued CA/crt/key. It serves both
 // "renew my certificate" (same roles) and "create a restricted config for another device".
-func GenerateTalosconfig(configYAML, contextName, roles string, ttlHours int) (string, error) {
+func GenerateTalosconfig(configYAML, contextName, roles string, ttlHours int) (out string, err error) {
+	// The result is a credential the user saves: only the error is masked.
+	defer maskErr(&err)
+
+	contextName = unmaskContext(configYAML, contextName)
+
 	roleList, err := parseRoles(roles)
 	if err != nil {
 		return "", err

@@ -23,7 +23,11 @@ type connectionInfo struct {
 
 // NodeConnections lists node's TCP/UDP sockets (IPv4 and IPv6, host network namespace),
 // listening ones first by port, like `talosctl netstat -a -p` (os:reader).
-func NodeConnections(configYAML, contextName, node string) (string, error) {
+func NodeConnections(configYAML, contextName, node string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err

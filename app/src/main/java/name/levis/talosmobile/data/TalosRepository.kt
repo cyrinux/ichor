@@ -29,6 +29,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
@@ -74,6 +77,19 @@ class TalosRepository(private val configs: ConfigRepository) {
     private fun scoped(key: String): String {
         val stored = configs.config.value
         return "${configs.generation.value}|${stored?.activeContext}|$key"
+    }
+
+    /** Bumped by [invalidate]; screens showing cluster data reload when it changes. */
+    private val _invalidations = MutableStateFlow(0)
+    val invalidations: StateFlow<Int> = _invalidations.asStateFlow()
+
+    /**
+     * Drops every cached result and asks visible screens to reload, e.g. after screenshot
+     * mode changed, so no value fetched under the previous setting stays on screen.
+     */
+    fun invalidate() {
+        cache.clear()
+        _invalidations.value++
     }
 
     private suspend fun <T : Any> remember(key: String, block: suspend () -> T): T =

@@ -41,7 +41,11 @@ type kubespanPeerInput struct {
 // KubeSpanStatus lists every node's KubeSpan peers (like `talosctl get kubespanpeerstatuses`).
 // Only peer statuses are read: the node identity resource is sensitive (it holds the
 // WireGuard private key), so it is neither needed nor touched.
-func KubeSpanStatus(configYAML, contextName string) (string, error) {
+func KubeSpanStatus(configYAML, contextName string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		nodes := targetNodes(s.context)
 		out := kubespanOverview{Nodes: make([]kubespanNode, len(nodes))}
@@ -68,6 +72,12 @@ func KubeSpanStatus(configYAML, contextName string) (string, error) {
 		}
 
 		wg.Wait()
+
+		for _, n := range out.Nodes {
+			for _, p := range n.Peers {
+				privacy.learnHost(p.Label, "node")
+			}
+		}
 
 		return toJSON(out)
 	})

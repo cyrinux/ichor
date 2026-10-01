@@ -23,7 +23,11 @@ type logTail struct {
 
 // ServiceLogs returns the last tailLines lines of a Talos service log (e.g. "kubelet", "etcd")
 // as JSON logTail, like `talosctl logs SERVICE --tail N`.
-func ServiceLogs(configYAML, contextName, node, service string, tailLines int) (string, error) {
+func ServiceLogs(configYAML, contextName, node, service string, tailLines int) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if strings.TrimSpace(service) == "" {
 			return "", errors.New("no service given")
@@ -47,7 +51,11 @@ func ServiceLogs(configYAML, contextName, node, service string, tailLines int) (
 }
 
 // KernelLogs returns the last tailLines lines of the kernel ring buffer (`talosctl dmesg`).
-func KernelLogs(configYAML, contextName, node string, tailLines int) (string, error) {
+func KernelLogs(configYAML, contextName, node string, tailLines int) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		stream, err := s.client.Dmesg(client.WithNode(ctx, node), false, false)
 		if err != nil {

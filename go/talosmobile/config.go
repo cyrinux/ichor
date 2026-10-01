@@ -27,7 +27,11 @@ type contextSummary struct {
 }
 
 // ParseConfig validates a talosconfig YAML and returns a JSON configSummary.
-func ParseConfig(configYAML string) (string, error) {
+func ParseConfig(configYAML string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	privacy.learnConfig(configYAML)
+
 	cfg, err := loadConfig(configYAML)
 	if err != nil {
 		return "", err

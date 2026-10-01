@@ -105,3 +105,16 @@ func TestLineSplitter(t *testing.T) {
 
 	_ = common.Data{}
 }
+
+func TestNodeFailedEvent(t *testing.T) {
+	at := time.UnixMilli(1_700_000_000_000)
+	ev := nodeFailedEvent("10.0.0.9", "connection refused", at)
+
+	if ev.Node != "10.0.0.9" || ev.Severity != "error" || ev.Action != "unreachable" || ev.At != at.UnixMilli() {
+		t.Fatalf("unexpected event: %+v", ev)
+	}
+
+	if ev.ID != "error-10.0.0.9" || ev.Message == "" {
+		t.Fatalf("missing id or message: %+v", ev)
+	}
+}

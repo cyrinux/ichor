@@ -47,12 +47,17 @@ type nodeProbe struct {
 	machineType machine.Type
 	typeErr     error
 	hostname    string
+	domain      string
 	hostnameErr error
 }
 
 // ClusterOverview queries every node of the context in parallel and returns a JSON clusterOverview.
 // Unreachable nodes are reported per node instead of failing the whole call.
-func ClusterOverview(configYAML, contextName string) (string, error) {
+func ClusterOverview(configYAML, contextName string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		name, _, err := resolveContext(configYAML, contextName)
 		if err != nil {
@@ -61,16 +66,20 @@ func ClusterOverview(configYAML, contextName string) (string, error) {
 
 		nodes := targetNodes(s.context)
 		result := clusterOverview{Context: name, Nodes: make([]nodeOverview, len(nodes))}
+		domains := make([]string, len(nodes))
 
 		var wg sync.WaitGroup
 
 		for i, node := range nodes {
 			wg.Go(func() {
-				result.Nodes[i] = buildNodeOverview(node, probeNode(ctx, s.client, node))
+				p := probeNode(ctx, s.client, node)
+				result.Nodes[i], domains[i] = buildNodeOverview(node, p), p.domain
 			})
 		}
 
 		wg.Wait()
+
+		learnClusterHosts(ctx, s.client, result.Nodes, domains)
 
 		return toJSON(result)
 	})
@@ -110,7 +119,7 @@ func probeNode(ctx context.Context, c *client.Client, node string) nodeProbe {
 	if hs, err := safe.StateGetByID[*network.HostnameStatus](nodeCtx, c.COSI, network.HostnameID); err != nil {
 		p.hostnameErr = err
 	} else {
-		p.hostname = hs.TypedSpec().Hostname
+		p.hostname, p.domain = hs.TypedSpec().Hostname, hs.TypedSpec().Domainname
 	}
 
 	return p

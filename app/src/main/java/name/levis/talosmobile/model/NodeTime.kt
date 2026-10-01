@@ -28,16 +28,42 @@ const val DRIFT_BAD_MS = 5_000L
 
 enum class DriftLevel { OK, WARN, BAD }
 
-val NodeTime.drift: DriftLevel
+/** How far the node's clock is off; null when the node could not be asked (unreachable). */
+val NodeTime.drift: DriftLevel?
     get() = when {
-        error != null -> DriftLevel.BAD
+        error != null -> null
         abs(offsetMs) >= DRIFT_BAD_MS -> DriftLevel.BAD
         abs(offsetMs) >= DRIFT_WARN_MS -> DriftLevel.WARN
         else -> DriftLevel.OK
     }
 
-/** The worst level over [nodes]; OK when empty. */
-fun worstDrift(nodes: List<NodeTime>): DriftLevel = nodes.maxOfOrNull { it.drift } ?: DriftLevel.OK
+/**
+ * The cluster-wide verdict of the clock drift card. [level] covers reachable nodes only
+ * (null when none answered), so an unreachable node never reads as "Out of sync".
+ */
+data class DriftSummary(
+    val level: DriftLevel?,
+    val reachable: Int,
+    val unreachable: Int,
+    /** Reachable nodes at or past [DRIFT_WARN_MS]. */
+    val drifting: Int,
+    /** Largest absolute offset over reachable nodes, null when none answered. */
+    val maxOffsetMs: Long?,
+) {
+    /** The per-node list starts expanded only when a reachable clock is off. */
+    val expandedByDefault: Boolean get() = level != null && level != DriftLevel.OK
+}
+
+fun driftSummary(nodes: List<NodeTime>): DriftSummary {
+    val (reachable, unreachable) = nodes.partition { it.error == null }
+    return DriftSummary(
+        level = reachable.mapNotNull { it.drift }.maxOrNull(),
+        reachable = reachable.size,
+        unreachable = unreachable.size,
+        drifting = reachable.count { it.drift != DriftLevel.OK },
+        maxOffsetMs = reachable.maxOfOrNull { abs(it.offsetMs) },
+    )
+}
 
 /** "+12 ms", "−1.25 s", "+3 min 4 s": a signed, readable clock offset. */
 fun formatOffset(offsetMs: Long): String {
@@ -49,3 +75,6 @@ fun formatOffset(offsetMs: Long): String {
         else -> "${ms / 60_000} min ${(ms % 60_000) / 1000} s"
     }
 }
+
+/** "±9 ms": the size of the largest offset, sign-free (used for the cluster summary). */
+fun formatMaxOffset(offsetMs: Long): String = "±" + formatOffset(abs(offsetMs)).drop(1)

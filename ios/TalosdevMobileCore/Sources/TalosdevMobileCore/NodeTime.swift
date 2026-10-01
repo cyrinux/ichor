@@ -56,8 +56,36 @@ public struct ClusterTimeInfo: Decodable, Equatable, Sendable {
         nodes = try c.decodeIfPresent([NodeTimeInfo].self, forKey: .nodes) ?? []
     }
 
-    /// The worst drift in the cluster (ok for no nodes).
+    /// The worst drift in the cluster, unreachable nodes counting as bad (ok for no nodes).
     public var worst: TimeDrift { nodes.map(\.drift).max() ?? .ok }
+
+    /// The overview badge and summary line: drift of the nodes that answered only.
+    public var summary: TimeDriftSummary { TimeDriftSummary(nodes) }
+}
+
+/// Clock drift of the reachable nodes, with the unreachable ones counted apart so a node
+/// that does not answer is not reported as out of sync (same rules as Android).
+public struct TimeDriftSummary: Equatable, Sendable {
+    public let reachable: Int
+    public let unreachable: Int
+    /// Reachable nodes at warning or worse.
+    public let drifting: Int
+    /// Worst drift of the reachable nodes; nil when none answered.
+    public let status: TimeDrift?
+    /// Largest |offset| among reachable nodes.
+    public let maxOffsetMs: Int64
+
+    public init(_ nodes: [NodeTimeInfo]) {
+        let answered = nodes.filter { $0.error == nil }
+        reachable = answered.count
+        unreachable = nodes.count - answered.count
+        drifting = answered.filter { $0.drift != .ok }.count
+        status = answered.map(\.drift).max()
+        maxOffsetMs = answered.map { $0.offsetMs == .min ? .max : abs($0.offsetMs) }.max() ?? 0
+    }
+
+    /// Collapsed to one line unless a reachable node drifts (same as Android).
+    public var expandedByDefault: Bool { (status ?? .ok) != .ok }
 }
 
 /// Clock drift severity; same thresholds as Android.
@@ -77,6 +105,11 @@ public func timeDrift(offsetMs: Int64, failed: Bool = false) -> TimeDrift {
     if magnitude >= UInt64(timeDriftBadMs) { return .bad }
     if magnitude >= UInt64(timeDriftWarningMs) { return .warning }
     return .ok
+}
+
+/// "12 ms", "1.25 s": formatOffset without the sign, for "max ±12 ms".
+public func formatOffsetMagnitude(_ ms: Int64) -> String {
+    String(formatOffset(ms == .min ? .max : abs(ms)).dropFirst())
 }
 
 /// "+12 ms", "-1.25 s", "+2 min 5 s": signed like the Go offset (positive = node behind).

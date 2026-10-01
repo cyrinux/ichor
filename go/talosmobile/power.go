@@ -16,7 +16,11 @@ import (
 //   - "default": stop pods and services gracefully, then reboot (kexec when available);
 //   - "powercycle": same, but a full firmware reboot instead of kexec;
 //   - "force": skip all teardown and reboot immediately.
-func Reboot(configYAML, contextName, node, mode string) error {
+func Reboot(configYAML, contextName, node, mode string) (err error) {
+	defer maskErr(&err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	m, err := parseRebootMode(mode)
 	if err != nil {
 		return err
@@ -29,7 +33,11 @@ func Reboot(configYAML, contextName, node, mode string) error {
 
 // Shutdown powers node off like `talosctl shutdown [--force]` (os:operator role or higher).
 // force skips the Kubernetes cordon/drain; pods and services are still stopped.
-func Shutdown(configYAML, contextName, node string, force bool) error {
+func Shutdown(configYAML, contextName, node string, force bool) (err error) {
+	defer maskErr(&err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return powerAction(configYAML, contextName, node, func(ctx context.Context, c *client.Client) error {
 		return c.Shutdown(ctx, client.WithShutdownForce(force))
 	})

@@ -41,7 +41,11 @@ type mountUsage struct {
 }
 
 // NodeServices returns the JSON list of Talos services on node.
-func NodeServices(configYAML, contextName, node string) (string, error) {
+func NodeServices(configYAML, contextName, node string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err
@@ -97,7 +101,11 @@ func mapServices(in []*machineapi.ServiceInfo) []serviceInfo {
 
 // NodeResources returns JSON memory, load, CPU, uptime and disk usage for node.
 // Individual RPC failures leave their section empty; only a total failure is an error.
-func NodeResources(configYAML, contextName, node string) (string, error) {
+func NodeResources(configYAML, contextName, node string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		nodeCtx := client.WithNode(ctx, node)
 		mc := s.client.MachineClient

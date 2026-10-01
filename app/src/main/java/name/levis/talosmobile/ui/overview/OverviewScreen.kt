@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -71,11 +72,12 @@ import name.levis.talosmobile.ui.components.DataFreshness
 import name.levis.talosmobile.ui.components.ErrorBox
 import name.levis.talosmobile.ui.components.LoadingBox
 import name.levis.talosmobile.ui.components.NodeHealthPill
+import name.levis.talosmobile.ui.components.StatusPill
 import name.levis.talosmobile.ui.factory
 import name.levis.talosmobile.ui.theme.LocalStatusColors
 
 class OverviewViewModel(
-    private val talos: TalosRepository,
+    val talos: TalosRepository,
     val configs: ConfigRepository,
 ) : LoadingViewModel<ClusterOverview>() {
     override fun cached(): TalosRepository.Timed<ClusterOverview>? = talos.cached(OVERVIEW)
@@ -99,9 +101,10 @@ fun OverviewScreen(
     val state by vm.state.collectAsStateWithLifecycle()
     val timeState by timeVm.state.collectAsStateWithLifecycle()
     val config by vm.configs.config.collectAsStateWithLifecycle()
+    val invalidations by vm.talos.invalidations.collectAsStateWithLifecycle()
 
-    // Reload whenever the active context changes (including first composition).
-    LaunchedEffect(config?.activeContext) {
+    // Reload whenever the active context changes or cached data was dropped (including first composition).
+    LaunchedEffect(config?.activeContext, invalidations) {
         vm.refresh(reset = true)
         timeVm.refresh(reset = true)
     }
@@ -113,13 +116,19 @@ fun OverviewScreen(
                 title = {
                     Column {
                         Text(stringResource(R.string.overview_title))
-                        config?.let { stored ->
-                            val access = stored.activeSummary?.accessLabel?.let { stringResource(it) }
-                            Text(
-                                listOfNotNull(stored.activeContext, access).joinToString(" · "),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            config?.let { stored ->
+                                val access = stored.activeSummary?.accessLabel?.let { stringResource(it) }
+                                Text(
+                                    listOfNotNull(stored.activeContext, access).joinToString(" · "),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false).padding(end = 6.dp),
+                                )
+                            }
+                            ScreenshotModeChip()
                         }
                     }
                 },
@@ -195,12 +204,13 @@ private fun NodeList(
         item { SupportCard() }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         item { Summary(overview.nodes) }
-        item { TimeDriftCard(time, overview.nodes.associate { it.node to it.hostname }) }
         items(nodes, key = { it.node }) { node ->
             SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {
                 NodeCard(node, onClick = { onNode(node) }, onLongClick = { sheetFor = node })
             }
         }
+        // After the nodes: they come first, the clocks are a secondary check.
+        item { TimeDriftCard(time, overview.nodes.associate { it.node to it.hostname }) }
     }
 }
 
@@ -314,6 +324,18 @@ private fun CertificateBanner(summary: ContextSummary, onIssueConfig: () -> Unit
     }
     if (canRenew) Card(onClick = onIssueConfig, modifier = Modifier.fillMaxWidth()) { content() }
     else Card(Modifier.fillMaxWidth()) { content() }
+}
+
+/** Reminds that screenshot mode is on, i.e. names and addresses on screen are not the real ones. */
+@Composable
+private fun ScreenshotModeChip() {
+    val prefs = (LocalContext.current.applicationContext as TalosApp).uiPreferences
+    val mask by prefs.privacyMask.collectAsStateWithLifecycle()
+    if (!mask.enabled) return
+    StatusPill(
+        stringResource(R.string.settings_screenshot_mode),
+        MaterialTheme.colorScheme.tertiary,
+    )
 }
 
 /** Shown when the daily check found a newer release; opens Settings → Updates. */

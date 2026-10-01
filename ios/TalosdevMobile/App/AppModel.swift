@@ -22,6 +22,9 @@ enum ThemeMode: String, CaseIterable, Identifiable {
 final class AppModel {
     private enum Keys {
         static let context = "activeContext"
+        /// Position of the active context in the config: unlike the name, it survives the
+        /// screenshot mode (Go masks context names but keeps their order).
+        static let contextIndex = "activeContextIndex"
         static let theme = "themeMode"
         static let lock = "appLockEnabled"
     }
@@ -32,15 +35,28 @@ final class AppModel {
     private(set) var lock: AppLockState
 
     var activeContext = "" {
-        didSet { UserDefaults.standard.set(activeContext, forKey: Keys.context) }
+        didSet {
+            UserDefaults.standard.set(activeContext, forKey: Keys.context)
+            if let index = summary?.contexts.firstIndex(where: { $0.name == activeContext }) {
+                UserDefaults.standard.set(index, forKey: Keys.contextIndex)
+            }
+        }
     }
 
     var theme: ThemeMode {
         didSet { UserDefaults.standard.set(theme.rawValue, forKey: Keys.theme) }
     }
 
+    /// Screenshot mode (masking done in Go, see TalosClient.setPrivacyMask) and its extra words.
+    private(set) var privacyMask: Bool
+    private(set) var privacyWords: String
+    /// Bumped when the screenshot mode changes, so screens reload instead of showing old data.
+    private(set) var dataGeneration = 0
+
     init() {
         theme = ThemeMode(rawValue: UserDefaults.standard.string(forKey: Keys.theme) ?? "") ?? .auto
+        privacyMask = UserDefaults.standard.bool(forKey: PrivacyKeys.enabled)
+        privacyWords = UserDefaults.standard.string(forKey: PrivacyKeys.words) ?? ""
         lock = AppLockState(enabled: UserDefaults.standard.bool(forKey: Keys.lock))
     }
 
@@ -58,7 +74,7 @@ final class AppModel {
         defer { loaded = true }
         guard let data = SecureConfigStore.load(), let stored = String(data: data, encoding: .utf8),
               let parsed = try? await TalosClient.parse(stored) else { return }
-        apply(yaml: stored, summary: parsed, preferred: UserDefaults.standard.string(forKey: Keys.context))
+        apply(yaml: stored, summary: parsed, preferred: parsed.selectedContext(index: Self.savedContextIndex, name: UserDefaults.standard.string(forKey: Keys.context)))
     }
 
     func save(yaml newYAML: String) async throws {
@@ -98,6 +114,24 @@ final class AppModel {
         UserDefaults.standard.set(enabled, forKey: Keys.lock)
     }
 
+    /// Turns the screenshot mode on or off (or changes its words): drops the data held with
+    /// the previous names (widget snapshot, loaded screens) and re-reads the config, whose
+    /// context names are masked too.
+    func setPrivacyMask(_ enabled: Bool, words: String) async {
+        guard enabled != privacyMask || words != privacyWords else { return }
+        let affectsData = enabled || privacyMask
+        privacyMask = enabled
+        privacyWords = words
+        UserDefaults.standard.set(enabled, forKey: PrivacyKeys.enabled)
+        UserDefaults.standard.set(words, forKey: PrivacyKeys.words)
+        TalosClient.setPrivacyMask(enabled: enabled, extraWords: words)
+        guard affectsData else { return }
+        // Also resets the alert diff, which would otherwise see every node renamed.
+        SharedStore.save(nil)
+        await reparse()
+        dataGeneration += 1
+    }
+
     func unlock() { lock.unlock() }
     func didEnterBackground() { lock.onBackground(now: Self.monotonicNow()) }
     func willEnterForeground() { lock.onForeground(now: Self.monotonicNow()) }
@@ -106,6 +140,19 @@ final class AppModel {
     /// so a locked phone left for hours would not relock the app); immune to clock changes.
     private static func monotonicNow() -> TimeInterval {
         TimeInterval(clock_gettime_nsec_np(CLOCK_MONOTONIC)) / 1_000_000_000
+    }
+
+    /// The saved context position; nil for installs from before it was saved.
+    nonisolated static var savedContextIndex: Int? {
+        UserDefaults.standard.object(forKey: Keys.contextIndex) as? Int
+    }
+
+    /// Parses the stored config again, keeping the active context by position (its name
+    /// changes when masking is toggled).
+    private func reparse() async {
+        guard let current = yaml, let before = summary, let parsed = try? await TalosClient.parse(current) else { return }
+        let index = before.contexts.firstIndex { $0.name == activeContext }
+        apply(yaml: current, summary: parsed, preferred: parsed.selectedContext(index: index, name: nil))
     }
 
     private func apply(yaml newYAML: String, summary newSummary: ConfigSummary, preferred: String?) {

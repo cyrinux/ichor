@@ -245,6 +245,11 @@
     <string name="settings_app_lock_desc">Impronta, o PIN/sequenza del dispositivo come alternativa, per aprire l\'app e prima di riavvio, spegnimento ed esportazione del kubeconfig. Blocca gli screenshot, a meno che non siano consentiti qui sotto.</string>
     <string name="settings_allow_screenshots">Consenti screenshot</string>
     <string name="settings_allow_screenshots_desc">Mostra anche il contenuto dell\'app tra le app recenti.</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_screenshot_mode">Modalità screenshot</string>
+    <string name="settings_screenshot_mode_desc">Nasconde indirizzi IP e nomi dei nodi, ad es. per screenshot o condivisione dello schermo</string>
+    <string name="settings_screenshot_mode_words">Nascondi anche queste parole</string>
+    <string name="settings_screenshot_mode_words_hint">Separate da virgole, ad es. un dominio o il nome di un cliente</string>
     <string name="settings_kube_section">Kubernetes</string>
     <string name="settings_kube_auth">Esporta kubeconfig</string>
     <string name="settings_kube_desc">Esporta un kubeconfig amministratore (richiede un talosconfig os:admin). Chiunque abbia questo file ha accesso completo al cluster Kubernetes: tienilo privato.</string>
@@ -549,6 +554,22 @@
     <string name="time_drift_drifting">In deriva</string>
     <string name="time_drift_bad">Non sincronizzato</string>
     <string name="time_drift_error">errore</string>
+    <string name="time_drift_unreachable">non raggiungibile</string>
+    <string name="time_drift_max">max %1$s</string>
+    <string name="time_drift_expand">Mostra nodi</string>
+    <string name="time_drift_collapse">Nascondi nodi</string>
+    <plurals name="time_drift_summary_in_sync">
+        <item quantity="one">%d nodo sincronizzato</item>
+        <item quantity="other">%d nodi sincronizzati</item>
+    </plurals>
+    <plurals name="time_drift_summary_drifting">
+        <item quantity="one">%d nodo in deriva</item>
+        <item quantity="other">%d nodi in deriva</item>
+    </plurals>
+    <plurals name="time_drift_unreachable_count">
+        <item quantity="one">%d non raggiungibile</item>
+        <item quantity="other">%d non raggiungibili</item>
+    </plurals>
     <string name="network_title">Rete</string>
     <string name="network_tab_interfaces">Interfacce</string>
     <string name="network_tab_connections">Connessioni</string>

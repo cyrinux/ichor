@@ -67,4 +67,16 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(ks.nodes[0].peers[0].state, "up")
         XCTAssertEqual(ks.nodes[1].error, "timed out")
     }
+
+    func testSelectedContextPrefersSavedIndex() {
+        let config = ConfigSummary(current: "b", contexts: [ContextSummary(name: "a"), ContextSummary(name: "b"), ContextSummary(name: "c")])
+        // A name saved while masked no longer matches; the index still does.
+        XCTAssertEqual(config.selectedContext(index: 2, name: "masked-1"), "c")
+        XCTAssertEqual(config.selectedContext(index: 0, name: "c"), "a")
+        // No index (older installs) or an index out of range: the name, then current.
+        XCTAssertEqual(config.selectedContext(index: nil, name: "c"), "c")
+        XCTAssertEqual(config.selectedContext(index: 7, name: "a"), "a")
+        XCTAssertEqual(config.selectedContext(index: -1, name: "masked-1"), "b")
+        XCTAssertEqual(config.selectedContext(index: nil, name: nil), "b")
+    }
 }

@@ -19,7 +19,11 @@ type imageInfo struct {
 
 // NodeImages lists the container images in node's CRI (Kubernetes) containerd namespace,
 // like `talosctl image list` (os:reader).
-func NodeImages(configYAML, contextName, node string) (string, error) {
+func NodeImages(configYAML, contextName, node string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err

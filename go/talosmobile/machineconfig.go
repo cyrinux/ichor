@@ -18,7 +18,11 @@ const redacted = "******"
 // `talosctl -n NODE get machineconfig -o yaml` (os:admin: the resource is sensitive).
 // Secrets (CA keys, tokens, encryption keys...) are masked with Talos's own RedactSecrets
 // unless revealSecrets is set, so they only reach the app when explicitly requested.
-func NodeMachineConfig(configYAML, contextName, node string, revealSecrets bool) (string, error) {
+func NodeMachineConfig(configYAML, contextName, node string, revealSecrets bool) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err

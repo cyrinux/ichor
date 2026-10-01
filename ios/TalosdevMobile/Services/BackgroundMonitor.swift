@@ -59,9 +59,10 @@ enum BackgroundMonitor {
     /// One check: overview + etcd, diffed with the previous snapshot. Silent if the cluster
     /// is unreachable as a whole (e.g. off VPN).
     static func check() async {
+        TalosClient.applyStoredPrivacyMask() // also set at launch; keeps this path self-contained
         guard let data = SecureConfigStore.load(), let yaml = String(data: data, encoding: .utf8),
               let summary = try? await TalosClient.parse(yaml) else { return }
-        let contextName = UserDefaults.standard.string(forKey: "activeContext").flatMap { summary.context(named: $0)?.name } ?? summary.current
+        let contextName = summary.selectedContext(index: AppModel.savedContextIndex, name: UserDefaults.standard.string(forKey: "activeContext"))
         let client = TalosClient(config: yaml, context: contextName)
         guard let overview = try? await client.overview() else { return }
         let etcd = try? await client.etcd()

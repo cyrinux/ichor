@@ -31,4 +31,50 @@ final class NodeTimeTests: XCTestCase {
         XCTAssertEqual(formatOffset(1_250), "+1.25 s")
         XCTAssertEqual(formatOffset(-125_000), "-2 min 5 s")
     }
+
+    func testSummaryIgnoresUnreachableNodes() {
+        let summary = ClusterTimeInfo(context: "x", nodes: [
+            NodeTimeInfo(node: "a", offsetMs: 9),
+            NodeTimeInfo(node: "b", offsetMs: -3),
+            NodeTimeInfo(node: "c", error: "connection refused"),
+        ]).summary
+        XCTAssertEqual(summary.reachable, 2)
+        XCTAssertEqual(summary.unreachable, 1)
+        XCTAssertEqual(summary.drifting, 0)
+        XCTAssertEqual(summary.status, .ok)
+        XCTAssertEqual(summary.maxOffsetMs, 9)
+        XCTAssertFalse(summary.expandedByDefault)
+    }
+
+    func testSummaryDrift() {
+        let drifting = TimeDriftSummary([NodeTimeInfo(node: "a", offsetMs: 2), NodeTimeInfo(node: "b", offsetMs: -700)])
+        XCTAssertEqual(drifting.status, .warning)
+        XCTAssertEqual(drifting.drifting, 1)
+        XCTAssertEqual(drifting.maxOffsetMs, 700)
+        XCTAssertTrue(drifting.expandedByDefault)
+
+        let bad = TimeDriftSummary([NodeTimeInfo(node: "a", offsetMs: 6_000), NodeTimeInfo(node: "b", offsetMs: -700), NodeTimeInfo(node: "c", error: "x")])
+        XCTAssertEqual(bad.status, .bad)
+        XCTAssertEqual(bad.drifting, 2)
+        XCTAssertEqual(bad.unreachable, 1)
+
+        let extreme = TimeDriftSummary([NodeTimeInfo(node: "a", offsetMs: .min)])
+        XCTAssertEqual(extreme.maxOffsetMs, .max)
+    }
+
+    func testSummaryWithoutReachableNodes() {
+        let none = TimeDriftSummary([NodeTimeInfo(node: "a", error: "timeout")])
+        XCTAssertNil(none.status)
+        XCTAssertEqual(none.reachable, 0)
+        XCTAssertEqual(none.unreachable, 1)
+        XCTAssertEqual(none.maxOffsetMs, 0)
+        XCTAssertFalse(none.expandedByDefault)
+        XCTAssertNil(TimeDriftSummary([]).status)
+    }
+
+    func testFormatOffsetMagnitude() {
+        XCTAssertEqual(formatOffsetMagnitude(9), "9 ms")
+        XCTAssertEqual(formatOffsetMagnitude(-1_250), "1.25 s")
+        XCTAssertFalse(formatOffsetMagnitude(.min).hasPrefix("-"))
+    }
 }

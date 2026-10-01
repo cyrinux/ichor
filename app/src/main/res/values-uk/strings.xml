@@ -277,6 +277,11 @@
     <string name="settings_app_lock_desc">Відбиток пальця або, як запасний варіант, PIN-код чи ключ пристрою для відкриття застосунку та перед перезавантаженням, вимкненням і експортом kubeconfig. Блокує знімки екрана, якщо їх не дозволено нижче.</string>
     <string name="settings_allow_screenshots">Дозволити знімки екрана</string>
     <string name="settings_allow_screenshots_desc">Також показує вміст застосунку в нещодавніх застосунках.</string>
+    <string name="settings_section_privacy">Приватність</string>
+    <string name="settings_screenshot_mode">Режим знімків екрана</string>
+    <string name="settings_screenshot_mode_desc">Приховує IP-адреси та імена вузлів, напр. для знімків екрана чи демонстрації екрана</string>
+    <string name="settings_screenshot_mode_words">Також приховувати ці слова</string>
+    <string name="settings_screenshot_mode_words_hint">Через кому, напр. домен або назва клієнта</string>
     <string name="settings_kube_section">Kubernetes</string>
     <string name="settings_kube_auth">Експортувати kubeconfig</string>
     <string name="settings_kube_desc">Експортувати kubeconfig адміністратора (потрібен talosconfig з os:admin). Будь-хто з цим файлом має повний доступ до кластера Kubernetes: зберігайте його в таємниці.</string>
@@ -599,6 +604,28 @@
     <string name="time_drift_drifting">Дрейфує</string>
     <string name="time_drift_bad">Не синхронізовано</string>
     <string name="time_drift_error">помилка</string>
+    <string name="time_drift_unreachable">недоступний</string>
+    <string name="time_drift_max">макс. %1$s</string>
+    <string name="time_drift_expand">Показати вузли</string>
+    <string name="time_drift_collapse">Сховати вузли</string>
+    <plurals name="time_drift_summary_in_sync">
+        <item quantity="one">%d вузол синхронізовано</item>
+        <item quantity="few">%d вузли синхронізовано</item>
+        <item quantity="many">%d вузлів синхронізовано</item>
+        <item quantity="other">%d вузла синхронізовано</item>
+    </plurals>
+    <plurals name="time_drift_summary_drifting">
+        <item quantity="one">%d вузол із розбіжністю</item>
+        <item quantity="few">%d вузли з розбіжністю</item>
+        <item quantity="many">%d вузлів із розбіжністю</item>
+        <item quantity="other">%d вузла з розбіжністю</item>
+    </plurals>
+    <plurals name="time_drift_unreachable_count">
+        <item quantity="one">%d недоступний</item>
+        <item quantity="few">%d недоступні</item>
+        <item quantity="many">%d недоступних</item>
+        <item quantity="other">%d недоступного</item>
+    </plurals>
     <string name="network_title">Мережа</string>
     <string name="network_tab_interfaces">Інтерфейси</string>
     <string name="network_tab_connections">З’єднання</string>

@@ -28,7 +28,11 @@ type processInfo struct {
 }
 
 // NodeProcesses lists node's processes, like `talosctl processes` (os:reader).
-func NodeProcesses(configYAML, contextName, node string) (string, error) {
+func NodeProcesses(configYAML, contextName, node string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, statsTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err

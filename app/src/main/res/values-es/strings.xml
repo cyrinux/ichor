@@ -245,6 +245,11 @@
     <string name="settings_app_lock_desc">Huella digital, o PIN/patrón del dispositivo como alternativa, para abrir la aplicación y antes de reiniciar, apagar o exportar el kubeconfig. Bloquea las capturas de pantalla salvo que se permitan abajo.</string>
     <string name="settings_allow_screenshots">Permitir capturas de pantalla</string>
     <string name="settings_allow_screenshots_desc">También muestra el contenido de la aplicación en las aplicaciones recientes.</string>
+    <string name="settings_section_privacy">Privacidad</string>
+    <string name="settings_screenshot_mode">Modo captura de pantalla</string>
+    <string name="settings_screenshot_mode_desc">Oculta las direcciones IP y los nombres de los nodos, p. ej. para capturas o al compartir pantalla</string>
+    <string name="settings_screenshot_mode_words">Ocultar también estas palabras</string>
+    <string name="settings_screenshot_mode_words_hint">Separadas por comas, p. ej. un dominio o el nombre de un cliente</string>
     <string name="settings_kube_section">Kubernetes</string>
     <string name="settings_kube_auth">Exportar kubeconfig</string>
     <string name="settings_kube_desc">Exporta un kubeconfig de administrador (requiere un talosconfig os:admin). Cualquiera que tenga este archivo tiene acceso total al clúster de Kubernetes: mantenlo en privado.</string>
@@ -549,6 +554,22 @@
     <string name="time_drift_drifting">Con deriva</string>
     <string name="time_drift_bad">Desincronizado</string>
     <string name="time_drift_error">error</string>
+    <string name="time_drift_unreachable">inaccesible</string>
+    <string name="time_drift_max">máx. %1$s</string>
+    <string name="time_drift_expand">Mostrar nodos</string>
+    <string name="time_drift_collapse">Ocultar nodos</string>
+    <plurals name="time_drift_summary_in_sync">
+        <item quantity="one">%d nodo sincronizado</item>
+        <item quantity="other">%d nodos sincronizados</item>
+    </plurals>
+    <plurals name="time_drift_summary_drifting">
+        <item quantity="one">%d nodo con deriva</item>
+        <item quantity="other">%d nodos con deriva</item>
+    </plurals>
+    <plurals name="time_drift_unreachable_count">
+        <item quantity="one">%d inaccesible</item>
+        <item quantity="other">%d inaccesibles</item>
+    </plurals>
     <string name="network_title">Red</string>
     <string name="network_tab_interfaces">Interfaces</string>
     <string name="network_tab_connections">Conexiones</string>

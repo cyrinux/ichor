@@ -52,6 +52,7 @@ struct SettingsView: View {
             } footer: {
                 Text("Face ID / Touch ID, or the device passcode, to open the app and before reboot or shutdown. Also hides the app in the app switcher.")
             }
+            PrivacySection()
             MonitoringSection()
             if model.allows(.kubeconfig) { KubeconfigSection() }
             Section("Config") {
@@ -112,5 +113,44 @@ struct SettingsView: View {
                 model.setLockEnabled(enabled)
             }
         }
+    }
+}
+
+/// Screenshot mode: Go masks IPs, node and context names, plus the extra words. The words
+/// apply when the field is submitted or the screen closes, not on every keystroke.
+private struct PrivacySection: View {
+    @Environment(AppModel.self) private var model
+    @State private var words = ""
+    @FocusState private var editingWords: Bool
+
+    var body: some View {
+        Section {
+            Toggle("Screenshot mode", isOn: Binding(get: { model.privacyMask }, set: { on in
+                Task { await model.setPrivacyMask(on, words: normalizedMaskWords(words)) }
+            }))
+            if model.privacyMask {
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("Also hide these words", text: $words)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .focused($editingWords)
+                        .onSubmit(commit)
+                    Text("Comma-separated, e.g. a domain or a customer name").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            Text("Privacy")
+        } footer: {
+            Text("Hide IP addresses and node names, e.g. for screenshots or screen sharing")
+        }
+        .onAppear { words = model.privacyWords }
+        .onChange(of: editingWords) { _, editing in if !editing { commit() } }
+        .onDisappear(perform: commit)
+    }
+
+    private func commit() {
+        words = normalizedMaskWords(words)
+        guard model.privacyMask, words != model.privacyWords else { return }
+        Task { await model.setPrivacyMask(true, words: words) }
     }
 }

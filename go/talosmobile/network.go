@@ -57,7 +57,11 @@ var virtualLinkPrefixes = []string{"lxc", "cilium_", "flannel", "cni", "kube-ipv
 // NodeNetwork returns node's links, addresses, main-table routes, DNS resolvers and time
 // servers, like `talosctl get links/addresses/routes/resolvers/timeservers` (os:reader).
 // Each section is best-effort; only a total failure is an error.
-func NodeNetwork(configYAML, contextName, node string) (string, error) {
+func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err
@@ -93,7 +97,9 @@ func NodeNetwork(configYAML, contextName, node string) (string, error) {
 		if res, err := safe.StateListAll[*network.ResolverStatus](nodeCtx, st); err != nil {
 			out.Errors["resolvers"] = friendlyError(err)
 		} else {
-			out.Resolvers = mapResolvers(safe.ToSlice(res, identity))
+			resolvers := safe.ToSlice(res, identity)
+			out.Resolvers = mapResolvers(resolvers)
+			learnSearchDomains(resolvers)
 		}
 
 		if ts, err := safe.StateListAll[*network.TimeServerStatus](nodeCtx, st); err != nil {

@@ -10,7 +10,12 @@ import (
 // Kubeconfig returns an admin kubeconfig for the cluster (like `talosctl kubeconfig`),
 // fetched from the first reachable control-plane node. Requires the os:admin role.
 // The result is a credential: callers must write it only where the user asked.
-func Kubeconfig(configYAML, contextName string) (string, error) {
+func Kubeconfig(configYAML, contextName string) (out string, err error) {
+	// The result is a credential the user saves: only the error is masked.
+	defer maskErr(&err)
+
+	contextName = unmaskContext(configYAML, contextName)
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		cps := classifyNodes(ctx, s.client, targetNodes(s.context)).GetControlPlaneNodes()
 		if len(cps) == 0 {

@@ -37,6 +37,10 @@ func (h *HealthRun) Cancel() {
 // StartClusterHealth runs the server-side cluster health check (like `talosctl health`)
 // on the first control-plane node and streams progress to listener.
 func StartClusterHealth(configYAML, contextName string, listener HealthListener) *HealthRun {
+	contextName = unmaskContext(configYAML, contextName)
+
+	listener = maskedHealthListener{listener}
+
 	ctx, cancel := context.WithTimeout(context.Background(), healthTimeout)
 
 	go func() {

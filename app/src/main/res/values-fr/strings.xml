@@ -245,6 +245,11 @@
     <string name="settings_app_lock_desc">Empreinte, ou code/schéma de l\'appareil en secours, pour ouvrir l\'app et avant un redémarrage, un arrêt ou un export du kubeconfig. Bloque les captures d\'écran sauf si elles sont autorisées ci-dessous.</string>
     <string name="settings_allow_screenshots">Autoriser les captures d\'écran</string>
     <string name="settings_allow_screenshots_desc">Affiche aussi le contenu de l\'app dans les applis récentes.</string>
+    <string name="settings_section_privacy">Confidentialité</string>
+    <string name="settings_screenshot_mode">Mode capture d\'écran</string>
+    <string name="settings_screenshot_mode_desc">Masque les adresses IP et les noms des nœuds, p. ex. pour des captures d\'écran ou un partage d\'écran</string>
+    <string name="settings_screenshot_mode_words">Masquer aussi ces mots</string>
+    <string name="settings_screenshot_mode_words_hint">Séparés par des virgules, p. ex. un domaine ou un nom de client</string>
     <string name="settings_kube_section">Kubernetes</string>
     <string name="settings_kube_auth">Exporter le kubeconfig</string>
     <string name="settings_kube_desc">Exporte un kubeconfig admin (nécessite un talosconfig os:admin). Toute personne disposant de ce fichier a un accès complet au cluster Kubernetes&#160;: gardez-le privé.</string>
@@ -549,6 +554,22 @@
     <string name="time_drift_drifting">Dérive</string>
     <string name="time_drift_bad">Désynchronisé</string>
     <string name="time_drift_error">erreur</string>
+    <string name="time_drift_unreachable">injoignable</string>
+    <string name="time_drift_max">max %1$s</string>
+    <string name="time_drift_expand">Afficher les nœuds</string>
+    <string name="time_drift_collapse">Masquer les nœuds</string>
+    <plurals name="time_drift_summary_in_sync">
+        <item quantity="one">%d nœud synchronisé</item>
+        <item quantity="other">%d nœuds synchronisés</item>
+    </plurals>
+    <plurals name="time_drift_summary_drifting">
+        <item quantity="one">%d nœud qui dérive</item>
+        <item quantity="other">%d nœuds qui dérivent</item>
+    </plurals>
+    <plurals name="time_drift_unreachable_count">
+        <item quantity="one">%d injoignable</item>
+        <item quantity="other">%d injoignables</item>
+    </plurals>
     <string name="network_title">Réseau</string>
     <string name="network_tab_interfaces">Interfaces</string>
     <string name="network_tab_connections">Connexions</string>

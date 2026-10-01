@@ -28,6 +28,12 @@ enum SnapshotEvent: Sendable {
     case failed(String)
 }
 
+/// UserDefaults keys of the screenshot mode.
+enum PrivacyKeys {
+    static let enabled = "privacyMask"
+    static let words = "privacyMaskWords"
+}
+
 /// Swift face of the gomobile framework. Go calls block, so they run off the main actor.
 /// Signatures come from the generated Talosmobile.objc.h (C functions with NSError**).
 struct TalosClient: Sendable {
@@ -42,6 +48,18 @@ struct TalosClient: Sendable {
     /// talosconfig from generateTalosconfig); other contexts and fields are kept.
     static func replaceContextCredentials(stored: String, generated: String, context: String) async throws -> String {
         try await run { TalosmobileReplaceContextCredentials(stored, generated, context, $0) }
+    }
+
+    /// Screenshot mode: Go masks IPs, hostnames, context names and `extraWords`
+    /// (comma-separated) in everything it returns, and unmasks what it is given back.
+    static func setPrivacyMask(enabled: Bool, extraWords: String) {
+        TalosmobileSetPrivacyMask(enabled, extraWords)
+    }
+
+    /// Applies the stored screenshot mode; call before any other Go call (also in background tasks).
+    static func applyStoredPrivacyMask() {
+        let defaults = UserDefaults.standard
+        setPrivacyMask(enabled: defaults.bool(forKey: PrivacyKeys.enabled), extraWords: defaults.string(forKey: PrivacyKeys.words) ?? "")
     }
 
     func overview() async throws -> ClusterOverview {

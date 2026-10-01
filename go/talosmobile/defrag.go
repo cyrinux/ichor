@@ -13,8 +13,12 @@ const defragTimeout = 5 * time.Minute
 
 // EtcdDefragment defragments node's etcd member, like `talosctl -n NODE etcd defrag`
 // (os:operator or os:admin). Talos advises one member at a time: callers sequence them.
-func EtcdDefragment(configYAML, contextName, node string) error {
-	_, err := withSession(configYAML, contextName, defragTimeout, func(ctx context.Context, s *session) (struct{}, error) {
+func EtcdDefragment(configYAML, contextName, node string) (err error) {
+	defer maskErr(&err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	_, err = withSession(configYAML, contextName, defragTimeout, func(ctx context.Context, s *session) (struct{}, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return struct{}{}, err
 		}

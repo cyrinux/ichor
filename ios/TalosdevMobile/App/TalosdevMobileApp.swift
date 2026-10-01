@@ -9,6 +9,8 @@ struct TalosdevMobileApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        // Before any Talos call, including the background refresh task registered below.
+        TalosClient.applyStoredPrivacyMask()
         BackgroundMonitor.register()
         BackgroundMonitor.registerCategories()
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
