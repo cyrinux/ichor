@@ -51,6 +51,9 @@ class TalosRepository(private val configs: ConfigRepository) {
         call { cfg, ctx -> TalosJson.decodeFromString(KubeSpanOverview.serializer(), Talosmobile.kubeSpanStatus(cfg, ctx)) }
     }
 
+    /** `talosctl -n NODE etcd defrag` (os:operator or os:admin); one member at a time. */
+    suspend fun etcdDefragment(node: String) = call { cfg, ctx -> Talosmobile.etcdDefragment(cfg, ctx, node) }
+
     /** One sample of node counters for the live graphs (not cached: always fresh). */
     suspend fun stats(node: String): NodeStats = call { cfg, ctx ->
         TalosJson.decodeFromString(NodeStats.serializer(), Talosmobile.nodeStats(cfg, ctx, node))

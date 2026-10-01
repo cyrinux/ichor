@@ -27,6 +27,7 @@ enum class Feature(val label: String, val roles: Set<String>) {
     KUBECONFIG("Kubeconfig export", setOf("os:admin")),
     // DebugService/ContainerRun is admin-only in Talos.
     DEBUG_SHELL("Debug shell", setOf("os:admin")),
+    ETCD_DEFRAG("etcd defragmentation", setOf("os:admin", "os:operator")),
     ;
 
     val minimumRole: String get() = if ("os:operator" in roles) "os:operator" else "os:admin"
@@ -169,3 +170,14 @@ data class KubeSpanPeer(
     val tx: Long = 0,
     val lastHandshake: Long = 0,
 )
+
+/** Space a defragmentation would give back (on-disk size minus space in use). */
+val EtcdNodeStatus.reclaimable: Long get() = (dbSize - dbSizeInUse).coerceAtLeast(0)
+
+/**
+ * Members to defragment, one at a time as Talos advises: followers first, the leader last
+ * (it stays available longest), skipping members that could not be queried.
+ */
+fun defragOrder(statuses: List<EtcdNodeStatus>): List<EtcdNodeStatus> =
+    statuses.filter { it.error == null && it.memberId.isNotEmpty() }
+        .sortedWith(compareBy<EtcdNodeStatus> { it.isLeader }.thenByDescending { it.reclaimable })

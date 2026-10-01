@@ -59,6 +59,13 @@ struct TalosClient: Sendable {
         TalosmobileStartDebugShell(config, context, node, image, args, cols, rows, listener)
     }
 
+    /// `talosctl -n NODE etcd defrag` (os:operator or os:admin); one member at a time.
+    func defragment(node: String) async throws {
+        try await Self.run { [config, context] error -> Void in
+            _ = TalosmobileEtcdDefragment(config, context, node, error)
+        }
+    }
+
     /// One sample of counters for the live graphs.
     func stats(node: String) async throws -> NodeStats {
         try await Self.json { [config, context] in TalosmobileNodeStats(config, context, node, $0) }

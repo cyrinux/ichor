@@ -150,7 +150,7 @@ public struct LogTail: Decodable, Equatable, Sendable {
 
 /// Features gated by Talos RBAC (rules from Talos v1.14 machined.go).
 public enum Feature: CaseIterable, Sendable {
-    case power, health, kubeconfig, debugShell
+    case power, health, kubeconfig, debugShell, etcdDefrag
 
     public var label: String {
         switch self {
@@ -158,12 +158,13 @@ public enum Feature: CaseIterable, Sendable {
         case .health: "Cluster health check"
         case .kubeconfig: "Kubeconfig export"
         case .debugShell: "Debug shell"
+        case .etcdDefrag: "etcd defragmentation"
         }
     }
 
     public var roles: Set<String> {
         switch self {
-        case .power: ["os:admin", "os:operator"]
+        case .power, .etcdDefrag: ["os:admin", "os:operator"]
         // The server-side health check fetches a Kubernetes admin kubeconfig with the caller's role.
         // DebugService/ContainerRun is admin-only too.
         case .health, .kubeconfig, .debugShell: ["os:admin"]
@@ -208,4 +209,20 @@ public struct KubeSpanPeer: Decodable, Equatable, Identifiable, Sendable {
     public let lastHandshake: Int64
 
     public var id: String { publicKey }
+}
+
+public extension EtcdNodeStatus {
+    /// Space a defragmentation would give back (on-disk size minus space in use).
+    var reclaimable: Int64 { max(dbSize - dbSizeInUse, 0) }
+}
+
+/// Members to defragment one at a time, as Talos advises: followers first, the leader last,
+/// skipping members that could not be queried (same rule as Android).
+public func defragOrder(_ statuses: [EtcdNodeStatus]) -> [EtcdNodeStatus] {
+    statuses
+        .filter { $0.error == nil && !$0.memberId.isEmpty }
+        .sorted { a, b in
+            if a.isLeader != b.isLeader { return !a.isLeader }
+            return a.reclaimable > b.reclaimable
+        }
 }
