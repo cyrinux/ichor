@@ -1,6 +1,9 @@
 package talosmobile
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestCompareVersions(t *testing.T) {
 	cases := []struct {
@@ -45,5 +48,29 @@ func TestCheckUpdate(t *testing.T) {
 
 	if none := checkUpdate(nil, "v1.14.1"); none.Newer || none.Latest != "" {
 		t.Fatalf("no releases should report nothing: %+v", none)
+	}
+}
+
+func TestParseReleasesSortsByVersion(t *testing.T) {
+	body := []byte(`[
+		{"tag_name":"v1.13.11","published_at":"2026-09-30T00:00:00Z"},
+		{"tag_name":"v1.14.2","published_at":"2026-09-29T00:00:00Z"},
+		{"tag_name":"v1.12.12","published_at":"2026-09-28T00:00:00Z"},
+		{"tag_name":"v1.15.0-alpha.1","prerelease":true,"published_at":"2026-09-27T00:00:00Z"},
+		{"tag_name":"v1.14.10","published_at":"2026-09-26T00:00:00Z","draft":true}
+	]`)
+
+	got, err := parseReleases(body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var versions []string
+	for _, r := range got {
+		versions = append(versions, r.Version)
+	}
+
+	if want := "v1.15.0-alpha.1,v1.14.2,v1.13.11,v1.12.12"; strings.Join(versions, ",") != want {
+		t.Fatalf("got %v, want %s", versions, want)
 	}
 }

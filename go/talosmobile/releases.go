@@ -92,9 +92,14 @@ func parseReleases(body []byte) ([]talosRelease, error) {
 
 		out = append(out, talosRelease{Version: v, Date: r.PublishedAt.UTC().Format(time.RFC3339), Prerelease: r.Prerelease})
 
-		if len(out) == maxReleases {
-			break
-		}
+	}
+
+	// Newest version first, not newest release: patch releases of older lines are published
+	// after newer minor versions.
+	sort.SliceStable(out, func(i, j int) bool { return compareVersions(out[i].Version, out[j].Version) > 0 })
+
+	if len(out) > maxReleases {
+		out = out[:maxReleases]
 	}
 
 	return out, nil

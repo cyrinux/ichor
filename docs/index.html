@@ -189,6 +189,12 @@
     .map td.role::before { content: "Needs "; }
     .top nav a.optional { display: none; }
   }
+  .shots { display: flex; gap: 1.25rem; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0.5rem 0 1.25rem; margin-top: 2rem; }
+  .shots figure { margin: 0; flex: 0 0 auto; width: min(240px, 70vw); scroll-snap-align: start; }
+  .shots img { display: block; width: 100%; height: auto; border-radius: 18px; border: 1px solid var(--line); background: var(--phone); }
+  .shots figcaption { margin-top: 0.6rem; font-size: 0.9rem; color: var(--ink-2); }
+  .shots figcaption strong { display: block; color: var(--ink); font-weight: 600; }
+  .shots:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 </style>
 </head>
 <body>
@@ -199,6 +205,7 @@
       Talosdev Mobile
     </a>
     <nav aria-label="Primary">
+      <a class="optional" href="#screens">Screens</a>
       <a class="optional" href="#features">Features</a>
       <a class="optional" href="#access">Access</a>
       <a href="#install">Install</a>
@@ -239,6 +246,41 @@
         </div>
       </div>
     </div>
+
+    <section id="screens" aria-labelledby="screens-title">
+      <h2 id="screens-title">What it looks like</h2>
+      <p class="intro">Real screens from a running cluster, taken in screenshot mode: addresses and node names are replaced with stand-ins.</p>
+      <div class="shots" tabindex="0" role="region" aria-label="App screenshots, scroll sideways">
+        <figure>
+          <img src="screenshots/overview.webp" width="540" height="1045" loading="lazy" alt="Cluster overview screen of Talosdev Mobile">
+          <figcaption><strong>Cluster overview</strong>Every node at a glance, and a banner when a newer Talos is out.</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/node-services.webp" width="540" height="1045" loading="lazy" alt="Services screen of Talosdev Mobile">
+          <figcaption><strong>Services</strong>Health of each Talos service, with restart for operators.</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/logs.webp" width="540" height="1045" loading="lazy" alt="Kernel and service logs screen of Talosdev Mobile">
+          <figcaption><strong>Kernel and service logs</strong>Colored by level, repeats folded, filter to warnings or errors.</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/events.webp" width="540" height="1045" loading="lazy" alt="Events screen of Talosdev Mobile">
+          <figcaption><strong>Events</strong>Service changes and node conditions as they happen.</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/graphs.webp" width="540" height="1045" loading="lazy" alt="Live graphs screen of Talosdev Mobile">
+          <figcaption><strong>Live graphs</strong>CPU, memory, network, disk and load every two seconds.</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/capture.webp" width="540" height="1045" loading="lazy" alt="Packet capture screen of Talosdev Mobile">
+          <figcaption><strong>Packet capture</strong>A live packet list, saved as a .pcap for Wireshark.</figcaption>
+        </figure>
+        <figure>
+          <img src="screenshots/upgrade.webp" width="540" height="1045" loading="lazy" alt="Talos upgrade screen of Talosdev Mobile">
+          <figcaption><strong>Talos upgrade</strong>Your installer image with the new version, after pre-flight checks.</figcaption>
+        </figure>
+      </div>
+    </section>
 
     <section id="features" aria-labelledby="features-title">
       <h2 id="features-title">The talosctl commands you reach for, as screens</h2>
