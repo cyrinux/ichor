@@ -137,3 +137,15 @@ _adb-install device apk:
         adb connect "{{ device }}" >/dev/null
     fi
     adb {{ if device == "" { "" } else { "-s " + device } }} install -r "{{ apk }}"
+
+# iOS core package tests on Linux (models, formatting, lock, power rules).
+ios-test-linux:
+    nix develop .#swift --command ios/TalosViewerCore/test-linux.sh
+
+# macOS only: Go xcframework, core tests and a simulator build.
+ios-test:
+    scripts/ios-build.sh test
+
+# macOS only: unsigned Release IPA in ios/build/ (re-sign with Sideloadly/AltStore).
+ios-build:
+    scripts/ios-build.sh ipa

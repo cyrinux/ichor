@@ -1,0 +1,51 @@
+name: Android
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write # attach APKs to releases on tags
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # scripts/version.sh derives the version from tags and history
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Check (gofmt, vet, Go and Kotlin unit tests)
+        run: ./build.sh check
+
+      - name: Build debug APK
+        run: ./build.sh debug
+
+      # Signed when the TALOS_KEYSTORE_BASE64 / TALOS_KEYSTORE_PASSWORD / TALOS_KEY_ALIAS
+      # secrets are set (base64 of the .jks from `just android-keystore-gen`), else unsigned.
+      - name: Build release APK
+        env:
+          TALOS_KEYSTORE_BASE64: ${{ secrets.TALOS_KEYSTORE_BASE64 }}
+          TALOS_KEYSTORE_PASSWORD: ${{ secrets.TALOS_KEYSTORE_PASSWORD }}
+          TALOS_KEY_ALIAS: ${{ secrets.TALOS_KEY_ALIAS }}
+        run: |
+          if [ -n "$TALOS_KEYSTORE_BASE64" ]; then
+            echo "$TALOS_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export TALOS_KEYSTORE="$RUNNER_TEMP/release.jks"
+          fi
+          ./build.sh release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: talos-viewer-android
+          path: app/build/outputs/apk/**/*.apk
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/outputs/apk/release/*.apk

@@ -1,6 +1,6 @@
 # Talos Viewer
 
-Android app for a [Talos](https://www.talos.dev) cluster:
+Android and iOS app for a [Talos](https://www.talos.dev) cluster:
 
 - **Viewing:** node status, services, resources, logs, etcd and the cluster health check.
 - **Actions:** reboot or shut down a node.
@@ -13,8 +13,9 @@ The Talos API layer is the official Go client (`siderolabs/talos/pkg/machinery`,
 proxying behave exactly like `talosctl`.
 
 ```
-app/            Kotlin + Jetpack Compose UI
-go/talosmobile  Go core exposed to Kotlin (JSON in/out)
+app/            Android: Kotlin + Jetpack Compose UI
+ios/            iOS: SwiftUI app (XcodeGen) + TalosViewerCore Swift package
+go/talosmobile  Go core exposed to Kotlin and Swift (JSON in/out)
 go/cmd/probe    desktop CLI calling the same Go functions
 flake.nix       Nix build environment (default)
 build/          amd64 Docker toolchain (CI)
@@ -145,3 +146,56 @@ go run ./cmd/probe overview   # also: services NODE, resources NODE, logs NODE S
                               #       etcd, health, kubeconfig (prints size only), parse
 go run ./cmd/probe -config ../talosconfig-phone overview   # test a role-limited config
 ```
+
+## iOS
+
+The iOS app (`ios/`) reuses the same Go core, built as `Talosmobile.xcframework` with
+gomobile, around a SwiftUI UI. The pure logic lives in the `TalosViewerCore` Swift package:
+models, formatting, lock state and power-request rules.
+
+**What the first version has:**
+
+- import from a file, by pasting, or by QR code (VisionKit), stored in the Keychain on this
+  device only;
+- overview, node services and resources, logs and dmesg, etcd, and the cluster health check;
+- reboot and shutdown with the same modes and typed confirmation as Android;
+- a Face ID / passcode lock, with an app-switcher privacy cover;
+- themes.
+
+**Not yet:** background alerts, the widget and kubeconfig export.
+
+**Differences from Android:**
+
+- iOS does not let apps block screenshots, so there is no screenshot switch.
+- Keychain items survive uninstalling the app. Use Settings → Delete to remove the config.
+
+**Building:** Xcode only runs on macOS.
+
+```sh
+just ios-test-linux   # core package tests, here on Linux (Nix swift shell)
+just ios-test         # macOS: xcframework + core tests + simulator build
+just ios-build        # macOS: unsigned IPA in ios/build/
+```
+
+**Installing:** CI produces an unsigned IPA. Sideloadly or AltStore re-sign it with your Apple
+ID: a free account means reinstalling every 7 days, a paid one lasts a year. To sign in Xcode
+instead, set `TALOS_IOS_TEAM_ID` before `xcodegen generate`.
+
+## CI (GitHub Actions)
+
+- **`.github/workflows/android.yml`** (Ubuntu, Nix flake): `./build.sh check`, then the debug
+  and release APKs.
+- **`.github/workflows/ios.yml`** (macOS 15): core tests, simulator build, unsigned IPA.
+
+Both run on pushes to `main` and on pull requests. On a `v*` tag (`just release-tag 0.1.0`,
+then `git push origin v0.1.0`), they attach the release APK and the IPA to the GitHub release.
+
+To sign the release APK in CI, add these repository secrets:
+
+| Secret | Value |
+|---|---|
+| `TALOS_KEYSTORE_BASE64` | `base64 -w0 ~/talos-viewer-release.jks` |
+| `TALOS_KEYSTORE_PASSWORD` | the keystore password |
+| `TALOS_KEY_ALIAS` | the key alias, e.g. `talos-viewer` |
+
+Without them, the release APK is unsigned.
