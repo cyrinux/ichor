@@ -156,20 +156,21 @@ fun NodeDetailScreen(
     val controlState by serviceControl.state.collectAsStateWithLifecycle()
     var confirmingService by remember { mutableStateOf<ServiceRequest?>(null) }
 
+    // dismiss() comes last: it changes the effect's key, which cancels whatever still runs here.
     LaunchedEffect(controlState) {
         when (val s = controlState) {
             is ServiceControlState.Done -> {
-                serviceControl.dismiss()
                 services.refresh()
-                // Talos applies the action asynchronously: look again once it had time to settle.
-                launch {
+                // Talos applies the action asynchronously: look again once it had time to settle
+                // (in the screen's scope, so another action does not cancel it).
+                scope.launch {
                     delay(SERVICE_SETTLE_MILLIS)
                     services.refresh()
                 }
                 snackbar.showSnackbar(context.getString(s.request.action.done, s.request.service, hostname))
+                serviceControl.dismiss()
             }
             is ServiceControlState.Failed -> {
-                serviceControl.dismiss()
                 snackbar.showSnackbar(
                     context.getString(
                         R.string.service_action_failed,
@@ -178,6 +179,7 @@ fun NodeDetailScreen(
                         s.message.resolve(context),
                     ),
                 )
+                serviceControl.dismiss()
             }
             else -> Unit
         }

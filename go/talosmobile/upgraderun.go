@@ -148,7 +148,12 @@ func runUpgrade(
 
 	emitProgress(listener, phaseInstall, "upgrade accepted: draining and installing")
 
-	tracker := &upgradeTracker{oldVersion: plan.CurrentVersion}
+	_, tag := splitImageRef(image)
+	tracker := &upgradeTracker{
+		oldVersion: plan.CurrentVersion,
+		reinstall:  tag != "" && sameVersion(tag, plan.CurrentVersion),
+		staged:     stage,
+	}
 	observe := func(ctx context.Context) upgradeObservation { return observeNode(ctx, s.client, node) }
 
 	return followUpgrade(ctx, tracker, observe, func(phase, msg string) { emitProgress(listener, phase, msg) },
@@ -225,7 +230,11 @@ func observeNode(ctx context.Context, c *client.Client, node string) upgradeObse
 type upgradeTracker struct {
 	oldVersion string
 	phase      string
+	reinstall  bool      // the image carries the version the node already runs
+	staged     bool      // staged upgrade: the node reboots twice
 	sawDown    bool      // the node went down (rebooted) since the request
+	inDown     bool      // the last observation was part of a reboot
+	downs      int       // reboots seen since the request
 	oldSince   time.Time // since when it runs the old version again after a reboot
 }
 
@@ -245,6 +254,14 @@ func (t *upgradeTracker) step(o upgradeObservation, now time.Time) trackStep {
 	if !backOnOld {
 		t.oldSince = time.Time{}
 	}
+
+	rebooting := !o.reachable || o.stage == runtime.MachineStageRebooting.String() ||
+		o.stage == runtime.MachineStageShuttingDown.String() || o.stage == runtime.MachineStageBooting.String()
+	if rebooting && !t.inDown {
+		t.downs++
+	}
+
+	t.inDown = rebooting
 
 	switch {
 	case !o.reachable:
@@ -270,12 +287,16 @@ func (t *upgradeTracker) step(o upgradeObservation, now time.Time) trackStep {
 
 		phase, msg = phaseBooted, "booted "+o.version+", waiting for it to be ready"
 	case backOnOld:
-		// Back on the old version after a reboot: a staged upgrade reboots once more, anything
-		// else failed (Talos rolls back to the previous image when the new one does not boot).
 		if t.oldSince.IsZero() {
 			t.oldSince = now
 		}
 
+		if t.reinstall {
+			return t.change(t.reinstalled(o, now))
+		}
+
+		// Back on the old version after a reboot: a staged upgrade reboots once more, anything
+		// else failed (Talos rolls back to the previous image when the new one does not boot).
 		if now.Sub(t.oldSince) > oldVersionGrace {
 			return trackStep{err: fmt.Errorf("the node rebooted but still runs %s: the upgrade failed or was rolled back (see its kernel log)", o.version)}
 		}
@@ -286,6 +307,22 @@ func (t *upgradeTracker) step(o upgradeObservation, now time.Time) trackStep {
 	}
 
 	return t.change(trackStep{phase: phase, message: msg})
+}
+
+// reinstalled handles a node that is back, after a reboot, on the version it was reinstalled
+// with: the version cannot tell success, so being ready again does. A staged reinstall
+// reboots twice: it is done after the second reboot, or once the node stayed up for
+// oldVersionGrace when the two reboots were seen as one.
+func (t *upgradeTracker) reinstalled(o upgradeObservation, now time.Time) trackStep {
+	if !o.ready {
+		return trackStep{phase: phaseBooted, message: "booted " + o.version + ", waiting for it to be ready"}
+	}
+
+	if t.staged && t.downs < 2 && now.Sub(t.oldSince) <= oldVersionGrace {
+		return trackStep{phase: phaseWaiting, message: "the node is back on " + o.version + ", waiting for the staged reinstall to apply"}
+	}
+
+	return trackStep{phase: phaseDone, message: "running " + o.version + " (reinstalled)", done: true, newVersion: o.version}
 }
 
 // change reports the step only when its phase differs from the current one.

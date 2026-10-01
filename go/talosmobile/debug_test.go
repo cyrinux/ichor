@@ -35,12 +35,31 @@ func TestValidateDebugImage(t *testing.T) {
 }
 
 type recordingListener struct {
-	exits []int
+	exits    []int
+	messages []string
 }
 
-func (r *recordingListener) OnStatus(string)           {}
-func (r *recordingListener) OnOutput([]byte)           {}
-func (r *recordingListener) OnExit(code int, _ string) { r.exits = append(r.exits, code) }
+func (r *recordingListener) OnStatus(message string) { r.messages = append(r.messages, message) }
+func (r *recordingListener) OnOutput([]byte)         {}
+func (r *recordingListener) OnExit(code int, message string) {
+	r.exits = append(r.exits, code)
+	r.messages = append(r.messages, message)
+}
+
+func TestDebugMessagesMasked(t *testing.T) {
+	enableMask(t, "")
+
+	l := &recordingListener{}
+	d := &DebugSession{listener: maskedDebugListener{l}}
+
+	d.listener.OnStatus("Starting on 192.168.1.11")
+	d.exit(-1, "pull failed: dial 192.168.1.11:50000")
+
+	want := "Starting on 10.0.0.1|pull failed: dial 10.0.0.1:50000"
+	if got := strings.Join(l.messages, "|"); got != want {
+		t.Errorf("messages = %q, want %q", got, want)
+	}
+}
 
 func TestDebugExitReportedOnce(t *testing.T) {
 	l := &recordingListener{}

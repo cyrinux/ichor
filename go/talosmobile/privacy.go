@@ -62,6 +62,7 @@ type maskState struct {
 
 	hosts     map[string]string // real hostname (lowercase) -> fake
 	hostsBack map[string]string // fake -> real
+	targets   map[string]string // real hostname -> the DNS name the talosconfig targets it by
 	roleCount map[string]int
 
 	contexts     map[string]string // real -> fake
@@ -121,7 +122,7 @@ func (m *privacyMask) set(enabled bool, words []string) {
 func (m *privacyMask) resetLocked() {
 	m.maskState = maskState{
 		ips: map[string]string{}, ipsBack: map[string]string{},
-		hosts: map[string]string{}, hostsBack: map[string]string{}, roleCount: map[string]int{},
+		hosts: map[string]string{}, hostsBack: map[string]string{}, targets: map[string]string{}, roleCount: map[string]int{},
 		contexts: map[string]string{}, contextsBack: map[string]string{}, contextParts: map[string]string{},
 		domains: map[string]bool{}, configs: map[string]bool{},
 	}
@@ -299,7 +300,7 @@ func (m *privacyMask) unmaskNode(node string) string {
 		return node
 	}
 
-	if real, ok := m.hostsBack[strings.ToLower(node)]; ok {
+	if real, ok := m.unmaskHostLocked(node); ok {
 		return real
 	}
 
@@ -310,6 +311,32 @@ func (m *privacyMask) unmaskNode(node string) string {
 	}
 
 	return replaceIPv6(replaceIPv4(node, back), back)
+}
+
+// unmaskHostLocked maps a fake hostname, with or without its domain and port, back to the
+// name the talosconfig targets the node by (its hostname when it is targeted by IP).
+func (m *privacyMask) unmaskHostLocked(node string) (string, bool) {
+	host, port := node, ""
+	if h, p, err := net.SplitHostPort(node); err == nil {
+		host, port = h, p
+	}
+
+	short, _, _ := strings.Cut(strings.ToLower(host), ".")
+
+	real, ok := m.hostsBack[short]
+	if !ok {
+		return "", false
+	}
+
+	if target, ok := m.targets[real]; ok {
+		real = target
+	}
+
+	if port != "" {
+		return net.JoinHostPort(real, port), true
+	}
+
+	return real, true
 }
 
 // unmaskNodes unmasks a comma-separated node list.
@@ -442,6 +469,12 @@ func (m *privacyMask) learnTargetLocked(target string) {
 	}
 
 	m.learnHostLocked(host, "node")
+
+	// The fake only stands for the short name: keep the name as written to map it back.
+	short, _, _ := strings.Cut(strings.ToLower(strings.TrimSuffix(host, ".")), ".")
+	if _, ok := m.targets[short]; !ok && short != "" {
+		m.targets[short] = host
+	}
 }
 
 // hostEntry is a node seen in an overview or member list.

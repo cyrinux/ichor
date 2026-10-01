@@ -11,10 +11,12 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import name.levis.talosmobile.TalosApp
 import name.levis.talosmobile.widget.ClusterWidget
+import name.levis.talosmobile.widget.staleInMillis
 import java.util.concurrent.TimeUnit
 
 private const val PERIODIC = "cluster-monitor"
 private const val ONE_SHOT = "cluster-monitor-now"
+private const val WIDGET_STALE = "cluster-widget-stale"
 
 /** Runs the monitor while alerts are on or a widget is placed; otherwise cancels it. */
 suspend fun syncMonitoring(context: Context, runNow: Boolean = false) {
@@ -44,4 +46,17 @@ suspend fun syncMonitoring(context: Context, runNow: Boolean = false) {
             OneTimeWorkRequestBuilder<MonitorWorker>().setConstraints(constraints).build(),
         )
     }
+}
+
+/**
+ * Redraws the widget when [snapshot] turns stale, so an old "all ready" is dimmed even when
+ * no check can run (no network). Replaced by every newer snapshot.
+ */
+fun scheduleWidgetStaleRefresh(context: Context, snapshot: ClusterSnapshot?, now: Long) {
+    val delay = staleInMillis(snapshot, now) ?: return
+    WorkManager.getInstance(context).enqueueUniqueWork(
+        WIDGET_STALE,
+        ExistingWorkPolicy.REPLACE,
+        OneTimeWorkRequestBuilder<WidgetRefreshWorker>().setInitialDelay(delay, TimeUnit.MILLISECONDS).build(),
+    )
 }

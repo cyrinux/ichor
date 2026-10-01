@@ -181,6 +181,14 @@ var down = upgradeObservation{}
 func follow(t *testing.T, steps []upgradeObservation, tick time.Duration, timeout time.Duration) ([]string, string, error) {
 	t.Helper()
 
+	return followWith(t, &upgradeTracker{oldVersion: "v1.13.4"}, steps, tick, timeout)
+}
+
+func followWith(
+	t *testing.T, tracker *upgradeTracker, steps []upgradeObservation, tick time.Duration, timeout time.Duration,
+) ([]string, string, error) {
+	t.Helper()
+
 	f := &fakeNode{steps: steps}
 	clock := time.Unix(0, 0)
 
@@ -189,7 +197,7 @@ func follow(t *testing.T, steps []upgradeObservation, tick time.Duration, timeou
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	v, err := followUpgrade(ctx, &upgradeTracker{oldVersion: "v1.13.4"}, f.observe,
+	v, err := followUpgrade(ctx, tracker, f.observe,
 		func(phase, _ string) { phases = append(phases, phase) },
 		time.Microsecond, func() time.Time { clock = clock.Add(tick); return clock })
 
@@ -238,6 +246,54 @@ func TestFollowUpgradeRolledBack(t *testing.T) {
 	}, time.Minute, 5*time.Second)
 	if err == nil || v != "" || !strings.Contains(err.Error(), "rolled back") {
 		t.Fatalf("v=%q err=%v", v, err)
+	}
+}
+
+func TestFollowUpgradeReinstall(t *testing.T) {
+	// Same version (e.g. another schematic): ready again after the reboot is the success.
+	phases, v, err := followWith(t, &upgradeTracker{oldVersion: "v1.13.4", reinstall: true}, []upgradeObservation{
+		obs("v1.13.4", "running", true),
+		obs("v1.13.4", "upgrading", false),
+		down,
+		obs("v1.13.4", "booting", false),
+		obs("v1.13.4", "running", false),
+		obs("v1.13.4", "running", true),
+	}, time.Minute, 5*time.Second)
+	if err != nil || v != "v1.13.4" {
+		t.Fatalf("v=%q err=%v", v, err)
+	}
+
+	want := "installing,rebooting,waiting for node,booted,done"
+	if got := strings.Join(phases, ","); got != want {
+		t.Fatalf("phases %s, want %s", got, want)
+	}
+}
+
+func TestFollowUpgradeStagedReinstall(t *testing.T) {
+	staged := func() *upgradeTracker { return &upgradeTracker{oldVersion: "v1.13.4", reinstall: true, staged: true} }
+
+	// The first boot back only applies the staged image: done after the second reboot.
+	f := &fakeNode{steps: []upgradeObservation{
+		down,
+		obs("v1.13.4", "running", true),
+		obs("v1.13.4", "running", true),
+		obs("v1.13.4", "upgrading", false),
+		down,
+		obs("v1.13.4", "running", true),
+	}}
+
+	clock := time.Unix(0, 0)
+
+	v, err := followUpgrade(context.Background(), staged(), f.observe, func(string, string) {},
+		time.Microsecond, func() time.Time { clock = clock.Add(time.Second); return clock })
+	if err != nil || v != "v1.13.4" || f.i != len(f.steps) {
+		t.Fatalf("v=%q err=%v after %d observations", v, err, f.i)
+	}
+
+	// Both reboots seen as one: done once the node stayed up for the grace period.
+	_, v, err = followWith(t, staged(), []upgradeObservation{down, obs("v1.13.4", "running", true)}, time.Minute, 5*time.Second)
+	if err != nil || v != "v1.13.4" {
+		t.Fatalf("one reboot seen: v=%q err=%v", v, err)
 	}
 }
 

@@ -28,12 +28,17 @@ const val CERT_WARN_DAYS = 7
 /**
  * Compares the previous and current snapshots. Only *changes* alert, so a node that stays
  * down notifies once. The first snapshot (or a context switch) is a silent baseline.
+ *
+ * A check where no node answered says nothing about the cluster (the phone is off its
+ * network): it alerts nothing and keeps the previous snapshot, so neither leaving nor
+ * coming back notifies for every node.
  */
 fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Evaluation {
     val alerts = mutableListOf<Alert>()
-    val comparable = prev != null && prev.context == cur.context
+    val comparable = prev != null && prev.context == cur.context && !prev.unreachableAsAWhole
+    val blind = comparable && cur.unreachableAsAWhole
 
-    if (comparable) {
+    if (comparable && !blind) {
         cur.nodes.forEach { (addr, state) ->
             val before = prev!!.nodes[addr] ?: return@forEach
             if (before.health != state.health) alerts += nodeAlert(addr, state)
@@ -63,7 +68,8 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
         }
     }
 
-    return Evaluation(alerts, cur.copy(lastCertWarnDay = warnedDay))
+    val next = if (blind) prev!!.copy(certNotAfter = cur.certNotAfter) else cur
+    return Evaluation(alerts, next.copy(lastCertWarnDay = warnedDay))
 }
 
 private fun nodeAlert(addr: String, state: NodeState): Alert {
