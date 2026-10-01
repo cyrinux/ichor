@@ -39,6 +39,8 @@ common=(
   -project TalosViewer.xcodeproj -scheme TalosViewer -derivedDataPath build
   MARKETING_VERSION="$TALOS_VIEWER_VERSION_BASE" CURRENT_PROJECT_VERSION="$TALOS_VIEWER_BUILD_NUMBER"
   CODE_SIGNING_ALLOWED=NO
+  # SwiftTerm ships a build-tool plugin; CI cannot click "Trust & Enable".
+  -skipPackagePluginValidation -skipMacroValidation
 )
 
 case "$MODE" in
