@@ -150,13 +150,14 @@ public struct LogTail: Decodable, Equatable, Sendable {
 
 /// Features gated by Talos RBAC (rules from Talos v1.14 machined.go).
 public enum Feature: CaseIterable, Sendable {
-    case power, health, kubeconfig
+    case power, health, kubeconfig, debugShell
 
     public var label: String {
         switch self {
         case .power: "Reboot / shutdown"
         case .health: "Cluster health check"
         case .kubeconfig: "Kubeconfig export"
+        case .debugShell: "Debug shell"
         }
     }
 
@@ -164,7 +165,8 @@ public enum Feature: CaseIterable, Sendable {
         switch self {
         case .power: ["os:admin", "os:operator"]
         // The server-side health check fetches a Kubernetes admin kubeconfig with the caller's role.
-        case .health, .kubeconfig: ["os:admin"]
+        // DebugService/ContainerRun is admin-only too.
+        case .health, .kubeconfig, .debugShell: ["os:admin"]
         }
     }
 

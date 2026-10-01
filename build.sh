@@ -14,7 +14,8 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 case "$VARIANT" in
   debug) GRADLE_TASKS=(testDebugUnitTest assembleDebug) ;;
-  release) GRADLE_TASKS=(testReleaseUnitTest assembleRelease) ;;
+  # AGP 9 only creates unit-test tasks for debug; check/debug already run them.
+  release) GRADLE_TASKS=(assembleRelease) ;;
   check) GRADLE_TASKS=(testDebugUnitTest) ;;
   *) echo "unknown variant: $VARIANT (debug|release|check)" >&2; exit 2 ;;
 esac

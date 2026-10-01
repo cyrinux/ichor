@@ -20,6 +20,7 @@ struct NodeDetailView: View {
     }
 
     @State private var live = LiveStats()
+    @State private var showingDebugShell = false
 
     enum Tab: String, CaseIterable { case services = "Services", resources = "Resources", live = "Live" }
 
@@ -63,6 +64,12 @@ struct NodeDetailView: View {
                         Button { showingKernelLog = true } label: {
                             Label("Kernel log", systemImage: "terminal")
                         }
+                        if model.allows(.debugShell) {
+                            // NavigationLink does not navigate from inside a Menu.
+                            Button { showingDebugShell = true } label: {
+                                Label("Debug shell", systemImage: "apple.terminal")
+                            }
+                        }
                         // Power actions only exist for configs whose role allows them.
                         if model.allows(.power) {
                             Divider()
@@ -80,6 +87,9 @@ struct NodeDetailView: View {
         }
         .navigationDestination(isPresented: $showingKernelLog) {
             LogsView(node: ref.address, hostname: ref.hostname, service: nil)
+        }
+        .navigationDestination(isPresented: $showingDebugShell) {
+            DebugShellView(node: ref.address, hostname: ref.hostname)
         }
         .sheet(item: $powerAction) { action in
             PowerSheet(action: action, hostname: ref.hostname, role: ref.role) { request in

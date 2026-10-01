@@ -37,6 +37,8 @@ struct SettingsView: View {
             } footer: {
                 Text("Face ID / Touch ID, or the device passcode, to open the app and before reboot or shutdown. Also hides the app in the app switcher.")
             }
+            MonitoringSection()
+            if model.allows(.kubeconfig) { KubeconfigSection() }
             Section("Config") {
                 if let protection = SecureConfigStore.protection {
                     LabeledContent("Encryption key", value: protection.rawValue)

@@ -62,6 +62,7 @@ final class AppModel {
 
     func clear() {
         SecureConfigStore.delete()
+        SharedStore.save(nil) // the widget stops showing the old cluster
         yaml = nil
         summary = nil
     }

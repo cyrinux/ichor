@@ -48,6 +48,17 @@ struct TalosClient: Sendable {
         try await Self.json { [config, context] in TalosmobileKubeSpanStatus(config, context, $0) }
     }
 
+    /// Admin kubeconfig (os:admin). A credential: only write it where the user chose.
+    func kubeconfig() async throws -> String {
+        try await Self.run { [config, context] in TalosmobileKubeconfig(config, context, $0) }
+    }
+
+    /// Starts `talosctl debug` on node; events go to the listener (from Go threads).
+    func startDebugShell(node: String, image: String, args: String, cols: Int, rows: Int,
+                         listener: TalosmobileDebugListenerProtocol) -> TalosmobileDebugSession? {
+        TalosmobileStartDebugShell(config, context, node, image, args, cols, rows, listener)
+    }
+
     /// One sample of counters for the live graphs.
     func stats(node: String) async throws -> NodeStats {
         try await Self.json { [config, context] in TalosmobileNodeStats(config, context, node, $0) }

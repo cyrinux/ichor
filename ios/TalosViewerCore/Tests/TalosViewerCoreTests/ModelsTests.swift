@@ -55,6 +55,7 @@ final class ModelsTests: XCTestCase {
         XCTAssertTrue(Feature.allCases.allSatisfy { !reader.allows($0) })
         XCTAssertTrue(operatorCtx.allows(.power))
         XCTAssertFalse(operatorCtx.allows(.health))
+        XCTAssertFalse(operatorCtx.allows(.debugShell))
         XCTAssertTrue(Feature.allCases.allSatisfy { admin.allows($0) })
         XCTAssertEqual(Feature.power.minimumRole, "os:operator")
         XCTAssertEqual(Feature.kubeconfig.minimumRole, "os:admin")

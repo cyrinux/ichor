@@ -195,21 +195,30 @@ The iOS app (`ios/`) reuses the same Go core, built as `Talosmobile.xcframework`
 gomobile, around a SwiftUI UI. The pure logic lives in the `TalosViewerCore` Swift package:
 models, formatting, lock state and power-request rules.
 
-**What the first version has:**
+**Feature parity with Android:**
 
-- import from a file, by pasting, or by QR code (VisionKit), stored in the Keychain on this
-  device only;
-- overview, node services and resources, logs and dmesg, etcd, and the cluster health check;
-- reboot and shutdown with the same modes and typed confirmation as Android;
-- a Face ID / passcode lock, with an app-switcher privacy cover;
-- themes.
+- import from a file, by pasting, or by QR code (VisionKit);
+- the config is encrypted to a Secure Enclave key (Keychain fallback without one);
+- overview, node services, resources, logs and live graphs;
+- etcd, KubeSpan and the cluster health check;
+- reboot and shutdown with the same modes and typed confirmation;
+- the debug shell (SwiftTerm terminal);
+- kubeconfig export;
+- background alerts and a home-screen widget;
+- Face ID / passcode lock, themes, and role-based actions.
 
-**Not yet:** background alerts, the widget and kubeconfig export.
+**What iOS does differently:**
 
-**Differences from Android:**
-
-- iOS does not let apps block screenshots, so there is no screenshot switch.
-- Keychain items survive uninstalling the app. Use Settings → Delete to remove the config.
+- **Self-update:** not possible for sideloaded apps; reinstall new releases with Sideloadly or
+  AltStore.
+- **Screenshots:** iOS does not let apps block them. The app-switcher privacy cover hides the
+  content instead.
+- **Background alerts:** best effort. iOS decides when background checks run, and skips them
+  while the device is locked, because the config cannot be decrypted then.
+- **Leftover data:** Keychain items survive uninstalling the app. Use Settings → Delete to
+  remove the config.
+- **Widget:** shares the last check with the app through an App Group, which a free Apple ID
+  may not support when sideloading. In that case the widget stays empty.
 
 **Building:** Xcode only runs on macOS.
 

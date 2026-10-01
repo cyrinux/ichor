@@ -14,6 +14,10 @@ settings:
 packages:
   TalosViewerCore:
     path: TalosViewerCore
+  # Terminal emulator for the debug shell (MIT).
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    from: 1.20.0
 targets:
   TalosViewer:
     type: application
@@ -23,9 +27,11 @@ targets:
     scheme: {}
     dependencies:
       - package: TalosViewerCore
+      - package: SwiftTerm
       # Built by gomobile (scripts/ios-build.sh); a static framework, so it is linked, not embedded.
       - framework: Frameworks/Talosmobile.xcframework
         embed: false
+      - target: TalosWidget
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: name.levis.talosmobile
@@ -33,6 +39,10 @@ targets:
         # The Go runtime's resolver needs libresolv.
         OTHER_LDFLAGS: [-lresolv]
         GENERATE_INFOPLIST_FILE: NO
+    entitlements:
+      path: TalosViewer/TalosViewer.entitlements
+      properties:
+        com.apple.security.application-groups: [group.name.levis.talosmobile]
     info:
       path: TalosViewer/Info.plist
       properties:
@@ -44,9 +54,37 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         NSCameraUsageDescription: Scan a talosconfig QR code to import it.
         NSFaceIDUsageDescription: Unlock Talos Viewer and confirm reboot or shutdown.
+        UIBackgroundModes: [fetch]
+        BGTaskSchedulerPermittedIdentifiers: [name.levis.talosmobile.refresh]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UISupportedInterfaceOrientations~ipad:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+
+  # Home-screen widget; reads the last snapshot from the shared App Group.
+  TalosWidget:
+    type: app-extension
+    platform: iOS
+    sources: [TalosWidget]
+    dependencies:
+      - package: TalosViewerCore
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: name.levis.talosmobile.widget
+        GENERATE_INFOPLIST_FILE: NO
+    entitlements:
+      path: TalosWidget/TalosWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.name.levis.talosmobile]
+    info:
+      path: TalosWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Talos Viewer
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension

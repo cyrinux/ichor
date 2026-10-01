@@ -4,6 +4,12 @@ import SwiftUI
 struct TalosViewerApp: App {
     @State private var model = AppModel()
     @State private var support = SupportPrompt()
+    @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        BackgroundMonitor.register()
+        BackgroundMonitor.registerCategories()
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -11,6 +17,9 @@ struct TalosViewerApp: App {
                 .environment(model)
                 .environment(support)
                 .task { support.onLaunch() }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .background, BackgroundMonitor.alertsEnabled { BackgroundMonitor.schedule() }
+                }
                 .preferredColorScheme(model.theme.colorScheme)
         }
     }
@@ -86,6 +95,7 @@ enum Route: Hashable {
     case health
     case settings
     case importConfig
+    case debugShell(node: String, hostname: String)
 }
 
 struct NodeRef: Hashable {
@@ -110,6 +120,7 @@ struct MainNavigation: View {
                     case .health: HealthView()
                     case .settings: SettingsView()
                     case .importConfig: ImportView { path.removeAll() }
+                    case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)
                     }
                 }
         }

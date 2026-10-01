@@ -22,3 +22,6 @@ ios/TalosViewer.xcodeproj/
 ios/TalosViewer/Info.plist
 ios/TalosViewerCore/.build/
 .envrc
+ios/TalosWidget/Info.plist
+ios/TalosViewer/TalosViewer.entitlements
+ios/TalosWidget/TalosWidget.entitlements
