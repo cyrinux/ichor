@@ -169,6 +169,32 @@ contexts:
 	}
 }
 
+func TestUnmaskDNSNode(t *testing.T) {
+	enableMask(t, "")
+
+	const real = "CP1.tailnet.ts.net"
+
+	privacy.mu.Lock()
+	privacy.learnTargetLocked(real)
+	privacy.mu.Unlock()
+
+	masked := privacy.maskPlain(strings.ToLower(real))
+	if masked != "node-1."+maskedDomain {
+		t.Fatalf("masked = %q", masked)
+	}
+
+	for _, tc := range []struct{ in, want string }{
+		{masked, real},
+		{"node-1", real},
+		{"NODE-1." + maskedDomain + ":50000", real + ":50000"},
+		{"node-2." + maskedDomain, "node-2." + maskedDomain},
+	} {
+		if got := privacy.unmaskNode(tc.in); got != tc.want {
+			t.Errorf("unmaskNode(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
+
 func TestMaskExtraWords(t *testing.T) {
 	enableMask(t, " Cyril , tracearr,,")
 
