@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talos Viewer</title>
+<meta name="description" content="Monitor and operate your Talos Linux cluster from your phone: node status, logs, etcd, KubeSpan, live graphs, alerts. Android and iOS, open source.">
+<meta property="og:title" content="Talos Viewer">
+<meta property="og:description" content="Your Talos cluster, from your phone.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z' fill='none' stroke='%23FF7A45' stroke-width='2' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='12' r='3' fill='%23FF7A45'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #E9EEF2;
+    --surface: #F6F8FA;
+    --ink: #14243B;
+    --ink-2: #51627A;
+    --line: #C9D3DD;
+    --accent: #FF7A45;
+    --accent-ink: #B4461B;
+    --ready: #1B7F45;
+    --warn: #8A6100;
+    --down: #C0282D;
+    --phone: #0F1A2A;
+    --phone-ink: #E8EEF5;
+    --phone-ink-2: #93A3B8;
+    --phone-card: #18263A;
+    --measure: 68ch;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101823;
+      --surface: #16212F;
+      --ink: #E4EAF1;
+      --ink-2: #9AABC0;
+      --line: #2A3A4E;
+      --accent-ink: #FF9466;
+      --ready: #5BD18B;
+      --warn: #F2C14E;
+      --down: #FF6B6B;
+      --phone: #05090F;
+      --phone-card: #121E2E;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 1.0625rem/1.6 "IBM Plex Sans", system-ui, sans-serif;
+  }
+  a { color: inherit; }
+  a:focus-visible, .button:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  code, .cmd { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+  .wrap { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem; }
+
+  /* Header */
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 0;
+  }
+  .brand { display: flex; align-items: center; gap: .6rem; font-weight: 600; text-decoration: none; }
+  .brand svg { width: 28px; height: 28px; }
+  .top nav { display: flex; gap: 1.25rem; font-size: .95rem; }
+  .top nav a { text-decoration: none; color: var(--ink-2); }
+  .top nav a:hover { color: var(--ink); }
+
+  /* Hero */
+  .hero {
+    display: grid; grid-template-columns: 1.1fr .9fr; gap: 3rem; align-items: center;
+    padding: 3.5rem 0 4.5rem;
+  }
+  .hero h1 {
+    font-weight: 600; font-size: clamp(2.4rem, 5.2vw, 4rem); line-height: 1.04;
+    letter-spacing: -0.025em; margin: 0 0 1.25rem; max-width: 14ch;
+  }
+  .lede { font-size: 1.2rem; color: var(--ink-2); max-width: 46ch; margin: 0 0 2rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+  .button {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .8rem 1.2rem; border-radius: 10px; font-weight: 500; text-decoration: none;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  }
+  .button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .button:hover { border-color: var(--ink-2); }
+  .note { font-size: .9rem; color: var(--ink-2); margin-top: 1rem; }
+
+  /* The phone: one orchestrated moment, the alert arriving */
+  .phone {
+    justify-self: center; width: min(320px, 100%); aspect-ratio: 9 / 19;
+    background: var(--phone); color: var(--phone-ink);
+    border-radius: 44px; padding: 14px; position: relative;
+    box-shadow: 0 0 0 2px #2C3A4F, 0 30px 60px -20px rgba(20, 36, 59, .45);
+  }
+  .screen {
+    height: 100%; border-radius: 32px; overflow: hidden; position: relative;
+    background: radial-gradient(120% 70% at 50% 0%, #1E3350 0%, var(--phone) 70%);
+    display: flex; flex-direction: column; align-items: center; padding: 3.2rem 1rem 1rem;
+  }
+  .clock { font-size: 4rem; font-weight: 300; letter-spacing: -0.03em; line-height: 1; }
+  .date { color: var(--phone-ink-2); font-size: .85rem; margin-top: .35rem; }
+  .notification {
+    margin-top: 2.2rem; width: 100%;
+    background: rgba(232, 238, 245, .12); backdrop-filter: blur(12px);
+    border-radius: 18px; padding: .8rem .9rem;
+    animation: arrive 900ms cubic-bezier(.2, .8, .2, 1) 900ms both;
+  }
+  .notification header { display: flex; align-items: center; gap: .45rem; font-size: .72rem; color: var(--phone-ink-2); }
+  .notification header svg { width: 16px; height: 16px; }
+  .notification header span:last-child { margin-left: auto; }
+  .notification strong { display: block; font-weight: 600; font-size: .92rem; margin-top: .35rem; }
+  .notification p { margin: .15rem 0 0; font-size: .82rem; color: var(--phone-ink-2); line-height: 1.35; }
+  .glance {
+    margin-top: auto; width: 100%; background: var(--phone-card); border-radius: 16px; padding: .8rem .9rem;
+    font-size: .8rem;
+  }
+  .glance .count { font-size: 1.6rem; font-weight: 600; line-height: 1.1; }
+  .glance .row { display: flex; gap: .9rem; color: var(--phone-ink-2); margin-top: .2rem; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: .35rem; vertical-align: middle; }
+  @keyframes arrive {
+    from { opacity: 0; transform: translateY(-14px) scale(.97); }
+    to { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .notification { animation: none; }
+  }
+
+  /* Sections */
+  section { padding: 4rem 0; border-top: 1px solid var(--line); }
+  h2 { font-weight: 600; font-size: clamp(1.6rem, 3vw, 2.1rem); line-height: 1.15; letter-spacing: -0.015em; margin: 0 0 .75rem; }
+  .intro { color: var(--ink-2); max-width: var(--measure); margin: 0 0 2rem; }
+
+  /* talosctl -> app mapping, the page's main device */
+  .map { width: 100%; border-collapse: collapse; }
+  .map th { text-align: left; font-weight: 500; font-size: .9rem; color: var(--ink-2); padding: 0 1rem .6rem 0; }
+  .map td { padding: .95rem 1rem .95rem 0; border-top: 1px solid var(--line); vertical-align: top; }
+  .map td.cmd { font-size: .92rem; white-space: nowrap; color: var(--ink-2); }
+  .map td.what strong { font-weight: 600; }
+  .map td.what span { display: block; color: var(--ink-2); font-size: .95rem; }
+  .role { font-size: .85rem; white-space: nowrap; }
+
+  /* Roles */
+  .roles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+  .roles h3 { margin: 0 0 .25rem; font-size: 1.1rem; font-weight: 600; }
+  .roles code { font-size: .9rem; color: var(--accent-ink); }
+  .roles p { margin: .5rem 0 0; color: var(--ink-2); font-size: .98rem; }
+  .roles .recommended { border-left: 3px solid var(--ready); padding-left: 1rem; }
+  .roles > div { border-left: 3px solid var(--line); padding-left: 1rem; }
+  .roles > div.recommended { border-left-color: var(--ready); }
+
+  /* Install: a real sequence, so numbered */
+  .steps { counter-reset: step; list-style: none; padding: 0; margin: 0; max-width: var(--measure); }
+  .steps li { counter-increment: step; position: relative; padding: 0 0 1.75rem 3rem; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: -.1rem;
+    width: 2rem; height: 2rem; border-radius: 50%; border: 1px solid var(--line);
+    display: grid; place-items: center; font-weight: 500; font-size: .95rem;
+  }
+  .steps h3 { margin: 0 0 .3rem; font-size: 1.05rem; font-weight: 600; }
+  .steps p { margin: 0; color: var(--ink-2); }
+  pre {
+    margin: .7rem 0 0; padding: .8rem 1rem; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; overflow-x: auto; font-size: .88rem; line-height: 1.5;
+  }
+
+  .platforms { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+  .platforms h3 { margin: 0 0 .4rem; font-weight: 600; }
+  .platforms p { color: var(--ink-2); margin: 0 0 1rem; }
+
+  footer { border-top: 1px solid var(--line); padding: 2.5rem 0 3rem; color: var(--ink-2); font-size: .92rem; }
+  footer .links { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-bottom: .75rem; }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; padding-top: 2rem; }
+    .phone { width: min(290px, 100%); }
+    .roles, .platforms { grid-template-columns: 1fr; }
+    .map thead { display: none; }
+    .map tr { display: block; border-top: 1px solid var(--line); padding: .9rem 0; }
+    .map td { display: block; border: 0; padding: .1rem 0; }
+    .map td.cmd { white-space: normal; }
+    .map td.role::before { content: "Needs "; }
+    .top nav a.optional { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" fill="none" stroke="#FF7A45" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="#FF7A45"/></svg>
+      Talos Viewer
+    </a>
+    <nav aria-label="Primary">
+      <a class="optional" href="#features">Features</a>
+      <a class="optional" href="#access">Access</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/cyrinux/talosctl-mobile">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div>
+        <h1>Your Talos cluster, from your phone.</h1>
+        <p class="lede">Node status, logs, etcd, KubeSpan and live graphs for Talos Linux, with alerts when a node goes down. It talks to the Talos API with the same client as talosctl.</p>
+        <div class="actions">
+          <a class="button primary" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.talosmobile%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Ftalosctl-mobile%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Talos%20Viewer%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D">Add to Obtainium</a>
+          <a class="button" href="https://github.com/cyrinux/talosctl-mobile/releases/latest">Download the APK</a>
+          <a class="button" href="#ios">iPhone</a>
+        </div>
+        <p class="note">Free and open source, Apache-2.0. Read-only by default.</p>
+      </div>
+
+      <div class="phone" role="img" aria-label="A phone lock screen showing a Talos Viewer alert: cp-2 is not ready, etcd not healthy. Below, a widget shows 7 of 8 nodes ready.">
+        <div class="screen" aria-hidden="true">
+          <div class="clock">3:12</div>
+          <div class="date">Thursday, 1 October</div>
+          <div class="notification">
+            <header>
+              <svg viewBox="0 0 24 24"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" fill="none" stroke="#FF7A45" stroke-width="2.4" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="#FF7A45"/></svg>
+              <span>Talos Viewer</span><span>now</span>
+            </header>
+            <strong>cp-2 is not ready</strong>
+            <p>services: etcd not healthy</p>
+          </div>
+          <div class="glance">
+            <div>lab</div>
+            <div class="count">7/8 ready</div>
+            <div class="row"><span><i class="dot" style="background:#F2C14E"></i>1 not ready</span><span><i class="dot" style="background:#5BD18B"></i>etcd: no alarms</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section id="features" aria-labelledby="features-title">
+      <h2 id="features-title">The talosctl commands you reach for, as screens</h2>
+      <p class="intro">Everything runs through the official Talos Go client, so talosconfig contexts, mTLS and endpoint-to-node proxying behave exactly like talosctl.</p>
+      <table class="map">
+        <thead><tr><th scope="col">Instead of</th><th scope="col">Open</th><th scope="col">Role</th></tr></thead>
+        <tbody>
+          <tr><td class="cmd">talosctl get machinestatus</td><td class="what"><strong>Cluster overview</strong><span>Every node: ready, not ready or unreachable, with the unmet conditions.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl services, talosctl logs</td><td class="what"><strong>Services and logs</strong><span>Service health, the last 500 log lines with a filter, and the kernel log.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl dashboard</td><td class="what"><strong>Live graphs</strong><span>CPU, memory, network, disk and load, sampled every two seconds.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl etcd status</td><td class="what"><strong>etcd</strong><span>Members, leader, database size, raft term and alarms.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl get kubespanpeerstatuses</td><td class="what"><strong>KubeSpan</strong><span>Each node's peers: state, endpoint, last handshake and traffic.</span></td><td class="role">reader</td></tr>
+          <tr><td class="cmd">talosctl reboot -m powercycle</td><td class="what"><strong>Reboot and shutdown</strong><span>Graceful, power cycle or force, after you type the hostname to confirm.</span></td><td class="role">operator</td></tr>
+          <tr><td class="cmd">talosctl health</td><td class="what"><strong>Cluster health check</strong><span>The server-side checks, streamed as they run.</span></td><td class="role">admin</td></tr>
+          <tr><td class="cmd">talosctl debug</td><td class="what"><strong>Debug shell</strong><span>Run an image such as nicolaka/netshoot on a node and get a terminal.</span></td><td class="role">admin</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="access" aria-labelledby="access-title">
+      <h2 id="access-title">Your phone gets only the access you give it</h2>
+      <p class="intro">Generate a dedicated talosconfig for the phone. The app reads its roles and only shows what that certificate is allowed to do. If the phone is lost, the certificate grants nothing more, and it expires on its own.</p>
+      <div class="roles">
+        <div class="recommended">
+          <h3>Read-only</h3>
+          <code>os:reader</code>
+          <p>Monitoring, logs, etcd, KubeSpan, graphs and alerts. The right default for a phone.</p>
+        </div>
+        <div>
+          <h3>Operator</h3>
+          <code>os:operator</code>
+          <p>Everything read-only, plus reboot and shutdown.</p>
+        </div>
+        <div>
+          <h3>Admin</h3>
+          <code>os:admin</code>
+          <p>Adds the health check, kubeconfig export and debug shells.</p>
+        </div>
+      </div>
+      <p class="intro" style="margin-top:2rem">The talosconfig is encrypted with a key held in the phone's security chip: StrongBox or the TEE on Android, the Secure Enclave on iPhone. An optional fingerprint, Face ID or PIN lock guards the app and every reboot.</p>
+    </section>
+
+    <section id="install" aria-labelledby="install-title">
+      <h2 id="install-title">Install</h2>
+      <ol class="steps">
+        <li>
+          <h3>Create a talosconfig for the phone</h3>
+          <p>On your workstation, sign a read-only certificate on one control-plane node, then list your nodes.</p>
+          <pre><code>talosctl -n &lt;control-plane-ip&gt; config new talosconfig-phone --roles os:reader --crt-ttl 8760h
+talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&gt; …</code></pre>
+        </li>
+        <li>
+          <h3>Install the app</h3>
+          <p>On Android, add it to <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.talosmobile%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Ftalosctl-mobile%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Talos%20Viewer%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D">Obtainium</a> to get updates, or download the APK for your phone (arm64-v8a for almost all of them) from the <a href="https://github.com/cyrinux/talosctl-mobile/releases/latest">latest release</a>.</p>
+        </li>
+        <li>
+          <h3>Import the config</h3>
+          <p>Pick the file, paste it, or scan it as a QR code:</p>
+          <pre><code>qrencode -t ansiutf8 -r talosconfig-phone</code></pre>
+        </li>
+      </ol>
+
+      <div class="platforms" id="ios">
+        <div>
+          <h3>Android</h3>
+          <p>Android 8 and later, one APK per ABI. The app checks GitHub releases for updates and verifies each download's checksum and signing key before installing.</p>
+          <a class="button" href="https://github.com/cyrinux/talosctl-mobile/releases/latest">Latest release</a>
+        </div>
+        <div>
+          <h3>iPhone</h3>
+          <p>iOS 17 and later. Each release includes an unsigned IPA: install it with Sideloadly or AltStore, which sign it with your Apple ID.</p>
+          <a class="button" href="https://github.com/cyrinux/talosctl-mobile/releases/latest">Latest release</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="links">
+      <a href="https://github.com/cyrinux/talosctl-mobile">Source on GitHub</a>
+      <a href="https://www.talos.dev">Talos Linux</a>
+      <a href="https://github.com/sponsors/cyrinux">Sponsor</a>
+    </div>
+    <p>Apache-2.0. Not affiliated with Sidero Labs; Talos is a trademark of Sidero Labs, Inc.</p>
+  </footer>
+</div>
+</body>
+</html>

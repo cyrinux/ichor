@@ -1,0 +1,14 @@
+Talos Viewer
+Copyright 2026 Cyril Levis
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes third-party software:
+
+- Talos machinery client library (github.com/siderolabs/talos/pkg/machinery),
+  Mozilla Public License 2.0, Copyright Sidero Labs, Inc.
+- Go mobile bindings (golang.org/x/mobile), BSD-3-Clause, Copyright The Go Authors.
+- ConnectBot termlib (github.com/connectbot/termlib), Apache License 2.0;
+  it bundles libvterm, MIT License, Copyright Paul Evans.
+
+Talos is a trademark of Sidero Labs, Inc. This project is not affiliated with Sidero Labs.
