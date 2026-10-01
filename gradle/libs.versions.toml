@@ -9,6 +9,7 @@ serialization = "1.11.0"
 coroutines = "1.11.0"
 camerax = "1.6.2"
 mlkitBarcode = "17.3.0"
+zxing = "3.5.4"
 coreKtx = "1.19.1"
 junit = "4.13.2"
 biometric = "1.1.0"
@@ -35,6 +36,7 @@ camerax-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "ca
 camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
 camerax-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
 mlkit-barcode = { module = "com.google.mlkit:barcode-scanning", version.ref = "mlkitBarcode" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 junit = { module = "junit:junit", version.ref = "junit" }
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragment" }

@@ -57,6 +57,10 @@ import name.levis.talosmobile.update.UpdateState
 import name.levis.talosmobile.data.TalosRepository
 import name.levis.talosmobile.data.OVERVIEW
 import name.levis.talosmobile.model.ClusterOverview
+import name.levis.talosmobile.model.ClusterTime
+import name.levis.talosmobile.model.ContextSummary
+import name.levis.talosmobile.monitor.CERT_WARN_DAYS
+import name.levis.talosmobile.util.daysUntil
 import name.levis.talosmobile.model.NodeHealth
 import name.levis.talosmobile.model.NodeOverview
 import name.levis.talosmobile.model.health
@@ -88,13 +92,19 @@ fun OverviewScreen(
     onHealth: () -> Unit,
     onEvents: () -> Unit,
     onSettings: () -> Unit,
+    onIssueConfig: () -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
+    timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val timeState by timeVm.state.collectAsStateWithLifecycle()
     val config by vm.configs.config.collectAsStateWithLifecycle()
 
     // Reload whenever the active context changes (including first composition).
-    LaunchedEffect(config?.activeContext) { vm.refresh(reset = true) }
+    LaunchedEffect(config?.activeContext) {
+        vm.refresh(reset = true)
+        timeVm.refresh(reset = true)
+    }
 
     Scaffold(
         bottomBar = { DataFreshness(state) },
@@ -131,11 +141,17 @@ fun OverviewScreen(
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.padding(padding))
             is UiState.Loaded -> PullToRefreshBox(
                 isRefreshing = s.refreshing,
-                onRefresh = vm::refresh,
+                onRefresh = {
+                    vm.refresh()
+                    timeVm.refresh()
+                },
                 modifier = Modifier.padding(padding).fillMaxSize(),
             ) {
                 NodeList(
                     overview = s.data,
+                    time = timeState,
+                    certificate = config?.activeSummary,
+                    onIssueConfig = onIssueConfig,
                     onNode = onNode,
                     onSettings = onSettings,
                     onNodeAction = onNodeAction,
@@ -150,6 +166,9 @@ fun OverviewScreen(
 @Composable
 private fun NodeList(
     overview: ClusterOverview,
+    time: UiState<ClusterTime>,
+    certificate: ContextSummary?,
+    onIssueConfig: () -> Unit,
     onNode: (NodeOverview) -> Unit,
     onSettings: () -> Unit,
     onNodeAction: (NodeOverview, NodeAction) -> Unit,
@@ -174,7 +193,9 @@ private fun NodeList(
     ) {
         item { UpdateBanner(onClick = onSettings) }
         item { SupportCard() }
+        certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         item { Summary(overview.nodes) }
+        item { TimeDriftCard(time, overview.nodes.associate { it.node to it.hostname }) }
         items(nodes, key = { it.node }) { node ->
             SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {
                 NodeCard(node, onClick = { onNode(node) }, onLongClick = { sheetFor = node })
@@ -262,6 +283,37 @@ private fun NodeCard(node: NodeOverview, onClick: () -> Unit, onLongClick: () ->
 private fun roleLabel(role: String) = when (role) {
     "controlplane" -> stringResource(R.string.overview_role_control_plane)
     else -> role
+}
+
+/**
+ * Shown when the client certificate expires within [CERT_WARN_DAYS] days (like the alert).
+ * An os:admin can renew it right away; anyone else needs a new talosconfig from an admin.
+ */
+@Composable
+private fun CertificateBanner(summary: ContextSummary, onIssueConfig: () -> Unit) {
+    if (summary.certNotAfter <= 0) return
+    val days = daysUntil(summary.certNotAfter)
+    if (days > CERT_WARN_DAYS) return
+    val canRenew = summary.allows(Feature.ISSUE_CONFIG)
+    val count = kotlin.math.abs(days).toInt()
+    val text = if (days < 0) {
+        pluralStringResource(R.plurals.overview_cert_expired, count, count)
+    } else {
+        pluralStringResource(R.plurals.overview_cert_expires, count, count)
+    }
+    val color = if (days < 0) LocalStatusColors.current.bad else LocalStatusColors.current.warn
+    val content: @Composable () -> Unit = {
+        Column(Modifier.padding(16.dp)) {
+            Text(text, style = MaterialTheme.typography.bodyMedium, color = color)
+            Text(
+                stringResource(if (canRenew) R.string.overview_cert_renew else R.string.overview_cert_ask_admin),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+    if (canRenew) Card(onClick = onIssueConfig, modifier = Modifier.fillMaxWidth()) { content() }
+    else Card(Modifier.fillMaxWidth()) { content() }
 }
 
 /** Shown when the daily check found a newer release; opens Settings → Updates. */

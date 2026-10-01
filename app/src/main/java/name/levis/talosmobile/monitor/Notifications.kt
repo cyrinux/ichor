@@ -14,6 +14,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import name.levis.talosmobile.MainActivity
 import name.levis.talosmobile.R
+import name.levis.talosmobile.ui.DeepLink
 
 private const val CHANNEL_ID = "cluster-alerts"
 
@@ -40,10 +41,14 @@ fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean) {
     val title = alertTitle(res, alert)
     val text = alertText(res, alert)
 
+    val intent = Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+    // A certificate alert opens the renewal screen (which explains when the role cannot renew).
+    val certificate = alert.kind == AlertKind.CERT_EXPIRING || alert.kind == AlertKind.CERT_EXPIRED
+    if (certificate) intent.putExtra(MainActivity.EXTRA_OPEN, DeepLink.ISSUE_CONFIG.name)
     val open = PendingIntent.getActivity(
         context,
-        0,
-        Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+        if (certificate) 1 else 0, // distinct request codes: the extras differ
+        intent,
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
     val builder = NotificationCompat.Builder(context, CHANNEL_ID)

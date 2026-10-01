@@ -67,6 +67,24 @@ final class AppModel {
         apply(yaml: newYAML, summary: parsed, preferred: parsed.current)
     }
 
+    /// Replaces the active context's ca/crt/key with those of `generated` (a renewed
+    /// single-context talosconfig), keeping the other contexts and the active context. The
+    /// result must parse, keep the same contexts and carry exactly the new certificate.
+    func renewCredentials(with generated: String) async throws {
+        guard let current = yaml, let before = summary else { throw TalosError(message: String(localized: "No talosconfig is stored.")) }
+        let context = activeContext
+        let patched = try await TalosClient.replaceContextCredentials(stored: current, generated: generated, context: context)
+        let parsed = try await TalosClient.parse(patched)
+        let issued = try await TalosClient.parse(generated)
+        guard let renewed = parsed.context(named: context), let fresh = issued.context(named: context),
+              renewed.certNotAfter == fresh.certNotAfter, Set(renewed.roles) == Set(fresh.roles),
+              parsed.contexts.map(\.name) == before.contexts.map(\.name) else {
+            throw TalosError(message: String(localized: "The renewed talosconfig did not validate; the stored one is unchanged."))
+        }
+        try SecureConfigStore.save(Data(patched.utf8))
+        apply(yaml: patched, summary: parsed, preferred: context)
+    }
+
     func clear() {
         SecureConfigStore.delete()
         SharedStore.save(nil) // the widget stops showing the old cluster

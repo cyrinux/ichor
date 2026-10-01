@@ -35,6 +35,8 @@ enum class Feature(@StringRes val label: Int, val roles: Set<String>) {
     ETCD_SNAPSHOT(R.string.common_feature_etcd_snapshot, setOf("os:admin", "os:operator", "os:etcd:backup")),
     // MachineService/ServiceStart|Stop|Restart need os:operator in Talos.
     SERVICE_CONTROL(R.string.common_feature_service_control, setOf("os:admin", "os:operator")),
+    // MachineService/GenerateClientConfiguration is admin-only in Talos.
+    ISSUE_CONFIG(R.string.common_feature_issue_config, setOf("os:admin")),
     ;
 
     val minimumRole: String get() = if ("os:operator" in roles) "os:operator" else "os:admin"

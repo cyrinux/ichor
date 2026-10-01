@@ -9,6 +9,8 @@ struct NodeDetailView: View {
     @State private var tab = Tab.services
     @State private var services: LoadState<[ServiceInfo]> = .loading
     @State private var resources: LoadState<NodeResources> = .loading
+    /// This node's clock offset, shown with its resources; nil until checked.
+    @State private var clock: NodeTimeInfo?
     @State private var powerAction: PowerAction?
     @State private var running = false
     @State private var resultMessage: String?
@@ -27,6 +29,9 @@ struct NodeDetailView: View {
     @State private var processes = ProcessMonitor()
     @State private var pods = PodMonitor()
     @State private var showingEvents = false
+    @State private var showingNetwork = false
+    @State private var showingHardware = false
+    @State private var showingImages = false
     /// Service start/stop/restart waiting for confirmation.
     @State private var serviceRequest: ServiceRequest?
 
@@ -61,7 +66,7 @@ struct NodeDetailView: View {
                 }
                 .task { if case .loading = services { await loadServices() } }
             case .resources:
-                LoadStateView(state: resources, retry: loadResources) { ResourcesList(resources: $0) }
+                LoadStateView(state: resources, retry: loadResources) { ResourcesList(resources: $0, clock: clock) }
                     .refreshable { await loadResources() }
                     .task { if case .loading = resources { await loadResources() } }
             case .live:
@@ -86,6 +91,15 @@ struct NodeDetailView: View {
                         }
                         Button { showingEvents = true } label: {
                             Label("Events", systemImage: "list.bullet.rectangle")
+                        }
+                        Button { showingNetwork = true } label: {
+                            Label("Network", systemImage: "network")
+                        }
+                        Button { showingImages = true } label: {
+                            Label("Images", systemImage: "shippingbox")
+                        }
+                        Button { showingHardware = true } label: {
+                            Label("About this node", systemImage: "info.circle")
                         }
                         if model.allows(.debugShell) {
                             // NavigationLink does not navigate from inside a Menu.
@@ -118,6 +132,15 @@ struct NodeDetailView: View {
         }
         .navigationDestination(isPresented: $showingEvents) {
             EventsView(node: ref.address, hostnames: [ref.address: ref.hostname])
+        }
+        .navigationDestination(isPresented: $showingNetwork) {
+            NetworkView(node: ref.address, hostname: ref.hostname)
+        }
+        .navigationDestination(isPresented: $showingImages) {
+            ImagesView(node: ref.address, hostname: ref.hostname)
+        }
+        .navigationDestination(isPresented: $showingHardware) {
+            HardwareView(node: ref.address, hostname: ref.hostname)
         }
         .navigationDestination(isPresented: $showingDebugShell) {
             DebugShellView(node: ref.address, hostname: ref.hostname)
@@ -159,6 +182,12 @@ struct NodeDetailView: View {
     private func loadResources() async {
         guard let client = model.client else { return }
         resources = await .from { try await client.resources(node: ref.address) }
+        // Best-effort: a node that cannot answer shows the error in its row.
+        do {
+            clock = try await client.nodeTime(node: ref.address)
+        } catch {
+            clock = NodeTimeInfo(node: ref.address, error: error.localizedDescription)
+        }
     }
 
     /// With the app lock on, destructive actions need a fresh Face ID / passcode check.
@@ -291,6 +320,7 @@ private struct ServiceRow: View {
 
 private struct ResourcesList: View {
     let resources: NodeResources
+    let clock: NodeTimeInfo?
 
     var body: some View {
         List {
@@ -299,6 +329,7 @@ private struct ResourcesList: View {
                 LabeledContent("CPU", value: resources.cpuModel.isEmpty ? String(localized: "\(resources.cpuCount) threads") : "\(resources.cpuCount) × \(resources.cpuModel)")
                 LabeledContent("Load (1/5/15)", value: String(format: "%.2f  %.2f  %.2f", resources.load1, resources.load5, resources.load15))
                 if resources.cpuCount > 0 { UsageBar(fraction: resources.load1 / Double(resources.cpuCount)) }
+                if let clock { TimeOffsetRow(info: clock, title: String(localized: "Clock offset")) }
             }
             Section("Memory") {
                 let used = resources.memTotal - min(resources.memAvailable, resources.memTotal)

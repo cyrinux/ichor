@@ -25,6 +25,7 @@ class FeatureTest {
         assertFalse(op.allows(Feature.KUBECONFIG))
         assertFalse(op.allows(Feature.DEBUG_SHELL))
         assertTrue(op.allows(Feature.SERVICE_CONTROL))
+        assertFalse(op.allows(Feature.ISSUE_CONFIG))
     }
 
     @Test
@@ -37,5 +38,6 @@ class FeatureTest {
         assertEquals("os:operator", Feature.POWER.minimumRole)
         assertEquals("os:admin", Feature.HEALTH.minimumRole)
         assertEquals("os:operator", Feature.SERVICE_CONTROL.minimumRole)
+        assertEquals("os:admin", Feature.ISSUE_CONFIG.minimumRole)
     }
 }

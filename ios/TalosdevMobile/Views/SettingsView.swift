@@ -21,6 +21,9 @@ struct SettingsView: View {
                         LabeledContent("Nodes", value: "\(ctx.nodes.isEmpty ? ctx.endpoints.count : ctx.nodes.count)")
                         LabeledContent("Roles", value: ctx.roles.joined(separator: ", "))
                         LabeledContent("Cert expires", value: localizedCertExpiry(ctx.certNotAfter))
+                        if ctx.certNotAfter > 0 && daysUntil(ctx.certNotAfter) <= certWarnDays {
+                            certificateWarning(ctx)
+                        }
                     }
                 }
             }
@@ -56,6 +59,10 @@ struct SettingsView: View {
                     LabeledContent("Encryption key", value: protection.label)
                 }
                 NavigationLink("Import a new talosconfig", value: Route.importConfig)
+                if model.allows(.issueConfig) {
+                    NavigationLink("Renew my certificate…", value: Route.issueConfig(renew: true))
+                    NavigationLink("Create a config for another device…", value: Route.issueConfig(renew: false))
+                }
                 Button("Delete stored talosconfig", role: .destructive) { confirmDelete = true }
             }
             AboutSection()
@@ -66,6 +73,21 @@ struct SettingsView: View {
             Button("Delete", role: .destructive) { model.clear() }
         } message: {
             Text("The config and its client key will be removed from this device.")
+        }
+    }
+
+    /// Expired or expiring soon: renew here when the role allows it, else say what to do.
+    @ViewBuilder
+    private func certificateWarning(_ ctx: ContextSummary) -> some View {
+        if model.allows(.issueConfig) {
+            NavigationLink(value: Route.issueConfig(renew: true)) {
+                Label("Renew the certificate now", systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+            }
+        } else {
+            Label("Ask an admin for a new talosconfig before this one expires.", systemImage: "exclamationmark.triangle.fill")
+                .font(.footnote)
+                .foregroundStyle(.orange)
         }
     }
 

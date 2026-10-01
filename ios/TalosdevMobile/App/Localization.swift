@@ -16,6 +16,7 @@ extension Feature {
         case .machineConfig: String(localized: "Machine config")
         case .etcdSnapshot: String(localized: "etcd snapshot")
         case .serviceControl: String(localized: "Service control")
+        case .issueConfig: String(localized: "Issue talosconfig")
         }
     }
 }
@@ -117,4 +118,33 @@ func localizedDuration(_ seconds: Int64) -> String {
     formatter.maximumUnitCount = 2
     formatter.allowedUnits = seconds >= 86_400 ? [.day, .hour] : seconds >= 3_600 ? [.hour, .minute] : [.minute]
     return formatter.string(from: TimeInterval(seconds)) ?? formatDuration(seconds)
+}
+
+extension ConfigValidity {
+    var localizedLabel: String {
+        switch self {
+        case .days30: String(localized: "30 days")
+        case .days90: String(localized: "90 days")
+        case .year: String(localized: "1 year")
+        }
+    }
+}
+
+extension ConnectionFilter {
+    var localizedLabel: String {
+        switch self {
+        case .listening: String(localized: "Listening")
+        case .all: String(localized: "All")
+        }
+    }
+}
+
+extension ImageSort {
+    var localizedLabel: String {
+        switch self {
+        case .name: String(localized: "Name")
+        case .size: String(localized: "Size")
+        case .created: String(localized: "Created")
+        }
+    }
 }

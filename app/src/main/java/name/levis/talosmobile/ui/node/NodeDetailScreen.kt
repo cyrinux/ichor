@@ -41,6 +41,7 @@ import name.levis.talosmobile.data.TalosRepository
 import name.levis.talosmobile.data.servicesKey
 import name.levis.talosmobile.data.resourcesKey
 import name.levis.talosmobile.model.NodeResources
+import name.levis.talosmobile.model.NodeTime
 import name.levis.talosmobile.model.ServiceInfo
 import name.levis.talosmobile.ui.LoadingViewModel
 import name.levis.talosmobile.ui.UiState
@@ -59,6 +60,9 @@ import java.util.Locale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Lan
+import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PowerSettingsNew
 import androidx.compose.material.icons.outlined.Terminal
@@ -108,6 +112,9 @@ fun NodeDetailScreen(
     onDebugShell: () -> Unit,
     onMachineConfig: () -> Unit,
     onEvents: () -> Unit,
+    onNetwork: () -> Unit,
+    onHardware: () -> Unit,
+    onImages: () -> Unit,
     power: PowerViewModel = viewModel(key = "power-$node", factory = factory { PowerViewModel(app.talosRepository, node) }),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(initialTab) }
@@ -249,6 +256,30 @@ fun NodeDetailScreen(
                                     onEvents()
                                 },
                             )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.node_menu_network)) },
+                                leadingIcon = { Icon(Icons.Outlined.Lan, contentDescription = null) },
+                                onClick = {
+                                    menuOpen = false
+                                    onNetwork()
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.node_menu_hardware)) },
+                                leadingIcon = { Icon(Icons.Outlined.Memory, contentDescription = null) },
+                                onClick = {
+                                    menuOpen = false
+                                    onHardware()
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.node_menu_images)) },
+                                leadingIcon = { Icon(Icons.Outlined.Layers, contentDescription = null) },
+                                onClick = {
+                                    menuOpen = false
+                                    onImages()
+                                },
+                            )
                             if (canDebug) {
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.node_menu_debug_shell)) },
@@ -339,16 +370,28 @@ fun NodeDetailScreen(
 private fun ResourcesTab(
     node: String,
     vm: ResourcesViewModel = viewModel(key = "resources-$node", factory = factory { ResourcesViewModel(app.talosRepository, node) }),
+    clock: NodeTimeViewModel = viewModel(key = "time-$node", factory = factory { NodeTimeViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
+    val clockState by clock.state.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) {
+        if (state == UiState.Loading) vm.refresh()
+        if (clockState == UiState.Loading) clock.refresh()
+    }
 
     when (val s = state) {
         UiState.Loading -> LoadingBox()
         is UiState.Failed -> ErrorBox(s.message, vm::refresh)
         is UiState.Loaded -> Column(Modifier.fillMaxSize()) {
-            PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                ResourcesContent(s.data)
+            PullToRefreshBox(
+                isRefreshing = s.refreshing,
+                onRefresh = {
+                    vm.refresh()
+                    clock.refresh()
+                },
+                modifier = Modifier.weight(1f),
+            ) {
+                ResourcesContent(s.data, clockState)
             }
             DataFreshness(s, edgeToEdge = false)
         }
@@ -356,7 +399,7 @@ private fun ResourcesTab(
 }
 
 @Composable
-private fun ResourcesContent(r: NodeResources) {
+private fun ResourcesContent(r: NodeResources, clock: UiState<NodeTime>) {
     val uptime = if (r.bootTime > 0) localizedDuration(System.currentTimeMillis() / 1000 - r.bootTime) else "—"
     val cpu = if (r.cpuModel.isBlank()) {
         pluralStringResource(R.plurals.node_cpu_threads, r.cpuCount, r.cpuCount)
@@ -372,6 +415,7 @@ private fun ResourcesContent(r: NodeResources) {
                     InfoRow(stringResource(R.string.node_cpu), cpu)
                     InfoRow(stringResource(R.string.node_load), String.format(Locale.ROOT, "%.2f  %.2f  %.2f", r.load1, r.load5, r.load15))
                     if (r.cpuCount > 0) UsageBar((r.load1 / r.cpuCount).toFloat().coerceIn(0f, 1f), Modifier.padding(top = 4.dp))
+                    ClockOffsetRow(clock)
                 }
             }
         }

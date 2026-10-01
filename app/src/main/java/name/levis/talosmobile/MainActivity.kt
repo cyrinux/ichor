@@ -1,6 +1,7 @@
 package name.levis.talosmobile
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -27,14 +28,19 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import name.levis.talosmobile.i18n.AppLocale
 import name.levis.talosmobile.security.LockScreen
+import name.levis.talosmobile.ui.DeepLink
 import name.levis.talosmobile.ui.Navigation
 import name.levis.talosmobile.ui.components.LoadingBox
 import name.levis.talosmobile.ui.theme.TalosTheme
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 // FragmentActivity (still a ComponentActivity) is required by BiometricPrompt.
 class MainActivity : FragmentActivity() {
+    /** A screen to open from a notification tap, consumed once by Navigation. */
+    private val deepLink = MutableStateFlow<DeepLink?>(null)
+
     // Below API 33, the in-app language is applied here (API 33+ uses LocaleManager).
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(AppLocale.wrap(newBase))
@@ -56,6 +62,7 @@ class MainActivity : FragmentActivity() {
             }
         }
 
+        if (savedInstanceState == null) deepLink.value = intent.deepLink()
         app.updateManager.maybeAutoCheck(lifecycleScope)
         if (savedInstanceState == null) app.supportPrompt.onLaunch()
 
@@ -79,25 +86,38 @@ class MainActivity : FragmentActivity() {
             }
             TalosTheme(themeMode) {
                 Surface {
-                    LockGate(app, onWiped = ::recreate)
+                    LockGate(app, deepLink, onWiped = ::recreate)
                 }
             }
         }
     }
+
+    // A notification tapped while the activity is kept (otherwise onCreate reads the intent).
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.deepLink()?.let { deepLink.value = it }
+    }
+
+    companion object {
+        const val EXTRA_OPEN = "name.levis.talosmobile.OPEN"
+    }
 }
+
+private fun Intent.deepLink(): DeepLink? =
+    getStringExtra(MainActivity.EXTRA_OPEN)?.let { name -> DeepLink.entries.firstOrNull { it.name == name } }
 
 /**
  * Nothing (not even the encrypted config) is loaded before the first unlock. Later relocks
  * draw over the app so navigation state survives.
  */
 @Composable
-private fun LockGate(app: TalosApp, onWiped: () -> Unit) {
+private fun LockGate(app: TalosApp, deepLink: MutableStateFlow<DeepLink?>, onWiped: () -> Unit) {
     val locked by app.appLock.locked.collectAsStateWithLifecycle()
     var everUnlocked by rememberSaveable { mutableStateOf(!locked) }
     val scope = rememberCoroutineScope()
 
     Box {
-        if (everUnlocked) Root(app)
+        if (everUnlocked) Root(app, deepLink)
         if (locked) {
             LockScreen(
                 onUnlocked = {
@@ -117,13 +137,14 @@ private fun LockGate(app: TalosApp, onWiped: () -> Unit) {
 }
 
 @Composable
-private fun Root(app: TalosApp) {
+private fun Root(app: TalosApp, deepLink: MutableStateFlow<DeepLink?>) {
+    val link by deepLink.collectAsStateWithLifecycle()
     // null = still loading the stored config; then whether one exists.
     var hasConfig by remember { mutableStateOf<Boolean?>(null) }
     LaunchedEffect(Unit) { hasConfig = app.configRepository.load() != null }
 
     when (val ready = hasConfig) {
         null -> LoadingBox()
-        else -> Navigation(app, startWithImport = !ready)
+        else -> Navigation(app, startWithImport = !ready, deepLink = link, onDeepLinkHandled = { deepLink.value = null })
     }
 }

@@ -38,6 +38,12 @@ struct TalosClient: Sendable {
         try await json { TalosmobileParseConfig(yaml, $0) }
     }
 
+    /// `stored` with context's ca/crt/key replaced by those of `generated` (a single-context
+    /// talosconfig from generateTalosconfig); other contexts and fields are kept.
+    static func replaceContextCredentials(stored: String, generated: String, context: String) async throws -> String {
+        try await run { TalosmobileReplaceContextCredentials(stored, generated, context, $0) }
+    }
+
     func overview() async throws -> ClusterOverview {
         try await Self.json { [config, context] in TalosmobileClusterOverview(config, context, $0) }
     }
@@ -170,6 +176,42 @@ struct TalosClient: Sendable {
         try await Self.run { [config, context] error -> Void in
             _ = TalosmobileServiceAction(config, context, node, service, action.rawValue, error)
         }
+    }
+
+    /// A new client certificate as a single-context talosconfig (os:admin): roles is the
+    /// comma-separated list, see rolesArgument. A credential: keep it in memory only.
+    func generateTalosconfig(roles: String, hours: Int) async throws -> String {
+        try await Self.run { [config, context] in TalosmobileGenerateTalosconfig(config, context, roles, hours, $0) }
+    }
+
+    /// Links, addresses, routes, DNS and time servers of node (os:reader).
+    func network(node: String) async throws -> NodeNetwork {
+        try await Self.json { [config, context] in TalosmobileNodeNetwork(config, context, node, $0) }
+    }
+
+    /// `talosctl netstat -a -p` on node (os:reader).
+    func connections(node: String) async throws -> [NodeConnection] {
+        try await Self.json { [config, context] in TalosmobileNodeConnections(config, context, node, $0) }
+    }
+
+    /// Node clock against its NTP server (os:reader).
+    func nodeTime(node: String) async throws -> NodeTimeInfo {
+        try await Self.json { [config, context] in TalosmobileNodeTime(config, context, node, $0) }
+    }
+
+    /// Clock offset of every node of the context; failures are reported per node (os:reader).
+    func clusterTime() async throws -> ClusterTimeInfo {
+        try await Self.json { [config, context] in TalosmobileClusterTime(config, context, $0) }
+    }
+
+    /// System, CPUs, memory, disks, extensions and security state of node (os:reader).
+    func hardware(node: String) async throws -> NodeHardware {
+        try await Self.json { [config, context] in TalosmobileNodeHardware(config, context, node, $0) }
+    }
+
+    /// Container images in node's CRI namespace (os:reader).
+    func images(node: String) async throws -> [ContainerImage] {
+        try await Self.json { [config, context] in TalosmobileNodeImages(config, context, node, $0) }
     }
 
     func etcd() async throws -> EtcdOverview {

@@ -1,5 +1,6 @@
 import SwiftUI
 import TalosdevMobileCore
+import UserNotifications
 
 @main
 struct TalosdevMobileApp: App {
@@ -10,6 +11,7 @@ struct TalosdevMobileApp: App {
     init() {
         BackgroundMonitor.register()
         BackgroundMonitor.registerCategories()
+        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
     }
 
     var body: some Scene {
@@ -102,6 +104,8 @@ enum Route: Hashable {
     case debugShell(node: String, hostname: String)
     /// Events timeline for one node, or all of them (node nil); hostnames by address.
     case events(node: String?, hostnames: [String: String])
+    /// Issue a talosconfig (os:admin): renew this device's certificate, or one for another device.
+    case issueConfig(renew: Bool)
 }
 
 struct NodeRef: Hashable {
@@ -111,6 +115,7 @@ struct NodeRef: Hashable {
 }
 
 struct MainNavigation: View {
+    @Environment(AppModel.self) private var model
     @State private var path: [Route] = []
 
     var body: some View {
@@ -130,8 +135,20 @@ struct MainNavigation: View {
                     case .importConfig: ImportView { path.removeAll() }
                     case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)
                     case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
+                    case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)
                     }
                 }
         }
+        .onChange(of: NotificationRouter.shared.pendingRenewal) { _, pending in
+            if pending { openRenewal() }
+        }
+        .onAppear { if NotificationRouter.shared.pendingRenewal { openRenewal() } }
+    }
+
+    /// From the certificate-expiry alert: the renewal screen, or the settings (which show the
+    /// expiry) when this config may not issue certificates.
+    private func openRenewal() {
+        NotificationRouter.shared.pendingRenewal = false
+        path = [model.allows(.issueConfig) ? .issueConfig(renew: true) : .settings]
     }
 }

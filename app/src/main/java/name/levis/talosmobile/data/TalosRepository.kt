@@ -19,6 +19,12 @@ import name.levis.talosmobile.model.ProcessSample
 import name.levis.talosmobile.model.ContainerSample
 import name.levis.talosmobile.model.ServiceAction
 import name.levis.talosmobile.model.TalosEvent
+import name.levis.talosmobile.model.ClusterTime
+import name.levis.talosmobile.model.ConnectionInfo
+import name.levis.talosmobile.model.ImageInfo
+import name.levis.talosmobile.model.NodeHardware
+import name.levis.talosmobile.model.NodeNetwork
+import name.levis.talosmobile.model.NodeTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -248,6 +254,40 @@ class TalosRepository(private val configs: ConfigRepository) {
         awaitClose { run.cancel() }
     }.buffer(Channel.UNLIMITED) // never drop progress lines or the final Done event
 
+    suspend fun network(node: String): NodeNetwork = remember(networkKey(node)) {
+        call { cfg, ctx -> TalosJson.decodeFromString(NodeNetwork.serializer(), Talosmobile.nodeNetwork(cfg, ctx, node)) }
+    }
+
+    /** The node's sockets, like `talosctl netstat -a -p` (not cached: always fresh). */
+    suspend fun connections(node: String): List<ConnectionInfo> = call { cfg, ctx ->
+        TalosJson.decodeFromString(ListSerializer(ConnectionInfo.serializer()), Talosmobile.nodeConnections(cfg, ctx, node))
+    }
+
+    /** The node's clock compared with its NTP server (not cached: an offset goes stale fast). */
+    suspend fun nodeTime(node: String): NodeTime = call { cfg, ctx ->
+        TalosJson.decodeFromString(NodeTime.serializer(), Talosmobile.nodeTime(cfg, ctx, node))
+    }
+
+    suspend fun clusterTime(): ClusterTime = remember(CLUSTER_TIME) {
+        call { cfg, ctx -> TalosJson.decodeFromString(ClusterTime.serializer(), Talosmobile.clusterTime(cfg, ctx)) }
+    }
+
+    suspend fun hardware(node: String): NodeHardware = remember(hardwareKey(node)) {
+        call { cfg, ctx -> TalosJson.decodeFromString(NodeHardware.serializer(), Talosmobile.nodeHardware(cfg, ctx, node)) }
+    }
+
+    suspend fun images(node: String): List<ImageInfo> = remember(imagesKey(node)) {
+        call { cfg, ctx -> TalosJson.decodeFromString(ListSerializer(ImageInfo.serializer()), Talosmobile.nodeImages(cfg, ctx, node)) }
+    }
+
+    /**
+     * A new single-context talosconfig for the active context with [roles] (comma-separated),
+     * valid [ttlHours] (os:admin). A credential: never cached, logged or written by this class.
+     */
+    suspend fun generateTalosconfig(roles: String, ttlHours: Int): String = call { cfg, ctx ->
+        Talosmobile.generateTalosconfig(cfg, ctx, roles, ttlHours.toLong())
+    }
+
     private suspend fun <T> call(block: (config: String, context: String) -> T): T {
         val stored = configs.config.value ?: throw NoConfigException()
         return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) }
@@ -259,3 +299,7 @@ const val ETCD = "etcd"
 const val KUBESPAN = "kubespan"
 fun servicesKey(node: String) = "services|$node"
 fun resourcesKey(node: String) = "resources|$node"
+const val CLUSTER_TIME = "clustertime"
+fun networkKey(node: String) = "network|$node"
+fun hardwareKey(node: String) = "hardware|$node"
+fun imagesKey(node: String) = "images|$node"

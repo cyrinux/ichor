@@ -2,6 +2,7 @@ package name.levis.talosmobile.ui
 
 import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -12,7 +13,11 @@ import name.levis.talosmobile.TalosApp
 import name.levis.talosmobile.ui.debug.DebugShellScreen
 import name.levis.talosmobile.ui.etcd.EtcdScreen
 import name.levis.talosmobile.ui.events.EventsScreen
+import name.levis.talosmobile.ui.hardware.HardwareScreen
 import name.levis.talosmobile.ui.health.HealthScreen
+import name.levis.talosmobile.ui.images.ImagesScreen
+import name.levis.talosmobile.ui.issueconfig.IssueConfigScreen
+import name.levis.talosmobile.ui.network.NetworkScreen
 import name.levis.talosmobile.ui.importconfig.ImportScreen
 import name.levis.talosmobile.ui.kubespan.KubeSpanScreen
 import name.levis.talosmobile.ui.logs.LogsScreen
@@ -32,6 +37,16 @@ private object Routes {
     const val KUBESPAN = "kubespan"
     const val DEBUG = "debug?addr={addr}&host={host}"
     const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}"
+    const val NETWORK = "network?addr={addr}&host={host}"
+    const val HARDWARE = "hardware?addr={addr}&host={host}"
+    const val IMAGES = "images?addr={addr}&host={host}"
+    const val ISSUE_CONFIG = "issueconfig"
+
+    fun network(addr: String, host: String) = "network?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
+
+    fun hardware(addr: String, host: String) = "hardware?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
+
+    fun images(addr: String, host: String) = "images?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
     /** Empty addr: events of every node of the context. */
     const val EVENTS = "events?addr={addr}&host={host}"
@@ -53,9 +68,23 @@ private object Routes {
         "node?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&role=${Uri.encode(role)}&tab=$tab&action=$action"
 }
 
+/** Screens a notification can open directly (see MainActivity.EXTRA_OPEN). */
+enum class DeepLink { ISSUE_CONFIG }
+
+/** [deepLink]: a screen to open once over the overview; [onDeepLinkHandled] then clears it. */
 @Composable
-fun Navigation(app: TalosApp, startWithImport: Boolean) {
+fun Navigation(app: TalosApp, startWithImport: Boolean, deepLink: DeepLink? = null, onDeepLinkHandled: () -> Unit = {}) {
     val nav = rememberNavController()
+
+    LaunchedEffect(deepLink) {
+        if (deepLink == null) return@LaunchedEffect
+        if (!startWithImport) {
+            when (deepLink) {
+                DeepLink.ISSUE_CONFIG -> nav.navigate(Routes.ISSUE_CONFIG) { launchSingleTop = true }
+            }
+        }
+        onDeepLinkHandled()
+    }
 
     NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW) {
         composable(Routes.IMPORT) {
@@ -82,6 +111,7 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
                 onHealth = { nav.navigate(Routes.HEALTH) },
                 onEvents = { nav.navigate(Routes.events()) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
+                onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
             )
         }
         composable(
@@ -110,6 +140,9 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
                 onDebugShell = { nav.navigate(Routes.debug(addr, entry.arguments?.getString("host") ?: addr)) },
                 onMachineConfig = { nav.navigate(Routes.machineConfig(addr, entry.arguments?.getString("host") ?: addr)) },
                 onEvents = { nav.navigate(Routes.events(addr, entry.arguments?.getString("host") ?: addr)) },
+                onNetwork = { nav.navigate(Routes.network(addr, entry.arguments?.getString("host") ?: addr)) },
+                onHardware = { nav.navigate(Routes.hardware(addr, entry.arguments?.getString("host") ?: addr)) },
+                onImages = { nav.navigate(Routes.images(addr, entry.arguments?.getString("host") ?: addr)) },
             )
         }
         composable(
@@ -122,6 +155,19 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
             val addr = entry.arguments?.getString("addr").orEmpty()
             MachineConfigScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
         }
+        composable(Routes.NETWORK, arguments = nodeArguments()) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty()
+            NetworkScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.HARDWARE, arguments = nodeArguments()) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty()
+            HardwareScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.IMAGES, arguments = nodeArguments()) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty()
+            ImagesScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
+        }
+        composable(Routes.ISSUE_CONFIG) { IssueConfigScreen(onBack = { nav.popBackStack() }) }
         composable(
             Routes.LOGS,
             arguments = listOf(
@@ -173,6 +219,7 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
                 talos = app.talosRepository,
                 onBack = { nav.popBackStack() },
                 onReimport = { nav.navigate(Routes.IMPORT) },
+                onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
                 onCleared = {
                     app.launchSync(runNow = true)
                     nav.resetTo(Routes.IMPORT)
@@ -181,6 +228,12 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
         }
     }
 }
+
+/** The addr/host arguments of a per-node screen. */
+private fun nodeArguments() = listOf(
+    navArgument("addr") { type = NavType.StringType },
+    navArgument("host") { type = NavType.StringType },
+)
 
 /** Navigates to [route] and drops everything else from the back stack. */
 private fun NavHostController.resetTo(route: String) {

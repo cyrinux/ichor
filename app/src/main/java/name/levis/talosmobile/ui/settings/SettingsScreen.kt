@@ -60,6 +60,7 @@ fun SettingsScreen(
     talos: TalosRepository,
     onBack: () -> Unit,
     onReimport: () -> Unit,
+    onIssueConfig: () -> Unit,
     onCleared: () -> Unit,
 ) {
     val config by configs.config.collectAsStateWithLifecycle()
@@ -106,6 +107,15 @@ fun SettingsScreen(
             UpdateSection((LocalContext.current.applicationContext as TalosApp).updateManager)
             config?.activeSummary?.takeIf { it.allows(Feature.KUBECONFIG) }?.let { KubeconfigSection(talos, appLock, it) }
             SectionTitle(stringResource(R.string.settings_section_config))
+            // Renewing the certificate or issuing a config for another device (os:admin).
+            if (config?.activeSummary?.allows(Feature.ISSUE_CONFIG) == true) {
+                Text(
+                    stringResource(R.string.settings_issue_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedButton(onClick = onIssueConfig, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_issue_open)) }
+            }
             configs.keyProtection()?.let {
                 InfoRow(stringResource(R.string.settings_encryption_key), stringResource(R.string.settings_encryption_value, stringResource(it.label)))
             }

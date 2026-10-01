@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.PersistableBundle
-import android.view.WindowManager
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,7 +34,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +62,7 @@ import name.levis.talosmobile.R
 import name.levis.talosmobile.TalosApp
 import name.levis.talosmobile.data.TalosRepository
 import name.levis.talosmobile.security.AuthResult
+import name.levis.talosmobile.security.SecureWhile
 import name.levis.talosmobile.security.authenticate
 import name.levis.talosmobile.security.findFragmentActivity
 import name.levis.talosmobile.ui.LoadingViewModel
@@ -114,7 +113,7 @@ fun MachineConfigScreen(
     val snackbar = remember { SnackbarHostState() }
     var query by rememberSaveable { mutableStateOf("") }
 
-    SecureWhile(revealed, app)
+    SecureWhile(revealed)
 
     // Revealing secrets needs a fresh fingerprint/PIN when the app lock is on, like reboot.
     fun toggleReveal(on: Boolean) {
@@ -235,20 +234,6 @@ private fun highlighted(lines: List<String>, query: String, color: Color): Annot
     while (from >= 0) {
         addStyle(SpanStyle(background = color), from, from + query.length)
         from = text.indexOf(query, from + query.length, ignoreCase = true)
-    }
-}
-
-/** Blocks screenshots and the recents thumbnail while secrets are on screen. */
-@Composable
-private fun SecureWhile(secure: Boolean, app: TalosApp) {
-    val window = LocalContext.current.findFragmentActivity()?.window ?: return
-    DisposableEffect(secure) {
-        if (secure) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        onDispose {
-            // MainActivity keeps the flag on when the app lock requires it.
-            val appWide = app.appLock.enabled.value && !app.uiPreferences.allowScreenshots.value
-            if (secure && !appWide) window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        }
     }
 }
 

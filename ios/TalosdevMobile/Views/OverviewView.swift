@@ -12,6 +12,9 @@ struct OverviewView: View {
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
             List {
+                if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
+                    Section { CertExpiryBanner(notAfter: ctx.certNotAfter) }
+                }
                 if support.visible { Section { SupportCard(prompt: support) } }
                 Section {
                     Summary(nodes: overview.nodes)
@@ -74,6 +77,8 @@ struct OverviewView: View {
                         }
                     }
                 }
+                // Re-checked with every overview refresh (the load time is the task id).
+                TimeDriftSection(hostnames: hostnames, refreshID: loadedAt)
             }
             .refreshable { await load() }
             .themedBackground()
@@ -102,6 +107,11 @@ struct OverviewView: View {
         return Dictionary(overview.nodes.map { ($0.node, $0.hostname) }, uniquingKeysWith: { first, _ in first })
     }
 
+    private var loadedAt: Date? {
+        if case .loaded(_, let at) = state { return at }
+        return nil
+    }
+
     private func load() async {
         guard let client = model.client else { return }
         if case .loaded = state {} else { state = .loading }
@@ -115,6 +125,26 @@ struct OverviewView: View {
 
     private func rank(_ node: NodeOverview) -> Int {
         node.role == "controlplane" ? 0 : 1
+    }
+}
+
+/// The client certificate expires within certWarnDays (or has expired): renew it (os:admin;
+/// other roles get the role notice there).
+private struct CertExpiryBanner: View {
+    let notAfter: Int64
+
+    var body: some View {
+        let days = daysUntil(notAfter)
+        NavigationLink(value: Route.issueConfig(renew: true)) {
+            Label {
+                Text(days < 0
+                     ? String(localized: "The client certificate expired \(-days) days ago.")
+                     : String(localized: "The client certificate expires in \(days) days. Generate a new talosconfig."))
+            } icon: {
+                Image(systemName: "exclamationmark.triangle.fill")
+            }
+            .foregroundStyle(days < 0 ? Color.red : Color.orange)
+        }
     }
 }
 

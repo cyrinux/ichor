@@ -60,6 +60,21 @@ class ConfigRepository(context: Context) {
         _generation.value++
     }
 
+    /**
+     * Replaces [contextName]'s CA, certificate and key with those of [generatedYaml] (a
+     * single-context talosconfig from GenerateTalosconfig), keeping the other contexts and
+     * the context the user is looking at. The result goes through the import validation.
+     */
+    suspend fun replaceCredentials(contextName: String, generatedYaml: String) = withContext(Dispatchers.IO) {
+        val current = _config.value ?: throw NoConfigException()
+        val merged = Talosmobile.replaceContextCredentials(current.yaml, generatedYaml, contextName)
+        val summary = parse(merged)
+        check(summary.contexts.any { it.name == current.activeContext }) { "context ${current.activeContext} disappeared" }
+        store.write(merged.encodeToByteArray())
+        _config.value = StoredConfig(merged, summary, current.activeContext)
+        _generation.value++
+    }
+
     fun selectContext(name: String) {
         val current = _config.value ?: return
         if (current.summary.contexts.none { it.name == name }) return
