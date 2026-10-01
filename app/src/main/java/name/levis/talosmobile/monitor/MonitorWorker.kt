@@ -9,7 +9,8 @@ import name.levis.talosmobile.widget.ClusterWidget
 
 /**
  * Periodic check: overview + etcd, diffed against the previous snapshot. If the cluster is
- * unreachable as a whole (e.g. off VPN) nothing changes, so you are not spammed.
+ * unreachable as a whole (e.g. off VPN) the previous snapshot is kept (see [evaluate]), so
+ * you are not spammed.
  */
 class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 

@@ -52,6 +52,41 @@ class AlertsTest {
     }
 
     @Test
+    fun wholeClusterUnreachableIsSilentAndKeepsThePreviousSnapshot() {
+        val prev = snap("a" to READY, "b" to NOT_READY)
+        val away = evaluate(prev, snap("a" to UNREACHABLE, "b" to UNREACHABLE).copy(takenAt = now + 1), now)
+
+        assertTrue(away.alerts.isEmpty())
+        assertEquals(prev, away.next)
+
+        // Back on the network: nothing changed since the last real check.
+        assertTrue(evaluate(away.next, snap("a" to READY, "b" to NOT_READY), now).alerts.isEmpty())
+    }
+
+    @Test
+    fun baselineTakenOffNetworkDoesNotAlertOnReturn() {
+        val baseline = evaluate(null, snap("a" to UNREACHABLE, "b" to UNREACHABLE), now).next
+        val back = evaluate(baseline, snap("a" to READY, "b" to NOT_READY), now)
+
+        assertTrue(back.alerts.isEmpty())
+        assertEquals(1, back.next.readyCount)
+    }
+
+    @Test
+    fun oneNodeOfSeveralUnreachableStillAlerts() {
+        val alerts = evaluate(snap("a" to READY, "b" to READY), snap("a" to UNREACHABLE, "b" to READY), now).alerts
+        assertEquals(listOf("node:a"), alerts.map { it.key })
+    }
+
+    @Test
+    fun certStillWarnsWhileOffNetwork() {
+        val soon = now / 1000 + 5L * 86_400
+        val result = evaluate(snap("a" to READY), snap("a" to UNREACHABLE, cert = soon), now)
+        assertEquals(listOf("cert"), result.alerts.map { it.key })
+        assertEquals(READY, result.next.nodes.getValue("a").health)
+    }
+
+    @Test
     fun steadyStateDoesNotRepeat() {
         val s = snap("a" to NOT_READY)
         assertTrue(evaluate(s, s, now).alerts.isEmpty())

@@ -32,6 +32,22 @@ final class MonitorTests: XCTestCase {
                                current: snap([("a", .unreachable)], context: "two"), now: now).alerts.isEmpty)
     }
 
+    func testWholeClusterUnreachableIsSilentAndKeepsThePreviousSnapshot() {
+        let previous = snap([("a", .ready), ("b", .notReady)])
+        let away = evaluate(previous: previous, current: snap([("a", .unreachable), ("b", .unreachable)]), now: now)
+        XCTAssertTrue(away.alerts.isEmpty)
+        XCTAssertEqual(away.next, previous)
+        // Back on the network: nothing changed since the last real check.
+        XCTAssertTrue(evaluate(previous: away.next, current: snap([("a", .ready), ("b", .notReady)]), now: now).alerts.isEmpty)
+    }
+
+    func testBaselineTakenOffNetworkDoesNotAlertOnReturn() {
+        let baseline = evaluate(previous: nil, current: snap([("a", .unreachable), ("b", .unreachable)]), now: now).next
+        let back = evaluate(previous: baseline, current: snap([("a", .ready), ("b", .notReady)]), now: now)
+        XCTAssertTrue(back.alerts.isEmpty)
+        XCTAssertEqual(back.next.readyCount, 1)
+    }
+
     func testNewEtcdAlarm() {
         let alerts = evaluate(previous: snap([("a", .ready)]), current: snap([("a", .ready)], alarms: ["beef:NOSPACE"]), now: now).alerts
         XCTAssertEqual(alerts.map(\.key), ["etcd:beef:NOSPACE"])

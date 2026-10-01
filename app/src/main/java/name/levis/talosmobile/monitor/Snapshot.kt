@@ -21,6 +21,9 @@ data class ClusterSnapshot(
     val readyCount: Int get() = nodes.values.count { it.health == NodeHealth.READY }
     val notReadyCount: Int get() = nodes.values.count { it.health == NodeHealth.NOT_READY }
     val unreachableCount: Int get() = nodes.values.count { it.health == NodeHealth.UNREACHABLE }
+
+    /** No node answered: most likely the phone is off the cluster's network (VPN, home LAN). */
+    val unreachableAsAWhole: Boolean get() = nodes.isNotEmpty() && unreachableCount == nodes.size
 }
 
 @Serializable

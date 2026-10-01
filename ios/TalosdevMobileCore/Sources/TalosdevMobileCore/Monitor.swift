@@ -25,6 +25,9 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     public var readyCount: Int { nodes.values.filter { $0.health == .ready }.count }
     public var notReadyCount: Int { nodes.values.filter { $0.health == .notReady }.count }
     public var unreachableCount: Int { nodes.values.filter { $0.health == .unreachable }.count }
+
+    /// No node answered: most likely the phone is off the cluster's network (VPN, home LAN).
+    public var unreachableAsAWhole: Bool { !nodes.isEmpty && unreachableCount == nodes.count }
 }
 
 extension NodeHealth: Codable {}
@@ -69,11 +72,17 @@ public struct Alert: Equatable, Sendable {
 public let certWarnDays = 7
 
 /// Same rules as Android: only changes alert, a first snapshot (or a context switch) is a
-/// silent baseline, and the certificate warning fires at most once a day.
+/// silent baseline, and the certificate warning fires at most once a day. A check where no
+/// node answered says nothing about the cluster (the phone is off its network): it alerts
+/// nothing and keeps the previous snapshot.
 public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: Date) -> (alerts: [Alert], next: ClusterSnapshot) {
     var alerts: [Alert] = []
+    var next = current
 
-    if let previous, previous.context == current.context {
+    if let previous, previous.context == current.context, !previous.unreachableAsAWhole, current.unreachableAsAWhole {
+        next = previous
+        next.certNotAfter = current.certNotAfter
+    } else if let previous, previous.context == current.context, !previous.unreachableAsAWhole {
         for addr in current.nodes.keys.sorted() {
             guard let state = current.nodes[addr], let before = previous.nodes[addr], before.health != state.health else { continue }
             let reason = state.reason.isEmpty ? addr : state.reason
@@ -92,7 +101,6 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
         }
     }
 
-    var next = current
     let today = Int64((now.timeIntervalSince1970 / 86_400).rounded(.down))
     let lastWarn = previous?.lastCertWarnDay ?? -1
     next.lastCertWarnDay = lastWarn
