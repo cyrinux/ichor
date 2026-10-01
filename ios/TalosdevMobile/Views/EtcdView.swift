@@ -74,7 +74,7 @@ struct EtcdView: View {
             return
         }
         let names: [String: String]
-        if case .loaded(let etcd) = state {
+        if case .loaded(let etcd, _) = state {
             names = Dictionary(etcd.members.map { ($0.id, $0.hostname) }, uniquingKeysWith: { a, _ in a })
         } else {
             names = [:]

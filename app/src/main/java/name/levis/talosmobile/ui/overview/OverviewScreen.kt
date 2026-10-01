@@ -55,6 +55,7 @@ import name.levis.talosmobile.model.health
 import name.levis.talosmobile.ui.LoadingViewModel
 import name.levis.talosmobile.ui.UiState
 import name.levis.talosmobile.ui.app
+import name.levis.talosmobile.ui.components.DataFreshness
 import name.levis.talosmobile.ui.components.ErrorBox
 import name.levis.talosmobile.ui.components.LoadingBox
 import name.levis.talosmobile.ui.components.NodeHealthPill
@@ -65,7 +66,7 @@ class OverviewViewModel(
     private val talos: TalosRepository,
     val configs: ConfigRepository,
 ) : LoadingViewModel<ClusterOverview>() {
-    override fun cached(): ClusterOverview? = talos.cached(OVERVIEW)
+    override fun cached(): TalosRepository.Timed<ClusterOverview>? = talos.cached(OVERVIEW)
     override suspend fun fetch() = talos.overview()
 }
 
@@ -86,6 +87,7 @@ fun OverviewScreen(
     LaunchedEffect(config?.activeContext) { vm.refresh(reset = true) }
 
     Scaffold(
+        bottomBar = { DataFreshness(state) },
         topBar = {
             TopAppBar(
                 title = {

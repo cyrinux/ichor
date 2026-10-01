@@ -37,6 +37,7 @@ import name.levis.talosmobile.model.EtcdOverview
 import name.levis.talosmobile.ui.LoadingViewModel
 import name.levis.talosmobile.ui.UiState
 import name.levis.talosmobile.ui.app
+import name.levis.talosmobile.ui.components.DataFreshness
 import name.levis.talosmobile.ui.components.ErrorBox
 import name.levis.talosmobile.ui.components.InfoRow
 import name.levis.talosmobile.ui.components.LoadingBox
@@ -79,7 +80,7 @@ sealed interface DefragState {
 }
 
 class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdOverview>() {
-    override fun cached(): EtcdOverview? = talos.cached(ETCD)
+    override fun cached(): TalosRepository.Timed<EtcdOverview>? = talos.cached(ETCD)
     override suspend fun fetch() = talos.etcd()
 
     private val _defrag = MutableStateFlow<DefragState>(DefragState.Idle)
@@ -144,6 +145,7 @@ fun EtcdScreen(
     }
 
     Scaffold(
+        bottomBar = { DataFreshness(state) },
         topBar = {
             TopAppBar(
                 title = { Text("etcd") },

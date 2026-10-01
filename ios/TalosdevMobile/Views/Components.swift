@@ -3,13 +3,14 @@ import TalosdevMobileCore
 
 enum LoadState<T> {
     case loading
-    case loaded(T)
+    /// `at`: when the data came from the cluster, shown in the screen footer.
+    case loaded(T, at: Date)
     case failed(String)
 }
 
 extension LoadState {
     static func from(_ operation: () async throws -> T) async -> LoadState<T> {
-        do { return .loaded(try await operation()) } catch { return .failed(error.localizedDescription) }
+        do { return .loaded(try await operation(), at: Date()) } catch { return .failed(error.localizedDescription) }
     }
 }
 
@@ -31,8 +32,9 @@ struct LoadStateView<T, Content: View>: View {
             } actions: {
                 Button("Retry") { Task { await retry() } }
             }
-        case .loaded(let value):
+        case .loaded(let value, let at):
             content(value)
+                .safeAreaInset(edge: .bottom, spacing: 0) { FreshnessFooter(at: at) }
         }
     }
 }
@@ -112,4 +114,31 @@ struct ThemedBackground: ViewModifier {
 
 extension View {
     func themedBackground() -> some View { modifier(ThemedBackground()) }
+}
+
+/// "Updated 15:42:10 · 2 min ago", re-rendered every 15 s so the age stays true.
+struct FreshnessFooter: View {
+    let at: Date
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 15)) { context in
+            Text("Updated \(at.formatted(date: .omitted, time: .standard)) · \(Self.ago(context.date.timeIntervalSince(at)))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.vertical, 6)
+                .background(.bar)
+        }
+    }
+
+    static func ago(_ seconds: TimeInterval) -> String {
+        let s = Int(max(seconds, 0))
+        switch s {
+        case ..<60: return "just now"
+        case ..<3_600: return "\(s / 60) min ago"
+        case ..<86_400: return "\(s / 3_600) h ago"
+        default: return "\(s / 86_400) d ago"
+        }
+    }
 }

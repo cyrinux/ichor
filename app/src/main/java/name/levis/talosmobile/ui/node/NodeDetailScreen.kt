@@ -42,6 +42,7 @@ import name.levis.talosmobile.model.ServiceInfo
 import name.levis.talosmobile.ui.LoadingViewModel
 import name.levis.talosmobile.ui.UiState
 import name.levis.talosmobile.ui.app
+import name.levis.talosmobile.ui.components.DataFreshness
 import name.levis.talosmobile.ui.components.ErrorBox
 import name.levis.talosmobile.ui.components.InfoRow
 import name.levis.talosmobile.ui.components.LoadingBox
@@ -80,12 +81,12 @@ import name.levis.talosmobile.security.findFragmentActivity
 import kotlinx.coroutines.launch
 
 class ServicesViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<List<ServiceInfo>>() {
-    override fun cached(): List<ServiceInfo>? = talos.cached(servicesKey(node))
+    override fun cached(): TalosRepository.Timed<List<ServiceInfo>>? = talos.cached(servicesKey(node))
     override suspend fun fetch() = talos.services(node)
 }
 
 class ResourcesViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<NodeResources>() {
-    override fun cached(): NodeResources? = talos.cached(resourcesKey(node))
+    override fun cached(): TalosRepository.Timed<NodeResources>? = talos.cached(resourcesKey(node))
     override suspend fun fetch() = talos.resources(node)
 }
 
@@ -241,10 +242,13 @@ private fun ServicesTab(
     when (val s = state) {
         UiState.Loading -> LoadingBox()
         is UiState.Failed -> ErrorBox(s.message, vm::refresh)
-        is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
-            LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(s.data, key = { it.id }) { ServiceRow(it, onClick = { onService(it.id) }) }
+        is UiState.Loaded -> Column(Modifier.fillMaxSize()) {
+            PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
+                LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(s.data, key = { it.id }) { ServiceRow(it, onClick = { onService(it.id) }) }
+                }
             }
+            DataFreshness(s, edgeToEdge = false)
         }
     }
 }
@@ -290,8 +294,11 @@ private fun ResourcesTab(
     when (val s = state) {
         UiState.Loading -> LoadingBox()
         is UiState.Failed -> ErrorBox(s.message, vm::refresh)
-        is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
-            ResourcesContent(s.data)
+        is UiState.Loaded -> Column(Modifier.fillMaxSize()) {
+            PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
+                ResourcesContent(s.data)
+            }
+            DataFreshness(s, edgeToEdge = false)
         }
     }
 }

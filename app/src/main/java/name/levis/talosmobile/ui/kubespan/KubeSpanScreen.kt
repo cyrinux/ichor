@@ -40,6 +40,7 @@ import name.levis.talosmobile.model.KubeSpanPeer
 import name.levis.talosmobile.ui.LoadingViewModel
 import name.levis.talosmobile.ui.UiState
 import name.levis.talosmobile.ui.app
+import name.levis.talosmobile.ui.components.DataFreshness
 import name.levis.talosmobile.ui.components.ErrorBox
 import name.levis.talosmobile.ui.components.LoadingBox
 import name.levis.talosmobile.ui.components.StatusPill
@@ -49,12 +50,12 @@ import name.levis.talosmobile.util.formatBytes
 import name.levis.talosmobile.util.formatDuration
 
 class KubeSpanViewModel(private val talos: TalosRepository) : LoadingViewModel<KubeSpanOverview>() {
-    override fun cached(): KubeSpanOverview? = talos.cached(KUBESPAN)
+    override fun cached(): TalosRepository.Timed<KubeSpanOverview>? = talos.cached(KUBESPAN)
     override suspend fun fetch() = talos.kubespan()
 
     /** node address -> hostname, from the cached overview when available. */
     fun hostnames(): Map<String, String> =
-        talos.cached<ClusterOverview>(OVERVIEW)?.nodes?.associate { it.node to it.hostname }.orEmpty()
+        talos.cached<ClusterOverview>(OVERVIEW)?.value?.nodes?.associate { it.node to it.hostname }.orEmpty()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,6 +68,7 @@ fun KubeSpanScreen(
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
     Scaffold(
+        bottomBar = { DataFreshness(state) },
         topBar = {
             TopAppBar(
                 title = { Text("KubeSpan") },

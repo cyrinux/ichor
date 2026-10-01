@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import name.levis.talosmobile.TalosApp
+import name.levis.talosmobile.data.TalosRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,7 @@ abstract class LoadingViewModel<T> : ViewModel() {
     protected abstract suspend fun fetch(): T
 
     /** Last cached value to show instantly while [fetch] runs (stale-while-revalidate). */
-    protected open fun cached(): T? = null
+    protected open fun cached(): TalosRepository.Timed<T>? = null
 
     /** [reset] drops the current data first, e.g. when the data source (context) changed. */
     fun refresh(reset: Boolean = false) {
@@ -36,7 +37,7 @@ abstract class LoadingViewModel<T> : ViewModel() {
         val previous = _state.value
         _state.value = when {
             !reset && previous is UiState.Loaded -> previous.copy(refreshing = true)
-            else -> cached()?.let { UiState.Loaded(it, refreshing = true) } ?: UiState.Loading
+            else -> cached()?.let { UiState.Loaded(it.value, refreshing = true, fetchedAt = it.at) } ?: UiState.Loading
         }
         job = viewModelScope.launch {
             _state.value = try {

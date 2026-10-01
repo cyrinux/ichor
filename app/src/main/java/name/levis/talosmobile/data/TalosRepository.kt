@@ -36,8 +36,11 @@ class TalosRepository(private val configs: ConfigRepository) {
      */
     private val cache = java.util.concurrent.ConcurrentHashMap<String, Any>()
 
+    /** A cached result and when it was fetched (epoch millis). */
+    data class Timed<T>(val value: T, val at: Long)
+
     @Suppress("UNCHECKED_CAST")
-    fun <T> cached(key: String): T? = cache[scoped(key)] as T?
+    fun <T> cached(key: String): Timed<T>? = cache[scoped(key)] as Timed<T>?
 
     private fun scoped(key: String): String {
         val stored = configs.config.value
@@ -45,7 +48,7 @@ class TalosRepository(private val configs: ConfigRepository) {
     }
 
     private suspend fun <T : Any> remember(key: String, block: suspend () -> T): T =
-        block().also { cache[scoped(key)] = it }
+        block().also { cache[scoped(key)] = Timed(it, System.currentTimeMillis()) }
 
     suspend fun kubespan(): KubeSpanOverview = remember(KUBESPAN) {
         call { cfg, ctx -> TalosJson.decodeFromString(KubeSpanOverview.serializer(), Talosmobile.kubeSpanStatus(cfg, ctx)) }

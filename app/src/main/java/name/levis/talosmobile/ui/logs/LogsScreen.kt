@@ -39,6 +39,7 @@ import name.levis.talosmobile.model.LogTail
 import name.levis.talosmobile.ui.LoadingViewModel
 import name.levis.talosmobile.ui.UiState
 import name.levis.talosmobile.ui.app
+import name.levis.talosmobile.ui.components.DataFreshness
 import name.levis.talosmobile.ui.components.ErrorBox
 import name.levis.talosmobile.ui.components.LoadingBox
 import name.levis.talosmobile.ui.factory
@@ -69,6 +70,7 @@ fun LogsScreen(
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
     Scaffold(
+        bottomBar = { DataFreshness(state) },
         topBar = {
             TopAppBar(
                 title = {
