@@ -1,20 +1,21 @@
 [versions]
-agp = "8.10.1"
-kotlin = "2.1.21"
-composeBom = "2025.05.00"
-activityCompose = "1.10.1"
-lifecycle = "2.9.0"
-navigation = "2.9.0"
-serialization = "1.8.1"
-coroutines = "1.10.2"
-camerax = "1.4.2"
+agp = "9.4.1"
+kotlin = "2.4.20"
+composeBom = "2026.09.00"
+activityCompose = "1.13.0"
+lifecycle = "2.11.0"
+navigation = "2.10.2"
+serialization = "1.11.0"
+coroutines = "1.11.0"
+camerax = "1.6.2"
 mlkitBarcode = "17.3.0"
-coreKtx = "1.16.0"
+coreKtx = "1.19.1"
 junit = "4.13.2"
 biometric = "1.1.0"
-fragment = "1.8.6"
-work = "2.10.1"
-glance = "1.1.1"
+fragment = "1.9.1"
+work = "2.12.0"
+glance = "1.2.0"
+termlib = "0.3.9"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -40,10 +41,10 @@ androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glance" }
 androidx-glance-material3 = { module = "androidx.glance:glance-material3", version.ref = "glance" }
+termlib = { module = "org.connectbot:termlib", version.ref = "termlib" }
 androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycle" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

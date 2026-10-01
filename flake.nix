@@ -10,7 +10,7 @@
         android_sdk.accept_license = true;
       };
 
-      buildToolsVersion = "35.0.0";
+      buildToolsVersion = "37.0.0";
       ndkVersion = "27.2.12479018";
 
       # Android build-tools and the NDK only exist for x86_64 Linux. On aarch64 hosts they run
@@ -18,7 +18,7 @@
       # Go runtime is unreliable under qemu-user.
       sdkPkgs = import nixpkgs { system = "x86_64-linux"; config = nixpkgsConfig; };
       android = sdkPkgs.androidenv.composeAndroidPackages {
-        platformVersions = [ "35" ];
+        platformVersions = [ "37" ];
         buildToolsVersions = [ buildToolsVersion ];
         includeNDK = true;
         ndkVersions = [ ndkVersion ];
@@ -30,7 +30,7 @@
       shellFor = system:
         let pkgs = import nixpkgs { inherit system; config = nixpkgsConfig; };
         in pkgs.mkShell {
-          packages = [ pkgs.jdk17 pkgs.gradle_8 pkgs.go ]
+          packages = [ pkgs.jdk17 pkgs.gradle_9 pkgs.go ]
             # Native cross-compiler for cgo on aarch64 hosts (matches NDK r27's clang 18).
             ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isAarch64 [ pkgs.llvmPackages_18.clang-unwrapped pkgs.lld_18 ];
 

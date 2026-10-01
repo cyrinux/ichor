@@ -1,18 +1,18 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
 
 android {
     namespace = "name.levis.talosmobile"
-    compileSdk = 35
+    compileSdk = 37
+    buildToolsVersion = "37.0.0"
 
     defaultConfig {
         applicationId = "name.levis.talosmobile"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 37
         // From scripts/version.sh (exported by build.sh); fallbacks for IDE builds.
         versionCode = System.getenv("TALOS_VIEWER_BUILD_NUMBER")?.toIntOrNull() ?: 1
         versionName = System.getenv("TALOS_VIEWER_VERSION") ?: "0.0.0-unknown"
@@ -67,10 +67,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -96,6 +92,7 @@ dependencies {
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
     implementation(libs.mlkit.barcode)
+    implementation(libs.termlib)
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.lifecycle.process)
