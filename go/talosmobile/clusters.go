@@ -52,16 +52,16 @@ func MergeConfig(storedYAML, addedYAML string) (out string, err error) {
 }
 
 // mergedName is the name ctx gets among contexts: its own when free or held by the same
-// cluster, else the first free name-N.
+// cluster, else the first name-N that is free or already holds this cluster (imported
+// before under that name: it is updated, not added again).
 func mergedName(contexts map[string]*clientconfig.Context, name string, ctx *clientconfig.Context) string {
-	existing, taken := contexts[name]
-	if !taken || sameCluster(existing, ctx) {
-		return name
-	}
+	for i := 0; ; i++ {
+		candidate := name
+		if i > 0 {
+			candidate = fmt.Sprintf("%s-%d", name, i)
+		}
 
-	for i := 1; ; i++ {
-		candidate := fmt.Sprintf("%s-%d", name, i)
-		if _, taken := contexts[candidate]; !taken {
+		if existing, taken := contexts[candidate]; !taken || sameCluster(existing, ctx) {
 			return candidate
 		}
 	}

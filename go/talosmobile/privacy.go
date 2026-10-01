@@ -426,7 +426,9 @@ func (m *privacyMask) learnContextLocked(name string, realNames []string) {
 		return
 	}
 
-	if slices.Contains(genericNames, strings.ToLower(name)) {
+	// A generic name stays, unless another context (learned from another config: clusters
+	// are added over time) is already shown under it.
+	if _, shown := m.contextsBack[name]; !shown && slices.Contains(genericNames, strings.ToLower(name)) {
 		m.contexts[name] = name
 
 		return
@@ -454,7 +456,9 @@ func (m *privacyMask) learnContextLocked(name string, realNames []string) {
 			fake = fakeUser + "@" + cluster
 		}
 
-		if _, taken := m.contextsBack[fake]; !taken && !slices.Contains(realNames, fake) {
+		// Nor a real name already learned (a generic one shown as itself), from any config.
+		_, shownAsItself := m.contexts[fake]
+		if _, taken := m.contextsBack[fake]; !taken && !shownAsItself && !slices.Contains(realNames, fake) {
 			break
 		}
 	}

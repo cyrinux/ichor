@@ -121,6 +121,69 @@ func TestMergeConfigSkipsTakenSuffixes(t *testing.T) {
 	}
 }
 
+func TestMergeConfigUpdatesSuffixedCluster(t *testing.T) {
+	once, err := MergeConfig(mergeStored, clustersOther)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The other "lab" again, renewed: it went in as lab-1, so lab-1 is what gets updated.
+	renewed := strings.ReplaceAll(clustersOther, "b3RoZXItY3J0", "cmVuZXdlZA==")
+
+	out, err := MergeConfig(once, renewed)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := mustConfig(t, out)
+
+	if got := strings.Join(sortedContextNames(cfg), ","); got != "lab,lab-1,prod,staging" {
+		t.Fatalf("contexts = %s", got)
+	}
+
+	if crt := cfg.Contexts["lab-1"].Crt; crt != "cmVuZXdlZA==" {
+		t.Fatalf("lab-1 not updated: %s", crt)
+	}
+
+	if crt := cfg.Contexts["lab"].Crt; crt != "bGFiLWNydA==" {
+		t.Fatalf("stored lab changed: %s", crt)
+	}
+}
+
+// Clusters added over time, screenshot mode on: no two contexts may be shown under the
+// same name, else an action on one would reach the other.
+func TestMaskedContextNamesStayDistinctAcrossConfigs(t *testing.T) {
+	SetPrivacyMask(true, "")
+	defer SetPrivacyMask(false, "")
+
+	// A cluster masked as "homelab", then a real one named "homelab" (a generic name).
+	first := strings.ReplaceAll(mergeGenerated, "prod", "mycluster")
+	second := strings.ReplaceAll(mergeGenerated, "prod", "homelab")
+	// And the reverse: a real generic name first, then a cluster whose fake would be it.
+	third := strings.ReplaceAll(mergeGenerated, "prod", "othercluster")
+
+	shown := map[string]string{}
+
+	for _, cfg := range []string{first, second, third} {
+		real := mustConfig(t, cfg).Context
+
+		privacy.learnConfig(cfg)
+		privacy.mu.Lock()
+		fake := privacy.contexts[real]
+		privacy.mu.Unlock()
+
+		if other, dup := shown[fake]; dup {
+			t.Fatalf("%s and %s are both shown as %s", other, real, fake)
+		}
+
+		shown[fake] = real
+
+		if back := privacy.unmaskContext(fake); back != real {
+			t.Fatalf("%s maps back to %s, want %s", fake, back, real)
+		}
+	}
+}
+
 func TestMergeConfigErrors(t *testing.T) {
 	if _, err := MergeConfig("not: [yaml", clustersOther); err == nil {
 		t.Fatal("bad stored config accepted")

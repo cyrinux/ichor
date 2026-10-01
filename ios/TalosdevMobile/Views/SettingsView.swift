@@ -93,7 +93,7 @@ struct SettingsView: View {
         .confirmationDialog("Delete talosconfig?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { model.clear() }
         } message: {
-            Text("The config and its client key will be removed from this device.")
+            Text("The config of every cluster, with their client keys, will be removed from this device.")
         }
     }
 

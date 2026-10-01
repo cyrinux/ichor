@@ -8,12 +8,6 @@ enum ChartPalette {
     static let second = Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(rgb: 0xD95926) : UIColor(rgb: 0xEB6834) })
 }
 
-private extension UIColor {
-    convenience init(rgb: UInt32) {
-        self.init(red: CGFloat((rgb >> 16) & 0xFF) / 255, green: CGFloat((rgb >> 8) & 0xFF) / 255, blue: CGFloat(rgb & 0xFF) / 255, alpha: 1)
-    }
-}
-
 /// Polled history; owned by the node screen so it survives tab switches.
 @Observable
 @MainActor

@@ -277,7 +277,7 @@
     <string name="settings_import_new">Aggiungi un cluster (importa un talosconfig)</string>
     <string name="settings_delete_config">Elimina il talosconfig salvato</string>
     <string name="settings_delete_title">Eliminare il talosconfig?</string>
-    <string name="settings_delete_body">La configurazione crittografata e la relativa chiave client verranno rimosse da questo dispositivo.</string>
+    <string name="settings_delete_body">La configurazione crittografata di tutti i cluster, con le loro chiavi client, verrà rimossa da questo dispositivo.</string>
 
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Monitoraggio</string>

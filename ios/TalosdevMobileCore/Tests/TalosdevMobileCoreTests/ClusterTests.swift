@@ -64,4 +64,11 @@ final class ClusterTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(contrast(dark, 0x000000), 4.5)
         }
     }
+
+    func testGreyStaysGrey() {
+        for seed in [0x808080, 0x000000, 0xFFFFFF, 0x7F8082] {
+            let accent = tonalColor(seed: seed, tone: lightAccentTone)
+            XCTAssertLessThan(hsl(accent).saturation, 0.1, String(seed, radix: 16))
+        }
+    }
 }

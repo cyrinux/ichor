@@ -278,7 +278,7 @@
     <string name="settings_import_new">Add a cluster (import a talosconfig)</string>
     <string name="settings_delete_config">Delete stored talosconfig</string>
     <string name="settings_delete_title">Delete talosconfig?</string>
-    <string name="settings_delete_body">The encrypted config and its client key will be removed from this device.</string>
+    <string name="settings_delete_body">The encrypted config of every cluster, with their client keys, will be removed from this device.</string>
 
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Monitoring</string>
