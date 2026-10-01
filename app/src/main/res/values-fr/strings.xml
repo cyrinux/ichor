@@ -399,4 +399,51 @@
         <item quantity="other">etcd&#160;: %1$d alarmes</item>
     </plurals>
     <string name="widget_updated">mis à jour %1$s</string>
+    <!-- Processes, machine config, etcd snapshot and alarms -->
+    <string name="common_feature_machine_config">Configuration machine</string>
+    <string name="common_feature_etcd_snapshot">Sauvegarde etcd</string>
+    <string name="node_menu_machine_config">Configuration machine</string>
+    <string name="node_tab_processes">Processus</string>
+    <plurals name="node_processes_summary">
+        <item quantity="one">%1$d processus · %2$s en mémoire</item>
+        <item quantity="other">%1$d processus · %2$s en mémoire</item>
+    </plurals>
+    <string name="node_processes_filter">Filtrer par commande ou arguments</string>
+    <string name="node_processes_sort">Trier par</string>
+    <string name="node_processes_sort_cpu">CPU</string>
+    <string name="node_processes_sort_memory">Mémoire</string>
+    <string name="node_processes_details">PID %1$d · %2$s · threads&#160;: %3$d</string>
+    <string name="machine_config_title">Configuration machine</string>
+    <string name="machine_config_auth">Afficher les secrets de %1$s</string>
+    <string name="machine_config_copied">Copié dans le presse-papiers</string>
+    <string name="machine_config_copy">Copier</string>
+    <string name="machine_config_reveal">Afficher les secrets</string>
+    <string name="machine_config_reveal_desc">Désactivé&#160;: clés, jetons et certificats sont masqués.</string>
+    <string name="machine_config_revealed_warning">Les secrets sont visibles&#160;: ces clés et jetons donnent le contrôle total du cluster. Masquez-les une fois terminé.</string>
+    <string name="machine_config_search">Rechercher</string>
+    <plurals name="machine_config_matches">
+        <item quantity="one">%1$d ligne correspondante</item>
+        <item quantity="other">%1$d lignes correspondantes</item>
+    </plurals>
+    <string name="etcd_snapshot_interrupted">La sauvegarde s\'est interrompue de façon inattendue.</string>
+    <string name="etcd_snapshot_open_failed">Impossible d\'ouvrir le fichier choisi.</string>
+    <string name="etcd_snapshot_auth">Enregistrer une sauvegarde etcd</string>
+    <string name="etcd_snapshot_warning_title">Enregistrer une sauvegarde etcd&#160;?</string>
+    <string name="etcd_snapshot_warning_body">La sauvegarde est prise sur %1$s. Elle contient tous les Secrets Kubernetes en clair&#160;: conservez-la comme un coffre-fort de mots de passe.</string>
+    <string name="etcd_snapshot_continue">Continuer</string>
+    <string name="etcd_snapshot_no_member">Aucun membre etcd sain pour la sauvegarde.</string>
+    <string name="etcd_snapshot_pick_member">Sauvegarder depuis quel membre&#160;?</string>
+    <string name="etcd_snapshot_title">Sauvegarde</string>
+    <string name="etcd_snapshot_explainer">Enregistrer une sauvegarde de la base etcd sur ce téléphone, pour la reprise après sinistre (comme talosctl etcd snapshot).</string>
+    <string name="etcd_snapshot_save">Enregistrer une sauvegarde…</string>
+    <string name="etcd_snapshot_progress_of">Téléchargement depuis %1$s&#160;: %2$s sur environ %3$s</string>
+    <string name="etcd_snapshot_progress">Téléchargement depuis %1$s&#160;: %2$s</string>
+    <string name="etcd_snapshot_saving">Enregistrement dans le fichier choisi…</string>
+    <string name="etcd_snapshot_done">Sauvegarde de %1$s enregistrée (%2$s).</string>
+    <string name="etcd_snapshot_copy_sha">Copier le SHA-256</string>
+    <string name="etcd_disarm_alarms">Désarmer les alarmes</string>
+    <string name="etcd_disarming">Désarmement…</string>
+    <string name="etcd_disarm_confirm_title">Désarmer les alarmes etcd&#160;?</string>
+    <string name="etcd_disarm_confirm_body">Le désarmement efface seulement les alarmes. Libérez d\'abord de l\'espace ou défragmentez&#160;: une alarme NOSPACE revient aussitôt tant que la base dépasse son quota, et etcd reste en lecture seule d\'ici là.</string>
+    <string name="etcd_disarm">Désarmer</string>
 </resources>

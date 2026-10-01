@@ -111,6 +111,33 @@ class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdO
     fun dismissDefrag() {
         _defrag.value = DefragState.Idle
     }
+
+    private val _disarm = MutableStateFlow<DisarmState>(DisarmState.Idle)
+    val disarm: StateFlow<DisarmState> = _disarm.asStateFlow()
+
+    /** Clears the (cluster-wide) alarms through [node], then reloads to show what is left. */
+    fun disarmAlarms(node: String) {
+        if (_disarm.value == DisarmState.Running) return
+        _disarm.value = DisarmState.Running
+        viewModelScope.launch {
+            val result = runCatching { talos.etcdAlarmDisarm(node) }
+            refresh()
+            _disarm.value = result.fold(
+                onSuccess = { DisarmState.Idle },
+                onFailure = { DisarmState.Failed(it.userMessage()) },
+            )
+        }
+    }
+
+    fun dismissDisarm() {
+        if (_disarm.value != DisarmState.Running) _disarm.value = DisarmState.Idle
+    }
+}
+
+sealed interface DisarmState {
+    data object Idle : DisarmState
+    data object Running : DisarmState
+    data class Failed(val message: String) : DisarmState
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,17 +145,23 @@ class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdO
 fun EtcdScreen(
     onBack: () -> Unit,
     vm: EtcdViewModel = viewModel(factory = factory { EtcdViewModel(app.talosRepository) }),
+    snapshotVm: EtcdSnapshotViewModel = viewModel(factory = factory { EtcdSnapshotViewModel(app.talosRepository, app) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val defrag by vm.defrag.collectAsStateWithLifecycle()
+    val disarm by vm.disarm.collectAsStateWithLifecycle()
+    val snapshot by snapshotVm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val canDefrag = config?.activeSummary?.allows(Feature.ETCD_DEFRAG) ?: false
+    val canSnapshot = config?.activeSummary?.allows(Feature.ETCD_SNAPSHOT) ?: false
     val scope = rememberCoroutineScope()
     var confirm by remember { mutableStateOf<DefragRequest?>(null) }
+    var confirmDisarm by remember { mutableStateOf<String?>(null) }
+    val startSnapshot = rememberSnapshotFlow(snapshotVm, config?.activeSummary?.name.orEmpty())
 
     // With the app lock on, defragmentation needs a fresh fingerprint/PIN, like reboot.
     fun confirmed(request: DefragRequest) {
@@ -168,6 +201,24 @@ fun EtcdScreen(
                     canDefrag = canDefrag,
                     onDefrag = { confirm = it },
                     onDismissDefrag = vm::dismissDefrag,
+                    alarms = AlarmActions(
+                        state = disarm,
+                        // Alarms are cluster-wide: any reachable member can clear them.
+                        onDisarm = s.data.statuses.firstOrNull { it.error == null }?.node
+                            ?.takeIf { canDefrag }
+                            ?.let { node -> { confirmDisarm = node } },
+                        onDismiss = vm::dismissDisarm,
+                    ),
+                    snapshot = if (canSnapshot || snapshot != SnapshotState.Idle) {
+                        SnapshotActions(
+                            state = snapshot,
+                            onSave = { startSnapshot(s.data) },
+                            onCancel = snapshotVm::cancel,
+                            onDismiss = snapshotVm::dismiss,
+                        )
+                    } else {
+                        null
+                    },
                 )
             }
         }
@@ -176,7 +227,31 @@ fun EtcdScreen(
     confirm?.let { request ->
         DefragConfirmDialog(request, onConfirm = { confirmed(request) }, onDismiss = { confirm = null })
     }
+    confirmDisarm?.let { node ->
+        AlertDialog(
+            onDismissRequest = { confirmDisarm = null },
+            title = { Text(stringResource(R.string.etcd_disarm_confirm_title)) },
+            text = { Text(stringResource(R.string.etcd_disarm_confirm_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDisarm = null
+                    vm.disarmAlarms(node)
+                }) { Text(stringResource(R.string.etcd_disarm)) }
+            },
+            dismissButton = { TextButton(onClick = { confirmDisarm = null }) { Text(stringResource(R.string.common_cancel)) } },
+        )
+    }
 }
+
+/** The alarms section's disarm action; [onDisarm] is null when not allowed. */
+private data class AlarmActions(val state: DisarmState, val onDisarm: (() -> Unit)?, val onDismiss: () -> Unit)
+
+private data class SnapshotActions(
+    val state: SnapshotState,
+    val onSave: () -> Unit,
+    val onCancel: () -> Unit,
+    val onDismiss: () -> Unit,
+)
 
 /** What the confirmation dialog is about to defragment. */
 data class DefragRequest(val targets: List<EtcdNodeStatus>, val hostnames: Map<String, String>)
@@ -188,6 +263,8 @@ private fun EtcdContent(
     canDefrag: Boolean,
     onDefrag: (DefragRequest) -> Unit,
     onDismissDefrag: () -> Unit,
+    alarms: AlarmActions,
+    snapshot: SnapshotActions?,
 ) {
     val colors = LocalStatusColors.current
     val hostnames = etcd.members.associate { it.id to it.hostname }
@@ -207,10 +284,28 @@ private fun EtcdContent(
                 )
             }
         }
+        snapshot?.let { snap ->
+            item { SnapshotPanel(snap.state, snap.onSave, snap.onCancel, snap.onDismiss) }
+        }
         if (etcd.alarms.isNotEmpty()) {
             item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
             items(etcd.alarms) { alarm ->
                 Text("${hostnames[alarm.memberId] ?: alarm.memberId}: ${alarm.alarm}", color = colors.bad)
+            }
+            alarms.onDisarm?.let { onDisarm ->
+                item {
+                    OutlinedButton(onClick = onDisarm, enabled = alarms.state != DisarmState.Running, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(if (alarms.state == DisarmState.Running) R.string.etcd_disarming else R.string.etcd_disarm_alarms))
+                    }
+                }
+            }
+        }
+        (alarms.state as? DisarmState.Failed)?.let { failed ->
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(failed.message, color = colors.bad, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                    TextButton(onClick = alarms.onDismiss) { Text(stringResource(R.string.common_ok)) }
+                }
             }
         }
         item { SectionTitle(stringResource(R.string.etcd_section_members, etcd.members.size)) }

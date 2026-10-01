@@ -65,7 +65,8 @@ public struct Alert: Equatable, Sendable {
     public let problem: Bool
 }
 
-public let certWarnDays = 14
+/// Days before expiry when the daily "renew your talosconfig" alert starts.
+public let certWarnDays = 7
 
 /// Same rules as Android: only changes alert, a first snapshot (or a context switch) is a
 /// silent baseline, and the certificate warning fires at most once a day.

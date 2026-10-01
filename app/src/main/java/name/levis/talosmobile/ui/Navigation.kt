@@ -15,6 +15,7 @@ import name.levis.talosmobile.ui.health.HealthScreen
 import name.levis.talosmobile.ui.importconfig.ImportScreen
 import name.levis.talosmobile.ui.kubespan.KubeSpanScreen
 import name.levis.talosmobile.ui.logs.LogsScreen
+import name.levis.talosmobile.ui.machineconfig.MachineConfigScreen
 import name.levis.talosmobile.ui.node.NodeDetailScreen
 import name.levis.talosmobile.ui.node.PowerAction
 import name.levis.talosmobile.ui.overview.NodeAction
@@ -29,6 +30,9 @@ private object Routes {
     const val ETCD = "etcd"
     const val KUBESPAN = "kubespan"
     const val DEBUG = "debug?addr={addr}&host={host}"
+    const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}"
+
+    fun machineConfig(addr: String, host: String) = "machineconfig?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
     fun debug(addr: String, host: String) = "debug?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
     const val HEALTH = "health"
@@ -38,7 +42,7 @@ private object Routes {
     fun logs(addr: String, host: String, service: String?) =
         "logs?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&service=${Uri.encode(service.orEmpty())}"
 
-    /** [tab]: 0 services, 1 resources, 2 live; [action]: "reboot"/"shutdown" opens its confirmation. */
+    /** [tab]: 0 services, 1 resources, 2 live, 3 processes; [action]: "reboot"/"shutdown" opens its confirmation. */
     fun node(addr: String, host: String, role: String, tab: Int = 0, action: String = "") =
         "node?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&role=${Uri.encode(role)}&tab=$tab&action=$action"
 }
@@ -97,7 +101,18 @@ fun Navigation(app: TalosApp, startWithImport: Boolean) {
                 onBack = { nav.popBackStack() },
                 onLogs = { service -> nav.navigate(Routes.logs(addr, entry.arguments?.getString("host") ?: addr, service)) },
                 onDebugShell = { nav.navigate(Routes.debug(addr, entry.arguments?.getString("host") ?: addr)) },
+                onMachineConfig = { nav.navigate(Routes.machineConfig(addr, entry.arguments?.getString("host") ?: addr)) },
             )
+        }
+        composable(
+            Routes.MACHINE_CONFIG,
+            arguments = listOf(
+                navArgument("addr") { type = NavType.StringType },
+                navArgument("host") { type = NavType.StringType },
+            ),
+        ) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty()
+            MachineConfigScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
         }
         composable(
             Routes.LOGS,

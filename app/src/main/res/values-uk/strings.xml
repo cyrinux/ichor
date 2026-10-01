@@ -441,4 +441,55 @@
         <item quantity="other">etcd: %1$d тривоги</item>
     </plurals>
     <string name="widget_updated">оновлено %1$s</string>
+    <!-- Processes, machine config, etcd snapshot and alarms -->
+    <string name="common_feature_machine_config">Конфігурація машини</string>
+    <string name="common_feature_etcd_snapshot">Знімок etcd</string>
+    <string name="node_menu_machine_config">Конфігурація машини</string>
+    <string name="node_tab_processes">Процеси</string>
+    <plurals name="node_processes_summary">
+        <item quantity="one">%1$d процес · %2$s у пам\'яті</item>
+        <item quantity="few">%1$d процеси · %2$s у пам\'яті</item>
+        <item quantity="many">%1$d процесів · %2$s у пам\'яті</item>
+        <item quantity="other">%1$d процесу · %2$s у пам\'яті</item>
+    </plurals>
+    <string name="node_processes_filter">Фільтр за командою або аргументами</string>
+    <string name="node_processes_sort">Сортувати за</string>
+    <string name="node_processes_sort_cpu">CPU</string>
+    <string name="node_processes_sort_memory">Пам\'ять</string>
+    <string name="node_processes_details">PID %1$d · %2$s · потоки: %3$d</string>
+    <string name="machine_config_title">Конфігурація машини</string>
+    <string name="machine_config_auth">Показати секрети %1$s</string>
+    <string name="machine_config_copied">Скопійовано в буфер обміну</string>
+    <string name="machine_config_copy">Копіювати</string>
+    <string name="machine_config_reveal">Показати секрети</string>
+    <string name="machine_config_reveal_desc">Вимкнено: ключі, токени та сертифікати приховано.</string>
+    <string name="machine_config_revealed_warning">Секрети видно: ці ключі й токени дають повний контроль над кластером. Приховайте їх, коли закінчите.</string>
+    <string name="machine_config_search">Пошук</string>
+    <plurals name="machine_config_matches">
+        <item quantity="one">%1$d відповідний рядок</item>
+        <item quantity="few">%1$d відповідні рядки</item>
+        <item quantity="many">%1$d відповідних рядків</item>
+        <item quantity="other">%1$d відповідного рядка</item>
+    </plurals>
+    <string name="etcd_snapshot_interrupted">Знімок несподівано перервався.</string>
+    <string name="etcd_snapshot_open_failed">Не вдалося відкрити вибраний файл.</string>
+    <string name="etcd_snapshot_auth">Зберегти знімок etcd</string>
+    <string name="etcd_snapshot_warning_title">Зберегти знімок etcd?</string>
+    <string name="etcd_snapshot_warning_body">Знімок береться з %1$s. Він містить усі Secrets Kubernetes у відкритому вигляді: зберігайте його як сховище паролів.</string>
+    <string name="etcd_snapshot_continue">Продовжити</string>
+    <string name="etcd_snapshot_no_member">Немає справного учасника etcd для знімка.</string>
+    <string name="etcd_snapshot_pick_member">З якого учасника зробити знімок?</string>
+    <string name="etcd_snapshot_title">Резервна копія</string>
+    <string name="etcd_snapshot_explainer">Зберегти знімок бази даних etcd на цьому телефоні для аварійного відновлення (як talosctl etcd snapshot).</string>
+    <string name="etcd_snapshot_save">Зберегти знімок…</string>
+    <string name="etcd_snapshot_progress_of">Завантаження з %1$s: %2$s із приблизно %3$s</string>
+    <string name="etcd_snapshot_progress">Завантаження з %1$s: %2$s</string>
+    <string name="etcd_snapshot_saving">Збереження у вибраний файл…</string>
+    <string name="etcd_snapshot_done">Знімок з %1$s збережено (%2$s).</string>
+    <string name="etcd_snapshot_copy_sha">Копіювати SHA-256</string>
+    <string name="etcd_disarm_alarms">Вимкнути тривоги</string>
+    <string name="etcd_disarming">Вимкнення…</string>
+    <string name="etcd_disarm_confirm_title">Вимкнути тривоги etcd?</string>
+    <string name="etcd_disarm_confirm_body">Вимкнення лише скидає тривоги. Спочатку звільніть місце або дефрагментуйте: тривога NOSPACE одразу повернеться, поки база даних перевищує квоту, а доти etcd лишається лише для читання.</string>
+    <string name="etcd_disarm">Вимкнути</string>
 </resources>

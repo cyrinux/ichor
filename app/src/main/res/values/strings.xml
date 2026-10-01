@@ -400,4 +400,52 @@
         <item quantity="other">etcd: %1$d alarms</item>
     </plurals>
     <string name="widget_updated">updated %1$s</string>
+    <!-- Processes, machine config, etcd snapshot and alarms -->
+    <string name="common_feature_machine_config">Machine config</string>
+    <string name="common_feature_etcd_snapshot">etcd snapshot</string>
+    <string name="node_menu_machine_config">Machine config</string>
+    <string name="node_tab_processes">Processes</string>
+    <plurals name="node_processes_summary">
+        <item quantity="one">%1$d process · %2$s resident</item>
+        <item quantity="other">%1$d processes · %2$s resident</item>
+    </plurals>
+    <string name="node_processes_filter">Filter by command or arguments</string>
+    <string name="node_processes_sort">Sort by</string>
+    <string name="node_processes_sort_cpu">CPU</string>
+    <string name="node_processes_sort_memory">Memory</string>
+    <string name="node_processes_details">PID %1$d · %2$s · threads: %3$d</string>
+    <string name="machine_config_title">Machine config</string>
+    <string name="machine_config_auth">Reveal the secrets of %1$s</string>
+    <string name="machine_config_copied">Copied to the clipboard</string>
+    <string name="machine_config_copy">Copy</string>
+    <string name="machine_config_reveal">Reveal secrets</string>
+    <string name="machine_config_reveal_desc">Off: keys, tokens and certificates are masked.</string>
+    <string name="machine_config_revealed_warning">Secrets are visible: these keys and tokens give full control of the cluster. Hide them when you are done.</string>
+    <string name="machine_config_search">Search</string>
+    <plurals name="machine_config_matches">
+        <item quantity="one">%1$d matching line</item>
+        <item quantity="other">%1$d matching lines</item>
+    </plurals>
+    <string name="etcd_snapshot_interrupted">The snapshot ended unexpectedly.</string>
+    <string name="etcd_snapshot_open_failed">Could not open the chosen file.</string>
+    <string name="etcd_snapshot_auth">Save an etcd snapshot</string>
+    <string name="etcd_snapshot_warning_title">Save an etcd snapshot?</string>
+    <string name="etcd_snapshot_warning_body">The snapshot is taken from %1$s. It contains every Kubernetes Secret in clear: store it like a password vault.</string>
+    <string name="etcd_snapshot_continue">Continue</string>
+    <string name="etcd_snapshot_no_member">No healthy etcd member to take a snapshot from.</string>
+    <string name="etcd_snapshot_pick_member">Snapshot from which member?</string>
+    <string name="etcd_snapshot_title">Backup</string>
+    <string name="etcd_snapshot_explainer">Save a snapshot of the etcd database to this phone, for disaster recovery (like talosctl etcd snapshot).</string>
+    <string name="etcd_snapshot_save">Save snapshot…</string>
+    <string name="etcd_snapshot_progress_of">Downloading from %1$s: %2$s of about %3$s</string>
+    <string name="etcd_snapshot_progress">Downloading from %1$s: %2$s</string>
+    <string name="etcd_snapshot_saving">Saving to the chosen file…</string>
+    <string name="etcd_snapshot_done">Snapshot from %1$s saved (%2$s).</string>
+    <string name="etcd_snapshot_copy_sha">Copy SHA-256</string>
+    <string name="etcd_disarm_alarms">Disarm alarms</string>
+    <string name="etcd_disarming">Disarming…</string>
+    <string name="etcd_disarm_confirm_title">Disarm etcd alarms?</string>
+    <string name="etcd_disarm_confirm_body">Disarming only clears the alarms. Free space or defragment first: a NOSPACE alarm comes straight back while the database is still over its quota, and etcd stays read-only until then.</string>
+    <string name="etcd_disarm">Disarm</string>
+    <string name="etcd_snapshot_sha256" translatable="false">SHA-256</string>
 </resources>

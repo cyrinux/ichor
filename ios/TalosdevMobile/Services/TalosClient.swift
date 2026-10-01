@@ -12,6 +12,12 @@ enum HealthEvent: Sendable {
     case done(error: String?)
 }
 
+enum SnapshotEvent: Sendable {
+    case progress(bytes: Int64)
+    case finished(path: String, size: Int64, sha256: String)
+    case failed(String)
+}
+
 /// Swift face of the gomobile framework. Go calls block, so they run off the main actor.
 /// Signatures come from the generated Talosmobile.objc.h (C functions with NSError**).
 struct TalosClient: Sendable {
@@ -69,6 +75,42 @@ struct TalosClient: Sendable {
     /// One sample of counters for the live graphs.
     func stats(node: String) async throws -> NodeStats {
         try await Self.json { [config, context] in TalosmobileNodeStats(config, context, node, $0) }
+    }
+
+    /// `talosctl processes` (os:reader); CPU time is cumulative, see processRows.
+    func processes(node: String) async throws -> ProcessSample {
+        try await Self.json { [config, context] in TalosmobileNodeProcesses(config, context, node, $0) }
+    }
+
+    /// Node's machine config as YAML (os:admin); secrets are masked unless revealSecrets.
+    func machineConfig(node: String, revealSecrets: Bool) async throws -> String {
+        try await Self.run { [config, context] in TalosmobileNodeMachineConfig(config, context, node, revealSecrets, $0) }
+    }
+
+    /// `talosctl etcd alarm disarm` through node (os:operator or os:admin).
+    func disarmEtcdAlarms(node: String) async throws {
+        try await Self.run { [config, context] error -> Void in
+            _ = TalosmobileEtcdAlarmDisarm(config, context, node, error)
+        }
+    }
+
+    /// Streams `talosctl -n NODE etcd snapshot` into destPath; cancelling the consuming task
+    /// cancels the transfer (Go then removes the partial file).
+    func etcdSnapshot(node: String, destPath: String) -> AsyncStream<SnapshotEvent> {
+        AsyncStream { continuation in
+            let bridge = SnapshotBridge(
+                progress: { continuation.yield(.progress(bytes: $0)) },
+                done: {
+                    continuation.yield($0)
+                    continuation.finish()
+                }
+            )
+            let run = TalosmobileStartEtcdSnapshot(config, context, node, destPath, bridge)
+            continuation.onTermination = { _ in
+                run?.cancel()
+                _ = bridge // keep the listener alive for the whole transfer
+            }
+        }
     }
 
     func etcd() async throws -> EtcdOverview {
@@ -134,5 +176,27 @@ private final class HealthBridge: NSObject, TalosmobileHealthListenerProtocol, @
 
     func onDone(_ errMessage: String?) {
         done(errMessage.flatMap { $0.isEmpty ? nil : $0 })
+    }
+}
+
+private final class SnapshotBridge: NSObject, TalosmobileSnapshotListenerProtocol, @unchecked Sendable {
+    private let progress: @Sendable (Int64) -> Void
+    private let done: @Sendable (SnapshotEvent) -> Void
+
+    init(progress: @escaping @Sendable (Int64) -> Void, done: @escaping @Sendable (SnapshotEvent) -> Void) {
+        self.progress = progress
+        self.done = done
+    }
+
+    func onProgress(_ bytes: Int64) {
+        progress(bytes)
+    }
+
+    func onDone(_ path: String?, size: Int64, sha256: String?, errMessage: String?) {
+        if let errMessage, !errMessage.isEmpty {
+            done(.failed(errMessage))
+        } else {
+            done(.finished(path: path ?? "", size: size, sha256: sha256 ?? ""))
+        }
     }
 }

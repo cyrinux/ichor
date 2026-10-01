@@ -150,7 +150,7 @@ public struct LogTail: Decodable, Equatable, Sendable {
 
 /// Features gated by Talos RBAC (rules from Talos v1.14 machined.go).
 public enum Feature: CaseIterable, Sendable {
-    case power, health, kubeconfig, debugShell, etcdDefrag
+    case power, health, kubeconfig, debugShell, etcdDefrag, machineConfig, etcdSnapshot
 
     public var label: String {
         switch self {
@@ -159,6 +159,8 @@ public enum Feature: CaseIterable, Sendable {
         case .kubeconfig: "Kubeconfig export"
         case .debugShell: "Debug shell"
         case .etcdDefrag: "etcd defragmentation"
+        case .machineConfig: "Machine config"
+        case .etcdSnapshot: "etcd snapshot"
         }
     }
 
@@ -167,7 +169,10 @@ public enum Feature: CaseIterable, Sendable {
         case .power, .etcdDefrag: ["os:admin", "os:operator"]
         // The server-side health check fetches a Kubernetes admin kubeconfig with the caller's role.
         // DebugService/ContainerRun is admin-only too.
-        case .health, .kubeconfig, .debugShell: ["os:admin"]
+        // The machine config holds the cluster secrets (CA keys, tokens).
+        case .health, .kubeconfig, .debugShell, .machineConfig: ["os:admin"]
+        // A snapshot holds every Kubernetes Secret; Talos has a dedicated role for it.
+        case .etcdSnapshot: ["os:admin", "os:operator", "os:etcd:backup"]
         }
     }
 

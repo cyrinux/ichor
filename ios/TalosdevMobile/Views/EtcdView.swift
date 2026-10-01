@@ -7,6 +7,10 @@ struct EtcdView: View {
     @State private var confirm: [EtcdNodeStatus] = []
     @State private var progress: String?
     @State private var result: String?
+    @State private var snapshot = EtcdSnapshotJob()
+    @State private var confirmDisarm = false
+    @State private var disarming = false
+    @State private var alarmMessage: String?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { etcd in
@@ -31,9 +35,21 @@ struct EtcdView: View {
                         Text("Defragmentation")
                     }
                 }
-                if !etcd.alarms.isEmpty {
+                if model.allows(.etcdSnapshot) {
+                    EtcdSnapshotSection(etcd: etcd, hostnames: hostnames, job: snapshot)
+                }
+                if !etcd.alarms.isEmpty || alarmMessage != nil {
                     Section("Alarms") {
                         ForEach(etcd.alarms, id: \.self) { Text(verbatim: "\(hostnames[$0.memberId] ?? $0.memberId): \($0.alarm)").foregroundStyle(.red) }
+                        if let alarmMessage { Text(alarmMessage).font(.footnote).foregroundStyle(.secondary) }
+                        if model.allows(.etcdDefrag) && !etcd.alarms.isEmpty {
+                            if disarming {
+                                HStack { ProgressView(); Text("Disarming…") }
+                            } else {
+                                Button("Disarm alarms", role: .destructive) { confirmDisarm = true }
+                                    .disabled(disarmNode(etcd) == nil)
+                            }
+                        }
                     }
                 }
                 Section("Members (\(etcd.members.count))") {
@@ -52,6 +68,14 @@ struct EtcdView: View {
         }
         .navigationTitle(Text(verbatim: "etcd"))
         .task { await load() }
+        .confirmationDialog(Text("Disarm etcd alarms?"), isPresented: $confirmDisarm, titleVisibility: .visible) {
+            Button("Disarm alarms", role: .destructive) { Task { await disarm() } }
+        } message: {
+            Text("Disarming does not fix the cause. For a NOSPACE alarm, free disk space and defragment first, or the alarm comes back. Once disarmed, etcd accepts writes again.")
+        }
+        .fileMover(isPresented: Binding(get: { snapshot.moving }, set: { snapshot.moving = $0 }), file: snapshot.file,
+                   onCompletion: { snapshot.moved($0) }, onCancellation: { snapshot.moveCancelled() })
+        .onDisappear { snapshot.leave() }
         .confirmationDialog(
             confirm.count == 1 ? Text("Defragment this member?") : Text("Defragment \(confirm.count) members?"),
             isPresented: Binding(get: { !confirm.isEmpty }, set: { if !$0 { confirm = [] } }),
@@ -101,6 +125,28 @@ struct EtcdView: View {
     private func load() async {
         guard let client = model.client else { return }
         state = await .from { try await client.etcd() }
+    }
+
+    /// Alarms are cluster-wide; any reachable member can disarm them.
+    private func disarmNode(_ etcd: EtcdOverview) -> String? {
+        defaultSnapshotMember(etcd.statuses)?.node ?? etcd.statuses.first { $0.error == nil }?.node
+    }
+
+    private func disarm() async {
+        guard let client = model.client, case .loaded(let etcd, _) = state, let node = disarmNode(etcd) else { return }
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Disarm etcd alarms")) {
+            alarmMessage = failure
+            return
+        }
+        disarming = true
+        defer { disarming = false }
+        do {
+            try await client.disarmEtcdAlarms(node: node)
+            alarmMessage = String(localized: "Alarms disarmed.")
+        } catch {
+            alarmMessage = error.localizedDescription
+        }
+        await load()
     }
 }
 

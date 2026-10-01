@@ -23,15 +23,18 @@ struct NodeDetailView: View {
 
     @State private var live = LiveStats()
     @State private var showingDebugShell = false
+    @State private var showingMachineConfig = false
+    @State private var processes = ProcessMonitor()
 
     enum Tab: String, CaseIterable {
-        case services = "Services", resources = "Resources", live = "Live"
+        case services = "Services", resources = "Resources", live = "Live", processes = "Processes"
 
         var label: String {
             switch self {
             case .services: String(localized: "Services")
             case .resources: String(localized: "Resources")
             case .live: String(localized: "Live")
+            case .processes: String(localized: "Processes")
             }
         }
     }
@@ -62,6 +65,8 @@ struct NodeDetailView: View {
                     .task { if case .loading = resources { await loadResources() } }
             case .live:
                 LiveView(node: ref.address, stats: live)
+            case .processes:
+                ProcessesView(node: ref.address, monitor: processes)
             }
         }
         .navigationTitle(ref.hostname)
@@ -80,6 +85,11 @@ struct NodeDetailView: View {
                             // NavigationLink does not navigate from inside a Menu.
                             Button { showingDebugShell = true } label: {
                                 Label("Debug shell", systemImage: "apple.terminal")
+                            }
+                        }
+                        if model.allows(.machineConfig) {
+                            Button { showingMachineConfig = true } label: {
+                                Label("Machine config", systemImage: "doc.text")
                             }
                         }
                         // Power actions only exist for configs whose role allows them.
@@ -102,6 +112,9 @@ struct NodeDetailView: View {
         }
         .navigationDestination(isPresented: $showingDebugShell) {
             DebugShellView(node: ref.address, hostname: ref.hostname)
+        }
+        .navigationDestination(isPresented: $showingMachineConfig) {
+            MachineConfigView(node: ref.address, hostname: ref.hostname)
         }
         .sheet(item: $powerAction) { action in
             PowerSheet(action: action, hostname: ref.hostname, role: ref.role) { request in

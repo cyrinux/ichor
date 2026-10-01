@@ -30,6 +30,9 @@ enum class Feature(@StringRes val label: Int, val roles: Set<String>) {
     // DebugService/ContainerRun is admin-only in Talos.
     DEBUG_SHELL(R.string.common_feature_debug_shell, setOf("os:admin")),
     ETCD_DEFRAG(R.string.common_feature_etcd_defrag, setOf("os:admin", "os:operator")),
+    // The MachineConfig resource is sensitive in Talos: only os:admin can read it.
+    MACHINE_CONFIG(R.string.common_feature_machine_config, setOf("os:admin")),
+    ETCD_SNAPSHOT(R.string.common_feature_etcd_snapshot, setOf("os:admin", "os:operator", "os:etcd:backup")),
     ;
 
     val minimumRole: String get() = if ("os:operator" in roles) "os:operator" else "os:admin"

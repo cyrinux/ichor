@@ -399,4 +399,51 @@
         <item quantity="other">etcd: %1$d Alarme</item>
     </plurals>
     <string name="widget_updated">aktualisiert %1$s</string>
+    <!-- Processes, machine config, etcd snapshot and alarms -->
+    <string name="common_feature_machine_config">Maschinenkonfiguration</string>
+    <string name="common_feature_etcd_snapshot">etcd-Snapshot</string>
+    <string name="node_menu_machine_config">Maschinenkonfiguration</string>
+    <string name="node_tab_processes">Prozesse</string>
+    <plurals name="node_processes_summary">
+        <item quantity="one">%1$d Prozess · %2$s im Speicher</item>
+        <item quantity="other">%1$d Prozesse · %2$s im Speicher</item>
+    </plurals>
+    <string name="node_processes_filter">Nach Befehl oder Argumenten filtern</string>
+    <string name="node_processes_sort">Sortieren nach</string>
+    <string name="node_processes_sort_cpu">CPU</string>
+    <string name="node_processes_sort_memory">Speicher</string>
+    <string name="node_processes_details">PID %1$d · %2$s · Threads: %3$d</string>
+    <string name="machine_config_title">Maschinenkonfiguration</string>
+    <string name="machine_config_auth">Geheimnisse von %1$s anzeigen</string>
+    <string name="machine_config_copied">In die Zwischenablage kopiert</string>
+    <string name="machine_config_copy">Kopieren</string>
+    <string name="machine_config_reveal">Geheimnisse anzeigen</string>
+    <string name="machine_config_reveal_desc">Aus: Schlüssel, Tokens und Zertifikate sind maskiert.</string>
+    <string name="machine_config_revealed_warning">Geheimnisse sind sichtbar: Diese Schlüssel und Tokens geben volle Kontrolle über den Cluster. Blende sie aus, wenn du fertig bist.</string>
+    <string name="machine_config_search">Suchen</string>
+    <plurals name="machine_config_matches">
+        <item quantity="one">%1$d passende Zeile</item>
+        <item quantity="other">%1$d passende Zeilen</item>
+    </plurals>
+    <string name="etcd_snapshot_interrupted">Der Snapshot wurde unerwartet beendet.</string>
+    <string name="etcd_snapshot_open_failed">Die gewählte Datei konnte nicht geöffnet werden.</string>
+    <string name="etcd_snapshot_auth">etcd-Snapshot speichern</string>
+    <string name="etcd_snapshot_warning_title">etcd-Snapshot speichern?</string>
+    <string name="etcd_snapshot_warning_body">Der Snapshot wird von %1$s erstellt. Er enthält alle Kubernetes-Secrets im Klartext: Bewahre ihn auf wie einen Passwort-Tresor.</string>
+    <string name="etcd_snapshot_continue">Weiter</string>
+    <string name="etcd_snapshot_no_member">Kein fehlerfreies etcd-Mitglied für einen Snapshot.</string>
+    <string name="etcd_snapshot_pick_member">Snapshot von welchem Mitglied?</string>
+    <string name="etcd_snapshot_title">Sicherung</string>
+    <string name="etcd_snapshot_explainer">Speichert einen Snapshot der etcd-Datenbank auf diesem Telefon, zur Notfallwiederherstellung (wie talosctl etcd snapshot).</string>
+    <string name="etcd_snapshot_save">Snapshot speichern…</string>
+    <string name="etcd_snapshot_progress_of">Download von %1$s: %2$s von etwa %3$s</string>
+    <string name="etcd_snapshot_progress">Download von %1$s: %2$s</string>
+    <string name="etcd_snapshot_saving">Speichern in die gewählte Datei…</string>
+    <string name="etcd_snapshot_done">Snapshot von %1$s gespeichert (%2$s).</string>
+    <string name="etcd_snapshot_copy_sha">SHA-256 kopieren</string>
+    <string name="etcd_disarm_alarms">Alarme deaktivieren</string>
+    <string name="etcd_disarming">Wird deaktiviert…</string>
+    <string name="etcd_disarm_confirm_title">etcd-Alarme deaktivieren?</string>
+    <string name="etcd_disarm_confirm_body">Das Deaktivieren löscht nur die Alarme. Gib zuerst Speicher frei oder defragmentiere: Ein NOSPACE-Alarm kommt sofort zurück, solange die Datenbank ihr Kontingent überschreitet, und etcd bleibt bis dahin schreibgeschützt.</string>
+    <string name="etcd_disarm">Deaktivieren</string>
 </resources>

@@ -60,6 +60,7 @@ import name.levis.talosmobile.util.usedFraction
 import java.util.Locale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PowerSettingsNew
 import androidx.compose.material.icons.outlined.Terminal
@@ -104,6 +105,7 @@ fun NodeDetailScreen(
     initialAction: PowerAction? = null,
     onLogs: (service: String?) -> Unit,
     onDebugShell: () -> Unit,
+    onMachineConfig: () -> Unit,
     power: PowerViewModel = viewModel(key = "power-$node", factory = factory { PowerViewModel(app.talosRepository, node) }),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(initialTab) }
@@ -124,6 +126,7 @@ fun NodeDetailScreen(
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val canPower = config?.activeSummary?.allows(Feature.POWER) ?: false
     val canDebug = config?.activeSummary?.allows(Feature.DEBUG_SHELL) ?: false
+    val canMachineConfig = config?.activeSummary?.allows(Feature.MACHINE_CONFIG) ?: false
 
     LaunchedEffect(powerState) {
         when (val s = powerState) {
@@ -194,6 +197,16 @@ fun NodeDetailScreen(
                                     },
                                 )
                             }
+                            if (canMachineConfig) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.node_menu_machine_config)) },
+                                    leadingIcon = { Icon(Icons.Outlined.Description, contentDescription = null) },
+                                    onClick = {
+                                        menuOpen = false
+                                        onMachineConfig()
+                                    },
+                                )
+                            }
                             // Power actions only exist for configs whose role allows them.
                             if (canPower) {
                                 HorizontalDivider()
@@ -220,11 +233,13 @@ fun NodeDetailScreen(
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.node_tab_services)) })
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.node_tab_resources)) })
                 Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.node_tab_live)) })
+                Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text(stringResource(R.string.node_tab_processes)) })
             }
             when (tab) {
                 0 -> ServicesTab(node, onService = { onLogs(it) })
                 1 -> ResourcesTab(node)
-                else -> LiveStatsTab(node)
+                2 -> LiveStatsTab(node)
+                else -> ProcessesTab(node)
             }
         }
     }

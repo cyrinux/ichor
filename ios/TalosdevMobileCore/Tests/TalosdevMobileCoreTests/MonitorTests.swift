@@ -54,4 +54,11 @@ final class MonitorTests: XCTestCase {
         XCTAssertEqual(s.readyCount, 1)
         XCTAssertEqual(s.unreachableCount, 1)
     }
+
+    func testCertAlertStartsOneWeekBeforeExpiry() {
+        let in10Days = Int64(now.timeIntervalSince1970) + 10 * 86_400
+        let in7Days = Int64(now.timeIntervalSince1970) + 7 * 86_400
+        XCTAssertTrue(evaluate(previous: snap([("a", .ready)]), current: snap([("a", .ready)], cert: in10Days), now: now).alerts.isEmpty)
+        XCTAssertEqual(evaluate(previous: snap([("a", .ready)]), current: snap([("a", .ready)], cert: in7Days), now: now).alerts.map(\.key), ["cert"])
+    }
 }

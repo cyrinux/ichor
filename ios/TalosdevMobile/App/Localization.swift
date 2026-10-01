@@ -13,6 +13,8 @@ extension Feature {
         case .kubeconfig: String(localized: "Kubeconfig export")
         case .debugShell: String(localized: "Debug shell")
         case .etcdDefrag: String(localized: "etcd defragmentation")
+        case .machineConfig: String(localized: "Machine config")
+        case .etcdSnapshot: String(localized: "etcd snapshot")
         }
     }
 }

@@ -22,7 +22,8 @@ data class Alert(
 
 data class Evaluation(val alerts: List<Alert>, val next: ClusterSnapshot)
 
-const val CERT_WARN_DAYS = 14
+/** Days before expiry when the daily "renew your talosconfig" alert starts. */
+const val CERT_WARN_DAYS = 7
 
 /**
  * Compares the previous and current snapshots. Only *changes* alert, so a node that stays

@@ -4,6 +4,7 @@ import name.levis.talosmobile.ui.UiText
 import name.levis.talosmobile.ui.LocalizedException
 import name.levis.talosmobile.R
 import name.levis.talosmobile.HealthListener
+import name.levis.talosmobile.SnapshotListener
 import name.levis.talosmobile.Talosmobile
 import name.levis.talosmobile.model.ClusterOverview
 import name.levis.talosmobile.model.EtcdOverview
@@ -12,6 +13,7 @@ import name.levis.talosmobile.model.LogTail
 import name.levis.talosmobile.model.NodeStats
 import name.levis.talosmobile.model.NodeResources
 import name.levis.talosmobile.model.ServiceInfo
+import name.levis.talosmobile.model.ProcessSample
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -25,6 +27,13 @@ import kotlinx.serialization.builtins.ListSerializer
 sealed interface HealthEvent {
     data class Progress(val node: String, val message: String) : HealthEvent
     data class Done(val error: String?) : HealthEvent
+}
+
+/** Events streamed by an etcd snapshot download. */
+sealed interface SnapshotEvent {
+    data class Progress(val bytes: Long) : SnapshotEvent
+    data class Done(val path: String, val size: Long, val sha256: String) : SnapshotEvent
+    data class Failed(val message: String) : SnapshotEvent
 }
 
 class NoConfigException : LocalizedException(UiText.Res(R.string.common_no_config))
@@ -64,6 +73,47 @@ class TalosRepository(private val configs: ConfigRepository) {
     suspend fun stats(node: String): NodeStats = call { cfg, ctx ->
         TalosJson.decodeFromString(NodeStats.serializer(), Talosmobile.nodeStats(cfg, ctx, node))
     }
+
+    /** One sample of the node's processes for the Processes tab (not cached: always fresh). */
+    suspend fun processes(node: String): ProcessSample = call { cfg, ctx ->
+        TalosJson.decodeFromString(ProcessSample.serializer(), Talosmobile.nodeProcesses(cfg, ctx, node))
+    }
+
+    /**
+     * The node's active machine config as YAML (os:admin). Secrets are masked unless
+     * [revealSecrets]. Never cached: it may hold secrets.
+     */
+    suspend fun machineConfig(node: String, revealSecrets: Boolean): String = call { cfg, ctx ->
+        Talosmobile.nodeMachineConfig(cfg, ctx, node, revealSecrets)
+    }
+
+    /** `talosctl etcd alarm disarm` through [node] (os:operator or os:admin); alarms are cluster-wide. */
+    suspend fun etcdAlarmDisarm(node: String) = call { cfg, ctx -> Talosmobile.etcdAlarmDisarm(cfg, ctx, node) }
+
+    /**
+     * Streams `talosctl -n NODE etcd snapshot` into [destPath] (written atomically by Go).
+     * Cancelling the collector cancels the download.
+     */
+    fun etcdSnapshot(node: String, destPath: String): Flow<SnapshotEvent> = callbackFlow {
+        val stored = configs.config.value ?: throw NoConfigException()
+        val run = Talosmobile.startEtcdSnapshot(
+            stored.yaml,
+            stored.activeContext,
+            node,
+            destPath,
+            object : SnapshotListener {
+                override fun onProgress(bytes: Long) {
+                    trySend(SnapshotEvent.Progress(bytes))
+                }
+
+                override fun onDone(path: String, size: Long, sha256: String, errMessage: String) {
+                    trySend(if (errMessage.isEmpty()) SnapshotEvent.Done(path, size, sha256) else SnapshotEvent.Failed(errMessage))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.CONFLATED) // progress may be dropped, the final event is always kept
 
     suspend fun overview(): ClusterOverview = remember(OVERVIEW) { overviewUncached() }
 

@@ -1,0 +1,185 @@
+package talosmobile
+
+import (
+	"context"
+	"encoding/base32"
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
+	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
+	"github.com/siderolabs/talos/pkg/machinery/client"
+	"google.golang.org/protobuf/proto"
+)
+
+// EventListener receives node events as JSON (implemented in Kotlin/Swift).
+type EventListener interface {
+	OnEvent(json string)
+	// OnDone is called exactly once when the stream ends; errMessage is empty when cancelled.
+	OnDone(errMessage string)
+}
+
+// EventsRun is a handle on a running events stream.
+type EventsRun struct {
+	cancel context.CancelFunc
+}
+
+// Cancel stops the stream.
+func (r *EventsRun) Cancel() { r.cancel() }
+
+type nodeEvent struct {
+	Node     string `json:"node"`
+	ID       string `json:"id"`
+	At       int64  `json:"at"`      // unix milliseconds (from the event id; receive time as fallback)
+	Kind     string `json:"kind"`    // service, sequence, phase, task, machine, config, address, restart, other
+	Subject  string `json:"subject"` // e.g. the service or sequence name
+	Action   string `json:"action"`  // e.g. "running", "start", "stop"
+	Message  string `json:"message"`
+	Severity string `json:"severity"` // info | warning | error
+}
+
+// StartEvents streams events from nodes (comma-separated; empty = the context's nodes),
+// like `talosctl events`, replaying the last tail events per node first (os:reader).
+func StartEvents(configYAML, contextName, nodes string, tail int, listener EventListener) *EventsRun {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		defer cancel()
+
+		listener.OnDone(runEvents(ctx, configYAML, contextName, nodes, tail, listener))
+	}()
+
+	return &EventsRun{cancel: cancel}
+}
+
+func runEvents(ctx context.Context, configYAML, contextName, nodes string, tail int, listener EventListener) string {
+	s, release, err := sessions.acquire(configYAML, contextName)
+	if err != nil {
+		return err.Error()
+	}
+
+	defer release()
+
+	targets := targetNodes(s.context)
+	if nodes = strings.TrimSpace(nodes); nodes != "" {
+		targets = strings.Split(nodes, ",")
+	}
+
+	ch := make(chan client.EventResult)
+
+	go func() {
+		err := s.client.EventsWatchV2(client.WithNodes(ctx, targets...), ch, client.WithTailEvents(int32(tail)))
+		if err != nil && ctx.Err() == nil {
+			ch <- client.EventResult{Error: err}
+		}
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ""
+		case res := <-ch:
+			if res.Error != nil {
+				if ctx.Err() != nil {
+					return ""
+				}
+
+				return friendlyError(res.Error)
+			}
+
+			out, err := toJSON(describeEvent(res.Event, time.Now()))
+			if err == nil {
+				listener.OnEvent(out)
+			}
+		}
+	}
+}
+
+// describeEvent turns a Talos event into a timeline entry.
+func describeEvent(ev client.Event, received time.Time) nodeEvent {
+	out := nodeEvent{
+		Node:     ev.Node,
+		ID:       ev.ID,
+		At:       received.UnixMilli(),
+		Kind:     "other",
+		Severity: "info",
+	}
+
+	if t, ok := xidTime(ev.ID); ok {
+		out.At = t.UnixMilli()
+	}
+
+	switch p := ev.Payload.(type) {
+	case *machineapi.ServiceStateEvent:
+		out.Kind, out.Subject, out.Action, out.Message = "service", p.GetService(), strings.ToLower(p.GetAction().String()), p.GetMessage()
+
+		switch {
+		case p.GetAction() == machineapi.ServiceStateEvent_FAILED:
+			out.Severity = "error"
+		case p.GetHealth() != nil && !p.GetHealth().GetUnknown() && !p.GetHealth().GetHealthy():
+			out.Severity = "warning"
+		}
+	case *machineapi.SequenceEvent:
+		out.Kind, out.Subject, out.Action = "sequence", p.GetSequence(), strings.ToLower(p.GetAction().String())
+		if e := p.GetError(); e != nil && e.GetMessage() != "" {
+			out.Message, out.Severity = e.GetMessage(), "error"
+		}
+	case *machineapi.PhaseEvent:
+		out.Kind, out.Subject, out.Action = "phase", p.GetPhase(), strings.ToLower(p.GetAction().String())
+	case *machineapi.TaskEvent:
+		out.Kind, out.Subject, out.Action = "task", p.GetTask(), strings.ToLower(p.GetAction().String())
+	case *machineapi.MachineStatusEvent:
+		out.Kind, out.Subject = "machine", strings.ToLower(p.GetStage().String())
+
+		if st := p.GetStatus(); st != nil {
+			out.Action = map[bool]string{true: "ready", false: "not ready"}[st.GetReady()]
+
+			var unmet []string
+			for _, c := range st.GetUnmetConditions() {
+				unmet = append(unmet, c.GetName()+": "+c.GetReason())
+			}
+
+			out.Message = strings.Join(unmet, "; ")
+			if !st.GetReady() {
+				out.Severity = "warning"
+			}
+		}
+	case *machineapi.ConfigLoadErrorEvent:
+		out.Kind, out.Subject, out.Message, out.Severity = "config", "load", p.GetError(), "error"
+	case *machineapi.ConfigValidationErrorEvent:
+		out.Kind, out.Subject, out.Message, out.Severity = "config", "validation", p.GetError(), "error"
+	case *machineapi.AddressEvent:
+		out.Kind, out.Subject, out.Message = "address", p.GetHostname(), strings.Join(p.GetAddresses(), ", ")
+	case *machineapi.RestartEvent:
+		out.Kind, out.Subject = "restart", fmt.Sprintf("%d", p.GetCmd())
+	default:
+		if ev.Payload != nil {
+			out.Subject = string(proto.MessageName(ev.Payload).Name())
+		} else {
+			out.Subject = ev.TypeURL
+		}
+	}
+
+	return out
+}
+
+var xidEncoding = base32.NewEncoding("0123456789abcdefghijklmnopqrstuv").WithPadding(base32.NoPadding)
+
+// xidTime decodes the creation time embedded in an xid (Talos event ids): 20 base32hex
+// characters, the first 4 bytes being big-endian unix seconds.
+func xidTime(id string) (time.Time, bool) {
+	if len(id) != 20 {
+		return time.Time{}, false
+	}
+
+	raw, err := xidEncoding.DecodeString(id)
+	if err != nil || len(raw) < 4 {
+		return time.Time{}, false
+	}
+
+	return time.Unix(int64(binary.BigEndian.Uint32(raw[:4])), 0), true
+}
+
+var errUnsupportedAction = errors.New("unsupported service action")

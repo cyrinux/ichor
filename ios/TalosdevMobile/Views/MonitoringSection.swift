@@ -1,4 +1,5 @@
 import SwiftUI
+import TalosdevMobileCore
 
 struct MonitoringSection: View {
     @State private var enabled = BackgroundMonitor.alertsEnabled
@@ -17,7 +18,7 @@ struct MonitoringSection: View {
         } header: {
             Text("Monitoring")
         } footer: {
-            Text("Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within \(14) days. iOS decides when background checks run, so alerts can be delayed. The home-screen widget shows the last check.")
+            Text("Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within \(certWarnDays) days. iOS decides when background checks run, so alerts can be delayed. The home-screen widget shows the last check.")
         }
     }
 

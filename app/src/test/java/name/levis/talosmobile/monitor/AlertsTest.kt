@@ -104,4 +104,12 @@ class AlertsTest {
     fun certFarAwayNeverWarns() {
         assertTrue(evaluate(null, snap("a" to READY), now).alerts.isEmpty())
     }
+
+    @Test
+    fun certAlertStartsOneWeekBeforeExpiry() {
+        val in10Days = now / 1000 + 10L * 86_400
+        val in7Days = now / 1000 + 7L * 86_400
+        assertTrue(evaluate(snap("a" to READY), snap("a" to READY, cert = in10Days), now).alerts.isEmpty())
+        assertEquals(listOf("cert"), evaluate(snap("a" to READY), snap("a" to READY, cert = in7Days), now).alerts.map { it.key })
+    }
 }

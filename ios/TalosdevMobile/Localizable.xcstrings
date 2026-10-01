@@ -1536,6 +1536,41 @@
         }
       }
     },
+    "Alarms disarmed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alarmes désarmées."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alarmas desactivadas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тривоги скасовано."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alarme aufgehoben."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allarmi disattivati."
+          }
+        }
+      }
+    },
     "All checks passed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1812,6 +1847,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Фонові сповіщення"
+          }
+        }
+      }
+    },
+    "Backup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarde"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia de seguridad"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Резервна копія"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherung"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup"
           }
         }
       }
@@ -2166,6 +2236,41 @@
         }
       }
     },
+    "Command or arguments" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commande ou arguments"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comando o argumentos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Команда або аргументи"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Befehl oder Argumente"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comando o argomenti"
+          }
+        }
+      }
+    },
     "Config" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2372,6 +2477,111 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вузол control plane: поки він вимкнений, він виходить з etcd. Переконайтеся, що інші члени справні, інакше кластер може втратити кворум."
+          }
+        }
+      }
+    },
+    "Copied." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copié."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiado."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопійовано."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiato."
+          }
+        }
+      }
+    },
+    "Copied. The clipboard is cleared in 2 minutes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copié. Le presse-papiers sera vidé dans 2 minutes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiado. El portapapeles se vaciará en 2 minutos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопійовано. Буфер обміну буде очищено через 2 хвилини."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert. Die Zwischenablage wird in 2 Minuten geleert."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiato. Gli appunti verranno svuotati tra 2 minuti."
+          }
+        }
+      }
+    },
+    "Copy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia"
           }
         }
       }
@@ -3291,6 +3501,181 @@
         }
       }
     },
+    "Disarm alarms" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désarmer les alarmes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivar alarmas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати тривоги"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alarme aufheben"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disattiva gli allarmi"
+          }
+        }
+      }
+    },
+    "Disarm etcd alarms" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désarmer les alarmes etcd"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivar las alarmas de etcd"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати тривоги etcd"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd-Alarme aufheben"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disattiva gli allarmi di etcd"
+          }
+        }
+      }
+    },
+    "Disarm etcd alarms?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désarmer les alarmes etcd ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Desactivar las alarmas de etcd?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати тривоги etcd?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd-Alarme aufheben?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disattivare gli allarmi di etcd?"
+          }
+        }
+      }
+    },
+    "Disarming does not fix the cause. For a NOSPACE alarm, free disk space and defragment first, or the alarm comes back. Once disarmed, etcd accepts writes again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désarmer ne corrige pas la cause. Pour une alarme NOSPACE, libérez de l'espace disque et défragmentez d'abord, sinon l'alarme revient. Une fois désarmé, etcd accepte de nouveau les écritures."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivarlas no corrige la causa. Para una alarma NOSPACE, libera espacio en disco y desfragmenta primero, o la alarma volverá. Una vez desactivadas, etcd vuelve a aceptar escrituras."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасування не усуває причину. Для тривоги NOSPACE спершу звільніть місце на диску та виконайте дефрагментацію, інакше тривога повернеться. Після скасування etcd знову приймає записи."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Aufheben behebt nicht die Ursache. Bei einem NOSPACE-Alarm zuerst Speicherplatz freigeben und defragmentieren, sonst kommt der Alarm zurück. Danach nimmt etcd wieder Schreibvorgänge an."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disattivarli non risolve la causa. Per un allarme NOSPACE, libera spazio su disco e deframmenta prima, altrimenti l'allarme ritorna. Una volta disattivati, etcd accetta di nuovo le scritture."
+          }
+        }
+      }
+    },
+    "Disarming…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désarmement…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivando…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасування…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird aufgehoben…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disattivazione…"
+          }
+        }
+      }
+    },
     "Disk" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3462,6 +3847,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Неактивний"
+          }
+        }
+      }
+    },
+    "Downloading snapshot from %@…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Téléchargement du snapshot depuis %@…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargando la instantánea desde %@…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантаження знімка з %@…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot wird von %@ heruntergeladen…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download dello snapshot da %@…"
           }
         }
       }
@@ -3777,6 +4197,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Дефрагментація etcd"
+          }
+        }
+      }
+    },
+    "etcd snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot etcd"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instantánea de etcd"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімок etcd"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd-Snapshot"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot di etcd"
           }
         }
       }
@@ -4217,6 +4672,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Фільтр"
+          }
+        }
+      }
+    },
+    "Filter lines" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrer les lignes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrar líneas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтрувати рядки"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilen filtern"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtra le righe"
           }
         }
       }
@@ -5571,6 +6061,41 @@
         }
       }
     },
+    "Loading processes…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chargement des processus…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargando procesos…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантаження процесів…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prozesse werden geladen…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caricamento dei processi…"
+          }
+        }
+      }
+    },
     "Logs" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5602,6 +6127,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Журнали"
+          }
+        }
+      }
+    },
+    "Machine config" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Config machine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Config. de la máquina"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конфігурація машини"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maschinenkonfiguration"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Config. macchina"
+          }
+        }
+      }
+    },
+    "Member" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Membre"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Miembro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Член"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mitglied"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Membro"
           }
         }
       }
@@ -5707,6 +6302,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Пам'ять"
+          }
+        }
+      }
+    },
+    "Memory (RSS)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mémoire (RSS)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memoria (RSS)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пам'ять (RSS)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speicher (RSS)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memoria (RSS)"
           }
         }
       }
@@ -6166,6 +6796,41 @@
         }
       }
     },
+    "Not saved: the snapshot was deleted from the phone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non enregistré : le snapshot a été supprimé du téléphone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No guardado: la instantánea se eliminó del teléfono."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не збережено: знімок видалено з телефона."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht gespeichert: der Snapshot wurde vom Telefon gelöscht."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non salvato: lo snapshot è stato eliminato dal telefono."
+          }
+        }
+      }
+    },
     "Notifications are off for Talosdev Mobile: allow them in the Settings app." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6477,6 +7142,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Цикл живлення"
+          }
+        }
+      }
+    },
+    "Processes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Procesos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Процеси"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prozesse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processi"
           }
         }
       }
@@ -6901,6 +7601,41 @@
         }
       }
     },
+    "Refreshed every 2s. CPU is a percentage of one core; tap a process to see its full command line." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualisé toutes les 2 s. Le CPU est un pourcentage d'un cœur ; touchez un processus pour voir sa ligne de commande complète."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se actualiza cada 2 s. La CPU es un porcentaje de un núcleo; toca un proceso para ver su línea de comandos completa."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлюється кожні 2 с. CPU — це відсоток одного ядра; торкніться процесу, щоб побачити повний командний рядок."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle 2 s aktualisiert. CPU ist ein Prozentsatz eines Kerns; tippe auf einen Prozess, um die vollständige Befehlszeile zu sehen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornato ogni 2 s. La CPU è una percentuale di un core; tocca un processo per vederne la riga di comando completa."
+          }
+        }
+      }
+    },
     "Request failed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7002,6 +7737,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Повторити"
+          }
+        }
+      }
+    },
+    "Reveal secrets" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les secrets"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar secretos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати секрети"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geheimnisse anzeigen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra i segreti"
+          }
+        }
+      }
+    },
+    "Reveal the secrets of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les secrets de %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar los secretos de %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати секрети %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geheimnisse von %@ anzeigen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra i segreti di %@"
           }
         }
       }
@@ -7146,6 +7951,181 @@
         }
       }
     },
+    "Save an etcd snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer un snapshot etcd"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar una instantánea de etcd"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти знімок etcd"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd-Snapshot speichern"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva uno snapshot di etcd"
+          }
+        }
+      }
+    },
+    "Save an etcd snapshot?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer un snapshot etcd ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Guardar una instantánea de etcd?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти знімок etcd?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd-Snapshot speichern?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvare uno snapshot di etcd?"
+          }
+        }
+      }
+    },
+    "Save snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer le snapshot"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar instantánea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти знімок"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot speichern"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva snapshot"
+          }
+        }
+      }
+    },
+    "Save snapshot…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer un snapshot…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar instantánea…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти знімок…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot speichern…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva snapshot…"
+          }
+        }
+      }
+    },
+    "Saved %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ enregistré"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ guardado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ збережено"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ gespeichert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ salvato"
+          }
+        }
+      }
+    },
     "Saved." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7181,6 +8161,41 @@
         }
       }
     },
+    "Saves a snapshot of the etcd database to a file you choose, to recover the cluster with talosctl bootstrap --recover-from." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistre un snapshot de la base etcd dans le fichier de votre choix, pour restaurer le cluster avec talosctl bootstrap --recover-from."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda una instantánea de la base de datos de etcd en el archivo que elijas, para recuperar el clúster con talosctl bootstrap --recover-from."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає знімок бази даних etcd у вибраний вами файл, щоб відновити кластер за допомогою talosctl bootstrap --recover-from."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichert einen Snapshot der etcd-Datenbank in einer Datei deiner Wahl, um den Cluster mit talosctl bootstrap --recover-from wiederherzustellen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva uno snapshot del database etcd in un file a tua scelta, per ripristinare il cluster con talosctl bootstrap --recover-from."
+          }
+        }
+      }
+    },
     "Scanner unavailable" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7212,6 +8227,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сканер недоступний"
+          }
+        }
+      }
+    },
+    "Secrets are shown in clear: CA keys and tokens give full control of the cluster. Don't share screenshots." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les secrets sont affichés en clair : les clés de CA et les jetons donnent le contrôle total du cluster. Ne partagez pas de captures d'écran."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los secretos se muestran en claro: las claves de CA y los tokens dan control total del clúster. No compartas capturas de pantalla."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Секрети показано відкритим текстом: ключі CA та токени дають повний контроль над кластером. Не діліться знімками екрана."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geheimnisse werden im Klartext angezeigt: CA-Schlüssel und Tokens geben volle Kontrolle über den Cluster. Teile keine Bildschirmfotos."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I segreti sono mostrati in chiaro: le chiavi della CA e i token danno il pieno controllo del cluster. Non condividere screenshot."
           }
         }
       }
@@ -7671,6 +8721,41 @@
         }
       }
     },
+    "Size" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розмір"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Größe"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dimensione"
+          }
+        }
+      }
+    },
     "Skip the Kubernetes cordon/drain, e.g. when the API is down. Pods and services are still stopped." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7702,6 +8787,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Пропускає cordon/drain Kubernetes, наприклад коли API недоступний. Поди й сервіси все одно зупиняються."
+          }
+        }
+      }
+    },
+    "Snapshot cancelled." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot annulé."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instantánea cancelada."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімок скасовано."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot abgebrochen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot annullato."
+          }
+        }
+      }
+    },
+    "Sort by" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trier par"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar por"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сортувати за"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sortieren nach"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordina per"
           }
         }
       }
@@ -8512,6 +9667,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Екрани огляду та etcd показують готовність вузлів і стан etcd з будь-якою роллю."
+          }
+        }
+      }
+    },
+    "The snapshot contains every Kubernetes Secret in clear. Anyone with the file can read them: keep it somewhere safe and delete it when no longer needed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le snapshot contient tous les Secrets Kubernetes en clair. Toute personne ayant le fichier peut les lire : conservez-le en lieu sûr et supprimez-le quand il n'est plus utile."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La instantánea contiene todos los Secrets de Kubernetes en claro. Cualquiera con el archivo puede leerlos: guárdalo en un lugar seguro y elimínalo cuando ya no lo necesites."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімок містить усі Secrets Kubernetes відкритим текстом. Будь-хто з цим файлом може їх прочитати: зберігайте його в безпечному місці та видаліть, коли він більше не потрібен."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Snapshot enthält alle Kubernetes-Secrets im Klartext. Jeder mit der Datei kann sie lesen: bewahre sie sicher auf und lösche sie, wenn sie nicht mehr gebraucht wird."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo snapshot contiene tutti i Secret di Kubernetes in chiaro. Chiunque abbia il file può leggerli: conservalo in un posto sicuro ed eliminalo quando non serve più."
           }
         }
       }
