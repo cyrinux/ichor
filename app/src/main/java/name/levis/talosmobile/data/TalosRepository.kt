@@ -1,5 +1,8 @@
 package name.levis.talosmobile.data
 
+import name.levis.talosmobile.ui.UiText
+import name.levis.talosmobile.ui.LocalizedException
+import name.levis.talosmobile.R
 import name.levis.talosmobile.HealthListener
 import name.levis.talosmobile.Talosmobile
 import name.levis.talosmobile.model.ClusterOverview
@@ -24,7 +27,7 @@ sealed interface HealthEvent {
     data class Done(val error: String?) : HealthEvent
 }
 
-class NoConfigException : IllegalStateException("No talosconfig imported")
+class NoConfigException : LocalizedException(UiText.Res(R.string.common_no_config))
 
 /** Read-only access to the Talos API through the Go core. All calls are blocking in Go, so run on IO. */
 class TalosRepository(private val configs: ConfigRepository) {

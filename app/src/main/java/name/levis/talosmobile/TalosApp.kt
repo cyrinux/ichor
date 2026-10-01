@@ -11,6 +11,7 @@ import name.levis.talosmobile.data.ConfigRepository
 import name.levis.talosmobile.data.TalosRepository
 import name.levis.talosmobile.data.SupportPrompt
 import name.levis.talosmobile.data.UiPreferences
+import name.levis.talosmobile.i18n.AppLocale
 import name.levis.talosmobile.monitor.MonitorStore
 import name.levis.talosmobile.monitor.syncMonitoring
 import name.levis.talosmobile.security.AppLock
@@ -22,7 +23,7 @@ import kotlinx.coroutines.launch
 class TalosApp : Application() {
     val configRepository by lazy { ConfigRepository(this) }
     val talosRepository by lazy { TalosRepository(configRepository) }
-    val uiPreferences by lazy { UiPreferences(getSharedPreferences("talosdev-mobile-ui", Context.MODE_PRIVATE)) }
+    val uiPreferences by lazy { UiPreferences(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
     val appLock by lazy {
         AppLock(
             PrefsLockSettings(getSharedPreferences("talosdev-mobile-security", Context.MODE_PRIVATE)),
@@ -42,12 +43,23 @@ class TalosApp : Application() {
     override fun onCreate() {
         super.onCreate()
         migrateLegacyPreferences()
+        syncLanguage()
         launchSync()
         // Process-wide foreground/background, so moving between our own screens never relocks.
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) = appLock.onForeground()
             override fun onStop(owner: LifecycleOwner) = appLock.onBackground()
         })
+    }
+
+    /**
+     * On API 33+ the system owns the per-app language (it can also be changed in Android
+     * settings), so mirror it into the stored choice shown in Settings. Below 33,
+     * MainActivity applies the stored choice itself.
+     */
+    private fun syncLanguage() {
+        val system = AppLocale.systemChoice(this) ?: return
+        if (system != uiPreferences.language.value) uiPreferences.setLanguage(system)
     }
 
     /**

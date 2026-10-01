@@ -21,7 +21,8 @@ struct EtcdView: View {
                             HStack { ProgressView(); Text(progress) }
                         } else {
                             if let result { Text(result).font(.footnote) }
-                            Text("About \(formatBytes(reclaimable)) reclaimable across \(order.count) member(s). Members are done one at a time, followers first and the leader last.")
+                            Text(String(localized: "\(order.count) members to defragment.") + " "
+                                + String(localized: "About \(formatBytes(reclaimable)) reclaimable. Members are done one at a time, followers first and the leader last."))
                                 .font(.footnote).foregroundStyle(.secondary)
                             Button("Defragment all") { confirm = order }
                                 .disabled(order.isEmpty || reclaimable == 0)
@@ -32,7 +33,7 @@ struct EtcdView: View {
                 }
                 if !etcd.alarms.isEmpty {
                     Section("Alarms") {
-                        ForEach(etcd.alarms, id: \.self) { Text("\(hostnames[$0.memberId] ?? $0.memberId): \($0.alarm)").foregroundStyle(.red) }
+                        ForEach(etcd.alarms, id: \.self) { Text(verbatim: "\(hostnames[$0.memberId] ?? $0.memberId): \($0.alarm)").foregroundStyle(.red) }
                     }
                 }
                 Section("Members (\(etcd.members.count))") {
@@ -49,10 +50,10 @@ struct EtcdView: View {
             .refreshable { await load() }
             .themedBackground()
         }
-        .navigationTitle("etcd")
+        .navigationTitle(Text(verbatim: "etcd"))
         .task { await load() }
         .confirmationDialog(
-            confirm.count == 1 ? "Defragment this member?" : "Defragment \(confirm.count) members?",
+            confirm.count == 1 ? Text("Defragment this member?") : Text("Defragment \(confirm.count) members?"),
             isPresented: Binding(get: { !confirm.isEmpty }, set: { if !$0 { confirm = [] } }),
             titleVisibility: .visible
         ) {
@@ -69,7 +70,7 @@ struct EtcdView: View {
     /// One member at a time, stopping at the first failure; Face ID first when the lock is on.
     private func defragment(_ targets: [EtcdNodeStatus]) async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: "Defragment etcd") {
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Defragment etcd")) {
             result = failure
             return
         }
@@ -81,7 +82,7 @@ struct EtcdView: View {
         }
         for (index, member) in targets.enumerated() {
             let name = names[member.memberId] ?? member.node
-            progress = "Defragmenting \(name) (\(index + 1)/\(targets.count))…"
+            progress = String(localized: "Defragmenting \(name) (\(index + 1)/\(targets.count))…")
             do {
                 try await client.defragment(node: member.node)
             } catch {
@@ -92,7 +93,8 @@ struct EtcdView: View {
             }
         }
         progress = nil
-        result = "Defragmented \(targets.count) member(s), about \(formatBytes(targets.reduce(Int64(0)) { $0 + $1.reclaimable })) reclaimed."
+        let reclaimed = formatBytes(targets.reduce(Int64(0)) { $0 + $1.reclaimable })
+        result = String(localized: "Defragmented \(targets.count) members.") + " " + String(localized: "About \(reclaimed) reclaimed.")
         await load()
     }
 
@@ -120,7 +122,7 @@ private struct MemberStatusRow: View {
                 Text(error).font(.caption).foregroundStyle(.red)
             } else {
                 LabeledContent("Member ID", value: status.memberId).font(.caption.monospaced())
-                LabeledContent("DB size", value: "\(formatBytes(status.dbSizeInUse)) in use / \(formatBytes(status.dbSize))").font(.caption)
+                LabeledContent("DB size", value: String(localized: "\(formatBytes(status.dbSizeInUse)) in use / \(formatBytes(status.dbSize))")).font(.caption)
                 UsageBar(fraction: status.dbSize > 0 ? Double(status.dbSizeInUse) / Double(status.dbSize) : 0)
                 LabeledContent("Raft term / index", value: "\(status.raftTerm) / \(status.raftIndex)").font(.caption)
                 ForEach(status.errors, id: \.self) { Text($0).font(.caption).foregroundStyle(.red) }
@@ -130,13 +132,13 @@ private struct MemberStatusRow: View {
 
     @ViewBuilder private var pill: some View {
         if status.error != nil || !status.errors.isEmpty {
-            StatusPill(label: "Error", color: .red)
+            StatusPill(label: String(localized: "Error"), color: .red)
         } else if status.isLeader {
-            StatusPill(label: "Leader", color: .green)
+            StatusPill(label: String(localized: "Leader"), color: .green)
         } else if status.isLearner {
-            StatusPill(label: "Learner", color: .orange)
+            StatusPill(label: String(localized: "Learner"), color: .orange)
         } else {
-            StatusPill(label: "Follower", color: .gray)
+            StatusPill(label: String(localized: "Follower"), color: .gray)
         }
     }
 }

@@ -53,19 +53,22 @@ struct LiveView: View {
         List {
             if let error = stats.error { Text(error).font(.footnote).foregroundStyle(.red) }
             if stats.points.isEmpty { Text("Collecting samples every 2s…").foregroundStyle(.secondary) }
-            LiveChart(title: "CPU" + (stats.cpuCount > 0 ? " (\(stats.cpuCount) threads)" : ""),
-                      points: stats.points, series: [("CPU", ChartPalette.first, \.cpuPercent)],
+            LiveChart(title: cpuTitle,
+                      points: stats.points, series: [(String(localized: "CPU"), ChartPalette.first, \.cpuPercent)],
                       format: { String(format: "%.0f%%", $0) }, fixedMax: 100)
-            LiveChart(title: "Memory" + (stats.points.last.map { " (\(formatBytes($0.memUsed)) used)" } ?? ""),
-                      points: stats.points, series: [("Memory", ChartPalette.first, \.memPercent)],
+            LiveChart(title: memoryTitle,
+                      points: stats.points, series: [(String(localized: "Memory"), ChartPalette.first, \.memPercent)],
                       format: { String(format: "%.0f%%", $0) }, fixedMax: 100)
-            LiveChart(title: "Network", points: stats.points,
-                      series: [("in", ChartPalette.first, \.rxPerSec), ("out", ChartPalette.second, \.txPerSec)],
+            LiveChart(title: String(localized: "Network"), points: stats.points,
+                      series: [(String(localized: "in"), ChartPalette.first, \.rxPerSec),
+                               (String(localized: "out"), ChartPalette.second, \.txPerSec)],
                       format: { formatBytes(UInt64(max($0, 0))) + "/s" })
-            LiveChart(title: "Disk", points: stats.points,
-                      series: [("read", ChartPalette.first, \.readPerSec), ("write", ChartPalette.second, \.writePerSec)],
+            LiveChart(title: String(localized: "Disk"), points: stats.points,
+                      series: [(String(localized: "read"), ChartPalette.first, \.readPerSec),
+                               (String(localized: "write"), ChartPalette.second, \.writePerSec)],
                       format: { formatBytes(UInt64(max($0, 0))) + "/s" })
-            LiveChart(title: "Load (1 min)", points: stats.points, series: [("Load", ChartPalette.first, \.load1)],
+            LiveChart(title: String(localized: "Load (1 min)"), points: stats.points,
+                      series: [(String(localized: "Load"), ChartPalette.first, \.load1)],
                       format: { String(format: "%.2f", $0) })
         }
         .themedBackground()
@@ -74,6 +77,20 @@ struct LiveView: View {
             guard let client = model.client else { return }
             await stats.poll(client, node: node)
         }
+    }
+
+    private var cpuTitle: String {
+        let cpu = String(localized: "CPU")
+        guard stats.cpuCount > 0 else { return cpu }
+        let threads = String(localized: "\(stats.cpuCount) threads")
+        return "\(cpu) (\(threads))"
+    }
+
+    private var memoryTitle: String {
+        let memory = String(localized: "Memory")
+        guard let last = stats.points.last else { return memory }
+        let used = String(localized: "\(formatBytes(last.memUsed)) used")
+        return "\(memory) (\(used))"
     }
 }
 

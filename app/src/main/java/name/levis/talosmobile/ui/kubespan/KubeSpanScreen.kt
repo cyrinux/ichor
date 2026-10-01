@@ -1,5 +1,8 @@
 package name.levis.talosmobile.ui.kubespan
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -47,7 +50,7 @@ import name.levis.talosmobile.ui.components.StatusPill
 import name.levis.talosmobile.ui.factory
 import name.levis.talosmobile.ui.theme.LocalStatusColors
 import name.levis.talosmobile.util.formatBytes
-import name.levis.talosmobile.util.formatDuration
+import name.levis.talosmobile.ui.components.localizedDuration
 
 class KubeSpanViewModel(private val talos: TalosRepository) : LoadingViewModel<KubeSpanOverview>() {
     override fun cached(): TalosRepository.Timed<KubeSpanOverview>? = talos.cached(KUBESPAN)
@@ -72,7 +75,7 @@ fun KubeSpanScreen(
         topBar = {
             TopAppBar(
                 title = { Text("KubeSpan") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
             )
         },
     ) { padding ->
@@ -98,8 +101,13 @@ fun KubeSpanScreen(
 private fun Summary(nodes: List<KubeSpanNode>) {
     val enabled = nodes.count { it.enabled }
     val down = nodes.sumOf { it.down }
+    val links = if (down > 0) {
+        pluralStringResource(R.plurals.kubespan_links_down, down, down)
+    } else {
+        stringResource(R.string.kubespan_no_link_down)
+    }
     Text(
-        "KubeSpan on $enabled of ${nodes.size} nodes" + if (down > 0) " · $down peer link(s) down" else " · no link down",
+        pluralStringResource(R.plurals.kubespan_summary, nodes.size, enabled, nodes.size) + " · " + links,
         style = MaterialTheme.typography.bodyMedium,
         color = if (down > 0) LocalStatusColors.current.bad else MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -116,10 +124,10 @@ private fun NodeCard(node: KubeSpanNode, hostname: String) {
                     Text(node.node, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                 }
                 when {
-                    node.error != null -> StatusPill("Unreachable", colors.bad)
-                    !node.enabled -> StatusPill("Off", colors.muted)
-                    node.down > 0 -> StatusPill("${node.down} down", colors.bad)
-                    else -> StatusPill("${node.up}/${node.peers.size} up", colors.ok)
+                    node.error != null -> StatusPill(stringResource(R.string.common_status_unreachable), colors.bad)
+                    !node.enabled -> StatusPill(stringResource(R.string.kubespan_status_off), colors.muted)
+                    node.down > 0 -> StatusPill(stringResource(R.string.kubespan_status_down_count, node.down), colors.bad)
+                    else -> StatusPill(stringResource(R.string.kubespan_status_up_count, node.up, node.peers.size), colors.ok)
                 }
             }
             node.error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = colors.bad) }
@@ -139,14 +147,17 @@ private fun PeerRow(peer: KubeSpanPeer) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(peer.label.ifBlank { peer.publicKey.take(12) }, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
             when (peer.state) {
-                "up" -> StatusPill("Up", colors.ok)
-                "down" -> StatusPill("Down", colors.bad)
-                else -> StatusPill("Unknown", colors.muted)
+                "up" -> StatusPill(stringResource(R.string.kubespan_peer_up), colors.ok)
+                "down" -> StatusPill(stringResource(R.string.kubespan_peer_down), colors.bad)
+                else -> StatusPill(stringResource(R.string.kubespan_peer_unknown), colors.muted)
             }
+        }
+        val handshake = peer.lastHandshake.takeIf { it > 0 }?.let {
+            stringResource(R.string.kubespan_handshake_ago, localizedDuration(now - it))
         }
         val details = listOfNotNull(
             peer.endpoint.ifBlank { null },
-            peer.lastHandshake.takeIf { it > 0 }?.let { "handshake ${formatDuration(now - it)} ago" },
+            handshake,
             "↓ ${formatBytes(peer.rx)} ↑ ${formatBytes(peer.tx)}",
         )
         Text(

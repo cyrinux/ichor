@@ -1,5 +1,11 @@
 package name.levis.talosmobile.ui.importconfig
 
+import name.levis.talosmobile.ui.uiText
+import name.levis.talosmobile.ui.UiText
+import name.levis.talosmobile.ui.LocalizedException
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -83,10 +89,10 @@ fun ImportScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Import talosconfig") },
+                title = { Text(stringResource(R.string.import_title)) },
                 actions = {
                     IconButton(onClick = { showHelp = true }) {
-                        Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "How to create a talosconfig")
+                        Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = stringResource(R.string.import_help))
                     }
                 },
             )
@@ -121,9 +127,9 @@ private fun SourcePicker(
     onYaml: (String) -> Unit,
 ) {
     val tabs = listOf(
-        "File" to Icons.Outlined.FileOpen,
-        "Paste" to Icons.Outlined.ContentPaste,
-        "QR code" to Icons.Outlined.QrCodeScanner,
+        stringResource(R.string.import_tab_file) to Icons.Outlined.FileOpen,
+        stringResource(R.string.import_tab_paste) to Icons.Outlined.ContentPaste,
+        stringResource(R.string.import_tab_qr) to Icons.Outlined.QrCodeScanner,
     )
 
     Column(Modifier.fillMaxSize()) {
@@ -162,10 +168,17 @@ private fun FileSource(onYaml: (String) -> Unit) {
         runCatching {
             context.contentResolver.openInputStream(uri)?.use { stream ->
                 readBounded(stream, MAX_CONFIG_BYTES).decodeToString()
-            } ?: error("Could not open file")
+            } ?: throw LocalizedException(UiText.Res(R.string.import_could_not_open))
         }.fold(
             onSuccess = { readError = null; onYaml(it) },
-            onFailure = { readError = it.message },
+            onFailure = {
+                // readBounded rejects oversized files with IllegalArgumentException.
+                readError = if (it is IllegalArgumentException) {
+                    context.getString(R.string.import_file_too_large)
+                } else {
+                    it.uiText().resolve(context)
+                }
+            },
         )
     }
 
@@ -174,11 +187,10 @@ private fun FileSource(onYaml: (String) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            "Select your talosconfig (the file at ~/.talos/config on your workstation). " +
-                "Copy it to the phone with adb push, Syncthing, etc.",
+            stringResource(R.string.import_file_hint),
             style = MaterialTheme.typography.bodyMedium,
         )
-        Button(onClick = { picker.launch(arrayOf("*/*")) }) { Text("Choose file") }
+        Button(onClick = { picker.launch(arrayOf("*/*")) }) { Text(stringResource(R.string.import_choose_file)) }
         readError?.let { Text(it, color = LocalStatusColors.current.bad) }
     }
 }
@@ -189,12 +201,12 @@ private fun PasteSource(text: String, onText: (String) -> Unit, onYaml: (String)
         OutlinedTextField(
             value = text,
             onValueChange = { if (it.length <= MAX_CONFIG_BYTES) onText(it) },
-            label = { Text("talosconfig YAML") },
+            label = { Text(stringResource(R.string.import_paste_label)) },
             textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
             modifier = Modifier.fillMaxWidth().weight(1f),
         )
         Button(onClick = { onYaml(text) }, enabled = text.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
-            Text("Validate")
+            Text(stringResource(R.string.import_validate))
         }
     }
 }
@@ -205,35 +217,40 @@ private fun PreviewCard(summary: ConfigSummary, onConfirm: () -> Unit, onCancel:
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text("Config is valid", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.import_valid), style = MaterialTheme.typography.titleLarge)
         summary.contexts.forEach { ctx ->
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    val marker = if (ctx.name == summary.current) " (current)" else ""
-                    Text(ctx.name + marker, style = MaterialTheme.typography.titleMedium)
-                    InfoRow("Endpoints", ctx.endpoints.joinToString("\n"), mono = true)
-                    InfoRow("Nodes", if (ctx.nodes.isEmpty()) "endpoints" else "${ctx.nodes.size}")
-                    InfoRow("Roles", ctx.roles.joinToString())
-                    InfoRow("Cert expires", certExpiry(ctx.certNotAfter))
+                    val name = if (ctx.name == summary.current) stringResource(R.string.import_context_current, ctx.name) else ctx.name
+                    Text(name, style = MaterialTheme.typography.titleMedium)
+                    InfoRow(stringResource(R.string.common_label_endpoints), ctx.endpoints.joinToString("\n"), mono = true)
+                    InfoRow(stringResource(R.string.common_label_nodes), if (ctx.nodes.isEmpty()) stringResource(R.string.import_nodes_endpoints) else "${ctx.nodes.size}")
+                    InfoRow(stringResource(R.string.common_label_roles), ctx.roles.joinToString())
+                    InfoRow(stringResource(R.string.common_label_cert_expires), certExpiry(ctx.certNotAfter))
                 }
             }
         }
         Text(
-            "The config is stored encrypted on this device (Android Keystore) and excluded from backups.",
+            stringResource(R.string.import_stored_encrypted),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text("Cancel") }
-            Button(onClick = onConfirm, modifier = Modifier.weight(1f)) { Text("Import") }
+            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
+            Button(onClick = onConfirm, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.import_import)) }
         }
         Box(Modifier.height(8.dp))
     }
 }
 
+@Composable
 fun certExpiry(notAfter: Long): String {
-    val days = daysUntil(notAfter)
-    return if (days < 0) "expired ${-days} days ago" else "in $days days"
+    val days = daysUntil(notAfter).toInt()
+    return if (days < 0) {
+        pluralStringResource(R.plurals.common_cert_expired_days_ago, -days, -days)
+    } else {
+        pluralStringResource(R.plurals.common_cert_in_days, days, days)
+    }
 }
 
 @Composable

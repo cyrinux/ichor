@@ -1,5 +1,9 @@
 package name.levis.talosmobile.ui.overview
 
+import androidx.annotation.PluralsRes
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -96,9 +100,9 @@ fun OverviewScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Cluster")
+                        Text(stringResource(R.string.overview_title))
                         config?.let { stored ->
-                            val access = stored.activeSummary?.accessLabel
+                            val access = stored.activeSummary?.accessLabel?.let { stringResource(it) }
                             Text(
                                 listOfNotNull(stored.activeContext, access).joinToString(" · "),
                                 style = MaterialTheme.typography.labelMedium,
@@ -110,11 +114,11 @@ fun OverviewScreen(
                 actions = {
                     // Only offered when the config's role can run it.
                     if (config?.activeSummary?.allows(Feature.HEALTH) == true) {
-                        IconButton(onClick = onHealth) { Icon(Icons.Outlined.Favorite, "Cluster health") }
+                        IconButton(onClick = onHealth) { Icon(Icons.Outlined.Favorite, stringResource(R.string.overview_action_health)) }
                     }
                     IconButton(onClick = onKubeSpan) { Icon(Icons.Outlined.Hub, "KubeSpan") }
                     IconButton(onClick = onEtcd) { Icon(Icons.Outlined.Storage, "etcd") }
-                    IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, "Settings") }
+                    IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, stringResource(R.string.overview_action_settings)) }
                 },
             )
         },
@@ -181,21 +185,21 @@ private fun Summary(nodes: List<NodeOverview>) {
     val colors = LocalStatusColors.current
     val counts = nodes.groupingBy { it.health }.eachCount()
     Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-        SummaryCount(counts[NodeHealth.READY] ?: 0, "ready", colors.ok)
-        SummaryCount(counts[NodeHealth.NOT_READY] ?: 0, "not ready", colors.warn)
-        SummaryCount(counts[NodeHealth.UNREACHABLE] ?: 0, "unreachable", colors.bad)
+        SummaryCount(counts[NodeHealth.READY] ?: 0, R.plurals.overview_summary_ready, colors.ok)
+        SummaryCount(counts[NodeHealth.NOT_READY] ?: 0, R.plurals.overview_summary_not_ready, colors.warn)
+        SummaryCount(counts[NodeHealth.UNREACHABLE] ?: 0, R.plurals.overview_summary_unreachable, colors.bad)
     }
 }
 
 @Composable
-private fun SummaryCount(count: Int, label: String, color: androidx.compose.ui.graphics.Color) {
+private fun SummaryCount(count: Int, @PluralsRes label: Int, color: androidx.compose.ui.graphics.Color) {
     Column {
         Text(
             "$count",
             style = MaterialTheme.typography.headlineMedium,
             color = if (count > 0) color else MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(pluralStringResource(label, count), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -205,7 +209,7 @@ private fun NodeCard(node: NodeOverview, onClick: () -> Unit, onLongClick: () ->
         Modifier.fillMaxWidth().combinedClickable(
             onClick = { if (node.reachable) onClick() },
             onLongClick = onLongClick,
-            onLongClickLabel = "Node actions",
+            onLongClickLabel = stringResource(R.string.overview_node_actions),
         ),
     ) {
         Column(Modifier.padding(16.dp)) {
@@ -251,8 +255,9 @@ private fun NodeCard(node: NodeOverview, onClick: () -> Unit, onLongClick: () ->
     }
 }
 
+@Composable
 private fun roleLabel(role: String) = when (role) {
-    "controlplane" -> "control plane"
+    "controlplane" -> stringResource(R.string.overview_role_control_plane)
     else -> role
 }
 
@@ -264,7 +269,7 @@ private fun UpdateBanner(onClick: () -> Unit) {
     val available = state as? UpdateState.Available ?: return
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Text(
-            "Talosdev Mobile ${available.info.version} is available — tap to update",
+            stringResource(R.string.overview_update_banner, available.info.version),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(16.dp),
@@ -281,19 +286,19 @@ private fun SupportCard() {
     if (!visible) return
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
-            Text("Enjoying Talosdev Mobile?", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.overview_support_title), style = MaterialTheme.typography.titleSmall)
             Text(
-                "It is free and open source. If it saves you time, you can support its development.",
+                stringResource(R.string.overview_support_body),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = prompt::never) { Text("Don't ask again") }
-                TextButton(onClick = prompt::later) { Text("Not now") }
+                TextButton(onClick = prompt::never) { Text(stringResource(R.string.overview_support_never)) }
+                TextButton(onClick = prompt::later) { Text(stringResource(R.string.overview_support_later)) }
                 TextButton(onClick = {
                     prompt.later()
                     openUrl(context, SPONSOR_URL)
-                }) { Text("Sponsor") }
+                }) { Text(stringResource(R.string.overview_support_sponsor)) }
             }
         }
     }

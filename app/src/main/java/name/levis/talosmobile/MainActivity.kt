@@ -1,5 +1,6 @@
 package name.levis.talosmobile
 
+import android.content.Context
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -24,6 +25,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import name.levis.talosmobile.i18n.AppLocale
 import name.levis.talosmobile.security.LockScreen
 import name.levis.talosmobile.ui.Navigation
 import name.levis.talosmobile.ui.components.LoadingBox
@@ -33,6 +35,11 @@ import kotlinx.coroutines.launch
 
 // FragmentActivity (still a ComponentActivity) is required by BiometricPrompt.
 class MainActivity : FragmentActivity() {
+    // Below API 33, the in-app language is applied here (API 33+ uses LocaleManager).
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLocale.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val app = application as TalosApp

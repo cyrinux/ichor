@@ -4,6 +4,7 @@ import TalosdevMobileCore
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @State private var confirmDelete = false
     @State private var lockError: String?
 
@@ -19,15 +20,26 @@ struct SettingsView: View {
                         LabeledContent("Endpoints", value: ctx.endpoints.joined(separator: "\n"))
                         LabeledContent("Nodes", value: "\(ctx.nodes.isEmpty ? ctx.endpoints.count : ctx.nodes.count)")
                         LabeledContent("Roles", value: ctx.roles.joined(separator: ", "))
-                        LabeledContent("Cert expires", value: certExpiryText(ctx.certNotAfter))
+                        LabeledContent("Cert expires", value: localizedCertExpiry(ctx.certNotAfter))
                     }
                 }
             }
-            Section("Appearance") {
+            Section {
                 Picker("Theme", selection: $model.theme) {
                     ForEach(ThemeMode.allCases) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
+                // iOS manages the per-app language in the Settings app (the bundle declares its localizations).
+                Button {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                } label: {
+                    LabeledContent("Language", value: Self.currentLanguage)
+                }
+                .foregroundStyle(.primary)
+            } header: {
+                Text("Appearance")
+            } footer: {
+                Text("Talosdev Mobile follows the iPhone language. To use another one for this app only, open its page in the Settings app and choose Language.")
             }
             Section {
                 Toggle("App lock", isOn: Binding(get: { model.lock.enabled }, set: { setLock($0) }))
@@ -41,7 +53,7 @@ struct SettingsView: View {
             if model.allows(.kubeconfig) { KubeconfigSection() }
             Section("Config") {
                 if let protection = SecureConfigStore.protection {
-                    LabeledContent("Encryption key", value: protection.rawValue)
+                    LabeledContent("Encryption key", value: protection.label)
                 }
                 NavigationLink("Import a new talosconfig", value: Route.importConfig)
                 Button("Delete stored talosconfig", role: .destructive) { confirmDelete = true }
@@ -57,14 +69,21 @@ struct SettingsView: View {
         }
     }
 
+    /// The language the app is shown in, named in that language ("Français", "Deutsch"…).
+    private static var currentLanguage: String {
+        let code = Bundle.main.preferredLocalizations.first ?? "en"
+        let name = Locale(identifier: code).localizedString(forLanguageCode: code) ?? code
+        return name.prefix(1).uppercased() + name.dropFirst()
+    }
+
     /// Both enabling and disabling require authenticating first.
     private func setLock(_ enabled: Bool) {
         guard Authenticator.isAvailable else {
-            lockError = "Set up a passcode (and optionally Face ID) on this device first."
+            lockError = String(localized: "Set up a passcode (and optionally Face ID) on this device first.")
             return
         }
         Task {
-            if let failure = await Authenticator.authenticate(reason: enabled ? "Enable app lock" : "Disable app lock") {
+            if let failure = await Authenticator.authenticate(reason: enabled ? String(localized: "Enable app lock") : String(localized: "Disable app lock")) {
                 lockError = failure
             } else {
                 lockError = nil

@@ -23,10 +23,10 @@ struct HealthView: View {
                             ProgressView()
                             Text("Running server-side checks…")
                         } else if finished && error == nil {
-                            StatusPill(label: "Healthy", color: .green)
+                            StatusPill(label: String(localized: "Healthy"), color: .green)
                             Text("All checks passed")
                         } else if finished {
-                            StatusPill(label: "Unhealthy", color: .red)
+                            StatusPill(label: String(localized: "Unhealthy"), color: .red)
                         }
                         Spacer()
                         if !running { Button("Re-run") { runID += 1 } }

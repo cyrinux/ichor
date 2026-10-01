@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Common -->
+    <string name="common_back">Назад</string>
+    <string name="common_cancel">Скасувати</string>
+    <string name="common_ok">OK</string>
+    <string name="common_retry">Повторити</string>
+    <string name="common_refresh">Оновити</string>
+    <string name="common_delete">Видалити</string>
+    <string name="common_more">Більше</string>
+    <string name="common_check_now">Перевірити зараз</string>
+    <string name="common_just_now">щойно</string>
+    <plurals name="common_minutes_ago">
+        <item quantity="one">%1$d хв тому</item>
+        <item quantity="few">%1$d хв тому</item>
+        <item quantity="many">%1$d хв тому</item>
+        <item quantity="other">%1$d хв тому</item>
+    </plurals>
+    <plurals name="common_hours_ago">
+        <item quantity="one">%1$d год тому</item>
+        <item quantity="few">%1$d год тому</item>
+        <item quantity="many">%1$d год тому</item>
+        <item quantity="other">%1$d год тому</item>
+    </plurals>
+    <plurals name="common_days_ago">
+        <item quantity="one">%1$d д тому</item>
+        <item quantity="few">%1$d д тому</item>
+        <item quantity="many">%1$d д тому</item>
+        <item quantity="other">%1$d д тому</item>
+    </plurals>
+    <string name="common_updated_ago">Оновлено %1$s · %2$s</string>
+    <string name="common_refreshing_showing">Оновлення… (показано дані від %1$s)</string>
+    <string name="common_status_ready">Готовий</string>
+    <string name="common_status_not_ready">Не готовий</string>
+    <string name="common_status_unreachable">Недоступний</string>
+    <string name="common_status_healthy">Справний</string>
+    <string name="common_status_unhealthy">Несправний</string>
+    <string name="common_label_endpoints">Кінцеві точки</string>
+    <string name="common_label_nodes">Вузли</string>
+    <string name="common_label_roles">Ролі</string>
+    <string name="common_label_cert_expires">Сертифікат дійсний до</string>
+    <plurals name="common_cert_expired_days_ago">
+        <item quantity="one">закінчився %1$d день тому</item>
+        <item quantity="few">закінчився %1$d дні тому</item>
+        <item quantity="many">закінчився %1$d днів тому</item>
+        <item quantity="other">закінчився %1$d дня тому</item>
+    </plurals>
+    <plurals name="common_cert_in_days">
+        <item quantity="one">через %1$d день</item>
+        <item quantity="few">через %1$d дні</item>
+        <item quantity="many">через %1$d днів</item>
+        <item quantity="other">через %1$d дня</item>
+    </plurals>
+    <string name="common_duration_days_hours">%1$d д %2$d год</string>
+    <string name="common_duration_hours_minutes">%1$d год %2$d хв</string>
+    <string name="common_duration_minutes">%1$d хв</string>
+    <string name="common_duration_less_than_minute">&lt;1 хв</string>
+    <string name="common_access_admin">адміністратор</string>
+    <string name="common_access_operator">оператор</string>
+    <string name="common_access_read_only">лише читання</string>
+    <string name="common_feature_power">Перезавантаження / вимкнення</string>
+    <string name="common_feature_health">Перевірка стану кластера</string>
+    <string name="common_feature_kubeconfig">Експорт kubeconfig</string>
+    <string name="common_feature_debug_shell">Налагоджувальна оболонка</string>
+    <string name="common_feature_etcd_defrag">Дефрагментація etcd</string>
+    <string name="common_role_notice_title">%1$s потребує %2$s</string>
+    <string name="common_role_notice_body">Цей talosconfig має %1$s. Щоб скористатися функцією, імпортуйте talosconfig, створений з --roles %2$s (див. README).</string>
+    <string name="common_role_notice_no_roles">жодних ролей</string>
+    <string name="common_no_config">Talosconfig не імпортовано</string>
+
+    <!-- Overview -->
+    <string name="overview_title">Кластер</string>
+    <string name="overview_action_health">Стан кластера</string>
+    <string name="overview_action_settings">Налаштування</string>
+    <plurals name="overview_summary_ready">
+        <item quantity="one">готовий</item>
+        <item quantity="few">готові</item>
+        <item quantity="many">готових</item>
+        <item quantity="other">готових</item>
+    </plurals>
+    <plurals name="overview_summary_not_ready">
+        <item quantity="one">не готовий</item>
+        <item quantity="few">не готові</item>
+        <item quantity="many">не готових</item>
+        <item quantity="other">не готових</item>
+    </plurals>
+    <plurals name="overview_summary_unreachable">
+        <item quantity="one">недоступний</item>
+        <item quantity="few">недоступні</item>
+        <item quantity="many">недоступних</item>
+        <item quantity="other">недоступних</item>
+    </plurals>
+    <string name="overview_node_actions">Дії з вузлом</string>
+    <string name="overview_role_control_plane">панель керування</string>
+    <string name="overview_update_banner">Доступна версія Talosdev Mobile %1$s — торкніться, щоб оновити</string>
+    <string name="overview_support_title">Подобається Talosdev Mobile?</string>
+    <string name="overview_support_body">Це безкоштовний застосунок з відкритим кодом. Якщо він заощаджує вам час, ви можете підтримати його розробку.</string>
+    <string name="overview_support_never">Більше не питати</string>
+    <string name="overview_support_later">Не зараз</string>
+    <string name="overview_support_sponsor">Підтримати</string>
+    <string name="overview_swipe_live">Наживо</string>
+    <string name="overview_swipe_actions">Дії</string>
+    <string name="overview_action_live_graphs">Графіки наживо</string>
+    <string name="overview_action_services_logs">Сервіси та журнали</string>
+    <string name="overview_action_kernel_log">Журнал ядра</string>
+    <string name="overview_action_debug_shell">Налагоджувальна оболонка</string>
+    <string name="overview_action_reboot">Перезавантажити…</string>
+    <string name="overview_action_shutdown">Вимкнути…</string>
+    <string name="overview_action_copy_ip">Копіювати IP (%1$s)</string>
+    <string name="overview_clip_label">IP вузла</string>
+
+    <!-- Node detail -->
+    <string name="node_menu_kernel_log">Журнал ядра</string>
+    <string name="node_menu_debug_shell">Налагоджувальна оболонка</string>
+    <string name="node_tab_services">Сервіси</string>
+    <string name="node_tab_resources">Ресурси</string>
+    <string name="node_tab_live">Наживо</string>
+    <string name="node_service_no_check">Без перевірки</string>
+    <string name="node_section_system">Система</string>
+    <string name="node_uptime">Час роботи</string>
+    <string name="node_cpu">ЦП</string>
+    <plurals name="node_cpu_threads">
+        <item quantity="one">%1$d потік</item>
+        <item quantity="few">%1$d потоки</item>
+        <item quantity="many">%1$d потоків</item>
+        <item quantity="other">%1$d потоку</item>
+    </plurals>
+    <string name="node_load">Навантаження (1/5/15)</string>
+    <string name="node_section_memory">Пам\'ять</string>
+    <string name="node_memory_used">Використано</string>
+    <string name="node_section_disks">Диски</string>
+    <string name="node_live_collecting">Збір даних кожні %1$d с…</string>
+    <string name="node_live_cpu">ЦП</string>
+    <plurals name="node_live_cpu_threads">
+        <item quantity="one">ЦП (%1$d потік)</item>
+        <item quantity="few">ЦП (%1$d потоки)</item>
+        <item quantity="many">ЦП (%1$d потоків)</item>
+        <item quantity="other">ЦП (%1$d потоку)</item>
+    </plurals>
+    <string name="node_live_memory">Пам\'ять</string>
+    <string name="node_live_memory_used">Пам\'ять (використано %1$s)</string>
+    <string name="node_live_network">Мережа</string>
+    <string name="node_live_in">вхід</string>
+    <string name="node_live_out">вихід</string>
+    <string name="node_live_disk">Диск</string>
+    <string name="node_live_read">читання</string>
+    <string name="node_live_write">запис</string>
+    <string name="node_live_load">Навантаження (1 хв)</string>
+    <string name="node_live_load_series">Навантаження</string>
+    <string name="node_live_chart_description">Графік: %1$s</string>
+    <string name="node_live_now">зараз</string>
+    <plurals name="node_live_seconds_ago">
+        <item quantity="one">%1$d с тому</item>
+        <item quantity="few">%1$d с тому</item>
+        <item quantity="many">%1$d с тому</item>
+        <item quantity="other">%1$d с тому</item>
+    </plurals>
+    <string name="node_live_minutes_axis">−%1$d хв</string>
+
+    <!-- Power actions -->
+    <string name="power_reboot">Перезавантажити</string>
+    <string name="power_shut_down">Вимкнути</string>
+    <string name="power_power_cycle">Повний перезапуск</string>
+    <string name="power_force_reboot">Примусово перезавантажити</string>
+    <string name="power_force_shut_down">Примусово вимкнути</string>
+    <string name="power_mode_graceful">Коректно</string>
+    <string name="power_mode_graceful_desc">Зупинити поди й сервіси, потім перезавантажити (швидке перезавантаження kexec, якщо доступне).</string>
+    <string name="power_mode_powercycle_desc">Коректна зупинка, потім повне перезавантаження через мікропрограму замість kexec.</string>
+    <string name="power_mode_force">Примусово</string>
+    <string name="power_mode_force_desc">Негайне перезавантаження: поди й сервіси НЕ зупиняються. Лише для вузла, що завис.</string>
+    <string name="power_requested">%1$s: запитано «%2$s»</string>
+    <string name="power_auth_title">%1$s %2$s</string>
+    <string name="power_confirm_title">%1$s %2$s?</string>
+    <string name="power_controlplane_warning">Вузол панелі керування: поки він вимкнений, він не бере участі в etcd. Переконайтеся, що інші учасники справні, інакше кластер може втратити кворум.</string>
+    <string name="power_shutdown_stays_off">Вузол залишатиметься вимкненим, доки його не ввімкнуть (Wake-on-LAN, IPMI або фізично).</string>
+    <string name="power_type_to_confirm">Введіть %1$s для підтвердження:</string>
+    <string name="power_mode_label">Режим (talosctl reboot -m)</string>
+    <string name="power_force_label">Примусово (--force)</string>
+    <string name="power_force_desc">Пропустити cordon/drain у Kubernetes, наприклад, коли API Kubernetes недоступний. Поди й сервіси все одно зупиняються.</string>
+
+    <!-- etcd -->
+    <string name="etcd_auth_defrag">Дефрагментувати etcd</string>
+    <string name="etcd_section_alarms">Тривоги</string>
+    <string name="etcd_section_members">Учасники (%1$d)</string>
+    <string name="etcd_section_unprobed">Учасники, яких немає в цьому talosconfig</string>
+    <string name="etcd_status_error">Помилка</string>
+    <string name="etcd_status_errors">Помилки</string>
+    <string name="etcd_status_leader">Лідер</string>
+    <string name="etcd_status_learner">Учень</string>
+    <string name="etcd_status_follower">Послідовник</string>
+    <string name="etcd_member_id">ID учасника</string>
+    <string name="etcd_db_size">Розмір БД</string>
+    <string name="etcd_db_size_value">%1$s використано / %2$s</string>
+    <string name="etcd_raft">Термін / індекс Raft</string>
+    <string name="etcd_storage_version">Версія сховища</string>
+    <string name="etcd_peer_urls">URL-адреси пірів</string>
+    <string name="etcd_defragment_member">Дефрагментувати (звільнить %1$s)</string>
+    <string name="etcd_defragmenting">Дефрагментація %1$s (%2$d/%3$d)…</string>
+    <plurals name="etcd_reclaimable_across">
+        <item quantity="one">Можна звільнити близько %1$s на %2$d учаснику</item>
+        <item quantity="few">Можна звільнити близько %1$s на %2$d учасниках</item>
+        <item quantity="many">Можна звільнити близько %1$s на %2$d учасниках</item>
+        <item quantity="other">Можна звільнити близько %1$s на %2$d учасниках</item>
+    </plurals>
+    <string name="etcd_defrag_explainer">Дефрагментація вимоглива до ресурсів: учасники обробляються по одному, спочатку послідовники, а лідер останнім.</string>
+    <string name="etcd_defragment_all">Дефрагментувати всі</string>
+    <string name="etcd_confirm_single">Дефрагментувати %1$s?</string>
+    <plurals name="etcd_confirm_multi">
+        <item quantity="one">Дефрагментувати %1$d учасника?</item>
+        <item quantity="few">Дефрагментувати %1$d учасники?</item>
+        <item quantity="many">Дефрагментувати %1$d учасників?</item>
+        <item quantity="other">Дефрагментувати %1$d учасника?</item>
+    </plurals>
+    <string name="etcd_confirm_body">Під час дефрагментації учасник зайнятий, і його запити виконуються повільніше. Учасники обробляються по одному, ніколи разом, тож кластер зберігає кворум.</string>
+    <string name="etcd_confirm_order">Порядок: %1$s</string>
+    <string name="etcd_confirm_reclaim">Має звільнитися близько %1$s.</string>
+    <string name="etcd_defragment">Дефрагментувати</string>
+    <plurals name="etcd_defrag_done">
+        <item quantity="one">Дефрагментовано %1$d учасника, звільнено близько %2$s</item>
+        <item quantity="few">Дефрагментовано %1$d учасники, звільнено близько %2$s</item>
+        <item quantity="many">Дефрагментовано %1$d учасників, звільнено близько %2$s</item>
+        <item quantity="other">Дефрагментовано %1$d учасника, звільнено близько %2$s</item>
+    </plurals>
+
+    <!-- KubeSpan -->
+    <plurals name="kubespan_summary">
+        <item quantity="one">KubeSpan на %1$d з %2$d вузла</item>
+        <item quantity="few">KubeSpan на %1$d з %2$d вузлів</item>
+        <item quantity="many">KubeSpan на %1$d з %2$d вузлів</item>
+        <item quantity="other">KubeSpan на %1$d з %2$d вузла</item>
+    </plurals>
+    <plurals name="kubespan_links_down">
+        <item quantity="one">%1$d з\'єднання з піром розірвано</item>
+        <item quantity="few">%1$d з\'єднання з пірами розірвано</item>
+        <item quantity="many">%1$d з\'єднань з пірами розірвано</item>
+        <item quantity="other">%1$d з\'єднання з пірами розірвано</item>
+    </plurals>
+    <string name="kubespan_no_link_down">усі з\'єднання працюють</string>
+    <string name="kubespan_status_off">Вимкнено</string>
+    <string name="kubespan_status_down_count">%1$d не працює</string>
+    <string name="kubespan_status_up_count">%1$d/%2$d працює</string>
+    <string name="kubespan_peer_up">Працює</string>
+    <string name="kubespan_peer_down">Не працює</string>
+    <string name="kubespan_peer_unknown">Невідомо</string>
+    <string name="kubespan_handshake_ago">рукостискання %1$s тому</string>
+
+    <!-- Logs -->
+    <string name="logs_kernel_log">Журнал ядра</string>
+    <string name="logs_filter">Фільтр</string>
+    <string name="logs_empty">Немає рядків журналу.</string>
+    <string name="logs_no_match">Немає рядків, що відповідають «%1$s».</string>
+    <string name="logs_older_omitted">… старіші рядки пропущено</string>
+
+    <!-- Health -->
+    <string name="health_title">Стан кластера</string>
+    <string name="health_any_role_hint">Екрани огляду й etcd показують готовність вузлів і стан etcd з будь-якою роллю.</string>
+    <string name="health_running">Виконання перевірок на сервері…</string>
+    <string name="health_all_passed">Усі перевірки пройдено</string>
+    <string name="health_rerun">Запустити знову</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Налаштування</string>
+    <string name="settings_section_context">Контекст</string>
+    <string name="settings_section_appearance">Вигляд</string>
+    <string name="settings_theme_auto">Автоматично</string>
+    <string name="settings_theme_light">Світла</string>
+    <string name="settings_theme_dark">Темна</string>
+    <string name="settings_theme_black">Чорна</string>
+    <string name="settings_language">Мова</string>
+    <string name="settings_language_system">Системна</string>
+    <string name="settings_section_security">Безпека</string>
+    <string name="settings_auth_needs_lock">Спочатку налаштуйте на цьому пристрої відбиток пальця або блокування екрана (PIN-код, ключ, пароль).</string>
+    <string name="settings_auth_enable_lock">Увімкнути блокування застосунку</string>
+    <string name="settings_auth_disable_lock">Вимкнути блокування застосунку</string>
+    <string name="settings_app_lock">Блокування застосунку</string>
+    <string name="settings_app_lock_desc">Відбиток пальця або, як запасний варіант, PIN-код чи ключ пристрою для відкриття застосунку та перед перезавантаженням, вимкненням і експортом kubeconfig. Блокує знімки екрана, якщо їх не дозволено нижче.</string>
+    <string name="settings_allow_screenshots">Дозволити знімки екрана</string>
+    <string name="settings_allow_screenshots_desc">Також показує вміст застосунку в нещодавніх застосунках.</string>
+    <string name="settings_kube_section">Kubernetes</string>
+    <string name="settings_kube_auth">Експортувати kubeconfig</string>
+    <string name="settings_kube_desc">Експортувати kubeconfig адміністратора (потрібен talosconfig з os:admin). Будь-хто з цим файлом має повний доступ до кластера Kubernetes: зберігайте його в таємниці.</string>
+    <string name="settings_kube_exporting">Експорт…</string>
+    <string name="settings_kube_export">Експортувати kubeconfig…</string>
+    <string name="settings_kube_saved">Збережено. У kubenav додайте кластер із цього файлу.</string>
+    <string name="settings_kube_open_kubenav">Відкрити kubenav</string>
+    <string name="settings_kube_open_failed">Не вдалося відкрити вибраний файл</string>
+    <string name="settings_section_config">Конфігурація</string>
+    <string name="settings_encryption_key">Ключ шифрування</string>
+    <string name="settings_encryption_value">AES-256-GCM у: %1$s</string>
+    <string name="settings_key_strongbox">чип безпеки StrongBox</string>
+    <string name="settings_key_tee">довірене середовище виконання (TEE)</string>
+    <string name="settings_key_software">програмне сховище ключів</string>
+    <string name="settings_import_new">Імпортувати новий talosconfig</string>
+    <string name="settings_delete_config">Видалити збережений talosconfig</string>
+    <string name="settings_delete_title">Видалити talosconfig?</string>
+    <string name="settings_delete_body">Зашифровану конфігурацію та її клієнтський ключ буде видалено з цього пристрою.</string>
+
+    <!-- Monitoring and notifications -->
+    <string name="monitor_section">Моніторинг</string>
+    <string name="monitor_notifications_blocked">Сповіщення для цього застосунку заблоковано; дозвольте їх у налаштуваннях Android.</string>
+    <string name="monitor_background_alerts">Фонові сповіщення</string>
+    <string name="monitor_background_alerts_desc">Сповіщає, коли вузол перестає працювати чи відновлюється, про нові тривоги etcd і щодня, коли до закінчення клієнтського сертифіката лишається менше %1$d днів. Мовчить, поки кластер недоступний (наприклад, без VPN).</string>
+    <string name="monitor_check_every">Перевіряти кожні</string>
+    <string name="monitor_interval_minutes">%1$d хв</string>
+    <string name="monitor_interval_hours">%1$d год</string>
+    <string name="monitor_widget_hint">Віджет головного екрана використовує ті самі перевірки; якщо його додати, вони виконуватимуться навіть із вимкненими сповіщеннями.</string>
+    <string name="monitor_channel_name">Сповіщення кластера</string>
+    <string name="monitor_channel_desc">Зміни стану вузлів, тривоги etcd і закінчення терміну дії сертифіката</string>
+    <string name="monitor_public_title">Сповіщення кластера Talos</string>
+    <string name="monitor_node_ready_again">%1$s знову готовий</string>
+    <string name="monitor_node_not_ready">%1$s не готовий</string>
+    <string name="monitor_node_unreachable">%1$s недоступний</string>
+    <string name="monitor_etcd_alarm_title">Тривога etcd</string>
+    <string name="monitor_etcd_alarm_text">%1$s на учаснику %2$s</string>
+    <string name="monitor_cert_title">Сертифікат talosconfig</string>
+    <plurals name="monitor_cert_expired">
+        <item quantity="one">Термін дії клієнтського сертифіката закінчився %1$d день тому.</item>
+        <item quantity="few">Термін дії клієнтського сертифіката закінчився %1$d дні тому.</item>
+        <item quantity="many">Термін дії клієнтського сертифіката закінчився %1$d днів тому.</item>
+        <item quantity="other">Термін дії клієнтського сертифіката закінчився %1$d дня тому.</item>
+    </plurals>
+    <plurals name="monitor_cert_expires">
+        <item quantity="one">Термін дії клієнтського сертифіката закінчується через %1$d день. Згенеруйте новий talosconfig.</item>
+        <item quantity="few">Термін дії клієнтського сертифіката закінчується через %1$d дні. Згенеруйте новий talosconfig.</item>
+        <item quantity="many">Термін дії клієнтського сертифіката закінчується через %1$d днів. Згенеруйте новий talosconfig.</item>
+        <item quantity="other">Термін дії клієнтського сертифіката закінчується через %1$d дня. Згенеруйте новий talosconfig.</item>
+    </plurals>
+
+    <!-- Updates -->
+    <string name="update_section">Оновлення</string>
+    <string name="update_auto_check">Щодня перевіряти оновлення</string>
+    <string name="update_auto_check_desc">З релізів на GitHub (%1$s). Контрольну суму й ключ підпису APK буде перевірено, а Android попросить вас підтвердити встановлення.</string>
+    <string name="update_checking">Перевірка…</string>
+    <string name="update_up_to_date">Talosdev Mobile %1$s — остання версія.</string>
+    <string name="update_available">Доступна версія %1$s (%2$s).</string>
+    <string name="update_download_install">Завантажити та встановити</string>
+    <string name="update_debug_build">Це налагоджувальна збірка, підписана локальним ключем: релізні APK не можуть її замінити. Видаліть її та один раз встановіть релізний APK, щоб отримувати оновлення.</string>
+    <string name="update_downloading">Завантаження %1$s…</string>
+    <string name="update_needs_permission">Дозвольте Talosdev Mobile встановлювати застосунки, а потім спробуйте ще раз.</string>
+    <string name="update_open_permission">Відкрити дозвіл на встановлення</string>
+    <string name="update_try_again">Спробувати ще раз</string>
+    <string name="update_installing">Встановлення… підтвердьте в системному вікні.</string>
+    <string name="update_check_failed">Не вдалося перевірити оновлення: %1$s</string>
+    <string name="update_install_failed">Не вдалося встановити: %1$s</string>
+    <string name="update_install_status">статус %1$d</string>
+    <string name="update_err_http">GitHub відповів HTTP %1$d</string>
+    <string name="update_err_download_http">Не вдалося завантажити: HTTP %1$d</string>
+    <string name="update_err_too_large">Оновлення має неочікувано великий розмір</string>
+    <string name="update_err_checksum">Контрольна сума не збігається: завантажений файл змінено або пошкоджено</string>
+    <string name="update_err_not_apk">Завантажений файл не є дійсним APK</string>
+    <string name="update_err_other_app">Цей APK належить іншому застосунку (%1$s)</string>
+    <string name="update_err_signature">APK не підписано ключем цього застосунку; встановлення скасовано</string>
+
+    <!-- About -->
+    <string name="about_section">Про застосунок</string>
+    <string name="about_version">Talosdev Mobile %1$s (%2$d)</string>
+    <string name="about_source">Вихідний код на GitHub</string>
+    <string name="about_talos">Talos Linux (talos.dev)</string>
+    <string name="about_sponsor">Підтримати на GitHub</string>
+    <string name="about_disclaimer">Не пов\'язано з Sidero Labs. Talos — торговельна марка Sidero Labs, Inc.</string>
+
+    <!-- Import -->
+    <string name="import_title">Імпорт talosconfig</string>
+    <string name="import_help">Як створити talosconfig</string>
+    <string name="import_tab_file">Файл</string>
+    <string name="import_tab_paste">Вставити</string>
+    <string name="import_tab_qr">QR-код</string>
+    <string name="import_could_not_open">Не вдалося відкрити файл</string>
+    <string name="import_file_too_large">Файл завеликий для talosconfig</string>
+    <string name="import_file_hint">Виберіть свій talosconfig (файл ~/.talos/config на робочому комп\'ютері). Скопіюйте його на телефон через adb push, Syncthing тощо.</string>
+    <string name="import_choose_file">Вибрати файл</string>
+    <string name="import_paste_label">talosconfig YAML</string>
+    <string name="import_validate">Перевірити</string>
+    <string name="import_valid">Конфігурація дійсна</string>
+    <string name="import_context_current">%1$s (поточний)</string>
+    <string name="import_nodes_endpoints">кінцеві точки</string>
+    <string name="import_stored_encrypted">Конфігурація зберігається на цьому пристрої в зашифрованому вигляді (Android Keystore) і не потрапляє в резервні копії.</string>
+    <string name="import_import">Імпортувати</string>
+    <string name="import_camera_needed">Для сканування QR-коду talosconfig потрібен дозвіл на доступ до камери.</string>
+    <string name="import_grant_camera">Надати доступ до камери</string>
+
+    <!-- Help: creating a talosconfig -->
+    <string name="help_title">Створіть talosconfig для цього телефона</string>
+    <string name="help_intro">Згенеруйте окрему ідентичність замість копіювання свого адміністраторського ~/.talos/config: якщо телефон загубиться, його сертифікат надаватиме лише вибрані вами права, а термін його дії закінчиться сам.</string>
+    <string name="help_role_reader">Лише читання</string>
+    <string name="help_role_reader_desc">Лише моніторинг: огляд, сервіси, ресурси, журнали, etcd, KubeSpan, графіки наживо, сповіщення. Рекомендовано для телефона.</string>
+    <string name="help_role_operator">Оператор</string>
+    <string name="help_role_operator_desc">Усе, що й у режимі лише читання, а також перезавантаження та вимкнення.</string>
+    <string name="help_role_admin">Адміністратор</string>
+    <string name="help_role_admin_desc">Усе, зокрема перевірка стану кластера, експорт kubeconfig і налагоджувальні оболонки. Ставтеся до телефона як до ноутбука.</string>
+    <string name="help_step1">1. На робочому комп\'ютері підпишіть сертифікат на одному з вузлів панелі керування:</string>
+    <string name="help_step2">2. Перелічіть усі вузли, які має показувати застосунок:</string>
+    <string name="help_step3">3. Перенесіть його на телефон і імпортуйте тут:</string>
+    <string name="help_step_qr">або покажіть його як QR-код і скористайтеся вкладкою QR:</string>
+    <string name="help_cleanup">Після цього видаліть копію в папці Download (і всі зображення QR): вона містить приватний ключ. Застосунок зберігає його зашифрованим в апаратно захищеному сховищі.</string>
+    <string name="help_got_it">Зрозуміло</string>
+    <string name="help_copy_command">Копіювати команду</string>
+
+    <!-- Debug shell -->
+    <string name="debug_title">Налагоджувальна оболонка</string>
+    <string name="debug_stop">Зупинити</string>
+    <string name="debug_auth">Налагоджувальна оболонка на %1$s</string>
+    <string name="debug_intro">Запускає образ як привілейований контейнер на %1$s з доступом до хоста й відкриває в ньому термінал. Якщо образу немає на вузлі, Talos спочатку завантажить його.</string>
+    <string name="debug_image">Образ</string>
+    <string name="debug_command">Команда</string>
+    <string name="debug_start">Запустити оболонку</string>
+    <string name="debug_exited">Завершено з кодом %1$d</string>
+    <string name="debug_new_shell">Нова оболонка</string>
+    <string name="debug_connecting">Під\'єднання…</string>
+
+    <!-- App lock -->
+    <string name="lock_prompt">Розблокуйте Talosdev Mobile</string>
+    <string name="lock_locked">Talosdev Mobile заблоковано</string>
+    <string name="lock_unlock">Розблокувати</string>
+    <string name="lock_no_auth">На цьому пристрої більше немає відбитка пальця чи блокування екрана, тому блокування застосунку не може вас перевірити.</string>
+    <string name="lock_delete_config">Видалити збережений talosconfig</string>
+
+    <!-- Home-screen widget -->
+    <string name="widget_description">Стан кластера за останньою фоновою перевіркою</string>
+    <string name="widget_waiting">Очікування першої перевірки…</string>
+    <string name="widget_ready_count">%1$d/%2$d готові</string>
+    <plurals name="widget_not_ready">
+        <item quantity="one">%1$d не готовий</item>
+        <item quantity="few">%1$d не готові</item>
+        <item quantity="many">%1$d не готових</item>
+        <item quantity="other">%1$d не готових</item>
+    </plurals>
+    <plurals name="widget_down">
+        <item quantity="one">%1$d не працює</item>
+        <item quantity="few">%1$d не працюють</item>
+        <item quantity="many">%1$d не працюють</item>
+        <item quantity="other">%1$d не працює</item>
+    </plurals>
+    <string name="widget_etcd_unknown">etcd: невідомо</string>
+    <string name="widget_etcd_no_alarms">etcd: тривог немає</string>
+    <plurals name="widget_etcd_alarms">
+        <item quantity="one">etcd: %1$d тривога</item>
+        <item quantity="few">etcd: %1$d тривоги</item>
+        <item quantity="many">etcd: %1$d тривог</item>
+        <item quantity="other">etcd: %1$d тривоги</item>
+    </plurals>
+    <string name="widget_updated">оновлено %1$s</string>
+</resources>

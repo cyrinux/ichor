@@ -70,7 +70,7 @@ struct DebugShellView: View {
     /// With the app lock on, a privileged shell needs a fresh Face ID / passcode, like reboot.
     private func start() async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: "Debug shell on \(hostname)") {
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Debug shell on \(hostname)")) {
             error = failure
             return
         }
@@ -105,7 +105,7 @@ final class DebugShell {
     var statusLine: String? {
         switch state {
         case .starting(let status): status
-        case .exited(let code, let message): code >= 0 ? "Exited with code \(code)" : message
+        case .exited(let code, let message): code >= 0 ? String(localized: "Exited with code \(code)") : message
         default: nil
         }
     }
@@ -113,7 +113,7 @@ final class DebugShell {
     func start(client: TalosClient, node: String, image: String, args: String) {
         stop()
         terminal.getTerminal().resetToInitialState()
-        state = .starting("Connecting…")
+        state = .starting(String(localized: "Connecting…"))
         let bridge = Bridge(owner: self)
         self.bridge = bridge
         let terminal = terminal.getTerminal()

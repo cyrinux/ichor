@@ -1,5 +1,7 @@
 package name.levis.talosmobile.ui.overview
 
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -77,7 +79,11 @@ fun SwipeableNode(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = if (toLive) Arrangement.Start else Arrangement.End,
             ) {
-                val (icon, label) = if (toLive) Icons.Outlined.ShowChart to "Live" else Icons.Outlined.MoreHoriz to "Actions"
+                val (icon, label) = if (toLive) {
+                    Icons.Outlined.ShowChart to stringResource(R.string.overview_swipe_live)
+                } else {
+                    Icons.Outlined.MoreHoriz to stringResource(R.string.overview_swipe_actions)
+                }
                 Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
                 Spacer(Modifier.width(8.dp))
                 Text(label, color = MaterialTheme.colorScheme.onSecondaryContainer)
@@ -109,23 +115,23 @@ fun NodeActionsSheet(
                 onAction(action)
             }
             if (node.reachable) {
-                Item(Icons.Outlined.ShowChart, "Live graphs") { pick(NodeAction.LIVE) }
-                Item(Icons.Outlined.ListAlt, "Services and logs") { pick(NodeAction.SERVICES) }
-                Item(Icons.Outlined.Terminal, "Kernel log") { pick(NodeAction.KERNEL_LOG) }
-                if (canShell) Item(Icons.Outlined.Terminal, "Debug shell") { pick(NodeAction.SHELL) }
+                Item(Icons.Outlined.ShowChart, stringResource(R.string.overview_action_live_graphs)) { pick(NodeAction.LIVE) }
+                Item(Icons.Outlined.ListAlt, stringResource(R.string.overview_action_services_logs)) { pick(NodeAction.SERVICES) }
+                Item(Icons.Outlined.Terminal, stringResource(R.string.overview_action_kernel_log)) { pick(NodeAction.KERNEL_LOG) }
+                if (canShell) Item(Icons.Outlined.Terminal, stringResource(R.string.overview_action_debug_shell)) { pick(NodeAction.SHELL) }
                 if (canPower) {
-                    Item(Icons.Outlined.PowerSettingsNew, "Reboot…", danger = true) { pick(NodeAction.REBOOT) }
-                    Item(Icons.Outlined.PowerSettingsNew, "Shut down…", danger = true) { pick(NodeAction.SHUTDOWN) }
+                    Item(Icons.Outlined.PowerSettingsNew, stringResource(R.string.overview_action_reboot), danger = true) { pick(NodeAction.REBOOT) }
+                    Item(Icons.Outlined.PowerSettingsNew, stringResource(R.string.overview_action_shutdown), danger = true) { pick(NodeAction.SHUTDOWN) }
                 }
             } else {
                 Text(
-                    node.error ?: "Unreachable",
+                    node.error ?: stringResource(R.string.common_status_unreachable),
                     style = MaterialTheme.typography.bodySmall,
                     color = LocalStatusColors.current.bad,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
                 )
             }
-            Item(Icons.Outlined.ContentCopy, "Copy IP (${node.node})") {
+            Item(Icons.Outlined.ContentCopy, stringResource(R.string.overview_action_copy_ip, node.node)) {
                 copy(context, node.node)
                 onDismiss()
             }
@@ -145,5 +151,5 @@ private fun Item(icon: ImageVector, label: String, danger: Boolean = false, onCl
 
 private fun copy(context: Context, text: String) {
     val clipboard = context.getSystemService(ClipboardManager::class.java)
-    clipboard.setPrimaryClip(ClipData.newPlainText("Node IP", text))
+    clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.overview_clip_label), text))
 }

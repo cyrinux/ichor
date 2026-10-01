@@ -32,8 +32,8 @@ struct PowerSheet: View {
                         Picker("Mode", selection: $mode) {
                             ForEach(RebootMode.allCases) { mode in
                                 VStack(alignment: .leading) {
-                                    Text(mode.label)
-                                    Text(mode.details).font(.caption).foregroundStyle(mode == .force ? .red : .secondary)
+                                    Text(mode.localizedLabel)
+                                    Text(mode.localizedDetails).font(.caption).foregroundStyle(mode == .force ? .red : .secondary)
                                 }
                                 .tag(mode)
                             }
@@ -68,12 +68,12 @@ struct PowerSheet: View {
                 }
                 Section {
                     Button(role: .destructive) { onConfirm(request) } label: {
-                        Text(request.title).fontWeight(request.forced ? .bold : .regular)
+                        Text(request.localizedTitle).fontWeight(request.forced ? .bold : .regular)
                     }
                     .disabled(!matches)
                 }
             }
-            .navigationTitle("\(action.title) \(hostname)?")
+            .navigationTitle(action == .reboot ? String(localized: "Reboot \(hostname)?") : String(localized: "Shut down \(hostname)?"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }

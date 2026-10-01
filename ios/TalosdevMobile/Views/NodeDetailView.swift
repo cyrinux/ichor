@@ -24,12 +24,22 @@ struct NodeDetailView: View {
     @State private var live = LiveStats()
     @State private var showingDebugShell = false
 
-    enum Tab: String, CaseIterable { case services = "Services", resources = "Resources", live = "Live" }
+    enum Tab: String, CaseIterable {
+        case services = "Services", resources = "Resources", live = "Live"
+
+        var label: String {
+            switch self {
+            case .services: String(localized: "Services")
+            case .resources: String(localized: "Resources")
+            case .live: String(localized: "Live")
+            }
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             Picker("View", selection: $tab) {
-                ForEach(Tab.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                ForEach(Tab.allCases, id: \.self) { Text($0.label).tag($0) }
             }
             .pickerStyle(.segmented)
             .padding()
@@ -77,7 +87,7 @@ struct NodeDetailView: View {
                             Divider()
                             ForEach(PowerAction.allCases) { action in
                                 Button(role: .destructive) { powerAction = action } label: {
-                                    Label(action.title, systemImage: "power")
+                                    Label(action.localizedTitle, systemImage: "power")
                                 }
                             }
                         }
@@ -117,7 +127,7 @@ struct NodeDetailView: View {
     /// With the app lock on, destructive actions need a fresh Face ID / passcode check.
     private func perform(_ request: PowerRequest) async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: "\(request.title) \(ref.hostname)") {
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: "\(request.localizedTitle) \(ref.hostname)") {
             succeeded = false
             resultMessage = failure
             return
@@ -127,7 +137,7 @@ struct NodeDetailView: View {
         do {
             try await client.perform(request, node: ref.address)
             succeeded = true
-            resultMessage = "\(ref.hostname): \(request.title.lowercased()) requested"
+            resultMessage = String(localized: "\(ref.hostname): \(request.localizedTitle) requested")
         } catch {
             succeeded = false
             resultMessage = error.localizedDescription
@@ -147,9 +157,9 @@ private struct ServiceRow: View {
                 }
                 Spacer()
                 switch service.health {
-                case "healthy": StatusPill(label: "Healthy", color: .green)
-                case "unhealthy": StatusPill(label: "Unhealthy", color: .red)
-                default: StatusPill(label: "No check", color: .gray)
+                case "healthy": StatusPill(label: String(localized: "Healthy"), color: .green)
+                case "unhealthy": StatusPill(label: String(localized: "Unhealthy"), color: .red)
+                default: StatusPill(label: String(localized: "No check"), color: .gray)
                 }
             }
             let detail = service.health == "unhealthy" ? service.message : service.lastEvent
@@ -167,7 +177,7 @@ private struct ResourcesList: View {
         List {
             Section("System") {
                 LabeledContent("Uptime", value: uptime)
-                LabeledContent("CPU", value: resources.cpuModel.isEmpty ? "\(resources.cpuCount) threads" : "\(resources.cpuCount) × \(resources.cpuModel)")
+                LabeledContent("CPU", value: resources.cpuModel.isEmpty ? String(localized: "\(resources.cpuCount) threads") : "\(resources.cpuCount) × \(resources.cpuModel)")
                 LabeledContent("Load (1/5/15)", value: String(format: "%.2f  %.2f  %.2f", resources.load1, resources.load5, resources.load15))
                 if resources.cpuCount > 0 { UsageBar(fraction: resources.load1 / Double(resources.cpuCount)) }
             }
@@ -183,7 +193,7 @@ private struct ResourcesList: View {
                             HStack {
                                 Text(mount.mountedOn)
                                 Spacer()
-                                Text("\(formatBytes(mount.size - min(mount.available, mount.size))) / \(formatBytes(mount.size))").font(.caption)
+                                Text(verbatim: "\(formatBytes(mount.size - min(mount.available, mount.size))) / \(formatBytes(mount.size))").font(.caption)
                             }
                             Text(mount.filesystem).font(.caption.monospaced()).foregroundStyle(.secondary)
                             UsageBar(fraction: usedFraction(total: mount.size, available: mount.available))
@@ -197,6 +207,6 @@ private struct ResourcesList: View {
 
     private var uptime: String {
         guard resources.bootTime > 0 else { return "—" }
-        return formatDuration(Int64(Date().timeIntervalSince1970) - Int64(resources.bootTime))
+        return localizedDuration(Int64(Date().timeIntervalSince1970) - Int64(resources.bootTime))
     }
 }

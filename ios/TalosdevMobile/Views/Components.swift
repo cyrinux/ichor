@@ -58,9 +58,9 @@ struct StatusPill: View {
 extension NodeHealth {
     var label: String {
         switch self {
-        case .ready: "Ready"
-        case .notReady: "Not ready"
-        case .unreachable: "Unreachable"
+        case .ready: String(localized: "Ready")
+        case .notReady: String(localized: "Not ready")
+        case .unreachable: String(localized: "Unreachable")
         }
     }
 
@@ -88,14 +88,18 @@ struct RoleNotice: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("\(feature.label) needs \(feature.minimumRole)").font(.headline)
-            Text("This talosconfig has \(roles.isEmpty ? "no roles" : roles.joined(separator: ", ")). Import a talosconfig created with --roles \(feature.minimumRole) to use it.")
+            Text("\(feature.localizedLabel) needs \(feature.minimumRole)").font(.headline)
+            Text("This talosconfig has \(roleList). Import a talosconfig created with --roles \(feature.minimumRole) to use it.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var roleList: String {
+        roles.isEmpty ? String(localized: "no roles") : roles.joined(separator: ", ")
     }
 }
 
@@ -135,10 +139,10 @@ struct FreshnessFooter: View {
     static func ago(_ seconds: TimeInterval) -> String {
         let s = Int(max(seconds, 0))
         switch s {
-        case ..<60: return "just now"
-        case ..<3_600: return "\(s / 60) min ago"
-        case ..<86_400: return "\(s / 3_600) h ago"
-        default: return "\(s / 86_400) d ago"
+        case ..<60: return String(localized: "just now")
+        case ..<3_600: return String(localized: "\(s / 60) min ago")
+        case ..<86_400: return String(localized: "\(s / 3_600) h ago")
+        default: return String(localized: "\(s / 86_400) d ago")
         }
     }
 }

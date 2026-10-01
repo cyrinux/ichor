@@ -1,5 +1,7 @@
 package name.levis.talosmobile.ui.components
 
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,10 +18,13 @@ import name.levis.talosmobile.model.Feature
 fun RoleNotice(feature: Feature, roles: List<String>, modifier: Modifier = Modifier) {
     Card(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
-            Text("${feature.label} needs ${feature.minimumRole}", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.common_role_notice_title, stringResource(feature.label), feature.minimumRole), style = MaterialTheme.typography.titleSmall)
             Text(
-                "This talosconfig has ${roles.joinToString().ifEmpty { "no roles" }}. Import a talosconfig " +
-                    "created with --roles ${feature.minimumRole} to use it (see README).",
+                stringResource(
+                    R.string.common_role_notice_body,
+                    roles.joinToString().ifEmpty { stringResource(R.string.common_role_notice_no_roles) },
+                    feature.minimumRole,
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

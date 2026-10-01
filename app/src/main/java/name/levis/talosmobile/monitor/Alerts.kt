@@ -3,8 +3,22 @@ package name.levis.talosmobile.monitor
 import name.levis.talosmobile.model.NodeHealth
 import name.levis.talosmobile.util.daysUntil
 
-/** [key] identifies the subject, so a newer alert replaces the older notification. */
-data class Alert(val key: String, val title: String, val text: String, val problem: Boolean)
+/** What an alert is about; Notifications.kt turns it into translated text. */
+enum class AlertKind { NODE_READY, NODE_NOT_READY, NODE_UNREACHABLE, ETCD_ALARM, CERT_EXPIRING, CERT_EXPIRED }
+
+/**
+ * [key] identifies the subject, so a newer alert replaces the older notification.
+ * [subject]: hostname (node) or alarm name (etcd); [detail]: node address/reason or etcd member;
+ * [days]: days until (or since) the certificate expiry.
+ */
+data class Alert(
+    val key: String,
+    val kind: AlertKind,
+    val problem: Boolean,
+    val subject: String = "",
+    val detail: String = "",
+    val days: Int = 0,
+)
 
 data class Evaluation(val alerts: List<Alert>, val next: ClusterSnapshot)
 
@@ -25,7 +39,13 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
         }
         if (cur.etcdChecked && prev!!.etcdChecked) {
             (cur.etcdAlarms - prev.etcdAlarms.toSet()).forEach { alarm ->
-                alerts += Alert("etcd:$alarm", "etcd alarm raised", alarm.substringAfter(':') + " on member " + alarm.substringBefore(':'), true)
+                alerts += Alert(
+                    key = "etcd:$alarm",
+                    kind = AlertKind.ETCD_ALARM,
+                    problem = true,
+                    subject = alarm.substringAfter(':'),
+                    detail = alarm.substringBefore(':'),
+                )
             }
         }
     }
@@ -36,9 +56,8 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
     if (cur.certNotAfter > 0 && lastWarn != today) {
         val days = daysUntil(cur.certNotAfter, nowMillis)
         if (days <= CERT_WARN_DAYS) {
-            val text = if (days < 0) "The client certificate expired ${-days} days ago."
-            else "The client certificate expires in $days days. Generate a new talosconfig."
-            alerts += Alert("cert", "talosconfig certificate", text, true)
+            val kind = if (days < 0) AlertKind.CERT_EXPIRED else AlertKind.CERT_EXPIRING
+            alerts += Alert("cert", kind, problem = true, days = kotlin.math.abs(days).toInt())
             warnedDay = today
         }
     }
@@ -49,8 +68,8 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
 private fun nodeAlert(addr: String, state: NodeState): Alert {
     val reason = state.reason.ifBlank { addr }
     return when (state.health) {
-        NodeHealth.READY -> Alert("node:$addr", "${state.hostname} is ready again", addr, false)
-        NodeHealth.NOT_READY -> Alert("node:$addr", "${state.hostname} is not ready", reason, true)
-        NodeHealth.UNREACHABLE -> Alert("node:$addr", "${state.hostname} is unreachable", reason, true)
+        NodeHealth.READY -> Alert("node:$addr", AlertKind.NODE_READY, false, state.hostname, addr)
+        NodeHealth.NOT_READY -> Alert("node:$addr", AlertKind.NODE_NOT_READY, true, state.hostname, reason)
+        NodeHealth.UNREACHABLE -> Alert("node:$addr", AlertKind.NODE_UNREACHABLE, true, state.hostname, reason)
     }
 }

@@ -1,5 +1,403 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Talosdev Mobile</string>
+    <string name="app_name" translatable="false">Talosdev Mobile</string>
+
+    <!-- Common -->
+    <string name="common_back">Back</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_ok">OK</string>
+    <string name="common_retry">Retry</string>
+    <string name="common_refresh">Refresh</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_more">More</string>
+    <string name="common_check_now">Check now</string>
+    <string name="common_just_now">just now</string>
+    <plurals name="common_minutes_ago">
+        <item quantity="one">%1$d min ago</item>
+        <item quantity="other">%1$d min ago</item>
+    </plurals>
+    <plurals name="common_hours_ago">
+        <item quantity="one">%1$d h ago</item>
+        <item quantity="other">%1$d h ago</item>
+    </plurals>
+    <plurals name="common_days_ago">
+        <item quantity="one">%1$d d ago</item>
+        <item quantity="other">%1$d d ago</item>
+    </plurals>
+    <string name="common_updated_ago">Updated %1$s · %2$s</string>
+    <string name="common_refreshing_showing">Refreshing… (showing data from %1$s)</string>
+    <string name="common_status_ready">Ready</string>
+    <string name="common_status_not_ready">Not ready</string>
+    <string name="common_status_unreachable">Unreachable</string>
+    <string name="common_status_healthy">Healthy</string>
+    <string name="common_status_unhealthy">Unhealthy</string>
+    <string name="common_label_endpoints">Endpoints</string>
+    <string name="common_label_nodes">Nodes</string>
+    <string name="common_label_roles">Roles</string>
+    <string name="common_label_cert_expires">Cert expires</string>
+    <plurals name="common_cert_expired_days_ago">
+        <item quantity="one">expired %1$d day ago</item>
+        <item quantity="other">expired %1$d days ago</item>
+    </plurals>
+    <plurals name="common_cert_in_days">
+        <item quantity="one">in %1$d day</item>
+        <item quantity="other">in %1$d days</item>
+    </plurals>
+    <string name="common_duration_days_hours">%1$dd %2$dh</string>
+    <string name="common_duration_hours_minutes">%1$dh %2$dm</string>
+    <string name="common_duration_minutes">%1$dm</string>
+    <string name="common_duration_less_than_minute">&lt;1m</string>
+    <string name="common_access_admin">admin</string>
+    <string name="common_access_operator">operator</string>
+    <string name="common_access_read_only">read-only</string>
+    <string name="common_feature_power">Reboot / shutdown</string>
+    <string name="common_feature_health">Cluster health check</string>
+    <string name="common_feature_kubeconfig">Kubeconfig export</string>
+    <string name="common_feature_debug_shell">Debug shell</string>
+    <string name="common_feature_etcd_defrag">etcd defragmentation</string>
+    <string name="common_role_notice_title">%1$s needs %2$s</string>
+    <string name="common_role_notice_body">This talosconfig has %1$s. Import a talosconfig created with --roles %2$s to use it (see README).</string>
+    <string name="common_role_notice_no_roles">no roles</string>
+    <string name="common_no_config">No talosconfig imported</string>
+
+    <!-- Overview -->
+    <string name="overview_title">Cluster</string>
+    <string name="overview_action_health">Cluster health</string>
+    <string name="overview_action_settings">Settings</string>
+    <plurals name="overview_summary_ready">
+        <item quantity="one">ready</item>
+        <item quantity="other">ready</item>
+    </plurals>
+    <plurals name="overview_summary_not_ready">
+        <item quantity="one">not ready</item>
+        <item quantity="other">not ready</item>
+    </plurals>
+    <plurals name="overview_summary_unreachable">
+        <item quantity="one">unreachable</item>
+        <item quantity="other">unreachable</item>
+    </plurals>
+    <string name="overview_node_actions">Node actions</string>
+    <string name="overview_role_control_plane">control plane</string>
+    <string name="overview_update_banner">Talosdev Mobile %1$s is available — tap to update</string>
+    <string name="overview_support_title">Enjoying Talosdev Mobile?</string>
+    <string name="overview_support_body">It is free and open source. If it saves you time, you can support its development.</string>
+    <string name="overview_support_never">Don\'t ask again</string>
+    <string name="overview_support_later">Not now</string>
+    <string name="overview_support_sponsor">Sponsor</string>
+    <string name="overview_swipe_live">Live</string>
+    <string name="overview_swipe_actions">Actions</string>
+    <string name="overview_action_live_graphs">Live graphs</string>
+    <string name="overview_action_services_logs">Services and logs</string>
+    <string name="overview_action_kernel_log">Kernel log</string>
+    <string name="overview_action_debug_shell">Debug shell</string>
+    <string name="overview_action_reboot">Reboot…</string>
+    <string name="overview_action_shutdown">Shut down…</string>
+    <string name="overview_action_copy_ip">Copy IP (%1$s)</string>
+    <string name="overview_clip_label">Node IP</string>
+
+    <!-- Node detail -->
+    <string name="node_menu_kernel_log">Kernel log</string>
+    <string name="node_menu_debug_shell">Debug shell</string>
+    <string name="node_tab_services">Services</string>
+    <string name="node_tab_resources">Resources</string>
+    <string name="node_tab_live">Live</string>
+    <string name="node_service_no_check">No check</string>
+    <string name="node_section_system">System</string>
+    <string name="node_uptime">Uptime</string>
+    <string name="node_cpu">CPU</string>
+    <plurals name="node_cpu_threads">
+        <item quantity="one">%1$d thread</item>
+        <item quantity="other">%1$d threads</item>
+    </plurals>
+    <string name="node_load">Load (1/5/15)</string>
+    <string name="node_section_memory">Memory</string>
+    <string name="node_memory_used">Used</string>
+    <string name="node_section_disks">Disks</string>
+    <string name="node_live_collecting">Collecting samples every %1$d s…</string>
+    <string name="node_live_cpu">CPU</string>
+    <plurals name="node_live_cpu_threads">
+        <item quantity="one">CPU (%1$d thread)</item>
+        <item quantity="other">CPU (%1$d threads)</item>
+    </plurals>
+    <string name="node_live_memory">Memory</string>
+    <string name="node_live_memory_used">Memory (%1$s used)</string>
+    <string name="node_live_network">Network</string>
+    <string name="node_live_in">in</string>
+    <string name="node_live_out">out</string>
+    <string name="node_live_disk">Disk</string>
+    <string name="node_live_read">read</string>
+    <string name="node_live_write">write</string>
+    <string name="node_live_load">Load (1 min)</string>
+    <string name="node_live_load_series">Load</string>
+    <string name="node_live_chart_description">%1$s chart</string>
+    <string name="node_live_now">now</string>
+    <plurals name="node_live_seconds_ago">
+        <item quantity="one">%1$d s ago</item>
+        <item quantity="other">%1$d s ago</item>
+    </plurals>
+    <string name="node_live_minutes_axis">−%1$d min</string>
+
+    <!-- Power actions -->
+    <string name="power_reboot">Reboot</string>
+    <string name="power_shut_down">Shut down</string>
+    <string name="power_power_cycle">Power cycle</string>
+    <string name="power_force_reboot">Force reboot</string>
+    <string name="power_force_shut_down">Force shutdown</string>
+    <string name="power_mode_graceful">Graceful</string>
+    <string name="power_mode_graceful_desc">Stop pods and services, then reboot (kexec fast reboot when available).</string>
+    <string name="power_mode_powercycle_desc">Graceful stop, then a full firmware reboot instead of kexec.</string>
+    <string name="power_mode_force">Force</string>
+    <string name="power_mode_force_desc">Reboot immediately: pods and services are NOT stopped. Only for a stuck node.</string>
+    <string name="power_requested">%1$s: %2$s requested</string>
+    <string name="power_auth_title">%1$s %2$s</string>
+    <string name="power_confirm_title">%1$s %2$s?</string>
+    <string name="power_controlplane_warning">Control-plane node: it leaves etcd while down. Make sure the other members are healthy, or the cluster can lose quorum.</string>
+    <string name="power_shutdown_stays_off">It stays off until someone powers it on (Wake-on-LAN, IPMI or physically).</string>
+    <string name="power_type_to_confirm">Type %1$s to confirm:</string>
+    <string name="power_mode_label">Mode (talosctl reboot -m)</string>
+    <string name="power_force_label">Force (--force)</string>
+    <string name="power_force_desc">Skip the Kubernetes cordon/drain, e.g. when the Kubernetes API is down. Pods and services are still stopped.</string>
+
+    <!-- etcd -->
+    <string name="etcd_auth_defrag">Defragment etcd</string>
+    <string name="etcd_section_alarms">Alarms</string>
+    <string name="etcd_section_members">Members (%1$d)</string>
+    <string name="etcd_section_unprobed">Members not in this talosconfig</string>
+    <string name="etcd_status_error">Error</string>
+    <string name="etcd_status_errors">Errors</string>
+    <string name="etcd_status_leader">Leader</string>
+    <string name="etcd_status_learner">Learner</string>
+    <string name="etcd_status_follower">Follower</string>
+    <string name="etcd_member_id">Member ID</string>
+    <string name="etcd_db_size">DB size</string>
+    <string name="etcd_db_size_value">%1$s in use / %2$s</string>
+    <string name="etcd_raft">Raft term / index</string>
+    <string name="etcd_storage_version">Storage version</string>
+    <string name="etcd_peer_urls">Peer URLs</string>
+    <string name="etcd_defragment_member">Defragment (reclaims %1$s)</string>
+    <string name="etcd_defragmenting">Defragmenting %1$s (%2$d/%3$d)…</string>
+    <plurals name="etcd_reclaimable_across">
+        <item quantity="one">About %1$s reclaimable across %2$d member</item>
+        <item quantity="other">About %1$s reclaimable across %2$d members</item>
+    </plurals>
+    <string name="etcd_defrag_explainer">Defragmentation is resource heavy: members are done one at a time, followers first and the leader last.</string>
+    <string name="etcd_defragment_all">Defragment all</string>
+    <string name="etcd_confirm_single">Defragment %1$s?</string>
+    <plurals name="etcd_confirm_multi">
+        <item quantity="one">Defragment %1$d member?</item>
+        <item quantity="other">Defragment %1$d members?</item>
+    </plurals>
+    <string name="etcd_confirm_body">Each member is busy while it is defragmented and its requests are slower. Members are done one at a time, never together, so the cluster keeps quorum.</string>
+    <string name="etcd_confirm_order">Order: %1$s</string>
+    <string name="etcd_confirm_reclaim">About %1$s should be reclaimed.</string>
+    <string name="etcd_defragment">Defragment</string>
+    <plurals name="etcd_defrag_done">
+        <item quantity="one">Defragmented %1$d member, about %2$s reclaimed</item>
+        <item quantity="other">Defragmented %1$d members, about %2$s reclaimed</item>
+    </plurals>
+
+    <!-- KubeSpan -->
+    <plurals name="kubespan_summary">
+        <item quantity="one">KubeSpan on %1$d of %2$d node</item>
+        <item quantity="other">KubeSpan on %1$d of %2$d nodes</item>
+    </plurals>
+    <plurals name="kubespan_links_down">
+        <item quantity="one">%1$d peer link down</item>
+        <item quantity="other">%1$d peer links down</item>
+    </plurals>
+    <string name="kubespan_no_link_down">no link down</string>
+    <string name="kubespan_status_off">Off</string>
+    <string name="kubespan_status_down_count">%1$d down</string>
+    <string name="kubespan_status_up_count">%1$d/%2$d up</string>
+    <string name="kubespan_peer_up">Up</string>
+    <string name="kubespan_peer_down">Down</string>
+    <string name="kubespan_peer_unknown">Unknown</string>
+    <string name="kubespan_handshake_ago">handshake %1$s ago</string>
+
+    <!-- Logs -->
+    <string name="logs_kernel_log">Kernel log</string>
+    <string name="logs_filter">Filter</string>
+    <string name="logs_empty">No log lines.</string>
+    <string name="logs_no_match">No lines match “%1$s”.</string>
+    <string name="logs_older_omitted">… older lines omitted</string>
+
+    <!-- Health -->
+    <string name="health_title">Cluster health</string>
+    <string name="health_any_role_hint">The overview and etcd screens show node readiness and etcd status with any role.</string>
+    <string name="health_running">Running server-side checks…</string>
+    <string name="health_all_passed">All checks passed</string>
+    <string name="health_rerun">Re-run</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_context">Context</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme_auto">Auto</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_black">Black</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">System default</string>
+    <string name="settings_section_security">Security</string>
+    <string name="settings_auth_needs_lock">Set up a fingerprint or a screen lock (PIN, pattern, password) on this device first.</string>
+    <string name="settings_auth_enable_lock">Enable app lock</string>
+    <string name="settings_auth_disable_lock">Disable app lock</string>
+    <string name="settings_app_lock">App lock</string>
+    <string name="settings_app_lock_desc">Fingerprint, or device PIN/pattern as fallback, to open the app and before reboot, shutdown and kubeconfig export. Blocks screenshots unless allowed below.</string>
+    <string name="settings_allow_screenshots">Allow screenshots</string>
+    <string name="settings_allow_screenshots_desc">Also shows the app content in recent apps.</string>
+    <string name="settings_kube_section">Kubernetes</string>
+    <string name="settings_kube_auth">Export kubeconfig</string>
+    <string name="settings_kube_desc">Export an admin kubeconfig (needs an os:admin talosconfig). Anyone with this file has full access to the Kubernetes cluster: keep it private.</string>
+    <string name="settings_kube_exporting">Exporting…</string>
+    <string name="settings_kube_export">Export kubeconfig…</string>
+    <string name="settings_kube_saved">Saved. In kubenav, add a cluster from that file.</string>
+    <string name="settings_kube_open_kubenav">Open kubenav</string>
+    <string name="settings_kube_open_failed">Could not open the chosen file</string>
+    <string name="settings_section_config">Config</string>
+    <string name="settings_encryption_key">Encryption key</string>
+    <string name="settings_encryption_value">AES-256-GCM in the %1$s</string>
+    <string name="settings_key_strongbox">StrongBox security chip</string>
+    <string name="settings_key_tee">Trusted Execution Environment</string>
+    <string name="settings_key_software">software keystore</string>
+    <string name="settings_import_new">Import a new talosconfig</string>
+    <string name="settings_delete_config">Delete stored talosconfig</string>
+    <string name="settings_delete_title">Delete talosconfig?</string>
+    <string name="settings_delete_body">The encrypted config and its client key will be removed from this device.</string>
+
+    <!-- Monitoring and notifications -->
+    <string name="monitor_section">Monitoring</string>
+    <string name="monitor_notifications_blocked">Notifications are blocked for this app; allow them in Android settings.</string>
+    <string name="monitor_background_alerts">Background alerts</string>
+    <string name="monitor_background_alerts_desc">Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within %1$d days. Silent while the cluster is unreachable (e.g. off VPN).</string>
+    <string name="monitor_check_every">Check every</string>
+    <string name="monitor_interval_minutes">%1$d min</string>
+    <string name="monitor_interval_hours">%1$d h</string>
+    <string name="monitor_widget_hint">The home-screen widget uses the same checks; adding it keeps them running even with alerts off.</string>
+    <string name="monitor_channel_name">Cluster alerts</string>
+    <string name="monitor_channel_desc">Node status changes, etcd alarms and certificate expiry</string>
+    <string name="monitor_public_title">Talos cluster alert</string>
+    <string name="monitor_node_ready_again">%1$s is ready again</string>
+    <string name="monitor_node_not_ready">%1$s is not ready</string>
+    <string name="monitor_node_unreachable">%1$s is unreachable</string>
+    <string name="monitor_etcd_alarm_title">etcd alarm raised</string>
+    <string name="monitor_etcd_alarm_text">%1$s on member %2$s</string>
+    <string name="monitor_cert_title">talosconfig certificate</string>
+    <plurals name="monitor_cert_expired">
+        <item quantity="one">The client certificate expired %1$d day ago.</item>
+        <item quantity="other">The client certificate expired %1$d days ago.</item>
+    </plurals>
+    <plurals name="monitor_cert_expires">
+        <item quantity="one">The client certificate expires in %1$d day. Generate a new talosconfig.</item>
+        <item quantity="other">The client certificate expires in %1$d days. Generate a new talosconfig.</item>
+    </plurals>
+
+    <!-- Updates -->
+    <string name="update_section">Updates</string>
+    <string name="update_auto_check">Check for updates daily</string>
+    <string name="update_auto_check_desc">From GitHub releases (%1$s). The APK\'s checksum and signing key are verified, and Android asks you to confirm the install.</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_up_to_date">Talosdev Mobile %1$s is up to date.</string>
+    <string name="update_available">Version %1$s is available (%2$s).</string>
+    <string name="update_download_install">Download and install</string>
+    <string name="update_debug_build">This is a debug build, signed with a local key: release APKs cannot replace it. Uninstall it and install a release APK once to get updates.</string>
+    <string name="update_downloading">Downloading %1$s…</string>
+    <string name="update_needs_permission">Allow Talosdev Mobile to install apps, then try again.</string>
+    <string name="update_open_permission">Open install permission</string>
+    <string name="update_try_again">Try again</string>
+    <string name="update_installing">Installing… confirm in the system dialog.</string>
+    <string name="update_check_failed">Update check failed: %1$s</string>
+    <string name="update_install_failed">Install failed: %1$s</string>
+    <string name="update_install_status">status %1$d</string>
+    <string name="update_err_http">GitHub answered HTTP %1$d</string>
+    <string name="update_err_download_http">Download failed: HTTP %1$d</string>
+    <string name="update_err_too_large">Update is unexpectedly large</string>
+    <string name="update_err_checksum">Checksum mismatch: the download was altered or corrupted</string>
+    <string name="update_err_not_apk">The downloaded file is not a valid APK</string>
+    <string name="update_err_other_app">The APK is for another app (%1$s)</string>
+    <string name="update_err_signature">The APK is not signed with this app\'s key; refusing to install</string>
+
+    <!-- About -->
+    <string name="about_section">About</string>
+    <string name="about_version">Talosdev Mobile %1$s (%2$d)</string>
+    <string name="about_source">Source code on GitHub</string>
+    <string name="about_talos">Talos Linux (talos.dev)</string>
+    <string name="about_sponsor">Sponsor on GitHub</string>
+    <string name="about_disclaimer">Not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.</string>
+
+    <!-- Import -->
+    <string name="import_title">Import talosconfig</string>
+    <string name="import_help">How to create a talosconfig</string>
+    <string name="import_tab_file">File</string>
+    <string name="import_tab_paste">Paste</string>
+    <string name="import_tab_qr">QR code</string>
+    <string name="import_could_not_open">Could not open file</string>
+    <string name="import_file_too_large">File is too large to be a talosconfig</string>
+    <string name="import_file_hint">Select your talosconfig (the file at ~/.talos/config on your workstation). Copy it to the phone with adb push, Syncthing, etc.</string>
+    <string name="import_choose_file">Choose file</string>
+    <string name="import_paste_label">talosconfig YAML</string>
+    <string name="import_validate">Validate</string>
+    <string name="import_valid">Config is valid</string>
+    <string name="import_context_current">%1$s (current)</string>
+    <string name="import_nodes_endpoints">endpoints</string>
+    <string name="import_stored_encrypted">The config is stored encrypted on this device (Android Keystore) and excluded from backups.</string>
+    <string name="import_import">Import</string>
+    <string name="import_camera_needed">Camera permission is needed to scan a talosconfig QR code.</string>
+    <string name="import_grant_camera">Grant camera access</string>
+
+    <!-- Help: creating a talosconfig -->
+    <string name="help_title">Create a talosconfig for this phone</string>
+    <string name="help_intro">Generate a dedicated identity instead of copying your admin ~/.talos/config: if the phone is lost, its certificate only grants what you chose, and it expires on its own.</string>
+    <string name="help_role_reader">Read-only</string>
+    <string name="help_role_reader_desc">Monitoring only: overview, services, resources, logs, etcd, KubeSpan, live graphs, alerts. Recommended for a phone.</string>
+    <string name="help_role_operator">Operator</string>
+    <string name="help_role_operator_desc">Everything read-only, plus reboot and shutdown.</string>
+    <string name="help_role_admin">Admin</string>
+    <string name="help_role_admin_desc">Everything, including the cluster health check, kubeconfig export and debug shells. Treat the phone like a laptop.</string>
+    <string name="help_step1">1. On your workstation, sign a certificate on one control-plane node:</string>
+    <string name="help_step2">2. List every node the app should show:</string>
+    <string name="help_step3">3. Bring it to the phone, then import it here:</string>
+    <string name="help_step_qr">or show it as a QR code and use the QR tab:</string>
+    <string name="help_cleanup">Delete the copy in Download (and any QR image) afterwards: it contains the private key. The app stores it encrypted in hardware-backed storage.</string>
+    <string name="help_got_it">Got it</string>
+    <string name="help_copy_command">Copy command</string>
+
+    <!-- Debug shell -->
+    <string name="debug_title">Debug shell</string>
+    <string name="debug_stop">Stop</string>
+    <string name="debug_auth">Debug shell on %1$s</string>
+    <string name="debug_intro">Runs the image as a privileged container on %1$s, with host access, and opens a terminal in it. Talos pulls the image first if the node does not have it.</string>
+    <string name="debug_image">Image</string>
+    <string name="debug_command">Command</string>
+    <string name="debug_start">Start shell</string>
+    <string name="debug_exited">Exited with code %1$d</string>
+    <string name="debug_new_shell">New shell</string>
+    <string name="debug_connecting">Connecting…</string>
+
+    <!-- App lock -->
+    <string name="lock_prompt">Unlock Talosdev Mobile</string>
+    <string name="lock_locked">Talosdev Mobile is locked</string>
+    <string name="lock_unlock">Unlock</string>
+    <string name="lock_no_auth">This device no longer has a fingerprint or screen lock, so the app lock cannot verify you.</string>
+    <string name="lock_delete_config">Delete stored talosconfig</string>
+
+    <!-- Home-screen widget -->
     <string name="widget_description">Cluster status from the last background check</string>
+    <string name="widget_waiting">Waiting for the first check…</string>
+    <string name="widget_ready_count">%1$d/%2$d ready</string>
+    <plurals name="widget_not_ready">
+        <item quantity="one">%1$d not ready</item>
+        <item quantity="other">%1$d not ready</item>
+    </plurals>
+    <plurals name="widget_down">
+        <item quantity="one">%1$d down</item>
+        <item quantity="other">%1$d down</item>
+    </plurals>
+    <string name="widget_etcd_unknown">etcd: unknown</string>
+    <string name="widget_etcd_no_alarms">etcd: no alarms</string>
+    <plurals name="widget_etcd_alarms">
+        <item quantity="one">etcd: %1$d alarm</item>
+        <item quantity="other">etcd: %1$d alarms</item>
+    </plurals>
+    <string name="widget_updated">updated %1$s</string>
 </resources>

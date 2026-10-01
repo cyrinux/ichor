@@ -71,7 +71,39 @@ enum BackgroundMonitor {
         SharedStore.save(result.next)
         guard alertsEnabled else { return }
         let hide = UserDefaults.standard.bool(forKey: "appLockEnabled")
-        for alert in result.alerts { await post(alert, hideDetails: hide) }
+        for alert in result.alerts {
+            await post(alert, localized: localized(alert, snapshot: result.next, now: now), hideDetails: hide)
+        }
+    }
+
+    /// TalosdevMobileCore builds English alerts; this rebuilds their text in the user's
+    /// language from the alert key and the snapshot (same wording, keys in Localizable.xcstrings).
+    static func localized(_ alert: Alert, snapshot: ClusterSnapshot, now: Date) -> (title: String, text: String) {
+        let parts = alert.key.split(separator: ":", maxSplits: 1).map(String.init)
+        guard let kind = parts.first else { return (alert.title, alert.text) }
+        let subject = parts.count > 1 ? parts[1] : ""
+        switch kind {
+        case "node":
+            guard let state = snapshot.nodes[subject] else { return (alert.title, alert.text) }
+            let title = switch state.health {
+            case .ready: String(localized: "\(state.hostname) is ready again")
+            case .notReady: String(localized: "\(state.hostname) is not ready")
+            case .unreachable: String(localized: "\(state.hostname) is unreachable")
+            }
+            return (title, alert.text)
+        case "etcd":
+            let alarm = subject.split(separator: ":", maxSplits: 1).map(String.init)
+            let text = String(localized: "\(alarm.last ?? subject) on member \(alarm.first ?? "")")
+            return (String(localized: "etcd alarm raised"), text)
+        case "cert":
+            let days = daysUntil(snapshot.certNotAfter, now: now)
+            let text = days < 0
+                ? String(localized: "The client certificate expired \(-days) days ago.")
+                : String(localized: "The client certificate expires in \(days) days. Generate a new talosconfig.")
+            return (String(localized: "talosconfig certificate"), text)
+        default:
+            return (alert.title, alert.text)
+        }
     }
 
     static func requestPermission() async -> Bool {
@@ -79,10 +111,10 @@ enum BackgroundMonitor {
     }
 
     /// With the app lock on, details are hidden on the lock screen (iOS shows "Notification").
-    private static func post(_ alert: Alert, hideDetails: Bool) async {
+    private static func post(_ alert: Alert, localized: (title: String, text: String), hideDetails: Bool) async {
         let content = UNMutableNotificationContent()
-        content.title = alert.title
-        content.body = alert.text
+        content.title = localized.title
+        content.body = localized.text
         content.sound = alert.problem ? .default : nil
         if hideDetails { content.categoryIdentifier = "private" }
         let request = UNNotificationRequest(identifier: alert.key, content: content, trigger: nil)
@@ -92,7 +124,7 @@ enum BackgroundMonitor {
     /// Registers the "private" category: its previews stay hidden until the device is unlocked.
     static func registerCategories() {
         let category = UNNotificationCategory(identifier: "private", actions: [], intentIdentifiers: [],
-                                              hiddenPreviewsBodyPlaceholder: "Talos cluster alert",
+                                              hiddenPreviewsBodyPlaceholder: String(localized: "Talos cluster alert"),
                                               options: [.hiddenPreviewsShowTitle])
         UNUserNotificationCenter.current().setNotificationCategories([category])
     }

@@ -1,5 +1,8 @@
 package name.levis.talosmobile.widget
 
+import androidx.glance.LocalContext
+import name.levis.talosmobile.i18n.AppLocale
+import name.levis.talosmobile.R
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
@@ -49,6 +52,8 @@ class ClusterWidget : GlanceAppWidget() {
 
 @Composable
 private fun WidgetContent(s: ClusterSnapshot?) {
+    // Glance's context is the application's; below API 33 apply the in-app language to it.
+    val res = AppLocale.wrap(LocalContext.current)
     val onSurface = GlanceTheme.colors.onSurface
     Column(
         modifier = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.widgetBackground)
@@ -57,12 +62,12 @@ private fun WidgetContent(s: ClusterSnapshot?) {
     ) {
         if (s == null) {
             Text("Talos", style = TextStyle(color = onSurface, fontWeight = FontWeight.Bold))
-            Text("Waiting for the first check…", style = TextStyle(color = onSurface, fontSize = 12.sp))
+            Text(res.getString(R.string.widget_waiting), style = TextStyle(color = onSurface, fontSize = 12.sp))
             return@Column
         }
         Text(s.context, style = TextStyle(color = onSurface, fontSize = 12.sp))
         Text(
-            "${s.readyCount}/${s.nodes.size} ready",
+            res.getString(R.string.widget_ready_count, s.readyCount, s.nodes.size),
             style = TextStyle(
                 color = ColorProvider(if (s.readyCount == s.nodes.size) Ok else Warn),
                 fontSize = 22.sp,
@@ -71,27 +76,27 @@ private fun WidgetContent(s: ClusterSnapshot?) {
         )
         Spacer(GlanceModifier.height(2.dp))
         Row {
-            Count(s.notReadyCount, "not ready", Warn)
+            Count(res.resources.getQuantityString(R.plurals.widget_not_ready, s.notReadyCount, s.notReadyCount), s.notReadyCount, Warn)
             Spacer(GlanceModifier.width(10.dp))
-            Count(s.unreachableCount, "down", Bad)
+            Count(res.resources.getQuantityString(R.plurals.widget_down, s.unreachableCount, s.unreachableCount), s.unreachableCount, Bad)
         }
         val etcd = when {
-            !s.etcdChecked -> "etcd: unknown"
-            s.etcdAlarms.isEmpty() -> "etcd: no alarms"
-            else -> "etcd: ${s.etcdAlarms.size} alarm(s)"
+            !s.etcdChecked -> res.getString(R.string.widget_etcd_unknown)
+            s.etcdAlarms.isEmpty() -> res.getString(R.string.widget_etcd_no_alarms)
+            else -> res.resources.getQuantityString(R.plurals.widget_etcd_alarms, s.etcdAlarms.size, s.etcdAlarms.size)
         }
         Text(etcd, style = TextStyle(color = onSurface, fontSize = 12.sp))
         Text(
-            "updated " + DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(s.takenAt)),
+            res.getString(R.string.widget_updated, DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(s.takenAt))),
             style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 11.sp),
         )
     }
 }
 
 @Composable
-private fun Count(n: Int, label: String, color: androidx.compose.ui.graphics.Color) {
+private fun Count(text: String, n: Int, color: androidx.compose.ui.graphics.Color) {
     Text(
-        "$n $label",
+        text,
         style = TextStyle(
             color = if (n > 0) ColorProvider(color) else GlanceTheme.colors.onSurfaceVariant,
             fontSize = 12.sp,

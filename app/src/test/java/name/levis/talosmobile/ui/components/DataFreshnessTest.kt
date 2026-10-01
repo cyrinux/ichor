@@ -6,13 +6,13 @@ import org.junit.Test
 class DataFreshnessTest {
 
     @Test
-    fun agoWording() {
-        assertEquals("just now", ago(0))
-        assertEquals("just now", ago(59_999))
-        assertEquals("1 min ago", ago(60_000))
-        assertEquals("59 min ago", ago(3_599_000))
-        assertEquals("2 h ago", ago(2 * 3_600_000L))
-        assertEquals("3 d ago", ago(3 * 86_400_000L))
-        assertEquals("just now", ago(-5_000)) // clock skew never shows a negative age
+    fun ageUnits() {
+        assertEquals(Age(AgeUnit.JUST_NOW, 0), age(0))
+        assertEquals(Age(AgeUnit.JUST_NOW, 0), age(59_999))
+        assertEquals(Age(AgeUnit.MINUTES, 1), age(60_000))
+        assertEquals(Age(AgeUnit.MINUTES, 59), age(3_599_000))
+        assertEquals(Age(AgeUnit.HOURS, 2), age(2 * 3_600_000L))
+        assertEquals(Age(AgeUnit.DAYS, 3), age(3 * 86_400_000L))
+        assertEquals(Age(AgeUnit.JUST_NOW, 0), age(-5_000)) // clock skew never shows a negative age
     }
 }

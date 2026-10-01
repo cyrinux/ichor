@@ -16,16 +16,31 @@ fun formatBytes(bytes: Long): String {
     return String.format(Locale.ROOT, "%.1f %s", value, UNITS[unit])
 }
 
-/** Seconds -> "3d 4h", "5h 12m", "42m" or "<1m". */
-fun formatDuration(seconds: Long): String {
-    if (seconds < 60) return "<1m"
+/**
+ * Compact duration patterns (positional %1$d/%2$d), so the UI can pass translated ones
+ * (see ui/components/Durations.kt); [ENGLISH] is the default.
+ */
+data class DurationFormat(
+    val daysHours: String,
+    val hoursMinutes: String,
+    val minutes: String,
+    val lessThanMinute: String,
+) {
+    companion object {
+        val ENGLISH = DurationFormat("%1\$dd %2\$dh", "%1\$dh %2\$dm", "%1\$dm", "<1m")
+    }
+}
+
+/** Seconds -> "3d 4h", "5h 12m", "42m" or "<1m" (in English). */
+fun formatDuration(seconds: Long, format: DurationFormat = DurationFormat.ENGLISH): String {
+    if (seconds < 60) return format.lessThanMinute
     val days = seconds / 86_400
     val hours = (seconds % 86_400) / 3_600
     val minutes = (seconds % 3_600) / 60
     return when {
-        days > 0 -> "${days}d ${hours}h"
-        hours > 0 -> "${hours}h ${minutes}m"
-        else -> "${minutes}m"
+        days > 0 -> String.format(Locale.ROOT, format.daysHours, days, hours)
+        hours > 0 -> String.format(Locale.ROOT, format.hoursMinutes, hours, minutes)
+        else -> String.format(Locale.ROOT, format.minutes, minutes)
     }
 }
 

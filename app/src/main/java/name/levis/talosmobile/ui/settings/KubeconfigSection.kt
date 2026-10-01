@@ -1,5 +1,7 @@
 package name.levis.talosmobile.ui.settings
 
+import name.levis.talosmobile.R
+import androidx.compose.ui.res.stringResource
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -34,7 +36,10 @@ import name.levis.talosmobile.security.authenticate
 import name.levis.talosmobile.security.findFragmentActivity
 import name.levis.talosmobile.ui.components.SectionTitle
 import name.levis.talosmobile.ui.theme.LocalStatusColors
-import name.levis.talosmobile.ui.userMessage
+import name.levis.talosmobile.ui.LocalizedException
+import name.levis.talosmobile.ui.UiText
+import name.levis.talosmobile.ui.asString
+import name.levis.talosmobile.ui.uiText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -45,7 +50,7 @@ private sealed interface ExportState {
     data object Idle : ExportState
     data object Working : ExportState
     data object Saved : ExportState
-    data class Failed(val message: String) : ExportState
+    data class Failed(val message: UiText) : ExportState
 }
 
 /**
@@ -71,7 +76,7 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
                 withContext(Dispatchers.IO) { writeText(context, uri, kubeconfig) }
             }.fold(
                 onSuccess = { ExportState.Saved },
-                onFailure = { ExportState.Failed(it.userMessage()) },
+                onFailure = { ExportState.Failed(it.uiText()) },
             )
         }
     }
@@ -83,19 +88,18 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
             return
         }
         scope.launch {
-            when (val auth = authenticate(activity, "Export kubeconfig")) {
+            when (val auth = authenticate(activity, context.getString(R.string.settings_kube_auth))) {
                 AuthResult.Success -> saver.launch("kubeconfig-$contextName.yaml")
-                is AuthResult.Failure -> state = ExportState.Failed(auth.message)
+                is AuthResult.Failure -> state = ExportState.Failed(UiText.Raw(auth.message))
             }
         }
     }
 
-    SectionTitle("Kubernetes")
+    SectionTitle(stringResource(R.string.settings_kube_section))
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                "Export an admin kubeconfig (needs an os:admin talosconfig). Anyone with this file has " +
-                    "full access to the Kubernetes cluster: keep it private.",
+                stringResource(R.string.settings_kube_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -105,20 +109,20 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
                 onClick = ::export,
                 enabled = state != ExportState.Working,
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text(if (state == ExportState.Working) "Exporting…" else "Export kubeconfig…") }
+            ) { Text(stringResource(if (state == ExportState.Working) R.string.settings_kube_exporting else R.string.settings_kube_export)) }
             when (val s = state) {
-                ExportState.Saved -> Text("Saved. In kubenav, add a cluster from that file.", style = MaterialTheme.typography.bodySmall)
-                is ExportState.Failed -> Text(s.message, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
+                ExportState.Saved -> Text(stringResource(R.string.settings_kube_saved), style = MaterialTheme.typography.bodySmall)
+                is ExportState.Failed -> Text(s.message.asString(), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
                 else -> Unit
             }
-            OutlinedButton(onClick = { openKubenav(context) }, modifier = Modifier.fillMaxWidth()) { Text("Open kubenav") }
+            OutlinedButton(onClick = { openKubenav(context) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_kube_open_kubenav)) }
         }
     }
 }
 
 private fun writeText(context: Context, uri: Uri, text: String) {
     // "wt" truncates when the user picked an existing file.
-    val stream = context.contentResolver.openOutputStream(uri, "wt") ?: error("Could not open the chosen file")
+    val stream = context.contentResolver.openOutputStream(uri, "wt") ?: throw LocalizedException(UiText.Res(R.string.settings_kube_open_failed))
     stream.use { it.write(text.encodeToByteArray()) }
 }
 

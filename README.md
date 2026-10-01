@@ -260,6 +260,30 @@ The secrets it sets:
 
 Without them, the release APK is unsigned.
 
+## Languages
+
+The app is available in English, French, Spanish, Ukrainian, German and Italian.
+
+- **Android:** pick a language in Settings → Appearance → Language. On Android 13+, the
+  system's per-app language settings work too.
+- **iOS:** iOS sets the app's language in the Settings app; the app's Language row opens it.
+
+When you add or change a UI string, translate it in all six languages:
+
+| Platform | English source | Translations |
+|---|---|---|
+| Android | `app/src/main/res/values/strings.xml` | `values-{fr,es,uk,de,it}/strings.xml` |
+| iOS | `ios/**/Localizable.xcstrings` | the same catalogs (String Catalogs) |
+
+Then run:
+
+```sh
+just i18n-check   # also part of `just check` and the iOS CI build
+```
+
+It fails on a missing translation, or when placeholders (`%1$s`, `%@`, `%lld`) differ from
+English.
+
 ## License
 
 Apache License 2.0; see [LICENSE](LICENSE) and [NOTICE](NOTICE) for third-party components.

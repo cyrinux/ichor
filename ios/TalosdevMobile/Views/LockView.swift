@@ -30,7 +30,7 @@ struct LockView: View {
     }
 
     private func unlock() async {
-        if let message = await Authenticator.authenticate(reason: "Unlock Talosdev Mobile") {
+        if let message = await Authenticator.authenticate(reason: String(localized: "Unlock Talosdev Mobile")) {
             error = message
         } else {
             model.unlock()

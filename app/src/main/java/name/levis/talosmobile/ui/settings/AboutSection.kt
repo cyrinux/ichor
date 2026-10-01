@@ -1,5 +1,7 @@
 package name.levis.talosmobile.ui.settings
 
+import name.levis.talosmobile.R
+import androidx.compose.ui.res.stringResource
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -30,19 +32,19 @@ import name.levis.talosmobile.ui.components.SectionTitle
 @Composable
 fun AboutSection() {
     val context = LocalContext.current
-    SectionTitle("About")
+    SectionTitle(stringResource(R.string.about_section))
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
             Text(
-                "Talosdev Mobile ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                stringResource(R.string.about_version, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
-            Link(Icons.Outlined.Code, "Source code on GitHub") { openUrl(context, REPO_URL_BASE + BuildConfig.UPDATE_REPO) }
-            Link(Icons.AutoMirrored.Outlined.OpenInNew, "Talos Linux (talos.dev)") { openUrl(context, TALOS_URL) }
-            Link(Icons.Outlined.FavoriteBorder, "Sponsor on GitHub") { openUrl(context, SPONSOR_URL) }
+            Link(Icons.Outlined.Code, stringResource(R.string.about_source)) { openUrl(context, REPO_URL_BASE + BuildConfig.UPDATE_REPO) }
+            Link(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.about_talos)) { openUrl(context, TALOS_URL) }
+            Link(Icons.Outlined.FavoriteBorder, stringResource(R.string.about_sponsor)) { openUrl(context, SPONSOR_URL) }
             Text(
-                "Not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.",
+                stringResource(R.string.about_disclaimer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),

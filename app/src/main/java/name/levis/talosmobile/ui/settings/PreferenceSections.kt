@@ -1,6 +1,16 @@
 package name.levis.talosmobile.ui.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import name.levis.talosmobile.R
+import name.levis.talosmobile.i18n.AppLocale
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -38,15 +48,67 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppearanceSection(prefs: UiPreferences) {
     val mode by prefs.themeMode.collectAsStateWithLifecycle()
-    SectionTitle("Appearance")
+    SectionTitle(stringResource(R.string.settings_section_appearance))
     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
         ThemeMode.entries.forEachIndexed { index, option ->
             SegmentedButton(
                 selected = option == mode,
                 onClick = { prefs.setThemeMode(option) },
                 shape = SegmentedButtonDefaults.itemShape(index, ThemeMode.entries.size),
-            ) { Text(option.label) }
+            ) { Text(stringResource(option.label)) }
         }
+    }
+    LanguageSetting(prefs)
+}
+
+/** In-app language: system default or one of the translations, each named in its own language. */
+@Composable
+private fun LanguageSetting(prefs: UiPreferences) {
+    val context = LocalContext.current
+    val current by prefs.language.collectAsStateWithLifecycle()
+    var picking by remember { mutableStateOf(false) }
+    val systemLabel = stringResource(R.string.settings_language_system)
+    fun labelOf(tag: String) = AppLocale.languages.firstOrNull { it.tag == tag }?.nativeName ?: systemLabel
+
+    Card(Modifier.fillMaxWidth().clickable { picking = true }) {
+        Column(Modifier.padding(16.dp)) {
+            Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.titleMedium)
+            Text(
+                labelOf(current),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+
+    if (picking) {
+        val options = listOf(AppLocale.SYSTEM) + AppLocale.languages.map { it.tag }
+        AlertDialog(
+            onDismissRequest = { picking = false },
+            title = { Text(stringResource(R.string.settings_language)) },
+            text = {
+                Column(Modifier.selectableGroup()) {
+                    options.forEach { tag ->
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .selectable(selected = tag == current, role = Role.RadioButton, onClick = {
+                                    picking = false
+                                    if (tag != current) {
+                                        prefs.setLanguage(tag)
+                                        if (AppLocale.apply(context, tag)) context.findFragmentActivity()?.recreate()
+                                    }
+                                })
+                                .padding(vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(selected = tag == current, onClick = null)
+                            Text(labelOf(tag), modifier = Modifier.padding(start = 12.dp))
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { picking = false }) { Text(stringResource(R.string.common_cancel)) } },
+        )
     }
 }
 
@@ -63,7 +125,7 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences) {
     fun authThen(title: String, action: () -> Unit) {
         val activity = context.findFragmentActivity() ?: return
         if (!canAuthenticate(context)) {
-            error = "Set up a fingerprint or a screen lock (PIN, pattern, password) on this device first."
+            error = context.getString(R.string.settings_auth_needs_lock)
             return
         }
         scope.launch {
@@ -78,17 +140,16 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences) {
     }
 
     fun toggle(target: Boolean) {
-        authThen(if (target) "Enable app lock" else "Disable app lock") { appLock.setEnabled(target) }
+        authThen(context.getString(if (target) R.string.settings_auth_enable_lock else R.string.settings_auth_disable_lock)) { appLock.setEnabled(target) }
     }
 
-    SectionTitle("Security")
+    SectionTitle(stringResource(R.string.settings_section_security))
     Card(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("App lock", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.settings_app_lock), style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "Fingerprint, or device PIN/pattern as fallback, to open the app and before reboot, " +
-                        "shutdown and kubeconfig export. Blocks screenshots unless allowed below.",
+                    stringResource(R.string.settings_app_lock_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -98,9 +159,9 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences) {
         if (enabled) {
             Row(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Allow screenshots", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.settings_allow_screenshots), style = MaterialTheme.typography.titleSmall)
                     Text(
-                        "Also shows the app content in recent apps.",
+                        stringResource(R.string.settings_allow_screenshots_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -108,7 +169,7 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences) {
                 Switch(
                     checked = allowScreenshots,
                     onCheckedChange = { allow ->
-                        if (allow) authThen("Allow screenshots") { prefs.setAllowScreenshots(true) }
+                        if (allow) authThen(context.getString(R.string.settings_allow_screenshots)) { prefs.setAllowScreenshots(true) }
                         else prefs.setAllowScreenshots(false)
                     },
                     modifier = Modifier.padding(start = 12.dp),

@@ -1,5 +1,7 @@
 package name.levis.talosmobile.ui.settings
 
+import name.levis.talosmobile.R
+import androidx.compose.ui.res.stringResource
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -54,7 +56,7 @@ fun MonitoringSection(app: TalosApp) {
             error = null
             apply(true)
         } else {
-            error = "Notifications are blocked for this app; allow them in Android settings."
+            error = context.getString(R.string.monitor_notifications_blocked)
         }
     }
 
@@ -66,23 +68,21 @@ fun MonitoringSection(app: TalosApp) {
         }
     }
 
-    SectionTitle("Monitoring")
+    SectionTitle(stringResource(R.string.monitor_section))
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Background alerts", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.monitor_background_alerts), style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "Notifies when a node goes down or recovers, on new etcd alarms, and daily when the " +
-                            "client certificate expires within $CERT_WARN_DAYS days. Silent while the cluster " +
-                            "is unreachable (e.g. off VPN).",
+                        stringResource(R.string.monitor_background_alerts_desc, CERT_WARN_DAYS),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Switch(checked = enabled, onCheckedChange = ::toggle, modifier = Modifier.padding(start = 12.dp))
             }
-            Text("Check every", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.monitor_check_every), style = MaterialTheme.typography.labelLarge)
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 MonitorStore.INTERVALS.forEachIndexed { index, minutes ->
                     SegmentedButton(
@@ -92,16 +92,16 @@ fun MonitoringSection(app: TalosApp) {
                             app.launchSync()
                         },
                         shape = SegmentedButtonDefaults.itemShape(index, MonitorStore.INTERVALS.size),
-                    ) { Text(if (minutes < 60) "$minutes min" else "${minutes / 60} h") }
+                    ) { Text(if (minutes < 60) stringResource(R.string.monitor_interval_minutes, minutes.toInt()) else stringResource(R.string.monitor_interval_hours, (minutes / 60).toInt())) }
                 }
             }
             Text(
-                "The home-screen widget uses the same checks; adding it keeps them running even with alerts off.",
+                stringResource(R.string.monitor_widget_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             OutlinedButton(onClick = { app.launchSync(runNow = true) }, modifier = Modifier.fillMaxWidth()) {
-                Text("Check now")
+                Text(stringResource(R.string.common_check_now))
             }
             error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
         }

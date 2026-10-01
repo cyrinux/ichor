@@ -1,5 +1,8 @@
 package name.levis.talosmobile.ui.importconfig
 
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,10 +36,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 
 /** What each Talos role unlocks in this app (rules from Talos v1.14). */
-private enum class PhoneRole(val label: String, val role: String, val unlocks: String) {
-    READER("Read-only", "os:reader", "Monitoring only: overview, services, resources, logs, etcd, KubeSpan, live graphs, alerts. Recommended for a phone."),
-    OPERATOR("Operator", "os:operator", "Everything read-only, plus reboot and shutdown."),
-    ADMIN("Admin", "os:admin", "Everything, including the cluster health check, kubeconfig export and debug shells. Treat the phone like a laptop."),
+private enum class PhoneRole(@StringRes val label: Int, val role: String, @StringRes val unlocks: Int) {
+    READER(R.string.help_role_reader, "os:reader", R.string.help_role_reader_desc),
+    OPERATOR(R.string.help_role_operator, "os:operator", R.string.help_role_operator_desc),
+    ADMIN(R.string.help_role_admin, "os:admin", R.string.help_role_admin_desc),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,12 +49,11 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create a talosconfig for this phone") },
+        title = { Text(stringResource(R.string.help_title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    "Generate a dedicated identity instead of copying your admin ~/.talos/config: if the phone " +
-                        "is lost, its certificate only grants what you chose, and it expires on its own.",
+                    stringResource(R.string.help_intro),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -60,28 +62,27 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
                             selected = r == role,
                             onClick = { role = r },
                             shape = SegmentedButtonDefaults.itemShape(i, PhoneRole.entries.size),
-                        ) { Text(r.label) }
+                        ) { Text(stringResource(r.label)) }
                     }
                 }
-                Text(role.unlocks, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(role.unlocks), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-                Step("1. On your workstation, sign a certificate on one control-plane node:")
+                Step(stringResource(R.string.help_step1))
                 Command("talosctl -n <control-plane-ip> config new talosconfig-phone --roles ${role.role} --crt-ttl 8760h")
-                Step("2. List every node the app should show:")
+                Step(stringResource(R.string.help_step2))
                 Command("talosctl --talosconfig talosconfig-phone config node <node-1> <node-2> …")
-                Step("3. Bring it to the phone, then import it here:")
+                Step(stringResource(R.string.help_step3))
                 Command("adb push talosconfig-phone /sdcard/Download/")
-                Step("or show it as a QR code and use the QR tab:")
+                Step(stringResource(R.string.help_step_qr))
                 Command("qrencode -t ansiutf8 -r talosconfig-phone")
                 Text(
-                    "Delete the copy in Download (and any QR image) afterwards: it contains the private key. " +
-                        "The app stores it encrypted in hardware-backed storage.",
+                    stringResource(R.string.help_cleanup),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Got it") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.help_got_it)) } },
     )
 }
 
@@ -102,7 +103,7 @@ private fun Command(command: String) {
                 modifier = Modifier.weight(1f).padding(vertical = 8.dp),
             )
             IconButton(onClick = { clipboard.setText(AnnotatedString(command)) }) {
-                Icon(Icons.Outlined.ContentCopy, contentDescription = "Copy command")
+                Icon(Icons.Outlined.ContentCopy, contentDescription = stringResource(R.string.help_copy_command))
             }
         }
     }

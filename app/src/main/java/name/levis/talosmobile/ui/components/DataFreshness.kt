@@ -11,7 +11,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.delay
+import name.levis.talosmobile.R
 import name.levis.talosmobile.ui.UiState
 import java.text.DateFormat
 import java.util.Date
@@ -32,9 +35,9 @@ fun DataFreshness(state: UiState<*>, modifier: Modifier = Modifier, edgeToEdge: 
     }
     val time = DateFormat.getTimeInstance(DateFormat.MEDIUM).format(Date(loaded.fetchedAt))
     val text = if (loaded.refreshing) {
-        "Refreshing… (showing data from $time)"
+        stringResource(R.string.common_refreshing_showing, time)
     } else {
-        "Updated $time · ${ago(now - loaded.fetchedAt)}"
+        stringResource(R.string.common_updated_ago, time, agoText(age(now - loaded.fetchedAt)))
     }
     Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = modifier.fillMaxWidth()) {
         Text(
@@ -47,12 +50,25 @@ fun DataFreshness(state: UiState<*>, modifier: Modifier = Modifier, edgeToEdge: 
     }
 }
 
-internal fun ago(millis: Long): String {
+/** How long ago, in the largest whole unit; formatted with plurals by [agoText]. */
+internal data class Age(val unit: AgeUnit, val count: Int)
+
+internal enum class AgeUnit { JUST_NOW, MINUTES, HOURS, DAYS }
+
+internal fun age(millis: Long): Age {
     val seconds = millis.coerceAtLeast(0) / 1000
     return when {
-        seconds < 60 -> "just now"
-        seconds < 3_600 -> "${seconds / 60} min ago"
-        seconds < 86_400 -> "${seconds / 3_600} h ago"
-        else -> "${seconds / 86_400} d ago"
+        seconds < 60 -> Age(AgeUnit.JUST_NOW, 0)
+        seconds < 3_600 -> Age(AgeUnit.MINUTES, (seconds / 60).toInt())
+        seconds < 86_400 -> Age(AgeUnit.HOURS, (seconds / 3_600).toInt())
+        else -> Age(AgeUnit.DAYS, (seconds / 86_400).toInt())
     }
+}
+
+@Composable
+private fun agoText(age: Age): String = when (age.unit) {
+    AgeUnit.JUST_NOW -> stringResource(R.string.common_just_now)
+    AgeUnit.MINUTES -> pluralStringResource(R.plurals.common_minutes_ago, age.count, age.count)
+    AgeUnit.HOURS -> pluralStringResource(R.plurals.common_hours_ago, age.count, age.count)
+    AgeUnit.DAYS -> pluralStringResource(R.plurals.common_days_ago, age.count, age.count)
 }

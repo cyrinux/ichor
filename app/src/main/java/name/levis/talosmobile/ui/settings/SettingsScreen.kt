@@ -1,5 +1,7 @@
 package name.levis.talosmobile.ui.settings
 
+import name.levis.talosmobile.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -67,8 +69,8 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                title = { Text(stringResource(R.string.settings_title)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
             )
         },
     ) { padding ->
@@ -76,7 +78,7 @@ fun SettingsScreen(
             Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            SectionTitle("Context")
+            SectionTitle(stringResource(R.string.settings_section_context))
             config?.summary?.contexts?.forEach { ctx ->
                 val selected = ctx.name == config?.activeContext
                 Card(
@@ -90,10 +92,10 @@ fun SettingsScreen(
                         RadioButton(selected = selected, onClick = null)
                         Column(Modifier.padding(start = 12.dp)) {
                             Text(ctx.name, style = MaterialTheme.typography.titleMedium)
-                            InfoRow("Endpoints", ctx.endpoints.joinToString("\n"), mono = true)
-                            InfoRow("Nodes", "${ctx.nodes.size.takeIf { it > 0 } ?: ctx.endpoints.size}")
-                            InfoRow("Roles", ctx.roles.joinToString())
-                            InfoRow("Cert expires", certExpiry(ctx.certNotAfter))
+                            InfoRow(stringResource(R.string.common_label_endpoints), ctx.endpoints.joinToString("\n"), mono = true)
+                            InfoRow(stringResource(R.string.common_label_nodes), "${ctx.nodes.size.takeIf { it > 0 } ?: ctx.endpoints.size}")
+                            InfoRow(stringResource(R.string.common_label_roles), ctx.roles.joinToString())
+                            InfoRow(stringResource(R.string.common_label_cert_expires), certExpiry(ctx.certNotAfter))
                         }
                     }
                 }
@@ -103,13 +105,13 @@ fun SettingsScreen(
             MonitoringSection(LocalContext.current.applicationContext as TalosApp)
             UpdateSection((LocalContext.current.applicationContext as TalosApp).updateManager)
             config?.activeSummary?.takeIf { it.allows(Feature.KUBECONFIG) }?.let { KubeconfigSection(talos, appLock, it) }
-            SectionTitle("Config")
+            SectionTitle(stringResource(R.string.settings_section_config))
             configs.keyProtection()?.let {
-                InfoRow("Encryption key", "AES-256-GCM in the ${it.label}")
+                InfoRow(stringResource(R.string.settings_encryption_key), stringResource(R.string.settings_encryption_value, stringResource(it.label)))
             }
-            OutlinedButton(onClick = onReimport, modifier = Modifier.fillMaxWidth()) { Text("Import a new talosconfig") }
+            OutlinedButton(onClick = onReimport, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_import_new)) }
             OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
-                Text("Delete stored talosconfig")
+                Text(stringResource(R.string.settings_delete_config))
             }
             AboutSection()
         }
@@ -118,8 +120,8 @@ fun SettingsScreen(
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            title = { Text("Delete talosconfig?") },
-            text = { Text("The encrypted config and its client key will be removed from this device.") },
+            title = { Text(stringResource(R.string.settings_delete_title)) },
+            text = { Text(stringResource(R.string.settings_delete_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     confirmDelete = false
@@ -127,9 +129,9 @@ fun SettingsScreen(
                         configs.clear()
                         onCleared()
                     }
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.common_delete)) }
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.common_cancel)) } },
         )
     }
 }

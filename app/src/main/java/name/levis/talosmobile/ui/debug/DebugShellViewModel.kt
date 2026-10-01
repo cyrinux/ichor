@@ -1,5 +1,7 @@
 package name.levis.talosmobile.ui.debug
 
+import name.levis.talosmobile.ui.UiText
+import name.levis.talosmobile.R
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +16,7 @@ import org.connectbot.terminal.TerminalEmulatorFactory
 
 sealed interface ShellState {
     data object Setup : ShellState
-    data class Starting(val status: String) : ShellState
+    data class Starting(val status: UiText) : ShellState
     data object Running : ShellState
     data class Exited(val code: Long, val message: String) : ShellState
 }
@@ -46,13 +48,13 @@ class DebugShellViewModel(private val configs: ConfigRepository, private val nod
         val stored = configs.config.value ?: return
         stop()
         emulator.clearScreen()
-        _state.value = ShellState.Starting("Connecting…")
+        _state.value = ShellState.Starting(UiText.Res(R.string.debug_connecting))
         session = Talosmobile.startDebugShell(
             stored.yaml, stored.activeContext, node, image, args,
             size.first.toLong(), size.second.toLong(),
             object : DebugListener {
                 override fun onStatus(message: String) {
-                    _state.value = ShellState.Starting(message)
+                    _state.value = ShellState.Starting(UiText.Raw(message)) // from the Go core
                 }
 
                 override fun onOutput(data: ByteArray) {

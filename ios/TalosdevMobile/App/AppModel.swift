@@ -6,7 +6,14 @@ enum ThemeMode: String, CaseIterable, Identifiable {
     case auto, light, dark, black
 
     var id: String { rawValue }
-    var label: String { rawValue.capitalized }
+    var label: String {
+        switch self {
+        case .auto: String(localized: "Auto")
+        case .light: String(localized: "Light")
+        case .dark: String(localized: "Dark")
+        case .black: String(localized: "Black")
+        }
+    }
 }
 
 /// App-wide state: the imported config, the active context, preferences and the lock.

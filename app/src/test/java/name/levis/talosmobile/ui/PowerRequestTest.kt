@@ -1,5 +1,6 @@
 package name.levis.talosmobile.ui
 
+import name.levis.talosmobile.R
 import name.levis.talosmobile.ui.node.PowerAction
 import name.levis.talosmobile.ui.node.PowerRequest
 import name.levis.talosmobile.ui.node.RebootMode
@@ -17,11 +18,11 @@ class PowerRequestTest {
 
     @Test
     fun titlesNameExactlyWhatHappens() {
-        assertEquals("Reboot", PowerRequest(PowerAction.REBOOT).title)
-        assertEquals("Power cycle", PowerRequest(PowerAction.REBOOT, RebootMode.POWERCYCLE).title)
-        assertEquals("Force reboot", PowerRequest(PowerAction.REBOOT, RebootMode.FORCE).title)
-        assertEquals("Shut down", PowerRequest(PowerAction.SHUTDOWN).title)
-        assertEquals("Force shut down", PowerRequest(PowerAction.SHUTDOWN, forceShutdown = true).title)
+        assertEquals(R.string.power_reboot, PowerRequest(PowerAction.REBOOT).title)
+        assertEquals(R.string.power_power_cycle, PowerRequest(PowerAction.REBOOT, RebootMode.POWERCYCLE).title)
+        assertEquals(R.string.power_force_reboot, PowerRequest(PowerAction.REBOOT, RebootMode.FORCE).title)
+        assertEquals(R.string.power_shut_down, PowerRequest(PowerAction.SHUTDOWN).title)
+        assertEquals(R.string.power_force_shut_down, PowerRequest(PowerAction.SHUTDOWN, forceShutdown = true).title)
     }
 
     @Test

@@ -1,5 +1,8 @@
 package name.levis.talosmobile.ui.live
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -87,12 +90,16 @@ fun LiveStatsTab(
     ) {
         state.error?.let { item { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) } }
         if (points.isEmpty()) {
-            item { Text("Collecting samples every ${POLL_SECONDS}s…", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            item { Text(stringResource(R.string.node_live_collecting, POLL_SECONDS.toInt()), color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
         item {
             LiveChart(
-                title = "CPU" + if (state.cpuCount > 0) " (${state.cpuCount} threads)" else "",
-                series = listOf(Series("CPU", colors.first, points.map { it.cpuPercent })),
+                title = if (state.cpuCount > 0) {
+                    pluralStringResource(R.plurals.node_live_cpu_threads, state.cpuCount, state.cpuCount)
+                } else {
+                    stringResource(R.string.node_live_cpu)
+                },
+                series = listOf(Series(stringResource(R.string.node_live_cpu), colors.first, points.map { it.cpuPercent })),
                 times = times,
                 format = { String.format(Locale.ROOT, "%.0f%%", it) },
                 gridColor = colors.grid,
@@ -101,8 +108,9 @@ fun LiveStatsTab(
         }
         item {
             LiveChart(
-                title = "Memory" + (points.lastOrNull()?.let { " (${formatBytes(it.memUsed)} used)" } ?: ""),
-                series = listOf(Series("Memory", colors.first, points.map { it.memPercent })),
+                title = points.lastOrNull()?.let { stringResource(R.string.node_live_memory_used, formatBytes(it.memUsed)) }
+                    ?: stringResource(R.string.node_live_memory),
+                series = listOf(Series(stringResource(R.string.node_live_memory), colors.first, points.map { it.memPercent })),
                 times = times,
                 format = { String.format(Locale.ROOT, "%.0f%%", it) },
                 gridColor = colors.grid,
@@ -111,10 +119,10 @@ fun LiveStatsTab(
         }
         item {
             LiveChart(
-                title = "Network",
+                title = stringResource(R.string.node_live_network),
                 series = listOf(
-                    Series("in", colors.first, points.map { it.rxPerSec }),
-                    Series("out", colors.second, points.map { it.txPerSec }),
+                    Series(stringResource(R.string.node_live_in), colors.first, points.map { it.rxPerSec }),
+                    Series(stringResource(R.string.node_live_out), colors.second, points.map { it.txPerSec }),
                 ),
                 times = times,
                 format = ::rate,
@@ -123,10 +131,10 @@ fun LiveStatsTab(
         }
         item {
             LiveChart(
-                title = "Disk",
+                title = stringResource(R.string.node_live_disk),
                 series = listOf(
-                    Series("read", colors.first, points.map { it.readPerSec }),
-                    Series("write", colors.second, points.map { it.writePerSec }),
+                    Series(stringResource(R.string.node_live_read), colors.first, points.map { it.readPerSec }),
+                    Series(stringResource(R.string.node_live_write), colors.second, points.map { it.writePerSec }),
                 ),
                 times = times,
                 format = ::rate,
@@ -135,8 +143,8 @@ fun LiveStatsTab(
         }
         item {
             LiveChart(
-                title = "Load (1 min)",
-                series = listOf(Series("Load", colors.first, points.map { it.load1 })),
+                title = stringResource(R.string.node_live_load),
+                series = listOf(Series(stringResource(R.string.node_live_load_series), colors.first, points.map { it.load1 })),
                 times = times,
                 format = { String.format(Locale.ROOT, "%.2f", it) },
                 gridColor = colors.grid,

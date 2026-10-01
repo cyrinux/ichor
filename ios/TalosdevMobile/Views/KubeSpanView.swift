@@ -13,7 +13,7 @@ struct KubeSpanView: View {
             List {
                 let down = overview.nodes.reduce(0) { $0 + $1.down }
                 Section {
-                    Text("KubeSpan on \(overview.nodes.filter(\.enabled).count) of \(overview.nodes.count) nodes" + (down > 0 ? " · \(down) peer link(s) down" : " · no link down"))
+                    Text(summary(overview, down: down))
                         .foregroundStyle(down > 0 ? .red : .secondary)
                 }
                 ForEach(overview.nodes) { node in
@@ -25,13 +25,13 @@ struct KubeSpanView: View {
                             Text(hostnames[node.node] ?? node.node)
                             Spacer()
                             if node.error != nil {
-                                StatusPill(label: "Unreachable", color: .red)
+                                StatusPill(label: String(localized: "Unreachable"), color: .red)
                             } else if !node.enabled {
-                                StatusPill(label: "Off", color: .gray)
+                                StatusPill(label: String(localized: "Off"), color: .gray)
                             } else if node.down > 0 {
-                                StatusPill(label: "\(node.down) down", color: .red)
+                                StatusPill(label: String(localized: "\(node.down) down"), color: .red)
                             } else {
-                                StatusPill(label: "\(node.up)/\(node.peers.count) up", color: .green)
+                                StatusPill(label: String(localized: "\(node.up)/\(node.peers.count) up"), color: .green)
                             }
                         }
                     }
@@ -40,8 +40,14 @@ struct KubeSpanView: View {
             .refreshable { await load() }
             .themedBackground()
         }
-        .navigationTitle("KubeSpan")
+        .navigationTitle(Text(verbatim: "KubeSpan"))
         .task { await load() }
+    }
+
+    private func summary(_ overview: KubeSpanOverview, down: Int) -> String {
+        let enabled = String(localized: "KubeSpan on \(overview.nodes.filter(\.enabled).count) of \(overview.nodes.count) nodes")
+        let links = down > 0 ? String(localized: "\(down) peer links down") : String(localized: "no link down")
+        return "\(enabled) · \(links)"
     }
 
     private func load() async {
@@ -62,9 +68,9 @@ private struct PeerRow: View {
                 Text(peer.label.isEmpty ? String(peer.publicKey.prefix(12)) : peer.label)
                 Spacer()
                 switch peer.state {
-                case "up": StatusPill(label: "Up", color: .green)
-                case "down": StatusPill(label: "Down", color: .red)
-                default: StatusPill(label: "Unknown", color: .gray)
+                case "up": StatusPill(label: String(localized: "Up"), color: .green)
+                case "down": StatusPill(label: String(localized: "Down"), color: .red)
+                default: StatusPill(label: String(localized: "Unknown"), color: .gray)
                 }
             }
             Text(details).font(.caption).foregroundStyle(.secondary)
@@ -75,7 +81,8 @@ private struct PeerRow: View {
         var parts: [String] = []
         if !peer.endpoint.isEmpty { parts.append(peer.endpoint) }
         if peer.lastHandshake > 0 {
-            parts.append("handshake \(formatDuration(Int64(Date().timeIntervalSince1970) - peer.lastHandshake)) ago")
+            let age = localizedDuration(Int64(Date().timeIntervalSince1970) - peer.lastHandshake)
+            parts.append(String(localized: "handshake \(age) ago"))
         }
         parts.append("↓ \(formatBytes(peer.rx)) ↑ \(formatBytes(peer.tx))")
         return parts.joined(separator: "  ·  ")

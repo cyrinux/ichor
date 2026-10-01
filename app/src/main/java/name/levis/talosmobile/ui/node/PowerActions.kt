@@ -1,5 +1,8 @@
 package name.levis.talosmobile.ui.node
 
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,26 +35,23 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import name.levis.talosmobile.data.TalosRepository
 import name.levis.talosmobile.ui.theme.LocalStatusColors
-import name.levis.talosmobile.ui.userMessage
+import name.levis.talosmobile.ui.UiText
+import name.levis.talosmobile.ui.uiText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-enum class PowerAction(val verb: String, val title: String) {
-    REBOOT("reboot", "Reboot"),
-    SHUTDOWN("shut down", "Shut down"),
+enum class PowerAction(@StringRes val title: Int) {
+    REBOOT(R.string.power_reboot),
+    SHUTDOWN(R.string.power_shut_down),
 }
 
 /** `talosctl reboot -m`; descriptions follow the Talos v1.14 reboot sequence. */
-enum class RebootMode(val cli: String, val label: String, val description: String) {
-    DEFAULT("default", "Graceful", "Stop pods and services, then reboot (kexec fast reboot when available)."),
-    POWERCYCLE("powercycle", "Power cycle", "Graceful stop, then a full firmware reboot instead of kexec."),
-    FORCE(
-        "force",
-        "Force",
-        "Reboot immediately: pods and services are NOT stopped. Only for a stuck node.",
-    ),
+enum class RebootMode(val cli: String, @StringRes val label: Int, @StringRes val description: Int) {
+    DEFAULT("default", R.string.power_mode_graceful, R.string.power_mode_graceful_desc),
+    POWERCYCLE("powercycle", R.string.power_power_cycle, R.string.power_mode_powercycle_desc),
+    FORCE("force", R.string.power_mode_force, R.string.power_mode_force_desc),
 }
 
 data class PowerRequest(
@@ -67,10 +67,11 @@ data class PowerRequest(
         }
 
     /** Button / auth-prompt label, e.g. "Force reboot", "Power cycle", "Shut down". */
-    val title: String
-        get() = when {
-            action == PowerAction.REBOOT && rebootMode == RebootMode.POWERCYCLE -> "Power cycle"
-            forced -> "Force ${action.title.lowercase()}"
+    val title: Int
+        @StringRes get() = when {
+            action == PowerAction.REBOOT && rebootMode == RebootMode.POWERCYCLE -> R.string.power_power_cycle
+            forced && action == PowerAction.REBOOT -> R.string.power_force_reboot
+            forced -> R.string.power_force_shut_down
             else -> action.title
         }
 }
@@ -79,7 +80,7 @@ sealed interface PowerState {
     data object Idle : PowerState
     data class Running(val request: PowerRequest) : PowerState
     data class Done(val request: PowerRequest) : PowerState
-    data class Failed(val message: String) : PowerState
+    data class Failed(val message: UiText) : PowerState
 }
 
 class PowerViewModel(private val talos: TalosRepository, private val node: String) : ViewModel() {
@@ -97,7 +98,7 @@ class PowerViewModel(private val talos: TalosRepository, private val node: Strin
                 }
             }.fold(
                 onSuccess = { PowerState.Done(request) },
-                onFailure = { PowerState.Failed(it.userMessage()) },
+                onFailure = { PowerState.Failed(it.uiText()) },
             )
         }
     }
@@ -128,7 +129,7 @@ fun PowerConfirmDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("${action.title} $hostname?") },
+        title = { Text(stringResource(R.string.power_confirm_title, stringResource(action.title), hostname)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 when (action) {
@@ -137,19 +138,18 @@ fun PowerConfirmDialog(
                 }
                 if (role == "controlplane") {
                     Text(
-                        "Control-plane node: it leaves etcd while down. Make sure the other members are " +
-                            "healthy, or the cluster can lose quorum.",
+                        stringResource(R.string.power_controlplane_warning),
                         color = colors.warn,
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
                 if (action == PowerAction.SHUTDOWN) {
                     Text(
-                        "It stays off until someone powers it on (Wake-on-LAN, IPMI or physically).",
+                        stringResource(R.string.power_shutdown_stays_off),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
-                Text("Type $hostname to confirm:", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.power_type_to_confirm, hostname), style = MaterialTheme.typography.bodyMedium)
                 OutlinedTextField(
                     value = typed,
                     onValueChange = { typed = it },
@@ -162,13 +162,13 @@ fun PowerConfirmDialog(
         confirmButton = {
             TextButton(onClick = { onConfirm(request) }, enabled = matches) {
                 Text(
-                    request.title,
+                    stringResource(request.title),
                     color = if (matches) colors.bad else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = if (request.forced) FontWeight.Bold else null,
                 )
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }
 
@@ -176,7 +176,7 @@ fun PowerConfirmDialog(
 private fun RebootModePicker(selected: RebootMode, onSelect: (RebootMode) -> Unit) {
     val colors = LocalStatusColors.current
     Column(Modifier.selectableGroup()) {
-        Text("Mode (talosctl reboot -m)", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.power_mode_label), style = MaterialTheme.typography.labelLarge)
         RebootMode.entries.forEach { mode ->
             Row(
                 Modifier.fillMaxWidth()
@@ -186,9 +186,9 @@ private fun RebootModePicker(selected: RebootMode, onSelect: (RebootMode) -> Uni
             ) {
                 RadioButton(selected = mode == selected, onClick = null)
                 Column(Modifier.padding(start = 8.dp)) {
-                    Text(mode.label, style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(mode.label), style = MaterialTheme.typography.bodyLarge)
                     Text(
-                        mode.description,
+                        stringResource(mode.description),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (mode == RebootMode.FORCE) colors.bad else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -205,10 +205,9 @@ private fun ForceShutdownSwitch(checked: Boolean, onChange: (Boolean) -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text("Force (--force)", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.power_force_label), style = MaterialTheme.typography.bodyLarge)
             Text(
-                "Skip the Kubernetes cordon/drain, e.g. when the Kubernetes API is down. Pods and services " +
-                    "are still stopped.",
+                stringResource(R.string.power_force_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

@@ -16,7 +16,7 @@ struct OverviewView: View {
                 Section {
                     Summary(nodes: overview.nodes)
                 } header: {
-                    if let access = model.activeSummary?.accessLabel { Text(access) }
+                    if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
                 }
                 Section {
                     ForEach(sorted(overview.nodes)) { node in
@@ -116,7 +116,7 @@ private struct Summary: View {
             ForEach(NodeHealth.allCases, id: \.self) { health in
                 let count = nodes.filter { $0.health == health }.count
                 VStack(alignment: .leading) {
-                    Text("\(count)").font(.title.bold()).foregroundStyle(count > 0 ? health.color : .secondary)
+                    Text(verbatim: "\(count)").font(.title.bold()).foregroundStyle(count > 0 ? health.color : .secondary)
                     Text(health.label.lowercased()).font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -138,12 +138,12 @@ private struct NodeRow: View {
                 StatusPill(label: node.health.label, color: node.health.color)
             }
             if node.reachable {
-                Text([node.role == "controlplane" ? "control plane" : node.role, node.version, node.stage, node.arch]
+                Text([node.role == "controlplane" ? String(localized: "control plane") : node.role, node.version, node.stage, node.arch]
                     .filter { !$0.isEmpty }.joined(separator: "  ·  "))
                     .font(.caption)
             }
             ForEach(node.unmetConditions, id: \.self) {
-                Text("\($0.name): \($0.reason)").font(.caption).foregroundStyle(.orange)
+                Text(verbatim: "\($0.name): \($0.reason)").font(.caption).foregroundStyle(.orange)
             }
             if let error = node.error, !error.isEmpty {
                 Text(error).font(.caption).foregroundStyle(.red)

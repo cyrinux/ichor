@@ -25,7 +25,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|stats NODE|kubespan|kubeconfig|etcd|health|parse"))
+		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|stats NODE|processes NODE|machineconfig NODE|kubespan|kubeconfig|etcd|health|parse"))
 	}
 
 	raw, err := os.ReadFile(*configPath)
@@ -56,6 +56,11 @@ func main() {
 		if kc, err = talosmobile.Kubeconfig(cfg, *contextName); err == nil {
 			out = fmt.Sprintf("kubeconfig: %d bytes, starts with %q", len(kc), firstLine(kc))
 		}
+	case "machineconfig":
+		// Redacted: never print secrets from the probe.
+		out, err = talosmobile.NodeMachineConfig(cfg, *contextName, flag.Arg(1), false)
+	case "processes":
+		out, err = talosmobile.NodeProcesses(cfg, *contextName, flag.Arg(1))
 	case "kubespan":
 		out, err = talosmobile.KubeSpanStatus(cfg, *contextName)
 	case "stats":

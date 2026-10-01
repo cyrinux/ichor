@@ -1,5 +1,7 @@
 package name.levis.talosmobile.ui.health
 
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -99,8 +101,8 @@ fun HealthScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Cluster health") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                title = { Text(stringResource(R.string.health_title)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
             )
         },
     ) { padding ->
@@ -108,7 +110,7 @@ fun HealthScreen(
             if (!allowed) {
                 RoleNotice(Feature.HEALTH, summary?.roles.orEmpty())
                 Text(
-                    "The overview and etcd screens show node readiness and etcd status with any role.",
+                    stringResource(R.string.health_any_role_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -133,18 +135,18 @@ private fun HealthHeader(state: HealthState, onRerun: () -> Unit) {
         when {
             state.running -> {
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                Text("Running server-side checks…", Modifier.weight(1f))
+                Text(stringResource(R.string.health_running), Modifier.weight(1f))
             }
             state.error == null && state.finished -> {
-                StatusPill("Healthy", colors.ok)
-                Text("All checks passed", Modifier.weight(1f))
+                StatusPill(stringResource(R.string.common_status_healthy), colors.ok)
+                Text(stringResource(R.string.health_all_passed), Modifier.weight(1f))
             }
             else -> {
-                StatusPill("Unhealthy", colors.bad)
+                StatusPill(stringResource(R.string.common_status_unhealthy), colors.bad)
                 Text("", Modifier.weight(1f))
             }
         }
-        if (!state.running) Button(onClick = onRerun) { Text("Re-run") }
+        if (!state.running) Button(onClick = onRerun) { Text(stringResource(R.string.health_rerun)) }
     }
     state.error?.let { Text(it, color = colors.bad, style = MaterialTheme.typography.bodyMedium) }
 }

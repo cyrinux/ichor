@@ -10,7 +10,7 @@ struct MonitoringSection: View {
             Button("Check now") {
                 Task {
                     await BackgroundMonitor.check()
-                    message = "Checked. The widget is updated."
+                    message = String(localized: "Checked. The widget is updated.")
                 }
             }
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
@@ -24,7 +24,7 @@ struct MonitoringSection: View {
     private func set(_ on: Bool) {
         Task {
             if on, !(await BackgroundMonitor.requestPermission()) {
-                message = "Notifications are off for Talosdev Mobile: allow them in the Settings app."
+                message = String(localized: "Notifications are off for Talosdev Mobile: allow them in the Settings app.")
                 return
             }
             BackgroundMonitor.alertsEnabled = on

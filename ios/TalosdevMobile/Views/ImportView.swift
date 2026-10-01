@@ -24,6 +24,14 @@ struct ImportView: View {
     enum Source: String, CaseIterable, Identifiable {
         case file = "File", paste = "Paste", qr = "QR code"
         var id: String { rawValue }
+
+        var label: String {
+            switch self {
+            case .file: String(localized: "File")
+            case .paste: String(localized: "Paste")
+            case .qr: String(localized: "QR code")
+            }
+        }
     }
 
     var body: some View {
@@ -57,7 +65,7 @@ struct ImportView: View {
     private var picker: some View {
         VStack(spacing: 16) {
             Picker("Source", selection: $source) {
-                ForEach(Source.allCases) { Text($0.rawValue).tag($0) }
+                ForEach(Source.allCases) { Text($0.label).tag($0) }
             }
             .pickerStyle(.segmented)
 
@@ -92,7 +100,7 @@ struct ImportView: View {
         do {
             let data = try Data(contentsOf: url)
             guard data.count <= 256 * 1024, let text = String(data: data, encoding: .utf8) else {
-                error = "This file is not a talosconfig."
+                error = String(localized: "This file is not a talosconfig.")
                 return
             }
             validate(text)
@@ -139,11 +147,11 @@ private struct PreviewList: View {
                 Text("Config is valid").font(.headline)
             }
             ForEach(summary.contexts) { ctx in
-                Section(ctx.name + (ctx.name == summary.current ? " (current)" : "")) {
+                Section(ctx.name == summary.current ? String(localized: "\(ctx.name) (current)") : ctx.name) {
                     LabeledContent("Endpoints", value: ctx.endpoints.joined(separator: "\n"))
-                    LabeledContent("Nodes", value: ctx.nodes.isEmpty ? "endpoints" : "\(ctx.nodes.count)")
+                    LabeledContent("Nodes", value: ctx.nodes.isEmpty ? String(localized: "endpoints") : "\(ctx.nodes.count)")
                     LabeledContent("Roles", value: ctx.roles.joined(separator: ", "))
-                    LabeledContent("Cert expires", value: certExpiryText(ctx.certNotAfter))
+                    LabeledContent("Cert expires", value: localizedCertExpiry(ctx.certNotAfter))
                 }
             }
             Section {

@@ -1,5 +1,8 @@
 package name.levis.talosmobile.ui.node
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -52,7 +55,7 @@ import name.levis.talosmobile.ui.components.UsageBar
 import name.levis.talosmobile.ui.factory
 import name.levis.talosmobile.ui.theme.LocalStatusColors
 import name.levis.talosmobile.util.formatBytes
-import name.levis.talosmobile.util.formatDuration
+import name.levis.talosmobile.ui.components.localizedDuration
 import name.levis.talosmobile.util.usedFraction
 import java.util.Locale
 import androidx.compose.foundation.layout.Box
@@ -125,12 +128,12 @@ fun NodeDetailScreen(
     LaunchedEffect(powerState) {
         when (val s = powerState) {
             is PowerState.Done -> {
-                snackbar.showSnackbar("$hostname: ${s.request.title.lowercase()} requested")
+                snackbar.showSnackbar(context.getString(R.string.power_requested, hostname, context.getString(s.request.title)))
                 power.dismiss()
                 onBack()
             }
             is PowerState.Failed -> {
-                snackbar.showSnackbar(s.message)
+                snackbar.showSnackbar(s.message.resolve(context))
                 power.dismiss()
             }
             else -> Unit
@@ -146,7 +149,7 @@ fun NodeDetailScreen(
             return
         }
         scope.launch {
-            when (val auth = authenticate(activity, "${request.title} $hostname")) {
+            when (val auth = authenticate(activity, context.getString(R.string.power_auth_title, context.getString(request.title), hostname))) {
                 AuthResult.Success -> power.run(request)
                 is AuthResult.Failure -> snackbar.showSnackbar(auth.message)
             }
@@ -164,17 +167,17 @@ fun NodeDetailScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
                 },
                 actions = {
                     if (powerState is PowerState.Running) {
                         CircularProgressIndicator(Modifier.size(20.dp).padding(end = 4.dp), strokeWidth = 2.dp)
                     }
                     Box {
-                        IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, "More") }
+                        IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.common_more)) }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             DropdownMenuItem(
-                                text = { Text("Kernel log") },
+                                text = { Text(stringResource(R.string.node_menu_kernel_log)) },
                                 leadingIcon = { Icon(Icons.Outlined.Terminal, contentDescription = null) },
                                 onClick = {
                                     menuOpen = false
@@ -183,7 +186,7 @@ fun NodeDetailScreen(
                             )
                             if (canDebug) {
                                 DropdownMenuItem(
-                                    text = { Text("Debug shell") },
+                                    text = { Text(stringResource(R.string.node_menu_debug_shell)) },
                                     leadingIcon = { Icon(Icons.Outlined.Terminal, contentDescription = null) },
                                     onClick = {
                                         menuOpen = false
@@ -196,7 +199,7 @@ fun NodeDetailScreen(
                                 HorizontalDivider()
                                 PowerAction.entries.forEach { action ->
                                     DropdownMenuItem(
-                                        text = { Text(action.title) },
+                                        text = { Text(stringResource(action.title)) },
                                         leadingIcon = { Icon(Icons.Outlined.PowerSettingsNew, contentDescription = null) },
                                         enabled = powerState !is PowerState.Running,
                                         onClick = {
@@ -214,9 +217,9 @@ fun NodeDetailScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             TabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Services") })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Resources") })
-                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text("Live") })
+                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.node_tab_services)) })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.node_tab_resources)) })
+                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.node_tab_live)) })
             }
             when (tab) {
                 0 -> ServicesTab(node, onService = { onLogs(it) })
@@ -272,9 +275,9 @@ private fun ServiceRow(svc: ServiceInfo, onClick: () -> Unit) {
                     Text(svc.state, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 when (svc.health) {
-                    "healthy" -> StatusPill("Healthy", colors.ok)
-                    "unhealthy" -> StatusPill("Unhealthy", colors.bad)
-                    else -> StatusPill("No check", colors.muted)
+                    "healthy" -> StatusPill(stringResource(R.string.common_status_healthy), colors.ok)
+                    "unhealthy" -> StatusPill(stringResource(R.string.common_status_unhealthy), colors.bad)
+                    else -> StatusPill(stringResource(R.string.node_service_no_check), colors.muted)
                 }
             }
             val detail = svc.message?.takeIf { svc.health == "unhealthy" } ?: svc.lastEvent
@@ -313,15 +316,20 @@ private fun ResourcesTab(
 
 @Composable
 private fun ResourcesContent(r: NodeResources) {
-    val uptime = if (r.bootTime > 0) formatDuration(System.currentTimeMillis() / 1000 - r.bootTime) else "—"
+    val uptime = if (r.bootTime > 0) localizedDuration(System.currentTimeMillis() / 1000 - r.bootTime) else "—"
+    val cpu = if (r.cpuModel.isBlank()) {
+        pluralStringResource(R.plurals.node_cpu_threads, r.cpuCount, r.cpuCount)
+    } else {
+        "${r.cpuCount} × ${r.cpuModel}"
+    }
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    SectionTitle("System")
-                    InfoRow("Uptime", uptime)
-                    InfoRow("CPU", if (r.cpuModel.isBlank()) "${r.cpuCount} threads" else "${r.cpuCount} × ${r.cpuModel}")
-                    InfoRow("Load (1/5/15)", String.format(Locale.ROOT, "%.2f  %.2f  %.2f", r.load1, r.load5, r.load15))
+                    SectionTitle(stringResource(R.string.node_section_system))
+                    InfoRow(stringResource(R.string.node_uptime), uptime)
+                    InfoRow(stringResource(R.string.node_cpu), cpu)
+                    InfoRow(stringResource(R.string.node_load), String.format(Locale.ROOT, "%.2f  %.2f  %.2f", r.load1, r.load5, r.load15))
                     if (r.cpuCount > 0) UsageBar((r.load1 / r.cpuCount).toFloat().coerceIn(0f, 1f), Modifier.padding(top = 4.dp))
                 }
             }
@@ -329,9 +337,9 @@ private fun ResourcesContent(r: NodeResources) {
         item {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    SectionTitle("Memory")
+                    SectionTitle(stringResource(R.string.node_section_memory))
                     val used = r.memTotal - r.memAvailable
-                    InfoRow("Used", "${formatBytes(used)} / ${formatBytes(r.memTotal)}")
+                    InfoRow(stringResource(R.string.node_memory_used), "${formatBytes(used)} / ${formatBytes(r.memTotal)}")
                     UsageBar(usedFraction(r.memTotal, r.memAvailable), Modifier.padding(top = 4.dp))
                 }
             }
@@ -340,7 +348,7 @@ private fun ResourcesContent(r: NodeResources) {
             item {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SectionTitle("Disks")
+                        SectionTitle(stringResource(R.string.node_section_disks))
                         r.mounts.forEach { m ->
                             Column {
                                 Row {
@@ -365,3 +373,4 @@ private fun ResourcesContent(r: NodeResources) {
         }
     }
 }
+

@@ -61,6 +61,10 @@ build-release:
 check:
     ./build.sh check
 
+# Every UI string translated (fr, es, uk, de, it) with matching placeholders, Android and iOS.
+i18n-check:
+    python3 scripts/check-translations.py
+
 # Go core only: fast, native, no Android toolchain.
 test:
     cd go && go test ./...

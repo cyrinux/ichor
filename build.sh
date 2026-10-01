@@ -62,6 +62,7 @@ build_inside() {
 
   cd "$ROOT/go"
   if [[ "$VARIANT" == "check" ]]; then
+    python3 "$ROOT/scripts/check-translations.py"
     unformatted="$(gofmt -l .)"
     [[ -z "$unformatted" ]] || { echo "gofmt needed:" >&2; echo "$unformatted" >&2; exit 1; }
     go vet ./...

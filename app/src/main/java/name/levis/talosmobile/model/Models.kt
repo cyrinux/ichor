@@ -1,6 +1,8 @@
 package name.levis.talosmobile.model
 
+import androidx.annotation.StringRes
 import kotlinx.serialization.Serializable
+import name.levis.talosmobile.R
 
 // Mirrors the JSON produced by the Go core (go/talosmobile).
 
@@ -20,14 +22,14 @@ data class ContextSummary(
 )
 
 /** Features gated by Talos RBAC (rules from Talos v1.14 machined.go). */
-enum class Feature(val label: String, val roles: Set<String>) {
-    POWER("Reboot / shutdown", setOf("os:admin", "os:operator")),
+enum class Feature(@StringRes val label: Int, val roles: Set<String>) {
+    POWER(R.string.common_feature_power, setOf("os:admin", "os:operator")),
     // The server-side health check fetches a Kubernetes admin kubeconfig with the caller's role.
-    HEALTH("Cluster health check", setOf("os:admin")),
-    KUBECONFIG("Kubeconfig export", setOf("os:admin")),
+    HEALTH(R.string.common_feature_health, setOf("os:admin")),
+    KUBECONFIG(R.string.common_feature_kubeconfig, setOf("os:admin")),
     // DebugService/ContainerRun is admin-only in Talos.
-    DEBUG_SHELL("Debug shell", setOf("os:admin")),
-    ETCD_DEFRAG("etcd defragmentation", setOf("os:admin", "os:operator")),
+    DEBUG_SHELL(R.string.common_feature_debug_shell, setOf("os:admin")),
+    ETCD_DEFRAG(R.string.common_feature_etcd_defrag, setOf("os:admin", "os:operator")),
     ;
 
     val minimumRole: String get() = if ("os:operator" in roles) "os:operator" else "os:admin"
@@ -36,11 +38,11 @@ enum class Feature(val label: String, val roles: Set<String>) {
 fun ContextSummary.allows(feature: Feature): Boolean = roles.any { it in feature.roles }
 
 /** Short access level for the UI: "admin", "operator" or "read-only". */
-val ContextSummary.accessLabel: String
-    get() = when {
-        "os:admin" in roles -> "admin"
-        "os:operator" in roles -> "operator"
-        else -> "read-only"
+val ContextSummary.accessLabel: Int
+    @StringRes get() = when {
+        "os:admin" in roles -> R.string.common_access_admin
+        "os:operator" in roles -> R.string.common_access_operator
+        else -> R.string.common_access_read_only
     }
 
 @Serializable

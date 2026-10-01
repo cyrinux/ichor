@@ -1,5 +1,9 @@
 package name.levis.talosmobile.ui.components
 
+import name.levis.talosmobile.ui.asString
+import name.levis.talosmobile.ui.UiText
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,7 +44,7 @@ fun LoadingBox(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ErrorBox(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+fun ErrorBox(message: UiText, onRetry: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.Center,
@@ -53,9 +57,9 @@ fun ErrorBox(message: String, onRetry: () -> Unit, modifier: Modifier = Modifier
             modifier = Modifier.size(40.dp),
         )
         Spacer(Modifier.height(12.dp))
-        Text(message, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium)
+        Text(message.asString(), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(16.dp))
-        Button(onClick = onRetry) { Text("Retry") }
+        Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
     }
 }
 
@@ -83,9 +87,9 @@ fun StatusPill(label: String, color: Color, modifier: Modifier = Modifier) {
 fun NodeHealthPill(health: NodeHealth, modifier: Modifier = Modifier) {
     val colors = LocalStatusColors.current
     when (health) {
-        NodeHealth.READY -> StatusPill("Ready", colors.ok, modifier)
-        NodeHealth.NOT_READY -> StatusPill("Not ready", colors.warn, modifier)
-        NodeHealth.UNREACHABLE -> StatusPill("Unreachable", colors.bad, modifier)
+        NodeHealth.READY -> StatusPill(stringResource(R.string.common_status_ready), colors.ok, modifier)
+        NodeHealth.NOT_READY -> StatusPill(stringResource(R.string.common_status_not_ready), colors.warn, modifier)
+        NodeHealth.UNREACHABLE -> StatusPill(stringResource(R.string.common_status_unreachable), colors.bad, modifier)
     }
 }
 

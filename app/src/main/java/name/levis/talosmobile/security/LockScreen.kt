@@ -1,5 +1,7 @@
 package name.levis.talosmobile.security
 
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,7 +46,7 @@ fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit) {
     fun prompt() {
         val activity = context.findFragmentActivity() ?: return
         scope.launch {
-            when (val result = authenticate(activity, "Unlock Talosdev Mobile")) {
+            when (val result = authenticate(activity, context.getString(R.string.lock_prompt))) {
                 AuthResult.Success -> onUnlocked()
                 is AuthResult.Failure -> error = result.message
             }
@@ -64,20 +66,20 @@ fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit) {
             Icon(Icons.Outlined.Lock, contentDescription = null, modifier = Modifier.size(48.dp))
             Spacer(Modifier.height(16.dp))
             if (available) {
-                Text("Talosdev Mobile is locked", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.lock_locked), style = MaterialTheme.typography.titleMedium)
                 error?.let {
                     Spacer(Modifier.height(8.dp))
                     Text(it, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
                 }
                 Spacer(Modifier.height(16.dp))
-                Button(onClick = ::prompt) { Text("Unlock") }
+                Button(onClick = ::prompt) { Text(stringResource(R.string.lock_unlock)) }
             } else {
                 Text(
-                    "This device no longer has a fingerprint or screen lock, so the app lock cannot verify you.",
+                    stringResource(R.string.lock_no_auth),
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(16.dp))
-                OutlinedButton(onClick = onWipe) { Text("Delete stored talosconfig") }
+                OutlinedButton(onClick = onWipe) { Text(stringResource(R.string.lock_delete_config)) }
             }
         }
     }

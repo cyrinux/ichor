@@ -1,15 +1,18 @@
 package name.levis.talosmobile.data
 
+import android.content.Context
 import android.content.SharedPreferences
+import androidx.annotation.StringRes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import name.levis.talosmobile.R
 
-enum class ThemeMode(val label: String) {
-    AUTO("Auto"),
-    LIGHT("Light"),
-    DARK("Dark"),
-    BLACK("Black"),
+enum class ThemeMode(@StringRes val label: Int) {
+    AUTO(R.string.settings_theme_auto),
+    LIGHT(R.string.settings_theme_light),
+    DARK(R.string.settings_theme_dark),
+    BLACK(R.string.settings_theme_black),
     ;
 
     /** Whether this mode renders dark, given the system setting (used by AUTO). */
@@ -32,6 +35,10 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _allowScreenshots = MutableStateFlow(prefs.getBoolean(KEY_SCREENSHOTS, false))
     val allowScreenshots: StateFlow<Boolean> = _allowScreenshots.asStateFlow()
 
+    /** In-app language as a BCP-47 tag; "" follows the system. */
+    private val _language = MutableStateFlow(prefs.getString(KEY_LANGUAGE, "").orEmpty())
+    val language: StateFlow<String> = _language.asStateFlow()
+
     fun setAllowScreenshots(allow: Boolean) {
         prefs.edit().putBoolean(KEY_SCREENSHOTS, allow).apply()
         _allowScreenshots.value = allow
@@ -42,8 +49,20 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _themeMode.value = mode
     }
 
-    private companion object {
-        const val KEY_THEME = "theme_mode"
-        const val KEY_SCREENSHOTS = "allow_screenshots"
+    /** Committed synchronously: the activity is recreated right after and reads it back. */
+    fun setLanguage(tag: String) {
+        prefs.edit().putString(KEY_LANGUAGE, tag).commit()
+        _language.value = tag
+    }
+
+    companion object {
+        const val FILE = "talosdev-mobile-ui"
+        private const val KEY_THEME = "theme_mode"
+        private const val KEY_SCREENSHOTS = "allow_screenshots"
+        private const val KEY_LANGUAGE = "language"
+
+        /** Reads the language without the app singletons (usable from attachBaseContext). */
+        fun storedLanguage(context: Context): String =
+            context.getSharedPreferences(FILE, Context.MODE_PRIVATE).getString(KEY_LANGUAGE, "").orEmpty()
     }
 }

@@ -9,7 +9,7 @@ sealed interface UiState<out T> {
         val refreshing: Boolean = false,
         val fetchedAt: Long = System.currentTimeMillis(),
     ) : UiState<T>
-    data class Failed(val message: String) : UiState<Nothing>
+    data class Failed(val message: UiText) : UiState<Nothing>
 }
 
 fun Throwable.userMessage(): String = message?.takeIf { it.isNotBlank() } ?: javaClass.simpleName

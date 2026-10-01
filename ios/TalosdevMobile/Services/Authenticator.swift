@@ -1,3 +1,4 @@
+import Foundation
 import LocalAuthentication
 
 /// Face ID / Touch ID with the device passcode as fallback.
@@ -12,7 +13,7 @@ enum Authenticator {
         let context = LAContext()
         do {
             return try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason)
-                ? nil : "Authentication failed"
+                ? nil : String(localized: "Authentication failed")
         } catch {
             return error.localizedDescription
         }

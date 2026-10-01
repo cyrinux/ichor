@@ -4,6 +4,13 @@ import Security
 enum ConfigProtection: String {
     case secureEnclave = "Secure Enclave"
     case keychain = "Keychain (no Secure Enclave on this device)"
+
+    var label: String {
+        switch self {
+        case .secureEnclave: String(localized: "Secure Enclave")
+        case .keychain: String(localized: "Keychain (no Secure Enclave on this device)")
+        }
+    }
 }
 
 /// The talosconfig is encrypted (ECIES, AES-GCM) to a P-256 key generated inside the Secure

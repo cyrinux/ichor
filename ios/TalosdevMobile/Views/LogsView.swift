@@ -38,7 +38,7 @@ struct LogsView: View {
             }
         }
         .searchable(text: $filter, prompt: "Filter")
-        .navigationTitle(service ?? "Kernel log")
+        .navigationTitle(service ?? String(localized: "Kernel log"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

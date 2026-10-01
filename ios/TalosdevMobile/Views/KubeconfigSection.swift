@@ -12,7 +12,7 @@ struct KubeconfigSection: View {
 
     var body: some View {
         Section {
-            Button(busy ? "Exporting…" : "Export kubeconfig…") { Task { await export() } }
+            Button(busy ? String(localized: "Exporting…") : String(localized: "Export kubeconfig…")) { Task { await export() } }
                 .disabled(busy)
             Link("Get kubenav", destination: URL(string: "https://apps.apple.com/app/kubenav/id1494512160")!)
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
@@ -24,7 +24,7 @@ struct KubeconfigSection: View {
         .fileExporter(isPresented: $exporting, document: document, contentType: .yaml,
                       defaultFilename: "kubeconfig-\(model.activeContext).yaml") { result in
             switch result {
-            case .success: message = "Saved."
+            case .success: message = String(localized: "Saved.")
             case .failure(let error): message = error.localizedDescription
             }
             document = nil // don't keep the credential around
@@ -33,7 +33,7 @@ struct KubeconfigSection: View {
 
     private func export() async {
         guard let client = model.client else { return }
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: "Export kubeconfig") {
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Export kubeconfig")) {
             message = failure
             return
         }

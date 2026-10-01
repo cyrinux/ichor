@@ -1,5 +1,8 @@
 package name.levis.talosmobile.ui.debug
 
+import name.levis.talosmobile.ui.asString
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -71,7 +74,7 @@ fun DebugShellScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Debug shell")
+                        Text(stringResource(R.string.debug_title))
                         Text(hostname, style = MaterialTheme.typography.labelMedium)
                     }
                 },
@@ -79,11 +82,11 @@ fun DebugShellScreen(
                     IconButton(onClick = {
                         vm.stop()
                         onBack()
-                    }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
                 },
                 actions = {
                     if (state is ShellState.Running || state is ShellState.Starting) {
-                        TextButton(onClick = vm::stop) { Text("Stop") }
+                        TextButton(onClick = vm::stop) { Text(stringResource(R.string.debug_stop)) }
                     }
                 },
             )
@@ -127,7 +130,7 @@ private fun SetupForm(hostname: String, onStart: (String, String) -> Unit) {
         }
         // With the app lock on, a privileged shell needs a fresh fingerprint/PIN, like reboot.
         scope.launch {
-            when (val auth = authenticate(activity, "Debug shell on $hostname")) {
+            when (val auth = authenticate(activity, context.getString(R.string.debug_auth, hostname))) {
                 AuthResult.Success -> onStart(image, args)
                 is AuthResult.Failure -> error = auth.message
             }
@@ -139,14 +142,13 @@ private fun SetupForm(hostname: String, onStart: (String, String) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            "Runs the image as a privileged container on $hostname, with host access, and opens a " +
-                "terminal in it. Talos pulls the image first if the node does not have it.",
+            stringResource(R.string.debug_intro, hostname),
             style = MaterialTheme.typography.bodyMedium,
         )
         OutlinedTextField(
             value = image,
             onValueChange = { image = it },
-            label = { Text("Image") },
+            label = { Text(stringResource(R.string.debug_image)) },
             singleLine = true,
             textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
             modifier = Modifier.fillMaxWidth(),
@@ -154,21 +156,21 @@ private fun SetupForm(hostname: String, onStart: (String, String) -> Unit) {
         OutlinedTextField(
             value = args,
             onValueChange = { args = it },
-            label = { Text("Command") },
+            label = { Text(stringResource(R.string.debug_command)) },
             singleLine = true,
             textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
             modifier = Modifier.fillMaxWidth(),
         )
         error?.let { Text(it, color = LocalStatusColors.current.bad) }
-        Button(onClick = ::start, enabled = image.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text("Start shell") }
+        Button(onClick = ::start, enabled = image.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.debug_start)) }
     }
 }
 
 @Composable
 private fun StatusLine(state: ShellState, onRestart: () -> Unit) {
     val text = when (state) {
-        is ShellState.Starting -> state.status
-        is ShellState.Exited -> if (state.code >= 0) "Exited with code ${state.code}" else state.message
+        is ShellState.Starting -> state.status.asString()
+        is ShellState.Exited -> if (state.code >= 0) stringResource(R.string.debug_exited, state.code.toInt()) else state.message
         else -> null
     } ?: return
     Row(
@@ -176,7 +178,7 @@ private fun StatusLine(state: ShellState, onRestart: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-        if (state is ShellState.Exited) TextButton(onClick = onRestart) { Text("New shell") }
+        if (state is ShellState.Exited) TextButton(onClick = onRestart) { Text(stringResource(R.string.debug_new_shell)) }
     }
 }
 

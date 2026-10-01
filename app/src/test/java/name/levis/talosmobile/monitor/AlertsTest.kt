@@ -43,9 +43,12 @@ class AlertsTest {
         val alerts = evaluate(prev, cur, now).alerts
 
         assertEquals(listOf("node:a", "node:b"), alerts.map { it.key })
-        assertEquals("host-a is unreachable", alerts[0].title)
+        assertEquals(AlertKind.NODE_UNREACHABLE, alerts[0].kind)
+        assertEquals("host-a", alerts[0].subject)
+        assertEquals("why", alerts[0].detail)
         assertTrue(alerts[0].problem)
-        assertEquals("host-b is ready again", alerts[1].title)
+        assertEquals(AlertKind.NODE_READY, alerts[1].kind)
+        assertEquals("host-b", alerts[1].subject)
     }
 
     @Test
@@ -68,6 +71,8 @@ class AlertsTest {
 
         val first = evaluate(prev, cur, now).alerts
         assertEquals(listOf("etcd:beef:NOSPACE"), first.map { it.key })
+        assertEquals("NOSPACE", first.single().subject)
+        assertEquals("beef", first.single().detail)
         assertTrue(evaluate(cur, cur, now).alerts.isEmpty())
     }
 
@@ -77,13 +82,22 @@ class AlertsTest {
         val first = evaluate(snap("a" to READY), snap("a" to READY, cert = soon), now)
 
         assertEquals(listOf("cert"), first.alerts.map { it.key })
-        assertTrue(first.alerts.single().text.contains("5 days"))
+        assertEquals(AlertKind.CERT_EXPIRING, first.alerts.single().kind)
+        assertEquals(5, first.alerts.single().days)
 
         val sameDay = evaluate(first.next, snap("a" to READY, cert = soon), now + 3_600_000)
         assertTrue(sameDay.alerts.isEmpty())
 
         val nextDay = evaluate(sameDay.next, snap("a" to READY, cert = soon), now + 86_400_000)
         assertEquals(listOf("cert"), nextDay.alerts.map { it.key })
+    }
+
+    @Test
+    fun expiredCertCountsDaysSince() {
+        val past = now / 1000 - 3L * 86_400
+        val alert = evaluate(snap("a" to READY), snap("a" to READY, cert = past), now).alerts.single()
+        assertEquals(AlertKind.CERT_EXPIRED, alert.kind)
+        assertEquals(3, alert.days)
     }
 
     @Test

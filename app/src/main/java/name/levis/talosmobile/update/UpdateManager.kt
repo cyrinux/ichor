@@ -1,5 +1,6 @@
 package name.levis.talosmobile.update
 
+import name.levis.talosmobile.R
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -8,7 +9,9 @@ import android.content.pm.PackageInstaller
 import android.os.Build
 import name.levis.talosmobile.BuildConfig
 import name.levis.talosmobile.data.TalosJson
-import name.levis.talosmobile.ui.userMessage
+import name.levis.talosmobile.ui.LocalizedException
+import name.levis.talosmobile.ui.UiText
+import name.levis.talosmobile.ui.uiText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +20,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
@@ -30,7 +32,7 @@ sealed interface UpdateState {
     data class Downloading(val info: UpdateInfo, val progress: Float) : UpdateState
     data class NeedsInstallPermission(val info: UpdateInfo) : UpdateState
     data object Installing : UpdateState
-    data class Failed(val message: String, val info: UpdateInfo? = null) : UpdateState
+    data class Failed(val message: UiText, val info: UpdateInfo? = null) : UpdateState
 }
 
 /**
@@ -68,7 +70,7 @@ class UpdateManager(private val context: Context, private val prefs: SharedPrefe
             val info = release?.let { selectUpdate(it, BuildConfig.VERSION_NAME, Build.SUPPORTED_ABIS.toList()) }
             if (info == null) UpdateState.UpToDate else UpdateState.Available(info)
         } catch (e: Exception) {
-            UpdateState.Failed("Update check failed: ${e.userMessage()}")
+            UpdateState.Failed(UiText.Res(R.string.update_check_failed, e.uiText()))
         }
     }
 
@@ -83,13 +85,13 @@ class UpdateManager(private val context: Context, private val prefs: SharedPrefe
             _state.value = UpdateState.Installing
             withContext(Dispatchers.IO) { install(apk) }
         } catch (e: Exception) {
-            _state.value = UpdateState.Failed(e.userMessage(), info)
+            _state.value = UpdateState.Failed(e.uiText(), info)
         }
     }
 
     /** Called by [InstallResultReceiver] when the installer reports a failure. */
-    fun onInstallFailed(message: String) {
-        _state.value = UpdateState.Failed("Install failed: $message")
+    fun onInstallFailed(message: UiText) {
+        _state.value = UpdateState.Failed(UiText.Res(R.string.update_install_failed, message))
     }
 
     private fun fetchLatestRelease(): GitHubRelease? {
@@ -101,7 +103,7 @@ class UpdateManager(private val context: Context, private val prefs: SharedPrefe
                     TalosJson.decodeFromString(GitHubRelease.serializer(), it.readBytes().decodeToString())
                 }
                 HttpURLConnection.HTTP_NOT_FOUND -> null // no release published yet
-                else -> throw IOException("GitHub answered HTTP $code")
+                else -> throw LocalizedException(UiText.Res(R.string.update_err_http, code))
             }
         } finally {
             connection.disconnect()
@@ -114,7 +116,7 @@ class UpdateManager(private val context: Context, private val prefs: SharedPrefe
         val connection = open(info.apkUrl)
         try {
             if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                throw IOException("Download failed: HTTP ${connection.responseCode}")
+                throw LocalizedException(UiText.Res(R.string.update_err_download_http, connection.responseCode))
             }
             val total = connection.contentLengthLong.takeIf { it > 0 } ?: info.apkSize
             connection.inputStream.use { input ->
@@ -126,7 +128,7 @@ class UpdateManager(private val context: Context, private val prefs: SharedPrefe
                         if (n < 0) break
                         output.write(buffer, 0, n)
                         done += n
-                        if (done > MAX_APK_BYTES) throw IOException("Update is unexpectedly large")
+                        if (done > MAX_APK_BYTES) throw LocalizedException(UiText.Res(R.string.update_err_too_large))
                         if (total > 0) _state.value = UpdateState.Downloading(info, (done.toFloat() / total).coerceIn(0f, 1f))
                     }
                 }
@@ -151,20 +153,20 @@ class UpdateManager(private val context: Context, private val prefs: SharedPrefe
             }
             if (actual != expected) {
                 apk.delete()
-                throw SecurityException("Checksum mismatch: the download was altered or corrupted")
+                throw LocalizedException(UiText.Res(R.string.update_err_checksum))
             }
         }
 
         val pm = context.packageManager
         val candidate = pm.getPackageArchiveInfo(apk.path, signatureFlags)
-            ?: throw IOException("The downloaded file is not a valid APK")
+            ?: throw LocalizedException(UiText.Res(R.string.update_err_not_apk))
         if (candidate.packageName != context.packageName) {
-            throw SecurityException("The APK is for another app (${candidate.packageName})")
+            throw LocalizedException(UiText.Res(R.string.update_err_other_app, candidate.packageName))
         }
         val installed = pm.getPackageInfo(context.packageName, signatureFlags)
         if (!sameSigners(installed.signerDigests(), candidate.signerDigests())) {
             apk.delete()
-            throw SecurityException("The APK is not signed with this app's key; refusing to install")
+            throw LocalizedException(UiText.Res(R.string.update_err_signature))
         }
     }
 

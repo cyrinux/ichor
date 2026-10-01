@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Common -->
+    <string name="common_back">Atrás</string>
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_ok">Aceptar</string>
+    <string name="common_retry">Reintentar</string>
+    <string name="common_refresh">Actualizar</string>
+    <string name="common_delete">Eliminar</string>
+    <string name="common_more">Más</string>
+    <string name="common_check_now">Comprobar ahora</string>
+    <string name="common_just_now">ahora mismo</string>
+    <plurals name="common_minutes_ago">
+        <item quantity="one">hace %1$d min</item>
+        <item quantity="other">hace %1$d min</item>
+    </plurals>
+    <plurals name="common_hours_ago">
+        <item quantity="one">hace %1$d h</item>
+        <item quantity="other">hace %1$d h</item>
+    </plurals>
+    <plurals name="common_days_ago">
+        <item quantity="one">hace %1$d d</item>
+        <item quantity="other">hace %1$d d</item>
+    </plurals>
+    <string name="common_updated_ago">Actualizado %1$s · %2$s</string>
+    <string name="common_refreshing_showing">Actualizando… (se muestran datos de %1$s)</string>
+    <string name="common_status_ready">Listo</string>
+    <string name="common_status_not_ready">No listo</string>
+    <string name="common_status_unreachable">Inaccesible</string>
+    <string name="common_status_healthy">Correcto</string>
+    <string name="common_status_unhealthy">Con fallos</string>
+    <string name="common_label_endpoints">Endpoints</string>
+    <string name="common_label_nodes">Nodos</string>
+    <string name="common_label_roles">Roles</string>
+    <string name="common_label_cert_expires">Caducidad del cert.</string>
+    <plurals name="common_cert_expired_days_ago">
+        <item quantity="one">caducó hace %1$d día</item>
+        <item quantity="other">caducó hace %1$d días</item>
+    </plurals>
+    <plurals name="common_cert_in_days">
+        <item quantity="one">en %1$d día</item>
+        <item quantity="other">en %1$d días</item>
+    </plurals>
+    <string name="common_duration_days_hours">%1$d d %2$d h</string>
+    <string name="common_duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="common_duration_minutes">%1$d min</string>
+    <string name="common_duration_less_than_minute">&lt;1 min</string>
+    <string name="common_access_admin">administrador</string>
+    <string name="common_access_operator">operador</string>
+    <string name="common_access_read_only">solo lectura</string>
+    <string name="common_feature_power">Reiniciar / apagar</string>
+    <string name="common_feature_health">Comprobación de estado del clúster</string>
+    <string name="common_feature_kubeconfig">Exportación de kubeconfig</string>
+    <string name="common_feature_debug_shell">Shell de depuración</string>
+    <string name="common_feature_etcd_defrag">Desfragmentación de etcd</string>
+    <string name="common_role_notice_title">%1$s requiere %2$s</string>
+    <string name="common_role_notice_body">Este talosconfig tiene %1$s. Importa un talosconfig creado con --roles %2$s para usarlo (consulta el README).</string>
+    <string name="common_role_notice_no_roles">ningún rol</string>
+    <string name="common_no_config">No se ha importado ningún talosconfig</string>
+
+    <!-- Overview -->
+    <string name="overview_title">Clúster</string>
+    <string name="overview_action_health">Estado del clúster</string>
+    <string name="overview_action_settings">Ajustes</string>
+    <plurals name="overview_summary_ready">
+        <item quantity="one">listo</item>
+        <item quantity="other">listos</item>
+    </plurals>
+    <plurals name="overview_summary_not_ready">
+        <item quantity="one">no listo</item>
+        <item quantity="other">no listos</item>
+    </plurals>
+    <plurals name="overview_summary_unreachable">
+        <item quantity="one">inaccesible</item>
+        <item quantity="other">inaccesibles</item>
+    </plurals>
+    <string name="overview_node_actions">Acciones del nodo</string>
+    <string name="overview_role_control_plane">plano de control</string>
+    <string name="overview_update_banner">Talosdev Mobile %1$s está disponible: toca para actualizar</string>
+    <string name="overview_support_title">¿Te gusta Talosdev Mobile?</string>
+    <string name="overview_support_body">Es gratuita y de código abierto. Si te ahorra tiempo, puedes apoyar su desarrollo.</string>
+    <string name="overview_support_never">No volver a preguntar</string>
+    <string name="overview_support_later">Ahora no</string>
+    <string name="overview_support_sponsor">Patrocinar</string>
+    <string name="overview_swipe_live">En directo</string>
+    <string name="overview_swipe_actions">Acciones</string>
+    <string name="overview_action_live_graphs">Gráficos en directo</string>
+    <string name="overview_action_services_logs">Servicios y registros</string>
+    <string name="overview_action_kernel_log">Registro del kernel</string>
+    <string name="overview_action_debug_shell">Shell de depuración</string>
+    <string name="overview_action_reboot">Reiniciar…</string>
+    <string name="overview_action_shutdown">Apagar…</string>
+    <string name="overview_action_copy_ip">Copiar IP (%1$s)</string>
+    <string name="overview_clip_label">IP del nodo</string>
+
+    <!-- Node detail -->
+    <string name="node_menu_kernel_log">Registro del kernel</string>
+    <string name="node_menu_debug_shell">Shell de depuración</string>
+    <string name="node_tab_services">Servicios</string>
+    <string name="node_tab_resources">Recursos</string>
+    <string name="node_tab_live">En directo</string>
+    <string name="node_service_no_check">Sin comprobación</string>
+    <string name="node_section_system">Sistema</string>
+    <string name="node_uptime">Tiempo activo</string>
+    <string name="node_cpu">CPU</string>
+    <plurals name="node_cpu_threads">
+        <item quantity="one">%1$d hilo</item>
+        <item quantity="other">%1$d hilos</item>
+    </plurals>
+    <string name="node_load">Carga (1/5/15)</string>
+    <string name="node_section_memory">Memoria</string>
+    <string name="node_memory_used">En uso</string>
+    <string name="node_section_disks">Discos</string>
+    <string name="node_live_collecting">Recogiendo muestras cada %1$d s…</string>
+    <string name="node_live_cpu">CPU</string>
+    <plurals name="node_live_cpu_threads">
+        <item quantity="one">CPU (%1$d hilo)</item>
+        <item quantity="other">CPU (%1$d hilos)</item>
+    </plurals>
+    <string name="node_live_memory">Memoria</string>
+    <string name="node_live_memory_used">Memoria (%1$s en uso)</string>
+    <string name="node_live_network">Red</string>
+    <string name="node_live_in">entrada</string>
+    <string name="node_live_out">salida</string>
+    <string name="node_live_disk">Disco</string>
+    <string name="node_live_read">lectura</string>
+    <string name="node_live_write">escritura</string>
+    <string name="node_live_load">Carga (1 min)</string>
+    <string name="node_live_load_series">Carga</string>
+    <string name="node_live_chart_description">Gráfico de %1$s</string>
+    <string name="node_live_now">ahora</string>
+    <plurals name="node_live_seconds_ago">
+        <item quantity="one">hace %1$d s</item>
+        <item quantity="other">hace %1$d s</item>
+    </plurals>
+    <string name="node_live_minutes_axis">−%1$d min</string>
+
+    <!-- Power actions -->
+    <string name="power_reboot">Reiniciar</string>
+    <string name="power_shut_down">Apagar</string>
+    <string name="power_power_cycle">Ciclo de encendido</string>
+    <string name="power_force_reboot">Forzar reinicio</string>
+    <string name="power_force_shut_down">Forzar apagado</string>
+    <string name="power_mode_graceful">Ordenado</string>
+    <string name="power_mode_graceful_desc">Detiene los pods y servicios y luego reinicia (reinicio rápido con kexec si está disponible).</string>
+    <string name="power_mode_powercycle_desc">Parada ordenada y luego reinicio completo del firmware en lugar de kexec.</string>
+    <string name="power_mode_force">Forzado</string>
+    <string name="power_mode_force_desc">Reinicia de inmediato: los pods y servicios NO se detienen. Solo para un nodo bloqueado.</string>
+    <string name="power_requested">%1$s: %2$s solicitado</string>
+    <string name="power_auth_title">%1$s %2$s</string>
+    <string name="power_confirm_title">¿%1$s %2$s?</string>
+    <string name="power_controlplane_warning">Nodo del plano de control: sale de etcd mientras está caído. Asegúrate de que los demás miembros están en buen estado o el clúster podría perder el quórum.</string>
+    <string name="power_shutdown_stays_off">Seguirá apagado hasta que alguien lo encienda (Wake-on-LAN, IPMI o físicamente).</string>
+    <string name="power_type_to_confirm">Escribe %1$s para confirmar:</string>
+    <string name="power_mode_label">Modo (talosctl reboot -m)</string>
+    <string name="power_force_label">Forzar (--force)</string>
+    <string name="power_force_desc">Omite el cordon/drain de Kubernetes, por ejemplo si la API de Kubernetes no responde. Los pods y servicios se detienen igualmente.</string>
+
+    <!-- etcd -->
+    <string name="etcd_auth_defrag">Desfragmentar etcd</string>
+    <string name="etcd_section_alarms">Alarmas</string>
+    <string name="etcd_section_members">Miembros (%1$d)</string>
+    <string name="etcd_section_unprobed">Miembros que no están en este talosconfig</string>
+    <string name="etcd_status_error">Error</string>
+    <string name="etcd_status_errors">Errores</string>
+    <string name="etcd_status_leader">Líder</string>
+    <string name="etcd_status_learner">Aprendiz</string>
+    <string name="etcd_status_follower">Seguidor</string>
+    <string name="etcd_member_id">ID de miembro</string>
+    <string name="etcd_db_size">Tamaño de la DB</string>
+    <string name="etcd_db_size_value">%1$s en uso / %2$s</string>
+    <string name="etcd_raft">Término / índice Raft</string>
+    <string name="etcd_storage_version">Versión de almacenamiento</string>
+    <string name="etcd_peer_urls">URL de pares</string>
+    <string name="etcd_defragment_member">Desfragmentar (libera %1$s)</string>
+    <string name="etcd_defragmenting">Desfragmentando %1$s (%2$d/%3$d)…</string>
+    <plurals name="etcd_reclaimable_across">
+        <item quantity="one">Unos %1$s recuperables en %2$d miembro</item>
+        <item quantity="other">Unos %1$s recuperables en %2$d miembros</item>
+    </plurals>
+    <string name="etcd_defrag_explainer">La desfragmentación consume muchos recursos: los miembros se procesan de uno en uno, primero los seguidores y el líder al final.</string>
+    <string name="etcd_defragment_all">Desfragmentar todos</string>
+    <string name="etcd_confirm_single">¿Desfragmentar %1$s?</string>
+    <plurals name="etcd_confirm_multi">
+        <item quantity="one">¿Desfragmentar %1$d miembro?</item>
+        <item quantity="other">¿Desfragmentar %1$d miembros?</item>
+    </plurals>
+    <string name="etcd_confirm_body">Cada miembro está ocupado mientras se desfragmenta y sus peticiones son más lentas. Los miembros se procesan de uno en uno, nunca a la vez, para que el clúster mantenga el quórum.</string>
+    <string name="etcd_confirm_order">Orden: %1$s</string>
+    <string name="etcd_confirm_reclaim">Deberían recuperarse unos %1$s.</string>
+    <string name="etcd_defragment">Desfragmentar</string>
+    <plurals name="etcd_defrag_done">
+        <item quantity="one">%1$d miembro desfragmentado, unos %2$s recuperados</item>
+        <item quantity="other">%1$d miembros desfragmentados, unos %2$s recuperados</item>
+    </plurals>
+
+    <!-- KubeSpan -->
+    <plurals name="kubespan_summary">
+        <item quantity="one">KubeSpan en %1$d de %2$d nodo</item>
+        <item quantity="other">KubeSpan en %1$d de %2$d nodos</item>
+    </plurals>
+    <plurals name="kubespan_links_down">
+        <item quantity="one">%1$d enlace con pares caído</item>
+        <item quantity="other">%1$d enlaces con pares caídos</item>
+    </plurals>
+    <string name="kubespan_no_link_down">ningún enlace caído</string>
+    <string name="kubespan_status_off">Desactivado</string>
+    <string name="kubespan_status_down_count">%1$d caídos</string>
+    <string name="kubespan_status_up_count">%1$d/%2$d activos</string>
+    <string name="kubespan_peer_up">Activo</string>
+    <string name="kubespan_peer_down">Caído</string>
+    <string name="kubespan_peer_unknown">Desconocido</string>
+    <string name="kubespan_handshake_ago">handshake hace %1$s</string>
+
+    <!-- Logs -->
+    <string name="logs_kernel_log">Registro del kernel</string>
+    <string name="logs_filter">Filtrar</string>
+    <string name="logs_empty">No hay líneas de registro.</string>
+    <string name="logs_no_match">Ninguna línea coincide con «%1$s».</string>
+    <string name="logs_older_omitted">… líneas anteriores omitidas</string>
+
+    <!-- Health -->
+    <string name="health_title">Estado del clúster</string>
+    <string name="health_any_role_hint">Las pantallas de resumen y de etcd muestran la disponibilidad de los nodos y el estado de etcd con cualquier rol.</string>
+    <string name="health_running">Ejecutando comprobaciones en el servidor…</string>
+    <string name="health_all_passed">Todas las comprobaciones se han superado</string>
+    <string name="health_rerun">Volver a ejecutar</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_section_context">Contexto</string>
+    <string name="settings_section_appearance">Apariencia</string>
+    <string name="settings_theme_auto">Automático</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Oscuro</string>
+    <string name="settings_theme_black">Negro</string>
+    <string name="settings_language">Idioma</string>
+    <string name="settings_language_system">Predeterminado del sistema</string>
+    <string name="settings_section_security">Seguridad</string>
+    <string name="settings_auth_needs_lock">Primero configura una huella digital o un bloqueo de pantalla (PIN, patrón, contraseña) en este dispositivo.</string>
+    <string name="settings_auth_enable_lock">Activar bloqueo de la aplicación</string>
+    <string name="settings_auth_disable_lock">Desactivar bloqueo de la aplicación</string>
+    <string name="settings_app_lock">Bloqueo de la aplicación</string>
+    <string name="settings_app_lock_desc">Huella digital, o PIN/patrón del dispositivo como alternativa, para abrir la aplicación y antes de reiniciar, apagar o exportar el kubeconfig. Bloquea las capturas de pantalla salvo que se permitan abajo.</string>
+    <string name="settings_allow_screenshots">Permitir capturas de pantalla</string>
+    <string name="settings_allow_screenshots_desc">También muestra el contenido de la aplicación en las aplicaciones recientes.</string>
+    <string name="settings_kube_section">Kubernetes</string>
+    <string name="settings_kube_auth">Exportar kubeconfig</string>
+    <string name="settings_kube_desc">Exporta un kubeconfig de administrador (requiere un talosconfig os:admin). Cualquiera que tenga este archivo tiene acceso total al clúster de Kubernetes: mantenlo en privado.</string>
+    <string name="settings_kube_exporting">Exportando…</string>
+    <string name="settings_kube_export">Exportar kubeconfig…</string>
+    <string name="settings_kube_saved">Guardado. En kubenav, añade un clúster desde ese archivo.</string>
+    <string name="settings_kube_open_kubenav">Abrir kubenav</string>
+    <string name="settings_kube_open_failed">No se ha podido abrir el archivo elegido</string>
+    <string name="settings_section_config">Configuración</string>
+    <string name="settings_encryption_key">Clave de cifrado</string>
+    <string name="settings_encryption_value">AES-256-GCM en %1$s</string>
+    <string name="settings_key_strongbox">el chip de seguridad StrongBox</string>
+    <string name="settings_key_tee">el entorno de ejecución de confianza (TEE)</string>
+    <string name="settings_key_software">el almacén de claves por software</string>
+    <string name="settings_import_new">Importar un nuevo talosconfig</string>
+    <string name="settings_delete_config">Eliminar el talosconfig guardado</string>
+    <string name="settings_delete_title">¿Eliminar el talosconfig?</string>
+    <string name="settings_delete_body">La configuración cifrada y su clave de cliente se eliminarán de este dispositivo.</string>
+
+    <!-- Monitoring and notifications -->
+    <string name="monitor_section">Supervisión</string>
+    <string name="monitor_notifications_blocked">Las notificaciones de esta aplicación están bloqueadas; permítelas en los ajustes de Android.</string>
+    <string name="monitor_background_alerts">Alertas en segundo plano</string>
+    <string name="monitor_background_alerts_desc">Avisa cuando un nodo cae o se recupera, ante nuevas alarmas de etcd y a diario cuando el certificado de cliente caduca en menos de %1$d días. Sin avisos mientras el clúster es inaccesible (p. ej., sin VPN).</string>
+    <string name="monitor_check_every">Comprobar cada</string>
+    <string name="monitor_interval_minutes">%1$d min</string>
+    <string name="monitor_interval_hours">%1$d h</string>
+    <string name="monitor_widget_hint">El widget de la pantalla de inicio usa las mismas comprobaciones; si lo añades, siguen ejecutándose aunque las alertas estén desactivadas.</string>
+    <string name="monitor_channel_name">Alertas del clúster</string>
+    <string name="monitor_channel_desc">Cambios de estado de los nodos, alarmas de etcd y caducidad del certificado</string>
+    <string name="monitor_public_title">Alerta del clúster Talos</string>
+    <string name="monitor_node_ready_again">%1$s vuelve a estar listo</string>
+    <string name="monitor_node_not_ready">%1$s no está listo</string>
+    <string name="monitor_node_unreachable">%1$s es inaccesible</string>
+    <string name="monitor_etcd_alarm_title">Alarma de etcd activada</string>
+    <string name="monitor_etcd_alarm_text">%1$s en el miembro %2$s</string>
+    <string name="monitor_cert_title">Certificado del talosconfig</string>
+    <plurals name="monitor_cert_expired">
+        <item quantity="one">El certificado de cliente caducó hace %1$d día.</item>
+        <item quantity="other">El certificado de cliente caducó hace %1$d días.</item>
+    </plurals>
+    <plurals name="monitor_cert_expires">
+        <item quantity="one">El certificado de cliente caduca en %1$d día. Genera un nuevo talosconfig.</item>
+        <item quantity="other">El certificado de cliente caduca en %1$d días. Genera un nuevo talosconfig.</item>
+    </plurals>
+
+    <!-- Updates -->
+    <string name="update_section">Actualizaciones</string>
+    <string name="update_auto_check">Buscar actualizaciones a diario</string>
+    <string name="update_auto_check_desc">Desde las versiones de GitHub (%1$s). Se verifican la suma de comprobación y la clave de firma del APK, y Android te pide que confirmes la instalación.</string>
+    <string name="update_checking">Comprobando…</string>
+    <string name="update_up_to_date">Talosdev Mobile %1$s está actualizada.</string>
+    <string name="update_available">La versión %1$s está disponible (%2$s).</string>
+    <string name="update_download_install">Descargar e instalar</string>
+    <string name="update_debug_build">Esta es una compilación de depuración firmada con una clave local: los APK de versión no pueden sustituirla. Desinstálala e instala una vez un APK de versión para recibir actualizaciones.</string>
+    <string name="update_downloading">Descargando %1$s…</string>
+    <string name="update_needs_permission">Permite que Talosdev Mobile instale aplicaciones y vuelve a intentarlo.</string>
+    <string name="update_open_permission">Abrir permiso de instalación</string>
+    <string name="update_try_again">Reintentar</string>
+    <string name="update_installing">Instalando… confirma en el cuadro de diálogo del sistema.</string>
+    <string name="update_check_failed">Error al buscar actualizaciones: %1$s</string>
+    <string name="update_install_failed">Error de instalación: %1$s</string>
+    <string name="update_install_status">estado %1$d</string>
+    <string name="update_err_http">GitHub respondió HTTP %1$d</string>
+    <string name="update_err_download_http">Error de descarga: HTTP %1$d</string>
+    <string name="update_err_too_large">La actualización es inesperadamente grande</string>
+    <string name="update_err_checksum">La suma de comprobación no coincide: la descarga se ha alterado o está dañada</string>
+    <string name="update_err_not_apk">El archivo descargado no es un APK válido</string>
+    <string name="update_err_other_app">El APK es de otra aplicación (%1$s)</string>
+    <string name="update_err_signature">El APK no está firmado con la clave de esta aplicación; se rechaza la instalación</string>
+
+    <!-- About -->
+    <string name="about_section">Información</string>
+    <string name="about_version">Talosdev Mobile %1$s (%2$d)</string>
+    <string name="about_source">Código fuente en GitHub</string>
+    <string name="about_talos">Talos Linux (talos.dev)</string>
+    <string name="about_sponsor">Patrocinar en GitHub</string>
+    <string name="about_disclaimer">Sin afiliación con Sidero Labs. Talos es una marca comercial de Sidero Labs, Inc.</string>
+
+    <!-- Import -->
+    <string name="import_title">Importar talosconfig</string>
+    <string name="import_help">Cómo crear un talosconfig</string>
+    <string name="import_tab_file">Archivo</string>
+    <string name="import_tab_paste">Pegar</string>
+    <string name="import_tab_qr">Código QR</string>
+    <string name="import_could_not_open">No se ha podido abrir el archivo</string>
+    <string name="import_file_too_large">El archivo es demasiado grande para ser un talosconfig</string>
+    <string name="import_file_hint">Selecciona tu talosconfig (el archivo ~/.talos/config de tu equipo). Cópialo al teléfono con adb push, Syncthing, etc.</string>
+    <string name="import_choose_file">Elegir archivo</string>
+    <string name="import_paste_label">YAML del talosconfig</string>
+    <string name="import_validate">Validar</string>
+    <string name="import_valid">La configuración es válida</string>
+    <string name="import_context_current">%1$s (actual)</string>
+    <string name="import_nodes_endpoints">endpoints</string>
+    <string name="import_stored_encrypted">La configuración se guarda cifrada en este dispositivo (Android Keystore) y se excluye de las copias de seguridad.</string>
+    <string name="import_import">Importar</string>
+    <string name="import_camera_needed">Se necesita permiso de cámara para escanear el código QR de un talosconfig.</string>
+    <string name="import_grant_camera">Permitir acceso a la cámara</string>
+
+    <!-- Help: creating a talosconfig -->
+    <string name="help_title">Crear un talosconfig para este teléfono</string>
+    <string name="help_intro">Genera una identidad dedicada en lugar de copiar tu ~/.talos/config de administrador: si pierdes el teléfono, su certificado solo concede lo que hayas elegido y caduca por sí solo.</string>
+    <string name="help_role_reader">Solo lectura</string>
+    <string name="help_role_reader_desc">Solo supervisión: resumen, servicios, recursos, registros, etcd, KubeSpan, gráficos en directo y alertas. Recomendado para un teléfono.</string>
+    <string name="help_role_operator">Operador</string>
+    <string name="help_role_operator_desc">Todo lo de solo lectura, además de reiniciar y apagar.</string>
+    <string name="help_role_admin">Administrador</string>
+    <string name="help_role_admin_desc">Todo, incluida la comprobación de estado del clúster, la exportación de kubeconfig y las shells de depuración. Trata el teléfono como un portátil.</string>
+    <string name="help_step1">1. En tu equipo, firma un certificado en un nodo del plano de control:</string>
+    <string name="help_step2">2. Indica todos los nodos que debe mostrar la aplicación:</string>
+    <string name="help_step3">3. Pásalo al teléfono e impórtalo aquí:</string>
+    <string name="help_step_qr">o muéstralo como código QR y usa la pestaña QR:</string>
+    <string name="help_cleanup">Después, elimina la copia de Descargas (y cualquier imagen QR): contiene la clave privada. La aplicación la guarda cifrada en almacenamiento respaldado por hardware.</string>
+    <string name="help_got_it">Entendido</string>
+    <string name="help_copy_command">Copiar comando</string>
+
+    <!-- Debug shell -->
+    <string name="debug_title">Shell de depuración</string>
+    <string name="debug_stop">Detener</string>
+    <string name="debug_auth">Shell de depuración en %1$s</string>
+    <string name="debug_intro">Ejecuta la imagen como contenedor privilegiado en %1$s, con acceso al host, y abre un terminal en él. Talos descarga primero la imagen si el nodo no la tiene.</string>
+    <string name="debug_image">Imagen</string>
+    <string name="debug_command">Comando</string>
+    <string name="debug_start">Iniciar shell</string>
+    <string name="debug_exited">Finalizado con el código %1$d</string>
+    <string name="debug_new_shell">Nueva shell</string>
+    <string name="debug_connecting">Conectando…</string>
+
+    <!-- App lock -->
+    <string name="lock_prompt">Desbloquear Talosdev Mobile</string>
+    <string name="lock_locked">Talosdev Mobile está bloqueada</string>
+    <string name="lock_unlock">Desbloquear</string>
+    <string name="lock_no_auth">Este dispositivo ya no tiene huella digital ni bloqueo de pantalla, así que el bloqueo de la aplicación no puede verificar tu identidad.</string>
+    <string name="lock_delete_config">Eliminar el talosconfig guardado</string>
+
+    <!-- Home-screen widget -->
+    <string name="widget_description">Estado del clúster según la última comprobación en segundo plano</string>
+    <string name="widget_waiting">Esperando la primera comprobación…</string>
+    <string name="widget_ready_count">%1$d/%2$d listos</string>
+    <plurals name="widget_not_ready">
+        <item quantity="one">%1$d no listo</item>
+        <item quantity="other">%1$d no listos</item>
+    </plurals>
+    <plurals name="widget_down">
+        <item quantity="one">%1$d caído</item>
+        <item quantity="other">%1$d caídos</item>
+    </plurals>
+    <string name="widget_etcd_unknown">etcd: desconocido</string>
+    <string name="widget_etcd_no_alarms">etcd: sin alarmas</string>
+    <plurals name="widget_etcd_alarms">
+        <item quantity="one">etcd: %1$d alarma</item>
+        <item quantity="other">etcd: %1$d alarmas</item>
+    </plurals>
+    <string name="widget_updated">actualizado %1$s</string>
+</resources>

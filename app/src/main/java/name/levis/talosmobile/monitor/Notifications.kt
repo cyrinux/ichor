@@ -1,5 +1,6 @@
 package name.levis.talosmobile.monitor
 
+import name.levis.talosmobile.i18n.AppLocale
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,10 +17,13 @@ import name.levis.talosmobile.R
 
 private const val CHANNEL_ID = "cluster-alerts"
 
+/** (Re)creating the channel also updates its name and description to the current language. */
 fun ensureAlertChannel(context: Context) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-    val channel = NotificationChannel(CHANNEL_ID, "Cluster alerts", NotificationManager.IMPORTANCE_DEFAULT).apply {
-        description = "Node status changes, etcd alarms and certificate expiry"
+    val res = AppLocale.wrap(context)
+    val name = res.getString(R.string.monitor_channel_name)
+    val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT).apply {
+        description = res.getString(R.string.monitor_channel_desc)
     }
     context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
 }
@@ -32,6 +36,9 @@ fun canPostNotifications(context: Context): Boolean =
 fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean) {
     if (!canPostNotifications(context)) return
     ensureAlertChannel(context)
+    val res = AppLocale.wrap(context)
+    val title = alertTitle(res, alert)
+    val text = alertText(res, alert)
 
     val open = PendingIntent.getActivity(
         context,
@@ -41,9 +48,9 @@ fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean) {
     )
     val builder = NotificationCompat.Builder(context, CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_stat_talos)
-        .setContentTitle(alert.title)
-        .setContentText(alert.text)
-        .setStyle(NotificationCompat.BigTextStyle().bigText(alert.text))
+        .setContentTitle(title)
+        .setContentText(text)
+        .setStyle(NotificationCompat.BigTextStyle().bigText(text))
         .setContentIntent(open)
         .setAutoCancel(true)
         .setCategory(NotificationCompat.CATEGORY_STATUS)
@@ -52,7 +59,7 @@ fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean) {
         builder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setPublicVersion(
             NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_stat_talos)
-                .setContentTitle("Talos cluster alert")
+                .setContentTitle(res.getString(R.string.monitor_public_title))
                 .build(),
         )
     }
@@ -62,4 +69,19 @@ fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean) {
     } catch (_: SecurityException) {
         // Permission revoked between the check and the post; nothing to do.
     }
+}
+
+private fun alertTitle(context: Context, alert: Alert): String = when (alert.kind) {
+    AlertKind.NODE_READY -> context.getString(R.string.monitor_node_ready_again, alert.subject)
+    AlertKind.NODE_NOT_READY -> context.getString(R.string.monitor_node_not_ready, alert.subject)
+    AlertKind.NODE_UNREACHABLE -> context.getString(R.string.monitor_node_unreachable, alert.subject)
+    AlertKind.ETCD_ALARM -> context.getString(R.string.monitor_etcd_alarm_title)
+    AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED -> context.getString(R.string.monitor_cert_title)
+}
+
+private fun alertText(context: Context, alert: Alert): String = when (alert.kind) {
+    AlertKind.NODE_READY, AlertKind.NODE_NOT_READY, AlertKind.NODE_UNREACHABLE -> alert.detail
+    AlertKind.ETCD_ALARM -> context.getString(R.string.monitor_etcd_alarm_text, alert.subject, alert.detail)
+    AlertKind.CERT_EXPIRING -> context.resources.getQuantityString(R.plurals.monitor_cert_expires, alert.days, alert.days)
+    AlertKind.CERT_EXPIRED -> context.resources.getQuantityString(R.plurals.monitor_cert_expired, alert.days, alert.days)
 }

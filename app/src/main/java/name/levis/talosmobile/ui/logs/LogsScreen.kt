@@ -1,5 +1,7 @@
 package name.levis.talosmobile.ui.logs
 
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -75,12 +77,12 @@ fun LogsScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(service ?: "Kernel log")
+                        Text(service ?: stringResource(R.string.logs_kernel_log))
                         Text(hostname, style = MaterialTheme.typography.labelMedium)
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
-                actions = { IconButton(onClick = vm::refresh) { Icon(Icons.Outlined.Refresh, "Refresh") } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                actions = { IconButton(onClick = vm::refresh) { Icon(Icons.Outlined.Refresh, stringResource(R.string.common_refresh)) } },
             )
         },
     ) { padding ->
@@ -88,7 +90,7 @@ fun LogsScreen(
             OutlinedTextField(
                 value = filter,
                 onValueChange = { filter = it },
-                placeholder = { Text("Filter") },
+                placeholder = { Text(stringResource(R.string.logs_filter)) },
                 leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
@@ -113,7 +115,7 @@ private fun LogLines(tail: LogTail, filter: String) {
 
     if (lines.isEmpty()) {
         Text(
-            if (filter.isBlank()) "No log lines." else "No lines match \"$filter\".",
+            if (filter.isBlank()) stringResource(R.string.logs_empty) else stringResource(R.string.logs_no_match, filter),
             modifier = Modifier.padding(16.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -129,7 +131,7 @@ private fun LogLines(tail: LogTail, filter: String) {
             if (tail.truncated && filter.isBlank()) {
                 item {
                     Text(
-                        "… older lines omitted",
+                        stringResource(R.string.logs_older_omitted),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

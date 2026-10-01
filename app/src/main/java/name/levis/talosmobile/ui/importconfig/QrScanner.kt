@@ -1,5 +1,7 @@
 package name.levis.talosmobile.ui.importconfig
 
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -65,9 +67,9 @@ fun QrScanner(onScanned: (String) -> Unit, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("Camera permission is needed to scan a talosconfig QR code.")
+            Text(stringResource(R.string.import_camera_needed))
             Button(onClick = { launcher.launch(Manifest.permission.CAMERA) }, Modifier.padding(top = 12.dp)) {
-                Text("Grant camera access")
+                Text(stringResource(R.string.import_grant_camera))
             }
         }
     }

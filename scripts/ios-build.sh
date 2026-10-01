@@ -30,6 +30,7 @@ rm -rf "$ROOT/ios/Frameworks/Talosmobile.xcframework"
 gomobile bind -target=ios,iossimulator -iosversion=17.0 -ldflags="-s -w" \
   -o "$ROOT/ios/Frameworks/Talosmobile.xcframework" ./talosmobile
 
+python3 "$ROOT/scripts/check-translations.py"
 (cd "$ROOT/ios/TalosdevMobileCore" && swift test)
 
 cd "$ROOT/ios"

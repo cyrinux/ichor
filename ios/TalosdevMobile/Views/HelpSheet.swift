@@ -9,6 +9,14 @@ struct HelpSheet: View {
         case reader = "Read-only", operatorRole = "Operator", admin = "Admin"
         var id: String { rawValue }
 
+        var label: String {
+            switch self {
+            case .reader: String(localized: "Read-only")
+            case .operatorRole: String(localized: "Operator")
+            case .admin: String(localized: "Admin")
+            }
+        }
+
         var talosRole: String {
             switch self {
             case .reader: "os:reader"
@@ -19,9 +27,9 @@ struct HelpSheet: View {
 
         var unlocks: String {
             switch self {
-            case .reader: "Monitoring only: overview, services, resources, logs, etcd, live graphs. Recommended for a phone."
-            case .operatorRole: "Everything read-only, plus reboot and shutdown."
-            case .admin: "Everything, including the cluster health check. Treat the phone like a laptop."
+            case .reader: String(localized: "Monitoring only: overview, services, resources, logs, etcd, live graphs. Recommended for a phone.")
+            case .operatorRole: String(localized: "Everything read-only, plus reboot and shutdown.")
+            case .admin: String(localized: "Everything, including the cluster health check. Treat the phone like a laptop.")
             }
         }
     }
@@ -33,7 +41,7 @@ struct HelpSheet: View {
                     Text("Generate a dedicated identity instead of copying your admin ~/.talos/config: if the phone is lost, its certificate only grants what you chose, and it expires on its own.")
                         .font(.callout)
                     Picker("Role", selection: $role) {
-                        ForEach(PhoneRole.allCases) { Text($0.rawValue).tag($0) }
+                        ForEach(PhoneRole.allCases) { Text($0.label).tag($0) }
                     }
                     .pickerStyle(.segmented)
                     Text(role.unlocks).font(.footnote).foregroundStyle(.secondary)

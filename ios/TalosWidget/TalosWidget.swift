@@ -33,19 +33,24 @@ struct ClusterWidgetView: View {
                 Text("\(s.readyCount)/\(s.nodes.count) ready")
                     .font(.title2.bold())
                     .foregroundStyle(s.readyCount == s.nodes.count ? .green : .orange)
-                Text("\(s.notReadyCount) not ready · \(s.unreachableCount) down").font(.caption)
-                Text(!s.etcdChecked ? "etcd: unknown" : s.etcdAlarms.isEmpty ? "etcd: no alarms" : "etcd: \(s.etcdAlarms.count) alarm(s)")
-                    .font(.caption)
+                Text(String(localized: "\(s.notReadyCount) not ready") + " · " + String(localized: "\(s.unreachableCount) down")).font(.caption)
+                etcdLine(s).font(.caption)
                 Spacer(minLength: 0)
                 Text("updated \(s.takenAt, style: .time)").font(.caption2).foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             VStack(alignment: .leading) {
-                Text("Talos").font(.headline)
+                Text(verbatim: "Talos").font(.headline)
                 Text("Open the app and run a check to fill this widget.").font(.caption).foregroundStyle(.secondary)
             }
         }
+    }
+
+    private func etcdLine(_ s: ClusterSnapshot) -> Text {
+        if !s.etcdChecked { return Text("etcd: unknown") }
+        if s.etcdAlarms.isEmpty { return Text("etcd: no alarms") }
+        return Text("etcd: \(s.etcdAlarms.count) alarms")
     }
 }
 

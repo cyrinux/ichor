@@ -1,5 +1,8 @@
 package name.levis.talosmobile.ui.live
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -64,8 +67,13 @@ fun LiveChart(
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 if (index != null && count > 0) {
+                    val seconds = ((times.last() - times[index]) / 1000).toInt()
                     Text(
-                        ago(times.last() - times[index]),
+                        if (seconds < 1) {
+                            stringResource(R.string.node_live_now)
+                        } else {
+                            pluralStringResource(R.plurals.node_live_seconds_ago, seconds, seconds)
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -88,13 +96,14 @@ fun LiveChart(
                 }
             }
 
+            val chartDescription = stringResource(R.string.node_live_chart_description, title)
             val maxValue = fixedMax ?: max(series.maxOf { it.values.maxOrNull() ?: 0f } * 1.15f, 1e-3f)
             Box {
                 Canvas(
                     Modifier
                         .fillMaxWidth()
                         .height(120.dp)
-                        .semantics { contentDescription = "$title chart" }
+                        .semantics { contentDescription = chartDescription }
                         .pointerInput(count) {
                             detectTapGestures { offset -> selected = indexAt(offset.x, size.width.toFloat(), count) }
                         }
@@ -141,8 +150,8 @@ fun LiveChart(
                 )
             }
             Row {
-                Text("−${MAX_POINTS * POLL_SECONDS / 60} min", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
-                Text("now", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.node_live_minutes_axis, (MAX_POINTS * POLL_SECONDS / 60).toInt()), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.node_live_now), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -155,4 +164,3 @@ private fun indexAt(x: Float, width: Float, count: Int): Int? {
     return ((x - startX) / step).toInt().coerceIn(0, count - 1)
 }
 
-private fun ago(millis: Long): String = if (millis < 1_000) "now" else "${millis / 1000}s ago"

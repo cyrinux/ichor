@@ -1,5 +1,8 @@
 package name.levis.talosmobile.ui.etcd
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import name.levis.talosmobile.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -75,7 +78,7 @@ import name.levis.talosmobile.ui.userMessage
 sealed interface DefragState {
     data object Idle : DefragState
     data class Running(val hostname: String, val index: Int, val total: Int) : DefragState
-    data class Done(val message: String) : DefragState
+    data class Done(val members: Int, val reclaimed: Long) : DefragState
     data class Failed(val message: String) : DefragState
 }
 
@@ -101,9 +104,7 @@ class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdO
                 }
             }
             val reclaimed = targets.sumOf { it.reclaimable }
-            _defrag.value = DefragState.Done(
-                "Defragmented ${targets.size} member(s), about ${formatBytes(reclaimed)} reclaimed",
-            )
+            _defrag.value = DefragState.Done(targets.size, reclaimed)
         }
     }
 
@@ -138,7 +139,7 @@ fun EtcdScreen(
             return
         }
         scope.launch {
-            if (authenticate(activity, "Defragment etcd") is AuthResult.Success) {
+            if (authenticate(activity, context.getString(R.string.etcd_auth_defrag)) is AuthResult.Success) {
                 vm.defragment(request.targets, request.hostnames)
             }
         }
@@ -149,7 +150,7 @@ fun EtcdScreen(
         topBar = {
             TopAppBar(
                 title = { Text("etcd") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
             )
         },
     ) { padding ->
@@ -207,12 +208,12 @@ private fun EtcdContent(
             }
         }
         if (etcd.alarms.isNotEmpty()) {
-            item { SectionTitle("Alarms") }
+            item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
             items(etcd.alarms) { alarm ->
                 Text("${hostnames[alarm.memberId] ?: alarm.memberId}: ${alarm.alarm}", color = colors.bad)
             }
         }
-        item { SectionTitle("Members (${etcd.members.size})") }
+        item { SectionTitle(stringResource(R.string.etcd_section_members, etcd.members.size)) }
         items(etcd.statuses, key = { it.node }) { status ->
             MemberStatusCard(
                 status = status,
@@ -226,7 +227,7 @@ private fun EtcdContent(
         }
         val unprobed = etcd.members.filter { m -> etcd.statuses.none { it.memberId == m.id } }
         if (unprobed.isNotEmpty()) {
-            item { SectionTitle("Members not in this talosconfig") }
+            item { SectionTitle(stringResource(R.string.etcd_section_unprobed)) }
             items(unprobed, key = { it.id }) { MemberCard(it) }
         }
     }
@@ -243,28 +244,28 @@ private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, onDefrag:
                     Text(status.node, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                 }
                 when {
-                    status.error != null -> StatusPill("Error", colors.bad)
-                    status.errors.isNotEmpty() -> StatusPill("Errors", colors.bad)
-                    status.isLeader -> StatusPill("Leader", colors.ok)
-                    status.isLearner -> StatusPill("Learner", colors.warn)
-                    else -> StatusPill("Follower", colors.muted)
+                    status.error != null -> StatusPill(stringResource(R.string.etcd_status_error), colors.bad)
+                    status.errors.isNotEmpty() -> StatusPill(stringResource(R.string.etcd_status_errors), colors.bad)
+                    status.isLeader -> StatusPill(stringResource(R.string.etcd_status_leader), colors.ok)
+                    status.isLearner -> StatusPill(stringResource(R.string.etcd_status_learner), colors.warn)
+                    else -> StatusPill(stringResource(R.string.etcd_status_follower), colors.muted)
                 }
             }
             if (status.error != null) {
                 Text(status.error, color = colors.bad, style = MaterialTheme.typography.bodySmall)
                 return@Column
             }
-            InfoRow("Member ID", status.memberId, mono = true)
-            InfoRow("DB size", "${formatBytes(status.dbSizeInUse)} in use / ${formatBytes(status.dbSize)}")
+            InfoRow(stringResource(R.string.etcd_member_id), status.memberId, mono = true)
+            InfoRow(stringResource(R.string.etcd_db_size), stringResource(R.string.etcd_db_size_value, formatBytes(status.dbSizeInUse), formatBytes(status.dbSize)))
             UsageBar(
                 if (status.dbSize > 0) status.dbSizeInUse.toFloat() / status.dbSize else 0f,
                 Modifier.padding(vertical = 4.dp),
             )
-            InfoRow("Raft term / index", "${status.raftTerm} / ${status.raftIndex}")
-            InfoRow("Storage version", status.version)
+            InfoRow(stringResource(R.string.etcd_raft), "${status.raftTerm} / ${status.raftIndex}")
+            InfoRow(stringResource(R.string.etcd_storage_version), status.version)
             status.errors.forEach { Text(it, color = colors.bad, style = MaterialTheme.typography.bodySmall) }
             if (onDefrag != null && status.reclaimable > 0) {
-                TextButton(onClick = onDefrag) { Text("Defragment (reclaims ${formatBytes(status.reclaimable)})") }
+                TextButton(onClick = onDefrag) { Text(stringResource(R.string.etcd_defragment_member, formatBytes(status.reclaimable))) }
             }
         }
     }
@@ -275,8 +276,8 @@ private fun MemberCard(member: EtcdMember) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text(member.hostname, style = MaterialTheme.typography.titleMedium)
-            InfoRow("Member ID", member.id, mono = true)
-            InfoRow("Peer URLs", member.peerUrls.joinToString("\n"), mono = true)
+            InfoRow(stringResource(R.string.etcd_member_id), member.id, mono = true)
+            InfoRow(stringResource(R.string.etcd_peer_urls), member.peerUrls.joinToString("\n"), mono = true)
         }
     }
 }
@@ -296,21 +297,24 @@ private fun DefragPanel(
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             when (defrag) {
                 is DefragState.Running -> {
-                    Text("Defragmenting ${defrag.hostname} (${defrag.index}/${defrag.total})…", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.etcd_defragmenting, defrag.hostname, defrag.index, defrag.total), style = MaterialTheme.typography.titleSmall)
                     LinearProgressIndicator(Modifier.fillMaxWidth())
                 }
                 is DefragState.Done -> {
-                    Text(defrag.message, color = colors.ok)
-                    TextButton(onClick = onDismiss) { Text("OK") }
+                    Text(
+                        pluralStringResource(R.plurals.etcd_defrag_done, defrag.members, defrag.members, formatBytes(defrag.reclaimed)),
+                        color = colors.ok,
+                    )
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
                 is DefragState.Failed -> {
                     Text(defrag.message, color = colors.bad)
-                    TextButton(onClick = onDismiss) { Text("OK") }
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                 }
                 DefragState.Idle -> {
-                    Text("About ${formatBytes(reclaimable)} reclaimable across ${order.size} member(s)", style = MaterialTheme.typography.titleSmall)
+                    Text(pluralStringResource(R.plurals.etcd_reclaimable_across, order.size, formatBytes(reclaimable), order.size), style = MaterialTheme.typography.titleSmall)
                     Text(
-                        "Defragmentation is resource heavy: members are done one at a time, followers first and the leader last.",
+                        stringResource(R.string.etcd_defrag_explainer),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -319,7 +323,7 @@ private fun DefragPanel(
                             onClick = { onDefrag(DefragRequest(order, hostnames)) },
                             enabled = order.isNotEmpty() && reclaimable > 0,
                             modifier = Modifier.fillMaxWidth(),
-                        ) { Text("Defragment all") }
+                        ) { Text(stringResource(R.string.etcd_defragment_all)) }
                     }
                 }
             }
@@ -332,18 +336,23 @@ private fun DefragConfirmDialog(request: DefragRequest, onConfirm: () -> Unit, o
     val names = request.targets.map { request.hostnames[it.memberId] ?: it.node }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (names.size == 1) "Defragment ${names.single()}?" else "Defragment ${names.size} members?") },
+        title = {
+            Text(
+                if (names.size == 1) {
+                    stringResource(R.string.etcd_confirm_single, names.single())
+                } else {
+                    pluralStringResource(R.plurals.etcd_confirm_multi, names.size, names.size)
+                },
+            )
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    "Each member is busy while it is defragmented and its requests are slower. " +
-                        "Members are done one at a time, never together, so the cluster keeps quorum.",
-                )
-                if (names.size > 1) Text("Order: ${names.joinToString(" → ")}", style = MaterialTheme.typography.bodySmall)
-                Text("About ${formatBytes(request.targets.sumOf { it.reclaimable })} should be reclaimed.", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.etcd_confirm_body))
+                if (names.size > 1) Text(stringResource(R.string.etcd_confirm_order, names.joinToString(" → ")), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.etcd_confirm_reclaim, formatBytes(request.targets.sumOf { it.reclaimable })), style = MaterialTheme.typography.bodySmall)
             }
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Defragment") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.etcd_defragment)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
 }

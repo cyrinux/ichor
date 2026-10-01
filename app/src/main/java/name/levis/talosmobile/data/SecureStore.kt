@@ -1,5 +1,7 @@
 package name.levis.talosmobile.data
 
+import androidx.annotation.StringRes
+import name.levis.talosmobile.R
 import android.content.pm.PackageManager
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
@@ -14,10 +16,10 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 /** Where the key protecting the config lives, strongest first. */
-enum class KeyProtection(val label: String) {
-    STRONGBOX("StrongBox security chip"),
-    TEE("Trusted Execution Environment"),
-    SOFTWARE("software keystore"),
+enum class KeyProtection(@StringRes val label: Int) {
+    STRONGBOX(R.string.settings_key_strongbox),
+    TEE(R.string.settings_key_tee),
+    SOFTWARE(R.string.settings_key_software),
 }
 
 /**

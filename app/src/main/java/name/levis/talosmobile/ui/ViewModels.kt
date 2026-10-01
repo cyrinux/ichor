@@ -45,7 +45,7 @@ abstract class LoadingViewModel<T> : ViewModel() {
             } catch (e: CancellationException) {
                 throw e // superseded by a newer refresh: don't report it as a failure
             } catch (e: Throwable) {
-                UiState.Failed(e.userMessage())
+                UiState.Failed(e.uiText())
             }
         }
     }

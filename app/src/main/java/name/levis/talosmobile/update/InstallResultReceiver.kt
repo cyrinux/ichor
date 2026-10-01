@@ -1,5 +1,7 @@
 package name.levis.talosmobile.update
 
+import name.levis.talosmobile.ui.UiText
+import name.levis.talosmobile.R
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -22,7 +24,8 @@ class InstallResultReceiver : BroadcastReceiver() {
             }
             PackageInstaller.STATUS_SUCCESS -> Unit // the app is replaced and restarted by the system
             else -> {
-                val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: "status $status"
+                val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)?.let { UiText.Raw(it) }
+                    ?: UiText.Res(R.string.update_install_status, status)
                 (context.applicationContext as TalosApp).updateManager.onInstallFailed(message)
             }
         }
