@@ -242,6 +242,27 @@ final class AppModel {
         apply(yaml: patched, summary: parsed, preferred: context)
     }
 
+    /// Adds discovered `nodes` (addresses) to the active context's nodes, keeping the other
+    /// contexts; the overview reloads with them.
+    func addNodes(_ nodes: [String]) async throws {
+        guard let current = yaml else { throw TalosError(message: String(localized: "No talosconfig is stored.")) }
+        let context = activeContext
+        let updated = try await TalosClient.addContextNodes(stored: current, context: context, nodes: nodes)
+        let parsed = try await TalosClient.parse(updated)
+        try SecureConfigStore.save(Data(updated.utf8))
+        apply(yaml: updated, summary: parsed, preferred: context)
+        dataGeneration += 1
+    }
+
+    /// Discovered members set aside with "Not now", per context, until the app restarts.
+    @ObservationIgnored private var dismissedByContext: [String: Set<String>] = [:]
+
+    func dismissedNodes(of context: String) -> Set<String> { dismissedByContext[context] ?? [] }
+
+    func dismissNodes(_ nodes: [DiscoveredNode], of context: String) {
+        dismissedByContext[context, default: []].formUnion(nodes.map(\.address))
+    }
+
     func clear() {
         SecureConfigStore.delete()
         SharedStore.save(nil) // the widget stops showing the old cluster
