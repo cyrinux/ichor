@@ -212,6 +212,22 @@ final class AppModel {
         apply(yaml: merged, summary: parsed, preferred: parsed.current)
     }
 
+    /// Replaces the stored config with `newYAML` (a restored backup) in one write, so a
+    /// failure leaves the previous one in place, and shows the context at `activeIndex`.
+    func replace(yaml newYAML: String, activeIndex: Int?) async throws {
+        let parsed = try await TalosClient.parse(newYAML)
+        try SecureConfigStore.save(Data(newYAML.utf8))
+        SharedStore.save(nil) // the widget stops showing the previous config's cluster
+        apply(yaml: newYAML, summary: parsed, preferred: parsed.selectedContext(index: activeIndex, name: nil))
+        dataGeneration += 1
+    }
+
+    /// Restored names (all of them) and colors (the others keep the one just assigned) of the stored clusters.
+    func restoreClusterSettings(names: [String: String], colors: [String: Int]) {
+        storeColors(clusterColors.merging(colors) { _, new in new })
+        storeNames(names)
+    }
+
     /// Removes the cluster `name` (a context and its credentials) from the stored config,
     /// showing its neighbour if it was the active one. Removing the last one deletes the
     /// stored config.

@@ -52,6 +52,7 @@ import name.levis.ichor.ui.components.text
 import name.levis.ichor.model.allows
 import name.levis.ichor.data.UiPreferences
 import name.levis.ichor.security.AppLock
+import name.levis.ichor.ui.backup.BackupSection
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.importconfig.certExpiry
@@ -137,6 +138,7 @@ fun SettingsScreen(
                 InfoRow(stringResource(R.string.settings_encryption_key), stringResource(R.string.settings_encryption_value, stringResource(it.label)))
             }
             OutlinedButton(onClick = onReimport, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_import_new)) }
+            BackupSection(hasConfig = config != null)
             OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.settings_delete_config))
             }

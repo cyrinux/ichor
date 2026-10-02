@@ -87,6 +87,22 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
     }
 
     /**
+     * Replaces the stored config with [yaml] (a restored backup) in one write, so a failure
+     * leaves the previous one in place, and shows the context at [activeIndex].
+     */
+    suspend fun replace(yaml: String, activeIndex: Int) = withContext(Dispatchers.IO) {
+        val summary = parse(yaml)
+        val active = contextAt(summary, activeIndex)
+        store.write(yaml.encodeToByteArray())
+        saveActive(summary, active)
+        _config.value = StoredConfig(yaml, summary, active)
+        _generation.value++
+    }
+
+    /** The position of the context on screen (contexts keep their order whether masked or not). */
+    fun activeIndex(): Int = _config.value?.let { it.summary.indexOf(it.activeContext) } ?: -1
+
+    /**
      * Removes the cluster [name] (a context and its credentials) from the stored config,
      * showing its neighbour if it was the active one. Removing the last one deletes the
      * stored config. Returns whether a config is still stored.

@@ -68,6 +68,7 @@ struct SettingsView: View {
                 }
                 Button("Delete stored talosconfig", role: .destructive) { confirmDelete = true }
             }
+            BackupSection()
             if model.allows(.supportBundle) {
                 let support = model.clusterSupport(.supportBundle)
                 Section {

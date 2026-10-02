@@ -59,6 +59,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.model.ImportChoice
 import name.levis.ichor.model.ImportConflict
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.backup.RestoreBackupButton
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -132,6 +133,8 @@ fun ImportScreen(
                     onPasted = { pasted = it },
                     onYaml = vm::submit,
                     onDemo = vm::startDemo,
+                    // A restore replaces every cluster: offered when there is none yet.
+                    restore = if (firstRun) ({ RestoreBackupButton(onRestored = onImported) }) else null,
                 )
             }
         }
@@ -147,6 +150,7 @@ private fun SourcePicker(
     onPasted: (String) -> Unit,
     onYaml: (String) -> Unit,
     onDemo: () -> Unit,
+    restore: (@Composable () -> Unit)?,
 ) {
     val tabs = listOf(
         stringResource(R.string.import_tab_file) to Icons.Outlined.FileOpen,
@@ -159,6 +163,10 @@ private fun SourcePicker(
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.demo_hint), style = MaterialTheme.typography.bodyMedium)
                 OutlinedButton(onClick = onDemo) { Text(stringResource(R.string.demo_try)) }
+                restore?.let {
+                    Text(stringResource(R.string.backup_restore_hint), style = MaterialTheme.typography.bodyMedium)
+                    it()
+                }
             }
         }
         TabRow(selectedTabIndex = tab) {
