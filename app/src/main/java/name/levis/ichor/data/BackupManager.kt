@@ -31,6 +31,7 @@ class BackupManager(
     private val wakeOnLan: WakeOnLanStore,
     private val monitor: MonitorStore,
     private val setPrivacyMask: (PrivacyMask) -> Unit,
+    private val notificationsAllowed: () -> Boolean,
     private val onRestored: () -> Unit,
 ) {
     /** The backup file of the stored config and settings, sealed with [passphrase]. */
@@ -73,27 +74,33 @@ class BackupManager(
             TalosJson.decodeFromString(BackupPayload.serializer(), json)
         }
         val settings = payload.settings
-        // First: the config is parsed (and its names masked) under the restored setting.
-        if (settings.privacyMask != null) {
-            setPrivacyMask(PrivacyMask(settings.privacyMask, settings.privacyMaskWords.orEmpty()))
-        }
+        // The config first: on failure nothing else changed. Screenshot mode comes after it,
+        // its re-parse then reads the restored config (applied before, it could race the write).
         configs.replace(payload.talosconfig, payload.activeContextIndex)
         val summary = configs.config.value?.summary ?: throw NoConfigException()
+        val fingerprints = summary.contexts.map { it.fingerprint }
 
-        // After the config: syncing the stores to it would forget clusters not stored yet.
-        val restored = restoredClusters(payload.clusters, summary.contexts.map { it.fingerprint })
+        // Syncing the stores to the new config already forgot the clusters no longer stored.
+        val restored = restoredClusters(payload.clusters, fingerprints)
         restored.colors.forEach { (fp, color) -> colors.set(fp, color) }
-        summary.contexts.forEach { ctx ->
-            names.set(ctx.fingerprint, restored.names[ctx.fingerprint].orEmpty())
-            vpnOnly.set(ctx.fingerprint, ctx.fingerprint in restored.vpnOnly)
+        fingerprints.forEach { fp ->
+            names.set(fp, restored.names[fp].orEmpty())
+            vpnOnly.set(fp, fp in restored.vpnOnly)
         }
+        (wakeOnLan.targets.value.keys - restored.wakeOnLan.keys)
+            .filter { it.substringBefore('|') in fingerprints }
+            .forEach { wakeOnLan.set(it.substringBefore('|'), it.substringAfter('|'), null) }
         restored.wakeOnLan.forEach { (key, target) ->
             wakeOnLan.set(key.substringBefore('|'), key.substringAfter('|'), target)
+        }
+        if (settings.privacyMask != null) {
+            setPrivacyMask(PrivacyMask(settings.privacyMask, settings.privacyMaskWords.orEmpty()))
         }
 
         settings.themeMode?.let { ui.setThemeMode(ThemeMode.parse(it.uppercase())) }
         settings.liveClusterStats?.let(ui::setLiveClusterStats)
-        settings.monitorAlerts?.let(monitor::setAlertsEnabled)
+        // Alerts need this device's notification permission; without it they stay off.
+        settings.monitorAlerts?.let { monitor.setAlertsEnabled(it && notificationsAllowed()) }
         settings.monitorIntervalMinutes?.takeIf { it in MonitorStore.INTERVALS }?.let(monitor::setIntervalMinutes)
         val language = settings.language?.let(AppLocale::normalize)
         val languageChanged = language != null && language != ui.language.value

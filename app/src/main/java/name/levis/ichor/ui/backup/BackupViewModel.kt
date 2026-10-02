@@ -20,14 +20,19 @@ sealed interface BackupState {
     data object NewPassphrase : BackupState
     data object Sealing : BackupState
 
-    /** Sealed, waiting for the user to pick where to save it. */
+    /** Sealed, the save picker is to be opened (once: [Saving] while it shows). */
     class ReadyToSave(val file: ByteArray) : BackupState
+
+    /** The save picker is open. */
+    class Saving(val file: ByteArray) : BackupState
     data object Saved : BackupState
 
     /** A picked backup file, waiting for its passphrase; [error] after a wrong one. */
     class Passphrase(val file: ByteArray, val error: UiText? = null) : BackupState
     data object Restoring : BackupState
+    /** Restored, the screen is to act on [outcome] (once: [RestoreDone] after). */
     data class Restored(val outcome: RestoreOutcome) : BackupState
+    data object RestoreDone : BackupState
 
     data class Failed(val message: UiText) : BackupState
 }
@@ -49,6 +54,20 @@ class BackupViewModel(private val manager: BackupManager) : ViewModel() {
                 onFailure = { BackupState.Failed(it.uiText()) },
             )
         }
+    }
+
+    /** The save picker opens for the sealed file; false when it already did (recomposition). */
+    fun openSaver(): Boolean {
+        val ready = _state.value as? BackupState.ReadyToSave ?: return false
+        _state.value = BackupState.Saving(ready.file)
+        return true
+    }
+
+    /** The restore's outcome, for the screen to act on once (recomposition, recreate()). */
+    fun takeRestored(): RestoreOutcome? {
+        val restored = _state.value as? BackupState.Restored ?: return null
+        _state.value = BackupState.RestoreDone
+        return restored.outcome
     }
 
     fun saved() {

@@ -78,6 +78,7 @@ class BackupTest {
 
         assertEquals(payload, TalosJson.decodeFromString(BackupPayload.serializer(), json))
         assertTrue("unset settings are left out", "\"privacyMask\"" !in json)
+        assertTrue("the Go core requires the format", "\"format\":1" in json)
     }
 
     @Test

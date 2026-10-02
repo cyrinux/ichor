@@ -52,12 +52,6 @@ struct ImportView: View {
             }
         }
         .sheet(isPresented: $showingHelp) { HelpSheet() }
-        .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.yaml, .plainText, .data, .item]) { result in
-            switch result {
-            case .success(let url): readFile(url)
-            case .failure(let failure): error = failure.localizedDescription
-            }
-        }
     }
 
     private var picker: some View {
@@ -74,6 +68,14 @@ struct ImportView: View {
                 }
                 .buttonStyle(.bordered)
                 .disabled(busy)
+                // A restore replaces every cluster: offered when there is none yet.
+                if model.yaml == nil {
+                    Text("Moving from another phone? Restore the backup you made there.")
+                        .font(.callout).foregroundStyle(.secondary)
+                    RestoreBackupButton(confirmFirst: false, onRestored: onImported) { error = $0 }
+                        .buttonStyle(.bordered)
+                        .disabled(busy)
+                }
             }
             Picker("Source", selection: $source) {
                 ForEach(Source.allCases) { Text($0.label).tag($0) }
@@ -87,7 +89,15 @@ struct ImportView: View {
             case .file:
                 Text("Select your talosconfig (~/.talos/config on your workstation), e.g. shared via AirDrop to Files.")
                     .font(.callout).foregroundStyle(.secondary)
-                Button("Choose file") { showingImporter = true }.buttonStyle(.borderedProminent)
+                // On the button, not the screen: the restore button has a file importer of its own.
+                Button("Choose file") { showingImporter = true }
+                    .buttonStyle(.borderedProminent)
+                    .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.yaml, .plainText, .data, .item]) { result in
+                        switch result {
+                        case .success(let url): readFile(url)
+                        case .failure(let failure): error = failure.localizedDescription
+                        }
+                    }
                 Spacer()
             case .paste:
                 TextEditor(text: $pasted)

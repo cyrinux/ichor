@@ -63,7 +63,7 @@ fun BackupFlow(vm: BackupViewModel, onRestored: () -> Unit = {}): () -> Unit {
     val state by vm.state.collectAsStateWithLifecycle()
 
     val saver = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
-        val ready = vm.state.value as? BackupState.ReadyToSave
+        val ready = vm.state.value as? BackupState.Saving
         if (uri == null || ready == null) return@rememberLauncherForActivityResult vm.reset()
         scope.launch {
             runCatching { writeBytes(context, uri, ready.file) }.fold(onSuccess = { vm.saved() }, onFailure = { vm.fail() })
@@ -76,14 +76,17 @@ fun BackupFlow(vm: BackupViewModel, onRestored: () -> Unit = {}): () -> Unit {
 
     when (val state = state) {
         BackupState.NewPassphrase -> NewPassphraseDialog(onConfirm = vm::seal, onDismiss = vm::reset)
-        is BackupState.ReadyToSave -> LaunchedEffect(state) { saver.launch(backupFileName(LocalDate.now())) }
+        is BackupState.ReadyToSave -> LaunchedEffect(state) {
+            if (vm.openSaver()) saver.launch(backupFileName(LocalDate.now()))
+        }
         is BackupState.Passphrase -> UnlockDialog(state.error, working = false, onConfirm = vm::restore, onDismiss = vm::reset)
         BackupState.Restoring -> UnlockDialog(null, working = true, onConfirm = {}, onDismiss = {})
         is BackupState.Restored -> LaunchedEffect(state) {
-            if (state.outcome.languageChanged && AppLocale.apply(context, state.outcome.language)) {
+            val outcome = vm.takeRestored() ?: return@LaunchedEffect
+            onRestored()
+            if (outcome.languageChanged && AppLocale.apply(context, outcome.language)) {
                 context.findFragmentActivity()?.recreate()
             }
-            onRestored()
         }
         else -> Unit
     }
@@ -96,7 +99,7 @@ fun BackupStatus(state: BackupState) {
     val text = when (state) {
         BackupState.Sealing -> stringResource(R.string.backup_sealing)
         BackupState.Saved -> stringResource(R.string.backup_saved)
-        is BackupState.Restored -> stringResource(R.string.backup_restored)
+        is BackupState.Restored, BackupState.RestoreDone -> stringResource(R.string.backup_restored)
         is BackupState.Failed -> state.message.asString()
         else -> return
     }

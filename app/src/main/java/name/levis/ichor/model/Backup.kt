@@ -1,5 +1,7 @@
 package name.levis.ichor.model
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 /**
@@ -11,10 +13,11 @@ import kotlinx.serialization.Serializable
  * Not included: AI diagnosis settings and keys (a third-party service, enabled per device),
  * the app lock and screenshot settings (per-device security), and caches.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class BackupPayload(
     /** The payload version, checked by the Go core; bump it for changes older apps cannot read. */
-    val format: Int = BACKUP_FORMAT,
+    @EncodeDefault val format: Int = BACKUP_FORMAT,
     val platform: String = "",
     /** Unix seconds. */
     val createdAt: Long = 0,

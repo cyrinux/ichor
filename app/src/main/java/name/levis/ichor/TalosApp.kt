@@ -27,6 +27,7 @@ import androidx.glance.appwidget.updateAll
 import name.levis.ichor.widget.ClusterWidget
 import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.monitor.MonitorStore
+import name.levis.ichor.monitor.canPostNotifications
 import name.levis.ichor.monitor.syncMonitoring
 import name.levis.ichor.security.AppLock
 import name.levis.ichor.security.PrefsLockSettings
@@ -99,6 +100,7 @@ class TalosApp : Application() {
         BackupManager(
             configRepository, uiPreferences, clusterColors, clusterNames, vpnOnly, wakeOnLan, monitorStore,
             setPrivacyMask = ::setPrivacyMask,
+            notificationsAllowed = { canPostNotifications(this) },
             onRestored = {
                 talosRepository.invalidate()
                 forgetShownCluster()

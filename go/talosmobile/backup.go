@@ -63,9 +63,10 @@ const (
 	backupMemory  = 64 * 1024
 	backupThreads = 4
 
-	// Bounds on what a file may ask for, so a crafted backup cannot exhaust memory or CPU.
+	// Bounds on what a file may ask for, so a crafted backup cannot exhaust memory or CPU
+	// (before the passphrase is checked); a phone app is killed well below 256 MiB.
 	backupMaxTime    = 10
-	backupMaxMemory  = 256 * 1024
+	backupMaxMemory  = 128 * 1024
 	backupMaxThreads = 16
 
 	// A talosconfig with many clusters and the settings stay far below this.

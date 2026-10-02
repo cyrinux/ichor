@@ -144,6 +144,23 @@ dark and true black alike) is generated from the color of the cluster on screen,
 always clear which cluster a reboot is about to hit. Background alerts and the widget follow
 the cluster on screen.
 
+### Backup and restore
+
+The stored config's key never leaves the phone, so moving to a new phone takes a backup:
+**Settings → Back up clusters and settings** (with the app lock on, you authenticate
+first). Restore it from the same section, or from **Restore a backup** on the first screen of
+a fresh install. Backups move between Android and iOS.
+
+- **What it holds:** the talosconfig (every cluster's credentials), the cluster on screen,
+  theme, language, screenshot mode, monitoring, and each cluster's name, color, VPN-only
+  setting and Wake-on-LAN targets (the last two exist on Android only).
+- **What it leaves out:** AI diagnosis settings and API keys, the app lock and "Allow
+  screenshots" (set them again on the new phone).
+- **Encryption:** a passphrase of at least 12 characters. The key comes from Argon2id (64 MiB,
+  3 passes) and the file is sealed with AES-256-GCM. Without the passphrase it cannot be opened,
+  and the passphrase cannot be recovered.
+- **Restoring replaces** every cluster and setting on the phone with those of the backup.
+
 ## Safety features
 
 - **Reboot / shutdown:** the same options as talosctl, from the Talos v1.14 sequencer:

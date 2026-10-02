@@ -74,6 +74,16 @@ struct TalosClient: Sendable {
         try await run { TalosmobileMergeConfig(stored, added, choices, $0) }
     }
 
+    /// The backup file of `payload` (backup JSON) sealed with `passphrase` (Argon2id, AES-256-GCM).
+    static func encryptBackup(payload: String, passphrase: String) async throws -> Data {
+        try await run { TalosmobileEncryptBackup(payload, passphrase, $0) ?? Data() }
+    }
+
+    /// The validated payload JSON of a backup `file`.
+    static func decryptBackup(_ file: Data, passphrase: String) async throws -> String {
+        try await run { TalosmobileDecryptBackup(file, passphrase, $0) }
+    }
+
     /// `stored` without `context` (not the last one: the stored config is deleted instead).
     static func removeContext(stored: String, context: String) async throws -> String {
         try await run { TalosmobileRemoveContext(stored, context, $0) }
