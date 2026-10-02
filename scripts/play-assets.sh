@@ -27,7 +27,6 @@ PHONE="#0F1A2A"
 GLOW="#1E3350"
 INK="#E8EEF5"
 INK_2="#93A3B8"
-ACCENT="#FF7A45"
 EDGE="#2C3A4F"
 
 setup_fonts() {
@@ -52,21 +51,20 @@ EOF
     fi
 }
 
-# The hexagon "node" mark, in the launcher's 108-unit coordinates.
+# The Ichor logo (docs/brand/ichor.svg) as an inline <svg> at x,y with the given edge, so
+# librsvg draws it as vectors rather than loading an external image.
 mark() {
-    cat <<EOF
-<path d="M54,30 L74.8,42 L74.8,66 L54,78 L33.2,66 L33.2,42 Z" fill="none" stroke="$ACCENT" stroke-width="5" stroke-linejoin="round"/>
-<circle cx="54" cy="54" r="8" fill="$ACCENT"/>
-EOF
+    local x="$1" y="$2" size="$3"
+    sed "s#<svg #<svg x=\"$x\" y=\"$y\" width=\"$size\" height=\"$size\" #" "$repo_root/docs/brand/ichor.svg"
 }
 
 render_icon() {
-    # Play masks the icon itself, so the background fills the square. The viewBox crops the
-    # adaptive canvas (108) to its central 72 units so the mark reads at small sizes.
+    # Play masks the icon itself, so the background fills the square; the logo keeps a
+    # margin so the mask does not clip the crest.
     cat > "$work/icon.svg" <<EOF
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="18 18 72 72">
-  <rect x="18" y="18" width="72" height="72" fill="$BG_ICON"/>
-  $(mark)
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="$BG_ICON"/>
+  $(mark 40 40 432)
 </svg>
 EOF
     magick -background none "$work/icon.svg" -define png:exclude-chunks=date,time -depth 8 "PNG32:$out/icon.png"
@@ -89,10 +87,8 @@ render_feature_graphic() {
   </defs>
   <rect width="1024" height="500" fill="url(#glow)"/>
 
-  <g transform="translate(64,62) scale(0.62)">
-    <g transform="translate(-33,-30)">$(mark)</g>
-  </g>
-  <text x="114" y="99" fill="$INK" font-family="IBM Plex Sans, DejaVu Sans" font-weight="600" font-size="26">Ichor<tspan dx="9" fill="$INK_2" font-weight="400">for Talos Linux</tspan></text>
+  $(mark 56 56 56)
+  <text x="122" y="99" fill="$INK" font-family="IBM Plex Sans, DejaVu Sans" font-weight="600" font-size="26">Ichor<tspan dx="9" fill="$INK_2" font-weight="400">for Talos Linux</tspan></text>
 
   <text fill="$INK" font-family="IBM Plex Sans, DejaVu Sans" font-weight="600" font-size="56" letter-spacing="-1.2">
     <tspan x="64" y="218">Your Talos cluster,</tspan>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed-icon layer: the single-colour Ichor glyph.
+     Generated from docs/brand/ichor-glyph.svg by scripts/brand-assets.py; edit the SVG. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="920"
+    android:viewportHeight="920">
+    <path
+        android:pathData="M504.1,276.6 A212,212,0,0,1,667.4,439.9"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="40" />
+    <path
+        android:pathData="M671.9,476.6 A212,212,0,0,1,559.5,671.2"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="40" />
+    <path
+        android:pathData="M415.9,276.6 A212,212,0,0,0,252.6,439.9"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="40" />
+    <path
+        android:pathData="M248.1,476.6 A212,212,0,0,0,360.5,671.2"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="40" />
+    <path
+        android:pathData="M460,212 L432,228 L444,320 L460,336 L476,320 L488,228 Z"
+        android:fillColor="#FFFFFFFF" />
+    <path
+        android:pathData="M460,304 C394,304,356,348,356,408 L356,504 L396,554 L524,554 L564,504 L564,408 C564,348,526,304,460,304 Z M366,388 L460,414 L554,388 L548,436 L506,454 L484,454 L484,554 L436,554 L436,454 L414,454 L372,436 Z"
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd" />
+    <path
+        android:pathData="M460,584 C460,584,418,634,418,660 A42,42,0,0,0,502,660 C502,634,460,584,460,584 Z"
+        android:fillColor="#FFFFFFFF" />
+</vector>
