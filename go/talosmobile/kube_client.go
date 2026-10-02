@@ -156,9 +156,17 @@ func (k *kubeClient) patch(ctx context.Context, path, contentType string, body a
 }
 
 func (k *kubeClient) do(ctx context.Context, method, path, contentType string, body []byte, out any) error {
+	// path is already escaped (url.PathEscape on names): keep it as the raw path.
 	u := *k.base
 	path, u.RawQuery, _ = strings.Cut(path, "?")
-	u.Path = strings.TrimSuffix(u.Path, "/") + path
+	u.RawPath = strings.TrimSuffix(k.base.EscapedPath(), "/") + path
+
+	unescaped, err := url.PathUnescape(u.RawPath)
+	if err != nil {
+		return fmt.Errorf("bad Kubernetes API path %q: %w", path, err)
+	}
+
+	u.Path = unescaped
 
 	req, err := http.NewRequestWithContext(ctx, method, u.String(), bytes.NewReader(body))
 	if err != nil {
