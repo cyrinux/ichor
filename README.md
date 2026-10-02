@@ -22,8 +22,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   each node's network cards are recorded on the phone while it is up, so a node that goes down
   before it was set up can still be woken.
 - **Kubernetes:** list Deployments, StatefulSets and DaemonSets with their rollout state and
-  restart one with a rolling update (`kubectl rollout restart`), or export a kubeconfig to open
-  the cluster in kubenav.
+  restart one with a rolling update (`kubectl rollout restart`); list pods with their
+  `kubectl get pods` status and delete one so its controller starts a new one; or export a
+  kubeconfig to open the cluster in kubenav.
 - **Background:** alerts and a home-screen widget.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
@@ -74,7 +75,7 @@ reads those roles and explains up front when a feature needs more.
 | **Reboot (`-m default\|powercycle\|force`) / shutdown (`--force`)** | `Reboot`, `Shutdown` | **`os:operator`** |
 | **Cluster health check** | `ClusterService/HealthCheck` | **`os:admin`** |
 | **Kubeconfig export** | `Kubeconfig` | **`os:admin`** |
-| **Kubernetes workloads, rollout restart** | `Kubeconfig`, then the Kubernetes API | **`os:admin`** |
+| **Kubernetes workloads and pods, rollout restart, pod delete** | `Kubeconfig`, then the Kubernetes API | **`os:admin`** |
 
 Notes:
 

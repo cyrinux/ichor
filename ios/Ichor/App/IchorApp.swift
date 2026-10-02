@@ -157,7 +157,7 @@ struct MainNavigation: View {
                     case .changelog: ChangelogView()
                     case .etcd: EtcdView()
                     case .kubespan: KubeSpanView()
-                    case .workloads: WorkloadsView()
+                    case .workloads: KubernetesView()
                     case .health: HealthView()
                     case .settings: SettingsView()
                     case .diagnosis(let note): DiagnosisView(initialNote: note)

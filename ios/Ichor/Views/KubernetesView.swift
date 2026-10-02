@@ -1,14 +1,61 @@
 import SwiftUI
 import IchorCore
 
-/// Deployments, StatefulSets and DaemonSets of the cluster, through the Kubernetes API with
-/// the admin kubeconfig Talos issues (os:admin), with a rolling restart like
-/// `kubectl rollout restart`.
-struct WorkloadsView: View {
-    @Environment(AppModel.self) private var model
-    @State private var state: LoadState<[KubeWorkload]> = .loading
+/// The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
+/// issues (os:admin): workloads with rollout restart, and pods. The namespace filter and the
+/// search carry over between the two.
+struct KubernetesView: View {
+    enum Tab: Hashable { case workloads, pods }
+
+    @State private var tab = Tab.workloads
     @State private var namespace: String?
     @State private var query = ""
+
+    var body: some View {
+        Group {
+            switch tab {
+            case .workloads: WorkloadsList(namespace: $namespace, query: query)
+            case .pods: PodsList(namespace: $namespace, query: query)
+            }
+        }
+        .safeAreaInset(edge: .top) {
+            Picker(selection: $tab) {
+                Text("Workloads").tag(Tab.workloads)
+                Text("Pods").tag(Tab.pods)
+            } label: {
+                EmptyView()
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.bottom, 6)
+            .background(.bar)
+        }
+        .searchable(text: $query, prompt: Text("Name, kind or image"))
+        .navigationTitle(Text(verbatim: "Kubernetes"))
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Picker of the namespaces present in the list; nil is every namespace.
+struct NamespacePicker: View {
+    let namespaces: [String]
+    @Binding var namespace: String?
+
+    var body: some View {
+        Picker("Namespace", selection: $namespace) {
+            Text("All namespaces").tag(String?.none)
+            ForEach(namespaces, id: \.self) { Text(verbatim: $0).tag(String?.some($0)) }
+        }
+    }
+}
+
+/// Deployments, StatefulSets and DaemonSets with a rolling restart like `kubectl rollout restart`.
+private struct WorkloadsList: View {
+    @Binding var namespace: String?
+    let query: String
+
+    @Environment(AppModel.self) private var model
+    @State private var state: LoadState<[KubeWorkload]> = .loading
     @State private var confirm: KubeWorkload?
     @State private var restarting: Set<String> = []
     @State private var resultMessage: String?
@@ -19,12 +66,7 @@ struct WorkloadsView: View {
             let selected = namespace.flatMap { namespaces.contains($0) ? $0 : nil }
             let shown = filterWorkloads(workloads, namespace: selected, query: query)
             List {
-                Section {
-                    Picker("Namespace", selection: $namespace) {
-                        Text("All namespaces").tag(String?.none)
-                        ForEach(namespaces, id: \.self) { Text(verbatim: $0).tag(String?.some($0)) }
-                    }
-                }
+                Section { NamespacePicker(namespaces: namespaces, namespace: $namespace) }
                 Section {
                     ForEach(shown) { workload in
                         WorkloadRow(workload: workload, showNamespace: selected == nil,
@@ -44,9 +86,6 @@ struct WorkloadsView: View {
             .refreshable { await load() }
             .themedBackground()
         }
-        .searchable(text: $query, prompt: Text("Name, kind or image"))
-        .navigationTitle(Text("Workloads"))
-        .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .confirmationDialog(confirm.map { String(localized: "Restart \($0.kind) \($0.name)?") } ?? "",
                             isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }),
