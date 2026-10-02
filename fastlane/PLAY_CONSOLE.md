@@ -19,8 +19,9 @@ the `play` build type, i.e. the release build with
   crypto addresses are hidden. The website keeps them.
 
 CI builds it on every push (artifact `android-play`, with its R8 mapping). On a `v*` tag,
-`release.yml` uploads it with the listing and release notes to the **internal** track as a
-**draft**, once the `PLAY_SERVICE_ACCOUNT_JSON` secret is set.
+`release.yml` uploads it with its mapping and release notes to the **internal** track as a
+**draft**, once the `WIF_PROVIDER` and `SERVICE_ACCOUNT` secrets are set. The store listing
+(texts, images) is not uploaded by CI: push it with `fastlane supply` (see below).
 
 ## One-time setup
 
@@ -33,10 +34,14 @@ CI builds it on every push (artifact `android-play`, with its R8 mapping). On a 
    signs with.
 3. **Upload the first AAB by hand** (`android-play` artifact of the tag's run, or
    `ICHOR_KEYSTORE=… just build-play`): the API cannot create the first release.
-4. **Service account for CI uploads:** Google Cloud → create a service account and a JSON
-   key; Play Console → Users and permissions → invite its email with *Release to testing
-   tracks* and *Manage store presence* for this app. Then:
-   `gh secret set PLAY_SERVICE_ACCOUNT_JSON < play-service-account.json`.
+4. **Service account for CI uploads (Workload Identity Federation, no JSON key):** Google
+   Cloud → enable the *Google Play Android Developer API*, create a service account, a
+   workload identity pool with a GitHub OIDC provider restricted to this repository
+   (`assertion.repository == 'cyrinux/ichor'`), and grant the repository's principal
+   *Workload Identity User* on the service account. Play Console → Users and permissions →
+   invite the service account's email with *Release to testing tracks* for this app. Then:
+   `gh secret set WIF_PROVIDER --body projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>`
+   and `gh secret set SERVICE_ACCOUNT --body <name>@<project>.iam.gserviceaccount.com`.
 5. **Closed test** (new personal developer accounts): at least 12 testers opted in for 14
    days in a row before production access can be requested.
 6. **Reviewer access:** the app does nothing without a talosconfig, and reviewers reject apps
@@ -188,9 +193,11 @@ no foreground service declaration.
 
 - Release name: `0.6.0`, versionCode `56` (the commit count at the tag; `scripts/version.sh`).
 - Release notes: `fastlane/metadata/android/<locale>/changelogs/56.txt`. For each later
-  release, add `<versionCode>.txt` per locale (500 characters max).
+  release, add `<versionCode>.txt` per locale (500 characters max); CI falls back to
+  `default.txt` and uploads none for a locale that has neither.
 - Every tag: CI uploads the bundle as a draft on the internal track; promote it to closed
-  testing or production in the Console. By hand, the same upload is:
+  testing or production in the Console. By hand, with a JSON key, the same upload plus the
+  store listing is:
 
 ```sh
 fastlane supply --package_name name.levis.ichor --json_key play-service-account.json \
