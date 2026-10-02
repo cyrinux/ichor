@@ -76,6 +76,17 @@
         <item quantity="one">unreachable</item>
         <item quantity="other">unreachable</item>
     </plurals>
+    <string name="overview_status_healthy">Healthy</string>
+    <string name="overview_status_degraded">Degraded</string>
+    <string name="overview_status_down">Unreachable</string>
+    <plurals name="overview_summary_nodes">
+        <item quantity="one">%d node</item>
+        <item quantity="other">%d nodes</item>
+    </plurals>
+    <string name="overview_stat_nodes">Nodes</string>
+    <string name="overview_stat_cpu">CPU cores</string>
+    <string name="overview_stat_memory">Memory</string>
+    <string name="overview_stat_memory_used">%d%% used</string>
     <string name="overview_node_actions">Node actions</string>
     <string name="overview_role_control_plane">control plane</string>
     <string name="overview_update_banner">Ichor %1$s is available — tap to update</string>

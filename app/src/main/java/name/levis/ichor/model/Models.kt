@@ -89,6 +89,10 @@ data class NodeOverview(
     val stage: String = "unknown",
     val ready: Boolean = false,
     val unmetConditions: List<UnmetCondition> = emptyList(),
+    /** Capacity for the cluster summary; 0 when unknown (older core, or the node did not say). */
+    val cpuCount: Int = 0,
+    val memTotal: Long = 0,
+    val memAvailable: Long = 0,
 )
 
 @Serializable

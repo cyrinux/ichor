@@ -3,7 +3,6 @@ package name.levis.ichor.ui.overview
 import name.levis.ichor.BuildConfig
 import name.levis.ichor.ui.components.rememberClusterLabels
 import android.widget.Toast
-import androidx.annotation.PluralsRes
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -71,8 +70,8 @@ import name.levis.ichor.model.ClusterTime
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.util.daysUntil
-import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.model.NodeOverview
+import name.levis.ichor.model.clusterSummary
 import name.levis.ichor.model.health
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
@@ -210,6 +209,7 @@ fun OverviewScreen(
             ) {
                 NodeList(
                     overview = s.data,
+                    clusterName = config?.activeSummary?.let(clusterLabels::of),
                     time = timeState,
                     certificate = config?.activeSummary,
                     onIssueConfig = onIssueConfig,
@@ -229,6 +229,7 @@ fun OverviewScreen(
 @Composable
 private fun NodeList(
     overview: ClusterOverview,
+    clusterName: String?,
     time: UiState<ClusterTime>,
     certificate: ContextSummary?,
     onIssueConfig: () -> Unit,
@@ -260,7 +261,7 @@ private fun NodeList(
         if (BuildConfig.DONATIONS) item { SupportCard() }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
-        item { Summary(overview.nodes) }
+        item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes)) }
         items(nodes, key = { it.node }) { node ->
             SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {
                 NodeCard(node, onClick = { onNode(node) }, onLongClick = { sheetFor = node })
@@ -268,29 +269,6 @@ private fun NodeList(
         }
         // After the nodes: they come first, the clocks are a secondary check.
         item { TimeDriftCard(time, overview.nodes.associate { it.node to it.hostname }) }
-    }
-}
-
-@Composable
-private fun Summary(nodes: List<NodeOverview>) {
-    val colors = LocalStatusColors.current
-    val counts = nodes.groupingBy { it.health }.eachCount()
-    Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-        SummaryCount(counts[NodeHealth.READY] ?: 0, R.plurals.overview_summary_ready, colors.ok)
-        SummaryCount(counts[NodeHealth.NOT_READY] ?: 0, R.plurals.overview_summary_not_ready, colors.warn)
-        SummaryCount(counts[NodeHealth.UNREACHABLE] ?: 0, R.plurals.overview_summary_unreachable, colors.bad)
-    }
-}
-
-@Composable
-private fun SummaryCount(count: Int, @PluralsRes label: Int, color: androidx.compose.ui.graphics.Color) {
-    Column {
-        Text(
-            "$count",
-            style = MaterialTheme.typography.headlineMedium,
-            color = if (count > 0) color else MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(pluralStringResource(label, count), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
