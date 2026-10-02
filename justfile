@@ -40,6 +40,19 @@ release-tag version:
     if [[ "${ICHOR_RELEASE_SKIP_GATE:-}" != 1 ]]; then
         just check
     fi
+    # Google Play's "What's new": drafted from the changelog for the commit about to be
+    # tagged (HEAD + 1), edited, then committed. Empty it to let CI generate the notes;
+    # without a terminal CI always does. A file written beforehand is kept as is.
+    if [[ -t 0 ]]; then
+        notes="$(scripts/play-notes.py --build "$(( $(git rev-list --count HEAD) + 1 ))")"
+        sh -c "${VISUAL:-${EDITOR:-vi}} \"\$1\"" editor "$notes" # as git runs it: "code --wait" works
+        if [[ ! -s "$notes" ]]; then
+            rm -f "$notes"
+        elif [[ -n "$(git status --porcelain -- "$notes")" ]]; then
+            git add "$notes"
+            git commit -q -m "docs: Google Play release notes for v${version}"
+        fi
+    fi
     previous="$(git describe --tags --match 'v[0-9]*' --abbrev=0 2>/dev/null || true)"
     range="${previous:+${previous}..}HEAD"
     {

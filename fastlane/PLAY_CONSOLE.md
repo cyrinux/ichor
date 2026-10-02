@@ -25,6 +25,13 @@ to testers, and the store listing (texts, icon, feature graphic, screenshots) is
 from this directory. Images are only re-uploaded when they changed. Set the repository
 variable `PLAY_RELEASE_STATUS=draft` to get a draft instead.
 
+Release notes ("What's new") are `<locale>/changelogs/<versionCode>.txt`. `just release-tag`
+drafts the en-US file from the `feat`/`fix`/`perf` commits since the previous tag
+(`scripts/play-notes.py`), opens it in `$EDITOR` and commits it before tagging (only
+en-US: other locales are not generated). Empty the draft, or tag without
+a terminal, and CI generates the en-US notes on the tag instead. Play's limit is 500
+characters per language.
+
 ## One-time setup
 
 1. **Create the app** in the Play Console (App name `Ichor for Talos Linux`, App, Free) and fill in
