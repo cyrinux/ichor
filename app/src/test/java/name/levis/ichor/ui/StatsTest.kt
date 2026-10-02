@@ -35,6 +35,22 @@ class StatsTest {
     }
 
     @Test
+    fun failedSectionDoesNotCreateRecoverySpike() {
+        val valid = sample(1_000, 1.0, 2.0, 100, 100)
+        val missing = sample(2_000, 2.0, 4.0, 0, 0).copy(errors = mapOf("network" to "unavailable"))
+        val recovered = sample(3_000, 3.0, 6.0, 10_000, 10_000)
+        assertNull(ratesBetween(valid, missing))
+        assertNull(ratesBetween(missing, recovered))
+    }
+
+    @Test
+    fun bootIdentityInvalidatesEvenIncreasingCounters() {
+        val previous = sample(1_000, 1.0, 2.0, 100, 100).copy(bootTime = 10)
+        val current = sample(2_000, 2.0, 4.0, 200, 200).copy(bootTime = 20)
+        assertNull(ratesBetween(previous, current))
+    }
+
+    @Test
     fun noElapsedTimeIsSkipped() {
         assertNull(ratesBetween(sample(5, 1.0, 2.0, 1, 1), sample(5, 1.0, 2.0, 1, 1)))
     }

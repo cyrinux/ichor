@@ -989,4 +989,27 @@
         <item quantity="one">Added %1$d node to the talosconfig.</item>
         <item quantity="other">Added %1$d nodes to the talosconfig.</item>
     </plurals>
+
+    <string name="insights_title">Cluster insights</string>
+    <string name="insights_drift">Configuration drift</string>
+    <string name="insights_recorder">Incident recorder</string>
+    <string name="insights_bottlenecks">Bottleneck metrics</string>
+    <string name="insights_cpu_wait">I/O wait: %1$s%% · VM steal: %2$s%%</string>
+    <string name="insights_disk_rate">Read: %1$s · Write: %2$s · Active: %3$s%% · Average I/O: %4$s ms</string>
+    <string name="insights_net_rate">In: %1$s · Out: %2$s · Errors: %3$s/s · Drops: %4$s/s</string>
+    <string name="insights_metrics_note">Rates use consecutive samples. Disk activity and average I/O time are evidence, not proof of saturation.</string>
+    <string name="insights_drift_note">Compare selected effective settings: DNS, NTP, MTU, extensions, Secure Boot, UKI and Talos version. Differences may be intentional; unavailable fields are unknown.</string>
+    <string name="insights_save_baseline">Save current baseline</string>
+    <string name="insights_baseline_at">Baseline: %1$s</string>
+    <string name="insights_delete_baseline">Delete baseline</string>
+    <string name="insights_peer_reference">Reference: first reachable node of each role. Save a baseline to track changes on the same nodes.</string>
+    <string name="insights_sample_at">Sample: %1$s</string>
+    <string name="insights_reference">Reference: %1$s</string>
+    <string name="insights_no_differences">No differences in comparable fields.</string>
+    <string name="insights_start">Start recording</string>
+    <string name="insights_stop">Stop recording</string>
+    <string name="insights_dropped">Older entries discarded: %1$d</string>
+    <string name="insights_show_metrics">Show metric samples</string>
+    <string name="insights_no_recording">No saved recording.</string>
+    <string name="insights_record_note">Record up to 10 minutes while this screen is in the foreground. Health, services, links and metrics are sampled, with live Talos events. No raw logs or credentials. The latest session is encrypted locally; starting replaces it. Keep up to 600 entries. Event timestamps use node clocks; ordering does not prove causation.</string>
 </resources>

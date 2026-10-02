@@ -81,6 +81,9 @@ func demoStats(n nodeOverview) nodeStats {
 	// changing CPU rate between polls (rather than multiplying a changing rate).
 	busy := float64(n.CPUCount) * (seconds*0.24 + 0.06*30*(1-math.Cos(seconds/30)))
 	return nodeStats{At: time.Now().UnixMilli(), CPUBusy: busy, CPUTotal: seconds * float64(n.CPUCount), CPUCount: n.CPUCount,
+		CPUWait: seconds * float64(n.CPUCount) * 0.04, CPUSteal: seconds * float64(n.CPUCount) * 0.01, BootTime: uint64(demoBoot.Unix()),
+		NetworkDevices: []networkCounters{{Name: "eth0", Rx: uint64(seconds * 180000), Tx: uint64(seconds * 75000), Errors: uint64(seconds / 60), Drops: uint64(seconds / 30)}},
+		DiskDevices:    []diskCounters{{Name: "nvme0n1", Read: uint64(seconds * 90000), Write: uint64(seconds * 45000), Operations: uint64(seconds * 25), TimeMs: uint64(seconds * 50), BusyMs: uint64(seconds * 120)}}, Errors: map[string]string{},
 		MemTotal: n.MemTotal, MemAvailable: uint64(float64(n.MemTotal) * (0.6 + 0.04*math.Sin(seconds/45))), Load1: 0.8,
 		NetRx: uint64(seconds * 180000), NetTx: uint64(seconds * 75000), DiskRead: uint64(seconds * 90000), DiskWrite: uint64(seconds * 45000)}
 }

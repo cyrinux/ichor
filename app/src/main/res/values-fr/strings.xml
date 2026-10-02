@@ -986,4 +986,27 @@
         <item quantity="one">%1$d nœud ajouté au talosconfig.</item>
         <item quantity="other">%1$d nœuds ajoutés au talosconfig.</item>
     </plurals>
+
+    <string name="insights_title">Analyse du cluster</string>
+    <string name="insights_drift">Écarts de configuration</string>
+    <string name="insights_recorder">Enregistrement d’incident</string>
+    <string name="insights_bottlenecks">Indicateurs de saturation</string>
+    <string name="insights_cpu_wait">Attente E/S : %1$s%% · Temps volé VM : %2$s%%</string>
+    <string name="insights_disk_rate">Lecture : %1$s · Écriture : %2$s · Activité : %3$s%% · E/S moyennes : %4$s ms</string>
+    <string name="insights_net_rate">Entrée : %1$s · Sortie : %2$s · Erreurs : %3$s/s · Paquets perdus : %4$s/s</string>
+    <string name="insights_metrics_note">Les débits utilisent des mesures consécutives. L’activité disque et le temps moyen des E/S sont des indices, pas une preuve de saturation.</string>
+    <string name="insights_drift_note">Compare les paramètres effectifs sélectionnés : DNS, NTP, MTU, extensions, Secure Boot, UKI et version Talos. Les différences peuvent être voulues ; les champs indisponibles sont inconnus.</string>
+    <string name="insights_save_baseline">Enregistrer la référence actuelle</string>
+    <string name="insights_baseline_at">Référence : %1$s</string>
+    <string name="insights_delete_baseline">Supprimer la référence</string>
+    <string name="insights_peer_reference">Référence : premier nœud joignable de chaque rôle. Enregistrez une référence pour suivre les changements sur les mêmes nœuds.</string>
+    <string name="insights_sample_at">Mesure : %1$s</string>
+    <string name="insights_reference">Référence : %1$s</string>
+    <string name="insights_no_differences">Aucune différence dans les champs comparables.</string>
+    <string name="insights_start">Démarrer l’enregistrement</string>
+    <string name="insights_stop">Arrêter l’enregistrement</string>
+    <string name="insights_dropped">Anciennes entrées supprimées : %1$d</string>
+    <string name="insights_show_metrics">Afficher les mesures</string>
+    <string name="insights_no_recording">Aucun enregistrement sauvegardé.</string>
+    <string name="insights_record_note">Enregistrez jusqu’à 10 minutes avec cet écran au premier plan. Santé, services, interfaces et métriques sont mesurés, avec les événements Talos en direct. Aucun journal brut ni identifiant. La dernière session est chiffrée localement ; démarrer la remplace. Jusqu’à 600 entrées. Les événements utilisent les horloges des nœuds ; leur ordre ne prouve pas la causalité.</string>
 </resources>

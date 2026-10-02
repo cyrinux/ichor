@@ -450,6 +450,14 @@ class TalosRepository(private val configs: ConfigRepository) {
         TalosJson.decodeFromString(ResourceDetail.serializer(), Talosmobile.resourceGet(cfg, ctx, node, namespace, type, id)).yaml
     }
 
+    suspend fun driftSnapshot(): String = call { cfg, ctx -> Talosmobile.clusterDriftSnapshot(cfg, ctx) }
+    suspend fun observation(): String = call { cfg, ctx -> Talosmobile.clusterObservation(cfg, ctx) }
+    suspend fun bottlenecks(previous: NodeStats, current: NodeStats): name.levis.ichor.model.Bottlenecks = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(name.levis.ichor.model.Bottlenecks.serializer(), Talosmobile.calculateBottlenecks(
+            TalosJson.encodeToString(NodeStats.serializer(), previous), TalosJson.encodeToString(NodeStats.serializer(), current),
+        ))
+    }
+
     private suspend fun <T> call(block: (config: String, context: String) -> T): T {
         val stored = configs.forCall()
         return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) }

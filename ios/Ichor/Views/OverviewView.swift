@@ -35,6 +35,9 @@ struct OverviewView: View {
                 if let update { TalosUpdateSection(info: update, nodes: overview.nodes) }
                 if support.visible { Section { SupportCard(prompt: support) } }
                 Section {
+                    NavigationLink(value: Route.insights) { Label("Cluster insights", systemImage: "magnifyingglass") }
+                }
+                Section {
                     Summary(nodes: overview.nodes)
                 } header: {
                     if let access = model.activeSummary?.localizedAccessLabel { Text(access) }

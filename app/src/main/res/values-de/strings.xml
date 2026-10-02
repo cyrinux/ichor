@@ -986,4 +986,27 @@
         <item quantity="one">%1$d Node zur talosconfig hinzugefügt.</item>
         <item quantity="other">%1$d Nodes zur talosconfig hinzugefügt.</item>
     </plurals>
+
+    <string name="insights_title">Clusteranalyse</string>
+    <string name="insights_drift">Konfigurationsabweichungen</string>
+    <string name="insights_recorder">Vorfallsaufzeichnung</string>
+    <string name="insights_bottlenecks">Engpassmetriken</string>
+    <string name="insights_cpu_wait">E/A-Wartezeit: %1$s%% · VM-Steal: %2$s%%</string>
+    <string name="insights_disk_rate">Lesen: %1$s · Schreiben: %2$s · Aktiv: %3$s%% · Mittlere E/A: %4$s ms</string>
+    <string name="insights_net_rate">Eingang: %1$s · Ausgang: %2$s · Fehler: %3$s/s · Verworfene Pakete: %4$s/s</string>
+    <string name="insights_metrics_note">Raten verwenden aufeinanderfolgende Messungen. Datenträgeraktivität und mittlere E/A-Zeit sind Hinweise, kein Beweis für Sättigung.</string>
+    <string name="insights_drift_note">Vergleicht ausgewählte wirksame Einstellungen: DNS, NTP, MTU, Erweiterungen, Secure Boot, UKI und Talos-Version. Unterschiede können beabsichtigt sein; nicht verfügbare Felder sind unbekannt.</string>
+    <string name="insights_save_baseline">Aktuellen Referenzstand speichern</string>
+    <string name="insights_baseline_at">Referenzstand: %1$s</string>
+    <string name="insights_delete_baseline">Referenzstand löschen</string>
+    <string name="insights_peer_reference">Referenz: erster erreichbarer Knoten jeder Rolle. Speichern Sie einen Referenzstand, um Änderungen derselben Knoten zu verfolgen.</string>
+    <string name="insights_sample_at">Messung: %1$s</string>
+    <string name="insights_reference">Referenz: %1$s</string>
+    <string name="insights_no_differences">Keine Unterschiede in vergleichbaren Feldern.</string>
+    <string name="insights_start">Aufzeichnung starten</string>
+    <string name="insights_stop">Aufzeichnung stoppen</string>
+    <string name="insights_dropped">Verworfene ältere Einträge: %1$d</string>
+    <string name="insights_show_metrics">Messwerte anzeigen</string>
+    <string name="insights_no_recording">Keine gespeicherte Aufzeichnung.</string>
+    <string name="insights_record_note">Bis zu 10 Minuten aufzeichnen, während dieser Bildschirm im Vordergrund ist. Zustand, Dienste, Schnittstellen und Metriken werden zusammen mit Talos-Ereignissen erfasst. Keine Rohprotokolle oder Zugangsdaten. Die letzte Sitzung wird lokal verschlüsselt; ein neuer Start ersetzt sie. Bis zu 600 Einträge. Ereignisse verwenden Knoten-Uhren; die Reihenfolge beweist keine Ursache.</string>
 </resources>

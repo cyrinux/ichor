@@ -98,6 +98,25 @@ struct TalosClient: Sendable {
         setPrivacyMask(enabled: defaults.bool(forKey: PrivacyKeys.enabled), extraWords: defaults.string(forKey: PrivacyKeys.words) ?? "")
     }
 
+    func driftSnapshot() async throws -> String {
+        try await Self.run { [config, context] in TalosmobileClusterDriftSnapshot(config, context, $0) }
+    }
+    func observation() async throws -> String {
+        try await Self.run { [config, context] in TalosmobileClusterObservation(config, context, $0) }
+    }
+    static func compareDrift(baseline: String, current: String) async throws -> [DriftChange] {
+        try await json { TalosmobileCompareDrift(baseline, current, $0) }
+    }
+    static func updateIncident(previous: String, observation: String, events: [NodeEvent]) async throws -> String {
+        let encoded = String(decoding: try JSONEncoder().encode(events), as: UTF8.self)
+        return try await run { TalosmobileUpdateIncident(previous, observation, encoded, $0) }
+    }
+    static func bottlenecks(previous: NodeStats, current: NodeStats) async throws -> Bottlenecks {
+        let a = String(decoding: try JSONEncoder().encode(previous), as: UTF8.self)
+        let b = String(decoding: try JSONEncoder().encode(current), as: UTF8.self)
+        return try await json { TalosmobileCalculateBottlenecks(a, b, $0) }
+    }
+
     func overview() async throws -> ClusterOverview {
         try await Self.json { [config, context] in TalosmobileClusterOverview(config, context, $0) }
     }

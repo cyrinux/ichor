@@ -17,6 +17,7 @@ final class LiveStats {
 
     private(set) var points: [StatsPoint] = []
     private(set) var cpuCount = 0
+    private(set) var detail: Bottlenecks?
     private(set) var error: String?
     private var last: NodeStats?
 
@@ -24,13 +25,20 @@ final class LiveStats {
         while !Task.isCancelled {
             do {
                 let sample = try await client.stats(node: node)
-                if let last, let point = ratesBetween(last, sample) {
-                    points = Array((points + [point]).suffix(Self.maxPoints))
+                try Task.checkCancellation()
+                if let last {
+                    detail = try await TalosClient.bottlenecks(previous: last, current: sample)
+                    if let point = ratesBetween(last, sample) {
+                        points = Array((points + [point]).suffix(Self.maxPoints))
+                    }
                 }
+                try Task.checkCancellation()
                 last = sample
                 cpuCount = sample.cpuCount
                 error = nil
             } catch {
+                last = nil
+                detail = nil
                 self.error = error.localizedDescription
             }
             try? await Task.sleep(for: .seconds(Self.pollSeconds))
@@ -61,6 +69,7 @@ struct LiveView: View {
                       series: [(String(localized: "read"), ChartPalette.first, \.readPerSec),
                                (String(localized: "write"), ChartPalette.second, \.writePerSec)],
                       format: { formatBytes(UInt64(max($0, 0))) + "/s" })
+            if let detail = stats.detail { BottleneckSection(detail: detail) }
             LiveChart(title: String(localized: "Load (1 min)"), points: stats.points,
                       series: [(String(localized: "Load"), ChartPalette.first, \.load1)],
                       format: { String(format: "%.2f", $0) })

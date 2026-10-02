@@ -986,4 +986,27 @@
         <item quantity="one">%1$d nodo aggiunto al talosconfig.</item>
         <item quantity="other">%1$d nodi aggiunti al talosconfig.</item>
     </plurals>
+
+    <string name="insights_title">Analisi del cluster</string>
+    <string name="insights_drift">Differenze di configurazione</string>
+    <string name="insights_recorder">Registrazione incidenti</string>
+    <string name="insights_bottlenecks">Metriche dei colli di bottiglia</string>
+    <string name="insights_cpu_wait">Attesa I/O: %1$s%% · Tempo sottratto VM: %2$s%%</string>
+    <string name="insights_disk_rate">Lettura: %1$s · Scrittura: %2$s · Attività: %3$s%% · I/O medio: %4$s ms</string>
+    <string name="insights_net_rate">Ingresso: %1$s · Uscita: %2$s · Errori: %3$s/s · Pacchetti scartati: %4$s/s</string>
+    <string name="insights_metrics_note">Le velocità usano campioni consecutivi. Attività del disco e tempo medio di I/O sono indizi, non prove di saturazione.</string>
+    <string name="insights_drift_note">Confronta impostazioni effettive selezionate: DNS, NTP, MTU, estensioni, Secure Boot, UKI e versione Talos. Le differenze possono essere intenzionali; i campi non disponibili sono sconosciuti.</string>
+    <string name="insights_save_baseline">Salva riferimento attuale</string>
+    <string name="insights_baseline_at">Riferimento: %1$s</string>
+    <string name="insights_delete_baseline">Elimina riferimento</string>
+    <string name="insights_peer_reference">Riferimento: primo nodo raggiungibile di ogni ruolo. Salva un riferimento per seguire le modifiche sugli stessi nodi.</string>
+    <string name="insights_sample_at">Campione: %1$s</string>
+    <string name="insights_reference">Riferimento: %1$s</string>
+    <string name="insights_no_differences">Nessuna differenza nei campi confrontabili.</string>
+    <string name="insights_start">Avvia registrazione</string>
+    <string name="insights_stop">Ferma registrazione</string>
+    <string name="insights_dropped">Voci precedenti scartate: %1$d</string>
+    <string name="insights_show_metrics">Mostra campioni delle metriche</string>
+    <string name="insights_no_recording">Nessuna registrazione salvata.</string>
+    <string name="insights_record_note">Registra fino a 10 minuti con questa schermata in primo piano. Stato, servizi, interfacce e metriche vengono campionati con gli eventi Talos in tempo reale. Senza log grezzi o credenziali. Ultima sessione cifrata localmente; una nuova la sostituisce. Fino a 600 voci. Gli eventi usano gli orologi dei nodi; l’ordine non prova causalità.</string>
 </resources>

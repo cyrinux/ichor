@@ -106,6 +106,7 @@ enum Route: Hashable {
     case logs(node: String, hostname: String, service: String?)
     /// Log of one Kubernetes container (from the Pods tab).
     case containerLogs(node: String, hostname: String, container: LogContainer)
+    case insights
     case supportBundle
     /// The bundled release history.
     case changelog
@@ -147,6 +148,7 @@ struct MainNavigation: View {
                         LogsView(node: node, hostname: hostname, service: service)
                     case .containerLogs(let node, let hostname, let container):
                         LogsView(node: node, hostname: hostname, service: nil, container: container)
+                    case .insights: InsightsView()
                     case .supportBundle: SupportBundleView()
                     case .changelog: ChangelogView()
                     case .etcd: EtcdView()

@@ -1,6 +1,887 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Cluster insights": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cluster insights"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analyse du cluster"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Análisis del clúster"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аналіз кластера"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clusteranalyse"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analisi del cluster"
+          }
+        }
+      }
+    },
+    "Configuration drift": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration drift"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écarts de configuration"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diferencias de configuración"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відхилення конфігурації"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfigurationsabweichungen"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Differenze di configurazione"
+          }
+        }
+      }
+    },
+    "Incident recorder": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incident recorder"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrement d’incident"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro de incidentes"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запис інцидентів"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorfallsaufzeichnung"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registrazione incidenti"
+          }
+        }
+      }
+    },
+    "Bottleneck metrics": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bottleneck metrics"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicateurs de saturation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Métricas de cuellos de botella"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показники вузьких місць"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Engpassmetriken"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metriche dei colli di bottiglia"
+          }
+        }
+      }
+    },
+    "I/O wait: %@%% · VM steal: %@%%": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I/O wait: %@%% · VM steal: %@%%"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attente E/S : %@%% · Temps volé VM : %@%%"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espera E/S: %@%% · Tiempo robado VM: %@%%"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Очікування вводу/виводу: %@%% · Викрадений час ВМ: %@%%"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E/A-Wartezeit: %@%% · VM-Steal: %@%%"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attesa I/O: %@%% · Tempo sottratto VM: %@%%"
+          }
+        }
+      }
+    },
+    "Read: %@ · Write: %@ · Active: %@%% · Average I/O: %@ ms": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read: %@ · Write: %@ · Active: %@%% · Average I/O: %@ ms"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lecture : %@ · Écriture : %@ · Activité : %@%% · E/S moyennes : %@ ms"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lectura: %@ · Escritura: %@ · Actividad: %@%% · E/S media: %@ ms"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Читання: %@ · Запис: %@ · Активність: %@%% · Середній ввід/вивід: %@ мс"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lesen: %@ · Schreiben: %@ · Aktiv: %@%% · Mittlere E/A: %@ ms"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lettura: %@ · Scrittura: %@ · Attività: %@%% · I/O medio: %@ ms"
+          }
+        }
+      }
+    },
+    "In: %@ · Out: %@ · Errors: %@/s · Drops: %@/s": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In: %@ · Out: %@ · Errors: %@/s · Drops: %@/s"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrée : %@ · Sortie : %@ · Erreurs : %@/s · Paquets perdus : %@/s"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrada: %@ · Salida: %@ · Errores: %@/s · Descartes: %@/s"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вхід: %@ · Вихід: %@ · Помилки: %@/с · Відкинуті пакети: %@/с"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingang: %@ · Ausgang: %@ · Fehler: %@/s · Verworfene Pakete: %@/s"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresso: %@ · Uscita: %@ · Errori: %@/s · Pacchetti scartati: %@/s"
+          }
+        }
+      }
+    },
+    "Rates use consecutive samples. Disk activity and average I/O time are evidence, not proof of saturation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rates use consecutive samples. Disk activity and average I/O time are evidence, not proof of saturation."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les débits utilisent des mesures consécutives. L’activité disque et le temps moyen des E/S sont des indices, pas une preuve de saturation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las tasas usan muestras consecutivas. La actividad del disco y el tiempo medio de E/S son indicios, no pruebas de saturación."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Швидкості обчислюються за послідовними вимірами. Активність диска та середній час вводу/виводу є ознаками, а не доказом насичення."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raten verwenden aufeinanderfolgende Messungen. Datenträgeraktivität und mittlere E/A-Zeit sind Hinweise, kein Beweis für Sättigung."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le velocità usano campioni consecutivi. Attività del disco e tempo medio di I/O sono indizi, non prove di saturazione."
+          }
+        }
+      }
+    },
+    "Compare selected effective settings: DNS, NTP, MTU, extensions, Secure Boot, UKI and Talos version. Differences may be intentional; unavailable fields are unknown.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare selected effective settings: DNS, NTP, MTU, extensions, Secure Boot, UKI and Talos version. Differences may be intentional; unavailable fields are unknown."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare les paramètres effectifs sélectionnés : DNS, NTP, MTU, extensions, Secure Boot, UKI et version Talos. Les différences peuvent être voulues ; les champs indisponibles sont inconnus."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compara ajustes efectivos seleccionados: DNS, NTP, MTU, extensiones, Secure Boot, UKI y versión de Talos. Las diferencias pueden ser intencionales; los campos no disponibles son desconocidos."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порівнює вибрані чинні параметри: DNS, NTP, MTU, розширення, Secure Boot, UKI та версію Talos. Відмінності можуть бути навмисними; недоступні поля є невідомими."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vergleicht ausgewählte wirksame Einstellungen: DNS, NTP, MTU, Erweiterungen, Secure Boot, UKI und Talos-Version. Unterschiede können beabsichtigt sein; nicht verfügbare Felder sind unbekannt."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confronta impostazioni effettive selezionate: DNS, NTP, MTU, estensioni, Secure Boot, UKI e versione Talos. Le differenze possono essere intenzionali; i campi non disponibili sono sconosciuti."
+          }
+        }
+      }
+    },
+    "Save current baseline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save current baseline"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer la référence actuelle"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar referencia actual"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зберегти поточний еталон"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktuellen Referenzstand speichern"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salva riferimento attuale"
+          }
+        }
+      }
+    },
+    "Baseline: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baseline: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Référence : %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Еталон: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referenzstand: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riferimento: %@"
+          }
+        }
+      }
+    },
+    "Delete baseline": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete baseline"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer la référence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar referencia"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Видалити еталон"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referenzstand löschen"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elimina riferimento"
+          }
+        }
+      }
+    },
+    "Reference: first reachable node of each role. Save a baseline to track changes on the same nodes.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reference: first reachable node of each role. Save a baseline to track changes on the same nodes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Référence : premier nœud joignable de chaque rôle. Enregistrez une référence pour suivre les changements sur les mêmes nœuds."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia: primer nodo accesible de cada rol. Guarda una referencia para seguir los cambios en los mismos nodos."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Еталон: перший доступний вузол кожної ролі. Збережіть еталон, щоб відстежувати зміни на тих самих вузлах."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referenz: erster erreichbarer Knoten jeder Rolle. Speichern Sie einen Referenzstand, um Änderungen derselben Knoten zu verfolgen."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riferimento: primo nodo raggiungibile di ogni ruolo. Salva un riferimento per seguire le modifiche sugli stessi nodi."
+          }
+        }
+      }
+    },
+    "Sample: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sample: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesure : %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вимір: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messung: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Campione: %@"
+          }
+        }
+      }
+    },
+    "Reference: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reference: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Référence : %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Еталон: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referenz: %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riferimento: %@"
+          }
+        }
+      }
+    },
+    "No differences in comparable fields.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No differences in comparable fields."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune différence dans les champs comparables."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin diferencias en los campos comparables."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відмінностей у порівнюваних полях немає."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Unterschiede in vergleichbaren Feldern."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessuna differenza nei campi confrontabili."
+          }
+        }
+      }
+    },
+    "Start recording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start recording"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démarrer l’enregistrement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar registro"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Почати запис"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufzeichnung starten"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvia registrazione"
+          }
+        }
+      }
+    },
+    "Stop recording": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop recording"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrêter l’enregistrement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detener registro"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зупинити запис"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufzeichnung stoppen"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ferma registrazione"
+          }
+        }
+      }
+    },
+    "Older entries discarded: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Older entries discarded: %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anciennes entrées supprimées : %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entradas antiguas descartadas: %lld"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкинуто старих записів: %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verworfene ältere Einträge: %lld"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voci precedenti scartate: %lld"
+          }
+        }
+      }
+    },
+    "Show metric samples": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show metric samples"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher les mesures"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar muestras de métricas"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показати виміри метрик"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messwerte anzeigen"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra campioni delle metriche"
+          }
+        }
+      }
+    },
+    "No saved recording.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No saved recording."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun enregistrement sauvegardé."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay registros guardados."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Збережених записів немає."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine gespeicherte Aufzeichnung."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nessuna registrazione salvata."
+          }
+        }
+      }
+    },
+    "Record up to 10 minutes while this screen is in the foreground. Health, services, links and metrics are sampled, with live Talos events. No raw logs or credentials. The latest session is encrypted locally; starting replaces it. Keep up to 600 entries. Event timestamps use node clocks; ordering does not prove causation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record up to 10 minutes while this screen is in the foreground. Health, services, links and metrics are sampled, with live Talos events. No raw logs or credentials. The latest session is encrypted locally; starting replaces it. Keep up to 600 entries. Event timestamps use node clocks; ordering does not prove causation."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrez jusqu’à 10 minutes avec cet écran au premier plan. Santé, services, interfaces et métriques sont mesurés, avec les événements Talos en direct. Aucun journal brut ni identifiant. La dernière session est chiffrée localement ; démarrer la remplace. Jusqu’à 600 entrées. Les événements utilisent les horloges des nœuds ; leur ordre ne prouve pas la causalité."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registra hasta 10 minutos con esta pantalla en primer plano. Se muestrean salud, servicios, interfaces y métricas, junto con eventos Talos en directo. Sin registros sin procesar ni credenciales. La última sesión se cifra localmente; iniciar la reemplaza. Hasta 600 entradas. Los eventos usan los relojes de los nodos; el orden no prueba causalidad."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Записуйте до 10 хвилин, поки цей екран на передньому плані. Вимірюються стан, служби, інтерфейси та метрики з подіями Talos наживо. Без сирих журналів або облікових даних. Останній сеанс зашифровано локально; новий запис його замінює. До 600 записів. Події використовують годинники вузлів; порядок не доводить причинності."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis zu 10 Minuten aufzeichnen, während dieser Bildschirm im Vordergrund ist. Zustand, Dienste, Schnittstellen und Metriken werden zusammen mit Talos-Ereignissen erfasst. Keine Rohprotokolle oder Zugangsdaten. Die letzte Sitzung wird lokal verschlüsselt; ein neuer Start ersetzt sie. Bis zu 600 Einträge. Ereignisse verwenden Knoten-Uhren; die Reihenfolge beweist keine Ursache."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registra fino a 10 minuti con questa schermata in primo piano. Stato, servizi, interfacce e metriche vengono campionati con gli eventi Talos in tempo reale. Senza log grezzi o credenziali. Ultima sessione cifrata localmente; una nuova la sostituisce. Fino a 600 voci. Gli eventi usano gli orologi dei nodi; l’ordine non prova causalità."
+          }
+        }
+      }
+    },
+
     "Try demo": {
       "extractionState": "manual",
       "localizations": {

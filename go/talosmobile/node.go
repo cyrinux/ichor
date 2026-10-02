@@ -62,7 +62,10 @@ func NodeServices(configYAML, contextName, node string) (out string, err error) 
 
 		msgs := resp.GetMessages()
 		if len(msgs) == 0 {
-			return toJSON([]serviceInfo{})
+			return "", errors.New("node returned no service data")
+		}
+		if problem := msgs[0].GetMetadata().GetError(); problem != "" {
+			return "", errors.New(s.friendly(node, errors.New(problem)))
 		}
 
 		return toJSON(mapServices(msgs[0].GetServices()))

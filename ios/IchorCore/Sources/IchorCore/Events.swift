@@ -1,7 +1,7 @@
 import Foundation
 
 /// One `talosctl events` entry from the Go core (StartEvents).
-public struct NodeEvent: Decodable, Equatable, Identifiable, Sendable {
+public struct NodeEvent: Codable, Equatable, Identifiable, Sendable {
     public let node: String
     /// Talos event id (an xid); unique per node.
     public let eventId: String

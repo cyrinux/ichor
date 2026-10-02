@@ -986,4 +986,27 @@
         <item quantity="one">%1$d nodo añadido al talosconfig.</item>
         <item quantity="other">%1$d nodos añadidos al talosconfig.</item>
     </plurals>
+
+    <string name="insights_title">Análisis del clúster</string>
+    <string name="insights_drift">Diferencias de configuración</string>
+    <string name="insights_recorder">Registro de incidentes</string>
+    <string name="insights_bottlenecks">Métricas de cuellos de botella</string>
+    <string name="insights_cpu_wait">Espera E/S: %1$s%% · Tiempo robado VM: %2$s%%</string>
+    <string name="insights_disk_rate">Lectura: %1$s · Escritura: %2$s · Actividad: %3$s%% · E/S media: %4$s ms</string>
+    <string name="insights_net_rate">Entrada: %1$s · Salida: %2$s · Errores: %3$s/s · Descartes: %4$s/s</string>
+    <string name="insights_metrics_note">Las tasas usan muestras consecutivas. La actividad del disco y el tiempo medio de E/S son indicios, no pruebas de saturación.</string>
+    <string name="insights_drift_note">Compara ajustes efectivos seleccionados: DNS, NTP, MTU, extensiones, Secure Boot, UKI y versión de Talos. Las diferencias pueden ser intencionales; los campos no disponibles son desconocidos.</string>
+    <string name="insights_save_baseline">Guardar referencia actual</string>
+    <string name="insights_baseline_at">Referencia: %1$s</string>
+    <string name="insights_delete_baseline">Eliminar referencia</string>
+    <string name="insights_peer_reference">Referencia: primer nodo accesible de cada rol. Guarda una referencia para seguir los cambios en los mismos nodos.</string>
+    <string name="insights_sample_at">Muestra: %1$s</string>
+    <string name="insights_reference">Referencia: %1$s</string>
+    <string name="insights_no_differences">Sin diferencias en los campos comparables.</string>
+    <string name="insights_start">Iniciar registro</string>
+    <string name="insights_stop">Detener registro</string>
+    <string name="insights_dropped">Entradas antiguas descartadas: %1$d</string>
+    <string name="insights_show_metrics">Mostrar muestras de métricas</string>
+    <string name="insights_no_recording">No hay registros guardados.</string>
+    <string name="insights_record_note">Registra hasta 10 minutos con esta pantalla en primer plano. Se muestrean salud, servicios, interfaces y métricas, junto con eventos Talos en directo. Sin registros sin procesar ni credenciales. La última sesión se cifra localmente; iniciar la reemplaza. Hasta 600 entradas. Los eventos usan los relojes de los nodos; el orden no prueba causalidad.</string>
 </resources>

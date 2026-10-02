@@ -16,6 +16,12 @@ data class NodeStats(
     val netTx: Long,
     val diskRead: Long,
     val diskWrite: Long,
+    val cpuWait: Double = 0.0,
+    val cpuSteal: Double = 0.0,
+    val bootTime: Long = 0,
+    val networkDevices: List<NetworkCounters> = emptyList(),
+    val diskDevices: List<DiskCounters> = emptyList(),
+    val errors: Map<String, String> = emptyMap(),
 )
 
 /** Rates between two samples, ready to plot. */
@@ -36,6 +42,8 @@ data class StatsPoint(
  * interface reset) give 0 rather than a huge negative spike; null if no time elapsed.
  */
 fun ratesBetween(prev: NodeStats, cur: NodeStats): StatsPoint? {
+    if (prev.errors.isNotEmpty() || cur.errors.isNotEmpty()) return null
+    if (prev.bootTime != 0L && cur.bootTime != 0L && prev.bootTime != cur.bootTime) return null
     val seconds = (cur.at - prev.at) / 1000f
     if (seconds <= 0f) return null
 

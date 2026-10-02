@@ -1,7 +1,7 @@
 import Foundation
 
 /// One sample of cumulative counters from the Go core (NodeStats).
-public struct NodeStats: Decodable, Equatable, Sendable {
+public struct NodeStats: Codable, Equatable, Sendable {
     public let at: Int64
     public let cpuBusy: Double
     public let cpuTotal: Double
@@ -13,6 +13,12 @@ public struct NodeStats: Decodable, Equatable, Sendable {
     public let netTx: UInt64
     public let diskRead: UInt64
     public let diskWrite: UInt64
+    public var cpuWait: Double? = nil
+    public var cpuSteal: Double? = nil
+    public var bootTime: UInt64? = nil
+    public var networkDevices: [NetworkCounters]? = nil
+    public var diskDevices: [DiskCounters]? = nil
+    public var errors: [String: String]? = nil
 }
 
 /// Rates between two samples, ready to plot (same rules as Android).
@@ -33,6 +39,8 @@ public struct StatsPoint: Equatable, Identifiable, Sendable {
 /// Counters that went backwards (node reboot, interface reset) give 0, not a negative spike;
 /// nil when no time elapsed.
 public func ratesBetween(_ prev: NodeStats, _ cur: NodeStats) -> StatsPoint? {
+    guard (prev.errors ?? [:]).isEmpty, (cur.errors ?? [:]).isEmpty else { return nil }
+    if let a = prev.bootTime, let b = cur.bootTime, a != 0, b != 0, a != b { return nil }
     let seconds = Double(cur.at - prev.at) / 1000
     guard seconds > 0 else { return nil }
 

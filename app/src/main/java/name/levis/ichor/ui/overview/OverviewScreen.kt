@@ -106,6 +106,7 @@ fun OverviewScreen(
     onKubeSpan: () -> Unit,
     onHealth: () -> Unit,
     onEvents: () -> Unit,
+    onInsights: () -> Unit,
     onSettings: () -> Unit,
     onIssueConfig: () -> Unit,
     onUpgrade: (NodeOverview, String) -> Unit,
@@ -264,6 +265,7 @@ fun OverviewScreen(
                     time = timeState,
                     certificate = config?.activeSummary,
                     onIssueConfig = onIssueConfig,
+                    onInsights = onInsights,
                     onNode = onNode,
                     onSettings = onSettings,
                     onNodeAction = onNodeAction,
@@ -288,6 +290,7 @@ private fun NodeList(
     time: UiState<ClusterTime>,
     certificate: ContextSummary?,
     onIssueConfig: () -> Unit,
+    onInsights: () -> Unit,
     onNode: (NodeOverview) -> Unit,
     onSettings: () -> Unit,
     onNodeAction: (NodeOverview, NodeAction) -> Unit,
@@ -329,6 +332,11 @@ private fun NodeList(
         if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
         if (certificate?.isDemo != true) item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
         item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes), live) }
+        item {
+            Card(onClick = onInsights, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.insights_title), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
+            }
+        }
         items(nodes, key = { it.node }) { node ->
             SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {
                 NodeCard(node, onClick = { onNode(node) }, onLongClick = { sheetFor = node })

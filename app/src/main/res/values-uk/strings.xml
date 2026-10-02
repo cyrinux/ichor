@@ -1070,4 +1070,27 @@
         <item quantity="many">Додано %1$d вузлів до talosconfig.</item>
         <item quantity="other">Додано %1$d вузла до talosconfig.</item>
     </plurals>
+
+    <string name="insights_title">Аналіз кластера</string>
+    <string name="insights_drift">Відхилення конфігурації</string>
+    <string name="insights_recorder">Запис інцидентів</string>
+    <string name="insights_bottlenecks">Показники вузьких місць</string>
+    <string name="insights_cpu_wait">Очікування вводу/виводу: %1$s%% · Викрадений час ВМ: %2$s%%</string>
+    <string name="insights_disk_rate">Читання: %1$s · Запис: %2$s · Активність: %3$s%% · Середній ввід/вивід: %4$s мс</string>
+    <string name="insights_net_rate">Вхід: %1$s · Вихід: %2$s · Помилки: %3$s/с · Відкинуті пакети: %4$s/с</string>
+    <string name="insights_metrics_note">Швидкості обчислюються за послідовними вимірами. Активність диска та середній час вводу/виводу є ознаками, а не доказом насичення.</string>
+    <string name="insights_drift_note">Порівнює вибрані чинні параметри: DNS, NTP, MTU, розширення, Secure Boot, UKI та версію Talos. Відмінності можуть бути навмисними; недоступні поля є невідомими.</string>
+    <string name="insights_save_baseline">Зберегти поточний еталон</string>
+    <string name="insights_baseline_at">Еталон: %1$s</string>
+    <string name="insights_delete_baseline">Видалити еталон</string>
+    <string name="insights_peer_reference">Еталон: перший доступний вузол кожної ролі. Збережіть еталон, щоб відстежувати зміни на тих самих вузлах.</string>
+    <string name="insights_sample_at">Вимір: %1$s</string>
+    <string name="insights_reference">Еталон: %1$s</string>
+    <string name="insights_no_differences">Відмінностей у порівнюваних полях немає.</string>
+    <string name="insights_start">Почати запис</string>
+    <string name="insights_stop">Зупинити запис</string>
+    <string name="insights_dropped">Відкинуто старих записів: %1$d</string>
+    <string name="insights_show_metrics">Показати виміри метрик</string>
+    <string name="insights_no_recording">Збережених записів немає.</string>
+    <string name="insights_record_note">Записуйте до 10 хвилин, поки цей екран на передньому плані. Вимірюються стан, служби, інтерфейси та метрики з подіями Talos наживо. Без сирих журналів або облікових даних. Останній сеанс зашифровано локально; новий запис його замінює. До 600 записів. Події використовують годинники вузлів; порядок не доводить причинності.</string>
 </resources>

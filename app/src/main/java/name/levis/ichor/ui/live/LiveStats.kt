@@ -40,7 +40,7 @@ import java.util.Locale
 const val POLL_SECONDS = 2L
 const val MAX_POINTS = 90 // 3 minutes of history
 
-data class LiveState(val points: List<StatsPoint> = emptyList(), val error: String? = null, val cpuCount: Int = 0)
+data class LiveState(val points: List<StatsPoint> = emptyList(), val error: String? = null, val cpuCount: Int = 0, val bottlenecks: name.levis.ichor.model.Bottlenecks? = null)
 
 /** Polls NodeStats while the Live tab is visible; history survives tab switches. */
 class LiveStatsViewModel(private val talos: TalosRepository, private val node: String) : ViewModel() {
@@ -53,19 +53,22 @@ class LiveStatsViewModel(private val talos: TalosRepository, private val node: S
             runCatching { talos.stats(node) }.fold(
                 onSuccess = { sample ->
                     val point = last?.let { ratesBetween(it, sample) }
+                    val detail = last?.let { talos.bottlenecks(it, sample) }
                     last = sample
                     _state.value = _state.value.let { s ->
                         s.copy(
                             points = if (point == null) s.points else (s.points + point).takeLast(MAX_POINTS),
                             error = null,
                             cpuCount = sample.cpuCount,
+                            bottlenecks = detail,
                         )
                     }
                 },
                 onFailure = {
                     // Leaving the tab cancels the call: that is not an error to show on return.
                     if (it is CancellationException) throw it
-                    _state.value = _state.value.copy(error = it.userMessage())
+                    last = null
+                    _state.value = _state.value.copy(error = it.userMessage(), bottlenecks = null)
                 },
             )
             delay(POLL_SECONDS * 1000)
@@ -145,6 +148,9 @@ fun LiveStatsTab(
                 format = ::rate,
                 gridColor = colors.grid,
             )
+        }
+        state.bottlenecks?.let { detail ->
+            item { BottleneckDetails(detail) }
         }
         item {
             LiveChart(

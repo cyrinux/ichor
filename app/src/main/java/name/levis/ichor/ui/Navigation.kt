@@ -59,6 +59,7 @@ private object Routes {
     const val RESOURCE = "resource?addr={addr}&host={host}&ns={ns}&type={type}&id={id}&sensitive={sensitive}"
     const val SUPPORT_BUNDLE = "supportbundle"
     const val CHANGELOG = "changelog"
+    const val INSIGHTS = "insights"
 
     fun storage(addr: String, host: String) = "storage?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
@@ -168,6 +169,7 @@ fun Navigation(
     }
 
     NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW) {
+        composable(Routes.INSIGHTS) { name.levis.ichor.ui.insights.InsightsScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.IMPORT) {
             ImportScreen(
                 onImported = {
@@ -205,6 +207,7 @@ fun Navigation(
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
                 onHealth = { nav.navigate(Routes.HEALTH) },
                 onEvents = { nav.navigate(Routes.events()) },
+                onInsights = { nav.navigate(Routes.INSIGHTS) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
                 onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
