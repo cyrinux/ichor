@@ -163,6 +163,19 @@ struct TalosClient: Sendable {
         try await Self.run { [config, context] in TalosmobileKubeconfig(config, context, $0) }
     }
 
+    /// Deployments, StatefulSets and DaemonSets through the Kubernetes API (os:admin: Talos issues the kubeconfig).
+    func workloads() async throws -> [KubeWorkload] {
+        let list: KubeWorkloadList = try await Self.json { [config, context] in TalosmobileKubeWorkloads(config, context, $0) }
+        return list.workloads
+    }
+
+    /// `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin).
+    func rolloutRestart(_ workload: KubeWorkload) async throws {
+        try await Self.run { [config, context] error -> Void in
+            _ = TalosmobileKubeRolloutRestart(config, context, workload.kind, workload.namespace, workload.name, error)
+        }
+    }
+
     /// Starts `talosctl debug` on node; events go to the listener (from Go threads).
     func startDebugShell(node: String, image: String, args: String, cols: Int, rows: Int,
                          listener: TalosmobileDebugListenerProtocol) -> TalosmobileDebugSession? {

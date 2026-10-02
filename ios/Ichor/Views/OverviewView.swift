@@ -163,6 +163,11 @@ struct OverviewView: View {
                     Image(systemName: "list.bullet.rectangle")
                 }
                 .accessibilityLabel(Text("Events"))
+                // The Kubernetes API is reached with the admin kubeconfig Talos issues.
+                if model.allows(.workloads) {
+                    NavigationLink(value: Route.workloads) { Image(systemName: "square.stack.3d.up") }
+                        .accessibilityLabel(Text("Kubernetes workloads"))
+                }
                 NavigationLink(value: Route.kubespan) { Image(systemName: "point.3.connected.trianglepath.dotted") }
                 NavigationLink(value: Route.etcd) { Image(systemName: "cylinder.split.1x2") }
                 NavigationLink(value: Route.settings) { Image(systemName: "gearshape") }

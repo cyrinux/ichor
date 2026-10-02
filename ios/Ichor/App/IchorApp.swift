@@ -112,6 +112,8 @@ enum Route: Hashable {
     case changelog
     case etcd
     case kubespan
+    /// Kubernetes Deployments, StatefulSets and DaemonSets (os:admin).
+    case workloads
     case health
     case settings
     case importConfig
@@ -155,6 +157,7 @@ struct MainNavigation: View {
                     case .changelog: ChangelogView()
                     case .etcd: EtcdView()
                     case .kubespan: KubeSpanView()
+                    case .workloads: WorkloadsView()
                     case .health: HealthView()
                     case .settings: SettingsView()
                     case .diagnosis(let note): DiagnosisView(initialNote: note)
