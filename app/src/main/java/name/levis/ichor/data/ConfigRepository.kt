@@ -114,6 +114,19 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
     }
 
     /**
+     * Adds [nodes] (addresses, as discovered) to the nodes of [contextName], keeping the
+     * other contexts and the context the user is looking at.
+     */
+    suspend fun addNodes(contextName: String, nodes: List<String>) = withContext(Dispatchers.IO) {
+        val current = _config.value ?: throw NoConfigException()
+        val updated = Talosmobile.addContextNodes(current.yaml, contextName, nodes.joinToString(","))
+        val summary = parse(updated)
+        store.write(updated.encodeToByteArray())
+        _config.value = StoredConfig(updated, summary, current.activeContext)
+        _generation.value++
+    }
+
+    /**
      * The config for a call to the cluster on screen. Throws [NoConfigException] without
      * one, or whatever [guard] throws when the call must not be tried (see [VpnRequiredException]).
      */

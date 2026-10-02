@@ -1044,4 +1044,26 @@
     <string name="demo_try">Спробувати демо</string>
     <string name="demo_hint">Ще немає кластера? Ознайомтеся з Ichor на прикладі кластера Talos.</string>
     <string name="demo_notice">Демонстраційний кластер · Приклад даних. Зміни кластера недоступні. Видаліть демо в розділі Керування кластерами після завершення.</string>
+    <string name="overview_discovered_nodes_hint">Торкніться, щоб додати їх до talosconfig.</string>
+    <string name="discover_nodes_title">Додати знайдені вузли</string>
+    <string name="discover_nodes_body">Виявлення кластера знає ці вузли, але talosconfig їх не містить. Додайте ті, які потрібно бачити й керувати тут.</string>
+    <string name="discover_nodes_not_now">Не зараз</string>
+    <plurals name="overview_discovered_nodes">
+        <item quantity="one">%1$d вузол кластера відсутній у talosconfig.</item>
+        <item quantity="few">%1$d вузли кластера відсутні у talosconfig.</item>
+        <item quantity="many">%1$d вузлів кластера відсутні у talosconfig.</item>
+        <item quantity="other">%1$d вузла кластера відсутні у talosconfig.</item>
+    </plurals>
+    <plurals name="discover_nodes_add">
+        <item quantity="one">Додати %1$d вузол</item>
+        <item quantity="few">Додати %1$d вузли</item>
+        <item quantity="many">Додати %1$d вузлів</item>
+        <item quantity="other">Додати %1$d вузла</item>
+    </plurals>
+    <plurals name="discover_nodes_added">
+        <item quantity="one">Додано %1$d вузол до talosconfig.</item>
+        <item quantity="few">Додано %1$d вузли до talosconfig.</item>
+        <item quantity="many">Додано %1$d вузлів до talosconfig.</item>
+        <item quantity="other">Додано %1$d вузла до talosconfig.</item>
+    </plurals>
 </resources>

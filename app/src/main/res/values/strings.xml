@@ -969,4 +969,20 @@
     <string name="demo_try">Try demo</string>
     <string name="demo_hint">No cluster yet? Explore Ichor with a sample Talos cluster.</string>
     <string name="demo_notice">Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.</string>
+    <string name="overview_discovered_nodes_hint">Tap to add them to the talosconfig.</string>
+    <string name="discover_nodes_title">Add discovered nodes</string>
+    <string name="discover_nodes_body">Cluster discovery knows these nodes, but the talosconfig does not list them. Add the ones to show and manage here.</string>
+    <string name="discover_nodes_not_now">Not now</string>
+    <plurals name="overview_discovered_nodes">
+        <item quantity="one">%1$d node of the cluster is not in the talosconfig.</item>
+        <item quantity="other">%1$d nodes of the cluster are not in the talosconfig.</item>
+    </plurals>
+    <plurals name="discover_nodes_add">
+        <item quantity="one">Add %1$d node</item>
+        <item quantity="other">Add %1$d nodes</item>
+    </plurals>
+    <plurals name="discover_nodes_added">
+        <item quantity="one">Added %1$d node to the talosconfig.</item>
+        <item quantity="other">Added %1$d nodes to the talosconfig.</item>
+    </plurals>
 </resources>

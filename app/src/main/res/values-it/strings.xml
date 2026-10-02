@@ -966,4 +966,20 @@
     <string name="demo_try">Prova la demo</string>
     <string name="demo_hint">Non hai ancora un cluster? Esplora Ichor con un cluster Talos di esempio.</string>
     <string name="demo_notice">Cluster dimostrativo · Dati di esempio. Le modifiche al cluster non sono disponibili. Rimuovi la demo da Gestisci cluster al termine.</string>
+    <string name="overview_discovered_nodes_hint">Tocca per aggiungerli al talosconfig.</string>
+    <string name="discover_nodes_title">Aggiungi i nodi rilevati</string>
+    <string name="discover_nodes_body">Il rilevamento del cluster conosce questi nodi, ma il talosconfig non li elenca. Aggiungi quelli da mostrare e gestire qui.</string>
+    <string name="discover_nodes_not_now">Non ora</string>
+    <plurals name="overview_discovered_nodes">
+        <item quantity="one">%1$d nodo del cluster non è nel talosconfig.</item>
+        <item quantity="other">%1$d nodi del cluster non sono nel talosconfig.</item>
+    </plurals>
+    <plurals name="discover_nodes_add">
+        <item quantity="one">Aggiungi %1$d nodo</item>
+        <item quantity="other">Aggiungi %1$d nodi</item>
+    </plurals>
+    <plurals name="discover_nodes_added">
+        <item quantity="one">%1$d nodo aggiunto al talosconfig.</item>
+        <item quantity="other">%1$d nodi aggiunti al talosconfig.</item>
+    </plurals>
 </resources>

@@ -966,4 +966,20 @@
     <string name="demo_try">Probar demo</string>
     <string name="demo_hint">¿Aún no tienes un clúster? Explora Ichor con un clúster Talos de ejemplo.</string>
     <string name="demo_notice">Clúster de demostración · Datos de ejemplo. No se puede modificar el clúster. Elimina la demo en Gestionar clústeres cuando termines.</string>
+    <string name="overview_discovered_nodes_hint">Toca para añadirlos al talosconfig.</string>
+    <string name="discover_nodes_title">Añadir nodos descubiertos</string>
+    <string name="discover_nodes_body">El descubrimiento del clúster conoce estos nodos, pero el talosconfig no los incluye. Añade los que quieras ver y gestionar aquí.</string>
+    <string name="discover_nodes_not_now">Ahora no</string>
+    <plurals name="overview_discovered_nodes">
+        <item quantity="one">%1$d nodo del clúster no está en el talosconfig.</item>
+        <item quantity="other">%1$d nodos del clúster no están en el talosconfig.</item>
+    </plurals>
+    <plurals name="discover_nodes_add">
+        <item quantity="one">Añadir %1$d nodo</item>
+        <item quantity="other">Añadir %1$d nodos</item>
+    </plurals>
+    <plurals name="discover_nodes_added">
+        <item quantity="one">%1$d nodo añadido al talosconfig.</item>
+        <item quantity="other">%1$d nodos añadidos al talosconfig.</item>
+    </plurals>
 </resources>
