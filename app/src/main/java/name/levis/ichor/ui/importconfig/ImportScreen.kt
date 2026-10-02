@@ -37,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -55,7 +56,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import name.levis.ichor.model.ConfigSummary
+import name.levis.ichor.model.ImportChoice
+import name.levis.ichor.model.ImportConflict
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.factory
@@ -111,7 +113,14 @@ fun ImportScreen(
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (val s = state) {
-                is ImportState.Preview -> PreviewCard(s.summary, adding = !firstRun, onConfirm = vm::confirm, onCancel = vm::reset)
+                is ImportState.Preview -> PreviewCard(
+                    s,
+                    adding = !firstRun,
+                    onRename = vm::rename,
+                    onReplace = vm::setReplace,
+                    onConfirm = vm::confirm,
+                    onCancel = vm::reset,
+                )
                 ImportState.Validating, ImportState.Saved -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator()
                 }
@@ -231,13 +240,21 @@ private fun PasteSource(text: String, onText: (String) -> Unit, onYaml: (String)
 }
 
 @Composable
-private fun PreviewCard(summary: ConfigSummary, adding: Boolean, onConfirm: () -> Unit, onCancel: () -> Unit) {
+private fun PreviewCard(
+    preview: ImportState.Preview,
+    adding: Boolean,
+    onRename: (Int, String) -> Unit,
+    onReplace: (Int, Boolean) -> Unit,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    val summary = preview.summary
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(stringResource(R.string.import_valid), style = MaterialTheme.typography.titleLarge)
-        summary.contexts.forEach { ctx ->
+        summary.contexts.forEachIndexed { index, ctx ->
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     val name = if (ctx.name == summary.current) stringResource(R.string.import_context_current, ctx.name) else ctx.name
@@ -246,11 +263,22 @@ private fun PreviewCard(summary: ConfigSummary, adding: Boolean, onConfirm: () -
                     InfoRow(stringResource(R.string.common_label_nodes), if (ctx.nodes.isEmpty()) stringResource(R.string.import_nodes_endpoints) else "${ctx.nodes.size}")
                     InfoRow(stringResource(R.string.common_label_roles), ctx.roles.joinToString())
                     InfoRow(stringResource(R.string.common_label_cert_expires), certExpiry(ctx.certNotAfter))
+                    preview.conflicts.firstOrNull { it.index == index }?.let { conflict ->
+                        NameConflict(
+                            name = ctx.name,
+                            conflict = conflict,
+                            choice = preview.choices.firstOrNull { it.index == index } ?: ImportChoice(index),
+                            taken = index in preview.takenNames,
+                            onRename = { onRename(index, it) },
+                            onReplace = { onReplace(index, it) },
+                        )
+                    }
                 }
             }
         }
         // The clusters already imported stay: say what this import does to them.
         if (adding) Text(stringResource(R.string.import_adds_cluster), style = MaterialTheme.typography.bodyMedium)
+        preview.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
         Text(
             stringResource(R.string.import_stored_encrypted),
             style = MaterialTheme.typography.bodySmall,
@@ -258,9 +286,58 @@ private fun PreviewCard(summary: ConfigSummary, adding: Boolean, onConfirm: () -
         )
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
-            Button(onClick = onConfirm, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.import_import)) }
+            Button(onClick = onConfirm, enabled = preview.canImport, modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.import_import))
+            }
         }
         Box(Modifier.height(8.dp))
+    }
+}
+
+/**
+ * A context named like a stored cluster: it is never overwritten silently. The user names
+ * it (the suggested free name by default) or, for the same cluster, replaces the stored one.
+ */
+@Composable
+private fun NameConflict(
+    name: String,
+    conflict: ImportConflict,
+    choice: ImportChoice,
+    taken: Boolean,
+    onRename: (String) -> Unit,
+    onReplace: (Boolean) -> Unit,
+) {
+    Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            stringResource(R.string.import_name_conflict, name),
+            color = LocalStatusColors.current.warn,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        OutlinedTextField(
+            value = choice.name,
+            onValueChange = onRename,
+            enabled = !choice.replace,
+            singleLine = true,
+            label = { Text(stringResource(R.string.import_name_as)) },
+            placeholder = { Text(conflict.suggested) },
+            isError = taken,
+            supportingText = if (taken) {
+                { Text(stringResource(R.string.import_name_taken)) }
+            } else {
+                null
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        conflict.sameAs?.let { same ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.import_name_replace, same),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                Switch(checked = choice.replace, onCheckedChange = onReplace)
+            }
+        }
     }
 }
 

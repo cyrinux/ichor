@@ -4,11 +4,14 @@ import android.content.Context
 import name.levis.talosmobile.Talosmobile
 import name.levis.ichor.model.ConfigSummary
 import name.levis.ichor.model.ContextSummary
+import name.levis.ichor.model.ImportChoice
+import name.levis.ichor.model.ImportConflict
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.builtins.ListSerializer
 import java.io.File
 
 /** The stored talosconfig (a context per imported cluster) plus the context the user is looking at. */
@@ -53,17 +56,29 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
     /** Validates without storing; throws with a readable message when invalid. */
     suspend fun validate(yaml: String): ConfigSummary = withContext(Dispatchers.IO) { parse(yaml) }
 
-    /** Adds the local demo alongside any imported clusters. */
-    suspend fun saveDemo() = withContext(Dispatchers.IO) { save(Talosmobile.demoConfig()) }
+    /** Adds the local demo alongside any imported clusters, replacing a demo added before. */
+    suspend fun saveDemo() = withContext(Dispatchers.IO) {
+        val yaml = Talosmobile.demoConfig()
+        save(yaml, importConflicts(yaml).filter { it.sameAs != null }.map { ImportChoice(it.index, replace = true) })
+    }
+
+    /** The contexts of [yaml] named like a stored one (none before the first import). */
+    suspend fun importConflicts(yaml: String): List<ImportConflict> = withContext(Dispatchers.IO) {
+        val current = _config.value ?: return@withContext emptyList()
+        TalosJson.decodeFromString(ListSerializer(ImportConflict.serializer()), Talosmobile.importConflicts(current.yaml, yaml))
+    }
 
     /**
      * Stores [yaml]. With a config already stored its contexts are added to it (one stored
-     * talosconfig, a context per cluster): a context of an already imported cluster (same
-     * name and CA) is updated, any other gets its own entry. The imported config's current
-     * context becomes the one shown.
+     * talosconfig, a context per cluster). A stored context is never overwritten: one named
+     * like it gets the name in [choices], else name-1, name-2…, unless [choices] asks to
+     * replace the stored context of the same cluster (see [importConflicts]). The imported
+     * config's current context becomes the one shown.
      */
-    suspend fun save(yaml: String) = withContext(Dispatchers.IO) {
-        val merged = _config.value?.let { Talosmobile.mergeConfig(it.yaml, yaml) } ?: yaml
+    suspend fun save(yaml: String, choices: List<ImportChoice> = emptyList()) = withContext(Dispatchers.IO) {
+        val merged = _config.value?.let {
+            Talosmobile.mergeConfig(it.yaml, yaml, TalosJson.encodeToString(ListSerializer(ImportChoice.serializer()), choices))
+        } ?: yaml
         val summary = parse(merged)
         store.write(merged.encodeToByteArray())
         saveActive(summary, summary.current)

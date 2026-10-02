@@ -447,7 +447,11 @@
     <string name="import_context_current">%1$s (поточний)</string>
     <string name="import_nodes_endpoints">кінцеві точки</string>
     <string name="import_stored_encrypted">Конфігурація зберігається на цьому пристрої в зашифрованому вигляді (Android Keystore) і не потрапляє в резервні копії.</string>
-    <string name="import_adds_cluster">Його буде додано до кластерів, які вже є на цьому пристрої. Уже імпортований кластер (та сама назва й той самий CA) буде оновлено.</string>
+    <string name="import_adds_cluster">Його буде додано до кластерів, які вже є на цьому пристрої. Уже імпортований кластер ніколи не перезаписується, якщо ви не оберете його замінити.</string>
+    <string name="import_name_conflict">Кластер з назвою %1$s уже є на цьому пристрої.</string>
+    <string name="import_name_as">Імпортувати як</string>
+    <string name="import_name_taken">Ця назва вже використовується.</string>
+    <string name="import_name_replace">Замінити %1$s (той самий кластер)</string>
     <string name="import_import">Імпортувати</string>
     <string name="import_camera_needed">Для сканування QR-коду talosconfig потрібен дозвіл на доступ до камери.</string>
     <string name="import_grant_camera">Надати доступ до камери</string>

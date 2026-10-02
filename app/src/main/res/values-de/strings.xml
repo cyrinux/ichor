@@ -407,7 +407,11 @@
     <string name="import_context_current">%1$s (aktuell)</string>
     <string name="import_nodes_endpoints">Endpunkte</string>
     <string name="import_stored_encrypted">Die Konfiguration wird verschlüsselt auf diesem Gerät gespeichert (Android Keystore) und von Back-ups ausgeschlossen.</string>
-    <string name="import_adds_cluster">Sie wird zu den Clustern auf diesem Gerät hinzugefügt. Ein bereits importierter Cluster (gleicher Name und gleiche CA) wird aktualisiert.</string>
+    <string name="import_adds_cluster">Sie wird zu den Clustern auf diesem Gerät hinzugefügt. Ein bereits importierter Cluster wird nie überschrieben, außer Sie wählen, ihn zu ersetzen.</string>
+    <string name="import_name_conflict">Ein Cluster namens %1$s ist bereits auf diesem Gerät.</string>
+    <string name="import_name_as">Importieren als</string>
+    <string name="import_name_taken">Dieser Name wird bereits verwendet.</string>
+    <string name="import_name_replace">%1$s ersetzen (gleicher Cluster)</string>
     <string name="import_import">Importieren</string>
     <string name="import_camera_needed">Zum Scannen eines talosconfig-QR-Codes ist die Kameraberechtigung erforderlich.</string>
     <string name="import_grant_camera">Kamerazugriff erlauben</string>

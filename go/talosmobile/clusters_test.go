@@ -46,7 +46,7 @@ func mustConfig(t *testing.T, yaml string) *clientconfig.Config {
 }
 
 func TestMergeConfigAddsClusters(t *testing.T) {
-	out, err := MergeConfig(mergeStored, clustersOther)
+	out, err := MergeConfig(mergeStored, clustersOther, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,8 +76,31 @@ func TestMergeConfigAddsClusters(t *testing.T) {
 	}
 }
 
-func TestMergeConfigUpdatesSameCluster(t *testing.T) {
-	out, err := MergeConfig(mergeStored, clustersRenewedLab)
+// The same cluster again (same name and CA): kept next to the stored one unless the user
+// chose to replace it.
+func TestMergeConfigKeepsSameClusterByDefault(t *testing.T) {
+	out, err := MergeConfig(mergeStored, clustersRenewedLab, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := mustConfig(t, out)
+
+	if got := strings.Join(sortedContextNames(cfg), ","); got != "lab,lab-1,prod" {
+		t.Fatalf("contexts = %s", got)
+	}
+
+	if lab := cfg.Contexts["lab"]; lab.Crt != "bGFiLWNydA==" {
+		t.Fatalf("stored lab overwritten: %+v", lab)
+	}
+
+	if cfg.Context != "lab-1" {
+		t.Fatalf("current = %q", cfg.Context)
+	}
+}
+
+func TestMergeConfigReplacesSameClusterWhenChosen(t *testing.T) {
+	out, err := MergeConfig(mergeStored, clustersRenewedLab, `[{"index":0,"replace":true}]`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,22 +120,116 @@ func TestMergeConfigUpdatesSameCluster(t *testing.T) {
 	}
 }
 
-func TestMergeConfigSkipsTakenSuffixes(t *testing.T) {
-	once, err := MergeConfig(mergeStored, clustersOther)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	third := strings.ReplaceAll(clustersOther, "b3RoZXItY2E=", "dGhpcmQtY2E=")
-
-	out, err := MergeConfig(once, third)
+func TestMergeConfigUsesChosenName(t *testing.T) {
+	out, err := MergeConfig(mergeStored, clustersOther, `[{"index":0,"name":"  home lab  "}]`)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	cfg := mustConfig(t, out)
 
-	if got := strings.Join(sortedContextNames(cfg), ","); got != "lab,lab-1,lab-2,prod,staging" {
+	if got := strings.Join(sortedContextNames(cfg), ","); got != "home lab,lab,prod,staging" {
+		t.Fatalf("contexts = %s", got)
+	}
+
+	if added := cfg.Contexts["home lab"]; added.Crt != "b3RoZXItY3J0" {
+		t.Fatalf("imported lab wrong: %+v", added)
+	}
+
+	if cfg.Context != "home lab" {
+		t.Fatalf("current = %q", cfg.Context)
+	}
+}
+
+func TestMergeConfigRefusesOverwrites(t *testing.T) {
+	// A chosen name held by a stored cluster, or by another context of the imported config.
+	for _, name := range []string{"prod", "staging"} {
+		if _, err := MergeConfig(mergeStored, clustersOther, `[{"index":0,"name":"`+name+`"}]`); err == nil {
+			t.Fatalf("name %q taken, accepted", name)
+		}
+	}
+
+	// Another cluster (another CA) cannot replace the stored one.
+	if _, err := MergeConfig(mergeStored, clustersOther, `[{"index":0,"replace":true}]`); err == nil {
+		t.Fatal("replacing another cluster accepted")
+	}
+
+	if _, err := MergeConfig(mergeStored, clustersOther, `{`); err == nil {
+		t.Fatal("bad choices accepted")
+	}
+}
+
+func TestMergeConfigSuffixAvoidsImportedNames(t *testing.T) {
+	// The imported config has both "lab" (clashing) and "lab-1": lab goes in as lab-2.
+	added := strings.Replace(clustersOther, "  staging:", "  lab-1:", 1)
+
+	out, err := MergeConfig(mergeStored, added, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := mustConfig(t, out)
+
+	if got := strings.Join(sortedContextNames(cfg), ","); got != "lab,lab-1,lab-2,prod" {
+		t.Fatalf("contexts = %s", got)
+	}
+
+	if crt := cfg.Contexts["lab-2"].Crt; crt != "b3RoZXItY3J0" {
+		t.Fatalf("lab-2 = %s", crt)
+	}
+}
+
+func TestImportConflicts(t *testing.T) {
+	out, err := ImportConflicts(mergeStored, clustersOther)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// lab clashes with another cluster; staging is new.
+	if out != `[{"index":0,"suggested":"lab-1"}]` {
+		t.Fatalf("conflicts = %s", out)
+	}
+
+	out, err = ImportConflicts(mergeStored, clustersRenewedLab)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != `[{"index":0,"suggested":"lab-1","sameAs":"lab"}]` {
+		t.Fatalf("conflicts = %s", out)
+	}
+
+	out, err = ImportConflicts(mergeStored, strings.ReplaceAll(clustersOther, "lab", "dev"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if out != `[]` {
+		t.Fatalf("conflicts = %s", out)
+	}
+
+	if _, err := ImportConflicts(mergeStored, "not: [yaml"); err == nil {
+		t.Fatal("bad imported config accepted")
+	}
+}
+
+func TestMergeConfigSkipsTakenSuffixes(t *testing.T) {
+	once, err := MergeConfig(mergeStored, clustersOther, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	third := strings.ReplaceAll(clustersOther, "b3RoZXItY2E=", "dGhpcmQtY2E=")
+
+	out, err := MergeConfig(once, third, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := mustConfig(t, out)
+
+	// Its staging is the stored one again: without a choice it is kept next to it too.
+	if got := strings.Join(sortedContextNames(cfg), ","); got != "lab,lab-1,lab-2,prod,staging,staging-1" {
 		t.Fatalf("contexts = %s", got)
 	}
 
@@ -121,16 +238,25 @@ func TestMergeConfigSkipsTakenSuffixes(t *testing.T) {
 	}
 }
 
-func TestMergeConfigUpdatesSuffixedCluster(t *testing.T) {
-	once, err := MergeConfig(mergeStored, clustersOther)
+func TestMergeConfigReplacesSuffixedCluster(t *testing.T) {
+	once, err := MergeConfig(mergeStored, clustersOther, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// The other "lab" again, renewed: it went in as lab-1, so lab-1 is what gets updated.
+	// The other "lab" again, renewed: it went in as lab-1, so lab-1 is what it may replace.
 	renewed := strings.ReplaceAll(clustersOther, "b3RoZXItY3J0", "cmVuZXdlZA==")
 
-	out, err := MergeConfig(once, renewed)
+	conflicts, err := ImportConflicts(once, renewed)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(conflicts, `"sameAs":"lab-1"`) {
+		t.Fatalf("conflicts = %s", conflicts)
+	}
+
+	out, err := MergeConfig(once, renewed, `[{"index":0,"replace":true},{"index":1,"replace":true}]`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,15 +311,15 @@ func TestMaskedContextNamesStayDistinctAcrossConfigs(t *testing.T) {
 }
 
 func TestMergeConfigErrors(t *testing.T) {
-	if _, err := MergeConfig("not: [yaml", clustersOther); err == nil {
+	if _, err := MergeConfig("not: [yaml", clustersOther, ""); err == nil {
 		t.Fatal("bad stored config accepted")
 	}
 
-	if _, err := MergeConfig(mergeStored, "not: [yaml"); err == nil {
+	if _, err := MergeConfig(mergeStored, "not: [yaml", ""); err == nil {
 		t.Fatal("bad imported config accepted")
 	}
 
-	if _, err := MergeConfig(mergeStored, "context: x\ncontexts: {}\n"); err == nil {
+	if _, err := MergeConfig(mergeStored, "context: x\ncontexts: {}\n", ""); err == nil {
 		t.Fatal("imported config without contexts accepted")
 	}
 }
