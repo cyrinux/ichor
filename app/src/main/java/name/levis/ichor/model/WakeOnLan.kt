@@ -95,10 +95,35 @@ fun decodeWolTarget(value: String): WolTarget? {
 }
 
 /** The settings of [saved] (by [wolKey]) whose cluster is still among [fingerprints]. */
-fun keepWolTargets(saved: Map<String, WolTarget>, fingerprints: List<String>): Map<String, WolTarget> {
+fun <T> keepWolTargets(saved: Map<String, T>, fingerprints: List<String>): Map<String, T> {
     val known = fingerprints.filter { it.isNotBlank() }.toSet()
     return saved.filterKeys { it.substringBefore('|') in known }
 }
+
+/** A physical link of a node and its MAC address, as last seen while the node was up. */
+data class SeenMac(val link: String, val mac: String)
+
+/** The links of a node as they are remembered: "eth0=aa:bb:…,eth1=…". */
+fun encodeSeenMacs(seen: List<SeenMac>): String = seen.joinToString(",") { "${it.link}=${it.mac}" }
+
+/** What [encodeSeenMacs] stored; entries that are not a link and a MAC are left out. */
+fun decodeSeenMacs(value: String): List<SeenMac> = value.split(',').mapNotNull { entry ->
+    val link = entry.substringBefore('=', "")
+    val mac = parseMac(entry.substringAfter('=', ""))
+    if (link.isBlank() || mac == null) null else SeenMac(link, formatMac(mac))
+}
+
+/** The MACs worth remembering from a node's [links]: those of its physical Ethernet links. */
+fun seenMacs(links: List<LinkInfo>): List<SeenMac> =
+    wolCandidates(links).map { SeenMac(it.name, formatMac(parseMac(it.hardwareAddr)!!)) }
+
+/**
+ * Where "Wake" sends magic packets: the [saved] setting; else, so a node that went down
+ * before anyone set it up can still be woken, every MAC it was [seen] with, on the phone's
+ * own network (a packet for a card that is not wired is simply lost).
+ */
+fun wakeTargets(saved: WolTarget?, seen: List<SeenMac>): List<WolTarget> =
+    saved?.let(::listOf) ?: seen.map { WolTarget(it.mac) }.distinct()
 
 /** The MAC addresses a node reports for its physical Ethernet links, to pick one from. */
 fun wolCandidates(links: List<LinkInfo>): List<LinkInfo> =

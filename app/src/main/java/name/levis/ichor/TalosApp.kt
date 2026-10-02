@@ -54,7 +54,12 @@ class TalosApp : Application() {
     val uiPreferences by lazy { UiPreferences(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
     val clusterColors by lazy { ClusterColors(getSharedPreferences(ClusterColors.FILE, Context.MODE_PRIVATE)) }
     val clusterNames by lazy { ClusterNames(getSharedPreferences(ClusterNames.FILE, Context.MODE_PRIVATE)) }
-    val wakeOnLan by lazy { WakeOnLanStore(getSharedPreferences(WakeOnLanStore.FILE, Context.MODE_PRIVATE)) }
+    val wakeOnLan by lazy {
+        WakeOnLanStore(
+            getSharedPreferences(WakeOnLanStore.FILE, Context.MODE_PRIVATE),
+            getSharedPreferences(WakeOnLanStore.SEEN_FILE, Context.MODE_PRIVATE),
+        )
+    }
     val appLock by lazy {
         AppLock(
             PrefsLockSettings(getSharedPreferences("talosdev-mobile-security", Context.MODE_PRIVATE)),

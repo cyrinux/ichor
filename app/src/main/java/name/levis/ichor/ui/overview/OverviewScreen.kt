@@ -262,6 +262,7 @@ private fun NodeList(
 ) {
     var sheetFor by remember { mutableStateOf<NodeOverview?>(null) }
     val wakeOnLan = rememberWakeOnLan(fingerprint)
+    RecordNodeMacs(fingerprint, overview.nodes)
     sheetFor?.let { node ->
         NodeActionsSheet(
             node = node,

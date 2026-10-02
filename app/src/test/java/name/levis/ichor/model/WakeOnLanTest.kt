@@ -89,6 +89,32 @@ class WakeOnLanTest {
     }
 
     @Test
+    fun seenMacsRoundTrip() {
+        val seen = listOf(SeenMac("eth0", "aa:bb:cc:01:02:03"), SeenMac("enp1s0", "aa:bb:cc:01:02:04"))
+        assertEquals(seen, decodeSeenMacs(encodeSeenMacs(seen)))
+        assertEquals(listOf(SeenMac("eth0", "aa:bb:cc:01:02:03")), decodeSeenMacs("eth0=AA-BB-CC-01-02-03,bad,=aabbcc010203,eth1=nope"))
+        assertEquals(emptyList<SeenMac>(), decodeSeenMacs(""))
+    }
+
+    @Test
+    fun seenMacsAreThePhysicalLinksNormalized() {
+        val links = listOf(
+            LinkInfo("eth0", type = "ether", hardwareAddr = "AA:BB:CC:01:02:03"),
+            LinkInfo("lxc1", type = "ether", hardwareAddr = "aa:bb:cc:01:02:05", virtual = true),
+        )
+        assertEquals(listOf(SeenMac("eth0", "aa:bb:cc:01:02:03")), seenMacs(links))
+    }
+
+    @Test
+    fun wakeUsesTheSavedSettingElseEverySeenMac() {
+        val saved = WolTarget("aa:bb:cc:01:02:03", "10.0.0.255", 7)
+        val seen = listOf(SeenMac("eth0", "aa:bb:cc:01:02:03"), SeenMac("eth1", "aa:bb:cc:01:02:04"))
+        assertEquals(listOf(saved), wakeTargets(saved, seen))
+        assertEquals(listOf(WolTarget("aa:bb:cc:01:02:03"), WolTarget("aa:bb:cc:01:02:04")), wakeTargets(null, seen))
+        assertEquals(emptyList<WolTarget>(), wakeTargets(null, emptyList()))
+    }
+
+    @Test
     fun candidatesArePhysicalEthernetLinks() {
         val links = listOf(
             LinkInfo("eth0", type = "ether", hardwareAddr = "aa:bb:cc:01:02:03"),

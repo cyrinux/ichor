@@ -40,8 +40,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
-import name.levis.ichor.model.LinkInfo
 import name.levis.ichor.model.NodeOverview
+import name.levis.ichor.model.SeenMac
 import name.levis.ichor.model.WOL_DEFAULT_BROADCAST
 import name.levis.ichor.model.WOL_DEFAULT_PORT
 import name.levis.ichor.model.WolInputError
@@ -49,18 +49,21 @@ import name.levis.ichor.model.WolInputException
 import name.levis.ichor.model.WolTarget
 import name.levis.ichor.model.parseMac
 import name.levis.ichor.model.parseWolTarget
-import name.levis.ichor.model.wolCandidates
+import name.levis.ichor.model.seenMacs
+import name.levis.ichor.model.wakeTargets
 
 /**
- * How to wake [node]: its MAC address, and where to send the magic packet. While the node
- * is up, the MACs of its Ethernet links are offered, so it can be set before it is needed.
- * [onSave] with null forgets the setting.
+ * How to wake [node]: its MAC address, and where to send the magic packet. The MACs of its
+ * Ethernet links are offered: read live while it is up, else the ones it was last [seen]
+ * with; a single one is filled in. [onSave] with null forgets the setting.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun WakeOnLanDialog(
     node: NodeOverview,
+    fingerprint: String,
     saved: WolTarget?,
+    seen: List<SeenMac>,
     onSave: (WolTarget?) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -68,7 +71,10 @@ fun WakeOnLanDialog(
     var broadcast by remember { mutableStateOf(saved?.broadcast.orEmpty()) }
     var port by remember { mutableStateOf(saved?.port?.takeIf { it != WOL_DEFAULT_PORT }?.toString().orEmpty()) }
     var error by remember { mutableStateOf<WolInputError?>(null) }
-    val links = rememberNodeLinks(node)
+    val links = rememberNodeMacs(node, fingerprint, seen)
+    LaunchedEffect(links) {
+        if (saved == null && mac.isBlank()) links.singleOrNull()?.let { mac = it.mac }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -95,12 +101,12 @@ fun WakeOnLanDialog(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         links.forEach { link ->
                             FilterChip(
-                                selected = parseMac(mac)?.toList() == parseMac(link.hardwareAddr)?.toList(),
+                                selected = parseMac(mac)?.toList() == parseMac(link.mac)?.toList(),
                                 onClick = {
-                                    mac = link.hardwareAddr
+                                    mac = link.mac
                                     error = null
                                 },
-                                label = { Text("${link.name}  ${link.hardwareAddr}", fontFamily = FontFamily.Monospace) },
+                                label = { Text("${link.link}  ${link.mac}", fontFamily = FontFamily.Monospace) },
                             )
                         }
                     }
@@ -168,6 +174,7 @@ fun rememberWakeOnLan(fingerprint: String?): (NodeOverview) -> WolActions? {
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
     val targets by app.wakeOnLan.targets.collectAsStateWithLifecycle()
+    val seen by app.wakeOnLan.seen.collectAsStateWithLifecycle()
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf<NodeOverview?>(null) }
     // Screenshot mode turned on with the dialog open: closed, not just hidden until it is off.
@@ -178,7 +185,9 @@ fun rememberWakeOnLan(fingerprint: String?): (NodeOverview) -> WolActions? {
         key(node.node) {
             WakeOnLanDialog(
                 node = node,
+                fingerprint = fingerprint,
                 saved = targets[wolKey(fingerprint, node.node)],
+                seen = seen[wolKey(fingerprint, node.node)].orEmpty(),
                 onSave = {
                     app.wakeOnLan.set(fingerprint, node.node, it)
                     editing = null
@@ -188,20 +197,23 @@ fun rememberWakeOnLan(fingerprint: String?): (NodeOverview) -> WolActions? {
         }
     }
     return { node ->
-        val target = targets[wolKey(fingerprint, node.node)]
+        val key = wolKey(fingerprint, node.node)
+        val wakeTo = wakeTargets(targets[key], seen[key].orEmpty())
         WolActions(
-            target = target,
+            targets = wakeTo,
             // Not the screen's scope: leaving the overview must not cut the packets short.
-            onWake = { target?.let { ProcessLifecycleOwner.get().lifecycleScope.launch { wake(app, node, it) } } },
+            onWake = { ProcessLifecycleOwner.get().lifecycleScope.launch { wake(app, node, wakeTo) } },
             onSettings = { editing = node },
         )
     }
 }
 
-private suspend fun wake(context: Context, node: NodeOverview, target: WolTarget) {
+private suspend fun wake(context: Context, node: NodeOverview, targets: List<WolTarget>) {
+    if (targets.isEmpty()) return
+    val sender = WakeOnLanSender(context)
     val message = try {
-        val destination = WakeOnLanSender(context).send(target)
-        context.getString(R.string.wol_sent, node.hostname, destination)
+        val destinations = targets.map { sender.send(it) }.distinct()
+        context.getString(R.string.wol_sent, node.hostname, destinations.joinToString(", "))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
@@ -210,15 +222,47 @@ private suspend fun wake(context: Context, node: NodeOverview, target: WolTarget
     Toast.makeText(context, message, Toast.LENGTH_LONG).show()
 }
 
-/** The node's Ethernet links with a MAC address, best effort: none while it is down. */
+/**
+ * Records the MACs of the reachable [nodes] of the cluster [fingerprint], once per node
+ * while the app runs, so a node that goes down before anyone set up its Wake-on-LAN can
+ * still be woken. Not in screenshot mode: addresses and MACs are masked then.
+ */
 @Composable
-private fun rememberNodeLinks(node: NodeOverview): List<LinkInfo> {
-    val talos = (LocalContext.current.applicationContext as TalosApp).talosRepository
-    var links by remember(node.node) { mutableStateOf(emptyList<LinkInfo>()) }
-    LaunchedEffect(node.node, node.reachable) {
-        if (node.reachable) {
-            links = runCatching { wolCandidates(talos.network(node.node).links) }.getOrDefault(emptyList())
+fun RecordNodeMacs(fingerprint: String?, nodes: List<NodeOverview>) {
+    val app = LocalContext.current.applicationContext as TalosApp
+    val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
+    val reachable = nodes.filter { it.reachable }.map { it.node }
+    LaunchedEffect(fingerprint, reachable, mask.enabled) {
+        if (fingerprint.isNullOrBlank() || mask.enabled) return@LaunchedEffect
+        reachable.filter { app.wakeOnLan.shouldRecord(fingerprint, it) }.forEach { node ->
+            readMacs(app, node)?.let { app.wakeOnLan.record(fingerprint, node, it) }
         }
     }
-    return links
+}
+
+/** [node]'s physical MACs, or null when they could not be read (it is tried again later). */
+private suspend fun readMacs(app: TalosApp, node: String): List<SeenMac>? = try {
+    seenMacs(app.talosRepository.network(node).links)
+} catch (e: CancellationException) {
+    throw e
+} catch (e: Exception) {
+    null
+}
+
+/**
+ * The MACs to offer for [node]: read live while it is up (and remembered on the way),
+ * else the ones it was last seen with.
+ */
+@Composable
+private fun rememberNodeMacs(node: NodeOverview, fingerprint: String, seen: List<SeenMac>): List<SeenMac> {
+    val app = LocalContext.current.applicationContext as TalosApp
+    var live by remember(node.node) { mutableStateOf(emptyList<SeenMac>()) }
+    LaunchedEffect(node.node, node.reachable) {
+        if (!node.reachable) return@LaunchedEffect
+        readMacs(app, node.node)?.let {
+            live = it
+            app.wakeOnLan.record(fingerprint, node.node, it)
+        }
+    }
+    return live.ifEmpty { seen }
 }
