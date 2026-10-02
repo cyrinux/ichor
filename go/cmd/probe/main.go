@@ -1,6 +1,6 @@
 // Command probe exercises the talosmobile API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|workloads|rollout-restart KIND NAMESPACE NAME|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai
 package main
 
 import (
@@ -73,7 +73,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|clusterstats|inventory|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai"))
+		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|clusterstats|inventory|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|workloads|rollout-restart KIND NAMESPACE NAME|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai"))
 	}
 
 	raw, err := os.ReadFile(*configPath)
@@ -111,6 +111,13 @@ func main() {
 		var kc string
 		if kc, err = talosmobile.Kubeconfig(cfg, *contextName); err == nil {
 			out = fmt.Sprintf("kubeconfig: %d bytes, starts with %q", len(kc), firstLine(kc))
+		}
+	case "workloads":
+		out, err = talosmobile.KubeWorkloads(cfg, *contextName)
+	case "rollout-restart":
+		// rollout-restart KIND NAMESPACE NAME
+		if err = talosmobile.KubeRolloutRestart(cfg, *contextName, flag.Arg(1), flag.Arg(2), flag.Arg(3)); err == nil {
+			out = "restarted"
 		}
 	case "machineconfig":
 		// Redacted: never print secrets from the probe.
