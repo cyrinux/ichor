@@ -85,7 +85,7 @@
     <string name="overview_stat_nodes">Nœuds</string>
     <string name="overview_stat_cpu">Cœurs CPU</string>
     <string name="overview_stat_memory">Mémoire</string>
-    <string name="overview_stat_memory_used">Mémoire · %d %%</string>
+    <string name="overview_stat_memory_used">%d %% utilisés</string>
     <string name="overview_node_actions">Actions sur le nœud</string>
     <string name="overview_role_control_plane">control plane</string>
     <string name="overview_update_banner">Ichor %1$s est disponible — appuyez pour mettre à jour</string>

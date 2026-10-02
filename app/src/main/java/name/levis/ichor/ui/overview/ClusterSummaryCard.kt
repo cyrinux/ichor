@@ -136,15 +136,10 @@ private fun Stat(icon: ImageVector, value: String, label: String, modifier: Modi
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(end = 8.dp).size(20.dp),
         )
+        // Narrow phones and long translations wrap rather than cut the label short.
         Column {
-            Text(value, style = MaterialTheme.typography.titleMedium, maxLines = 1)
-            Text(
-                label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Text(value, style = MaterialTheme.typography.titleMedium)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
