@@ -101,7 +101,12 @@ fun SwipeableNode(
 }
 
 /** How the actions sheet offers Wake-on-LAN for a node; null when it does not (screenshot mode). */
-data class WolActions(val target: WolTarget?, val onWake: () -> Unit, val onSettings: () -> Unit)
+data class WolActions(
+    /** Where "Wake" sends magic packets (see wakeTargets); empty: nothing to wake it with yet. */
+    val targets: List<WolTarget>,
+    val onWake: () -> Unit,
+    val onSettings: () -> Unit,
+)
 
 /**
  * Per-node actions, filtered by reachability and the config's role. Wake-on-LAN needs no
@@ -150,7 +155,7 @@ fun NodeActionsSheet(
                 )
             }
             wol?.let {
-                if (it.target != null) {
+                if (it.targets.isNotEmpty()) {
                     Item(Icons.Outlined.Power, stringResource(R.string.wol_wake)) {
                         onDismiss()
                         it.onWake()

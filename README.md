@@ -18,7 +18,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
 - **Viewing:** node status, services, resources, logs, etcd and the cluster health check.
 - **Actions:** reboot or shut down a node, and wake a powered-off one with Wake-on-LAN (set a
   MAC address and, optionally, a broadcast address and port per node, from its action sheet;
-  the phone sends the magic packet itself, so it has to reach the node's network).
+  the phone sends the magic packet itself, so it has to reach the node's network). The MACs of
+  each node's network cards are recorded on the phone while it is up, so a node that goes down
+  before it was set up can still be woken.
 - **Kubernetes:** export a kubeconfig to open the cluster in kubenav.
 - **Background:** alerts and a home-screen widget.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
