@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 
 /** What each Talos role unlocks in this app (rules from Talos v1.14). */
 private enum class PhoneRole(@StringRes val label: Int, val role: String, @StringRes val unlocks: Int) {
@@ -47,8 +48,11 @@ private enum class PhoneRole(@StringRes val label: Int, val role: String, @Strin
 fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
     var role by rememberSaveable { mutableStateOf(PhoneRole.READER) }
 
+    // The platform default dialog width is too narrow for the role tabs on phones.
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
         title = { Text(stringResource(R.string.help_title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -62,6 +66,7 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
                             selected = r == role,
                             onClick = { role = r },
                             shape = SegmentedButtonDefaults.itemShape(i, PhoneRole.entries.size),
+                            icon = {},
                         ) { Text(stringResource(r.label)) }
                     }
                 }
