@@ -86,6 +86,13 @@
     <string name="overview_stat_cpu">Core CPU</string>
     <string name="overview_stat_memory">Memoria</string>
     <string name="overview_stat_memory_used">%d%% in uso</string>
+    <string name="overview_stat_percent">%d%%</string>
+    <string name="overview_stat_cpu_used">CPU in uso</string>
+    <plurals name="overview_stat_cpu_of_cores">
+        <item quantity="one">di %d core</item>
+        <item quantity="other">di %d core</item>
+    </plurals>
+    <string name="overview_cpu_history_description">Uso CPU del cluster negli ultimi minuti</string>
     <string name="overview_node_actions">Azioni sul nodo</string>
     <string name="overview_role_control_plane">control plane</string>
     <string name="overview_update_banner">È disponibile Ichor %1$s: tocca per aggiornare</string>
@@ -262,6 +269,8 @@
     <string name="settings_theme_black">Nero</string>
     <string name="settings_language">Lingua</string>
     <string name="settings_language_system">Predefinita di sistema</string>
+    <string name="settings_live_cluster_stats">Uso del cluster in tempo reale</string>
+    <string name="settings_live_cluster_stats_desc">Aggiorna CPU e memoria della panoramica ogni pochi secondi mentre è aperta. Disattiva per risparmiare dati mobili e batteria.</string>
     <string name="settings_section_security">Sicurezza</string>
     <string name="settings_auth_needs_lock">Configura prima un\'impronta o un blocco schermo (PIN, sequenza, password) su questo dispositivo.</string>
     <string name="settings_auth_enable_lock">Attiva blocco app</string>

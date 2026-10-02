@@ -83,6 +83,9 @@ import name.levis.ichor.ui.components.NodeHealthPill
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.userMessage
 import kotlinx.coroutines.launch
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 class OverviewViewModel(
@@ -110,6 +113,7 @@ fun OverviewScreen(
     onClustersCleared: () -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
+    liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -127,6 +131,17 @@ fun OverviewScreen(
     LaunchedEffect(config?.activeContext, invalidations) {
         vm.refresh(reset = true)
         timeVm.refresh(reset = true)
+    }
+
+    val liveEnabled by app.uiPreferences.liveClusterStats.collectAsStateWithLifecycle()
+    val liveState by liveVm.state.collectAsStateWithLifecycle()
+    val loaded = state is UiState.Loaded
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    // Live CPU and memory only while the overview is on screen, once it loaded, and if not turned off.
+    LaunchedEffect(liveEnabled, loaded, config?.activeContext, invalidations) {
+        if (!liveEnabled) liveVm.clear()
+        if (!liveEnabled || !loaded) return@LaunchedEffect
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { liveVm.poll(config?.activeContext to invalidations) }
     }
 
     Scaffold(
@@ -220,6 +235,7 @@ fun OverviewScreen(
                     canShell = config?.activeSummary?.allows(Feature.DEBUG_SHELL) == true,
                     canUpgrade = config?.activeSummary?.allows(Feature.UPGRADE) == true,
                     onUpgrade = onUpgrade,
+                    live = liveState.takeIf { liveEnabled },
                 )
             }
         }
@@ -240,6 +256,7 @@ private fun NodeList(
     canShell: Boolean,
     canUpgrade: Boolean,
     onUpgrade: (NodeOverview, String) -> Unit,
+    live: ClusterLiveState?,
 ) {
     var sheetFor by remember { mutableStateOf<NodeOverview?>(null) }
     sheetFor?.let { node ->
@@ -261,7 +278,7 @@ private fun NodeList(
         if (BuildConfig.DONATIONS) item { SupportCard() }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
-        item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes)) }
+        item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes), live) }
         items(nodes, key = { it.node }) { node ->
             SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {
                 NodeCard(node, onClick = { onNode(node) }, onLongClick = { sheetFor = node })

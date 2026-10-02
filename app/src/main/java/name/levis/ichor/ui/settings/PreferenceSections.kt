@@ -59,6 +59,26 @@ fun AppearanceSection(prefs: UiPreferences) {
         }
     }
     LanguageSetting(prefs)
+    LiveClusterStatsSetting(prefs)
+}
+
+/** Live CPU and memory on the overview: on by default, off to spare data and battery. */
+@Composable
+private fun LiveClusterStatsSetting(prefs: UiPreferences) {
+    val enabled by prefs.liveClusterStats.collectAsStateWithLifecycle()
+    Card(Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.settings_live_cluster_stats), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(R.string.settings_live_cluster_stats_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(checked = enabled, onCheckedChange = prefs::setLiveClusterStats, modifier = Modifier.padding(start = 12.dp))
+        }
+    }
 }
 
 /** In-app language: system default or one of the translations, each named in its own language. */

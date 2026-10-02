@@ -15,6 +15,7 @@ import name.levis.ichor.model.LogEntry
 import name.levis.ichor.model.LogTail
 import name.levis.ichor.model.decodeLogTail
 import name.levis.ichor.model.NodeStats
+import name.levis.ichor.model.ClusterStatsSample
 import name.levis.ichor.model.NodeResources
 import name.levis.ichor.model.ServiceInfo
 import name.levis.ichor.model.ProcessSample
@@ -120,6 +121,11 @@ class TalosRepository(private val configs: ConfigRepository) {
     /** One sample of node counters for the live graphs (not cached: always fresh). */
     suspend fun stats(node: String): NodeStats = call { cfg, ctx ->
         TalosJson.decodeFromString(NodeStats.serializer(), Talosmobile.nodeStats(cfg, ctx, node))
+    }
+
+    /** One sample of every node's CPU and memory counters for the live cluster summary (not cached). */
+    suspend fun clusterStats(): ClusterStatsSample = call { cfg, ctx ->
+        TalosJson.decodeFromString(ClusterStatsSample.serializer(), Talosmobile.clusterStats(cfg, ctx))
     }
 
     /** One sample of the node's processes for the Processes tab (not cached: always fresh). */

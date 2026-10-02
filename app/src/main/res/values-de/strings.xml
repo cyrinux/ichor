@@ -86,6 +86,13 @@
     <string name="overview_stat_cpu">CPU-Kerne</string>
     <string name="overview_stat_memory">Arbeitsspeicher</string>
     <string name="overview_stat_memory_used">%d %% belegt</string>
+    <string name="overview_stat_percent">%d %%</string>
+    <string name="overview_stat_cpu_used">CPU belegt</string>
+    <plurals name="overview_stat_cpu_of_cores">
+        <item quantity="one">von %d Kern</item>
+        <item quantity="other">von %d Kernen</item>
+    </plurals>
+    <string name="overview_cpu_history_description">CPU-Auslastung des Clusters in den letzten Minuten</string>
     <string name="overview_node_actions">Knotenaktionen</string>
     <string name="overview_role_control_plane">Control Plane</string>
     <string name="overview_update_banner">Ichor %1$s ist verfügbar – zum Aktualisieren tippen</string>
@@ -262,6 +269,8 @@
     <string name="settings_theme_black">Schwarz</string>
     <string name="settings_language">Sprache</string>
     <string name="settings_language_system">Systemstandard</string>
+    <string name="settings_live_cluster_stats">Live-Clusterauslastung</string>
+    <string name="settings_live_cluster_stats_desc">Aktualisiert CPU und Speicher in der Übersicht alle paar Sekunden, solange sie geöffnet ist. Ausschalten spart mobile Daten und Akku.</string>
     <string name="settings_section_security">Sicherheit</string>
     <string name="settings_auth_needs_lock">Richte zuerst einen Fingerabdruck oder eine Displaysperre (PIN, Muster, Passwort) auf diesem Gerät ein.</string>
     <string name="settings_auth_enable_lock">App-Sperre aktivieren</string>

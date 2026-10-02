@@ -104,6 +104,15 @@
     <string name="overview_stat_cpu">Ядра CPU</string>
     <string name="overview_stat_memory">Пам\'ять</string>
     <string name="overview_stat_memory_used">%d%% використано</string>
+    <string name="overview_stat_percent">%d%%</string>
+    <string name="overview_stat_cpu_used">CPU використано</string>
+    <plurals name="overview_stat_cpu_of_cores">
+        <item quantity="one">з %d ядра</item>
+        <item quantity="few">з %d ядер</item>
+        <item quantity="many">з %d ядер</item>
+        <item quantity="other">з %d ядра</item>
+    </plurals>
+    <string name="overview_cpu_history_description">Використання CPU кластера за останні хвилини</string>
     <string name="overview_node_actions">Дії з вузлом</string>
     <string name="overview_role_control_plane">панель керування</string>
     <string name="overview_update_banner">Доступна версія Ichor %1$s — торкніться, щоб оновити</string>
@@ -296,6 +305,8 @@
     <string name="settings_theme_black">Чорна</string>
     <string name="settings_language">Мова</string>
     <string name="settings_language_system">Системна</string>
+    <string name="settings_live_cluster_stats">Навантаження кластера наживо</string>
+    <string name="settings_live_cluster_stats_desc">Оновлює CPU і пам\'ять в огляді кожні кілька секунд, поки він відкритий. Вимкніть, щоб заощадити мобільні дані й батарею.</string>
     <string name="settings_section_security">Безпека</string>
     <string name="settings_auth_needs_lock">Спочатку налаштуйте на цьому пристрої відбиток пальця або блокування екрана (PIN-код, ключ, пароль).</string>
     <string name="settings_auth_enable_lock">Увімкнути блокування застосунку</string>
