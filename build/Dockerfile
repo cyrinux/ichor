@@ -2,12 +2,12 @@
 # are not published for linux/arm64 (runs under qemu binfmt on arm64 hosts).
 FROM --platform=linux/amd64 docker.io/library/eclipse-temurin:17-jdk-jammy
 
-ARG GO_VERSION=1.26.5
-ARG GRADLE_VERSION=9.5.1
-ARG CMDLINE_TOOLS=13114758
+ARG GO_VERSION=1.26.8
+ARG GRADLE_VERSION=9.8.0
+ARG CMDLINE_TOOLS=16111833
 ARG ANDROID_PLATFORM=android-37
 ARG BUILD_TOOLS=37.0.0
-ARG NDK_VERSION=27.2.12479018
+ARG NDK_VERSION=29.0.14206865
 
 ENV ANDROID_HOME=/opt/android-sdk \
     ANDROID_NDK_HOME=/opt/android-sdk/ndk/${NDK_VERSION} \
