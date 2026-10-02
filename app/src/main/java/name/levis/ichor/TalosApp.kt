@@ -141,6 +141,13 @@ class TalosApp : Application() {
     }
 
     /** Removes a cluster from the stored config; false when it was the last one (nothing is stored anymore). */
+    /** Adds discovered [nodes] to the cluster [name]'s talosconfig context; screens and monitoring follow. */
+    suspend fun addClusterNodes(name: String, nodes: List<String>) {
+        configRepository.addNodes(name, nodes)
+        talosRepository.invalidate()
+        launchSync(runNow = true)
+    }
+
     suspend fun removeCluster(name: String): Boolean {
         val wasShown = name == configRepository.config.value?.activeContext
         val remains = configRepository.removeContext(name)

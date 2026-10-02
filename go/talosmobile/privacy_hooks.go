@@ -155,3 +155,18 @@ func learnSearchDomains(resolvers []*network.ResolverStatus) {
 		privacy.learnDomains(r.TypedSpec().SearchDomains...)
 	}
 }
+
+// learnDiscoveredHosts names the discovered members like the overview's, so the masked
+// addresses the app gets back map to real ones when it adds them to the talosconfig.
+func learnDiscoveredHosts(nodes []discoveredNode) {
+	if !privacy.isEnabled() {
+		return
+	}
+
+	entries := make([]hostEntry, 0, len(nodes))
+	for _, n := range nodes {
+		entries = append(entries, hostEntry{address: n.Address, hostname: n.Hostname, role: n.Role})
+	}
+
+	privacy.learnHosts(entries)
+}

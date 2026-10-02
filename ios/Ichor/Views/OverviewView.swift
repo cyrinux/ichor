@@ -13,6 +13,9 @@ struct OverviewView: View {
     /// Release notes to present after an app update.
     @State private var whatsNew: WhatsNewContent?
     @State private var openChangelog = false
+    /// Cluster members the talosconfig context misses (cluster discovery), offered to add.
+    @State private var discovered: [DiscoveredNode] = []
+    @State private var showDiscovered = false
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -25,6 +28,9 @@ struct OverviewView: View {
                 }
                 if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
                     Section { CertExpiryBanner(notAfter: ctx.certNotAfter) }
+                }
+                if !discovered.isEmpty {
+                    Section { DiscoveredNodesBanner(count: discovered.count) { showDiscovered = true } }
                 }
                 if let update { TalosUpdateSection(info: update, nodes: overview.nodes) }
                 if support.visible { Section { SupportCard(prompt: support) } }
@@ -145,9 +151,24 @@ struct OverviewView: View {
         }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
-        .onChange(of: model.dataGeneration) { state = .loading }
+        .onChange(of: model.dataGeneration) {
+            state = .loading
+            discovered = []
+        }
         // Another cluster: never its name over the previous one's nodes.
-        .onChange(of: model.activeContext) { state = .loading }
+        .onChange(of: model.activeContext) {
+            state = .loading
+            discovered = []
+        }
+        .sheet(isPresented: $showDiscovered) {
+            let context = model.activeContext
+            DiscoveredNodesSheet(nodes: discovered) { nodes in
+                try await model.addNodes(nodes.map(\.address))
+            } notNow: {
+                model.dismissNodes(discovered, of: context)
+                discovered = discovered.filter { !model.dismissedNodes(of: context).contains($0.address) }
+            }
+        }
         // After an update (and the unlock: the overview is not shown before): what changed
         // since the build launched last time. The build is remembered once the notes are closed.
         .task {
@@ -198,7 +219,15 @@ struct OverviewView: View {
             update = info
             // What each node's Talos version can do, cached per version: gates menus and screens.
             await model.loadFeatures(of: overview.nodes)
+            await discover(with: client, id: id)
         }
+    }
+
+    /// Best effort: discovery off, or no node answering, offers nothing.
+    private func discover(with client: TalosClient, id: String) async {
+        let discovery = try? await client.discoverNodes()
+        guard id == loadID else { return }
+        discovered = discovery?.offer(dismissed: model.dismissedNodes(of: model.activeContext)) ?? []
     }
 
     private func sorted(_ nodes: [NodeOverview]) -> [NodeOverview] {

@@ -970,4 +970,20 @@
     <string name="demo_try">Demo ausprobieren</string>
     <string name="demo_hint">Noch kein Cluster? Erkunde Ichor mit einem Talos-Beispielcluster.</string>
     <string name="demo_notice">Demo-Cluster · Beispieldaten. Clusteränderungen sind nicht verfügbar. Entferne die Demo anschließend unter Cluster verwalten.</string>
+    <string name="overview_discovered_nodes_hint">Tippen, um sie zur talosconfig hinzuzufügen.</string>
+    <string name="discover_nodes_title">Gefundene Nodes hinzufügen</string>
+    <string name="discover_nodes_body">Die Cluster-Discovery kennt diese Nodes, aber die talosconfig führt sie nicht auf. Füge diejenigen hinzu, die du hier sehen und verwalten willst.</string>
+    <string name="discover_nodes_not_now">Nicht jetzt</string>
+    <plurals name="overview_discovered_nodes">
+        <item quantity="one">%1$d Node des Clusters ist nicht in der talosconfig.</item>
+        <item quantity="other">%1$d Nodes des Clusters sind nicht in der talosconfig.</item>
+    </plurals>
+    <plurals name="discover_nodes_add">
+        <item quantity="one">%1$d Node hinzufügen</item>
+        <item quantity="other">%1$d Nodes hinzufügen</item>
+    </plurals>
+    <plurals name="discover_nodes_added">
+        <item quantity="one">%1$d Node zur talosconfig hinzugefügt.</item>
+        <item quantity="other">%1$d Nodes zur talosconfig hinzugefügt.</item>
+    </plurals>
 </resources>

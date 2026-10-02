@@ -115,6 +115,7 @@ fun OverviewScreen(
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
+    discoveryVm: NodeDiscoveryViewModel = viewModel(factory = factory { NodeDiscoveryViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -144,6 +145,13 @@ fun OverviewScreen(
         if (!liveEnabled) liveVm.clear()
         if (!liveEnabled || !loaded) return@LaunchedEffect
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { liveVm.poll(config?.activeContext to invalidations) }
+    }
+
+    // Members the talosconfig misses, once the overview loaded (its nodes answer, so will discovery).
+    val discovered by discoveryVm.offer.collectAsStateWithLifecycle()
+    var showDiscovered by remember { mutableStateOf(false) }
+    LaunchedEffect(loaded, config?.activeContext, invalidations) {
+        if (loaded) discoveryVm.discover() else discoveryVm.clear()
     }
 
     Scaffold(
@@ -213,6 +221,28 @@ fun OverviewScreen(
                 onDismiss = { showClusters = false },
             )
         }
+        config?.activeContext?.takeIf { showDiscovered && discovered.isNotEmpty() }?.let { contextName ->
+            AddDiscoveredNodesDialog(
+                nodes = discovered,
+                onAdd = { nodes ->
+                    showDiscovered = false
+                    scope.launch {
+                        runCatching { app.addClusterNodes(contextName, nodes.map { it.address }) }.fold(
+                            onSuccess = {
+                                val text = context.resources.getQuantityString(R.plurals.discover_nodes_added, nodes.size, nodes.size)
+                                Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+                            },
+                            onFailure = { Toast.makeText(context, it.userMessage(), Toast.LENGTH_LONG).show() },
+                        )
+                    }
+                },
+                onNotNow = {
+                    showDiscovered = false
+                    discoveryVm.dismiss(discovered)
+                },
+                onDismiss = { showDiscovered = false },
+            )
+        }
         when (val s = state) {
             UiState.Loading -> LoadingBox(Modifier.padding(padding))
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.padding(padding))
@@ -223,6 +253,7 @@ fun OverviewScreen(
                     vm.talos.forgetFeatures()
                     vm.refresh()
                     timeVm.refresh()
+                    scope.launch { discoveryVm.discover() }
                 },
                 modifier = Modifier.padding(padding).fillMaxSize(),
             ) {
@@ -241,6 +272,8 @@ fun OverviewScreen(
                     canUpgrade = config?.activeSummary?.allows(Feature.UPGRADE) == true,
                     onUpgrade = onUpgrade,
                     live = liveState.takeIf { liveEnabled },
+                    discovered = discovered.size,
+                    onDiscovered = { showDiscovered = true },
                 )
             }
         }
@@ -263,6 +296,8 @@ private fun NodeList(
     canUpgrade: Boolean,
     onUpgrade: (NodeOverview, String) -> Unit,
     live: ClusterLiveState?,
+    discovered: Int,
+    onDiscovered: () -> Unit,
 ) {
     var sheetFor by remember { mutableStateOf<NodeOverview?>(null) }
     val wakeOnLan = rememberWakeOnLan(fingerprint)
@@ -291,6 +326,7 @@ private fun NodeList(
         if (BuildConfig.SELF_UPDATE) item { UpdateBanner(onClick = onSettings) }
         if (BuildConfig.DONATIONS) item { SupportCard() }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
+        if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
         if (certificate?.isDemo != true) item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
         item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes), live) }
         items(nodes, key = { it.node }) { node ->

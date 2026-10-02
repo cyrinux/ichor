@@ -33,6 +33,7 @@ import name.levis.ichor.model.DiskUsage
 import name.levis.ichor.model.EtcdForfeitResult
 import name.levis.ichor.model.EtcdMemberPlan
 import name.levis.ichor.model.MountList
+import name.levis.ichor.model.NodeDiscovery
 import name.levis.ichor.model.NodeFeatures
 import name.levis.ichor.model.ResourceDetail
 import name.levis.ichor.model.ResourceList
@@ -437,6 +438,11 @@ class TalosRepository(private val configs: ConfigRepository) {
     /** `talosctl get TYPE -n NODE --namespace NAMESPACE` (never cached: may be sensitive). */
     suspend fun resourceList(node: String, namespace: String, type: String): ResourceList = call { cfg, ctx ->
         TalosJson.decodeFromString(ResourceList.serializer(), Talosmobile.resourceList(cfg, ctx, node, namespace, type))
+    }
+
+    /** The cluster's members (Talos cluster discovery), flagged when the context already targets them. */
+    suspend fun discoverNodes(): NodeDiscovery = call { cfg, ctx ->
+        TalosJson.decodeFromString(NodeDiscovery.serializer(), Talosmobile.discoverNodes(cfg, ctx))
     }
 
     /** `talosctl get TYPE ID -o yaml` (never cached: may hold secrets). */

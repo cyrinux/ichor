@@ -79,6 +79,13 @@ struct TalosClient: Sendable {
         try await run { TalosmobileRemoveContext(stored, context, $0) }
     }
 
+    /// `stored` with `nodes` (addresses) added to context's nodes; a context without nodes
+    /// keeps its endpoints as its first nodes.
+    static func addContextNodes(stored: String, context: String, nodes: [String]) async throws -> String {
+        let list = nodes.joined(separator: ",")
+        return try await run { TalosmobileAddContextNodes(stored, context, list, $0) }
+    }
+
     /// Screenshot mode: Go masks IPs, hostnames, context names and `extraWords`
     /// (comma-separated) in everything it returns, and unmasks what it is given back.
     static func setPrivacyMask(enabled: Bool, extraWords: String) {
@@ -93,6 +100,11 @@ struct TalosClient: Sendable {
 
     func overview() async throws -> ClusterOverview {
         try await Self.json { [config, context] in TalosmobileClusterOverview(config, context, $0) }
+    }
+
+    /// The cluster's members (Talos cluster discovery), flagged when the context already targets them.
+    func discoverNodes() async throws -> NodeDiscovery {
+        try await Self.json { [config, context] in TalosmobileDiscoverNodes(config, context, $0) }
     }
 
     func services(node: String) async throws -> [ServiceInfo] {
