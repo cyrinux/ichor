@@ -49,6 +49,7 @@ import name.levis.ichor.ui.upgrade.UpgradeScreen
 
 private object Routes {
     const val IMPORT = "import"
+    const val DEMO = "demo"
     const val OVERVIEW = "overview"
     const val NODE = "node?addr={addr}&host={host}&role={role}&tab={tab}&action={action}"
     const val LOGS = "logs?addr={addr}&host={host}&service={service}&container={container}&title={title}&subtitle={subtitle}"
@@ -126,7 +127,7 @@ private object Routes {
 }
 
 /** Screens a notification can open directly (see MainActivity.EXTRA_OPEN). */
-enum class DeepLink { ISSUE_CONFIG }
+enum class DeepLink { ISSUE_CONFIG, DEMO }
 
 /**
  * [deepLink]: a screen to open once over the overview; [onDeepLinkHandled] then clears it.
@@ -157,9 +158,10 @@ fun Navigation(
 
     LaunchedEffect(deepLink) {
         if (deepLink == null) return@LaunchedEffect
-        if (!startWithImport) {
-            when (deepLink) {
-                DeepLink.ISSUE_CONFIG -> nav.navigate(Routes.ISSUE_CONFIG) { launchSingleTop = true }
+        when (deepLink) {
+            DeepLink.DEMO -> nav.navigate(Routes.DEMO) { launchSingleTop = true }
+            DeepLink.ISSUE_CONFIG -> if (!startWithImport) {
+                nav.navigate(Routes.ISSUE_CONFIG) { launchSingleTop = true }
             }
         }
         onDeepLinkHandled()
@@ -174,6 +176,16 @@ fun Navigation(
                 },
                 // Adding a cluster comes from the overview or the settings: one can go back.
                 onBack = if (nav.previousBackStackEntry != null) ({ nav.popBackStack() }) else null,
+            )
+        }
+        composable(Routes.DEMO) {
+            ImportScreen(
+                autoStartDemo = true,
+                onImported = {
+                    app.launchSync(runNow = true)
+                    nav.resetTo(Routes.OVERVIEW)
+                },
+                onBack = { nav.popBackStack() },
             )
         }
         composable(Routes.OVERVIEW) {

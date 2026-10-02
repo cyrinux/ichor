@@ -378,3 +378,17 @@ The app's About section and the [website](https://cyrinux.github.io/ichor/#suppo
 ## License
 
 Apache License 2.0; see [LICENSE](LICENSE) and [NOTICE](NOTICE) for third-party components.
+
+### Android demo deep link
+
+Use `ichor://demo` in Google Play Console's Pre-launch report deep link settings
+after uploading a build containing this support. It opens the offline demo overview
+and preserves imported clusters. An enabled app lock still requires unlock.
+
+Test a stopped app, then repeat while it is open:
+
+```sh
+adb shell am force-stop name.levis.ichor
+adb shell am start -W -a android.intent.action.VIEW -d 'ichor://demo' -p name.levis.ichor
+adb shell am start -W -a android.intent.action.VIEW -d 'ichor://demo' -p name.levis.ichor
+```

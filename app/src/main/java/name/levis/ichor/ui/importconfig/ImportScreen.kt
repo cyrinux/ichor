@@ -70,6 +70,7 @@ private const val MAX_CONFIG_BYTES = 256 * 1024
 fun ImportScreen(
     onImported: () -> Unit,
     onBack: (() -> Unit)? = null,
+    autoStartDemo: Boolean = false,
     vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -80,6 +81,10 @@ fun ImportScreen(
     var tab by rememberSaveable { mutableIntStateOf(0) }
     // Not saveable: it may contain the client private key, which must not land in saved instance state.
     var pasted by remember { mutableStateOf("") }
+
+    LaunchedEffect(autoStartDemo) {
+        if (autoStartDemo && state is ImportState.Idle) vm.startDemo()
+    }
 
     LaunchedEffect(state) {
         if (state is ImportState.Saved) onImported()

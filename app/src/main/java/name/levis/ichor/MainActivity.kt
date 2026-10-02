@@ -130,8 +130,14 @@ private class LaunchTargets(val deepLink: MutableStateFlow<DeepLink?>, val clust
 
 private fun Intent.clusterFingerprint(): String? = getStringExtra(MainActivity.EXTRA_CLUSTER)?.takeIf { it.isNotBlank() }
 
-private fun Intent.deepLink(): DeepLink? =
-    getStringExtra(MainActivity.EXTRA_OPEN)?.let { name -> DeepLink.entries.firstOrNull { it.name == name } }
+private fun Intent.deepLink(): DeepLink? {
+    val uri = data
+    if (action == Intent.ACTION_VIEW && uri?.scheme == "ichor" && uri.host == "demo" &&
+        uri.port == -1 && uri.userInfo == null && uri.path.orEmpty() in listOf("", "/") &&
+        uri.query == null && uri.fragment == null
+    ) return DeepLink.DEMO
+    return getStringExtra(MainActivity.EXTRA_OPEN)?.let { name -> DeepLink.entries.firstOrNull { it.name == name } }
+}
 
 /**
  * Nothing (not even the encrypted config) is loaded before the first unlock. Later relocks
