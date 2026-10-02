@@ -1237,4 +1237,23 @@
     <string name="workloads_restart_confirm">Перезапустити</string>
     <string name="workloads_restart_done">%1$s перезапускається</string>
     <string name="workloads_restart_failed">Не вдалося перезапустити %1$s: %2$s</string>
+
+    <!-- Kubernetes pods -->
+    <string name="pods_title">Поди</string>
+    <string name="pods_empty">Немає подів.</string>
+    <string name="pods_no_match">Немає подів, що відповідають «%1$s».</string>
+    <string name="pods_ready_count">%1$d/%2$d готові</string>
+    <string name="pods_delete">Видалити %1$s</string>
+    <string name="pods_delete_title">Видалити под %1$s?</string>
+    <string name="pods_delete_text_owned">Його буде видалено з %1$s після пільгового періоду; %2$s запустить новий.</string>
+    <string name="pods_delete_text_bare">Його буде видалено з %1$s після пільгового періоду. Жоден контролер ним не керує: він не повернеться.</string>
+    <string name="pods_delete_confirm">Видалити</string>
+    <string name="pods_delete_done">%1$s видаляється</string>
+    <string name="pods_delete_failed">Не вдалося видалити %1$s: %2$s</string>
+    <plurals name="pods_restarts">
+        <item quantity="one">%1$d перезапуск</item>
+        <item quantity="few">%1$d перезапуски</item>
+        <item quantity="many">%1$d перезапусків</item>
+        <item quantity="other">%1$d перезапуску</item>
+    </plurals>
 </resources>

@@ -1136,4 +1136,21 @@
     <string name="workloads_restart_confirm">Riavvia</string>
     <string name="workloads_restart_done">%1$s si sta riavviando</string>
     <string name="workloads_restart_failed">Impossibile riavviare %1$s: %2$s</string>
+
+    <!-- Kubernetes pods -->
+    <string name="pods_title">Pod</string>
+    <string name="pods_empty">Nessun pod.</string>
+    <string name="pods_no_match">Nessun pod corrisponde a «%1$s».</string>
+    <string name="pods_ready_count">%1$d/%2$d pronti</string>
+    <string name="pods_delete">Elimina %1$s</string>
+    <string name="pods_delete_title">Eliminare il pod %1$s?</string>
+    <string name="pods_delete_text_owned">Viene rimosso da %1$s dopo il periodo di grazia; %2$s ne avvia uno nuovo.</string>
+    <string name="pods_delete_text_bare">Viene rimosso da %1$s dopo il periodo di grazia. Nessun controller lo gestisce: non tornerà.</string>
+    <string name="pods_delete_confirm">Elimina</string>
+    <string name="pods_delete_done">%1$s è in eliminazione</string>
+    <string name="pods_delete_failed">Impossibile eliminare %1$s: %2$s</string>
+    <plurals name="pods_restarts">
+        <item quantity="one">%1$d riavvio</item>
+        <item quantity="other">%1$d riavvii</item>
+    </plurals>
 </resources>

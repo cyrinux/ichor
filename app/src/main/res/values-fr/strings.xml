@@ -1136,4 +1136,21 @@
     <string name="workloads_restart_confirm">Redémarrer</string>
     <string name="workloads_restart_done">%1$s redémarre</string>
     <string name="workloads_restart_failed">Impossible de redémarrer %1$s : %2$s</string>
+
+    <!-- Kubernetes pods -->
+    <string name="pods_title">Pods</string>
+    <string name="pods_empty">Aucun pod.</string>
+    <string name="pods_no_match">Aucun pod ne correspond à « %1$s ».</string>
+    <string name="pods_ready_count">%1$d/%2$d prêts</string>
+    <string name="pods_delete">Supprimer %1$s</string>
+    <string name="pods_delete_title">Supprimer le pod %1$s ?</string>
+    <string name="pods_delete_text_owned">Il est retiré de %1$s après son délai de grâce ; %2$s en démarre un nouveau.</string>
+    <string name="pods_delete_text_bare">Il est retiré de %1$s après son délai de grâce. Aucun contrôleur ne le gère : il ne reviendra pas.</string>
+    <string name="pods_delete_confirm">Supprimer</string>
+    <string name="pods_delete_done">%1$s est en cours de suppression</string>
+    <string name="pods_delete_failed">Impossible de supprimer %1$s : %2$s</string>
+    <plurals name="pods_restarts">
+        <item quantity="one">%1$d redémarrage</item>
+        <item quantity="other">%1$d redémarrages</item>
+    </plurals>
 </resources>

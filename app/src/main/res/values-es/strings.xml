@@ -1136,4 +1136,21 @@
     <string name="workloads_restart_confirm">Reiniciar</string>
     <string name="workloads_restart_done">%1$s se está reiniciando</string>
     <string name="workloads_restart_failed">No se pudo reiniciar %1$s: %2$s</string>
+
+    <!-- Kubernetes pods -->
+    <string name="pods_title">Pods</string>
+    <string name="pods_empty">No hay pods.</string>
+    <string name="pods_no_match">Ningún pod coincide con «%1$s».</string>
+    <string name="pods_ready_count">%1$d/%2$d listos</string>
+    <string name="pods_delete">Eliminar %1$s</string>
+    <string name="pods_delete_title">¿Eliminar el pod %1$s?</string>
+    <string name="pods_delete_text_owned">Se retira de %1$s tras su periodo de gracia; %2$s inicia uno nuevo.</string>
+    <string name="pods_delete_text_bare">Se retira de %1$s tras su periodo de gracia. Ningún controlador lo gestiona: no volverá.</string>
+    <string name="pods_delete_confirm">Eliminar</string>
+    <string name="pods_delete_done">%1$s se está eliminando</string>
+    <string name="pods_delete_failed">No se pudo eliminar %1$s: %2$s</string>
+    <plurals name="pods_restarts">
+        <item quantity="one">%1$d reinicio</item>
+        <item quantity="other">%1$d reinicios</item>
+    </plurals>
 </resources>

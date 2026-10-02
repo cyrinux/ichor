@@ -11,6 +11,8 @@ import name.levis.talosmobile.Talosmobile
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.KubeSpanOverview
+import name.levis.ichor.model.KubePod
+import name.levis.ichor.model.KubePodList
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.LogEntry
@@ -317,6 +319,14 @@ class TalosRepository(private val configs: ConfigRepository) {
         Talosmobile.kubeRolloutRestart(cfg, ctx, workload.kind, workload.namespace, workload.name)
     }
 
+    /** Every pod with the status `kubectl get pods` shows (os:admin). */
+    suspend fun pods(): List<KubePod> = remember(PODS) {
+        call { cfg, ctx -> TalosJson.decodeFromString(KubePodList.serializer(), Talosmobile.kubePods(cfg, ctx)).pods }
+    }
+
+    /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
+    suspend fun deletePod(pod: KubePod) = call { cfg, ctx -> Talosmobile.kubeDeletePod(cfg, ctx, pod.namespace, pod.name) }
+
     /** `talosctl reboot -m [mode]` (default, powercycle, force); needs os:operator or higher. */
     suspend fun reboot(node: String, mode: String) = call { cfg, ctx -> Talosmobile.reboot(cfg, ctx, node, mode) }
 
@@ -487,6 +497,7 @@ const val ETCD = "etcd"
 const val KUBESPAN = "kubespan"
 const val INVENTORY = "inventory"
 const val WORKLOADS = "workloads"
+const val PODS = "pods"
 fun servicesKey(node: String) = "services|$node"
 fun resourcesKey(node: String) = "resources|$node"
 const val CLUSTER_TIME = "clustertime"

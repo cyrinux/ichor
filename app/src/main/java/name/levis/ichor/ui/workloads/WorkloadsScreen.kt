@@ -14,29 +14,24 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,9 +44,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
@@ -83,8 +81,9 @@ class WorkloadsViewModel(private val talos: TalosRepository) : LoadingViewModel<
     /** Keys of the workloads whose restart request is in flight. */
     val restarting: StateFlow<Set<String>> = _restarting.asStateFlow()
 
-    private val _result = MutableStateFlow<RestartResult?>(null)
-    val result: StateFlow<RestartResult?> = _result.asStateFlow()
+    // A queue, not a state: two restarts finishing together each get their message.
+    private val _results = Channel<RestartResult>(Channel.BUFFERED)
+    val results: Flow<RestartResult> = _results.receiveAsFlow()
 
     fun restart(workload: KubeWorkload) {
         if (workload.key in _restarting.value) return
@@ -92,42 +91,38 @@ class WorkloadsViewModel(private val talos: TalosRepository) : LoadingViewModel<
         viewModelScope.launch {
             val outcome = runCatching { talos.rolloutRestart(workload) }
             _restarting.update { it - workload.key }
-            _result.value = RestartResult(workload, outcome.exceptionOrNull()?.uiText())
+            _results.send(RestartResult(workload, outcome.exceptionOrNull()?.uiText()))
             // Show the rollout starting: the controller already bumped the generation.
             if (outcome.isSuccess) refresh()
         }
     }
-
-    fun consumeResult() {
-        _result.value = null
-    }
 }
 
 /**
- * Deployments, StatefulSets and DaemonSets of the cluster, through the Kubernetes API with
- * the admin kubeconfig Talos issues, with a rolling restart like `kubectl rollout restart`.
+ * Deployments, StatefulSets and DaemonSets of the cluster with a rolling restart like
+ * `kubectl rollout restart`. [namespace] and [query] are shared with the Pods tab.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WorkloadsScreen(
-    onBack: () -> Unit,
+fun WorkloadsTab(
+    namespace: String?,
+    query: String,
+    onNamespace: (String?) -> Unit,
+    onQuery: (String) -> Unit,
+    modifier: Modifier = Modifier,
     vm: WorkloadsViewModel = viewModel(factory = factory { WorkloadsViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val restarting by vm.restarting.collectAsStateWithLifecycle()
-    val result by vm.result.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
-    var namespace by rememberSaveable { mutableStateOf<String?>(null) }
-    var query by rememberSaveable { mutableStateOf("") }
     var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
 
     val context = LocalContext.current
-    LaunchedEffect(result) {
-        val r = result ?: return@LaunchedEffect
-        val text = r.error?.resolve(context)?.let { context.getString(R.string.workloads_restart_failed, r.workload.name, it) }
-            ?: context.getString(R.string.workloads_restart_done, r.workload.name)
-        Toast.makeText(context, text, if (r.error == null) Toast.LENGTH_SHORT else Toast.LENGTH_LONG).show()
-        vm.consumeResult()
+    LaunchedEffect(vm) {
+        vm.results.collect { r ->
+            val text = r.error?.resolve(context)?.let { context.getString(R.string.workloads_restart_failed, r.workload.name, it) }
+                ?: context.getString(R.string.workloads_restart_done, r.workload.name)
+            Toast.makeText(context, text, if (r.error == null) Toast.LENGTH_SHORT else Toast.LENGTH_LONG).show()
+        }
     }
 
     confirm?.let { w ->
@@ -141,47 +136,39 @@ fun WorkloadsScreen(
         )
     }
 
-    Scaffold(
-        bottomBar = { DataFreshness(state) },
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.workloads_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
-            )
-        },
-    ) { padding ->
-        when (val s = state) {
-            UiState.Loading -> LoadingBox(Modifier.padding(padding))
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.padding(padding))
-            is UiState.Loaded -> Column(Modifier.padding(padding).fillMaxSize()) {
-                val namespaces = remember(s.data) { s.data.namespaces }
-                val selected = namespace?.takeIf { it in namespaces }
-                val rows = remember(s.data, selected, query) { s.data.filtered(selected, query) }
-                Filters(namespaces, selected, query, onNamespace = { namespace = it }, onQuery = { query = it })
-                HorizontalDivider()
-                PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                    if (rows.isEmpty()) {
-                        Text(
-                            if (query.isBlank()) stringResource(R.string.workloads_empty) else stringResource(R.string.workloads_no_match, query.trim()),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(16.dp),
-                        )
-                    } else {
-                        LazyColumn(Modifier.fillMaxSize()) {
-                            items(rows, key = { it.key }) { w ->
-                                WorkloadRow(w, showNamespace = selected == null, restarting = w.key in restarting, onRestart = { confirm = w })
-                                HorizontalDivider()
-                            }
+    when (val s = state) {
+        UiState.Loading -> LoadingBox(modifier)
+        is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
+        is UiState.Loaded -> Column(modifier.fillMaxSize()) {
+            val namespaces = remember(s.data) { s.data.namespaces }
+            val selected = namespace?.takeIf { it in namespaces }
+            val rows = remember(s.data, selected, query) { s.data.filtered(selected, query) }
+            KubeFilters(namespaces, selected, query, onNamespace, onQuery)
+            HorizontalDivider()
+            PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
+                if (rows.isEmpty()) {
+                    Text(
+                        if (query.isBlank()) stringResource(R.string.workloads_empty) else stringResource(R.string.workloads_no_match, query.trim()),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                } else {
+                    LazyColumn(Modifier.fillMaxSize()) {
+                        items(rows, key = { it.key }) { w ->
+                            WorkloadRow(w, showNamespace = selected == null, restarting = w.key in restarting, onRestart = { confirm = w })
+                            HorizontalDivider()
                         }
                     }
                 }
             }
+            DataFreshness(s, edgeToEdge = false)
         }
     }
 }
 
+/** Search field and namespace chips, shared by the Workloads and Pods tabs. */
 @Composable
-private fun Filters(
+internal fun KubeFilters(
     namespaces: List<String>,
     selected: String?,
     query: String,

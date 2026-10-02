@@ -1138,4 +1138,21 @@
     <string name="workloads_restart_confirm">Restart</string>
     <string name="workloads_restart_done">%1$s is restarting</string>
     <string name="workloads_restart_failed">Could not restart %1$s: %2$s</string>
+
+    <!-- Kubernetes pods -->
+    <string name="pods_title">Pods</string>
+    <string name="pods_empty">No pods.</string>
+    <string name="pods_no_match">No pod matches “%1$s”.</string>
+    <string name="pods_ready_count">%1$d/%2$d ready</string>
+    <string name="pods_delete">Delete %1$s</string>
+    <string name="pods_delete_title">Delete pod %1$s?</string>
+    <string name="pods_delete_text_owned">It is removed from %1$s after its grace period; %2$s starts a new one.</string>
+    <string name="pods_delete_text_bare">It is removed from %1$s after its grace period. No controller owns it: it will not come back.</string>
+    <string name="pods_delete_confirm">Delete</string>
+    <string name="pods_delete_done">%1$s is being deleted</string>
+    <string name="pods_delete_failed">Could not delete %1$s: %2$s</string>
+    <plurals name="pods_restarts">
+        <item quantity="one">%1$d restart</item>
+        <item quantity="other">%1$d restarts</item>
+    </plurals>
 </resources>
