@@ -56,7 +56,7 @@ class UpgradeManager(private val configs: ConfigRepository, private val onFinish
     @Synchronized
     fun start(node: String, hostname: String, fromVersion: String, image: String, stage: Boolean, force: Boolean): Boolean {
         if (_current.value?.running == true) return false
-        val stored = configs.config.value ?: throw NoConfigException()
+        val stored = configs.forCall()
         _current.value = UpgradeRunState(node, hostname, fromVersion, image)
         run = try {
             Talosmobile.startUpgrade(stored.yaml, stored.activeContext, node, image, stage, force, listener(node))
@@ -104,7 +104,7 @@ class UpgradeManager(private val configs: ConfigRepository, private val onFinish
     }
 
     private suspend fun <T> call(block: (config: String, context: String) -> T): T {
-        val stored = configs.config.value ?: throw NoConfigException()
+        val stored = configs.forCall()
         return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) }
     }
 }
