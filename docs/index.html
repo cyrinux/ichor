@@ -6,11 +6,11 @@
     <title>Ichor for Talos Linux</title>
     <meta
       name="description"
-      content="Ichor is a free, open-source Talos Linux app for Android and iPhone: node health, logs, etcd, KubeSpan, live graphs and alerts when a node goes down. Built on the same Go client as talosctl."
+      content="Ichor is a free, open-source Talos Linux app for Android and iPhone: node health, logs, etcd, KubeSpan, live graphs, configuration drift, an incident recorder and alerts when a node goes down. Built on the same Go client as talosctl. Try the offline demo, no cluster needed."
     />
     <meta
       name="keywords"
-      content="Talos, Talos Linux, talosctl, Kubernetes, k8s, Sidero, etcd, KubeSpan, cluster monitoring, Android, iOS"
+      content="Talos, Talos Linux, talosctl, Kubernetes, k8s, Sidero, etcd, KubeSpan, cluster monitoring, configuration drift, incident timeline, Wake-on-LAN, Android, iOS"
     />
     <link rel="canonical" href="https://cyrinux.github.io/ichor/" />
     <meta name="theme-color" content="#14243B" />
@@ -20,7 +20,7 @@
     <meta property="og:title" content="Ichor for Talos Linux" />
     <meta
       property="og:description"
-      content="Your Talos cluster, from your phone. Node health, logs, etcd and alerts, with the same client as talosctl."
+      content="Your Talos cluster, from your phone. Node health, logs, etcd, alerts, and now configuration drift, an incident recorder and bottleneck metrics, with the same client as talosctl."
     />
     <meta
       property="og:image"
@@ -33,7 +33,16 @@
         "@type": "SoftwareApplication",
         "name": "Ichor for Talos Linux",
         "alternateName": "Ichor",
-        "description": "Monitor and operate Talos Linux clusters from your phone: node health, logs, etcd, KubeSpan, live graphs and alerts.",
+        "description": "Monitor and operate Talos Linux clusters from your phone: node health, logs, etcd, KubeSpan, live graphs, configuration drift, incident recording, bottleneck metrics and alerts.",
+        "featureList": [
+          "Cluster overview and background alerts",
+          "Configuration drift between nodes",
+          "Incident recorder timeline",
+          "Bottleneck metrics: I/O wait, steal, disk and network",
+          "Discovery of nodes missing from the talosconfig",
+          "Wake-on-LAN",
+          "Offline demo cluster"
+        ],
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "Android 8.0+, iOS 17+",
         "license": "https://www.apache.org/licenses/LICENSE-2.0",
@@ -709,6 +718,230 @@
           grid-template-columns: 1fr;
         }
       }
+      /* "New" pill above the hero title */
+      .newpill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin: 0 0 1.25rem;
+        padding: 0.3rem 0.85rem 0.3rem 0.35rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface);
+        font-size: 0.9rem;
+        text-decoration: none;
+        color: var(--ink-2);
+      }
+      .newpill:hover {
+        border-color: var(--ink-2);
+        color: var(--ink);
+      }
+      .newpill b {
+        background: var(--accent);
+        color: #14243b;
+        font-weight: 600;
+        font-size: 0.75rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+      }
+
+      /* Cluster insights spotlight */
+      .spotlight {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-top: 2rem;
+      }
+      .insight {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 1.25rem;
+      }
+      .insight h3 {
+        margin: 1.1rem 0 0.35rem;
+        font-size: 1.15rem;
+        font-weight: 600;
+      }
+      .insight p {
+        margin: 0;
+        color: var(--ink-2);
+        font-size: 0.97rem;
+      }
+      .insight .ask {
+        margin-top: 0.9rem;
+        font: 500 0.85rem/1.4 "IBM Plex Mono", ui-monospace, monospace;
+        color: var(--accent-ink);
+      }
+      .mock {
+        background: var(--phone);
+        color: var(--phone-ink);
+        border-radius: 14px;
+        padding: 0.9rem;
+        font: 400 0.78rem/1.45 "IBM Plex Mono", ui-monospace, monospace;
+        min-height: 10.6rem;
+      }
+      .mock .title {
+        color: var(--phone-ink-2);
+        font-size: 0.7rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+      }
+      .mock .line {
+        display: grid;
+        grid-template-columns: 6rem 1fr auto;
+        gap: 0.5rem;
+        padding: 0.28rem 0;
+        border-top: 1px solid rgba(147, 163, 184, 0.16);
+      }
+      .mock .line span:first-child {
+        color: var(--phone-ink-2);
+      }
+      .mock .tag {
+        font-size: 0.68rem;
+        padding: 0 0.4rem;
+        border-radius: 6px;
+        align-self: center;
+      }
+      .tag.same {
+        color: #5bd18b;
+        background: rgba(91, 209, 139, 0.12);
+      }
+      .tag.diff {
+        color: #ff9466;
+        background: rgba(255, 122, 69, 0.16);
+      }
+      .mock .tl {
+        display: grid;
+        grid-template-columns: 4.2rem 0.6rem 1fr;
+        gap: 0.45rem;
+        padding: 0.22rem 0;
+        align-items: center;
+      }
+      .mock .tl time {
+        color: var(--phone-ink-2);
+      }
+      .mock .bar {
+        display: grid;
+        grid-template-columns: 6rem 1fr 2.6rem;
+        gap: 0.5rem;
+        align-items: center;
+        padding: 0.3rem 0;
+      }
+      .mock .bar span:first-child {
+        color: var(--phone-ink-2);
+      }
+      .mock .bar span:last-child {
+        text-align: right;
+      }
+      .mock .meter {
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(147, 163, 184, 0.18);
+        overflow: hidden;
+      }
+      .mock .meter i {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+        background: #5bd18b;
+      }
+      .mock .meter i.hot {
+        background: #ff7a45;
+      }
+      .reassure {
+        margin: 1.5rem 0 0;
+        color: var(--ink-2);
+        font-size: 0.95rem;
+        max-width: var(--measure);
+      }
+
+      /* Smaller "also new" items */
+      .alsonew {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+        margin: 3rem 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .alsonew li {
+        border-left: 3px solid var(--accent);
+        padding-left: 1rem;
+      }
+      .alsonew h3 {
+        margin: 0 0 0.3rem;
+        font-size: 1.02rem;
+        font-weight: 600;
+      }
+      .alsonew p {
+        margin: 0;
+        color: var(--ink-2);
+        font-size: 0.95rem;
+      }
+
+      /* Closing call to action */
+      .cta {
+        background: var(--ink);
+        color: var(--bg);
+        border-radius: 24px;
+        padding: 3rem 2.5rem;
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 2rem;
+        align-items: center;
+        border-top: 0;
+        margin: 1rem 0 4rem;
+      }
+      .cta h2 {
+        margin: 0 0 0.6rem;
+      }
+      .cta p {
+        margin: 0;
+        opacity: 0.8;
+        max-width: 48ch;
+      }
+      .cta .actions {
+        justify-content: flex-end;
+      }
+      .cta .button {
+        background: transparent;
+        color: var(--bg);
+        border-color: color-mix(in srgb, var(--bg) 40%, transparent);
+      }
+      .cta .button.primary {
+        background: var(--accent);
+        color: #14243b;
+        border-color: var(--accent);
+      }
+
+      @media (max-width: 960px) {
+        .spotlight {
+          grid-template-columns: 1fr;
+          max-width: 34rem;
+        }
+        .alsonew {
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+        }
+        .cta {
+          grid-template-columns: 1fr;
+          padding: 2rem 1.5rem;
+        }
+        .cta .actions {
+          justify-content: flex-start;
+        }
+      }
+      @media (max-width: 520px) {
+        .alsonew {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
     <meta
       name="google-site-verification"
@@ -723,6 +956,7 @@
           <span>Ichor <small>for Talos Linux</small></span>
         </a>
         <nav aria-label="Primary">
+          <a class="optional" href="#insights">What's new</a>
           <a class="optional" href="#screens">Screens</a>
           <a class="optional" href="#features">Features</a>
           <a class="optional" href="#access">Access</a>
@@ -735,7 +969,10 @@
       <main>
         <div class="hero">
           <div>
-            <p class="eyebrow">Ichor for Talos Linux</p>
+            <a class="newpill" href="#insights"
+              ><b>New</b> Cluster insights: drift, incident recorder,
+              bottlenecks →</a
+            >
             <h1>Your Talos cluster, from your phone.</h1>
             <p class="lede">
               Node health, logs, etcd, KubeSpan and live graphs in your pocket,
@@ -757,9 +994,9 @@
               <a class="button" href="#ios">iPhone</a>
             </div>
             <p class="note">
-              Free and open source, Apache-2.0. Read-only by default. Screenshot
-              mode hides your addresses and node names when you share your
-              screen.
+              No cluster at hand? Tap <strong>Try demo</strong> on the first
+              screen: five sample nodes, live graphs and logs, fully offline.
+              Free and open source, Apache-2.0, read-only by default.
             </p>
           </div>
 
@@ -843,6 +1080,175 @@
             </p>
           </li>
         </ul>
+
+        <section id="insights" aria-labelledby="insights-title">
+          <p class="eyebrow">New · Cluster insights</p>
+          <h2 id="insights-title">
+            Stop guessing what changed. Your phone saw it.
+          </h2>
+          <p class="intro">
+            It's 3 a.m., a node is flapping and your laptop is in the other
+            room. Cluster insights turns Ichor from a status page into a
+            troubleshooting kit: spot the node that drifted, record the incident
+            as it unfolds, and see which resource is actually choking. All with
+            a read-only <code>os:reader</code> certificate.
+          </p>
+
+          <div class="spotlight">
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Drift view: DNS and MTU differ on one node, Talos version is the same everywhere."
+              >
+                <div class="title">Configuration drift · workers</div>
+                <div class="line" aria-hidden="true">
+                  <span>Talos</span><span>v1.12 ×4</span
+                  ><span class="tag same">same</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>DNS</span><span>w-3: 9.9.9.9</span
+                  ><span class="tag diff">drift</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>eth0 MTU</span><span>w-3: 1450</span
+                  ><span class="tag diff">drift</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>Secure Boot</span><span>on ×4</span
+                  ><span class="tag same">same</span>
+                </div>
+              </div>
+              <h3>Configuration drift</h3>
+              <p>
+                The one worker with a different MTU, the forgotten NTP server,
+                the extension left behind on an upgrade. Ichor compares DNS,
+                NTP, MTUs, extension versions, Secure Boot, UKI and Talos
+                versions across each role, or against a baseline you save, and
+                points at the odd one out.
+              </p>
+              <p class="ask">"Why is only w-3 slow?" → found it.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Incident timeline: etcd turns unhealthy, cp-2 becomes not ready, then link errors appear on eth0."
+              >
+                <div class="title">Incident recorder · 03:12 → now</div>
+                <div class="tl" aria-hidden="true">
+                  <time>03:12:04</time
+                  ><i class="dot" style="background: #f2c14e"></i
+                  ><span>etcd: not healthy</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>03:12:09</time
+                  ><i class="dot" style="background: #ff6b6b"></i
+                  ><span>cp-2 not ready</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>03:12:14</time
+                  ><i class="dot" style="background: #ff6b6b"></i
+                  ><span>eth0 rx errors +42</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>03:13:02</time
+                  ><i class="dot" style="background: #5bd18b"></i
+                  ><span>cp-2 ready</span>
+                </div>
+              </div>
+              <h3>Incident recorder</h3>
+              <p>
+                Hit record while it's happening and Ichor builds a timeline for
+                up to ten minutes: live Talos events, plus node readiness,
+                services, links and network counters sampled every five
+                seconds. The timeline is saved, ready for the postmortem.
+              </p>
+              <p class="ask">"What broke first?" → it's on the timeline.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Bottleneck metrics: I/O wait is high, steal time is low, disk sda is busy, eth0 shows drops."
+              >
+                <div class="title">Live · bottlenecks</div>
+                <div class="bar" aria-hidden="true">
+                  <span>I/O wait</span
+                  ><span class="meter"><i class="hot" style="width: 68%"></i></span
+                  ><span>34%</span>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <span>steal</span
+                  ><span class="meter"><i style="width: 6%"></i></span
+                  ><span>1%</span>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <span>sda busy</span
+                  ><span class="meter"><i class="hot" style="width: 92%"></i></span
+                  ><span>92%</span>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <span>eth0 drops</span
+                  ><span class="meter"><i style="width: 12%"></i></span
+                  ><span>3/s</span>
+                </div>
+              </div>
+              <h3>Bottleneck metrics</h3>
+              <p>
+                High load, but is it the CPU, the disk, the network or a noisy
+                neighbour on the hypervisor? The Live tab now shows I/O wait and
+                VM steal time, per-disk throughput and I/O time, and
+                per-interface throughput, errors and drops, with no fake spikes
+                after a reboot.
+              </p>
+              <p class="ask">"Is it the disk?" → now you know.</p>
+            </article>
+          </div>
+
+          <p class="reassure">
+            Baselines and recordings are encrypted on the phone, kept apart per
+            cluster and never backed up. No machine configs, kubeconfigs or raw
+            logs are collected, and you can delete everything from the insights
+            screen.
+          </p>
+
+          <ul class="alsonew" aria-label="Also new">
+            <li>
+              <h3>Finds the nodes you forgot</h3>
+              <p>
+                Your talosconfig lists one endpoint? Ichor asks the cluster for
+                its members and offers to add the missing nodes in one tap.
+              </p>
+            </li>
+            <li>
+              <h3>Wake-on-LAN</h3>
+              <p>
+                Wake a powered-off node from its action sheet. Ichor remembers
+                each node's network cards while it is up, so you can wake it
+                even if you never set it up.
+              </p>
+            </li>
+            <li>
+              <h3>Try it with no cluster</h3>
+              <p>
+                The built-in demo runs offline with five sample nodes, live
+                metrics, logs, etcd and more. See everything before you import
+                a single config.
+              </p>
+            </li>
+            <li>
+              <h3>Safer imports, faster switching</h3>
+              <p>
+                Importing a context with a familiar name never overwrites a
+                cluster. Long-press the app icon to jump straight into any
+                cluster.
+              </p>
+            </li>
+          </ul>
+        </section>
 
         <section id="screens" aria-labelledby="screens-title">
           <h2 id="screens-title">What it looks like</h2>
@@ -1013,6 +1419,51 @@
                 <td class="role">reader</td>
               </tr>
               <tr>
+                <td class="cmd">talosctl get members</td>
+                <td class="what">
+                  <strong>Node discovery</strong
+                  ><span
+                    >Cluster members your talosconfig does not target yet,
+                    added to the context in one tap.</span
+                  >
+                </td>
+                <td class="role">reader</td>
+              </tr>
+              <tr>
+                <td class="cmd">diff of talosctl get … on every node</td>
+                <td class="what">
+                  <strong>Configuration drift</strong
+                  ><span
+                    >DNS, NTP, MTUs, extensions, Secure Boot, UKI and Talos
+                    versions compared across a role or against a saved
+                    baseline.</span
+                  >
+                </td>
+                <td class="role">reader</td>
+              </tr>
+              <tr>
+                <td class="cmd">talosctl events + watch, in a terminal</td>
+                <td class="what">
+                  <strong>Incident recorder</strong
+                  ><span
+                    >Events and sampled node, service and network state merged
+                    into one saved timeline.</span
+                  >
+                </td>
+                <td class="role">reader</td>
+              </tr>
+              <tr>
+                <td class="cmd">talosctl read /proc/stat, /proc/diskstats</td>
+                <td class="what">
+                  <strong>Bottleneck metrics</strong
+                  ><span
+                    >I/O wait, steal time, per-disk I/O and per-interface errors
+                    and drops, live.</span
+                  >
+                </td>
+                <td class="role">reader</td>
+              </tr>
+              <tr>
                 <td class="cmd">talosctl containers -k</td>
                 <td class="what">
                   <strong>Pods</strong
@@ -1078,10 +1529,10 @@
               <tr>
                 <td class="cmd">talosctl reboot -m powercycle</td>
                 <td class="what">
-                  <strong>Reboot and shutdown</strong
+                  <strong>Reboot, shutdown and wake</strong
                   ><span
                     >Graceful, power cycle or force, after you type the hostname
-                    to confirm.</span
+                    to confirm. Wake a powered-off node with Wake-on-LAN.</span
                   >
                 </td>
                 <td class="role">operator</td>
@@ -1155,8 +1606,9 @@
               <h3>Read-only</h3>
               <code>os:reader</code>
               <p>
-                Monitoring, logs, events, pods, network, etcd, KubeSpan, graphs
-                and alerts. The right default for a phone.
+                Monitoring, logs, events, pods, network, etcd, KubeSpan, graphs,
+                alerts and every cluster insight. The right default for a
+                phone.
               </p>
             </div>
             <div>
@@ -1276,6 +1728,15 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
           <h2 id="faq-title">Questions</h2>
           <div class="faq">
             <details>
+              <summary>Can I try it without a Talos cluster?</summary>
+              <p>
+                Yes. Tap Try demo on the import screen: an offline cluster of
+                five sample nodes with live metrics, services, logs, events,
+                etcd and networking. It is clearly marked as demo data, can sit
+                next to your real clusters, and is removed from Manage clusters.
+              </p>
+            </details>
+            <details>
               <summary>Is Ichor an official Sidero Labs app?</summary>
               <p>
                 No. Ichor is an independent, community-built client for Talos
@@ -1321,11 +1782,32 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
           </div>
         </section>
 
+        <section class="cta" aria-labelledby="cta-title">
+          <div>
+            <h2 id="cta-title">Your cluster has a pulse. Carry it with you.</h2>
+            <p>
+              Install Ichor in a minute, open the demo, then point it at your
+              own cluster with a read-only certificate. Free, open source, no
+              account.
+            </p>
+          </div>
+          <div class="actions">
+            <a
+              class="button primary"
+              href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor.foss%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D"
+              >Get Ichor</a
+            >
+            <a class="button" href="#install">How to install</a>
+          </div>
+        </section>
+
         <section id="support" aria-labelledby="support-title">
           <h2 id="support-title">Support the project</h2>
           <p class="intro">
-            Ichor is free and has no ads or tracking. If it saves you a trip to
-            the laptop, you can help keep it going through
+            Ichor is free and has no ads or tracking. Drift detection, the
+            incident recorder and every feature on this page are built in the
+            open. If Ichor saves you a trip to the laptop, help fund what comes
+            next through
             <a href="https://github.com/sponsors/cyrinux">GitHub Sponsors</a> or
             in crypto.
           </p>
