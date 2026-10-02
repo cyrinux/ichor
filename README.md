@@ -6,6 +6,12 @@ KubeSpan and live graphs in your pocket, and a notification the moment a node go
 
 Website: <https://cyrinux.github.io/ichor/>
 
+Want to explore without a Talos cluster? Tap **Try demo** on the import screen.
+The built-in demo works offline and shows five sample nodes, live metrics, services,
+logs, events, etcd, networking, storage, hardware and resources. The overview marks
+it as demo data; cluster changes and credential exports are unavailable. It can
+sit alongside your real clusters and be removed from **Manage clusters**.
+
 > Ichor is an independent community project, not affiliated with or endorsed by Sidero Labs.
 > Talos is a trademark of Sidero Labs, Inc.
 

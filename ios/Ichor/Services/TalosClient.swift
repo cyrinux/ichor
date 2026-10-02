@@ -44,6 +44,10 @@ struct TalosClient: Sendable {
         try await json { TalosmobileParseConfig(yaml, $0) }
     }
 
+    static func demoConfig() async throws -> String {
+        try await run { TalosmobileDemoConfig($0) }
+    }
+
     /// `stored` with context's ca/crt/key replaced by those of `generated` (a single-context
     /// talosconfig from generateTalosconfig); other contexts and fields are kept.
     static func replaceContextCredentials(stored: String, generated: String, context: String) async throws -> String {

@@ -963,4 +963,7 @@
     <string name="ai_copy">Kopieren</string>
     <string name="ai_disclaimer">KI-Antworten können falsch sein. Prüfen Sie einen Befehl, bevor Sie ihn ausführen, besonders wenn er einen Knoten zurücksetzt oder etcd verändert.</string>
     <string name="ai_health_diagnose">Mit KI diagnostizieren</string>
+    <string name="demo_try">Demo ausprobieren</string>
+    <string name="demo_hint">Noch kein Cluster? Erkunde Ichor mit einem Talos-Beispielcluster.</string>
+    <string name="demo_notice">Demo-Cluster · Beispieldaten. Clusteränderungen sind nicht verfügbar. Entferne die Demo anschließend unter Cluster verwalten.</string>
 </resources>

@@ -51,7 +51,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -74,9 +73,9 @@ fun ImportScreen(
     vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    // First run (nothing imported yet): explain how to create a talosconfig right away.
+    // Keep the demo entry visible on first launch; config help is available in the toolbar.
     val firstRun = app().configRepository.config.collectAsStateWithLifecycle().value == null
-    var showHelp by rememberSaveable { mutableStateOf(firstRun) }
+    var showHelp by rememberSaveable { mutableStateOf(false) }
     // Hoisted so the chosen tab and pasted text survive the Validating -> Invalid round trip.
     var tab by rememberSaveable { mutableIntStateOf(0) }
     // Not saveable: it may contain the client private key, which must not land in saved instance state.
@@ -118,6 +117,7 @@ fun ImportScreen(
                     pasted = pasted,
                     onPasted = { pasted = it },
                     onYaml = vm::submit,
+                    onDemo = vm::startDemo,
                 )
             }
         }
@@ -132,6 +132,7 @@ private fun SourcePicker(
     pasted: String,
     onPasted: (String) -> Unit,
     onYaml: (String) -> Unit,
+    onDemo: () -> Unit,
 ) {
     val tabs = listOf(
         stringResource(R.string.import_tab_file) to Icons.Outlined.FileOpen,
@@ -140,6 +141,12 @@ private fun SourcePicker(
     )
 
     Column(Modifier.fillMaxSize()) {
+        Card(Modifier.fillMaxWidth().padding(16.dp)) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.demo_hint), style = MaterialTheme.typography.bodyMedium)
+                OutlinedButton(onClick = onDemo) { Text(stringResource(R.string.demo_try)) }
+            }
+        }
         TabRow(selectedTabIndex = tab) {
             tabs.forEachIndexed { index, (label, icon) ->
                 Tab(

@@ -53,6 +53,9 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
     /** Validates without storing; throws with a readable message when invalid. */
     suspend fun validate(yaml: String): ConfigSummary = withContext(Dispatchers.IO) { parse(yaml) }
 
+    /** Adds the local demo alongside any imported clusters. */
+    suspend fun saveDemo() = withContext(Dispatchers.IO) { save(Talosmobile.demoConfig()) }
+
     /**
      * Stores [yaml]. With a config already stored its contexts are added to it (one stored
      * talosconfig, a context per cluster): a context of an already imported cluster (same

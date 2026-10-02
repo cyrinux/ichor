@@ -53,6 +53,15 @@ func StartClusterHealth(configYAML, contextName string, listener HealthListener)
 }
 
 func runHealth(ctx context.Context, configYAML, contextName string, listener HealthListener) string {
+	if isDemoContext(configYAML, contextName) {
+		for _, message := range []string{"Demo: all nodes are ready", "Demo: etcd members are healthy", "Demo: Kubernetes control plane is ready"} {
+			if ctx.Err() != nil {
+				return ""
+			}
+			listener.OnProgress("demo-cp-1", message)
+		}
+		return ""
+	}
 	s, release, err := sessions.acquire(configYAML, contextName)
 	if err != nil {
 		return err.Error()

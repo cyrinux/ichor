@@ -966,4 +966,7 @@
     <string name="ai_copy">Copy</string>
     <string name="ai_disclaimer">AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd.</string>
     <string name="ai_health_diagnose">Diagnose with AI</string>
+    <string name="demo_try">Try demo</string>
+    <string name="demo_hint">No cluster yet? Explore Ichor with a sample Talos cluster.</string>
+    <string name="demo_notice">Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.</string>
 </resources>

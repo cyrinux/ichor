@@ -3,6 +3,7 @@ package talosmobile
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -33,6 +34,9 @@ func openSession(configYAML, contextName string) (*session, error) {
 	_, cfgCtx, err := resolveContext(configYAML, contextName)
 	if err != nil {
 		return nil, err
+	}
+	if slices.Contains(cfgCtx.Endpoints, demoEndpoint) {
+		return nil, demoUnavailable
 	}
 
 	// client.New only dials lazily, so no context is needed here.

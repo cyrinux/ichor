@@ -52,8 +52,6 @@ struct ImportView: View {
             }
         }
         .sheet(isPresented: $showingHelp) { HelpSheet() }
-        // First run (nothing imported yet): explain how to create a talosconfig right away.
-        .onAppear { if model.yaml == nil { showingHelp = true } }
         .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.yaml, .plainText, .data, .item]) { result in
             switch result {
             case .success(let url): readFile(url)
@@ -64,6 +62,19 @@ struct ImportView: View {
 
     private var picker: some View {
         VStack(spacing: 16) {
+            VStack(spacing: 8) {
+                Text("No cluster yet? Explore Ichor with a sample Talos cluster.")
+                    .font(.callout).foregroundStyle(.secondary)
+                Button("Try demo") {
+                    busy = true
+                    Task {
+                        do { await save(try await TalosClient.demoConfig()) }
+                        catch { self.error = error.localizedDescription; busy = false }
+                    }
+                }
+                .buttonStyle(.bordered)
+                .disabled(busy)
+            }
             Picker("Source", selection: $source) {
                 ForEach(Source.allCases) { Text($0.label).tag($0) }
             }

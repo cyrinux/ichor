@@ -963,4 +963,7 @@
     <string name="ai_copy">Copiar</string>
     <string name="ai_disclaimer">Las respuestas de la IA pueden ser erróneas. Comprueba un comando antes de ejecutarlo, sobre todo si restablece un nodo o modifica etcd.</string>
     <string name="ai_health_diagnose">Diagnosticar con IA</string>
+    <string name="demo_try">Probar demo</string>
+    <string name="demo_hint">¿Aún no tienes un clúster? Explora Ichor con un clúster Talos de ejemplo.</string>
+    <string name="demo_notice">Clúster de demostración · Datos de ejemplo. No se puede modificar el clúster. Elimina la demo en Gestionar clústeres cuando termines.</string>
 </resources>

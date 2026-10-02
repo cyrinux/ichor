@@ -48,6 +48,10 @@ func ResourceTypes(configYAML, contextName, node string) (out string, err error)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("ResourceTypes", configYAML, contextName, node)
+	}
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err
@@ -107,6 +111,10 @@ func ResourceList(configYAML, contextName, node, namespace, resourceType string)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("ResourceList", configYAML, contextName, node)
+	}
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err
@@ -161,6 +169,10 @@ func ResourceGet(configYAML, contextName, node, namespace, resourceType, id stri
 	defer maskResult(&out, &err)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("ResourceGet", configYAML, contextName, node)
+	}
 	id = privacy.unmaskText(id)
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {

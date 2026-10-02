@@ -67,6 +67,10 @@ func NodeDiskHealth(configYAML, contextName, node string) (out string, err error
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("NodeDiskHealth", configYAML, contextName, node)
+	}
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err

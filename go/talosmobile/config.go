@@ -28,6 +28,7 @@ type contextSummary struct {
 	Nodes        []string `json:"nodes"`
 	Roles        []string `json:"roles"`
 	CertNotAfter int64    `json:"certNotAfter"`
+	Demo         bool     `json:"demo,omitempty"`
 }
 
 // ParseConfig validates a talosconfig YAML and returns a JSON configSummary.
@@ -101,6 +102,7 @@ func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, e
 		Nodes:        slices.Clone(ctx.Nodes),
 		Roles:        slices.Clone(leaf.Subject.Organization),
 		CertNotAfter: leaf.NotAfter.Unix(),
+		Demo:         slices.Contains(ctx.Endpoints, demoEndpoint),
 	}, nil
 }
 

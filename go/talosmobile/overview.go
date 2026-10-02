@@ -65,6 +65,10 @@ func ClusterOverview(configYAML, contextName string) (out string, err error) {
 
 	contextName = unmaskContext(configYAML, contextName)
 
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("ClusterOverview", configYAML, contextName, "")
+	}
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		name, _, err := resolveContext(configYAML, contextName)
 		if err != nil {
