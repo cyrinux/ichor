@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DeveloperBoard
 import androidx.compose.material.icons.outlined.Memory
+import androidx.compose.material.icons.outlined.SdCard
 import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
@@ -64,7 +64,7 @@ fun ClusterSummaryCard(name: String, summary: ClusterSummary, modifier: Modifier
                     Modifier.weight(1f),
                 )
                 Stat(
-                    Icons.Outlined.DeveloperBoard,
+                    Icons.Outlined.Memory,
                     summary.cpuCount.takeIf { it > 0 }?.toString() ?: UNKNOWN,
                     stringResource(R.string.overview_stat_cpu),
                     Modifier.weight(1f),
@@ -94,21 +94,23 @@ private fun ClusterStatusPill(status: ClusterStatus) {
     }
 }
 
-/** Which nodes are in trouble; nothing when all are ready. */
+/** Which nodes are in trouble, each count in its own status colour; nothing when all are ready. */
 @Composable
 private fun Breakdown(summary: ClusterSummary) {
     val colors = LocalStatusColors.current
     val parts = listOfNotNull(
-        summary.notReady.takeIf { it > 0 }?.let { "$it ${pluralStringResource(R.plurals.overview_summary_not_ready, it)}" },
-        summary.unreachable.takeIf { it > 0 }?.let { "$it ${pluralStringResource(R.plurals.overview_summary_unreachable, it)}" },
+        summary.notReady.takeIf { it > 0 }
+            ?.let { "$it ${pluralStringResource(R.plurals.overview_summary_not_ready, it)}" to colors.warn },
+        summary.unreachable.takeIf { it > 0 }
+            ?.let { "$it ${pluralStringResource(R.plurals.overview_summary_unreachable, it)}" to colors.bad },
     )
     if (parts.isEmpty()) return
-    Text(
-        parts.joinToString("  ·  "),
-        style = MaterialTheme.typography.bodySmall,
-        color = if (summary.unreachable > 0) colors.bad else colors.warn,
-        modifier = Modifier.padding(top = 6.dp),
-    )
+    Row(Modifier.padding(top = 6.dp)) {
+        parts.forEachIndexed { i, (text, color) ->
+            if (i > 0) Text("  ·  ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text, style = MaterialTheme.typography.bodySmall, color = color)
+        }
+    }
 }
 
 @Composable
@@ -116,7 +118,7 @@ private fun MemoryStat(summary: ClusterSummary, modifier: Modifier) {
     val used = summary.memUsedFraction
     Column(modifier) {
         Stat(
-            Icons.Outlined.Memory,
+            Icons.Outlined.SdCard,
             if (summary.memTotal > 0) formatBytes(summary.memTotal) else UNKNOWN,
             used?.let { stringResource(R.string.overview_stat_memory_used, (it * 100).toInt()) }
                 ?: stringResource(R.string.overview_stat_memory),

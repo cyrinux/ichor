@@ -103,7 +103,7 @@
     <string name="overview_stat_nodes">Вузли</string>
     <string name="overview_stat_cpu">Ядра CPU</string>
     <string name="overview_stat_memory">Пам\'ять</string>
-    <string name="overview_stat_memory_used">%d%% використано</string>
+    <string name="overview_stat_memory_used">Пам\'ять · %d%%</string>
     <string name="overview_node_actions">Дії з вузлом</string>
     <string name="overview_role_control_plane">панель керування</string>
     <string name="overview_update_banner">Доступна версія Ichor %1$s — торкніться, щоб оновити</string>

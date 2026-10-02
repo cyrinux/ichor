@@ -85,7 +85,7 @@
     <string name="overview_stat_nodes">Nodos</string>
     <string name="overview_stat_cpu">Núcleos de CPU</string>
     <string name="overview_stat_memory">Memoria</string>
-    <string name="overview_stat_memory_used">%d %% en uso</string>
+    <string name="overview_stat_memory_used">Memoria · %d %%</string>
     <string name="overview_node_actions">Acciones del nodo</string>
     <string name="overview_role_control_plane">plano de control</string>
     <string name="overview_update_banner">Ichor %1$s está disponible: toca para actualizar</string>
