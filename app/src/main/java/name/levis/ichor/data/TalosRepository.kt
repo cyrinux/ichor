@@ -11,6 +11,8 @@ import name.levis.talosmobile.Talosmobile
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.KubeSpanOverview
+import name.levis.ichor.model.KubeWorkload
+import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.LogEntry
 import name.levis.ichor.model.LogTail
 import name.levis.ichor.model.decodeLogTail
@@ -305,6 +307,16 @@ class TalosRepository(private val configs: ConfigRepository) {
     /** Admin kubeconfig (os:admin role). A credential: only hand it to where the user chose. */
     suspend fun kubeconfig(): String = call { cfg, ctx -> Talosmobile.kubeconfig(cfg, ctx) }
 
+    /** Deployments, StatefulSets and DaemonSets through the Kubernetes API (os:admin: Talos issues the kubeconfig). */
+    suspend fun workloads(): List<KubeWorkload> = remember(WORKLOADS) {
+        call { cfg, ctx -> TalosJson.decodeFromString(KubeWorkloadList.serializer(), Talosmobile.kubeWorkloads(cfg, ctx)).workloads }
+    }
+
+    /** `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin). */
+    suspend fun rolloutRestart(workload: KubeWorkload) = call { cfg, ctx ->
+        Talosmobile.kubeRolloutRestart(cfg, ctx, workload.kind, workload.namespace, workload.name)
+    }
+
     /** `talosctl reboot -m [mode]` (default, powercycle, force); needs os:operator or higher. */
     suspend fun reboot(node: String, mode: String) = call { cfg, ctx -> Talosmobile.reboot(cfg, ctx, node, mode) }
 
@@ -474,6 +486,7 @@ const val OVERVIEW = "overview"
 const val ETCD = "etcd"
 const val KUBESPAN = "kubespan"
 const val INVENTORY = "inventory"
+const val WORKLOADS = "workloads"
 fun servicesKey(node: String) = "services|$node"
 fun resourcesKey(node: String) = "resources|$node"
 const val CLUSTER_TIME = "clustertime"

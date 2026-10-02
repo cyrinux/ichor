@@ -26,6 +26,7 @@ class FeatureTest {
         assertTrue(op.allows(Feature.POWER))
         assertFalse(op.allows(Feature.HEALTH))
         assertFalse(op.allows(Feature.KUBECONFIG))
+        assertFalse(op.allows(Feature.WORKLOADS))
         assertFalse(op.allows(Feature.DEBUG_SHELL))
         assertTrue(op.allows(Feature.SERVICE_CONTROL))
         assertFalse(op.allows(Feature.ISSUE_CONFIG))

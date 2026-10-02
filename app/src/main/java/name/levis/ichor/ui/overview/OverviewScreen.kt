@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -109,6 +110,7 @@ fun OverviewScreen(
     onNodeAction: (NodeOverview, NodeAction) -> Unit,
     onEtcd: () -> Unit,
     onKubeSpan: () -> Unit,
+    onWorkloads: () -> Unit,
     onHealth: () -> Unit,
     onEvents: () -> Unit,
     onInsights: () -> Unit,
@@ -224,6 +226,10 @@ fun OverviewScreen(
                     val features = rememberClusterFeatures(reachable)
                     IconButton(onClick = onEvents, enabled = clusterSupport(features, TalosFeature.EVENTS).supported) {
                         Icon(Icons.Outlined.Timeline, stringResource(R.string.overview_action_events))
+                    }
+                    // Kubernetes workloads: the API is reached with the admin kubeconfig Talos issues.
+                    if (config?.activeSummary?.allows(Feature.WORKLOADS) == true) {
+                        IconButton(onClick = onWorkloads) { Icon(Icons.Outlined.Widgets, stringResource(R.string.overview_action_workloads)) }
                     }
                     IconButton(onClick = onKubeSpan, enabled = clusterSupport(features, TalosFeature.KUBESPAN).supported) {
                         Icon(Icons.Outlined.Hub, "KubeSpan")

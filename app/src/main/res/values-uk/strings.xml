@@ -62,6 +62,7 @@
     <string name="common_feature_power">Перезавантаження / вимкнення</string>
     <string name="common_feature_health">Перевірка стану кластера</string>
     <string name="common_feature_kubeconfig">Експорт kubeconfig</string>
+    <string name="common_feature_workloads">Робочі навантаження Kubernetes</string>
     <string name="common_feature_debug_shell">Налагоджувальна оболонка</string>
     <string name="common_feature_etcd_defrag">Дефрагментація etcd</string>
     <string name="common_role_notice_title">%1$s потребує %2$s</string>
@@ -75,6 +76,7 @@
     <string name="overview_title">Кластер</string>
     <string name="overview_action_health">Стан кластера</string>
     <string name="overview_action_settings">Налаштування</string>
+    <string name="overview_action_workloads">Робочі навантаження Kubernetes</string>
     <plurals name="overview_summary_ready">
         <item quantity="one">готовий</item>
         <item quantity="few">готові</item>
@@ -1213,4 +1215,26 @@
         <item quantity="many">Працює %1$d версій</item>
         <item quantity="other">Працює %1$d версії</item>
     </plurals>
+
+    <!-- Kubernetes workloads -->
+    <string name="workloads_title">Робочі навантаження</string>
+    <string name="workloads_search">Фільтр за назвою, типом або образом</string>
+    <string name="workloads_all_namespaces">Усі простори імен</string>
+    <string name="workloads_empty">Немає робочих навантажень.</string>
+    <string name="workloads_no_match">Немає робочих навантажень, що відповідають «%1$s».</string>
+    <string name="workloads_ready_count">%1$d/%2$d готові</string>
+    <string name="workloads_state_ready">актуальний</string>
+    <string name="workloads_state_progressing">розгортається</string>
+    <string name="workloads_state_degraded">деградований</string>
+    <string name="workloads_state_paused">призупинено</string>
+    <string name="workloads_state_scaled_down">масштабовано до нуля</string>
+    <string name="workloads_state_unknown">невідомо</string>
+    <string name="workloads_restarted_ago">перезапущено %1$s</string>
+    <string name="workloads_restart">Перезапустити %1$s</string>
+    <string name="workloads_restart_title">Перезапустити %1$s %2$s?</string>
+    <string name="workloads_restart_text">Його поди в %1$s поступово замінюються, як із kubectl rollout restart.</string>
+    <string name="workloads_restart_single">З одним подом робоче навантаження ненадовго недоступне.</string>
+    <string name="workloads_restart_confirm">Перезапустити</string>
+    <string name="workloads_restart_done">%1$s перезапускається</string>
+    <string name="workloads_restart_failed">Не вдалося перезапустити %1$s: %2$s</string>
 </resources>

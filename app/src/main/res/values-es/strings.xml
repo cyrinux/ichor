@@ -52,6 +52,7 @@
     <string name="common_feature_power">Reiniciar / apagar</string>
     <string name="common_feature_health">Comprobación de estado del clúster</string>
     <string name="common_feature_kubeconfig">Exportación de kubeconfig</string>
+    <string name="common_feature_workloads">Cargas de trabajo de Kubernetes</string>
     <string name="common_feature_debug_shell">Shell de depuración</string>
     <string name="common_feature_etcd_defrag">Desfragmentación de etcd</string>
     <string name="common_role_notice_title">%1$s requiere %2$s</string>
@@ -65,6 +66,7 @@
     <string name="overview_title">Clúster</string>
     <string name="overview_action_health">Estado del clúster</string>
     <string name="overview_action_settings">Ajustes</string>
+    <string name="overview_action_workloads">Cargas de trabajo de Kubernetes</string>
     <plurals name="overview_summary_ready">
         <item quantity="one">listo</item>
         <item quantity="other">listos</item>
@@ -1112,4 +1114,26 @@
         <item quantity="one">%1$d versión en ejecución</item>
         <item quantity="other">%1$d versiones en ejecución</item>
     </plurals>
+
+    <!-- Kubernetes workloads -->
+    <string name="workloads_title">Cargas de trabajo</string>
+    <string name="workloads_search">Filtrar por nombre, tipo o imagen</string>
+    <string name="workloads_all_namespaces">Todos los namespaces</string>
+    <string name="workloads_empty">No hay cargas de trabajo.</string>
+    <string name="workloads_no_match">Ninguna carga de trabajo coincide con «%1$s».</string>
+    <string name="workloads_ready_count">%1$d/%2$d listos</string>
+    <string name="workloads_state_ready">actualizado</string>
+    <string name="workloads_state_progressing">desplegando</string>
+    <string name="workloads_state_degraded">degradado</string>
+    <string name="workloads_state_paused">en pausa</string>
+    <string name="workloads_state_scaled_down">escalado a cero</string>
+    <string name="workloads_state_unknown">desconocido</string>
+    <string name="workloads_restarted_ago">reiniciado %1$s</string>
+    <string name="workloads_restart">Reiniciar %1$s</string>
+    <string name="workloads_restart_title">¿Reiniciar %1$s %2$s?</string>
+    <string name="workloads_restart_text">Sus pods en %1$s se reemplazan de forma gradual, como con kubectl rollout restart.</string>
+    <string name="workloads_restart_single">Con un solo pod, la carga de trabajo queda brevemente no disponible.</string>
+    <string name="workloads_restart_confirm">Reiniciar</string>
+    <string name="workloads_restart_done">%1$s se está reiniciando</string>
+    <string name="workloads_restart_failed">No se pudo reiniciar %1$s: %2$s</string>
 </resources>

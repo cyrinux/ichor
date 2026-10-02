@@ -80,6 +80,7 @@ private object Routes {
             "&title=${Uri.encode(title)}&subtitle=${Uri.encode(subtitle)}"
     const val ETCD = "etcd"
     const val KUBESPAN = "kubespan"
+    const val WORKLOADS = "workloads"
     const val DEBUG = "debug?addr={addr}&host={host}"
     const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}"
     const val NETWORK = "network?addr={addr}&host={host}"
@@ -207,6 +208,7 @@ fun Navigation(
                 },
                 onEtcd = { nav.navigate(Routes.ETCD) },
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
+                onWorkloads = { nav.navigate(Routes.WORKLOADS) },
                 onHealth = { nav.navigate(Routes.HEALTH) },
                 onEvents = { nav.navigate(Routes.events()) },
                 onInsights = { nav.navigate(Routes.INSIGHTS) },
@@ -414,6 +416,7 @@ fun Navigation(
             )
         }
         composable(Routes.KUBESPAN) { KubeSpanScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.WORKLOADS) { name.levis.ichor.ui.workloads.WorkloadsScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.ETCD) { EtcdScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.HEALTH) {
             HealthScreen(onBack = { nav.popBackStack() }, onDiagnose = { note -> nav.navigate(Routes.diagnosis(note)) })
