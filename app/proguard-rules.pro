@@ -8,12 +8,10 @@
 -keep class name.levis.talosmobile.DebugSession { *; }
 
 # ML Kit (QR import) instantiates its components by reflection from manifest metadata; R8 full
-# mode stripped what it needed and BarcodeScanning.getClient() crashed in release builds only.
+# mode stripped their constructors and BarcodeScanning.getClient() crashed in release builds
+# only. Keeping the registrars is enough: ML Kit's own consumer rules cover the rest, and
+# keeping all of com.google.mlkit.** left a third of the DEX unoptimized.
 -keep class * implements com.google.firebase.components.ComponentRegistrar { <init>(); *; }
--keep class com.google.mlkit.** { *; }
--keep class com.google.android.gms.internal.mlkit_vision_barcode.** { *; }
--keep class com.google.android.gms.internal.mlkit_vision_common.** { *; }
--keep class com.google.android.gms.internal.mlkit_common.** { *; }
 
 # Batch 4 bindings (packet capture, upgrade): Go calls back into these through JNI.
 -keep class name.levis.talosmobile.CaptureListener { *; }

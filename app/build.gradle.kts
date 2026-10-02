@@ -42,6 +42,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("release")
         }
@@ -57,9 +58,12 @@ android {
 
     // One APK per ABI (app-<abi>-<buildType>.apk), each with only its own native libraries.
     // The list must match the Go core targets in build.sh.
+    // Off for App Bundles (bundlePlay): Play splits by ABI itself, and optimized resource
+    // shrinking refuses bundles built alongside multiple APKs (issuetracker 402800800).
+    val buildingBundle = gradle.startParameter.taskNames.any { it.contains("bundle", ignoreCase = true) }
     splits {
         abi {
-            isEnable = true
+            isEnable = !buildingBundle
             reset()
             include("arm64-v8a", "armeabi-v7a", "x86_64")
             isUniversalApk = false
