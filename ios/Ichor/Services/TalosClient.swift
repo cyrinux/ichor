@@ -28,6 +28,13 @@ enum SnapshotEvent: Sendable {
     case failed(String)
 }
 
+/// An imported context named like a stored one (see ImportConflicts in Go).
+struct ImportConflict: Decodable, Sendable {
+    let index: Int
+    let suggested: String
+    let sameAs: String?
+}
+
 /// UserDefaults keys of the screenshot mode.
 enum PrivacyKeys {
     static let enabled = "privacyMask"
@@ -54,10 +61,17 @@ struct TalosClient: Sendable {
         try await run { TalosmobileReplaceContextCredentials(stored, generated, context, $0) }
     }
 
-    /// `stored` with the contexts of `added` added: a context per cluster. One already there
-    /// (same name and CA) is updated, another one of that name is added as name-1.
-    static func mergeConfig(stored: String, added: String) async throws -> String {
-        try await run { TalosmobileMergeConfig(stored, added, $0) }
+    /// The contexts of `added` named like one of `stored`: the free name each gets, and the
+    /// stored context of the same cluster (same CA) it may replace instead.
+    static func importConflicts(stored: String, added: String) async throws -> [ImportConflict] {
+        try await json { TalosmobileImportConflicts(stored, added, $0) }
+    }
+
+    /// `stored` with the contexts of `added` added: a context per cluster. A stored context is
+    /// never overwritten: one of that name is added as name-1, unless `choices` (a JSON array
+    /// of {index, name, replace}, see MergeConfig in Go) names it or replaces the same cluster.
+    static func mergeConfig(stored: String, added: String, choices: String = "") async throws -> String {
+        try await run { TalosmobileMergeConfig(stored, added, choices, $0) }
     }
 
     /// `stored` without `context` (not the last one: the stored config is deleted instead).

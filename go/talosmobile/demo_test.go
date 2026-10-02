@@ -27,11 +27,11 @@ func TestDemoImportMergeSwitchAndRemove(t *testing.T) {
 		t.Fatalf("demo must pass normal import validation: %v", err)
 	}
 	real := testConfig(t, time.Now().Add(time.Hour))
-	merged, err := MergeConfig(real, yaml)
+	merged, err := MergeConfig(real, yaml, "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	merged, err = MergeConfig(merged, again)
+	merged, err = MergeConfig(merged, again, `[{"index":0,"replace":true}]`)
 	if err != nil {
 		t.Fatal(err)
 	}

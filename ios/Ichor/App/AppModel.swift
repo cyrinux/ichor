@@ -189,13 +189,21 @@ final class AppModel {
     }
 
     /// Stores `newYAML`. With a config already stored its contexts are added to it (one
-    /// stored talosconfig, a context per cluster): a context of an already imported cluster
-    /// (same name and CA) is updated, any other gets its own entry. The imported config's
-    /// current context becomes the one shown.
-    func save(yaml newYAML: String) async throws {
+    /// stored talosconfig, a context per cluster). A stored context is never overwritten: one
+    /// of the same name is added as name-1, name-2…, unless `replacingSameCluster` (the demo
+    /// added again) and it is the same cluster (same CA). The imported config's current
+    /// context becomes the one shown.
+    func save(yaml newYAML: String, replacingSameCluster: Bool = false) async throws {
         let merged: String
         if let stored = yaml {
-            merged = try await TalosClient.mergeConfig(stored: stored, added: newYAML)
+            var choices = ""
+            if replacingSameCluster {
+                let conflicts = try await TalosClient.importConflicts(stored: stored, added: newYAML)
+                choices = "[" + conflicts.filter { $0.sameAs != nil }
+                    .map { "{\"index\":\($0.index),\"replace\":true}" }
+                    .joined(separator: ",") + "]"
+            }
+            merged = try await TalosClient.mergeConfig(stored: stored, added: newYAML, choices: choices)
         } else {
             merged = newYAML
         }

@@ -68,7 +68,7 @@ struct ImportView: View {
                 Button("Try demo") {
                     busy = true
                     Task {
-                        do { await save(try await TalosClient.demoConfig()) }
+                        do { await save(try await TalosClient.demoConfig(), replacingSameCluster: true) }
                         catch { self.error = error.localizedDescription; busy = false }
                     }
                 }
@@ -133,11 +133,11 @@ struct ImportView: View {
         }
     }
 
-    private func save(_ yaml: String) async {
+    private func save(_ yaml: String, replacingSameCluster: Bool = false) async {
         busy = true
         defer { busy = false }
         do {
-            try await model.save(yaml: yaml)
+            try await model.save(yaml: yaml, replacingSameCluster: replacingSameCluster)
             onImported()
         } catch {
             self.error = error.localizedDescription
