@@ -18,8 +18,10 @@ jobs:
     uses: ./.github/workflows/ios.yml
 
   # Uploads the App Bundle (the `play` build from android.yml, not bundleRelease), its R8
-  # mapping and the release notes (fastlane/metadata/android/*/changelogs) to Play's internal
-  # track as a draft, to promote by hand in the Play Console. Authenticates with Workload
+  # mapping, the release notes and the store listing (texts, icon, feature graphic,
+  # screenshots) from fastlane/metadata/android to Play's internal track, rolled out to
+  # testers; promote it by hand in the Play Console. The PLAY_RELEASE_STATUS repository
+  # variable overrides the status (`draft` to review it first). Authenticates with Workload
   # Identity Federation, so no service account key is stored. Skipped until the WIF_PROVIDER
   # and SERVICE_ACCOUNT secrets are set (see fastlane/PLAY_CONSOLE.md).
   play:
@@ -38,29 +40,12 @@ jobs:
 
       - uses: actions/checkout@v4
         if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
-        with:
-          fetch-depth: 0 # scripts/version.sh derives the versionCode from tags and history
 
       - uses: actions/download-artifact@v4
         if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
         with:
           name: android-play
           path: play
-
-      # Play wants whatsnew-<locale> files; fastlane keeps changelogs/<versionCode>.txt
-      # (default.txt as fallback) per locale.
-      - name: Release notes
-        if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
-        run: |
-          code="$(scripts/version.sh --field BUILD_NUMBER)"
-          mkdir -p whatsnew
-          for dir in fastlane/metadata/android/*/; do
-            locale="$(basename "$dir")"
-            for notes in "$dir/changelogs/$code.txt" "$dir/changelogs/default.txt"; do
-              if [ -f "$notes" ]; then cp "$notes" "whatsnew/whatsnew-$locale"; break; fi
-            done
-          done
-          echo "versionCode $code"; ls -l whatsnew
 
       - id: auth
         if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
@@ -69,17 +54,31 @@ jobs:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.SERVICE_ACCOUNT }}
 
-      - name: Upload to Google Play (internal track, draft)
+      - uses: ruby/setup-ruby@v1
         if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
-        uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJson: ${{ steps.auth.outputs.credentials_file_path }}
-          packageName: name.levis.ichor
-          releaseFiles: play/bundle/play/*.aab
-          mappingFile: play/mapping/play/mapping.txt
-          whatsNewDirectory: whatsnew
-          track: internal
-          status: draft
+          ruby-version: "3.3"
+
+      # fastlane 2.240+ reads the external_account credentials WIF writes. Release notes come
+      # from <locale>/changelogs/<versionCode>.txt (default.txt as fallback); images are only
+      # re-uploaded when their checksum changed.
+      - name: Upload to Google Play (internal track)
+        if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
+        env:
+          CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+          RELEASE_STATUS: ${{ vars.PLAY_RELEASE_STATUS || 'completed' }}
+        run: |
+          gem install --no-document fastlane -v '>= 2.240'
+          aab="$(find play -name '*.aab' | head -1)"
+          fastlane supply \
+            --package_name name.levis.ichor \
+            --json_key "$CREDENTIALS" \
+            --aab "$aab" \
+            --mapping play/mapping/play/mapping.txt \
+            --track internal \
+            --release_status "$RELEASE_STATUS" \
+            --metadata_path fastlane/metadata/android \
+            --sync_image_upload true
 
   publish:
     needs: [android, ios]
