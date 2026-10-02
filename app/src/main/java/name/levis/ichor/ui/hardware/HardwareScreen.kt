@@ -36,6 +36,7 @@ import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.hardwareKey
 import name.levis.ichor.model.DiskInfo
+import name.levis.ichor.model.ExtensionInfo
 import name.levis.ichor.model.HardwareSection
 import name.levis.ichor.model.MemoryModule
 import name.levis.ichor.model.NodeHardware
@@ -134,15 +135,7 @@ private fun HardwareContent(hw: NodeHardware) {
         }
         item {
             Section(stringResource(R.string.hardware_extensions), hw.errors[HardwareSection.EXTENSIONS], hw.extensions.isEmpty()) {
-                hw.extensions.forEach { ext ->
-                    Column(Modifier.padding(vertical = 2.dp)) {
-                        Row {
-                            Text(ext.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                            Text(ext.version, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
-                        }
-                        if (ext.description.isNotBlank()) Muted(ext.description)
-                    }
-                }
+                hw.extensions.forEach { ext -> ExtensionRow(ext) }
             }
         }
         item {
@@ -171,6 +164,26 @@ private fun Section(title: String, error: String?, empty: Boolean, content: @Com
 @Composable
 private fun Muted(text: String) {
     Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+/** Versions longer than this (e.g. the schematic's 64-char hash) get their own line instead of squeezing the name. */
+private const val INLINE_VERSION_MAX = 16
+
+@Composable
+private fun ExtensionRow(ext: ExtensionInfo) {
+    val inlineVersion = ext.version.length <= INLINE_VERSION_MAX
+    Column(Modifier.padding(vertical = 2.dp)) {
+        Row {
+            Text(ext.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            if (inlineVersion) {
+                Text(ext.version, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(start = 8.dp))
+            }
+        }
+        if (!inlineVersion) {
+            Text(ext.version, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if (ext.description.isNotBlank()) Muted(ext.description)
+    }
 }
 
 /** An [InfoRow] skipped when [value] is blank (SMBIOS fields are often empty). */

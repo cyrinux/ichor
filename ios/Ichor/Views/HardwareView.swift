@@ -135,10 +135,17 @@ struct HardwareView: View {
                 Text("None").foregroundStyle(.secondary)
             }
             ForEach(hw.extensions) { ext in
+                // Long versions (the schematic's 64-char hash) get their own line instead of squeezing the name.
+                let inlineVersion = ext.version.count <= 16
                 VStack(alignment: .leading, spacing: 3) {
                     HStack {
                         Text(verbatim: ext.name)
                         Spacer()
+                        if inlineVersion {
+                            Text(verbatim: ext.version).font(.caption.monospaced()).foregroundStyle(.secondary)
+                        }
+                    }
+                    if !inlineVersion {
                         Text(verbatim: ext.version).font(.caption.monospaced()).foregroundStyle(.secondary)
                     }
                     if !ext.description.isEmpty {
