@@ -123,6 +123,23 @@
     <string name="overview_action_copy_ip">Копіювати IP (%1$s)</string>
     <string name="overview_clip_label">IP вузла</string>
 
+    <!-- Wake-on-LAN -->
+    <string name="wol_wake">Розбудити (Wake-on-LAN)</string>
+    <string name="wol_settings">Wake-on-LAN…</string>
+    <string name="wol_title">Wake-on-LAN: %1$s</string>
+    <string name="wol_hint">Вмикає вузол, надсилаючи magic packet з цього телефона. Телефон має бачити мережу вузла напряму або через маршрутизатор, що пересилає пакет. Зберігається лише на цьому пристрої.</string>
+    <string name="wol_mac">MAC-адреса</string>
+    <string name="wol_mac_invalid">Це не MAC-адреса (напр. aa:bb:cc:dd:ee:ff)</string>
+    <string name="wol_broadcast">Широкомовна адреса (необов\'язково)</string>
+    <string name="wol_broadcast_hint">Порожньо: широкомовна адреса Wi-Fi або Ethernet мережі телефона</string>
+    <string name="wol_broadcast_invalid">Це не IPv4-адреса і не ім\'я хоста</string>
+    <string name="wol_port">UDP-порт (необов\'язково, типово 9)</string>
+    <string name="wol_port_invalid">Порт має бути від 1 до 65535</string>
+    <string name="wol_save">Зберегти</string>
+    <string name="wol_forget">Забути</string>
+    <string name="wol_sent">Magic packet надіслано до %1$s (через %2$s)</string>
+    <string name="wol_failed">Не вдалося надіслати magic packet: %1$s</string>
+
     <!-- Node detail -->
     <string name="node_menu_kernel_log">Журнал ядра</string>
     <string name="node_menu_debug_shell">Налагоджувальна оболонка</string>
