@@ -59,6 +59,8 @@
     <string name="common_role_notice_body">This talosconfig has %1$s. Import a talosconfig created with --roles %2$s to use it (see README).</string>
     <string name="common_role_notice_no_roles">no roles</string>
     <string name="common_no_config">No talosconfig imported</string>
+    <string name="common_vpn_required">This cluster is set to be reached over a VPN only, and no VPN is connected. Connect it: this screen reloads by itself.</string>
+    <string name="common_vpn_settings">VPN settings</string>
 
     <!-- Overview -->
     <string name="overview_title">Cluster</string>
@@ -276,6 +278,8 @@
     <string name="clusters_rename">Rename %1$s</string>
     <string name="clusters_rename_label">Name</string>
     <string name="clusters_rename_hint">Shown on this device only, the talosconfig keeps %1$s. Leave empty to use it again.</string>
+    <string name="clusters_vpn_only">VPN only</string>
+    <string name="clusters_vpn_only_hint">VPN only: without a VPN connected the app does not try the cluster, and background checks wait for it.</string>
     <string name="shortcut_cluster_removed">This cluster was removed</string>
 
     <!-- Settings -->

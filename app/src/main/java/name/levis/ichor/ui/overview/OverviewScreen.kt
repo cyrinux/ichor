@@ -120,6 +120,7 @@ fun OverviewScreen(
     val app = context.applicationContext as TalosApp
     val ai by app.aiPreferences.settings.collectAsStateWithLifecycle()
     val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
+    val vpnOnly by app.vpnOnly.fingerprints.collectAsStateWithLifecycle()
     val clusterLabels = rememberClusterLabels()
     val scope = rememberCoroutineScope()
     var showClusters by remember { mutableStateOf(false) }
@@ -194,6 +195,8 @@ fun OverviewScreen(
                 },
                 onRename = { cluster, name -> app.renameCluster(cluster.fingerprint, name) },
                 onColor = { cluster, color -> app.clusterColors.set(cluster.fingerprint, color) },
+                vpnOnly = vpnOnly,
+                onVpnOnly = { cluster, on -> app.setVpnOnly(cluster.fingerprint, on) },
                 onAdd = {
                     showClusters = false
                     onAddCluster()
