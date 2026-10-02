@@ -75,10 +75,21 @@
         <item quantity="one">nicht erreichbar</item>
         <item quantity="other">nicht erreichbar</item>
     </plurals>
+    <string name="overview_status_healthy">Gesund</string>
+    <string name="overview_status_degraded">Beeinträchtigt</string>
+    <string name="overview_status_down">Nicht erreichbar</string>
+    <plurals name="overview_summary_nodes">
+        <item quantity="one">%d Knoten</item>
+        <item quantity="other">%d Knoten</item>
+    </plurals>
+    <string name="overview_stat_nodes">Knoten</string>
+    <string name="overview_stat_cpu">CPU-Kerne</string>
+    <string name="overview_stat_memory">Arbeitsspeicher</string>
+    <string name="overview_stat_memory_used">%d %% belegt</string>
     <string name="overview_node_actions">Knotenaktionen</string>
     <string name="overview_role_control_plane">Control Plane</string>
-    <string name="overview_update_banner">Talosdev Mobile %1$s ist verfügbar – zum Aktualisieren tippen</string>
-    <string name="overview_support_title">Gefällt dir Talosdev Mobile?</string>
+    <string name="overview_update_banner">Ichor %1$s ist verfügbar – zum Aktualisieren tippen</string>
+    <string name="overview_support_title">Gefällt dir Ichor?</string>
     <string name="overview_support_body">Die App ist kostenlos und Open Source. Wenn sie dir Zeit spart, kannst du ihre Entwicklung unterstützen.</string>
     <string name="overview_support_never">Nicht mehr fragen</string>
     <string name="overview_support_later">Nicht jetzt</string>
@@ -315,12 +326,12 @@
     <string name="update_auto_check">Täglich nach Updates suchen</string>
     <string name="update_auto_check_desc">Aus GitHub-Releases (%1$s). Prüfsumme und Signaturschlüssel der APK werden verifiziert, und Android fragt dich vor der Installation.</string>
     <string name="update_checking">Wird geprüft…</string>
-    <string name="update_up_to_date">Talosdev Mobile %1$s ist auf dem neuesten Stand.</string>
+    <string name="update_up_to_date">Ichor %1$s ist auf dem neuesten Stand.</string>
     <string name="update_available">Version %1$s ist verfügbar (%2$s).</string>
     <string name="update_download_install">Herunterladen und installieren</string>
     <string name="update_debug_build">Dies ist ein Debug-Build, signiert mit einem lokalen Schlüssel: Release-APKs können ihn nicht ersetzen. Deinstalliere ihn und installiere einmalig eine Release-APK, um Updates zu erhalten.</string>
     <string name="update_downloading">%1$s wird heruntergeladen…</string>
-    <string name="update_needs_permission">Erlaube Talosdev Mobile, Apps zu installieren, und versuche es dann erneut.</string>
+    <string name="update_needs_permission">Erlaube Ichor, Apps zu installieren, und versuche es dann erneut.</string>
     <string name="update_open_permission">Installationsberechtigung öffnen</string>
     <string name="update_try_again">Erneut versuchen</string>
     <string name="update_installing">Wird installiert… Bestätige im Systemdialog.</string>
@@ -337,7 +348,7 @@
 
     <!-- About -->
     <string name="about_section">Über</string>
-    <string name="about_version">Talosdev Mobile %1$s (%2$d)</string>
+    <string name="about_version">Ichor %1$s (%2$d)</string>
     <string name="about_source">Quellcode auf GitHub</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="about_sponsor">Auf GitHub sponsern</string>
@@ -401,8 +412,8 @@
     <string name="debug_connecting">Verbindung wird hergestellt…</string>
 
     <!-- App lock -->
-    <string name="lock_prompt">Talosdev Mobile entsperren</string>
-    <string name="lock_locked">Talosdev Mobile ist gesperrt</string>
+    <string name="lock_prompt">Ichor entsperren</string>
+    <string name="lock_locked">Ichor ist gesperrt</string>
     <string name="lock_unlock">Entsperren</string>
     <string name="lock_no_auth">Dieses Gerät hat keinen Fingerabdruck und keine Displaysperre mehr, daher kann die App-Sperre dich nicht verifizieren.</string>
     <string name="lock_delete_config">Gespeicherte talosconfig löschen</string>
@@ -566,7 +577,7 @@
     <string name="issue_renewed_body">Das neue Zertifikat für „%1$s“ ist gespeichert und gültig bis %2$s.</string>
     <string name="issue_result_warning">Diese Config gewährt %2$s-Zugriff auf „%1$s“ bis %3$s und kann nicht widerrufen werden. Behandle sie wie ein Passwort: Zeige den QR-Code nur dem Gerät, für das er bestimmt ist.</string>
     <string name="issue_qr_description">QR-Code der talosconfig</string>
-    <string name="issue_qr_hint">Öffne auf dem anderen Gerät Talosdev Mobile, dann Importieren → QR-Code.</string>
+    <string name="issue_qr_hint">Öffne auf dem anderen Gerät Ichor, dann Importieren → QR-Code.</string>
     <string name="issue_qr_too_large">Diese Config ist zu groß für einen QR-Code (%1$d Bytes, höchstens %2$d). Speichere sie stattdessen in einer Datei.</string>
     <string name="issue_save_file">In Datei speichern</string>
     <string name="issue_saved">Gespeichert. Lösche die Datei, sobald sie auf dem anderen Gerät importiert ist.</string>

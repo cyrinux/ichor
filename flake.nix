@@ -1,5 +1,5 @@
 {
-  description = "Talosdev Mobile: Android build environment";
+  description = "Ichor: Android build environment";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
@@ -47,7 +47,7 @@
         let pkgs = import nixpkgs { inherit system; };
         in {
           default = shellFor system;
-          # Swift on Linux for the iOS core package tests (ios/TalosdevMobileCore/test-linux.sh).
+          # Swift on Linux for the iOS core package tests (ios/IchorCore/test-linux.sh).
           swift = (pkgs.mkShell.override { stdenv = pkgs.swift.stdenv; }) {
             packages = [ pkgs.swift pkgs.swiftPackages.Foundation pkgs.swiftPackages.XCTest pkgs.swiftPackages.Dispatch ];
             LD_LIBRARY_PATH = "${pkgs.swiftPackages.Dispatch}/lib:${pkgs.swiftPackages.XCTest}/lib";

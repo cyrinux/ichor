@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Talosdev Mobile</string>
+    <string name="app_name" translatable="false">Ichor</string>
 
     <!-- Common -->
     <string name="common_back">Back</string>
@@ -76,10 +76,21 @@
         <item quantity="one">unreachable</item>
         <item quantity="other">unreachable</item>
     </plurals>
+    <string name="overview_status_healthy">Healthy</string>
+    <string name="overview_status_degraded">Degraded</string>
+    <string name="overview_status_down">Unreachable</string>
+    <plurals name="overview_summary_nodes">
+        <item quantity="one">%d node</item>
+        <item quantity="other">%d nodes</item>
+    </plurals>
+    <string name="overview_stat_nodes">Nodes</string>
+    <string name="overview_stat_cpu">CPU cores</string>
+    <string name="overview_stat_memory">Memory</string>
+    <string name="overview_stat_memory_used">%d%% used</string>
     <string name="overview_node_actions">Node actions</string>
     <string name="overview_role_control_plane">control plane</string>
-    <string name="overview_update_banner">Talosdev Mobile %1$s is available — tap to update</string>
-    <string name="overview_support_title">Enjoying Talosdev Mobile?</string>
+    <string name="overview_update_banner">Ichor %1$s is available — tap to update</string>
+    <string name="overview_support_title">Enjoying Ichor?</string>
     <string name="overview_support_body">It is free and open source. If it saves you time, you can support its development.</string>
     <string name="overview_support_never">Don\'t ask again</string>
     <string name="overview_support_later">Not now</string>
@@ -316,12 +327,12 @@
     <string name="update_auto_check">Check for updates daily</string>
     <string name="update_auto_check_desc">From GitHub releases (%1$s). The APK\'s checksum and signing key are verified, and Android asks you to confirm the install.</string>
     <string name="update_checking">Checking…</string>
-    <string name="update_up_to_date">Talosdev Mobile %1$s is up to date.</string>
+    <string name="update_up_to_date">Ichor %1$s is up to date.</string>
     <string name="update_available">Version %1$s is available (%2$s).</string>
     <string name="update_download_install">Download and install</string>
     <string name="update_debug_build">This is a debug build, signed with a local key: release APKs cannot replace it. Uninstall it and install a release APK once to get updates.</string>
     <string name="update_downloading">Downloading %1$s…</string>
-    <string name="update_needs_permission">Allow Talosdev Mobile to install apps, then try again.</string>
+    <string name="update_needs_permission">Allow Ichor to install apps, then try again.</string>
     <string name="update_open_permission">Open install permission</string>
     <string name="update_try_again">Try again</string>
     <string name="update_installing">Installing… confirm in the system dialog.</string>
@@ -338,7 +349,7 @@
 
     <!-- About -->
     <string name="about_section">About</string>
-    <string name="about_version">Talosdev Mobile %1$s (%2$d)</string>
+    <string name="about_version">Ichor %1$s (%2$d)</string>
     <string name="about_source">Source code on GitHub</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="about_sponsor">Sponsor on GitHub</string>
@@ -402,8 +413,8 @@
     <string name="debug_connecting">Connecting…</string>
 
     <!-- App lock -->
-    <string name="lock_prompt">Unlock Talosdev Mobile</string>
-    <string name="lock_locked">Talosdev Mobile is locked</string>
+    <string name="lock_prompt">Unlock Ichor</string>
+    <string name="lock_locked">Ichor is locked</string>
     <string name="lock_unlock">Unlock</string>
     <string name="lock_no_auth">This device no longer has a fingerprint or screen lock, so the app lock cannot verify you.</string>
     <string name="lock_delete_config">Delete stored talosconfig</string>
@@ -568,7 +579,7 @@
     <string name="issue_renewed_body">The new certificate for “%1$s” is stored and valid until %2$s.</string>
     <string name="issue_result_warning">This config grants %2$s access to “%1$s” until %3$s and cannot be revoked. Treat it like a password: show the QR code only to the device it is for.</string>
     <string name="issue_qr_description">QR code of the talosconfig</string>
-    <string name="issue_qr_hint">On the other device, open Talosdev Mobile, then Import → QR code.</string>
+    <string name="issue_qr_hint">On the other device, open Ichor, then Import → QR code.</string>
     <string name="issue_qr_too_large">This config is too large for a QR code (%1$d bytes, at most %2$d). Save it to a file instead.</string>
     <string name="issue_save_file">Save to file</string>
     <string name="issue_saved">Saved. Delete the file once it is imported on the other device.</string>

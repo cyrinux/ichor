@@ -1,0 +1,33 @@
+package name.levis.ichor.ui.components
+
+import androidx.compose.ui.res.stringResource
+import name.levis.ichor.R
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import name.levis.ichor.model.Feature
+
+/** Explains why a feature is unavailable with the imported talosconfig's roles. */
+@Composable
+fun RoleNotice(feature: Feature, roles: List<String>, modifier: Modifier = Modifier) {
+    Card(modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text(stringResource(R.string.common_role_notice_title, stringResource(feature.label), feature.minimumRole), style = MaterialTheme.typography.titleSmall)
+            Text(
+                stringResource(
+                    R.string.common_role_notice_body,
+                    roles.joinToString().ifEmpty { stringResource(R.string.common_role_notice_no_roles) },
+                    feature.minimumRole,
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}

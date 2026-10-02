@@ -1,5 +1,5 @@
 import SwiftUI
-import TalosdevMobileCore
+import IchorCore
 import WidgetKit
 
 /// Home-screen summary of the last background check. Counts only, no hostnames: it stays
@@ -11,7 +11,7 @@ struct Entry: TimelineEntry {
 
 struct Provider: TimelineProvider {
     private var snapshot: ClusterSnapshot? {
-        UserDefaults(suiteName: "group.name.levis.talosmobile")?.data(forKey: "snapshot")
+        UserDefaults(suiteName: "group.name.levis.ichor")?.data(forKey: "snapshot")
             .flatMap { try? JSONDecoder().decode(ClusterSnapshot.self, from: $0) }
     }
 

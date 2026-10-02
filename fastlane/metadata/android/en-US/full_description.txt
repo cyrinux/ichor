@@ -1,4 +1,6 @@
-Talosdev Mobile puts your Talos Linux cluster in your pocket. It talks to the Talos API with the official Go client, the same code as talosctl, so talosconfig contexts, mTLS and endpoint-to-node proxying behave exactly as they do on your workstation.
+Your Talos cluster, from your phone.
+
+Ichor puts your Talos Linux cluster in your pocket. It talks to the Talos API with the official Go client, the same code as talosctl, so talosconfig contexts, mTLS and endpoint-to-node proxying behave exactly as they do on your workstation.
 
 Bring your own cluster: the app needs a talosconfig for a Talos Linux cluster you run. It has no server and no account of its own.
 
@@ -38,8 +40,8 @@ Background checks notify you when a node goes down or the phone's certificate is
 <b>Optional AI diagnosis</b>
 Off by default, and hidden until you turn it on. It builds a report of the cluster state and shows it to you; only when you tap Ask is it sent to Anthropic (Claude), OpenAI or your own compatible server, with your own API key. Node names, addresses and the domain are anonymized by default. Without an API key, you can hand the report to an assistant app through the share sheet.
 
-Free and open source (Apache-2.0): https://github.com/cyrinux/talosdev-mobile
+Free and open source (Apache-2.0): https://github.com/cyrinux/ichor
 
 Available in English, French, German, Spanish, Italian and Ukrainian.
 
-Talosdev Mobile is an independent project, not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.
+Ichor is an independent community project, not affiliated with or endorsed by Sidero Labs. Talos is a trademark of Sidero Labs, Inc.

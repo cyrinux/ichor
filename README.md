@@ -1,8 +1,13 @@
-# Talos.dev mobile
+# Ichor for Talos Linux
 
-Website: <https://cyrinux.github.io/talosdev-mobile/>
+**Your Talos cluster, from your phone.** Ichor is a free, open-source Android and iOS app to
+monitor and operate [Talos Linux](https://www.talos.dev) clusters: node health, logs, etcd,
+KubeSpan and live graphs in your pocket, and a notification the moment a node goes down.
 
-Android and iOS app for a [Talos](https://www.talos.dev) cluster:
+Website: <https://cyrinux.github.io/ichor/>
+
+> Ichor is an independent community project, not affiliated with or endorsed by Sidero Labs.
+> Talos is a trademark of Sidero Labs, Inc.
 
 - **Viewing:** node status, services, resources, logs, etcd and the cluster health check.
 - **Actions:** reboot or shut down a node.
@@ -18,15 +23,15 @@ The Talos API layer is the official Go client (`siderolabs/talos/pkg/machinery`,
 `talosctl`) compiled with gomobile, so talosconfig parsing, Ed25519 mTLS and endpoint→node
 proxying behave exactly like `talosctl`.
 
-[<img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="54">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.talosmobile%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Ftalosdev-mobile%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Talosdev%20Mobile%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D)
+[<img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="54">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D)
 
 **Install on Android:**
 
 - **[Obtainium](https://obtainium.imranr.dev)** installs and updates the app straight from this
   repository's GitHub releases. The button above pre-fills it, with a filter that skips
   unsigned APKs.
-- **Manually:** download `talosdev-mobile-v<version>-<abi>.apk` from the
-  [latest release](https://github.com/cyrinux/talosdev-mobile/releases/latest); `arm64-v8a`
+- **Manually:** download `ichor-v<version>-<abi>.apk` from the
+  [latest release](https://github.com/cyrinux/ichor/releases/latest); `arm64-v8a`
   fits almost all phones.
 
 **F-Droid:** not listed yet. The planned route is [IzzyOnDroid](https://apt.izzysoft.de/fdroid/),
@@ -34,7 +39,7 @@ an F-Droid repository that ships the signed release APKs.
 
 ```
 app/            Android: Kotlin + Jetpack Compose UI
-ios/            iOS: SwiftUI app (XcodeGen) + TalosdevMobileCore Swift package
+ios/            iOS: SwiftUI app (XcodeGen) + IchorCore Swift package
 go/talosmobile  Go core exposed to Kotlin and Swift (JSON in/out)
 go/cmd/probe    desktop CLI calling the same Go functions
 flake.nix       Nix build environment (default)
@@ -206,14 +211,14 @@ The Android app updates itself from this repository's GitHub releases (Settings 
   2. the package name;
   3. that it is signed with exactly the installed app's key.
 - **Installing:** Android shows its own confirmation, and asks once to allow
-  "Install unknown apps" for Talosdev Mobile.
+  "Install unknown apps" for Ichor.
 
 Updates only work between builds signed with the same key, which means CI release builds with
-the `TALOS_KEYSTORE*` secrets set. A **debug** build, signed with your machine's debug key,
+the `ICHOR_KEYSTORE*` secrets set. A **debug** build, signed with your machine's debug key,
 cannot be replaced by a release. To switch once:
 
 1. uninstall the debug build;
-2. install `talosdev-mobile-vX.Y.Z-<abi>.apk` from a release;
+2. install `ichor-vX.Y.Z-<abi>.apk` from a release;
 3. re-import the talosconfig.
 
 There is no self-update on iOS, where sideloaded apps are reinstalled with Sideloadly or AltStore.
@@ -225,7 +230,7 @@ compressed native libraries. A release APK is about 16 MB.
 
 ```sh
 ./build.sh            # debug APKs -> app/build/outputs/apk/debug/app-<abi>-debug.apk
-./build.sh release    # needs TALOS_KEYSTORE, TALOS_KEYSTORE_PASSWORD, TALOS_KEY_ALIAS, TALOS_KEY_PASSWORD
+./build.sh release    # needs ICHOR_KEYSTORE, ICHOR_KEYSTORE_PASSWORD, ICHOR_KEY_ALIAS, ICHOR_KEY_PASSWORD
 just install           # builds, then installs the APK matching the connected device's ABI
 ./build.sh play       # Google Play App Bundle -> app/build/outputs/bundle/play/app-play.aab
 ```
@@ -258,7 +263,7 @@ go run ./cmd/probe -config ../talosconfig-phone overview   # test a role-limited
 ## iOS
 
 The iOS app (`ios/`) reuses the same Go core, built as `Talosmobile.xcframework` with
-gomobile, around a SwiftUI UI. The pure logic lives in the `TalosdevMobileCore` Swift package:
+gomobile, around a SwiftUI UI. The pure logic lives in the `IchorCore` Swift package:
 models, formatting, lock state and power-request rules.
 
 **Feature parity with Android:**
@@ -296,7 +301,7 @@ just ios-build        # macOS: unsigned IPA in ios/build/
 
 **Installing:** CI produces an unsigned IPA. Sideloadly or AltStore re-sign it with your Apple
 ID: a free account means reinstalling every 7 days, a paid one lasts a year. To sign in Xcode
-instead, set `TALOS_IOS_TEAM_ID` before `xcodegen generate`.
+instead, set `ICHOR_IOS_TEAM_ID` before `xcodegen generate`.
 
 ## CI (GitHub Actions)
 
@@ -305,14 +310,14 @@ instead, set `TALOS_IOS_TEAM_ID` before `xcodegen generate`.
 - **`.github/workflows/ios.yml`** (macOS 15): core tests, simulator build, unsigned IPA.
 
 Both run on pushes to `main` and on pull requests. Release APKs are named
-`talosdev-mobile-v<version>-<abi>.apk`, or `…-unsigned.apk` when no keystore secrets are set;
+`ichor-v<version>-<abi>.apk`, or `…-unsigned.apk` when no keystore secrets are set;
 the updater ignores unsigned ones. On a `v*` tag (`just release-tag 0.1.0`,
 then `git push origin v0.1.0`), they attach the release APK and the IPA to the GitHub release.
 
 To sign the release APK in CI, generate a key once and upload it as repository secrets:
 
 ```sh
-just android-keystore-gen       # then export TALOS_KEYSTORE, TALOS_KEYSTORE_PASSWORD, TALOS_KEY_ALIAS
+just android-keystore-gen       # then export ICHOR_KEYSTORE, ICHOR_KEYSTORE_PASSWORD, ICHOR_KEY_ALIAS
 just github-secrets             # sets the three secrets below with gh (values via stdin)
 ```
 
@@ -320,9 +325,9 @@ The secrets it sets:
 
 | Secret | Value |
 |---|---|
-| `TALOS_KEYSTORE_BASE64` | `base64 -w0 ~/talosdev-mobile-release.jks` |
-| `TALOS_KEYSTORE_PASSWORD` | the keystore password |
-| `TALOS_KEY_ALIAS` | the key alias, e.g. `talosdev-mobile` |
+| `ICHOR_KEYSTORE_BASE64` | `base64 -w0 ~/ichor-release.jks` |
+| `ICHOR_KEYSTORE_PASSWORD` | the keystore password |
+| `ICHOR_KEY_ALIAS` | the key alias, e.g. `ichor` |
 
 Without them, the release APK is unsigned.
 
@@ -352,13 +357,13 @@ English.
 
 ## Support the project
 
-Talosdev Mobile is free, with no ads or tracking. To help keep it going:
+Ichor is free, with no ads or tracking. To help keep it going:
 
 - [GitHub Sponsors](https://github.com/sponsors/cyrinux)
 - Bitcoin: `bc1qc0dhqrgw6z08du94rkfequk8n5r3lgcr5lnxtl`
 - Ethereum: `0xb32676301F9c4abD35Eb2e4c7C8cdA754BA29804`
 
-The app's About section and the [website](https://cyrinux.github.io/talosdev-mobile/#support) show them as QR codes.
+The app's About section and the [website](https://cyrinux.github.io/ichor/#support) show them as QR codes.
 
 ## License
 

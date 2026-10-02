@@ -3,11 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Talosdev Mobile</title>
-<meta name="description" content="Monitor and operate your Talos Linux cluster from your phone: node status, logs, etcd, KubeSpan, live graphs, alerts. Android and iOS, open source.">
-<meta property="og:title" content="Talosdev Mobile">
-<meta property="og:description" content="Your Talos cluster, from your phone.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z' fill='none' stroke='%23FF7A45' stroke-width='2' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='12' r='3' fill='%23FF7A45'/%3E%3C/svg%3E">
+<title>Ichor for Talos Linux</title>
+<meta name="description" content="Ichor is a free, open-source Talos Linux app for Android and iPhone: node health, logs, etcd, KubeSpan, live graphs and alerts when a node goes down. Built on the same Go client as talosctl.">
+<meta name="keywords" content="Talos, Talos Linux, talosctl, Kubernetes, k8s, Sidero, etcd, KubeSpan, cluster monitoring, Android, iOS">
+<link rel="canonical" href="https://cyrinux.github.io/ichor/">
+<meta name="theme-color" content="#14243B">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ichor">
+<meta property="og:url" content="https://cyrinux.github.io/ichor/">
+<meta property="og:title" content="Ichor for Talos Linux">
+<meta property="og:description" content="Your Talos cluster, from your phone. Node health, logs, etcd and alerts, with the same client as talosctl.">
+<meta property="og:image" content="https://cyrinux.github.io/ichor/screenshots/overview.webp">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Ichor for Talos Linux",
+  "alternateName": "Ichor",
+  "description": "Monitor and operate Talos Linux clusters from your phone: node health, logs, etcd, KubeSpan, live graphs and alerts.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Android 8.0+, iOS 17+",
+  "license": "https://www.apache.org/licenses/LICENSE-2.0",
+  "url": "https://cyrinux.github.io/ichor/",
+  "downloadUrl": "https://github.com/cyrinux/ichor/releases/latest",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+  "author": { "@type": "Person", "name": "Cyril Levis" }
+}
+</script>
+<link rel="icon" href="brand/ichor.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -68,7 +92,7 @@
     padding: 1.25rem 0;
   }
   .brand { display: flex; align-items: center; gap: .6rem; font-weight: 600; text-decoration: none; }
-  .brand svg { width: 28px; height: 28px; }
+  .brand img { width: 32px; height: 32px; }
   .top nav { display: flex; gap: 1.25rem; font-size: .95rem; }
   .top nav a { text-decoration: none; color: var(--ink-2); }
   .top nav a:hover { color: var(--ink); }
@@ -114,7 +138,7 @@
     animation: arrive 900ms cubic-bezier(.2, .8, .2, 1) 900ms both;
   }
   .notification header { display: flex; align-items: center; gap: .45rem; font-size: .72rem; color: var(--phone-ink-2); }
-  .notification header svg { width: 16px; height: 16px; }
+  .notification header svg { width: 16px; height: 16px; color: #FF7A45; }
   .notification header span:last-child { margin-left: auto; }
   .notification strong { display: block; font-weight: 600; font-size: .92rem; margin-top: .35rem; }
   .notification p { margin: .15rem 0 0; font-size: .82rem; color: var(--phone-ink-2); line-height: 1.35; }
@@ -203,45 +227,83 @@
   .donate .row { display: flex; gap: .5rem; flex-wrap: wrap; }
   .donate button, .donate .wallet { font: inherit; font-size: .85rem; padding: .4rem .8rem; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; text-decoration: none; }
   .donate button:focus-visible, .donate .wallet:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .brand small { font-weight: 400; color: var(--ink-2); }
+  .eyebrow {
+    display: inline-block; margin: 0 0 1rem; font: 500 .85rem/1 "IBM Plex Mono", ui-monospace, monospace;
+    letter-spacing: .04em; text-transform: uppercase; color: var(--accent-ink);
+  }
+
+  /* Four reasons, right under the hero */
+  .props { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; padding: 0 0 4rem; margin: 0; list-style: none; }
+  .props li { border-top: 2px solid var(--accent); padding-top: 1rem; }
+  .props h3 { margin: 0 0 .35rem; font-size: 1.05rem; font-weight: 600; }
+  .props p { margin: 0; color: var(--ink-2); font-size: .97rem; }
+
+  /* The name */
+  .myth { display: grid; grid-template-columns: .8fr 1.2fr; gap: 3rem; align-items: start; }
+  .myth blockquote {
+    margin: 0; padding-left: 1.25rem; border-left: 3px solid var(--accent);
+    font-size: 1.35rem; line-height: 1.4; font-weight: 500; letter-spacing: -0.01em;
+  }
+  .myth p { margin: 0 0 1rem; color: var(--ink-2); max-width: var(--measure); }
+
+  /* FAQ */
+  .faq { max-width: var(--measure); }
+  .faq details { border-top: 1px solid var(--line); padding: 1rem 0; }
+  .faq details:last-child { border-bottom: 1px solid var(--line); }
+  .faq summary { cursor: pointer; font-weight: 600; }
+  .faq summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+  .faq details p { margin: .6rem 0 0; color: var(--ink-2); }
+
+  @media (max-width: 860px) {
+    .props { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .myth { grid-template-columns: 1fr; gap: 1.5rem; }
+  }
+  @media (max-width: 520px) {
+    .props { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
     <a class="brand" href="./">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" fill="none" stroke="#FF7A45" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="#FF7A45"/></svg>
-      Talosdev Mobile
+      <img src="brand/ichor.svg" width="32" height="32" alt="">
+      <span>Ichor <small>for Talos Linux</small></span>
     </a>
     <nav aria-label="Primary">
       <a class="optional" href="#screens">Screens</a>
       <a class="optional" href="#features">Features</a>
       <a class="optional" href="#access">Access</a>
+      <a class="optional" href="#faq">FAQ</a>
       <a href="#install">Install</a>
-      <a href="https://github.com/cyrinux/talosdev-mobile">GitHub</a>
+      <a href="https://github.com/cyrinux/ichor">GitHub</a>
     </nav>
   </header>
 
   <main>
     <div class="hero">
       <div>
+        <p class="eyebrow">Ichor for Talos Linux</p>
         <h1>Your Talos cluster, from your phone.</h1>
-        <p class="lede">Node status, logs, etcd, KubeSpan and live graphs for Talos Linux, with alerts when a node goes down. It talks to the Talos API with the same client as talosctl.</p>
+        <p class="lede">Node health, logs, etcd, KubeSpan and live graphs in your pocket, and a notification the moment a node goes down. Ichor talks to the Talos API with the same client as talosctl: nothing to install on the cluster, nothing in between.</p>
         <div class="actions">
-          <a class="button primary" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.talosmobile%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Ftalosdev-mobile%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Talosdev%20Mobile%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D">Add to Obtainium</a>
-          <a class="button" href="https://github.com/cyrinux/talosdev-mobile/releases/latest">Download the APK</a>
+          <a class="button primary" href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D">Add to Obtainium</a>
+          <a class="button" href="https://github.com/cyrinux/ichor/releases/latest">Download the APK</a>
           <a class="button" href="#ios">iPhone</a>
         </div>
         <p class="note">Free and open source, Apache-2.0. Read-only by default. Screenshot mode hides your addresses and node names when you share your screen.</p>
       </div>
 
-      <div class="phone" role="img" aria-label="A phone lock screen showing a Talosdev Mobile alert: cp-2 is not ready, etcd not healthy. Below, a widget shows 7 of 8 nodes ready.">
+      <div class="phone" role="img" aria-label="A phone lock screen showing an Ichor alert: cp-2 is not ready, etcd not healthy. Below, a widget shows 7 of 8 nodes ready.">
         <div class="screen" aria-hidden="true">
           <div class="clock">3:12</div>
           <div class="date">Thursday, 1 October</div>
           <div class="notification">
             <header>
-              <svg viewBox="0 0 24 24"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" fill="none" stroke="#FF7A45" stroke-width="2.4" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="#FF7A45"/></svg>
-              <span>Talosdev Mobile</span><span>now</span>
+              <svg viewBox="0 0 512 512" fill="currentColor" stroke="currentColor"><path fill="none" stroke-width="40" d="M300.1,72.6A212,212 0 0 1 463.4,235.9M467.9,272.6A212,212 0 0 1 355.5,467.2M211.9,72.6A212,212 0 0 0 48.6,235.9M44.1,272.6A212,212 0 0 0 156.5,467.2"/><path stroke="none" fill-rule="evenodd" d="M256,8L228,24L240,116L256,132L272,116L284,24ZM256,100C190,100 152,144 152,204L152,300L192,350L320,350L360,300L360,204C360,144 322,100 256,100ZM162,184L256,210L350,184L344,232L302,250L280,250L280,350L232,350L232,250L210,250L168,232ZM256,380C256,380 214,430 214,456A42,42 0 0 0 298,456C298,430 256,380 256,380Z"/></svg>
+              <span>Ichor</span><span>now</span>
             </header>
             <strong>cp-2 is not ready</strong>
             <p>services: etcd not healthy</p>
@@ -255,36 +317,55 @@
       </div>
     </div>
 
+    <ul class="props" aria-label="Why Ichor">
+      <li>
+        <h3>Same client as talosctl</h3>
+        <p>Built on Sidero's official Go machinery library. Contexts, mTLS and endpoint-to-node proxying behave exactly as on your laptop.</p>
+      </li>
+      <li>
+        <h3>Alerts without a server</h3>
+        <p>The phone itself checks the cluster in the background and tells you when a node or etcd is unhealthy. A home-screen widget shows it at a glance.</p>
+      </li>
+      <li>
+        <h3>Least privilege</h3>
+        <p>Give it an <code>os:reader</code> certificate and it stays read-only. Keys live in StrongBox or the Secure Enclave, behind an optional biometric lock.</p>
+      </li>
+      <li>
+        <h3>Open source, no tracking</h3>
+        <p>Apache-2.0, no account, no ads, no analytics. Your talosconfig only ever talks to your nodes.</p>
+      </li>
+    </ul>
+
     <section id="screens" aria-labelledby="screens-title">
       <h2 id="screens-title">What it looks like</h2>
       <p class="intro">Real screens from a running cluster, taken in screenshot mode: addresses and node names are replaced with stand-ins.</p>
       <div class="shots" tabindex="0" role="region" aria-label="App screenshots, scroll sideways">
         <figure>
-          <img src="screenshots/overview.webp" width="540" height="1045" loading="lazy" alt="Cluster overview screen of Talosdev Mobile">
+          <img src="screenshots/overview.webp" width="540" height="1045" loading="lazy" alt="Cluster overview screen of Ichor for Talos Linux">
           <figcaption><strong>Cluster overview</strong>Every node at a glance, and a banner when a newer Talos is out.</figcaption>
         </figure>
         <figure>
-          <img src="screenshots/node-services.webp" width="540" height="1045" loading="lazy" alt="Services screen of Talosdev Mobile">
+          <img src="screenshots/node-services.webp" width="540" height="1045" loading="lazy" alt="Services screen of Ichor for Talos Linux">
           <figcaption><strong>Services</strong>Health of each Talos service, with restart for operators.</figcaption>
         </figure>
         <figure>
-          <img src="screenshots/logs.webp" width="540" height="1045" loading="lazy" alt="Kernel and service logs screen of Talosdev Mobile">
+          <img src="screenshots/logs.webp" width="540" height="1045" loading="lazy" alt="Kernel and service logs screen of Ichor for Talos Linux">
           <figcaption><strong>Kernel and service logs</strong>Colored by level, repeats folded, filter to warnings or errors.</figcaption>
         </figure>
         <figure>
-          <img src="screenshots/events.webp" width="540" height="1045" loading="lazy" alt="Events screen of Talosdev Mobile">
+          <img src="screenshots/events.webp" width="540" height="1045" loading="lazy" alt="Events screen of Ichor for Talos Linux">
           <figcaption><strong>Events</strong>Service changes and node conditions as they happen.</figcaption>
         </figure>
         <figure>
-          <img src="screenshots/graphs.webp" width="540" height="1045" loading="lazy" alt="Live graphs screen of Talosdev Mobile">
+          <img src="screenshots/graphs.webp" width="540" height="1045" loading="lazy" alt="Live graphs screen of Ichor for Talos Linux">
           <figcaption><strong>Live graphs</strong>CPU, memory, network, disk and load every two seconds.</figcaption>
         </figure>
         <figure>
-          <img src="screenshots/capture.webp" width="540" height="1045" loading="lazy" alt="Packet capture screen of Talosdev Mobile">
+          <img src="screenshots/capture.webp" width="540" height="1045" loading="lazy" alt="Packet capture screen of Ichor for Talos Linux">
           <figcaption><strong>Packet capture</strong>A live packet list, saved as a .pcap for Wireshark.</figcaption>
         </figure>
         <figure>
-          <img src="screenshots/upgrade.webp" width="540" height="1045" loading="lazy" alt="Talos upgrade screen of Talosdev Mobile">
+          <img src="screenshots/upgrade.webp" width="540" height="1045" loading="lazy" alt="Talos upgrade screen of Ichor for Talos Linux">
           <figcaption><strong>Talos upgrade</strong>Your installer image with the new version, after pre-flight checks.</figcaption>
         </figure>
       </div>
@@ -350,7 +431,7 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
         </li>
         <li>
           <h3>Install the app</h3>
-          <p>On Android, add it to <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.talosmobile%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Ftalosdev-mobile%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Talosdev%20Mobile%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D">Obtainium</a> to get updates, or download the APK for your phone (arm64-v8a for almost all of them) from the <a href="https://github.com/cyrinux/talosdev-mobile/releases/latest">latest release</a>.</p>
+          <p>On Android, add it to <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D">Obtainium</a> to get updates, or download the APK for your phone (arm64-v8a for almost all of them) from the <a href="https://github.com/cyrinux/ichor/releases/latest">latest release</a>.</p>
         </li>
         <li>
           <h3>Import the config</h3>
@@ -363,18 +444,57 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
         <div>
           <h3>Android</h3>
           <p>Android 8 and later, one APK per ABI. The app checks GitHub releases for updates and verifies each download's checksum and signing key before installing.</p>
-          <a class="button" href="https://github.com/cyrinux/talosdev-mobile/releases/latest">Latest release</a>
+          <a class="button" href="https://github.com/cyrinux/ichor/releases/latest">Latest release</a>
         </div>
         <div>
           <h3>iPhone</h3>
           <p>iOS 17 and later. Each release includes an unsigned IPA: install it with Sideloadly or AltStore, which sign it with your Apple ID.</p>
-          <a class="button" href="https://github.com/cyrinux/talosdev-mobile/releases/latest">Latest release</a>
+          <a class="button" href="https://github.com/cyrinux/ichor/releases/latest">Latest release</a>
         </div>
       </div>
     </section>
+    <section id="name" aria-labelledby="name-title">
+      <div class="myth">
+        <div>
+          <h2 id="name-title">Why Ichor</h2>
+          <blockquote>One vein kept the bronze giant alive. Keep an eye on yours.</blockquote>
+        </div>
+        <div>
+          <p>In Greek myth, Talos was the bronze giant who guarded Crete, walking its shores three times a day. A single vein ran from his neck to his ankle, carrying ichor, the golden blood of the gods. As long as the ichor flowed, Talos stood.</p>
+          <p>Your cluster has a pulse too: nodes ready, services healthy, etcd with a quorum. Ichor is the app you open to check it, from anywhere, and the one that taps you on the shoulder when it falters.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">Questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Is Ichor an official Sidero Labs app?</summary>
+          <p>No. Ichor is an independent, community-built client for Talos Linux. It uses Sidero's open-source Go client library, but it is not made, endorsed or supported by Sidero Labs.</p>
+        </details>
+        <details>
+          <summary>Do I need to install anything on the cluster?</summary>
+          <p>No. Ichor talks to the Talos API that every node already exposes, with a talosconfig, exactly like talosctl. There is no agent, operator or relay server.</p>
+        </details>
+        <details>
+          <summary>Where does my data go?</summary>
+          <p>Only to your nodes. The app checks GitHub for new releases, and nothing else leaves the phone unless you turn on AI diagnosis: it is off by default, shows you the exact report first, and sends it only when you tap Ask, with names and addresses hidden if you choose.</p>
+        </details>
+        <details>
+          <summary>Can it break my cluster?</summary>
+          <p>Not with a read-only certificate: the Talos API refuses every change. With an operator or admin certificate, risky actions ask you to type the node's hostname, and upgrades are refused when etcd would lose quorum.</p>
+        </details>
+        <details>
+          <summary>Does it handle several clusters?</summary>
+          <p>Yes. Import as many talosconfigs or contexts as you like, switch between them from the header, and give each cluster its own color so you always know where you are.</p>
+        </details>
+      </div>
+    </section>
+
     <section id="support" aria-labelledby="support-title">
       <h2 id="support-title">Support the project</h2>
-      <p class="intro">Talosdev Mobile is free and has no ads or tracking. If it saves you a trip to the laptop, you can help keep it going through <a href="https://github.com/sponsors/cyrinux">GitHub Sponsors</a> or in crypto.</p>
+      <p class="intro">Ichor is free and has no ads or tracking. If it saves you a trip to the laptop, you can help keep it going through <a href="https://github.com/sponsors/cyrinux">GitHub Sponsors</a> or in crypto.</p>
       <div class="donate">
         <div>
           <h3>Bitcoin</h3>
@@ -400,7 +520,7 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
 
   <footer>
     <div class="links">
-      <a href="https://github.com/cyrinux/talosdev-mobile">Source on GitHub</a>
+      <a href="https://github.com/cyrinux/ichor">Source on GitHub</a>
       <a href="https://www.talos.dev">Talos Linux</a>
       <a href="#support">Support the project</a>
       <a href="privacy.html">Privacy policy</a>

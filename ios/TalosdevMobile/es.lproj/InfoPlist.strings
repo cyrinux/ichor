@@ -1,3 +1,0 @@
-/* Permission prompts (keys of Info.plist, see project.yml). */
-"NSCameraUsageDescription" = "Escanea el código QR de un talosconfig para importarlo.";
-"NSFaceIDUsageDescription" = "Desbloquear Talosdev Mobile y confirmar el reinicio o el apagado.";

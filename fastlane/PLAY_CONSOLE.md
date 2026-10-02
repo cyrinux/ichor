@@ -1,6 +1,6 @@
 # Google Play Console: listing and policy answers
 
-Package `name.levis.talosmobile`. The store listing itself (texts in six languages, icon,
+Package `name.levis.ichor`. The store listing itself (texts in six languages, icon,
 feature graphic, screenshots) lives in `fastlane/metadata/android/`, in the layout
 `fastlane supply` and IzzyOnDroid read. Regenerate the graphics with `scripts/play-assets.sh`.
 
@@ -24,7 +24,7 @@ CI builds it on every push (artifact `android-play`, with its R8 mapping). On a 
 
 ## One-time setup
 
-1. **Create the app** in the Play Console (App name `Talosdev Mobile`, App, Free) and fill in
+1. **Create the app** in the Play Console (App name `Ichor for Talos Linux`, App, Free) and fill in
    the forms below.
 2. **Play App Signing: choose "Use existing app signing key"** and upload the release key
    (Play's PEPK tool encrypts it). Play installs and GitHub/Obtainium installs then share one
@@ -32,7 +32,7 @@ CI builds it on every push (artifact `android-play`, with its R8 mapping). On a 
    key, they could not. The same key also serves as the upload key, which the CI already
    signs with.
 3. **Upload the first AAB by hand** (`android-play` artifact of the tag's run, or
-   `TALOS_KEYSTORE=… just build-play`): the API cannot create the first release.
+   `ICHOR_KEYSTORE=… just build-play`): the API cannot create the first release.
 4. **Service account for CI uploads:** Google Cloud → create a service account and a JSON
    key; Play Console → Users and permissions → invite its email with *Release to testing
    tracks* and *Manage store presence* for this app. Then:
@@ -46,7 +46,7 @@ CI builds it on every push (artifact `android-play`, with its R8 mapping). On a 
 
 | Field | Value |
 |---|---|
-| App name | `Talosdev Mobile` |
+| App name | `Ichor for Talos Linux` |
 | Short / full description | `fastlane/metadata/android/<locale>/` |
 | App icon | `images/icon.png` (512×512) |
 | Feature graphic | `images/featureGraphic.png` (1024×500) |
@@ -67,14 +67,14 @@ them in. Locales without their own images use the en-US ones.
 | Category | Tools |
 | Tags | Developer tools, Monitoring, Network tools (pick the closest offered) |
 | Contact email | required, shown publicly: use a project address rather than a personal one |
-| Website | `https://cyrinux.github.io/talosdev-mobile/` |
-| Privacy policy | `https://cyrinux.github.io/talosdev-mobile/privacy.html` |
+| Website | `https://cyrinux.github.io/ichor/` |
+| Privacy policy | `https://cyrinux.github.io/ichor/privacy.html` |
 
 ## App content
 
 ### Privacy policy
 
-`https://cyrinux.github.io/talosdev-mobile/privacy.html` (from `docs/privacy.html`, published
+`https://cyrinux.github.io/ichor/privacy.html` (from `docs/privacy.html`, published
 with the GitHub Pages site).
 
 ### Ads
@@ -97,7 +97,7 @@ Options, best first:
 
 Instructions text (for option 1):
 
-> Talosdev Mobile is a client for Talos Linux server clusters and has no account. To review
+> Ichor is a client for Talos Linux server clusters and has no account. To review
 > it: open the app, choose "Paste", paste the configuration from <URL>, and tap Import.
 > Alternatively scan the QR code at <URL>. The configuration is read-only (os:reader) and
 > connects to a demonstration cluster; reboot, shutdown and other operator actions are
@@ -193,7 +193,7 @@ no foreground service declaration.
   testing or production in the Console. By hand, the same upload is:
 
 ```sh
-fastlane supply --package_name name.levis.talosmobile --json_key play-service-account.json \
+fastlane supply --package_name name.levis.ichor --json_key play-service-account.json \
   --aab app/build/outputs/bundle/play/app-play.aab --track internal --release_status draft \
   --metadata_path fastlane/metadata/android
 ```

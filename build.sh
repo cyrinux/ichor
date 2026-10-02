@@ -10,7 +10,7 @@
 set -euo pipefail
 
 VARIANT="${1:-debug}"
-IMAGE="${IMAGE:-localhost/talosdev-apk-builder:latest}"
+IMAGE="${IMAGE:-localhost/ichor-builder:latest}"
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 case "$VARIANT" in
@@ -60,7 +60,7 @@ build_inside() {
   set -a
   eval "$("$ROOT/scripts/version.sh" --env)"
   set +a
-  echo "version $TALOSDEV_MOBILE_VERSION (code $TALOSDEV_MOBILE_BUILD_NUMBER)"
+  echo "version $ICHOR_VERSION (code $ICHOR_BUILD_NUMBER)"
   # Release notes bundled in the app, for the "what's new" shown after an update.
   python3 "$ROOT/scripts/changelog.py" --limit 30 -o "$ROOT/app/src/main/assets/changelog.json"
 
@@ -124,7 +124,7 @@ docker run --rm --platform linux/amd64 \
   -u "$(id -u):$(id -g)" -e HOME=/tmp/home -e IN_CONTAINER=1 \
   -e GOMODCACHE=/cache/gomod -e GOCACHE=/cache/gobuild -e GRADLE_USER_HOME=/cache/gradle \
   -e GOFLAGS=-buildvcs=false \
-  -e TALOS_KEYSTORE -e TALOS_KEYSTORE_PASSWORD -e TALOS_KEY_ALIAS -e TALOS_KEY_PASSWORD \
-  -e TALOSDEV_MOBILE_VERSION -e TALOSDEV_MOBILE_BUILD_NUMBER \
+  -e ICHOR_KEYSTORE -e ICHOR_KEYSTORE_PASSWORD -e ICHOR_KEY_ALIAS -e ICHOR_KEY_PASSWORD \
+  -e ICHOR_VERSION -e ICHOR_BUILD_NUMBER \
   -v "$ROOT:/src" -v "$ROOT/.cache:/cache" \
   "$IMAGE" bash -c 'mkdir -p /tmp/home && /src/build.sh '"$VARIANT"

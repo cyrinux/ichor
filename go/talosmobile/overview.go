@@ -12,6 +12,7 @@ import (
 	"github.com/siderolabs/talos/pkg/machinery/resources/config"
 	"github.com/siderolabs/talos/pkg/machinery/resources/network"
 	"github.com/siderolabs/talos/pkg/machinery/resources/runtime"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type clusterOverview struct {
@@ -31,6 +32,10 @@ type nodeOverview struct {
 	Stage           string           `json:"stage"`
 	Ready           bool             `json:"ready"`
 	UnmetConditions []unmetCondition `json:"unmetConditions"`
+	// Capacity for the cluster summary; 0 when the node did not say.
+	CPUCount     int    `json:"cpuCount"`
+	MemTotal     uint64 `json:"memTotal"`     // bytes
+	MemAvailable uint64 `json:"memAvailable"` // bytes
 }
 
 type unmetCondition struct {
@@ -49,6 +54,8 @@ type nodeProbe struct {
 	hostname    string
 	domain      string
 	hostnameErr error
+	memory      *machineapi.Memory   // nil when unknown
+	cpu         *machineapi.CPUsInfo // nil when unknown
 }
 
 // ClusterOverview queries every node of the context in parallel and returns a JSON clusterOverview.
@@ -124,6 +131,15 @@ func probeNode(ctx context.Context, c *client.Client, node string) nodeProbe {
 		p.hostname, p.domain = hs.TypedSpec().Hostname, hs.TypedSpec().Domainname
 	}
 
+	// Best effort: a node that cannot say its size is still reported, without it.
+	if mem, err := c.Memory(nodeCtx); err == nil {
+		p.memory = first(mem.GetMessages())
+	}
+
+	if cpu, err := c.MachineClient.CPUInfo(nodeCtx, &emptypb.Empty{}); err == nil {
+		p.cpu = first(cpu.GetMessages())
+	}
+
 	return p
 }
 
@@ -153,6 +169,12 @@ func buildNodeOverview(node string, p nodeProbe) nodeOverview {
 	if p.hostnameErr == nil && p.hostname != "" {
 		out.Hostname = p.hostname
 	}
+
+	const kib = 1024
+
+	out.CPUCount = len(p.cpu.GetCpuInfo())
+	out.MemTotal = p.memory.GetMeminfo().GetMemtotal() * kib
+	out.MemAvailable = p.memory.GetMeminfo().GetMemavailable() * kib
 
 	var errs []string
 
