@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -34,6 +35,8 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 
 /** What each Talos role unlocks in this app (rules from Talos v1.14). */
 private enum class PhoneRole(@StringRes val label: Int, val role: String, @StringRes val unlocks: Int) {
@@ -49,6 +52,10 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        // The platform default leaves wide side margins; the role selector
+        // and the commands need the room.
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
         title = { Text(stringResource(R.string.help_title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -62,7 +69,17 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
                             selected = r == role,
                             onClick = { role = r },
                             shape = SegmentedButtonDefaults.itemShape(i, PhoneRole.entries.size),
-                        ) { Text(stringResource(r.label)) }
+                            // The fill already marks the selection; a checkmark
+                            // would squeeze the label onto two lines.
+                            icon = {},
+                        ) {
+                            Text(
+                                stringResource(r.label),
+                                maxLines = 1,
+                                softWrap = false,
+                                autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = MaterialTheme.typography.labelLarge.fontSize),
+                            )
+                        }
                     }
                 }
                 Text(stringResource(role.unlocks), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
