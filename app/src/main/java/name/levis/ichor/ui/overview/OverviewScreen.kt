@@ -73,6 +73,7 @@ import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.util.daysUntil
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.clusterSummary
+import name.levis.ichor.model.outage
 import name.levis.ichor.model.health
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
@@ -83,7 +84,9 @@ import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.NodeHealthPill
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.userMessage
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -137,10 +140,38 @@ fun OverviewScreen(
         timeVm.refresh(reset = true)
     }
 
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    // No node answered (VPN off, another network): one notice instead of a list of red nodes.
+    val outage = (state as? UiState.Loaded)?.data?.outage
+    var showNodesAnyway by remember(config?.activeContext) { mutableStateOf(false) }
+    LaunchedEffect(outage != null, config?.activeContext, invalidations) {
+        if (outage == null) return@LaunchedEffect
+        showNodesAnyway = false
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                delay(UNREACHABLE_RETRY_SECONDS.seconds)
+                if ((vm.state.value as? UiState.Loaded)?.refreshing != true) vm.refresh()
+            }
+        }
+    }
+    // A new network (VPN connected, back on Wi-Fi) is the likely fix: try again at once.
+    // Only while on screen; a change made in the background is caught up on return.
+    LaunchedEffect(Unit) {
+        var seen = app.vpn.networkChanges.value
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            app.vpn.networkChanges.collect { change ->
+                if (change == seen) return@collect
+                seen = change
+                val current = vm.state.value
+                if (current is UiState.Failed || (current as? UiState.Loaded)?.data?.outage != null) vm.refresh()
+            }
+        }
+    }
+
     val liveEnabled by app.uiPreferences.liveClusterStats.collectAsStateWithLifecycle()
     val liveState by liveVm.state.collectAsStateWithLifecycle()
-    val loaded = state is UiState.Loaded
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    // Live stats and discovery only make sense once a node answers.
+    val loaded = state is UiState.Loaded && outage == null
     // Live CPU and memory only while the overview is on screen, once it loaded, and if not turned off.
     LaunchedEffect(liveEnabled, loaded, config?.activeContext, invalidations) {
         if (!liveEnabled) liveVm.clear()
@@ -258,7 +289,13 @@ fun OverviewScreen(
                 },
                 modifier = Modifier.padding(padding).fillMaxSize(),
             ) {
-                NodeList(
+                val down = s.data.outage
+                if (down != null && !showNodesAnyway) ClusterUnreachableBox(
+                    outage = down,
+                    endpoints = config?.activeSummary?.endpoints.orEmpty(),
+                    onRetry = vm::refresh,
+                    onShowNodes = { showNodesAnyway = true },
+                ) else NodeList(
                     overview = s.data,
                     clusterName = config?.activeSummary?.let(clusterLabels::of),
                     fingerprint = config?.activeSummary?.fingerprint,

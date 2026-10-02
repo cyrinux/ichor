@@ -80,6 +80,16 @@
     <string name="overview_status_healthy">Gesund</string>
     <string name="overview_status_degraded">Beeinträchtigt</string>
     <string name="overview_status_down">Nicht erreichbar</string>
+    <string name="overview_unreachable_title">Cluster nicht erreichbar</string>
+    <string name="overview_unreachable_network">Kein Node hat geantwortet. Dein Telefon ist wahrscheinlich nicht im Netzwerk des Clusters: Prüfe, ob dein VPN verbunden ist oder ob du im richtigen WLAN bist.</string>
+    <string name="overview_unreachable_credentials">Der Cluster hat geantwortet, aber diese talosconfig abgelehnt: Zertifikat, CA oder Rolle sind möglicherweise falsch oder abgelaufen.</string>
+    <string name="overview_unreachable_other">Kein Node hat geantwortet. Details siehe unten.</string>
+    <string name="overview_unreachable_endpoints">Endpunkte: %1$s</string>
+    <string name="overview_unreachable_auto_retry">Neuer Versuch alle %1$d s und sobald sich das Netzwerk ändert.</string>
+    <plurals name="overview_unreachable_show_nodes">
+        <item quantity="one">%d Node anzeigen</item>
+        <item quantity="other">%d Nodes anzeigen</item>
+    </plurals>
     <plurals name="overview_summary_nodes">
         <item quantity="one">%d Knoten</item>
         <item quantity="other">%d Knoten</item>

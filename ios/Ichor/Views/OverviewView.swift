@@ -16,93 +16,106 @@ struct OverviewView: View {
     /// Cluster members the talosconfig context misses (cluster discovery), offered to add.
     @State private var discovered: [DiscoveredNode] = []
     @State private var showDiscovered = false
+    /// Show the nodes even though none answered (the outage notice replaces them otherwise).
+    @State private var showNodesAnyway = false
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
-            List {
-                if model.activeSummary?.demo == true {
+            // No node answered (VPN off, another network): one notice instead of a list of red nodes.
+            if let outage = overview.outage, !showNodesAnyway {
+                ClusterUnreachableView(
+                    outage: outage,
+                    endpoints: model.activeSummary?.endpoints ?? [],
+                    retry: load,
+                    showNodes: { showNodesAnyway = true }
+                )
+                .themedBackground()
+            } else {
+                List {
+                    if model.activeSummary?.demo == true {
+                        Section {
+                            Text("Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.")
+                                .font(.callout).foregroundStyle(.secondary)
+                        }
+                    }
+                    if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
+                        Section { CertExpiryBanner(notAfter: ctx.certNotAfter) }
+                    }
+                    if !discovered.isEmpty {
+                        Section { DiscoveredNodesBanner(count: discovered.count) { showDiscovered = true } }
+                    }
+                    if let update { TalosUpdateSection(info: update, nodes: overview.nodes) }
+                    if support.visible { Section { SupportCard(prompt: support) } }
                     Section {
-                        Text("Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.")
-                            .font(.callout).foregroundStyle(.secondary)
+                        NavigationLink(value: Route.insights) { Label("Cluster insights", systemImage: "magnifyingglass") }
                     }
-                }
-                if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
-                    Section { CertExpiryBanner(notAfter: ctx.certNotAfter) }
-                }
-                if !discovered.isEmpty {
-                    Section { DiscoveredNodesBanner(count: discovered.count) { showDiscovered = true } }
-                }
-                if let update { TalosUpdateSection(info: update, nodes: overview.nodes) }
-                if support.visible { Section { SupportCard(prompt: support) } }
-                Section {
-                    NavigationLink(value: Route.insights) { Label("Cluster insights", systemImage: "magnifyingglass") }
-                }
-                Section {
-                    Summary(nodes: overview.nodes)
-                } header: {
-                    if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
-                }
-                Section {
-                    ForEach(sorted(overview.nodes)) { node in
-                        let ref = NodeRef(address: node.node, hostname: node.hostname, role: node.role)
-                        Group {
-                            if node.reachable {
-                                NavigationLink(value: Route.node(ref)) { NodeRow(node: node) }
-                            } else {
-                                NodeRow(node: node)
-                            }
-                        }
-                        // Swipe right: live graphs. Swipe left: logs, shell, reboot (which only opens
-                        // its confirmation). Long press: everything, plus Copy IP.
-                        .swipeActions(edge: .leading) {
-                            if node.reachable {
-                                Button { path.append(.nodeLive(ref)) } label: { Label("Live", systemImage: "chart.xyaxis.line") }
-                                    .tint(.blue)
-                            }
-                        }
-                        .swipeActions(edge: .trailing) {
-                            if node.reachable {
-                                if model.allows(.power) {
-                                    Button { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot", systemImage: "power") }
-                                        .tint(.red)
+                    Section {
+                        Summary(nodes: overview.nodes)
+                    } header: {
+                        if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
+                    }
+                    Section {
+                        ForEach(sorted(overview.nodes)) { node in
+                            let ref = NodeRef(address: node.node, hostname: node.hostname, role: node.role)
+                            Group {
+                                if node.reachable {
+                                    NavigationLink(value: Route.node(ref)) { NodeRow(node: node) }
+                                } else {
+                                    NodeRow(node: node)
                                 }
-                                if model.allows(.debugShell) {
-                                    Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
-                                        Label("Shell", systemImage: "apple.terminal")
+                            }
+                            // Swipe right: live graphs. Swipe left: logs, shell, reboot (which only opens
+                            // its confirmation). Long press: everything, plus Copy IP.
+                            .swipeActions(edge: .leading) {
+                                if node.reachable {
+                                    Button { path.append(.nodeLive(ref)) } label: { Label("Live", systemImage: "chart.xyaxis.line") }
+                                        .tint(.blue)
+                                }
+                            }
+                            .swipeActions(edge: .trailing) {
+                                if node.reachable {
+                                    if model.allows(.power) {
+                                        Button { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot", systemImage: "power") }
+                                            .tint(.red)
                                     }
-                                    .tint(.indigo)
-                                }
-                                Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
-                                    Label("Logs", systemImage: "text.alignleft")
-                                }
-                            }
-                        }
-                        .contextMenu {
-                            if node.reachable {
-                                Button { path.append(.nodeLive(ref)) } label: { Label("Live graphs", systemImage: "chart.xyaxis.line") }
-                                Button { path.append(.node(ref)) } label: { Label("Services and logs", systemImage: "list.bullet") }
-                                Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
-                                    Label("Kernel log", systemImage: "text.alignleft")
-                                }
-                                if model.allows(.debugShell) {
-                                    Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
-                                        Label("Debug shell", systemImage: "apple.terminal")
+                                    if model.allows(.debugShell) {
+                                        Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
+                                            Label("Shell", systemImage: "apple.terminal")
+                                        }
+                                        .tint(.indigo)
+                                    }
+                                    Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
+                                        Label("Logs", systemImage: "text.alignleft")
                                     }
                                 }
-                                if model.allows(.power) {
-                                    Button(role: .destructive) { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot…", systemImage: "power") }
-                                    Button(role: .destructive) { path.append(.nodePower(ref, .shutdown)) } label: { Label("Shut down…", systemImage: "power") }
-                                }
                             }
-                            Button { UIPasteboard.general.string = node.node } label: { Label("Copy IP", systemImage: "doc.on.doc") }
+                            .contextMenu {
+                                if node.reachable {
+                                    Button { path.append(.nodeLive(ref)) } label: { Label("Live graphs", systemImage: "chart.xyaxis.line") }
+                                    Button { path.append(.node(ref)) } label: { Label("Services and logs", systemImage: "list.bullet") }
+                                    Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
+                                        Label("Kernel log", systemImage: "text.alignleft")
+                                    }
+                                    if model.allows(.debugShell) {
+                                        Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
+                                            Label("Debug shell", systemImage: "apple.terminal")
+                                        }
+                                    }
+                                    if model.allows(.power) {
+                                        Button(role: .destructive) { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot…", systemImage: "power") }
+                                        Button(role: .destructive) { path.append(.nodePower(ref, .shutdown)) } label: { Label("Shut down…", systemImage: "power") }
+                                    }
+                                }
+                                Button { UIPasteboard.general.string = node.node } label: { Label("Copy IP", systemImage: "doc.on.doc") }
+                            }
                         }
                     }
+                    // Re-checked with every overview refresh (the load time is the task id).
+                    TimeDriftSection(hostnames: hostnames, refreshID: loadedAt)
                 }
-                // Re-checked with every overview refresh (the load time is the task id).
-                TimeDriftSection(hostnames: hostnames, refreshID: loadedAt)
+                .refreshable { await load() }
+                .themedBackground()
             }
-            .refreshable { await load() }
-            .themedBackground()
         }
         .navigationTitle(model.activeLabel)
         // Shown by the title once it is inline (scrolled); the bar below is always there.
@@ -154,6 +167,25 @@ struct OverviewView: View {
         }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
+        // Nothing answered: try again on a timer, not only on a pull to refresh.
+        // Keyed on the cluster only: a retry that succeeds must not cancel its own load().
+        .task(id: loadID) {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(unreachableRetrySeconds))
+                if Task.isCancelled { return }
+                if outage != nil { await load() }
+            }
+        }
+        // A new outage shows the notice again, even if the nodes were shown for the last one.
+        .onChange(of: outage != nil) { _, down in
+            if down { showNodesAnyway = false }
+        }
+        // A new network (VPN connected, back on Wi-Fi) is the likely fix: try again at once.
+        .task {
+            for await _ in NetworkChanges.stream() {
+                if case .failed = state { await load() } else if outage != nil { await load() }
+            }
+        }
         .onChange(of: model.dataGeneration) {
             state = .loading
             discovered = []
@@ -198,6 +230,12 @@ struct OverviewView: View {
         return Dictionary(overview.nodes.map { ($0.node, $0.hostname) }, uniquingKeysWith: { first, _ in first })
     }
 
+    /// No node answered in the loaded overview.
+    private var outage: ClusterOutage? {
+        if case .loaded(let overview, _) = state { return overview.outage }
+        return nil
+    }
+
     private var loadedAt: Date? {
         if case .loaded(_, let at) = state { return at }
         return nil
@@ -222,7 +260,8 @@ struct OverviewView: View {
             update = info
             // What each node's Talos version can do, cached per version: gates menus and screens.
             await model.loadFeatures(of: overview.nodes)
-            await discover(with: client, id: id)
+            // Discovery asks the nodes too: pointless while none answers.
+            if overview.outage == nil { await discover(with: client, id: id) }
         }
     }
 
