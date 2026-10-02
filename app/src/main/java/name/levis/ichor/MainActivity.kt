@@ -51,6 +51,16 @@ class MainActivity : FragmentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Edge-to-edge from the first frame (and what Play's check looks for): system-theme
+        // bars until the composition below restyles them for the app theme.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // No grey scrim behind 3-button navigation: true black stays black.
+            window.isNavigationBarContrastEnforced = false
+        }
         super.onCreate(savedInstanceState)
         val app = application as TalosApp
 
@@ -87,10 +97,6 @@ class MainActivity : FragmentActivity() {
                     SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
                 }
                 enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    // No grey scrim behind 3-button navigation: true black stays black.
-                    window.isNavigationBarContrastEnforced = false
-                }
                 onDispose {}
             }
             // The palette follows the cluster on screen (its main color, see ClusterColors).
