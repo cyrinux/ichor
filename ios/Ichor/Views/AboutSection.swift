@@ -25,7 +25,10 @@ struct AboutSection: View {
         } header: {
             Text("About")
         } footer: {
-            Text("Not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.")
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.")
+                Text("App icons: Dashboard Icons (Apache 2.0) and selfh.st/icons (CC BY 4.0). App names and logos are trademarks of their owners.")
+            }
         }
         .sheet(item: $donation) { coin in DonationSheet(coin: coin) }
     }

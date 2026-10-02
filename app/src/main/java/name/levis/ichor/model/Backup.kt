@@ -36,6 +36,8 @@ data class BackupSettings(
     /** BCP-47 language tag, "" for the system's. Android only. */
     val language: String? = null,
     val liveClusterStats: Boolean? = null,
+    /** Download app icons the app does not bundle (a third-party request, off by default). */
+    val remoteAppIcons: Boolean? = null,
     val privacyMask: Boolean? = null,
     val privacyMaskWords: String? = null,
     val monitorAlerts: Boolean? = null,

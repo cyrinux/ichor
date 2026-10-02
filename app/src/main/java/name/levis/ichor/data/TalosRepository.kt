@@ -25,6 +25,7 @@ import name.levis.ichor.model.TalosEvent
 import name.levis.ichor.model.ClusterTime
 import name.levis.ichor.model.ConnectionInfo
 import name.levis.ichor.model.ImageInfo
+import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.NodeHardware
 import name.levis.ichor.model.NodeNetwork
 import name.levis.ichor.model.NodeTime
@@ -356,6 +357,11 @@ class TalosRepository(private val configs: ConfigRepository) {
         call { cfg, ctx -> TalosJson.decodeFromString(ListSerializer(ImageInfo.serializer()), Talosmobile.nodeImages(cfg, ctx, node)) }
     }
 
+    /** The apps running in the cluster. One container listing per node: on demand, never polled. */
+    suspend fun inventory(): Inventory = remember(INVENTORY) {
+        call { cfg, ctx -> TalosJson.decodeFromString(Inventory.serializer(), Talosmobile.clusterInventory(cfg, ctx)) }
+    }
+
     /**
      * A new single-context talosconfig for the active context with [roles] (comma-separated),
      * valid [ttlHours] (os:admin). A credential: never cached, logged or written by this class.
@@ -467,6 +473,7 @@ class TalosRepository(private val configs: ConfigRepository) {
 const val OVERVIEW = "overview"
 const val ETCD = "etcd"
 const val KUBESPAN = "kubespan"
+const val INVENTORY = "inventory"
 fun servicesKey(node: String) = "services|$node"
 fun resourcesKey(node: String) = "resources|$node"
 const val CLUSTER_TIME = "clustertime"

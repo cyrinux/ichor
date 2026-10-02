@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
+import name.levis.ichor.ui.apps.AppsScreen
 import name.levis.ichor.ui.capture.CaptureFileScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
 import name.levis.ichor.ui.changelog.WhatsNewHost
@@ -60,6 +61,7 @@ private object Routes {
     const val SUPPORT_BUNDLE = "supportbundle"
     const val CHANGELOG = "changelog"
     const val INSIGHTS = "insights"
+    const val APPS = "apps"
 
     fun storage(addr: String, host: String) = "storage?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
@@ -208,6 +210,7 @@ fun Navigation(
                 onHealth = { nav.navigate(Routes.HEALTH) },
                 onEvents = { nav.navigate(Routes.events()) },
                 onInsights = { nav.navigate(Routes.INSIGHTS) },
+                onApps = { nav.navigate(Routes.APPS) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
                 onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
@@ -401,6 +404,13 @@ fun Navigation(
                 node = addr,
                 hostname = addr?.let { entry.arguments?.getString("host")?.ifEmpty { null } ?: it },
                 onBack = { nav.popBackStack() },
+            )
+        }
+        composable(Routes.APPS) {
+            AppsScreen(
+                onBack = { nav.popBackStack() },
+                // A pod's node, on its Pods tab.
+                onNode = { addr, host, role -> nav.navigate(Routes.node(addr, host, role, tab = 4)) },
             )
         }
         composable(Routes.KUBESPAN) { KubeSpanScreen(onBack = { nav.popBackStack() }) }

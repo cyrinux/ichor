@@ -338,7 +338,7 @@
     <string name="settings_allow_screenshots_desc">Також показує вміст застосунку в нещодавніх застосунках.</string>
     <string name="settings_section_privacy">Приватність</string>
     <string name="settings_screenshot_mode">Режим знімків екрана</string>
-    <string name="settings_screenshot_mode_desc">Приховує IP-адреси та імена вузлів, напр. для знімків екрана чи демонстрації екрана</string>
+    <string name="settings_screenshot_mode_desc">Приховує IP-адреси, імена вузлів і логотипи застосунків, напр. для знімків екрана чи демонстрації екрана</string>
     <string name="settings_screenshot_mode_words">Також приховувати ці слова</string>
     <string name="settings_screenshot_mode_words_hint">Через кому, напр. домен або назва клієнта</string>
     <string name="settings_kube_section">Kubernetes</string>
@@ -1120,4 +1120,85 @@
     <string name="backup_err_unsupported">Цю резервну копію створено новішою версією Ichor. Оновіть застосунок, щоб відновити її.</string>
     <string name="backup_err_invalid">Резервну копію відкрито, але її вміст недійсний.</string>
     <string name="backup_err_open">Не вдалося прочитати або записати файл.</string>
+    <!-- Apps inventory -->
+    <string name="apps_title">Застосунки</string>
+    <string name="apps_search">Пошук застосунків, просторів імен, образів</string>
+    <string name="apps_filter_all">Усі</string>
+    <string name="apps_filter_attention">Увага</string>
+    <string name="apps_empty">Поки що жоден застосунок не працює. Поди з’являться тут, щойно Kubernetes запустить навантаження.</string>
+    <string name="apps_no_match">Нічого не відповідає «%1$s».</string>
+    <string name="apps_no_filter_match">У цьому фільтрі немає застосунків.</string>
+    <string name="apps_section_system">Kubernetes і Talos</string>
+    <string name="apps_section_unknown">Не розпізнано</string>
+    <string name="apps_unpinned">Образ не закріплено</string>
+    <string name="apps_stat_containers">Контейнери</string>
+    <string name="apps_stat_nodes">Вузли</string>
+    <string name="apps_stat_memory">Пам’ять</string>
+    <string name="apps_detail_images">Образи</string>
+    <string name="apps_detail_pods">Поди</string>
+    <string name="settings_remote_icons">Завантажувати відсутні значки застосунків</string>
+    <string name="settings_remote_icons_desc">Близько 250 поширених застосунків мають вбудовані значки. Якщо увімкнено, значки інших розпізнаних застосунків завантажуються з jsDelivr (Dashboard Icons). Надсилається лише публічна назва значка, ніколи — назви ваших образів чи дані кластера.</string>
+    <string name="about_icon_credits">Значки застосунків: Dashboard Icons (Apache 2.0) і selfh.st/icons (CC BY 4.0). Назви й логотипи застосунків є торговими марками їхніх власників.</string>
+    <string name="apps_category_system">Система</string>
+    <string name="apps_category_networking">Мережа</string>
+    <string name="apps_category_storage">Сховище</string>
+    <string name="apps_category_observability">Спостережуваність</string>
+    <string name="apps_category_security">Безпека</string>
+    <string name="apps_category_database">Бази даних</string>
+    <string name="apps_category_messaging">Обмін повідомленнями</string>
+    <string name="apps_category_devops">DevOps</string>
+    <string name="apps_category_media">Медіа</string>
+    <string name="apps_category_home">Розумний дім</string>
+    <string name="apps_category_productivity">Продуктивність</string>
+    <string name="apps_category_ai">ШІ</string>
+    <string name="apps_category_web">Веб</string>
+    <string name="apps_category_other">Інше</string>
+    <plurals name="apps_running">
+        <item quantity="one">%1$d працює</item>
+        <item quantity="few">%1$d працюють</item>
+        <item quantity="many">%1$d працюють</item>
+        <item quantity="other">%1$d працює</item>
+    </plurals>
+    <plurals name="apps_containers">
+        <item quantity="one">%1$d контейнер</item>
+        <item quantity="few">%1$d контейнери</item>
+        <item quantity="many">%1$d контейнерів</item>
+        <item quantity="other">%1$d контейнера</item>
+    </plurals>
+    <plurals name="apps_count">
+        <item quantity="one">%1$d застосунок</item>
+        <item quantity="few">%1$d застосунки</item>
+        <item quantity="many">%1$d застосунків</item>
+        <item quantity="other">%1$d застосунку</item>
+    </plurals>
+    <plurals name="apps_nodes">
+        <item quantity="one">%1$d вузол</item>
+        <item quantity="few">%1$d вузли</item>
+        <item quantity="many">%1$d вузлів</item>
+        <item quantity="other">%1$d вузла</item>
+    </plurals>
+    <plurals name="apps_nodes_partial">
+        <item quantity="one">%1$d з %2$d вузла</item>
+        <item quantity="few">%1$d з %2$d вузлів</item>
+        <item quantity="many">%1$d з %2$d вузлів</item>
+        <item quantity="other">%1$d з %2$d вузла</item>
+    </plurals>
+    <plurals name="apps_attention">
+        <item quantity="one">%1$d потребує уваги</item>
+        <item quantity="few">%1$d потребують уваги</item>
+        <item quantity="many">%1$d потребують уваги</item>
+        <item quantity="other">%1$d потребує уваги</item>
+    </plurals>
+    <plurals name="apps_versions">
+        <item quantity="one">%1$d версія</item>
+        <item quantity="few">%1$d версії</item>
+        <item quantity="many">%1$d версій</item>
+        <item quantity="other">%1$d версії</item>
+    </plurals>
+    <plurals name="apps_versions_running">
+        <item quantity="one">Працює %1$d версія</item>
+        <item quantity="few">Працюють %1$d версії</item>
+        <item quantity="many">Працює %1$d версій</item>
+        <item quantity="other">Працює %1$d версії</item>
+    </plurals>
 </resources>

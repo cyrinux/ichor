@@ -46,12 +46,18 @@ public struct BackupSettings: Codable, Equatable, Sendable {
     public var monitorAlerts: Bool?
     /// Android only (iOS schedules background checks itself).
     public var monitorIntervalMinutes: Int?
+    /// Download icons the app does not bundle (Apps inventory).
+    public var remoteAppIcons: Bool?
 
-    public init(themeMode: String? = nil, privacyMask: Bool? = nil, privacyMaskWords: String? = nil, monitorAlerts: Bool? = nil) {
+    public init(
+        themeMode: String? = nil, privacyMask: Bool? = nil, privacyMaskWords: String? = nil, monitorAlerts: Bool? = nil,
+        remoteAppIcons: Bool? = nil
+    ) {
         self.themeMode = themeMode
         self.privacyMask = privacyMask
         self.privacyMaskWords = privacyMaskWords
         self.monitorAlerts = monitorAlerts
+        self.remoteAppIcons = remoteAppIcons
     }
 }
 

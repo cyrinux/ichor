@@ -54,6 +54,7 @@ struct SettingsView: View {
                 Text("Face ID / Touch ID, or the device passcode, to open the app and before reboot or shutdown. Also hides the app in the app switcher.")
             }
             PrivacySection()
+            AppIconsSection()
             MonitoringSection()
             AISection()
             if model.allows(.kubeconfig) { KubeconfigSection() }
@@ -137,6 +138,21 @@ struct SettingsView: View {
     }
 }
 
+/// Icons of the Apps inventory: off, only the bundled ones are shown (a third-party request).
+private struct AppIconsSection: View {
+    @AppStorage(AppIconSettings.remoteKey) private var remoteIcons = false
+
+    var body: some View {
+        Section {
+            Toggle("Download missing app icons", isOn: $remoteIcons)
+        } header: {
+            Text("Apps")
+        } footer: {
+            Text("About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details.")
+        }
+    }
+}
+
 /// Screenshot mode: Go masks IPs, node and context names, plus the extra words. The words
 /// apply when the field is submitted or the screen closes, not on every keystroke.
 private struct PrivacySection: View {
@@ -162,7 +178,7 @@ private struct PrivacySection: View {
         } header: {
             Text("Privacy")
         } footer: {
-            Text("Hide IP addresses and node names, e.g. for screenshots or screen sharing")
+            Text("Hide IP addresses, node names and app logos, e.g. for screenshots or screen sharing")
         }
         .onAppear { words = model.privacyWords }
         .onChange(of: editingWords) { _, editing in if !editing { commit() } }

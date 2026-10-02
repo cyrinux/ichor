@@ -308,6 +308,12 @@ struct TalosClient: Sendable {
         try await Self.json { [config, context] in TalosmobileNodeImages(config, context, node, $0) }
     }
 
+    /// The apps running in the cluster, from every node's containers (os:reader). One container
+    /// listing per node: called when a screen opens or refreshes, not on a poll.
+    func inventory() async throws -> ClusterInventory {
+        try await Self.json { [config, context] in TalosmobileClusterInventory(config, context, $0) }
+    }
+
     func etcd() async throws -> EtcdOverview {
         try await Self.json { [config, context] in TalosmobileEtcdStatus(config, context, $0) }
     }

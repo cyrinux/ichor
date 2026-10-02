@@ -302,7 +302,7 @@
     <string name="settings_allow_screenshots_desc">También muestra el contenido de la aplicación en las aplicaciones recientes.</string>
     <string name="settings_section_privacy">Privacidad</string>
     <string name="settings_screenshot_mode">Modo captura de pantalla</string>
-    <string name="settings_screenshot_mode_desc">Oculta las direcciones IP y los nombres de los nodos, p. ej. para capturas o al compartir pantalla</string>
+    <string name="settings_screenshot_mode_desc">Oculta las direcciones IP, los nombres de los nodos y los logotipos de las aplicaciones, p. ej. para capturas o al compartir pantalla</string>
     <string name="settings_screenshot_mode_words">Ocultar también estas palabras</string>
     <string name="settings_screenshot_mode_words_hint">Separadas por comas, p. ej. un dominio o el nombre de un cliente</string>
     <string name="settings_kube_section">Kubernetes</string>
@@ -1036,4 +1036,69 @@
     <string name="backup_err_unsupported">Esta copia la creó una versión más reciente de Ichor. Actualiza la app para restaurarla.</string>
     <string name="backup_err_invalid">La copia se abrió, pero su contenido no es válido.</string>
     <string name="backup_err_open">No se pudo leer ni escribir el archivo.</string>
+    <!-- Apps inventory -->
+    <string name="apps_title">Aplicaciones</string>
+    <string name="apps_search">Buscar aplicaciones, namespaces, imágenes</string>
+    <string name="apps_filter_all">Todas</string>
+    <string name="apps_filter_attention">Atención</string>
+    <string name="apps_empty">Todavía no se ejecuta ninguna aplicación. Los pods aparecen aquí en cuanto Kubernetes ejecuta cargas de trabajo.</string>
+    <string name="apps_no_match">Nada coincide con «%1$s».</string>
+    <string name="apps_no_filter_match">Ninguna aplicación en este filtro.</string>
+    <string name="apps_section_system">Kubernetes y Talos</string>
+    <string name="apps_section_unknown">No reconocidas</string>
+    <string name="apps_unpinned">Imagen sin fijar</string>
+    <string name="apps_stat_containers">Contenedores</string>
+    <string name="apps_stat_nodes">Nodos</string>
+    <string name="apps_stat_memory">Memoria</string>
+    <string name="apps_detail_images">Imágenes</string>
+    <string name="apps_detail_pods">Pods</string>
+    <string name="settings_remote_icons">Descargar los iconos de aplicaciones que faltan</string>
+    <string name="settings_remote_icons_desc">Unas 250 aplicaciones comunes tienen su icono incluido. Si se activa, los iconos de otras aplicaciones reconocidas se descargan de jsDelivr (Dashboard Icons). Solo se envía el nombre público del icono, nunca los nombres de tus imágenes ni los detalles del clúster.</string>
+    <string name="about_icon_credits">Iconos de aplicaciones: Dashboard Icons (Apache 2.0) y selfh.st/icons (CC BY 4.0). Los nombres y logotipos de las aplicaciones son marcas de sus propietarios.</string>
+    <string name="apps_category_system">Sistema</string>
+    <string name="apps_category_networking">Redes</string>
+    <string name="apps_category_storage">Almacenamiento</string>
+    <string name="apps_category_observability">Observabilidad</string>
+    <string name="apps_category_security">Seguridad</string>
+    <string name="apps_category_database">Bases de datos</string>
+    <string name="apps_category_messaging">Mensajería</string>
+    <string name="apps_category_devops">DevOps</string>
+    <string name="apps_category_media">Multimedia</string>
+    <string name="apps_category_home">Domótica</string>
+    <string name="apps_category_productivity">Productividad</string>
+    <string name="apps_category_ai">IA</string>
+    <string name="apps_category_web">Web</string>
+    <string name="apps_category_other">Otras</string>
+    <plurals name="apps_running">
+        <item quantity="one">%1$d en ejecución</item>
+        <item quantity="other">%1$d en ejecución</item>
+    </plurals>
+    <plurals name="apps_containers">
+        <item quantity="one">%1$d contenedor</item>
+        <item quantity="other">%1$d contenedores</item>
+    </plurals>
+    <plurals name="apps_count">
+        <item quantity="one">%1$d aplicación</item>
+        <item quantity="other">%1$d aplicaciones</item>
+    </plurals>
+    <plurals name="apps_nodes">
+        <item quantity="one">%1$d nodo</item>
+        <item quantity="other">%1$d nodos</item>
+    </plurals>
+    <plurals name="apps_nodes_partial">
+        <item quantity="one">%1$d de %2$d nodo</item>
+        <item quantity="other">%1$d de %2$d nodos</item>
+    </plurals>
+    <plurals name="apps_attention">
+        <item quantity="one">%1$d requiere atención</item>
+        <item quantity="other">%1$d requieren atención</item>
+    </plurals>
+    <plurals name="apps_versions">
+        <item quantity="one">%1$d versión</item>
+        <item quantity="other">%1$d versiones</item>
+    </plurals>
+    <plurals name="apps_versions_running">
+        <item quantity="one">%1$d versión en ejecución</item>
+        <item quantity="other">%1$d versiones en ejecución</item>
+    </plurals>
 </resources>

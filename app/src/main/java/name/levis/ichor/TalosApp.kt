@@ -25,6 +25,7 @@ import name.levis.ichor.data.PrivacyMask
 import name.levis.ichor.data.UiPreferences
 import androidx.glance.appwidget.updateAll
 import name.levis.ichor.widget.ClusterWidget
+import name.levis.ichor.ui.apps.AppIconLoader
 import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.monitor.canPostNotifications
@@ -84,6 +85,8 @@ class TalosApp : Application() {
     val updateManager by lazy {
         UpdateManager(this, getSharedPreferences("talosdev-mobile-update", Context.MODE_PRIVATE), changelogRepository)
     }
+    /** Bundled app icons, and downloaded ones when the user allowed it (Settings → Privacy). */
+    val appIcons by lazy { AppIconLoader(this) }
     val monitorStore by lazy { MonitorStore(getSharedPreferences("talosdev-mobile-monitor", Context.MODE_PRIVATE)) }
 
     /** The optional AI diagnosis: off until enabled in Settings. API keys get their own Keystore keys. */
