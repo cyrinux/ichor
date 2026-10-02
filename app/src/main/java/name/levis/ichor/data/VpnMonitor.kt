@@ -7,6 +7,7 @@ import android.net.NetworkCapabilities
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import name.levis.ichor.R
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
@@ -23,14 +24,27 @@ class VpnMonitor(context: Context) {
     /** Follows the default network, so screens can reload once the VPN connects. */
     val up: StateFlow<Boolean> = _up.asStateFlow()
 
+    private val _networkChanges = MutableStateFlow(0)
+
+    /**
+     * Bumped each time the default network changes (Wi-Fi, mobile data, a VPN coming or going),
+     * so a cluster that did not answer is tried again at once.
+     */
+    val networkChanges: StateFlow<Int> = _networkChanges.asStateFlow()
+
     init {
         connectivity.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                _networkChanges.update { it + 1 }
+            }
+
             override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
                 _up.value = capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
             }
 
             override fun onLost(network: Network) {
                 _up.value = isUp()
+                _networkChanges.update { it + 1 }
             }
         })
     }

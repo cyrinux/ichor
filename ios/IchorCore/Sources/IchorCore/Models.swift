@@ -91,6 +91,8 @@ public struct NodeOverview: Decodable, Equatable, Identifiable, Hashable, Sendab
     public let hostname: String
     public let reachable: Bool
     public let error: String?
+    /// Why an unreachable node failed: network, tls, auth or other; nil from older cores.
+    public let errorKind: String?
     public let version: String
     public let arch: String
     public let platform: String

@@ -86,6 +86,8 @@ data class NodeOverview(
     val hostname: String,
     val reachable: Boolean,
     val error: String? = null,
+    /** Why an unreachable node failed: network, tls, auth or other; null from older cores. */
+    val errorKind: String? = null,
     val version: String = "",
     val arch: String = "",
     val platform: String = "",

@@ -48,6 +48,19 @@ func TestBuildNodeOverviewUnreachable(t *testing.T) {
 	if got.Error == "" || got.Hostname != "10.0.0.9" || got.Role != "unknown" {
 		t.Errorf("unexpected overview: %+v", got)
 	}
+
+	if got.ErrorKind != errorKindOther {
+		t.Errorf("error kind: got %q, want %q", got.ErrorKind, errorKindOther)
+	}
+}
+
+func TestBuildNodeOverviewUnreachableNetwork(t *testing.T) {
+	dial := errors.New(`transport: Error while dialing: dial tcp 10.0.0.9:50000: connect: no route to host`)
+	got := buildNodeOverview("10.0.0.9", nodeProbe{versionErr: dial})
+
+	if got.ErrorKind != errorKindNetwork {
+		t.Errorf("error kind: got %q, want %q", got.ErrorKind, errorKindNetwork)
+	}
 }
 
 func TestBuildNodeOverviewNotReadyWithConditions(t *testing.T) {

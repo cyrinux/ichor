@@ -80,6 +80,17 @@
     <string name="overview_status_healthy">Sano</string>
     <string name="overview_status_degraded">Degradado</string>
     <string name="overview_status_down">Inaccesible</string>
+    <string name="overview_unreachable_title">No se puede acceder al clúster</string>
+    <string name="overview_unreachable_network">Ningún nodo respondió. Probablemente tu teléfono no está en la red del clúster: comprueba que la VPN esté conectada o que estés en la Wi-Fi correcta.</string>
+    <string name="overview_unreachable_credentials">El clúster respondió pero rechazó este talosconfig: su certificado, CA o rol puede ser incorrecto o haber caducado.</string>
+    <string name="overview_unreachable_other">Ningún nodo respondió. Los detalles están abajo.</string>
+    <string name="overview_unreachable_endpoints">Endpoints: %1$s</string>
+    <string name="overview_unreachable_auto_retry">Se reintenta cada %1$d s y en cuanto cambia la red.</string>
+    <plurals name="overview_unreachable_show_nodes">
+        <item quantity="one">Mostrar %d nodo</item>
+        <item quantity="many">Mostrar %d nodos</item>
+        <item quantity="other">Mostrar %d nodos</item>
+    </plurals>
     <plurals name="overview_summary_nodes">
         <item quantity="one">%d nodo</item>
         <item quantity="other">%d nodos</item>
