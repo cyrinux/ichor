@@ -8,6 +8,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import name.levis.ichor.data.BackupManager
 import name.levis.ichor.data.AiPreferences
 import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.data.ChangelogRepository
@@ -91,6 +92,18 @@ class TalosApp : Application() {
             getSharedPreferences(AiPreferences.FILE, Context.MODE_PRIVATE),
             diagnosisRepository.providers.map { it.id },
         ) { provider -> SecureStore(java.io.File(filesDir, "ai-key-$provider.enc"), keyAlias = "ai-key-$provider") }
+    }
+
+    /** Passphrase-sealed backups of the config and settings, restorable on another device (Android or iOS). */
+    val backupManager by lazy {
+        BackupManager(
+            configRepository, uiPreferences, clusterColors, clusterNames, vpnOnly, wakeOnLan, monitorStore,
+            setPrivacyMask = ::setPrivacyMask,
+            onRestored = {
+                talosRepository.invalidate()
+                forgetShownCluster()
+            },
+        )
     }
 
     /** Re-evaluates whether background monitoring should run (alerts on or widget placed). */
