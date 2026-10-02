@@ -2,7 +2,6 @@ package talosmobile
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -235,8 +234,8 @@ func KubeDeletePod(configYAML, contextName, namespace, name string) (err error) 
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
-	if namespace == "" || name == "" {
-		return errors.New("no pod namespace or name given")
+	if err := validateKubeName("pod", namespace, name); err != nil {
+		return err
 	}
 
 	if isDemoContext(configYAML, contextName) {
@@ -247,7 +246,7 @@ func KubeDeletePod(configYAML, contextName, namespace, name string) (err error) 
 		return struct{}{}, k.do(ctx, http.MethodDelete, podPath(namespace, name), "", nil, nil)
 	})
 
-	return err
+	return kubeMutationError(err)
 }
 
 func podPath(namespace, name string) string {

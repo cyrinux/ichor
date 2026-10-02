@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -73,8 +74,14 @@ type appsObject struct {
 		CreationTimestamp time.Time `json:"creationTimestamp"`
 	} `json:"metadata"`
 	Spec struct {
-		Replicas *int32 `json:"replicas"`
-		Paused   bool   `json:"paused"`
+		Replicas       *int32 `json:"replicas"`
+		Paused         bool   `json:"paused"`
+		UpdateStrategy struct {
+			Type          string `json:"type"` // OnDelete: pods are only replaced when deleted
+			RollingUpdate *struct {
+				Partition *int32 `json:"partition"` // StatefulSet: ordinals below it keep the old revision
+			} `json:"rollingUpdate"`
+		} `json:"updateStrategy"`
 		Template struct {
 			Metadata struct {
 				Annotations map[string]string `json:"annotations"`
@@ -195,24 +202,85 @@ func mapWorkload(kind string, obj appsObject) kubeWorkload {
 		}
 	}
 
-	w.State = workloadState(w, obj.Spec.Paused, obj.Status.ObservedGeneration < obj.Metadata.Generation)
+	w.State = workloadState(w, rolloutFacts{
+		paused: obj.Spec.Paused,
+		stale:  obj.Status.ObservedGeneration < obj.Metadata.Generation,
+		// Deployment and StatefulSet: pods of the old revision still running.
+		oldPods: kind != "DaemonSet" && st.Replicas > st.UpdatedReplicas,
+		manual:  manualUpdates(kind, obj),
+	})
 
 	return w
 }
 
-func workloadState(w kubeWorkload, paused, stale bool) string {
+// rolloutFacts are what decides between ready and progressing, as `kubectl rollout status`.
+type rolloutFacts struct {
+	paused  bool
+	stale   bool // the controller has not seen the last spec change yet
+	oldPods bool
+	manual  bool // pods are only replaced when deleted (OnDelete, StatefulSet partition)
+}
+
+// manualUpdates tells a workload whose controller does not replace every pod on its own:
+// fewer updated than desired pods is then its normal state, not a rollout in progress.
+func manualUpdates(kind string, obj appsObject) bool {
+	strategy := obj.Spec.UpdateStrategy
+	if kind == "Deployment" {
+		return false
+	}
+
+	if strategy.Type == "OnDelete" {
+		return true
+	}
+
+	return kind == "StatefulSet" && strategy.RollingUpdate != nil &&
+		strategy.RollingUpdate.Partition != nil && *strategy.RollingUpdate.Partition > 0
+}
+
+func workloadState(w kubeWorkload, f rolloutFacts) string {
+	rolling := f.stale || (!f.manual && (w.Updated < w.Desired || f.oldPods))
+
 	switch {
-	case paused:
+	case f.paused:
 		return workloadPaused
 	case w.Desired == 0:
 		return workloadScaledDown
-	case stale || w.Updated < w.Desired:
+	case rolling:
 		return workloadProgressing
 	case w.Ready < w.Desired:
 		return workloadDegraded
 	default:
 		return workloadReady
 	}
+}
+
+// kubeNamePattern is a DNS-1123 subdomain: what Kubernetes accepts for namespaces and
+// object names. Checking it keeps "..", "/" and the like out of API paths.
+var kubeNamePattern = regexp.MustCompile(`^[a-z0-9]([-a-z0-9.]{0,251}[a-z0-9])?$`)
+
+func validateKubeName(what, namespace, name string) error {
+	if namespace == "" || name == "" {
+		return fmt.Errorf("no %s namespace or name given", what)
+	}
+
+	for _, s := range []string{namespace, name} {
+		if !kubeNamePattern.MatchString(s) || strings.Contains(s, "..") {
+			return fmt.Errorf("invalid Kubernetes name %q", s)
+		}
+	}
+
+	return nil
+}
+
+// kubeMutationError explains an action that got no answer: the API server may have
+// applied it anyway, so a blind retry could do it twice.
+func kubeMutationError(err error) error {
+	var apiErr *kubeAPIError
+	if err == nil || errors.As(err, &apiErr) {
+		return err
+	}
+
+	return fmt.Errorf("%w (it may have been applied: refresh before trying again)", err)
 }
 
 // KubeRolloutRestart restarts the pods of a Deployment, StatefulSet or DaemonSet with a
@@ -230,8 +298,8 @@ func KubeRolloutRestart(configYAML, contextName, kind, namespace, name string) (
 		return err
 	}
 
-	if namespace == "" || name == "" {
-		return errors.New("no workload namespace or name given")
+	if err := validateKubeName("workload", namespace, name); err != nil {
+		return err
 	}
 
 	if isDemoContext(configYAML, contextName) {
@@ -242,7 +310,7 @@ func KubeRolloutRestart(configYAML, contextName, kind, namespace, name string) (
 		return struct{}{}, rolloutRestart(ctx, k, wk, namespace, name, time.Now())
 	})
 
-	return err
+	return kubeMutationError(err)
 }
 
 func rolloutRestart(ctx context.Context, k *kubeClient, wk workloadKind, namespace, name string, now time.Time) error {

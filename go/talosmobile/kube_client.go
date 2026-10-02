@@ -64,23 +64,54 @@ func openKubeClient(ctx context.Context, kubeconfig string, talosEndpoints []str
 		return nil, err
 	}
 
+	candidates := []*url.URL{creds.server}
+	// Without verification, another address could be anyone: only the configured one.
+	if !creds.tls.InsecureSkipVerify {
+		candidates = kubeServerCandidates(creds.server, talosEndpoints)
+	}
+
+	// Probed in parallel (one probe timeout in all), the first candidate in order that
+	// answers wins: the kubeconfig's own server is preferred when it works.
+	clients := make([]*kubeClient, len(candidates))
+	results := make([]chan error, len(candidates))
+
+	for i, base := range candidates {
+		clients[i], results[i] = newKubeClient(base, creds), make(chan error, 1)
+		go func() { results[i] <- clients[i].probe(ctx) }()
+	}
+
+	// Once decided, the other probes finish in the background and their clients are closed.
+	discardFrom := func(i int) {
+		go func() {
+			for j := i; j < len(results); j++ {
+				<-results[j]
+				clients[j].close()
+			}
+		}()
+	}
+
 	var failures []string
 
-	for _, base := range kubeServerCandidates(creds.server, talosEndpoints) {
-		k := newKubeClient(base, creds)
-
-		err := k.probe(ctx)
-		if err == nil {
-			return k, nil
-		}
+	for i, result := range results {
+		err := <-result
 
 		var apiErr *kubeAPIError
-		if errors.As(err, &apiErr) {
-			// It answered: the address is right, the credentials are not.
-			return nil, err
-		}
 
-		failures = append(failures, base.Host+": "+kubeTransportError(err))
+		switch {
+		case err == nil:
+			discardFrom(i + 1)
+
+			return clients[i], nil
+		case errors.As(err, &apiErr):
+			// It answered: the address is right, the credentials are not.
+			clients[i].close()
+			discardFrom(i + 1)
+
+			return nil, err
+		default:
+			clients[i].close()
+			failures = append(failures, candidates[i].Host+": "+kubeTransportError(err))
+		}
 	}
 
 	return nil, errors.New("Kubernetes API not reachable from this device (" + strings.Join(failures, "; ") + ")")
@@ -128,8 +159,15 @@ func newKubeClient(base *url.URL, creds *kubeCredentials) *kubeClient {
 		IdleConnTimeout:     sessionIdle,
 	}
 
-	return &kubeClient{base: base, http: &http.Client{Transport: transport}, token: creds.token}
+	return &kubeClient{base: base, http: &http.Client{
+		Transport: transport,
+		// The API server does not redirect; never send the credentials anywhere else.
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+	}, token: creds.token}
 }
+
+// close drops the client's idle connections (its TLS sessions hold the client key).
+func (k *kubeClient) close() { k.http.CloseIdleConnections() }
 
 func (k *kubeClient) probe(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, kubeProbeTimeout)
@@ -190,9 +228,13 @@ func (k *kubeClient) do(ctx context.Context, method, path, contentType string, b
 	}
 	defer resp.Body.Close() //nolint:errcheck
 
-	data, err := io.ReadAll(io.LimitReader(resp.Body, kubeMaxBody))
+	data, err := io.ReadAll(io.LimitReader(resp.Body, kubeMaxBody+1))
 	if err != nil {
 		return err
+	}
+
+	if len(data) > kubeMaxBody {
+		return &kubeAPIError{Code: http.StatusRequestEntityTooLarge, Reason: "TooLarge", Message: "the answer is larger than the app reads (32 MiB)"}
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
@@ -259,80 +301,140 @@ func kubeError(err error) error {
 }
 
 // kubeClients caches one client per (talosconfig, context) for kubeClientTTL.
-var kubeClients = &kubeClientCache{entries: map[string]kubeClientEntry{}, open: openKubeClientForContext}
+var kubeClients = newKubeClientCache(openKubeClientForContext)
 
 type kubeClientEntry struct {
 	client  *kubeClient
 	expires time.Time
 }
 
+// kubeOpening is an open in flight: concurrent callers wait for it instead of each asking
+// Talos for a kubeconfig (every Kubeconfig call signs a new certificate).
+type kubeOpening struct {
+	done   chan struct{}
+	client *kubeClient
+	err    error
+}
+
 type kubeClientCache struct {
 	mu      sync.Mutex
 	entries map[string]kubeClientEntry
-	open    func(ctx context.Context, configYAML, contextName string) (*kubeClient, error)
+	opening map[string]*kubeOpening
+	open    func(configYAML, contextName string) (*kubeClient, error)
 }
 
-func (c *kubeClientCache) get(ctx context.Context, configYAML, contextName string) (*kubeClient, error) {
+func newKubeClientCache(open func(configYAML, contextName string) (*kubeClient, error)) *kubeClientCache {
+	return &kubeClientCache{entries: map[string]kubeClientEntry{}, opening: map[string]*kubeOpening{}, open: open}
+}
+
+// get returns the cached client, or opens one; fresh tells the client was opened for this call.
+func (c *kubeClientCache) get(configYAML, contextName string) (k *kubeClient, fresh bool, err error) {
 	key := cacheKey(configYAML, contextName)
 
 	c.mu.Lock()
-	entry, ok := c.entries[key]
-	c.mu.Unlock()
+	c.sweepLocked()
 
-	if ok && time.Now().Before(entry.expires) {
-		return entry.client, nil
+	if entry, ok := c.entries[key]; ok {
+		c.mu.Unlock()
+
+		return entry.client, false, nil
 	}
 
-	k, err := c.open(ctx, configYAML, contextName)
+	if op, ok := c.opening[key]; ok {
+		c.mu.Unlock()
+		<-op.done
+
+		return op.client, false, op.err
+	}
+
+	op := &kubeOpening{done: make(chan struct{})}
+	c.opening[key] = op
+	c.mu.Unlock()
+
+	op.client, op.err = c.open(configYAML, contextName)
+
+	c.mu.Lock()
+	delete(c.opening, key)
+
+	if op.err == nil {
+		c.entries[key] = kubeClientEntry{client: op.client, expires: time.Now().Add(kubeClientTTL)}
+	}
+	c.mu.Unlock()
+	close(op.done)
+
+	return op.client, true, op.err
+}
+
+// sweepLocked drops expired clients: their keys should not stay in memory.
+func (c *kubeClientCache) sweepLocked() {
+	now := time.Now()
+	for key, entry := range c.entries {
+		if !now.Before(entry.expires) {
+			delete(c.entries, key)
+			entry.client.close()
+		}
+	}
+}
+
+// forget drops k if it is still the cached client, so the next call fetches a new
+// kubeconfig and probes again; a client another call already replaced it with stays.
+func (c *kubeClientCache) forget(configYAML, contextName string, k *kubeClient) {
+	key := cacheKey(configYAML, contextName)
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if entry, ok := c.entries[key]; ok && entry.client == k {
+		delete(c.entries, key)
+		k.close()
+	}
+}
+
+// openKubeClientForContext fetches an admin kubeconfig from Talos (bounded by callTimeout)
+// and probes the API server addresses (bounded by kubeProbeTimeout).
+func openKubeClientForContext(configYAML, contextName string) (*kubeClient, error) {
+	var endpoints []string
+
+	kubeconfig, err := withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
+		endpoints = s.context.Endpoints
+
+		return fetchKubeconfig(ctx, s)
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	c.mu.Lock()
-	c.entries[key] = kubeClientEntry{client: k, expires: time.Now().Add(kubeClientTTL)}
-	c.mu.Unlock()
-
-	return k, nil
+	return openKubeClient(context.Background(), kubeconfig, endpoints)
 }
 
-// forget drops the cached client, so the next call fetches a new kubeconfig and probes again.
-func (c *kubeClientCache) forget(configYAML, contextName string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	delete(c.entries, cacheKey(configYAML, contextName))
-}
-
-func openKubeClientForContext(ctx context.Context, configYAML, contextName string) (*kubeClient, error) {
-	return withSession(configYAML, contextName, callTimeout, func(sctx context.Context, s *session) (*kubeClient, error) {
-		kubeconfig, err := fetchKubeconfig(sctx, s)
-		if err != nil {
-			return nil, err
-		}
-
-		return openKubeClient(ctx, kubeconfig, s.context.Endpoints)
-	})
-}
-
-// withKube runs fn with the context's Kubernetes client. A call that gets no answer or is
-// refused for its credentials drops the client: the next one fetches a fresh kubeconfig
-// and looks for a reachable address again (the phone may have changed networks).
+// withKube runs fn with the context's Kubernetes client, bounded by callTimeout once the
+// client is there. A call that gets no answer or is refused for its credentials drops the
+// client: the next one fetches a fresh kubeconfig and looks for a reachable address again
+// (the phone may have changed networks). A client just opened and probed is kept on a
+// timeout: the address answered a moment ago, the call itself was slow.
 func withKube[T any](configYAML, contextName string, fn func(context.Context, *kubeClient) (T, error)) (T, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
-	defer cancel()
-
 	var zero T
 
-	k, err := kubeClients.get(ctx, configYAML, contextName)
+	k, fresh, err := kubeClients.get(configYAML, contextName)
 	if err != nil {
 		return zero, err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
+	defer cancel()
+
 	out, err := fn(ctx, k)
 	if err != nil {
 		var apiErr *kubeAPIError
-		if !errors.As(err, &apiErr) || apiErr.Code == http.StatusUnauthorized {
-			kubeClients.forget(configYAML, contextName)
+
+		switch {
+		case errors.As(err, &apiErr):
+			if apiErr.Code == http.StatusUnauthorized {
+				kubeClients.forget(configYAML, contextName, k)
+			}
+		case fresh && errors.Is(err, context.DeadlineExceeded):
+		default:
+			kubeClients.forget(configYAML, contextName, k)
 		}
 
 		return zero, kubeError(err)

@@ -413,11 +413,11 @@ func TestWithKubeForgetsUnreachableClient(t *testing.T) {
 	f := newFakeKubeAPI(t, nil)
 
 	opens := 0
-	cache := &kubeClientCache{entries: map[string]kubeClientEntry{}, open: func(ctx context.Context, _, _ string) (*kubeClient, error) {
+	cache := newKubeClientCache(func(_, _ string) (*kubeClient, error) {
 		opens++
 
-		return openKubeClient(ctx, f.kubeconfigFor(f.URL), nil)
-	}}
+		return openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil)
+	})
 
 	saved := kubeClients
 	kubeClients = cache
@@ -445,11 +445,123 @@ func TestWithKubeForgetsUnreachableClient(t *testing.T) {
 		t.Fatal("expected an error")
 	}
 
-	if _, err := cache.get(context.Background(), "cfg", "ctx"); err == nil {
+	if _, _, err := cache.get("cfg", "ctx"); err == nil {
 		t.Fatal("expected the dropped client to be reopened (and fail)")
 	}
 
 	if opens != 2 {
 		t.Fatalf("opened %d times", opens)
+	}
+}
+
+func TestKubeClientCacheOpensOnceForConcurrentCalls(t *testing.T) {
+	var (
+		mu    sync.Mutex
+		opens int
+	)
+
+	release := make(chan struct{})
+	cache := newKubeClientCache(func(_, _ string) (*kubeClient, error) {
+		mu.Lock()
+		opens++
+		mu.Unlock()
+		<-release
+
+		return &kubeClient{http: &http.Client{}}, nil
+	})
+
+	var wg sync.WaitGroup
+
+	clients := make([]*kubeClient, 5)
+	for i := range clients {
+		wg.Go(func() { clients[i], _, _ = cache.get("cfg", "ctx") })
+	}
+
+	time.Sleep(50 * time.Millisecond)
+	close(release)
+	wg.Wait()
+
+	if opens != 1 {
+		t.Fatalf("opened %d times", opens)
+	}
+
+	for _, k := range clients {
+		if k != clients[0] || k == nil {
+			t.Fatal("callers got different clients")
+		}
+	}
+
+	// A stale client being forgotten leaves the current one alone.
+	cache.forget("cfg", "ctx", &kubeClient{http: &http.Client{}})
+
+	if k, fresh, _ := cache.get("cfg", "ctx"); k != clients[0] || fresh {
+		t.Fatal("the cached client was dropped by a stale forget")
+	}
+}
+
+func TestOpenKubeClientPrefersKubeconfigServer(t *testing.T) {
+	f := newFakeKubeAPI(t, nil)
+
+	// Both answer: the kubeconfig's own address wins over the Talos endpoint.
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), []string{"localhost"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if k.base.String() != f.URL {
+		t.Fatalf("picked %s", k.base)
+	}
+}
+
+func TestOpenKubeClientNoFallbackWithoutVerification(t *testing.T) {
+	f := newFakeKubeAPI(t, nil)
+	port := f.URL[strings.LastIndex(f.URL, ":")+1:]
+	cfg := strings.Replace(f.kubeconfigFor("https://unreachable.invalid:"+port), "    server: https://unreachable.invalid", "    insecure-skip-tls-verify: true\n    server: https://unreachable.invalid", 1)
+
+	if _, err := openKubeClient(context.Background(), cfg, []string{"127.0.0.1"}); err == nil {
+		t.Fatal("an insecure kubeconfig fell back to another address")
+	}
+}
+
+func TestWorkloadStateLikeRolloutStatus(t *testing.T) {
+	w := kubeWorkload{Desired: 3, Ready: 3, Updated: 3, Available: 3}
+
+	cases := []struct {
+		want string
+		w    kubeWorkload
+		f    rolloutFacts
+	}{
+		{workloadReady, w, rolloutFacts{}},
+		{workloadProgressing, w, rolloutFacts{oldPods: true}},                                                     // old pods still being replaced
+		{workloadReady, kubeWorkload{Desired: 3, Ready: 3, Updated: 1, Available: 1}, rolloutFacts{manual: true}}, // OnDelete
+		{workloadProgressing, w, rolloutFacts{manual: true, stale: true}},
+		{workloadDegraded, kubeWorkload{Desired: 3, Ready: 2, Updated: 3, Available: 3}, rolloutFacts{}},
+	}
+
+	for _, c := range cases {
+		if got := workloadState(c.w, c.f); got != c.want {
+			t.Errorf("%+v %+v: got %s, want %s", c.w, c.f, got, c.want)
+		}
+	}
+
+	var sts appsObject
+	if err := json.Unmarshal([]byte(`{"spec":{"updateStrategy":{"type":"RollingUpdate","rollingUpdate":{"partition":2}}}}`), &sts); err != nil {
+		t.Fatal(err)
+	}
+
+	if !manualUpdates("StatefulSet", sts) || manualUpdates("Deployment", sts) {
+		t.Fatal("partition not recognized")
+	}
+}
+
+func TestValidateKubeName(t *testing.T) {
+	for _, bad := range []string{"..", "a/b", "A", "-a", "a..b", strings.Repeat("a", 254)} {
+		if validateKubeName("pod", "ns", bad) == nil {
+			t.Errorf("%q accepted", bad)
+		}
+	}
+
+	if err := validateKubeName("pod", "kube-system", "coredns-5c6b7.abc"); err != nil {
+		t.Fatal(err)
 	}
 }
