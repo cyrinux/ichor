@@ -19,7 +19,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.ListAlt
+import androidx.compose.material.icons.outlined.Power
 import androidx.compose.material.icons.outlined.PowerSettingsNew
+import androidx.compose.material.icons.outlined.SettingsEthernet
 import androidx.compose.material.icons.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material.icons.outlined.MoreHoriz
@@ -41,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.TalosFeature
+import name.levis.ichor.model.WolTarget
 import name.levis.ichor.model.notice
 import name.levis.ichor.model.support
 import name.levis.ichor.ui.components.rememberNodeFeatures
@@ -97,13 +100,20 @@ fun SwipeableNode(
     ) { content() }
 }
 
-/** Per-node actions, filtered by reachability and the config's role. */
+/** How the actions sheet offers Wake-on-LAN for a node; null when it does not (screenshot mode). */
+data class WolActions(val target: WolTarget?, val onWake: () -> Unit, val onSettings: () -> Unit)
+
+/**
+ * Per-node actions, filtered by reachability and the config's role. Wake-on-LAN needs no
+ * role: the phone sends the packet itself, the Talos API is not involved.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NodeActionsSheet(
     node: NodeOverview,
     canPower: Boolean,
     canShell: Boolean,
+    wol: WolActions?,
     onAction: (NodeAction) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -138,6 +148,18 @@ fun NodeActionsSheet(
                     color = LocalStatusColors.current.bad,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
                 )
+            }
+            wol?.let {
+                if (it.target != null) {
+                    Item(Icons.Outlined.Power, stringResource(R.string.wol_wake)) {
+                        onDismiss()
+                        it.onWake()
+                    }
+                }
+                Item(Icons.Outlined.SettingsEthernet, stringResource(R.string.wol_settings)) {
+                    onDismiss()
+                    it.onSettings()
+                }
             }
             Item(Icons.Outlined.ContentCopy, stringResource(R.string.overview_action_copy_ip, node.node)) {
                 copy(context, node.node)

@@ -112,6 +112,23 @@
     <string name="overview_action_copy_ip">Copiar IP (%1$s)</string>
     <string name="overview_clip_label">IP del nodo</string>
 
+    <!-- Wake-on-LAN -->
+    <string name="wol_wake">Despertar (Wake-on-LAN)</string>
+    <string name="wol_settings">Wake-on-LAN…</string>
+    <string name="wol_title">Wake-on-LAN: %1$s</string>
+    <string name="wol_hint">Enciende el nodo enviando un paquete mágico desde este teléfono. El teléfono debe alcanzar la red del nodo, directamente o mediante un router que reenvíe el paquete. Solo se guarda en este dispositivo.</string>
+    <string name="wol_mac">Dirección MAC</string>
+    <string name="wol_mac_invalid">No es una dirección MAC (p. ej. aa:bb:cc:dd:ee:ff)</string>
+    <string name="wol_broadcast">Dirección de broadcast (opcional)</string>
+    <string name="wol_broadcast_hint">Vacío: la dirección de broadcast de la red Wi-Fi o Ethernet del teléfono</string>
+    <string name="wol_broadcast_invalid">No es una dirección IPv4 ni un nombre de host</string>
+    <string name="wol_port">Puerto UDP (opcional, 9 por defecto)</string>
+    <string name="wol_port_invalid">El puerto debe estar entre 1 y 65535</string>
+    <string name="wol_save">Guardar</string>
+    <string name="wol_forget">Olvidar</string>
+    <string name="wol_sent">Paquete mágico enviado a %1$s (vía %2$s)</string>
+    <string name="wol_failed">No se pudo enviar el paquete mágico: %1$s</string>
+
     <!-- Node detail -->
     <string name="node_menu_kernel_log">Registro del kernel</string>
     <string name="node_menu_debug_shell">Shell de depuración</string>

@@ -225,6 +225,7 @@ fun OverviewScreen(
                 NodeList(
                     overview = s.data,
                     clusterName = config?.activeSummary?.let(clusterLabels::of),
+                    fingerprint = config?.activeSummary?.fingerprint,
                     time = timeState,
                     certificate = config?.activeSummary,
                     onIssueConfig = onIssueConfig,
@@ -246,6 +247,7 @@ fun OverviewScreen(
 private fun NodeList(
     overview: ClusterOverview,
     clusterName: String?,
+    fingerprint: String?,
     time: UiState<ClusterTime>,
     certificate: ContextSummary?,
     onIssueConfig: () -> Unit,
@@ -259,11 +261,13 @@ private fun NodeList(
     live: ClusterLiveState?,
 ) {
     var sheetFor by remember { mutableStateOf<NodeOverview?>(null) }
+    val wakeOnLan = rememberWakeOnLan(fingerprint)
     sheetFor?.let { node ->
         NodeActionsSheet(
             node = node,
             canPower = canPower,
             canShell = canShell,
+            wol = wakeOnLan(node),
             onAction = { onNodeAction(node, it) },
             onDismiss = { sheetFor = null },
         )

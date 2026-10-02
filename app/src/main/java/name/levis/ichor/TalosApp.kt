@@ -31,6 +31,7 @@ import name.levis.ichor.security.AppLock
 import name.levis.ichor.security.PrefsLockSettings
 import name.levis.ichor.update.UpdateManager
 import name.levis.ichor.data.ClusterNames
+import name.levis.ichor.data.WakeOnLanStore
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.shortcuts.ClusterShortcuts
 import name.levis.ichor.shortcuts.ShortcutSpec
@@ -53,6 +54,7 @@ class TalosApp : Application() {
     val uiPreferences by lazy { UiPreferences(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
     val clusterColors by lazy { ClusterColors(getSharedPreferences(ClusterColors.FILE, Context.MODE_PRIVATE)) }
     val clusterNames by lazy { ClusterNames(getSharedPreferences(ClusterNames.FILE, Context.MODE_PRIVATE)) }
+    val wakeOnLan by lazy { WakeOnLanStore(getSharedPreferences(WakeOnLanStore.FILE, Context.MODE_PRIVATE)) }
     val appLock by lazy {
         AppLock(
             PrefsLockSettings(getSharedPreferences("talosdev-mobile-security", Context.MODE_PRIVATE)),
@@ -151,6 +153,7 @@ class TalosApp : Application() {
                 stored?.let {
                     clusterColors.sync(it.summary)
                     clusterNames.sync(it.summary)
+                    wakeOnLan.sync(it.summary)
                 }
             }
         }

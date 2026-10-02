@@ -113,6 +113,23 @@
     <string name="overview_action_copy_ip">Copy IP (%1$s)</string>
     <string name="overview_clip_label">Node IP</string>
 
+    <!-- Wake-on-LAN -->
+    <string name="wol_wake">Wake (Wake-on-LAN)</string>
+    <string name="wol_settings">Wake-on-LAN…</string>
+    <string name="wol_title">Wake-on-LAN: %1$s</string>
+    <string name="wol_hint">Powers the node on by sending a magic packet from this phone. The phone must reach the node\'s network, directly or through a router that forwards the packet. Kept on this device only.</string>
+    <string name="wol_mac">MAC address</string>
+    <string name="wol_mac_invalid">Not a MAC address (e.g. aa:bb:cc:dd:ee:ff)</string>
+    <string name="wol_broadcast">Broadcast address (optional)</string>
+    <string name="wol_broadcast_hint">Empty: the broadcast address of the phone\'s Wi-Fi or Ethernet network</string>
+    <string name="wol_broadcast_invalid">Not an IPv4 address or a host name</string>
+    <string name="wol_port">UDP port (optional, 9 by default)</string>
+    <string name="wol_port_invalid">Port must be between 1 and 65535</string>
+    <string name="wol_save">Save</string>
+    <string name="wol_forget">Forget</string>
+    <string name="wol_sent">Magic packet sent to %1$s (via %2$s)</string>
+    <string name="wol_failed">Could not send the magic packet: %1$s</string>
+
     <!-- Node detail -->
     <string name="node_menu_kernel_log">Kernel log</string>
     <string name="node_menu_debug_shell">Debug shell</string>

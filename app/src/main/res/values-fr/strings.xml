@@ -112,6 +112,23 @@
     <string name="overview_action_copy_ip">Copier l\'IP (%1$s)</string>
     <string name="overview_clip_label">IP du nœud</string>
 
+    <!-- Wake-on-LAN -->
+    <string name="wol_wake">Réveiller (Wake-on-LAN)</string>
+    <string name="wol_settings">Wake-on-LAN…</string>
+    <string name="wol_title">Wake-on-LAN : %1$s</string>
+    <string name="wol_hint">Allume le nœud en envoyant un paquet magique depuis ce téléphone. Le téléphone doit atteindre le réseau du nœud, directement ou via un routeur qui relaie le paquet. Conservé sur cet appareil uniquement.</string>
+    <string name="wol_mac">Adresse MAC</string>
+    <string name="wol_mac_invalid">Adresse MAC invalide (ex. aa:bb:cc:dd:ee:ff)</string>
+    <string name="wol_broadcast">Adresse de broadcast (facultatif)</string>
+    <string name="wol_broadcast_hint">Vide : l\'adresse de broadcast du réseau Wi-Fi ou Ethernet du téléphone</string>
+    <string name="wol_broadcast_invalid">Ni une adresse IPv4, ni un nom d\'hôte</string>
+    <string name="wol_port">Port UDP (facultatif, 9 par défaut)</string>
+    <string name="wol_port_invalid">Le port doit être compris entre 1 et 65535</string>
+    <string name="wol_save">Enregistrer</string>
+    <string name="wol_forget">Oublier</string>
+    <string name="wol_sent">Paquet magique envoyé à %1$s (via %2$s)</string>
+    <string name="wol_failed">Échec de l\'envoi du paquet magique : %1$s</string>
+
     <!-- Node detail -->
     <string name="node_menu_kernel_log">Journal du noyau</string>
     <string name="node_menu_debug_shell">Shell de débogage</string>
