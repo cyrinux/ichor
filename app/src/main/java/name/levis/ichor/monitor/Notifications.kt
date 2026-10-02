@@ -52,7 +52,7 @@ fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean) {
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
     val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-        .setSmallIcon(R.drawable.ic_stat_talos)
+        .setSmallIcon(R.drawable.ic_stat_ichor)
         .setContentTitle(title)
         .setContentText(text)
         .setStyle(NotificationCompat.BigTextStyle().bigText(text))
@@ -63,7 +63,7 @@ fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean) {
     if (hideOnLockScreen) {
         builder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setPublicVersion(
             NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_stat_talos)
+                .setSmallIcon(R.drawable.ic_stat_ichor)
                 .setContentTitle(res.getString(R.string.monitor_public_title))
                 .build(),
         )

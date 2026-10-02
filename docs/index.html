@@ -31,7 +31,7 @@
   "author": { "@type": "Person", "name": "Cyril Levis" }
 }
 </script>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z' fill='none' stroke='%23FF7A45' stroke-width='2' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='12' r='3' fill='%23FF7A45'/%3E%3C/svg%3E">
+<link rel="icon" href="brand/ichor.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -92,7 +92,7 @@
     padding: 1.25rem 0;
   }
   .brand { display: flex; align-items: center; gap: .6rem; font-weight: 600; text-decoration: none; }
-  .brand svg { width: 28px; height: 28px; }
+  .brand img { width: 32px; height: 32px; }
   .top nav { display: flex; gap: 1.25rem; font-size: .95rem; }
   .top nav a { text-decoration: none; color: var(--ink-2); }
   .top nav a:hover { color: var(--ink); }
@@ -138,7 +138,7 @@
     animation: arrive 900ms cubic-bezier(.2, .8, .2, 1) 900ms both;
   }
   .notification header { display: flex; align-items: center; gap: .45rem; font-size: .72rem; color: var(--phone-ink-2); }
-  .notification header svg { width: 16px; height: 16px; }
+  .notification header svg { width: 16px; height: 16px; color: #FF7A45; }
   .notification header span:last-child { margin-left: auto; }
   .notification strong { display: block; font-weight: 600; font-size: .92rem; margin-top: .35rem; }
   .notification p { margin: .15rem 0 0; font-size: .82rem; color: var(--phone-ink-2); line-height: 1.35; }
@@ -269,7 +269,7 @@
 <div class="wrap">
   <header class="top">
     <a class="brand" href="./">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" fill="none" stroke="#FF7A45" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="#FF7A45"/></svg>
+      <img src="brand/ichor.svg" width="32" height="32" alt="">
       <span>Ichor <small>for Talos Linux</small></span>
     </a>
     <nav aria-label="Primary">
@@ -302,7 +302,7 @@
           <div class="date">Thursday, 1 October</div>
           <div class="notification">
             <header>
-              <svg viewBox="0 0 24 24"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" fill="none" stroke="#FF7A45" stroke-width="2.4" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="#FF7A45"/></svg>
+              <svg viewBox="0 0 512 512" fill="currentColor" stroke="currentColor"><path fill="none" stroke-width="40" d="M300.1,72.6A212,212 0 0 1 463.4,235.9M467.9,272.6A212,212 0 0 1 355.5,467.2M211.9,72.6A212,212 0 0 0 48.6,235.9M44.1,272.6A212,212 0 0 0 156.5,467.2"/><path stroke="none" fill-rule="evenodd" d="M256,8L228,24L240,116L256,132L272,116L284,24ZM256,100C190,100 152,144 152,204L152,300L192,350L320,350L360,300L360,204C360,144 322,100 256,100ZM162,184L256,210L350,184L344,232L302,250L280,250L280,350L232,350L232,250L210,250L168,232ZM256,380C256,380 214,430 214,456A42,42 0 0 0 298,456C298,430 256,380 256,380Z"/></svg>
               <span>Ichor</span><span>now</span>
             </header>
             <strong>cp-2 is not ready</strong>

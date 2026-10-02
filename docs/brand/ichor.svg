@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Ichor</title>
+  <defs>
+    <linearGradient id="gold" gradientUnits="userSpaceOnUse" x1="256" y1="40" x2="256" y2="500">
+      <stop offset="0" stop-color="#FFC94A"/>
+      <stop offset="0.55" stop-color="#E29A2B"/>
+      <stop offset="1" stop-color="#A9661C"/>
+    </linearGradient>
+    <linearGradient id="bronzeL" gradientUnits="userSpaceOnUse" x1="150" y1="60" x2="300" y2="300">
+      <stop offset="0" stop-color="#E9B266"/>
+      <stop offset="1" stop-color="#B27A3A"/>
+    </linearGradient>
+    <linearGradient id="bronzeR" gradientUnits="userSpaceOnUse" x1="256" y1="60" x2="380" y2="300">
+      <stop offset="0" stop-color="#B98243"/>
+      <stop offset="1" stop-color="#7E5225"/>
+    </linearGradient>
+    <linearGradient id="armor" gradientUnits="userSpaceOnUse" x1="256" y1="180" x2="256" y2="340">
+      <stop offset="0" stop-color="#36383C"/>
+      <stop offset="1" stop-color="#18191C"/>
+    </linearGradient>
+    <radialGradient id="core" gradientUnits="userSpaceOnUse" cx="252" cy="251" r="16">
+      <stop offset="0" stop-color="#FFF8D6"/>
+      <stop offset="0.45" stop-color="#FFD54A"/>
+      <stop offset="1" stop-color="#F29A0E"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Broken halo ring, split by the crest -->
+  <g fill="none" stroke="url(#gold)" stroke-width="14">
+    <path d="M274.6,55 A178,178 0 0 1 407,137.7"/>
+    <path d="M414.6,151.2 A178,178 0 0 1 433.6,219.6"/>
+    <path d="M237.4,55 A178,178 0 0 0 105,137.7"/>
+    <path d="M97.4,151.2 A178,178 0 0 0 78.4,219.6"/>
+  </g>
+
+  <!-- Lower claws flaring out from the halo -->
+  <g fill="url(#gold)">
+    <path d="M68,234 Q54,282 68,326 L83,314 Q74,282 83,240 Z"/>
+    <path d="M72,338 Q88,398 142,436 L150,418 Q108,386 88,332 Z"/>
+    <path d="M444,234 Q458,282 444,326 L429,314 Q438,282 429,240 Z"/>
+    <path d="M440,338 Q424,398 370,436 L362,418 Q404,386 424,332 Z"/>
+  </g>
+
+  <!-- Shield behind the cluster -->
+  <path d="M100,300 L100,380 L256,500 L412,380 L412,300 Z" fill="url(#bronzeL)"/>
+  <path d="M256,500 L412,380 L412,300 L256,300 Z" fill="url(#bronzeR)"/>
+  <path d="M114,306 L114,372 L256,482 L398,372 L398,306 Z" fill="#141518"/>
+
+  <!-- Torso and pauldrons -->
+  <path d="M224,182 C200,182 178,184 158,190 C118,200 88,224 82,264 L86,304 L94,340 L418,340 L426,304 L430,264 C424,224 394,200 354,190 C334,184 312,182 288,182 Z" fill="url(#armor)" stroke="#0E0F11" stroke-width="5"/>
+  <path d="M120,304 C118,268 148,240 196,234 L222,246 L214,320 L122,320 Z" fill="#2A2C30"/>
+  <path d="M392,304 C394,268 364,240 316,234 L290,246 L298,320 L390,320 Z" fill="#202225"/>
+  <path d="M206,244 Q256,230 306,244 L296,336 L216,336 Z" fill="#1C1D20"/>
+  <path d="M230,192 C186,192 132,202 104,234 C90,250 86,272 88,304 L108,304 C106,282 110,266 121,254 C146,228 190,214 236,212 Z" fill="url(#bronzeL)" stroke="#0E0F11" stroke-width="3"/>
+  <path d="M282,192 C326,192 380,202 408,234 C422,250 426,272 424,304 L404,304 C406,282 402,266 391,254 C366,228 322,214 276,212 Z" fill="url(#bronzeR)" stroke="#0E0F11" stroke-width="3"/>
+  <path d="M184,232 Q218,240 238,268 L229,274 Q212,252 180,244 Z" fill="url(#bronzeL)"/>
+  <path d="M328,232 Q294,240 274,268 L283,274 Q300,252 332,244 Z" fill="url(#bronzeR)"/>
+  <circle cx="176" cy="236" r="14" fill="url(#bronzeL)" stroke="#0E0F11" stroke-width="4"/>
+  <circle cx="336" cy="236" r="14" fill="url(#bronzeR)" stroke="#0E0F11" stroke-width="4"/>
+
+  <!-- Neck guard -->
+  <path d="M222,166 L290,166 L302,204 L256,230 L210,204 Z" fill="#1C1D20" stroke="#0E0F11" stroke-width="4"/>
+  <path d="M226,176 L214,202 M286,176 L298,202" fill="none" stroke="#8A5A2A" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Helmet -->
+  <path d="M256,58 C218,58 198,86 198,120 L198,160 L218,188 L294,188 L314,160 L314,120 C314,86 294,58 256,58 Z" fill="#0E0F11"/>
+  <path d="M256,64 C224,64 204,88 204,120 L204,158 L222,182 L238,182 L238,138 L256,128 Z" fill="url(#bronzeL)"/>
+  <path d="M256,64 C288,64 308,88 308,120 L308,158 L290,182 L274,182 L274,138 L256,128 Z" fill="url(#bronzeR)"/>
+  <path d="M208,100 L256,114 L304,100 L300,128 L278,138 L268,138 L268,190 L244,190 L244,138 L234,138 L212,128 Z" fill="#141518"/>
+  <path d="M216,136 L228,144 L228,176 L220,170 Z M296,136 L284,144 L284,176 L292,170 Z" fill="#141518"/>
+
+  <!-- Crest -->
+  <path d="M256,12 L240,22 L248,88 L256,98 Z" fill="url(#bronzeL)" stroke="#0E0F11" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M256,12 L274,20 L264,88 L256,98 Z" fill="url(#bronzeR)" stroke="#0E0F11" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- Cluster nodes -->
+  <g stroke="#5A5E64" stroke-width="3.5" stroke-linejoin="round">
+    <path d="M90,326 L146,304 L204,326 L148,348 Z" fill="#3C3E42"/>
+    <path d="M90,326 L148,348 L148,416 L90,394 Z" fill="#28292C"/>
+    <path d="M148,348 L204,326 L204,394 L148,416 Z" fill="#1B1C1F"/>
+
+    <path d="M308,326 L366,304 L422,326 L364,348 Z" fill="#3C3E42"/>
+    <path d="M308,326 L364,348 L364,416 L308,394 Z" fill="#28292C"/>
+    <path d="M364,348 L422,326 L422,394 L364,416 Z" fill="#1B1C1F"/>
+
+    <path d="M184,364 L256,336 L328,364 L256,392 Z" fill="#3C3E42"/>
+    <path d="M184,364 L256,392 L256,474 L184,446 Z" fill="#28292C"/>
+    <path d="M256,392 L328,364 L328,446 L256,474 Z" fill="#1B1C1F"/>
+  </g>
+
+  <!-- Status lights -->
+  <g fill="#FFC43A">
+    <circle cx="104" cy="356" r="4"/><circle cx="104" cy="371" r="4"/>
+    <circle cx="200" cy="396" r="4"/><circle cx="200" cy="411" r="4"/>
+  </g>
+  <g fill="none" stroke="#E59A22" stroke-width="4.5" stroke-linecap="round">
+    <path d="M115,362 L134,369"/><path d="M115,377 L134,384"/>
+    <path d="M211,402 L238,412"/><path d="M211,417 L238,427"/>
+    <path d="M274,412 L310,398"/><path d="M274,427 L310,413"/>
+    <path d="M378,370 L408,358"/><path d="M378,385 L408,373"/>
+  </g>
+
+  <!-- Ichor: soft glow, then the bright vein -->
+  <g fill="none" stroke="#FFA914" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke-opacity="0.14" stroke-width="24" d="M222,110 L256,121 L290,110 M256,121 L256,364 M256,292 C218,292 166,298 146,326 M256,292 C294,292 346,298 366,326"/>
+    <path stroke-opacity="0.3" stroke-width="13" d="M222,110 L256,121 L290,110 M256,121 L256,364 M256,292 C218,292 166,298 146,326 M256,292 C294,292 346,298 366,326"/>
+  </g>
+  <path fill="none" stroke="#FFD54A" stroke-linecap="round" stroke-linejoin="round" stroke-width="6" d="M222,110 L256,121 L290,110 M256,121 L256,364 M256,292 C218,292 166,298 146,326 M256,292 C294,292 346,298 366,326"/>
+  <g fill="#FFE27A">
+    <circle cx="146" cy="326" r="7.5"/>
+    <circle cx="366" cy="326" r="7.5"/>
+    <circle cx="256" cy="364" r="7.5"/>
+  </g>
+  <circle cx="256" cy="256" r="34" fill="#FFA914" fill-opacity="0.16"/>
+  <circle cx="256" cy="256" r="27" fill="#FFA914" fill-opacity="0.3"/>
+  <circle cx="256" cy="256" r="21" fill="url(#bronzeR)" stroke="#0E0F11" stroke-width="3"/>
+  <circle cx="256" cy="256" r="15" fill="url(#core)"/>
+</svg>
