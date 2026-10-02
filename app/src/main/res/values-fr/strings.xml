@@ -86,6 +86,13 @@
     <string name="overview_stat_cpu">Cœurs CPU</string>
     <string name="overview_stat_memory">Mémoire</string>
     <string name="overview_stat_memory_used">%d %% utilisés</string>
+    <string name="overview_stat_percent">%d %%</string>
+    <string name="overview_stat_cpu_used">CPU utilisé</string>
+    <plurals name="overview_stat_cpu_of_cores">
+        <item quantity="one">sur %d cœur</item>
+        <item quantity="other">sur %d cœurs</item>
+    </plurals>
+    <string name="overview_cpu_history_description">Utilisation CPU du cluster ces dernières minutes</string>
     <string name="overview_node_actions">Actions sur le nœud</string>
     <string name="overview_role_control_plane">control plane</string>
     <string name="overview_update_banner">Ichor %1$s est disponible — appuyez pour mettre à jour</string>
@@ -262,6 +269,8 @@
     <string name="settings_theme_black">Noir</string>
     <string name="settings_language">Langue</string>
     <string name="settings_language_system">Langue du système</string>
+    <string name="settings_live_cluster_stats">Utilisation du cluster en direct</string>
+    <string name="settings_live_cluster_stats_desc">Actualise le CPU et la mémoire de la vue d\'ensemble toutes les quelques secondes tant qu\'elle est ouverte. Désactivez pour économiser données mobiles et batterie.</string>
     <string name="settings_section_security">Sécurité</string>
     <string name="settings_auth_needs_lock">Configurez d\'abord une empreinte ou un verrouillage d\'écran (code, schéma, mot de passe) sur cet appareil.</string>
     <string name="settings_auth_enable_lock">Activer le verrouillage de l\'app</string>

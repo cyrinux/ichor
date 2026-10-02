@@ -73,7 +73,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai"))
+		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|clusterstats|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|kubeconfig|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai"))
 	}
 
 	raw, err := os.ReadFile(*configPath)
@@ -154,6 +154,8 @@ func main() {
 		out, err = talosmobile.KubeSpanStatus(cfg, *contextName)
 	case "stats":
 		out, err = talosmobile.NodeStats(cfg, *contextName, flag.Arg(1))
+	case "clusterstats":
+		out, err = talosmobile.ClusterStats(cfg, *contextName)
 	case "etcd":
 		out, err = talosmobile.EtcdStatus(cfg, *contextName)
 	case "pcap":

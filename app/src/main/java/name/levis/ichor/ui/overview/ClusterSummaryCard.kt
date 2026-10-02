@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.overview
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -26,21 +28,24 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ClusterStatus
 import name.levis.ichor.model.ClusterSummary
+import name.levis.ichor.model.ClusterUsage
 import name.levis.ichor.model.displayVersion
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
+import kotlin.math.roundToInt
 
 /** Unknown capacity (older core, or no node said): a dash rather than a misleading 0. */
 private const val UNKNOWN = "—"
 
 /**
  * The cluster at a glance, above the nodes: its name and overall state, how many nodes on
- * which Talos version, and the capacity of the nodes that answered.
+ * which Talos version, and the capacity of the nodes that answered. With [live] usage, CPU
+ * and memory follow it; without, they show the overview's snapshot.
  */
 @Composable
-fun ClusterSummaryCard(name: String, summary: ClusterSummary, modifier: Modifier = Modifier) {
+fun ClusterSummaryCard(name: String, summary: ClusterSummary, live: ClusterLiveState?, modifier: Modifier = Modifier) {
     Card(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -63,13 +68,10 @@ fun ClusterSummaryCard(name: String, summary: ClusterSummary, modifier: Modifier
                     stringResource(R.string.overview_stat_nodes),
                     Modifier.weight(1f),
                 )
-                Stat(
-                    Icons.Outlined.Memory,
-                    summary.cpuCount.takeIf { it > 0 }?.toString() ?: UNKNOWN,
-                    stringResource(R.string.overview_stat_cpu),
-                    Modifier.weight(1f),
-                )
-                MemoryStat(summary, Modifier.weight(1f))
+                CpuStat(summary.cpuCount, live, Modifier.weight(1f))
+                // Live memory only once it covers every node the overview reached, never fewer.
+                val reached = summary.total - summary.unreachable
+                MemoryStat(summary, live?.usage?.takeIf { it.nodes >= reached }, Modifier.weight(1f))
             }
         }
     }
@@ -113,17 +115,40 @@ private fun Breakdown(summary: ClusterSummary) {
     }
 }
 
+/** Cores; with live usage, the busy share of them and how it moved over the last minutes. */
 @Composable
-private fun MemoryStat(summary: ClusterSummary, modifier: Modifier) {
-    val used = summary.memUsedFraction
+private fun CpuStat(cpuCount: Int, live: ClusterLiveState?, modifier: Modifier) {
+    val used = live?.usage?.cpuFraction
+    val cores = cpuCount.takeIf { it > 0 }
+    Column(modifier) {
+        if (used == null) {
+            Stat(Icons.Outlined.Memory, cores?.toString() ?: UNKNOWN, stringResource(R.string.overview_stat_cpu))
+        } else {
+            Stat(
+                Icons.Outlined.Memory,
+                stringResource(R.string.overview_stat_percent, (used * 100).roundToInt()),
+                cores?.let { pluralStringResource(R.plurals.overview_stat_cpu_of_cores, it, it) }
+                    ?: stringResource(R.string.overview_stat_cpu_used),
+            )
+            CpuSparkline(live.cpuHistory, Modifier.padding(top = 4.dp))
+        }
+    }
+}
+
+@Composable
+private fun MemoryStat(summary: ClusterSummary, live: ClusterUsage?, modifier: Modifier) {
+    val total = live?.memTotal?.takeIf { it > 0 } ?: summary.memTotal
+    val used = live?.memUsedFraction ?: summary.memUsedFraction
+    // Glide between samples rather than jump.
+    val shown by animateFloatAsState(used ?: 0f, label = "memory")
     Column(modifier) {
         Stat(
             Icons.Outlined.SdCard,
-            if (summary.memTotal > 0) formatBytes(summary.memTotal) else UNKNOWN,
-            used?.let { stringResource(R.string.overview_stat_memory_used, (it * 100).toInt()) }
+            if (total > 0) formatBytes(total) else UNKNOWN,
+            used?.let { stringResource(R.string.overview_stat_memory_used, (it * 100).roundToInt()) }
                 ?: stringResource(R.string.overview_stat_memory),
         )
-        used?.let { UsageBar(it, Modifier.padding(top = 6.dp)) }
+        if (used != null) UsageBar(shown, Modifier.padding(top = 6.dp))
     }
 }
 

@@ -49,6 +49,10 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _language = MutableStateFlow(prefs.getString(KEY_LANGUAGE, "").orEmpty())
     val language: StateFlow<String> = _language.asStateFlow()
 
+    /** Refreshes the overview's CPU and memory every few seconds while it is on screen. */
+    private val _liveClusterStats = MutableStateFlow(prefs.getBoolean(KEY_LIVE_CLUSTER_STATS, true))
+    val liveClusterStats: StateFlow<Boolean> = _liveClusterStats.asStateFlow()
+
     private val _privacyMask = MutableStateFlow(
         PrivacyMask(prefs.getBoolean(KEY_PRIVACY_MASK, false), prefs.getString(KEY_PRIVACY_WORDS, "").orEmpty()),
     )
@@ -63,6 +67,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
     fun setAllowScreenshots(allow: Boolean) {
         prefs.edit().putBoolean(KEY_SCREENSHOTS, allow).apply()
         _allowScreenshots.value = allow
+    }
+
+    fun setLiveClusterStats(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_LIVE_CLUSTER_STATS, enabled).apply()
+        _liveClusterStats.value = enabled
     }
 
     fun setThemeMode(mode: ThemeMode) {
@@ -83,6 +92,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_LANGUAGE = "language"
         private const val KEY_PRIVACY_MASK = "privacy_mask"
         private const val KEY_PRIVACY_WORDS = "privacy_mask_words"
+        private const val KEY_LIVE_CLUSTER_STATS = "live_cluster_stats"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */
         fun storedLanguage(context: Context): String =

@@ -87,6 +87,13 @@
     <string name="overview_stat_cpu">CPU cores</string>
     <string name="overview_stat_memory">Memory</string>
     <string name="overview_stat_memory_used">%d%% used</string>
+    <string name="overview_stat_percent">%d%%</string>
+    <string name="overview_stat_cpu_used">CPU in use</string>
+    <plurals name="overview_stat_cpu_of_cores">
+        <item quantity="one">of %d core</item>
+        <item quantity="other">of %d cores</item>
+    </plurals>
+    <string name="overview_cpu_history_description">Cluster CPU usage over the last minutes</string>
     <string name="overview_node_actions">Node actions</string>
     <string name="overview_role_control_plane">control plane</string>
     <string name="overview_update_banner">Ichor %1$s is available — tap to update</string>
@@ -263,6 +270,8 @@
     <string name="settings_theme_black">Black</string>
     <string name="settings_language">Language</string>
     <string name="settings_language_system">System default</string>
+    <string name="settings_live_cluster_stats">Live cluster usage</string>
+    <string name="settings_live_cluster_stats_desc">Refresh CPU and memory on the overview every few seconds while it is open. Turn off to save mobile data and battery.</string>
     <string name="settings_section_security">Security</string>
     <string name="settings_auth_needs_lock">Set up a fingerprint or a screen lock (PIN, pattern, password) on this device first.</string>
     <string name="settings_auth_enable_lock">Enable app lock</string>
