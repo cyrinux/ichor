@@ -17,39 +17,69 @@ jobs:
   ios:
     uses: ./.github/workflows/ios.yml
 
-  # Uploads the App Bundle, the store listing and the release notes (fastlane/metadata/android)
-  # to Play's internal track as a draft, to promote by hand in the Play Console. Skipped
-  # until the PLAY_SERVICE_ACCOUNT_JSON secret is set (see fastlane/PLAY_CONSOLE.md).
+  # Uploads the App Bundle (the `play` build from android.yml, not bundleRelease), its R8
+  # mapping and the release notes (fastlane/metadata/android/*/changelogs) to Play's internal
+  # track as a draft, to promote by hand in the Play Console. Authenticates with Workload
+  # Identity Federation, so no service account key is stored. Skipped until the WIF_PROVIDER
+  # and SERVICE_ACCOUNT secrets are set (see fastlane/PLAY_CONSOLE.md).
   play:
     needs: [android]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC token exchanged for Google credentials
+    env:
+      WIF_PROVIDER: ${{ secrets.WIF_PROVIDER }}
+      SERVICE_ACCOUNT: ${{ secrets.SERVICE_ACCOUNT }}
     steps:
+      - name: Check Play secrets
+        if: env.WIF_PROVIDER == '' || env.SERVICE_ACCOUNT == ''
+        run: echo "WIF_PROVIDER or SERVICE_ACCOUNT is not set, skipping the Play upload."
+
       - uses: actions/checkout@v4
+        if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
+        with:
+          fetch-depth: 0 # scripts/version.sh derives the versionCode from tags and history
 
       - uses: actions/download-artifact@v4
+        if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
         with:
           name: android-play
           path: play
 
-      - name: Upload to Google Play (internal track, draft)
-        env:
-          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+      # Play wants whatsnew-<locale> files; fastlane keeps changelogs/<versionCode>.txt
+      # (default.txt as fallback) per locale.
+      - name: Release notes
+        if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
         run: |
-          if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then
-            echo "PLAY_SERVICE_ACCOUNT_JSON is not set: skipping the Play upload."
-            exit 0
-          fi
-          printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/play.json"
-          gem install --no-document fastlane
-          aab="$(find play -name '*.aab' | head -1)"
-          fastlane supply \
-            --package_name name.levis.talosmobile \
-            --json_key "$RUNNER_TEMP/play.json" \
-            --aab "$aab" \
-            --mapping play/mapping/play/mapping.txt \
-            --track internal \
-            --release_status draft \
-            --metadata_path fastlane/metadata/android
+          code="$(scripts/version.sh --field BUILD_NUMBER)"
+          mkdir -p whatsnew
+          for dir in fastlane/metadata/android/*/; do
+            locale="$(basename "$dir")"
+            for notes in "$dir/changelogs/$code.txt" "$dir/changelogs/default.txt"; do
+              if [ -f "$notes" ]; then cp "$notes" "whatsnew/whatsnew-$locale"; break; fi
+            done
+          done
+          echo "versionCode $code"; ls -l whatsnew
+
+      - id: auth
+        if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+
+      - name: Upload to Google Play (internal track, draft)
+        if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: ${{ steps.auth.outputs.credentials_file_path }}
+          packageName: name.levis.ichor
+          releaseFiles: play/bundle/play/*.aab
+          mappingFile: play/mapping/play/mapping.txt
+          whatsNewDirectory: whatsnew
+          track: internal
+          status: draft
 
   publish:
     needs: [android, ios]
