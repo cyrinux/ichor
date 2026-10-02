@@ -26,8 +26,11 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.UnfoldMore
+import androidx.compose.material.icons.outlined.VpnLock
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -199,8 +202,8 @@ private fun ClusterPosition(contexts: List<ContextSummary>, active: Int, colors:
 }
 
 /**
- * The imported clusters: pick the one to show, rename it, change its color, remove it, or
- * add one. Removing asks first; [onRemove] then drops the cluster's credentials from the device.
+ * The imported clusters: pick the one to show, rename it, change its color, set it to be
+ * reached over a VPN only ([vpnOnly], by fingerprint), remove it, or add one. Removing asks first; [onRemove] then drops the cluster's credentials from the device.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -211,6 +214,8 @@ fun ClusterSheet(
     onSelect: (String) -> Unit,
     onRename: (ContextSummary, String) -> Unit,
     onColor: (ContextSummary, Int) -> Unit,
+    vpnOnly: Set<String>,
+    onVpnOnly: (ContextSummary, Boolean) -> Unit,
     onAdd: () -> Unit,
     onRemove: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -237,9 +242,17 @@ fun ClusterSheet(
                     // Not in screenshot mode: the dialog would show the given name.
                     onRename = { renaming = context }.takeIf { !labels.masked && context.fingerprint.isNotBlank() },
                     onColor = { coloring = context },
+                    vpnOnly = context.fingerprint in vpnOnly,
+                    onVpnOnly = { on: Boolean -> onVpnOnly(context, on) }.takeIf { context.fingerprint.isNotBlank() },
                     onRemove = { removing = context },
                 )
             }
+            Text(
+                stringResource(R.string.clusters_vpn_only_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+            )
             if (contexts.size > 1) {
                 Text(
                     stringResource(R.string.clusters_swipe_hint),
@@ -304,6 +317,8 @@ private fun ClusterRow(
     onSelect: () -> Unit,
     onRename: (() -> Unit)?,
     onColor: () -> Unit,
+    vpnOnly: Boolean,
+    onVpnOnly: ((Boolean) -> Unit)?,
     onRemove: () -> Unit,
 ) {
     val label = labels.of(context)
@@ -325,6 +340,16 @@ private fun ClusterRow(
                     Text(
                         "${stringResource(R.string.common_label_cert_expires)}: ${certExpiry(context.certNotAfter)}",
                         color = LocalStatusColors.current.warn,
+                    )
+                }
+                onVpnOnly?.let { toggle ->
+                    FilterChip(
+                        selected = vpnOnly,
+                        onClick = { toggle(!vpnOnly) },
+                        label = { Text(stringResource(R.string.clusters_vpn_only)) },
+                        leadingIcon = {
+                            Icon(Icons.Outlined.VpnLock, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize))
+                        },
                     )
                 }
             }

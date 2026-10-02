@@ -58,6 +58,8 @@
     <string name="common_role_notice_body">Este talosconfig tiene %1$s. Importa un talosconfig creado con --roles %2$s para usarlo (consulta el README).</string>
     <string name="common_role_notice_no_roles">ningún rol</string>
     <string name="common_no_config">No se ha importado ningún talosconfig</string>
+    <string name="common_vpn_required">Este clúster está configurado para alcanzarse solo por VPN y no hay ninguna VPN conectada. Conéctala: esta pantalla se recarga sola.</string>
+    <string name="common_vpn_settings">Ajustes de VPN</string>
 
     <!-- Overview -->
     <string name="overview_title">Clúster</string>
@@ -275,6 +277,8 @@
     <string name="clusters_rename">Renombrar %1$s</string>
     <string name="clusters_rename_label">Nombre</string>
     <string name="clusters_rename_hint">Solo se muestra en este dispositivo, el talosconfig conserva %1$s. Déjalo vacío para volver a usarlo.</string>
+    <string name="clusters_vpn_only">Solo VPN</string>
+    <string name="clusters_vpn_only_hint">Solo VPN: sin una VPN conectada la app no intenta alcanzar el clúster y las comprobaciones en segundo plano la esperan.</string>
     <string name="shortcut_cluster_removed">Este clúster se ha eliminado</string>
 
     <!-- Settings -->
@@ -959,4 +963,7 @@
     <string name="ai_copy">Copiar</string>
     <string name="ai_disclaimer">Las respuestas de la IA pueden ser erróneas. Comprueba un comando antes de ejecutarlo, sobre todo si restablece un nodo o modifica etcd.</string>
     <string name="ai_health_diagnose">Diagnosticar con IA</string>
+    <string name="demo_try">Probar demo</string>
+    <string name="demo_hint">¿Aún no tienes un clúster? Explora Ichor con un clúster Talos de ejemplo.</string>
+    <string name="demo_notice">Clúster de demostración · Datos de ejemplo. No se puede modificar el clúster. Elimina la demo en Gestionar clústeres cuando termines.</string>
 </resources>

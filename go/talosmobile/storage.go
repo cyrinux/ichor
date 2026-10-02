@@ -49,6 +49,10 @@ func NodeMounts(configYAML, contextName, node string) (out string, err error) {
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("NodeMounts", configYAML, contextName, node)
+	}
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err
@@ -112,6 +116,10 @@ func NodeVolumes(configYAML, contextName, node string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("NodeVolumes", configYAML, contextName, node)
+	}
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
@@ -223,6 +231,10 @@ func NodeDiskUsage(configYAML, contextName, node, path string, depth int) (out s
 	defer maskResult(&out, &err)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("NodeDiskUsage", configYAML, contextName, node, path)
+	}
 	path = privacy.unmaskText(path)
 
 	return withSession(configYAML, contextName, diskUsageTimeout, func(ctx context.Context, s *session) (string, error) {

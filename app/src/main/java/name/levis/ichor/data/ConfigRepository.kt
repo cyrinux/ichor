@@ -21,7 +21,8 @@ data class StoredConfig(
 val StoredConfig.activeSummary: ContextSummary?
     get() = summary.contexts.firstOrNull { it.name == activeContext }
 
-class ConfigRepository(context: Context) {
+/** [guard] may hold back a call to the cluster on screen by throwing, e.g. off its VPN. */
+class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Unit = {}) {
 
     private val store = SecureStore(
         File(context.filesDir, "talosconfig.enc"),
@@ -51,6 +52,9 @@ class ConfigRepository(context: Context) {
 
     /** Validates without storing; throws with a readable message when invalid. */
     suspend fun validate(yaml: String): ConfigSummary = withContext(Dispatchers.IO) { parse(yaml) }
+
+    /** Adds the local demo alongside any imported clusters. */
+    suspend fun saveDemo() = withContext(Dispatchers.IO) { save(Talosmobile.demoConfig()) }
 
     /**
      * Stores [yaml]. With a config already stored its contexts are added to it (one stored
@@ -108,6 +112,12 @@ class ConfigRepository(context: Context) {
         _config.value = StoredConfig(merged, summary, current.activeContext)
         _generation.value++
     }
+
+    /**
+     * The config for a call to the cluster on screen. Throws [NoConfigException] without
+     * one, or whatever [guard] throws when the call must not be tried (see [VpnRequiredException]).
+     */
+    fun forCall(): StoredConfig = (_config.value ?: throw NoConfigException()).also(guard)
 
     fun selectContext(name: String) {
         val current = _config.value ?: return

@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -59,6 +60,36 @@ func StartEvents(configYAML, contextName, nodes string, tail int, listener Event
 }
 
 func runEvents(ctx context.Context, configYAML, contextName, nodes string, tail int, listener EventListener) string {
+	if isDemoContext(configYAML, contextName) {
+		targets := demoNodes()
+		selected := func(node string) bool {
+			return strings.TrimSpace(nodes) == "" || slices.Contains(strings.Split(nodes, ","), node)
+		}
+		emit := func(n nodeOverview, at time.Time) {
+			if !selected(n.Node) {
+				return
+			}
+			out, _ := toJSON(nodeEvent{Node: n.Node, ID: fmt.Sprintf("demo-%d-%s", at.UnixNano(), n.Hostname), At: at.UnixMilli(), Kind: "service", Subject: "kubelet", Action: "running", Message: "Demo: node health check successful", Severity: "info"})
+			listener.OnEvent(out)
+		}
+		if tail > 0 {
+			for _, n := range targets {
+				emit(n, time.Now().Add(-time.Minute))
+			}
+		}
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		i := 0
+		for {
+			select {
+			case <-ctx.Done():
+				return ""
+			case at := <-ticker.C:
+				emit(targets[i%len(targets)], at)
+				i++
+			}
+		}
+	}
 	s, release, err := sessions.acquire(configYAML, contextName)
 	if err != nil {
 		return err.Error()

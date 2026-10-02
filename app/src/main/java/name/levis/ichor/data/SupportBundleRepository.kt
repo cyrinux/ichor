@@ -35,7 +35,7 @@ class SupportBundleRepository(private val configs: ConfigRepository, filesDir: F
 
     /** Collects a bundle of [nodes] into [dest]. Cancelling the collector cancels it. */
     fun collect(nodes: List<String>, dest: File): Flow<SupportEvent> = callbackFlow {
-        val stored = configs.config.value ?: throw NoConfigException()
+        val stored = configs.forCall()
         dest.parentFile?.mkdirs()
         val run = Talosmobile.startSupportBundle(
             stored.yaml,

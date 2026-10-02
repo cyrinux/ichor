@@ -3,6 +3,7 @@ package talosmobile
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"time"
@@ -29,6 +30,10 @@ func ServiceLogs(configYAML, contextName, node, service string, tailLines int) (
 	defer maskResult(&out, &err)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("ServiceLogs", configYAML, contextName, node, service, fmt.Sprint(tailLines))
+	}
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if strings.TrimSpace(service) == "" {
@@ -57,6 +62,10 @@ func KernelLogs(configYAML, contextName, node string, tailLines int) (out string
 	defer maskResult(&out, &err)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("KernelLogs", configYAML, contextName, node, "", fmt.Sprint(tailLines))
+	}
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		stream, err := s.client.Dmesg(client.WithNode(ctx, node), false, false)

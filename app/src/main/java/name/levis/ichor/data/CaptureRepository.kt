@@ -47,7 +47,7 @@ class CaptureRepository(private val configs: ConfigRepository, filesDir: File) {
      * is kept and Done still follows).
      */
     suspend fun start(node: String, options: CaptureOptions, dest: File): CaptureHandle = withContext(Dispatchers.IO) {
-        val stored = configs.config.value ?: throw NoConfigException()
+        val stored = configs.forCall()
         dest.parentFile?.mkdirs()
         val events = Channel<CaptureEvent>(Channel.UNLIMITED) // never drop packets or the final Done
         val run = Talosmobile.startPacketCapture(

@@ -58,6 +58,8 @@
     <string name="common_role_notice_body">Questo talosconfig ha %1$s. Per usare questa funzione importa un talosconfig creato con --roles %2$s (vedi README).</string>
     <string name="common_role_notice_no_roles">nessun ruolo</string>
     <string name="common_no_config">Nessun talosconfig importato</string>
+    <string name="common_vpn_required">Questo cluster è impostato per essere raggiunto solo tramite VPN e nessuna VPN è connessa. Connettila: questa schermata si ricarica da sola.</string>
+    <string name="common_vpn_settings">Impostazioni VPN</string>
 
     <!-- Overview -->
     <string name="overview_title">Cluster</string>
@@ -275,6 +277,8 @@
     <string name="clusters_rename">Rinomina %1$s</string>
     <string name="clusters_rename_label">Nome</string>
     <string name="clusters_rename_hint">Mostrato solo su questo dispositivo, il talosconfig mantiene %1$s. Lascia vuoto per usarlo di nuovo.</string>
+    <string name="clusters_vpn_only">Solo VPN</string>
+    <string name="clusters_vpn_only_hint">Solo VPN: senza una VPN connessa l\'app non prova a raggiungere il cluster e i controlli in background la attendono.</string>
     <string name="shortcut_cluster_removed">Questo cluster è stato rimosso</string>
 
     <!-- Settings -->
@@ -959,4 +963,7 @@
     <string name="ai_copy">Copia</string>
     <string name="ai_disclaimer">Le risposte dell’IA possono essere sbagliate. Controlla un comando prima di eseguirlo, soprattutto se reimposta un nodo o modifica etcd.</string>
     <string name="ai_health_diagnose">Diagnostica con l’IA</string>
+    <string name="demo_try">Prova la demo</string>
+    <string name="demo_hint">Non hai ancora un cluster? Esplora Ichor con un cluster Talos di esempio.</string>
+    <string name="demo_notice">Cluster dimostrativo · Dati di esempio. Le modifiche al cluster non sono disponibili. Rimuovi la demo da Gestisci cluster al termine.</string>
 </resources>

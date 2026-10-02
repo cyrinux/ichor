@@ -2,9 +2,12 @@ package talosmobile
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/api/common"
 	"github.com/siderolabs/talos/pkg/machinery/constants"
@@ -37,7 +40,7 @@ func StartLogFollow(configYAML, contextName, node, service string, tailLines int
 	go func() {
 		defer cancel()
 
-		listener.OnDone(followLog(ctx, configYAML, contextName, node, serviceLogOpener(strings.TrimSpace(service), clampTail(tailLines)), listener))
+		listener.OnDone(followLog(ctx, configYAML, contextName, node, serviceLogOpener(strings.TrimSpace(service), clampTail(tailLines)), listener, service, tailLines))
 	}()
 
 	return &LogRun{cancel: cancel}
@@ -66,7 +69,36 @@ func serviceLogOpener(service string, tail int) logOpener {
 	}
 }
 
-func followLog(ctx context.Context, configYAML, contextName, node string, open logOpener, listener LogListener) string {
+func followLog(ctx context.Context, configYAML, contextName, node string, open logOpener, listener LogListener, demoSource string, demoTail int) string {
+	if isDemoContext(configYAML, contextName) {
+		out, err := demoRead("ServiceLogs", configYAML, contextName, node, demoSource, fmt.Sprint(demoTail))
+		if err != nil {
+			return err.Error()
+		}
+		var tail logTail
+		if err := json.Unmarshal([]byte(out), &tail); err != nil {
+			return err.Error()
+		}
+		for _, line := range tail.Lines {
+			if ctx.Err() != nil {
+				return ""
+			}
+			listener.OnLine(line)
+		}
+		if demoSource == "" {
+			demoSource = "kernel"
+		}
+		ticker := time.NewTicker(3 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return ""
+			case at := <-ticker.C:
+				listener.OnLine(demoLogLine(demoSource, at))
+			}
+		}
+	}
 	s, release, err := sessions.acquire(configYAML, contextName)
 	if err != nil {
 		return err.Error()

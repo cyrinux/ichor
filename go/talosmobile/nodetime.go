@@ -29,6 +29,10 @@ func NodeTime(configYAML, contextName, node string) (out string, err error) {
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("NodeTime", configYAML, contextName, node)
+	}
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if err := validatePowerTarget(s.context, node); err != nil {
 			return "", err
@@ -49,6 +53,10 @@ func ClusterTime(configYAML, contextName string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
+
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("ClusterTime", configYAML, contextName, "")
+	}
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		name, _, err := resolveContext(configYAML, contextName)

@@ -46,6 +46,10 @@ fun LoadingBox(modifier: Modifier = Modifier) {
 
 @Composable
 fun ErrorBox(message: UiText, onRetry: () -> Unit, modifier: Modifier = Modifier) {
+    if (message.isVpnRequired) {
+        VpnRequiredBox(onRetry, modifier)
+        return
+    }
     val text = message.asString()
     // "This node's Talos version cannot do that" is information, not a failure. Retry stays:
     // a node that is still booting may answer the same before its API is complete.

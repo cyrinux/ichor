@@ -36,6 +36,10 @@ func ClusterStats(configYAML, contextName string) (out string, err error) {
 
 	contextName = unmaskContext(configYAML, contextName)
 
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("ClusterStats", configYAML, contextName, "")
+	}
+
 	return withSession(configYAML, contextName, statsTimeout, func(ctx context.Context, s *session) (string, error) {
 		nodes := targetNodes(s.context)
 		samples := make([]*nodeCounters, len(nodes))

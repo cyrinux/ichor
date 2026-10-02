@@ -38,7 +38,7 @@ class DiagnosisRepository(private val configs: ConfigRepository) {
 
     /** Reads the cluster state into a report (os:reader calls only). Nothing leaves the phone here. */
     suspend fun collect(anonymize: Boolean): Diagnosis {
-        val stored = configs.config.value ?: throw NoConfigException()
+        val stored = configs.forCall()
         return withContext(Dispatchers.IO) { Talosmobile.collectDiagnosis(stored.yaml, stored.activeContext, anonymize) }
     }
 

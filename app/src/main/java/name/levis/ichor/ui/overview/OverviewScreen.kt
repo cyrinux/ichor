@@ -57,6 +57,7 @@ import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.SPONSOR_URL
 import name.levis.ichor.ui.settings.openUrl
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.TalosFeature
@@ -120,6 +121,7 @@ fun OverviewScreen(
     val app = context.applicationContext as TalosApp
     val ai by app.aiPreferences.settings.collectAsStateWithLifecycle()
     val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
+    val vpnOnly by app.vpnOnly.fingerprints.collectAsStateWithLifecycle()
     val clusterLabels = rememberClusterLabels()
     val scope = rememberCoroutineScope()
     var showClusters by remember { mutableStateOf(false) }
@@ -194,6 +196,8 @@ fun OverviewScreen(
                 },
                 onRename = { cluster, name -> app.renameCluster(cluster.fingerprint, name) },
                 onColor = { cluster, color -> app.clusterColors.set(cluster.fingerprint, color) },
+                vpnOnly = vpnOnly,
+                onVpnOnly = { cluster, on -> app.setVpnOnly(cluster.fingerprint, on) },
                 onAdd = {
                     showClusters = false
                     onAddCluster()
@@ -279,10 +283,15 @@ private fun NodeList(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
+        if (certificate?.isDemo == true) item {
+            Card(Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.demo_notice), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
         if (BuildConfig.SELF_UPDATE) item { UpdateBanner(onClick = onSettings) }
         if (BuildConfig.DONATIONS) item { SupportCard() }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
-        item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
+        if (certificate?.isDemo != true) item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
         item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes), live) }
         items(nodes, key = { it.node }) { node ->
             SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {

@@ -32,6 +32,12 @@ import name.levis.ichor.security.PrefsLockSettings
 import name.levis.ichor.update.UpdateManager
 import name.levis.ichor.data.ClusterNames
 import name.levis.ichor.data.WakeOnLanStore
+import name.levis.ichor.data.StoredConfig
+import name.levis.ichor.data.VpnMonitor
+import name.levis.ichor.data.VpnOnlyClusters
+import name.levis.ichor.data.VpnRequiredException
+import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.heldBackForVpn
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.shortcuts.ClusterShortcuts
 import name.levis.ichor.shortcuts.ShortcutSpec
@@ -40,12 +46,14 @@ import name.levis.ichor.shortcuts.clusterShortcuts
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
 /** Holds app-wide singletons (manual DI; the app is small). */
 class TalosApp : Application() {
-    val configRepository by lazy { ConfigRepository(this) }
+    val configRepository by lazy { ConfigRepository(this, guard = ::holdBackOffVpn) }
     val talosRepository by lazy { TalosRepository(configRepository) }
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
     val supportBundleRepository by lazy { SupportBundleRepository(configRepository, filesDir) }
@@ -60,6 +68,8 @@ class TalosApp : Application() {
             getSharedPreferences(WakeOnLanStore.SEEN_FILE, Context.MODE_PRIVATE),
         )
     }
+    val vpnOnly by lazy { VpnOnlyClusters(getSharedPreferences(VpnOnlyClusters.FILE, Context.MODE_PRIVATE)) }
+    val vpn by lazy { VpnMonitor(this) }
     val appLock by lazy {
         AppLock(
             PrefsLockSettings(getSharedPreferences("talosdev-mobile-security", Context.MODE_PRIVATE)),
@@ -99,6 +109,35 @@ class TalosApp : Application() {
     fun renameCluster(fingerprint: String, name: String) {
         clusterNames.set(fingerprint, name)
         ProcessLifecycleOwner.get().lifecycleScope.launch { ClusterWidget().updateAll(this@TalosApp) }
+    }
+
+    /**
+     * Sets whether the cluster [fingerprint] is reached over a VPN only. When it is the one
+     * on screen it reloads: with the VPN off, the screens say to connect it instead.
+     */
+    fun setVpnOnly(fingerprint: String, vpnOnly: Boolean) {
+        this.vpnOnly.set(fingerprint, vpnOnly)
+        if (fingerprint == configRepository.config.value?.activeSummary?.fingerprint) talosRepository.invalidate()
+    }
+
+    /** Throws [VpnRequiredException] instead of trying a VPN-only cluster while no VPN is up. */
+    private fun holdBackOffVpn(stored: StoredConfig) {
+        if (heldBackForVpn(vpnOnly.fingerprints.value, stored.activeSummary?.fingerprint, vpn.isUp())) {
+            throw VpnRequiredException()
+        }
+    }
+
+    /** Once the VPN is up, a VPN-only cluster on screen reloads and is checked in the background. */
+    private fun reloadWhenVpnConnects() {
+        ProcessLifecycleOwner.get().lifecycleScope.launch {
+            vpn.up.drop(1).filter { it }.collect {
+                val shown = configRepository.config.value?.activeSummary?.fingerprint
+                if (shown != null && shown in vpnOnly.fingerprints.value) {
+                    talosRepository.invalidate()
+                    syncMonitoring(this@TalosApp, runNow = true)
+                }
+            }
+        }
     }
 
     /** Removes a cluster from the stored config; false when it was the last one (nothing is stored anymore). */
@@ -159,10 +198,12 @@ class TalosApp : Application() {
                     clusterColors.sync(it.summary)
                     clusterNames.sync(it.summary)
                     wakeOnLan.sync(it.summary)
+                    vpnOnly.sync(it.summary)
                 }
             }
         }
         publishClusterShortcuts()
+        reloadWhenVpnConnects()
         // Process-wide foreground/background, so moving between our own screens never relocks.
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) = appLock.onForeground()

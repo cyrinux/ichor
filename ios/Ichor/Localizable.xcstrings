@@ -1,6 +1,129 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Try demo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try demo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essayer la démo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probar demo"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo ausprobieren"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prova la demo"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спробувати демо"
+          }
+        }
+      }
+    },
+    "No cluster yet? Explore Ichor with a sample Talos cluster.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cluster yet? Explore Ichor with a sample Talos cluster."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas encore de cluster ? Explorez Ichor avec un exemple de cluster Talos."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Aún no tienes un clúster? Explora Ichor con un clúster Talos de ejemplo."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch kein Cluster? Erkunde Ichor mit einem Talos-Beispielcluster."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non hai ancora un cluster? Esplora Ichor con un cluster Talos di esempio."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ще немає кластера? Ознайомтеся з Ichor на прикладі кластера Talos."
+          }
+        }
+      }
+    },
+    "Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cluster de démonstration · Données fictives. Les modifications du cluster sont indisponibles. Supprimez la démo dans Gérer les clusters une fois terminé."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clúster de demostración · Datos de ejemplo. No se puede modificar el clúster. Elimina la demo en Gestionar clústeres cuando termines."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo-Cluster · Beispieldaten. Clusteränderungen sind nicht verfügbar. Entferne die Demo anschließend unter Cluster verwalten."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cluster dimostrativo · Dati di esempio. Le modifiche al cluster non sono disponibili. Rimuovi la demo da Gestisci cluster al termine."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Демонстраційний кластер · Приклад даних. Зміни кластера недоступні. Видаліть демо в розділі Керування кластерами після завершення."
+          }
+        }
+      }
+    },
     "%@ (current)" : {
       "extractionState" : "manual",
       "localizations" : {

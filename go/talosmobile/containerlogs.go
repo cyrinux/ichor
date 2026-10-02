@@ -3,6 +3,7 @@ package talosmobile
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/siderolabs/talos/pkg/machinery/api/common"
@@ -16,6 +17,10 @@ func ContainerLogs(configYAML, contextName, node, containerID string, tailLines 
 	defer maskResult(&out, &err)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("ContainerLogs", configYAML, contextName, node, containerID, fmt.Sprint(tailLines))
+	}
 	containerID = privacy.unmaskText(containerID)
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
@@ -71,7 +76,7 @@ func StartContainerLogFollow(configYAML, contextName, node, containerID string, 
 	go func() {
 		defer cancel()
 
-		listener.OnDone(followLog(ctx, configYAML, contextName, node, open, listener))
+		listener.OnDone(followLog(ctx, configYAML, contextName, node, open, listener, containerID, tailLines))
 	}()
 
 	return &LogRun{cancel: cancel}

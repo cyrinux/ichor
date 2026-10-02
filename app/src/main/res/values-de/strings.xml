@@ -58,6 +58,8 @@
     <string name="common_role_notice_body">Diese talosconfig hat %1$s. Importiere eine mit --roles %2$s erstellte talosconfig, um diese Funktion zu nutzen (siehe README).</string>
     <string name="common_role_notice_no_roles">keine Rollen</string>
     <string name="common_no_config">Keine talosconfig importiert</string>
+    <string name="common_vpn_required">Dieser Cluster ist nur über ein VPN erreichbar eingestellt, und kein VPN ist verbunden. Verbinde es: dieser Bildschirm lädt dann von selbst neu.</string>
+    <string name="common_vpn_settings">VPN-Einstellungen</string>
 
     <!-- Overview -->
     <string name="overview_title">Cluster</string>
@@ -275,6 +277,8 @@
     <string name="clusters_rename">%1$s umbenennen</string>
     <string name="clusters_rename_label">Name</string>
     <string name="clusters_rename_hint">Nur auf diesem Gerät angezeigt, die talosconfig behält %1$s. Leer lassen, um ihn wieder zu verwenden.</string>
+    <string name="clusters_vpn_only">Nur VPN</string>
+    <string name="clusters_vpn_only_hint">Nur VPN: ohne verbundenes VPN versucht die App den Cluster nicht zu erreichen, und Hintergrundprüfungen warten darauf.</string>
     <string name="shortcut_cluster_removed">Dieser Cluster wurde entfernt</string>
 
     <!-- Settings -->
@@ -959,4 +963,7 @@
     <string name="ai_copy">Kopieren</string>
     <string name="ai_disclaimer">KI-Antworten können falsch sein. Prüfen Sie einen Befehl, bevor Sie ihn ausführen, besonders wenn er einen Knoten zurücksetzt oder etcd verändert.</string>
     <string name="ai_health_diagnose">Mit KI diagnostizieren</string>
+    <string name="demo_try">Demo ausprobieren</string>
+    <string name="demo_hint">Noch kein Cluster? Erkunde Ichor mit einem Talos-Beispielcluster.</string>
+    <string name="demo_notice">Demo-Cluster · Beispieldaten. Clusteränderungen sind nicht verfügbar. Entferne die Demo anschließend unter Cluster verwalten.</string>
 </resources>

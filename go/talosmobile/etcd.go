@@ -59,6 +59,10 @@ func EtcdStatus(configYAML, contextName string) (out string, err error) {
 
 	contextName = unmaskContext(configYAML, contextName)
 
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("EtcdStatus", configYAML, contextName, "")
+	}
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		out, err := gatherEtcdOverview(ctx, s)
 		if err != nil {

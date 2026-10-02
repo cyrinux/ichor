@@ -46,4 +46,15 @@ class ImportViewModel(private val configs: ConfigRepository) : ViewModel() {
     fun reset() {
         _state.value = ImportState.Idle
     }
+
+    fun startDemo() {
+        if (_state.value is ImportState.Validating || _state.value is ImportState.Saved) return
+        _state.value = ImportState.Validating
+        viewModelScope.launch {
+            _state.value = runCatching { configs.saveDemo() }.fold(
+                onSuccess = { ImportState.Saved },
+                onFailure = { ImportState.Invalid(it.userMessage()) },
+            )
+        }
+    }
 }

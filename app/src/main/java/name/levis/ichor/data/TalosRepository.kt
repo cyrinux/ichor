@@ -148,7 +148,7 @@ class TalosRepository(private val configs: ConfigRepository) {
      * nodes), replaying the last [tail] per node. Cancelling the collector stops the stream.
      */
     fun events(nodes: List<String>, tail: Int): Flow<StreamItem<TalosEvent>> = callbackFlow {
-        val stored = configs.config.value ?: throw NoConfigException()
+        val stored = configs.forCall()
         val run = Talosmobile.startEvents(
             stored.yaml,
             stored.activeContext,
@@ -174,7 +174,7 @@ class TalosRepository(private val configs: ConfigRepository) {
      * --tail`, starting with the last [tailLines]. Cancelling the collector stops it.
      */
     fun followLogs(node: String, service: String?, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
-        val stored = configs.config.value ?: throw NoConfigException()
+        val stored = configs.forCall()
         val run = Talosmobile.startLogFollow(
             stored.yaml,
             stored.activeContext,
@@ -197,7 +197,7 @@ class TalosRepository(private val configs: ConfigRepository) {
 
     /** Like [followLogs] for one CRI container (`talosctl logs -k -f`). */
     fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
-        val stored = configs.config.value ?: throw NoConfigException()
+        val stored = configs.forCall()
         val run = Talosmobile.startContainerLogFollow(
             stored.yaml,
             stored.activeContext,
@@ -234,7 +234,7 @@ class TalosRepository(private val configs: ConfigRepository) {
      * Cancelling the collector cancels the download.
      */
     fun etcdSnapshot(node: String, destPath: String): Flow<SnapshotEvent> = callbackFlow {
-        val stored = configs.config.value ?: throw NoConfigException()
+        val stored = configs.forCall()
         val run = Talosmobile.startEtcdSnapshot(
             stored.yaml,
             stored.activeContext,
@@ -311,7 +311,7 @@ class TalosRepository(private val configs: ConfigRepository) {
 
     /** Streams the server-side health check; cancelling the collector cancels the check. */
     fun health(): Flow<HealthEvent> = callbackFlow {
-        val stored = configs.config.value ?: throw NoConfigException()
+        val stored = configs.forCall()
         val run = Talosmobile.startClusterHealth(
             stored.yaml,
             stored.activeContext,
@@ -445,7 +445,7 @@ class TalosRepository(private val configs: ConfigRepository) {
     }
 
     private suspend fun <T> call(block: (config: String, context: String) -> T): T {
-        val stored = configs.config.value ?: throw NoConfigException()
+        val stored = configs.forCall()
         return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) }
     }
 }

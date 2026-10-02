@@ -21,7 +21,11 @@ data class ContextSummary(
     val nodes: List<String> = emptyList(),
     val roles: List<String> = emptyList(),
     val certNotAfter: Long = 0,
+    val demo: Boolean = false,
 )
+
+/** Preserved even when screenshot mode masks the endpoint. */
+val ContextSummary.isDemo: Boolean get() = demo
 
 /** Features gated by Talos RBAC (rules from Talos v1.14 machined.go). */
 enum class Feature(@StringRes val label: Int, val roles: Set<String>) {

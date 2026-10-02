@@ -17,6 +17,12 @@ struct OverviewView: View {
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
             List {
+                if model.activeSummary?.demo == true {
+                    Section {
+                        Text("Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
+                }
                 if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
                     Section { CertExpiryBanner(notAfter: ctx.certNotAfter) }
                 }
@@ -186,7 +192,8 @@ struct OverviewView: View {
         guard id == loadID else { return }
         state = loaded
         if case .loaded(let overview, _) = loaded {
-            let info = await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
+            let info = model.activeSummary?.demo == true
+                ? nil : await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
             guard id == loadID else { return }
             update = info
             // What each node's Talos version can do, cached per version: gates menus and screens.

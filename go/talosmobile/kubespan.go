@@ -46,6 +46,10 @@ func KubeSpanStatus(configYAML, contextName string) (out string, err error) {
 
 	contextName = unmaskContext(configYAML, contextName)
 
+	if isDemoContext(configYAML, contextName) {
+		return demoRead("KubeSpanStatus", configYAML, contextName, "")
+	}
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		nodes := targetNodes(s.context)
 		out := kubespanOverview{Nodes: make([]kubespanNode, len(nodes))}
