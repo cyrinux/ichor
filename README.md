@@ -303,7 +303,7 @@ without the donation links. Its store listing, privacy policy and Console answer
   NDK clang crash under qemu-user. `build.sh` therefore keeps Go, gomobile, the JDK and Gradle
   native:
   - gomobile is built from a patched copy, because upstream refuses linux/arm64;
-  - cgo uses a native clang 18 with the NDK sysroot (`.cache/ndk`);
+  - cgo uses a native clang (the NDK's version, 21 for r29) with the NDK sysroot (`.cache/ndk`);
   - only `aapt2` runs emulated.
 - **Nix sandbox:** for the x86_64 SDK builds, `build.sh` exposes the binfmt qemu closure to the
   sandbox, which requires a trusted Nix user.

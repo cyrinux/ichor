@@ -40,6 +40,8 @@ install_gomobile_linux_arm64() {
 use_native_ndk_linux_arm64() {
   local real="$ANDROID_NDK_HOME" shadow="$ROOT/.cache/ndk" entry tool
   local prebuilt="$real/toolchains/llvm/prebuilt/linux-x86_64"
+  # The NDK's clang major (lib/clang/<major>); the native clang in flake.nix must match it.
+  local resources=("$prebuilt"/lib/clang/*)
   local bin="$shadow/toolchains/llvm/prebuilt/linux-x86_64/bin"
   rm -rf "$shadow" && mkdir -p "$bin"
   for entry in "$real"/*; do
@@ -48,8 +50,8 @@ use_native_ndk_linux_arm64() {
   ln -s "$prebuilt/sysroot" "$prebuilt/lib" "$shadow/toolchains/llvm/prebuilt/linux-x86_64/"
   # gomobile runs bin/clang{,++} itself and passes --target=<triple><api>.
   for tool in clang clang++; do
-    printf '#!/bin/sh\nexec %s --sysroot=%s/sysroot -resource-dir %s/lib/clang/18 -fuse-ld=lld -Wno-unused-command-line-argument "$@"\n' \
-      "$tool" "$prebuilt" "$prebuilt" >"$bin/$tool"
+    printf '#!/bin/sh\nexec %s --sysroot=%s/sysroot -resource-dir %s -fuse-ld=lld -Wno-unused-command-line-argument "$@"\n' \
+      "$tool" "$prebuilt" "${resources[0]}" >"$bin/$tool"
     chmod +x "$bin/$tool"
   done
   export ANDROID_NDK_HOME="$shadow"

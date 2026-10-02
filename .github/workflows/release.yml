@@ -38,10 +38,10 @@ jobs:
         if: env.WIF_PROVIDER == '' || env.SERVICE_ACCOUNT == ''
         run: echo "WIF_PROVIDER or SERVICE_ACCOUNT is not set, skipping the Play upload."
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
         with:
           name: android-play
@@ -57,7 +57,7 @@ jobs:
       - uses: ruby/setup-ruby@v1
         if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
         with:
-          ruby-version: "3.3"
+          ruby-version: "3.4"
 
       # fastlane 2.240+ reads the external_account credentials WIF writes. Release notes come
       # from <locale>/changelogs/<versionCode>.txt (default.txt as fallback); images are only
@@ -86,7 +86,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: "*-release"
           path: dist
@@ -95,6 +95,6 @@ jobs:
       - name: List files
         run: ls -l dist
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: dist/*

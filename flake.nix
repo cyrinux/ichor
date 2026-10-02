@@ -11,7 +11,7 @@
       };
 
       buildToolsVersion = "37.0.0";
-      ndkVersion = "27.2.12479018";
+      ndkVersion = "29.0.14206865";
 
       # Android build-tools and the NDK only exist for x86_64 Linux. On aarch64 hosts they run
       # through binfmt emulation; everything else (Go, JDK, Gradle) stays native, because the
@@ -31,8 +31,8 @@
         let pkgs = import nixpkgs { inherit system; config = nixpkgsConfig; };
         in pkgs.mkShell {
           packages = [ pkgs.jdk17 pkgs.gradle_9 pkgs.go ]
-            # Native cross-compiler for cgo on aarch64 hosts (matches NDK r27's clang 18).
-            ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isAarch64 [ pkgs.llvmPackages_18.clang-unwrapped pkgs.lld_18 ];
+            # Native cross-compiler for cgo on aarch64 hosts (matches NDK r29's clang 21).
+            ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isAarch64 [ pkgs.llvmPackages_21.clang-unwrapped pkgs.lld_21 ];
 
           ANDROID_HOME = sdkRoot;
           ANDROID_SDK_ROOT = sdkRoot;
