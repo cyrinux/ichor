@@ -4,7 +4,8 @@ default:
 # adb target. Empty = the only connected device; "ip:port" = wireless adb (connected first).
 DEVICE := env_var_or_default("ICHOR_DEVICE", "")
 
-APP_ID := "name.levis.ichor"
+# Open-source builds (debug/release); the Play build is the bare name.levis.ichor.
+APP_ID := "name.levis.ichor.foss"
 # Per-ABI APKs: app/build/outputs/apk/<buildType>/app-<abi>-<buildType>.apk
 APK_DIR := "app/build/outputs/apk"
 
@@ -137,7 +138,7 @@ install-release device=DEVICE: build-release
 
 # Install the debug APK and start the app.
 run device=DEVICE: (install device)
-    adb {{ if device == "" { "" } else { "-s " + device } }} shell am start -n {{ APP_ID }}/.MainActivity
+    adb {{ if device == "" { "" } else { "-s " + device } }} shell am start -n {{ APP_ID }}/name.levis.ichor.MainActivity
 
 # Follow the app's logcat (the app must be running).
 logs device=DEVICE:

@@ -10,6 +10,8 @@ android {
     buildToolsVersion = "37.0.0"
 
     defaultConfig {
+        // The Play build keeps the bare id; the open-source builds (GitHub releases, Obtainium,
+        // debug) add ".foss" so both can be installed side by side and never update each other.
         applicationId = "name.levis.ichor"
         minSdk = 26
         targetSdk = 37
@@ -40,7 +42,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".foss"
+        }
         release {
+            applicationIdSuffix = ".foss"
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -51,6 +57,7 @@ android {
         // permission. Signed with the release key, which doubles as the Play upload key.
         create("play") {
             initWith(getByName("release"))
+            applicationIdSuffix = null
             buildConfigField("boolean", "SELF_UPDATE", "false")
             buildConfigField("boolean", "DONATIONS", "false")
         }
