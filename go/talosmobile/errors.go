@@ -54,6 +54,46 @@ func friendlyError(err error) string {
 	}
 }
 
+// Error kinds let the apps tell "the phone can't reach the cluster" (VPN off, wrong LAN)
+// from a cluster that answers but refuses us, without matching the English messages.
+const (
+	errorKindNetwork = "network"
+	errorKindTLS     = "tls"
+	errorKindAuth    = "auth"
+	errorKindOther   = "other"
+)
+
+// errorKind classifies err along the same lines as friendlyError; "" for nil.
+func errorKind(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	if errors.Is(err, context.DeadlineExceeded) || dialFailure(err.Error()) != "" {
+		return errorKindNetwork
+	}
+
+	st, ok := status.FromError(err)
+	if !ok {
+		return errorKindOther
+	}
+
+	switch st.Code() { //nolint:exhaustive
+	case codes.Unavailable:
+		if msg := st.Message(); strings.Contains(msg, "certificate") || strings.Contains(msg, "tls") {
+			return errorKindTLS
+		}
+
+		return errorKindNetwork
+	case codes.DeadlineExceeded:
+		return errorKindNetwork
+	case codes.PermissionDenied, codes.Unauthenticated:
+		return errorKindAuth
+	default:
+		return errorKindOther
+	}
+}
+
 // notAvailable is the message for an API or resource type the node's Talos version lacks.
 const notAvailable = "not available on this node's Talos version"
 

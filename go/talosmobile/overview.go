@@ -25,6 +25,7 @@ type nodeOverview struct {
 	Hostname        string           `json:"hostname"`
 	Reachable       bool             `json:"reachable"`
 	Error           string           `json:"error,omitempty"`
+	ErrorKind       string           `json:"errorKind,omitempty"` // why an unreachable node failed; see errorKind
 	Version         string           `json:"version"`
 	Arch            string           `json:"arch"`
 	Platform        string           `json:"platform"`
@@ -158,6 +159,7 @@ func buildNodeOverview(node string, p nodeProbe) nodeOverview {
 
 	if p.versionErr != nil {
 		out.Error = friendlyError(p.versionErr)
+		out.ErrorKind = errorKind(p.versionErr)
 
 		return out
 	}

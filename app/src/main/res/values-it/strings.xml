@@ -80,6 +80,17 @@
     <string name="overview_status_healthy">Integro</string>
     <string name="overview_status_degraded">Degradato</string>
     <string name="overview_status_down">Irraggiungibile</string>
+    <string name="overview_unreachable_title">Cluster irraggiungibile</string>
+    <string name="overview_unreachable_network">Nessun nodo ha risposto. Probabilmente il telefono non è sulla rete del cluster: verifica che la VPN sia connessa o di essere sulla Wi-Fi giusta.</string>
+    <string name="overview_unreachable_credentials">Il cluster ha risposto ma ha rifiutato questo talosconfig: il certificato, la CA o il ruolo potrebbero essere errati o scaduti.</string>
+    <string name="overview_unreachable_other">Nessun nodo ha risposto. I dettagli sono qui sotto.</string>
+    <string name="overview_unreachable_endpoints">Endpoint: %1$s</string>
+    <string name="overview_unreachable_auto_retry">Nuovo tentativo ogni %1$d s e appena cambia la rete.</string>
+    <plurals name="overview_unreachable_show_nodes">
+        <item quantity="one">Mostra %d nodo</item>
+        <item quantity="many">Mostra %d nodi</item>
+        <item quantity="other">Mostra %d nodi</item>
+    </plurals>
     <plurals name="overview_summary_nodes">
         <item quantity="one">%d nodo</item>
         <item quantity="other">%d nodi</item>

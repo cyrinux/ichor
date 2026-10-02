@@ -40,6 +40,14 @@ jobs:
 
       - uses: actions/checkout@v7
         if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
+        with:
+          fetch-depth: 0 # scripts/play-notes.py reads the tags and history
+
+      # en-US release notes from the commits since the previous tag, unless notes for this
+      # versionCode were committed by hand (`just release-tag` drafts them).
+      - name: Release notes
+        if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
+        run: cat "$(scripts/play-notes.py)"
 
       - uses: actions/download-artifact@v8
         if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
@@ -60,8 +68,8 @@ jobs:
           ruby-version: "3.4"
 
       # fastlane 2.240+ reads the external_account credentials WIF writes. Release notes come
-      # from <locale>/changelogs/<versionCode>.txt (default.txt as fallback); images are only
-      # re-uploaded when their checksum changed.
+      # from <locale>/changelogs/<versionCode>.txt (default.txt as fallback; en-US is written
+      # by the step above); images are only re-uploaded when their checksum changed.
       - name: Upload to Google Play (internal track)
         if: env.WIF_PROVIDER != '' && env.SERVICE_ACCOUNT != ''
         env:

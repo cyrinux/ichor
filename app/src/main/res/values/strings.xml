@@ -81,6 +81,16 @@
     <string name="overview_status_healthy">Healthy</string>
     <string name="overview_status_degraded">Degraded</string>
     <string name="overview_status_down">Unreachable</string>
+    <string name="overview_unreachable_title">Can\'t reach the cluster</string>
+    <string name="overview_unreachable_network">No node answered. Your phone is probably not on the cluster\'s network: check that your VPN is connected, or that you are on the right Wi-Fi.</string>
+    <string name="overview_unreachable_credentials">The cluster answered but refused this talosconfig: its certificate, CA or role may be wrong or expired.</string>
+    <string name="overview_unreachable_other">No node answered. The details are below.</string>
+    <string name="overview_unreachable_endpoints">Endpoints: %1$s</string>
+    <string name="overview_unreachable_auto_retry">Tries again every %1$d s, and as soon as the network changes.</string>
+    <plurals name="overview_unreachable_show_nodes">
+        <item quantity="one">Show %d node</item>
+        <item quantity="other">Show %d nodes</item>
+    </plurals>
     <plurals name="overview_summary_nodes">
         <item quantity="one">%d node</item>
         <item quantity="other">%d nodes</item>
