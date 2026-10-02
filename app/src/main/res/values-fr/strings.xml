@@ -75,6 +75,17 @@
         <item quantity="one">injoignable</item>
         <item quantity="other">injoignables</item>
     </plurals>
+    <string name="overview_status_healthy">Sain</string>
+    <string name="overview_status_degraded">Dégradé</string>
+    <string name="overview_status_down">Injoignable</string>
+    <plurals name="overview_summary_nodes">
+        <item quantity="one">%d nœud</item>
+        <item quantity="other">%d nœuds</item>
+    </plurals>
+    <string name="overview_stat_nodes">Nœuds</string>
+    <string name="overview_stat_cpu">Cœurs CPU</string>
+    <string name="overview_stat_memory">Mémoire</string>
+    <string name="overview_stat_memory_used">%d %% utilisés</string>
     <string name="overview_node_actions">Actions sur le nœud</string>
     <string name="overview_role_control_plane">control plane</string>
     <string name="overview_update_banner">Ichor %1$s est disponible — appuyez pour mettre à jour</string>

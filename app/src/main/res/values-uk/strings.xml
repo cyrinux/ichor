@@ -91,6 +91,19 @@
         <item quantity="many">недоступних</item>
         <item quantity="other">недоступних</item>
     </plurals>
+    <string name="overview_status_healthy">Справний</string>
+    <string name="overview_status_degraded">Погіршений</string>
+    <string name="overview_status_down">Недосяжний</string>
+    <plurals name="overview_summary_nodes">
+        <item quantity="one">%d вузол</item>
+        <item quantity="few">%d вузли</item>
+        <item quantity="many">%d вузлів</item>
+        <item quantity="other">%d вузла</item>
+    </plurals>
+    <string name="overview_stat_nodes">Вузли</string>
+    <string name="overview_stat_cpu">Ядра CPU</string>
+    <string name="overview_stat_memory">Пам\'ять</string>
+    <string name="overview_stat_memory_used">%d%% використано</string>
     <string name="overview_node_actions">Дії з вузлом</string>
     <string name="overview_role_control_plane">панель керування</string>
     <string name="overview_update_banner">Доступна версія Ichor %1$s — торкніться, щоб оновити</string>

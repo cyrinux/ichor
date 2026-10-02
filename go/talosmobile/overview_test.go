@@ -91,3 +91,26 @@ func TestBuildNodeOverviewPartialFailureSurfacesError(t *testing.T) {
 		t.Errorf("unexpected overview: %+v", got)
 	}
 }
+
+func TestBuildNodeOverviewCapacity(t *testing.T) {
+	probe := nodeProbe{
+		version: &machineapi.Version{Version: &machineapi.VersionInfo{Tag: "v1.14.1"}},
+		memory:  &machineapi.Memory{Meminfo: &machineapi.MemInfo{Memtotal: 8 * 1024 * 1024, Memavailable: 2 * 1024 * 1024}},
+		cpu:     &machineapi.CPUsInfo{CpuInfo: []*machineapi.CPUInfo{{}, {}, {}, {}}},
+	}
+
+	got := buildNodeOverview("10.0.0.2", probe)
+
+	if got.CPUCount != 4 || got.MemTotal != 8<<30 || got.MemAvailable != 2<<30 {
+		t.Errorf("capacity = %d cpus, %d/%d bytes", got.CPUCount, got.MemAvailable, got.MemTotal)
+	}
+}
+
+// Capacity is a best-effort extra: without it the node is still fine, just of unknown size.
+func TestBuildNodeOverviewCapacityUnknown(t *testing.T) {
+	got := buildNodeOverview("10.0.0.2", nodeProbe{version: &machineapi.Version{}})
+
+	if got.CPUCount != 0 || got.MemTotal != 0 || got.MemAvailable != 0 || got.Error != "" {
+		t.Errorf("missing capacity should stay zero without an error: %+v", got)
+	}
+}
