@@ -60,6 +60,7 @@ import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.components.TooltipIconButton
 
 /** One resource as YAML. Never cached: a sensitive one holds secrets. */
 class ResourceDetailViewModel(private val talos: TalosRepository, private val ref: ResourceRef, private val id: String) : LoadingViewModel<String>() {
@@ -117,8 +118,10 @@ fun ResourceDetailScreen(
                 },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
                 actions = {
-                    IconButton(onClick = vm::refresh, enabled = revealed) { Icon(Icons.Outlined.Refresh, stringResource(R.string.common_refresh)) }
-                    IconButton(
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = vm::refresh, enabled = revealed)
+                    TooltipIconButton(
+                        Icons.Outlined.ContentCopy,
+                        stringResource(R.string.resources_copy),
                         enabled = yaml != null,
                         onClick = {
                             yaml?.let {
@@ -126,7 +129,7 @@ fun ResourceDetailScreen(
                                 scope.launch { snackbar.showSnackbar(context.getString(R.string.machine_config_copied)) }
                             }
                         },
-                    ) { Icon(Icons.Outlined.ContentCopy, stringResource(R.string.resources_copy)) }
+                    )
                 },
             )
         },

@@ -55,6 +55,7 @@ import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
+import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
  * The optional AI diagnosis: shows the report that would be sent, then either asks the
@@ -96,9 +97,12 @@ fun DiagnosisScreen(
                 title = { Text(stringResource(R.string.ai_title)) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
                 actions = {
-                    IconButton(onClick = vm::collect, enabled = report !is UiState.Loading) {
-                        Icon(Icons.Outlined.Refresh, stringResource(R.string.common_refresh))
-                    }
+                    TooltipIconButton(
+                        Icons.Outlined.Refresh,
+                        stringResource(R.string.common_refresh),
+                        onClick = vm::collect,
+                        enabled = report !is UiState.Loading,
+                    )
                 },
             )
         },

@@ -77,6 +77,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
+import name.levis.ichor.ui.components.TooltipIconButton
 
 /** Release suggestions shown as chips; any other version can be typed. */
 private const val MAX_RELEASE_CHIPS = 8
@@ -152,7 +153,7 @@ fun UpgradeScreen(
                     // Force is tucked away and only offered when etcd checks block the upgrade.
                     if (following == null && showForce) {
                         Box {
-                            IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.common_more)) }
+                            TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { menuOpen = true })
                             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.upgrade_force)) },

@@ -35,7 +35,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
@@ -106,6 +105,7 @@ import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.dataServiceHints
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.dataservices.downHostnames
+import name.levis.ichor.ui.components.TooltipIconButton
 
 class OverviewViewModel(
     val talos: TalosRepository,
@@ -266,25 +266,34 @@ fun OverviewScreen(
                 actions = {
                     // Only offered when the config's role can run it.
                     if (config?.activeSummary?.allows(Feature.HEALTH) == true) {
-                        IconButton(onClick = onHealth) { Icon(Icons.Outlined.Favorite, stringResource(R.string.overview_action_health)) }
+                        TooltipIconButton(Icons.Outlined.Favorite, stringResource(R.string.overview_action_health), onClick = onHealth)
                     }
                     // Cluster-wide screens: only disabled when no reachable node's Talos has them.
                     val reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node }
                     val features = rememberClusterFeatures(reachable)
-                    IconButton(onClick = onEvents, enabled = clusterSupport(features, TalosFeature.EVENTS).supported) {
-                        Icon(Icons.Outlined.Timeline, stringResource(R.string.overview_action_events))
-                    }
+                    TooltipIconButton(
+                        Icons.Outlined.Timeline,
+                        stringResource(R.string.overview_action_events),
+                        onClick = onEvents,
+                        enabled = clusterSupport(features, TalosFeature.EVENTS).supported,
+                    )
                     // Kubernetes workloads: the API is reached with the admin kubeconfig Talos issues.
                     if (config?.activeSummary?.allows(Feature.WORKLOADS) == true) {
-                        IconButton(onClick = onWorkloads) { Icon(Icons.Outlined.Widgets, stringResource(R.string.overview_action_workloads)) }
+                        TooltipIconButton(Icons.Outlined.Widgets, stringResource(R.string.overview_action_workloads), onClick = onWorkloads)
                     }
-                    IconButton(onClick = onKubeSpan, enabled = clusterSupport(features, TalosFeature.KUBESPAN).supported) {
-                        Icon(Icons.Outlined.Hub, "KubeSpan")
-                    }
-                    IconButton(onClick = onEtcd, enabled = clusterSupport(features, TalosFeature.ETCD).supported) {
-                        Icon(Icons.Outlined.Storage, "etcd")
-                    }
-                    IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, stringResource(R.string.overview_action_settings)) }
+                    TooltipIconButton(
+                        Icons.Outlined.Hub,
+                        "KubeSpan",
+                        onClick = onKubeSpan,
+                        enabled = clusterSupport(features, TalosFeature.KUBESPAN).supported,
+                    )
+                    TooltipIconButton(
+                        Icons.Outlined.Storage,
+                        "etcd",
+                        onClick = onEtcd,
+                        enabled = clusterSupport(features, TalosFeature.ETCD).supported,
+                    )
+                    TooltipIconButton(Icons.Outlined.Settings, stringResource(R.string.overview_action_settings), onClick = onSettings)
                 },
             )
         },

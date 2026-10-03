@@ -46,6 +46,7 @@ import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
+import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
  * Every app running in the cluster as a grid of icons, with search and filters; tapping one
@@ -112,9 +113,7 @@ fun AppsScreen(
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
                 actions = {
                     val busy = state == UiState.Loading || (state as? UiState.Loaded)?.refreshing == true
-                    IconButton(onClick = { vm.refresh() }, enabled = !busy) {
-                        Icon(Icons.Outlined.Refresh, stringResource(R.string.common_refresh))
-                    }
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }, enabled = !busy)
                 },
             )
         },

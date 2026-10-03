@@ -95,6 +95,7 @@ import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
 import kotlinx.coroutines.launch
+import name.levis.ichor.ui.components.TooltipIconButton
 
 /** Index of the Cgroups tab, after Pods. */
 private const val CGROUPS_TAB = 5
@@ -257,7 +258,7 @@ fun NodeDetailScreen(
                         CircularProgressIndicator(Modifier.size(20.dp).padding(end = 4.dp), strokeWidth = 2.dp)
                     }
                     Box {
-                        IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.common_more)) }
+                        TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { menuOpen = true })
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             NodeMenuItems(
                                 summary = config?.activeSummary,

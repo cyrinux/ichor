@@ -56,6 +56,7 @@ import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.uiText
 import java.io.File
+import name.levis.ichor.ui.components.TooltipIconButton
 
 /** Packets of a saved capture read so far, [PCAP_PAGE_SIZE] at a time. */
 data class PcapView(
@@ -126,7 +127,7 @@ fun CaptureFileScreen(
                 actions = {
                     if (file != null) {
                         Box {
-                            IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.common_more)) }
+                            TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { menuOpen = true })
                             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                                 DropdownMenuItem(text = { Text(stringResource(R.string.capture_save)) }, onClick = { menuOpen = false; save(file) })
                                 DropdownMenuItem(text = { Text(stringResource(R.string.capture_share)) }, onClick = { menuOpen = false; shareCapture(context, file) })

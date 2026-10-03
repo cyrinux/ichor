@@ -48,6 +48,7 @@ import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.KubeServerDialog
+import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
  * Longhorn volumes, Garage clusters and CloudNativePG clusters, one tab per system the cluster
@@ -94,9 +95,9 @@ fun DataServicesScreen(onBack: () -> Unit) {
                 title = { Text(stringResource(R.string.data_services_title)) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
                 actions = {
-                    IconButton(onClick = { vm.refresh() }) { Icon(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh)) }
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh), onClick = { vm.refresh() })
                     if (fingerprint != null) {
-                        IconButton(onClick = { editing = true }) { Icon(Icons.Outlined.Dns, stringResource(R.string.kube_server_title)) }
+                        TooltipIconButton(Icons.Outlined.Dns, stringResource(R.string.kube_server_title), onClick = { editing = true })
                     }
                 },
             )
