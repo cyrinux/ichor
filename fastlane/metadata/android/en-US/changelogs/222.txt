@@ -1,0 +1,10 @@
+• Charts for network tests, node pressure and KubeSpan link speeds
+• Nodes section header and clock icon on the home screen
+• Keep network test results
+• (i) hints explaining the network test and how to read it
+• Network test tab in Cluster insights
+• French, Spanish, Ukrainian, German and Italian translations
+• Open an app in the browser from its sheet
+• Web addresses of an app from its Ingresses and HTTPRoutes
+• Node pressure section and Cgroups tab
+• Node pressure card and Cgroups tab
