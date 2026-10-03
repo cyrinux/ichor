@@ -219,6 +219,9 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 	case "KubeSpanStatus":
 		return toJSON(demoKubeSpan())
 	case "ClusterTopology":
+		if privacy.isEnabled() {
+			return toJSON(hideLocations(demoTopology()))
+		}
 		return toJSON(demoTopology())
 	case "NodeMachineConfig":
 		return fmt.Sprintf("# Sample configuration for the Ichor demo\nversion: v1alpha1\nmachine:\n  type: %s\n  network:\n    hostname: %s\ncluster:\n  clusterName: ichor-demo\n  controlPlane:\n    endpoint: https://192.0.2.10:6443\n", n.Role, n.Hostname), nil

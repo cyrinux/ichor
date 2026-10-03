@@ -1,8 +1,10 @@
 package talosmobile
 
 import (
+	"encoding/json"
 	"errors"
 	"net/netip"
+	"strings"
 	"testing"
 
 	"github.com/siderolabs/talos/pkg/machinery/resources/kubespan"
@@ -228,6 +230,38 @@ func TestBuildTopologyPublicLinkKeepsSameSubnetApart(t *testing.T) {
 
 	if len(topo.Sites) != 2 {
 		t.Errorf("public link must keep the sites apart: %+v", topo.Sites)
+	}
+}
+
+func TestScreenshotModeHidesLocations(t *testing.T) {
+	yaml := demoConfigForTest(t)
+
+	SetPrivacyMask(true, "")
+	defer SetPrivacyMask(false, "")
+
+	out, err := ClusterTopology(yaml, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, leak := range []string{"fr-par-1", "nl-ams-1", "fsn1", `"country"`, `"region"`} {
+		if strings.Contains(out, leak) {
+			t.Errorf("screenshot mode shows %s: %s", leak, out)
+		}
+	}
+
+	var topo clusterTopology
+	if err := json.Unmarshal([]byte(out), &topo); err != nil {
+		t.Fatal(err)
+	}
+
+	// Still three sites, now zone-1..3; the same zone gets the same fake.
+	if len(topo.Sites) != 3 || topo.Sites[0].Label != "zone-1" || topo.Sites[2].Label != "zone-3" {
+		t.Errorf("sites = %+v", topo.Sites)
+	}
+
+	if topo.Nodes[0].Zone != topo.Nodes[1].Zone {
+		t.Errorf("one zone, two fakes: %+v", topo.Nodes)
 	}
 }
 

@@ -2,6 +2,8 @@ package talosmobile
 
 import (
 	"context"
+	"fmt"
+	"slices"
 	"sync"
 
 	"github.com/cosi-project/runtime/pkg/safe"
@@ -45,8 +47,48 @@ func ClusterTopology(configYAML, contextName string) (out string, err error) {
 			privacy.learnHost(n.Hostname, n.Role)
 		}
 
+		if privacy.isEnabled() {
+			topology = hideLocations(topology)
+		}
+
 		return toJSON(topology)
 	})
+}
+
+// hideLocations is the map for screenshot mode: zones say where the servers are, so each
+// becomes a neutral "zone-N" (the same for the same zone, sites still group), and the region
+// and guessed country (the flag) are dropped. The privacy mask only knows addresses and names.
+func hideLocations(t clusterTopology) clusterTopology {
+	fakes := map[string]string{}
+	fake := func(zone string) string {
+		if zone == "" {
+			return ""
+		}
+
+		if _, ok := fakes[zone]; !ok {
+			fakes[zone] = fmt.Sprintf("zone-%d", len(fakes)+1)
+		}
+
+		return fakes[zone]
+	}
+
+	out := clusterTopology{Nodes: slices.Clone(t.Nodes), Links: t.Links, Sites: slices.Clone(t.Sites)}
+
+	for i, n := range out.Nodes {
+		n.Zone, n.Region, n.Country = fake(n.Zone), "", ""
+		out.Nodes[i] = n
+	}
+
+	for i, s := range out.Sites {
+		if s.Kind == "zone" {
+			s.Label = fake(s.Label)
+		}
+
+		s.Country = ""
+		out.Sites[i] = s
+	}
+
+	return out
 }
 
 // observeTopology reads what one node knows: its hostname, KubeSpan peers, node labels and
