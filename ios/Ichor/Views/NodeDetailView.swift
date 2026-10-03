@@ -28,6 +28,9 @@ struct NodeDetailView: View {
     @State private var showingMachineConfig = false
     @State private var processes = ProcessMonitor()
     @State private var pods = PodMonitor()
+    @State private var cgroups = CgroupMonitor()
+    /// One cgroups read for the pressure section of Resources (os:admin only).
+    @State private var pressure: LoadState<CgroupReport> = .loading
     @State private var showingEvents = false
     @State private var showingNetwork = false
     @State private var showingHardware = false
@@ -40,7 +43,7 @@ struct NodeDetailView: View {
     @State private var serviceRequest: ServiceRequest?
 
     enum Tab: String, CaseIterable {
-        case services = "Services", resources = "Resources", live = "Live", processes = "Processes", pods = "Pods"
+        case services = "Services", resources = "Resources", live = "Live", processes = "Processes", pods = "Pods", cgroups = "Cgroups"
 
         var label: String {
             switch self {
@@ -49,6 +52,7 @@ struct NodeDetailView: View {
             case .live: String(localized: "Live")
             case .processes: String(localized: "Processes")
             case .pods: String(localized: "Pods")
+            case .cgroups: String(localized: "Cgroups")
             }
         }
     }
@@ -56,12 +60,14 @@ struct NodeDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             Picker("View", selection: $tab) {
-                ForEach(Tab.allCases, id: \.self) { Text($0.label).tag($0) }
+                // Cgroups (a copy of /sys/fs/cgroup) only exists for admin configs.
+                ForEach(Tab.allCases.filter { $0 != .cgroups || model.allows(.cgroups) }, id: \.self) { Text($0.label).tag($0) }
             }
             .pickerStyle(.segmented)
             .padding()
 
-            switch tab {
+            // A role change (another config) can leave the hidden Cgroups tab selected.
+            switch (tab == .cgroups && !model.allows(.cgroups)) ? Tab.services : tab {
             case .services:
                 LoadStateView(state: services, retry: loadServices) { list in
                     List(list) { svc in serviceRow(svc) }
@@ -70,7 +76,9 @@ struct NodeDetailView: View {
                 }
                 .task { if case .loading = services { await loadServices() } }
             case .resources:
-                LoadStateView(state: resources, retry: loadResources) { ResourcesList(resources: $0, clock: clock) }
+                LoadStateView(state: resources, retry: loadResources) {
+                    ResourcesList(resources: $0, clock: clock, pressure: model.allows(.cgroups) ? pressure : nil) { tab = .cgroups }
+                }
                     .refreshable { await loadResources() }
                     .task { if case .loading = resources { await loadResources() } }
             case .live:
@@ -83,6 +91,8 @@ struct NodeDetailView: View {
                 FeatureGated(support: support(.containers)) {
                     PodsView(node: ref.address, hostname: ref.hostname, monitor: pods)
                 }
+            case .cgroups:
+                CgroupsView(node: ref.address, monitor: cgroups)
             }
         }
         .navigationTitle(ref.hostname)
@@ -167,6 +177,10 @@ struct NodeDetailView: View {
 
     private func loadResources() async {
         guard let client = model.client else { return }
+        // The cgroups copy is the slow part: on its own, so pull-to-refresh ends with resources.
+        if model.allows(.cgroups) {
+            Task { pressure = pressure.refreshed(with: await .from { try await client.cgroups(node: ref.address) }) }
+        }
         resources = model.seeded(resources, from: .resources(node: ref.address))
         resources = resources.refreshed(with: await .from { try await model.fetch(.resources(node: ref.address), with: client) })
         // Best-effort: a node that cannot answer shows the error in its row.
@@ -376,6 +390,9 @@ private struct ServiceRow: View {
 private struct ResourcesList: View {
     let resources: NodeResources
     let clock: NodeTimeInfo?
+    /// nil when the role cannot read cgroups: no pressure section then.
+    let pressure: LoadState<CgroupReport>?
+    let onPressureDetails: () -> Void
 
     var body: some View {
         List {
@@ -391,6 +408,8 @@ private struct ResourcesList: View {
                 LabeledContent("Used", value: "\(formatBytes(used)) / \(formatBytes(resources.memTotal))")
                 UsageBar(fraction: usedFraction(total: resources.memTotal, available: resources.memAvailable))
             }
+            // Right after memory: pressure says whether CPU, memory or disk actually hold tasks back.
+            if let pressure { PressureSection(state: pressure, onDetails: onPressureDetails) }
             if !resources.mounts.isEmpty {
                 Section("Disks") {
                     ForEach(resources.mounts) { mount in

@@ -88,6 +88,7 @@ func TestDemoPublicReadsAndActions(t *testing.T) {
 			func() (string, error) { return NodeConnections(yaml, "", n.Node) },
 			func() (string, error) { return NodeProcesses(yaml, "", n.Node) },
 			func() (string, error) { return NodeContainers(yaml, "", n.Node) },
+			func() (string, error) { return NodeCgroups(yaml, "", n.Node) },
 			func() (string, error) { return NodeImages(yaml, "", n.Node) },
 			func() (string, error) { return NodeHardware(yaml, "", n.Node) },
 			func() (string, error) { return NodeMounts(yaml, "", n.Node) },

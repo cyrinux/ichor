@@ -8,6 +8,7 @@ import name.levis.talosmobile.HealthListener
 import name.levis.talosmobile.LogListener
 import name.levis.talosmobile.SnapshotListener
 import name.levis.talosmobile.Talosmobile
+import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.EtcdOverview
@@ -218,6 +219,11 @@ class TalosRepository(
     /** One sample of the node's processes for the Processes tab (not cached: always fresh). */
     suspend fun processes(node: String): ProcessSample = call { cfg, ctx ->
         TalosJson.decodeFromString(ProcessSample.serializer(), Talosmobile.nodeProcesses(cfg, ctx, node))
+    }
+
+    /** The node's cgroup tree with pressure, for the pressure card and the Cgroups tab (os:admin; not cached). */
+    suspend fun cgroups(node: String): CgroupReport = call { cfg, ctx ->
+        TalosJson.decodeFromString(CgroupReport.serializer(), Talosmobile.nodeCgroups(cfg, ctx, node))
     }
 
     /** One sample of the node's CRI containers for the Pods tab (not cached: always fresh). */

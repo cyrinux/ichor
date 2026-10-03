@@ -259,6 +259,11 @@ struct TalosClient: Sendable {
         try await Self.json { [config, context] in TalosmobileNodeProcesses(config, context, node, $0) }
     }
 
+    /// The node's cgroup tree with pressure (os:admin: a copy of /sys/fs/cgroup); see cgroupRows.
+    func cgroups(node: String) async throws -> CgroupReport {
+        try await Self.json { [config, context] in TalosmobileNodeCgroups(config, context, node, $0) }
+    }
+
     /// Node's machine config as YAML (os:admin); secrets are masked unless revealSecrets.
     func machineConfig(node: String, revealSecrets: Bool) async throws -> String {
         try await Self.run { [config, context] in TalosmobileNodeMachineConfig(config, context, node, revealSecrets, $0) }

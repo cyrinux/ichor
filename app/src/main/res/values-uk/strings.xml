@@ -654,6 +654,33 @@
     <string name="overview_action_events">Події</string>
     <string name="node_menu_events">Події</string>
     <string name="node_tab_pods">Поди</string>
+    <string name="node_tab_cgroups">Cgroups</string>
+    <string name="node_section_pressure">Тиск</string>
+    <string name="node_pressure_caption">Частка останніх 10 с, коли завдання чекали на кожен ресурс</string>
+    <string name="node_pressure_cpu">CPU</string>
+    <string name="node_pressure_memory">Пам\'ять</string>
+    <string name="node_pressure_io">Дисковий I/O</string>
+    <string name="node_pressure_most">Найбільше страждає: %1$s</string>
+    <string name="node_pressure_details">Докладно</string>
+    <string name="node_pressure_unavailable">Тиск недоступний: %1$s</string>
+    <plurals name="node_cgroups_oom">
+        <item quantity="one">%1$s: знищено через брак пам\'яті %2$d раз від запуску</item>
+        <item quantity="few">%1$s: знищено через брак пам\'яті %2$d рази від запуску</item>
+        <item quantity="many">%1$s: знищено через брак пам\'яті %2$d разів від запуску</item>
+        <item quantity="other">%1$s: знищено через брак пам\'яті %2$d разу від запуску</item>
+    </plurals>
+    <string name="node_cgroups_near_limit">%1$s: пам\'ять на %2$d%% від ліміту</string>
+    <string name="node_cgroups_caption" formatted="false">CPU (% одного ядра) і дисковий I/O від останнього оновлення; тиск за останні 10 с</string>
+    <string name="node_cgroups_limit">ліміт %1$s</string>
+    <string name="node_cgroups_io">диск %1$s/s</string>
+    <plurals name="node_cgroups_oom_short">
+        <item quantity="one">OOM: знищено %1$d раз</item>
+        <item quantity="few">OOM: знищено %1$d рази</item>
+        <item quantity="many">OOM: знищено %1$d разів</item>
+        <item quantity="other">OOM: знищено %1$d разу</item>
+    </plurals>
+    <string name="node_cgroups_waiting">чекає на %1$s %2$s</string>
+    <string name="common_feature_cgroups">Cgroups і тиск</string>
     <plurals name="node_pods_summary">
         <item quantity="one">%1$d контейнер · %2$s у пам\'яті</item>
         <item quantity="few">%1$d контейнери · %2$s у пам\'яті</item>
