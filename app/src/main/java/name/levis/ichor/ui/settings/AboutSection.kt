@@ -39,7 +39,7 @@ import name.levis.ichor.ui.components.SectionTitle
 private const val LICENSE_PATH = "/blob/main/LICENSE"
 
 @Composable
-fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit) {
+fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit, onFunding: () -> Unit) {
     val context = LocalContext.current
     var donating by rememberSaveable { mutableStateOf<Donation?>(null) }
     donating?.let { DonateDialog(it) { donating = null } }
@@ -56,6 +56,7 @@ fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit) {
             Link(Icons.Outlined.Gavel, stringResource(R.string.about_license)) { openUrl(context, REPO_URL_BASE + BuildConfig.UPDATE_REPO + LICENSE_PATH) }
             Link(Icons.Outlined.Description, stringResource(R.string.about_licenses), onLicenses)
             Link(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.about_talos)) { openUrl(context, TALOS_URL) }
+            if (BuildConfig.FEATURE_FUNDING) Link(Icons.Outlined.FavoriteBorder, stringResource(R.string.funding_title), onFunding)
             if (BuildConfig.DONATIONS) {
                 Link(Icons.Outlined.FavoriteBorder, stringResource(R.string.about_sponsor)) { openUrl(context, SPONSOR_URL) }
                 DonationRow(Donation.Bitcoin) { donating = Donation.Bitcoin }
@@ -86,5 +87,9 @@ private fun Link(icon: ImageVector, label: String, onClick: () -> Unit) {
 }
 
 fun openUrl(context: Context, url: String) {
-    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    try {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (_: android.content.ActivityNotFoundException) {
+        // No browser installed: nothing to open the link with.
+    }
 }

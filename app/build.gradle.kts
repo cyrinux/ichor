@@ -27,6 +27,8 @@ android {
         // Off in the Play build: Play forbids self-updates and in-app donations outside its billing.
         buildConfigField("boolean", "SELF_UPDATE", "true")
         buildConfigField("boolean", "DONATIONS", "true")
+        // On in the Play build: features funded with Play in-app products (Settings → About).
+        buildConfigField("boolean", "FEATURE_FUNDING", "false")
     }
 
     // Release signing comes from env vars so CI (Forgejo) can inject secrets.
@@ -62,7 +64,15 @@ android {
             applicationIdSuffix = null
             buildConfigField("boolean", "SELF_UPDATE", "false")
             buildConfigField("boolean", "DONATIONS", "false")
+            buildConfigField("boolean", "FEATURE_FUNDING", "true")
         }
+    }
+
+    // The store behind feature funding: Play Billing in src/play, none in src/foss (shared by
+    // the open-source builds), so the proprietary billing library never reaches their APKs.
+    sourceSets {
+        getByName("debug").kotlin.directories.add("src/foss/java")
+        getByName("release").kotlin.directories.add("src/foss/java")
     }
 
     // One APK per ABI (app-<abi>-<buildType>.apk), each with only its own native libraries.
@@ -147,6 +157,8 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
     implementation(libs.aboutlibraries.compose.m3)
+    // Feature funding, Play build only (see sourceSets above).
+    "playImplementation"(libs.billing)
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)

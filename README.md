@@ -345,7 +345,8 @@ just install           # builds, then installs the APK matching the connected de
 ```
 
 The Play build is the release build without the self-updater (Play delivers updates) and
-without the donation links. Its store listing, privacy policy and Console answers are in
+without the donation links, with feature funding through Play Billing instead (the billing
+library is only in that build; the others get the no-op store in `app/src/foss`). Its store listing, privacy policy and Console answers are in
 `fastlane/` (see [fastlane/PLAY_CONSOLE.md](fastlane/PLAY_CONSOLE.md)).
 
 - **Default toolchain:** Nix (`flake.nix`). `BUILDER=docker ./build.sh` uses `build/Dockerfile`
@@ -473,6 +474,11 @@ Ichor is free, with no ads or tracking. To help keep it going:
 - Ethereum: `0xb32676301F9c4abD35Eb2e4c7C8cdA754BA29804`
 
 The app's About section and the [website](https://cyrinux.github.io/ichor/#support) show them as QR codes.
+
+The Google Play version can't show those links (Play's payment rules). Instead,
+**Settings → About → Fund features** lets you back the features you want next, with Google
+Play purchases. The list is [`docs/roadmap.json`](docs/roadmap.json); the maintainer side is
+in [fastlane/PLAY_CONSOLE.md](fastlane/PLAY_CONSOLE.md#feature-funding-in-app-products).
 
 ## License
 

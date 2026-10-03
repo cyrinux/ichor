@@ -90,7 +90,7 @@ class ChangelogRepository(private val context: Context, private val prefs: Share
 }
 
 /** Reads at most [limit] bytes (InputStream.readNBytes needs API 33). */
-private fun java.io.InputStream.readNBytesCompat(limit: Int): ByteArray {
+internal fun java.io.InputStream.readNBytesCompat(limit: Int): ByteArray {
     val out = java.io.ByteArrayOutputStream()
     val buffer = ByteArray(16 * 1024)
     while (out.size() < limit) {

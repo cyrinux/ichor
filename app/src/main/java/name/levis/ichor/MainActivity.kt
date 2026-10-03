@@ -90,7 +90,10 @@ class MainActivity : FragmentActivity() {
             backupFile.value = intent.backupFile()
         }
         if (BuildConfig.SELF_UPDATE) app.updateManager.maybeAutoCheck(lifecycleScope)
-        if (BuildConfig.DONATIONS && savedInstanceState == null) app.supportPrompt.onLaunch()
+        if (BuildConfig.FEATURE_FUNDING) {
+            lifecycleScope.launch { lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { app.featureStore.finishPurchases() } }
+        }
+        if ((BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) && savedInstanceState == null) app.supportPrompt.onLaunch()
 
         setContent {
             val themeMode by app.uiPreferences.themeMode.collectAsStateWithLifecycle()
