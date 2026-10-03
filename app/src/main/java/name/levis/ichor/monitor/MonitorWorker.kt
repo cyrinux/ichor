@@ -5,6 +5,8 @@ import androidx.glance.appwidget.updateAll
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.Feature
+import name.levis.ichor.model.allows
 import name.levis.ichor.widget.ClusterWidget
 
 /**
@@ -30,8 +32,14 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val active = stored.summary.contexts.firstOrNull { it.name == stored.activeContext }
         val certNotAfter = active?.certNotAfter ?: 0
 
+        // Opt-in, and only for roles that may use the Kubernetes API: each check then lists custom
+        // resources and runs the Garage CLI in a pod.
+        val watchData = store.dataServicesWatched.value && active?.allows(Feature.WORKLOADS) == true
+        val dataServices = if (watchData) runCatching { app.talosRepository.dataServices(hints = "") }.getOrNull() else null
+
         val now = System.currentTimeMillis()
-        val evaluation = evaluate(store.snapshot(), snapshotOf(overview, etcd, certNotAfter, now, active?.fingerprint.orEmpty()), now)
+        val current = snapshotOf(overview, etcd, certNotAfter, now, active?.fingerprint.orEmpty(), watchData, dataServices)
+        val evaluation = evaluate(store.snapshot(), current, now)
         store.saveSnapshot(evaluation.next)
         scheduleWidgetStaleRefresh(applicationContext, evaluation.next, now)
 

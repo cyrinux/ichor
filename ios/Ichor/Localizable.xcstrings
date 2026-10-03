@@ -35060,6 +35060,170 @@
           }
         }
       }
+    },
+    "Watch data services" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch data services"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surveiller les services de données"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datendienste überwachen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vigilar los servicios de datos"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monitora i servizi dati"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стежити за сервісами даних"
+          }
+        }
+      }
+    },
+    "Also alerts on Longhorn volumes that fault or degrade, a degraded Garage cluster and Postgres clusters that go down or whose backups fail. Each check uses the Kubernetes API (os:admin) and runs the Garage CLI in one of its pods." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also alerts on Longhorn volumes that fault or degrade, a degraded Garage cluster and Postgres clusters that go down or whose backups fail. Each check uses the Kubernetes API (os:admin) and runs the Garage CLI in one of its pods."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerte aussi quand un volume Longhorn tombe en panne ou se dégrade, quand un cluster Garage est dégradé et quand un cluster Postgres tombe ou que ses sauvegardes échouent. Chaque vérification utilise l’API Kubernetes (os:admin) et lance la CLI Garage dans un de ses pods."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldet auch ausgefallene oder beeinträchtigte Longhorn-Volumes, einen beeinträchtigten Garage-Cluster und Postgres-Cluster, die ausfallen oder deren Backups fehlschlagen. Jede Prüfung nutzt die Kubernetes-API (os:admin) und führt die Garage-CLI in einem seiner Pods aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "También avisa de volúmenes de Longhorn con fallo o degradados, de un clúster de Garage degradado y de clústeres de Postgres caídos o con copias fallidas. Cada comprobación usa la API de Kubernetes (os:admin) y ejecuta la CLI de Garage en uno de sus pods."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisa anche di volumi Longhorn guasti o degradati, di un cluster Garage degradato e di cluster Postgres non attivi o con backup non riusciti. Ogni controllo usa l’API Kubernetes (os:admin) ed esegue la CLI di Garage in uno dei suoi pod."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Також сповіщає про несправні чи погіршені томи Longhorn, погіршений кластер Garage і кластери Postgres, що впали або мають невдалі резервні копії. Кожна перевірка використовує API Kubernetes (os:admin) і запускає CLI Garage в одному з його подів."
+          }
+        }
+      }
+    },
+    "%@ needs attention" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ needs attention"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ à surveiller"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ braucht Aufmerksamkeit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ requiere atención"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ da controllare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ потребує уваги"
+          }
+        }
+      }
+    },
+    "%@ is healthy again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is healthy again"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ est de nouveau sain"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist wieder fehlerfrei"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ vuelve a estar correcto"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ è di nuovo integro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ знову справний"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

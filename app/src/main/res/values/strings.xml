@@ -344,6 +344,11 @@
     <string name="monitor_notifications_blocked">Notifications are blocked for this app; allow them in Android settings.</string>
     <string name="monitor_background_alerts">Background alerts</string>
     <string name="monitor_background_alerts_desc">Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within %1$d days. Silent while the cluster is unreachable (e.g. off VPN).</string>
+    <string name="monitor_data_services">Watch data services</string>
+    <string name="monitor_data_services_desc">Also alerts on Longhorn volumes that fault or degrade, a degraded Garage cluster and Postgres clusters that go down or whose backups fail. Each check uses the Kubernetes API (os:admin) and runs the Garage CLI in one of its pods.</string>
+    <string name="monitor_data_problem">%1$s needs attention</string>
+    <string name="monitor_data_ok">%1$s is healthy again</string>
+    <string name="monitor_data_text">%1$s · %2$s</string>
     <string name="monitor_check_every">Check every</string>
     <string name="monitor_interval_minutes">%1$d min</string>
     <string name="monitor_interval_hours">%1$d h</string>

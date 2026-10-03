@@ -14,7 +14,10 @@ plus wire format), then the plan of the phase you're doing.
   but nothing has been checked visually on a device yet. PR #41.
 - **Phase 3 (iOS) implemented** on `feat/data-services-ios` (stacked on Android): an IchorCore
   model with tests (green on Linux) plus SwiftUI views; the iOS workflow on the PR compiles them.
-  **Next: phase 4 (opt-in background alerts)**.
+  PR #44.
+- **Phase 4 (opt-in alerts) implemented** on `feat/data-services-alerts` (stacked on iOS), on
+  both platforms with tests. **Remaining:** check everything on devices (demo and the user's
+  cluster), the manual alert check, and optional phase 5 (support bundle and AI context).
 - **Live check done (user-approved, read-only).** Every API shape the plan relies on is
   verified against the real cluster; corrections are folded into 01 and the README.
   Anonymised fixtures are committed in `go/talosmobile/testdata/`:

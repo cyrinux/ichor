@@ -344,6 +344,11 @@
     <string name="monitor_notifications_blocked">Las notificaciones de esta aplicación están bloqueadas; permítelas en los ajustes de Android.</string>
     <string name="monitor_background_alerts">Alertas en segundo plano</string>
     <string name="monitor_background_alerts_desc">Avisa cuando un nodo cae o se recupera, ante nuevas alarmas de etcd y a diario cuando el certificado de cliente caduca en menos de %1$d días. Sin avisos mientras el clúster es inaccesible (p. ej., sin VPN).</string>
+    <string name="monitor_data_services">Vigilar los servicios de datos</string>
+    <string name="monitor_data_services_desc">También avisa de volúmenes de Longhorn con fallo o degradados, de un clúster de Garage degradado y de clústeres de Postgres caídos o con copias fallidas. Cada comprobación usa la API de Kubernetes (os:admin) y ejecuta la CLI de Garage en uno de sus pods.</string>
+    <string name="monitor_data_problem">%1$s requiere atención</string>
+    <string name="monitor_data_ok">%1$s vuelve a estar correcto</string>
+    <string name="monitor_data_text">%1$s · %2$s</string>
     <string name="monitor_check_every">Comprobar cada</string>
     <string name="monitor_interval_minutes">%1$d min</string>
     <string name="monitor_interval_hours">%1$d h</string>

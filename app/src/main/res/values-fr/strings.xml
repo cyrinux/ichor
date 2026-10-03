@@ -344,6 +344,11 @@
     <string name="monitor_notifications_blocked">Les notifications sont bloquées pour cette app&#160;; autorisez-les dans les paramètres Android.</string>
     <string name="monitor_background_alerts">Alertes en arrière-plan</string>
     <string name="monitor_background_alerts_desc">Prévient quand un nœud tombe ou redevient disponible, lors de nouvelles alarmes etcd, et chaque jour quand le certificat client expire dans moins de %1$d jours. Silencieux tant que le cluster est injoignable (par exemple hors VPN).</string>
+    <string name="monitor_data_services">Surveiller les services de données</string>
+    <string name="monitor_data_services_desc">Alerte aussi quand un volume Longhorn tombe en panne ou se dégrade, quand un cluster Garage est dégradé et quand un cluster Postgres tombe ou que ses sauvegardes échouent. Chaque vérification utilise l’API Kubernetes (os:admin) et lance la CLI Garage dans un de ses pods.</string>
+    <string name="monitor_data_problem">%1$s à surveiller</string>
+    <string name="monitor_data_ok">%1$s est de nouveau sain</string>
+    <string name="monitor_data_text">%1$s · %2$s</string>
     <string name="monitor_check_every">Vérifier toutes les</string>
     <string name="monitor_interval_minutes">%1$d min</string>
     <string name="monitor_interval_hours">%1$d h</string>

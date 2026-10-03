@@ -1,6 +1,7 @@
 package name.levis.ichor.monitor
 
 import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.model.health
@@ -19,6 +20,17 @@ data class ClusterSnapshot(
     val lastCertWarnDay: Long = -1,
     /** The cluster's context fingerprint: the widget shows the name the user gave it. */
     val fingerprint: String = "",
+    /** Watching Longhorn, Garage and CloudNativePG was on for this check (opt-in). */
+    val dataWatched: Boolean = false,
+    /** Their health could be read this time. */
+    val dataChecked: Boolean = false,
+    /**
+     * Data-service issues ("system|label" → severity, see [dataIssuesOf]): what was observed in a
+     * fresh snapshot; after [evaluate], the ones already notified (or present at the baseline).
+     */
+    val dataIssues: Map<String, String> = emptyMap(),
+    /** Warnings seen once and not notified yet: a short rebuild after a reboot should not alert. */
+    val dataPending: List<String> = emptyList(),
 ) {
     val readyCount: Int get() = nodes.values.count { it.health == NodeHealth.READY }
     val notReadyCount: Int get() = nodes.values.count { it.health == NodeHealth.NOT_READY }
@@ -41,7 +53,13 @@ fun snapshotOf(
     certNotAfter: Long,
     takenAt: Long,
     fingerprint: String = "",
+    /** Data services watched ([dataServices] null when watched but unreadable). */
+    dataWatched: Boolean = false,
+    dataServices: DataServices? = null,
 ): ClusterSnapshot = ClusterSnapshot(
+    dataWatched = dataWatched,
+    dataChecked = dataWatched && dataServices != null,
+    dataIssues = dataServices?.takeIf { dataWatched }?.let(::dataIssuesOf).orEmpty(),
     context = overview.context,
     fingerprint = fingerprint,
     takenAt = takenAt,

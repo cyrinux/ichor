@@ -3,11 +3,25 @@ import IchorCore
 
 struct MonitoringSection: View {
     @State private var enabled = BackgroundMonitor.alertsEnabled
+    @State private var dataWatched = BackgroundMonitor.dataServicesWatched
     @State private var message: String?
 
     var body: some View {
         Section {
             Toggle("Background alerts", isOn: Binding(get: { enabled }, set: { set($0) }))
+            // Opt-in on top of the alerts: Kubernetes API calls and a Garage CLI run at every check.
+            Toggle(isOn: Binding(get: { dataWatched }, set: { on in
+                BackgroundMonitor.dataServicesWatched = on
+                dataWatched = on
+            })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Watch data services")
+                    Text("Also alerts on Longhorn volumes that fault or degrade, a degraded Garage cluster and Postgres clusters that go down or whose backups fail. Each check uses the Kubernetes API (os:admin) and runs the Garage CLI in one of its pods.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
             Button("Check now") {
                 Task {
                     await BackgroundMonitor.check()
