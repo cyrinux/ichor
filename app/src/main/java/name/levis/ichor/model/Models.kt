@@ -33,6 +33,8 @@ enum class Feature(@StringRes val label: Int, val roles: Set<String>) {
     // The server-side health check fetches a Kubernetes admin kubeconfig with the caller's role.
     HEALTH(R.string.common_feature_health, setOf("os:admin")),
     KUBECONFIG(R.string.common_feature_kubeconfig, setOf("os:admin")),
+    // The Kubernetes API is reached with the admin kubeconfig Talos only issues to os:admin.
+    WORKLOADS(R.string.common_feature_workloads, setOf("os:admin")),
     // DebugService/ContainerRun is admin-only in Talos.
     DEBUG_SHELL(R.string.common_feature_debug_shell, setOf("os:admin")),
     ETCD_DEFRAG(R.string.common_feature_etcd_defrag, setOf("os:admin", "os:operator")),
