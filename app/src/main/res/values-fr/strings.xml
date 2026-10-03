@@ -266,6 +266,26 @@
     <string name="kubespan_peer_down">Coupé</string>
     <string name="kubespan_peer_unknown">Inconnu</string>
     <string name="kubespan_handshake_ago">handshake il y a %1$s</string>
+    <string name="topology_tab_map">Carte</string>
+    <string name="topology_tab_peers">Pairs</string>
+    <plurals name="topology_sites">
+        <item quantity="one">%1$d site</item>
+        <item quantity="other">%1$d sites</item>
+    </plurals>
+    <plurals name="topology_links">
+        <item quantity="one">%1$d lien</item>
+        <item quantity="other">%1$d liens</item>
+    </plurals>
+    <string name="topology_site_lan">Réseau local</string>
+    <string name="topology_site_alone">Réseau propre</string>
+    <string name="topology_role_controlplane">Plan de contrôle</string>
+    <string name="topology_role_worker">Worker</string>
+    <string name="topology_link_degraded">Une extrémité coupée</string>
+    <string name="topology_link_one_side">Une seule extrémité de ce lien a été interrogée : l\'autre nœud n\'est pas dans ce talosconfig.</string>
+    <string name="topology_link_seen_from">Vu depuis %1$s</string>
+    <string name="topology_not_queried">Les nœuds en gris ne sont pas dans ce talosconfig : ils sont dessinés d\'après leurs pairs.</string>
+    <string name="topology_empty">Rien à cartographier : aucun membre du cluster ni pair KubeSpan trouvé.</string>
+    <string name="topology_map_description">Carte du cluster : sites, nœuds et liens KubeSpan</string>
 
     <!-- Logs -->
     <string name="logs_kernel_log">Journal du noyau</string>

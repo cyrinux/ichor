@@ -266,6 +266,26 @@
     <string name="kubespan_peer_down">Inattivo</string>
     <string name="kubespan_peer_unknown">Sconosciuto</string>
     <string name="kubespan_handshake_ago">handshake %1$s fa</string>
+    <string name="topology_tab_map">Mappa</string>
+    <string name="topology_tab_peers">Peer</string>
+    <plurals name="topology_sites">
+        <item quantity="one">%1$d sito</item>
+        <item quantity="other">%1$d siti</item>
+    </plurals>
+    <plurals name="topology_links">
+        <item quantity="one">%1$d collegamento</item>
+        <item quantity="other">%1$d collegamenti</item>
+    </plurals>
+    <string name="topology_site_lan">Rete locale</string>
+    <string name="topology_site_alone">Rete propria</string>
+    <string name="topology_role_controlplane">Control plane</string>
+    <string name="topology_role_worker">Worker</string>
+    <string name="topology_link_degraded">Un capo inattivo</string>
+    <string name="topology_link_one_side">È stato interrogato un solo capo di questo collegamento: l\'altro nodo non è in questo talosconfig.</string>
+    <string name="topology_link_seen_from">Visto da %1$s</string>
+    <string name="topology_not_queried">I nodi in grigio non sono in questo talosconfig: sono disegnati in base a ciò che riportano i loro peer.</string>
+    <string name="topology_empty">Niente da mostrare: nessun membro del cluster né peer KubeSpan trovato.</string>
+    <string name="topology_map_description">Mappa del cluster con siti, nodi e collegamenti KubeSpan</string>
 
     <!-- Logs -->
     <string name="logs_kernel_log">Log del kernel</string>

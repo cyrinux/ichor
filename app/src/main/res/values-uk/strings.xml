@@ -303,6 +303,30 @@
     <string name="kubespan_peer_down">Не працює</string>
     <string name="kubespan_peer_unknown">Невідомо</string>
     <string name="kubespan_handshake_ago">рукостискання %1$s тому</string>
+    <string name="topology_tab_map">Карта</string>
+    <string name="topology_tab_peers">Піри</string>
+    <plurals name="topology_sites">
+        <item quantity="one">%1$d майданчик</item>
+        <item quantity="few">%1$d майданчики</item>
+        <item quantity="many">%1$d майданчиків</item>
+        <item quantity="other">%1$d майданчика</item>
+    </plurals>
+    <plurals name="topology_links">
+        <item quantity="one">%1$d з\'єднання</item>
+        <item quantity="few">%1$d з\'єднання</item>
+        <item quantity="many">%1$d з\'єднань</item>
+        <item quantity="other">%1$d з\'єднання</item>
+    </plurals>
+    <string name="topology_site_lan">Локальна мережа</string>
+    <string name="topology_site_alone">Окрема мережа</string>
+    <string name="topology_role_controlplane">Площина керування</string>
+    <string name="topology_role_worker">Робочий вузол</string>
+    <string name="topology_link_degraded">Один бік розірвано</string>
+    <string name="topology_link_one_side">Опитано лише один бік цього з\'єднання: інший вузол відсутній у цьому talosconfig.</string>
+    <string name="topology_link_seen_from">З боку %1$s</string>
+    <string name="topology_not_queried">Сірі вузли відсутні у цьому talosconfig: їх показано за даними їхніх пірів.</string>
+    <string name="topology_empty">Немає чого показати: не знайдено жодного учасника кластера чи піра KubeSpan.</string>
+    <string name="topology_map_description">Карта кластера: майданчики, вузли та з\'єднання KubeSpan</string>
 
     <!-- Logs -->
     <string name="logs_kernel_log">Журнал ядра</string>

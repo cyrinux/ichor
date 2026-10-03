@@ -217,17 +217,9 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 	case "NodeDiskHealth":
 		return `{"supported":false,"reason":"Disk health data is unavailable in the demo cluster","disks":[]}`, nil
 	case "KubeSpanStatus":
-		result := kubespanOverview{Nodes: []kubespanNode{}}
-		for _, n := range nodes {
-			peers := []kubespanPeer{}
-			for _, peer := range nodes {
-				if peer.Node != n.Node {
-					peers = append(peers, kubespanPeer{PublicKey: "demo-" + peer.Hostname, Label: peer.Hostname, State: "up", Endpoint: peer.Node + ":51820", Rx: 1048576, Tx: 524288, LastHandshake: time.Now().Add(-10 * time.Second).Unix()})
-				}
-			}
-			result.Nodes = append(result.Nodes, kubespanNode{Node: n.Node, Enabled: true, Up: len(peers), Peers: peers})
-		}
-		return toJSON(result)
+		return toJSON(demoKubeSpan())
+	case "ClusterTopology":
+		return toJSON(demoTopology())
 	case "NodeMachineConfig":
 		return fmt.Sprintf("# Sample configuration for the Ichor demo\nversion: v1alpha1\nmachine:\n  type: %s\n  network:\n    hostname: %s\ncluster:\n  clusterName: ichor-demo\n  controlPlane:\n    endpoint: https://192.0.2.10:6443\n", n.Role, n.Hostname), nil
 	case "NodeDiskUsage":

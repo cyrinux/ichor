@@ -4,6 +4,12 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import name.levis.ichor.model.TopologyNode
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -66,13 +72,20 @@ class KubeSpanViewModel(private val talos: TalosRepository) : LoadingViewModel<K
 @Composable
 fun KubeSpanScreen(
     onBack: () -> Unit,
+    onNode: (TopologyNode) -> Unit,
     vm: KubeSpanViewModel = viewModel(factory = factory { KubeSpanViewModel(app.talosRepository) }),
+    mapVm: TopologyViewModel = viewModel(factory = factory { TopologyViewModel(app.talosRepository) }),
 ) {
+    var tab by rememberSaveable { mutableIntStateOf(0) }
     val state by vm.state.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
+    val mapState by mapVm.state.collectAsStateWithLifecycle()
+    LaunchedEffect(tab) {
+        if (tab == MAP_TAB && mapState == UiState.Loading) mapVm.refresh()
+        if (tab == PEERS_TAB && state == UiState.Loading) vm.refresh()
+    }
 
     Scaffold(
-        bottomBar = { DataFreshness(state) },
+        bottomBar = { DataFreshness(if (tab == MAP_TAB) mapState else state) },
         topBar = {
             TopAppBar(
                 title = { Text("KubeSpan") },
@@ -80,20 +93,38 @@ fun KubeSpanScreen(
             )
         },
     ) { padding ->
-        when (val s = state) {
-            UiState.Loading -> LoadingBox(Modifier.padding(padding))
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.padding(padding))
-            is UiState.Loaded -> PullToRefreshBox(
-                isRefreshing = s.refreshing,
-                onRefresh = vm::refresh,
-                modifier = Modifier.padding(padding).fillMaxSize(),
-            ) {
-                val hostnames = vm.hostnames()
-                LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    item { Summary(s.data.nodes) }
-                    items(s.data.nodes, key = { it.node }) { NodeCard(it, hostnames[it.node] ?: it.node) }
+        Column(Modifier.padding(padding).fillMaxSize()) {
+            PrimaryTabRow(selectedTabIndex = tab) {
+                Tab(selected = tab == MAP_TAB, onClick = { tab = MAP_TAB }, text = { Text(stringResource(R.string.topology_tab_map)) })
+                Tab(selected = tab == PEERS_TAB, onClick = { tab = PEERS_TAB }, text = { Text(stringResource(R.string.topology_tab_peers)) })
+            }
+            if (tab == MAP_TAB) {
+                Loaded(mapState, mapVm::refresh) { TopologyContent(it, onNode) }
+            } else {
+                Loaded(state, vm::refresh) { data ->
+                    val hostnames = vm.hostnames()
+                    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        item { Summary(data.nodes) }
+                        items(data.nodes, key = { it.node }) { NodeCard(it, hostnames[it.node] ?: it.node) }
+                    }
                 }
             }
+        }
+    }
+}
+
+private const val MAP_TAB = 0
+private const val PEERS_TAB = 1
+
+/** Loading, error or the data with pull-to-refresh. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun <T> Loaded(state: UiState<T>, refresh: () -> Unit, content: @Composable (T) -> Unit) {
+    when (state) {
+        UiState.Loading -> LoadingBox()
+        is UiState.Failed -> ErrorBox(state.message, refresh)
+        is UiState.Loaded -> PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = refresh, modifier = Modifier.fillMaxSize()) {
+            content(state.data)
         }
     }
 }
