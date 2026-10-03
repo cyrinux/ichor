@@ -381,6 +381,11 @@
     <string name="monitor_notifications_blocked">Сповіщення для цього застосунку заблоковано; дозвольте їх у налаштуваннях Android.</string>
     <string name="monitor_background_alerts">Фонові сповіщення</string>
     <string name="monitor_background_alerts_desc">Сповіщає, коли вузол перестає працювати чи відновлюється, про нові тривоги etcd і щодня, коли до закінчення клієнтського сертифіката лишається менше %1$d днів. Мовчить, поки кластер недоступний (наприклад, без VPN).</string>
+    <string name="monitor_data_services">Стежити за сервісами даних</string>
+    <string name="monitor_data_services_desc">Також сповіщає про несправні чи погіршені томи Longhorn, погіршений кластер Garage і кластери Postgres, що впали або мають невдалі резервні копії. Кожна перевірка використовує API Kubernetes (os:admin) і запускає CLI Garage в одному з його подів.</string>
+    <string name="monitor_data_problem">%1$s потребує уваги</string>
+    <string name="monitor_data_ok">%1$s знову справний</string>
+    <string name="monitor_data_text">%1$s · %2$s</string>
     <string name="monitor_check_every">Перевіряти кожні</string>
     <string name="monitor_interval_minutes">%1$d хв</string>
     <string name="monitor_interval_hours">%1$d год</string>

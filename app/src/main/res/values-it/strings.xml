@@ -344,6 +344,11 @@
     <string name="monitor_notifications_blocked">Le notifiche sono bloccate per questa app; consentile nelle impostazioni di Android.</string>
     <string name="monitor_background_alerts">Avvisi in background</string>
     <string name="monitor_background_alerts_desc">Avvisa quando un nodo diventa inattivo o si ripristina, per nuovi allarmi etcd e ogni giorno quando il certificato client scade entro %1$d giorni. Nessun avviso mentre il cluster è irraggiungibile (ad es. fuori dalla VPN).</string>
+    <string name="monitor_data_services">Monitora i servizi dati</string>
+    <string name="monitor_data_services_desc">Avvisa anche di volumi Longhorn guasti o degradati, di un cluster Garage degradato e di cluster Postgres non attivi o con backup non riusciti. Ogni controllo usa l’API Kubernetes (os:admin) ed esegue la CLI di Garage in uno dei suoi pod.</string>
+    <string name="monitor_data_problem">%1$s da controllare</string>
+    <string name="monitor_data_ok">%1$s è di nuovo integro</string>
+    <string name="monitor_data_text">%1$s · %2$s</string>
     <string name="monitor_check_every">Controlla ogni</string>
     <string name="monitor_interval_minutes">%1$d min</string>
     <string name="monitor_interval_hours">%1$d h</string>

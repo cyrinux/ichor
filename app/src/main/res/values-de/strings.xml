@@ -343,6 +343,11 @@
     <string name="monitor_notifications_blocked">Benachrichtigungen sind für diese App blockiert. Erlaube sie in den Android-Einstellungen.</string>
     <string name="monitor_background_alerts">Hintergrundwarnungen</string>
     <string name="monitor_background_alerts_desc">Benachrichtigt, wenn ein Knoten ausfällt oder wieder bereit ist, bei neuen etcd-Alarmen und täglich, wenn das Client-Zertifikat innerhalb von %1$d Tagen abläuft. Stumm, solange der Cluster nicht erreichbar ist (z. B. ohne VPN).</string>
+    <string name="monitor_data_services">Datendienste überwachen</string>
+    <string name="monitor_data_services_desc">Meldet auch ausgefallene oder beeinträchtigte Longhorn-Volumes, einen beeinträchtigten Garage-Cluster und Postgres-Cluster, die ausfallen oder deren Backups fehlschlagen. Jede Prüfung nutzt die Kubernetes-API (os:admin) und führt die Garage-CLI in einem seiner Pods aus.</string>
+    <string name="monitor_data_problem">%1$s braucht Aufmerksamkeit</string>
+    <string name="monitor_data_ok">%1$s ist wieder fehlerfrei</string>
+    <string name="monitor_data_text">%1$s · %2$s</string>
     <string name="monitor_check_every">Prüfen alle</string>
     <string name="monitor_interval_minutes">%1$d Min.</string>
     <string name="monitor_interval_hours">%1$d Std.</string>

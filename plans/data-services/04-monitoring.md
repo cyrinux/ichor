@@ -52,6 +52,20 @@ kubeconfig encrypted until it nears expiry; that's out of scope here.
 
 ## Done when
 
-- [ ] `just test`, `just ios-test-linux` and `just i18n-check` green
+- [x] `./build.sh check` (Android unit tests: `DataAlertsTest` 10/10, existing `AlertsTest` still
+      13/13), `just ios-test-linux` (257 tests, including the 11 new `DataAlertsTests` and decoding
+      of older stored snapshots) and `scripts/check-translations.py` green
 - [ ] Manual check: on a test cluster, scale a Longhorn volume's replicas down or cordon a
       node, and see a notification within one monitor period
+
+Implementation notes (2026-10-03):
+- Issue keys are "system|label" with severity "critical"/"warning" (`dataIssuesOf`, the same on
+  both platforms). The snapshot gains `dataWatched`, `dataChecked`, `dataIssues` (notified) and
+  `dataPending` (warnings seen once).
+- Rules: a critical issue alerts at once; a warning alerts on its second consecutive check; a
+  recovery alerts once; de-escalation is quiet. A baseline (first check, context switch,
+  watching just turned on) is silent. A check that couldn't read data services keeps the
+  previous state; turning watching off forgets it.
+- Settings: Android "Watch data services" switch under Background alerts (disabled while
+  alerts are off); iOS toggle in the Monitoring section. The iOS background check now also
+  uses the Kubernetes API address set for the cluster.

@@ -11,8 +11,13 @@ plus wire format), then the plan of the phase you're doing.
   the user's cluster: about 2 s end to end, all three sections correct. Draft PR #39.
 - **Phase 2 (Android) implemented** on `feat/data-services-android` (stacked on the Go core):
   an Overview card plus a "Data services" screen. Build, unit tests and translations are green,
-  but nothing has been checked visually on a device yet. **Next: phase 3 (iOS)**, then phase 4
-  (opt-in alerts).
+  but nothing has been checked visually on a device yet. PR #41.
+- **Phase 3 (iOS) implemented** on `feat/data-services-ios` (stacked on Android): an IchorCore
+  model with tests (green on Linux) plus SwiftUI views; the iOS workflow on the PR compiles them.
+  PR #44.
+- **Phase 4 (opt-in alerts) implemented** on `feat/data-services-alerts` (stacked on iOS), on
+  both platforms with tests. **Remaining:** check everything on devices (demo and the user's
+  cluster), the manual alert check, and optional phase 5 (support bundle and AI context).
 - **Live check done (user-approved, read-only).** Every API shape the plan relies on is
   verified against the real cluster; corrections are folded into 01 and the README.
   Anonymised fixtures are committed in `go/talosmobile/testdata/`:

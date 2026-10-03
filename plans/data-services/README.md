@@ -1,6 +1,6 @@
 # Data services: Longhorn, Garage and CloudNativePG health
 
-Status: **phase 1 (Go core) and phase 2 (Android) done**; phases 3–4 planned. Pick up from [HANDOFF.md](HANDOFF.md).
+Status: **phases 1–4 implemented** (Go core, Android, iOS, opt-in alerts); device checks and optional phase 5 remain. Pick up from [HANDOFF.md](HANDOFF.md).
 
 ## Goal
 
