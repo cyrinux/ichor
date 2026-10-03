@@ -54,6 +54,7 @@ import name.levis.ichor.ui.components.KeepScreenOn
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
+import name.levis.ichor.ui.components.TooltipIconButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,7 +110,7 @@ fun CaptureScreen(
                 navigationIcon = { IconButton(onClick = ::back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
                 actions = {
                     if (!running) {
-                        IconButton(onClick = onCaptures) { Icon(Icons.Outlined.FolderOpen, stringResource(R.string.captures_title)) }
+                        TooltipIconButton(Icons.Outlined.FolderOpen, stringResource(R.string.captures_title), onClick = onCaptures)
                     }
                 },
             )

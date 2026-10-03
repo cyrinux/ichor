@@ -65,6 +65,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.daysUntil
 import name.levis.ichor.util.readBounded
+import name.levis.ichor.ui.components.TooltipIconButton
 
 private const val MAX_CONFIG_BYTES = 256 * 1024
 
@@ -105,9 +106,7 @@ fun ImportScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showHelp = true }) {
-                        Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = stringResource(R.string.import_help))
-                    }
+                    TooltipIconButton(Icons.AutoMirrored.Outlined.HelpOutline, stringResource(R.string.import_help), onClick = { showHelp = true })
                 },
             )
         },

@@ -76,6 +76,7 @@ import name.levis.ichor.ui.components.LiveIndicator
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.userMessage
+import name.levis.ichor.ui.components.TooltipIconButton
 
 class LogsViewModel(
     private val talos: TalosRepository,
@@ -234,9 +235,9 @@ fun LogsScreen(
                         label = { Text(stringResource(R.string.logs_follow)) },
                         leadingIcon = if (follow) ({ Icon(Icons.Outlined.Check, contentDescription = null, Modifier.size(18.dp)) }) else null,
                     )
-                    if (!follow) IconButton(onClick = vm::refresh) { Icon(Icons.Outlined.Refresh, stringResource(R.string.common_refresh)) }
+                    if (!follow) TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = vm::refresh)
                     Box {
-                        IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.common_more)) }
+                        TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { menuOpen = true })
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.logs_raw)) },
