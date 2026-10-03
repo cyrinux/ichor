@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.SdCard
 import androidx.compose.material.icons.outlined.ViewInAr
@@ -42,11 +44,18 @@ private const val UNKNOWN = "—"
 /**
  * The cluster at a glance, above the nodes: its name and overall state, how many nodes on
  * which Talos version, and the capacity of the nodes that answered. With [live] usage, CPU
- * and memory follow it; without, they show the overview's snapshot.
+ * and memory follow it; without, they show the overview's snapshot. Tapping it opens the
+ * cluster insights, which its footer names.
  */
 @Composable
-fun ClusterSummaryCard(name: String, summary: ClusterSummary, live: ClusterLiveState?, modifier: Modifier = Modifier) {
-    Card(modifier.fillMaxWidth()) {
+fun ClusterSummaryCard(
+    name: String,
+    summary: ClusterSummary,
+    live: ClusterLiveState?,
+    onInsights: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(onClick = onInsights, modifier = modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -73,7 +82,24 @@ fun ClusterSummaryCard(name: String, summary: ClusterSummary, live: ClusterLiveS
                 val reached = summary.total - summary.unreachable
                 MemoryStat(summary, live?.usage?.takeIf { it.nodes >= reached }, Modifier.weight(1f))
             }
+            InsightsFooter()
         }
+    }
+}
+
+/** The way into the cluster insights, so the card reads as tappable. */
+@Composable
+private fun InsightsFooter() {
+    val color = MaterialTheme.colorScheme.primary
+    Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Outlined.Insights, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+        Text(
+            stringResource(R.string.insights_title),
+            style = MaterialTheme.typography.labelLarge,
+            color = color,
+            modifier = Modifier.weight(1f).padding(start = 8.dp),
+        )
+        Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null, tint = color)
     }
 }
 
