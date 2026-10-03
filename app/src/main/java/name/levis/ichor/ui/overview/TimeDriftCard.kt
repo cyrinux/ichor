@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -80,6 +81,12 @@ fun TimeDriftCard(state: UiState<ClusterTime>, hostnames: Map<String, String>) {
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.Schedule,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(end = 8.dp).size(18.dp),
+                    )
                     Text(stringResource(R.string.time_drift_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                     when {
                         state is UiState.Loading -> CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)

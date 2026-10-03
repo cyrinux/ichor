@@ -121,6 +121,12 @@ struct OverviewView: View {
                                 Button { UIPasteboard.general.string = node.node } label: { Label("Copy IP", systemImage: "doc.on.doc") }
                             }
                         }
+                    } header: {
+                        HStack {
+                            Label("Nodes", systemImage: "cube")
+                            Spacer()
+                            Text(verbatim: "\(overview.nodes.count)")
+                        }
                     }
                     // Re-checked with every overview refresh (the load time is the task id).
                     TimeDriftSection(hostnames: hostnames, refreshID: loadedAt)
