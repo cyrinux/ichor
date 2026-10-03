@@ -12,6 +12,8 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -314,6 +316,7 @@ fun ClusterSheet(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ClusterRow(
     context: ContextSummary,
@@ -349,12 +352,13 @@ private fun ClusterRow(
                         color = LocalStatusColors.current.warn,
                     )
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Wraps: beside the trailing actions there is not always room for both chips.
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     onVpnOnly?.let { toggle ->
                         FilterChip(
                             selected = vpnOnly,
                             onClick = { toggle(!vpnOnly) },
-                            label = { Text(stringResource(R.string.clusters_vpn_only)) },
+                            label = { Text(stringResource(R.string.clusters_vpn_only), maxLines = 1) },
                             leadingIcon = {
                                 Icon(Icons.Outlined.VpnLock, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize))
                             },
@@ -363,7 +367,7 @@ private fun ClusterRow(
                     onEndpoints?.let {
                         AssistChip(
                             onClick = it,
-                            label = { Text(stringResource(R.string.common_label_endpoints)) },
+                            label = { Text(stringResource(R.string.common_label_endpoints), maxLines = 1) },
                             leadingIcon = {
                                 Icon(Icons.Outlined.Router, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize))
                             },
