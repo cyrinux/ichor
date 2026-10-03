@@ -8,8 +8,11 @@ plus wire format), then the plan of the phase you're doing.
 - **Phase 1 (Go core) implemented** on branch `feat/data-services-core`: `KubeDataServices`
   plus `kube_exec.go`, `kube_longhorn.go`, `kube_cnpg.go`, `kube_garage.go`, demo data, and
   `just probe dataservices [HINTS]`. Tests: 90.9% coverage of the new files. Live run on
-  the user's cluster: about 2 s end to end, all three sections correct. **Next: phases 2
-  (Android) and 3 (iOS)**, against the wire format in the README (kept in sync with the code).
+  the user's cluster: about 2 s end to end, all three sections correct. Draft PR #39.
+- **Phase 2 (Android) implemented** on `feat/data-services-android` (stacked on the Go core):
+  an Overview card plus a "Data services" screen. Build, unit tests and translations are green,
+  but nothing has been checked visually on a device yet. **Next: phase 3 (iOS)**, then phase 4
+  (opt-in alerts).
 - **Live check done (user-approved, read-only).** Every API shape the plan relies on is
   verified against the real cluster; corrections are folded into 01 and the README.
   Anonymised fixtures are committed in `go/talosmobile/testdata/`:
