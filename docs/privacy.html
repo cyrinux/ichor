@@ -64,12 +64,13 @@
 
   <main>
     <h1>Privacy policy</h1>
-    <p class="meta">Effective 2 October 2026. Applies to the Ichor apps for Android and iOS.</p>
+    <p class="meta">Effective 3 October 2026. Applies to the Ichor apps for Android and iOS.</p>
 
     <div class="summary">
       <p>Ichor has no server, no account and no ads. The developer receives none of your
       data. The app talks to your own Talos clusters and, only for the features listed below, to
-      GitHub, to Google's on-device barcode library, and to an AI provider you choose yourself.</p>
+      GitHub, to Google's on-device barcode library, and, if you turn them on, to an icon
+      download service and an AI provider you choose yourself.</p>
     </div>
 
     <h2>What stays on your phone</h2>
@@ -90,8 +91,10 @@
     <h2>What the app sends, and to whom</h2>
     <ul>
       <li><strong>Your Talos clusters.</strong> The app connects directly to the endpoints in
-        your talosconfig, over mutually authenticated TLS, as <code>talosctl</code> does. The
-        developer is not involved in this connection.</li>
+        your talosconfig, over mutually authenticated TLS, as <code>talosctl</code> does. With an
+        admin talosconfig, the Kubernetes screens also reach the cluster's Kubernetes API with the
+        admin kubeconfig Talos issues, kept in memory only and never written to storage. The
+        developer is not involved in these connections.</li>
       <li><strong>GitHub</strong> (<code>api.github.com</code>). The app reads the public list of
         Talos releases to tell you when an upgrade is available, and the app's own release notes
         from its source repository. Builds installed from GitHub releases also check that
@@ -104,6 +107,13 @@
         per-installation identifier that does not identify you or your device, performance
         metrics and error codes. See
         <a href="https://developers.google.com/ml-kit/android-data-disclosure">Google's ML Kit data disclosure</a>.</li>
+      <li><strong>App icons, only if you turn it on.</strong> The logos of about 250 common apps
+        ship inside Ichor. When the <em>Download missing app icons</em> setting is on (it is off by
+        default), the logos of other recognised apps are downloaded from jsDelivr
+        (<code>cdn.jsdelivr.net</code>, the Dashboard Icons set) and kept in the app's cache. Each
+        request carries only the icon's public name, never your image names, namespaces or other
+        cluster details. jsDelivr sees your IP address, as for any web request, and its
+        <a href="https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net">privacy policy</a> applies.</li>
       <li><strong>AI diagnosis, only if you turn it on.</strong> It is off by default. When you
         tap <em>Ask</em>, a report of the cluster state (node readiness, services, resource
         usage, etcd status, recent events and the last lines of unhealthy services' logs) is

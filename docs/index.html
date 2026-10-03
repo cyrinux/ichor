@@ -6,11 +6,11 @@
     <title>Ichor for Talos Linux</title>
     <meta
       name="description"
-      content="Ichor is a free, open-source Talos Linux app for Android and iPhone: node health, logs, etcd, KubeSpan, live graphs, configuration drift, an incident recorder and alerts when a node goes down. Built on the same Go client as talosctl. Try the offline demo, no cluster needed."
+      content="Ichor is a free, open-source Talos Linux app for Android and iPhone: node health, logs, etcd, KubeSpan, live graphs, an inventory of the apps you run, Kubernetes workloads and pods, configuration drift, an incident recorder and alerts when a node goes down. Built on the same Go client as talosctl. Try the offline demo, no cluster needed."
     />
     <meta
       name="keywords"
-      content="Talos, Talos Linux, talosctl, Kubernetes, k8s, Sidero, etcd, KubeSpan, cluster monitoring, configuration drift, incident timeline, Wake-on-LAN, Android, iOS"
+      content="Talos, Talos Linux, talosctl, Kubernetes, k8s, Sidero, etcd, KubeSpan, cluster monitoring, app inventory, rollout restart, pods, configuration drift, incident timeline, Wake-on-LAN, Android, iOS"
     />
     <link rel="canonical" href="https://cyrinux.github.io/ichor/" />
     <meta name="theme-color" content="#14243B" />
@@ -20,7 +20,7 @@
     <meta property="og:title" content="Ichor for Talos Linux" />
     <meta
       property="og:description"
-      content="Your Talos cluster, from your phone. Node health, logs, etcd, alerts, and now configuration drift, an incident recorder and bottleneck metrics, with the same client as talosctl."
+      content="Your Talos cluster, from your phone. Node health, logs, etcd, alerts, and now an inventory of the apps you run, Kubernetes workloads and pods, configuration drift and an incident recorder, with the same client as talosctl."
     />
     <meta
       property="og:image"
@@ -33,9 +33,11 @@
         "@type": "SoftwareApplication",
         "name": "Ichor for Talos Linux",
         "alternateName": "Ichor",
-        "description": "Monitor and operate Talos Linux clusters from your phone: node health, logs, etcd, KubeSpan, live graphs, configuration drift, incident recording, bottleneck metrics and alerts.",
+        "description": "Monitor and operate Talos Linux clusters from your phone: node health, logs, etcd, KubeSpan, live graphs, an inventory of the apps running in the cluster, Kubernetes workloads and pods, configuration drift, incident recording, bottleneck metrics and alerts.",
         "featureList": [
           "Cluster overview and background alerts",
+          "Inventory of the apps running in the cluster, with their logos",
+          "Kubernetes workloads with rollout restart, and pods with delete",
           "Configuration drift between nodes",
           "Incident recorder timeline",
           "Bottleneck metrics: I/O wait, steal, disk and network",
@@ -854,6 +856,44 @@
       .mock .meter i.hot {
         background: #ff7a45;
       }
+      .mock .apps {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.55rem 0.4rem;
+      }
+      .mock .app {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.2rem;
+        font-size: 0.64rem;
+        color: var(--phone-ink-2);
+        white-space: nowrap;
+      }
+      .mock .app b {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.6rem;
+        display: grid;
+        place-items: center;
+        font: 600 0.72rem/1 "IBM Plex Sans", system-ui, sans-serif;
+        color: #0f1a2a;
+      }
+      .mock .app.warn::after {
+        content: "";
+        position: absolute;
+        top: -0.15rem;
+        right: 0.55rem;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: #f2c14e;
+        border: 2px solid var(--phone);
+      }
+      .mock .app.warn span {
+        color: #f2c14e;
+      }
       .reassure {
         margin: 1.5rem 0 0;
         color: var(--ink-2);
@@ -956,7 +996,7 @@
           <span>Ichor <small>for Talos Linux</small></span>
         </a>
         <nav aria-label="Primary">
-          <a class="optional" href="#insights">What's new</a>
+          <a class="optional" href="#apps">What's new</a>
           <a class="optional" href="#screens">Screens</a>
           <a class="optional" href="#features">Features</a>
           <a class="optional" href="#access">Access</a>
@@ -969,9 +1009,8 @@
       <main>
         <div class="hero">
           <div>
-            <a class="newpill" href="#insights"
-              ><b>New</b> Cluster insights: drift, incident recorder,
-              bottlenecks →</a
+            <a class="newpill" href="#apps"
+              ><b>New</b> App inventory, Kubernetes workloads and pods →</a
             >
             <h1>Your Talos cluster, from your phone.</h1>
             <p class="lede">
@@ -1081,8 +1120,187 @@
           </li>
         </ul>
 
+        <section id="apps" aria-labelledby="apps-title">
+          <p class="eyebrow">New · Apps and Kubernetes</p>
+          <h2 id="apps-title">
+            Know what runs on your cluster, and nudge it when it sticks.
+          </h2>
+          <p class="intro">
+            Talos tells you the nodes are fine. But is Grafana up to date, why
+            is one Cilium agent still on the old version, and which pod is
+            crash-looping? Ichor now shows the software running in the cluster,
+            and, with an admin certificate, restarts the workload or deletes the
+            stuck pod without a laptop.
+          </p>
+
+          <div class="spotlight">
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="App inventory: a grid of apps such as Argo CD, Cilium, Grafana, Immich and Longhorn; Cilium and Uptime Kuma are flagged for a look."
+              >
+                <div class="title">Apps · 24 running · 87 containers</div>
+                <div class="apps" aria-hidden="true">
+                  <span class="app"
+                    ><b style="background: #f7a26b">AC</b>v3.1.8</span
+                  >
+                  <span class="app warn"
+                    ><b style="background: #8fc6f2">Ci</b
+                    ><span>2 versions</span></span
+                  >
+                  <span class="app"
+                    ><b style="background: #f2c14e">Gr</b>12.2.0</span
+                  >
+                  <span class="app"
+                    ><b style="background: #9bdcb0">HA</b>2025.10</span
+                  >
+                  <span class="app"
+                    ><b style="background: #c9a7f2">Im</b>v2.0.1</span
+                  >
+                  <span class="app"
+                    ><b style="background: #7fd3d0">Lo</b>v1.9.1</span
+                  >
+                  <span class="app"
+                    ><b style="background: #f29fb8">Pa</b>2.18.4</span
+                  >
+                  <span class="app warn"
+                    ><b style="background: #b8c6f2">UK</b
+                    ><span>:latest</span></span
+                  >
+                </div>
+              </div>
+              <h3>App inventory</h3>
+              <p>
+                Every container on every node, grouped into the apps you
+                recognise, with their logos: Home Assistant, Immich, the *arr
+                stack, Longhorn, Cilium and about 250 more. Sidecars and init
+                containers join their app, and Ichor flags an app running two
+                versions at once or an unpinned <code>:latest</code> image.
+              </p>
+              <p class="ask">"Is everything on the new version?" → one glance.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Kubernetes workloads: Grafana is ready, Immich is rolling out, Paperless has one of two pods ready; Paperless can be restarted."
+              >
+                <div class="title">Kubernetes · workloads</div>
+                <div class="line" aria-hidden="true">
+                  <span>paperless</span><span>1/2 ready</span
+                  ><span class="tag diff">restart</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>immich</span><span>rolling out</span
+                  ><span class="tag diff">2/3</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>grafana</span><span>deployment</span
+                  ><span class="tag same">1/1</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>cilium</span><span>daemonset</span
+                  ><span class="tag same">5/5</span>
+                </div>
+              </div>
+              <h3>Workloads and rollout restart</h3>
+              <p>
+                Deployments, StatefulSets and DaemonSets with their readiness
+                and rollout state, the ones that need attention first. Restart
+                one with a rolling update, like
+                <code>kubectl rollout restart</code>, after a confirmation that
+                warns when it runs a single pod.
+              </p>
+              <p class="ask">"It just needs a kick." → kicked, from bed.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Kubernetes pods: one pod in CrashLoopBackOff with 14 restarts, one terminating, two running."
+              >
+                <div class="title">Kubernetes · pods</div>
+                <div class="tl" aria-hidden="true">
+                  <time>w-2</time
+                  ><i class="dot" style="background: #ff6b6b"></i
+                  ><span>scanner · CrashLoopBackOff ×14</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>w-1</time
+                  ><i class="dot" style="background: #f2c14e"></i
+                  ><span>sonarr-0 · Terminating</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>w-1</time
+                  ><i class="dot" style="background: #5bd18b"></i
+                  ><span>grafana-6d8b · Running</span>
+                </div>
+                <div class="tl" aria-hidden="true">
+                  <time>cp-1</time
+                  ><i class="dot" style="background: #5bd18b"></i
+                  ><span>coredns-7c9d · Running</span>
+                </div>
+              </div>
+              <h3>Pods, unhealthy first</h3>
+              <p>
+                Every pod with the status <code>kubectl get pods</code> shows
+                (CrashLoopBackOff, Init:Error, Terminating), its restarts and
+                node. Delete a stuck one so its controller starts a fresh copy;
+                the confirmation tells you whether anything brings it back.
+              </p>
+              <p class="ask">"Why is it still restarting?" → gone, recreated.</p>
+            </article>
+          </div>
+
+          <p class="reassure">
+            The app inventory works with a read-only <code>os:reader</code>
+            certificate and the logos ship inside the app, so nothing is looked
+            up online. Workloads and pods use the admin kubeconfig Talos issues,
+            kept in memory only. Screenshot mode hides every logo as well as
+            addresses and node names.
+          </p>
+
+          <ul class="alsonew" aria-label="Also new">
+            <li>
+              <h3>"Can't reach the cluster", explained</h3>
+              <p>
+                VPN off or on the wrong network? Instead of a wall of red nodes,
+                one notice says why, retries on its own and recovers the moment
+                your connection comes back.
+              </p>
+            </li>
+            <li>
+              <h3>Evidence with every incident</h3>
+              <p>
+                Recorded incidents now keep the service states and network link
+                changes captured at the time, with technical details one tap
+                away.
+              </p>
+            </li>
+            <li>
+              <h3>Logos for the rest, if you want</h3>
+              <p>
+                For apps beyond the 250 bundled ones, Ichor can download a logo
+                from the open Dashboard Icons set. It is off by default and
+                sends only the icon's public name.
+              </p>
+            </li>
+            <li>
+              <h3>Version drift, spotted</h3>
+              <p>
+                One node still on the old Cilium, a forgotten
+                <code>:latest</code> tag: apps that need a look are counted
+                right on the overview.
+              </p>
+            </li>
+          </ul>
+        </section>
+
         <section id="insights" aria-labelledby="insights-title">
-          <p class="eyebrow">New · Cluster insights</p>
+          <p class="eyebrow">Cluster insights</p>
           <h2 id="insights-title">
             Stop guessing what changed. Your phone saw it.
           </h2>
@@ -1472,6 +1690,18 @@
                 <td class="role">reader</td>
               </tr>
               <tr>
+                <td class="cmd">talosctl containers -k on every node</td>
+                <td class="what">
+                  <strong>App inventory</strong
+                  ><span
+                    >The software running in the cluster, grouped into apps
+                    with their logos, versions, version drift and unpinned
+                    images.</span
+                  >
+                </td>
+                <td class="role">reader</td>
+              </tr>
+              <tr>
                 <td class="cmd">talosctl get links, talosctl netstat</td>
                 <td class="what">
                   <strong>Network</strong
@@ -1560,6 +1790,29 @@
                 <td class="role">admin</td>
               </tr>
               <tr>
+                <td class="cmd">kubectl get deploy,sts,ds, kubectl rollout restart</td>
+                <td class="what">
+                  <strong>Kubernetes workloads</strong
+                  ><span
+                    >Readiness and rollout state of every Deployment,
+                    StatefulSet and DaemonSet, and a rolling restart after a
+                    confirmation.</span
+                  >
+                </td>
+                <td class="role">admin</td>
+              </tr>
+              <tr>
+                <td class="cmd">kubectl get pods, kubectl delete pod</td>
+                <td class="what">
+                  <strong>Kubernetes pods</strong
+                  ><span
+                    >Pod status, readiness, restarts and node, unhealthy first;
+                    delete a stuck pod so its controller recreates it.</span
+                  >
+                </td>
+                <td class="role">admin</td>
+              </tr>
+              <tr>
                 <td class="cmd">talosctl config new</td>
                 <td class="what">
                   <strong>Issue a talosconfig</strong
@@ -1606,9 +1859,9 @@
               <h3>Read-only</h3>
               <code>os:reader</code>
               <p>
-                Monitoring, logs, events, pods, network, etcd, KubeSpan, graphs,
-                alerts and every cluster insight. The right default for a
-                phone.
+                Monitoring, logs, events, pods, the app inventory, network,
+                etcd, KubeSpan, graphs, alerts and every cluster insight. The
+                right default for a phone.
               </p>
             </div>
             <div>
@@ -1624,7 +1877,8 @@
               <code>os:admin</code>
               <p>
                 Adds the health check, machine config, Talos upgrades, issuing
-                talosconfigs, kubeconfig export and debug shells.
+                talosconfigs, kubeconfig export, debug shells, and Kubernetes
+                rollout restarts and pod deletes.
               </p>
             </div>
           </div>
@@ -1749,17 +2003,21 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
               <p>
                 No. Ichor talks to the Talos API that every node already
                 exposes, with a talosconfig, exactly like talosctl. There is no
-                agent, operator or relay server.
+                agent, operator or relay server. The Kubernetes screens use the
+                admin kubeconfig Talos issues to an admin certificate, kept in
+                memory only.
               </p>
             </details>
             <details>
               <summary>Where does my data go?</summary>
               <p>
                 Only to your nodes. The app checks GitHub for new releases, and
-                nothing else leaves the phone unless you turn on AI diagnosis:
-                it is off by default, shows you the exact report first, and
-                sends it only when you tap Ask, with names and addresses hidden
-                if you choose.
+                nothing else leaves the phone unless you turn it on. AI
+                diagnosis is off by default, shows you the exact report first,
+                and sends it only when you tap Ask, with names and addresses
+                hidden if you choose. Downloading logos for apps beyond the
+                bundled ones is off by default too, and sends only the icon's
+                public name, never your image names.
               </p>
             </details>
             <details>
