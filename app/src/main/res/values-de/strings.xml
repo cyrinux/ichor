@@ -1385,4 +1385,12 @@
     <string name="netperf_test_latency">Latenz (p50)</string>
     <string name="netperf_latency_values">p50 %1$s · p90 %2$s · p99 %3$s</string>
     <string name="netperf_round_trips">%1$s Round-Trips/s</string>
+    <string name="common_more_info">Weitere Informationen</string>
+    <string name="netperf_hint_nodes_title">Client und Server</string>
+    <string name="netperf_hint_nodes">Der Server-Node startet netserver und wartet. Der Client-Node startet netperf, das sich damit verbindet und sendet: Der Durchsatz wird vom Client zum Server gemessen.\n\nTausche die beiden Nodes, um die andere Richtung zu messen. Zweimal derselbe Node misst seinen eigenen Netzwerkstack, keine Verbindung.</string>
+    <string name="netperf_hint_paths_title">Netzwerkpfade</string>
+    <string name="netperf_hint_paths">Pod zu Pod läuft durch das CNI: virtuelle Interfaces, Overlay oder Kapselung, eBPF, Verschlüsselung wie WireGuard oder KubeSpan. Host zu Host nutzt die Adressen der Nodes und umgeht all das.\n\nPod zu Pod viel langsamer als Host zu Host: Der Unterschied ist, was das CNI kostet. Beide langsam: Prüfe die Verbindung selbst (Netzwerkkarte, Switch, MTU, Entfernung zwischen Standorten).</string>
+    <string name="netperf_hint_duration">Wie lange jede Messung dauert. Längere Messungen glätten Spitzen und den Anlauf von TCP, belasten die Verbindung aber länger.\n\nDer Test macht 2 Messungen nacheinander, erst Durchsatz, dann Latenz, und 4 mit dem Host-Netzwerk.</string>
+    <string name="netperf_hint_throughput">netperf TCP_STREAM: Eine TCP-Verbindung sendet die ganze Dauer so schnell sie kann, das ist also die Bandbreite eines einzelnen Flows.\n\nAuf einem gesunden Pfad liegt sie nahe an der Link-Geschwindigkeit: etwa 940 Mbit/s bei 1 GbE, 9,4 Gbit/s bei 10 GbE. Verschlüsselung, eine kleine MTU oder eine ausgelastete CPU senken sie. Mehrere Flows zusammen können mehr erreichen.</string>
+    <string name="netperf_hint_latency">netperf TCP_RR: Ein Byte geht zum Server und zurück, immer wieder über eine Verbindung. Jeder Wert ist ein vollständiger Round-Trip, inklusive der Netzwerkstacks beider Seiten.\n\np50 ist der Median: Die Hälfte der Round-Trips war schneller. p90: 9 von 10 waren schneller. p99: Nur der langsamste von 100 dauerte länger, hier zeigen sich Jitter und Retransmits. Ein p99 weit über p50 bedeutet eine ungleichmäßige Verbindung.\n\nRound-Trips/s: wie viele pro Sekunde nacheinander abgeschlossen wurden. Im LAN sind einige zehn bis wenige hundert µs üblich; zwischen Standorten Millisekunden.</string>
 </resources>

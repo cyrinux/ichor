@@ -1386,4 +1386,12 @@
     <string name="netperf_test_latency">Latencia (p50)</string>
     <string name="netperf_latency_values">p50 %1$s · p90 %2$s · p99 %3$s</string>
     <string name="netperf_round_trips">%1$s idas y vueltas/s</string>
+    <string name="common_more_info">Más información</string>
+    <string name="netperf_hint_nodes_title">Cliente y servidor</string>
+    <string name="netperf_hint_nodes">El nodo servidor ejecuta netserver y espera. El nodo cliente ejecuta netperf, que se conecta a él y envía: el rendimiento se mide del cliente al servidor.\n\nIntercambia los dos nodos para medir el otro sentido. Elegir dos veces el mismo nodo mide su propia pila de red, no un enlace.</string>
+    <string name="netperf_hint_paths_title">Rutas de red</string>
+    <string name="netperf_hint_paths">Pod a pod pasa por el CNI: interfaces virtuales, overlay o encapsulación, eBPF, cifrado como WireGuard o KubeSpan. Host a host usa las direcciones de los nodos y evita todo eso.\n\nPod a pod mucho más lento que host a host: la diferencia es lo que cuesta el CNI. Ambos lentos: revisa el enlace en sí (tarjeta de red, switch, MTU, distancia entre sitios).</string>
+    <string name="netperf_hint_duration">Cuánto dura cada medición. Una medición más larga suaviza los picos y el arranque de TCP, pero mantiene el enlace ocupado más tiempo.\n\nLa prueba hace 2 mediciones una tras otra, rendimiento y luego latencia, y 4 con la red del host.</string>
+    <string name="netperf_hint_throughput">netperf TCP_STREAM: una conexión TCP envía lo más rápido posible durante toda la duración, así que es el ancho de banda de un solo flujo.\n\nEn una ruta sana se acerca a la velocidad del enlace: unos 940 Mbit/s en 1 GbE, 9,4 Gbit/s en 10 GbE. El cifrado, una MTU pequeña o una CPU ocupada lo reducen. Varios flujos juntos pueden llegar más lejos.</string>
+    <string name="netperf_hint_latency">netperf TCP_RR: un byte va al servidor y vuelve, una y otra vez en una conexión. Cada valor es una ida y vuelta completa, con las pilas de red de ambos lados.\n\np50 es la mediana: la mitad de las idas y vueltas fueron más rápidas. p90: 9 de cada 10 fueron más rápidas. p99: solo la más lenta de cada 100 tardó más; ahí se ven el jitter y las retransmisiones. Un p99 muy por encima del p50 indica un enlace irregular.\n\nIdas y vueltas/s: cuántas se completaron cada segundo, una tras otra. En una LAN, espera de decenas a unos cientos de µs; entre sitios, milisegundos.</string>
 </resources>
