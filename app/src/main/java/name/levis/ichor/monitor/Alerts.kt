@@ -40,10 +40,10 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
 
     if (comparable && !blind) {
         cur.nodes.forEach { (addr, state) ->
-            val before = prev!!.nodes[addr] ?: return@forEach
+            val before = prev.nodes[addr] ?: return@forEach
             if (before.health != state.health) alerts += nodeAlert(addr, state)
         }
-        if (cur.etcdChecked && prev!!.etcdChecked) {
+        if (cur.etcdChecked && prev.etcdChecked) {
             (cur.etcdAlarms - prev.etcdAlarms.toSet()).forEach { alarm ->
                 alerts += Alert(
                     key = "etcd:$alarm",
@@ -68,7 +68,7 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
         }
     }
 
-    val next = if (blind) prev!!.copy(certNotAfter = cur.certNotAfter) else cur
+    val next = if (blind) prev.copy(certNotAfter = cur.certNotAfter) else cur
     return Evaluation(alerts, next.copy(lastCertWarnDay = warnedDay))
 }
 

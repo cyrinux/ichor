@@ -18,11 +18,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.ListAlt
+import androidx.compose.material.icons.automirrored.outlined.ListAlt
 import androidx.compose.material.icons.outlined.Power
 import androidx.compose.material.icons.outlined.PowerSettingsNew
 import androidx.compose.material.icons.outlined.SettingsEthernet
-import androidx.compose.material.icons.outlined.ShowChart
+import androidx.compose.material.icons.automirrored.outlined.ShowChart
 import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,12 +35,14 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.WolTarget
@@ -65,19 +67,19 @@ fun SwipeableNode(
     onMore: () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    val state = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
+    val state = rememberSwipeToDismissBoxState()
+    val scope = rememberCoroutineScope()
+    SwipeToDismissBox(
+        state = state,
+        enableDismissFromStartToEnd = node.reachable, // no live data from an unreachable node
+        onDismiss = { value ->
             when (value) {
                 SwipeToDismissBoxValue.StartToEnd -> onLive()
                 SwipeToDismissBoxValue.EndToStart -> onMore()
                 SwipeToDismissBoxValue.Settled -> Unit
             }
-            false // spring back
+            scope.launch { state.reset() } // spring back
         },
-    )
-    SwipeToDismissBox(
-        state = state,
-        enableDismissFromStartToEnd = node.reachable, // no live data from an unreachable node
         backgroundContent = {
             val toLive = state.dismissDirection == SwipeToDismissBoxValue.StartToEnd
             Row(
@@ -88,7 +90,7 @@ fun SwipeableNode(
                 horizontalArrangement = if (toLive) Arrangement.Start else Arrangement.End,
             ) {
                 val (icon, label) = if (toLive) {
-                    Icons.Outlined.ShowChart to stringResource(R.string.overview_swipe_live)
+                    Icons.AutoMirrored.Outlined.ShowChart to stringResource(R.string.overview_swipe_live)
                 } else {
                     Icons.Outlined.MoreHoriz to stringResource(R.string.overview_swipe_actions)
                 }
@@ -136,8 +138,8 @@ fun NodeActionsSheet(
                 onAction(action)
             }
             if (node.reachable) {
-                Item(Icons.Outlined.ShowChart, stringResource(R.string.overview_action_live_graphs)) { pick(NodeAction.LIVE) }
-                Item(Icons.Outlined.ListAlt, stringResource(R.string.overview_action_services_logs)) { pick(NodeAction.SERVICES) }
+                Item(Icons.AutoMirrored.Outlined.ShowChart, stringResource(R.string.overview_action_live_graphs)) { pick(NodeAction.LIVE) }
+                Item(Icons.AutoMirrored.Outlined.ListAlt, stringResource(R.string.overview_action_services_logs)) { pick(NodeAction.SERVICES) }
                 Item(Icons.Outlined.Terminal, stringResource(R.string.overview_action_kernel_log)) { pick(NodeAction.KERNEL_LOG) }
                 if (canShell) {
                     Item(Icons.Outlined.Terminal, stringResource(R.string.overview_action_debug_shell), disabled = shell?.text()) { pick(NodeAction.SHELL) }
