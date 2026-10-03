@@ -1,0 +1,124 @@
+{
+  "apiVersion": "v1",
+  "items": [
+    {
+      "apiVersion": "barmancloud.cnpg.io/v1",
+      "kind": "ObjectStore",
+      "metadata": {
+        "name": "garage-store",
+        "namespace": "db-1"
+      },
+      "spec": {
+        "configuration": {
+          "destinationPath": "s3://postgres-backup/pg-healthy/",
+          "endpointURL": "http://garage.garage.svc.cluster.local:3900"
+        },
+        "retentionPolicy": "14d"
+      },
+      "status": {
+        "serverRecoveryWindow": {
+          "pg-healthy": {
+            "firstRecoverabilityPoint": "2026-09-19T03:00:09Z",
+            "lastFailedBackupTime": "2026-07-04T03:01:28Z",
+            "lastSuccessfulBackupTime": "2026-10-03T03:00:06Z"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "barmancloud.cnpg.io/v1",
+      "kind": "ObjectStore",
+      "metadata": {
+        "name": "garage-store",
+        "namespace": "db-2"
+      },
+      "spec": {
+        "configuration": {
+          "destinationPath": "s3://postgres-backup/pg-backup-failed/",
+          "endpointURL": "http://garage.garage.svc.cluster.local:3900"
+        },
+        "retentionPolicy": "14d"
+      },
+      "status": {
+        "serverRecoveryWindow": {
+          "pg-backup-failed": {
+            "firstRecoverabilityPoint": "2026-09-17T03:23:50Z",
+            "lastFailedBackupTime": "2026-10-01T03:05:01Z",
+            "lastSuccessfulBackupTime": "2026-09-24T03:00:15Z"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "barmancloud.cnpg.io/v1",
+      "kind": "ObjectStore",
+      "metadata": {
+        "name": "garage-store",
+        "namespace": "db-3"
+      },
+      "spec": {
+        "configuration": {
+          "destinationPath": "s3://postgres-backup/pg-short-instances/",
+          "endpointURL": "http://garage.garage.svc.cluster.local:3900"
+        },
+        "retentionPolicy": "14d"
+      },
+      "status": {
+        "serverRecoveryWindow": {
+          "pg-short-instances": {
+            "firstRecoverabilityPoint": "2026-09-11T03:15:47Z",
+            "lastFailedBackupTime": "2026-10-02T03:04:42Z",
+            "lastSuccessfulBackupTime": "2026-09-25T03:09:07Z"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "barmancloud.cnpg.io/v1",
+      "kind": "ObjectStore",
+      "metadata": {
+        "name": "garage-store",
+        "namespace": "db-4"
+      },
+      "spec": {
+        "configuration": {
+          "destinationPath": "s3://postgres-backup/pg-no-ready/",
+          "endpointURL": "http://garage.garage.svc.cluster.local:3900"
+        },
+        "retentionPolicy": "14d"
+      },
+      "status": {
+        "serverRecoveryWindow": {
+          "pg-no-ready": {
+            "firstRecoverabilityPoint": "2026-09-15T04:44:38Z",
+            "lastSuccessfulBackupTime": "2026-09-29T18:02:27Z"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "barmancloud.cnpg.io/v1",
+      "kind": "ObjectStore",
+      "metadata": {
+        "name": "garage-store",
+        "namespace": "db-5"
+      },
+      "spec": {
+        "configuration": {
+          "destinationPath": "s3://postgres-backup/pg-wal-archiver-off/",
+          "endpointURL": "http://garage.garage.svc.cluster.local:3900"
+        },
+        "retentionPolicy": "14d"
+      },
+      "status": {
+        "serverRecoveryWindow": {
+          "pg-wal-archiver-off": {
+            "firstRecoverabilityPoint": "2026-09-13T03:47:33Z",
+            "lastSuccessfulBackupTime": "2026-09-27T03:54:55Z"
+          }
+        }
+      }
+    }
+  ],
+  "kind": "List"
+}

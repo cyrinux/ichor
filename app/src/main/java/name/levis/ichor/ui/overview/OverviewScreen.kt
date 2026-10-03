@@ -98,6 +98,11 @@ import androidx.lifecycle.repeatOnLifecycle
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.apps.AppsViewModel
 import name.levis.ichor.model.Inventory
+import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.DataServices
+import name.levis.ichor.model.dataServiceHints
+import name.levis.ichor.ui.dataservices.DataServicesViewModel
+import name.levis.ichor.ui.dataservices.downHostnames
 
 class OverviewViewModel(
     val talos: TalosRepository,
@@ -117,6 +122,7 @@ fun OverviewScreen(
     onEtcd: () -> Unit,
     onKubeSpan: () -> Unit,
     onWorkloads: () -> Unit,
+    onDataServices: () -> Unit,
     onHealth: () -> Unit,
     onEvents: () -> Unit,
     onInsights: () -> Unit,
@@ -132,6 +138,7 @@ fun OverviewScreen(
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
     discoveryVm: NodeDiscoveryViewModel = viewModel(factory = factory { NodeDiscoveryViewModel(app.talosRepository) }),
     appsVm: AppsViewModel = viewModel(key = "overview-apps", factory = factory { AppsViewModel(app.talosRepository) }),
+    dataVm: DataServicesViewModel = viewModel(key = "overview-data-services", factory = factory { DataServicesViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -159,6 +166,16 @@ fun OverviewScreen(
         appsVm.load(Triple(config?.activeContext, generation, invalidations))
     }
     val apps by appsVm.state.collectAsStateWithLifecycle()
+
+    // Longhorn, Garage, CloudNativePG: only asked (through Kubernetes) when the inventory shows
+    // one of them and the role may use the Kubernetes API; other clusters pay nothing.
+    val dataHints = (apps as? UiState.Loaded)?.data?.dataServiceHints().orEmpty()
+        .takeIf { config?.activeSummary?.allows(Feature.WORKLOADS) == true }.orEmpty()
+    LaunchedEffect(config?.activeContext, generation, invalidations, dataHints) {
+        // Another cluster without hints: forgotten, so coming back loads again instead of showing the old result.
+        if (dataHints.isNotEmpty()) dataVm.load(listOf(config?.activeContext, generation, invalidations, dataHints), dataHints) else dataVm.forget()
+    }
+    val dataServices by dataVm.state.collectAsStateWithLifecycle()
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     // No node answered (VPN off, another network): one notice instead of a list of red nodes.
@@ -324,6 +341,7 @@ fun OverviewScreen(
                     vm.refresh()
                     timeVm.refresh()
                     appsVm.refresh()
+                    if (dataHints.isNotEmpty()) dataVm.refresh()
                     scope.launch { discoveryVm.discover() }
                 },
                 modifier = Modifier.padding(padding).fillMaxSize(),
@@ -347,6 +365,9 @@ fun OverviewScreen(
                     onInsights = onInsights,
                     apps = apps,
                     onApps = onApps,
+                    dataServices = dataServices.takeIf { dataHints.isNotEmpty() },
+                    dataHints = dataHints,
+                    onDataServices = onDataServices,
                     onNode = onNode,
                     onSettings = onSettings,
                     onNodeAction = onNodeAction,
@@ -376,6 +397,9 @@ private fun NodeList(
     onInsights: () -> Unit,
     apps: UiState<Inventory>,
     onApps: () -> Unit,
+    dataServices: UiState<DataServices>?,
+    dataHints: String,
+    onDataServices: () -> Unit,
     onNode: (NodeOverview) -> Unit,
     onSettings: () -> Unit,
     onNodeAction: (NodeOverview, NodeAction) -> Unit,
@@ -419,6 +443,13 @@ private fun NodeList(
         if (certificate?.isDemo != true) item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
         item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes), live, onInsights) }
         item { AppsCard(apps, onApps) }
+        if (dataServices != null) item {
+            val inventory = (apps as? UiState.Loaded)?.data
+            val appsById = remember(inventory) { inventory?.apps.orEmpty().associateBy { it.id } }
+            val hinted = remember(dataHints) { DataServiceKind.entries.filter { it.catalogId in dataHints.split(',') } }
+            val downNodes = remember(overview) { overview.downHostnames() }
+            DataServicesCard(dataServices, hinted, appsById, downNodes, onDataServices)
+        }
         items(nodes, key = { it.node }) { node ->
             SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {
                 NodeCard(node, onClick = { onNode(node) }, onLongClick = { sheetFor = node })

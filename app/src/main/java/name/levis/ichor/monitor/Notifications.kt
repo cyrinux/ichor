@@ -82,6 +82,24 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.NODE_UNREACHABLE -> context.getString(R.string.monitor_node_unreachable, alert.subject)
     AlertKind.ETCD_ALARM -> context.getString(R.string.monitor_etcd_alarm_title)
     AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED -> context.getString(R.string.monitor_cert_title)
+    AlertKind.DATA_PROBLEM -> context.getString(R.string.monitor_data_problem, alert.subject)
+    AlertKind.DATA_OK -> context.getString(R.string.monitor_data_ok, alert.subject)
+}
+
+/** "Longhorn · critical" from a data alert's "system|severity" detail. */
+private fun dataAlertText(context: Context, alert: Alert): String {
+    val system = when (alert.detail.substringBefore('|')) {
+        "longhorn" -> "Longhorn"
+        "garage" -> "Garage"
+        "dragonfly" -> "Dragonfly"
+        else -> "CloudNativePG"
+    }
+    if (!alert.problem) return system
+    val severity = when (alert.detail.substringAfter('|')) {
+        DATA_CRITICAL -> context.getString(R.string.data_services_health_critical)
+        else -> context.getString(R.string.data_services_health_warning)
+    }
+    return context.getString(R.string.monitor_data_text, system, severity)
 }
 
 private fun alertText(context: Context, alert: Alert): String = when (alert.kind) {
@@ -89,4 +107,5 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.ETCD_ALARM -> context.getString(R.string.monitor_etcd_alarm_text, alert.subject, alert.detail)
     AlertKind.CERT_EXPIRING -> context.resources.getQuantityString(R.plurals.monitor_cert_expires, alert.days, alert.days)
     AlertKind.CERT_EXPIRED -> context.resources.getQuantityString(R.plurals.monitor_cert_expired, alert.days, alert.days)
+    AlertKind.DATA_PROBLEM, AlertKind.DATA_OK -> dataAlertText(context, alert)
 }

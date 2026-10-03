@@ -1,0 +1,10 @@
+{
+  "connectedNodes": 6,
+  "knownNodes": 7,
+  "partitions": 256,
+  "partitionsAllOk": 128,
+  "partitionsQuorum": 256,
+  "status": "degraded",
+  "storageNodes": 7,
+  "storageNodesUp": 6
+}

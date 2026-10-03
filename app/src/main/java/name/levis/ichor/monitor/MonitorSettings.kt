@@ -22,6 +22,16 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
     private val _intervalMinutes = MutableStateFlow(prefs.getLong(KEY_INTERVAL, INTERVALS.first()))
     val intervalMinutes: StateFlow<Long> = _intervalMinutes.asStateFlow()
 
+    private val _dataServicesWatched = MutableStateFlow(prefs.getBoolean(KEY_DATA_SERVICES, false))
+
+    /** Opt-in: also check Longhorn, Garage and CloudNativePG through the Kubernetes API. */
+    val dataServicesWatched: StateFlow<Boolean> = _dataServicesWatched.asStateFlow()
+
+    fun setDataServicesWatched(watched: Boolean) {
+        prefs.edit().putBoolean(KEY_DATA_SERVICES, watched).apply()
+        _dataServicesWatched.value = watched
+    }
+
     fun setAlertsEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_ENABLED, enabled).apply()
         _alertsEnabled.value = enabled
@@ -68,5 +78,6 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_ENABLED = "alerts_enabled"
         private const val KEY_INTERVAL = "interval_minutes"
         private const val KEY_SNAPSHOT = "snapshot"
+        private const val KEY_DATA_SERVICES = "data_services_watched"
     }
 }

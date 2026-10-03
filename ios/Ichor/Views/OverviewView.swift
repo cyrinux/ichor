@@ -20,6 +20,10 @@ struct OverviewView: View {
     @State private var showNodesAnyway = false
     /// The apps card's data: loaded with the overview, not with every refresh of live data.
     @State private var inventory: LoadState<ClusterInventory> = .loading
+    /// Longhorn, Garage, CloudNativePG: only asked when the inventory shows one of them and the
+    /// role may use the Kubernetes API (nil hides the section); hints are their catalog ids.
+    @State private var dataServices: LoadState<DataServices>?
+    @State private var dataHints = ""
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -59,6 +63,9 @@ struct OverviewView: View {
                         if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
                     }
                     AppsCard(state: inventory, hostnames: hostnames)
+                    if let dataServices {
+                        DataServicesSection(state: dataServices, hints: dataHints, apps: inventoryApps, downNodes: overview.downHostnames)
+                    }
                     Section {
                         ForEach(sorted(overview.nodes)) { node in
                             let ref = NodeRef(address: node.node, hostname: node.hostname, role: node.role)
@@ -206,12 +213,14 @@ struct OverviewView: View {
             state = .loading
             discovered = []
             inventory = .loading
+            dataServices = nil
         }
         // Another cluster: never its name over the previous one's nodes.
         .onChange(of: model.activeContext) {
             state = .loading
             discovered = []
             inventory = .loading
+            dataServices = nil
         }
         .sheet(isPresented: $showDiscovered) {
             let context = model.activeContext
@@ -312,6 +321,29 @@ struct OverviewView: View {
         let loaded: LoadState<ClusterInventory> = await .from { try await model.fetch(.inventory, with: client) }
         guard id == loadID else { return }
         inventory = inventory.refreshed(with: loaded)
+        if case .loaded(let apps, _, _) = loaded { await loadDataServices(with: client, id: id, inventory: apps) }
+    }
+
+    /// Only for clusters whose inventory shows Longhorn, Garage, CloudNativePG or Dragonfly, and roles
+    /// that may use the Kubernetes API: others make no Kubernetes call. A failed refresh keeps what was
+    /// shown (with its error noted).
+    private func loadDataServices(with client: TalosClient, id: String, inventory apps: ClusterInventory) async {
+        let hints = dataServiceHints(apps)
+        guard model.allows(.workloads), !hints.isEmpty else {
+            dataServices = nil
+            return
+        }
+        dataHints = hints
+        if dataServices == nil { dataServices = .loading }
+        let loaded: LoadState<DataServices> = await .from { try await client.dataServices(hints: hints) }
+        guard id == loadID else { return }
+        dataServices = (dataServices ?? .loading).refreshed(with: loaded)
+    }
+
+    /// The inventory's apps by catalog id, for the data services' icons.
+    private var inventoryApps: [String: InventoryApp] {
+        guard case .loaded(let apps, _, _) = inventory else { return [:] }
+        return Dictionary(apps.apps.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
     /// Best effort: discovery off, or no node answering, offers nothing.

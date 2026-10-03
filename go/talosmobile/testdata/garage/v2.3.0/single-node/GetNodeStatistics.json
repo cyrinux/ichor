@@ -1,0 +1,111 @@
+{
+  "error": {},
+  "success": {
+    "fa7e3c484cb7cd73e19d2e728c1319cf6d9e63198da1b2613ae53d4def9fc8a3": {
+      "blockManagerStats": {
+        "rcEntries": 452100,
+        "resyncErrors": 0,
+        "resyncQueueLen": 0
+      },
+      "freeform": "Node ID: (redacted)\nHostname: (redacted)\nGarage version: v2.3.0\n",
+      "tableStats": [
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "admin_token"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 5,
+          "merkleItems": 6,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_v2"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 5,
+          "merkleItems": 6,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_alias"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 7,
+          "merkleItems": 8,
+          "merkleQueueLen": 0,
+          "tableName": "key"
+        },
+        {
+          "gcQueueLen": 77,
+          "insertQueueLen": 0,
+          "items": 286753,
+          "merkleItems": 365584,
+          "merkleQueueLen": 0,
+          "tableName": "object"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 4,
+          "merkleItems": 4,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_object_counter"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 63,
+          "merkleItems": 70,
+          "merkleQueueLen": 0,
+          "tableName": "multipart_upload"
+        },
+        {
+          "gcQueueLen": 1,
+          "insertQueueLen": 0,
+          "items": 2,
+          "merkleItems": 2,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_mpu_counter"
+        },
+        {
+          "gcQueueLen": 493,
+          "insertQueueLen": 0,
+          "items": 277023,
+          "merkleItems": 340094,
+          "merkleQueueLen": 0,
+          "tableName": "version"
+        },
+        {
+          "gcQueueLen": 537,
+          "insertQueueLen": 0,
+          "items": 519130,
+          "merkleItems": 592788,
+          "merkleQueueLen": 0,
+          "tableName": "block_ref"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_item"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_index_counter_v2"
+        }
+      ]
+    }
+  }
+}

@@ -43,6 +43,7 @@ fun MonitoringSection(app: TalosApp) {
     val context = LocalContext.current
     val store = app.monitorStore
     val enabled by store.alertsEnabled.collectAsStateWithLifecycle()
+    val dataWatched by store.dataServicesWatched.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -81,6 +82,23 @@ fun MonitoringSection(app: TalosApp) {
                     )
                 }
                 Switch(checked = enabled, onCheckedChange = ::toggle, modifier = Modifier.padding(start = 12.dp))
+            }
+            // Opt-in on top of the alerts: Kubernetes API calls and a Garage CLI run at every check.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_data_services), style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        stringResource(R.string.monitor_data_services_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = dataWatched,
+                    onCheckedChange = { store.setDataServicesWatched(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
             }
             Text(stringResource(R.string.monitor_check_every), style = MaterialTheme.typography.labelLarge)
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {

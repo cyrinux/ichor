@@ -40,6 +40,7 @@ import name.levis.ichor.util.formatBytes
 class TopologyViewModel(private val talos: TalosRepository) : LoadingViewModel<ClusterTopology>() {
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<ClusterTopology>? = talos.cached(TOPOLOGY)
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.topology()
 }
 

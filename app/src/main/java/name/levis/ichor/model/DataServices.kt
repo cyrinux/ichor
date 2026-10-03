@@ -1,0 +1,419 @@
+package name.levis.ichor.model
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+// Mirrors go/talosmobile/kube_dataservices.go, kube_longhorn.go, kube_garage.go and kube_cnpg.go
+// (the wire format is documented in plans/data-services/README.md).
+
+/** Health of the storage and database operators a cluster runs; a null section is not installed. */
+@Serializable
+data class DataServices(
+    val longhorn: LonghornStatus? = null,
+    val garage: GarageStatus? = null,
+    val cnpg: CnpgStatus? = null,
+    val dragonfly: DragonflyStatus? = null,
+)
+
+@Serializable
+data class LonghornStatus(
+    val version: String = "",
+    /** Installed but could not be read. */
+    val error: String = "",
+    val volumes: List<LonghornVolume> = emptyList(),
+    val nodes: List<LonghornNode> = emptyList(),
+    val backupTargets: List<LonghornBackupTarget> = emptyList(),
+)
+
+@Serializable
+data class LonghornVolume(
+    val name: String,
+    val namespace: String = "",
+    /** "" when no claim is bound. */
+    val pvcNamespace: String = "",
+    val pvcName: String = "",
+    /** creating, attached, detached, attaching, detaching or deleting. */
+    val state: String = "",
+    /** healthy, degraded, faulted or unknown. */
+    val robustness: String = "",
+    val health: String = "",
+    val replicasDesired: Int = 0,
+    val replicasHealthy: Int = 0,
+    val rebuilding: Int = 0,
+    /** Nodes holding a replica, failed ones too. */
+    val replicaNodes: List<String> = emptyList(),
+    /** Where it is attached. */
+    val node: String = "",
+    val size: Long = 0,
+    val actualSize: Long = 0,
+    /** Unix millis, 0 when never. */
+    val lastBackupAt: Long = 0,
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+
+    /** The claim it backs ("namespace/name"), or the volume's own name when unbound. */
+    val label: String get() = if (pvcName.isNotEmpty()) "$pvcNamespace/$pvcName" else name
+}
+
+@Serializable
+data class LonghornNode(
+    val name: String,
+    val ready: Boolean = false,
+    val schedulable: Boolean = false,
+    val disks: List<LonghornDisk> = emptyList(),
+)
+
+@Serializable
+data class LonghornDisk(
+    val path: String = "",
+    val schedulable: Boolean = false,
+    val available: Long = 0,
+    val maximum: Long = 0,
+    val scheduled: Long = 0,
+)
+
+@Serializable
+data class LonghornBackupTarget(
+    val name: String = "",
+    val url: String = "",
+    val available: Boolean = false,
+    val message: String = "",
+)
+
+@Serializable
+data class GarageStatus(
+    val error: String = "",
+    val instances: List<GarageInstance> = emptyList(),
+)
+
+@Serializable
+data class GarageInstance(
+    val namespace: String = "",
+    val name: String = "",
+    /** Pod the CLI ran in, "" when none was ready. */
+    val pod: String = "",
+    val pods: Int = 0,
+    val podsReady: Int = 0,
+    val version: String = "",
+    /** healthy, degraded, unavailable or unknown. */
+    val status: String = "",
+    /** English, causes first (from the Go core). */
+    val message: String = "",
+    val connectedNodes: Int = 0,
+    val knownNodes: Int = 0,
+    val storageNodes: Int = 0,
+    val storageNodesUp: Int = 0,
+    val partitions: Int = 0,
+    val partitionsQuorum: Int = 0,
+    val partitionsAllOk: Int = 0,
+    /** -1 when unknown. */
+    val resyncQueue: Long = -1,
+    val resyncErrors: Long = -1,
+    val tableSyncQueue: Long = -1,
+    val layoutVersion: Long = 0,
+    val nodes: List<GarageNode> = emptyList(),
+    /** cli-json (full picture) or health (status only). */
+    val source: String = "",
+) {
+    val state: GarageState get() = GarageState.from(status)
+    val label: String get() = "$namespace/$name"
+    val detailed: Boolean get() = source == "cli-json"
+}
+
+@Serializable
+data class GarageNode(
+    val id: String = "",
+    val hostname: String = "",
+    val zone: String = "",
+    val tags: List<String> = emptyList(),
+    /** Kubernetes node of the pod with that hostname, "" when none. */
+    val kubeNode: String = "",
+    /** Holds a role in the current layout: only those count as down. */
+    val storage: Boolean = false,
+    val up: Boolean = false,
+    /** -1 when up or unknown. */
+    val lastSeenSecs: Long = -1,
+    val draining: Boolean = false,
+    val dataAvail: Long = 0,
+    val dataTotal: Long = 0,
+    val resyncQueue: Long = -1,
+    val resyncErrors: Long = -1,
+    val tableSyncQueue: Long = -1,
+    val statsError: String = "",
+) {
+    /** What names the node best: Garage forgets a long-gone node's hostname, its tags often name the host. */
+    val label: String get() = hostname.ifEmpty { tags.joinToString(",").ifEmpty { id.take(16) } }
+}
+
+@Serializable
+data class CnpgStatus(
+    val version: String = "",
+    val error: String = "",
+    val clusters: List<CnpgCluster> = emptyList(),
+)
+
+@Serializable
+data class CnpgCluster(
+    val namespace: String,
+    val name: String,
+    val phase: String = "",
+    val phaseReason: String = "",
+    val health: String = "",
+    val hibernated: Boolean = false,
+    /** Wire values of [CnpgReason]. */
+    val reasons: List<String> = emptyList(),
+    val instances: Int = 0,
+    val readyInstances: Int = 0,
+    val currentPrimary: String = "",
+    val targetPrimary: String = "",
+    val instancePods: List<CnpgPod> = emptyList(),
+    /** ok, failing, off or unknown. */
+    val archiving: String = "",
+    /** ok, failed, stale or none. */
+    val lastBackup: String = "",
+    /** plugin, in-tree or none. */
+    val backupMethod: String = "",
+    val objectStore: String = "",
+    val scheduled: Boolean = false,
+    @SerialName("lastSuccessfulBackupAt") val lastSuccessAt: Long = 0,
+    @SerialName("lastFailedBackupAt") val lastFailureAt: Long = 0,
+    @SerialName("firstRecoverabilityAt") val recoverableAt: Long = 0,
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+    val reasonList: List<CnpgReason> get() = reasons.mapNotNull(CnpgReason::from)
+}
+
+@Serializable
+data class CnpgPod(
+    val name: String,
+    /** "" while Pending: not scheduled anywhere. */
+    val node: String = "",
+    val phase: String = "",
+    /** primary or replica, "" when not running. */
+    val role: String = "",
+    val ready: Boolean = false,
+)
+
+@Serializable
+data class DragonflyStatus(
+    val version: String = "",
+    val error: String = "",
+    val instances: List<DragonflyInstance> = emptyList(),
+)
+
+@Serializable
+data class DragonflyInstance(
+    val namespace: String = "",
+    val name: String = "",
+    /** The operator's own word: Ready, or a step such as a rolling update. */
+    val phase: String = "",
+    val health: String = "",
+    /** Wire values of [DragonflyReason]. */
+    val reasons: List<String> = emptyList(),
+    val replicas: Int = 0,
+    val readyPods: Int = 0,
+    /** Pod with role=master, "" when none. */
+    val master: String = "",
+    /** The master first. */
+    val pods: List<DragonflyPod> = emptyList(),
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+    val reasonList: List<DragonflyReason> get() = reasons.mapNotNull(DragonflyReason::from)
+}
+
+@Serializable
+data class DragonflyPod(
+    val name: String,
+    val node: String = "",
+    val phase: String = "",
+    /** The operator's role label: master or replica. */
+    val role: String = "",
+    val ready: Boolean = false,
+)
+
+/** Why a Dragonfly instance is not ok, as the Go core names it. */
+enum class DragonflyReason(val wire: String) {
+    NO_READY("noReady"),
+    NO_MASTER("noMaster"),
+    MASTERS("masters"),
+    PODS("pods"),
+    NOT_READY("notReady"),
+    ;
+
+    companion object {
+        fun from(wire: String): DragonflyReason? = entries.firstOrNull { it.wire == wire }
+    }
+}
+
+/** Health of one item (a volume, a Postgres cluster), worst first. */
+enum class ServiceHealth(val wire: String) {
+    CRITICAL("critical"),
+    WARNING("warning"),
+    UNKNOWN(""),
+    OK("ok"),
+    IDLE("idle"),
+    ;
+
+    val needsAttention: Boolean get() = this == CRITICAL || this == WARNING
+
+    companion object {
+        fun from(wire: String): ServiceHealth = entries.firstOrNull { it.wire == wire && wire.isNotEmpty() } ?: UNKNOWN
+
+        /** The worst of [healths], [OK] when there is none. */
+        fun worst(healths: Iterable<ServiceHealth>): ServiceHealth = healths.minByOrNull { it.ordinal }?.takeIf { it != IDLE } ?: OK
+    }
+}
+
+enum class GarageState(val wire: String, val health: ServiceHealth) {
+    HEALTHY("healthy", ServiceHealth.OK),
+    DEGRADED("degraded", ServiceHealth.WARNING),
+    UNAVAILABLE("unavailable", ServiceHealth.CRITICAL),
+    UNKNOWN("unknown", ServiceHealth.UNKNOWN),
+    ;
+
+    companion object {
+        fun from(wire: String): GarageState = entries.firstOrNull { it.wire == wire } ?: UNKNOWN
+    }
+}
+
+/** Why a Postgres cluster is not ok, as the Go core names it. */
+enum class CnpgReason(val wire: String) {
+    NO_INSTANCE("noInstance"),
+    FAILOVER("failover"),
+    INSTANCES("instances"),
+    SWITCHOVER("switchover"),
+    NOT_READY("notReady"),
+    ARCHIVING("archiving"),
+    BACKUP_FAILED("backupFailed"),
+    BACKUP_STALE("backupStale"),
+    ;
+
+    companion object {
+        fun from(wire: String): CnpgReason? = entries.firstOrNull { it.wire == wire }
+    }
+}
+
+/** The systems, in the order the app shows them, with their app catalog id. */
+enum class DataServiceKind(val catalogId: String) {
+    LONGHORN("longhorn"),
+    GARAGE("garage"),
+    CNPG("cloudnative-pg"),
+    DRAGONFLY("dragonfly"),
+}
+
+/** The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs. */
+fun Inventory.dataServiceHints(): String {
+    val ids = apps.map { it.id }.toSet()
+    return DataServiceKind.entries.map { it.catalogId }.filter { it in ids }.joinToString(",")
+}
+
+/** The installed systems, in display order. */
+val DataServices.detected: List<DataServiceKind>
+    get() = listOfNotNull(
+        DataServiceKind.LONGHORN.takeIf { longhorn != null },
+        DataServiceKind.GARAGE.takeIf { garage != null },
+        DataServiceKind.CNPG.takeIf { cnpg != null },
+        DataServiceKind.DRAGONFLY.takeIf { dragonfly != null },
+    )
+
+/**
+ * One system at a glance: [total] items (volumes, Garage clusters, Postgres clusters), how many
+ * need attention, its worst health, and the error when it could not be read.
+ */
+data class ServiceSummary(val total: Int, val attention: Int, val health: ServiceHealth, val error: String = "")
+
+fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
+    DataServiceKind.LONGHORN -> longhorn?.summary()
+    DataServiceKind.GARAGE -> garage?.summary()
+    DataServiceKind.CNPG -> cnpg?.summary()
+    DataServiceKind.DRAGONFLY -> dragonfly?.summary()
+}
+
+fun DragonflyStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty() && instances.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
+    val healths = instances.map { it.serviceHealth }
+    return ServiceSummary(instances.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
+}
+
+fun LonghornStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty()) return ServiceSummary(volumes.size, 0, ServiceHealth.UNKNOWN, error)
+    // A node that is not ready or a backup target that is gone needs a look as much as a volume.
+    val healths = volumes.map { it.serviceHealth } +
+        nodes.filter { !it.ready }.map { ServiceHealth.WARNING } +
+        backupTargets.filter { !it.available }.map { ServiceHealth.WARNING }
+    return ServiceSummary(volumes.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths))
+}
+
+fun GarageStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty()) return ServiceSummary(instances.size, 0, ServiceHealth.UNKNOWN, error)
+    val healths = instances.map { it.state.health }
+    return ServiceSummary(instances.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths))
+}
+
+fun CnpgStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty() && clusters.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
+    val healths = clusters.map { it.serviceHealth }
+    return ServiceSummary(clusters.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
+}
+
+/** Worst health over every installed system. */
+val DataServices.worst: ServiceHealth
+    get() = ServiceHealth.worst(detected.mapNotNull { summary(it)?.health })
+
+/** A node that is not ready and the problems it most likely explains. */
+data class LikelyCause(val node: String, val problems: Int)
+
+/**
+ * Nodes that are not ready ([downNodes], plus the ones Longhorn reports) and how many problems
+ * each explains: a volume with a replica there, a Garage cluster whose missing node runs there,
+ * a Postgres cluster with an instance there that is not ready. Worst first; empty when no
+ * problem points to a node.
+ */
+fun DataServices.likelyCauses(downNodes: Set<String> = emptySet()): List<LikelyCause> {
+    val down = downNodes + longhorn?.nodes.orEmpty().filter { !it.ready }.map { it.name }
+    if (down.isEmpty()) return emptyList()
+
+    val hits = mutableMapOf<String, Int>()
+    fun count(nodes: Collection<String>) = nodes.filter { it in down }.distinct().forEach { hits[it] = (hits[it] ?: 0) + 1 }
+
+    longhorn?.volumes.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { count(it.replicaNodes) }
+    garage?.instances.orEmpty().filter { it.state.health.needsAttention }.forEach { inst ->
+        count(inst.nodes.filter { !it.up && it.storage }.flatMap { listOf(it.kubeNode) + it.tags })
+    }
+    cnpg?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { c ->
+        count(c.instancePods.filter { !it.ready }.map { it.node })
+    }
+    dragonfly?.instances.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { d ->
+        count(d.pods.filter { !it.ready }.map { it.node })
+    }
+
+    return hits.map { (node, n) -> LikelyCause(node, n) }.sortedWith(compareByDescending<LikelyCause> { it.problems }.thenBy { it.node })
+}
+
+/** Postgres instances waiting unscheduled (no node): often their volume is pinned to a node that is gone. */
+val CnpgStatus.pendingInstances: Int
+    get() = clusters.sumOf { c -> c.instancePods.count { it.node.isEmpty() && it.phase == "Pending" } }
+
+/** Volumes of [filter], worst first as the Go core sorts them. */
+fun List<LonghornVolume>.filtered(filter: VolumeFilter, query: String): List<LonghornVolume> {
+    val q = query.trim()
+    return filter { v ->
+        when (filter) {
+            VolumeFilter.ALL -> true
+            VolumeFilter.PROBLEMS -> v.serviceHealth.needsAttention
+            VolumeFilter.DETACHED -> v.state == "detached"
+        } && (q.isEmpty() || v.label.contains(q, ignoreCase = true) || v.name.contains(q, ignoreCase = true))
+    }
+}
+
+enum class VolumeFilter { ALL, PROBLEMS, DETACHED }
+
+/** Clusters matching [query] by namespace/name, only those needing attention when [problemsOnly]. */
+fun List<CnpgCluster>.filtered(problemsOnly: Boolean, query: String): List<CnpgCluster> {
+    val q = query.trim()
+    return filter { c ->
+        (!problemsOnly || c.serviceHealth.needsAttention) && (q.isEmpty() || c.label.contains(q, ignoreCase = true))
+    }
+}

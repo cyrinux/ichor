@@ -1,0 +1,316 @@
+{
+  "apiVersion": "v1",
+  "items": [
+    {
+      "apiVersion": "postgresql.cnpg.io/v1",
+      "kind": "Cluster",
+      "metadata": {
+        "name": "pg-healthy",
+        "namespace": "db-1"
+      },
+      "spec": {
+        "instances": 2,
+        "plugins": [
+          {
+            "enabled": true,
+            "isWALArchiver": true,
+            "name": "barman-cloud.cloudnative-pg.io",
+            "parameters": {
+              "barmanObjectName": "garage-store"
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "message": "",
+            "reason": "Unique",
+            "status": "True",
+            "type": "ConsistentSystemID"
+          },
+          {
+            "message": "",
+            "reason": "ClusterIsReady",
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "message": "",
+            "reason": "ContinuousArchivingSuccess",
+            "status": "True",
+            "type": "ContinuousArchiving"
+          },
+          {
+            "message": "",
+            "reason": "LastBackupSucceeded",
+            "status": "True",
+            "type": "LastBackupSucceeded"
+          }
+        ],
+        "currentPrimary": "pg-healthy-8",
+        "instances": 2,
+        "instancesStatus": {
+          "healthy": [
+            "pg-healthy-17",
+            "pg-healthy-8"
+          ]
+        },
+        "lastFailedBackup": "2026-07-04T03:01:28Z",
+        "phase": "Cluster in healthy state",
+        "readyInstances": 2,
+        "targetPrimary": "pg-healthy-8",
+        "timelineID": 72
+      }
+    },
+    {
+      "apiVersion": "postgresql.cnpg.io/v1",
+      "kind": "Cluster",
+      "metadata": {
+        "name": "pg-backup-failed",
+        "namespace": "db-2"
+      },
+      "spec": {
+        "instances": 2,
+        "plugins": [
+          {
+            "enabled": true,
+            "isWALArchiver": true,
+            "name": "barman-cloud.cloudnative-pg.io",
+            "parameters": {
+              "barmanObjectName": "garage-store"
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "message": "",
+            "reason": "ClusterIsReady",
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "message": "",
+            "reason": "Unique",
+            "status": "True",
+            "type": "ConsistentSystemID"
+          },
+          {
+            "message": "",
+            "reason": "ContinuousArchivingSuccess",
+            "status": "True",
+            "type": "ContinuousArchiving"
+          },
+          {
+            "message": "",
+            "reason": "LastBackupFailed",
+            "status": "False",
+            "type": "LastBackupSucceeded"
+          }
+        ],
+        "currentPrimary": "pg-backup-failed-1",
+        "instances": 2,
+        "instancesStatus": {
+          "healthy": [
+            "pg-backup-failed-1",
+            "pg-backup-failed-10"
+          ]
+        },
+        "lastFailedBackup": "2026-10-01T03:05:01Z",
+        "phase": "Cluster in healthy state",
+        "readyInstances": 2,
+        "targetPrimary": "pg-backup-failed-1",
+        "timelineID": 23
+      }
+    },
+    {
+      "apiVersion": "postgresql.cnpg.io/v1",
+      "kind": "Cluster",
+      "metadata": {
+        "name": "pg-short-instances",
+        "namespace": "db-3"
+      },
+      "spec": {
+        "instances": 2,
+        "plugins": [
+          {
+            "enabled": true,
+            "isWALArchiver": true,
+            "name": "barman-cloud.cloudnative-pg.io",
+            "parameters": {
+              "barmanObjectName": "garage-store"
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "message": "",
+            "reason": "Unique",
+            "status": "True",
+            "type": "ConsistentSystemID"
+          },
+          {
+            "message": "",
+            "reason": "ClusterIsNotReady",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "message": "",
+            "reason": "ContinuousArchivingSuccess",
+            "status": "True",
+            "type": "ContinuousArchiving"
+          },
+          {
+            "message": "",
+            "reason": "LastBackupFailed",
+            "status": "False",
+            "type": "LastBackupSucceeded"
+          }
+        ],
+        "currentPrimary": "pg-short-instances-15",
+        "instances": 2,
+        "instancesStatus": {
+          "failed": [
+            "pg-short-instances-19"
+          ],
+          "healthy": [
+            "pg-short-instances-15"
+          ]
+        },
+        "lastFailedBackup": "2026-10-02T03:04:42Z",
+        "phase": "Waiting for the instances to become active",
+        "phaseReason": "Some instances are not yet active. Please wait.",
+        "readyInstances": 1,
+        "targetPrimary": "pg-short-instances-15",
+        "timelineID": 83
+      }
+    },
+    {
+      "apiVersion": "postgresql.cnpg.io/v1",
+      "kind": "Cluster",
+      "metadata": {
+        "name": "pg-no-ready",
+        "namespace": "db-4"
+      },
+      "spec": {
+        "instances": 2,
+        "plugins": [
+          {
+            "enabled": true,
+            "isWALArchiver": true,
+            "name": "barman-cloud.cloudnative-pg.io",
+            "parameters": {
+              "barmanObjectName": "garage-store"
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "message": "",
+            "reason": "NotFound",
+            "status": "False",
+            "type": "ConsistentSystemID"
+          },
+          {
+            "message": "",
+            "reason": "ClusterIsNotReady",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "message": "",
+            "reason": "ContinuousArchivingSuccess",
+            "status": "True",
+            "type": "ContinuousArchiving"
+          },
+          {
+            "message": "",
+            "reason": "LastBackupSucceeded",
+            "status": "True",
+            "type": "LastBackupSucceeded"
+          }
+        ],
+        "currentPrimary": "pg-no-ready-4",
+        "instances": 2,
+        "instancesStatus": {
+          "failed": [
+            "pg-no-ready-5"
+          ]
+        },
+        "phase": "Waiting for the instances to become active",
+        "phaseReason": "Some instances are not yet active. Please wait.",
+        "targetPrimary": "pg-no-ready-4",
+        "timelineID": 58
+      }
+    },
+    {
+      "apiVersion": "postgresql.cnpg.io/v1",
+      "kind": "Cluster",
+      "metadata": {
+        "name": "pg-wal-archiver-off",
+        "namespace": "db-5"
+      },
+      "spec": {
+        "instances": 2,
+        "plugins": [
+          {
+            "enabled": true,
+            "isWALArchiver": false,
+            "name": "barman-cloud.cloudnative-pg.io",
+            "parameters": {
+              "barmanObjectName": "garage-store"
+            }
+          }
+        ]
+      },
+      "status": {
+        "conditions": [
+          {
+            "message": "",
+            "reason": "ClusterIsReady",
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "message": "",
+            "reason": "Unique",
+            "status": "True",
+            "type": "ConsistentSystemID"
+          },
+          {
+            "message": "",
+            "reason": "ContinuousArchivingSuccess",
+            "status": "True",
+            "type": "ContinuousArchiving"
+          },
+          {
+            "message": "",
+            "reason": "LastBackupSucceeded",
+            "status": "True",
+            "type": "LastBackupSucceeded"
+          }
+        ],
+        "currentPrimary": "pg-wal-archiver-off-9",
+        "instances": 2,
+        "instancesStatus": {
+          "healthy": [
+            "pg-wal-archiver-off-10",
+            "pg-wal-archiver-off-9"
+          ]
+        },
+        "phase": "Cluster in healthy state",
+        "readyInstances": 2,
+        "targetPrimary": "pg-wal-archiver-off-9",
+        "timelineID": 12
+      }
+    }
+  ],
+  "kind": "List"
+}

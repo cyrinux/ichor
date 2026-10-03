@@ -3,6 +3,7 @@ package talosmobile
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -32,6 +33,7 @@ type kubeClient struct {
 	base  *url.URL
 	http  *http.Client
 	token string
+	tls   *tls.Config // the kubeconfig's TLS settings, for connections outside http (exec)
 }
 
 // kubeAPIError is a non-2xx answer of the API server, with its Status message.
@@ -172,7 +174,7 @@ func newKubeClient(base *url.URL, creds *kubeCredentials) *kubeClient {
 		Transport: transport,
 		// The API server does not redirect; never send the credentials anywhere else.
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
-	}, token: creds.token}
+	}, token: creds.token, tls: creds.tls.Clone()}
 }
 
 // close drops the client's idle connections (its TLS sessions hold the client key).
@@ -202,7 +204,8 @@ func (k *kubeClient) patch(ctx context.Context, path, contentType string, body a
 	return k.do(ctx, http.MethodPatch, path, contentType, data, out)
 }
 
-func (k *kubeClient) do(ctx context.Context, method, path, contentType string, body []byte, out any) error {
+// endpoint is the URL of an API path below the client's base address.
+func (k *kubeClient) endpoint(path string) (*url.URL, error) {
 	// path is already escaped (url.PathEscape on names): keep it as the raw path.
 	u := *k.base
 	path, u.RawQuery, _ = strings.Cut(path, "?")
@@ -210,40 +213,29 @@ func (k *kubeClient) do(ctx context.Context, method, path, contentType string, b
 
 	unescaped, err := url.PathUnescape(u.RawPath)
 	if err != nil {
-		return fmt.Errorf("bad Kubernetes API path %q: %w", path, err)
+		return nil, fmt.Errorf("bad Kubernetes API path %q: %w", path, err)
 	}
 
 	u.Path = unescaped
 
-	req, err := http.NewRequestWithContext(ctx, method, u.String(), bytes.NewReader(body))
+	return &u, nil
+}
+
+// getRaw reads path whatever the HTTP status: a service proxy answers with the backend's
+// own status and body, which the caller interprets. ctype is the answer's Content-Type.
+func (k *kubeClient) getRaw(ctx context.Context, path string) (status int, ctype string, body []byte, err error) {
+	resp, data, err := k.send(ctx, http.MethodGet, path, "", nil)
+	if err != nil {
+		return 0, "", nil, err
+	}
+
+	return resp.StatusCode, resp.Header.Get("Content-Type"), data, nil
+}
+
+func (k *kubeClient) do(ctx context.Context, method, path, contentType string, body []byte, out any) error {
+	resp, data, err := k.send(ctx, method, path, contentType, body)
 	if err != nil {
 		return err
-	}
-
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "ichor")
-
-	if contentType != "" {
-		req.Header.Set("Content-Type", contentType)
-	}
-
-	if k.token != "" {
-		req.Header.Set("Authorization", "Bearer "+k.token)
-	}
-
-	resp, err := k.http.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close() //nolint:errcheck
-
-	data, err := io.ReadAll(io.LimitReader(resp.Body, kubeMaxBody+1))
-	if err != nil {
-		return err
-	}
-
-	if len(data) > kubeMaxBody {
-		return &kubeAPIError{Code: http.StatusRequestEntityTooLarge, Reason: "TooLarge", Message: "the answer is larger than the app reads (32 MiB)"}
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
@@ -259,6 +251,47 @@ func (k *kubeClient) do(ctx context.Context, method, path, contentType string, b
 	}
 
 	return nil
+}
+
+// send makes one request and reads its answer, capped at kubeMaxBody.
+func (k *kubeClient) send(ctx context.Context, method, path, contentType string, body []byte) (*http.Response, []byte, error) {
+	u, err := k.endpoint(path)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, u.String(), bytes.NewReader(body))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", "ichor")
+
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+
+	if k.token != "" {
+		req.Header.Set("Authorization", "Bearer "+k.token)
+	}
+
+	resp, err := k.http.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer resp.Body.Close() //nolint:errcheck
+
+	data, err := io.ReadAll(io.LimitReader(resp.Body, kubeMaxBody+1))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if len(data) > kubeMaxBody {
+		return nil, nil, &kubeAPIError{Code: http.StatusRequestEntityTooLarge, Reason: "TooLarge", Message: "the answer is larger than the app reads (32 MiB)"}
+	}
+
+	return resp, data, nil
 }
 
 func kubeStatusError(code int, data []byte) error {

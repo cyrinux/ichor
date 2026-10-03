@@ -37,6 +37,13 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: alertsKey) }
     }
 
+    static let dataServicesKey = "monitor.dataServices"
+    /// Opt-in: also check Longhorn, Garage and CloudNativePG through the Kubernetes API.
+    static var dataServicesWatched: Bool {
+        get { UserDefaults.standard.bool(forKey: dataServicesKey) }
+        set { UserDefaults.standard.set(newValue, forKey: dataServicesKey) }
+    }
+
     /// Call once, before the app finishes launching.
     static func register() {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: taskID, using: nil) { task in
@@ -63,11 +70,19 @@ enum BackgroundMonitor {
         guard let data = SecureConfigStore.load(), let yaml = String(data: data, encoding: .utf8),
               let summary = try? await TalosClient.parse(yaml) else { return }
         let contextName = summary.selectedContext(index: AppModel.savedContextIndex, name: UserDefaults.standard.string(forKey: "activeContext"))
-        let client = TalosClient(config: yaml, context: contextName)
+        let context = summary.context(named: contextName)
+        // The Kubernetes API address the user set for this cluster, as the app uses it.
+        let servers = UserDefaults.standard.dictionary(forKey: "kubeServers") as? [String: String] ?? [:]
+        let client = TalosClient(config: yaml, context: contextName, kubeServer: context.flatMap { servers[$0.fingerprint] } ?? "")
         guard let overview = try? await client.overview() else { return }
         let etcd = try? await client.etcd()
+        // Opt-in, and only for roles that may use the Kubernetes API: each check then lists custom
+        // resources and runs the Garage CLI in a pod.
+        let watchData = dataServicesWatched && context?.allows(.workloads) == true
+        let dataServices = watchData ? try? await client.dataServices(hints: "") : nil
         let now = Date()
-        let current = snapshotOf(overview, etcd: etcd, certNotAfter: summary.context(named: contextName)?.certNotAfter ?? 0, takenAt: now)
+        let current = snapshotOf(overview, etcd: etcd, certNotAfter: context?.certNotAfter ?? 0, takenAt: now,
+                                 dataWatched: watchData, dataServices: dataServices)
         let result = evaluate(previous: SharedStore.snapshot(), current: current, now: now)
         SharedStore.save(result.next)
         guard alertsEnabled else { return }
@@ -102,6 +117,19 @@ enum BackgroundMonitor {
                 ? String(localized: "The client certificate expired \(-days) days ago.")
                 : String(localized: "The client certificate expires in \(days) days. Generate a new talosconfig.")
             return (String(localized: "talosconfig certificate"), text)
+        case "data":
+            // "system|label": the label names the volume or cluster, the system goes in the text.
+            let issue = subject.split(separator: "|", maxSplits: 1).map(String.init)
+            let label = issue.last ?? subject
+            let system = switch issue.first ?? "" {
+            case "longhorn": "Longhorn"
+            case "garage": "Garage"
+            case "dragonfly": "Dragonfly"
+            default: "CloudNativePG"
+            }
+            guard alert.problem else { return (String(localized: "\(label) is healthy again"), system) }
+            let severity = snapshot.dataIssues[subject] == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
+            return (String(localized: "\(label) needs attention"), "\(system) · \(severity)")
         default:
             return (alert.title, alert.text)
         }

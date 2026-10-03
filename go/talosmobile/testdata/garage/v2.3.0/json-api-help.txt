@@ -1,0 +1,13 @@
+garage-json-api v2.3.0
+Directly invoke the admin API using a JSON payload. The result is printed to `stdout` in JSON format
+
+USAGE:
+    garage json-api <endpoint> [payload]
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+ARGS:
+    <endpoint>    The admin API endpoint to invoke, e.g. `GetClusterStatus`
+    <payload>     The JSON payload, or `-` to read from `stdin` [default: null]
