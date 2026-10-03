@@ -68,6 +68,18 @@ fun DebugShellScreen(
     vm: DebugShellViewModel = viewModel(key = "debug-$node", factory = factory { DebugShellViewModel(app.configRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    var showSnippets by rememberSaveable { mutableStateOf(false) }
+
+    if (showSnippets && state is ShellState.Running) {
+        DebugSnippetsSheet(
+            snippets = vm.snippets,
+            onPick = {
+                vm.send(it.bytes())
+                showSnippets = false
+            },
+            onDismiss = { showSnippets = false },
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -104,7 +116,12 @@ fun DebugShellScreen(
                         foregroundColor = Color(0xFFE4EAF1),
                         keyboardEnabled = s is ShellState.Running,
                     )
-                    if (s is ShellState.Running) ExtraKeys(onKey = vm::send)
+                    if (s is ShellState.Running) {
+                        ExtraKeys(
+                            onKey = vm::send,
+                            onSnippets = if (vm.snippets.isEmpty()) null else ({ showSnippets = true }),
+                        )
+                    }
                 }
             }
         }
@@ -184,7 +201,7 @@ private fun StatusLine(state: ShellState, onRestart: () -> Unit) {
 
 /** Keys phone keyboards lack, sent as the bytes a terminal would produce. */
 @Composable
-private fun ExtraKeys(onKey: (ByteArray) -> Unit) {
+private fun ExtraKeys(onKey: (ByteArray) -> Unit, onSnippets: (() -> Unit)?) {
     val keys = listOf(
         "Esc" to "\u001b", "Tab" to "\t", "Ctrl-C" to "\u0003", "Ctrl-D" to "\u0004",
         "←" to "\u001b[D", "↓" to "\u001b[B", "↑" to "\u001b[A", "→" to "\u001b[C",
@@ -195,6 +212,7 @@ private fun ExtraKeys(onKey: (ByteArray) -> Unit) {
             .horizontalScroll(rememberScrollState()).padding(horizontal = 6.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
+        onSnippets?.let { Button(onClick = it) { Text(stringResource(R.string.debug_snippets)) } }
         keys.forEach { (label, bytes) ->
             FilledTonalButton(onClick = { onKey(bytes.toByteArray()) }) {
                 Text(label, fontFamily = FontFamily.Monospace)

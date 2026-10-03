@@ -463,6 +463,19 @@
     <string name="debug_exited">Exited with code %1$d</string>
     <string name="debug_new_shell">New shell</string>
     <string name="debug_connecting">Connecting…</string>
+    <string name="debug_snippets">Snippets</string>
+    <string name="debug_snippets_hint">Tap to run. Commands ending with … are only typed, so you can add the target.</string>
+    <string name="debug_group_interfaces">Interfaces</string>
+    <string name="debug_group_control_plane">Control plane</string>
+    <string name="debug_group_dns">DNS</string>
+    <string name="debug_group_reachability">Reachability</string>
+    <string name="debug_group_mtu">MTU</string>
+    <string name="debug_group_tls">TLS / HTTP</string>
+    <string name="debug_group_firewall">Firewall &amp; services</string>
+    <string name="debug_group_kubespan">KubeSpan</string>
+    <string name="debug_group_capture">Capture</string>
+    <string name="debug_group_node">Node</string>
+    <string name="debug_group_throughput">Throughput</string>
 
     <!-- App lock -->
     <string name="lock_prompt">Unlock Ichor</string>

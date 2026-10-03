@@ -11,8 +11,9 @@ import (
 )
 
 // Exported functions whose result is a credential or file the user saves: only their errors
-// are masked. The debug shell's terminal stream is not masked at all.
-var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "AddContextNodes", "DemoConfig", "DecryptBackup", "NormalizeKubeServer"}
+// are masked. The debug shell's terminal stream is not masked at all, nor its snippets
+// (fixed commands whose well-known addresses masking would break).
+var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "AddContextNodes", "DemoConfig", "DecryptBackup", "NormalizeKubeServer", "DebugSnippets"}
 
 var unmaskedListeners = []string{"StartDebugShell"}
 
