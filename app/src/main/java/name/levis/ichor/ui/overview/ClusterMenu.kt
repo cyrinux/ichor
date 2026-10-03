@@ -1,0 +1,95 @@
+package name.levis.ichor.ui.overview
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.SwapHoriz
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import name.levis.ichor.R
+import name.levis.ichor.data.StoredConfig
+import name.levis.ichor.model.ClusterLabels
+import name.levis.ichor.model.seedOf
+
+/**
+ * The overview title's menu, as on iOS: the clusters behind a "Switch cluster" submenu, so
+ * "Manage clusters…" stays in reach without a scroll however many clusters there are.
+ * Compose menus do not nest, so the submenu takes the menu's place, with a way back.
+ */
+@Composable
+fun ClusterMenu(
+    expanded: Boolean,
+    config: StoredConfig,
+    colors: Map<String, Int>,
+    labels: ClusterLabels,
+    onSelect: (String) -> Unit,
+    onManage: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var switching by remember(expanded) { mutableStateOf(false) }
+    val contexts = config.summary.contexts
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        if (switching) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.clusters_switch)) },
+                leadingIcon = { Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.common_back)) },
+                onClick = { switching = false },
+            )
+            HorizontalDivider()
+            contexts.forEach { context ->
+                val active = context.name == config.activeContext
+                DropdownMenuItem(
+                    text = { Text(labels.of(context), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    leadingIcon = {
+                        Box(Modifier.size(10.dp).background(Color(colors.seedOf(context)), CircleShape))
+                    },
+                    trailingIcon = if (active) {
+                        { Icon(Icons.Outlined.Check, contentDescription = null) }
+                    } else {
+                        null
+                    },
+                    onClick = {
+                        onDismiss()
+                        if (!active) onSelect(context.name)
+                    },
+                )
+            }
+        } else {
+            if (contexts.size > 1) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.clusters_switch)) },
+                    leadingIcon = { Icon(Icons.Outlined.SwapHoriz, contentDescription = null) },
+                    trailingIcon = { Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null) },
+                    onClick = { switching = true },
+                )
+            }
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.clusters_manage)) },
+                leadingIcon = { Icon(Icons.Outlined.Layers, contentDescription = null) },
+                onClick = {
+                    onDismiss()
+                    onManage()
+                },
+            )
+        }
+    }
+}

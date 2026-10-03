@@ -121,16 +121,22 @@ struct OverviewView: View {
         .navigationTitle(model.activeLabel)
         // Shown by the title once it is inline (scrolled); the bar below is always there.
         .toolbarTitleMenu {
-            ForEach(model.summary?.contexts ?? []) { context in
-                Button { model.activeContext = context.name } label: {
-                    if context.name == model.activeContext {
-                        Label(model.labels.of(context), systemImage: "checkmark")
-                    } else {
-                        Text(model.labels.of(context))
+            // A submenu: with many clusters, the actions below stay in reach without a scroll.
+            if (model.summary?.contexts.count ?? 0) > 1 {
+                Menu {
+                    ForEach(model.summary?.contexts ?? []) { context in
+                        Button { model.activeContext = context.name } label: {
+                            if context.name == model.activeContext {
+                                Label(model.labels.of(context), systemImage: "checkmark")
+                            } else {
+                                Text(model.labels.of(context))
+                            }
+                        }
                     }
+                } label: {
+                    Label("Switch cluster", systemImage: "arrow.left.arrow.right")
                 }
             }
-            Divider()
             Button { path.append(.clusters) } label: { Label("Manage clusters…", systemImage: "square.stack.3d.up") }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
