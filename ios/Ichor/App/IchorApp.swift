@@ -121,6 +121,8 @@ enum Route: Hashable {
     /// Longhorn, Garage and CloudNativePG health (os:admin); hints: catalog ids from the
     /// inventory, downNodes: hostnames Talos reports not ready, for the likely cause.
     case dataServices(hints: String, downNodes: Set<String>)
+    /// Argo CD Applications (os:admin); downNodes as for dataServices.
+    case argoCD(downNodes: Set<String>)
     case health
     case settings
     case importConfig
@@ -166,6 +168,7 @@ struct MainNavigation: View {
                     case .kubespan: KubeSpanView()
                     case .workloads: KubernetesView()
                     case .dataServices(let hints, let downNodes): DataServicesView(hints: hints, downNodes: downNodes)
+                    case .argoCD(let downNodes): ArgoCDView(downNodes: downNodes)
                     case .health: HealthView()
                     case .settings: SettingsView()
                     case .diagnosis(let note): DiagnosisView(initialNote: note)

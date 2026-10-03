@@ -39,12 +39,17 @@ let attentionColor = Color.orange
 /// An app in the grid: icon, name, and its version or what needs a look.
 struct AppTile: View {
     let app: InventoryApp
+    /// Its Argo CD Application is broken or drifting.
+    var argoBadge = false
 
     var body: some View {
         VStack(spacing: 6) {
             AppIconView(app: app)
                 .overlay(alignment: .topTrailing) {
                     if app.needsAttention { AttentionDot().offset(x: 3, y: -3) }
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    if argoBadge { ArgoTileBadge().offset(x: 4, y: 4) }
                 }
             Text(verbatim: app.name)
                 .font(.caption.weight(.semibold))

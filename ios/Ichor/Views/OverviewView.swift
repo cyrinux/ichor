@@ -24,6 +24,8 @@ struct OverviewView: View {
     /// role may use the Kubernetes API (nil hides the section); hints are their catalog ids.
     @State private var dataServices: LoadState<DataServices>?
     @State private var dataHints = ""
+    /// Argo CD: only asked when the inventory shows it and the role may use the Kubernetes API.
+    @State private var argo: LoadState<ArgoStatus>?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -65,6 +67,9 @@ struct OverviewView: View {
                     AppsCard(state: inventory, hostnames: hostnames)
                     if let dataServices {
                         DataServicesSection(state: dataServices, hints: dataHints, apps: inventoryApps, downNodes: overview.downHostnames)
+                    }
+                    if let argo {
+                        ArgoSection(state: argo, app: inventoryApps[argoCDCatalogID], downNodes: overview.downHostnames)
                     }
                     Section {
                         ForEach(sorted(overview.nodes)) { node in
@@ -220,6 +225,7 @@ struct OverviewView: View {
             discovered = []
             inventory = .loading
             dataServices = nil
+            argo = nil
         }
         // Another cluster: never its name over the previous one's nodes.
         .onChange(of: model.activeContext) {
@@ -227,6 +233,7 @@ struct OverviewView: View {
             discovered = []
             inventory = .loading
             dataServices = nil
+            argo = nil
         }
         .sheet(isPresented: $showDiscovered) {
             let context = model.activeContext
@@ -327,7 +334,25 @@ struct OverviewView: View {
         let loaded: LoadState<ClusterInventory> = await .from { try await model.fetch(.inventory, with: client) }
         guard id == loadID else { return }
         inventory = inventory.refreshed(with: loaded)
-        if case .loaded(let apps, _, _) = loaded { await loadDataServices(with: client, id: id, inventory: apps) }
+        if case .loaded(let apps, _, _) = loaded {
+            // Alongside: each one only calls the Kubernetes API when the inventory shows it.
+            Task { await loadArgo(with: client, id: id, inventory: apps) }
+            await loadDataServices(with: client, id: id, inventory: apps)
+        }
+    }
+
+    /// Only for clusters whose inventory shows Argo CD, and roles that may use the Kubernetes API.
+    /// The answer is shared (ArgoCDStore) with the Argo CD screens and the Apps grid's badges.
+    private func loadArgo(with client: TalosClient, id: String, inventory apps: ClusterInventory) async {
+        guard model.allows(.workloads), argoCDHinted(apps) else {
+            argo = nil
+            return
+        }
+        if argo == nil { argo = .loading }
+        let key = model.argoKey
+        let loaded: LoadState<ArgoStatus> = await .from { try await ArgoCDStore.shared.load(with: client, key: key) }
+        guard id == loadID else { return }
+        argo = (argo ?? .loading).refreshed(with: loaded)
     }
 
     /// Only for clusters whose inventory shows Longhorn, Garage, CloudNativePG or Dragonfly, and roles

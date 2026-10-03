@@ -72,7 +72,7 @@ struct AppsView: View {
         // A search or a chip may match apps of the collapsed groups: show them.
         .onChange(of: query) { _, text in if !text.isEmpty { expandGroups() } }
         .onChange(of: filter) { _, chip in if chip != .all { expandGroups() } }
-        .sheet(item: $selected) { app in AppDetailSheet(app: app, hostnames: hostnamesStale ? [:] : hostnames) }
+        .sheet(item: $selected) { app in AppDetailSheet(app: app, hostnames: hostnamesStale ? [:] : hostnames, argoCD: argoCDShown) }
         // Screenshot mode toggled: nothing loaded before (names, logos) stays on screen.
         .onChange(of: model.dataGeneration) {
             selected = nil
@@ -85,7 +85,7 @@ struct AppsView: View {
     private func grid(_ apps: [InventoryApp]) -> some View {
         LazyVGrid(columns: columns, spacing: 12) {
             ForEach(apps) { app in
-                Button { selected = app } label: { AppTile(app: app) }
+                Button { selected = app } label: { AppTile(app: app, argoBadge: argoBadge(app)) }
                     .buttonStyle(.plain)
             }
         }
@@ -109,6 +109,19 @@ struct AppsView: View {
             }
         }
         .scrollClipDisabled()
+    }
+
+    /// The inventory shows Argo CD and the role may read it: app sheets show their Applications.
+    private var argoCDShown: Bool {
+        guard model.allows(.workloads), case .loaded(let inventory, _, _) = state else { return false }
+        return argoCDHinted(inventory)
+    }
+
+    /// A matched Argo CD Application is broken or drifting; only from data already loaded
+    /// elsewhere (Overview, Argo CD screen): the grid never fetches it.
+    private func argoBadge(_ app: InventoryApp) -> Bool {
+        guard let status = ArgoCDStore.shared.status(for: model.argoKey) else { return false }
+        return argoNeedsBadge(argoApps(for: app, in: status))
     }
 
     /// The chosen chip, or All once a refresh removed it (nothing left to look at, say).
