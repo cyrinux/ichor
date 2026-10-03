@@ -1,19 +1,6 @@
 import SwiftUI
 import IchorCore
 
-enum LoadState<T> {
-    case loading
-    /// `at`: when the data came from the cluster, shown in the screen footer.
-    case loaded(T, at: Date)
-    case failed(String)
-}
-
-extension LoadState {
-    static func from(_ operation: () async throws -> T) async -> LoadState<T> {
-        do { return .loaded(try await operation(), at: Date()) } catch { return .failed(error.localizedDescription) }
-    }
-}
-
 /// Spinner / error with retry / content for a LoadState.
 struct LoadStateView<T, Content: View>: View {
     let state: LoadState<T>
@@ -37,9 +24,9 @@ struct LoadStateView<T, Content: View>: View {
                     Button("Retry") { Task { await retry() } }
                 }
             }
-        case .loaded(let value, let at):
+        case .loaded(let value, let at, let refreshError):
             content(value)
-                .safeAreaInset(edge: .bottom, spacing: 0) { FreshnessFooter(at: at) }
+                .safeAreaInset(edge: .bottom, spacing: 0) { FreshnessFooter(at: at, refreshError: refreshError) }
         }
     }
 }
@@ -155,19 +142,32 @@ extension View {
     func themedBackground() -> some View { modifier(ThemedBackground()) }
 }
 
-/// "Updated 15:42:10 · 2 min ago", re-rendered every 15 s so the age stays true.
+/// "Updated 15:42:10 · 2 min ago", re-rendered every 15 s so the age stays true. After a
+/// failed refresh: why, and that the data shown is older, in a warning tint.
 struct FreshnessFooter: View {
     let at: Date
+    var refreshError: String?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 15)) { context in
-            Text("Updated \(at.formatted(date: .omitted, time: .standard)) · \(Self.ago(context.date.timeIntervalSince(at)))")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
-                .padding(.vertical, 6)
-                .background(.bar)
+            let time = at.formatted(date: .omitted, time: .standard)
+            let ago = Self.ago(context.date.timeIntervalSince(at))
+            Group {
+                if let refreshError {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Couldn't refresh: \(refreshError)").lineLimit(2)
+                        Text("Showing data from \(time) (\(ago))")
+                    }
+                    .foregroundStyle(.orange)
+                } else {
+                    Text("Updated \(time) · \(ago)").foregroundStyle(.secondary)
+                }
+            }
+            .font(.caption)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
+            .padding(.vertical, 6)
+            .background(.bar)
         }
     }
 

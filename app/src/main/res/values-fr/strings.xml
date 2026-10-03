@@ -25,6 +25,8 @@
     </plurals>
     <string name="common_updated_ago">Mis à jour %1$s · %2$s</string>
     <string name="common_refreshing_showing">Actualisation… (données de %1$s affichées)</string>
+    <string name="common_refresh_failed">Actualisation impossible : %1$s</string>
+    <string name="common_showing_data_from">Données de %1$s affichées (%2$s)</string>
     <string name="common_status_ready">Prêt</string>
     <string name="common_status_not_ready">Non prêt</string>
     <string name="common_status_unreachable">Injoignable</string>
@@ -83,6 +85,8 @@
     <string name="overview_status_degraded">Dégradé</string>
     <string name="overview_status_down">Injoignable</string>
     <string name="overview_unreachable_title">Cluster injoignable</string>
+    <string name="overview_last_known_state">Dernier état connu affiché.</string>
+    <string name="overview_node_last_seen">Vu pour la dernière fois %1$s</string>
     <string name="overview_unreachable_network">Aucun nœud n\'a répondu. Votre téléphone n\'est sans doute pas sur le réseau du cluster : vérifiez que votre VPN est connecté, ou que vous êtes sur le bon Wi-Fi.</string>
     <string name="overview_unreachable_credentials">Le cluster a répondu mais a refusé ce talosconfig : son certificat, sa CA ou son rôle est peut-être erroné ou expiré.</string>
     <string name="overview_unreachable_other">Aucun nœud n\'a répondu. Les détails sont ci-dessous.</string>
@@ -1083,6 +1087,8 @@
     <string name="apps_detail_pods">Pods</string>
     <string name="settings_remote_icons">Télécharger les icônes d’applications manquantes</string>
     <string name="settings_remote_icons_desc">Environ 250 applications courantes ont leur icône intégrée. Activé, les icônes des autres applications reconnues sont téléchargées depuis jsDelivr (Dashboard Icons). Seul le nom public de l’icône est envoyé, jamais vos noms d’images ni les détails du cluster.</string>
+    <string name="settings_offline_cache">Garder le dernier état connu</string>
+    <string name="settings_offline_cache_desc">Enregistre sur ce téléphone, chiffrées, les dernières données reçues de chaque cluster, pour les afficher encore quand il est injoignable. Conservées 24 heures, jamais sauvegardées.</string>
     <string name="about_icon_credits">Icônes d’applications : Dashboard Icons (Apache 2.0) et selfh.st/icons (CC BY 4.0). Les noms et logos des applications sont des marques de leurs propriétaires.</string>
     <string name="apps_category_system">Système</string>
     <string name="apps_category_networking">Réseau</string>

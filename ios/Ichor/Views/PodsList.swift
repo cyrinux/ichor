@@ -61,7 +61,8 @@ struct PodsList: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        state = await .from { try await client.pods() }
+        state = model.seeded(state, from: .pods, as: KubePodList.self) { $0.pods }
+        state = state.refreshed(with: await .from { try await model.fetch(.pods, as: KubePodList.self, with: client).pods })
     }
 
     private func delete(_ pod: KubePod) async {

@@ -112,7 +112,7 @@ struct CaptureView: View {
         case .failed(let message):
             Text(message).font(.footnote).foregroundStyle(.red)
             Button("Retry") { Task { await loadLinks() } }
-        case .loaded(let all, _):
+        case .loaded(let all, _, _):
             let shown = captureInterfaces(all, includeVirtual: showVirtual || all.first { $0.name == options.interface }?.virtual == true)
             Picker("Interface", selection: $options.interface) {
                 ForEach(shown) { link in
@@ -156,7 +156,7 @@ struct CaptureView: View {
     private func loadLinks() async {
         guard let client = model.client else { return }
         links = await .from { try await client.network(node: node).links }
-        if case .loaded(let all, _) = links, options.interface.isEmpty {
+        if case .loaded(let all, _, _) = links, options.interface.isEmpty {
             options.interface = captureInterfaces(all, includeVirtual: false).first?.name ?? ""
         }
     }

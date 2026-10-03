@@ -60,6 +60,13 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _remoteAppIcons = MutableStateFlow(prefs.getBoolean(KEY_REMOTE_APP_ICONS, false))
     val remoteAppIcons: StateFlow<Boolean> = _remoteAppIcons.asStateFlow()
 
+    /**
+     * Keeps the last results of each cluster on disk, encrypted, to show them when it cannot
+     * be reached. Off by default: otherwise cluster data never leaves memory.
+     */
+    private val _offlineCache = MutableStateFlow(prefs.getBoolean(KEY_OFFLINE_CACHE, false))
+    val offlineCache: StateFlow<Boolean> = _offlineCache.asStateFlow()
+
     private val _privacyMask = MutableStateFlow(
         PrivacyMask(prefs.getBoolean(KEY_PRIVACY_MASK, false), prefs.getString(KEY_PRIVACY_WORDS, "").orEmpty()),
     )
@@ -86,6 +93,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _remoteAppIcons.value = enabled
     }
 
+    fun setOfflineCache(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_OFFLINE_CACHE, enabled).apply()
+        _offlineCache.value = enabled
+    }
+
     fun setThemeMode(mode: ThemeMode) {
         prefs.edit().putString(KEY_THEME, mode.name).apply()
         _themeMode.value = mode
@@ -106,6 +118,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_PRIVACY_WORDS = "privacy_mask_words"
         private const val KEY_LIVE_CLUSTER_STATS = "live_cluster_stats"
         private const val KEY_REMOTE_APP_ICONS = "remote_app_icons"
+        private const val KEY_OFFLINE_CACHE = "offline_cache"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */
         fun storedLanguage(context: Context): String =

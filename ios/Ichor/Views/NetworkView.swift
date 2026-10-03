@@ -52,7 +52,8 @@ struct NetworkView: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        state = await .from { try await client.network(node: node) }
+        state = model.seeded(state, from: .network(node: node))
+        state = state.refreshed(with: await .from { try await model.fetch(.network(node: node), with: client) })
     }
 
     private func loadTime() async {
@@ -116,7 +117,7 @@ struct NetworkView: View {
                 EmptyView()
             case .failed(let message):
                 SectionError(message: message)
-            case .loaded(let info, _):
+            case .loaded(let info, _, _):
                 TimeOffsetRow(info: info, title: info.server.isEmpty ? String(localized: "Clock offset") : info.server)
             }
         }

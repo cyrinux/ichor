@@ -184,7 +184,7 @@ struct SupportBundleView: View {
     private func loadNodes() async {
         guard let client = model.client, model.allows(.supportBundle) else { return }
         nodes = await .from { try await client.overview().nodes }
-        if case .loaded(let list, _) = nodes {
+        if case .loaded(let list, _, _) = nodes {
             if selected.isEmpty { selected = Set(list.filter(\.reachable).map(\.node)) }
             await model.loadFeatures(of: list)
         }

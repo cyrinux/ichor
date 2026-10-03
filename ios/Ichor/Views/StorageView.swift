@@ -89,7 +89,7 @@ struct StorageView: View {
     private func loadMounts() async {
         guard let client = model.client else { return }
         let result: LoadState<NodeMounts> = await .from { try await client.mounts(node: node) }
-        if !Task.isCancelled { mounts = result }
+        if !Task.isCancelled { mounts = mounts.refreshed(with: result) }
     }
 
     /// What the node's Talos version lacks is not asked for (the section shows the notice).
@@ -98,7 +98,7 @@ struct StorageView: View {
         await model.loadFeatures(node: node)
         guard model.support(.volumes, node: node).supported else { return }
         let result: LoadState<NodeVolumes> = await .from { try await client.volumes(node: node) }
-        if !Task.isCancelled { volumes = result }
+        if !Task.isCancelled { volumes = volumes.refreshed(with: result) }
     }
 
     private func loadUsage() async {
@@ -114,7 +114,7 @@ struct StorageView: View {
         await model.loadFeatures(node: node)
         guard model.support(.diskHealth, node: node).supported else { return }
         let result: LoadState<NodeDiskHealth> = await .from { try await client.diskHealth(node: node) }
-        if !Task.isCancelled { health = result }
+        if !Task.isCancelled { health = health.refreshed(with: result) }
     }
 }
 
@@ -132,7 +132,7 @@ struct SectionStateView<T, Content: View>: View {
             }
         case .failed(let message):
             ErrorOrNoticeText(message: message)
-        case .loaded(let value, _):
+        case .loaded(let value, _, _):
             content(value)
         }
     }

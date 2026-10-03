@@ -31,6 +31,13 @@ abstract class LoadingViewModel<T> : ViewModel() {
     /** Last cached value to show instantly while [fetch] runs (stale-while-revalidate). */
     protected open fun cached(): TalosRepository.Timed<T>? = null
 
+    /**
+     * Whether a failed refresh leaves the data on screen, marked with the error, instead of
+     * an error box. Only where the screen shows [name.levis.ichor.ui.components.DataFreshness],
+     * which tells the user the data could not be refreshed.
+     */
+    protected open val keepsDataOnFailure: Boolean = false
+
     /** [reset] drops the current data first, e.g. when the data source (context) changed. */
     fun refresh(reset: Boolean = false) {
         job?.cancel()
@@ -45,7 +52,12 @@ abstract class LoadingViewModel<T> : ViewModel() {
             } catch (e: CancellationException) {
                 throw e // superseded by a newer refresh: don't report it as a failure
             } catch (e: Throwable) {
-                UiState.Failed(e.uiText())
+                if (keepsDataOnFailure) {
+                    // Keep what is on screen; the last known value may have been restored meanwhile.
+                    _state.value.refreshFailed(e.uiText(), cached()?.let { it.value to it.at })
+                } else {
+                    UiState.Failed(e.uiText())
+                }
             }
         }
     }

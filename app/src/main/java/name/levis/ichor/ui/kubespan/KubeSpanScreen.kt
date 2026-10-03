@@ -53,6 +53,7 @@ import name.levis.ichor.util.formatBytes
 import name.levis.ichor.ui.components.localizedDuration
 
 class KubeSpanViewModel(private val talos: TalosRepository) : LoadingViewModel<KubeSpanOverview>() {
+    override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<KubeSpanOverview>? = talos.cached(KUBESPAN)
     override suspend fun fetch() = talos.kubespan()
 

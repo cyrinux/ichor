@@ -15,6 +15,8 @@ import name.levis.ichor.data.ChangelogRepository
 import name.levis.ichor.data.ClusterColors
 import name.levis.ichor.data.DiagnosisRepository
 import name.levis.ichor.data.SecureStore
+import name.levis.ichor.data.KeystoreSealer
+import name.levis.ichor.data.OfflineCache
 import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.TalosUpdateChecker
 import name.levis.ichor.data.UpgradeManager
@@ -58,7 +60,16 @@ import kotlinx.coroutines.launch
 /** Holds app-wide singletons (manual DI; the app is small). */
 class TalosApp : Application() {
     val configRepository by lazy { ConfigRepository(this, guard = ::holdBackOffVpn) }
-    val talosRepository by lazy { TalosRepository(configRepository, kubeServers) }
+    val talosRepository by lazy { TalosRepository(configRepository, kubeServers, offlineCache) }
+
+    /** Last known cluster data on disk, only while "Keep last known state" is on (Settings → Privacy). */
+    private val offlineCache by lazy {
+        OfflineCache(
+            java.io.File(noBackupFilesDir, "offline"),
+            KeystoreSealer("ichor-offline"),
+            enabled = { uiPreferences.offlineCache.value },
+        )
+    }
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
     val supportBundleRepository by lazy { SupportBundleRepository(configRepository, filesDir) }
     val upgradeManager by lazy { UpgradeManager(configRepository, onFinished = talosRepository::forgetFeatures) }
@@ -212,6 +223,8 @@ class TalosApp : Application() {
             // The config summary (context names, endpoints) is masked too, and the Go side
             // forgets its previous mapping: re-read it, then reload with the new names.
             runCatching { configRepository.reparse() }
+            // Kept under the previous setting: masked and real names must never mix.
+            offlineCache.clear()
             talosRepository.invalidate()
             ClusterWidget().updateAll(this@TalosApp)
             syncMonitoring(this@TalosApp, runNow = true)
@@ -219,6 +232,38 @@ class TalosApp : Application() {
     }
 
     private fun applyPrivacyMask(mask: PrivacyMask) = Talosmobile.setPrivacyMask(mask.enabled, mask.words)
+
+    /**
+     * Turns "Keep last known state" on or off. Off deletes everything kept and its key; on
+     * starts with what the screens fetch next.
+     */
+    fun setOfflineCache(enabled: Boolean) {
+        if (enabled == uiPreferences.offlineCache.value) return
+        uiPreferences.setOfflineCache(enabled)
+        ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.IO) {
+            if (enabled) talosRepository.restoreOffline() else offlineCache.clear()
+        }
+    }
+
+    /**
+     * Keeps the last known data in step with the config: the active cluster's is read back
+     * when it is shown, removed clusters' is deleted, and all of it once no config is left.
+     */
+    private fun syncOfflineCache() {
+        ProcessLifecycleOwner.get().lifecycleScope.launch(Dispatchers.IO) {
+            combine(configRepository.config, configRepository.generation) { stored, generation -> stored to generation }
+                .collect { (stored, generation) ->
+                    when {
+                        stored != null -> {
+                            offlineCache.retain(stored.summary.contexts.map { it.fingerprint })
+                            talosRepository.restoreOffline()
+                        }
+                        // Generation 0: not loaded yet (locked); later, every cluster was removed.
+                        generation > 0 -> offlineCache.clear()
+                    }
+                }
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -243,6 +288,7 @@ class TalosApp : Application() {
         }
         publishClusterShortcuts()
         reloadWhenVpnConnects()
+        syncOfflineCache()
         // Process-wide foreground/background, so moving between our own screens never relocks.
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) = appLock.onForeground()

@@ -161,7 +161,8 @@ private struct AppIconsSection: View {
 }
 
 /// Screenshot mode: Go masks IPs, node and context names, plus the extra words. The words
-/// apply when the field is submitted or the screen closes, not on every keystroke.
+/// apply when the field is submitted or the screen closes, not on every keystroke. And the
+/// last known state, kept on the phone only when turned on.
 private struct PrivacySection: View {
     @Environment(AppModel.self) private var model
     @State private var words = ""
@@ -181,6 +182,13 @@ private struct PrivacySection: View {
                         .onSubmit(commit)
                     Text("Comma-separated, e.g. a domain or a customer name").font(.caption).foregroundStyle(.secondary)
                 }
+            }
+            // Off: what was kept is deleted (AppModel.setKeepLastKnown).
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("Keep last known state", isOn: Binding(get: { model.keepLastKnown }, set: { model.setKeepLastKnown($0) }))
+                Text("Save the last data fetched from each cluster on this phone, encrypted, so it still shows when the cluster can't be reached. Kept for 24 hours and never backed up.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         } header: {
             Text("Privacy")

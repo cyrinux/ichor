@@ -12,11 +12,11 @@ struct ClusterUnreachableView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
-                Image(systemName: icon)
+                Image(systemName: outage.cause.icon)
                     .font(.system(size: 44))
-                    .foregroundStyle(outage.cause == .network ? Color.orange : Color.red)
+                    .foregroundStyle(outage.cause.tint)
                 Text("Can’t reach the cluster").font(.title2.bold()).multilineTextAlignment(.center)
-                Text(explanation).font(.callout).multilineTextAlignment(.center)
+                Text(outage.cause.explanation).font(.callout).multilineTextAlignment(.center)
                 if !endpoints.isEmpty {
                     Text("Endpoints: \(endpoints.joined(separator: ", "))")
                         .font(.caption.monospaced())
@@ -41,17 +41,22 @@ struct ClusterUnreachableView: View {
         }
         .refreshable { await retry() }
     }
+}
 
-    private var icon: String {
-        switch outage.cause {
+extension OutageCause {
+    var icon: String {
+        switch self {
         case .network: "wifi.exclamationmark"
         case .credentials: "lock.shield"
         case .other: "exclamationmark.triangle"
         }
     }
 
-    private var explanation: String {
-        switch outage.cause {
+    /// Orange when the fix is likely on the phone (network), red otherwise.
+    var tint: Color { self == .network ? .orange : .red }
+
+    var explanation: String {
+        switch self {
         case .network:
             String(localized: "No node answered. Your phone is probably not on the cluster’s network: check that your VPN is connected, or that you are on the right Wi-Fi.")
         case .credentials:

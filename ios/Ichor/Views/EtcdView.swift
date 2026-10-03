@@ -90,7 +90,7 @@ struct EtcdView: View {
             Text("\(memberName(leader)) gives up etcd leadership and another member is elected. Writes pause briefly during the election.")
         }
         .sheet(item: $removing) { member in
-            if let client = model.client, case .loaded(let etcd, _) = state {
+            if let client = model.client, case .loaded(let etcd, _, _) = state {
                 EtcdRemoveMemberSheet(member: member, throughNode: etcdRemovalNode(memberId: member.id, statuses: etcd.statuses),
                                       client: client, lockEnabled: model.lock.enabled) { name in
                     removing = nil
@@ -125,7 +125,7 @@ struct EtcdView: View {
             return
         }
         let names: [String: String]
-        if case .loaded(let etcd, _) = state {
+        if case .loaded(let etcd, _, _) = state {
             names = Dictionary(etcd.members.map { ($0.id, $0.hostname) }, uniquingKeysWith: { a, _ in a })
         } else {
             names = [:]
@@ -150,16 +150,17 @@ struct EtcdView: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        state = await .from { try await client.etcd() }
+        state = model.seeded(state, from: .etcd)
+        state = state.refreshed(with: await .from { try await model.fetch(.etcd, with: client) })
         // Which Talos versions the members run decides whether the member actions exist.
-        if model.allows(.etcdMemberActions), case .loaded(let etcd, _) = state {
+        if model.allows(.etcdMemberActions), case .loaded(let etcd, _, _) = state {
             for status in etcd.statuses where status.error == nil { await model.loadFeatures(node: status.node) }
         }
     }
 
     /// The hostname of a status' member, its node address when the member list does not have it.
     private func memberName(_ status: EtcdNodeStatus) -> String {
-        guard case .loaded(let etcd, _) = state,
+        guard case .loaded(let etcd, _, _) = state,
               let member = etcd.members.first(where: { $0.id == status.memberId }), !member.hostname.isEmpty else { return status.node }
         return member.hostname
     }
@@ -191,7 +192,7 @@ struct EtcdView: View {
     }
 
     private func disarm() async {
-        guard let client = model.client, case .loaded(let etcd, _) = state, let node = disarmNode(etcd) else { return }
+        guard let client = model.client, case .loaded(let etcd, _, _) = state, let node = disarmNode(etcd) else { return }
         if model.lock.enabled, let failure = await Authenticator.authenticate(reason: String(localized: "Disarm etcd alarms")) {
             alarmMessage = failure
             return
