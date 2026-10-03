@@ -46,12 +46,19 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 
 /**
- * One app: what it is, which versions run, its images and its pods. [nodes] names the node
- * addresses; tapping a pod opens its node's pods ([onPodNode] with the node address).
+ * One app: what it is, which versions run, its workloads to restart ([restart], null when the
+ * role cannot), its images and its pods. [nodes] names the node addresses; tapping a pod opens
+ * its node's pods ([onPodNode] with the node address).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppDetailSheet(app: InventoryApp, nodes: Map<String, NodeOverview>, onPodNode: (String) -> Unit, onDismiss: () -> Unit) {
+fun AppDetailSheet(
+    app: InventoryApp,
+    nodes: Map<String, NodeOverview>,
+    restart: AppRestartUi?,
+    onPodNode: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         LazyColumn(
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
@@ -60,6 +67,7 @@ fun AppDetailSheet(app: InventoryApp, nodes: Map<String, NodeOverview>, onPodNod
             item { Header(app) }
             item { Badges(app) }
             item { Stats(app) }
+            restart?.let { appWorkloadsSection(it) }
             if (app.images.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.apps_detail_images)) }
                 val drifting = app.driftingRepos
