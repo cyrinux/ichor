@@ -310,6 +310,7 @@
     <string name="settings_auth_disable_lock">App-Sperre deaktivieren</string>
     <string name="settings_app_lock">App-Sperre</string>
     <string name="settings_app_lock_desc">Fingerabdruck oder ersatzweise Geräte-PIN/-Muster zum Öffnen der App sowie vor Neustart, Herunterfahren und kubeconfig-Export. Blockiert Screenshots, sofern unten nicht erlaubt.</string>
+    <string name="settings_app_lock_required">Immer aktiv, solange ein Cluster importiert ist.</string>
     <string name="settings_allow_screenshots">Screenshots erlauben</string>
     <string name="settings_allow_screenshots_desc">Zeigt den App-Inhalt auch in den letzten Apps an.</string>
     <string name="settings_section_privacy">Datenschutz</string>
@@ -463,6 +464,20 @@
     <string name="lock_unlock">Entsperren</string>
     <string name="lock_no_auth">Dieses Gerät hat keinen Fingerabdruck und keine Displaysperre mehr, daher kann die App-Sperre dich nicht verifizieren.</string>
     <string name="lock_delete_config">Gespeicherte talosconfig löschen</string>
+    <string name="lock_onboarding_title">Schließ deine Cluster weg</string>
+    <string name="lock_onboarding_done">Deine Cluster sind geschützt</string>
+    <string name="lock_onboarding_intro">Deine talosconfig enthält Client-Schlüssel mit direktem Zugriff auf deine Nodes. Ichor schützt sie mit der App-Sperre.</string>
+    <string name="lock_onboarding_unlock">Fingerabdruck oder Geräte-PIN</string>
+    <string name="lock_onboarding_unlock_desc">Wird beim Öffnen von Ichor und nach 30 Sekunden im Hintergrund abgefragt.</string>
+    <string name="lock_onboarding_actions">Eine Prüfung vor riskanten Aktionen</string>
+    <string name="lock_onboarding_actions_desc">Neustart, Herunterfahren, Upgrades und Config-Exporte fragen zuerst danach.</string>
+    <string name="lock_onboarding_private">Standardmäßig privat</string>
+    <string name="lock_onboarding_private_desc">Screenshots und die Vorschau der letzten Apps bleiben leer, und Warnungen verbergen Cluster-Details auf dem Sperrbildschirm.</string>
+    <string name="lock_onboarding_no_lock">Keine Displaysperre auf diesem Gerät</string>
+    <string name="lock_onboarding_open_settings">Sicherheitseinstellungen öffnen</string>
+    <string name="lock_onboarding_delete">Stattdessen die importierte Config löschen</string>
+    <string name="lock_onboarding_delete_title">talosconfig löschen?</string>
+    <string name="lock_onboarding_delete_body">Die Config jedes Clusters wird samt Client-Schlüsseln von diesem Gerät entfernt.</string>
 
     <!-- Home-screen widget -->
     <string name="widget_description">Cluster-Status der letzten Hintergrundprüfung</string>

@@ -311,6 +311,7 @@
     <string name="settings_auth_disable_lock">Disattiva blocco app</string>
     <string name="settings_app_lock">Blocco app</string>
     <string name="settings_app_lock_desc">Impronta, o PIN/sequenza del dispositivo come alternativa, per aprire l\'app e prima di riavvio, spegnimento ed esportazione del kubeconfig. Blocca gli screenshot, a meno che non siano consentiti qui sotto.</string>
+    <string name="settings_app_lock_required">Sempre attivo finché è importato un cluster.</string>
     <string name="settings_allow_screenshots">Consenti screenshot</string>
     <string name="settings_allow_screenshots_desc">Mostra anche il contenuto dell\'app tra le app recenti.</string>
     <string name="settings_section_privacy">Privacy</string>
@@ -464,6 +465,20 @@
     <string name="lock_unlock">Sblocca</string>
     <string name="lock_no_auth">Questo dispositivo non ha più un\'impronta o un blocco schermo, quindi il blocco app non può verificare la tua identità.</string>
     <string name="lock_delete_config">Elimina il talosconfig salvato</string>
+    <string name="lock_onboarding_title">Metti i tuoi cluster sotto chiave</string>
+    <string name="lock_onboarding_done">I tuoi cluster sono protetti</string>
+    <string name="lock_onboarding_intro">Il tuo talosconfig contiene chiavi client con accesso diretto ai tuoi nodi. Ichor le protegge con il blocco dell\'app.</string>
+    <string name="lock_onboarding_unlock">Impronta o PIN del dispositivo</string>
+    <string name="lock_onboarding_unlock_desc">Richiesto all\'apertura di Ichor e dopo 30 secondi in background.</string>
+    <string name="lock_onboarding_actions">Una verifica prima delle azioni rischiose</string>
+    <string name="lock_onboarding_actions_desc">Riavvio, spegnimento, aggiornamenti ed esportazioni della config la richiedono prima.</string>
+    <string name="lock_onboarding_private">Privato per impostazione predefinita</string>
+    <string name="lock_onboarding_private_desc">Gli screenshot e l\'anteprima delle app recenti restano vuoti, e gli avvisi nascondono i dettagli del cluster nella schermata di blocco.</string>
+    <string name="lock_onboarding_no_lock">Nessun blocco schermo su questo dispositivo</string>
+    <string name="lock_onboarding_open_settings">Apri le impostazioni di sicurezza</string>
+    <string name="lock_onboarding_delete">Elimina invece la config importata</string>
+    <string name="lock_onboarding_delete_title">Eliminare il talosconfig?</string>
+    <string name="lock_onboarding_delete_body">La config di ogni cluster, con le sue chiavi client, verrà rimossa da questo dispositivo.</string>
 
     <!-- Home-screen widget -->
     <string name="widget_description">Stato del cluster dall\'ultimo controllo in background</string>

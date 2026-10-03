@@ -311,6 +311,7 @@
     <string name="settings_auth_disable_lock">Désactiver le verrouillage de l\'app</string>
     <string name="settings_app_lock">Verrouillage de l\'app</string>
     <string name="settings_app_lock_desc">Empreinte, ou code/schéma de l\'appareil en secours, pour ouvrir l\'app et avant un redémarrage, un arrêt ou un export du kubeconfig. Bloque les captures d\'écran sauf si elles sont autorisées ci-dessous.</string>
+    <string name="settings_app_lock_required">Toujours actif tant qu\'un cluster est importé.</string>
     <string name="settings_allow_screenshots">Autoriser les captures d\'écran</string>
     <string name="settings_allow_screenshots_desc">Affiche aussi le contenu de l\'app dans les applis récentes.</string>
     <string name="settings_section_privacy">Confidentialité</string>
@@ -464,6 +465,20 @@
     <string name="lock_unlock">Déverrouiller</string>
     <string name="lock_no_auth">Cet appareil n\'a plus d\'empreinte ni de verrouillage d\'écran, le verrouillage de l\'app ne peut donc pas vous identifier.</string>
     <string name="lock_delete_config">Supprimer le talosconfig enregistré</string>
+    <string name="lock_onboarding_title">Mettez vos clusters sous clé</string>
+    <string name="lock_onboarding_done">Vos clusters sont protégés</string>
+    <string name="lock_onboarding_intro">Votre talosconfig contient des clés client qui donnent un accès direct à vos nœuds. Ichor les garde derrière le verrouillage de l\'app.</string>
+    <string name="lock_onboarding_unlock">Empreinte ou code de l\'appareil</string>
+    <string name="lock_onboarding_unlock_desc">Demandé à l\'ouverture d\'Ichor et après 30 secondes en arrière-plan.</string>
+    <string name="lock_onboarding_actions">Une vérification avant les actions risquées</string>
+    <string name="lock_onboarding_actions_desc">Redémarrage, arrêt, mises à niveau et exports de config la demandent d\'abord.</string>
+    <string name="lock_onboarding_private">Privé par défaut</string>
+    <string name="lock_onboarding_private_desc">Les captures d\'écran et l\'aperçu des apps récentes restent vides, et les alertes masquent les détails du cluster sur l\'écran de verrouillage.</string>
+    <string name="lock_onboarding_no_lock">Aucun verrouillage d\'écran sur cet appareil</string>
+    <string name="lock_onboarding_open_settings">Ouvrir les paramètres de sécurité</string>
+    <string name="lock_onboarding_delete">Supprimer plutôt la config importée</string>
+    <string name="lock_onboarding_delete_title">Supprimer le talosconfig ?</string>
+    <string name="lock_onboarding_delete_body">La config de chaque cluster, avec ses clés client, sera supprimée de cet appareil.</string>
 
     <!-- Home-screen widget -->
     <string name="widget_description">État du cluster lors de la dernière vérification en arrière-plan</string>

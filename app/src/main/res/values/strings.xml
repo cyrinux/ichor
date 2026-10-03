@@ -311,6 +311,7 @@
     <string name="settings_auth_disable_lock">Disable app lock</string>
     <string name="settings_app_lock">App lock</string>
     <string name="settings_app_lock_desc">Fingerprint, or device PIN/pattern as fallback, to open the app and before reboot, shutdown and kubeconfig export. Blocks screenshots unless allowed below.</string>
+    <string name="settings_app_lock_required">Always on while a cluster is imported.</string>
     <string name="settings_allow_screenshots">Allow screenshots</string>
     <string name="settings_allow_screenshots_desc">Also shows the app content in recent apps.</string>
     <string name="settings_section_privacy">Privacy</string>
@@ -464,6 +465,20 @@
     <string name="lock_unlock">Unlock</string>
     <string name="lock_no_auth">This device no longer has a fingerprint or screen lock, so the app lock cannot verify you.</string>
     <string name="lock_delete_config">Delete stored talosconfig</string>
+    <string name="lock_onboarding_title">Lock your clusters away</string>
+    <string name="lock_onboarding_done">Your clusters are protected</string>
+    <string name="lock_onboarding_intro">Your talosconfig holds client keys with direct access to your nodes. Ichor keeps them behind the app lock.</string>
+    <string name="lock_onboarding_unlock">Fingerprint or device PIN</string>
+    <string name="lock_onboarding_unlock_desc">Asked when Ichor opens and after 30 seconds in the background.</string>
+    <string name="lock_onboarding_actions">A check before risky actions</string>
+    <string name="lock_onboarding_actions_desc">Reboot, shutdown, upgrades and config exports ask for it first.</string>
+    <string name="lock_onboarding_private">Private by default</string>
+    <string name="lock_onboarding_private_desc">Screenshots and the recent apps preview stay blank, and alerts hide cluster details on the lock screen.</string>
+    <string name="lock_onboarding_no_lock">No screen lock on this device</string>
+    <string name="lock_onboarding_open_settings">Open security settings</string>
+    <string name="lock_onboarding_delete">Delete the imported config instead</string>
+    <string name="lock_onboarding_delete_title">Delete talosconfig?</string>
+    <string name="lock_onboarding_delete_body">The config of every cluster, with their client keys, will be removed from this device.</string>
 
     <!-- Home-screen widget -->
     <string name="widget_description">Cluster status from the last background check</string>

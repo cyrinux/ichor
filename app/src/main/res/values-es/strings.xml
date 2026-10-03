@@ -311,6 +311,7 @@
     <string name="settings_auth_disable_lock">Desactivar bloqueo de la aplicación</string>
     <string name="settings_app_lock">Bloqueo de la aplicación</string>
     <string name="settings_app_lock_desc">Huella digital, o PIN/patrón del dispositivo como alternativa, para abrir la aplicación y antes de reiniciar, apagar o exportar el kubeconfig. Bloquea las capturas de pantalla salvo que se permitan abajo.</string>
+    <string name="settings_app_lock_required">Siempre activo mientras haya un clúster importado.</string>
     <string name="settings_allow_screenshots">Permitir capturas de pantalla</string>
     <string name="settings_allow_screenshots_desc">También muestra el contenido de la aplicación en las aplicaciones recientes.</string>
     <string name="settings_section_privacy">Privacidad</string>
@@ -464,6 +465,20 @@
     <string name="lock_unlock">Desbloquear</string>
     <string name="lock_no_auth">Este dispositivo ya no tiene huella digital ni bloqueo de pantalla, así que el bloqueo de la aplicación no puede verificar tu identidad.</string>
     <string name="lock_delete_config">Eliminar el talosconfig guardado</string>
+    <string name="lock_onboarding_title">Pon tus clústeres bajo llave</string>
+    <string name="lock_onboarding_done">Tus clústeres están protegidos</string>
+    <string name="lock_onboarding_intro">Tu talosconfig contiene claves de cliente con acceso directo a tus nodos. Ichor las protege con el bloqueo de la app.</string>
+    <string name="lock_onboarding_unlock">Huella o PIN del dispositivo</string>
+    <string name="lock_onboarding_unlock_desc">Se pide al abrir Ichor y tras 30 segundos en segundo plano.</string>
+    <string name="lock_onboarding_actions">Una verificación antes de las acciones arriesgadas</string>
+    <string name="lock_onboarding_actions_desc">Reinicio, apagado, actualizaciones y exportaciones de configuración la piden antes.</string>
+    <string name="lock_onboarding_private">Privado por defecto</string>
+    <string name="lock_onboarding_private_desc">Las capturas y la vista previa de apps recientes quedan en blanco, y las alertas ocultan los detalles del clúster en la pantalla de bloqueo.</string>
+    <string name="lock_onboarding_no_lock">Este dispositivo no tiene bloqueo de pantalla</string>
+    <string name="lock_onboarding_open_settings">Abrir los ajustes de seguridad</string>
+    <string name="lock_onboarding_delete">Eliminar la configuración importada en su lugar</string>
+    <string name="lock_onboarding_delete_title">¿Eliminar el talosconfig?</string>
+    <string name="lock_onboarding_delete_body">La configuración de cada clúster, con sus claves de cliente, se eliminará de este dispositivo.</string>
 
     <!-- Home-screen widget -->
     <string name="widget_description">Estado del clúster según la última comprobación en segundo plano</string>

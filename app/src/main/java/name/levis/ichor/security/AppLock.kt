@@ -4,6 +4,8 @@ import android.content.SharedPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import name.levis.ichor.model.ContextSummary
+import name.levis.ichor.model.isDemo
 
 /** Persistence for the app-lock preference (abstracted for unit tests). */
 interface LockSettings {
@@ -23,7 +25,13 @@ class PrefsLockSettings(private val prefs: SharedPreferences) : LockSettings {
 }
 
 /**
- * Optional app lock: locked at cold start and after [graceMillis] in the background.
+ * The lock is mandatory once the client keys of a real cluster are stored (the demo has none):
+ * the app asks to set it up before showing anything else, and Settings cannot turn it off.
+ */
+fun lockRequired(contexts: List<ContextSummary>): Boolean = contexts.any { !it.isDemo }
+
+/**
+ * App lock: locked at cold start and after [graceMillis] in the background.
  * The grace period keeps short trips (file picker, camera permission) from relocking.
  */
 class AppLock(

@@ -1,5 +1,6 @@
 package name.levis.ichor.security
 
+import name.levis.ichor.model.ContextSummary
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -89,5 +90,15 @@ class AppLockTest {
         lock.setEnabled(false)
         assertFalse(store.lockEnabled)
         assertFalse(lock.locked.value)
+    }
+
+    @Test
+    fun requiredOnceARealClusterIsStored() {
+        val real = ContextSummary(name = "prod")
+        val demo = ContextSummary(name = "demo", demo = true)
+        assertFalse("nothing imported yet", lockRequired(emptyList()))
+        assertFalse("the demo holds no credentials", lockRequired(listOf(demo)))
+        assertTrue(lockRequired(listOf(real)))
+        assertTrue(lockRequired(listOf(demo, real)))
     }
 }
