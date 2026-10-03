@@ -10,6 +10,7 @@ import name.levis.talosmobile.SnapshotListener
 import name.levis.talosmobile.Talosmobile
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.EtcdOverview
+import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubePodList
@@ -190,6 +191,11 @@ class TalosRepository(
 
     suspend fun kubespan(): KubeSpanOverview = remember(KUBESPAN) {
         call { cfg, ctx -> TalosJson.decodeFromString(KubeSpanOverview.serializer(), Talosmobile.kubeSpanStatus(cfg, ctx)) }
+    }
+
+    /** The cluster map: nodes, KubeSpan links and sites (zones or shared LANs). */
+    suspend fun topology(): ClusterTopology = remember(TOPOLOGY) {
+        call { cfg, ctx -> TalosJson.decodeFromString(ClusterTopology.serializer(), Talosmobile.clusterTopology(cfg, ctx)) }
     }
 
     /** `talosctl -n NODE etcd defrag` (os:operator or os:admin); one member at a time. */
@@ -582,6 +588,7 @@ class TalosRepository(
 const val OVERVIEW = "overview"
 const val ETCD = "etcd"
 const val KUBESPAN = "kubespan"
+const val TOPOLOGY = "topology"
 const val INVENTORY = "inventory"
 const val WORKLOADS = "workloads"
 const val PODS = "pods"
@@ -601,6 +608,7 @@ private val PERSISTED: Map<String, KSerializer<*>> = mapOf(
     OVERVIEW to ClusterOverview.serializer(),
     ETCD to EtcdOverview.serializer(),
     KUBESPAN to KubeSpanOverview.serializer(),
+    TOPOLOGY to ClusterTopology.serializer(),
     INVENTORY to Inventory.serializer(),
     WORKLOADS to ListSerializer(KubeWorkload.serializer()),
     PODS to ListSerializer(KubePod.serializer()),

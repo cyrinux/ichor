@@ -266,6 +266,26 @@
     <string name="kubespan_peer_down">Down</string>
     <string name="kubespan_peer_unknown">Unknown</string>
     <string name="kubespan_handshake_ago">handshake %1$s ago</string>
+    <string name="topology_tab_map">Map</string>
+    <string name="topology_tab_peers">Peers</string>
+    <plurals name="topology_sites">
+        <item quantity="one">%1$d site</item>
+        <item quantity="other">%1$d sites</item>
+    </plurals>
+    <plurals name="topology_links">
+        <item quantity="one">%1$d link</item>
+        <item quantity="other">%1$d links</item>
+    </plurals>
+    <string name="topology_site_lan">Local network</string>
+    <string name="topology_site_alone">Own network</string>
+    <string name="topology_role_controlplane">Control plane</string>
+    <string name="topology_role_worker">Worker</string>
+    <string name="topology_link_degraded">One end down</string>
+    <string name="topology_link_one_side">Only one end of this link was queried: the other node is not in this talosconfig.</string>
+    <string name="topology_link_seen_from">Seen from %1$s</string>
+    <string name="topology_not_queried">Nodes in grey are not in this talosconfig: they are drawn from what their peers report.</string>
+    <string name="topology_empty">Nothing to map: no cluster member or KubeSpan peer was found.</string>
+    <string name="topology_map_description">Cluster map of sites, nodes and KubeSpan links</string>
 
     <!-- Logs -->
     <string name="logs_kernel_log">Kernel log</string>

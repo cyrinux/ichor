@@ -265,6 +265,26 @@
     <string name="kubespan_peer_down">Getrennt</string>
     <string name="kubespan_peer_unknown">Unbekannt</string>
     <string name="kubespan_handshake_ago">Handshake vor %1$s</string>
+    <string name="topology_tab_map">Karte</string>
+    <string name="topology_tab_peers">Peers</string>
+    <plurals name="topology_sites">
+        <item quantity="one">%1$d Standort</item>
+        <item quantity="other">%1$d Standorte</item>
+    </plurals>
+    <plurals name="topology_links">
+        <item quantity="one">%1$d Verbindung</item>
+        <item quantity="other">%1$d Verbindungen</item>
+    </plurals>
+    <string name="topology_site_lan">Lokales Netz</string>
+    <string name="topology_site_alone">Eigenes Netz</string>
+    <string name="topology_role_controlplane">Control Plane</string>
+    <string name="topology_role_worker">Worker</string>
+    <string name="topology_link_degraded">Eine Seite getrennt</string>
+    <string name="topology_link_one_side">Nur eine Seite dieser Verbindung wurde abgefragt: der andere Node ist nicht in dieser talosconfig.</string>
+    <string name="topology_link_seen_from">Gesehen von %1$s</string>
+    <string name="topology_not_queried">Graue Nodes sind nicht in dieser talosconfig: sie werden aus den Angaben ihrer Peers gezeichnet.</string>
+    <string name="topology_empty">Nichts darzustellen: kein Cluster-Mitglied und kein KubeSpan-Peer gefunden.</string>
+    <string name="topology_map_description">Clusterkarte mit Standorten, Nodes und KubeSpan-Verbindungen</string>
 
     <!-- Logs -->
     <string name="logs_kernel_log">Kernel-Log</string>

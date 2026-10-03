@@ -266,6 +266,26 @@
     <string name="kubespan_peer_down">Caído</string>
     <string name="kubespan_peer_unknown">Desconocido</string>
     <string name="kubespan_handshake_ago">handshake hace %1$s</string>
+    <string name="topology_tab_map">Mapa</string>
+    <string name="topology_tab_peers">Pares</string>
+    <plurals name="topology_sites">
+        <item quantity="one">%1$d sitio</item>
+        <item quantity="other">%1$d sitios</item>
+    </plurals>
+    <plurals name="topology_links">
+        <item quantity="one">%1$d enlace</item>
+        <item quantity="other">%1$d enlaces</item>
+    </plurals>
+    <string name="topology_site_lan">Red local</string>
+    <string name="topology_site_alone">Red propia</string>
+    <string name="topology_role_controlplane">Plano de control</string>
+    <string name="topology_role_worker">Worker</string>
+    <string name="topology_link_degraded">Un extremo caído</string>
+    <string name="topology_link_one_side">Solo se consultó un extremo de este enlace: el otro nodo no está en este talosconfig.</string>
+    <string name="topology_link_seen_from">Visto desde %1$s</string>
+    <string name="topology_not_queried">Los nodos en gris no están en este talosconfig: se dibujan a partir de lo que informan sus pares.</string>
+    <string name="topology_empty">Nada que mostrar: no se encontró ningún miembro del clúster ni par de KubeSpan.</string>
+    <string name="topology_map_description">Mapa del clúster con sitios, nodos y enlaces KubeSpan</string>
 
     <!-- Logs -->
     <string name="logs_kernel_log">Registro del kernel</string>

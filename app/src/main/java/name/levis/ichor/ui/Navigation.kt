@@ -418,7 +418,13 @@ fun Navigation(
                 onNode = { addr, host, role -> nav.navigate(Routes.node(addr, host, role, tab = 4)) },
             )
         }
-        composable(Routes.KUBESPAN) { KubeSpanScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.KUBESPAN) {
+            KubeSpanScreen(
+                onBack = { nav.popBackStack() },
+                // Only a node the talosconfig targets has a detail screen.
+                onNode = { n -> if (n.node.isNotBlank()) nav.navigate(Routes.node(n.node, n.hostname, n.role)) },
+            )
+        }
         composable(Routes.WORKLOADS) { name.levis.ichor.ui.workloads.KubernetesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.ETCD) { EtcdScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.HEALTH) {
