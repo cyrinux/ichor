@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
@@ -44,13 +43,7 @@ func ClusterStats(configYAML, contextName string) (out string, err error) {
 		nodes := targetNodes(s.context)
 		samples := make([]*nodeCounters, len(nodes))
 
-		var wg sync.WaitGroup
-
-		for i, node := range nodes {
-			wg.Go(func() { samples[i] = sampleCounters(ctx, s.client, node) })
-		}
-
-		wg.Wait()
+		forEachNode(nodes, func(i int, node string) { samples[i] = sampleCounters(ctx, s.client, node) })
 
 		return toJSON(clusterStats{At: time.Now().UnixMilli(), Nodes: answered(samples)})
 	})

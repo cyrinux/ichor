@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -79,7 +81,8 @@ fun TalosUpdateBanner(nodes: List<NodeOverview>, canUpgrade: Boolean, onUpgrade:
             onDismissRequest = { choosing = false },
             title = { Text(stringResource(R.string.overview_talos_pick_node, check.latest)) },
             text = {
-                Column {
+                // Scrolls: right after a release, a large cluster lists more nodes than fit the dialog.
+                Column(Modifier.verticalScroll(rememberScrollState())) {
                     Text(
                         stringResource(R.string.overview_talos_pick_hint),
                         style = MaterialTheme.typography.bodySmall,

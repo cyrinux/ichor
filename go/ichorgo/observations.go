@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -46,68 +45,64 @@ func ClusterDriftSnapshot(configYAML, contextName string) (out string, err error
 		return "", err
 	}
 	result := driftSnapshot{Scope: contextFingerprint(name, cfg), At: time.Now().UnixMilli(), Nodes: make([]driftNode, len(overview.Nodes))}
-	var wg sync.WaitGroup
-	for i, n := range overview.Nodes {
-		wg.Go(func() {
-			d := driftNode{Node: n.Node, Hostname: n.Hostname, Role: n.Role, Values: map[string]string{}, Errors: map[string]string{}}
-			if !n.Reachable {
-				d.Errors["node"] = n.Error
-				result.Nodes[i] = d
-				return
-			}
-			if n.Version != "" {
-				d.Values["version"] = n.Version
-			}
-			var network nodeNetwork
-			raw, e := NodeNetwork(configYAML, contextName, n.Node)
-			if e := decodeObservation(raw, e, &network); e != nil {
-				d.Errors["network"] = e.Error()
-			} else {
-				for k, v := range network.Errors {
-					d.Errors[k] = v
-				}
-				if network.Errors["resolvers"] == "" {
-					d.Values["dns"] = sortedSetting(network.Resolvers)
-				}
-				if network.Errors["timeServers"] == "" {
-					d.Values["ntp"] = sortedSetting(network.TimeServers)
-				}
-				if network.Errors["links"] == "" {
-					mtus := []string{}
-					for _, l := range network.Links {
-						if !l.Virtual && l.Type != "loopback" {
-							mtus = append(mtus, fmt.Sprintf("%s=%d", l.Name, l.MTU))
-						}
-					}
-					d.Values["mtu"] = sortedSetting(mtus)
-				}
-			}
-			var hw nodeHardware
-			raw, e = NodeHardware(configYAML, contextName, n.Node)
-			if e := decodeObservation(raw, e, &hw); e != nil {
-				d.Errors["hardware"] = e.Error()
-			} else {
-				for _, k := range []string{"extensions", "security"} {
-					if hw.Errors[k] != "" {
-						d.Errors[k] = hw.Errors[k]
-					}
-				}
-				if hw.Errors["extensions"] == "" {
-					extensions := []string{}
-					for _, e := range hw.Extensions {
-						extensions = append(extensions, e.Name+"="+e.Version)
-					}
-					d.Values["extensions"] = sortedSetting(extensions)
-				}
-				if hw.Security != nil && hw.Errors["security"] == "" {
-					d.Values["secureBoot"] = fmt.Sprint(hw.Security.SecureBoot)
-					d.Values["uki"] = fmt.Sprint(hw.Security.BootedWithUKI)
-				}
-			}
+	forEachNode(overview.Nodes, func(i int, n nodeOverview) {
+		d := driftNode{Node: n.Node, Hostname: n.Hostname, Role: n.Role, Values: map[string]string{}, Errors: map[string]string{}}
+		if !n.Reachable {
+			d.Errors["node"] = n.Error
 			result.Nodes[i] = d
-		})
-	}
-	wg.Wait()
+			return
+		}
+		if n.Version != "" {
+			d.Values["version"] = n.Version
+		}
+		var network nodeNetwork
+		raw, e := NodeNetwork(configYAML, contextName, n.Node)
+		if e := decodeObservation(raw, e, &network); e != nil {
+			d.Errors["network"] = e.Error()
+		} else {
+			for k, v := range network.Errors {
+				d.Errors[k] = v
+			}
+			if network.Errors["resolvers"] == "" {
+				d.Values["dns"] = sortedSetting(network.Resolvers)
+			}
+			if network.Errors["timeServers"] == "" {
+				d.Values["ntp"] = sortedSetting(network.TimeServers)
+			}
+			if network.Errors["links"] == "" {
+				mtus := []string{}
+				for _, l := range network.Links {
+					if !l.Virtual && l.Type != "loopback" {
+						mtus = append(mtus, fmt.Sprintf("%s=%d", l.Name, l.MTU))
+					}
+				}
+				d.Values["mtu"] = sortedSetting(mtus)
+			}
+		}
+		var hw nodeHardware
+		raw, e = NodeHardware(configYAML, contextName, n.Node)
+		if e := decodeObservation(raw, e, &hw); e != nil {
+			d.Errors["hardware"] = e.Error()
+		} else {
+			for _, k := range []string{"extensions", "security"} {
+				if hw.Errors[k] != "" {
+					d.Errors[k] = hw.Errors[k]
+				}
+			}
+			if hw.Errors["extensions"] == "" {
+				extensions := []string{}
+				for _, e := range hw.Extensions {
+					extensions = append(extensions, e.Name+"="+e.Version)
+				}
+				d.Values["extensions"] = sortedSetting(extensions)
+			}
+			if hw.Security != nil && hw.Errors["security"] == "" {
+				d.Values["secureBoot"] = fmt.Sprint(hw.Security.SecureBoot)
+				d.Values["uki"] = fmt.Sprint(hw.Security.BootedWithUKI)
+			}
+		}
+		result.Nodes[i] = d
+	})
 	sort.Slice(result.Nodes, func(i, j int) bool { return result.Nodes[i].Node < result.Nodes[j].Node })
 	return toJSON(result)
 }
@@ -218,39 +213,35 @@ func ClusterObservation(configYAML, contextName string) (out string, err error) 
 		return "", err
 	}
 	result := clusterObservation{Scope: contextFingerprint(name, cfg), At: time.Now().UnixMilli(), Nodes: make([]observedNode, len(overview.Nodes))}
-	var wg sync.WaitGroup
-	for i, n := range overview.Nodes {
-		wg.Go(func() {
-			o := observedNode{Status: n, Services: []serviceInfo{}, Links: map[string]string{}, Errors: map[string]string{}}
-			if n.Reachable {
-				var stats nodeStats
-				raw, e := NodeStats(configYAML, contextName, n.Node)
-				if e = decodeObservation(raw, e, &stats); e != nil {
-					o.Errors["stats"] = e.Error()
-				} else {
-					o.Stats = &stats
-				}
-				raw, e = NodeServices(configYAML, contextName, n.Node)
-				if e = decodeObservation(raw, e, &o.Services); e != nil {
-					o.Errors["services"] = e.Error()
-				}
-				var net nodeNetwork
-				raw, e = NodeNetwork(configYAML, contextName, n.Node)
-				if e = decodeObservation(raw, e, &net); e != nil {
-					o.Errors["links"] = e.Error()
-				} else if net.Errors["links"] != "" {
-					o.Errors["links"] = net.Errors["links"]
-				} else {
-					for _, l := range net.Links {
-						if !l.Virtual && l.Type != "loopback" {
-							o.Links[l.Name] = l.State
-						}
+	forEachNode(overview.Nodes, func(i int, n nodeOverview) {
+		o := observedNode{Status: n, Services: []serviceInfo{}, Links: map[string]string{}, Errors: map[string]string{}}
+		if n.Reachable {
+			var stats nodeStats
+			raw, e := NodeStats(configYAML, contextName, n.Node)
+			if e = decodeObservation(raw, e, &stats); e != nil {
+				o.Errors["stats"] = e.Error()
+			} else {
+				o.Stats = &stats
+			}
+			raw, e = NodeServices(configYAML, contextName, n.Node)
+			if e = decodeObservation(raw, e, &o.Services); e != nil {
+				o.Errors["services"] = e.Error()
+			}
+			var net nodeNetwork
+			raw, e = NodeNetwork(configYAML, contextName, n.Node)
+			if e = decodeObservation(raw, e, &net); e != nil {
+				o.Errors["links"] = e.Error()
+			} else if net.Errors["links"] != "" {
+				o.Errors["links"] = net.Errors["links"]
+			} else {
+				for _, l := range net.Links {
+					if !l.Virtual && l.Type != "loopback" {
+						o.Links[l.Name] = l.State
 					}
 				}
 			}
-			result.Nodes[i] = o
-		})
-	}
-	wg.Wait()
+		}
+		result.Nodes[i] = o
+	})
 	return toJSON(result)
 }

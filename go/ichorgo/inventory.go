@@ -5,7 +5,6 @@ import (
 	"context"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/api/common"
@@ -92,13 +91,7 @@ func ClusterInventory(configYAML, contextName string) (out string, err error) {
 		nodes := targetNodes(s.context)
 		lists := make([]*nodeContainers, len(nodes))
 
-		var wg sync.WaitGroup
-
-		for i, node := range nodes {
-			wg.Go(func() { lists[i] = listNodeContainers(ctx, s.client, node) })
-		}
-
-		wg.Wait()
+		forEachNode(nodes, func(i int, node string) { lists[i] = listNodeContainers(ctx, s.client, node) })
 
 		answered := make([]nodeContainers, 0, len(lists))
 

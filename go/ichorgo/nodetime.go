@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"context"
 	"errors"
-	"sync"
 
 	"github.com/siderolabs/talos/pkg/machinery/api/time"
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -67,15 +66,9 @@ func ClusterTime(configYAML, contextName string) (out string, err error) {
 		nodes := targetNodes(s.context)
 		result := clusterTime{Context: name, Nodes: make([]nodeTime, len(nodes))}
 
-		var wg sync.WaitGroup
-
-		for i, node := range nodes {
-			wg.Go(func() {
-				result.Nodes[i] = probeTime(ctx, s.client, node)
-			})
-		}
-
-		wg.Wait()
+		forEachNode(nodes, func(i int, node string) {
+			result.Nodes[i] = probeTime(ctx, s.client, node)
+		})
 
 		return toJSON(result)
 	})
