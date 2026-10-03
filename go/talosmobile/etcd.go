@@ -18,6 +18,9 @@ type etcdOverview struct {
 	Members  []etcdMember     `json:"members"`
 	Statuses []etcdNodeStatus `json:"statuses"`
 	Alarms   []etcdAlarm      `json:"alarms"`
+	// AlarmsError is set when no control-plane node answered the alarm list: Alarms is then
+	// unknown, not empty.
+	AlarmsError string `json:"alarmsError,omitempty"`
 }
 
 type etcdMember struct {
@@ -87,8 +90,8 @@ func gatherEtcdOverview(ctx context.Context, s *session) (etcdOverview, error) {
 	return fetchEtcd(ctx, s.client, cps), nil
 }
 
-// fetchEtcd asks every control-plane node for its etcd status, and the first one for the
-// member list and the alarms.
+// fetchEtcd asks every control-plane node for its etcd status, then reads the member list
+// and the alarms through the first node that answers them.
 func fetchEtcd(ctx context.Context, c *client.Client, cps []string) etcdOverview {
 	probes := make([]etcdProbe, len(cps))
 
@@ -113,28 +116,68 @@ func fetchEtcd(ctx context.Context, c *client.Client, cps []string) etcdOverview
 
 	wg.Wait()
 
-	cpCtx := client.WithNode(ctx, cps[0])
+	order := queryOrder(probes)
 
-	var members *machineapi.EtcdMembers
+	members, membersErr := firstAnswer(order, func(node string) (*machineapi.EtcdMembers, error) {
+		resp, err := c.EtcdMemberList(client.WithNode(ctx, node), &machineapi.EtcdMemberListRequest{QueryLocal: false})
+		if err != nil {
+			return nil, err
+		}
 
-	membersResp, membersErr := c.EtcdMemberList(cpCtx, &machineapi.EtcdMemberListRequest{QueryLocal: false})
-	if membersErr == nil {
-		members = first(membersResp.GetMessages())
-	}
+		return first(resp.GetMessages()), nil
+	})
 
-	var alarms []*machineapi.EtcdMemberAlarm
+	alarms, alarmsErr := firstAnswer(order, func(node string) ([]*machineapi.EtcdMemberAlarm, error) {
+		resp, err := c.EtcdAlarmList(client.WithNode(ctx, node))
+		if err != nil {
+			return nil, err
+		}
 
-	if alarmResp, err := c.EtcdAlarmList(cpCtx); err == nil {
-		if m := first(alarmResp.GetMessages()); m != nil {
-			alarms = m.GetMemberAlarms()
+		return first(resp.GetMessages()).GetMemberAlarms(), nil
+	})
+
+	return buildEtcdOverview(members, membersErr, probes, alarms, alarmsErr)
+}
+
+// queryOrder lists the probed nodes with those whose etcd answered the status probe first,
+// so cluster-wide reads skip a down member instead of failing on it.
+func queryOrder(probes []etcdProbe) []string {
+	up := make([]string, 0, len(probes))
+	down := make([]string, 0, len(probes))
+
+	for _, p := range probes {
+		if p.err == nil {
+			up = append(up, p.node)
+		} else {
+			down = append(down, p.node)
 		}
 	}
 
-	return buildEtcdOverview(members, membersErr, probes, alarms)
+	return append(up, down...)
+}
+
+// firstAnswer calls ask on each node in turn and returns the first success, or the last
+// error when every node fails.
+func firstAnswer[T any](nodes []string, ask func(node string) (T, error)) (T, error) {
+	err := errors.New("no control-plane node to ask")
+
+	for _, node := range nodes {
+		v, askErr := ask(node)
+		if askErr == nil {
+			return v, nil
+		}
+
+		err = askErr
+	}
+
+	var zero T
+
+	return zero, err
 }
 
 func buildEtcdOverview(
-	members *machineapi.EtcdMembers, membersErr error, probes []etcdProbe, alarms []*machineapi.EtcdMemberAlarm,
+	members *machineapi.EtcdMembers, membersErr error, probes []etcdProbe,
+	alarms []*machineapi.EtcdMemberAlarm, alarmsErr error,
 ) etcdOverview {
 	out := etcdOverview{
 		Members:  []etcdMember{},
@@ -144,6 +187,10 @@ func buildEtcdOverview(
 
 	if membersErr != nil {
 		out.Error = fmt.Sprintf("member list: %s", friendlyError(membersErr))
+	}
+
+	if alarmsErr != nil {
+		out.AlarmsError = friendlyError(alarmsErr)
 	}
 
 	for _, m := range members.GetMembers() {

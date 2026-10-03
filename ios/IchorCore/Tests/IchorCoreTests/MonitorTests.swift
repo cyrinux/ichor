@@ -77,4 +77,13 @@ final class MonitorTests: XCTestCase {
         XCTAssertTrue(evaluate(previous: snap([("a", .ready)]), current: snap([("a", .ready)], cert: in10Days), now: now).alerts.isEmpty)
         XCTAssertEqual(evaluate(previous: snap([("a", .ready)]), current: snap([("a", .ready)], cert: in7Days), now: now).alerts.map(\.key), ["cert"])
     }
+
+    func testFailedAlarmListIsNotAnAllClear() throws {
+        let overview = try TalosJSON.decode(ClusterOverview.self, from: #"{"context":"lab","nodes":[]}"#)
+        let etcd = { (extra: String) throws -> EtcdOverview in
+            try TalosJSON.decode(EtcdOverview.self, from: #"{"leaderId":"","members":[],"statuses":[],"alarms":[]\#(extra)}"#)
+        }
+        XCTAssertTrue(snapshotOf(overview, etcd: try etcd(""), certNotAfter: 0, takenAt: now).etcdChecked)
+        XCTAssertFalse(snapshotOf(overview, etcd: try etcd(#","alarmsError":"permission denied""#), certNotAfter: 0, takenAt: now).etcdChecked)
+    }
 }

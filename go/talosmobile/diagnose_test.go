@@ -116,6 +116,22 @@ func TestRenderDiagnosisWithoutEtcdOrEvents(t *testing.T) {
 	}
 }
 
+func TestRenderDiagnosisAlarmCheckFailed(t *testing.T) {
+	d := sampleDiagnosis()
+	d.Etcd.Alarms = []etcdAlarm{}
+	d.Etcd.AlarmsError = "permission denied"
+
+	report := renderDiagnosis(d)
+
+	if !strings.Contains(report, "  alarms: check FAILED, permission denied") {
+		t.Errorf("report lacks the failed alarm check:\n%s", report)
+	}
+
+	if strings.Contains(report, "alarms: none") {
+		t.Error("a failed alarm check rendered as no alarms")
+	}
+}
+
 func TestLogTargets(t *testing.T) {
 	services := func(states ...string) []serviceInfo {
 		out := []serviceInfo{{ID: "kubelet", State: "Running", Health: "healthy"}}

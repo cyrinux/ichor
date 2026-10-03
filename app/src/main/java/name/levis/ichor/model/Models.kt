@@ -149,6 +149,8 @@ data class EtcdOverview(
     val members: List<EtcdMember> = emptyList(),
     val statuses: List<EtcdNodeStatus> = emptyList(),
     val alarms: List<EtcdAlarm> = emptyList(),
+    /** Set when no control-plane node answered the alarm list: [alarms] is unknown, not empty. */
+    val alarmsError: String? = null,
 )
 
 @Serializable

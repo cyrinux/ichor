@@ -218,6 +218,8 @@ public struct EtcdOverview: Decodable, Equatable, Sendable {
     public let members: [EtcdMember]
     public let statuses: [EtcdNodeStatus]
     public let alarms: [EtcdAlarm]
+    /// Set when no control-plane node answered the alarm list: `alarms` is unknown, not empty.
+    public let alarmsError: String?
 }
 
 public struct EtcdMember: Decodable, Equatable, Identifiable, Sendable {

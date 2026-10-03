@@ -42,8 +42,9 @@ struct EtcdView: View {
                 if model.allows(.etcdSnapshot) {
                     EtcdSnapshotSection(etcd: etcd, hostnames: hostnames, job: snapshot)
                 }
-                if !etcd.alarms.isEmpty || alarmMessage != nil {
+                if !etcd.alarms.isEmpty || alarmMessage != nil || etcd.alarmsError != nil {
                     Section("Alarms") {
+                        if let alarmsError = etcd.alarmsError { Text("Could not check alarms: \(alarmsError)").foregroundStyle(.red) }
                         ForEach(etcd.alarms, id: \.self) { Text(verbatim: "\(hostnames[$0.memberId] ?? $0.memberId): \($0.alarm)").foregroundStyle(.red) }
                         if let alarmMessage { Text(alarmMessage).font(.footnote).foregroundStyle(.secondary) }
                         if model.allows(.etcdDefrag) && !etcd.alarms.isEmpty {

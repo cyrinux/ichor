@@ -312,7 +312,10 @@ func renderEtcd(b *strings.Builder, d diagnosisData) {
 		}
 	}
 
-	if len(e.Alarms) == 0 {
+	switch {
+	case e.AlarmsError != "":
+		fmt.Fprintf(b, "  alarms: check FAILED, %s\n", e.AlarmsError)
+	case len(e.Alarms) == 0:
 		b.WriteString("  alarms: none\n")
 	}
 
