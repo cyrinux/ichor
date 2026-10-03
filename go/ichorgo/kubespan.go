@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"context"
 	"sort"
-	"sync"
 
 	"github.com/cosi-project/runtime/pkg/safe"
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -54,28 +53,22 @@ func KubeSpanStatus(configYAML, contextName string) (out string, err error) {
 		nodes := targetNodes(s.context)
 		out := kubespanOverview{Nodes: make([]kubespanNode, len(nodes))}
 
-		var wg sync.WaitGroup
+		forEachNode(nodes, func(i int, node string) {
+			nodeCtx, cancel := context.WithTimeout(client.WithNode(ctx, node), nodeTimeout)
+			defer cancel()
 
-		for i, node := range nodes {
-			wg.Go(func() {
-				nodeCtx, cancel := context.WithTimeout(client.WithNode(ctx, node), nodeTimeout)
-				defer cancel()
+			list, err := safe.StateListAll[*kubespan.PeerStatus](nodeCtx, s.client.COSI)
 
-				list, err := safe.StateListAll[*kubespan.PeerStatus](nodeCtx, s.client.COSI)
+			var peers []kubespanPeerInput
 
-				var peers []kubespanPeerInput
-
-				if err == nil {
-					for res := range list.All() {
-						peers = append(peers, kubespanPeerInput{id: res.Metadata().ID(), spec: *res.TypedSpec()})
-					}
+			if err == nil {
+				for res := range list.All() {
+					peers = append(peers, kubespanPeerInput{id: res.Metadata().ID(), spec: *res.TypedSpec()})
 				}
+			}
 
-				out.Nodes[i] = buildKubeSpanNode(node, peers, err)
-			})
-		}
-
-		wg.Wait()
+			out.Nodes[i] = buildKubeSpanNode(node, peers, err)
+		})
 
 		for _, n := range out.Nodes {
 			for _, p := range n.Peers {

@@ -99,16 +99,10 @@ func collectDiagnosis(ctx context.Context, s *session) diagnosisData {
 	overviews := make([]nodeOverview, len(nodes))
 	domains := make([]string, len(nodes))
 
-	var wg sync.WaitGroup
-
-	for i, node := range nodes {
-		wg.Go(func() {
-			p := probeNode(ctx, s.client, node)
-			overviews[i], domains[i] = buildNodeOverview(node, p), p.domain
-		})
-	}
-
-	wg.Wait()
+	forEachNode(nodes, func(i int, node string) {
+		p := probeNode(ctx, s.client, node)
+		overviews[i], domains[i] = buildNodeOverview(node, p), p.domain
+	})
 
 	data.hosts, data.domains = clusterHostEntries(ctx, s.client, overviews), domains
 
@@ -124,9 +118,11 @@ func collectDiagnosis(ctx context.Context, s *session) diagnosisData {
 		}
 	}
 
-	for i, o := range overviews {
-		wg.Go(func() { data.Nodes[i] = diagnoseNode(ctx, s.client, o) })
-	}
+	var wg sync.WaitGroup
+
+	wg.Go(func() {
+		forEachNode(overviews, func(i int, o nodeOverview) { data.Nodes[i] = diagnoseNode(ctx, s.client, o) })
+	})
 
 	wg.Go(func() {
 		if len(controlPlanes) == 0 {

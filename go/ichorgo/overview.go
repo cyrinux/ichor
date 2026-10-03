@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"context"
 	"strings"
-	"sync"
 
 	"github.com/cosi-project/runtime/pkg/safe"
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
@@ -80,18 +79,12 @@ func ClusterOverview(configYAML, contextName string) (out string, err error) {
 		result := clusterOverview{Context: name, Nodes: make([]nodeOverview, len(nodes))}
 		domains := make([]string, len(nodes))
 
-		var wg sync.WaitGroup
+		forEachNode(nodes, func(i int, node string) {
+			p := probeNode(ctx, s.client, node)
+			result.Nodes[i], domains[i] = buildNodeOverview(node, p), p.domain
 
-		for i, node := range nodes {
-			wg.Go(func() {
-				p := probeNode(ctx, s.client, node)
-				result.Nodes[i], domains[i] = buildNodeOverview(node, p), p.domain
-
-				s.rememberVersion(node, result.Nodes[i].Version)
-			})
-		}
-
-		wg.Wait()
+			s.rememberVersion(node, result.Nodes[i].Version)
+		})
 
 		rememberNodeNames(contextFingerprints(configYAML), contextFingerprint(name, cfg), result.Nodes)
 		learnClusterHosts(ctx, s.client, result.Nodes, domains)

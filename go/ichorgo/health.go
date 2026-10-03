@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"sync"
 	"time"
 
 	"github.com/cosi-project/runtime/pkg/safe"
@@ -129,16 +128,10 @@ func classifyNodes(ctx context.Context, c *client.Client, nodes []string) *clust
 
 	isCP := make([]bool, len(nodes))
 
-	var wg sync.WaitGroup
-
-	for i, node := range nodes {
-		wg.Go(func() {
-			mt, err := safe.StateGetByID[*config.MachineType](client.WithNode(ctx, node), c.COSI, config.MachineTypeID)
-			isCP[i] = err == nil && mt.MachineType().IsControlPlane()
-		})
-	}
-
-	wg.Wait()
+	forEachNode(nodes, func(i int, node string) {
+		mt, err := safe.StateGetByID[*config.MachineType](client.WithNode(ctx, node), c.COSI, config.MachineTypeID)
+		isCP[i] = err == nil && mt.MachineType().IsControlPlane()
+	})
 
 	info := &clusterapi.ClusterInfo{}
 
