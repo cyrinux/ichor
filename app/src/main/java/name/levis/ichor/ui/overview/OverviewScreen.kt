@@ -390,13 +390,8 @@ private fun NodeList(
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
         if (certificate?.isDemo != true) item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
-        item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes), live) }
+        item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes), live, onInsights) }
         item { AppsCard(apps, onApps) }
-        item {
-            Card(onClick = onInsights, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.insights_title), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)
-            }
-        }
         items(nodes, key = { it.node }) { node ->
             SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {
                 NodeCard(node, onClick = { onNode(node) }, onLongClick = { sheetFor = node })
