@@ -52,6 +52,7 @@ import name.levis.ichor.ui.components.text
 import name.levis.ichor.model.allows
 import name.levis.ichor.data.UiPreferences
 import name.levis.ichor.security.AppLock
+import name.levis.ichor.security.lockRequired
 import name.levis.ichor.ui.backup.BackupSection
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.SectionTitle
@@ -114,7 +115,7 @@ fun SettingsScreen(
                 }
             }
             AppearanceSection(uiPreferences)
-            SecuritySection(appLock, uiPreferences)
+            SecuritySection(appLock, uiPreferences, required = lockRequired(config?.summary?.contexts.orEmpty()))
             PrivacySection(LocalContext.current.applicationContext as TalosApp)
             MonitoringSection(LocalContext.current.applicationContext as TalosApp)
             AiSection(LocalContext.current.applicationContext as TalosApp)

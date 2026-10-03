@@ -83,6 +83,9 @@ struct RootView: View {
             ProgressView().task { await model.load() }
         } else if model.yaml == nil {
             NavigationStack { ImportView() }
+        } else if !model.lock.enabled && AppLockState.required(for: model.summary?.contexts ?? []) {
+            // Right after the first import, or on updating from an optional lock.
+            LockOnboardingView()
         } else {
             MainNavigation()
         }

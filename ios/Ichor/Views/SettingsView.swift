@@ -47,11 +47,15 @@ struct SettingsView: View {
             }
             Section {
                 Toggle("App lock", isOn: Binding(get: { model.lock.enabled }, set: { setLock($0) }))
+                    .disabled(lockRequired && model.lock.enabled)
                 if let lockError { Text(lockError).font(.footnote).foregroundStyle(.red) }
             } header: {
                 Text("Security")
             } footer: {
-                Text("Face ID / Touch ID, or the device passcode, to open the app and before reboot or shutdown. Also hides the app in the app switcher.")
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Face ID / Touch ID, or the device passcode, to open the app and before reboot or shutdown. Also hides the app in the app switcher.")
+                    if lockRequired && model.lock.enabled { Text("Always on while a cluster is imported.") }
+                }
             }
             PrivacySection()
             AppIconsSection()
@@ -120,6 +124,9 @@ struct SettingsView: View {
         let name = Locale(identifier: code).localizedString(forLanguageCode: code) ?? code
         return name.prefix(1).uppercased() + name.dropFirst()
     }
+
+    /// The lock cannot be turned off while a real cluster is stored.
+    private var lockRequired: Bool { AppLockState.required(for: model.summary?.contexts ?? []) }
 
     /// Both enabling and disabling require authenticating first.
     private func setLock(_ enabled: Bool) {

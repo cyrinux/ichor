@@ -132,9 +132,12 @@ private fun LanguageSetting(prefs: UiPreferences) {
     }
 }
 
-/** App-lock switch. Both enabling and disabling require authenticating first. */
+/**
+ * App-lock switch. Both enabling and disabling require authenticating first; it cannot be
+ * turned off while [required] (a real cluster is stored, see lockRequired).
+ */
 @Composable
-fun SecuritySection(appLock: AppLock, prefs: UiPreferences) {
+fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val enabled by appLock.enabled.collectAsStateWithLifecycle()
@@ -173,8 +176,20 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (required && enabled) {
+                    Text(
+                        stringResource(R.string.settings_app_lock_required),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
-            Switch(checked = enabled, onCheckedChange = ::toggle, modifier = Modifier.padding(start = 12.dp))
+            Switch(
+                checked = enabled,
+                onCheckedChange = ::toggle,
+                enabled = !(required && enabled),
+                modifier = Modifier.padding(start = 12.dp),
+            )
         }
         if (enabled) {
             Row(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {

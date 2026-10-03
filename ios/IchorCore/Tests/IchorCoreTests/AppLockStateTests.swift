@@ -33,4 +33,13 @@ final class AppLockStateTests: XCTestCase {
         lock.onForeground(now: 9_999)
         XCTAssertFalse(lock.locked)
     }
+
+    func testRequiredOnceARealClusterIsStored() {
+        let real = ContextSummary(name: "prod")
+        let demo = ContextSummary(name: "demo", demo: true)
+        XCTAssertFalse(AppLockState.required(for: []), "nothing imported yet")
+        XCTAssertFalse(AppLockState.required(for: [demo]), "the demo holds no credentials")
+        XCTAssertTrue(AppLockState.required(for: [real]))
+        XCTAssertTrue(AppLockState.required(for: [demo, real]))
+    }
 }

@@ -917,6 +917,47 @@
         }
       }
     },
+    "A check before risky actions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Prüfung vor riskanten Aktionen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A check before risky actions"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una verificación antes de las acciones arriesgadas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une vérification avant les actions risquées"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una verifica prima delle azioni rischiose"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірка перед ризикованими діями"
+          }
+        }
+      }
+    },
     "About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -999,6 +1040,47 @@
         }
       }
     },
+    "Always on while a cluster is imported." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immer aktiv, solange ein Cluster importiert ist."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Always on while a cluster is imported."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siempre activo mientras haya un clúster importado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toujours actif tant qu'un cluster est importé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sempre attivo finché è importato un cluster."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завжди ввімкнено, поки імпортовано кластер."
+          }
+        }
+      }
+    },
     "App icons: Dashboard Icons (Apache 2.0) and selfh.st/icons (CC BY 4.0). App names and logos are trademarks of their owners." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1077,6 +1159,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Застосунки"
+          }
+        }
+      }
+    },
+    "Asked when Ichor opens and after 30 seconds in the background." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird beim Öffnen von Ichor und nach 30 Sekunden im Hintergrund abgefragt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asked when Ichor opens and after 30 seconds in the background."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se pide al abrir Ichor y tras 30 segundos en segundo plano."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demandé à l'ouverture d'Ichor et après 30 secondes en arrière-plan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richiesto all'apertura di Ichor e dopo 30 secondi in background."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запитується під час відкриття Ichor і після 30 секунд у фоні."
           }
         }
       }
@@ -1203,6 +1326,47 @@
         }
       }
     },
+    "Delete the imported config instead" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stattdessen die importierte Config löschen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete the imported config instead"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar la configuración importada en su lugar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer plutôt la config importée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina invece la config importata"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Натомість видалити імпортовану конфігурацію"
+          }
+        }
+      }
+    },
     "DevOps" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1281,6 +1445,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Завантажувати відсутні значки застосунків"
+          }
+        }
+      }
+    },
+    "Face ID, Touch ID or passcode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID, Touch ID oder Code"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID, Touch ID or passcode"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID, Touch ID o código"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID, Touch ID ou code"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID, Touch ID o codice"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID, Touch ID або код-пароль"
           }
         }
       }
@@ -1404,6 +1609,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kubernetes & Talos · %lld"
+          }
+        }
+      }
+    },
+    "Lock your clusters away" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schließ deine Cluster weg"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lock your clusters away"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pon tus clústeres bajo llave"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettez vos clusters sous clé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metti i tuoi cluster sotto chiave"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заблокуйте доступ до кластерів"
           }
         }
       }
@@ -1695,6 +1941,47 @@
         }
       }
     },
+    "No screen lock on this device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Displaysperre auf diesem Gerät"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No screen lock on this device"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este dispositivo no tiene bloqueo de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun verrouillage d'écran sur cet appareil"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun blocco schermo su questo dispositivo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На цьому пристрої немає блокування екрана"
+          }
+        }
+      }
+    },
     "Not recognised · %lld" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1818,6 +2105,47 @@
         }
       }
     },
+    "Open Settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen öffnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Ajustes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir Réglages"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri Impostazioni"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити Параметри"
+          }
+        }
+      }
+    },
     "Other" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1855,6 +2183,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Інше"
+          }
+        }
+      }
+    },
+    "Private by default" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardmäßig privat"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private by default"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privado por defecto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privé par défaut"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privato per impostazione predefinita"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приватно за замовчуванням"
           }
         }
       }
@@ -1976,6 +2345,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ripristina un backup"
+          }
+        }
+      }
+    },
+    "Reboot, shutdown, upgrades and config exports ask for it first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neustart, Herunterfahren, Upgrades und Config-Exporte fragen zuerst danach."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reboot, shutdown, upgrades and config exports ask for it first."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinicio, apagado, actualizaciones y exportaciones de configuración la piden antes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redémarrage, arrêt, mises à niveau et exports de config la demandent d'abord."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riavvio, spegnimento, aggiornamenti ed esportazioni della config la richiedono prima."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезавантаження, вимкнення, оновлення та експорт конфігурації спершу її запитують."
           }
         }
       }
@@ -2457,6 +2867,88 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cifra e salva"
+          }
+        }
+      }
+    },
+    "Set a passcode (and optionally Face ID or Touch ID) in the Settings app, then come back." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lege in den Einstellungen einen Code fest (optional Face ID oder Touch ID) und komm dann zurück."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set a passcode (and optionally Face ID or Touch ID) in the Settings app, then come back."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configura un código (y opcionalmente Face ID o Touch ID) en Ajustes y vuelve."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Définissez un code (et éventuellement Face ID ou Touch ID) dans Réglages, puis revenez."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imposta un codice (e facoltativamente Face ID o Touch ID) in Impostazioni, poi torna qui."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установіть код-пароль (і за бажання Face ID або Touch ID) у Параметрах, потім поверніться."
+          }
+        }
+      }
+    },
+    "The app switcher shows a blank cover, and alerts hide cluster details on the lock screen." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der App-Umschalter zeigt eine leere Abdeckung, und Warnungen verbergen Cluster-Details auf dem Sperrbildschirm."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app switcher shows a blank cover, and alerts hide cluster details on the lock screen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El selector de apps muestra una pantalla en blanco, y las alertas ocultan los detalles del clúster en la pantalla bloqueada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le sélecteur d'apps affiche un écran vide, et les alertes masquent les détails du cluster sur l'écran verrouillé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il selettore di app mostra una copertina vuota, e gli avvisi nascondono i dettagli del cluster nella schermata di blocco."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемикач застосунків показує порожній екран, а сповіщення приховують деталі кластера на екрані блокування."
           }
         }
       }
@@ -5968,6 +6460,88 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Адреси"
+          }
+        }
+      }
+    },
+    "Your clusters are protected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine Cluster sind geschützt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your clusters are protected"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus clústeres están protegidos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos clusters sont protégés"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I tuoi cluster sono protetti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваші кластери захищено"
+          }
+        }
+      }
+    },
+    "Your talosconfig holds client keys with direct access to your nodes. Ichor keeps them behind the app lock." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine talosconfig enthält Client-Schlüssel mit direktem Zugriff auf deine Nodes. Ichor schützt sie mit der App-Sperre."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your talosconfig holds client keys with direct access to your nodes. Ichor keeps them behind the app lock."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu talosconfig contiene claves de cliente con acceso directo a tus nodos. Ichor las protege con el bloqueo de la app."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre talosconfig contient des clés client qui donnent un accès direct à vos nœuds. Ichor les garde derrière le verrouillage de l'app."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo talosconfig contiene chiavi client con accesso diretto ai tuoi nodi. Ichor le protegge con il blocco dell'app."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш talosconfig містить клієнтські ключі з прямим доступом до вузлів. Ichor тримає їх під блокуванням застосунку."
           }
         }
       }

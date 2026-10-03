@@ -348,6 +348,7 @@
     <string name="settings_auth_disable_lock">Вимкнути блокування застосунку</string>
     <string name="settings_app_lock">Блокування застосунку</string>
     <string name="settings_app_lock_desc">Відбиток пальця або, як запасний варіант, PIN-код чи ключ пристрою для відкриття застосунку та перед перезавантаженням, вимкненням і експортом kubeconfig. Блокує знімки екрана, якщо їх не дозволено нижче.</string>
+    <string name="settings_app_lock_required">Завжди ввімкнено, поки імпортовано кластер.</string>
     <string name="settings_allow_screenshots">Дозволити знімки екрана</string>
     <string name="settings_allow_screenshots_desc">Також показує вміст застосунку в нещодавніх застосунках.</string>
     <string name="settings_section_privacy">Приватність</string>
@@ -505,6 +506,20 @@
     <string name="lock_unlock">Розблокувати</string>
     <string name="lock_no_auth">На цьому пристрої більше немає відбитка пальця чи блокування екрана, тому блокування застосунку не може вас перевірити.</string>
     <string name="lock_delete_config">Видалити збережений talosconfig</string>
+    <string name="lock_onboarding_title">Заблокуйте доступ до кластерів</string>
+    <string name="lock_onboarding_done">Ваші кластери захищено</string>
+    <string name="lock_onboarding_intro">Ваш talosconfig містить клієнтські ключі з прямим доступом до вузлів. Ichor тримає їх під блокуванням застосунку.</string>
+    <string name="lock_onboarding_unlock">Відбиток пальця або PIN пристрою</string>
+    <string name="lock_onboarding_unlock_desc">Запитується під час відкриття Ichor і після 30 секунд у фоні.</string>
+    <string name="lock_onboarding_actions">Перевірка перед ризикованими діями</string>
+    <string name="lock_onboarding_actions_desc">Перезавантаження, вимкнення, оновлення та експорт конфігурації спершу її запитують.</string>
+    <string name="lock_onboarding_private">Приватно за замовчуванням</string>
+    <string name="lock_onboarding_private_desc">Знімки екрана й попередній перегляд недавніх застосунків порожні, а сповіщення приховують деталі кластера на екрані блокування.</string>
+    <string name="lock_onboarding_no_lock">На цьому пристрої немає блокування екрана</string>
+    <string name="lock_onboarding_open_settings">Відкрити налаштування безпеки</string>
+    <string name="lock_onboarding_delete">Натомість видалити імпортовану конфігурацію</string>
+    <string name="lock_onboarding_delete_title">Видалити talosconfig?</string>
+    <string name="lock_onboarding_delete_body">Конфігурацію кожного кластера разом із клієнтськими ключами буде видалено з цього пристрою.</string>
 
     <!-- Home-screen widget -->
     <string name="widget_description">Стан кластера за останньою фоновою перевіркою</string>

@@ -26,7 +26,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import name.levis.ichor.i18n.AppLocale
+import name.levis.ichor.security.LockOnboarding
 import name.levis.ichor.security.LockScreen
+import name.levis.ichor.security.lockRequired
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.seedOf
 import name.levis.ichor.ui.DeepLink
@@ -166,23 +168,49 @@ private fun LockGate(app: TalosApp, targets: LaunchTargets, onWiped: () -> Unit)
     }
 }
 
+/**
+ * The stored config once loaded. A real cluster stored without the app lock gets the lock
+ * onboarding first: right after the first import, or on updating from an optional lock.
+ */
 @Composable
 private fun Root(app: TalosApp, targets: LaunchTargets) {
     val link by targets.deepLink.collectAsStateWithLifecycle()
     val cluster by targets.cluster.collectAsStateWithLifecycle()
-    // null = still loading the stored config; then whether one exists.
-    var hasConfig by remember { mutableStateOf<Boolean?>(null) }
-    LaunchedEffect(Unit) { hasConfig = app.configRepository.load() != null }
+    val config by app.configRepository.config.collectAsStateWithLifecycle()
+    val lockEnabled by app.appLock.enabled.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    var loaded by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        app.configRepository.load()
+        loaded = true
+    }
 
-    when (val ready = hasConfig) {
-        null -> LoadingBox()
-        else -> Navigation(
-            app,
-            startWithImport = !ready,
-            deepLink = link,
-            onDeepLinkHandled = { targets.deepLink.value = null },
-            openCluster = cluster,
-            onClusterOpened = { targets.cluster.value = null },
+    when {
+        !loaded -> LoadingBox()
+        !lockEnabled && lockRequired(config?.summary?.contexts.orEmpty()) -> LockOnboarding(
+            // The import screen may have left before starting the monitoring sync.
+            onEnabled = {
+                app.appLock.setEnabled(true)
+                app.launchSync(runNow = true)
+            },
+            onDeleteConfig = {
+                scope.launch {
+                    app.configRepository.clear()
+                    app.launchSync(runNow = true)
+                }
+            },
         )
+        else -> {
+            // Read when the navigation (re)starts, e.g. on the overview after the onboarding.
+            val startWithImport = remember { app.configRepository.config.value == null }
+            Navigation(
+                app,
+                startWithImport = startWithImport,
+                deepLink = link,
+                onDeepLinkHandled = { targets.deepLink.value = null },
+                openCluster = cluster,
+                onClusterOpened = { targets.cluster.value = null },
+            )
+        }
     }
 }

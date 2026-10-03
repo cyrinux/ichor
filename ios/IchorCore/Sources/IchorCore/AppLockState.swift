@@ -22,6 +22,12 @@ public struct AppLockState: Equatable, Sendable {
 
     public mutating func unlock() { locked = false }
 
+    /// The lock is mandatory once the client keys of a real cluster are stored (the demo has
+    /// none): the app asks to set it up before anything else, and Settings cannot turn it off.
+    public static func required(for contexts: [ContextSummary]) -> Bool {
+        contexts.contains { !$0.demo }
+    }
+
     public mutating func onBackground(now: TimeInterval) { backgroundedAt = now }
 
     public mutating func onForeground(now: TimeInterval) {
