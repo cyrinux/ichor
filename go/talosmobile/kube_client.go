@@ -224,7 +224,7 @@ func (k *kubeClient) endpoint(path string) (*url.URL, error) {
 // getRaw reads path whatever the HTTP status: a service proxy answers with the backend's
 // own status and body, which the caller interprets. ctype is the answer's Content-Type.
 func (k *kubeClient) getRaw(ctx context.Context, path string) (status int, ctype string, body []byte, err error) {
-	resp, data, err := k.send(ctx, http.MethodGet, path, "", nil)
+	resp, data, err := k.send(ctx, http.MethodGet, path, "application/json", "", nil)
 	if err != nil {
 		return 0, "", nil, err
 	}
@@ -232,8 +232,31 @@ func (k *kubeClient) getRaw(ctx context.Context, path string) (status int, ctype
 	return resp.StatusCode, resp.Header.Get("Content-Type"), data, nil
 }
 
+func (k *kubeClient) post(ctx context.Context, path string, body any, out any) error {
+	data, err := json.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("encode request: %w", err)
+	}
+
+	return k.do(ctx, http.MethodPost, path, "application/json", data, out)
+}
+
+// getText reads a plain-text answer, such as a pod log.
+func (k *kubeClient) getText(ctx context.Context, path string) (string, error) {
+	resp, data, err := k.send(ctx, http.MethodGet, path, "text/plain, */*", "", nil)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return "", kubeStatusError(resp.StatusCode, data)
+	}
+
+	return string(data), nil
+}
+
 func (k *kubeClient) do(ctx context.Context, method, path, contentType string, body []byte, out any) error {
-	resp, data, err := k.send(ctx, method, path, contentType, body)
+	resp, data, err := k.send(ctx, method, path, "application/json", contentType, body)
 	if err != nil {
 		return err
 	}
@@ -254,7 +277,7 @@ func (k *kubeClient) do(ctx context.Context, method, path, contentType string, b
 }
 
 // send makes one request and reads its answer, capped at kubeMaxBody.
-func (k *kubeClient) send(ctx context.Context, method, path, contentType string, body []byte) (*http.Response, []byte, error) {
+func (k *kubeClient) send(ctx context.Context, method, path, accept, contentType string, body []byte) (*http.Response, []byte, error) {
 	u, err := k.endpoint(path)
 	if err != nil {
 		return nil, nil, err
@@ -265,7 +288,7 @@ func (k *kubeClient) send(ctx context.Context, method, path, contentType string,
 		return nil, nil, err
 	}
 
-	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Accept", accept)
 	req.Header.Set("User-Agent", "ichor")
 
 	if contentType != "" {
@@ -463,15 +486,21 @@ func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
 // (the phone may have changed networks). A client just opened and probed is kept on a
 // timeout: the address answered a moment ago, the call itself was slow.
 func withKube[T any](target kubeTarget, fn func(context.Context, *kubeClient) (T, error)) (T, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
+	defer cancel()
+
+	return withKubeContext(ctx, target, fn)
+}
+
+// withKubeContext is withKube bounded by ctx instead of callTimeout, for the calls that run
+// longer (a network test). Cancelling ctx keeps the client: the address did not fail.
+func withKubeContext[T any](ctx context.Context, target kubeTarget, fn func(context.Context, *kubeClient) (T, error)) (T, error) {
 	var zero T
 
 	k, fresh, err := kubeClients.get(target)
 	if err != nil {
 		return zero, err
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
-	defer cancel()
 
 	out, err := fn(ctx, k)
 	if err != nil {
@@ -482,6 +511,7 @@ func withKube[T any](target kubeTarget, fn func(context.Context, *kubeClient) (T
 			if apiErr.Code == http.StatusUnauthorized {
 				kubeClients.forget(target, k)
 			}
+		case errors.Is(err, context.Canceled):
 		case fresh && errors.Is(err, context.DeadlineExceeded):
 		default:
 			kubeClients.forget(target, k)

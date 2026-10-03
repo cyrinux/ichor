@@ -1353,4 +1353,37 @@
         <item quantity="one">%1$d instancia esperando a ser programada</item>
         <item quantity="other">%1$d instancias esperando a ser programadas</item>
     </plurals>
+    <string name="netperf_tab">Red</string>
+    <string name="netperf_intro">Mide el rendimiento y la latencia TCP de un nodo a otro con netperf, como cilium connectivity perf. La prueba se ejecuta en un namespace temporal que se elimina después.</string>
+    <string name="netperf_client">Nodo cliente</string>
+    <string name="netperf_server">Nodo servidor</string>
+    <string name="netperf_same_node">Mismo nodo: esto mide la pila de red del propio nodo, no un enlace.</string>
+    <string name="netperf_host">Probar también la red del host</string>
+    <string name="netperf_host_desc">De nodo a nodo, fuera del CNI. El namespace de la prueba necesita entonces el nivel de seguridad de pods privileged.</string>
+    <string name="netperf_duration">Duración de cada medición</string>
+    <string name="netperf_seconds">%1$d s</string>
+    <string name="netperf_start">Iniciar prueba</string>
+    <string name="netperf_no_nodes">Ningún nodo listo para probar.</string>
+    <string name="netperf_confirm_title">¿Iniciar una prueba de red?</string>
+    <string name="netperf_confirm_text">Se ejecutan pods de netperf en %1$s y %2$s en un namespace temporal. El enlace entre ellos se satura durante unos %3$d segundos y luego se elimina el namespace.</string>
+    <string name="netperf_confirm_host">Para la red del host, el namespace se crea con el nivel de seguridad de pods privileged.</string>
+    <string name="netperf_confirm">Iniciar</string>
+    <string name="netperf_summary">%1$s → %2$s · %3$d s</string>
+    <string name="netperf_phase_preparing">Preparando el namespace de prueba…</string>
+    <string name="netperf_phase_starting">Iniciando netserver en %1$s…</string>
+    <string name="netperf_phase_waiting">Esperando a %1$s…</string>
+    <string name="netperf_phase_testing">%1$s · %2$s (%3$d/%4$d)…</string>
+    <string name="netperf_phase_cleaning">Eliminando el namespace de prueba…</string>
+    <string name="netperf_keep_open">Mantén esta pantalla abierta: salir detiene la prueba.</string>
+    <string name="netperf_stop">Detener</string>
+    <string name="netperf_stopping">Deteniendo: eliminando el namespace de prueba…</string>
+    <string name="netperf_stopped">Prueba detenida.</string>
+    <string name="netperf_failed">La prueba falló: %1$s</string>
+    <string name="netperf_again">Nueva prueba</string>
+    <string name="netperf_path_pod">Pod a pod</string>
+    <string name="netperf_path_host">Host a host</string>
+    <string name="netperf_test_throughput">Rendimiento</string>
+    <string name="netperf_test_latency">Latencia (p50)</string>
+    <string name="netperf_latency_values">p50 %1$s · p90 %2$s · p99 %3$s</string>
+    <string name="netperf_round_trips">%1$s idas y vueltas/s</string>
 </resources>

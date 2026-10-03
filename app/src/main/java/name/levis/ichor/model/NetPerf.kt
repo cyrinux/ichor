@@ -1,0 +1,134 @@
+package name.levis.ichor.model
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import java.util.Locale
+
+// Mirrors go/talosmobile/kube_netperf.go.
+
+const val NETPERF_PATH_POD = "pod"
+const val NETPERF_PATH_HOST = "host"
+const val NETPERF_THROUGHPUT = "throughput"
+const val NETPERF_LATENCY = "latency"
+
+const val NETPERF_PHASE_PREPARING = "preparing"
+const val NETPERF_PHASE_STARTING = "starting"
+const val NETPERF_PHASE_TESTING = "testing"
+const val NETPERF_PHASE_CLEANING = "cleaning"
+
+/** Seconds each measurement can last, offered in the setup. */
+val NETPERF_DURATIONS = listOf(5, 10, 20)
+const val NETPERF_DEFAULT_SECONDS = 10
+
+@Serializable
+data class NetPerfNodeList(val nodes: List<NetPerfNode> = emptyList())
+
+@Serializable
+data class NetPerfNode(
+    val name: String,
+    val address: String = "",
+    val controlPlane: Boolean = false,
+    val ready: Boolean = false,
+)
+
+/** Round trip in microseconds. */
+@Serializable
+data class NetPerfLatency(
+    val min: Double = 0.0,
+    val mean: Double = 0.0,
+    val max: Double = 0.0,
+    val p50: Double = 0.0,
+    val p90: Double = 0.0,
+    val p99: Double = 0.0,
+)
+
+@Serializable
+data class NetPerfResult(
+    /** [NETPERF_PATH_POD] or [NETPERF_PATH_HOST]. */
+    val path: String,
+    /** [NETPERF_THROUGHPUT] or [NETPERF_LATENCY]. */
+    val test: String,
+    val throughputMbps: Double = 0.0,
+    /** Round trips per second. */
+    val transactionRate: Double = 0.0,
+    @SerialName("latencyUs") val latency: NetPerfLatency? = null,
+    val error: String = "",
+)
+
+@Serializable
+data class NetPerfReport(
+    val server: String = "",
+    val client: String = "",
+    val hostNetwork: Boolean = false,
+    val seconds: Int = 0,
+    val image: String = "",
+    /** Unix millis. */
+    val started: Long = 0,
+    val finished: Long = 0,
+    val results: List<NetPerfResult> = emptyList(),
+)
+
+@Serializable
+data class NetPerfProgress(
+    val phase: String,
+    val path: String = "",
+    val test: String = "",
+    /** 1-based measurement number while [phase] is [NETPERF_PHASE_TESTING]. */
+    val step: Int = 0,
+    val steps: Int = 0,
+    /** While starting: "node: reason" of a pod waiting, e.g. its image being pulled. */
+    val message: String = "",
+    val at: Long = 0,
+    val results: List<NetPerfResult> = emptyList(),
+)
+
+/** What the user chose to test. */
+data class NetPerfSetup(
+    val server: String = "",
+    val client: String = "",
+    val hostNetwork: Boolean = false,
+    val seconds: Int = NETPERF_DEFAULT_SECONDS,
+) {
+    val ready: Boolean get() = server.isNotEmpty() && client.isNotEmpty()
+
+    /** Measurements the test makes: throughput and latency per network path. */
+    val steps: Int get() = if (hostNetwork) 4 else 2
+}
+
+/**
+ * The pair a test starts with: two ready workers when there are, else two ready nodes, else
+ * the one ready node against itself. Null without a ready node.
+ */
+fun defaultNetPerfPair(nodes: List<NetPerfNode>): Pair<String, String>? {
+    val ready = nodes.filter { it.ready }
+    val workers = ready.filterNot { it.controlPlane }
+    val pick = if (workers.size >= 2) workers else ready
+    return when {
+        pick.size >= 2 -> pick[0].name to pick[1].name
+        pick.size == 1 -> pick[0].name to pick[0].name
+        else -> null
+    }
+}
+
+/** [setup] with nodes that exist and are ready, the default pair filling what is not. */
+fun NetPerfSetup.withNodes(nodes: List<NetPerfNode>): NetPerfSetup {
+    val ready = nodes.filter { it.ready }.map { it.name }.toSet()
+    val pair = defaultNetPerfPair(nodes) ?: return copy(server = "", client = "")
+    return copy(
+        server = server.takeIf { it in ready } ?: pair.first,
+        client = client.takeIf { it in ready } ?: pair.second,
+    )
+}
+
+/** "9.41 Gbit/s", "870 Mbit/s". */
+fun formatMbps(mbps: Double): String = when {
+    mbps >= 1000 -> String.format(Locale.ROOT, "%.2f Gbit/s", mbps / 1000)
+    mbps >= 10 -> String.format(Locale.ROOT, "%.0f Mbit/s", mbps)
+    else -> String.format(Locale.ROOT, "%.1f Mbit/s", mbps)
+}
+
+/** "58 µs", "1.87 ms". */
+fun formatMicros(us: Double): String = when {
+    us >= 1000 -> String.format(Locale.ROOT, "%.2f ms", us / 1000)
+    else -> String.format(Locale.ROOT, "%.0f µs", us)
+}

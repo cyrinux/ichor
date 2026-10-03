@@ -2,12 +2,12 @@ import SwiftUI
 import IchorCore
 
 /// The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
-/// issues (os:admin): workloads with rollout restart, and pods. The namespace filter and the
-/// search carry over between the two. The toolbar sets the API address to use instead of the
-/// kubeconfig's, for a cluster the phone reaches another way (not in screenshot mode: the
-/// alert would show the real address).
+/// issues (os:admin): workloads with rollout restart, pods, and a network test between two
+/// nodes. The namespace filter and the search carry over between the lists. The toolbar sets
+/// the API address to use instead of the kubeconfig's, for a cluster the phone reaches another
+/// way (not in screenshot mode: the alert would show the real address).
 struct KubernetesView: View {
-    enum Tab: Hashable { case workloads, pods }
+    enum Tab: Hashable { case workloads, pods, network }
 
     @Environment(AppModel.self) private var model
     @State private var tab = Tab.workloads
@@ -16,6 +16,8 @@ struct KubernetesView: View {
     @State private var editingServer = false
     @State private var serverInput = ""
     @State private var serverError: String?
+    /// Kept across tabs: only leaving the screen stops a running network test.
+    @State private var netPerf = NetPerfSession()
 
     /// The cluster whose API address can be set: not the demo, not in screenshot mode.
     private var editable: ContextSummary? {
@@ -27,6 +29,7 @@ struct KubernetesView: View {
             switch tab {
             case .workloads: WorkloadsList(namespace: $namespace, query: query)
             case .pods: PodsList(namespace: $namespace, query: query)
+            case .network: NetPerfView(session: netPerf)
             }
         }
         // A new address: the lists load again through it.
@@ -60,6 +63,7 @@ struct KubernetesView: View {
             Picker(selection: $tab) {
                 Text("Workloads").tag(Tab.workloads)
                 Text("Pods").tag(Tab.pods)
+                Text("Network").tag(Tab.network)
             } label: {
                 EmptyView()
             }
@@ -72,6 +76,7 @@ struct KubernetesView: View {
         .navigationTitle(Text(verbatim: "Kubernetes"))
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: model.privacyMask) { _, masked in if masked { editingServer = false } }
+        .onDisappear { if netPerf.isRunning { netPerf.leave() } }
     }
 
     private func saveServer() async {

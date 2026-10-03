@@ -36,7 +36,8 @@ import name.levis.ichor.ui.factory
 
 /**
  * The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
- * issues (os:admin): workloads with rollout restart, and pods. The namespace filter and the
+ * issues (os:admin): workloads with rollout restart, pods, and a network test between two
+ * nodes. The namespace filter and the
  * search carry over between the tabs. The top bar sets the API address to use instead of the
  * kubeconfig's, for a cluster the phone reaches another way (not in screenshot mode: the
  * dialog would show the real address).
@@ -51,6 +52,7 @@ fun KubernetesScreen(onBack: () -> Unit) {
     val app = LocalContext.current.applicationContext as TalosApp
     val workloads: WorkloadsViewModel = viewModel(factory = factory { WorkloadsViewModel(app.talosRepository) })
     val pods: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.talosRepository) })
+    val netPerf: NetPerfViewModel = viewModel(factory = factory { NetPerfViewModel(app.netPerfRepository) })
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val servers by app.kubeServers.servers.collectAsStateWithLifecycle()
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
@@ -67,7 +69,7 @@ fun KubernetesScreen(onBack: () -> Unit) {
                 if (server != servers[fingerprint].orEmpty()) {
                     app.setKubeServer(fingerprint, server)
                     // Both reload through the new address; a load in flight through the old one is cancelled.
-                    listOf<LoadingViewModel<*>>(workloads, pods).forEach { it.refresh(reset = true) }
+                    listOf<LoadingViewModel<*>>(workloads, pods, netPerf).forEach { it.refresh(reset = true) }
                 }
             },
             onDismiss = { editing = false },
@@ -91,10 +93,12 @@ fun KubernetesScreen(onBack: () -> Unit) {
             PrimaryTabRow(selectedTabIndex = tab) {
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.workloads_title)) })
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.pods_title)) })
+                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.netperf_tab)) })
             }
             when (tab) {
                 0 -> WorkloadsTab(namespace, query, onNamespace = { namespace = it }, onQuery = { query = it }, vm = workloads)
-                else -> PodsTab(namespace, query, onNamespace = { namespace = it }, onQuery = { query = it }, vm = pods)
+                1 -> PodsTab(namespace, query, onNamespace = { namespace = it }, onQuery = { query = it }, vm = pods)
+                else -> NetPerfTab(netPerf)
             }
         }
     }

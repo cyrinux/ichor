@@ -1355,4 +1355,37 @@
         <item quantity="one">%1$d instance waiting to be scheduled</item>
         <item quantity="other">%1$d instances waiting to be scheduled</item>
     </plurals>
+    <string name="netperf_tab">Network</string>
+    <string name="netperf_intro">Measures TCP throughput and latency from one node to another with netperf, like cilium connectivity perf. The test runs in a temporary namespace, deleted afterwards.</string>
+    <string name="netperf_client">Client node</string>
+    <string name="netperf_server">Server node</string>
+    <string name="netperf_same_node">Same node: this measures the node’s own network stack, not a link.</string>
+    <string name="netperf_host">Also test the host network</string>
+    <string name="netperf_host_desc">Node to node, outside the CNI. The test namespace then needs the privileged pod security level.</string>
+    <string name="netperf_duration">Duration of each measurement</string>
+    <string name="netperf_seconds">%1$d s</string>
+    <string name="netperf_start">Start test</string>
+    <string name="netperf_no_nodes">No ready node to test.</string>
+    <string name="netperf_confirm_title">Start a network test?</string>
+    <string name="netperf_confirm_text">netperf pods run on %1$s and %2$s in a temporary namespace. The link between them is saturated for about %3$d seconds, then the namespace is deleted.</string>
+    <string name="netperf_confirm_host">For the host network, the namespace is created with the privileged pod security level.</string>
+    <string name="netperf_confirm">Start</string>
+    <string name="netperf_summary">%1$s → %2$s · %3$d s</string>
+    <string name="netperf_phase_preparing">Preparing the test namespace…</string>
+    <string name="netperf_phase_starting">Starting netserver on %1$s…</string>
+    <string name="netperf_phase_waiting">Waiting for %1$s…</string>
+    <string name="netperf_phase_testing">%1$s · %2$s (%3$d/%4$d)…</string>
+    <string name="netperf_phase_cleaning">Deleting the test namespace…</string>
+    <string name="netperf_keep_open">Keep this screen open: leaving it stops the test.</string>
+    <string name="netperf_stop">Stop</string>
+    <string name="netperf_stopping">Stopping: deleting the test namespace…</string>
+    <string name="netperf_stopped">Test stopped.</string>
+    <string name="netperf_failed">The test failed: %1$s</string>
+    <string name="netperf_again">New test</string>
+    <string name="netperf_path_pod">Pod to pod</string>
+    <string name="netperf_path_host">Host to host</string>
+    <string name="netperf_test_throughput">Throughput</string>
+    <string name="netperf_test_latency">Latency (p50)</string>
+    <string name="netperf_latency_values">p50 %1$s · p90 %2$s · p99 %3$s</string>
+    <string name="netperf_round_trips">%1$s round trips/s</string>
 </resources>

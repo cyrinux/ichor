@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import name.levis.ichor.data.BackupManager
 import name.levis.ichor.data.AiPreferences
 import name.levis.ichor.data.CaptureRepository
+import name.levis.ichor.data.NetPerfRepository
 import name.levis.ichor.data.ChangelogRepository
 import name.levis.ichor.data.ClusterColors
 import name.levis.ichor.data.DiagnosisRepository
@@ -72,6 +73,7 @@ class TalosApp : Application() {
         )
     }
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
+    val netPerfRepository by lazy { NetPerfRepository(configRepository, kubeServers) }
     val supportBundleRepository by lazy { SupportBundleRepository(configRepository, filesDir) }
     val upgradeManager by lazy { UpgradeManager(configRepository, onFinished = talosRepository::forgetFeatures) }
     val talosUpdateChecker by lazy { TalosUpdateChecker() }

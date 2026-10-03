@@ -23,8 +23,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   before it was set up can still be woken.
 - **Kubernetes:** list Deployments, StatefulSets and DaemonSets with their rollout state and
   restart one with a rolling update (`kubectl rollout restart`); list pods with their
-  `kubectl get pods` status and delete one so its controller starts a new one; or export a
-  kubeconfig to open the cluster in kubenav.
+  `kubectl get pods` status and delete one so its controller starts a new one; measure the
+  network between two nodes (TCP throughput and latency, see [Network test](#network-test)); or
+  export a kubeconfig to open the cluster in kubenav.
 - **Background:** alerts and a home-screen widget.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
@@ -76,6 +77,7 @@ reads those roles and explains up front when a feature needs more.
 | **Cluster health check** | `ClusterService/HealthCheck` | **`os:admin`** |
 | **Kubeconfig export** | `Kubeconfig` | **`os:admin`** |
 | **Kubernetes workloads and pods, rollout restart, pod delete** | `Kubeconfig`, then the Kubernetes API | **`os:admin`** |
+| **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 
 Notes:
 
@@ -88,6 +90,27 @@ Notes:
   only, for 30 minutes; it is never written to disk. The phone must reach the Kubernetes API
   (port 6443): when the kubeconfig's address (often a VIP or an internal name) does not answer,
   the app tries the Talos endpoints on the same port.
+
+### Network test
+
+**Kubernetes → Network** measures the network from a client node to a server node with netperf,
+the way `cilium connectivity perf` does, on any CNI: TCP throughput (`TCP_STREAM`), then TCP
+round trips (`TCP_RR`: p50/p90/p99 latency), pod to pod and, optionally, host to host.
+
+- **What runs:** a namespace `ichor-netperf-<random>`, a `netserver` pod on the server node and
+  one short-lived `netperf` pod per measurement on the client node, with the
+  `quay.io/cilium/network-perf` image pinned by digest (pulled from quay.io by the nodes). The
+  namespace is deleted at the end, also when the test fails or is stopped; one left behind by a
+  killed app is deleted by the next test.
+- **Pod security:** the pods run as non-root, without capabilities, with a read-only root file
+  system and the `RuntimeDefault` seccomp profile, so pod to pod passes the `restricted` level.
+  The host network variant creates the namespace with
+  `pod-security.kubernetes.io/enforce=privileged`.
+- **Firewall:** host to host uses TCP ports 12866 (control) and 12867 (data) on the server node.
+  With an ingress firewall on the nodes, allow them between nodes, or the host measurements
+  report that netserver does not answer.
+- **Load:** each measurement saturates the link between the two nodes for its duration (5, 10 or
+  20 s); run it when that is acceptable.
 
 ### Creating a talosconfig for the phone
 
