@@ -1,6 +1,6 @@
 import Foundation
 import Security
-import Talosmobile
+import Ichorgo
 import IchorCore
 
 struct TalosError: LocalizedError {
@@ -43,7 +43,7 @@ enum PrivacyKeys {
 }
 
 /// Swift face of the gomobile framework. Go calls block, so they run off the main actor.
-/// Signatures come from the generated Talosmobile.objc.h (C functions with NSError**).
+/// Signatures come from the generated Ichorgo.objc.h (C functions with NSError**).
 struct TalosClient: Sendable {
     let config: String
     let context: String
@@ -51,63 +51,63 @@ struct TalosClient: Sendable {
     var kubeServer = ""
 
     static func parse(_ yaml: String) async throws -> ConfigSummary {
-        try await json { TalosmobileParseConfig(yaml, $0) }
+        try await json { IchorgoParseConfig(yaml, $0) }
     }
 
     /// A Kubernetes API address the user typed, as the https URL to store ("" when blank).
     static func normalizeKubeServer(_ input: String) async throws -> String {
-        try await run { TalosmobileNormalizeKubeServer(input, $0) }
+        try await run { IchorgoNormalizeKubeServer(input, $0) }
     }
 
     static func demoConfig() async throws -> String {
-        try await run { TalosmobileDemoConfig($0) }
+        try await run { IchorgoDemoConfig($0) }
     }
 
     /// `stored` with context's ca/crt/key replaced by those of `generated` (a single-context
     /// talosconfig from generateTalosconfig); other contexts and fields are kept.
     static func replaceContextCredentials(stored: String, generated: String, context: String) async throws -> String {
-        try await run { TalosmobileReplaceContextCredentials(stored, generated, context, $0) }
+        try await run { IchorgoReplaceContextCredentials(stored, generated, context, $0) }
     }
 
     /// The contexts of `added` named like one of `stored`: the free name each gets, and the
     /// stored context of the same cluster (same CA) it may replace instead.
     static func importConflicts(stored: String, added: String) async throws -> [ImportConflict] {
-        try await json { TalosmobileImportConflicts(stored, added, $0) }
+        try await json { IchorgoImportConflicts(stored, added, $0) }
     }
 
     /// `stored` with the contexts of `added` added: a context per cluster. A stored context is
     /// never overwritten: one of that name is added as name-1, unless `choices` (a JSON array
     /// of {index, name, replace}, see MergeConfig in Go) names it or replaces the same cluster.
     static func mergeConfig(stored: String, added: String, choices: String = "") async throws -> String {
-        try await run { TalosmobileMergeConfig(stored, added, choices, $0) }
+        try await run { IchorgoMergeConfig(stored, added, choices, $0) }
     }
 
     /// The backup file of `payload` (backup JSON) sealed with `passphrase` (Argon2id, AES-256-GCM).
     static func encryptBackup(payload: String, passphrase: String) async throws -> Data {
-        try await run { TalosmobileEncryptBackup(payload, passphrase, $0) ?? Data() }
+        try await run { IchorgoEncryptBackup(payload, passphrase, $0) ?? Data() }
     }
 
     /// The validated payload JSON of a backup `file`.
     static func decryptBackup(_ file: Data, passphrase: String) async throws -> String {
-        try await run { TalosmobileDecryptBackup(file, passphrase, $0) }
+        try await run { IchorgoDecryptBackup(file, passphrase, $0) }
     }
 
     /// `stored` without `context` (not the last one: the stored config is deleted instead).
     static func removeContext(stored: String, context: String) async throws -> String {
-        try await run { TalosmobileRemoveContext(stored, context, $0) }
+        try await run { IchorgoRemoveContext(stored, context, $0) }
     }
 
     /// `stored` with `nodes` (addresses) added to context's nodes; a context without nodes
     /// keeps its endpoints as its first nodes.
     static func addContextNodes(stored: String, context: String, nodes: [String]) async throws -> String {
         let list = nodes.joined(separator: ",")
-        return try await run { TalosmobileAddContextNodes(stored, context, list, $0) }
+        return try await run { IchorgoAddContextNodes(stored, context, list, $0) }
     }
 
     /// Screenshot mode: Go masks IPs, hostnames, context names and `extraWords`
     /// (comma-separated) in everything it returns, and unmasks what it is given back.
     static func setPrivacyMask(enabled: Bool, extraWords: String) {
-        TalosmobileSetPrivacyMask(enabled, extraWords)
+        IchorgoSetPrivacyMask(enabled, extraWords)
     }
 
     /// Where Go remembers node names, so a node that is down still shows its hostname.
@@ -121,7 +121,7 @@ struct TalosClient: Sendable {
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
         try? url.setResourceValues(values)
-        TalosmobileSetDataDir(url.path, dataKey())
+        IchorgoSetDataDir(url.path, dataKey())
     }
 
     private static let dataKeyAccount = "core-data-key"
@@ -147,70 +147,70 @@ struct TalosClient: Sendable {
     }
 
     func driftSnapshot() async throws -> String {
-        try await Self.run { [config, context] in TalosmobileClusterDriftSnapshot(config, context, $0) }
+        try await Self.run { [config, context] in IchorgoClusterDriftSnapshot(config, context, $0) }
     }
     func observation() async throws -> String {
-        try await Self.run { [config, context] in TalosmobileClusterObservation(config, context, $0) }
+        try await Self.run { [config, context] in IchorgoClusterObservation(config, context, $0) }
     }
     static func compareDrift(baseline: String, current: String) async throws -> [DriftChange] {
-        try await json { TalosmobileCompareDrift(baseline, current, $0) }
+        try await json { IchorgoCompareDrift(baseline, current, $0) }
     }
     static func updateIncident(previous: String, observation: String, events: [NodeEvent]) async throws -> String {
         let encoded = String(decoding: try JSONEncoder().encode(events), as: UTF8.self)
-        return try await run { TalosmobileUpdateIncident(previous, observation, encoded, $0) }
+        return try await run { IchorgoUpdateIncident(previous, observation, encoded, $0) }
     }
     static func bottlenecks(previous: NodeStats, current: NodeStats) async throws -> Bottlenecks {
         let a = String(decoding: try JSONEncoder().encode(previous), as: UTF8.self)
         let b = String(decoding: try JSONEncoder().encode(current), as: UTF8.self)
-        return try await json { TalosmobileCalculateBottlenecks(a, b, $0) }
+        return try await json { IchorgoCalculateBottlenecks(a, b, $0) }
     }
 
     func overview() async throws -> ClusterOverview {
-        try await Self.json { [config, context] in TalosmobileClusterOverview(config, context, $0) }
+        try await Self.json { [config, context] in IchorgoClusterOverview(config, context, $0) }
     }
 
     /// The cluster's members (Talos cluster discovery), flagged when the context already targets them.
     func discoverNodes() async throws -> NodeDiscovery {
-        try await Self.json { [config, context] in TalosmobileDiscoverNodes(config, context, $0) }
+        try await Self.json { [config, context] in IchorgoDiscoverNodes(config, context, $0) }
     }
 
     func services(node: String) async throws -> [ServiceInfo] {
-        try await Self.json { [config, context] in TalosmobileNodeServices(config, context, node, $0) }
+        try await Self.json { [config, context] in IchorgoNodeServices(config, context, node, $0) }
     }
 
     func resources(node: String) async throws -> NodeResources {
-        try await Self.json { [config, context] in TalosmobileNodeResources(config, context, node, $0) }
+        try await Self.json { [config, context] in IchorgoNodeResources(config, context, node, $0) }
     }
 
     /// Kernel log when `service` is nil.
     func logs(node: String, service: String?, lines: Int = 500) async throws -> LogTail {
         try await Self.json { [config, context] in
             if let service {
-                return TalosmobileServiceLogs(config, context, node, service, lines, $0)
+                return IchorgoServiceLogs(config, context, node, service, lines, $0)
             }
-            return TalosmobileKernelLogs(config, context, node, lines, $0)
+            return IchorgoKernelLogs(config, context, node, lines, $0)
         }
     }
 
     func kubespan() async throws -> KubeSpanOverview {
-        try await Self.json { [config, context] in TalosmobileKubeSpanStatus(config, context, $0) }
+        try await Self.json { [config, context] in IchorgoKubeSpanStatus(config, context, $0) }
     }
 
     /// Admin kubeconfig (os:admin). A credential: only write it where the user chose.
     func kubeconfig() async throws -> String {
-        try await Self.run { [config, context, kubeServer] in TalosmobileKubeconfig(config, context, kubeServer, $0) }
+        try await Self.run { [config, context, kubeServer] in IchorgoKubeconfig(config, context, kubeServer, $0) }
     }
 
     /// Deployments, StatefulSets and DaemonSets through the Kubernetes API (os:admin: Talos issues the kubeconfig).
     func workloads() async throws -> [KubeWorkload] {
-        let list: KubeWorkloadList = try await Self.json { [config, context, kubeServer] in TalosmobileKubeWorkloads(config, context, kubeServer, $0) }
+        let list: KubeWorkloadList = try await Self.json { [config, context, kubeServer] in IchorgoKubeWorkloads(config, context, kubeServer, $0) }
         return list.workloads
     }
 
     /// `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin).
     func rolloutRestart(_ workload: KubeWorkload) async throws {
         try await Self.run { [config, context, kubeServer] error -> Void in
-            _ = TalosmobileKubeRolloutRestart(config, context, kubeServer, workload.kind, workload.namespace, workload.name, error)
+            _ = IchorgoKubeRolloutRestart(config, context, kubeServer, workload.kind, workload.namespace, workload.name, error)
         }
     }
 
@@ -218,61 +218,61 @@ struct TalosClient: Sendable {
     func appRoutes(pods: [RoutePod]) async throws -> [KubeRoute] {
         let encoded = String(decoding: try JSONEncoder().encode(pods), as: UTF8.self)
         let list: KubeRouteList = try await Self.json { [config, context, kubeServer] in
-            TalosmobileKubeAppRoutes(config, context, kubeServer, encoded, $0)
+            IchorgoKubeAppRoutes(config, context, kubeServer, encoded, $0)
         }
         return list.routes
     }
 
     /// Every pod with the status `kubectl get pods` shows (os:admin).
     func pods() async throws -> [KubePod] {
-        let list: KubePodList = try await Self.json { [config, context, kubeServer] in TalosmobileKubePods(config, context, kubeServer, $0) }
+        let list: KubePodList = try await Self.json { [config, context, kubeServer] in IchorgoKubePods(config, context, kubeServer, $0) }
         return list.pods
     }
 
     /// `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one.
     func deletePod(_ pod: KubePod) async throws {
         try await Self.run { [config, context, kubeServer] error -> Void in
-            _ = TalosmobileKubeDeletePod(config, context, kubeServer, pod.namespace, pod.name, error)
+            _ = IchorgoKubeDeletePod(config, context, kubeServer, pod.namespace, pod.name, error)
         }
     }
 
     /// Starts `talosctl debug` on node; events go to the listener (from Go threads).
     func startDebugShell(node: String, image: String, args: String, cols: Int, rows: Int,
-                         listener: TalosmobileDebugListenerProtocol) -> TalosmobileDebugSession? {
-        TalosmobileStartDebugShell(config, context, node, image, args, cols, rows, listener)
+                         listener: IchorgoDebugListenerProtocol) -> IchorgoDebugSession? {
+        IchorgoStartDebugShell(config, context, node, image, args, cols, rows, listener)
     }
 
     /// `talosctl -n NODE etcd defrag` (os:operator or os:admin); one member at a time.
     func defragment(node: String) async throws {
         try await Self.run { [config, context] error -> Void in
-            _ = TalosmobileEtcdDefragment(config, context, node, error)
+            _ = IchorgoEtcdDefragment(config, context, node, error)
         }
     }
 
     /// One sample of counters for the live graphs.
     func stats(node: String) async throws -> NodeStats {
-        try await Self.json { [config, context] in TalosmobileNodeStats(config, context, node, $0) }
+        try await Self.json { [config, context] in IchorgoNodeStats(config, context, node, $0) }
     }
 
     /// `talosctl processes` (os:reader); CPU time is cumulative, see processRows.
     func processes(node: String) async throws -> ProcessSample {
-        try await Self.json { [config, context] in TalosmobileNodeProcesses(config, context, node, $0) }
+        try await Self.json { [config, context] in IchorgoNodeProcesses(config, context, node, $0) }
     }
 
     /// The node's cgroup tree with pressure (os:admin: a copy of /sys/fs/cgroup); see cgroupRows.
     func cgroups(node: String) async throws -> CgroupReport {
-        try await Self.json { [config, context] in TalosmobileNodeCgroups(config, context, node, $0) }
+        try await Self.json { [config, context] in IchorgoNodeCgroups(config, context, node, $0) }
     }
 
     /// Node's machine config as YAML (os:admin); secrets are masked unless revealSecrets.
     func machineConfig(node: String, revealSecrets: Bool) async throws -> String {
-        try await Self.run { [config, context] in TalosmobileNodeMachineConfig(config, context, node, revealSecrets, $0) }
+        try await Self.run { [config, context] in IchorgoNodeMachineConfig(config, context, node, revealSecrets, $0) }
     }
 
     /// `talosctl etcd alarm disarm` through node (os:operator or os:admin).
     func disarmEtcdAlarms(node: String) async throws {
         try await Self.run { [config, context] error -> Void in
-            _ = TalosmobileEtcdAlarmDisarm(config, context, node, error)
+            _ = IchorgoEtcdAlarmDisarm(config, context, node, error)
         }
     }
 
@@ -287,7 +287,7 @@ struct TalosClient: Sendable {
                     continuation.finish()
                 }
             )
-            let run = TalosmobileStartEtcdSnapshot(config, context, node, destPath, bridge)
+            let run = IchorgoStartEtcdSnapshot(config, context, node, destPath, bridge)
             continuation.onTermination = { _ in
                 run?.cancel()
                 _ = bridge // keep the listener alive for the whole transfer
@@ -306,7 +306,7 @@ struct TalosClient: Sendable {
                     continuation.finish()
                 }
             )
-            let run = TalosmobileStartEvents(config, context, node ?? "", tail, bridge)
+            let run = IchorgoStartEvents(config, context, node ?? "", tail, bridge)
             continuation.onTermination = { _ in
                 run?.cancel()
                 _ = bridge // keep the listener alive for the whole stream
@@ -324,7 +324,7 @@ struct TalosClient: Sendable {
                     continuation.finish()
                 }
             )
-            let run = TalosmobileStartLogFollow(config, context, node, service ?? "", tailLines, bridge)
+            let run = IchorgoStartLogFollow(config, context, node, service ?? "", tailLines, bridge)
             continuation.onTermination = { _ in
                 run?.cancel()
                 _ = bridge // keep the listener alive for the whole stream
@@ -335,72 +335,72 @@ struct TalosClient: Sendable {
     /// Level, time, source, message and fields of a followed log line (Go ParseLogLine; an
     /// unparsed entry when it gives nothing usable). Blocking: call it off the main actor.
     static func parseLogLine(_ line: String) -> LogEntry {
-        parseLogEntry(json: TalosmobileParseLogLine(line), line: line)
+        parseLogEntry(json: IchorgoParseLogLine(line), line: line)
     }
 
     /// Kubernetes containers on node with cumulative CPU time (os:reader), see containerRows.
     func containers(node: String) async throws -> ContainerSample {
-        try await Self.json { [config, context] in TalosmobileNodeContainers(config, context, node, $0) }
+        try await Self.json { [config, context] in IchorgoNodeContainers(config, context, node, $0) }
     }
 
     /// `talosctl service SERVICE start|stop|restart` (os:operator or os:admin).
     func serviceAction(_ action: ServiceAction, service: String, node: String) async throws {
         try await Self.run { [config, context] error -> Void in
-            _ = TalosmobileServiceAction(config, context, node, service, action.rawValue, error)
+            _ = IchorgoServiceAction(config, context, node, service, action.rawValue, error)
         }
     }
 
     /// A new client certificate as a single-context talosconfig (os:admin): roles is the
     /// comma-separated list, see rolesArgument. A credential: keep it in memory only.
     func generateTalosconfig(roles: String, hours: Int) async throws -> String {
-        try await Self.run { [config, context] in TalosmobileGenerateTalosconfig(config, context, roles, hours, $0) }
+        try await Self.run { [config, context] in IchorgoGenerateTalosconfig(config, context, roles, hours, $0) }
     }
 
     /// Links, addresses, routes, DNS and time servers of node (os:reader).
     func network(node: String) async throws -> NodeNetwork {
-        try await Self.json { [config, context] in TalosmobileNodeNetwork(config, context, node, $0) }
+        try await Self.json { [config, context] in IchorgoNodeNetwork(config, context, node, $0) }
     }
 
     /// `talosctl netstat -a -p` on node (os:reader).
     func connections(node: String) async throws -> [NodeConnection] {
-        try await Self.json { [config, context] in TalosmobileNodeConnections(config, context, node, $0) }
+        try await Self.json { [config, context] in IchorgoNodeConnections(config, context, node, $0) }
     }
 
     /// Node clock against its NTP server (os:reader).
     func nodeTime(node: String) async throws -> NodeTimeInfo {
-        try await Self.json { [config, context] in TalosmobileNodeTime(config, context, node, $0) }
+        try await Self.json { [config, context] in IchorgoNodeTime(config, context, node, $0) }
     }
 
     /// Clock offset of every node of the context; failures are reported per node (os:reader).
     func clusterTime() async throws -> ClusterTimeInfo {
-        try await Self.json { [config, context] in TalosmobileClusterTime(config, context, $0) }
+        try await Self.json { [config, context] in IchorgoClusterTime(config, context, $0) }
     }
 
     /// System, CPUs, memory, disks, extensions and security state of node (os:reader).
     func hardware(node: String) async throws -> NodeHardware {
-        try await Self.json { [config, context] in TalosmobileNodeHardware(config, context, node, $0) }
+        try await Self.json { [config, context] in IchorgoNodeHardware(config, context, node, $0) }
     }
 
     /// Container images in node's CRI namespace (os:reader).
     func images(node: String) async throws -> [ContainerImage] {
-        try await Self.json { [config, context] in TalosmobileNodeImages(config, context, node, $0) }
+        try await Self.json { [config, context] in IchorgoNodeImages(config, context, node, $0) }
     }
 
     /// The apps running in the cluster, from every node's containers (os:reader). One container
     /// listing per node: called when a screen opens or refreshes, not on a poll.
     func inventory() async throws -> ClusterInventory {
-        try await Self.json { [config, context] in TalosmobileClusterInventory(config, context, $0) }
+        try await Self.json { [config, context] in IchorgoClusterInventory(config, context, $0) }
     }
 
     func etcd() async throws -> EtcdOverview {
-        try await Self.json { [config, context] in TalosmobileEtcdStatus(config, context, $0) }
+        try await Self.json { [config, context] in IchorgoEtcdStatus(config, context, $0) }
     }
 
     func perform(_ request: PowerRequest, node: String) async throws {
         try await Self.run { [config, context] error -> Void in
             switch request.action {
-            case .reboot: _ = TalosmobileReboot(config, context, node, request.rebootMode.cli, error)
-            case .shutdown: _ = TalosmobileShutdown(config, context, node, request.forceShutdown, error)
+            case .reboot: _ = IchorgoReboot(config, context, node, request.rebootMode.cli, error)
+            case .shutdown: _ = IchorgoShutdown(config, context, node, request.forceShutdown, error)
             }
         }
     }
@@ -415,7 +415,7 @@ struct TalosClient: Sendable {
                     continuation.finish()
                 }
             )
-            let run = TalosmobileStartClusterHealth(config, context, bridge)
+            let run = IchorgoStartClusterHealth(config, context, bridge)
             continuation.onTermination = { _ in
                 run?.cancel()
                 _ = bridge // keep the listener alive for the whole check
@@ -440,7 +440,7 @@ struct TalosClient: Sendable {
 
 /// gomobile exposes the Go interface as an Objective-C protocol; since a class with the same
 /// name also exists, Swift imports the protocol as `…Protocol`.
-private final class HealthBridge: NSObject, TalosmobileHealthListenerProtocol, @unchecked Sendable {
+private final class HealthBridge: NSObject, IchorgoHealthListenerProtocol, @unchecked Sendable {
     private let progress: @Sendable (String, String) -> Void
     private let done: @Sendable (String?) -> Void
 
@@ -458,7 +458,7 @@ private final class HealthBridge: NSObject, TalosmobileHealthListenerProtocol, @
     }
 }
 
-private final class SnapshotBridge: NSObject, TalosmobileSnapshotListenerProtocol, @unchecked Sendable {
+private final class SnapshotBridge: NSObject, IchorgoSnapshotListenerProtocol, @unchecked Sendable {
     private let progress: @Sendable (Int64) -> Void
     private let done: @Sendable (SnapshotEvent) -> Void
 
@@ -480,7 +480,7 @@ private final class SnapshotBridge: NSObject, TalosmobileSnapshotListenerProtoco
     }
 }
 
-private final class EventsBridge: NSObject, TalosmobileEventListenerProtocol, @unchecked Sendable {
+private final class EventsBridge: NSObject, IchorgoEventListenerProtocol, @unchecked Sendable {
     private let event: @Sendable (NodeEvent) -> Void
     private let done: @Sendable (String?) -> Void
 
@@ -499,7 +499,7 @@ private final class EventsBridge: NSObject, TalosmobileEventListenerProtocol, @u
     }
 }
 
-final class LogBridge: NSObject, TalosmobileLogListenerProtocol, @unchecked Sendable {
+final class LogBridge: NSObject, IchorgoLogListenerProtocol, @unchecked Sendable {
     private let line: @Sendable (String) -> Void
     private let done: @Sendable (String?) -> Void
 

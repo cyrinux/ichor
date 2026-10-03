@@ -93,7 +93,7 @@ class AiPreferences(
     )
 
     companion object {
-        const val FILE = "talosdev-mobile-ai"
+        const val FILE = "ichor-ai"
         private const val KEY_ENABLED = "enabled"
         private const val KEY_PROVIDER = "provider"
         private const val KEY_ANONYMIZE = "anonymize"

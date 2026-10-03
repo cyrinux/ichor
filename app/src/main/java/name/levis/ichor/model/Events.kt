@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile/events.go.
+// Mirrors go/ichorgo/events.go.
 
 @Serializable
 data class TalosEvent(

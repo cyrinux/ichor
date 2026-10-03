@@ -2,11 +2,11 @@
 """Bundles the app-inventory icons from homarr-labs/dashboard-icons (Apache-2.0), plus a
 few from selfh.st/icons (CC-BY-4.0) that dashboard-icons lacks.
 
-Reads the curated catalog (go/talosmobile/appcatalog.json), checks it, then:
+Reads the curated catalog (go/ichorgo/appcatalog.json), checks it, then:
 
   app/src/main/assets/appicons/<id>.webp        icon for a light background
   app/src/main/assets/appicons/<id>-night.webp  icon for a dark background, when upstream has one
-  go/talosmobile/appicons.txt                   every upstream slug, so the Go core can name an
+  go/ichorgo/appicons.txt                   every upstream slug, so the Go core can name an
                                                 unknown image's icon (fetched only when opted in)
 
 iOS bundles the same folder (ios/project.yml). Icons are resized to 96 px lossy WebP with
@@ -25,8 +25,8 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CATALOG = ROOT / "go/talosmobile/appcatalog.json"
-SLUGS = ROOT / "go/talosmobile/appicons.txt"
+CATALOG = ROOT / "go/ichorgo/appcatalog.json"
+SLUGS = ROOT / "go/ichorgo/appicons.txt"
 ASSETS = ROOT / "app/src/main/assets/appicons"
 CDN = "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons"
 # A catalog icon "sh:<ref>" comes from selfh.st/icons (CC-BY-4.0, credited in NOTICE) instead.

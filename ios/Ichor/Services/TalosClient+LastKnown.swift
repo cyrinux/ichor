@@ -1,5 +1,5 @@
 import Foundation
-import Talosmobile
+import Ichorgo
 import IchorCore
 
 extension TalosClient {
@@ -14,17 +14,17 @@ extension TalosClient {
     private func rawJSON(_ domain: LastKnownDomain) async throws -> String {
         try await Self.run { [config, context, kubeServer] error -> String in
             switch domain {
-            case .overview: return TalosmobileClusterOverview(config, context, error)
-            case .etcd: return TalosmobileEtcdStatus(config, context, error)
-            case .kubespan: return TalosmobileKubeSpanStatus(config, context, error)
-            case .inventory: return TalosmobileClusterInventory(config, context, error)
-            case .workloads: return TalosmobileKubeWorkloads(config, context, kubeServer, error)
-            case .pods: return TalosmobileKubePods(config, context, kubeServer, error)
-            case .services(let node): return TalosmobileNodeServices(config, context, node, error)
-            case .resources(let node): return TalosmobileNodeResources(config, context, node, error)
-            case .hardware(let node): return TalosmobileNodeHardware(config, context, node, error)
-            case .network(let node): return TalosmobileNodeNetwork(config, context, node, error)
-            case .images(let node): return TalosmobileNodeImages(config, context, node, error)
+            case .overview: return IchorgoClusterOverview(config, context, error)
+            case .etcd: return IchorgoEtcdStatus(config, context, error)
+            case .kubespan: return IchorgoKubeSpanStatus(config, context, error)
+            case .inventory: return IchorgoClusterInventory(config, context, error)
+            case .workloads: return IchorgoKubeWorkloads(config, context, kubeServer, error)
+            case .pods: return IchorgoKubePods(config, context, kubeServer, error)
+            case .services(let node): return IchorgoNodeServices(config, context, node, error)
+            case .resources(let node): return IchorgoNodeResources(config, context, node, error)
+            case .hardware(let node): return IchorgoNodeHardware(config, context, node, error)
+            case .network(let node): return IchorgoNodeNetwork(config, context, node, error)
+            case .images(let node): return IchorgoNodeImages(config, context, node, error)
             }
         }
     }

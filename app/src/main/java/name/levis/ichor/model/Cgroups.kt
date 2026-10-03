@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile/cgroups.go.
+// Mirrors go/ichorgo/cgroups.go.
 
 /** PSI averages: % of the last 10/60 s some (or all) tasks waited for the resource. */
 @Serializable

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the iOS app on macOS (Xcode + xcodegen + Go):
-#   1. Talosmobile.xcframework from the Go core (gomobile, device + simulator);
+#   1. Ichorgo.xcframework from the Go core (gomobile, device + simulator);
 #   2. the core Swift package tests;
 #   3. the Xcode project (XcodeGen) and the app.
 #
@@ -28,9 +28,9 @@ python3 "$ROOT/scripts/changelog.py" --limit 30 -o "$ROOT/ios/Ichor/changelog.js
 cd "$ROOT/go"
 export GOBIN="$ROOT/.cache/gobin" PATH="$ROOT/.cache/gobin:$PATH"
 go install tool
-rm -rf "$ROOT/ios/Frameworks/Talosmobile.xcframework"
+rm -rf "$ROOT/ios/Frameworks/Ichorgo.xcframework"
 gomobile bind -target=ios,iossimulator -iosversion=17.0 -ldflags="-s -w" \
-  -o "$ROOT/ios/Frameworks/Talosmobile.xcframework" ./talosmobile
+  -o "$ROOT/ios/Frameworks/Ichorgo.xcframework" ./ichorgo
 
 python3 "$ROOT/scripts/check-translations.py"
 (cd "$ROOT/ios/IchorCore" && swift test)

@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"strconv"
 
-	"github.com/cyrinux/ichor/go/talosmobile"
+	"github.com/cyrinux/ichor/go/ichorgo"
 )
 
 // netPerfProbe prints a network test's progress as it comes.
@@ -23,7 +23,7 @@ func (p *netPerfProbe) OnDone(report, errMessage string) {
 func netPerfRun(cfg, contextName, kubeServer, server, client, host, seconds string) string {
 	secs, _ := strconv.Atoi(seconds) //nolint:errcheck
 	p := &netPerfProbe{done: make(chan string, 1)}
-	run := talosmobile.StartNetPerf(cfg, contextName, kubeServer, server, client, host == "host", secs, p)
+	run := ichorgo.StartNetPerf(cfg, contextName, kubeServer, server, client, host == "host", secs, p)
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)

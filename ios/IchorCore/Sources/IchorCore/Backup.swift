@@ -1,6 +1,6 @@
 import Foundation
 
-/// What an app backup holds once the Go core opened it (TalosmobileDecryptBackup): the
+/// What an app backup holds once the Go core opened it (IchorgoDecryptBackup): the
 /// talosconfig and the settings that go with it. Same JSON as the Android app's, so a backup
 /// moves between platforms; a setting this app does not have is ignored, one the backup lacks
 /// (nil) keeps its current value.

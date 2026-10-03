@@ -1,6 +1,6 @@
 package name.levis.ichor
 
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.Ichorgo
 import android.app.Application
 import android.content.Context
 import android.os.SystemClock
@@ -97,21 +97,21 @@ class TalosApp : Application() {
     val vpn by lazy { VpnMonitor(this) }
     val appLock by lazy {
         AppLock(
-            PrefsLockSettings(getSharedPreferences("talosdev-mobile-security", Context.MODE_PRIVATE)),
+            PrefsLockSettings(getSharedPreferences("ichor-security", Context.MODE_PRIVATE)),
             clock = SystemClock::elapsedRealtime,
         )
     }
 
-    val supportPrompt by lazy { SupportPrompt(getSharedPreferences("talosdev-mobile-support", Context.MODE_PRIVATE)) }
+    val supportPrompt by lazy { SupportPrompt(getSharedPreferences("ichor-support", Context.MODE_PRIVATE)) }
     val changelogRepository by lazy { ChangelogRepository(this, getSharedPreferences(ChangelogRepository.PREFS, Context.MODE_PRIVATE)) }
     val updateManager by lazy {
-        UpdateManager(this, getSharedPreferences("talosdev-mobile-update", Context.MODE_PRIVATE), changelogRepository)
+        UpdateManager(this, getSharedPreferences("ichor-update", Context.MODE_PRIVATE), changelogRepository)
     }
     /** Bundled app icons, and downloaded ones when the user allowed it (Settings → Privacy). */
     val appIcons by lazy { AppIconLoader(this) }
     val monitorStore by lazy {
         MonitorStore(
-            getSharedPreferences("talosdev-mobile-monitor", Context.MODE_PRIVATE),
+            getSharedPreferences("ichor-monitor", Context.MODE_PRIVATE),
             KeystoreValue(java.io.File(noBackupFilesDir, "monitor-snapshot.enc"), "ichor-monitor-snapshot"),
         )
     }
@@ -167,7 +167,7 @@ class TalosApp : Application() {
 
     /**
      * Sets the Kubernetes API address of the cluster [fingerprint] ([server] checked by
-     * Talosmobile.normalizeKubeServer, blank for the kubeconfig's); its cached results go.
+     * Ichorgo.normalizeKubeServer, blank for the kubeconfig's); its cached results go.
      */
     fun setKubeServer(fingerprint: String, server: String) {
         kubeServers.set(fingerprint, server)
@@ -262,7 +262,7 @@ class TalosApp : Application() {
         }
     }
 
-    private fun applyPrivacyMask(mask: PrivacyMask) = Talosmobile.setPrivacyMask(mask.enabled, mask.words)
+    private fun applyPrivacyMask(mask: PrivacyMask) = Ichorgo.setPrivacyMask(mask.enabled, mask.words)
 
     /**
      * The key the Go core encrypts what it remembers with, created once and kept encrypted by
@@ -309,12 +309,11 @@ class TalosApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        migrateLegacyPreferences()
         syncLanguage()
         // Before any Talos call: the monitor worker and the widget run in this process too.
         applyPrivacyMask(uiPreferences.privacyMask.value)
         // Where Go remembers node names, so a node that is down still shows its hostname.
-        Talosmobile.setDataDir(noBackupFilesDir.path, coreDataKey() ?: ByteArray(0))
+        Ichorgo.setDataDir(noBackupFilesDir.path, coreDataKey() ?: ByteArray(0))
         launchSync()
         // Every cluster of the stored config gets a color of its own, as soon as it shows up.
         ProcessLifecycleOwner.get().lifecycleScope.launch {
@@ -378,19 +377,7 @@ class TalosApp : Application() {
         val system = AppLocale.systemChoice(this) ?: return
         if (system != uiPreferences.language.value) uiPreferences.setLanguage(system)
     }
-
-    /**
-     * v0.3.x stored settings under "talos-viewer*" names (before the Talosdev Mobile rebrand).
-     * Rename the files once, before any SharedPreferences is opened, so nothing is lost.
-     */
-    private fun migrateLegacyPreferences() {
-        val dir = java.io.File(applicationInfo.dataDir, "shared_prefs")
-        dir.listFiles { f -> f.name.startsWith("talos-viewer") && f.name.endsWith(".xml") }?.forEach { old ->
-            val renamed = java.io.File(dir, old.name.replaceFirst("talos-viewer", "talosdev-mobile"))
-            if (!renamed.exists()) old.renameTo(renamed)
-        }
-    }
 }
 
-/** AES-256: what Talosmobile.setDataDir takes. */
+/** AES-256: what Ichorgo.setDataDir takes. */
 private const val CORE_KEY_SIZE = 32

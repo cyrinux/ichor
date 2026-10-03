@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile/hardware.go.
+// Mirrors go/ichorgo/hardware.go.
 
 @Serializable
 data class NodeHardware(

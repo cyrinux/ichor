@@ -1,0 +1,205 @@
+package ichorgo
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net"
+	"net/url"
+	"strconv"
+	"time"
+
+	"golang.org/x/net/websocket"
+)
+
+const (
+	// kubeExecTimeout bounds one command run in a container.
+	kubeExecTimeout = 10 * time.Second
+	// kubeExecMaxOutput caps what the app reads from each of stdout and stderr.
+	kubeExecMaxOutput = 1 << 20
+)
+
+// kubeExecProtocols are the WebSocket subprotocols of `kubectl exec`, newest first: v5 adds
+// a close signal the app does not need, v4 is what every supported Kubernetes accepts.
+var kubeExecProtocols = []string{"v5.channel.k8s.io", "v4.channel.k8s.io"}
+
+// The channels of the Kubernetes stream protocol: the first byte of every frame.
+const (
+	execStdout = 1
+	execStderr = 2
+	execStatus = 3 // a JSON metav1.Status once the command ended
+)
+
+// kubeExecError is a command that ran and failed (ExitCode >= 0), or a status the API
+// server sent instead of running it (ExitCode -1).
+type kubeExecError struct {
+	ExitCode int
+	Message  string
+}
+
+func (e *kubeExecError) Error() string {
+	if e.ExitCode >= 0 {
+		return fmt.Sprintf("command exited with code %d: %s", e.ExitCode, e.Message)
+	}
+
+	return "exec failed: " + e.Message
+}
+
+// errExecRefused is an exec the API server did not upgrade to a stream: forbidden, the pod
+// or container is gone, or exec over WebSocket is not supported.
+var errExecRefused = errors.New("exec refused by the Kubernetes API (forbidden, pod gone, or WebSocket exec unsupported)")
+
+// exec runs argv in a container like `kubectl exec -n NAMESPACE POD -c CONTAINER -- ARGV`,
+// without stdin or a terminal, and returns what it wrote. Callers pass fixed commands only:
+// nothing a user types reaches argv. A non-zero exit returns the output with a *kubeExecError.
+func (k *kubeClient) exec(ctx context.Context, namespace, pod, container string, argv []string) (stdout, stderr []byte, err error) {
+	if err := validateKubeName("pod", namespace, pod); err != nil {
+		return nil, nil, err
+	}
+
+	if !kubeNamePattern.MatchString(container) || len(argv) == 0 {
+		return nil, nil, fmt.Errorf("invalid exec target %q %v", container, argv)
+	}
+
+	cfg, err := k.execConfig(namespace, pod, container, argv)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, kubeExecTimeout)
+	defer cancel()
+
+	ws, err := cfg.DialContext(ctx)
+	if err != nil {
+		// websocket.DialError does not unwrap: look at its Err by hand.
+		var dialErr *websocket.DialError
+		if errors.As(err, &dialErr) {
+			if errors.Is(dialErr.Err, websocket.ErrBadStatus) {
+				return nil, nil, errExecRefused
+			}
+
+			return nil, nil, dialErr.Err
+		}
+
+		return nil, nil, err
+	}
+	defer ws.Close() //nolint:errcheck
+
+	if deadline, ok := ctx.Deadline(); ok {
+		_ = ws.SetDeadline(deadline)
+	}
+
+	ws.MaxPayloadBytes = kubeExecMaxOutput
+
+	return readExecStream(ws)
+}
+
+func (k *kubeClient) execConfig(namespace, pod, container string, argv []string) (*websocket.Config, error) {
+	query := url.Values{"container": {container}, "command": argv, "stdout": {"true"}, "stderr": {"true"}}
+
+	u, err := k.endpoint("/api/v1/namespaces/" + url.PathEscape(namespace) + "/pods/" + url.PathEscape(pod) + "/exec?" + query.Encode())
+	if err != nil {
+		return nil, err
+	}
+
+	u.Scheme = "wss"
+
+	cfg, err := websocket.NewConfig(u.String(), (&url.URL{Scheme: "https", Host: u.Host}).String())
+	if err != nil {
+		return nil, fmt.Errorf("exec URL: %w", err)
+	}
+
+	cfg.Protocol = kubeExecProtocols
+	cfg.TlsConfig = k.tls.Clone()
+	cfg.Dialer = &net.Dialer{Timeout: kubeProbeTimeout}
+	cfg.Header.Set("User-Agent", "ichor")
+
+	if k.token != "" {
+		cfg.Header.Set("Authorization", "Bearer "+k.token)
+	}
+
+	return cfg, nil
+}
+
+// readExecStream demultiplexes the frames until the server closes the stream.
+func readExecStream(ws *websocket.Conn) (stdout, stderr []byte, err error) {
+	var out, errOut, status bytes.Buffer
+
+	for {
+		var frame []byte
+		if err := websocket.Message.Receive(ws, &frame); err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+
+			return nil, nil, fmt.Errorf("exec stream: %w", err)
+		}
+
+		// An empty frame (the channel byte alone) only announces the channel.
+		if len(frame) < 2 {
+			continue
+		}
+
+		var dst *bytes.Buffer
+
+		switch frame[0] {
+		case execStdout:
+			dst = &out
+		case execStderr:
+			dst = &errOut
+		case execStatus:
+			dst = &status
+		default:
+			continue
+		}
+
+		if dst.Len()+len(frame)-1 > kubeExecMaxOutput {
+			return nil, nil, errors.New("exec output is larger than the app reads (1 MiB)")
+		}
+
+		dst.Write(frame[1:])
+	}
+
+	return out.Bytes(), errOut.Bytes(), execStatusError(status.Bytes())
+}
+
+// execStatusError reads the status channel: nil on success (or when the server sent none).
+func execStatusError(raw []byte) error {
+	if len(bytes.TrimSpace(raw)) == 0 {
+		return nil
+	}
+
+	var st struct {
+		Status  string `json:"status"`
+		Message string `json:"message"`
+		Details struct {
+			Causes []struct {
+				Reason  string `json:"reason"`
+				Message string `json:"message"`
+			} `json:"causes"`
+		} `json:"details"`
+	}
+
+	if err := json.Unmarshal(raw, &st); err != nil {
+		return &kubeExecError{ExitCode: -1, Message: string(bytes.TrimSpace(raw))}
+	}
+
+	if st.Status == "Success" {
+		return nil
+	}
+
+	e := &kubeExecError{ExitCode: -1, Message: st.Message}
+
+	for _, cause := range st.Details.Causes {
+		if cause.Reason == "ExitCode" {
+			if code, err := strconv.Atoi(cause.Message); err == nil {
+				e.ExitCode = code
+			}
+		}
+	}
+
+	return e
+}

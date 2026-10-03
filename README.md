@@ -55,7 +55,7 @@ an F-Droid repository that ships the signed release APKs.
 ```
 app/            Android: Kotlin + Jetpack Compose UI
 ios/            iOS: SwiftUI app (XcodeGen) + IchorCore Swift package
-go/talosmobile  Go core exposed to Kotlin and Swift (JSON in/out)
+go/ichorgo  Go core exposed to Kotlin and Swift (JSON in/out)
 go/cmd/probe    desktop CLI calling the same Go functions
 flake.nix       Nix build environment (default)
 build/          amd64 Docker toolchain (CI)
@@ -371,7 +371,7 @@ go run ./cmd/probe -config ../talosconfig-phone overview   # test a role-limited
 
 ## iOS
 
-The iOS app (`ios/`) reuses the same Go core, built as `Talosmobile.xcframework` with
+The iOS app (`ios/`) reuses the same Go core, built as `Ichorgo.xcframework` with
 gomobile, around a SwiftUI UI. The pure logic lives in the `IchorCore` Swift package:
 models, formatting, lock state and power-request rules.
 

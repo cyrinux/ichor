@@ -1,0 +1,242 @@
+package ichorgo
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"maps"
+	"net"
+	"net/http"
+	"net/url"
+	"slices"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+)
+
+// kubeRoute is an address an app is reachable at from outside the cluster: a host of an
+// Ingress or of a Gateway API HTTPRoute whose backend is a Service selecting its pods.
+type kubeRoute struct {
+	Kind      string `json:"kind"` // Ingress or HTTPRoute
+	Namespace string `json:"namespace"`
+	Name      string `json:"name"`
+	URL       string `json:"url"`
+	Service   string `json:"service"` // the backend Service, in Namespace
+}
+
+type kubeRouteList struct {
+	Routes []kubeRoute `json:"routes"`
+}
+
+// routePod names one pod of an app, as the inventory gives it.
+type routePod struct {
+	Namespace string `json:"namespace"`
+	Pod       string `json:"pod"`
+}
+
+// serviceRef is a Service by namespace and name.
+type serviceRef struct{ namespace, name string }
+
+// KubeAppRoutes lists the URLs the given pods are served at, through the Kubernetes API
+// with the admin kubeconfig Talos issues (os:admin): the Services selecting them, then the
+// Ingresses and HTTPRoutes (gateway.networking.k8s.io/v1, when installed) sending traffic to
+// those Services. pods: [{namespace,pod}]. {"routes":[{kind,namespace,name,url,service}]}.
+// kubeServer: see KubePods.
+func KubeAppRoutes(configYAML, contextName, kubeServer, pods string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+
+	var refs []routePod
+	if err := json.Unmarshal([]byte(privacy.reveal(pods)), &refs); err != nil {
+		return "", fmt.Errorf("invalid pod list: %w", err)
+	}
+
+	if isDemoContext(configYAML, contextName) {
+		return toJSON(kubeRouteList{Routes: demoRoutes(refs)})
+	}
+
+	list, err := withKube(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (kubeRouteList, error) {
+		return appRoutes(ctx, k, refs)
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return toJSON(list)
+}
+
+func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteList, error) {
+	services, err := servicesOfPods(ctx, k, pods)
+	if err != nil || len(services) == 0 {
+		return kubeRouteList{Routes: []kubeRoute{}}, err
+	}
+
+	var (
+		ingresses  ingressList
+		httpRoutes httpRouteList
+		gateways   gatewayList
+	)
+
+	errs := make([]error, 3)
+
+	var wg sync.WaitGroup
+
+	wg.Go(func() { errs[0] = k.get(ctx, "/apis/networking.k8s.io/v1/ingresses", &ingresses) })
+	// The Gateway API is optional: without its CRDs, no HTTPRoute.
+	wg.Go(func() {
+		errs[1] = ignoreNotFound(k.get(ctx, "/apis/gateway.networking.k8s.io/v1/httproutes", &httpRoutes))
+	})
+	// Only used to tell http from https: a URL is still worth showing without it.
+	wg.Go(func() { _ = k.get(ctx, "/apis/gateway.networking.k8s.io/v1/gateways", &gateways) })
+	wg.Wait()
+
+	if err := errors.Join(errs...); err != nil {
+		return kubeRouteList{}, err
+	}
+
+	routes := append(ingressRoutes(ingresses.Items, services), httpRouteRoutes(httpRoutes.Items, gateways.Items, services)...)
+
+	return kubeRouteList{Routes: uniqueRoutes(routes)}, nil
+}
+
+func ignoreNotFound(err error) error {
+	var apiErr *kubeAPIError
+	if errors.As(err, &apiErr) && apiErr.Code == http.StatusNotFound {
+		return nil
+	}
+
+	return err
+}
+
+type labeledObject struct {
+	Metadata struct {
+		Name   string            `json:"name"`
+		Labels map[string]string `json:"labels"`
+	} `json:"metadata"`
+}
+
+type serviceObject struct {
+	Metadata struct {
+		Name string `json:"name"`
+	} `json:"metadata"`
+	Spec struct {
+		Selector map[string]string `json:"selector"`
+	} `json:"spec"`
+}
+
+// servicesOfPods finds the Services whose selector matches the labels of one of pods.
+func servicesOfPods(ctx context.Context, k *kubeClient, pods []routePod) (map[serviceRef]bool, error) {
+	wanted := map[string]map[string]bool{} // namespace -> pod names
+
+	for _, p := range pods {
+		if validateKubeName("pod", p.Namespace, p.Pod) != nil {
+			continue
+		}
+
+		if wanted[p.Namespace] == nil {
+			wanted[p.Namespace] = map[string]bool{}
+		}
+
+		wanted[p.Namespace][p.Pod] = true
+	}
+
+	found := map[serviceRef]bool{}
+
+	for _, ns := range slices.Sorted(maps.Keys(wanted)) {
+		base := "/api/v1/namespaces/" + url.PathEscape(ns)
+
+		var podList struct{ Items []labeledObject }
+		if err := k.get(ctx, base+"/pods", &podList); err != nil {
+			return nil, err
+		}
+
+		var svcList struct{ Items []serviceObject }
+		if err := k.get(ctx, base+"/services", &svcList); err != nil {
+			return nil, err
+		}
+
+		for _, pod := range podList.Items {
+			if !wanted[ns][pod.Metadata.Name] {
+				continue
+			}
+
+			for _, svc := range svcList.Items {
+				if selects(svc.Spec.Selector, pod.Metadata.Labels) {
+					found[serviceRef{ns, svc.Metadata.Name}] = true
+				}
+			}
+		}
+	}
+
+	return found, nil
+}
+
+// selects tells whether a Service selector matches labels; an empty one selects nothing
+// (its endpoints are managed by hand).
+func selects(selector, labels map[string]string) bool {
+	if len(selector) == 0 {
+		return false
+	}
+
+	for key, value := range selector {
+		if labels[key] != value {
+			return false
+		}
+	}
+
+	return true
+}
+
+// routeURL is scheme://host[:port][path], the path left out when it is the root.
+func routeURL(scheme, host string, port int32, path string) string {
+	u := url.URL{Scheme: scheme, Host: host}
+	if strings.Contains(host, ":") {
+		u.Host = "[" + host + "]" // an IPv6 load balancer address
+	}
+
+	if port > 0 && !(scheme == "http" && port == 80) && !(scheme == "https" && port == 443) {
+		u.Host = net.JoinHostPort(host, strconv.Itoa(int(port)))
+	}
+
+	if strings.Trim(path, "/") != "" {
+		u.Path = path
+	}
+
+	return u.String()
+}
+
+// openableHost keeps a host a browser can open: not a wildcard, not empty.
+func openableHost(host string) bool {
+	return host != "" && !strings.Contains(host, "*")
+}
+
+// hostMatches tells whether host is pattern or under its wildcard ("*.example.com").
+func hostMatches(pattern, host string) bool {
+	if suffix, ok := strings.CutPrefix(pattern, "*"); ok {
+		return strings.HasSuffix(host, suffix) && len(host) > len(suffix)
+	}
+
+	return strings.EqualFold(pattern, host)
+}
+
+// uniqueRoutes drops repeated URLs (the first one wins) and sorts by URL.
+func uniqueRoutes(routes []kubeRoute) []kubeRoute {
+	seen := map[string]bool{}
+	out := []kubeRoute{}
+
+	for _, r := range routes {
+		if seen[r.URL] {
+			continue
+		}
+
+		seen[r.URL] = true
+		out = append(out, r)
+	}
+
+	sort.SliceStable(out, func(i, j int) bool { return out[i].URL < out[j].URL })
+
+	return out
+}

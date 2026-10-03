@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile/images.go.
+// Mirrors go/ichorgo/images.go.
 
 @Serializable
 data class ImageInfo(

@@ -1,6 +1,6 @@
 import Foundation
 
-// Mirrors go/talosmobile/kube_netperf.go.
+// Mirrors go/ichorgo/kube_netperf.go.
 
 /// Network paths a test measures.
 public enum NetPerfPath {

@@ -32,6 +32,6 @@ class ClusterColors(private val prefs: SharedPreferences) {
     }
 
     companion object {
-        const val FILE = "talosdev-mobile-cluster-colors"
+        const val FILE = "ichor-cluster-colors"
     }
 }

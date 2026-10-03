@@ -19,7 +19,7 @@ import name.levis.ichor.data.TalosJson
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.*
 import name.levis.ichor.ui.userMessage
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.Ichorgo
 import java.io.File
 
 /** One encrypted baseline and recording per cluster and screenshot mode; no cloud export. */
@@ -74,7 +74,7 @@ class InsightsViewModel(private val talos: TalosRepository, private val store: I
     }
 
     private suspend fun compare(baseline: String?, current: String): List<DriftChange> = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(ListSerializer(DriftChange.serializer()), Talosmobile.compareDrift(baseline.orEmpty(), current))
+        TalosJson.decodeFromString(ListSerializer(DriftChange.serializer()), Ichorgo.compareDrift(baseline.orEmpty(), current))
     }
 
     fun saveBaseline() = viewModelScope.launch {
@@ -135,7 +135,7 @@ class InsightsViewModel(private val talos: TalosRepository, private val store: I
                     pendingLost = 0
                 }
                 val updated = withContext(Dispatchers.IO) {
-                    val json = Talosmobile.updateIncident(document, raw, TalosJson.encodeToString(ListSerializer(TalosEvent.serializer()), batch))
+                    val json = Ichorgo.updateIncident(document, raw, TalosJson.encodeToString(ListSerializer(TalosEvent.serializer()), batch))
                     store.save("incident", json)
                     json
                 }

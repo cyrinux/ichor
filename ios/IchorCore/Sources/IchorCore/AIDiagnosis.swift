@@ -1,7 +1,7 @@
 import Foundation
 
 // The optional AI diagnosis: the Go core collects a report and asks the model (see
-// go/talosmobile/diagnose.go); this is what the app keeps about the user's choices.
+// go/ichorgo/diagnose.go); this is what the app keeps about the user's choices.
 
 /// A model provider, as listed by the Go core (AIProviders), so both apps show the same defaults.
 public struct AIProvider: Decodable, Equatable, Identifiable, Sendable {

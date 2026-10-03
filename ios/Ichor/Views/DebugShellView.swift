@@ -1,6 +1,6 @@
 import SwiftTerm
 import SwiftUI
-import Talosmobile
+import Ichorgo
 import IchorCore
 
 /// `talosctl debug -n NODE IMAGE --args ARGS`: a privileged container with a terminal
@@ -97,7 +97,7 @@ struct DebugShellView: View {
 extension TalosClient {
     /// The debug shell's ready-made commands (no network).
     static func debugSnippets() async throws -> [DebugSnippet] {
-        try await json { TalosmobileDebugSnippets($0) }
+        try await json { IchorgoDebugSnippets($0) }
     }
 }
 
@@ -170,7 +170,7 @@ final class DebugShell {
 
     private(set) var state = State.setup
     let terminal = TerminalView(frame: .zero)
-    private var session: TalosmobileDebugSession?
+    private var session: IchorgoDebugSession?
     private var bridge: Bridge?
 
     var isActive: Bool {
@@ -221,7 +221,7 @@ final class DebugShell {
     fileprivate func exited(_ code: Int, _ message: String) { state = .exited(code: code, message: message) }
 
     /// gomobile protocol (a class of the same name exists, hence "Protocol").
-    private final class Bridge: NSObject, TalosmobileDebugListenerProtocol, @unchecked Sendable {
+    private final class Bridge: NSObject, IchorgoDebugListenerProtocol, @unchecked Sendable {
         weak var owner: DebugShell?
         init(owner: DebugShell) { self.owner = owner }
 

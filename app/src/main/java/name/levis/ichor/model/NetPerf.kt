@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.util.Locale
 
-// Mirrors go/talosmobile/kube_netperf.go.
+// Mirrors go/ichorgo/kube_netperf.go.
 
 const val NETPERF_PATH_POD = "pod"
 const val NETPERF_PATH_HOST = "host"

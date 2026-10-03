@@ -1,5 +1,5 @@
 import Foundation
-import Talosmobile
+import Ichorgo
 import IchorCore
 
 enum NetPerfEvent: Sendable {
@@ -14,7 +14,7 @@ extension TalosClient {
     /// The Kubernetes nodes a test can run between, by name.
     func netPerfNodes() async throws -> [NetPerfNode] {
         let list: NetPerfNodeList = try await Self.json { [config, context, kubeServer] in
-            TalosmobileNetPerfNodes(config, context, kubeServer, $0)
+            IchorgoNetPerfNodes(config, context, kubeServer, $0)
         }
         return list.nodes
     }
@@ -31,7 +31,7 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = TalosmobileStartNetPerf(config, context, kubeServer, setup.server, setup.client,
+        let run = IchorgoStartNetPerf(config, context, kubeServer, setup.server, setup.client,
                                           setup.hostNetwork, setup.seconds, bridge)
         continuation.onTermination = { _ in
             run?.cancel()
@@ -41,7 +41,7 @@ extension TalosClient {
     }
 }
 
-private final class NetPerfBridge: NSObject, TalosmobileNetPerfListenerProtocol, @unchecked Sendable {
+private final class NetPerfBridge: NSObject, IchorgoNetPerfListenerProtocol, @unchecked Sendable {
     private let progress: @Sendable (NetPerfProgress) -> Void
     private let done: @Sendable (NetPerfReport, String?) -> Void
 

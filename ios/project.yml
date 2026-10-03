@@ -38,7 +38,7 @@ targets:
       - package: IchorCore
       - package: SwiftTerm
       # Built by gomobile (scripts/ios-build.sh); a static framework, so it is linked, not embedded.
-      - framework: Frameworks/Talosmobile.xcframework
+      - framework: Frameworks/Ichorgo.xcframework
         embed: false
       - target: TalosWidget
     settings:

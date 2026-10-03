@@ -1,6 +1,6 @@
 import Foundation
 
-// Mirrors the JSON produced by the Go core (go/talosmobile), like the Android models.
+// Mirrors the JSON produced by the Go core (go/ichorgo), like the Android models.
 
 public struct ConfigSummary: Decodable, Equatable, Sendable {
     public let current: String
