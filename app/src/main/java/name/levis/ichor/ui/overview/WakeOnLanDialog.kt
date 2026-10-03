@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.overview
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.runtime.key
@@ -39,6 +41,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.data.LOCAL_NETWORK_PERMISSION
+import name.levis.ichor.data.hasLocalNetworkAccess
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.SeenMac
@@ -179,6 +183,13 @@ fun rememberWakeOnLan(fingerprint: String?): (NodeOverview) -> WolActions? {
     var editing by remember { mutableStateOf<NodeOverview?>(null) }
     // Screenshot mode turned on with the dialog open: closed, not just hidden until it is off.
     LaunchedEffect(mask.enabled) { if (mask.enabled) editing = null }
+    // Android 17 drops packets to the Wi-Fi network until allowed: asked first, sent either
+    // way (a relay reached over a VPN needs no permission).
+    var pending by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val allowLan = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        pending?.invoke()
+        pending = null
+    }
     if (fingerprint.isNullOrBlank() || mask.enabled) return { null }
 
     editing?.let { node ->
@@ -202,7 +213,15 @@ fun rememberWakeOnLan(fingerprint: String?): (NodeOverview) -> WolActions? {
         WolActions(
             targets = wakeTo,
             // Not the screen's scope: leaving the overview must not cut the packets short.
-            onWake = { ProcessLifecycleOwner.get().lifecycleScope.launch { wake(app, node, wakeTo) } },
+            onWake = {
+                val send = { ProcessLifecycleOwner.get().lifecycleScope.launch { wake(app, node, wakeTo) }; Unit }
+                if (hasLocalNetworkAccess(context)) {
+                    send()
+                } else {
+                    pending = send
+                    allowLan.launch(LOCAL_NETWORK_PERMISSION)
+                }
+            },
             onSettings = { editing = node },
         )
     }

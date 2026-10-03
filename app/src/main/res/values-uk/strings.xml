@@ -1185,6 +1185,32 @@
         <item quantity="many">Додано %1$d вузлів до talosconfig.</item>
         <item quantity="other">Додано %1$d вузла до talosconfig.</item>
     </plurals>
+    <string name="endpoint_scan_action">Шукати в локальній мережі</string>
+    <string name="endpoint_scan_title">Шукати в локальній мережі</string>
+    <string name="endpoint_scan_body">Шукає вузли ваших кластерів у мережах навколо телефона.</string>
+    <string name="endpoint_scan_running">Пошук вузлів Talos…</string>
+    <string name="endpoint_scan_networks">Переглянуті мережі: %1$s</string>
+    <string name="endpoint_scan_none">Жоден вузол ваших кластерів не відповів у цих мережах. Якщо ви знаєте адресу вузла, додайте її як endpoint.</string>
+    <string name="endpoint_scan_no_permission">Доступ до локальної мережі не дозволено, тож мережу Wi-Fi не вдалося переглянути.</string>
+    <plurals name="endpoint_scan_found">
+        <item quantity="one">Знайдено %1$d вузол, додано як endpoint:</item>
+        <item quantity="few">Знайдено %1$d вузли, додано як endpoints:</item>
+        <item quantity="many">Знайдено %1$d вузлів, додано як endpoints:</item>
+        <item quantity="other">Знайдено %1$d вузла, додано як endpoints:</item>
+    </plurals>
+    <string name="endpoint_scan_added_to">Додано до %1$s</string>
+    <string name="endpoint_scan_discovery_hint">Додаються лише вузли, що приймають облікові дані кластера. Щойно кластер відповість, огляд запропонує додати інші його вузли.</string>
+    <string name="endpoints_edit">Змінити endpoints</string>
+    <string name="endpoints_title">Endpoints %1$s</string>
+    <string name="endpoints_body">Адреси, через які застосунок звертається до API Talos (порт 50000, якщо не вказано інший, напр. 192.168.1.10:50001). Перевірте адресу з обліковими даними кластера; ту, що зараз не відповідає, усе одно можна зберегти: вона може відповісти через VPN.</string>
+    <string name="endpoints_add_label">Додати endpoint</string>
+    <string name="endpoints_add">Додати</string>
+    <string name="endpoints_save">Зберегти</string>
+    <string name="endpoints_answered">Відповів: %1$s</string>
+    <string name="endpoints_test">Перевірити %1$s</string>
+    <string name="endpoints_remove">Прибрати %1$s</string>
+    <string name="local_network_blocked">Android поки не дозволяє Ichor звертатися до пристроїв у вашій мережі Wi-Fi.</string>
+    <string name="local_network_allow">Дозволити доступ до локальної мережі</string>
 
     <string name="insights_title">Аналіз кластера</string>
     <string name="insights_drift">Відхилення конфігурації</string>

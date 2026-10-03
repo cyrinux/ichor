@@ -45,6 +45,8 @@ import name.levis.ichor.model.EtcdForfeitResult
 import name.levis.ichor.model.EtcdMemberPlan
 import name.levis.ichor.model.MountList
 import name.levis.ichor.model.NodeDiscovery
+import name.levis.ichor.model.EndpointMatch
+import name.levis.ichor.model.EndpointProbe
 import name.levis.ichor.model.NodeFeatures
 import name.levis.ichor.model.ResourceDetail
 import name.levis.ichor.model.ResourceList
@@ -581,6 +583,28 @@ class TalosRepository(
     /** The cluster's members (Talos cluster discovery), flagged when the context already targets them. */
     suspend fun discoverNodes(): NodeDiscovery = call { cfg, ctx ->
         TalosJson.decodeFromString(NodeDiscovery.serializer(), Talosmobile.discoverNodes(cfg, ctx))
+    }
+
+    /**
+     * Hosts of [networks] (IPv4 CIDRs) answering the Talos API with the credentials of one of
+     * the stored contexts. Not through [call]: it looks for any cluster, on whatever network.
+     */
+    suspend fun findEndpoints(networks: List<String>): List<EndpointMatch> {
+        val stored = configs.config.value ?: throw NoConfigException()
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(
+                ListSerializer(EndpointMatch.serializer()),
+                Talosmobile.findEndpoints(stored.yaml, networks.joinToString(",")),
+            )
+        }
+    }
+
+    /** Asks [endpoint] its version with [contextName]'s credentials, before adding it. */
+    suspend fun probeEndpoint(contextName: String, endpoint: String): EndpointProbe {
+        val stored = configs.config.value ?: throw NoConfigException()
+        return withContext(Dispatchers.IO) {
+            TalosJson.decodeFromString(EndpointProbe.serializer(), Talosmobile.probeEndpoint(stored.yaml, contextName, endpoint))
+        }
     }
 
     /** `talosctl get TYPE ID -o yaml` (never cached: may hold secrets). */

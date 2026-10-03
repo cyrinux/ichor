@@ -46,6 +46,7 @@ import name.levis.ichor.data.VpnOnlyClusters
 import name.levis.ichor.data.KubeServers
 import name.levis.ichor.data.VpnRequiredException
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.heldBackForVpn
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.shortcuts.ClusterShortcuts
@@ -197,6 +198,23 @@ class TalosApp : Application() {
     /** Adds discovered [nodes] to the cluster [name]'s talosconfig context; screens and monitoring follow. */
     suspend fun addClusterNodes(name: String, nodes: List<String>) {
         configRepository.addNodes(name, nodes)
+        talosRepository.invalidate()
+        launchSync(runNow = true)
+    }
+
+    /** Replaces the endpoints of the cluster [name]'s talosconfig context; screens and monitoring follow. */
+    suspend fun setClusterEndpoints(name: String, endpoints: List<String>) {
+        configRepository.setEndpoints(name, endpoints)
+        talosRepository.invalidate()
+        launchSync(runNow = true)
+    }
+
+    /**
+     * Adds the endpoints a network search found to the contexts each one answered for. Once a
+     * cluster answers again, node discovery offers the members it still misses.
+     */
+    suspend fun addFoundEndpoints(matches: List<EndpointMatch>) {
+        configRepository.addEndpoints(matches)
         talosRepository.invalidate()
         launchSync(runNow = true)
     }

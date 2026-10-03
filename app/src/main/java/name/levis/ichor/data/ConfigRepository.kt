@@ -4,9 +4,13 @@ import android.content.Context
 import name.levis.talosmobile.Talosmobile
 import name.levis.ichor.model.ConfigSummary
 import name.levis.ichor.model.ContextSummary
+import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.ImportChoice
 import name.levis.ichor.model.ImportConflict
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,6 +39,8 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
     /** Where the key protecting the stored config lives (null before the first import). */
     fun keyProtection(): KeyProtection? = runCatching { store.protection() }.getOrNull()
     private val prefs = context.getSharedPreferences("talosdev-mobile", Context.MODE_PRIVATE)
+
+    private val writes = Mutex()
 
     private val _config = MutableStateFlow<StoredConfig?>(null)
     val config: StateFlow<StoredConfig?> = _config.asStateFlow()
@@ -75,7 +81,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      * replace the stored context of the same cluster (see [importConflicts]). The imported
      * config's current context becomes the one shown.
      */
-    suspend fun save(yaml: String, choices: List<ImportChoice> = emptyList()) = withContext(Dispatchers.IO) {
+    suspend fun save(yaml: String, choices: List<ImportChoice> = emptyList()) = writing {
         val merged = _config.value?.let {
             Talosmobile.mergeConfig(it.yaml, yaml, TalosJson.encodeToString(ListSerializer(ImportChoice.serializer()), choices))
         } ?: yaml
@@ -90,7 +96,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      * Replaces the stored config with [yaml] (a restored backup) in one write, so a failure
      * leaves the previous one in place, and shows the context at [activeIndex].
      */
-    suspend fun replace(yaml: String, activeIndex: Int) = withContext(Dispatchers.IO) {
+    suspend fun replace(yaml: String, activeIndex: Int) = writing {
         val summary = parse(yaml)
         val active = contextAt(summary, activeIndex)
         store.write(yaml.encodeToByteArray())
@@ -107,13 +113,13 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      * showing its neighbour if it was the active one. Removing the last one deletes the
      * stored config. Returns whether a config is still stored.
      */
-    suspend fun removeContext(name: String): Boolean = withContext(Dispatchers.IO) {
-        val current = _config.value ?: return@withContext false
+    suspend fun removeContext(name: String): Boolean = writing {
+        val current = _config.value ?: return@writing false
         val removed = current.summary.indexOf(name)
-        if (removed < 0) return@withContext true
+        if (removed < 0) return@writing true
         if (current.summary.contexts.size == 1) {
             clear()
-            return@withContext false
+            return@writing false
         }
         val remaining = Talosmobile.removeContext(current.yaml, name)
         val summary = parse(remaining)
@@ -134,7 +140,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      * single-context talosconfig from GenerateTalosconfig), keeping the other contexts and
      * the context the user is looking at. The result goes through the import validation.
      */
-    suspend fun replaceCredentials(contextName: String, generatedYaml: String) = withContext(Dispatchers.IO) {
+    suspend fun replaceCredentials(contextName: String, generatedYaml: String) = writing {
         val current = _config.value ?: throw NoConfigException()
         val merged = Talosmobile.replaceContextCredentials(current.yaml, generatedYaml, contextName)
         val summary = parse(merged)
@@ -148,9 +154,34 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      * Adds [nodes] (addresses, as discovered) to the nodes of [contextName], keeping the
      * other contexts and the context the user is looking at.
      */
-    suspend fun addNodes(contextName: String, nodes: List<String>) = withContext(Dispatchers.IO) {
+    suspend fun addNodes(contextName: String, nodes: List<String>) =
+        edit { Talosmobile.addContextNodes(it, contextName, nodes.joinToString(",")) }
+
+    /** Replaces the endpoints of [contextName] with [endpoints], in order. */
+    suspend fun setEndpoints(contextName: String, endpoints: List<String>) =
+        edit { Talosmobile.setContextEndpoints(it, contextName, endpoints.joinToString(",")) }
+
+    /**
+     * Puts each endpoint a network search found first among the endpoints of the contexts it
+     * answered for, all in one write: nothing is stored if one fails.
+     */
+    suspend fun addEndpoints(found: List<EndpointMatch>) = edit { yaml ->
+        found.fold(yaml) { acc, match ->
+            match.contexts.fold(acc) { config, name -> Talosmobile.addContextEndpoint(config, name, match.endpoint) }
+        }
+    }
+
+    /**
+     * Runs a change of the stored config off the main thread, one at a time: each reads the
+     * stored config, changes it and writes it back, so two at once would lose one of them.
+     */
+    private suspend fun <T> writing(block: suspend CoroutineScope.() -> T): T =
+        writes.withLock { withContext(Dispatchers.IO, block) }
+
+    /** Stores the stored config changed by [change], keeping the context the user is looking at. */
+    private suspend fun edit(change: (String) -> String) = writing {
         val current = _config.value ?: throw NoConfigException()
-        val updated = Talosmobile.addContextNodes(current.yaml, contextName, nodes.joinToString(","))
+        val updated = change(current.yaml)
         val summary = parse(updated)
         store.write(updated.encodeToByteArray())
         _config.value = StoredConfig(updated, summary, current.activeContext)

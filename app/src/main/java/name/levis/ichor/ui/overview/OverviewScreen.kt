@@ -151,6 +151,9 @@ fun OverviewScreen(
     val scope = rememberCoroutineScope()
     var showClusters by remember { mutableStateOf(false) }
     var clusterMenu by remember { mutableStateOf(false) }
+    // The cluster whose endpoints are being edited, and the network search for clusters' nodes.
+    var editingEndpoints by remember { mutableStateOf<String?>(null) }
+    var scanningEndpoints by remember { mutableStateOf(false) }
     val timeState by timeVm.state.collectAsStateWithLifecycle()
     val config by vm.configs.config.collectAsStateWithLifecycle()
     val invalidations by vm.talos.invalidations.collectAsStateWithLifecycle()
@@ -217,6 +220,9 @@ fun OverviewScreen(
         if (!liveEnabled || !loaded) return@LaunchedEffect
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { liveVm.poll(config?.activeContext to invalidations) }
     }
+
+    // Android 17: a cluster on the Wi-Fi network needs local network access, asked up front.
+    AskLocalNetworkAccess(config?.activeSummary, onGranted = vm.talos::invalidate)
 
     // Members the talosconfig misses, once the overview loaded (its nodes answer, so will discovery).
     val discovered by discoveryVm.offer.collectAsStateWithLifecycle()
@@ -307,6 +313,20 @@ fun OverviewScreen(
                     }
                 },
                 onDismiss = { showClusters = false },
+                onEndpoints = {
+                    showClusters = false
+                    editingEndpoints = it.name
+                },
+            )
+        }
+        config?.let { stored ->
+            EndpointTools(
+                config = stored,
+                labels = clusterLabels,
+                editing = editingEndpoints,
+                scanning = scanningEndpoints,
+                onEdit = { editingEndpoints = it },
+                onScan = { scanningEndpoints = it },
             )
         }
         config?.activeContext?.takeIf { showDiscovered && discovered.isNotEmpty() }?.let { contextName ->
@@ -354,6 +374,9 @@ fun OverviewScreen(
                     endpoints = config?.activeSummary?.endpoints.orEmpty(),
                     onRetry = vm::refresh,
                     onShowNodes = { showNodesAnyway = true },
+                    onScan = { scanningEndpoints = true }.takeIf { config?.activeSummary?.demo == false },
+                    onEditEndpoints = { editingEndpoints = config?.activeContext }
+                        .takeIf { config?.activeSummary?.demo == false && !clusterLabels.masked },
                 ) else NodeList(
                     overview = s.data,
                     outage = down?.takeIf { s.data.hasLastKnown },

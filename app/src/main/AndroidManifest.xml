@@ -4,6 +4,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Wake-on-LAN: find the Wi-Fi/Ethernet network to broadcast the magic packet on. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Android 17+: reach nodes on the Wi-Fi/Ethernet network (not needed over a VPN), and
+         search it for a cluster's nodes. -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Self-update from GitHub releases (the user still confirms each install). -->
