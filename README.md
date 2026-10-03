@@ -96,9 +96,10 @@ Notes:
 
 ### Network test
 
-**Kubernetes → Network** measures the network from a client node to a server node with netperf,
-the way `cilium connectivity perf` does, on any CNI: TCP throughput (`TCP_STREAM`), then TCP
-round trips (`TCP_RR`: p50/p90/p99 latency), pod to pod and, optionally, host to host.
+**Kubernetes → Network** (also under **Cluster insights → Network**) measures the network from a
+client node to a server node with netperf, the way `cilium connectivity perf` does, on any CNI:
+TCP throughput (`TCP_STREAM`), then TCP round trips (`TCP_RR`: p50/p90/p99 latency), pod to pod
+and, optionally, host to host.
 
 - **What runs:** a namespace `ichor-netperf-<random>`, a `netserver` pod on the server node and
   one short-lived `netperf` pod per measurement on the client node, with the

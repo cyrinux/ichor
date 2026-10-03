@@ -22,6 +22,8 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.KeepScreenOn
+import name.levis.ichor.ui.workloads.NetPerfTab
+import name.levis.ichor.ui.workloads.NetPerfViewModel
 import java.text.DateFormat
 import java.util.Date
 
@@ -40,6 +42,8 @@ fun InsightsScreen(onBack: () -> Unit) {
     val vm: InsightsViewModel = viewModel(key = key, factory = factory {
         InsightsViewModel(application.talosRepository, InsightsStore(context.applicationContext, storageScope), cluster)
     })
+    // Per cluster, so another cluster's nodes never show; leaving the screen stops a running test.
+    val netPerf: NetPerfViewModel = viewModel(key = "netperf-$cluster", factory = factory { NetPerfViewModel(application.netPerfRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var tab by remember { mutableIntStateOf(0) }
@@ -61,6 +65,11 @@ fun InsightsScreen(onBack: () -> Unit) {
             SecondaryTabRow(selectedTabIndex = tab) {
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.insights_drift)) })
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.insights_recorder)) })
+                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.netperf_tab)) })
+            }
+            if (tab == 2) {
+                NetPerfTab(netPerf)
+                return@Column
             }
             LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 state.error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }

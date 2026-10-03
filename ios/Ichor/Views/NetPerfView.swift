@@ -2,8 +2,8 @@ import SwiftUI
 import IchorCore
 
 /// A network test between two nodes (netperf, like `cilium connectivity perf`): the setup,
-/// then its progress and the measurements. The session belongs to the Kubernetes screen,
-/// which stops a running test when it goes away.
+/// then its progress and the measurements. The session belongs to the screen showing it
+/// (Kubernetes or Cluster insights), which stops a running test when it goes away.
 struct NetPerfView: View {
     @Bindable var session: NetPerfSession
 

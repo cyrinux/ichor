@@ -22,20 +22,35 @@ private struct InsightsContent: View {
     @State private var session: InsightsSession
     @State private var tab = 0
     @State private var showMetrics = false
+    /// Kept across tabs: only leaving the screen stops a running network test.
+    @State private var netPerf = NetPerfSession()
     init(cluster: String, storageScope: String) {
         _session = State(initialValue: InsightsSession(cluster: cluster, storageScope: storageScope))
     }
     private func time(_ at: Int64) -> String {
         Date(timeIntervalSince1970: Double(at) / 1000).formatted(date: .abbreviated, time: .standard)
     }
+    private var picker: some View {
+        Picker("Cluster insights", selection: $tab) {
+            Text("Configuration drift").tag(0)
+            Text("Incident recorder").tag(1)
+            Text("Network").tag(2)
+        }.pickerStyle(.segmented)
+    }
     var body: some View {
-        List {
-            Picker("Cluster insights", selection: $tab) {
-                Text("Configuration drift").tag(0)
-                Text("Incident recorder").tag(1)
-            }.pickerStyle(.segmented)
-            if let error = session.error { Text(verbatim: error).foregroundStyle(.red) }
-            if tab == 0 { drift } else { recorder }
+        Group {
+            if tab == 2 {
+                VStack(spacing: 0) {
+                    picker.padding(.horizontal)
+                    NetPerfView(session: netPerf)
+                }
+            } else {
+                List {
+                    picker
+                    if let error = session.error { Text(verbatim: error).foregroundStyle(.red) }
+                    if tab == 0 { drift } else { recorder }
+                }
+            }
         }
         .themedBackground()
         .navigationTitle("Cluster insights")
@@ -44,6 +59,7 @@ private struct InsightsContent: View {
         .onChange(of: scenePhase) { _, phase in if phase != .active { session.stop() } }
         .onChange(of: session.recording) { _, recording in UIApplication.shared.isIdleTimerDisabled = recording }
         .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        .onDisappear { if netPerf.isRunning { netPerf.leave() } }
     }
     @ViewBuilder private var drift: some View {
         Section {
