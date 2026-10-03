@@ -1,0 +1,7 @@
+• Incident evidence card in insights
+• Kubernetes pods tab with delete on Android, iOS
+• List and delete Kubernetes pods in the Go core
+• Kubernetes workloads screen with rollout restart on Android, iOS
+• Kubernetes workloads and rollout restart in the Go core
+• App inventory with logos of the software running in the cluster
+• Show a "can't reach the cluster" view when no node answers
