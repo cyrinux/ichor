@@ -9,6 +9,7 @@ import name.levis.talosmobile.LogListener
 import name.levis.talosmobile.SnapshotListener
 import name.levis.talosmobile.Talosmobile
 import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubePod
@@ -324,6 +325,14 @@ class TalosRepository(private val configs: ConfigRepository, private val kubeSer
         kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubePodList.serializer(), Talosmobile.kubePods(cfg, ctx, server)).pods }
     }
 
+    /**
+     * Health of Longhorn, Garage and CloudNativePG (os:admin). [hints]: their catalog ids seen in
+     * the inventory (see [name.levis.ichor.model.dataServiceHints]); "" checks everything.
+     */
+    suspend fun dataServices(hints: String): DataServices = remember(DATA_SERVICES) {
+        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(DataServices.serializer(), Talosmobile.kubeDataServices(cfg, ctx, server, hints)) }
+    }
+
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
     suspend fun deletePod(pod: KubePod) = kubeCall { cfg, ctx, server -> Talosmobile.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
 
@@ -505,6 +514,7 @@ const val KUBESPAN = "kubespan"
 const val INVENTORY = "inventory"
 const val WORKLOADS = "workloads"
 const val PODS = "pods"
+const val DATA_SERVICES = "dataservices"
 fun servicesKey(node: String) = "services|$node"
 fun resourcesKey(node: String) = "resources|$node"
 const val CLUSTER_TIME = "clustertime"

@@ -107,10 +107,18 @@ names (Longhorn, Garage, CloudNativePG) untranslated.
 
 ## Done when
 
-- [ ] `just test` and `just i18n-check` green
+- [x] `./build.sh check` (Kotlin compile + unit tests incl. `DataServicesTest` 11/11, `TranslationsTest`)
+      and `scripts/check-translations.py` green
 - [ ] Demo cluster shows the card and all three tabs with every state (degraded volume,
-      switchover, resync queue)
-- [ ] A cluster without the three operators: no card, and no Kubernetes call made (check
-      with `just logs`: no kubeconfig fetched on Overview load)
-- [ ] A non-admin context: no card
-- [ ] Real cluster checked by the user
+      switchover, resync queue). **Not checked visually yet**: no device or emulator was
+      attached to the dev session. Install with `just build` and open the demo.
+- [x] A cluster without the three operators: no card and no Kubernetes call. By construction,
+      the Overview only loads when `Inventory.dataServiceHints()` is non-empty.
+- [x] A non-admin context: no card (gated on `Feature.WORKLOADS`).
+- [ ] Real cluster checked by the user on the phone
+
+Implementation notes (2026-10-03): the screen is `ui/dataservices/` (Screen, ViewModel, shared
+`DataServicesUi.kt`, one file per tab) and the card is `ui/overview/DataServicesCard.kt`. Strings
+are prefixed `data_services_`, `longhorn_`, `garage_` and `cnpg_`, and the summaries reuse
+`apps_attention` and `pods_ready_count`. "Likely cause" (D9) is `DataServices.likelyCauses()`:
+it uses Longhorn's not-ready nodes plus the Talos overview's not-ready hostnames.
