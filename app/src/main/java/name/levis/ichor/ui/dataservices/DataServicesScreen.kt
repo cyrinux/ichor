@@ -147,6 +147,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>) {
             DataServiceKind.LONGHORN -> LonghornTab(services.longhorn!!, garageDetected = services.garage != null, onGarage = { selected = DataServiceKind.GARAGE })
             DataServiceKind.GARAGE -> GarageTab(services.garage!!)
             DataServiceKind.CNPG -> CnpgTab(services.cnpg!!)
+            DataServiceKind.DRAGONFLY -> DragonflyTab(services.dragonfly!!)
         }
     }
 }

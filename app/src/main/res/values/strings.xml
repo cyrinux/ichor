@@ -1279,6 +1279,17 @@
     <string name="cnpg_last_failure">Last failure</string>
     <string name="cnpg_never">never</string>
     <string name="cnpg_recoverable">Oldest recovery point</string>
+    <string name="dragonfly_empty">No Dragonfly instances.</string>
+    <string name="dragonfly_role_master">master</string>
+    <string name="dragonfly_reason_no_ready">no pod ready</string>
+    <string name="dragonfly_reason_no_master">no master</string>
+    <string name="dragonfly_reason_masters">several masters</string>
+    <string name="dragonfly_reason_pods">replicas missing</string>
+    <string name="dragonfly_reason_phase">operator: %1$s</string>
+    <plurals name="dragonfly_instances">
+        <item quantity="one">%1$d Dragonfly instance</item>
+        <item quantity="other">%1$d Dragonfly instances</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s is not ready: the likely cause of %2$d problem</item>
         <item quantity="other">%1$s is not ready: the likely cause of %2$d problems</item>

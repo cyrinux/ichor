@@ -34,19 +34,20 @@ func healthRank(h string) int {
 // dataServices is the health of the storage and database operators a cluster runs. A nil
 // section is a system that is not installed.
 type dataServices struct {
-	Longhorn *longhornStatus `json:"longhorn,omitempty"`
-	Garage   *garageStatus   `json:"garage,omitempty"`
-	CNPG     *cnpgStatus     `json:"cnpg,omitempty"`
+	Longhorn  *longhornStatus  `json:"longhorn,omitempty"`
+	Garage    *garageStatus    `json:"garage,omitempty"`
+	CNPG      *cnpgStatus      `json:"cnpg,omitempty"`
+	Dragonfly *dragonflyStatus `json:"dragonfly,omitempty"`
 }
 
 // KubeDataServices reports the health of the storage and database operators the cluster
-// runs (Longhorn, Garage, CloudNativePG), through the Kubernetes API with the admin
+// runs (Longhorn, Garage, CloudNativePG, Dragonfly), through the Kubernetes API with the admin
 // kubeconfig Talos issues (os:admin): Longhorn and CloudNativePG from their custom
 // resources, Garage by running its own CLI (`garage json-api`) in one of its pods.
 //
 // hints is a comma-separated list of catalog app ids the app saw in the inventory
-// ("longhorn,garage,cloudnative-pg"); "" checks everything. Longhorn and CloudNativePG are
-// found by their API groups either way; Garage, which has no API of its own, is only
+// ("longhorn,garage,cloudnative-pg,dragonfly"); "" checks everything. Longhorn, CloudNativePG
+// and Dragonfly are found by their API groups (their CRDs) either way; Garage, which has no API of its own, is only
 // looked for (a listing of every pod) when hinted or when hints is "".
 // See plans/data-services/README.md for the JSON. kubeServer: see KubePods.
 func KubeDataServices(configYAML, contextName, kubeServer, hints string) (out string, err error) {
@@ -133,6 +134,10 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 		})
 	}
 
+	if v, ok := groups[groupDragonfly]; ok {
+		wg.Go(func() { out.Dragonfly = readDragonfly(ctx, k, v) })
+	}
+
 	if hints.wants("garage") {
 		wg.Go(func() { out.Garage = readGarage(ctx, k, run, pods, podsErr, hints["garage"]) })
 	}
@@ -215,11 +220,12 @@ func (p dsPod) containerReady(container string) bool {
 	return found
 }
 
-// listDSPods lists the pods of every namespace, those with the label key when set.
-func listDSPods(ctx context.Context, k *kubeClient, labelKey string) ([]dsPod, error) {
+// listDSPods lists the pods of every namespace, those matching the label selector when set
+// ("cnpg.io/cluster" for a key, "app.kubernetes.io/name=dragonfly" for a value).
+func listDSPods(ctx context.Context, k *kubeClient, selector string) ([]dsPod, error) {
 	path := "/api/v1/pods"
-	if labelKey != "" {
-		path += "?labelSelector=" + url.QueryEscape(labelKey)
+	if selector != "" {
+		path += "?labelSelector=" + url.QueryEscape(selector)
 	}
 
 	var list struct {

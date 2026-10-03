@@ -2,6 +2,7 @@ package name.levis.ichor.monitor
 
 import name.levis.ichor.model.CnpgReason
 import name.levis.ichor.model.DataServices
+import name.levis.ichor.model.DragonflyReason
 import name.levis.ichor.model.GarageState
 import name.levis.ichor.model.ServiceHealth
 
@@ -37,6 +38,13 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
         when {
             c.serviceHealth == ServiceHealth.CRITICAL -> out["cnpg|${c.label}"] = DATA_CRITICAL
             c.reasonList.any { it in CNPG_ALERT_REASONS } -> out["cnpg|${c.label}"] = DATA_WARNING
+        }
+    }
+    services.dragonfly?.instances.orEmpty().forEach { d ->
+        when {
+            d.serviceHealth == ServiceHealth.CRITICAL -> out["dragonfly|${d.label}"] = DATA_CRITICAL
+            // A rolling update is planned; a replica down or two masters are not.
+            d.reasonList.any { it == DragonflyReason.PODS || it == DragonflyReason.MASTERS } -> out["dragonfly|${d.label}"] = DATA_WARNING
         }
     }
     return out

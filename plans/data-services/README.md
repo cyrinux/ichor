@@ -119,6 +119,28 @@ Clusters without any of the three see nothing new and pay no extra cost.
 }
 ```
 
+Dragonfly (phase 5, operator `dragonflydb.io/v1alpha1`, detected by its API group like Longhorn
+and CNPG; pods selected with `app.kubernetes.io/name=dragonfly`, instance from `app`, role from
+`role`):
+
+```jsonc
+  "dragonfly": {
+    "version": "v1alpha1", "error": "",
+    "instances": [{
+      "namespace": "app", "name": "cache",
+      "phase": "Ready",             // the operator's own word (Ready, Rolling-update…)
+      "health": "ok",               // critical: noReady/noMaster; warning: pods/masters/notReady
+      "reasons": [],                // noReady|noMaster|masters|pods|notReady
+      "replicas": 2, "readyPods": 2,
+      "master": "cache-0",          // pod with role=master, "" when none
+      "pods": [{ "name": "cache-0", "node": "worker-1", "phase": "Running", "role": "master", "ready": true }]
+    }]
+  }
+```
+
+Alerts (phase 4 rules): `noReady`/`noMaster` → critical; `pods`/`masters` → warning; a rolling
+update (`notReady`) doesn't alert.
+
 A section key is **absent/null** when the system isn't installed. An **empty list with no
 error** means it's installed but has nothing in it. A **non-empty `error`** means the
 system was detected but couldn't be read; the UI shows it inline in that tab only.
