@@ -6394,41 +6394,6 @@
         }
       }
     },
-    "Active context" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktiver Kontext"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contexto activo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contexte actif"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contesto attivo"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Активний контекст"
-          }
-        }
-      }
-    },
     "Add a cluster" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7227,41 +7192,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вигляд"
-          }
-        }
-      }
-    },
-    "Ask an admin for a new talosconfig before this one expires." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bitte einen Admin um eine neue talosconfig, bevor diese abläuft."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pide un nuevo talosconfig a un administrador antes de que caduque este."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Demandez un nouveau talosconfig à un admin avant que celui-ci n'expire."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chiedi a un amministratore un nuovo talosconfig prima che questo scada."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Попросіть адміністратора про новий talosconfig, доки цей не сплив."
           }
         }
       }
@@ -16252,41 +16182,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Оновити мій сертифікат…"
-          }
-        }
-      }
-    },
-    "Renew the certificate now" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zertifikat jetzt erneuern"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Renovar el certificado ahora"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Renouveler le certificat maintenant"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rinnova ora il certificato"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Оновити сертифікат зараз"
           }
         }
       }

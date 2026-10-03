@@ -11,23 +11,6 @@ struct SettingsView: View {
     var body: some View {
         @Bindable var model = model
         Form {
-            if let contexts = model.summary?.contexts {
-                Section("Clusters") {
-                    Picker("Active context", selection: $model.activeContext) {
-                        ForEach(contexts) { Text($0.name).tag($0.name) }
-                    }
-                    if let ctx = model.activeSummary {
-                        LabeledContent("Endpoints", value: ctx.endpoints.joined(separator: "\n"))
-                        LabeledContent("Nodes", value: "\(ctx.nodes.isEmpty ? ctx.endpoints.count : ctx.nodes.count)")
-                        LabeledContent("Roles", value: ctx.roles.joined(separator: ", "))
-                        LabeledContent("Cert expires", value: localizedCertExpiry(ctx.certNotAfter))
-                        if ctx.certNotAfter > 0 && daysUntil(ctx.certNotAfter) <= certWarnDays {
-                            certificateWarning(ctx)
-                        }
-                    }
-                    NavigationLink("Manage clusters…", value: Route.clusters)
-                }
-            }
             Section {
                 Picker("Theme", selection: $model.theme) {
                     ForEach(ThemeMode.allCases) { Text($0.label).tag($0) }
@@ -100,21 +83,6 @@ struct SettingsView: View {
             Button("Delete", role: .destructive) { model.clear() }
         } message: {
             Text("The config of every cluster, with their client keys, will be removed from this device.")
-        }
-    }
-
-    /// Expired or expiring soon: renew here when the role allows it, else say what to do.
-    @ViewBuilder
-    private func certificateWarning(_ ctx: ContextSummary) -> some View {
-        if model.allows(.issueConfig) {
-            NavigationLink(value: Route.issueConfig(renew: true)) {
-                Label("Renew the certificate now", systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.orange)
-            }
-        } else {
-            Label("Ask an admin for a new talosconfig before this one expires.", systemImage: "exclamationmark.triangle.fill")
-                .font(.footnote)
-                .foregroundStyle(.orange)
         }
     }
 

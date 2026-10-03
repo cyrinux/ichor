@@ -1,27 +1,22 @@
 package name.levis.ichor.ui.settings
 
-import name.levis.ichor.ui.components.rememberClusterLabels
 import name.levis.ichor.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,9 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalContext
@@ -56,7 +49,6 @@ import name.levis.ichor.security.lockRequired
 import name.levis.ichor.ui.backup.BackupSection
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.SectionTitle
-import name.levis.ichor.ui.importconfig.certExpiry
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,7 +67,6 @@ fun SettingsScreen(
     onCleared: () -> Unit,
 ) {
     val config by configs.config.collectAsStateWithLifecycle()
-    val app = LocalContext.current.applicationContext as TalosApp
     val scope = rememberCoroutineScope()
     var confirmDelete by remember { mutableStateOf(false) }
 
@@ -91,30 +82,6 @@ fun SettingsScreen(
             Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            SectionTitle(stringResource(R.string.clusters_title))
-            val clusterLabels = rememberClusterLabels()
-            config?.summary?.contexts?.forEach { ctx ->
-                val selected = ctx.name == config?.activeContext
-                Card(
-                    Modifier.fillMaxWidth().selectable(
-                        selected = selected,
-                        role = Role.RadioButton,
-                        onClick = { app.selectCluster(ctx.name) },
-                    ),
-                ) {
-                    Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
-                        RadioButton(selected = selected, onClick = null)
-                        Column(Modifier.padding(start = 12.dp)) {
-                            Text(clusterLabels.of(ctx), style = MaterialTheme.typography.titleMedium)
-                            clusterLabels.given(ctx)?.let { Text(ctx.name, style = MaterialTheme.typography.bodySmall) }
-                            InfoRow(stringResource(R.string.common_label_endpoints), ctx.endpoints.joinToString("\n"), mono = true)
-                            InfoRow(stringResource(R.string.common_label_nodes), "${ctx.nodes.size.takeIf { it > 0 } ?: ctx.endpoints.size}")
-                            InfoRow(stringResource(R.string.common_label_roles), ctx.roles.joinToString())
-                            InfoRow(stringResource(R.string.common_label_cert_expires), certExpiry(ctx.certNotAfter))
-                        }
-                    }
-                }
-            }
             AppearanceSection(uiPreferences)
             SecuritySection(appLock, uiPreferences, required = lockRequired(config?.summary?.contexts.orEmpty()))
             PrivacySection(LocalContext.current.applicationContext as TalosApp)
