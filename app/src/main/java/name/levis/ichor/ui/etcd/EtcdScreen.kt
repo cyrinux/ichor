@@ -395,6 +395,10 @@ private fun EtcdContent(
         snapshot?.let { snap ->
             item { SnapshotPanel(snap.state, snap.onSave, snap.onCancel, snap.onDismiss, snap.notice) }
         }
+        etcd.alarmsError?.let { error ->
+            item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
+            item { Text(stringResource(R.string.etcd_alarms_check_failed, error), color = colors.bad) }
+        }
         if (etcd.alarms.isNotEmpty()) {
             item { SectionTitle(stringResource(R.string.etcd_section_alarms)) }
             items(etcd.alarms) { alarm ->

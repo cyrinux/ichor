@@ -68,6 +68,7 @@ fun snapshotOf(
         n.node to NodeState(n.hostname, n.health, reason)
     },
     etcdAlarms = etcd?.alarms?.map { "${it.memberId}:${it.alarm}" }.orEmpty().sorted(),
-    etcdChecked = etcd != null && etcd.error == null,
+    // A failed alarm list is "not checked", never an all-clear.
+    etcdChecked = etcd != null && etcd.error == null && etcd.alarmsError == null,
     certNotAfter = certNotAfter,
 )

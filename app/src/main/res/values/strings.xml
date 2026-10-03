@@ -214,6 +214,7 @@
     <!-- etcd -->
     <string name="etcd_auth_defrag">Defragment etcd</string>
     <string name="etcd_section_alarms">Alarms</string>
+    <string name="etcd_alarms_check_failed">Could not check alarms: %1$s</string>
     <string name="etcd_section_members">Members (%1$d)</string>
     <string name="etcd_section_unprobed">Members not in this talosconfig</string>
     <string name="etcd_status_error">Error</string>
