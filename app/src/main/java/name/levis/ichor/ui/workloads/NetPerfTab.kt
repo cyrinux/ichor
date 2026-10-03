@@ -46,6 +46,7 @@ import name.levis.ichor.model.NetPerfNode
 import name.levis.ichor.model.NetPerfSetup
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.ErrorBox
+import name.levis.ichor.ui.components.InfoHint
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.KeepScreenOn
 import name.levis.ichor.ui.components.LoadingBox
@@ -106,7 +107,12 @@ private fun NetPerfSetupForm(nodes: List<NetPerfNode>, setup: NetPerfSetup, onCh
         Text(stringResource(R.string.netperf_no_nodes), color = muted, modifier = gutter)
         return
     }
-    NodeChips(stringResource(R.string.netperf_client), nodes, setup.client) { name -> onChange { it.copy(client = name) } }
+    NodeChips(
+        stringResource(R.string.netperf_client),
+        nodes,
+        setup.client,
+        hint = { InfoHint(stringResource(R.string.netperf_hint_nodes_title), stringResource(R.string.netperf_hint_nodes)) },
+    ) { name -> onChange { it.copy(client = name) } }
     NodeChips(stringResource(R.string.netperf_server), nodes, setup.server) { name -> onChange { it.copy(server = name) } }
     if (setup.ready && setup.server == setup.client) {
         Text(stringResource(R.string.netperf_same_node), style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.warn, modifier = gutter)
@@ -116,9 +122,13 @@ private fun NetPerfSetupForm(nodes: List<NetPerfNode>, setup: NetPerfSetup, onCh
             Text(stringResource(R.string.netperf_host), style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.netperf_host_desc), style = MaterialTheme.typography.bodySmall, color = muted)
         }
+        InfoHint(stringResource(R.string.netperf_hint_paths_title), stringResource(R.string.netperf_hint_paths))
         Switch(checked = setup.hostNetwork, onCheckedChange = { on -> onChange { it.copy(hostNetwork = on) } }, modifier = Modifier.padding(start = 12.dp))
     }
-    Text(stringResource(R.string.netperf_duration), style = MaterialTheme.typography.labelLarge, modifier = gutter)
+    Row(gutter, verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.netperf_duration), style = MaterialTheme.typography.labelLarge)
+        InfoHint(stringResource(R.string.netperf_duration), stringResource(R.string.netperf_hint_duration))
+    }
     SingleChoiceSegmentedButtonRow(gutter.fillMaxWidth()) {
         NETPERF_DURATIONS.forEachIndexed { index, seconds ->
             SegmentedButton(
@@ -132,9 +142,18 @@ private fun NetPerfSetupForm(nodes: List<NetPerfNode>, setup: NetPerfSetup, onCh
 }
 
 @Composable
-private fun NodeChips(label: String, nodes: List<NetPerfNode>, selected: String, onSelect: (String) -> Unit) {
+private fun NodeChips(
+    label: String,
+    nodes: List<NetPerfNode>,
+    selected: String,
+    hint: @Composable () -> Unit = {},
+    onSelect: (String) -> Unit,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(label, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(horizontal = 16.dp))
+        Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(label, style = MaterialTheme.typography.labelLarge)
+            hint()
+        }
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(nodes, key = { it.name }) { node ->
                 FilterChip(

@@ -3,6 +3,7 @@ package name.levis.ichor.ui.workloads
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
@@ -23,6 +24,7 @@ import name.levis.ichor.model.NetPerfResult
 import name.levis.ichor.model.NetPerfSetup
 import name.levis.ichor.model.formatMbps
 import name.levis.ichor.model.formatMicros
+import name.levis.ichor.ui.components.InfoHint
 import name.levis.ichor.ui.components.InlineError
 import java.text.NumberFormat
 
@@ -35,7 +37,10 @@ fun NetPerfResults(setup: NetPerfSetup, results: List<NetPerfResult>, running: B
         if (measured.isEmpty() && !running) return@forEach
         Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(pathLabel(path), style = MaterialTheme.typography.titleSmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(pathLabel(path), style = MaterialTheme.typography.titleSmall)
+                    InfoHint(stringResource(R.string.netperf_hint_paths_title), stringResource(R.string.netperf_hint_paths))
+                }
                 listOf(NETPERF_THROUGHPUT, NETPERF_LATENCY).forEach { test ->
                     val result = measured.firstOrNull { it.test == test }
                     if (result != null || running) ResultRow(test, result)
@@ -49,8 +54,10 @@ fun NetPerfResults(setup: NetPerfSetup, results: List<NetPerfResult>, running: B
 private fun ResultRow(test: String, result: NetPerfResult?) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(testLabel(test), style = MaterialTheme.typography.bodyMedium, color = muted, modifier = Modifier.weight(1f))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(testLabel(test), style = MaterialTheme.typography.bodyMedium, color = muted)
+            InfoHint(testLabel(test), stringResource(if (test == NETPERF_LATENCY) R.string.netperf_hint_latency else R.string.netperf_hint_throughput))
+            Spacer(Modifier.weight(1f))
             Text(
                 when {
                     result == null -> "…"
