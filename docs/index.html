@@ -7,11 +7,11 @@
     <meta
       name="description"
       data-i18n-attr="content"
-      content="Ichor is a free, open-source Talos Linux app for Android and iPhone: node health, logs, etcd, KubeSpan, live graphs, an inventory of the apps you run, Kubernetes workloads and pods, configuration drift, an incident recorder and alerts when a node goes down. Built on the same Go client as talosctl. Try the offline demo, no cluster needed."
+      content="Ichor is a free, open-source Talos Linux app for Android and iPhone: node health, logs, etcd, KubeSpan, live graphs, an inventory of the apps you run, Kubernetes workloads and pods, network tests between nodes, Longhorn and CloudNativePG health, configuration drift, an incident recorder and alerts when a node goes down. Built on the same Go client as talosctl. Try the offline demo, no cluster needed."
     />
     <meta
       name="keywords"
-      content="Talos, Talos Linux, talosctl, Kubernetes, k8s, Sidero, etcd, KubeSpan, cluster monitoring, app inventory, rollout restart, pods, configuration drift, incident timeline, Wake-on-LAN, Android, iOS"
+      content="Talos, Talos Linux, talosctl, Kubernetes, k8s, Sidero, etcd, KubeSpan, cluster monitoring, app inventory, rollout restart, pods, netperf, network test, Longhorn, CloudNativePG, cgroups, configuration drift, incident timeline, Wake-on-LAN, Android, iOS"
     />
     <link rel="canonical" href="https://cyrinux.github.io/ichor/" />
     <link rel="alternate" hreflang="en" href="https://cyrinux.github.io/ichor/" />
@@ -34,7 +34,7 @@
     <meta
       property="og:description"
       data-i18n-attr="content"
-      content="Your Talos cluster, from your phone. Node health, logs, etcd, alerts, and now an inventory of the apps you run, Kubernetes workloads and pods, configuration drift and an incident recorder, with the same client as talosctl."
+      content="Your Talos cluster, from your phone. Node health, logs, etcd, alerts, the apps you run, Kubernetes workloads and pods, and now network tests between nodes, storage and database health and node pressure, with the same client as talosctl."
     />
     <meta
       property="og:image"
@@ -47,15 +47,19 @@
         "@type": "SoftwareApplication",
         "name": "Ichor for Talos Linux",
         "alternateName": "Ichor",
-        "description": "Monitor and operate Talos Linux clusters from your phone: node health, logs, etcd, KubeSpan, live graphs, an inventory of the apps running in the cluster, Kubernetes workloads and pods, configuration drift, incident recording, bottleneck metrics and alerts.",
+        "description": "Monitor and operate Talos Linux clusters from your phone: node health, logs, etcd, KubeSpan, live graphs, an inventory of the apps running in the cluster, Kubernetes workloads and pods, network tests between nodes, Longhorn, CloudNativePG, Garage and Dragonfly health, node pressure, configuration drift, incident recording, bottleneck metrics and alerts.",
         "featureList": [
           "Cluster overview and background alerts",
           "Inventory of the apps running in the cluster, with their logos",
           "Kubernetes workloads with rollout restart, and pods with delete",
+          "Network test between two nodes with netperf",
+          "Longhorn, CloudNativePG, Garage and Dragonfly health",
+          "Node pressure (PSI) and cgroups",
+          "Cluster map of sites, nodes and KubeSpan links",
           "Configuration drift between nodes",
           "Incident recorder timeline",
           "Bottleneck metrics: I/O wait, steal, disk and network",
-          "Discovery of nodes missing from the talosconfig",
+          "Discovery of nodes missing from the talosconfig, and of endpoints on the local network",
           "Wake-on-LAN",
           "Offline demo cluster"
         ],
@@ -1078,7 +1082,7 @@
           <span data-i18n>Ichor <small>for Talos Linux</small></span>
         </a>
         <nav aria-label="Primary">
-          <a data-i18n class="optional" href="#apps">What's new</a>
+          <a data-i18n class="optional" href="#new">What's new</a>
           <a data-i18n class="optional" href="#screens">Screens</a>
           <a data-i18n class="optional" href="#features">Features</a>
           <a data-i18n class="optional" href="#access">Access</a>
@@ -1102,8 +1106,8 @@
       <main>
         <div class="hero">
           <div>
-            <a class="newpill" href="#apps" data-i18n
-              ><b>New</b> App inventory, Kubernetes workloads and pods →</a
+            <a class="newpill" href="#new" data-i18n
+              ><b>New</b> Network test, data services and node pressure →</a
             >
             <h1>Your Talos cluster, from your phone.</h1>
             <p class="lede">
@@ -1215,8 +1219,176 @@
           </li>
         </ul>
 
+        <section id="new" aria-labelledby="new-title">
+          <p class="eyebrow">New · Network, storage and pressure</p>
+          <h2 id="new-title">
+            Is it the network, the storage or the node? Measure it.
+          </h2>
+          <p class="intro">
+            Something is slow and every node says Ready. Ichor now measures the
+            link between two nodes, checks the storage and databases your apps
+            sit on, and shows which workload a node is starving, straight from
+            the phone.
+          </p>
+
+          <div class="spotlight">
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Network test from w-1 to w-3: 9.4 Gbit/s pod to pod, 9.8 Gbit/s host to host, 0.21 ms median latency and a slow 1.9 ms p99."
+              >
+                <div class="title" data-i18n>Network test · w-1 → w-3</div>
+                <div class="line" aria-hidden="true">
+                  <span data-i18n>pod → pod</span><span>9.4 Gbit/s</span
+                  ><span class="tag same">+3%</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span data-i18n>host → host</span><span>9.8 Gbit/s</span
+                  ><span class="tag same">+1%</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span data-i18n>latency p50</span><span>0.21 ms</span
+                  ><span class="tag same">ok</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span data-i18n>latency p99</span><span>1.9 ms</span
+                  ><span class="tag diff" data-i18n>slow</span>
+                </div>
+              </div>
+              <h3>Network test</h3>
+              <p>
+                Pick two nodes, from a list or, on Android, right on the cluster
+                map, and Ichor measures them with netperf, the way
+                <code>cilium connectivity perf</code> does, on any CNI: TCP
+                throughput, then p50, p90 and p99 latency, pod to pod and, if
+                you want, host to host. Results are kept and charted over time.
+              </p>
+              <p class="ask">"Is the new switch any faster?" → measured.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Data services: a Longhorn volume is degraded on w-2 and a Postgres backup is 26 hours old; Garage and Dragonfly are healthy."
+              >
+                <div class="title" data-i18n>Data services · 4 found</div>
+                <div class="line" aria-hidden="true">
+                  <span>Longhorn</span><span data-i18n>1 volume degraded</span
+                  ><span class="tag diff">w-2</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>Postgres</span><span data-i18n>backup 26 h ago</span
+                  ><span class="tag diff" data-i18n>stale</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>Garage</span><span data-i18n>3/3 nodes</span
+                  ><span class="tag same">ok</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>Dragonfly</span><span data-i18n>master + replica</span
+                  ><span class="tag same">ok</span>
+                </div>
+              </div>
+              <h3>Data services</h3>
+              <p>
+                Ichor recognises Longhorn, CloudNativePG, Garage and Dragonfly
+                in the cluster and checks them: degraded volumes and their
+                replicas, Postgres instances and stale or failed backups, Garage
+                nodes, Dragonfly's master and replicas. Each problem names the
+                node behind it, and opt-in alerts tell you when a volume faults
+                or backups stop.
+              </p>
+              <p class="ask">"Did last night's backup run?" → yes, or why not.</p>
+            </article>
+
+            <article class="insight">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Node pressure on w-2: little CPU stall, high memory and disk stall, and one container at 94% of its memory limit."
+              >
+                <div class="title" data-i18n>w-2 · pressure, last 5 min</div>
+                <div class="bar" aria-hidden="true">
+                  <span>CPU</span
+                  ><span class="meter"><i style="width: 12%"></i></span
+                  ><span>6%</span>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <span data-i18n>memory</span
+                  ><span class="meter"><i class="hot" style="width: 62%"></i></span
+                  ><span>31%</span>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <span data-i18n>disk I/O</span
+                  ><span class="meter"><i class="hot" style="width: 80%"></i></span
+                  ><span>40%</span>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <span data-i18n>near limit</span
+                  ><span class="meter"><i class="hot" style="width: 94%"></i></span
+                  ><span>94%</span>
+                </div>
+              </div>
+              <h3>Node pressure and cgroups</h3>
+              <p>
+                How long work on a node waits for CPU, memory or disk, charted
+                over the last five minutes, with the workload that waits the
+                most, OOM kills and containers close to their memory limit. The
+                Cgroups tab, like <code>talosctl cgroups</code>, breaks it all
+                down by service, pod and container.
+              </p>
+              <p class="ask">"Who is eating w-2?" → named.</p>
+            </article>
+          </div>
+
+          <p class="reassure">
+            These need an <code>os:admin</code> certificate. The network test
+            runs its pods in a namespace of its own, with the restricted pod
+            security profile, and deletes it afterwards; each measurement fills
+            the link for 5 to 20 seconds. Saved results stay encrypted on the
+            phone, out of backups, and data service alerts are off until you
+            turn them on.
+          </p>
+
+          <ul class="alsonew" aria-label="Also new">
+            <li>
+              <h3>Cluster map</h3>
+              <p>
+                On Android, the KubeSpan screen draws your sites, nodes and tunnels, up,
+                degraded or down, with a flag for each zone. Tap two nodes to
+                test the link between them.
+              </p>
+            </li>
+            <li>
+              <h3>Open an app in the browser</h3>
+              <p>
+                An app's sheet lists its web addresses, found in the Ingresses
+                and Gateway API HTTPRoutes that point at it, one tap away.
+              </p>
+            </li>
+            <li>
+              <h3>Finds your cluster on the LAN</h3>
+              <p>
+                No endpoint answers from here? On Android, Ichor searches the
+                local network for nodes that accept your credentials, and lets
+                you edit endpoints by hand.
+              </p>
+            </li>
+            <li>
+              <h3>Ready-made debug commands</h3>
+              <p>
+                About 40 netshoot commands for DNS, MTU, TLS, KubeSpan and more,
+                one tap away in the debug shell, so you barely need the phone
+                keyboard.
+              </p>
+            </li>
+          </ul>
+        </section>
+
         <section id="apps" aria-labelledby="apps-title">
-          <p class="eyebrow">New · Apps and Kubernetes</p>
+          <p class="eyebrow">Apps and Kubernetes</p>
           <h2 id="apps-title">
             Know what runs on your cluster, and nudge it when it sticks.
           </h2>
@@ -1737,7 +1909,8 @@
                   <strong>Node discovery</strong
                   ><span
                     >Cluster members your talosconfig does not target yet,
-                    added to the context in one tap.</span
+                    added to the context in one tap, and, on Android, a search
+                    of the local network when no endpoint answers.</span
                   >
                 </td>
                 <td class="role" translate="no">reader</td>
@@ -1835,7 +2008,8 @@
                   <strong>KubeSpan</strong
                   ><span
                     >Each node's peers: state, endpoint, last handshake and
-                    traffic.</span
+                    traffic, and, on Android, a map of sites, nodes and
+                    tunnels.</span
                   >
                 </td>
                 <td class="role" translate="no">reader</td>
@@ -1908,6 +2082,42 @@
                 <td class="role" translate="no">admin</td>
               </tr>
               <tr>
+                <td class="cmd" translate="no">cilium connectivity perf, netperf</td>
+                <td class="what">
+                  <strong>Network test</strong
+                  ><span
+                    >TCP throughput and p50 to p99 latency between two nodes,
+                    pod to pod or host to host, saved and charted over
+                    time.</span
+                  >
+                </td>
+                <td class="role" translate="no">admin</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">kubectl get volumes.longhorn.io, clusters.postgresql.cnpg.io</td>
+                <td class="what">
+                  <strong>Data services</strong
+                  ><span
+                    >Longhorn volumes, CloudNativePG clusters and their backups,
+                    Garage and Dragonfly, with the node behind each
+                    problem.</span
+                  >
+                </td>
+                <td class="role" translate="no">admin</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">talosctl cgroups</td>
+                <td class="what">
+                  <strong>Node pressure and cgroups</strong
+                  ><span
+                    >CPU, memory and disk pressure, the workload that waits the
+                    most, OOM kills, and usage per service, pod and
+                    container.</span
+                  >
+                </td>
+                <td class="role" translate="no">admin</td>
+              </tr>
+              <tr>
                 <td class="cmd" translate="no">talosctl config new</td>
                 <td class="what">
                   <strong>Issue a talosconfig</strong
@@ -1932,7 +2142,7 @@
                   <strong>Debug shell</strong
                   ><span
                     >Run an image such as nicolaka/netshoot on a node and get a
-                    terminal.</span
+                    terminal, with about 40 ready-made commands.</span
                   >
                 </td>
                 <td class="role" translate="no">admin</td>
@@ -1955,8 +2165,8 @@
               <code>os:reader</code>
               <p>
                 Monitoring, logs, events, pods, the app inventory, network,
-                etcd, KubeSpan, graphs, alerts and every cluster insight. The
-                right default for a phone.
+                etcd, KubeSpan and the cluster map, graphs, alerts and every
+                cluster insight. The right default for a phone.
               </p>
             </div>
             <div>
@@ -1972,8 +2182,9 @@
               <code>os:admin</code>
               <p>
                 Adds the health check, machine config, Talos upgrades, issuing
-                talosconfigs, kubeconfig export, debug shells, and Kubernetes
-                rollout restarts and pod deletes.
+                talosconfigs, kubeconfig export, debug shells, Kubernetes
+                rollout restarts and pod deletes, network tests, data services
+                and node pressure.
               </p>
             </div>
           </div>
@@ -2102,7 +2313,9 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
                 exposes, with a talosconfig, exactly like talosctl. There is no
                 agent, operator or relay server. The Kubernetes screens use the
                 admin kubeconfig Talos issues to an admin certificate, kept in
-                memory only.
+                memory only. The network test is the one exception: it starts
+                short-lived netperf pods in a namespace of its own and deletes
+                it when done.
               </p>
             </details>
             <details>
@@ -2124,6 +2337,16 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
                 change. With an operator or admin certificate, risky actions ask
                 you to type the node's hostname, and upgrades are refused when
                 etcd would lose quorum.
+              </p>
+            </details>
+            <details>
+              <summary>How do I move to a new phone?</summary>
+              <p>
+                Back up your clusters and settings from Settings, sealed with a
+                passphrase. On the new phone, tap Restore a backup on the first
+                screen, or, on Android, open the backup file from your file
+                manager.
+                Backups move between Android and iPhone.
               </p>
             </details>
             <details>
