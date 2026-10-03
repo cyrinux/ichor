@@ -48,11 +48,13 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,6 +68,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.activeSummary
@@ -230,8 +233,12 @@ fun ClusterSheet(
     var renaming by remember { mutableStateOf<ContextSummary?>(null) }
     var coloring by remember { mutableStateOf<ContextSummary?>(null) }
     val contexts = config.summary.contexts
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    // Another cluster re-themes the whole app: only once the sheet's window is gone. Torn down
+    // in the same frame, it could leave a black window over the app.
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
             Text(
                 stringResource(R.string.clusters_title),
@@ -244,7 +251,9 @@ fun ClusterSheet(
                     labels = labels,
                     selected = context.name == config.activeContext,
                     color = Color(colors.seedOf(context)),
-                    onSelect = { onSelect(context.name) },
+                    onSelect = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion { onSelect(context.name) }
+                    },
                     // Not in screenshot mode: the dialog would show the given name.
                     onRename = { renaming = context }.takeIf { !labels.masked && context.fingerprint.isNotBlank() },
                     onColor = { coloring = context },
