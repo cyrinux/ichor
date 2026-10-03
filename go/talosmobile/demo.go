@@ -189,6 +189,8 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			{Pid: 1, State: "S", Threads: 12, CPUTime: time.Since(demoBoot).Seconds() * 0.02, RSS: 32 << 20, VMS: 64 << 20, Command: "machined", Args: "/sbin/machined"},
 			{Pid: 230, Ppid: 1, State: "S", Threads: 24, CPUTime: time.Since(demoBoot).Seconds() * 0.15, RSS: 128 << 20, VMS: 256 << 20, Command: "kubelet", Args: "/usr/bin/kubelet --config=/etc/kubernetes/kubelet.yaml"},
 		}})
+	case "NodeCgroups":
+		return toJSON(demoCgroups(n, now))
 	case "NodeContainers":
 		return toJSON(containerList{At: now, Containers: []containerInfo{
 			{ID: "demo-coredns", PodNamespace: "kube-system", Pod: "coredns-demo", Name: "coredns", Image: "registry.k8s.io/coredns/coredns:v1.12.0", Status: "CONTAINER_RUNNING", Pid: 300, Memory: 24 << 20, CPUNanos: uint64(time.Since(demoBoot).Seconds() * 2e7)},
