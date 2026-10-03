@@ -4,7 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy policy · Ichor</title>
-<meta name="description" content="What Ichor stores on your phone, what it sends, and to whom.">
+<link rel="canonical" href="https://cyrinux.github.io/ichor/privacy.html">
+<link rel="alternate" hreflang="en" href="https://cyrinux.github.io/ichor/privacy.html">
+<link rel="alternate" hreflang="fr" href="https://cyrinux.github.io/ichor/fr/privacy.html">
+<link rel="alternate" hreflang="es" href="https://cyrinux.github.io/ichor/es/privacy.html">
+<link rel="alternate" hreflang="uk" href="https://cyrinux.github.io/ichor/uk/privacy.html">
+<link rel="alternate" hreflang="de" href="https://cyrinux.github.io/ichor/de/privacy.html">
+<link rel="alternate" hreflang="it" href="https://cyrinux.github.io/ichor/it/privacy.html">
+<link rel="alternate" hreflang="x-default" href="https://cyrinux.github.io/ichor/privacy.html">
+<meta name="description" data-i18n-attr="content" content="What Ichor stores on your phone, what it sends, and to whom.">
 <link rel="icon" href="brand/ichor.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +48,7 @@
   a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
   code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .92em; }
   .wrap { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem; }
-  .top { display: flex; align-items: center; padding: 1.25rem 0; }
+  .top { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 0; }
   .brand { display: flex; align-items: center; gap: .6rem; font-weight: 600; text-decoration: none; }
   .brand img { width: 32px; height: 32px; }
   main { max-width: var(--measure); padding: 2rem 0 4rem; }
@@ -50,6 +58,16 @@
   .summary { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1rem 1.25rem; }
   .summary p { margin: 0; }
   li { margin-bottom: .4rem; }
+  .lang { position: relative; }
+  .lang summary { list-style: none; white-space: nowrap; cursor: pointer; color: var(--ink-2); font: 500 .85rem/1.6 "IBM Plex Mono", ui-monospace, monospace; }
+  .lang summary::-webkit-details-marker { display: none; }
+  .lang summary::after { content: " ▾"; }
+  .lang summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+  .lang ul { position: absolute; right: 0; top: calc(100% + .5rem); z-index: 10; min-width: 10rem; margin: 0; padding: .35rem; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  .lang li { margin: 0; }
+  .lang a { display: block; padding: .35rem .6rem; border-radius: 6px; text-decoration: none; }
+  .lang a:hover { background: var(--bg); }
+  .lang a[aria-current] { font-weight: 600; }
   footer { border-top: 1px solid var(--line); padding: 2rem 0 3rem; color: var(--ink-2); font-size: .92rem; }
 </style>
 </head>
@@ -60,6 +78,17 @@
       <img src="brand/ichor.svg" width="32" height="32" alt="">
       Ichor
     </a>
+    <details class="lang">
+      <summary aria-label="Language">EN</summary>
+      <ul translate="no">
+        <li><a href="privacy.html" hreflang="en" lang="en" aria-current="true">English</a></li>
+        <li><a href="fr/privacy.html" hreflang="fr" lang="fr">Français</a></li>
+        <li><a href="es/privacy.html" hreflang="es" lang="es">Español</a></li>
+        <li><a href="uk/privacy.html" hreflang="uk" lang="uk">Українська</a></li>
+        <li><a href="de/privacy.html" hreflang="de" lang="de">Deutsch</a></li>
+        <li><a href="it/privacy.html" hreflang="it" lang="it">Italiano</a></li>
+      </ul>
+    </details>
   </header>
 
   <main>
