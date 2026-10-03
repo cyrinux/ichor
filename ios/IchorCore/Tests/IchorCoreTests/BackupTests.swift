@@ -9,7 +9,7 @@ final class BackupTests: XCTestCase {
          "settings":{"themeMode":"black","language":"fr","liveClusterStats":true,"privacyMask":false,
                      "privacyMaskWords":"","monitorAlerts":true,"monitorIntervalMinutes":30,
                      "remoteAppIcons":true},
-         "clusters":{"aaaa":{"name":"Home","color":11141120,"vpnOnly":true,
+         "clusters":{"aaaa":{"name":"Home","color":11141120,"vpnOnly":true,"kubeServer":"https://k8s.lan:6443",
                              "wakeOnLan":{"10.0.0.2":{"mac":"aa:bb:cc:dd:ee:ff","broadcast":"","port":9}}}}}
         """
         let payload = try JSONDecoder().decode(BackupPayload.self, from: Data(json.utf8))
@@ -19,7 +19,7 @@ final class BackupTests: XCTestCase {
         XCTAssertEqual(payload.settings?.themeMode, "black")
         XCTAssertEqual(payload.settings?.monitorAlerts, true)
         XCTAssertEqual(payload.settings?.remoteAppIcons, true)
-        XCTAssertEqual(payload.clusters?["aaaa"], BackupCluster(name: "Home", color: 0xAA0000, vpnOnly: true))
+        XCTAssertEqual(payload.clusters?["aaaa"], BackupCluster(name: "Home", color: 0xAA0000, vpnOnly: true, kubeServer: "https://k8s.lan:6443"))
     }
 
     func testMinimalPayloadDecodes() throws {
@@ -41,17 +41,19 @@ final class BackupTests: XCTestCase {
         XCTAssertFalse(json.contains("language"))
         XCTAssertFalse(json.contains("vpnOnly"))
         XCTAssertFalse(json.contains("remoteAppIcons"))
+        XCTAssertFalse(json.contains("kubeServer"))
     }
 
     func testBackupClustersKeepsStoredClustersOnly() {
         let clusters = backupClusters(
             fingerprints: ["aaaa", "bbbb", ""],
             names: ["aaaa": "Home", "gone": "Old"],
-            colors: ["aaaa": 0xFF00FF, "bbbb": 0x123456]
+            colors: ["aaaa": 0xFF00FF, "bbbb": 0x123456],
+            kubeServers: ["bbbb": "https://k8s.lan:6443", "gone": "https://old.lan"]
         )
         XCTAssertEqual(clusters, [
             "aaaa": BackupCluster(name: "Home", color: 0xFF00FF),
-            "bbbb": BackupCluster(color: 0x123456),
+            "bbbb": BackupCluster(color: 0x123456, kubeServer: "https://k8s.lan:6443"),
         ])
     }
 
@@ -59,12 +61,13 @@ final class BackupTests: XCTestCase {
         let restored = restoredClusters(
             [
                 "aaaa": BackupCluster(name: "  Home ", color: -0x1000000 | 0xAA0000),
-                "bbbb": BackupCluster(name: "   "),
-                "gone": BackupCluster(name: "Elsewhere", color: 1),
+                "bbbb": BackupCluster(name: "   ", kubeServer: " https://k8s.lan "),
+                "gone": BackupCluster(name: "Elsewhere", color: 1, kubeServer: "https://old.lan"),
             ],
             fingerprints: ["aaaa", "bbbb"]
         )
-        XCTAssertEqual(restored, RestoredClusters(names: ["aaaa": "Home"], colors: ["aaaa": 0xAA0000]))
+        XCTAssertEqual(restored, RestoredClusters(names: ["aaaa": "Home"], colors: ["aaaa": 0xAA0000],
+                                                   kubeServers: ["bbbb": "https://k8s.lan"]))
     }
 
     func testPassphraseRules() {

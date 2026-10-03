@@ -28,6 +28,7 @@ class BackupManager(
     private val colors: ClusterColors,
     private val names: ClusterNames,
     private val vpnOnly: VpnOnlyClusters,
+    private val kubeServers: KubeServers,
     private val wakeOnLan: WakeOnLanStore,
     private val monitor: MonitorStore,
     private val setPrivacyMask: (PrivacyMask) -> Unit,
@@ -60,6 +61,7 @@ class BackupManager(
                     colors.colors.value,
                     vpnOnly.fingerprints.value,
                     wakeOnLan.targets.value,
+                    kubeServers.servers.value,
                 ),
             )
             backupCall { Talosmobile.encryptBackup(TalosJson.encodeToString(BackupPayload.serializer(), payload), passphrase) }
@@ -87,6 +89,8 @@ class BackupManager(
         fingerprints.forEach { fp ->
             names.set(fp, restored.names[fp].orEmpty())
             vpnOnly.set(fp, fp in restored.vpnOnly)
+            // Checked like a typed one: an address the Go core refuses is dropped.
+            kubeServers.set(fp, restored.kubeServers[fp]?.let { runCatching { Talosmobile.normalizeKubeServer(it) }.getOrNull() }.orEmpty())
         }
         (wakeOnLan.targets.value.keys - restored.wakeOnLan.keys)
             .filter { it.substringBefore('|') in fingerprints }

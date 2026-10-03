@@ -67,11 +67,14 @@ public struct BackupCluster: Codable, Equatable, Sendable {
     public var color: Int?
     /// Android only, like its Wake-on-LAN targets (not decoded here).
     public var vpnOnly: Bool?
+    /// The Kubernetes API address to use instead of the kubeconfig's.
+    public var kubeServer: String?
 
-    public init(name: String? = nil, color: Int? = nil, vpnOnly: Bool? = nil) {
+    public init(name: String? = nil, color: Int? = nil, vpnOnly: Bool? = nil, kubeServer: String? = nil) {
         self.name = name
         self.color = color
         self.vpnOnly = vpnOnly
+        self.kubeServer = kubeServer
     }
 }
 
@@ -101,10 +104,11 @@ public func backupPassphraseProblem(_ passphrase: String, again: String) -> Back
 }
 
 /// The per-cluster settings of this device, as a backup stores them (only clusters still in `fingerprints`).
-public func backupClusters(fingerprints: [String], names: [String: String], colors: [String: Int]) -> [String: BackupCluster] {
+public func backupClusters(fingerprints: [String], names: [String: String], colors: [String: Int],
+                           kubeServers: [String: String]) -> [String: BackupCluster] {
     var out: [String: BackupCluster] = [:]
     for fp in fingerprints where !fp.isEmpty {
-        out[fp] = BackupCluster(name: names[fp], color: colors[fp].map { $0 & 0xFFFFFF })
+        out[fp] = BackupCluster(name: names[fp], color: colors[fp].map { $0 & 0xFFFFFF }, kubeServer: kubeServers[fp])
     }
     return out
 }
@@ -113,18 +117,24 @@ public func backupClusters(fingerprints: [String], names: [String: String], colo
 public struct RestoredClusters: Equatable, Sendable {
     public let names: [String: String]
     public let colors: [String: Int]
+    /// Trimmed; the Go core checks them before they are stored.
+    public let kubeServers: [String: String]
 }
 
 public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints: [String]) -> RestoredClusters {
     let known = Set(fingerprints.filter { !$0.isEmpty })
     var names: [String: String] = [:]
     var colors: [String: Int] = [:]
+    var kubeServers: [String: String] = [:]
     for (fp, cluster) in clusters ?? [:] where known.contains(fp) {
         if let name = cluster.name.flatMap(normalizeClusterName) { names[fp] = name }
         // Android writes RGB too, but drop any alpha a future writer might add.
         if let color = cluster.color { colors[fp] = color & 0xFFFFFF }
+        if let server = cluster.kubeServer?.trimmingCharacters(in: .whitespacesAndNewlines), !server.isEmpty {
+            kubeServers[fp] = server
+        }
     }
-    return RestoredClusters(names: names, colors: colors)
+    return RestoredClusters(names: names, colors: colors, kubeServers: kubeServers)
 }
 
 /// A backup error of the Go core, whose messages start with a code (backup.go).

@@ -3,13 +3,24 @@ import IchorCore
 
 /// The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
 /// issues (os:admin): workloads with rollout restart, and pods. The namespace filter and the
-/// search carry over between the two.
+/// search carry over between the two. The toolbar sets the API address to use instead of the
+/// kubeconfig's, for a cluster the phone reaches another way (not in screenshot mode: the
+/// alert would show the real address).
 struct KubernetesView: View {
     enum Tab: Hashable { case workloads, pods }
 
+    @Environment(AppModel.self) private var model
     @State private var tab = Tab.workloads
     @State private var namespace: String?
     @State private var query = ""
+    @State private var editingServer = false
+    @State private var serverInput = ""
+    @State private var serverError: String?
+
+    /// The cluster whose API address can be set: not the demo, not in screenshot mode.
+    private var editable: ContextSummary? {
+        model.activeSummary.flatMap { $0.demo || $0.fingerprint.isEmpty || model.privacyMask ? nil : $0 }
+    }
 
     var body: some View {
         Group {
@@ -17,6 +28,33 @@ struct KubernetesView: View {
             case .workloads: WorkloadsList(namespace: $namespace, query: query)
             case .pods: PodsList(namespace: $namespace, query: query)
             }
+        }
+        // A new address: the lists load again through it.
+        .id(model.client?.kubeServer)
+        .toolbar {
+            if editable != nil {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        serverInput = model.client?.kubeServer ?? ""
+                        editingServer = true
+                    } label: {
+                        Label("Kubernetes API address", systemImage: "server.rack")
+                    }
+                }
+            }
+        }
+        .alert("Kubernetes API address", isPresented: $editingServer) {
+            TextField(text: $serverInput, prompt: Text(verbatim: "k8s.example.com:6443")) { Text("Address") }
+                .keyboardType(.URL)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            Button("OK") { Task { await saveServer() } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Used instead of the address in the kubeconfig Talos issues, e.g. a port forward, a load balancer or a public name: host, host:port or an https URL. Without a port, the kubeconfig’s is used. The certificate is still checked against the cluster’s own address. Leave empty to use the kubeconfig’s again. Only on this device.")
+        }
+        .alert(serverError ?? "", isPresented: Binding(get: { serverError != nil }, set: { if !$0 { serverError = nil } })) {
+            Button("OK") {}
         }
         .safeAreaInset(edge: .top) {
             Picker(selection: $tab) {
@@ -33,6 +71,16 @@ struct KubernetesView: View {
         .searchable(text: $query, prompt: Text("Name, kind or image"))
         .navigationTitle(Text(verbatim: "Kubernetes"))
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: model.privacyMask) { _, masked in if masked { editingServer = false } }
+    }
+
+    private func saveServer() async {
+        guard let context = editable else { return }
+        do {
+            model.setKubeServer(try await TalosClient.normalizeKubeServer(serverInput), for: context)
+        } catch {
+            serverError = error.localizedDescription
+        }
     }
 }
 

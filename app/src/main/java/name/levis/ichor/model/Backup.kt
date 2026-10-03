@@ -53,6 +53,8 @@ data class BackupCluster(
     val vpnOnly: Boolean = false,
     /** By node address, as the talosconfig names it. Android only. */
     val wakeOnLan: Map<String, BackupWolTarget> = emptyMap(),
+    /** The Kubernetes API address to use instead of the kubeconfig's. */
+    val kubeServer: String? = null,
 )
 
 @Serializable
@@ -67,6 +69,7 @@ fun backupClusters(
     colors: Map<String, Int>,
     vpnOnly: Set<String>,
     wakeOnLan: Map<String, WolTarget>,
+    kubeServers: Map<String, String>,
 ): Map<String, BackupCluster> = fingerprints.filter { it.isNotBlank() }.distinct().associateWith { fp ->
     BackupCluster(
         name = names[fp],
@@ -75,6 +78,7 @@ fun backupClusters(
         wakeOnLan = wakeOnLan.filterKeys { it.substringBefore('|') == fp }
             .mapKeys { (key, _) -> key.substringAfter('|') }
             .mapValues { (_, t) -> BackupWolTarget(t.mac, t.broadcast, t.port) },
+        kubeServer = kubeServers[fp],
     )
 }
 
@@ -85,6 +89,8 @@ data class RestoredClusters(
     val vpnOnly: Set<String>,
     /** By [wolKey]. */
     val wakeOnLan: Map<String, WolTarget>,
+    /** Trimmed; the Go core checks them before they are stored. */
+    val kubeServers: Map<String, String>,
 )
 
 /** [clusters] narrowed to [fingerprints] (the restored config's) and validated. */
@@ -100,6 +106,7 @@ fun restoredClusters(clusters: Map<String, BackupCluster>, fingerprints: List<St
                 target?.takeIf { node.isNotBlank() && '|' !in t.broadcast }?.let { wolKey(fp, node.trim()) to it }
             }
         }.toMap(),
+        kubeServers = known.mapNotNull { (fp, c) -> c.kubeServer?.trim()?.takeIf { it.isNotEmpty() }?.let { fp to it } }.toMap(),
     )
 }
 

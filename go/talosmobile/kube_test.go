@@ -198,7 +198,7 @@ func TestOpenKubeClientFallsBackToTalosEndpoint(t *testing.T) {
 	port = port[strings.LastIndex(port, ":")+1:]
 
 	// The kubeconfig names an address the phone cannot resolve; the Talos endpoint works.
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor("https://unreachable.invalid:"+port), []string{"127.0.0.1:50000"})
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor("https://unreachable.invalid:"+port), []string{"127.0.0.1:50000"}, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -215,7 +215,7 @@ func TestOpenKubeClientFallsBackToTalosEndpoint(t *testing.T) {
 func TestOpenKubeClientReportsUnreachable(t *testing.T) {
 	f := newFakeKubeAPI(t, nil)
 
-	_, err := openKubeClient(context.Background(), f.kubeconfigFor("https://unreachable.invalid:1"), nil)
+	_, err := openKubeClient(context.Background(), f.kubeconfigFor("https://unreachable.invalid:1"), nil, "")
 	if err == nil || !strings.Contains(err.Error(), "not reachable from this device") {
 		t.Fatalf("got %v", err)
 	}
@@ -224,7 +224,7 @@ func TestOpenKubeClientReportsUnreachable(t *testing.T) {
 func TestKubeAPIErrorMessage(t *testing.T) {
 	f := newFakeKubeAPI(t, map[string]string{})
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil)
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -257,7 +257,7 @@ func TestListWorkloads(t *testing.T) {
 			"status":{"desiredNumberScheduled":3,"numberReady":3,"updatedNumberScheduled":3,"numberAvailable":3}}]}`,
 	})
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil)
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -295,7 +295,7 @@ func TestListWorkloads(t *testing.T) {
 func TestListWorkloadsFailsOnAnyKind(t *testing.T) {
 	f := newFakeKubeAPI(t, map[string]string{"GET /apis/apps/v1/deployments": `{"items":[]}`})
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil)
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -314,7 +314,7 @@ func TestRolloutRestart(t *testing.T) {
 		"PATCH /apis/apps/v1/namespaces/shop/statefulsets/db": `{}`,
 	})
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil)
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -362,7 +362,7 @@ func TestRolloutRestartRefusesPausedDeployment(t *testing.T) {
 
 	f := newFakeKubeAPI(t, map[string]string{"GET " + path: `{"spec":{"paused":true}}`, "PATCH " + path: `{}`})
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil)
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -379,11 +379,11 @@ func TestRolloutRestartRefusesPausedDeployment(t *testing.T) {
 }
 
 func TestKubeRolloutRestartValidates(t *testing.T) {
-	if err := KubeRolloutRestart("", "", "CronJob", "ns", "x"); err == nil || !strings.Contains(err.Error(), "unsupported workload kind") {
+	if err := KubeRolloutRestart("", "", "", "CronJob", "ns", "x"); err == nil || !strings.Contains(err.Error(), "unsupported workload kind") {
 		t.Fatalf("got %v", err)
 	}
 
-	if err := KubeRolloutRestart("", "", "deployment", " ", "x"); err == nil || !strings.Contains(err.Error(), "no workload") {
+	if err := KubeRolloutRestart("", "", "", "deployment", " ", "x"); err == nil || !strings.Contains(err.Error(), "no workload") {
 		t.Fatalf("got %v", err)
 	}
 }
@@ -394,7 +394,7 @@ func TestKubeDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	out, err := KubeWorkloads(cfg, "")
+	out, err := KubeWorkloads(cfg, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -404,7 +404,7 @@ func TestKubeDemo(t *testing.T) {
 		t.Fatalf("demo workloads: %v %s", err, out)
 	}
 
-	if err := KubeRolloutRestart(cfg, "", "Deployment", "demo", "hello-ichor"); !errors.Is(err, demoUnavailable) {
+	if err := KubeRolloutRestart(cfg, "", "", "Deployment", "demo", "hello-ichor"); !errors.Is(err, demoUnavailable) {
 		t.Fatalf("got %v", err)
 	}
 }
@@ -413,10 +413,10 @@ func TestWithKubeForgetsUnreachableClient(t *testing.T) {
 	f := newFakeKubeAPI(t, nil)
 
 	opens := 0
-	cache := newKubeClientCache(func(_, _ string) (*kubeClient, error) {
+	cache := newKubeClientCache(func(kubeTarget) (*kubeClient, error) {
 		opens++
 
-		return openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil)
+		return openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
 	})
 
 	saved := kubeClients
@@ -425,7 +425,7 @@ func TestWithKubeForgetsUnreachableClient(t *testing.T) {
 	t.Cleanup(func() { kubeClients = saved })
 
 	call := func(path string) error {
-		_, err := withKube("cfg", "ctx", func(ctx context.Context, k *kubeClient) (struct{}, error) {
+		_, err := withKube(kubeTarget{"cfg", "ctx", ""}, func(ctx context.Context, k *kubeClient) (struct{}, error) {
 			return struct{}{}, k.get(ctx, path, &struct{}{})
 		})
 
@@ -445,7 +445,7 @@ func TestWithKubeForgetsUnreachableClient(t *testing.T) {
 		t.Fatal("expected an error")
 	}
 
-	if _, _, err := cache.get("cfg", "ctx"); err == nil {
+	if _, _, err := cache.get(kubeTarget{"cfg", "ctx", ""}); err == nil {
 		t.Fatal("expected the dropped client to be reopened (and fail)")
 	}
 
@@ -461,7 +461,7 @@ func TestKubeClientCacheOpensOnceForConcurrentCalls(t *testing.T) {
 	)
 
 	release := make(chan struct{})
-	cache := newKubeClientCache(func(_, _ string) (*kubeClient, error) {
+	cache := newKubeClientCache(func(kubeTarget) (*kubeClient, error) {
 		mu.Lock()
 		opens++
 		mu.Unlock()
@@ -474,7 +474,7 @@ func TestKubeClientCacheOpensOnceForConcurrentCalls(t *testing.T) {
 
 	clients := make([]*kubeClient, 5)
 	for i := range clients {
-		wg.Go(func() { clients[i], _, _ = cache.get("cfg", "ctx") })
+		wg.Go(func() { clients[i], _, _ = cache.get(kubeTarget{"cfg", "ctx", ""}) })
 	}
 
 	time.Sleep(50 * time.Millisecond)
@@ -492,9 +492,9 @@ func TestKubeClientCacheOpensOnceForConcurrentCalls(t *testing.T) {
 	}
 
 	// A stale client being forgotten leaves the current one alone.
-	cache.forget("cfg", "ctx", &kubeClient{http: &http.Client{}})
+	cache.forget(kubeTarget{"cfg", "ctx", ""}, &kubeClient{http: &http.Client{}})
 
-	if k, fresh, _ := cache.get("cfg", "ctx"); k != clients[0] || fresh {
+	if k, fresh, _ := cache.get(kubeTarget{"cfg", "ctx", ""}); k != clients[0] || fresh {
 		t.Fatal("the cached client was dropped by a stale forget")
 	}
 }
@@ -503,7 +503,7 @@ func TestOpenKubeClientPrefersKubeconfigServer(t *testing.T) {
 	f := newFakeKubeAPI(t, nil)
 
 	// Both answer: the kubeconfig's own address wins over the Talos endpoint.
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), []string{"localhost"})
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), []string{"localhost"}, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -518,7 +518,7 @@ func TestOpenKubeClientNoFallbackWithoutVerification(t *testing.T) {
 	port := f.URL[strings.LastIndex(f.URL, ":")+1:]
 	cfg := strings.Replace(f.kubeconfigFor("https://unreachable.invalid:"+port), "    server: https://unreachable.invalid", "    insecure-skip-tls-verify: true\n    server: https://unreachable.invalid", 1)
 
-	if _, err := openKubeClient(context.Background(), cfg, []string{"127.0.0.1"}); err == nil {
+	if _, err := openKubeClient(context.Background(), cfg, []string{"127.0.0.1"}, ""); err == nil {
 		t.Fatal("an insecure kubeconfig fell back to another address")
 	}
 }

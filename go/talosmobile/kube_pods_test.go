@@ -62,7 +62,7 @@ func TestListAndDeletePods(t *testing.T) {
 		"DELETE /api/v1/namespaces/z/pods/a b": `{}`,
 	})
 
-	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil)
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,16 +91,16 @@ func TestKubePodsDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	out, err := KubePods(cfg, "")
+	out, err := KubePods(cfg, "", "")
 	if err != nil || !strings.Contains(out, "CrashLoopBackOff") {
 		t.Fatalf("demo pods: %v %s", err, out)
 	}
 
-	if err := KubeDeletePod(cfg, "", "demo", "worker-6f4b8-uvwxy"); !errors.Is(err, demoUnavailable) {
+	if err := KubeDeletePod(cfg, "", "", "demo", "worker-6f4b8-uvwxy"); !errors.Is(err, demoUnavailable) {
 		t.Fatalf("got %v", err)
 	}
 
-	if err := KubeDeletePod(cfg, "", "", "x"); err == nil {
+	if err := KubeDeletePod(cfg, "", "", "", "x"); err == nil {
 		t.Fatal("expected a validation error")
 	}
 }

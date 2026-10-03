@@ -58,15 +58,24 @@ func (e *kubeAPIError) Error() string {
 // answers: the kubeconfig's own server, then each Talos endpoint host on the same port. The
 // server is often a VIP or an internal name the phone cannot reach while the Talos endpoints
 // are; Talos puts every node address in the API server certificate, so TLS still verifies.
-func openKubeClient(ctx context.Context, kubeconfig string, talosEndpoints []string) (*kubeClient, error) {
+// A server the user set (see NormalizeKubeServer) is the only address tried.
+func openKubeClient(ctx context.Context, kubeconfig string, talosEndpoints []string, server string) (*kubeClient, error) {
 	creds, err := parseKubeconfig(kubeconfig)
 	if err != nil {
 		return nil, err
 	}
 
 	candidates := []*url.URL{creds.server}
-	// Without verification, another address could be anyone: only the configured one.
-	if !creds.tls.InsecureSkipVerify {
+
+	switch {
+	case server != "":
+		if err := creds.applyKubeServer(server); err != nil {
+			return nil, err
+		}
+
+		candidates = []*url.URL{creds.server}
+	case !creds.tls.InsecureSkipVerify:
+		// Without verification, another address could be anyone: only the configured one.
 		candidates = kubeServerCandidates(creds.server, talosEndpoints)
 	}
 
@@ -300,7 +309,15 @@ func kubeError(err error) error {
 	return errors.New("Kubernetes API: " + kubeTransportError(err))
 }
 
-// kubeClients caches one client per (talosconfig, context) for kubeClientTTL.
+// kubeTarget is what a Kubernetes client is opened for: a talosconfig context and the API
+// server address the user set for it, if any.
+type kubeTarget struct {
+	config, context, server string
+}
+
+func (t kubeTarget) key() string { return cacheKey(t.config, t.context+"\x00"+t.server) }
+
+// kubeClients caches one client per kubeTarget for kubeClientTTL.
 var kubeClients = newKubeClientCache(openKubeClientForContext)
 
 type kubeClientEntry struct {
@@ -320,16 +337,16 @@ type kubeClientCache struct {
 	mu      sync.Mutex
 	entries map[string]kubeClientEntry
 	opening map[string]*kubeOpening
-	open    func(configYAML, contextName string) (*kubeClient, error)
+	open    func(kubeTarget) (*kubeClient, error)
 }
 
-func newKubeClientCache(open func(configYAML, contextName string) (*kubeClient, error)) *kubeClientCache {
+func newKubeClientCache(open func(kubeTarget) (*kubeClient, error)) *kubeClientCache {
 	return &kubeClientCache{entries: map[string]kubeClientEntry{}, opening: map[string]*kubeOpening{}, open: open}
 }
 
 // get returns the cached client, or opens one; fresh tells the client was opened for this call.
-func (c *kubeClientCache) get(configYAML, contextName string) (k *kubeClient, fresh bool, err error) {
-	key := cacheKey(configYAML, contextName)
+func (c *kubeClientCache) get(target kubeTarget) (k *kubeClient, fresh bool, err error) {
+	key := target.key()
 
 	c.mu.Lock()
 	c.sweepLocked()
@@ -351,7 +368,7 @@ func (c *kubeClientCache) get(configYAML, contextName string) (k *kubeClient, fr
 	c.opening[key] = op
 	c.mu.Unlock()
 
-	op.client, op.err = c.open(configYAML, contextName)
+	op.client, op.err = c.open(target)
 
 	c.mu.Lock()
 	delete(c.opening, key)
@@ -378,8 +395,8 @@ func (c *kubeClientCache) sweepLocked() {
 
 // forget drops k if it is still the cached client, so the next call fetches a new
 // kubeconfig and probes again; a client another call already replaced it with stays.
-func (c *kubeClientCache) forget(configYAML, contextName string, k *kubeClient) {
-	key := cacheKey(configYAML, contextName)
+func (c *kubeClientCache) forget(target kubeTarget, k *kubeClient) {
+	key := target.key()
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -392,10 +409,10 @@ func (c *kubeClientCache) forget(configYAML, contextName string, k *kubeClient) 
 
 // openKubeClientForContext fetches an admin kubeconfig from Talos (bounded by callTimeout)
 // and probes the API server addresses (bounded by kubeProbeTimeout).
-func openKubeClientForContext(configYAML, contextName string) (*kubeClient, error) {
+func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
 	var endpoints []string
 
-	kubeconfig, err := withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
+	kubeconfig, err := withSession(target.config, target.context, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		endpoints = s.context.Endpoints
 
 		return fetchKubeconfig(ctx, s)
@@ -404,7 +421,7 @@ func openKubeClientForContext(configYAML, contextName string) (*kubeClient, erro
 		return nil, err
 	}
 
-	return openKubeClient(context.Background(), kubeconfig, endpoints)
+	return openKubeClient(context.Background(), kubeconfig, endpoints, target.server)
 }
 
 // withKube runs fn with the context's Kubernetes client, bounded by callTimeout once the
@@ -412,10 +429,10 @@ func openKubeClientForContext(configYAML, contextName string) (*kubeClient, erro
 // client: the next one fetches a fresh kubeconfig and looks for a reachable address again
 // (the phone may have changed networks). A client just opened and probed is kept on a
 // timeout: the address answered a moment ago, the call itself was slow.
-func withKube[T any](configYAML, contextName string, fn func(context.Context, *kubeClient) (T, error)) (T, error) {
+func withKube[T any](target kubeTarget, fn func(context.Context, *kubeClient) (T, error)) (T, error) {
 	var zero T
 
-	k, fresh, err := kubeClients.get(configYAML, contextName)
+	k, fresh, err := kubeClients.get(target)
 	if err != nil {
 		return zero, err
 	}
@@ -430,11 +447,11 @@ func withKube[T any](configYAML, contextName string, fn func(context.Context, *k
 		switch {
 		case errors.As(err, &apiErr):
 			if apiErr.Code == http.StatusUnauthorized {
-				kubeClients.forget(configYAML, contextName, k)
+				kubeClients.forget(target, k)
 			}
 		case fresh && errors.Is(err, context.DeadlineExceeded):
 		default:
-			kubeClients.forget(configYAML, contextName, k)
+			kubeClients.forget(target, k)
 		}
 
 		return zero, kubeError(err)

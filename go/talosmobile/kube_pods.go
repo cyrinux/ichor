@@ -78,7 +78,9 @@ type podObject struct {
 // KubePods lists the pods of every namespace with the status `kubectl get pods` shows,
 // through the Kubernetes API with the admin kubeconfig Talos issues (os:admin):
 // {"pods":[{namespace,name,status,healthy,ready,containers,restarts,node,owner,created,images}]}.
-func KubePods(configYAML, contextName string) (out string, err error) {
+// kubeServer is the API server address the user set for the cluster (see
+// NormalizeKubeServer), "" for the kubeconfig's own.
+func KubePods(configYAML, contextName, kubeServer string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
@@ -87,7 +89,7 @@ func KubePods(configYAML, contextName string) (out string, err error) {
 		return toJSON(kubePodList{Pods: demoPods()})
 	}
 
-	list, err := withKube(configYAML, contextName, listPods)
+	list, err := withKube(kubeTarget{configYAML, contextName, kubeServer}, listPods)
 	if err != nil {
 		return "", err
 	}
@@ -227,8 +229,8 @@ func terminatedReason(reason string, signal, exitCode int) string {
 }
 
 // KubeDeletePod deletes a pod like `kubectl delete pod NAME -n NAMESPACE` (os:admin): its
-// controller, if any, starts a new one. The pod gets its usual grace period.
-func KubeDeletePod(configYAML, contextName, namespace, name string) (err error) {
+// controller, if any, starts a new one. The pod gets its usual grace period. kubeServer: see KubePods.
+func KubeDeletePod(configYAML, contextName, kubeServer, namespace, name string) (err error) {
 	defer maskErr(&err)
 
 	contextName = unmaskContext(configYAML, contextName)
@@ -242,7 +244,7 @@ func KubeDeletePod(configYAML, contextName, namespace, name string) (err error) 
 		return demoUnavailable
 	}
 
-	_, err = withKube(configYAML, contextName, func(ctx context.Context, k *kubeClient) (struct{}, error) {
+	_, err = withKube(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (struct{}, error) {
 		return struct{}{}, k.do(ctx, http.MethodDelete, podPath(namespace, name), "", nil, nil)
 	})
 

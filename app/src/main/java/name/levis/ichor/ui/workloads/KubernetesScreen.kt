@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -14,19 +15,31 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
+import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.isDemo
+import name.levis.ichor.ui.LoadingViewModel
+import name.levis.ichor.ui.factory
 
 /**
  * The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
  * issues (os:admin): workloads with rollout restart, and pods. The namespace filter and the
- * search carry over between the tabs.
+ * search carry over between the tabs. The top bar sets the API address to use instead of the
+ * kubeconfig's, for a cluster the phone reaches another way (not in screenshot mode: the
+ * dialog would show the real address).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,11 +48,42 @@ fun KubernetesScreen(onBack: () -> Unit) {
     var namespace by rememberSaveable { mutableStateOf<String?>(null) }
     var query by rememberSaveable { mutableStateOf("") }
 
+    val app = LocalContext.current.applicationContext as TalosApp
+    val workloads: WorkloadsViewModel = viewModel(factory = factory { WorkloadsViewModel(app.talosRepository) })
+    val pods: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.talosRepository) })
+    val config by app.configRepository.config.collectAsStateWithLifecycle()
+    val servers by app.kubeServers.servers.collectAsStateWithLifecycle()
+    val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
+    val fingerprint = config?.activeSummary?.takeIf { !it.isDemo && !mask.enabled }?.fingerprint?.takeIf { it.isNotBlank() }
+    var editing by remember { mutableStateOf(false) }
+    // Screenshot mode turned on with the dialog open: closed, not just hidden until it is off.
+    LaunchedEffect(fingerprint) { if (fingerprint == null) editing = false }
+
+    if (editing && fingerprint != null) {
+        KubeServerDialog(
+            saved = servers[fingerprint].orEmpty(),
+            onSave = { server ->
+                editing = false
+                if (server != servers[fingerprint].orEmpty()) {
+                    app.setKubeServer(fingerprint, server)
+                    // Both reload through the new address; a load in flight through the old one is cancelled.
+                    listOf<LoadingViewModel<*>>(workloads, pods).forEach { it.refresh(reset = true) }
+                }
+            },
+            onDismiss = { editing = false },
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Kubernetes") },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                actions = {
+                    if (fingerprint != null) {
+                        IconButton(onClick = { editing = true }) { Icon(Icons.Outlined.Dns, stringResource(R.string.kube_server_title)) }
+                    }
+                },
             )
         },
     ) { padding ->
@@ -49,8 +93,8 @@ fun KubernetesScreen(onBack: () -> Unit) {
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.pods_title)) })
             }
             when (tab) {
-                0 -> WorkloadsTab(namespace, query, onNamespace = { namespace = it }, onQuery = { query = it })
-                else -> PodsTab(namespace, query, onNamespace = { namespace = it }, onQuery = { query = it })
+                0 -> WorkloadsTab(namespace, query, onNamespace = { namespace = it }, onQuery = { query = it }, vm = workloads)
+                else -> PodsTab(namespace, query, onNamespace = { namespace = it }, onQuery = { query = it }, vm = pods)
             }
         }
     }

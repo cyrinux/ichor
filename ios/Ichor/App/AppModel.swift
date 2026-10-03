@@ -29,6 +29,7 @@ final class AppModel {
         static let lock = "appLockEnabled"
         static let clusterColors = "clusterColors"
         static let clusterNames = "clusterNames"
+        static let kubeServers = "kubeServers"
     }
 
     private(set) var yaml: String?
@@ -55,6 +56,10 @@ final class AppModel {
     /// importing it again still updates the same cluster.
     private(set) var clusterNames: [String: String]
 
+    /// The Kubernetes API address the user set for clusters, by context fingerprint, to use
+    /// instead of the one in the kubeconfig Talos issues (checked by TalosClient.normalizeKubeServer).
+    private(set) var kubeServers: [String: String]
+
     var theme: ThemeMode {
         didSet { UserDefaults.standard.set(theme.rawValue, forKey: Keys.theme) }
     }
@@ -77,10 +82,12 @@ final class AppModel {
         lock = AppLockState(enabled: UserDefaults.standard.bool(forKey: Keys.lock))
         clusterColors = UserDefaults.standard.dictionary(forKey: Keys.clusterColors) as? [String: Int] ?? [:]
         clusterNames = UserDefaults.standard.dictionary(forKey: Keys.clusterNames) as? [String: String] ?? [:]
+        kubeServers = UserDefaults.standard.dictionary(forKey: Keys.kubeServers) as? [String: String] ?? [:]
     }
 
     var client: TalosClient? {
-        yaml.map { TalosClient(config: $0, context: activeContext) }
+        let kubeServer = activeSummary.flatMap { kubeServers[$0.fingerprint] } ?? ""
+        return yaml.map { TalosClient(config: $0, context: activeContext, kubeServer: kubeServer) }
     }
 
     var activeSummary: ContextSummary? { summary?.context(named: activeContext) }
@@ -107,6 +114,20 @@ final class AppModel {
         var names = clusterNames
         names[context.fingerprint] = normalizeClusterName(input)
         storeNames(names)
+    }
+
+    /// Sets the Kubernetes API address of `context` (`server` already normalized, "" for the kubeconfig's).
+    func setKubeServer(_ server: String, for context: ContextSummary) {
+        guard !context.fingerprint.isEmpty else { return }
+        var servers = kubeServers
+        servers[context.fingerprint] = server.isEmpty ? nil : server
+        storeKubeServers(servers)
+    }
+
+    private func storeKubeServers(_ servers: [String: String]) {
+        guard servers != kubeServers else { return }
+        kubeServers = servers
+        UserDefaults.standard.set(servers, forKey: Keys.kubeServers)
     }
 
     private func storeNames(_ names: [String: String]) {
@@ -223,9 +244,10 @@ final class AppModel {
     }
 
     /// Restored names (all of them) and colors (the others keep the one just assigned) of the stored clusters.
-    func restoreClusterSettings(names: [String: String], colors: [String: Int]) {
+    func restoreClusterSettings(names: [String: String], colors: [String: Int], kubeServers servers: [String: String]) {
         storeColors(clusterColors.merging(colors) { _, new in new })
         storeNames(names)
+        storeKubeServers(servers)
     }
 
     /// Removes the cluster `name` (a context and its credentials) from the stored config,
@@ -352,6 +374,7 @@ final class AppModel {
         // Every cluster gets a color of its own; removed ones are forgotten.
         storeColors(assignClusterColors(saved: clusterColors, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeNames(keepClusterNames(saved: clusterNames, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        storeKubeServers(keepClusterNames(saved: kubeServers, fingerprints: newSummary.contexts.map(\.fingerprint)))
         QuickActions.update(summary: newSummary, labels: labels)
     }
 }

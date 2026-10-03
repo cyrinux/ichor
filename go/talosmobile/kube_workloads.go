@@ -115,8 +115,8 @@ type appsObjectList struct {
 // KubeWorkloads lists the Deployments, StatefulSets and DaemonSets of every namespace with
 // their rollout state, through the Kubernetes API with the admin kubeconfig Talos issues
 // (os:admin): {"workloads":[{kind,namespace,name,desired,ready,updated,available,state,
-// restartedAt,created,images}]}.
-func KubeWorkloads(configYAML, contextName string) (out string, err error) {
+// restartedAt,created,images}]}. kubeServer: see KubePods.
+func KubeWorkloads(configYAML, contextName, kubeServer string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
@@ -125,7 +125,7 @@ func KubeWorkloads(configYAML, contextName string) (out string, err error) {
 		return toJSON(kubeWorkloadList{Workloads: demoKubeWorkloads()})
 	}
 
-	list, err := withKube(configYAML, contextName, listWorkloads)
+	list, err := withKube(kubeTarget{configYAML, contextName, kubeServer}, listWorkloads)
 	if err != nil {
 		return "", err
 	}
@@ -286,8 +286,8 @@ func kubeMutationError(err error) error {
 // KubeRolloutRestart restarts the pods of a Deployment, StatefulSet or DaemonSet with a
 // rolling update, like `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin): it
 // stamps the pod template with the restart time and the controller replaces the pods. A
-// paused Deployment is refused, as kubectl does.
-func KubeRolloutRestart(configYAML, contextName, kind, namespace, name string) (err error) {
+// paused Deployment is refused, as kubectl does. kubeServer: see KubePods.
+func KubeRolloutRestart(configYAML, contextName, kubeServer, kind, namespace, name string) (err error) {
 	defer maskErr(&err)
 
 	contextName = unmaskContext(configYAML, contextName)
@@ -306,7 +306,7 @@ func KubeRolloutRestart(configYAML, contextName, kind, namespace, name string) (
 		return demoUnavailable
 	}
 
-	_, err = withKube(configYAML, contextName, func(ctx context.Context, k *kubeClient) (struct{}, error) {
+	_, err = withKube(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (struct{}, error) {
 		return struct{}{}, rolloutRestart(ctx, k, wk, namespace, name, time.Now())
 	})
 
