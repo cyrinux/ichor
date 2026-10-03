@@ -113,7 +113,7 @@ fun HealthScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (!allowed) {
-                RoleNotice(Feature.HEALTH, summary?.roles.orEmpty())
+                RoleNotice(Feature.HEALTH, summary.roles)
                 Text(
                     stringResource(R.string.health_any_role_hint),
                     style = MaterialTheme.typography.bodySmall,

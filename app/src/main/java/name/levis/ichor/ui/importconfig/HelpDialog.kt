@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.importconfig
 
+import android.content.ClipData
 import androidx.annotation.StringRes
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -27,16 +28,18 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.launch
 
 /** What each Talos role unlocks in this app (rules from Talos v1.14). */
 private enum class PhoneRole(@StringRes val label: Int, val role: String, @StringRes val unlocks: Int) {
@@ -110,7 +113,8 @@ private fun Step(text: String) {
 
 @Composable
 private fun Command(command: String) {
-    val clipboard = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
     Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.small) {
         Row(Modifier.padding(start = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -119,7 +123,7 @@ private fun Command(command: String) {
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.weight(1f).padding(vertical = 8.dp),
             )
-            IconButton(onClick = { clipboard.setText(AnnotatedString(command)) }) {
+            IconButton(onClick = { scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(command, command))) } }) {
                 Icon(Icons.Outlined.ContentCopy, contentDescription = stringResource(R.string.help_copy_command))
             }
         }

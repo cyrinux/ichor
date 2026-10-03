@@ -2,6 +2,7 @@ package name.levis.ichor.ui.insights
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -46,7 +47,7 @@ fun IncidentEvidenceCard(entry: IncidentEntry, timestamp: String) {
     val positive = !warning && (entry.kind == "recovered" || (entry.kind == "status" && ready == true && reachable == true) || (entry.kind == "service" && value("health") == "healthy"))
     val colors = LocalStatusColors.current
     val color = when { entry.severity == "error" -> colors.bad; warning -> colors.warn; positive -> colors.ok; else -> MaterialTheme.colorScheme.primary }
-    val icon = when { warning -> Icons.Default.Warning; positive -> Icons.Default.CheckCircle; entry.kind == "metrics" -> Icons.Default.ShowChart; entry.kind == "service" -> Icons.Default.Settings; entry.kind == "link" -> Icons.Default.Link; else -> Icons.Default.Info }
+    val icon = when { warning -> Icons.Default.Warning; positive -> Icons.Default.CheckCircle; entry.kind == "metrics" -> Icons.AutoMirrored.Filled.ShowChart; entry.kind == "service" -> Icons.Default.Settings; entry.kind == "link" -> Icons.Default.Link; else -> Icons.Default.Info }
     var expanded by remember(entry.id) { mutableStateOf(false) }
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
