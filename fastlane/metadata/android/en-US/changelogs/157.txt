@@ -1,0 +1,9 @@
+• Encrypt the node names the core remembers
+• Encrypt the monitor snapshot and Wake-on-LAN data
+• Keep the last known state when a cluster can't be reached
+• Cluster switch submenu in the overview title menu
+• Remember node names so a down node keeps its hostname
+• Require the app lock once a cluster is imported, with an onboarding
+• Per-cluster Kubernetes API address override
+• Open cluster insights from the summary card
+• Pass the Kubernetes API address override to last known fetches
