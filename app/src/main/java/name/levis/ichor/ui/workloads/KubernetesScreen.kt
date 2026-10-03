@@ -52,7 +52,7 @@ fun KubernetesScreen(onBack: () -> Unit) {
     val app = LocalContext.current.applicationContext as TalosApp
     val workloads: WorkloadsViewModel = viewModel(factory = factory { WorkloadsViewModel(app.talosRepository) })
     val pods: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.talosRepository) })
-    val netPerf: NetPerfViewModel = viewModel(factory = factory { NetPerfViewModel(app.netPerfRepository) })
+    val netPerf = netPerfViewModel()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val servers by app.kubeServers.servers.collectAsStateWithLifecycle()
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()

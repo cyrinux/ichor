@@ -17,14 +17,22 @@ struct NetPerfView: View {
                 if let run = session.run {
                     NetPerfStatusSection(run: run, stop: { session.stop() }, reset: { session.reset() })
                     NetPerfResultsSections(setup: run.setup, results: run.results, running: run.running)
+                } else if let report = session.viewing {
+                    savedSections(report)
                 } else {
                     setupSections(nodes.filter(\.ready))
+                    historySection
                 }
             }
             .refreshable { await load() }
             .themedBackground()
         }
-        .task { await load() }
+        .task {
+            if let cluster = model.activeSummary?.fingerprint {
+                session.loadHistory(scope: "\(cluster)-\(model.privacyStorageKey)")
+            }
+            await load()
+        }
         .alert(Text("Start a network test?"), isPresented: $confirming) {
             Button("Start") { if let client = model.client { session.start(client: client) } }
             Button("Cancel", role: .cancel) {}
@@ -81,6 +89,59 @@ struct NetPerfView: View {
                     .disabled(!session.setup.ready)
             }
         }
+    }
+
+    /// The saved tests under the setup, newest first; one opens its results.
+    @ViewBuilder
+    private var historySection: some View {
+        if !session.history.isEmpty {
+            Section {
+                ForEach(session.history, id: \.started) { report in
+                    Button { session.viewing = report } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(report.client) → \(report.server) · \(report.seconds) s")
+                                .font(.subheadline.monospaced())
+                                .foregroundStyle(.primary)
+                            Text(verbatim: ([testedAt(report)] + [headline(report)].compactMap { $0 }).joined(separator: "  ·  "))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .onDelete { offsets in offsets.map { session.history[$0] }.forEach(session.delete) }
+            } header: {
+                Text("Previous tests")
+            } footer: {
+                Text("Kept encrypted on this phone: the last \(netPerfHistoryLimit) tests of this cluster.")
+            }
+        }
+    }
+
+    /// A saved test: when it ran and what it measured.
+    @ViewBuilder
+    private func savedSections(_ report: NetPerfReport) -> some View {
+        Section {
+            Text("\(report.client) → \(report.server) · \(report.seconds) s")
+                .font(.subheadline.monospaced())
+            Text(verbatim: testedAt(report)).font(.caption).foregroundStyle(.secondary)
+            Button("Back") { session.viewing = nil }
+            Button("Delete", role: .destructive) { session.delete(report) }
+        }
+        NetPerfResultsSections(setup: report.setup, results: report.results, running: false)
+    }
+
+    private func testedAt(_ report: NetPerfReport) -> String {
+        Date(timeIntervalSince1970: Double(report.started) / 1000).formatted(date: .abbreviated, time: .shortened)
+    }
+
+    /// Pod-to-pod throughput and p50 latency, the figures the list compares tests by.
+    private func headline(_ report: NetPerfReport) -> String? {
+        let pod = report.results.filter { $0.path == NetPerfPath.pod && $0.error.isEmpty }
+        let figures = [
+            pod.first { $0.test == NetPerfTest.throughput }.map { formatMbps($0.throughputMbps) },
+            pod.first { $0.test == NetPerfTest.latency }?.latency.map { formatMicros($0.p50) },
+        ].compactMap { $0 }
+        return figures.isEmpty ? nil : figures.joined(separator: " · ")
     }
 
     private func nodePicker(_ title: LocalizedStringKey, nodes: [NetPerfNode], selection: Binding<String>) -> some View {

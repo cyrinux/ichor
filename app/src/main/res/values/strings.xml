@@ -1410,6 +1410,8 @@
     <string name="netperf_stopped">Test stopped.</string>
     <string name="netperf_failed">The test failed: %1$s</string>
     <string name="netperf_again">New test</string>
+    <string name="netperf_history">Previous tests</string>
+    <string name="netperf_history_note">Kept encrypted on this phone: the last %d tests of this cluster.</string>
     <string name="netperf_path_pod">Pod to pod</string>
     <string name="netperf_path_host">Host to host</string>
     <string name="netperf_test_throughput">Throughput</string>

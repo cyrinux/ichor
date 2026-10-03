@@ -23,7 +23,7 @@ import name.levis.ichor.ui.app
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.KeepScreenOn
 import name.levis.ichor.ui.workloads.NetPerfTab
-import name.levis.ichor.ui.workloads.NetPerfViewModel
+import name.levis.ichor.ui.workloads.netPerfViewModel
 import java.text.DateFormat
 import java.util.Date
 
@@ -36,14 +36,12 @@ fun InsightsScreen(onBack: () -> Unit) {
     val invalidations by application.talosRepository.invalidations.collectAsStateWithLifecycle()
     val mask by application.uiPreferences.privacyMask.collectAsStateWithLifecycle()
     val cluster = config?.activeSummary?.fingerprint ?: return
-    val maskKey = if (mask.enabled) java.security.MessageDigest.getInstance("SHA-256").digest(mask.words.toByteArray()).take(8).joinToString("") { "%02x".format(it) } else "real"
-    val storageScope = "$cluster-$maskKey"
+    val storageScope = "$cluster-${mask.storageKey}"
     val key = "$storageScope-$invalidations"
     val vm: InsightsViewModel = viewModel(key = key, factory = factory {
         InsightsViewModel(application.talosRepository, InsightsStore(context.applicationContext, storageScope), cluster)
     })
-    // Per cluster, so another cluster's nodes never show; leaving the screen stops a running test.
-    val netPerf: NetPerfViewModel = viewModel(key = "netperf-$cluster", factory = factory { NetPerfViewModel(application.netPerfRepository) })
+    val netPerf = netPerfViewModel()
     val state by vm.state.collectAsStateWithLifecycle()
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var tab by remember { mutableIntStateOf(0) }

@@ -61,6 +61,8 @@ fun NetPerfTab(vm: NetPerfViewModel, modifier: Modifier = Modifier) {
     val state by vm.state.collectAsStateWithLifecycle()
     val setup by vm.setup.collectAsStateWithLifecycle()
     val session by vm.session.collectAsStateWithLifecycle()
+    val history by vm.history.collectAsStateWithLifecycle()
+    val viewing by vm.viewing.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var confirming by remember { mutableStateOf(false) }
 
@@ -85,8 +87,12 @@ fun NetPerfTab(vm: NetPerfViewModel, modifier: Modifier = Modifier) {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 val current = session
-                if (current == null) {
+                val open = viewing
+                if (current == null && open != null) {
+                    NetPerfSaved(open, onBack = vm::close, onDelete = { vm.delete(open) })
+                } else if (current == null) {
                     NetPerfSetupForm(s.data, setup, vm::update, onStart = { confirming = true })
+                    NetPerfHistoryList(history, onOpen = vm::open)
                 } else {
                     if (current.running) KeepScreenOn()
                     NetPerfStatus(current, onStop = vm::stop, onReset = vm::reset)

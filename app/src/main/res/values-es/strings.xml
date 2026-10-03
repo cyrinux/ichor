@@ -1408,6 +1408,8 @@
     <string name="netperf_stopped">Prueba detenida.</string>
     <string name="netperf_failed">La prueba falló: %1$s</string>
     <string name="netperf_again">Nueva prueba</string>
+    <string name="netperf_history">Pruebas anteriores</string>
+    <string name="netperf_history_note">Guardadas cifradas en este teléfono: las últimas %d pruebas de este clúster.</string>
     <string name="netperf_path_pod">Pod a pod</string>
     <string name="netperf_path_host">Host a host</string>
     <string name="netperf_test_throughput">Rendimiento</string>

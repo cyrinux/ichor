@@ -120,6 +120,19 @@ fun NetPerfSetup.withNodes(nodes: List<NetPerfNode>): NetPerfSetup {
     )
 }
 
+/** Finished tests kept per cluster on the phone. */
+const val NETPERF_HISTORY_LIMIT = 20
+
+/** What was tested, to show a saved report like the test that made it. */
+val NetPerfReport.setup: NetPerfSetup get() = NetPerfSetup(server, client, hostNetwork, seconds)
+
+/**
+ * These saved tests, newest first, with [report] added in front and at most [limit] kept; a
+ * test already there (same start) is replaced.
+ */
+fun List<NetPerfReport>.withReport(report: NetPerfReport, limit: Int = NETPERF_HISTORY_LIMIT): List<NetPerfReport> =
+    (listOf(report) + filterNot { it.started == report.started }).take(limit)
+
 /** "9.41 Gbit/s", "870 Mbit/s". */
 fun formatMbps(mbps: Double): String = when {
     mbps >= 1000 -> String.format(Locale.ROOT, "%.2f Gbit/s", mbps / 1000)

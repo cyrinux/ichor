@@ -1,16 +1,11 @@
 import SwiftUI
 import IchorCore
-import CryptoKit
 
 struct InsightsView: View {
     @Environment(AppModel.self) private var model
-    private var storageKey: String {
-        guard model.privacyMask else { return "real" }
-        return SHA256.hash(data: Data(model.privacyWords.utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
-    }
     var body: some View {
         if let cluster = model.activeSummary?.fingerprint {
-            InsightsContent(cluster: cluster, storageScope: "\(cluster)-\(storageKey)")
+            InsightsContent(cluster: cluster, storageScope: "\(cluster)-\(model.privacyStorageKey)")
                 .id("\(cluster)-\(model.dataGeneration)")
         }
     }

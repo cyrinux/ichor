@@ -2,6 +2,14 @@ import Foundation
 import CryptoKit
 import Security
 
+extension AppModel {
+    /// Keeps what is saved while masked apart from the real data: "real", or a hash of the words.
+    var privacyStorageKey: String {
+        guard privacyMask else { return "real" }
+        return SHA256.hash(data: Data(privacyWords.utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
+    }
+}
+
 /// Encrypted, bounded local observations. The AES key is device-only, accessible
 /// when unlocked. Files are excluded from backup, just like packet captures.
 struct InsightsStore: Sendable {

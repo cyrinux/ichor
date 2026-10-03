@@ -1531,6 +1531,8 @@
     <string name="netperf_stopped">Тест зупинено.</string>
     <string name="netperf_failed">Тест не вдався: %1$s</string>
     <string name="netperf_again">Новий тест</string>
+    <string name="netperf_history">Попередні тести</string>
+    <string name="netperf_history_note">Зберігаються зашифрованими на цьому телефоні: останні %d тестів цього кластера.</string>
     <string name="netperf_path_pod">Под до пода</string>
     <string name="netperf_path_host">Хост до хоста</string>
     <string name="netperf_test_throughput">Пропускна здатність</string>

@@ -1,11 +1,16 @@
 package name.levis.ichor.ui.workloads
 
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import name.levis.ichor.data.NetPerfHistory
 import name.levis.ichor.data.NetPerfEvent
 import name.levis.ichor.data.NetPerfHandle
 import name.levis.ichor.data.NetPerfRepository
@@ -15,6 +20,7 @@ import name.levis.ichor.model.NetPerfReport
 import name.levis.ichor.model.NetPerfResult
 import name.levis.ichor.model.NetPerfSetup
 import name.levis.ichor.model.withNodes
+import name.levis.ichor.model.withReport
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.uiText
@@ -34,8 +40,15 @@ data class NetPerfSession(
     val results: List<NetPerfResult> get() = report?.results ?: progress?.results.orEmpty()
 }
 
-/** The nodes to test between, the setup, and the test running or last run. */
-class NetPerfViewModel(private val netPerf: NetPerfRepository) : LoadingViewModel<List<NetPerfNode>>() {
+/**
+ * The nodes to test between, the setup, the test running or last run, and the finished tests
+ * saved under [scope] (the cluster and the privacy mask).
+ */
+class NetPerfViewModel(
+    private val netPerf: NetPerfRepository,
+    private val saved: NetPerfHistory,
+    private val scope: String,
+) : LoadingViewModel<List<NetPerfNode>>() {
     override suspend fun fetch() = netPerf.nodes()
 
     private val _setup = MutableStateFlow(NetPerfSetup())
@@ -44,7 +57,22 @@ class NetPerfViewModel(private val netPerf: NetPerfRepository) : LoadingViewMode
     private val _session = MutableStateFlow<NetPerfSession?>(null)
     val session: StateFlow<NetPerfSession?> = _session.asStateFlow()
 
+    private val _history = MutableStateFlow<List<NetPerfReport>>(emptyList())
+    val history: StateFlow<List<NetPerfReport>> = _history.asStateFlow()
+
+    /** A saved test shown instead of the setup. */
+    private val _viewing = MutableStateFlow<NetPerfReport?>(null)
+    val viewing: StateFlow<NetPerfReport?> = _viewing.asStateFlow()
+
     private var handle: NetPerfHandle? = null
+    private val writes = Mutex()
+
+    init {
+        viewModelScope.launch {
+            // Unreadable (e.g. its key gone with a restore): a new history starts over it.
+            _history.value = withContext(Dispatchers.IO) { runCatching { saved.read(scope) }.getOrDefault(emptyList()) }
+        }
+    }
 
     /** Keeps the chosen nodes that are still there and ready, and picks a pair otherwise. */
     fun nodesLoaded(nodes: List<NetPerfNode>) = _setup.update { it.withNodes(nodes) }
@@ -72,16 +100,47 @@ class NetPerfViewModel(private val netPerf: NetPerfRepository) : LoadingViewMode
         }
     }
 
-    private fun apply(event: NetPerfEvent) = when (event) {
-        is NetPerfEvent.Progress -> _session.update { it?.copy(progress = event.progress) }
-        is NetPerfEvent.Done -> _session.update { s ->
-            s?.copy(
-                report = event.report,
-                running = false,
-                stopped = s.stopping,
-                // Stopping is not a failure, whatever the core reports for it.
-                error = event.error?.takeUnless { s.stopping }?.let(UiText::Raw),
-            )
+    private fun apply(event: NetPerfEvent) {
+        when (event) {
+            is NetPerfEvent.Progress -> _session.update { it?.copy(progress = event.progress) }
+            is NetPerfEvent.Done -> {
+                _session.update { s ->
+                    s?.copy(
+                        report = event.report,
+                        running = false,
+                        stopped = s.stopping,
+                        // Stopping is not a failure, whatever the core reports for it.
+                        error = event.error?.takeUnless { s.stopping }?.let(UiText::Raw),
+                    )
+                }
+                // A stopped or failed test is kept too, with what it measured.
+                if (event.report.results.isNotEmpty()) {
+                    _history.update { it.withReport(event.report) }
+                    persist()
+                }
+            }
+        }
+    }
+
+    fun open(report: NetPerfReport) {
+        _viewing.value = report
+    }
+
+    fun close() {
+        _viewing.value = null
+    }
+
+    fun delete(report: NetPerfReport) {
+        _history.update { list -> list.filterNot { it.started == report.started } }
+        _viewing.value = null
+        persist()
+    }
+
+    /** Writes the history as it is now; one write at a time, so the last one wins. */
+    private fun persist() {
+        viewModelScope.launch(Dispatchers.IO) {
+            // A failed write keeps the history on screen until the screen is left.
+            writes.withLock { runCatching { saved.save(scope, _history.value) } }
         }
     }
 
