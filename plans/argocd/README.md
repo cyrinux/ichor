@@ -114,6 +114,14 @@ problem apps with their likely cause. Calm (one muted line) when everything is S
 - **Sync sheet**: prune (with the list of what goes), dry run, force, apply out-of-sync only,
   server-side apply, replace. Defaults copied from the app's `syncOptions`.
 
+### In the app inventory
+
+An inventory app is matched to the Applications that deploy it: same catalog id (the Argo app's
+icon), then the Application's name, then its destination namespace among the app's namespaces.
+Its detail sheet gets an "Argo CD" section (health, sync, revision, running sync, Sync and
+Refresh, a link to the app page); a tile shows a badge when its app is failing or OutOfSync,
+from data already loaded only. The Argo CD tile's own sheet shows the GitOps summary.
+
 ### ApplicationSets and projects (second tab)
 
 - ApplicationSets with their generated apps rolled up (worst health first), `ErrorOccurred` /
