@@ -18,6 +18,8 @@ struct OverviewView: View {
     @State private var showDiscovered = false
     /// Show the nodes even though none answered (the outage notice replaces them otherwise).
     @State private var showNodesAnyway = false
+    /// The apps card's data: loaded with the overview, not with every refresh of live data.
+    @State private var inventory: LoadState<ClusterInventory> = .loading
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -54,6 +56,7 @@ struct OverviewView: View {
                     } header: {
                         if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
                     }
+                    AppsCard(state: inventory, hostnames: hostnames)
                     Section {
                         ForEach(sorted(overview.nodes)) { node in
                             let ref = NodeRef(address: node.node, hostname: node.hostname, role: node.role)
@@ -189,11 +192,13 @@ struct OverviewView: View {
         .onChange(of: model.dataGeneration) {
             state = .loading
             discovered = []
+            inventory = .loading
         }
         // Another cluster: never its name over the previous one's nodes.
         .onChange(of: model.activeContext) {
             state = .loading
             discovered = []
+            inventory = .loading
         }
         .sheet(isPresented: $showDiscovered) {
             let context = model.activeContext
@@ -254,6 +259,8 @@ struct OverviewView: View {
         guard id == loadID else { return }
         state = loaded
         if case .loaded(let overview, _) = loaded {
+            // Alongside the rest: listing every node's containers takes a while.
+            Task { await loadInventory(with: client, id: id) }
             let info = model.activeSummary?.demo == true
                 ? nil : await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
             guard id == loadID else { return }
@@ -263,6 +270,14 @@ struct OverviewView: View {
             // Discovery asks the nodes too: pointless while none answers.
             if overview.outage == nil { await discover(with: client, id: id) }
         }
+    }
+
+    /// Best effort: a first failure hides the apps card; a failed refresh keeps the apps shown.
+    private func loadInventory(with client: TalosClient, id: String) async {
+        let loaded: LoadState<ClusterInventory> = await .from { try await client.inventory() }
+        guard id == loadID else { return }
+        if case .failed = loaded, case .loaded = inventory { return }
+        inventory = loaded
     }
 
     /// Best effort: discovery off, or no node answering, offers nothing.

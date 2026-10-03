@@ -120,6 +120,8 @@ enum Route: Hashable {
     case debugShell(node: String, hostname: String)
     /// Events timeline for one node, or all of them (node nil); hostnames by address.
     case events(node: String?, hostnames: [String: String])
+    /// The apps running in the cluster; hostnames by address, for the nodes pods run on.
+    case apps(hostnames: [String: String])
     /// Issue a talosconfig (os:admin): renew this device's certificate, or one for another device.
     case issueConfig(renew: Bool)
     /// AI diagnosis (optional, see AISettings); note: what the opening screen already knows.
@@ -160,6 +162,7 @@ struct MainNavigation: View {
                     case .clusters: ClustersView()
                     case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)
                     case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
+                    case .apps(let hostnames): AppsView(hostnames: hostnames)
                     case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)
                     }
                 }

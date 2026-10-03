@@ -56,6 +56,12 @@ fun AboutSection(onChangelog: () -> Unit) {
                 DonationRow(Donation.Ethereum) { donating = Donation.Ethereum }
             }
             Text(
+                stringResource(R.string.about_icon_credits),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            Text(
                 stringResource(R.string.about_disclaimer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

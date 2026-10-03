@@ -84,6 +84,11 @@ check:
 i18n-check:
     python3 scripts/check-translations.py
 
+# Refresh the bundled app-inventory icons from go/talosmobile/appcatalog.json (needs network
+# and ImageMagick). `just app-icons --check` only validates the catalog and the bundle.
+app-icons *args:
+    python3 scripts/sync-app-icons.py {{ args }}
+
 # Go core only: fast, native, no Android toolchain.
 test:
     cd go && go test ./...

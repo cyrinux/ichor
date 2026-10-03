@@ -116,6 +116,8 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 			result.Nodes = append(result.Nodes, nodeCounters{Node: n.Node, CPUBusy: s.CPUBusy, CPUTotal: s.CPUTotal, CPUCount: s.CPUCount, MemTotal: s.MemTotal, MemAvailable: s.MemAvailable})
 		}
 		return toJSON(result)
+	case "ClusterInventory":
+		return inventoryJSON(demoInventory(now))
 	case "NodeServices":
 		services := []serviceInfo{}
 		ids := []string{"apid", "containerd", "kubelet", "machined", "trustd"}

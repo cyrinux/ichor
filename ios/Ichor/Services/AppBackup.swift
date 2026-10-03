@@ -21,7 +21,8 @@ enum AppBackup {
                 themeMode: model.theme.rawValue,
                 privacyMask: model.privacyMask,
                 privacyMaskWords: model.privacyWords,
-                monitorAlerts: BackgroundMonitor.alertsEnabled
+                monitorAlerts: BackgroundMonitor.alertsEnabled,
+                remoteAppIcons: AppIconSettings.remoteEnabled
             ),
             clusters: backupClusters(
                 fingerprints: summary.contexts.map(\.fingerprint),
@@ -49,6 +50,7 @@ enum AppBackup {
             await model.setPrivacyMask(mask, words: settings?.privacyMaskWords ?? "")
         }
         if let theme = settings?.themeMode.flatMap(ThemeMode.init(rawValue:)) { model.theme = theme }
+        if let icons = settings?.remoteAppIcons { AppIconSettings.remoteEnabled = icons }
         if let alerts = settings?.monitorAlerts {
             // Notifications need this device's permission; without it alerts stay off.
             let on = alerts ? await BackgroundMonitor.requestPermission() : false

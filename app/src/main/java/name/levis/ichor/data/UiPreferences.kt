@@ -53,6 +53,13 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _liveClusterStats = MutableStateFlow(prefs.getBoolean(KEY_LIVE_CLUSTER_STATS, true))
     val liveClusterStats: StateFlow<Boolean> = _liveClusterStats.asStateFlow()
 
+    /**
+     * Downloads icons the app does not bundle from jsDelivr (Dashboard Icons). Off by default:
+     * a third-party request, even if only the public icon name is sent.
+     */
+    private val _remoteAppIcons = MutableStateFlow(prefs.getBoolean(KEY_REMOTE_APP_ICONS, false))
+    val remoteAppIcons: StateFlow<Boolean> = _remoteAppIcons.asStateFlow()
+
     private val _privacyMask = MutableStateFlow(
         PrivacyMask(prefs.getBoolean(KEY_PRIVACY_MASK, false), prefs.getString(KEY_PRIVACY_WORDS, "").orEmpty()),
     )
@@ -74,6 +81,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _liveClusterStats.value = enabled
     }
 
+    fun setRemoteAppIcons(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_REMOTE_APP_ICONS, enabled).apply()
+        _remoteAppIcons.value = enabled
+    }
+
     fun setThemeMode(mode: ThemeMode) {
         prefs.edit().putString(KEY_THEME, mode.name).apply()
         _themeMode.value = mode
@@ -93,6 +105,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_PRIVACY_MASK = "privacy_mask"
         private const val KEY_PRIVACY_WORDS = "privacy_mask_words"
         private const val KEY_LIVE_CLUSTER_STATS = "live_cluster_stats"
+        private const val KEY_REMOTE_APP_ICONS = "remote_app_icons"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */
         fun storedLanguage(context: Context): String =

@@ -73,4 +73,24 @@ fun PrivacySection(app: TalosApp) {
             )
         }
     }
+    RemoteAppIconsSetting(app)
+}
+
+/** Opt-in: icons the app does not bundle are downloaded by their public name only. */
+@Composable
+private fun RemoteAppIconsSetting(app: TalosApp) {
+    val enabled by app.uiPreferences.remoteAppIcons.collectAsStateWithLifecycle()
+    Card(Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.settings_remote_icons), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(R.string.settings_remote_icons_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(checked = enabled, onCheckedChange = app.uiPreferences::setRemoteAppIcons, modifier = Modifier.padding(start = 12.dp))
+        }
+    }
 }

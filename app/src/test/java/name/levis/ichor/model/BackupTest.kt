@@ -70,7 +70,7 @@ class BackupTest {
             createdAt = 1_790_000_000,
             talosconfig = "context: lab\n",
             activeContextIndex = 1,
-            settings = BackupSettings(themeMode = "dark", language = "fr", monitorIntervalMinutes = 30),
+            settings = BackupSettings(themeMode = "dark", language = "fr", remoteAppIcons = true, monitorIntervalMinutes = 30),
             clusters = mapOf("aaaa" to BackupCluster("Home", red, true)),
         )
 
@@ -79,6 +79,7 @@ class BackupTest {
         assertEquals(payload, TalosJson.decodeFromString(BackupPayload.serializer(), json))
         assertTrue("unset settings are left out", "\"privacyMask\"" !in json)
         assertTrue("the Go core requires the format", "\"format\":1" in json)
+        assertTrue("iOS reads the same key", "\"remoteAppIcons\":true" in json)
     }
 
     @Test
@@ -94,6 +95,7 @@ class BackupTest {
         assertEquals("light", payload.settings.themeMode)
         assertNull(payload.settings.language)
         assertNull(payload.settings.monitorIntervalMinutes)
+        assertNull("an older backup keeps the current setting", payload.settings.remoteAppIcons)
         assertEquals(emptyMap<String, BackupWolTarget>(), payload.clusters.getValue("aaaa").wakeOnLan)
     }
 

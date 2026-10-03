@@ -1,0 +1,102 @@
+package name.levis.ichor.ui.overview
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import name.levis.ichor.R
+import name.levis.ichor.model.Inventory
+import name.levis.ichor.model.attentionCount
+import name.levis.ichor.model.overviewTiles
+import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.apps.AppIconPlaceholder
+import name.levis.ichor.ui.apps.AppIconTile
+import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.theme.LocalStatusColors
+
+private const val TILES = 6
+private val TILE = 36.dp
+
+/**
+ * The cluster's apps at a glance, opening the Apps screen: how many run, how many need a
+ * look, and a few icons. A skeleton while loading; nothing on failure or without apps, so
+ * the inventory never gets in the way of the overview.
+ */
+@Composable
+fun AppsCard(state: UiState<Inventory>, onOpen: () -> Unit) {
+    when (state) {
+        UiState.Loading -> AppsCardFrame(subtitle = null, attention = 0, onOpen = onOpen) {
+            repeat(TILES) { AppIconPlaceholder(size = TILE) }
+        }
+        is UiState.Failed -> Unit
+        is UiState.Loaded -> {
+            val apps = state.data.apps
+            if (apps.isEmpty()) return
+            val running = apps.count { !it.system }
+            val containers = apps.sumOf { it.containers }
+            val subtitle = listOf(
+                pluralStringResource(R.plurals.apps_running, running, running),
+                pluralStringResource(R.plurals.apps_containers, containers, containers),
+            ).joinToString(" · ")
+            AppsCardFrame(subtitle, apps.attentionCount, onOpen) {
+                val tiles = apps.overviewTiles(TILES)
+                tiles.forEach { AppIconTile(it, size = TILE) }
+                val rest = running - tiles.size
+                if (rest > 0) MoreTile(rest)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppsCardFrame(subtitle: String?, attention: Int, onOpen: () -> Unit, tiles: @Composable () -> Unit) {
+    Card(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.apps_title), style = MaterialTheme.typography.titleMedium)
+                    if (subtitle != null) {
+                        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                if (attention > 0) {
+                    StatusPill(pluralStringResource(R.plurals.apps_attention, attention, attention), LocalStatusColors.current.warn)
+                }
+                Icon(
+                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp),
+                )
+            }
+            Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) { tiles() }
+        }
+    }
+}
+
+/** "+12": the apps the row has no room for. */
+@Composable
+private fun MoreTile(count: Int) {
+    Surface(shape = RoundedCornerShape(TILE * 0.3f), color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.size(TILE)) {
+        Box(contentAlignment = Alignment.Center) {
+            Text("+$count", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+        }
+    }
+}

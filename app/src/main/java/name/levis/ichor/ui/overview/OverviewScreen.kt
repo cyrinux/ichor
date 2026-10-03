@@ -91,6 +91,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.apps.AppsViewModel
+import name.levis.ichor.model.Inventory
 
 class OverviewViewModel(
     val talos: TalosRepository,
@@ -110,6 +112,7 @@ fun OverviewScreen(
     onHealth: () -> Unit,
     onEvents: () -> Unit,
     onInsights: () -> Unit,
+    onApps: () -> Unit,
     onSettings: () -> Unit,
     onIssueConfig: () -> Unit,
     onUpgrade: (NodeOverview, String) -> Unit,
@@ -120,6 +123,7 @@ fun OverviewScreen(
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
     discoveryVm: NodeDiscoveryViewModel = viewModel(factory = factory { NodeDiscoveryViewModel(app.talosRepository) }),
+    appsVm: AppsViewModel = viewModel(key = "overview-apps", factory = factory { AppsViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -139,6 +143,13 @@ fun OverviewScreen(
         vm.refresh(reset = true)
         timeVm.refresh(reset = true)
     }
+    // Once per cluster and config generation (adding nodes or new credentials keep the context):
+    // listing every node's containers is too heavy to repeat on each visit.
+    val generation by vm.configs.generation.collectAsStateWithLifecycle()
+    LaunchedEffect(config?.activeContext, generation, invalidations) {
+        appsVm.load(Triple(config?.activeContext, generation, invalidations))
+    }
+    val apps by appsVm.state.collectAsStateWithLifecycle()
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     // No node answered (VPN off, another network): one notice instead of a list of red nodes.
@@ -285,6 +296,7 @@ fun OverviewScreen(
                     vm.talos.forgetFeatures()
                     vm.refresh()
                     timeVm.refresh()
+                    appsVm.refresh()
                     scope.launch { discoveryVm.discover() }
                 },
                 modifier = Modifier.padding(padding).fillMaxSize(),
@@ -303,6 +315,8 @@ fun OverviewScreen(
                     certificate = config?.activeSummary,
                     onIssueConfig = onIssueConfig,
                     onInsights = onInsights,
+                    apps = apps,
+                    onApps = onApps,
                     onNode = onNode,
                     onSettings = onSettings,
                     onNodeAction = onNodeAction,
@@ -328,6 +342,8 @@ private fun NodeList(
     certificate: ContextSummary?,
     onIssueConfig: () -> Unit,
     onInsights: () -> Unit,
+    apps: UiState<Inventory>,
+    onApps: () -> Unit,
     onNode: (NodeOverview) -> Unit,
     onSettings: () -> Unit,
     onNodeAction: (NodeOverview, NodeAction) -> Unit,
@@ -369,6 +385,7 @@ private fun NodeList(
         if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
         if (certificate?.isDemo != true) item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
         item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes), live) }
+        item { AppsCard(apps, onApps) }
         item {
             Card(onClick = onInsights, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.insights_title), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium)

@@ -7,7 +7,8 @@ final class BackupTests: XCTestCase {
         {"format":1,"platform":"android","createdAt":1790000000,"talosconfig":"context: lab\\n",
          "activeContextIndex":1,
          "settings":{"themeMode":"black","language":"fr","liveClusterStats":true,"privacyMask":false,
-                     "privacyMaskWords":"","monitorAlerts":true,"monitorIntervalMinutes":30},
+                     "privacyMaskWords":"","monitorAlerts":true,"monitorIntervalMinutes":30,
+                     "remoteAppIcons":true},
          "clusters":{"aaaa":{"name":"Home","color":11141120,"vpnOnly":true,
                              "wakeOnLan":{"10.0.0.2":{"mac":"aa:bb:cc:dd:ee:ff","broadcast":"","port":9}}}}}
         """
@@ -17,6 +18,7 @@ final class BackupTests: XCTestCase {
         XCTAssertEqual(payload.activeContextIndex, 1)
         XCTAssertEqual(payload.settings?.themeMode, "black")
         XCTAssertEqual(payload.settings?.monitorAlerts, true)
+        XCTAssertEqual(payload.settings?.remoteAppIcons, true)
         XCTAssertEqual(payload.clusters?["aaaa"], BackupCluster(name: "Home", color: 0xAA0000, vpnOnly: true))
     }
 
@@ -38,6 +40,7 @@ final class BackupTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(BackupPayload.self, from: data), payload)
         XCTAssertFalse(json.contains("language"))
         XCTAssertFalse(json.contains("vpnOnly"))
+        XCTAssertFalse(json.contains("remoteAppIcons"))
     }
 
     func testBackupClustersKeepsStoredClustersOnly() {

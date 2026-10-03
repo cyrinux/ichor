@@ -1,5 +1,6 @@
 .cache/
 .gradle/
+.kotlin/
 **/build/
 !/build/
 /build/*
