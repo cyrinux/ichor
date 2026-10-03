@@ -1,0 +1,9 @@
+{
+  "uniqueId": "github.com/selfhst/icons",
+  "name": "selfh.st/icons",
+  "description": "Application icons by selfh.st, resized. App names and logos are trademarks of their respective owners.",
+  "website": "https://selfh.st/icons/",
+  "organization": { "name": "selfh.st", "url": "https://selfh.st" },
+  "scm": { "url": "https://github.com/selfhst/icons" },
+  "licenses": ["CC-BY-4.0"]
+}

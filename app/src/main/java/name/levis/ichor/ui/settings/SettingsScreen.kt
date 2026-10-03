@@ -71,6 +71,7 @@ fun SettingsScreen(
     onIssueConfig: () -> Unit,
     onSupportBundle: () -> Unit,
     onChangelog: () -> Unit,
+    onLicenses: () -> Unit,
     onCleared: () -> Unit,
 ) {
     val config by configs.config.collectAsStateWithLifecycle()
@@ -157,7 +158,7 @@ fun SettingsScreen(
                 }
                 support.notice?.let { InfoNotice(it.text()) }
             }
-            AboutSection(onChangelog)
+            AboutSection(onChangelog, onLicenses)
         }
     }
 
