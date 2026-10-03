@@ -118,6 +118,9 @@ enum Route: Hashable {
     case kubespan
     /// Kubernetes Deployments, StatefulSets and DaemonSets (os:admin).
     case workloads
+    /// Longhorn, Garage and CloudNativePG health (os:admin); hints: catalog ids from the
+    /// inventory, downNodes: hostnames Talos reports not ready, for the likely cause.
+    case dataServices(hints: String, downNodes: Set<String>)
     case health
     case settings
     case importConfig
@@ -162,6 +165,7 @@ struct MainNavigation: View {
                     case .etcd: EtcdView()
                     case .kubespan: KubeSpanView()
                     case .workloads: KubernetesView()
+                    case .dataServices(let hints, let downNodes): DataServicesView(hints: hints, downNodes: downNodes)
                     case .health: HealthView()
                     case .settings: SettingsView()
                     case .diagnosis(let note): DiagnosisView(initialNote: note)

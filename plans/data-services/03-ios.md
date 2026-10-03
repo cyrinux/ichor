@@ -45,6 +45,17 @@ func dataServices(hints: String) async throws -> DataServices {
 
 ## Done when
 
-- [ ] `just ios-test-linux` (or `just ios-test`) green, and `just i18n-check` green
-- [ ] `just ios-build` builds
-- [ ] The demo cluster shows the same states as Android
+- [x] `just ios-test-linux` green (246 tests, including the 9 new `DataServicesTests`), and
+      `scripts/check-translations.py` green (75 new catalog keys, all 5 languages)
+- [x] Every localized literal in the new views resolves to a catalog key (the script does not
+      check that; it was verified separately)
+- [ ] `just ios-build` builds: compiled by the iOS GitHub workflow on the PR (macOS runner);
+      SwiftUI cannot be built on the Linux dev machine
+- [ ] The demo cluster shows the same states as Android (not checked on a device yet)
+
+Implementation notes (2026-10-03): model and helpers in `IchorCore/DataServices.swift`; views
+`DataServicesSection` (overview), `DataServicesView` (segmented screen), `LonghornList`,
+`GarageList` and `CnpgList`. The route is `.dataServices(hints:downNodes:)`, so the screen asks
+with the inventory's hints and names the likely cause with the Talos not-ready hostnames.
+Catalog entries were spliced in as text: the catalog mixes `" : "` and `": "` separators, so a
+full rewrite would have touched unrelated lines.
