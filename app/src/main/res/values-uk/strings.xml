@@ -1472,4 +1472,37 @@
         <item quantity="many">%1$d екземплярів очікують планування</item>
         <item quantity="other">%1$d екземпляра очікують планування</item>
     </plurals>
+    <string name="netperf_tab">Мережа</string>
+    <string name="netperf_intro">Вимірює пропускну здатність і затримку TCP між двома вузлами за допомогою netperf, як cilium connectivity perf. Тест виконується в тимчасовому namespace, який потім видаляється.</string>
+    <string name="netperf_client">Вузол-клієнт</string>
+    <string name="netperf_server">Вузол-сервер</string>
+    <string name="netperf_same_node">Той самий вузол: вимірюється власний мережевий стек вузла, а не з’єднання.</string>
+    <string name="netperf_host">Також перевірити мережу хоста</string>
+    <string name="netperf_host_desc">Від вузла до вузла, поза CNI. Тоді namespace тесту потребує рівня безпеки подів privileged.</string>
+    <string name="netperf_duration">Тривалість кожного вимірювання</string>
+    <string name="netperf_seconds">%1$d с</string>
+    <string name="netperf_start">Почати тест</string>
+    <string name="netperf_no_nodes">Немає готових вузлів для тесту.</string>
+    <string name="netperf_confirm_title">Почати тест мережі?</string>
+    <string name="netperf_confirm_text">Поди netperf працюють на %1$s і %2$s у тимчасовому namespace. З’єднання між ними буде завантажене приблизно %3$d секунд, потім namespace видаляється.</string>
+    <string name="netperf_confirm_host">Для мережі хоста namespace створюється з рівнем безпеки подів privileged.</string>
+    <string name="netperf_confirm">Почати</string>
+    <string name="netperf_summary">%1$s → %2$s · %3$d с</string>
+    <string name="netperf_phase_preparing">Підготовка namespace тесту…</string>
+    <string name="netperf_phase_starting">Запуск netserver на %1$s…</string>
+    <string name="netperf_phase_waiting">Очікування %1$s…</string>
+    <string name="netperf_phase_testing">%1$s · %2$s (%3$d/%4$d)…</string>
+    <string name="netperf_phase_cleaning">Видалення namespace тесту…</string>
+    <string name="netperf_keep_open">Не закривайте цей екран: вихід зупиняє тест.</string>
+    <string name="netperf_stop">Зупинити</string>
+    <string name="netperf_stopping">Зупинка: видалення namespace тесту…</string>
+    <string name="netperf_stopped">Тест зупинено.</string>
+    <string name="netperf_failed">Тест не вдався: %1$s</string>
+    <string name="netperf_again">Новий тест</string>
+    <string name="netperf_path_pod">Под до пода</string>
+    <string name="netperf_path_host">Хост до хоста</string>
+    <string name="netperf_test_throughput">Пропускна здатність</string>
+    <string name="netperf_test_latency">Затримка (p50)</string>
+    <string name="netperf_latency_values">p50 %1$s · p90 %2$s · p99 %3$s</string>
+    <string name="netperf_round_trips">%1$s обмінів/с</string>
 </resources>

@@ -1352,4 +1352,37 @@
         <item quantity="one">%1$d Instanz wartet auf Einplanung</item>
         <item quantity="other">%1$d Instanzen warten auf Einplanung</item>
     </plurals>
+    <string name="netperf_tab">Netzwerk</string>
+    <string name="netperf_intro">Misst TCP-Durchsatz und -Latenz von einem Node zu einem anderen mit netperf, wie cilium connectivity perf. Der Test läuft in einem temporären Namespace, der danach gelöscht wird.</string>
+    <string name="netperf_client">Client-Node</string>
+    <string name="netperf_server">Server-Node</string>
+    <string name="netperf_same_node">Gleicher Node: Das misst den Netzwerkstack des Nodes, keine Verbindung.</string>
+    <string name="netperf_host">Auch das Host-Netzwerk testen</string>
+    <string name="netperf_host_desc">Von Node zu Node, außerhalb des CNI. Der Test-Namespace braucht dann die Pod-Sicherheitsstufe privileged.</string>
+    <string name="netperf_duration">Dauer jeder Messung</string>
+    <string name="netperf_seconds">%1$d s</string>
+    <string name="netperf_start">Test starten</string>
+    <string name="netperf_no_nodes">Kein bereiter Node zum Testen.</string>
+    <string name="netperf_confirm_title">Netzwerktest starten?</string>
+    <string name="netperf_confirm_text">netperf-Pods laufen auf %1$s und %2$s in einem temporären Namespace. Die Verbindung zwischen ihnen wird etwa %3$d Sekunden lang ausgelastet, danach wird der Namespace gelöscht.</string>
+    <string name="netperf_confirm_host">Für das Host-Netzwerk wird der Namespace mit der Pod-Sicherheitsstufe privileged erstellt.</string>
+    <string name="netperf_confirm">Starten</string>
+    <string name="netperf_summary">%1$s → %2$s · %3$d s</string>
+    <string name="netperf_phase_preparing">Test-Namespace wird vorbereitet…</string>
+    <string name="netperf_phase_starting">netserver wird auf %1$s gestartet…</string>
+    <string name="netperf_phase_waiting">Warten auf %1$s…</string>
+    <string name="netperf_phase_testing">%1$s · %2$s (%3$d/%4$d)…</string>
+    <string name="netperf_phase_cleaning">Test-Namespace wird gelöscht…</string>
+    <string name="netperf_keep_open">Lass diesen Bildschirm offen: Verlassen beendet den Test.</string>
+    <string name="netperf_stop">Stoppen</string>
+    <string name="netperf_stopping">Wird gestoppt: Test-Namespace wird gelöscht…</string>
+    <string name="netperf_stopped">Test gestoppt.</string>
+    <string name="netperf_failed">Test fehlgeschlagen: %1$s</string>
+    <string name="netperf_again">Neuer Test</string>
+    <string name="netperf_path_pod">Pod zu Pod</string>
+    <string name="netperf_path_host">Host zu Host</string>
+    <string name="netperf_test_throughput">Durchsatz</string>
+    <string name="netperf_test_latency">Latenz (p50)</string>
+    <string name="netperf_latency_values">p50 %1$s · p90 %2$s · p99 %3$s</string>
+    <string name="netperf_round_trips">%1$s Round-Trips/s</string>
 </resources>
