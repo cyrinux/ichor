@@ -15,6 +15,7 @@ import name.levis.ichor.ui.LoadingViewModel
  */
 class DataServicesViewModel(private val talos: TalosRepository) : LoadingViewModel<DataServices>() {
     override fun cached(): TalosRepository.Timed<DataServices>? = talos.cached(DATA_SERVICES)
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.dataServices(hints)
 
     /** Catalog ids from the inventory; "" checks everything (Garage needs a listing of every pod then). */
