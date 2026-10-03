@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Timeline
+import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.Card
@@ -450,6 +451,7 @@ private fun NodeList(
             val downNodes = remember(overview) { overview.downHostnames() }
             DataServicesCard(dataServices, hinted, appsById, downNodes, onDataServices)
         }
+        if (nodes.isNotEmpty()) item(key = "nodes-header") { NodesHeader(nodes.size) }
         items(nodes, key = { it.node }) { node ->
             SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {
                 NodeCard(node, onClick = { onNode(node) }, onLongClick = { sheetFor = node })
@@ -457,6 +459,21 @@ private fun NodeList(
         }
         // After the nodes: they come first, the clocks are a secondary check.
         item { TimeDriftCard(time, overview.nodes.associate { it.node to it.hostname }) }
+    }
+}
+
+/** Heads the node cards so they read as one section, apart from the cards above. */
+@Composable
+private fun NodesHeader(count: Int) {
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    Row(
+        Modifier.fillMaxWidth().padding(start = 4.dp, top = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(Icons.Outlined.ViewInAr, contentDescription = null, tint = muted, modifier = Modifier.size(18.dp))
+        Text(stringResource(R.string.overview_stat_nodes), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+        Text(count.toString(), style = MaterialTheme.typography.labelMedium, color = muted)
     }
 }
 

@@ -50,7 +50,7 @@ struct TimeDriftSection: View {
             }
         } header: {
             HStack {
-                Text("Clock drift")
+                Label("Clock drift", systemImage: "clock")
                 Spacer()
                 if case .loaded(let time, _, _) = state, let status = time.summary.status {
                     StatusPill(label: label(status), color: status.color)
