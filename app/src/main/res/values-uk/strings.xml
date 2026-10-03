@@ -1213,4 +1213,15 @@
         <item quantity="many">Працює %1$d версій</item>
         <item quantity="other">Працює %1$d версії</item>
     </plurals>
+    <string name="evidence_service">Стан служби</string>
+    <string name="evidence_link">Мережеве з’єднання змінилося</string>
+    <string name="evidence_unavailable">Дані недоступні</string>
+    <string name="evidence_recovered">Збір даних відновлено</string>
+    <string name="evidence_available">Цей розділ знову доступний для збору даних.</string>
+    <string name="evidence_details">Технічні подробиці</string>
+    <string name="evidence_hide_details">Приховати технічні подробиці</string>
+    <string name="evidence_legacy_metrics">Цей старий зразок неповний. Запишіть новий сеанс, щоб переглянути відформатовані метрики.</string>
+    <string name="evidence_stage">Етап: %1$s</string>
+    <string name="evidence_link_change">З’єднання: %1$s → %2$s</string>
+    <string name="evidence_omitted">Пропущено додаткових записів пристроїв або помилок: %1$d</string>
 </resources>

@@ -36,10 +36,25 @@ public struct IncidentEntry: Decodable, Equatable, Identifiable, Sendable {
     public let id: String
     public let at: Int64
     public let node, kind, subject, detail, severity: String
+    public let metrics: Bottlenecks?
+    public let metricsOmitted: Int?
 }
 public struct IncidentDocument: Decodable, Equatable, Sendable {
     public let scope: String
     public let startedAt, updatedAt: Int64
     public let dropped: Int
     public let entries: [IncidentEntry]
+}
+
+public extension IncidentEntry {
+    /// Old raw details may have been truncated. Do not invent facts from invalid JSON.
+    var evidenceDetail: [String: Any]? {
+        (try? JSONSerialization.jsonObject(with: Data(detail.utf8))) as? [String: Any]
+    }
+    var evidenceMetrics: Bottlenecks? {
+        if let metrics { return metrics }
+        guard let rates = evidenceDetail?["rates"],
+              let data = try? JSONSerialization.data(withJSONObject: rates) else { return nil }
+        return try? JSONDecoder().decode(Bottlenecks.self, from: data)
+    }
 }

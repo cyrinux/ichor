@@ -243,6 +243,14 @@ record an incident. These features are read-only and work with `os:reader`.
   Review the latest saved timeline when you return; starting a new session replaces
   it. The timeline retains up to 600 entries, with bounded detail per entry, and
   reports discarded older entries. Metric samples can be shown or hidden.
+  Evidence cards show readiness, service health and link changes with status icons
+  and colors. Metric cards format CPU percentages, device throughput, disk activity
+  and average I/O time; network warnings use errors and drops from the sampled
+  interval rather than historical totals. Expand **Technical details** for the
+  original bounded payload. New samples retain a separate readable summary of up
+  to eight disks, eight interfaces and eight collection errors, with omissions
+  reported. Older truncated samples remain available as technical details; record
+  a new session to get their formatted metrics.
 - **Bottleneck metrics:** the node’s **Live** tab now includes CPU I/O wait and VM
   steal time, per-disk throughput/activity/average I/O time, and per-interface
   throughput/errors/drops. Rates use consecutive counters; rebooted nodes, new

@@ -1114,4 +1114,15 @@
         <item quantity="one">%1$d version running</item>
         <item quantity="other">%1$d versions running</item>
     </plurals>
+    <string name="evidence_service">Service status</string>
+    <string name="evidence_link">Network link changed</string>
+    <string name="evidence_unavailable">Evidence unavailable</string>
+    <string name="evidence_recovered">Evidence collection recovered</string>
+    <string name="evidence_available">This section can be sampled again.</string>
+    <string name="evidence_details">Technical details</string>
+    <string name="evidence_hide_details">Hide technical details</string>
+    <string name="evidence_legacy_metrics">This older sample has incomplete details. Record a new session to see formatted metrics.</string>
+    <string name="evidence_stage">Stage: %1$s</string>
+    <string name="evidence_link_change">Link: %1$s → %2$s</string>
+    <string name="evidence_omitted">Additional device or error entries omitted: %1$d</string>
 </resources>

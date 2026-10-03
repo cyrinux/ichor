@@ -17,6 +17,6 @@ data class DriftSnapshot(val scope: String, val at: Long, val nodes: List<DriftN
 @Serializable
 data class DriftChange(val node: String, val reference: String, val key: String, val before: String, val after: String)
 @Serializable
-data class IncidentEntry(val id: String, val at: Long, val node: String, val kind: String, val subject: String, val detail: String, val severity: String)
+data class IncidentEntry(val id: String, val at: Long, val node: String, val kind: String, val subject: String, val detail: String, val severity: String, val metrics: Bottlenecks? = null, val metricsOmitted: Int = 0)
 @Serializable
 data class IncidentDocument(val scope: String, val startedAt: Long, val updatedAt: Long, val dropped: Int, val entries: List<IncidentEntry>)
