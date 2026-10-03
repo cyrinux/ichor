@@ -24,8 +24,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
 - **Kubernetes:** list Deployments, StatefulSets and DaemonSets with their rollout state and
   restart one with a rolling update (`kubectl rollout restart`); list pods with their
   `kubectl get pods` status and delete one so its controller starts a new one; measure the
-  network between two nodes (TCP throughput and latency, see [Network test](#network-test)); or
-  export a kubeconfig to open the cluster in kubenav.
+  network between two nodes (TCP throughput and latency, see [Network test](#network-test));
+  open an app in the browser from its sheet, at the hosts of the Ingresses and Gateway API
+  HTTPRoutes whose Services select its pods; or export a kubeconfig to open the cluster in kubenav.
 - **Background:** alerts and a home-screen widget.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
@@ -77,7 +78,9 @@ reads those roles and explains up front when a feature needs more.
 | **Cluster health check** | `ClusterService/HealthCheck` | **`os:admin`** |
 | **Kubeconfig export** | `Kubeconfig` | **`os:admin`** |
 | **Kubernetes workloads and pods, rollout restart, pod delete** | `Kubeconfig`, then the Kubernetes API | **`os:admin`** |
+| **App web addresses (Ingress, HTTPRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, gateways) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
+| **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
 
 Notes:
 

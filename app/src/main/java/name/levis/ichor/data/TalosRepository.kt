@@ -8,6 +8,7 @@ import name.levis.talosmobile.HealthListener
 import name.levis.talosmobile.LogListener
 import name.levis.talosmobile.SnapshotListener
 import name.levis.talosmobile.Talosmobile
+import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.EtcdOverview
@@ -15,6 +16,9 @@ import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubePodList
+import name.levis.ichor.model.KubeRoute
+import name.levis.ichor.model.KubeRouteList
+import name.levis.ichor.model.RoutePod
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.LogEntry
@@ -217,6 +221,11 @@ class TalosRepository(
         TalosJson.decodeFromString(ProcessSample.serializer(), Talosmobile.nodeProcesses(cfg, ctx, node))
     }
 
+    /** The node's cgroup tree with pressure, for the pressure card and the Cgroups tab (os:admin; not cached). */
+    suspend fun cgroups(node: String): CgroupReport = call { cfg, ctx ->
+        TalosJson.decodeFromString(CgroupReport.serializer(), Talosmobile.nodeCgroups(cfg, ctx, node))
+    }
+
     /** One sample of the node's CRI containers for the Pods tab (not cached: always fresh). */
     suspend fun containers(node: String): ContainerSample = call { cfg, ctx ->
         TalosJson.decodeFromString(ContainerSample.serializer(), Talosmobile.nodeContainers(cfg, ctx, node))
@@ -404,6 +413,12 @@ class TalosRepository(
     /** `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin). */
     suspend fun rolloutRestart(workload: KubeWorkload) = kubeCall { cfg, ctx, server ->
         Talosmobile.kubeRolloutRestart(cfg, ctx, server, workload.kind, workload.namespace, workload.name)
+    }
+
+    /** The Ingress and HTTPRoute URLs serving [pods] (os:admin). */
+    suspend fun appRoutes(pods: List<RoutePod>): List<KubeRoute> = kubeCall { cfg, ctx, server ->
+        val json = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
+        TalosJson.decodeFromString(KubeRouteList.serializer(), Talosmobile.kubeAppRoutes(cfg, ctx, server, json)).routes
     }
 
     /** Every pod with the status `kubectl get pods` shows (os:admin). */

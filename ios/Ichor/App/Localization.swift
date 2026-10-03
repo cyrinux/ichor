@@ -23,6 +23,7 @@ extension Feature {
         case .resourceBrowser: String(localized: "Resources browser")
         case .supportBundle: String(localized: "Support bundle")
         case .workloads: String(localized: "Kubernetes workloads")
+        case .cgroups: String(localized: "Cgroups and pressure")
         }
     }
 }

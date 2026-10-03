@@ -87,7 +87,8 @@ public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNot
         takenAt: takenAt,
         nodes: nodes,
         etcdAlarms: (etcd?.alarms.map { "\($0.memberId):\($0.alarm)" } ?? []).sorted(),
-        etcdChecked: etcd != nil && etcd?.error == nil,
+        // A failed alarm list is "not checked", never an all-clear.
+        etcdChecked: etcd != nil && etcd?.error == nil && etcd?.alarmsError == nil,
         certNotAfter: certNotAfter,
         dataWatched: dataWatched,
         dataChecked: dataWatched && dataServices != nil,

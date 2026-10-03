@@ -214,6 +214,15 @@ struct TalosClient: Sendable {
         }
     }
 
+    /// The Ingress and HTTPRoute URLs serving pods (os:admin).
+    func appRoutes(pods: [RoutePod]) async throws -> [KubeRoute] {
+        let encoded = String(decoding: try JSONEncoder().encode(pods), as: UTF8.self)
+        let list: KubeRouteList = try await Self.json { [config, context, kubeServer] in
+            TalosmobileKubeAppRoutes(config, context, kubeServer, encoded, $0)
+        }
+        return list.routes
+    }
+
     /// Every pod with the status `kubectl get pods` shows (os:admin).
     func pods() async throws -> [KubePod] {
         let list: KubePodList = try await Self.json { [config, context, kubeServer] in TalosmobileKubePods(config, context, kubeServer, $0) }
@@ -248,6 +257,11 @@ struct TalosClient: Sendable {
     /// `talosctl processes` (os:reader); CPU time is cumulative, see processRows.
     func processes(node: String) async throws -> ProcessSample {
         try await Self.json { [config, context] in TalosmobileNodeProcesses(config, context, node, $0) }
+    }
+
+    /// The node's cgroup tree with pressure (os:admin: a copy of /sys/fs/cgroup); see cgroupRows.
+    func cgroups(node: String) async throws -> CgroupReport {
+        try await Self.json { [config, context] in TalosmobileNodeCgroups(config, context, node, $0) }
     }
 
     /// Node's machine config as YAML (os:admin); secrets are masked unless revealSecrets.

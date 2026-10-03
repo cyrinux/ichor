@@ -3,7 +3,7 @@ name: Website
 on:
   push:
     branches: [main]
-    paths: ["docs/**", ".github/workflows/pages.yml"]
+    paths: ["docs/**", "docs-i18n/**", "scripts/site-i18n.py", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -26,6 +26,9 @@ jobs:
       - uses: actions/configure-pages@v6
         with:
           enablement: true # turns GitHub Pages on (source: Actions) on first run
+      # docs/<lang>/ from the English pages and docs-i18n/; a string not translated yet
+      # stays in English (and is flagged as a warning) rather than blocking the deploy.
+      - run: python3 scripts/site-i18n.py
       - uses: actions/upload-pages-artifact@v5
         with:
           path: docs

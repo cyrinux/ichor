@@ -40,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.servicesKey
 import name.levis.ichor.data.resourcesKey
+import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.NodeResources
 import name.levis.ichor.model.NodeTime
 import name.levis.ichor.model.ServiceInfo
@@ -95,6 +96,9 @@ import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
 import kotlinx.coroutines.launch
 
+/** Index of the Cgroups tab, after Pods. */
+private const val CGROUPS_TAB = 5
+
 /** How long after a service action the list is fetched again, once the state settled. */
 private const val SERVICE_SETTLE_MILLIS = 2_500L
 
@@ -144,6 +148,8 @@ fun NodeDetailScreen(
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val canPower = config?.activeSummary?.allows(Feature.POWER) ?: false
     val canControlServices = config?.activeSummary?.allows(Feature.SERVICE_CONTROL) ?: false
+    // Pressure and cgroups come from a copy of /sys/fs/cgroup: os:admin only, hidden otherwise.
+    val canCgroups = config?.activeSummary?.allows(Feature.CGROUPS) ?: false
     val features = rememberNodeFeatures(node)
     // One upgrade at a time in the app: the entry stays open for the node being upgraded.
     val upgrading by app.upgradeManager.current.collectAsStateWithLifecycle()
@@ -285,7 +291,9 @@ fun NodeDetailScreen(
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            PrimaryScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {
+            // The Cgroups tab (last, so deep-link indexes stay) only exists for admin configs.
+            val shownTab = if (tab == CGROUPS_TAB && !canCgroups) 0 else tab
+            PrimaryScrollableTabRow(selectedTabIndex = shownTab, edgePadding = 0.dp) {
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.node_tab_services)) })
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.node_tab_resources)) })
                 Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.node_tab_live)) })
@@ -303,8 +311,11 @@ fun NodeDetailScreen(
                     text = { Text(stringResource(R.string.node_tab_pods)) },
                     unselectedContentColor = if (features.support(TalosFeature.CONTAINERS).supported) MaterialTheme.colorScheme.onSurfaceVariant else dimmed,
                 )
+                if (canCgroups) {
+                    Tab(selected = tab == CGROUPS_TAB, onClick = { tab = CGROUPS_TAB }, text = { Text(stringResource(R.string.node_tab_cgroups)) })
+                }
             }
-            when (tab) {
+            when (shownTab) {
                 0 -> ServicesTab(
                     node,
                     onService = { onLogs(it) },
@@ -313,9 +324,10 @@ fun NodeDetailScreen(
                     actionsNotice = features.support(TalosFeature.SERVICE_CONTROL).notice,
                     vm = services,
                 )
-                1 -> ResourcesTab(node)
+                1 -> ResourcesTab(node, onPressureDetails = if (canCgroups) ({ tab = CGROUPS_TAB }) else null)
                 2 -> LiveStatsTab(node)
                 3 -> FeatureGate(features.support(TalosFeature.PROCESSES)) { ProcessesTab(node) }
+                CGROUPS_TAB -> CgroupsTab(node)
                 else -> FeatureGate(features.support(TalosFeature.CONTAINERS)) { PodsTab(node, onContainer = onContainerLogs) }
             }
         }
@@ -345,14 +357,23 @@ fun NodeDetailScreen(
 @Composable
 private fun ResourcesTab(
     node: String,
+    /** Opens the Cgroups tab; null hides the pressure card (the role cannot read cgroups). */
+    onPressureDetails: (() -> Unit)?,
+    pressure: PressureViewModel = viewModel(key = "pressure-$node", factory = factory { PressureViewModel(app.talosRepository, node) }),
     vm: ResourcesViewModel = viewModel(key = "resources-$node", factory = factory { ResourcesViewModel(app.talosRepository, node) }),
     clock: NodeTimeViewModel = viewModel(key = "time-$node", factory = factory { NodeTimeViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val clockState by clock.state.collectAsStateWithLifecycle()
+    val pressureState by pressure.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         if (state == UiState.Loading) vm.refresh()
         if (clockState == UiState.Loading) clock.refresh()
+    }
+    // Keyed on access: the config (and so the role) can arrive after the first frame.
+    val showsPressure = onPressureDetails != null
+    LaunchedEffect(showsPressure) {
+        if (showsPressure && pressureState == UiState.Loading) pressure.refresh()
     }
 
     when (val s = state) {
@@ -364,10 +385,11 @@ private fun ResourcesTab(
                 onRefresh = {
                     vm.refresh()
                     clock.refresh()
+                    if (onPressureDetails != null) pressure.refresh()
                 },
                 modifier = Modifier.weight(1f),
             ) {
-                ResourcesContent(s.data, clockState)
+                ResourcesContent(s.data, clockState, pressure = onPressureDetails?.let { pressureState to it })
             }
             DataFreshness(s, edgeToEdge = false)
         }
@@ -375,7 +397,7 @@ private fun ResourcesTab(
 }
 
 @Composable
-private fun ResourcesContent(r: NodeResources, clock: UiState<NodeTime>) {
+private fun ResourcesContent(r: NodeResources, clock: UiState<NodeTime>, pressure: Pair<UiState<CgroupReport>, () -> Unit>?) {
     val uptime = if (r.bootTime > 0) localizedDuration(System.currentTimeMillis() / 1000 - r.bootTime) else "—"
     val cpu = if (r.cpuModel.isBlank()) {
         pluralStringResource(R.plurals.node_cpu_threads, r.cpuCount, r.cpuCount)
@@ -405,6 +427,8 @@ private fun ResourcesContent(r: NodeResources, clock: UiState<NodeTime>) {
                 }
             }
         }
+        // Right after memory: pressure says whether CPU, memory or disk actually hold tasks back.
+        pressure?.let { (state, onDetails) -> item { PressureCard(state, onDetails) } }
         if (r.mounts.isNotEmpty()) {
             item {
                 Card(Modifier.fillMaxWidth()) {

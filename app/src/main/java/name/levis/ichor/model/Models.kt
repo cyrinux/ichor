@@ -51,6 +51,8 @@ enum class Feature(@StringRes val label: Int, val roles: Set<String>) {
     UPGRADE(R.string.common_feature_upgrade, setOf("os:admin")),
     // MachineService/EtcdForfeitLeadership and EtcdRemoveMemberByID are admin-only in Talos.
     ETCD_MEMBER_ACTIONS(R.string.common_feature_etcd_member_actions, setOf("os:admin")),
+    // The cgroup tree is read with MachineService/Copy of /sys/fs/cgroup, admin-only in Talos.
+    CGROUPS(R.string.common_feature_cgroups, setOf("os:admin")),
     // Non-sensitive resources are readable by every role; sensitive ones answer "permission denied".
     RESOURCE_BROWSER(R.string.common_feature_resource_browser, setOf("os:admin", "os:operator", "os:reader")),
     // Every role can collect a bundle; what it cannot read (machine config: os:admin, etcd
@@ -149,6 +151,8 @@ data class EtcdOverview(
     val members: List<EtcdMember> = emptyList(),
     val statuses: List<EtcdNodeStatus> = emptyList(),
     val alarms: List<EtcdAlarm> = emptyList(),
+    /** Set when no control-plane node answered the alarm list: [alarms] is unknown, not empty. */
+    val alarmsError: String? = null,
 )
 
 @Serializable

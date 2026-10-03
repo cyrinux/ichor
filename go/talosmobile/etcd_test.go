@@ -2,6 +2,7 @@ package talosmobile
 
 import (
 	"errors"
+	"slices"
 	"testing"
 
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
@@ -24,7 +25,7 @@ func TestBuildEtcdOverview(t *testing.T) {
 
 	alarms := []*machineapi.EtcdMemberAlarm{{MemberId: 0xbeef, Alarm: machineapi.EtcdMemberAlarm_NOSPACE}}
 
-	got := buildEtcdOverview(members, nil, statuses, alarms)
+	got := buildEtcdOverview(members, nil, statuses, alarms, nil)
 
 	if got.Error != "" {
 		t.Fatalf("unexpected error %q", got.Error)
@@ -61,9 +62,64 @@ func TestBuildEtcdOverview(t *testing.T) {
 }
 
 func TestBuildEtcdOverviewMemberListError(t *testing.T) {
-	got := buildEtcdOverview(nil, errors.New("boom"), nil, nil)
+	got := buildEtcdOverview(nil, errors.New("boom"), nil, nil, nil)
 
 	if got.Error == "" || got.Members == nil || got.Statuses == nil || got.Alarms == nil {
 		t.Errorf("got %+v", got)
+	}
+}
+
+func TestBuildEtcdOverviewAlarmListError(t *testing.T) {
+	got := buildEtcdOverview(nil, nil, nil, nil, errors.New("permission denied"))
+
+	if got.AlarmsError == "" || got.Error != "" || got.Alarms == nil || len(got.Alarms) != 0 {
+		t.Errorf("got %+v", got)
+	}
+
+	if ok := buildEtcdOverview(nil, nil, nil, nil, nil); ok.AlarmsError != "" {
+		t.Errorf("alarmsError set without an error: %q", ok.AlarmsError)
+	}
+}
+
+func TestQueryOrderPutsAnsweringNodesFirst(t *testing.T) {
+	probes := []etcdProbe{
+		{node: "10.0.0.2", err: errors.New("down")},
+		{node: "10.0.0.3"},
+		{node: "10.0.0.4", err: errors.New("down")},
+		{node: "10.0.0.5"},
+	}
+
+	got := queryOrder(probes)
+	want := []string{"10.0.0.3", "10.0.0.5", "10.0.0.2", "10.0.0.4"}
+
+	if !slices.Equal(got, want) {
+		t.Errorf("order = %v, want %v", got, want)
+	}
+}
+
+func TestFirstAnswer(t *testing.T) {
+	var asked []string
+
+	got, err := firstAnswer([]string{"a", "b", "c"}, func(node string) (string, error) {
+		asked = append(asked, node)
+		if node == "a" {
+			return "", errors.New("a down")
+		}
+
+		return "from " + node, nil
+	})
+	if err != nil || got != "from b" || !slices.Equal(asked, []string{"a", "b"}) {
+		t.Errorf("got %q, %v after asking %v", got, err, asked)
+	}
+
+	_, err = firstAnswer([]string{"a", "b"}, func(node string) (int, error) {
+		return 0, errors.New(node + " down")
+	})
+	if err == nil || err.Error() != "b down" {
+		t.Errorf("all failing: err = %v, want the last error", err)
+	}
+
+	if _, err := firstAnswer(nil, func(string) (int, error) { return 1, nil }); err == nil {
+		t.Error("no nodes: want an error")
 	}
 }
