@@ -280,6 +280,7 @@
     <!-- Clusters -->
     <string name="clusters_title">Cluster</string>
     <string name="clusters_switch">Cambia cluster</string>
+    <string name="clusters_manage">Gestisci i cluster…</string>
     <string name="clusters_add">Aggiungi un cluster</string>
     <string name="clusters_swipe_hint">Scorri la barra in alto verso sinistra o destra per cambiare cluster.</string>
     <string name="clusters_remove">Rimuovi %1$s</string>

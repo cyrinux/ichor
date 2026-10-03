@@ -317,6 +317,7 @@
     <!-- Clusters -->
     <string name="clusters_title">Кластери</string>
     <string name="clusters_switch">Змінити кластер</string>
+    <string name="clusters_manage">Керувати кластерами…</string>
     <string name="clusters_add">Додати кластер</string>
     <string name="clusters_swipe_hint">Проведіть по верхній панелі ліворуч або праворуч, щоб змінити кластер.</string>
     <string name="clusters_remove">Вилучити %1$s</string>

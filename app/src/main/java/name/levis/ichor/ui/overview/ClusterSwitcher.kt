@@ -113,7 +113,7 @@ fun Modifier.clusterSwipe(config: StoredConfig?, onSelect: (String) -> Unit): Mo
 
 /**
  * The overview's title: the cluster on screen, its access level and, with several clusters,
- * which one of them it is. Tapping it opens the cluster list; [badge] leads the second line.
+ * which one of them it is. Tapping it opens the cluster menu; [badge] leads the second line.
  */
 @Composable
 fun ClusterTitle(

@@ -8,6 +8,7 @@ import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -136,6 +137,7 @@ fun OverviewScreen(
     val clusterLabels = rememberClusterLabels()
     val scope = rememberCoroutineScope()
     var showClusters by remember { mutableStateOf(false) }
+    var clusterMenu by remember { mutableStateOf(false) }
     val timeState by timeVm.state.collectAsStateWithLifecycle()
     val config by vm.configs.config.collectAsStateWithLifecycle()
     val invalidations by vm.talos.invalidations.collectAsStateWithLifecycle()
@@ -211,10 +213,23 @@ fun OverviewScreen(
         },
         topBar = {
             TopAppBar(
-                // Swipe the bar sideways for the previous/next cluster, tap the title for the list.
+                // Swipe the bar sideways for the previous/next cluster, tap the title for the menu.
                 modifier = Modifier.clusterSwipe(config, app::selectCluster),
                 title = {
-                    ClusterTitle(config, clusterColors, clusterLabels, onOpen = { showClusters = true }) { ScreenshotModeIcon() }
+                    Box {
+                        ClusterTitle(config, clusterColors, clusterLabels, onOpen = { clusterMenu = true }) { ScreenshotModeIcon() }
+                        config?.let { stored ->
+                            ClusterMenu(
+                                expanded = clusterMenu,
+                                config = stored,
+                                colors = clusterColors,
+                                labels = clusterLabels,
+                                onSelect = app::selectCluster,
+                                onManage = { showClusters = true },
+                                onDismiss = { clusterMenu = false },
+                            )
+                        }
+                    }
                 },
                 actions = {
                     // Only offered when the config's role can run it.
