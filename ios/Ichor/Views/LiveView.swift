@@ -2,10 +2,11 @@ import Charts
 import SwiftUI
 import IchorCore
 
-/// Validated chart colors (dataviz reference palette slots 1-2, light and dark steps).
+/// Validated chart colors (dataviz reference palette slots 1-3, light and dark steps).
 enum ChartPalette {
     static let first = Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(rgb: 0x3987E5) : UIColor(rgb: 0x2A78D6) })
     static let second = Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(rgb: 0xD95926) : UIColor(rgb: 0xEB6834) })
+    static let third = Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(rgb: 0x199E70) : UIColor(rgb: 0x1BAF7A) })
 }
 
 /// Polled history; owned by the node screen so it survives tab switches.

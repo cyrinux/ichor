@@ -283,6 +283,8 @@
     <string name="topology_role_worker">Worker</string>
     <string name="topology_link_degraded">One end down</string>
     <string name="topology_link_one_side">Only one end of this link was queried: the other node is not in this talosconfig.</string>
+    <string name="topology_link_test">Last network test</string>
+    <string name="topology_link_test_host">host to host %1$s</string>
     <string name="topology_link_seen_from">Seen from %1$s</string>
     <string name="topology_not_queried">Nodes in grey are not in this talosconfig: they are drawn from what their peers report.</string>
     <string name="topology_empty">Nothing to map: no cluster member or KubeSpan peer was found.</string>
@@ -1426,4 +1428,12 @@
     <string name="netperf_hint_duration">How long each measurement lasts. Longer runs smooth out bursts and TCP’s ramp-up, but keep the link busy for longer.\n\nThe test makes 2 measurements one after the other, throughput then latency, and 4 with the host network.</string>
     <string name="netperf_hint_throughput">netperf TCP_STREAM: one TCP connection sends as fast as it can for the whole duration, so this is the bandwidth a single flow gets.\n\nOn a healthy path it comes close to the link speed: about 940 Mbit/s on 1 GbE, 9.4 Gbit/s on 10 GbE. Encryption, a small MTU or a busy CPU lower it. Several flows together can reach more.</string>
     <string name="netperf_hint_latency">netperf TCP_RR: one byte goes to the server and back, again and again on one connection. Each value is a full round trip, both network stacks included.\n\np50 is the median: half of the round trips were faster. p90: 9 in 10 were faster. p99: only the slowest 1 in 100 took longer, where jitter and retransmits show. A p99 far above p50 means an uneven link.\n\nRound trips/s is how many completed each second, one after the other. On a LAN expect tens to a few hundred µs; between sites, milliseconds.</string>
+    <string name="netperf_trend">Over time</string>
+    <string name="netperf_trend_pair">%1$s → %2$s · pod to pod</string>
+    <string name="netperf_trend_latency">Latency (p50)</string>
+    <string name="netperf_trend_description">%1$s across the saved tests</string>
+    <string name="netperf_hint_trend">The saved tests between the client and server chosen above, oldest on the left. Points are evenly spaced, whatever the time between tests.\n\nTap a point to see that test in both charts. A drop in throughput or a jump in latency after a change (CNI, MTU, encryption, a new switch) shows what it cost.</string>
+    <string name="netperf_latency_range_description">Round trips from %1$s to %4$s, p50 %2$s, p99 %3$s</string>
+    <string name="netperf_latency_min">fastest %1$s</string>
+    <string name="netperf_latency_max">slowest %1$s</string>
 </resources>

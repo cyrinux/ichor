@@ -82,4 +82,45 @@ class NetPerfTest {
         assertEquals(listOf(report), read)
         assertEquals(NetPerfSetup(server = "a", client = "b", hostNetwork = true, seconds = 5), report.setup)
     }
+
+    @Test
+    fun trendFollowsOnePairOldestFirst() {
+        fun report(started: Long, client: String, server: String, vararg results: NetPerfResult) =
+            NetPerfReport(server = server, client = client, started = started, results = results.toList())
+        val history = listOf(
+            report(
+                3, "a", "b",
+                NetPerfResult(NETPERF_PATH_POD, NETPERF_THROUGHPUT, throughputMbps = 900.0),
+                NetPerfResult(NETPERF_PATH_HOST, NETPERF_THROUGHPUT, throughputMbps = 5000.0),
+                NetPerfResult(NETPERF_PATH_POD, NETPERF_LATENCY, latency = NetPerfLatency(p50 = 60.0)),
+            ),
+            report(2, "b", "a", NetPerfResult(NETPERF_PATH_POD, NETPERF_THROUGHPUT, throughputMbps = 1.0)),
+            report(
+                1, "a", "b",
+                NetPerfResult(NETPERF_PATH_POD, NETPERF_THROUGHPUT, error = "refused"),
+                NetPerfResult(NETPERF_PATH_POD, NETPERF_LATENCY, latency = NetPerfLatency(p50 = 80.0)),
+            ),
+        )
+        val trend = history.trendOf("a", "b")
+        assertEquals(listOf(1L, 3L), trend.map { it.started })
+        assertEquals(listOf(null, 900.0), trend.map { it.throughputMbps })
+        assertEquals(listOf(80.0, 60.0), trend.map { it.p50Us })
+        assertTrue(history.trendOf("b", "a").size == 1)
+    }
+
+    @Test
+    fun latestBetweenTakesEitherDirectionWithAThroughput() {
+        val ok = listOf(NetPerfResult(NETPERF_PATH_POD, NETPERF_THROUGHPUT, throughputMbps = 900.0))
+        val failed = listOf(NetPerfResult(NETPERF_PATH_POD, NETPERF_THROUGHPUT, error = "refused"))
+        val history = listOf(
+            NetPerfReport(client = "a", server = "b", started = 4, results = failed),
+            NetPerfReport(client = "b", server = "a", started = 3, results = ok),
+            NetPerfReport(client = "a", server = "b", started = 2, results = ok),
+            NetPerfReport(client = "a", server = "c", started = 5, results = ok),
+        )
+        assertEquals(3L, history.latestBetween("a", "b")?.started)
+        assertEquals(3L, history.latestBetween("b", "a")?.started)
+        assertNull(history.latestBetween("b", "c"))
+        assertEquals(900.0, history.latestBetween("c", "a")?.podThroughputMbps)
+    }
 }

@@ -286,6 +286,36 @@ extension Array where Element == NetPerfReport {
     }
 }
 
+/// One saved test in a pair's trend: its pod-to-pod figures, nil where not measured.
+public struct NetPerfTrendPoint: Equatable, Sendable {
+    /// Unix ms.
+    public let started: Int64
+    public let throughputMbps: Double?
+    public let p50Us: Double?
+
+    public init(started: Int64, throughputMbps: Double?, p50Us: Double?) {
+        self.started = started
+        self.throughputMbps = throughputMbps
+        self.p50Us = p50Us
+    }
+}
+
+extension Array where Element == NetPerfReport {
+    /// The saved tests from `client` to `server`, oldest first, for the trend charts.
+    public func trend(client: String, server: String) -> [NetPerfTrendPoint] {
+        filter { $0.client == client && $0.server == server }
+            .sorted { $0.started < $1.started }
+            .map { report in
+                let pod = report.results.filter { $0.path == NetPerfPath.pod && $0.error.isEmpty }
+                return NetPerfTrendPoint(
+                    started: report.started,
+                    throughputMbps: pod.first { $0.test == NetPerfTest.throughput }?.throughputMbps,
+                    p50Us: pod.first { $0.test == NetPerfTest.latency }?.latency?.p50
+                )
+            }
+    }
+}
+
 /// "9.41 Gbit/s", "870 Mbit/s" (same output as the Android app).
 public func formatMbps(_ mbps: Double) -> String {
     if mbps >= 1000 { return String(format: "%.2f Gbit/s", mbps / 1000) }

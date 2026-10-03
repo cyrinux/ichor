@@ -51,10 +51,10 @@ val LocalStatusColors = staticCompositionLocalOf { DarkStatus }
  * surfaces. Single-series charts use [first].
  */
 @Immutable
-data class ChartColors(val first: Color, val second: Color, val grid: Color)
+data class ChartColors(val first: Color, val second: Color, val third: Color, val grid: Color)
 
-private val LightChart = ChartColors(first = Color(0xFF2A78D6), second = Color(0xFFEB6834), grid = Color(0x1F000000))
-private val DarkChart = ChartColors(first = Color(0xFF3987E5), second = Color(0xFFD95926), grid = Color(0x29FFFFFF))
+private val LightChart = ChartColors(first = Color(0xFF2A78D6), second = Color(0xFFEB6834), third = Color(0xFF1BAF7A), grid = Color(0x1F000000))
+private val DarkChart = ChartColors(first = Color(0xFF3987E5), second = Color(0xFFD95926), third = Color(0xFF199E70), grid = Color(0x29FFFFFF))
 
 val LocalChartColors = staticCompositionLocalOf { DarkChart }
 

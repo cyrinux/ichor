@@ -324,6 +324,8 @@
     <string name="topology_role_worker">Робочий вузол</string>
     <string name="topology_link_degraded">Один бік розірвано</string>
     <string name="topology_link_one_side">Опитано лише один бік цього з\'єднання: інший вузол відсутній у цьому talosconfig.</string>
+    <string name="topology_link_test">Останній тест мережі</string>
+    <string name="topology_link_test_host">хост до хоста %1$s</string>
     <string name="topology_link_seen_from">З боку %1$s</string>
     <string name="topology_not_queried">Сірі вузли відсутні у цьому talosconfig: їх показано за даними їхніх пірів.</string>
     <string name="topology_empty">Немає чого показати: не знайдено жодного учасника кластера чи піра KubeSpan.</string>
@@ -1547,4 +1549,12 @@
     <string name="netperf_hint_duration">Скільки триває кожне вимірювання. Довші вимірювання згладжують сплески й розгін TCP, але довше навантажують з’єднання.\n\nТест робить 2 вимірювання одне за одним, пропускну здатність, потім затримку, і 4 з мережею хоста.</string>
     <string name="netperf_hint_throughput">netperf TCP_STREAM: одне TCP-з’єднання надсилає дані якомога швидше впродовж усього часу, тож це пропускна здатність одного потоку.\n\nНа справному шляху вона близька до швидкості з’єднання: близько 940 Мбіт/с на 1 GbE, 9,4 Гбіт/с на 10 GbE. Шифрування, мала MTU або завантажений CPU її знижують. Кілька потоків разом можуть дати більше.</string>
     <string name="netperf_hint_latency">netperf TCP_RR: один байт іде до сервера й назад, знову і знову в одному з’єднанні. Кожне значення — повний обмін туди й назад, разом із мережевими стеками обох боків.\n\np50 — медіана: половина обмінів була швидшою. p90: 9 з 10 були швидшими. p99: лише найповільніший 1 зі 100 тривав довше, тут видно джитер і повторні передачі. p99 набагато вищий за p50 означає нерівне з’єднання.\n\nОбмінів/с — скільки завершилося щосекунди, один за одним. У локальній мережі очікуйте від десятків до кількох сотень мкс; між майданчиками — мілісекунди.</string>
+    <string name="netperf_trend">У часі</string>
+    <string name="netperf_trend_pair">%1$s → %2$s · под до пода</string>
+    <string name="netperf_trend_latency">Затримка (p50)</string>
+    <string name="netperf_trend_description">%1$s у збережених тестах</string>
+    <string name="netperf_hint_trend">Збережені тести між клієнтом і сервером, вибраними вище, найстаріший ліворуч. Точки розташовані рівномірно, незалежно від часу між тестами.\n\nТоркніться точки, щоб побачити цей тест на обох графіках. Падіння пропускної здатності чи стрибок затримки після зміни (CNI, MTU, шифрування, новий комутатор) показує, чого вона коштувала.</string>
+    <string name="netperf_latency_range_description">Цикли від %1$s до %4$s, p50 %2$s, p99 %3$s</string>
+    <string name="netperf_latency_min">найшвидший %1$s</string>
+    <string name="netperf_latency_max">найповільніший %1$s</string>
 </resources>

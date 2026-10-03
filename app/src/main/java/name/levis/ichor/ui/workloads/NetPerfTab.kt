@@ -92,6 +92,7 @@ fun NetPerfTab(vm: NetPerfViewModel, modifier: Modifier = Modifier) {
                     NetPerfSaved(open, onBack = vm::close, onDelete = { vm.delete(open) })
                 } else if (current == null) {
                     NetPerfSetupForm(s.data, setup, vm::update, onStart = { confirming = true })
+                    NetPerfTrend(history, setup.client, setup.server)
                     NetPerfHistoryList(history, onOpen = vm::open)
                 } else {
                     if (current.running) KeepScreenOn()

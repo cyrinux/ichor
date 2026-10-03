@@ -61,6 +61,8 @@ fun TopologyMap(
     onNode: (TopologyNode) -> Unit,
     onLink: (TopologyLink) -> Unit,
     modifier: Modifier = Modifier,
+    /** Throughput last measured on a link by the network test, shown at its middle. */
+    speeds: Map<TopologyLink, String> = emptyMap(),
 ) {
     val colors = LocalStatusColors.current
     val siteFill = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -121,6 +123,17 @@ fun TopologyMap(
                     Modifier.centeredAt(12f, box.top + layout.header / 2, alignStart = true).widthIn(max = (layout.width - 24f).dp),
                 )
             }
+            speeds.forEach { (link, speed) ->
+                val a = layout.nodes[link.a] ?: return@forEach
+                val b = layout.nodes[link.b] ?: return@forEach
+                val c = layout.control(a, b, nodes[link.a]?.site == nodes[link.b]?.site)
+                // The middle of the quadratic curve: (a + 2c + b) / 4.
+                SpeedPill(
+                    speed,
+                    onClick = { onLink(link) },
+                    modifier = Modifier.centeredAt((a.x + 2 * c.x + b.x) / 4, (a.y + 2 * c.y + b.y) / 4),
+                )
+            }
             topology.nodes.forEach { node ->
                 val at = layout.nodes[node.id] ?: return@forEach
                 NodeChip(
@@ -143,6 +156,25 @@ private fun Modifier.centeredAt(x: Float, y: Float, alignStart: Boolean = false)
     layout(placeable.width, placeable.height) {
         val left = if (alignStart) x.dp.toPx() else x.dp.toPx() - placeable.width / 2f
         placeable.place(left.roundToInt(), (y.dp.toPx() - placeable.height / 2f).roundToInt())
+    }
+}
+
+/** A link's measured throughput, in text ink on a surface pill so it reads over the line. */
+@Composable
+private fun SpeedPill(speed: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        tonalElevation = 1.dp,
+    ) {
+        Text(
+            speed,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+        )
     }
 }
 

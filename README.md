@@ -118,6 +118,11 @@ and, optionally, host to host.
 - **Saved results:** the last 20 finished tests of each cluster (stopped ones too, with what they
   measured) are listed under the setup, to compare over time. They are kept encrypted on the
   phone, outside backups, apart for the privacy mask; open one to delete it (or swipe it away on iOS).
+- **Charts:** with two saved tests or more between the chosen client and server, an *Over time*
+  card charts their pod-to-pod throughput and p50 latency (tap a point to see that test). Each
+  latency result also draws where the round trips fell, from the fastest to the slowest, with
+  p50 to p99 as a bar. On Android, the KubeSpan map shows the last pod-to-pod throughput measured
+  between two nodes on their link, and the link's sheet the rest of that test.
 
 ### Creating a talosconfig for the phone
 

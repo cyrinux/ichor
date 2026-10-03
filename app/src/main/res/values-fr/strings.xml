@@ -283,6 +283,8 @@
     <string name="topology_role_worker">Worker</string>
     <string name="topology_link_degraded">Une extrémité coupée</string>
     <string name="topology_link_one_side">Une seule extrémité de ce lien a été interrogée : l\'autre nœud n\'est pas dans ce talosconfig.</string>
+    <string name="topology_link_test">Dernier test réseau</string>
+    <string name="topology_link_test_host">hôte à hôte %1$s</string>
     <string name="topology_link_seen_from">Vu depuis %1$s</string>
     <string name="topology_not_queried">Les nœuds en gris ne sont pas dans ce talosconfig : ils sont dessinés d\'après leurs pairs.</string>
     <string name="topology_empty">Rien à cartographier : aucun membre du cluster ni pair KubeSpan trouvé.</string>
@@ -1424,4 +1426,12 @@
     <string name="netperf_hint_duration">Durée de chaque mesure. Une mesure plus longue lisse les pics et la montée en charge de TCP, mais occupe le lien plus longtemps.\n\nLe test fait 2 mesures l’une après l’autre, débit puis latence, et 4 avec le réseau hôte.</string>
     <string name="netperf_hint_throughput">netperf TCP_STREAM : une connexion TCP envoie aussi vite que possible pendant toute la durée, c’est donc la bande passante d’un seul flux.\n\nSur un chemin sain, elle approche la vitesse du lien : environ 940 Mbit/s en 1 GbE, 9,4 Gbit/s en 10 GbE. Le chiffrement, une petite MTU ou un CPU occupé la réduisent. Plusieurs flux ensemble peuvent aller plus loin.</string>
     <string name="netperf_hint_latency">netperf TCP_RR : un octet va au serveur et revient, encore et encore sur une connexion. Chaque valeur est un aller-retour complet, piles réseau des deux côtés comprises.\n\np50 est la médiane : la moitié des allers-retours ont été plus rapides. p90 : 9 sur 10 ont été plus rapides. p99 : seul le 1 sur 100 le plus lent a pris plus longtemps, c’est là que la gigue et les retransmissions se voient. Un p99 bien au-dessus du p50 indique un lien irrégulier.\n\nAllers-retours/s : combien se sont terminés chaque seconde, l’un après l’autre. Sur un LAN, comptez quelques dizaines à quelques centaines de µs ; entre sites, des millisecondes.</string>
+    <string name="netperf_trend">Dans le temps</string>
+    <string name="netperf_trend_pair">%1$s → %2$s · pod à pod</string>
+    <string name="netperf_trend_latency">Latence (p50)</string>
+    <string name="netperf_trend_description">%1$s sur les tests conservés</string>
+    <string name="netperf_hint_trend">Les tests conservés entre le client et le serveur choisis plus haut, le plus ancien à gauche. Les points sont espacés régulièrement, quel que soit le temps entre deux tests.\n\nTouchez un point pour voir ce test dans les deux graphiques. Une baisse de débit ou un saut de latence après un changement (CNI, MTU, chiffrement, nouveau switch) montre ce qu’il a coûté.</string>
+    <string name="netperf_latency_range_description">Allers-retours de %1$s à %4$s, p50 %2$s, p99 %3$s</string>
+    <string name="netperf_latency_min">plus rapide %1$s</string>
+    <string name="netperf_latency_max">plus lent %1$s</string>
 </resources>

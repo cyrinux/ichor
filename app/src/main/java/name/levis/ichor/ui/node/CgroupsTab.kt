@@ -57,6 +57,9 @@ import name.levis.ichor.model.pressureLevel
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.live.LiveChart
+import name.levis.ichor.ui.live.Series
+import name.levis.ichor.ui.theme.LocalChartColors
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
 import name.levis.ichor.util.formatBytes
@@ -65,7 +68,16 @@ import java.util.Locale
 /** A copy of /sys/fs/cgroup (several MB on a busy node) is heavy on mobile data: poll slowly. */
 private const val CGROUPS_POLL_SECONDS = 10L
 
-data class CgroupsState(val previous: CgroupReport? = null, val current: CgroupReport? = null, val error: String? = null)
+/** Pressure samples the chart keeps: 5 minutes at one per poll. */
+private const val CGROUPS_HISTORY_POINTS = 30
+
+data class CgroupsState(
+    val previous: CgroupReport? = null,
+    val current: CgroupReport? = null,
+    val error: String? = null,
+    /** The node's pressure at each poll, oldest first, without the tree, for the chart. */
+    val history: List<CgroupReport> = emptyList(),
+)
 
 /** Polls the node's cgroups while the tab is visible; keeps the previous sample for rates. */
 class CgroupsViewModel(private val talos: TalosRepository, private val node: String) : ViewModel() {
@@ -75,7 +87,14 @@ class CgroupsViewModel(private val talos: TalosRepository, private val node: Str
     suspend fun poll() {
         while (true) {
             runCatching { talos.cgroups(node) }.fold(
-                onSuccess = { report -> _state.value = CgroupsState(previous = _state.value.current, current = report) },
+                onSuccess = { report ->
+                    val last = _state.value
+                    _state.value = CgroupsState(
+                        previous = last.current,
+                        current = report,
+                        history = (last.history + report.copy(root = null)).takeLast(CGROUPS_HISTORY_POINTS),
+                    )
+                },
                 onFailure = {
                     // Leaving the tab cancels the call: that is not an error to show on return.
                     if (it is CancellationException) throw it
@@ -129,6 +148,7 @@ fun CgroupsTab(
         }
         HorizontalDivider()
         LazyColumn(Modifier.fillMaxSize()) {
+            item(key = "pressure-chart") { PressureChart(state.history) }
             items(rows, key = { it.path }) { row ->
                 CgroupItem(row, expanded = row.path in open) {
                     expanded = if (row.path in open) open - row.path else open + row.path
@@ -224,3 +244,31 @@ private fun CgroupNotes(row: CgroupRow) {
         }
     }
 }
+
+/**
+ * The node's PSI "some" 10 s averages at each poll while the tab is open: how the waiting for
+ * CPU, memory and disk moves. The scale reaches at least 10 % so a quiet node reads as flat.
+ */
+@Composable
+private fun PressureChart(history: List<CgroupReport>) {
+    val colors = LocalChartColors.current
+    val series = listOf(
+        Series(stringResource(R.string.node_pressure_cpu), colors.first, history.map { it.pressure.cpu.some10.toFloat() }),
+        Series(stringResource(R.string.node_pressure_memory), colors.second, history.map { it.pressure.memory.some10.toFloat() }),
+        Series(stringResource(R.string.node_pressure_io), colors.third, history.map { it.pressure.io.some10.toFloat() }),
+    )
+    val peak = series.maxOf { it.values.maxOrNull() ?: 0f }
+    LiveChart(
+        title = stringResource(R.string.node_section_pressure),
+        series = series,
+        times = history.map { it.at },
+        format = { String.format(Locale.ROOT, "%.1f%%", it) },
+        gridColor = colors.grid,
+        modifier = Modifier.padding(16.dp),
+        fixedMax = (peak * 1.15f).coerceIn(PRESSURE_CHART_FLOOR, 100f),
+        maxPoints = CGROUPS_HISTORY_POINTS,
+        pollSeconds = CGROUPS_POLL_SECONDS,
+    )
+}
+
+private const val PRESSURE_CHART_FLOOR = 10f

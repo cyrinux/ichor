@@ -21,6 +21,7 @@ struct NetPerfView: View {
                     savedSections(report)
                 } else {
                     setupSections(nodes.filter(\.ready))
+                    NetPerfTrendSection(history: session.history, client: session.setup.client, server: session.setup.server)
                     historySection
                 }
             }
@@ -264,6 +265,7 @@ private struct NetPerfResultRow: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
+                    NetPerfLatencyRange(latency: l)
                 }
             }
         }
@@ -281,7 +283,7 @@ private func netPerfPathLabel(_ path: String) -> String {
     path == NetPerfPath.host ? String(localized: "Host to host") : String(localized: "Pod to pod")
 }
 
-private func netPerfTestLabel(_ test: String) -> String {
+func netPerfTestLabel(_ test: String) -> String {
     test == NetPerfTest.latency ? String(localized: "Latency (p50)") : String(localized: "Throughput")
 }
 
