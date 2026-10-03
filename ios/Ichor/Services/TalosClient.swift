@@ -109,6 +109,20 @@ struct TalosClient: Sendable {
         TalosmobileSetPrivacyMask(enabled, extraWords)
     }
 
+    /// Where Go remembers node names, so a node that is down still shows its hostname.
+    /// Device-only: excluded from backup. Call before any other Go call.
+    static func setDataDirectory() {
+        guard var url = try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
+                                                     appropriateFor: nil, create: true)
+            .appendingPathComponent("core", isDirectory: true),
+            (try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)) != nil
+        else { return }
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        try? url.setResourceValues(values)
+        TalosmobileSetDataDir(url.path)
+    }
+
     /// Applies the stored screenshot mode; call before any other Go call (also in background tasks).
     static func applyStoredPrivacyMask() {
         let defaults = UserDefaults.standard

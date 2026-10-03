@@ -13,6 +13,7 @@ struct IchorApp: App {
     init() {
         // Before any Talos call, including the background refresh task registered below.
         TalosClient.applyStoredPrivacyMask()
+        TalosClient.setDataDirectory()
         SupportBundleStore.removeStaleParts()
         BackgroundMonitor.register()
         BackgroundMonitor.registerCategories()

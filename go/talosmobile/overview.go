@@ -71,7 +71,7 @@ func ClusterOverview(configYAML, contextName string) (out string, err error) {
 	}
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		name, _, err := resolveContext(configYAML, contextName)
+		name, cfg, err := resolveContext(configYAML, contextName)
 		if err != nil {
 			return "", err
 		}
@@ -93,6 +93,7 @@ func ClusterOverview(configYAML, contextName string) (out string, err error) {
 
 		wg.Wait()
 
+		rememberNodeNames(contextFingerprints(configYAML), contextFingerprint(name, cfg), result.Nodes)
 		learnClusterHosts(ctx, s.client, result.Nodes, domains)
 
 		return toJSON(result)
@@ -204,10 +205,12 @@ func buildNodeOverview(node string, p nodeProbe) nodeOverview {
 	return out
 }
 
+const roleUnknown = "unknown"
+
 func roleName(t machine.Type, err error) string {
 	switch {
 	case err != nil || t == machine.TypeUnknown:
-		return "unknown"
+		return roleUnknown
 	case t.IsControlPlane():
 		return "controlplane"
 	default:

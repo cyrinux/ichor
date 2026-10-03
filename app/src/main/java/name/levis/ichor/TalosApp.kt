@@ -226,6 +226,8 @@ class TalosApp : Application() {
         syncLanguage()
         // Before any Talos call: the monitor worker and the widget run in this process too.
         applyPrivacyMask(uiPreferences.privacyMask.value)
+        // Where Go remembers node names, so a node that is down still shows its hostname.
+        Talosmobile.setDataDir(noBackupFilesDir.path)
         launchSync()
         // Every cluster of the stored config gets a color of its own, as soon as it shows up.
         ProcessLifecycleOwner.get().lifecycleScope.launch {
