@@ -65,6 +65,8 @@ build_inside() {
   echo "version $ICHOR_VERSION (code $ICHOR_BUILD_NUMBER)"
   # Release notes bundled in the app, for the "what's new" shown after an update.
   python3 "$ROOT/scripts/changelog.py" --limit 30 -o "$ROOT/app/src/main/assets/changelog.json"
+  # The Go core's modules for the "Open-source licenses" screen (Gradle cannot see into the AAR).
+  python3 "$ROOT/scripts/go-licenses.py"
 
   cd "$ROOT/go"
   if [[ "$VARIANT" == "check" ]]; then

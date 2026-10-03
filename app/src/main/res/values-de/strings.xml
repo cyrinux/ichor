@@ -398,6 +398,8 @@
     <string name="about_section">Über</string>
     <string name="about_version">Ichor %1$s (%2$d)</string>
     <string name="about_source">Quellcode auf GitHub</string>
+    <string name="about_license">Lizenz: Apache 2.0</string>
+    <string name="about_licenses">Open-Source-Lizenzen</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="about_sponsor">Auf GitHub sponsern</string>
     <string name="about_donate_btc">Mit Bitcoin spenden</string>
