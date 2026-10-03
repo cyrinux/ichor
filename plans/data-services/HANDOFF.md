@@ -74,12 +74,40 @@ Paste one of these into a fresh session in `/home/cyril/personal/ichor`:
 - Phase 4:
   > Implement plans/data-services/04-monitoring.md (Android + iOS), opt-in and off by default.
 
-## Questions for the user (answer before or during phase 1)
+## Reference cluster and fixtures
+
+The user's cluster config (GitOps, ArgoCD) is at `~/hacklab/talos`. Its `AGENTS.md`
+says which kubeconfig to use. Read it for the namespaces and workload names, which are
+kept out of this public repo on purpose; the shape is in
+[README.md §Reference cluster](README.md#reference-cluster-the-users).
+
+Before writing parsers, capture real outputs as fixtures. These commands are read-only,
+but they touch the live cluster, so **ask the user before running them**. Fill in the
+placeholders from `~/hacklab/talos`:
+
+```sh
+# Garage: main (DaemonSet) and NAS (StatefulSet)
+kubectl -n <garage-ns> exec ds/<garage-ds> -c garage -- /garage json-api --help
+kubectl -n <garage-ns> exec ds/<garage-ds> -c garage -- /garage json-api GetClusterHealth
+kubectl -n <garage-ns> exec ds/<garage-ds> -c garage -- /garage json-api GetClusterStatus
+kubectl -n <garage-ns> exec ds/<garage-ds> -c garage -- /garage json-api GetNodeStatistics '{"node":"*"}'   # syntax to confirm via --help
+kubectl -n <nas-ns> exec sts/<nas-sts> -c garage -- /garage json-api GetClusterHealth
+# Longhorn 1.12 / CNPG + plugin
+kubectl get volumes.longhorn.io,replicas.longhorn.io,nodes.longhorn.io,backuptargets.longhorn.io -A -o json
+kubectl get clusters.postgresql.cnpg.io,scheduledbackups.postgresql.cnpg.io,objectstores.barmancloud.cnpg.io -A -o json
+```
+
+**This repo is public.** Trim fixtures to a few objects and replace real namespaces,
+names, hostnames, IPs, bucket names and node ids with neutral ones (`garage`, `db`,
+`node-1`…) before committing them under
+`go/talosmobile/testdata/{garage/v2.3.0,longhorn/1.12,cnpg}/`.
+
+## Questions for the user
 
 1. ~~Garage version~~ → v2.3.0 (answered 2026-10-03).
-2. In which namespace, and with which pod and container names, does Garage run? (`just probe`
-   will find out anyway.)
-3. Does anything block `kubectl exec` there (PodSecurity, Kyverno policy)?
+2. ~~Garage namespace/pods~~ → found in `~/hacklab/talos` (two instances).
+3. ~~Exec blockers~~ → none in the repo (no Kyverno/Gatekeeper/NetworkPolicy in the Garage namespaces).
+4. OK to run the read-only fixture commands above against the live cluster?
 
 ## Progress log
 
@@ -90,3 +118,7 @@ Append a line per session: date, phase, what was done, what's next.
   admin-token phase 1b dropped; alerts confirmed opt-in.
 - 2026-10-03: user runs Garage v2.3.0 → json-api only (GetClusterHealth, GetClusterStatus,
   GetNodeStatistics node=*); 1.x text parsing deferred; garagenodes CRD added as a hint.
+- 2026-10-03: surveyed ~/hacklab/talos. Garage = a 7-node DaemonSet + a standalone StatefulSet; Longhorn 1.12 with a Garage backup target; 29 CNPG clusters, all
+  plugin backups (barman-cloud v0.13.0) → CNPG backup health now comes from ObjectStore
+  `serverRecoveryWindow` + ScheduledBackups, and `isWALArchiver: false` is neutral.
+  Next: fixtures (with the user's OK), then phase 1.

@@ -67,8 +67,10 @@ never polled; manual refresh with pull-to-refresh).
     replicas `2/3` with a rebuilding badge, node, `actualSize / size` (`util/Format.kt`
     bytes formatter), last backup age (`ui/components/Durations.kt`). Below that, a
     "Nodes" section: each node's ready/schedulable state and disks with a usage bar
-    (`scheduled/maximum`).
-  - `GarageTab.kt`: one card per instance with a big status, the message, stat rows
+    (`scheduled/maximum`). At the top, a backup-target row (available or not, with its
+    message). When it's unavailable and Garage is detected, link to the Garage tab.
+  - `GarageTab.kt`: one card per instance (the user has two: a
+    multi-node cluster and a standalone one), titled `namespace/name`, with a big status, the message, stat rows
     (storage nodes ok/total, partitions quorum/all-ok/total, connected/known nodes,
     resync queue, resync errors in red when > 0). Below that, a node list (hostname,
     zone, up/down with last-seen age, data disk usage bar, per-node resync queue/errors).
@@ -76,9 +78,14 @@ never polled; manual refresh with pull-to-refresh).
     `source == "health"`: an `InfoNotice` with the `message` (for example "exec refused")
     explaining why only the basic status is shown. When `source == "cli-text"`: an
     expandable "Details" block with `raw` in a monospace font.
-  - `CnpgTab.kt`: rows per cluster: `ns/name`, a phase chip, `ready/instances`, the primary
-    (with "→ target" when switching), archiving and backup badges, last backup age, and the
-    first recoverability point.
+  - `CnpgTab.kt`: built for many clusters (the user has 29):
+    - A summary header: "29 clusters · 27 ok · 2 need attention".
+    - Filter chips: Problems (the default when any exist) / All.
+    - Compact rows: `ns/name`, `ready/instances`, a health dot. Problems show their
+      reason inline ("backup stale 12 d", "switchover pg-1 → pg-2").
+    - Tapping a row expands it: phase, primary, archiving badge (`off` shown as a muted
+      "no WAL archiving", not as an error), backup method + ObjectStore, last success and
+      last failure ages, first recoverability point.
   - A section `error` → `ErrorBox` inside that tab only.
 - Reuse `KubeFilters` (`ui/workloads/WorkloadsScreen.kt:171`) for namespace and search on
   the Longhorn and CNPG tabs.

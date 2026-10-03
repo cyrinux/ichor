@@ -58,6 +58,8 @@ Clusters without any of the three see nothing new and pay no extra cost.
       "size": 10737418240, "actualSize": 2147483648,
       "lastBackupAt": 0             // unix ms, 0 = never
     }],
+    "backupTargets": [{ "name": "default", "url": "s3://longhorn-backups@garage/",
+                        "available": true, "message": "" }],
     "nodes": [{ "name": "worker-1", "ready": true, "schedulable": true,
                 "disks": [{ "path": "/var/lib/longhorn", "schedulable": true,
                             "available": 0, "maximum": 0, "scheduled": 0 }] }]
@@ -93,9 +95,12 @@ Clusters without any of the three see nothing new and pay no extra cost.
       "health": "ok",               // ok|warning|critical (see 01 §CNPG)
       "instances": 3, "readyInstances": 3,
       "currentPrimary": "pg-1", "targetPrimary": "pg-1",
-      "archiving": "ok",            // ok|failing|off (ContinuousArchiving condition)
-      "lastBackup": "ok",           // ok|failed|none (LastBackupSucceeded condition)
-      "lastSuccessfulBackupAt": 0, "firstRecoverabilityAt": 0
+      "archiving": "ok",            // ok|failing|off|unknown (off = no WAL archiver configured: neutral)
+      "lastBackup": "ok",           // ok|failed|stale|none (plugin ObjectStore first, see 01 §CNPG)
+      "backupMethod": "plugin",     // plugin|in-tree|none
+      "objectStore": "garage-store",// plugin ObjectStore name, "" otherwise
+      "scheduled": true,            // a non-suspended ScheduledBackup targets it
+      "lastSuccessfulBackupAt": 0, "lastFailedBackupAt": 0, "firstRecoverabilityAt": 0
     }]
   }
 }
@@ -104,6 +109,31 @@ Clusters without any of the three see nothing new and pay no extra cost.
 A section key is **absent/null** when the system isn't installed. An **empty list with no
 error** means it's installed but has nothing in it. A **non-empty `error`** means the
 system was detected but couldn't be read; the UI shows it inline in that tab only.
+
+## Reference cluster (the user's)
+
+The plans are designed against the user's real setup. Its GitOps config lives in a
+private repo on the user's machine; HANDOFF.md says where. Specific names are left out
+because this repo is public. Shape, from a read-only survey on 2026-10-03:
+
+- **One Talos cluster**, with apps deployed by ArgoCD.
+- **Garage v2.3.0, two independent clusters in two namespaces:**
+  - a Helm-chart **DaemonSet** on 7 nodes (replication 3, lmdb), with the S3 and admin
+    ports on *different* Services (the admin one is not the S3 one)
+  - a standalone single-node **StatefulSet** (replication 1) on NFS, which is the Longhorn
+    backup target
+  - container `garage`, image `dxflrs/amd64_garage:v2.3.0`, binary `/garage` (the user's
+    own runbook execs `/garage …`)
+- **Longhorn 1.12.0** (default StorageClass), with an S3 backup target on Garage.
+- **CloudNativePG** chart 0.28.3 plus plugin-barman-cloud v0.13.0.
+  - **29 Clusters**, 2–3 instances each, *all* with plugin backups (one ObjectStore
+    each), 28 weekly ScheduledBackups. No Poolers.
+  - 2 clusters set `isWALArchiver: false` on purpose.
+- **No exec/proxy blockers**: no Kyverno, Gatekeeper or NetworkPolicy in the Garage
+  namespaces; PodSecurity is `privileged` there; the Cilium host firewall allows ingress
+  from the cluster.
+- Possible next targets (not in scope): the Dragonfly operator, the CSI
+  snapshot-controller, an offline-backup CronJob.
 
 ## Risks and open questions
 

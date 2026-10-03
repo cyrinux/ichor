@@ -46,18 +46,15 @@ into that section's `error` string.
 
 ## Detection (`kube_dataservices.go`)
 
-1. `GET /apis` → `{"groups":[{"name","preferredVersion":{"version"}}]}`. Keep `longhorn.io`
-   and `postgresql.cnpg.io` with their preferred version.
-2. Garage (no CRD): when the hint includes `garage`, or there are no hints, list
-   `GET /api/v1/services` and keep Services that either
-   - carry the label `app.kubernetes.io/name=garage` (Helm chart), or
-   - expose a port named `admin` or numbered `3903` **and** have a selector that matches
-     pods running a Garage image. Reuse `loadAppCatalog()` image matching: list pods once
-     with `labelSelector` from the service selector, or reuse `listPods` filtered by
-     catalog id `garage`.
-
-   Keep it simple first: label match plus port 3903/`admin`. Add the image fallback only
-   if the user's cluster needs it (see the README risks).
+1. `GET /apis` → `{"groups":[{"name","preferredVersion":{"version"}}]}`. Keep, with
+   their preferred versions: `longhorn.io`, `postgresql.cnpg.io`, `barmancloud.cnpg.io`
+   (plugin backups) and `deuxfleurs.fr` (Garage `garagenodes`, a hint only).
+2. Garage (no CRD of its own): when the hint includes `garage`, or there are no hints,
+   find Garage **pods** by image (see §Garage, "Finding the pod"). Services are only
+   needed for the `/health` fallback: there, pick the Service in the same namespace whose
+   selector matches the pods and that exposes port `admin`/3903. In the user's cluster
+   that's a dedicated admin/metrics Service, not the
+   S3 service.
 3. Fan out the three readers in parallel (`wg.Go`), each with its own error.
 
 ## Longhorn (`kube_longhorn.go`)
@@ -67,6 +64,13 @@ Paths (version `v` from detection, namespace-agnostic, so they list every namesp
 - `/apis/longhorn.io/{v}/volumes`
 - `/apis/longhorn.io/{v}/replicas`
 - `/apis/longhorn.io/{v}/nodes`
+- `/apis/longhorn.io/{v}/backuptargets`: `status.available` (bool), `status.conditions`
+  (`Unavailable` with message), and `spec.backupTargetURL` (shown as-is; secrets aren't
+  part of the URL). The user's target is S3 on their standalone Garage
+  instance, so an unavailable target often means Garage trouble. Show both together in the UI.
+
+Target version: the user runs Longhorn **1.12.0**, so v1beta2.
+Build the fixtures from that.
 
 Fields to read:
 
@@ -155,10 +159,19 @@ the os:admin kubeconfig allows).
    container whose image the catalog maps to `garage` (`loadAppCatalog()`; images
    `dxflrs/garage`, `dxflrs/amd64_garage`, `dxflrs/arm64_garage`). The
    `app.kubernetes.io/name=garage` label is a second signal.
-2. Group them by namespace: each namespace counts as one Garage cluster (an `instance` in
-   the wire format). Pick one pod that is `Running` with the Garage container ready,
-   preferring the lowest ordinal (`garage-0`). If none is ready, set status `unavailable`
-   with "no ready Garage pod" and still report the pod counts.
+2. Group them into Garage clusters (an `instance` in the wire format) by **namespace + the
+   pod's `app.kubernetes.io/name` label** (or the controller owner when the label is
+   missing). Don't assume the name `garage`, the namespace, or the controller kind:
+   - the user's main cluster is a **DaemonSet** (7 pods, random suffixes, replication 3), and
+   - a second, standalone **StatefulSet** in another namespace (1 pod, replication 1).
+
+   Pick the first pod (sorted by name) that is `Running` with its Garage container ready.
+   With a DaemonSet there's no ordinal; any node's CLI sees the whole cluster. If none is
+   ready, set status `unavailable` with "no ready Garage pod" and still report the pod
+   counts. The container is the one whose image matched (named `garage` in both of the
+   user's deployments).
+3. A single-node Garage (`storageNodes == 1`) is normal for its kind: don't flag "1/1
+   nodes" or the replication factor.
 
 ### Exec (`kube_exec.go`, new, ~150 lines)
 
@@ -268,27 +281,65 @@ type cnpgCluster struct {
 }
 ```
 
+Also read `spec.plugins[] {name, isWALArchiver, parameters.barmanObjectName}` and
+`spec.backup.barmanObjectStore` (presence only).
+
+**Backups: plugin first.** The user's 29 clusters *all* back up through the
+barman-cloud plugin (CNPG chart 0.28.3, plugin v0.13.0): `spec.plugins` with
+`barman-cloud.cloudnative-pg.io` and an `ObjectStore` (`barmancloud.cnpg.io/v1`).
+There are 28 `ScheduledBackup`s with `method: plugin`, and no in-tree `barmanObjectStore`.
+In that setup the Cluster's own backup fields can be empty, so:
+
+- When `/apis` lists `barmancloud.cnpg.io`, also list
+  `/apis/barmancloud.cnpg.io/{v}/objectstores`. For each cluster, take the ObjectStore
+  named by its plugin's `barmanObjectName` (same namespace), then
+  `status.serverRecoveryWindow[<serverName>]`, where `serverName` defaults to the cluster
+  name (the plugin parameter `serverName` overrides it). Read `firstRecoverabilityPoint`,
+  `lastSuccessfulBackupTime` and `lastFailedBackupTime`.
+- List `/apis/postgresql.cnpg.io/{v}/scheduledbackups` to know which clusters are
+  *expected* to have backups (`spec.cluster.name`, `spec.suspend`).
+- Fallback for in-tree setups: the Cluster's `status.lastSuccessfulBackup` /
+  `firstRecoverabilityPoint` and the `LastBackupSucceeded` condition.
+
 Derivations:
 
-- `archiving`: condition `ContinuousArchiving`. True → `ok`, False → `failing`, absent → `off`.
-- `lastBackup`: condition `LastBackupSucceeded`. True → `ok`, False → `failed`, absent → `none`.
+- `archiving`: is a WAL archiver configured? Either a plugin with `isWALArchiver: true`,
+  or in-tree `barmanObjectStore`.
+  - Not configured → `off`. This is **neutral**, not a warning: two of the user's clusters
+    deliberately set `isWALArchiver: false`.
+  - Configured: the condition `ContinuousArchiving` True → `ok`, False → `failing`
+    (with its message), absent → `unknown`.
+- `lastBackup`:
+  - `failed`: `lastFailedBackupTime` is newer than `lastSuccessfulBackupTime`, or the
+    condition `LastBackupSucceeded` is False
+  - `stale`: a non-suspended ScheduledBackup exists, but the last success is older than
+    the expected interval plus a margin. Keep it simple: parse the 6-field cron for "daily"
+    vs "weekly" (the user's schedules look like `0 0 3 * * 0`, i.e. weekly) and allow
+    ×1.5. Unknown schedule → 8 days.
+  - `none`: no backup ever and none expected
+  - `ok`: otherwise
 - `health`:
   - `critical`: `readyInstances == 0`, or phase contains "Failing over"/"failover"
   - `warning`: `readyInstances < spec.instances`, `currentPrimary != targetPrimary`
-    (switchover), `archiving == failing`, `lastBackup == failed`, or the `Ready` condition
-    is not True
+    (switchover), `archiving == failing`, `lastBackup` `failed`/`stale`, or the `Ready`
+    condition is not True
   - `ok`: otherwise
-- Sort: critical first, then by namespace and name.
+- Sort: critical first, then warning, then by namespace and name.
 
-Tests: healthy, a replica down, switchover, failover, archiving failing, backup failed,
-a fresh cluster with no status.
+Scale: 29 clusters means one `clusters` list, one `objectstores` list and one
+`scheduledbackups` list (3 requests, fanned out). There's no per-cluster call.
+
+Tests: healthy; a replica down; switchover; failover; plugin with a recent success;
+plugin with a failure after the success; stale weekly backup; `isWALArchiver: false`
+(neutral); in-tree fallback; a fresh cluster with no status; an ObjectStore missing.
 
 ## Demo (`kube_dataservices_demo.go`)
 
 The demo must exercise every UI state: Longhorn with 4 volumes (ok, degraded 2/3 with
-1 rebuilding, idle detached, faulted), 3 nodes with one unschedulable disk; Garage healthy
-(`source: cli-json`) with resync queue 12 and errors 0; CNPG with 2 clusters (healthy, switchover in
-progress). Add `TestKubeDataServicesDemo` like `TestKubeDemo` (`kube_test.go:391`). The demo
+1 rebuilding, idle detached, faulted), 3 nodes with one unschedulable disk, and an available backup target; Garage with two
+instances (a 3-node DaemonSet cluster with resync queue 12 and errors 0, `source: cli-json`,
+and a standalone 1-node one); CNPG with 4 clusters (healthy with a plugin backup,
+switchover in progress, a stale weekly backup, archiving off). Add `TestKubeDataServicesDemo` like `TestKubeDemo` (`kube_test.go:391`). The demo
 inventory (`demo_inventory.go`) already lists longhorn and cloudnative-pg images; add a
 garage image so the hint path is covered.
 
