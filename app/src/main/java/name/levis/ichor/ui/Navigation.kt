@@ -16,6 +16,7 @@ import name.levis.ichor.ui.apps.AppsScreen
 import name.levis.ichor.ui.capture.CaptureFileScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
 import name.levis.ichor.ui.settings.LicensesScreen
+import name.levis.ichor.ui.funding.FundingScreen
 import name.levis.ichor.ui.changelog.WhatsNewHost
 import name.levis.ichor.ui.backup.IncomingBackup
 import name.levis.ichor.ui.capture.CaptureScreen
@@ -65,6 +66,7 @@ private object Routes {
     const val SUPPORT_BUNDLE = "supportbundle"
     const val CHANGELOG = "changelog"
     const val LICENSES = "licenses"
+    const val FUNDING = "funding"
     const val INSIGHTS = "insights"
     const val APPS = "apps"
 
@@ -224,6 +226,7 @@ fun Navigation(
                 onInsights = { nav.navigate(Routes.INSIGHTS) },
                 onApps = { nav.navigate(Routes.APPS) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
+                onFunding = { nav.navigate(Routes.FUNDING) },
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
                 onUpgrade = { n, version -> nav.navigate(Routes.upgrade(n.node, n.hostname, version)) },
                 onDiagnose = { nav.navigate(Routes.diagnosis()) },
@@ -394,6 +397,7 @@ fun Navigation(
         }
         composable(Routes.CHANGELOG) { ChangelogScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.LICENSES) { LicensesScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.FUNDING) { FundingScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.SUPPORT_BUNDLE) { SupportBundleScreen(onBack = { nav.popBackStack() }) }
         composable(
             Routes.DEBUG,
@@ -461,6 +465,7 @@ fun Navigation(
                 onSupportBundle = { nav.navigate(Routes.SUPPORT_BUNDLE) },
                 onChangelog = { nav.navigate(Routes.CHANGELOG) },
                 onLicenses = { nav.navigate(Routes.LICENSES) },
+                onFunding = { nav.navigate(Routes.FUNDING) },
                 onCleared = {
                     app.launchSync(runNow = true)
                     nav.resetTo(Routes.IMPORT)

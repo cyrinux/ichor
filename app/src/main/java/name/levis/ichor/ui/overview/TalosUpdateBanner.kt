@@ -1,8 +1,6 @@
 package name.levis.ichor.ui.overview
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
+import name.levis.ichor.ui.settings.openUrl
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -110,13 +108,5 @@ fun TalosUpdateBanner(nodes: List<NodeOverview>, canUpgrade: Boolean, onUpgrade:
             confirmButton = {},
             dismissButton = { TextButton(onClick = { choosing = false }) { Text(stringResource(R.string.common_cancel)) } },
         )
-    }
-}
-
-private fun openUrl(context: android.content.Context, url: String) {
-    try {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-    } catch (_: ActivityNotFoundException) {
-        // No browser: nothing to do.
     }
 }

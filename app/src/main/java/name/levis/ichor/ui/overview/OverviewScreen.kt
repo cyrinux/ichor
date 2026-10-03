@@ -131,6 +131,7 @@ fun OverviewScreen(
     onInsights: () -> Unit,
     onApps: () -> Unit,
     onSettings: () -> Unit,
+    onFunding: () -> Unit,
     onIssueConfig: () -> Unit,
     onUpgrade: (NodeOverview, String) -> Unit,
     onDiagnose: () -> Unit,
@@ -402,6 +403,7 @@ fun OverviewScreen(
                     onDataServices = onDataServices,
                     onNode = onNode,
                     onSettings = onSettings,
+                    onFunding = onFunding,
                     onNodeAction = onNodeAction,
                     canPower = config?.activeSummary?.allows(Feature.POWER) == true,
                     canShell = config?.activeSummary?.allows(Feature.DEBUG_SHELL) == true,
@@ -434,6 +436,7 @@ private fun NodeList(
     onDataServices: () -> Unit,
     onNode: (NodeOverview) -> Unit,
     onSettings: () -> Unit,
+    onFunding: () -> Unit,
     onNodeAction: (NodeOverview, NodeAction) -> Unit,
     canPower: Boolean,
     canShell: Boolean,
@@ -469,7 +472,7 @@ private fun NodeList(
             }
         }
         if (BuildConfig.SELF_UPDATE) item { UpdateBanner(onClick = onSettings) }
-        if (BuildConfig.DONATIONS) item { SupportCard() }
+        if (BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) item { SupportCard(onFunding) }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
         if (certificate?.isDemo != true) item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
@@ -655,9 +658,12 @@ private fun UpdateBanner(onClick: () -> Unit) {
     }
 }
 
-/** Occasional, dismissable ask to support the project (see SupportPrompt for the timing). */
+/**
+ * Occasional, dismissable ask to support the project (see SupportPrompt for the timing): GitHub
+ * Sponsors in the open-source builds, [onFunding] (Play in-app purchases) in the Play build.
+ */
 @Composable
-private fun SupportCard() {
+private fun SupportCard(onFunding: () -> Unit) {
     val context = LocalContext.current
     val prompt = (context.applicationContext as TalosApp).supportPrompt
     val visible by prompt.visible.collectAsStateWithLifecycle()
@@ -675,8 +681,8 @@ private fun SupportCard() {
                 TextButton(onClick = prompt::later) { Text(stringResource(R.string.overview_support_later)) }
                 TextButton(onClick = {
                     prompt.later()
-                    openUrl(context, SPONSOR_URL)
-                }) { Text(stringResource(R.string.overview_support_sponsor)) }
+                    if (BuildConfig.FEATURE_FUNDING) onFunding() else openUrl(context, SPONSOR_URL)
+                }) { Text(stringResource(if (BuildConfig.FEATURE_FUNDING) R.string.funding_title else R.string.overview_support_sponsor)) }
             }
         }
     }

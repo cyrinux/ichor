@@ -26,6 +26,9 @@ import name.levis.ichor.data.UpgradeManager
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.SupportBundleRepository
 import name.levis.ichor.data.SupportPrompt
+import name.levis.ichor.data.FundingHistory
+import name.levis.ichor.data.RoadmapRepository
+import name.levis.ichor.data.createFeatureStore
 import name.levis.ichor.data.PrivacyMask
 import name.levis.ichor.data.UiPreferences
 import androidx.glance.appwidget.updateAll
@@ -103,6 +106,9 @@ class TalosApp : Application() {
     }
 
     val supportPrompt by lazy { SupportPrompt(getSharedPreferences("ichor-support", Context.MODE_PRIVATE)) }
+    val fundingHistory by lazy { FundingHistory(getSharedPreferences(FundingHistory.FILE, Context.MODE_PRIVATE)) }
+    val featureStore by lazy { createFeatureStore(this, fundingHistory) }
+    val roadmapRepository by lazy { RoadmapRepository(getSharedPreferences(RoadmapRepository.FILE, Context.MODE_PRIVATE)) }
     val changelogRepository by lazy { ChangelogRepository(this, getSharedPreferences(ChangelogRepository.PREFS, Context.MODE_PRIVATE)) }
     val updateManager by lazy {
         UpdateManager(this, getSharedPreferences("ichor-update", Context.MODE_PRIVATE), changelogRepository)
