@@ -75,6 +75,9 @@ import name.levis.ichor.util.daysUntil
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.clusterSummary
 import name.levis.ichor.model.outage
+import name.levis.ichor.model.ClusterOutage
+import name.levis.ichor.model.hasLastKnown
+import name.levis.ichor.ui.components.agoLabel
 import name.levis.ichor.model.health
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
@@ -99,6 +102,7 @@ class OverviewViewModel(
     val talos: TalosRepository,
     val configs: ConfigRepository,
 ) : LoadingViewModel<ClusterOverview>() {
+    override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<ClusterOverview>? = talos.cached(OVERVIEW)
     override suspend fun fetch() = talos.overview()
 }
@@ -176,7 +180,8 @@ fun OverviewScreen(
                 if (change == seen) return@collect
                 seen = change
                 val current = vm.state.value
-                if (current is UiState.Failed || (current as? UiState.Loaded)?.data?.outage != null) vm.refresh()
+                val loaded = current as? UiState.Loaded
+                if (current is UiState.Failed || loaded?.error != null || loaded?.data?.outage != null) vm.refresh()
             }
         }
     }
@@ -308,13 +313,16 @@ fun OverviewScreen(
                 modifier = Modifier.padding(padding).fillMaxSize(),
             ) {
                 val down = s.data.outage
-                if (down != null && !showNodesAnyway) ClusterUnreachableBox(
+                // With nodes known from before, they stay listed under a banner instead.
+                if (down != null && !showNodesAnyway && !s.data.hasLastKnown) ClusterUnreachableBox(
                     outage = down,
                     endpoints = config?.activeSummary?.endpoints.orEmpty(),
                     onRetry = vm::refresh,
                     onShowNodes = { showNodesAnyway = true },
                 ) else NodeList(
                     overview = s.data,
+                    outage = down?.takeIf { s.data.hasLastKnown },
+                    onRetry = vm::refresh,
                     clusterName = config?.activeSummary?.let(clusterLabels::of),
                     fingerprint = config?.activeSummary?.fingerprint,
                     time = timeState,
@@ -342,6 +350,8 @@ fun OverviewScreen(
 @Composable
 private fun NodeList(
     overview: ClusterOverview,
+    outage: ClusterOutage?,
+    onRetry: () -> Unit,
     clusterName: String?,
     fingerprint: String?,
     time: UiState<ClusterTime>,
@@ -380,6 +390,7 @@ private fun NodeList(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.fillMaxSize(),
     ) {
+        outage?.let { item { LastKnownBanner(it, onRetry) } }
         if (certificate?.isDemo == true) item {
             Card(Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.demo_notice), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
@@ -432,6 +443,20 @@ private fun NodeCard(node: NodeOverview, onClick: () -> Unit, onLongClick: () ->
                         .joinToString("  ·  "),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+            // No longer answering: what it was when it last did, dimmed.
+            node.lastSeen?.let { seen ->
+                Text(
+                    listOf(roleLabel(node.role), node.version, node.arch).filter { it.isNotBlank() }.joinToString("  ·  "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                Text(
+                    stringResource(R.string.overview_node_last_seen, agoLabel(System.currentTimeMillis() - seen)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             node.unmetConditions.forEach {

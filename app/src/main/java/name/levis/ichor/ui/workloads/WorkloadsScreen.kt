@@ -74,6 +74,7 @@ import name.levis.ichor.ui.uiText
 data class RestartResult(val workload: KubeWorkload, val error: UiText?)
 
 class WorkloadsViewModel(private val talos: TalosRepository) : LoadingViewModel<List<KubeWorkload>>() {
+    override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<List<KubeWorkload>>? = talos.cached(WORKLOADS)
     override suspend fun fetch() = talos.workloads()
 

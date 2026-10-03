@@ -74,6 +74,26 @@ fun PrivacySection(app: TalosApp) {
         }
     }
     RemoteAppIconsSetting(app)
+    OfflineCacheSetting(app)
+}
+
+/** Opt-in: the last data of each cluster is kept on the phone, encrypted, to show it offline. */
+@Composable
+private fun OfflineCacheSetting(app: TalosApp) {
+    val enabled by app.uiPreferences.offlineCache.collectAsStateWithLifecycle()
+    Card(Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.settings_offline_cache), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(R.string.settings_offline_cache_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(checked = enabled, onCheckedChange = app::setOfflineCache, modifier = Modifier.padding(start = 12.dp))
+        }
+    }
 }
 
 /** Opt-in: icons the app does not bundle are downloaded by their public name only. */

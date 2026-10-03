@@ -16,12 +16,14 @@ import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.delay
 import name.levis.ichor.R
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.asString
 import java.text.DateFormat
 import java.util.Date
 
 /**
  * Screen footer saying how fresh the data is: "Updated 15:42:10 · 2 min ago", or, while a
- * refresh runs over cached data, "Refreshing… (showing data from 15:40:02)". Nothing until loaded.
+ * refresh runs over cached data, "Refreshing… (showing data from 15:40:02)"; after a failed one,
+ * the error and the age of the data still shown. Nothing until loaded.
  */
 @Composable
 fun DataFreshness(state: UiState<*>, modifier: Modifier = Modifier, edgeToEdge: Boolean = true) {
@@ -34,16 +36,25 @@ fun DataFreshness(state: UiState<*>, modifier: Modifier = Modifier, edgeToEdge: 
         }
     }
     val time = DateFormat.getTimeInstance(DateFormat.MEDIUM).format(Date(loaded.fetchedAt))
-    val text = if (loaded.refreshing) {
-        stringResource(R.string.common_refreshing_showing, time)
-    } else {
-        stringResource(R.string.common_updated_ago, time, agoText(age(now - loaded.fetchedAt)))
+    val ago = agoText(age(now - loaded.fetchedAt))
+    val error = loaded.error?.takeUnless { loaded.refreshing }
+    val text = when {
+        loaded.refreshing -> stringResource(R.string.common_refreshing_showing, time)
+        error != null -> stringResource(R.string.common_refresh_failed, error.asString()) + "\n" +
+            stringResource(R.string.common_showing_data_from, time, ago)
+        else -> stringResource(R.string.common_updated_ago, time, ago)
     }
-    Surface(color = MaterialTheme.colorScheme.surfaceContainer, modifier = modifier.fillMaxWidth()) {
+    // A failed refresh stands out: what is on screen may no longer be true.
+    val (background, content) = if (error != null) {
+        MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceContainer to MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Surface(color = background, modifier = modifier.fillMaxWidth()) {
         Text(
             text,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = content,
             modifier = (if (edgeToEdge) Modifier.navigationBarsPadding() else Modifier)
                 .padding(horizontal = 16.dp, vertical = 6.dp),
         )

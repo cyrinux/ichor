@@ -82,6 +82,7 @@ class LogsViewModel(
     private val node: String,
     private val source: LogSource,
 ) : LoadingViewModel<LogTail>() {
+    override val keepsDataOnFailure = true
     override suspend fun fetch() = when (source) {
         is LogSource.Service -> talos.logs(node, source.name)
         is LogSource.Container -> talos.containerLogs(node, source.id)

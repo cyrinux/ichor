@@ -51,6 +51,7 @@ import name.levis.ichor.ui.factory
 
 /** Sockets change constantly: not cached, fetched on open and on pull-to-refresh. */
 class ConnectionsViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<List<ConnectionInfo>>() {
+    override val keepsDataOnFailure = true
     override suspend fun fetch() = talos.connections(node)
 }
 
