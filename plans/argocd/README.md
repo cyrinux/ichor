@@ -1,6 +1,10 @@
 # Argo CD: see and pilot GitOps apps from the phone
 
-Status: **study**. Nothing implemented yet.
+Status: **implemented**: Go core (`kube_argocd*.go`, `just probe argocd`), Android and iOS
+screens. Remaining: on-device checks against a real Argo CD, opt-in background alerts (phase 4),
+diagnosis/support-bundle context.
+
+Defaults chosen: a sync never prunes unless the user ticks it; Flux is deferred (phase 5).
 
 ## What exists today
 
@@ -129,42 +133,17 @@ problem apps with their likely cause. Calm (one muted line) when everything is S
 Degraded and failed apps (conditions, health messages, failed resources) go into the diagnosis
 context and the support bundle, masked like the rest.
 
-## Wire format (draft)
+## Wire format
 
-```jsonc
-{
-  "version": "v3.4.5",            // from the argocd-server/controller image, "" when unknown
-  "apps": [{
-    "namespace": "argocd", "name": "cilium", "project": "infra",
-    "owner": { "kind": "ApplicationSet", "name": "infra" },   // null when unowned
-    "icon": "cilium",               // catalog id, "" when none matched
-    "health": "Healthy",            // Healthy|Progressing|Degraded|Suspended|Missing|Unknown
-    "healthMessage": "",
-    "sync": "Synced",               // Synced|OutOfSync|Unknown
-    "revision": "a1b2c3d", "targetRevision": "1.18.2",
-    "source": { "repo": "https://helm.cilium.io", "chart": "cilium", "path": "" },
-    "destination": { "server": "in-cluster", "namespace": "kube-system" },
-    "autoSync": { "enabled": true, "prune": true, "selfHeal": false },
-    "syncOptions": ["ServerSideApply=true"],
-    "operation": {                  // null when none ran
-      "phase": "Running",           // Running|Terminating|Succeeded|Failed|Error
-      "message": "waiting for healthy state of apps/Deployment/hubble-relay",
-      "startedAt": 0, "finishedAt": 0, "initiatedBy": "automated",
-      "done": 12, "total": 30, "wave": 1
-    },
-    "conditions": [{ "type": "SyncError", "message": "…" }],
-    "resources": [{
-      "group": "apps", "kind": "Deployment", "namespace": "kube-system", "name": "hubble-relay",
-      "sync": "Synced", "health": "Progressing", "healthMessage": "",
-      "wave": 1, "hook": "", "prune": false, "nodes": ["node-3"]   // D8: nodes of its pods
-    }],
-    "history": [{ "id": 41, "revision": "a1b2c3d", "targetRevision": "1.18.1", "deployedAt": 0 }],
-    "syncWindowBlocked": false, "syncWindowUntil": 0
-  }],
-  "appSets": [{ "namespace": "argocd", "name": "infra", "apps": 8,
-                "conditions": [{ "type": "ErrorOccurred", "status": "False", "message": "" }] }]
-}
-```
+The JSON is defined by the Go types in `go/ichorgo/kube_argocd.go` (`argoStatus` and below);
+`kube_argocd_demo.go` shows every state. Differences from the first draft: no sync-window
+evaluation (projects only report how many windows they have), per-resource health is often
+empty on Argo CD 3 (it no longer stores it in the Application), and the nodes of an unhealthy
+app come from `unhealthyPods` (pods of its destination namespace that are not ready).
+
+Auto-sync is paused by removing `spec.syncPolicy.automated` and keeping its prune/selfHeal in
+the `ichor.levis.name/paused-automated` annotation, which resuming restores: unlike
+`automated.enabled`, this works on every Argo CD version.
 
 ## Phases
 

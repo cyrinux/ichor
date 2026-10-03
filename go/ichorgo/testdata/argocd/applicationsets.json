@@ -1,0 +1,4 @@
+{"items":[{"metadata":{"name":"infra","namespace":"argocd"},"status":{"conditions":[
+ {"type":"ErrorOccurred","status":"False","message":"Successfully generated parameters for all Applications"},
+ {"type":"ResourcesUpToDate","status":"True","message":"ApplicationSet up to date"}]}},
+ {"metadata":{"name":"broken","namespace":"argocd"},"status":{"conditions":[{"type":"ErrorOccurred","status":"True","message":"repository not found"}]}}]}
