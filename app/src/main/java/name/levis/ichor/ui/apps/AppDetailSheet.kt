@@ -50,8 +50,9 @@ import name.levis.ichor.util.formatBytes
 /**
  * One app: what it is, which versions run, the URLs it is served at ([routes]) and its
  * workloads to restart ([restart]), both null when the role cannot reach the Kubernetes API,
- * its images and its pods. [nodes] names the node addresses; tapping a pod opens its node's
- * pods ([onPodNode] with the node address).
+ * the Argo CD Applications deploying it ([argo], null without Argo CD), its images and its
+ * pods. [nodes] names the node addresses; tapping a pod opens its node's pods ([onPodNode]
+ * with the node address).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,6 +61,7 @@ fun AppDetailSheet(
     nodes: Map<String, NodeOverview>,
     routes: UiState<List<KubeRoute>>?,
     restart: AppRestartUi?,
+    argo: AppArgoUi?,
     onPodNode: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -73,6 +75,7 @@ fun AppDetailSheet(
             item { Stats(app) }
             routes?.let { appRoutesSection(it) }
             restart?.let { appWorkloadsSection(it) }
+            argo?.let { appArgoSection(it) }
             if (app.images.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.apps_detail_images)) }
                 val drifting = app.driftingRepos

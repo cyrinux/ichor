@@ -103,6 +103,11 @@ import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.dataServiceHints
+import name.levis.ichor.model.ARGO_CD_CATALOG_ID
+import name.levis.ichor.model.ArgoStatus
+import name.levis.ichor.model.hasArgoCD
+import name.levis.ichor.model.inventoryBadges
+import name.levis.ichor.ui.argocd.ArgoViewModel
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.components.TooltipIconButton
@@ -126,6 +131,7 @@ fun OverviewScreen(
     onKubeSpan: () -> Unit,
     onWorkloads: () -> Unit,
     onDataServices: () -> Unit,
+    onArgoCD: () -> Unit,
     onHealth: () -> Unit,
     onEvents: () -> Unit,
     onInsights: () -> Unit,
@@ -142,6 +148,7 @@ fun OverviewScreen(
     discoveryVm: NodeDiscoveryViewModel = viewModel(factory = factory { NodeDiscoveryViewModel(app.talosRepository) }),
     appsVm: AppsViewModel = viewModel(key = "overview-apps", factory = factory { AppsViewModel(app.talosRepository) }),
     dataVm: DataServicesViewModel = viewModel(key = "overview-data-services", factory = factory { DataServicesViewModel(app.talosRepository) }),
+    argoVm: ArgoViewModel = viewModel(key = "overview-argocd", factory = factory { ArgoViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -182,6 +189,13 @@ fun OverviewScreen(
         if (dataHints.isNotEmpty()) dataVm.load(listOf(config?.activeContext, generation, invalidations, dataHints), dataHints) else dataVm.forget()
     }
     val dataServices by dataVm.state.collectAsStateWithLifecycle()
+    // Argo CD likewise, when the inventory shows it.
+    val argoHinted = config?.activeSummary?.allows(Feature.WORKLOADS) == true &&
+        (apps as? UiState.Loaded)?.data?.hasArgoCD == true
+    LaunchedEffect(config?.activeContext, generation, invalidations, argoHinted) {
+        if (argoHinted) argoVm.load(listOf(config?.activeContext, generation, invalidations)) else argoVm.forget()
+    }
+    val argo by argoVm.state.collectAsStateWithLifecycle()
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     // No node answered (VPN off, another network): one notice instead of a list of red nodes.
@@ -403,6 +417,8 @@ fun OverviewScreen(
                     dataServices = dataServices.takeIf { dataHints.isNotEmpty() },
                     dataHints = dataHints,
                     onDataServices = onDataServices,
+                    argo = argo.takeIf { argoHinted },
+                    onArgoCD = onArgoCD,
                     onNode = onNode,
                     onSettings = onSettings,
                     onNodeAction = onNodeAction,
@@ -435,6 +451,8 @@ private fun NodeList(
     dataServices: UiState<DataServices>?,
     dataHints: String,
     onDataServices: () -> Unit,
+    argo: UiState<ArgoStatus>?,
+    onArgoCD: () -> Unit,
     onNode: (NodeOverview) -> Unit,
     onSettings: () -> Unit,
     onNodeAction: (NodeOverview, NodeAction) -> Unit,
@@ -477,13 +495,23 @@ private fun NodeList(
         if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
         if (certificate?.isDemo != true) item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
         item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes), live, onInsights) }
-        item { AppsCard(apps, onApps) }
+        item {
+            val argoData = (argo as? UiState.Loaded)?.data
+            val inventory = (apps as? UiState.Loaded)?.data
+            val badges = remember(argoData, inventory) { if (argoData != null && inventory != null) argoData.inventoryBadges(inventory.apps) else emptyMap() }
+            AppsCard(apps, onApps, badges)
+        }
         if (dataServices != null) item {
             val inventory = (apps as? UiState.Loaded)?.data
             val appsById = remember(inventory) { inventory?.apps.orEmpty().associateBy { it.id } }
             val hinted = remember(dataHints) { DataServiceKind.entries.filter { it.catalogId in dataHints.split(',') } }
             val downNodes = remember(overview) { overview.downHostnames() }
             DataServicesCard(dataServices, hinted, appsById, downNodes, onDataServices)
+        }
+        if (argo != null) item(key = "argocd") {
+            val argoTile = (apps as? UiState.Loaded)?.data?.apps?.firstOrNull { it.id == ARGO_CD_CATALOG_ID }
+            val downNodes = remember(overview) { overview.downHostnames() }
+            ArgoCard(argo, argoTile, downNodes, onArgoCD)
         }
         if (nodes.isNotEmpty()) item(key = "nodes") {
             NodesCard(

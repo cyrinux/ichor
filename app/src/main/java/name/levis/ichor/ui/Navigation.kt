@@ -13,6 +13,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import name.levis.ichor.TalosApp
 import name.levis.ichor.ui.apps.AppsScreen
+import name.levis.ichor.ui.argocd.ArgoAppScreen
+import name.levis.ichor.ui.argocd.ArgoAppsScreen
 import name.levis.ichor.ui.capture.CaptureFileScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
 import name.levis.ichor.ui.settings.LicensesScreen
@@ -87,6 +89,10 @@ private object Routes {
     const val KUBESPAN = "kubespan"
     const val WORKLOADS = "workloads"
     const val DATA_SERVICES = "data-services"
+    const val ARGO_CD = "argocd"
+    const val ARGO_APP = "argocd-app?ns={ns}&name={name}"
+
+    fun argoApp(namespace: String, name: String) = "argocd-app?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
     const val DEBUG = "debug?addr={addr}&host={host}"
     const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}"
     const val NETWORK = "network?addr={addr}&host={host}"
@@ -219,6 +225,7 @@ fun Navigation(
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
                 onWorkloads = { nav.navigate(Routes.WORKLOADS) },
                 onDataServices = { nav.navigate(Routes.DATA_SERVICES) },
+                onArgoCD = { nav.navigate(Routes.ARGO_CD) },
                 onHealth = { nav.navigate(Routes.HEALTH) },
                 onEvents = { nav.navigate(Routes.events()) },
                 onInsights = { nav.navigate(Routes.INSIGHTS) },
@@ -424,6 +431,8 @@ fun Navigation(
                 onBack = { nav.popBackStack() },
                 // A pod's node, on its Pods tab.
                 onNode = { addr, host, role -> nav.navigate(Routes.node(addr, host, role, tab = 4)) },
+                onArgoCD = { nav.navigate(Routes.ARGO_CD) },
+                onArgoApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
             )
         }
         composable(Routes.KUBESPAN) {
@@ -435,6 +444,22 @@ fun Navigation(
         }
         composable(Routes.WORKLOADS) { name.levis.ichor.ui.workloads.KubernetesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.DATA_SERVICES) { name.levis.ichor.ui.dataservices.DataServicesScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.ARGO_CD) {
+            ArgoAppsScreen(onBack = { nav.popBackStack() }, onApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) })
+        }
+        composable(
+            Routes.ARGO_APP,
+            arguments = listOf(
+                navArgument("ns") { type = NavType.StringType; defaultValue = "" },
+                navArgument("name") { type = NavType.StringType; defaultValue = "" },
+            ),
+        ) { entry ->
+            ArgoAppScreen(
+                namespace = entry.arguments?.getString("ns").orEmpty(),
+                name = entry.arguments?.getString("name").orEmpty(),
+                onBack = { nav.popBackStack() },
+            )
+        }
         composable(Routes.ETCD) { EtcdScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.HEALTH) {
             HealthScreen(onBack = { nav.popBackStack() }, onDiagnose = { note -> nav.navigate(Routes.diagnosis(note)) })
