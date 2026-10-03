@@ -1130,6 +1130,10 @@
     <string name="apps_detail_workloads_loading">Ricerca dei suoi workload…</string>
     <string name="apps_detail_workloads_none">Nessun Deployment, StatefulSet o DaemonSet la esegue.</string>
     <string name="apps_detail_workloads_failed">Impossibile elencare i suoi workload: %1$s</string>
+    <string name="apps_detail_routes">Accesso web</string>
+    <string name="apps_detail_routes_loading">Ricerca dei suoi indirizzi…</string>
+    <string name="apps_detail_routes_failed">Impossibile trovare i suoi indirizzi: %1$s</string>
+    <string name="apps_detail_routes_open">Apri nel browser</string>
     <string name="settings_remote_icons">Scarica le icone delle app mancanti</string>
     <string name="settings_remote_icons_desc">Circa 250 app comuni hanno l’icona inclusa. Se attivo, le icone delle altre app riconosciute vengono scaricate da jsDelivr (Dashboard Icons). Viene inviato solo il nome pubblico dell’icona, mai i nomi delle tue immagini o i dettagli del cluster.</string>
     <string name="settings_offline_cache">Conserva l\'ultimo stato noto</string>

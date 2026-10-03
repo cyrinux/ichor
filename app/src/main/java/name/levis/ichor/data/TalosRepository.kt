@@ -15,6 +15,9 @@ import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubePodList
+import name.levis.ichor.model.KubeRoute
+import name.levis.ichor.model.KubeRouteList
+import name.levis.ichor.model.RoutePod
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.LogEntry
@@ -404,6 +407,12 @@ class TalosRepository(
     /** `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin). */
     suspend fun rolloutRestart(workload: KubeWorkload) = kubeCall { cfg, ctx, server ->
         Talosmobile.kubeRolloutRestart(cfg, ctx, server, workload.kind, workload.namespace, workload.name)
+    }
+
+    /** The Ingress and HTTPRoute URLs serving [pods] (os:admin). */
+    suspend fun appRoutes(pods: List<RoutePod>): List<KubeRoute> = kubeCall { cfg, ctx, server ->
+        val json = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
+        TalosJson.decodeFromString(KubeRouteList.serializer(), Talosmobile.kubeAppRoutes(cfg, ctx, server, json)).routes
     }
 
     /** Every pod with the status `kubectl get pods` shows (os:admin). */

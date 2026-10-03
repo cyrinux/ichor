@@ -1129,6 +1129,10 @@
     <string name="apps_detail_workloads_loading">Workloads werden gesucht…</string>
     <string name="apps_detail_workloads_none">Kein Deployment, StatefulSet oder DaemonSet führt sie aus.</string>
     <string name="apps_detail_workloads_failed">Workloads konnten nicht aufgelistet werden: %1$s</string>
+    <string name="apps_detail_routes">Webzugriff</string>
+    <string name="apps_detail_routes_loading">Adressen werden gesucht…</string>
+    <string name="apps_detail_routes_failed">Adressen konnten nicht ermittelt werden: %1$s</string>
+    <string name="apps_detail_routes_open">Im Browser öffnen</string>
     <string name="settings_remote_icons">Fehlende App-Symbole herunterladen</string>
     <string name="settings_remote_icons_desc">Etwa 250 gängige Apps haben ein mitgeliefertes Symbol. Wenn aktiviert, werden die Symbole weiterer erkannter Apps von jsDelivr (Dashboard Icons) geladen. Gesendet wird nur der öffentliche Symbolname, nie deine Image-Namen oder Cluster-Details.</string>
     <string name="settings_offline_cache">Letzten bekannten Zustand behalten</string>
