@@ -25,6 +25,8 @@
     </plurals>
     <string name="common_updated_ago">Aktualisiert %1$s · %2$s</string>
     <string name="common_refreshing_showing">Wird aktualisiert… (Daten von %1$s)</string>
+    <string name="common_refresh_failed">Aktualisierung fehlgeschlagen: %1$s</string>
+    <string name="common_showing_data_from">Daten von %1$s (%2$s)</string>
     <string name="common_status_ready">Bereit</string>
     <string name="common_status_not_ready">Nicht bereit</string>
     <string name="common_status_unreachable">Nicht erreichbar</string>
@@ -83,6 +85,8 @@
     <string name="overview_status_degraded">Beeinträchtigt</string>
     <string name="overview_status_down">Nicht erreichbar</string>
     <string name="overview_unreachable_title">Cluster nicht erreichbar</string>
+    <string name="overview_last_known_state">Letzter bekannter Zustand.</string>
+    <string name="overview_node_last_seen">Zuletzt gesehen %1$s</string>
     <string name="overview_unreachable_network">Kein Node hat geantwortet. Dein Telefon ist wahrscheinlich nicht im Netzwerk des Clusters: Prüfe, ob dein VPN verbunden ist oder ob du im richtigen WLAN bist.</string>
     <string name="overview_unreachable_credentials">Der Cluster hat geantwortet, aber diese talosconfig abgelehnt: Zertifikat, CA oder Rolle sind möglicherweise falsch oder abgelaufen.</string>
     <string name="overview_unreachable_other">Kein Node hat geantwortet. Details siehe unten.</string>
@@ -261,6 +265,26 @@
     <string name="kubespan_peer_down">Getrennt</string>
     <string name="kubespan_peer_unknown">Unbekannt</string>
     <string name="kubespan_handshake_ago">Handshake vor %1$s</string>
+    <string name="topology_tab_map">Karte</string>
+    <string name="topology_tab_peers">Peers</string>
+    <plurals name="topology_sites">
+        <item quantity="one">%1$d Standort</item>
+        <item quantity="other">%1$d Standorte</item>
+    </plurals>
+    <plurals name="topology_links">
+        <item quantity="one">%1$d Verbindung</item>
+        <item quantity="other">%1$d Verbindungen</item>
+    </plurals>
+    <string name="topology_site_lan">Lokales Netz</string>
+    <string name="topology_site_alone">Eigenes Netz</string>
+    <string name="topology_role_controlplane">Control Plane</string>
+    <string name="topology_role_worker">Worker</string>
+    <string name="topology_link_degraded">Eine Seite getrennt</string>
+    <string name="topology_link_one_side">Nur eine Seite dieser Verbindung wurde abgefragt: der andere Node ist nicht in dieser talosconfig.</string>
+    <string name="topology_link_seen_from">Gesehen von %1$s</string>
+    <string name="topology_not_queried">Graue Nodes sind nicht in dieser talosconfig: sie werden aus den Angaben ihrer Peers gezeichnet.</string>
+    <string name="topology_empty">Nichts darzustellen: kein Cluster-Mitglied und kein KubeSpan-Peer gefunden.</string>
+    <string name="topology_map_description">Clusterkarte mit Standorten, Nodes und KubeSpan-Verbindungen</string>
 
     <!-- Logs -->
     <string name="logs_kernel_log">Kernel-Log</string>
@@ -399,6 +423,8 @@
     <string name="about_section">Über</string>
     <string name="about_version">Ichor %1$s (%2$d)</string>
     <string name="about_source">Quellcode auf GitHub</string>
+    <string name="about_license">Lizenz: Apache 2.0</string>
+    <string name="about_licenses">Open-Source-Lizenzen</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="about_sponsor">Auf GitHub sponsern</string>
     <string name="about_donate_btc">Mit Bitcoin spenden</string>
@@ -463,6 +489,19 @@
     <string name="debug_exited">Beendet mit Code %1$d</string>
     <string name="debug_new_shell">Neue Shell</string>
     <string name="debug_connecting">Verbindung wird hergestellt…</string>
+    <string name="debug_snippets">Snippets</string>
+    <string name="debug_snippets_hint">Zum Ausführen tippen. Befehle mit … am Ende werden nur eingetippt, um das Ziel zu ergänzen.</string>
+    <string name="debug_group_interfaces">Schnittstellen</string>
+    <string name="debug_group_control_plane">Control Plane</string>
+    <string name="debug_group_dns">DNS</string>
+    <string name="debug_group_reachability">Erreichbarkeit</string>
+    <string name="debug_group_mtu">MTU</string>
+    <string name="debug_group_tls">TLS / HTTP</string>
+    <string name="debug_group_firewall">Firewall &amp; Dienste</string>
+    <string name="debug_group_kubespan">KubeSpan</string>
+    <string name="debug_group_capture">Mitschnitt</string>
+    <string name="debug_group_node">Knoten</string>
+    <string name="debug_group_throughput">Durchsatz</string>
 
     <!-- App lock -->
     <string name="lock_prompt">Ichor entsperren</string>
@@ -1085,8 +1124,14 @@
     <string name="apps_stat_memory">Speicher</string>
     <string name="apps_detail_images">Images</string>
     <string name="apps_detail_pods">Pods</string>
+    <string name="apps_detail_workloads">Workloads</string>
+    <string name="apps_detail_workloads_loading">Workloads werden gesucht…</string>
+    <string name="apps_detail_workloads_none">Kein Deployment, StatefulSet oder DaemonSet führt sie aus.</string>
+    <string name="apps_detail_workloads_failed">Workloads konnten nicht aufgelistet werden: %1$s</string>
     <string name="settings_remote_icons">Fehlende App-Symbole herunterladen</string>
     <string name="settings_remote_icons_desc">Etwa 250 gängige Apps haben ein mitgeliefertes Symbol. Wenn aktiviert, werden die Symbole weiterer erkannter Apps von jsDelivr (Dashboard Icons) geladen. Gesendet wird nur der öffentliche Symbolname, nie deine Image-Namen oder Cluster-Details.</string>
+    <string name="settings_offline_cache">Letzten bekannten Zustand behalten</string>
+    <string name="settings_offline_cache_desc">Speichert die zuletzt abgerufenen Daten jedes Clusters verschlüsselt auf diesem Telefon, damit sie auch angezeigt werden, wenn der Cluster nicht erreichbar ist. 24 Stunden aufbewahrt, nie gesichert.</string>
     <string name="about_icon_credits">App-Symbole: Dashboard Icons (Apache 2.0) und selfh.st/icons (CC BY 4.0). App-Namen und Logos sind Marken ihrer Inhaber.</string>
     <string name="apps_category_system">System</string>
     <string name="apps_category_networking">Netzwerk</string>

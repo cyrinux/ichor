@@ -56,7 +56,8 @@ struct ImagesView: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        state = await .from { try await client.images(node: node) }
+        state = model.seeded(state, from: .images(node: node))
+        state = state.refreshed(with: await .from { try await model.fetch(.images(node: node), with: client) })
     }
 }
 

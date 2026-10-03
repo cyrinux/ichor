@@ -30,6 +30,7 @@ final class AppModel {
         static let clusterColors = "clusterColors"
         static let clusterNames = "clusterNames"
         static let kubeServers = "kubeServers"
+        static let keepLastKnown = "keepLastKnownState"
     }
 
     private(set) var yaml: String?
@@ -70,6 +71,10 @@ final class AppModel {
     /// Bumped when the screenshot mode changes, so screens reload instead of showing old data.
     private(set) var dataGeneration = 0
 
+    /// Keep the last data fetched from each cluster on the phone (LastKnownStore), to show it
+    /// when the cluster cannot be reached. Off by default.
+    private(set) var keepLastKnown: Bool
+
     /// What each node's Talos version can do (Go NodeFeatures), by node address; loaded once
     /// per node and Talos version, see loadFeatures.
     private(set) var nodeFeatures: [String: NodeFeatures] = [:]
@@ -80,6 +85,7 @@ final class AppModel {
         privacyMask = UserDefaults.standard.bool(forKey: PrivacyKeys.enabled)
         privacyWords = UserDefaults.standard.string(forKey: PrivacyKeys.words) ?? ""
         lock = AppLockState(enabled: UserDefaults.standard.bool(forKey: Keys.lock))
+        keepLastKnown = UserDefaults.standard.bool(forKey: Keys.keepLastKnown)
         clusterColors = UserDefaults.standard.dictionary(forKey: Keys.clusterColors) as? [String: Int] ?? [:]
         clusterNames = UserDefaults.standard.dictionary(forKey: Keys.clusterNames) as? [String: String] ?? [:]
         kubeServers = UserDefaults.standard.dictionary(forKey: Keys.kubeServers) as? [String: String] ?? [:]
@@ -311,6 +317,7 @@ final class AppModel {
 
     func clear() {
         SecureConfigStore.delete()
+        LastKnownStore.wipe()
         SharedStore.save(nil) // the widget stops showing the old cluster
         forgetFeatures()
         yaml = nil
@@ -322,6 +329,13 @@ final class AppModel {
     func setLockEnabled(_ enabled: Bool) {
         lock.setEnabled(enabled)
         UserDefaults.standard.set(enabled, forKey: Keys.lock)
+    }
+
+    /// Off: everything kept so far is deleted, with its key.
+    func setKeepLastKnown(_ enabled: Bool) {
+        keepLastKnown = enabled
+        UserDefaults.standard.set(enabled, forKey: Keys.keepLastKnown)
+        if !enabled { LastKnownStore.wipe() }
     }
 
     /// Turns the screenshot mode on or off (or changes its words): drops the data held with
@@ -338,6 +352,8 @@ final class AppModel {
         guard affectsData else { return }
         // Also resets the alert diff, which would otherwise see every node renamed.
         SharedStore.save(nil)
+        // Stored with the old names.
+        LastKnownStore.wipe()
         forgetFeatures()
         await reparse()
         dataGeneration += 1
@@ -375,6 +391,7 @@ final class AppModel {
         storeColors(assignClusterColors(saved: clusterColors, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeNames(keepClusterNames(saved: clusterNames, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeKubeServers(keepClusterNames(saved: kubeServers, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        LastKnownStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         QuickActions.update(summary: newSummary, labels: labels)
     }
 }

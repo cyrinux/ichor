@@ -27,8 +27,9 @@ struct OverviewView: View {
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
-            // No node answered (VPN off, another network): one notice instead of a list of red nodes.
-            if let outage = overview.outage, !showNodesAnyway {
+            // No node answered (VPN off, another network): one notice instead of a list of red
+            // nodes, unless they are known from before (then the list, under a banner).
+            if let outage = overview.outage, !showNodesAnyway, !overview.showsLastKnown {
                 ClusterUnreachableView(
                     outage: outage,
                     endpoints: model.activeSummary?.endpoints ?? [],
@@ -38,6 +39,9 @@ struct OverviewView: View {
                 .themedBackground()
             } else {
                 List {
+                    if let outage = overview.outage, overview.showsLastKnown {
+                        Section { LastKnownBanner(outage: outage, retry: load) }
+                    }
                     if model.activeSummary?.demo == true {
                         Section {
                             Text("Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.")
@@ -249,18 +253,18 @@ struct OverviewView: View {
 
     /// Address → hostname of the loaded nodes, for the events timeline.
     private var hostnames: [String: String] {
-        guard case .loaded(let overview, _) = state else { return [:] }
+        guard case .loaded(let overview, _, _) = state else { return [:] }
         return Dictionary(overview.nodes.map { ($0.node, $0.hostname) }, uniquingKeysWith: { first, _ in first })
     }
 
     /// No node answered in the loaded overview.
     private var outage: ClusterOutage? {
-        if case .loaded(let overview, _) = state { return overview.outage }
+        if case .loaded(let overview, _, _) = state { return overview.outage }
         return nil
     }
 
     private var loadedAt: Date? {
-        if case .loaded(_, let at) = state { return at }
+        if case .loaded(_, let at, _) = state { return at }
         return nil
     }
 
@@ -269,14 +273,17 @@ struct OverviewView: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        if case .loaded = state {} else { state = .loading }
+        // Nothing on screen: the last known overview (when kept) while this one loads.
+        if case .loaded = state {} else { state = model.seeded(LoadState<ClusterOverview>.loading, from: .overview) }
         // The call is not cancelled with its task: a slow load of the previous context can
         // end after the new one's, and must not replace it.
         let id = loadID
-        let loaded: LoadState<ClusterOverview> = await .from { try await client.overview() }
+        let target = model.lastKnownTarget
+        let fetched: LoadState<ClusterOverview> = await .from { try await client.overview() }
         guard id == loadID else { return }
-        state = loaded
-        if case .loaded(let overview, _) = loaded {
+        let loaded = merged(fetched, for: target)
+        state = state.refreshed(with: loaded)
+        if case .loaded(let overview, _, _) = loaded {
             // Alongside the rest: listing every node's containers takes a while.
             Task { await loadInventory(with: client, id: id) }
             let info = model.activeSummary?.demo == true
@@ -290,17 +297,36 @@ struct OverviewView: View {
         }
     }
 
-    /// Best effort: a first failure hides the apps card; a failed refresh keeps the apps shown.
-    private func loadInventory(with client: TalosClient, id: String) async {
-        let loaded: LoadState<ClusterInventory> = await .from { try await client.inventory() }
-        guard id == loadID else { return }
-        if case .failed = loaded, case .loaded = inventory { return }
-        inventory = loaded
-        if case .loaded(let apps, _) = loaded { await loadDataServices(with: client, id: id, inventory: apps) }
+    /// `fetched` with the nodes that stopped answering filled in from the overview on screen
+    /// (see mergeLastKnown), kept as last known while a node answers: an outage leaves the
+    /// stored one, with its time, as it is.
+    private func merged(_ fetched: LoadState<ClusterOverview>, for target: LastKnownTarget?) -> LoadState<ClusterOverview> {
+        guard case .loaded(let overview, let at, _) = fetched else { return fetched }
+        var previous: ClusterOverview?
+        var previousAt = at
+        if case .loaded(let shown, let shownAt, _) = state {
+            previous = shown
+            previousAt = shownAt
+        }
+        let result = mergeLastKnown(current: overview, previous: previous, previousAt: previousAt)
+        if let target, result.outage == nil, let json = try? JSONEncoder().encode(result) {
+            model.remember(.overview, json: String(decoding: json, as: UTF8.self), at: at, for: target)
+        }
+        return .loaded(result, at: at)
     }
 
-    /// Only for clusters whose inventory shows Longhorn, Garage or CloudNativePG, and roles that may
-    /// use the Kubernetes API: others make no Kubernetes call. A failed refresh keeps what was shown.
+    /// Best effort: a first failure hides the apps card; a failed refresh keeps the apps shown.
+    private func loadInventory(with client: TalosClient, id: String) async {
+        inventory = model.seeded(inventory, from: .inventory)
+        let loaded: LoadState<ClusterInventory> = await .from { try await model.fetch(.inventory, with: client) }
+        guard id == loadID else { return }
+        inventory = inventory.refreshed(with: loaded)
+        if case .loaded(let apps, _, _) = loaded { await loadDataServices(with: client, id: id, inventory: apps) }
+    }
+
+    /// Only for clusters whose inventory shows Longhorn, Garage, CloudNativePG or Dragonfly, and roles
+    /// that may use the Kubernetes API: others make no Kubernetes call. A failed refresh keeps what was
+    /// shown (with its error noted).
     private func loadDataServices(with client: TalosClient, id: String, inventory apps: ClusterInventory) async {
         let hints = dataServiceHints(apps)
         guard model.allows(.workloads), !hints.isEmpty else {
@@ -311,13 +337,12 @@ struct OverviewView: View {
         if dataServices == nil { dataServices = .loading }
         let loaded: LoadState<DataServices> = await .from { try await client.dataServices(hints: hints) }
         guard id == loadID else { return }
-        if case .failed = loaded, case .loaded = dataServices { return }
-        dataServices = loaded
+        dataServices = (dataServices ?? .loading).refreshed(with: loaded)
     }
 
     /// The inventory's apps by catalog id, for the data services' icons.
     private var inventoryApps: [String: InventoryApp] {
-        guard case .loaded(let apps, _) = inventory else { return [:] }
+        guard case .loaded(let apps, _, _) = inventory else { return [:] }
         return Dictionary(apps.apps.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
@@ -388,9 +413,16 @@ private struct NodeRow: View {
                 StatusPill(label: node.health.label, color: node.health.color)
             }
             if node.reachable {
-                Text([node.role == "controlplane" ? String(localized: "control plane") : node.role, node.version, node.stage, node.arch]
-                    .filter { !$0.isEmpty }.joined(separator: "  ·  "))
+                Text([role, node.version, node.stage, node.arch].filter { !$0.isEmpty }.joined(separator: "  ·  "))
                     .font(.caption)
+            } else if let lastSeen = node.lastSeenDate {
+                // Not answering, known from before: what it was, dimmed, and since when.
+                Text([role, node.version, node.arch].filter { !$0.isEmpty }.joined(separator: "  ·  "))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("Last seen \(FreshnessFooter.ago(Date().timeIntervalSince(lastSeen)))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             ForEach(node.unmetConditions, id: \.self) {
                 Text(verbatim: "\($0.name): \($0.reason)").font(.caption).foregroundStyle(.orange)
@@ -400,5 +432,9 @@ private struct NodeRow: View {
             }
         }
         .padding(.vertical, 2)
+    }
+
+    private var role: String {
+        node.role == "controlplane" ? String(localized: "control plane") : node.role
     }
 }

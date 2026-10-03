@@ -96,7 +96,9 @@ sealed interface DefragState {
 }
 
 class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdOverview>() {
+    override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<EtcdOverview>? = talos.cached(ETCD)
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.etcd()
 
     private val _defrag = MutableStateFlow<DefragState>(DefragState.Idle)

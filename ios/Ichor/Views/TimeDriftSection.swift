@@ -33,7 +33,7 @@ struct TimeDriftSection: View {
             case .failed(let message):
                 SectionError(message: message)
                 Button("Retry") { Task { await load() } }
-            case .loaded(let time, _):
+            case .loaded(let time, _, _):
                 let summary = time.summary
                 DisclosureGroup(isExpanded: $expanded) {
                     ForEach(time.nodes) { info in
@@ -52,7 +52,7 @@ struct TimeDriftSection: View {
             HStack {
                 Text("Clock drift")
                 Spacer()
-                if case .loaded(let time, _) = state, let status = time.summary.status {
+                if case .loaded(let time, _, _) = state, let status = time.summary.status {
                     StatusPill(label: label(status), color: status.color)
                         .textCase(nil)
                 }
@@ -93,7 +93,7 @@ struct TimeDriftSection: View {
     }
 
     private var loadedSummary: TimeDriftSummary? {
-        if case .loaded(let time, _) = state { return time.summary }
+        if case .loaded(let time, _, _) = state { return time.summary }
         return nil
     }
 }

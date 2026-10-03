@@ -25,6 +25,8 @@
     </plurals>
     <string name="common_updated_ago">Actualizado %1$s · %2$s</string>
     <string name="common_refreshing_showing">Actualizando… (se muestran datos de %1$s)</string>
+    <string name="common_refresh_failed">No se pudo actualizar: %1$s</string>
+    <string name="common_showing_data_from">Se muestran datos de %1$s (%2$s)</string>
     <string name="common_status_ready">Listo</string>
     <string name="common_status_not_ready">No listo</string>
     <string name="common_status_unreachable">Inaccesible</string>
@@ -83,6 +85,8 @@
     <string name="overview_status_degraded">Degradado</string>
     <string name="overview_status_down">Inaccesible</string>
     <string name="overview_unreachable_title">No se puede acceder al clúster</string>
+    <string name="overview_last_known_state">Se muestra el último estado conocido.</string>
+    <string name="overview_node_last_seen">Visto por última vez %1$s</string>
     <string name="overview_unreachable_network">Ningún nodo respondió. Probablemente tu teléfono no está en la red del clúster: comprueba que la VPN esté conectada o que estés en la Wi-Fi correcta.</string>
     <string name="overview_unreachable_credentials">El clúster respondió pero rechazó este talosconfig: su certificado, CA o rol puede ser incorrecto o haber caducado.</string>
     <string name="overview_unreachable_other">Ningún nodo respondió. Los detalles están abajo.</string>
@@ -262,6 +266,26 @@
     <string name="kubespan_peer_down">Caído</string>
     <string name="kubespan_peer_unknown">Desconocido</string>
     <string name="kubespan_handshake_ago">handshake hace %1$s</string>
+    <string name="topology_tab_map">Mapa</string>
+    <string name="topology_tab_peers">Pares</string>
+    <plurals name="topology_sites">
+        <item quantity="one">%1$d sitio</item>
+        <item quantity="other">%1$d sitios</item>
+    </plurals>
+    <plurals name="topology_links">
+        <item quantity="one">%1$d enlace</item>
+        <item quantity="other">%1$d enlaces</item>
+    </plurals>
+    <string name="topology_site_lan">Red local</string>
+    <string name="topology_site_alone">Red propia</string>
+    <string name="topology_role_controlplane">Plano de control</string>
+    <string name="topology_role_worker">Worker</string>
+    <string name="topology_link_degraded">Un extremo caído</string>
+    <string name="topology_link_one_side">Solo se consultó un extremo de este enlace: el otro nodo no está en este talosconfig.</string>
+    <string name="topology_link_seen_from">Visto desde %1$s</string>
+    <string name="topology_not_queried">Los nodos en gris no están en este talosconfig: se dibujan a partir de lo que informan sus pares.</string>
+    <string name="topology_empty">Nada que mostrar: no se encontró ningún miembro del clúster ni par de KubeSpan.</string>
+    <string name="topology_map_description">Mapa del clúster con sitios, nodos y enlaces KubeSpan</string>
 
     <!-- Logs -->
     <string name="logs_kernel_log">Registro del kernel</string>
@@ -400,6 +424,8 @@
     <string name="about_section">Información</string>
     <string name="about_version">Ichor %1$s (%2$d)</string>
     <string name="about_source">Código fuente en GitHub</string>
+    <string name="about_license">Licencia: Apache 2.0</string>
+    <string name="about_licenses">Licencias de código abierto</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="about_sponsor">Patrocinar en GitHub</string>
     <string name="about_donate_btc">Donar en Bitcoin</string>
@@ -464,6 +490,19 @@
     <string name="debug_exited">Finalizado con el código %1$d</string>
     <string name="debug_new_shell">Nueva shell</string>
     <string name="debug_connecting">Conectando…</string>
+    <string name="debug_snippets">Atajos</string>
+    <string name="debug_snippets_hint">Toque para ejecutar. Los comandos que terminan en … solo se escriben, para añadir el destino.</string>
+    <string name="debug_group_interfaces">Interfaces</string>
+    <string name="debug_group_control_plane">Plano de control</string>
+    <string name="debug_group_dns">DNS</string>
+    <string name="debug_group_reachability">Conectividad</string>
+    <string name="debug_group_mtu">MTU</string>
+    <string name="debug_group_tls">TLS / HTTP</string>
+    <string name="debug_group_firewall">Cortafuegos y servicios</string>
+    <string name="debug_group_kubespan">KubeSpan</string>
+    <string name="debug_group_capture">Captura</string>
+    <string name="debug_group_node">Nodo</string>
+    <string name="debug_group_throughput">Ancho de banda</string>
 
     <!-- App lock -->
     <string name="lock_prompt">Desbloquear Ichor</string>
@@ -1086,8 +1125,14 @@
     <string name="apps_stat_memory">Memoria</string>
     <string name="apps_detail_images">Imágenes</string>
     <string name="apps_detail_pods">Pods</string>
+    <string name="apps_detail_workloads">Cargas de trabajo</string>
+    <string name="apps_detail_workloads_loading">Buscando sus cargas de trabajo…</string>
+    <string name="apps_detail_workloads_none">Ningún Deployment, StatefulSet o DaemonSet la ejecuta.</string>
+    <string name="apps_detail_workloads_failed">No se pudieron listar sus cargas de trabajo: %1$s</string>
     <string name="settings_remote_icons">Descargar los iconos de aplicaciones que faltan</string>
     <string name="settings_remote_icons_desc">Unas 250 aplicaciones comunes tienen su icono incluido. Si se activa, los iconos de otras aplicaciones reconocidas se descargan de jsDelivr (Dashboard Icons). Solo se envía el nombre público del icono, nunca los nombres de tus imágenes ni los detalles del clúster.</string>
+    <string name="settings_offline_cache">Conservar el último estado conocido</string>
+    <string name="settings_offline_cache_desc">Guarda en este teléfono, cifrados, los últimos datos recibidos de cada clúster, para seguir mostrándolos cuando no se pueda acceder a él. Se conservan 24 horas y nunca se incluyen en copias de seguridad.</string>
     <string name="about_icon_credits">Iconos de aplicaciones: Dashboard Icons (Apache 2.0) y selfh.st/icons (CC BY 4.0). Los nombres y logotipos de las aplicaciones son marcas de sus propietarios.</string>
     <string name="apps_category_system">Sistema</string>
     <string name="apps_category_networking">Redes</string>

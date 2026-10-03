@@ -1,13 +1,21 @@
 package name.levis.ichor.monitor
 
 import android.content.SharedPreferences
+import name.levis.ichor.data.SealedValue
 import name.levis.ichor.data.TalosJson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/** Background monitoring preferences plus the last snapshot (shared with the widget). */
-class MonitorStore(private val prefs: SharedPreferences) {
+/**
+ * Background monitoring preferences plus the last snapshot (shared with the widget). The
+ * snapshot names the cluster's nodes and addresses: it is kept encrypted, in [snapshotFile].
+ */
+class MonitorStore(private val prefs: SharedPreferences, private val snapshotFile: SealedValue) {
+    init {
+        migrateSnapshot()
+    }
+
     private val _alertsEnabled = MutableStateFlow(prefs.getBoolean(KEY_ENABLED, false))
     val alertsEnabled: StateFlow<Boolean> = _alertsEnabled.asStateFlow()
 
@@ -41,18 +49,27 @@ class MonitorStore(private val prefs: SharedPreferences) {
 
     fun snapshot(): ClusterSnapshot? = _snapshotState.value
 
+    /** Best effort: with the Keystore unavailable, the widget and alerts use it until the app stops. */
     fun saveSnapshot(snapshot: ClusterSnapshot) {
-        prefs.edit().putString(KEY_SNAPSHOT, TalosJson.encodeToString(ClusterSnapshot.serializer(), snapshot)).apply()
+        runCatching { snapshotFile.write(TalosJson.encodeToString(ClusterSnapshot.serializer(), snapshot)) }
         _snapshotState.value = snapshot
     }
 
     fun clearSnapshot() {
-        prefs.edit().remove(KEY_SNAPSHOT).apply()
+        snapshotFile.delete()
         _snapshotState.value = null
     }
 
-    private fun readSnapshot(): ClusterSnapshot? = prefs.getString(KEY_SNAPSHOT, null)?.let {
+    // The plaintext one is only left when it could not be moved (Keystore unavailable).
+    private fun readSnapshot(): ClusterSnapshot? = (snapshotFile.read() ?: prefs.getString(KEY_SNAPSHOT, null))?.let {
         runCatching { TalosJson.decodeFromString(ClusterSnapshot.serializer(), it) }.getOrNull()
+    }
+
+    /** Versions before encryption kept the snapshot in plaintext preferences: moved once, then removed. */
+    private fun migrateSnapshot() {
+        val legacy = prefs.getString(KEY_SNAPSHOT, null) ?: return
+        if (snapshotFile.read() == null && runCatching { snapshotFile.write(legacy) }.isFailure) return
+        prefs.edit().remove(KEY_SNAPSHOT).commit()
     }
 
     companion object {

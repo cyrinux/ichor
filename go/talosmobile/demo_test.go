@@ -118,7 +118,7 @@ func TestDemoPublicReadsAndActions(t *testing.T) {
 			t.Fatalf("service control must be blocked locally: %v", err)
 		}
 	}
-	for _, read := range []func(string, string) (string, error){ClusterStats, ClusterTime, EtcdStatus, KubeSpanStatus} {
+	for _, read := range []func(string, string) (string, error){ClusterStats, ClusterTime, EtcdStatus, KubeSpanStatus, ClusterTopology} {
 		out, err := read(yaml, "")
 		if err != nil || !json.Valid([]byte(out)) {
 			t.Fatalf("cluster read: %s %v", out, err)

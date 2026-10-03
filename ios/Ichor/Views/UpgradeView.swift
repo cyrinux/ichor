@@ -51,7 +51,7 @@ struct UpgradeView: View {
     }
 
     private var loadedPlan: UpgradePlan? {
-        if case .loaded(let plan, _) = plan { return plan }
+        if case .loaded(let plan, _, _) = plan { return plan }
         return nil
     }
 

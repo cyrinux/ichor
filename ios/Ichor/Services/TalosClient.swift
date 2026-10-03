@@ -1,4 +1,5 @@
 import Foundation
+import Security
 import Talosmobile
 import IchorCore
 
@@ -110,7 +111,7 @@ struct TalosClient: Sendable {
     }
 
     /// Where Go remembers node names, so a node that is down still shows its hostname.
-    /// Device-only: excluded from backup. Call before any other Go call.
+    /// Device-only: excluded from backup, encrypted with `dataKey()`. Call before any other Go call.
     static func setDataDirectory() {
         guard var url = try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
                                                      appropriateFor: nil, create: true)
@@ -120,7 +121,23 @@ struct TalosClient: Sendable {
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
         try? url.setResourceValues(values)
-        TalosmobileSetDataDir(url.path)
+        TalosmobileSetDataDir(url.path, dataKey())
+    }
+
+    private static let dataKeyAccount = "core-data-key"
+
+    /// The key Go encrypts what it remembers with: random, created once, in the Keychain. Readable
+    /// after the first unlock, as background checks run while the phone is locked. Nil when the
+    /// Keychain cannot be used (before the first unlock): nothing is remembered then.
+    private static func dataKey() -> Data? {
+        if let key = Keychain.read(dataKeyAccount), key.count == 32 { return key }
+        var bytes = [UInt8](repeating: 0, count: 32)
+        guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else { return nil }
+        let key = Data(bytes)
+        // Fails while locked, so an existing key is never replaced by one that was only unreadable.
+        guard (try? Keychain.write(key, account: dataKeyAccount,
+                                   accessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)) != nil else { return nil }
+        return key
     }
 
     /// Applies the stored screenshot mode; call before any other Go call (also in background tasks).

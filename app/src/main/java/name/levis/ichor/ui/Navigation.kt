@@ -13,6 +13,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.ui.apps.AppsScreen
 import name.levis.ichor.ui.capture.CaptureFileScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
+import name.levis.ichor.ui.settings.LicensesScreen
 import name.levis.ichor.ui.changelog.WhatsNewHost
 import name.levis.ichor.ui.capture.CaptureScreen
 import name.levis.ichor.ui.capture.CapturesScreen
@@ -60,6 +61,7 @@ private object Routes {
     const val RESOURCE = "resource?addr={addr}&host={host}&ns={ns}&type={type}&id={id}&sensitive={sensitive}"
     const val SUPPORT_BUNDLE = "supportbundle"
     const val CHANGELOG = "changelog"
+    const val LICENSES = "licenses"
     const val INSIGHTS = "insights"
     const val APPS = "apps"
 
@@ -385,6 +387,7 @@ fun Navigation(
             )
         }
         composable(Routes.CHANGELOG) { ChangelogScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.LICENSES) { LicensesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.SUPPORT_BUNDLE) { SupportBundleScreen(onBack = { nav.popBackStack() }) }
         composable(
             Routes.DEBUG,
@@ -417,7 +420,13 @@ fun Navigation(
                 onNode = { addr, host, role -> nav.navigate(Routes.node(addr, host, role, tab = 4)) },
             )
         }
-        composable(Routes.KUBESPAN) { KubeSpanScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.KUBESPAN) {
+            KubeSpanScreen(
+                onBack = { nav.popBackStack() },
+                // Only a node the talosconfig targets has a detail screen.
+                onNode = { n -> if (n.node.isNotBlank()) nav.navigate(Routes.node(n.node, n.hostname, n.role)) },
+            )
+        }
         composable(Routes.WORKLOADS) { name.levis.ichor.ui.workloads.KubernetesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.DATA_SERVICES) { name.levis.ichor.ui.dataservices.DataServicesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.ETCD) { EtcdScreen(onBack = { nav.popBackStack() }) }
@@ -445,6 +454,7 @@ fun Navigation(
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
                 onSupportBundle = { nav.navigate(Routes.SUPPORT_BUNDLE) },
                 onChangelog = { nav.navigate(Routes.CHANGELOG) },
+                onLicenses = { nav.navigate(Routes.LICENSES) },
                 onCleared = {
                     app.launchSync(runNow = true)
                     nav.resetTo(Routes.IMPORT)

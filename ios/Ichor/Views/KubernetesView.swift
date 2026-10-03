@@ -135,30 +135,14 @@ private struct WorkloadsList: View {
             .themedBackground()
         }
         .task { await load() }
-        .confirmationDialog(confirm.map { String(localized: "Restart \($0.kind) \($0.name)?") } ?? "",
-                            isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }),
-                            titleVisibility: .visible,
-                            presenting: confirm) { workload in
-            Button("Restart", role: .destructive) {
-                Task { await restart(workload) }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: { workload in
-            if workload.desired <= 1 {
-                Text("Its pods in \(workload.namespace) are replaced with a rolling update, like kubectl rollout restart.") +
-                    Text(verbatim: " ") + Text("With a single pod, the workload is briefly unavailable.")
-            } else {
-                Text("Its pods in \(workload.namespace) are replaced with a rolling update, like kubectl rollout restart.")
-            }
-        }
-        .alert(resultMessage ?? "", isPresented: Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })) {
-            Button("OK") {}
-        }
+        .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
+        .restartResult($resultMessage)
     }
 
     private func load() async {
         guard let client = model.client else { return }
-        state = await .from { try await client.workloads() }
+        state = model.seeded(state, from: .workloads, as: KubeWorkloadList.self) { $0.workloads }
+        state = state.refreshed(with: await .from { try await model.fetch(.workloads, as: KubeWorkloadList.self, with: client).workloads })
     }
 
     private func restart(_ workload: KubeWorkload) async {

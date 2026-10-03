@@ -26,6 +26,8 @@
     </plurals>
     <string name="common_updated_ago">Updated %1$s · %2$s</string>
     <string name="common_refreshing_showing">Refreshing… (showing data from %1$s)</string>
+    <string name="common_refresh_failed">Couldn\'t refresh: %1$s</string>
+    <string name="common_showing_data_from">Showing data from %1$s (%2$s)</string>
     <string name="common_status_ready">Ready</string>
     <string name="common_status_not_ready">Not ready</string>
     <string name="common_status_unreachable">Unreachable</string>
@@ -84,6 +86,8 @@
     <string name="overview_status_degraded">Degraded</string>
     <string name="overview_status_down">Unreachable</string>
     <string name="overview_unreachable_title">Can\'t reach the cluster</string>
+    <string name="overview_last_known_state">Showing the last known state.</string>
+    <string name="overview_node_last_seen">Last seen %1$s</string>
     <string name="overview_unreachable_network">No node answered. Your phone is probably not on the cluster\'s network: check that your VPN is connected, or that you are on the right Wi-Fi.</string>
     <string name="overview_unreachable_credentials">The cluster answered but refused this talosconfig: its certificate, CA or role may be wrong or expired.</string>
     <string name="overview_unreachable_other">No node answered. The details are below.</string>
@@ -262,6 +266,26 @@
     <string name="kubespan_peer_down">Down</string>
     <string name="kubespan_peer_unknown">Unknown</string>
     <string name="kubespan_handshake_ago">handshake %1$s ago</string>
+    <string name="topology_tab_map">Map</string>
+    <string name="topology_tab_peers">Peers</string>
+    <plurals name="topology_sites">
+        <item quantity="one">%1$d site</item>
+        <item quantity="other">%1$d sites</item>
+    </plurals>
+    <plurals name="topology_links">
+        <item quantity="one">%1$d link</item>
+        <item quantity="other">%1$d links</item>
+    </plurals>
+    <string name="topology_site_lan">Local network</string>
+    <string name="topology_site_alone">Own network</string>
+    <string name="topology_role_controlplane">Control plane</string>
+    <string name="topology_role_worker">Worker</string>
+    <string name="topology_link_degraded">One end down</string>
+    <string name="topology_link_one_side">Only one end of this link was queried: the other node is not in this talosconfig.</string>
+    <string name="topology_link_seen_from">Seen from %1$s</string>
+    <string name="topology_not_queried">Nodes in grey are not in this talosconfig: they are drawn from what their peers report.</string>
+    <string name="topology_empty">Nothing to map: no cluster member or KubeSpan peer was found.</string>
+    <string name="topology_map_description">Cluster map of sites, nodes and KubeSpan links</string>
 
     <!-- Logs -->
     <string name="logs_kernel_log">Kernel log</string>
@@ -400,6 +424,8 @@
     <string name="about_section">About</string>
     <string name="about_version">Ichor %1$s (%2$d)</string>
     <string name="about_source">Source code on GitHub</string>
+    <string name="about_license">License: Apache 2.0</string>
+    <string name="about_licenses">Open-source licenses</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="about_sponsor">Sponsor on GitHub</string>
     <string name="about_donate_btc">Donate in Bitcoin</string>
@@ -464,6 +490,19 @@
     <string name="debug_exited">Exited with code %1$d</string>
     <string name="debug_new_shell">New shell</string>
     <string name="debug_connecting">Connecting…</string>
+    <string name="debug_snippets">Snippets</string>
+    <string name="debug_snippets_hint">Tap to run. Commands ending with … are only typed, so you can add the target.</string>
+    <string name="debug_group_interfaces">Interfaces</string>
+    <string name="debug_group_control_plane">Control plane</string>
+    <string name="debug_group_dns">DNS</string>
+    <string name="debug_group_reachability">Reachability</string>
+    <string name="debug_group_mtu">MTU</string>
+    <string name="debug_group_tls">TLS / HTTP</string>
+    <string name="debug_group_firewall">Firewall &amp; services</string>
+    <string name="debug_group_kubespan">KubeSpan</string>
+    <string name="debug_group_capture">Capture</string>
+    <string name="debug_group_node">Node</string>
+    <string name="debug_group_throughput">Throughput</string>
 
     <!-- App lock -->
     <string name="lock_prompt">Unlock Ichor</string>
@@ -1088,8 +1127,14 @@
     <string name="apps_stat_memory">Memory</string>
     <string name="apps_detail_images">Images</string>
     <string name="apps_detail_pods">Pods</string>
+    <string name="apps_detail_workloads">Workloads</string>
+    <string name="apps_detail_workloads_loading">Finding its workloads…</string>
+    <string name="apps_detail_workloads_none">No Deployment, StatefulSet or DaemonSet runs it.</string>
+    <string name="apps_detail_workloads_failed">Could not list its workloads: %1$s</string>
     <string name="settings_remote_icons">Download missing app icons</string>
     <string name="settings_remote_icons_desc">About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details.</string>
+    <string name="settings_offline_cache">Keep last known state</string>
+    <string name="settings_offline_cache_desc">Save the last data fetched from each cluster on this phone, encrypted, so it still shows when the cluster can\'t be reached. Kept for 24 hours and never backed up.</string>
     <string name="about_icon_credits">App icons: Dashboard Icons (Apache 2.0) and selfh.st/icons (CC BY 4.0). App names and logos are trademarks of their owners.</string>
     <string name="apps_category_system">System</string>
     <string name="apps_category_networking">Networking</string>

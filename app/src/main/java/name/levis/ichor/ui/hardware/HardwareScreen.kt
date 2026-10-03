@@ -59,7 +59,9 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 
 class HardwareViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<NodeHardware>() {
+    override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<NodeHardware>? = talos.cached(hardwareKey(node))
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.hardware(node)
 }
 

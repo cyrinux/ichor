@@ -129,12 +129,11 @@ struct AppsView: View {
     /// before a screenshot mode change is dropped, so no logo or name from before comes back.
     private func load() async {
         guard let client = model.client else { return }
-        if case .loaded = state {} else { state = .loading }
+        if case .loaded = state {} else { state = model.seeded(LoadState<ClusterInventory>.loading, from: .inventory) }
         let generation = model.dataGeneration
-        let loaded: LoadState<ClusterInventory> = await .from { try await client.inventory() }
+        let loaded: LoadState<ClusterInventory> = await .from { try await model.fetch(.inventory, with: client) }
         guard generation == model.dataGeneration else { return }
-        if case .failed = loaded, case .loaded = state { return }
-        state = loaded
+        state = state.refreshed(with: loaded)
     }
 }
 

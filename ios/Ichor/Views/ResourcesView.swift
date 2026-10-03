@@ -268,7 +268,7 @@ struct ResourceDetailView: View {
     }
 
     private var loadedYAML: String? {
-        if case .loaded(let document, _) = state { return document.yaml }
+        if case .loaded(let document, _, _) = state { return document.yaml }
         return nil
     }
 

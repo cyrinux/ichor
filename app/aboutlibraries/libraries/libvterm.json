@@ -1,0 +1,8 @@
+{
+  "uniqueId": "libvterm",
+  "name": "libvterm",
+  "description": "Terminal emulator library bundled by ConnectBot termlib.",
+  "website": "https://www.leonerd.org.uk/code/libvterm/",
+  "organization": { "name": "Paul Evans", "url": "https://www.leonerd.org.uk" },
+  "licenses": ["MIT"]
+}

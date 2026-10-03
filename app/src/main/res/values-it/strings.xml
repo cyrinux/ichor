@@ -25,6 +25,8 @@
     </plurals>
     <string name="common_updated_ago">Aggiornato %1$s · %2$s</string>
     <string name="common_refreshing_showing">Aggiornamento… (dati di %1$s)</string>
+    <string name="common_refresh_failed">Aggiornamento non riuscito: %1$s</string>
+    <string name="common_showing_data_from">Dati di %1$s (%2$s)</string>
     <string name="common_status_ready">Pronto</string>
     <string name="common_status_not_ready">Non pronto</string>
     <string name="common_status_unreachable">Irraggiungibile</string>
@@ -83,6 +85,8 @@
     <string name="overview_status_degraded">Degradato</string>
     <string name="overview_status_down">Irraggiungibile</string>
     <string name="overview_unreachable_title">Cluster irraggiungibile</string>
+    <string name="overview_last_known_state">Viene mostrato l\'ultimo stato noto.</string>
+    <string name="overview_node_last_seen">Visto l\'ultima volta %1$s</string>
     <string name="overview_unreachable_network">Nessun nodo ha risposto. Probabilmente il telefono non è sulla rete del cluster: verifica che la VPN sia connessa o di essere sulla Wi-Fi giusta.</string>
     <string name="overview_unreachable_credentials">Il cluster ha risposto ma ha rifiutato questo talosconfig: il certificato, la CA o il ruolo potrebbero essere errati o scaduti.</string>
     <string name="overview_unreachable_other">Nessun nodo ha risposto. I dettagli sono qui sotto.</string>
@@ -262,6 +266,26 @@
     <string name="kubespan_peer_down">Inattivo</string>
     <string name="kubespan_peer_unknown">Sconosciuto</string>
     <string name="kubespan_handshake_ago">handshake %1$s fa</string>
+    <string name="topology_tab_map">Mappa</string>
+    <string name="topology_tab_peers">Peer</string>
+    <plurals name="topology_sites">
+        <item quantity="one">%1$d sito</item>
+        <item quantity="other">%1$d siti</item>
+    </plurals>
+    <plurals name="topology_links">
+        <item quantity="one">%1$d collegamento</item>
+        <item quantity="other">%1$d collegamenti</item>
+    </plurals>
+    <string name="topology_site_lan">Rete locale</string>
+    <string name="topology_site_alone">Rete propria</string>
+    <string name="topology_role_controlplane">Control plane</string>
+    <string name="topology_role_worker">Worker</string>
+    <string name="topology_link_degraded">Un capo inattivo</string>
+    <string name="topology_link_one_side">È stato interrogato un solo capo di questo collegamento: l\'altro nodo non è in questo talosconfig.</string>
+    <string name="topology_link_seen_from">Visto da %1$s</string>
+    <string name="topology_not_queried">I nodi in grigio non sono in questo talosconfig: sono disegnati in base a ciò che riportano i loro peer.</string>
+    <string name="topology_empty">Niente da mostrare: nessun membro del cluster né peer KubeSpan trovato.</string>
+    <string name="topology_map_description">Mappa del cluster con siti, nodi e collegamenti KubeSpan</string>
 
     <!-- Logs -->
     <string name="logs_kernel_log">Log del kernel</string>
@@ -400,6 +424,8 @@
     <string name="about_section">Informazioni</string>
     <string name="about_version">Ichor %1$s (%2$d)</string>
     <string name="about_source">Codice sorgente su GitHub</string>
+    <string name="about_license">Licenza: Apache 2.0</string>
+    <string name="about_licenses">Licenze open source</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
     <string name="about_sponsor">Sostieni su GitHub</string>
     <string name="about_donate_btc">Dona in Bitcoin</string>
@@ -464,6 +490,19 @@
     <string name="debug_exited">Terminata con codice %1$d</string>
     <string name="debug_new_shell">Nuova shell</string>
     <string name="debug_connecting">Connessione…</string>
+    <string name="debug_snippets">Scorciatoie</string>
+    <string name="debug_snippets_hint">Tocca per eseguire. I comandi che finiscono con … vengono solo digitati, per aggiungere la destinazione.</string>
+    <string name="debug_group_interfaces">Interfacce</string>
+    <string name="debug_group_control_plane">Control plane</string>
+    <string name="debug_group_dns">DNS</string>
+    <string name="debug_group_reachability">Raggiungibilità</string>
+    <string name="debug_group_mtu">MTU</string>
+    <string name="debug_group_tls">TLS / HTTP</string>
+    <string name="debug_group_firewall">Firewall e servizi</string>
+    <string name="debug_group_kubespan">KubeSpan</string>
+    <string name="debug_group_capture">Cattura</string>
+    <string name="debug_group_node">Nodo</string>
+    <string name="debug_group_throughput">Banda</string>
 
     <!-- App lock -->
     <string name="lock_prompt">Sblocca Ichor</string>
@@ -1086,8 +1125,14 @@
     <string name="apps_stat_memory">Memoria</string>
     <string name="apps_detail_images">Immagini</string>
     <string name="apps_detail_pods">Pod</string>
+    <string name="apps_detail_workloads">Workload</string>
+    <string name="apps_detail_workloads_loading">Ricerca dei suoi workload…</string>
+    <string name="apps_detail_workloads_none">Nessun Deployment, StatefulSet o DaemonSet la esegue.</string>
+    <string name="apps_detail_workloads_failed">Impossibile elencare i suoi workload: %1$s</string>
     <string name="settings_remote_icons">Scarica le icone delle app mancanti</string>
     <string name="settings_remote_icons_desc">Circa 250 app comuni hanno l’icona inclusa. Se attivo, le icone delle altre app riconosciute vengono scaricate da jsDelivr (Dashboard Icons). Viene inviato solo il nome pubblico dell’icona, mai i nomi delle tue immagini o i dettagli del cluster.</string>
+    <string name="settings_offline_cache">Conserva l\'ultimo stato noto</string>
+    <string name="settings_offline_cache_desc">Salva su questo telefono, cifrati, gli ultimi dati ricevuti da ogni cluster, per mostrarli anche quando il cluster è irraggiungibile. Conservati 24 ore e mai inclusi nei backup.</string>
     <string name="about_icon_credits">Icone delle app: Dashboard Icons (Apache 2.0) e selfh.st/icons (CC BY 4.0). I nomi e i loghi delle app sono marchi dei rispettivi proprietari.</string>
     <string name="apps_category_system">Sistema</string>
     <string name="apps_category_networking">Rete</string>

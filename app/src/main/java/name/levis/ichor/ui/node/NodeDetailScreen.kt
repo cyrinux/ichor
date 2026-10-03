@@ -99,12 +99,16 @@ import kotlinx.coroutines.launch
 private const val SERVICE_SETTLE_MILLIS = 2_500L
 
 class ServicesViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<List<ServiceInfo>>() {
+    override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<List<ServiceInfo>>? = talos.cached(servicesKey(node))
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.services(node)
 }
 
 class ResourcesViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<NodeResources>() {
+    override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<NodeResources>? = talos.cached(resourcesKey(node))
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.resources(node)
 }
 

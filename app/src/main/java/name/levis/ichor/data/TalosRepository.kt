@@ -11,6 +11,7 @@ import name.levis.talosmobile.Talosmobile
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.EtcdOverview
+import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubePodList
@@ -57,8 +58,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
+import name.levis.ichor.model.isDemo
+import name.levis.ichor.model.withLastKnown
+import name.levis.ichor.model.outage
 
 /** Events streamed by the cluster health check. */
 sealed interface HealthEvent {
@@ -81,21 +88,56 @@ sealed interface StreamItem<out T> {
 
 class NoConfigException : LocalizedException(UiText.Res(R.string.common_no_config))
 
-/** Read-only access to the Talos API through the Go core. All calls are blocking in Go, so run on IO. */
-class TalosRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers) {
+/**
+ * Read-only access to the Talos API through the Go core. All calls are blocking in Go, so run on IO.
+ * [offline] keeps some results on disk, only when the user turned it on.
+ */
+class TalosRepository(
+    private val configs: ConfigRepository,
+    private val kubeServers: KubeServers,
+    private val offline: OfflineCache? = null,
+) {
 
     /**
-     * Last successful results, in memory only (cluster data is never written to disk), so
-     * screens can show them instantly while refreshing. Keys include the config generation
-     * and context, so importing or switching invalidates them.
+     * Last successful results in memory, so screens can show them instantly while refreshing.
+     * Keys include the config generation and context, so importing or switching invalidates them.
+     * Cluster data reaches the disk only through [offline], when the user turned it on.
      */
     private val cache = java.util.concurrent.ConcurrentHashMap<String, Any>()
 
     /** A cached result and when it was fetched (epoch millis). */
     data class Timed<T>(val value: T, val at: Long)
 
+    /** The last result of [key]: fetched in this process, or else the last known one [offline]. */
     @Suppress("UNCHECKED_CAST")
-    fun <T> cached(key: String): Timed<T>? = cache[scoped(key)] as Timed<T>?
+    fun <T> cached(key: String): Timed<T>? = (cache[scoped(key)] ?: restored(key)) as Timed<T>?
+
+    /** The active cluster's fingerprint, when its results may be kept on disk (never the demo's). */
+    private fun offlineCluster(): String? =
+        configs.config.value?.activeSummary?.takeUnless { it.isDemo }?.fingerprint?.takeIf { it.isNotBlank() }
+
+    private fun restored(key: String, cluster: String? = offlineCluster()): Timed<Any>? {
+        val serializer = PERSISTED[key.substringBefore('|')] ?: return null
+        val stored = offline?.peek(cluster ?: return null, key) ?: return null
+        // Stored by an older version whose model no longer decodes: as good as nothing.
+        val value = runCatching { TalosJson.decodeFromString(serializer, stored.value) }.getOrNull() ?: return null
+        return Timed(value, stored.at)
+    }
+
+    private val _restores = MutableStateFlow(0)
+
+    /**
+     * Bumped once [restoreOffline] read what [offline] kept: a screen that started loading
+     * before (e.g. right after switching cluster) asks [cached] again.
+     */
+    val restores: StateFlow<Int> = _restores.asStateFlow()
+
+    /** Reads what [offline] kept of the active cluster, so [cached] has it before the first fetch. */
+    suspend fun restoreOffline() {
+        val cluster = offlineCluster() ?: return
+        offline?.load(cluster) ?: return
+        _restores.update { it + 1 }
+    }
 
     private fun scoped(key: String): String {
         val stored = configs.config.value
@@ -115,11 +157,46 @@ class TalosRepository(private val configs: ConfigRepository, private val kubeSer
         _invalidations.value++
     }
 
-    private suspend fun <T : Any> remember(key: String, block: suspend () -> T): T =
-        block().also { cache[scoped(key)] = Timed(it, System.currentTimeMillis()) }
+    /**
+     * Runs [block] and keeps its result for the cluster that was active when it started; on
+     * disk too when [persistable] says it describes the cluster.
+     */
+    private suspend fun <T : Any> remember(
+        key: String,
+        persistable: (T) -> Boolean = { true },
+        block: suspend (last: () -> Timed<T>?) -> T,
+    ): T {
+        val scope = scoped(key)
+        val cluster = offlineCluster()
+        val epoch = offline?.epoch ?: 0
+        // The last result of the cluster this fetch is for, even if another one is shown by now.
+        @Suppress("UNCHECKED_CAST")
+        val value = block { (cache[scope] ?: restored(key, cluster)) as Timed<T>? }
+        val at = System.currentTimeMillis()
+        cache[scope] = Timed(value, at)
+        if (cluster != null && persistable(value)) persist(cluster, key, value, at, epoch)
+        return value
+    }
+
+    private suspend fun persist(cluster: String, key: String, value: Any, at: Long, epoch: Int) {
+        @Suppress("UNCHECKED_CAST")
+        val serializer = PERSISTED[key.substringBefore('|')] as KSerializer<Any>? ?: return
+        try {
+            offline?.save(cluster, key, TalosJson.encodeToString(serializer, value), at, epoch)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Not kept on disk (full, key gone): the screen still gets its fresh result.
+        }
+    }
 
     suspend fun kubespan(): KubeSpanOverview = remember(KUBESPAN) {
         call { cfg, ctx -> TalosJson.decodeFromString(KubeSpanOverview.serializer(), Talosmobile.kubeSpanStatus(cfg, ctx)) }
+    }
+
+    /** The cluster map: nodes, KubeSpan links and sites (zones or shared LANs). */
+    suspend fun topology(): ClusterTopology = remember(TOPOLOGY) {
+        call { cfg, ctx -> TalosJson.decodeFromString(ClusterTopology.serializer(), Talosmobile.clusterTopology(cfg, ctx)) }
     }
 
     /** `talosctl -n NODE etcd defrag` (os:operator or os:admin); one member at a time. */
@@ -261,7 +338,16 @@ class TalosRepository(private val configs: ConfigRepository, private val kubeSer
         awaitClose { run.cancel() }
     }.buffer(Channel.CONFLATED) // progress may be dropped, the final event is always kept
 
-    suspend fun overview(): ClusterOverview = remember(OVERVIEW) { overviewUncached() }
+    /**
+     * The cluster's nodes. Those that no longer answer keep what the last overview knew of
+     * them (see [withLastKnown]), read once the call returned so a restored one counts too.
+     * Kept on disk only while a node answers: an outage must not make old data look fresh.
+     */
+    suspend fun overview(): ClusterOverview = remember(OVERVIEW, persistable = { it.outage == null }) { last ->
+        val fresh = overviewUncached()
+        val previous = last()
+        fresh.withLastKnown(previous?.value, previous?.at ?: 0L)
+    }
 
     private suspend fun overviewUncached(): ClusterOverview = call { cfg, ctx ->
         TalosJson.decodeFromString(ClusterOverview.serializer(), Talosmobile.clusterOverview(cfg, ctx))
@@ -511,6 +597,7 @@ class TalosRepository(private val configs: ConfigRepository, private val kubeSer
 const val OVERVIEW = "overview"
 const val ETCD = "etcd"
 const val KUBESPAN = "kubespan"
+const val TOPOLOGY = "topology"
 const val INVENTORY = "inventory"
 const val WORKLOADS = "workloads"
 const val PODS = "pods"
@@ -521,6 +608,26 @@ const val CLUSTER_TIME = "clustertime"
 fun networkKey(node: String) = "network|$node"
 fun hardwareKey(node: String) = "hardware|$node"
 fun imagesKey(node: String) = "images|$node"
+
+/**
+ * The results [TalosRepository] may keep on disk, by key prefix, when "Keep last known state"
+ * is on: what describes the cluster. Never live figures (stats, processes, connections, time,
+ * logs) nor anything that may hold secrets (machine config, resources, kubeconfig).
+ */
+private val PERSISTED: Map<String, KSerializer<*>> = mapOf(
+    OVERVIEW to ClusterOverview.serializer(),
+    ETCD to EtcdOverview.serializer(),
+    KUBESPAN to KubeSpanOverview.serializer(),
+    TOPOLOGY to ClusterTopology.serializer(),
+    INVENTORY to Inventory.serializer(),
+    WORKLOADS to ListSerializer(KubeWorkload.serializer()),
+    PODS to ListSerializer(KubePod.serializer()),
+    "services" to ListSerializer(ServiceInfo.serializer()),
+    "resources" to NodeResources.serializer(),
+    "network" to NodeNetwork.serializer(),
+    "hardware" to NodeHardware.serializer(),
+    "images" to ListSerializer(ImageInfo.serializer()),
+)
 
 private const val FEATURES_PREFIX = "|features|"
 fun featuresKey(node: String) = "features|$node"

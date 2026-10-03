@@ -16,7 +16,7 @@ struct AppsCard: View {
             Section { content(apps: Self.placeholder, containers: 0).redacted(reason: .placeholder) }
         case .failed:
             EmptyView()
-        case .loaded(let inventory, _):
+        case .loaded(let inventory, _, _):
             if !inventory.apps.isEmpty {
                 Section {
                     NavigationLink(value: Route.apps(hostnames: hostnames)) {

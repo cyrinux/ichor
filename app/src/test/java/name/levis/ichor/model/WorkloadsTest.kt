@@ -45,4 +45,35 @@ class WorkloadsTest {
         assertTrue(workloads.first { it.name == "web" }.canRestart)
         assertEquals(WorkloadState.UNKNOWN, WorkloadState.from("weird"))
     }
+
+    @Test
+    fun ownersOfAnAppsPodsThroughReplicaSetsAndDirectOwners() {
+        val kubePods = listOf(
+            KubePod("shop", "web-5d8f-abcde", owner = "ReplicaSet/web-5d8f"),
+            KubePod("shop", "web-5d8f-fghij", owner = "ReplicaSet/web-5d8f"),
+            KubePod("shop", "db-0", owner = "StatefulSet/db"),
+            KubePod("kube-system", "proxy-xyz", owner = "DaemonSet/proxy"),
+            KubePod("shop", "migrate-1-q", owner = "Job/migrate-1"),
+            KubePod("kube-system", "apiserver-cp1", owner = "Node/cp1"),
+        )
+        val app = listOf(
+            InventoryPod("shop", "web-5d8f-abcde"),
+            InventoryPod("shop", "web-5d8f-fghij"),
+            InventoryPod("shop", "db-0"),
+            InventoryPod("shop", "migrate-1-q"),
+        )
+        assertEquals(listOf("web", "db"), workloads.ownersOf(app, kubePods).map { it.name })
+        assertEquals(listOf("proxy"), workloads.ownersOf(listOf(InventoryPod("kube-system", "proxy-xyz")), kubePods).map { it.name })
+    }
+
+    @Test
+    fun ownersOfIgnoresUnknownPodsOtherNamespacesAndOddOwners() {
+        val kubePods = listOf(
+            KubePod("other", "web-5d8f-abcde", owner = "ReplicaSet/web-5d8f"),
+            KubePod("shop", "bare", owner = ""),
+            KubePod("shop", "odd", owner = "ReplicaSet/nohash"),
+        )
+        val app = listOf(InventoryPod("other", "web-5d8f-abcde"), InventoryPod("shop", "bare"), InventoryPod("shop", "odd"), InventoryPod("shop", "gone"))
+        assertTrue(workloads.ownersOf(app, kubePods).isEmpty())
+    }
 }

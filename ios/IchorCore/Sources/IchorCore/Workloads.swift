@@ -110,3 +110,32 @@ public func filterWorkloads(_ workloads: [KubeWorkload], namespace: String?, que
             return a.kind < b.kind
         }
 }
+
+/// The workloads that run pods (an app's, from the inventory), through each pod's owner in
+/// kubePods: a StatefulSet or DaemonSet directly, a Deployment through its ReplicaSet, named
+/// `<deployment>-<pod-template-hash>`. Pods without such an owner (static, Job, bare) are left
+/// out. In the order of workloads.
+public func workloadOwners(_ workloads: [KubeWorkload], pods: [InventoryPod], kubePods: [KubePod]) -> [KubeWorkload] {
+    let owners = Dictionary(kubePods.map { ($0.id, $0.owner) }, uniquingKeysWith: { first, _ in first })
+    let wanted = Set(pods.compactMap { pod in
+        owners["\(pod.namespace)/\(pod.pod)"].flatMap { workloadKey(namespace: pod.namespace, owner: $0) }
+    })
+    return workloads.filter { wanted.contains($0.id) }
+}
+
+/// The KubeWorkload id an owner reference ("ReplicaSet/web-5d8f") stands for; nil for other kinds.
+private func workloadKey(namespace: String, owner: String) -> String? {
+    guard let slash = owner.firstIndex(of: "/") else { return nil }
+    let kind = owner[..<slash]
+    let name = owner[owner.index(after: slash)...]
+    guard !name.isEmpty else { return nil }
+    switch kind {
+    case "StatefulSet", "DaemonSet":
+        return "\(kind)/\(namespace)/\(name)"
+    case "ReplicaSet":
+        guard let dash = name.lastIndex(of: "-"), dash > name.startIndex else { return nil }
+        return "Deployment/\(namespace)/\(name[..<dash])"
+    default:
+        return nil
+    }
+}

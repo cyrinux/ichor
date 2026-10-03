@@ -1,0 +1,9 @@
+{
+  "uniqueId": "github.com/homarr-labs/dashboard-icons",
+  "name": "Dashboard Icons",
+  "description": "Application icons. App names and logos are trademarks of their respective owners.",
+  "website": "https://github.com/homarr-labs/dashboard-icons",
+  "organization": { "name": "Homarr Labs", "url": "https://github.com/homarr-labs" },
+  "scm": { "url": "https://github.com/homarr-labs/dashboard-icons" },
+  "licenses": ["Apache-2.0"]
+}

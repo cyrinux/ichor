@@ -117,7 +117,7 @@ struct DataServicesSection: View {
                     }
                 }
             }
-        case .loaded(let services, _):
+        case .loaded(let services, _, _):
             if !services.detected.isEmpty {
                 Section {
                     NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes)) { content(services) }

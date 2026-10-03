@@ -57,9 +57,8 @@ struct DataServicesView: View {
     private func load() async {
         guard let client = model.client else { return }
         let loaded: LoadState<DataServices> = await .from { try await client.dataServices(hints: hints) }
-        // A failed refresh keeps what was shown.
-        if case .failed = loaded, case .loaded = state { return }
-        state = loaded
+        // A failed refresh keeps what was shown, with the error in the footer.
+        state = state.refreshed(with: loaded)
     }
 }
 
