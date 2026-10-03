@@ -1,6 +1,9 @@
 package talosmobile
 
 import (
+	"bytes"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -13,10 +16,82 @@ func nodeDown(node string) nodeOverview {
 	return nodeOverview{Node: node, Hostname: node, Role: roleUnknown}
 }
 
-func withDataDir(t *testing.T) {
+var testDataKey = bytes.Repeat([]byte{7}, dataKeySize)
+
+// withDataDir remembers node names in a temporary directory, returned, with testDataKey.
+func withDataDir(t *testing.T) string {
 	t.Helper()
-	SetDataDir(t.TempDir())
-	t.Cleanup(func() { SetDataDir("") })
+	dir := t.TempDir()
+	SetDataDir(dir, testDataKey)
+	t.Cleanup(func() { SetDataDir("", nil) })
+
+	return dir
+}
+
+// rememberedHostname is what a down node 10.0.0.3 is given after w-1 was recorded for it.
+func rememberedHostname() string {
+	nodes := []nodeOverview{nodeDown("10.0.0.3")}
+	rememberNodeNames([]string{"fp"}, "fp", nodes)
+
+	return nodes[0].Hostname
+}
+
+func TestNodeNamesFileIsEncrypted(t *testing.T) {
+	dir := withDataDir(t)
+	rememberNodeNames([]string{"fp"}, "fp", []nodeOverview{nodeUp("10.0.0.3", "w-1", "worker")})
+
+	data, err := os.ReadFile(filepath.Join(dir, nodeNamesFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if bytes.Contains(data, []byte("w-1")) || bytes.Contains(data, []byte("10.0.0.3")) {
+		t.Errorf("file holds names or addresses in clear: %q", data)
+	}
+
+	if got := rememberedHostname(); got != "w-1" {
+		t.Errorf("hostname = %q, want w-1 read back", got)
+	}
+}
+
+func TestPlaintextNodeNamesFileIsReadThenEncrypted(t *testing.T) {
+	dir := withDataDir(t)
+	path := filepath.Join(dir, nodeNamesFile)
+	if err := os.WriteFile(path, []byte(`{"fp":{"10.0.0.3":{"hostname":"w-1","role":"worker"}}}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if got := rememberedHostname(); got != "w-1" {
+		t.Errorf("hostname = %q, want w-1 from the older plaintext file", got)
+	}
+
+	data, _ := os.ReadFile(path)
+	if bytes.Contains(data, []byte("w-1")) {
+		t.Error("the plaintext file was not rewritten encrypted")
+	}
+}
+
+func TestNodeNamesFileFromAnotherKeyIsIgnored(t *testing.T) {
+	withDataDir(t)
+	rememberNodeNames([]string{"fp"}, "fp", []nodeOverview{nodeUp("10.0.0.3", "w-1", "worker")})
+
+	dir := nodeNames.dir
+	SetDataDir(dir, bytes.Repeat([]byte{8}, dataKeySize))
+
+	if got := rememberedHostname(); got != "10.0.0.3" {
+		t.Errorf("hostname = %q, want the address: a file sealed with a reset key is as good as none", got)
+	}
+}
+
+func TestRememberNodeNamesWithoutKey(t *testing.T) {
+	SetDataDir(t.TempDir(), nil)
+	t.Cleanup(func() { SetDataDir("", nil) })
+
+	rememberNodeNames([]string{"fp"}, "fp", []nodeOverview{nodeUp("10.0.0.3", "w-1", "worker")})
+
+	if got := rememberedHostname(); got != "10.0.0.3" {
+		t.Errorf("hostname = %q, want the address: nothing is kept without a key", got)
+	}
 }
 
 func TestRememberNodeNamesFillsDownNode(t *testing.T) {
@@ -37,7 +112,7 @@ func TestRememberNodeNamesFillsDownNode(t *testing.T) {
 }
 
 func TestRememberNodeNamesWithoutDataDir(t *testing.T) {
-	SetDataDir("")
+	SetDataDir("", testDataKey)
 
 	rememberNodeNames([]string{"fp"}, "fp", []nodeOverview{nodeUp("10.0.0.3", "w-1", "worker")})
 
