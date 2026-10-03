@@ -269,7 +269,7 @@ public struct LogTail: Decodable, Equatable, Sendable {
 /// Features gated by Talos RBAC (rules from Talos v1.14 machined.go).
 public enum Feature: CaseIterable, Sendable {
     case power, health, kubeconfig, debugShell, etcdDefrag, machineConfig, etcdSnapshot, serviceControl, issueConfig, packetCapture, upgrade
-    case etcdMemberActions, resourceBrowser, supportBundle, workloads
+    case etcdMemberActions, resourceBrowser, supportBundle, workloads, cgroups
 
     public var label: String {
         switch self {
@@ -288,6 +288,7 @@ public enum Feature: CaseIterable, Sendable {
         case .resourceBrowser: "Resources browser"
         case .supportBundle: "Support bundle"
         case .workloads: "Kubernetes workloads"
+        case .cgroups: "Cgroups and pressure"
         }
     }
 
@@ -302,7 +303,8 @@ public enum Feature: CaseIterable, Sendable {
         // Forfeiting leadership and removing a member (EtcdForfeitLeadership, EtcdRemoveMemberByID)
         // are admin-only.
         // The Kubernetes API is reached with the admin kubeconfig Talos only issues to os:admin.
-        case .health, .kubeconfig, .debugShell, .machineConfig, .issueConfig, .upgrade, .etcdMemberActions, .workloads: ["os:admin"]
+        // The cgroup tree is a MachineService/Copy of /sys/fs/cgroup, admin-only too.
+        case .health, .kubeconfig, .debugShell, .machineConfig, .issueConfig, .upgrade, .etcdMemberActions, .workloads, .cgroups: ["os:admin"]
         // Reading resources (COSI state) is open to every role; Talos itself filters what a
         // reader may see of the sensitive ones. A support bundle too: the parts the role cannot
         // read (machine config: os:admin, etcd status: os:operator) are left out and noted in it.
