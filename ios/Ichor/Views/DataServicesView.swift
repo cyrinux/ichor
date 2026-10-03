@@ -26,6 +26,7 @@ struct DataServicesView: View {
                     case .longhorn: LonghornList(status: services.longhorn!, refresh: load)
                     case .garage: GarageList(status: services.garage!, refresh: load)
                     case .cnpg: CnpgList(status: services.cnpg!, refresh: load)
+                    case .dragonfly: DragonflyList(status: services.dragonfly!, refresh: load)
                     }
                 }
                 .safeAreaInset(edge: .top) {

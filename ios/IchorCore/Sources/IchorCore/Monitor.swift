@@ -124,6 +124,14 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
             out["cnpg|\(c.label)"] = dataWarning
         }
     }
+    for d in services.dragonfly?.instances ?? [] {
+        if d.health == .critical {
+            out["dragonfly|\(d.label)"] = dataCritical
+        } else if d.reasons.contains(.pods) || d.reasons.contains(.masters) {
+            // A rolling update is planned; a replica down or two masters are not.
+            out["dragonfly|\(d.label)"] = dataWarning
+        }
+    }
     return out
 }
 
@@ -132,6 +140,7 @@ private func dataSystemTitle(_ key: String) -> String {
     switch key.split(separator: "|", maxSplits: 1).first.map(String.init) ?? "" {
     case "longhorn": "Longhorn"
     case "garage": "Garage"
+    case "dragonfly": "Dragonfly"
     default: "CloudNativePG"
     }
 }

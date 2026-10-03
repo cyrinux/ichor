@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
@@ -47,6 +48,7 @@ val DataServiceKind.title: String
         DataServiceKind.LONGHORN -> "Longhorn"
         DataServiceKind.GARAGE -> "Garage"
         DataServiceKind.CNPG -> "CloudNativePG"
+        DataServiceKind.DRAGONFLY -> "Dragonfly"
     }
 
 private val DataServiceKind.fallbackIcon: ImageVector
@@ -54,6 +56,7 @@ private val DataServiceKind.fallbackIcon: ImageVector
         DataServiceKind.LONGHORN -> Icons.Outlined.Storage
         DataServiceKind.GARAGE -> Icons.Outlined.Cloud
         DataServiceKind.CNPG -> Icons.Outlined.Dns
+        DataServiceKind.DRAGONFLY -> Icons.Outlined.Memory
     }
 
 /** Hostnames of the nodes Talos reports not ready or unreachable: candidates for a likely cause. */
@@ -120,6 +123,7 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
     val head = when (kind) {
         DataServiceKind.LONGHORN -> pluralStringResource(R.plurals.longhorn_volumes, summary.total, summary.total)
         DataServiceKind.CNPG -> pluralStringResource(R.plurals.cnpg_clusters, summary.total, summary.total)
+        DataServiceKind.DRAGONFLY -> pluralStringResource(R.plurals.dragonfly_instances, summary.total, summary.total)
         DataServiceKind.GARAGE -> {
             val single = services.garage?.instances?.singleOrNull()
             if (single != null) {

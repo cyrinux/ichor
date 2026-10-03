@@ -12,6 +12,7 @@ data class DataServices(
     val longhorn: LonghornStatus? = null,
     val garage: GarageStatus? = null,
     val cnpg: CnpgStatus? = null,
+    val dragonfly: DragonflyStatus? = null,
 )
 
 @Serializable
@@ -194,6 +195,58 @@ data class CnpgPod(
     val ready: Boolean = false,
 )
 
+@Serializable
+data class DragonflyStatus(
+    val version: String = "",
+    val error: String = "",
+    val instances: List<DragonflyInstance> = emptyList(),
+)
+
+@Serializable
+data class DragonflyInstance(
+    val namespace: String = "",
+    val name: String = "",
+    /** The operator's own word: Ready, or a step such as a rolling update. */
+    val phase: String = "",
+    val health: String = "",
+    /** Wire values of [DragonflyReason]. */
+    val reasons: List<String> = emptyList(),
+    val replicas: Int = 0,
+    val readyPods: Int = 0,
+    /** Pod with role=master, "" when none. */
+    val master: String = "",
+    /** The master first. */
+    val pods: List<DragonflyPod> = emptyList(),
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+    val reasonList: List<DragonflyReason> get() = reasons.mapNotNull(DragonflyReason::from)
+}
+
+@Serializable
+data class DragonflyPod(
+    val name: String,
+    val node: String = "",
+    val phase: String = "",
+    /** The operator's role label: master or replica. */
+    val role: String = "",
+    val ready: Boolean = false,
+)
+
+/** Why a Dragonfly instance is not ok, as the Go core names it. */
+enum class DragonflyReason(val wire: String) {
+    NO_READY("noReady"),
+    NO_MASTER("noMaster"),
+    MASTERS("masters"),
+    PODS("pods"),
+    NOT_READY("notReady"),
+    ;
+
+    companion object {
+        fun from(wire: String): DragonflyReason? = entries.firstOrNull { it.wire == wire }
+    }
+}
+
 /** Health of one item (a volume, a Postgres cluster), worst first. */
 enum class ServiceHealth(val wire: String) {
     CRITICAL("critical"),
@@ -247,6 +300,7 @@ enum class DataServiceKind(val catalogId: String) {
     LONGHORN("longhorn"),
     GARAGE("garage"),
     CNPG("cloudnative-pg"),
+    DRAGONFLY("dragonfly"),
 }
 
 /** The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs. */
@@ -261,6 +315,7 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.LONGHORN.takeIf { longhorn != null },
         DataServiceKind.GARAGE.takeIf { garage != null },
         DataServiceKind.CNPG.takeIf { cnpg != null },
+        DataServiceKind.DRAGONFLY.takeIf { dragonfly != null },
     )
 
 /**
@@ -273,6 +328,13 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.LONGHORN -> longhorn?.summary()
     DataServiceKind.GARAGE -> garage?.summary()
     DataServiceKind.CNPG -> cnpg?.summary()
+    DataServiceKind.DRAGONFLY -> dragonfly?.summary()
+}
+
+fun DragonflyStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty() && instances.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
+    val healths = instances.map { it.serviceHealth }
+    return ServiceSummary(instances.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
 }
 
 fun LonghornStatus.summary(): ServiceSummary {
@@ -322,6 +384,9 @@ fun DataServices.likelyCauses(downNodes: Set<String> = emptySet()): List<LikelyC
     }
     cnpg?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { c ->
         count(c.instancePods.filter { !it.ready }.map { it.node })
+    }
+    dragonfly?.instances.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { d ->
+        count(d.pods.filter { !it.ready }.map { it.node })
     }
 
     return hits.map { (node, n) -> LikelyCause(node, n) }.sortedWith(compareByDescending<LikelyCause> { it.problems }.thenBy { it.node })

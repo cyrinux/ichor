@@ -1380,6 +1380,19 @@
     <string name="cnpg_last_failure">Остання невдача</string>
     <string name="cnpg_never">ніколи</string>
     <string name="cnpg_recoverable">Найдавніша точка відновлення</string>
+    <string name="dragonfly_empty">Немає екземплярів Dragonfly.</string>
+    <string name="dragonfly_role_master">головний</string>
+    <string name="dragonfly_reason_no_ready">жоден под не готовий</string>
+    <string name="dragonfly_reason_no_master">немає головного</string>
+    <string name="dragonfly_reason_masters">кілька головних</string>
+    <string name="dragonfly_reason_pods">бракує реплік</string>
+    <string name="dragonfly_reason_phase">оператор: %1$s</string>
+    <plurals name="dragonfly_instances">
+        <item quantity="one">%1$d екземпляр Dragonfly</item>
+        <item quantity="few">%1$d екземпляри Dragonfly</item>
+        <item quantity="many">%1$d екземплярів Dragonfly</item>
+        <item quantity="other">%1$d екземпляра Dragonfly</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s не готовий: імовірна причина %2$d проблеми</item>
         <item quantity="few">%1$s не готовий: імовірна причина %2$d проблем</item>

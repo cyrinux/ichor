@@ -124,6 +124,7 @@ enum BackgroundMonitor {
             let system = switch issue.first ?? "" {
             case "longhorn": "Longhorn"
             case "garage": "Garage"
+            case "dragonfly": "Dragonfly"
             default: "CloudNativePG"
             }
             guard alert.problem else { return (String(localized: "\(label) is healthy again"), system) }

@@ -91,6 +91,7 @@ private fun dataAlertText(context: Context, alert: Alert): String {
     val system = when (alert.detail.substringBefore('|')) {
         "longhorn" -> "Longhorn"
         "garage" -> "Garage"
+        "dragonfly" -> "Dragonfly"
         else -> "CloudNativePG"
     }
     if (!alert.problem) return system

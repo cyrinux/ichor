@@ -15,12 +15,90 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let longhorn: LonghornStatus?
     public let garage: GarageStatus?
     public let cnpg: CnpgStatus?
+    public let dragonfly: DragonflyStatus?
 
-    public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil) {
+    public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil, dragonfly: DragonflyStatus? = nil) {
         self.longhorn = longhorn
         self.garage = garage
         self.cnpg = cnpg
+        self.dragonfly = dragonfly
     }
+}
+
+public struct DragonflyStatus: Decodable, Equatable, Sendable {
+    public let version: String
+    public let error: String
+    public let instances: [DragonflyInstance]
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        version = try c.field(.version, "")
+        error = try c.field(.error, "")
+        instances = try c.field(.instances, [])
+    }
+
+    private enum CodingKeys: String, CodingKey { case version, error, instances }
+}
+
+public struct DragonflyInstance: Decodable, Equatable, Identifiable, Sendable {
+    public let namespace: String
+    public let name: String
+    /// The operator's own word: Ready, or a step such as a rolling update.
+    public let phase: String
+    public let health: ServiceHealth
+    /// Known reasons only; values from newer cores are dropped.
+    public let reasons: [DragonflyReason]
+    public let replicas: Int
+    public let readyPods: Int
+    /// Pod with role=master, "" when none.
+    public let master: String
+    /// The master first.
+    public let pods: [DragonflyPod]
+
+    public var id: String { label }
+    public var label: String { "\(namespace)/\(name)" }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+        phase = try c.field(.phase, "")
+        health = ServiceHealth(wire: try c.field(.health, ""))
+        reasons = (try c.field(.reasons, [String]())).compactMap(DragonflyReason.init(rawValue:))
+        replicas = try c.field(.replicas, 0)
+        readyPods = try c.field(.readyPods, 0)
+        master = try c.field(.master, "")
+        pods = try c.field(.pods, [])
+    }
+
+    private enum CodingKeys: String, CodingKey { case namespace, name, phase, health, reasons, replicas, readyPods, master, pods }
+}
+
+public struct DragonflyPod: Decodable, Equatable, Identifiable, Sendable {
+    public let name: String
+    public let node: String
+    public let phase: String
+    /// The operator's role label: master or replica.
+    public let role: String
+    public let ready: Bool
+
+    public var id: String { name }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decode(String.self, forKey: .name)
+        node = try c.field(.node, "")
+        phase = try c.field(.phase, "")
+        role = try c.field(.role, "")
+        ready = try c.field(.ready, false)
+    }
+
+    private enum CodingKeys: String, CodingKey { case name, node, phase, role, ready }
+}
+
+/// Why a Dragonfly instance is not ok, as the Go core names it.
+public enum DragonflyReason: String, Sendable {
+    case noReady, noMaster, masters, pods, notReady
 }
 
 public struct LonghornStatus: Decodable, Equatable, Sendable {
@@ -434,6 +512,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     case longhorn = "longhorn"
     case garage = "garage"
     case cnpg = "cloudnative-pg"
+    case dragonfly = "dragonfly"
 
     public var id: String { rawValue }
     public var catalogID: String { rawValue }
@@ -444,6 +523,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .longhorn: "Longhorn"
         case .garage: "Garage"
         case .cnpg: "CloudNativePG"
+        case .dragonfly: "Dragonfly"
         }
     }
 }
@@ -484,7 +564,8 @@ public struct LikelyCause: Equatable, Sendable, Identifiable {
 public extension DataServices {
     /// The installed systems, in display order.
     var detected: [DataServiceKind] {
-        [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil].compactMap { $0 }
+        [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
+         dragonfly != nil ? .dragonfly : nil].compactMap { $0 }
     }
 
     func summary(_ kind: DataServiceKind) -> ServiceSummary? {
@@ -506,6 +587,11 @@ public extension DataServices {
             if !p.error.isEmpty && p.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: p.error) }
             let healths = p.clusters.map(\.health)
             return ServiceSummary(total: p.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: p.error)
+        case .dragonfly:
+            guard let d = dragonfly else { return nil }
+            if !d.error.isEmpty && d.instances.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: d.error) }
+            let healths = d.instances.map(\.health)
+            return ServiceSummary(total: d.instances.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: d.error)
         }
     }
 
@@ -527,6 +613,9 @@ public extension DataServices {
         }
         for cluster in cnpg?.clusters ?? [] where cluster.health.needsAttention {
             count(cluster.instancePods.filter { !$0.ready }.map(\.node))
+        }
+        for instance in dragonfly?.instances ?? [] where instance.health.needsAttention {
+            count(instance.pods.filter { !$0.ready }.map(\.node))
         }
         return hits.map { LikelyCause(node: $0.key, problems: $0.value) }
             .sorted { $0.problems != $1.problems ? $0.problems > $1.problems : $0.node < $1.node }

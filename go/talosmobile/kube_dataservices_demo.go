@@ -94,5 +94,18 @@ func demoDataServices(now time.Time) dataServices {
 			LastSuccessAt: ms(3 * 24 * time.Hour), RecoverableAt: ms(17 * 24 * time.Hour)},
 	}}
 
-	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg}
+	dragonfly := &dragonflyStatus{Version: "v1alpha1", Instances: []dragonflyInstance{
+		{Namespace: "demo", Name: "session-cache", Phase: "Ready", Health: healthWarning, Reasons: []string{dragonflyReasonPods},
+			Replicas: 2, ReadyPods: 1, Master: "session-cache-0", Pods: []dragonflyPod{
+				{Name: "session-cache-0", Node: "demo-worker-1", Phase: "Running", Role: "master", Ready: true},
+				{Name: "session-cache-1", Phase: "Pending", Role: "replica"},
+			}},
+		{Namespace: "demo", Name: "queue-cache", Phase: "Ready", Health: healthOK, Reasons: []string{},
+			Replicas: 2, ReadyPods: 2, Master: "queue-cache-1", Pods: []dragonflyPod{
+				{Name: "queue-cache-1", Node: "demo-worker-2", Phase: "Running", Role: "master", Ready: true},
+				{Name: "queue-cache-0", Node: "demo-worker-1", Phase: "Running", Role: "replica", Ready: true},
+			}},
+	}}
+
+	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly}
 }
