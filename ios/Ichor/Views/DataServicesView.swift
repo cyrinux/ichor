@@ -34,7 +34,7 @@ struct DataServicesView: View {
                         LikelyCauseBanner(causes: services.likelyCauses(downNodes: downNodes))
                         if kinds.count > 1 {
                             Picker(selection: Binding(get: { tab }, set: { selected = $0 })) {
-                                ForEach(kinds) { Text(verbatim: $0.title).tag($0) }
+                                ForEach(kinds) { Text(verbatim: $0.tabTitle).tag($0) }
                             } label: {
                                 EmptyView()
                             }

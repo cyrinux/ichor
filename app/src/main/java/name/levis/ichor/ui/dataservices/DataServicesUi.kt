@@ -51,6 +51,13 @@ val DataServiceKind.title: String
         DataServiceKind.DRAGONFLY -> "Dragonfly"
     }
 
+/** The tab's name, short enough for four tabs; [tabCaption] then names the product underneath. */
+val DataServiceKind.tabTitle: String
+    get() = if (this == DataServiceKind.CNPG) "CNPG" else title
+
+val DataServiceKind.tabCaption: String?
+    get() = if (this == DataServiceKind.CNPG) "cloudnativepg" else null
+
 private val DataServiceKind.fallbackIcon: ImageVector
     get() = when (this) {
         DataServiceKind.LONGHORN -> Icons.Outlined.Storage
