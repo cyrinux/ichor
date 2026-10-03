@@ -1087,6 +1087,30 @@
         <item quantity="one">Added %1$d node to the talosconfig.</item>
         <item quantity="other">Added %1$d nodes to the talosconfig.</item>
     </plurals>
+    <string name="endpoint_scan_action">Search the local network</string>
+    <string name="endpoint_scan_title">Search the local network</string>
+    <string name="endpoint_scan_body">Looks for the nodes of your clusters on the networks around the phone.</string>
+    <string name="endpoint_scan_running">Looking for Talos nodes…</string>
+    <string name="endpoint_scan_networks">Networks searched: %1$s</string>
+    <string name="endpoint_scan_none">No node of your clusters answered on these networks. If you know a node\'s address, add it as an endpoint.</string>
+    <string name="endpoint_scan_no_permission">Local network access was not allowed, so the Wi-Fi network could not be searched.</string>
+    <plurals name="endpoint_scan_found">
+        <item quantity="one">Found %1$d node, added as an endpoint:</item>
+        <item quantity="other">Found %1$d nodes, added as endpoints:</item>
+    </plurals>
+    <string name="endpoint_scan_added_to">Added to %1$s</string>
+    <string name="endpoint_scan_discovery_hint">Only nodes that accept the cluster\'s credentials are added. Once the cluster answers, the overview offers to add its other nodes.</string>
+    <string name="endpoints_edit">Edit endpoints</string>
+    <string name="endpoints_title">Endpoints of %1$s</string>
+    <string name="endpoints_body">The addresses the app reaches the Talos API through (port 50000 unless given, e.g. 192.168.1.10:50001). Test one with the cluster\'s credentials; one that does not answer now can still be saved, it may answer over a VPN.</string>
+    <string name="endpoints_add_label">Add an endpoint</string>
+    <string name="endpoints_add">Add</string>
+    <string name="endpoints_save">Save</string>
+    <string name="endpoints_answered">Answered: %1$s</string>
+    <string name="endpoints_test">Test %1$s</string>
+    <string name="endpoints_remove">Remove %1$s</string>
+    <string name="local_network_blocked">Android does not let Ichor reach devices on your Wi-Fi network yet.</string>
+    <string name="local_network_allow">Allow local network access</string>
 
     <string name="insights_title">Cluster insights</string>
     <string name="insights_drift">Configuration drift</string>

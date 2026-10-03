@@ -25,9 +25,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Router
 import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material.icons.outlined.VpnLock
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -219,6 +222,7 @@ fun ClusterSheet(
     onAdd: () -> Unit,
     onRemove: (String) -> Unit,
     onDismiss: () -> Unit,
+    onEndpoints: ((ContextSummary) -> Unit)? = null,
 ) {
     var removing by remember { mutableStateOf<ContextSummary?>(null) }
     var renaming by remember { mutableStateOf<ContextSummary?>(null) }
@@ -245,6 +249,8 @@ fun ClusterSheet(
                     vpnOnly = context.fingerprint in vpnOnly,
                     onVpnOnly = { on: Boolean -> onVpnOnly(context, on) }.takeIf { context.fingerprint.isNotBlank() },
                     onRemove = { removing = context },
+                    // Not in screenshot mode (the endpoints shown are fake), nor for the demo.
+                    onEndpoints = onEndpoints?.let { edit -> { edit(context) } }?.takeIf { !labels.masked && !context.demo },
                 )
             }
             Text(
@@ -320,6 +326,7 @@ private fun ClusterRow(
     vpnOnly: Boolean,
     onVpnOnly: ((Boolean) -> Unit)?,
     onRemove: () -> Unit,
+    onEndpoints: (() -> Unit)?,
 ) {
     val label = labels.of(context)
     ListItem(
@@ -342,15 +349,26 @@ private fun ClusterRow(
                         color = LocalStatusColors.current.warn,
                     )
                 }
-                onVpnOnly?.let { toggle ->
-                    FilterChip(
-                        selected = vpnOnly,
-                        onClick = { toggle(!vpnOnly) },
-                        label = { Text(stringResource(R.string.clusters_vpn_only)) },
-                        leadingIcon = {
-                            Icon(Icons.Outlined.VpnLock, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize))
-                        },
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    onVpnOnly?.let { toggle ->
+                        FilterChip(
+                            selected = vpnOnly,
+                            onClick = { toggle(!vpnOnly) },
+                            label = { Text(stringResource(R.string.clusters_vpn_only)) },
+                            leadingIcon = {
+                                Icon(Icons.Outlined.VpnLock, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize))
+                            },
+                        )
+                    }
+                    onEndpoints?.let {
+                        AssistChip(
+                            onClick = it,
+                            label = { Text(stringResource(R.string.common_label_endpoints)) },
+                            leadingIcon = {
+                                Icon(Icons.Outlined.Router, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize))
+                            },
+                        )
+                    }
                 }
             }
         },

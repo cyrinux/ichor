@@ -1084,6 +1084,30 @@
         <item quantity="one">%1$d Node zur talosconfig hinzugefügt.</item>
         <item quantity="other">%1$d Nodes zur talosconfig hinzugefügt.</item>
     </plurals>
+    <string name="endpoint_scan_action">Lokales Netzwerk durchsuchen</string>
+    <string name="endpoint_scan_title">Lokales Netzwerk durchsuchen</string>
+    <string name="endpoint_scan_body">Sucht die Nodes deiner Cluster in den Netzwerken rund um das Telefon.</string>
+    <string name="endpoint_scan_running">Suche nach Talos-Nodes…</string>
+    <string name="endpoint_scan_networks">Durchsuchte Netzwerke: %1$s</string>
+    <string name="endpoint_scan_none">Kein Node deiner Cluster hat in diesen Netzwerken geantwortet. Wenn du die Adresse eines Nodes kennst, füge sie als Endpoint hinzu.</string>
+    <string name="endpoint_scan_no_permission">Der Zugriff auf das lokale Netzwerk wurde nicht erlaubt, daher konnte das WLAN nicht durchsucht werden.</string>
+    <plurals name="endpoint_scan_found">
+        <item quantity="one">%1$d Node gefunden, als Endpoint hinzugefügt:</item>
+        <item quantity="other">%1$d Nodes gefunden, als Endpoints hinzugefügt:</item>
+    </plurals>
+    <string name="endpoint_scan_added_to">Hinzugefügt zu %1$s</string>
+    <string name="endpoint_scan_discovery_hint">Nur Nodes, die die Zugangsdaten des Clusters akzeptieren, werden hinzugefügt. Sobald der Cluster antwortet, bietet die Übersicht an, seine anderen Nodes hinzuzufügen.</string>
+    <string name="endpoints_edit">Endpoints bearbeiten</string>
+    <string name="endpoints_title">Endpoints von %1$s</string>
+    <string name="endpoints_body">Die Adressen, über die die App die Talos-API erreicht (Port 50000, sofern nicht angegeben, z. B. 192.168.1.10:50001). Teste einen mit den Zugangsdaten des Clusters; einer, der jetzt nicht antwortet, kann trotzdem gespeichert werden, er antwortet vielleicht über ein VPN.</string>
+    <string name="endpoints_add_label">Endpoint hinzufügen</string>
+    <string name="endpoints_add">Hinzufügen</string>
+    <string name="endpoints_save">Speichern</string>
+    <string name="endpoints_answered">Geantwortet: %1$s</string>
+    <string name="endpoints_test">%1$s testen</string>
+    <string name="endpoints_remove">%1$s entfernen</string>
+    <string name="local_network_blocked">Android erlaubt Ichor noch nicht, Geräte in deinem WLAN zu erreichen.</string>
+    <string name="local_network_allow">Zugriff auf lokales Netzwerk erlauben</string>
 
     <string name="insights_title">Clusteranalyse</string>
     <string name="insights_drift">Konfigurationsabweichungen</string>

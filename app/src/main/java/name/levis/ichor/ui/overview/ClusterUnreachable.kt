@@ -60,6 +60,8 @@ fun ClusterUnreachableBox(
     onRetry: () -> Unit,
     onShowNodes: () -> Unit,
     modifier: Modifier = Modifier,
+    onScan: (() -> Unit)? = null,
+    onEditEndpoints: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val colors = LocalStatusColors.current
@@ -104,6 +106,17 @@ fun ClusterUnreachableBox(
                     Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
                 }
             }
+            // Android 17 keeps the Wi-Fi/Ethernet network out of reach until allowed: often the cause.
+            if (outage.cause == OutageCause.NETWORK) {
+                LocalNetworkNotice(onGranted = onRetry, centered = true, modifier = Modifier.padding(top = 12.dp))
+            }
+            // A talosconfig shared from elsewhere may list no endpoint reachable from here.
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+                if (outage.cause == OutageCause.NETWORK) {
+                    onScan?.let { OutlinedButton(onClick = it) { Text(stringResource(R.string.endpoint_scan_action)) } }
+                }
+                onEditEndpoints?.let { TextButton(onClick = it) { Text(stringResource(R.string.endpoints_edit)) } }
+            }
             // The nodes stay one tap away: their actions sheet can still wake a node over LAN.
             TextButton(onClick = onShowNodes) {
                 Text(pluralStringResource(R.plurals.overview_unreachable_show_nodes, outage.nodes, outage.nodes))
@@ -147,6 +160,9 @@ fun LastKnownBanner(outage: ClusterOutage, onRetry: () -> Unit, modifier: Modifi
                     OutlinedButton(onClick = { openVpnSettings(context) }) { Text(stringResource(R.string.common_vpn_settings)) }
                 }
                 OutlinedButton(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+            }
+            if (outage.cause == OutageCause.NETWORK) {
+                LocalNetworkNotice(onGranted = onRetry, modifier = Modifier.padding(top = 8.dp))
             }
         }
     }
