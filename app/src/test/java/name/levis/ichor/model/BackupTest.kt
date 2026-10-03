@@ -2,6 +2,7 @@ package name.levis.ichor.model
 
 import name.levis.ichor.data.TalosJson
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -106,5 +107,14 @@ class BackupTest {
     @Test
     fun fileName() {
         assertEquals("ichor-2026-10-02.ichorbackup", backupFileName(LocalDate.of(2026, 10, 2)))
+    }
+
+    @Test
+    fun looksLikeBackupChecksTheMagic() {
+        assertTrue(looksLikeBackup("ICHORBAK".toByteArray() + ByteArray(60)))
+        assertTrue(looksLikeBackup("ICHORBAK".toByteArray()))
+        assertFalse(looksLikeBackup("ICHORBA".toByteArray()))
+        assertFalse(looksLikeBackup("PK\u0003\u0004 a zip".toByteArray()))
+        assertFalse(looksLikeBackup(ByteArray(0)))
     }
 }

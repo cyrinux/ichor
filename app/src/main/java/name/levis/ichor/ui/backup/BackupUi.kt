@@ -55,9 +55,12 @@ private const val MAX_BACKUP_BYTES = 5 * 1024 * 1024
 
 private val minPassphrase = Talosmobile.BackupMinPassphrase.toInt()
 
-/** Launches the file pickers and shows the dialogs of [vm]'s current step; returns a picker to start a restore. */
+/**
+ * Launches the file pickers and shows the dialogs of [vm]'s current step; returns a picker to start a restore.
+ * [replaceWarning]: the passphrase dialog recalls that a restore replaces what is stored (no confirmation came first).
+ */
 @Composable
-fun BackupFlow(vm: BackupViewModel, onRestored: () -> Unit = {}): () -> Unit {
+fun BackupFlow(vm: BackupViewModel, onRestored: () -> Unit = {}, replaceWarning: Boolean = false): () -> Unit {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val state by vm.state.collectAsStateWithLifecycle()
@@ -79,8 +82,8 @@ fun BackupFlow(vm: BackupViewModel, onRestored: () -> Unit = {}): () -> Unit {
         is BackupState.ReadyToSave -> LaunchedEffect(state) {
             if (vm.openSaver()) saver.launch(backupFileName(LocalDate.now()))
         }
-        is BackupState.Passphrase -> UnlockDialog(state.error, working = false, onConfirm = vm::restore, onDismiss = vm::reset)
-        BackupState.Restoring -> UnlockDialog(null, working = true, onConfirm = {}, onDismiss = {})
+        is BackupState.Passphrase -> UnlockDialog(state.error, working = false, replaceWarning, onConfirm = vm::restore, onDismiss = vm::reset)
+        BackupState.Restoring -> UnlockDialog(null, working = true, replaceWarning, onConfirm = {}, onDismiss = {})
         is BackupState.Restored -> LaunchedEffect(state) {
             val outcome = vm.takeRestored() ?: return@LaunchedEffect
             onRestored()
@@ -137,13 +140,22 @@ private fun NewPassphraseDialog(onConfirm: (String) -> Unit, onDismiss: () -> Un
 }
 
 @Composable
-private fun UnlockDialog(error: UiText?, working: Boolean, onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
+private fun UnlockDialog(
+    error: UiText?,
+    working: Boolean,
+    replaceWarning: Boolean,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
     var passphrase by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = { if (!working) onDismiss() },
         title = { Text(stringResource(R.string.backup_restore_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (replaceWarning) {
+                    Text(stringResource(R.string.backup_restore_replace_warning), style = MaterialTheme.typography.bodySmall)
+                }
                 Text(stringResource(R.string.backup_restore_desc), style = MaterialTheme.typography.bodySmall)
                 PassphraseField(passphrase, { passphrase = it }, stringResource(R.string.backup_passphrase), enabled = !working)
                 if (working) CircularProgressIndicator()
@@ -195,7 +207,7 @@ private suspend fun writeBytes(context: Context, uri: Uri, bytes: ByteArray) = w
     stream.use { it.write(bytes) }
 }
 
-private suspend fun readBytes(context: Context, uri: Uri): ByteArray = withContext(Dispatchers.IO) {
+internal suspend fun readBytes(context: Context, uri: Uri): ByteArray = withContext(Dispatchers.IO) {
     context.contentResolver.openInputStream(uri)?.use { readBounded(it, MAX_BACKUP_BYTES) }
         ?: throw LocalizedException(UiText.Res(R.string.backup_err_open))
 }

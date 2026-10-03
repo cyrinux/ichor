@@ -3,6 +3,7 @@ package name.levis.ichor
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
@@ -47,6 +48,9 @@ class MainActivity : FragmentActivity() {
     /** The fingerprint of a cluster to show, from a launcher shortcut; consumed once by Navigation. */
     private val openCluster = MutableStateFlow<String?>(null)
 
+    /** A backup file opened from another app (a file manager), consumed once read. */
+    private val backupFile = MutableStateFlow<Uri?>(null)
+
     // Below API 33, the in-app language is applied here (API 33+ uses LocaleManager).
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(AppLocale.wrap(newBase))
@@ -83,6 +87,7 @@ class MainActivity : FragmentActivity() {
         if (savedInstanceState == null && !fromHistory) {
             deepLink.value = intent.deepLink()
             openCluster.value = intent.clusterFingerprint()
+            backupFile.value = intent.backupFile()
         }
         if (BuildConfig.SELF_UPDATE) app.updateManager.maybeAutoCheck(lifecycleScope)
         if (BuildConfig.DONATIONS && savedInstanceState == null) app.supportPrompt.onLaunch()
@@ -106,17 +111,18 @@ class MainActivity : FragmentActivity() {
             val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
             TalosTheme(themeMode, seed = clusterColors.seedOf(stored?.activeSummary)) {
                 Surface {
-                    LockGate(app, LaunchTargets(deepLink, openCluster), onWiped = ::recreate)
+                    LockGate(app, LaunchTargets(deepLink, openCluster, backupFile), onWiped = ::recreate)
                 }
             }
         }
     }
 
-    // A notification or shortcut tapped while the activity is kept (otherwise onCreate reads the intent).
+    // A notification, shortcut or file opened while the activity is kept (otherwise onCreate reads the intent).
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         intent.deepLink()?.let { deepLink.value = it }
         intent.clusterFingerprint()?.let { openCluster.value = it }
+        intent.backupFile()?.let { backupFile.value = it }
     }
 
     companion object {
@@ -127,10 +133,20 @@ class MainActivity : FragmentActivity() {
     }
 }
 
-/** What the intent that launched the app asks to show: a screen, a cluster. */
-private class LaunchTargets(val deepLink: MutableStateFlow<DeepLink?>, val cluster: MutableStateFlow<String?>)
+/** What the intent that launched the app asks to show: a screen, a cluster, a backup to restore. */
+private class LaunchTargets(
+    val deepLink: MutableStateFlow<DeepLink?>,
+    val cluster: MutableStateFlow<String?>,
+    val backupFile: MutableStateFlow<Uri?>,
+)
 
 private fun Intent.clusterFingerprint(): String? = getStringExtra(MainActivity.EXTRA_CLUSTER)?.takeIf { it.isNotBlank() }
+
+/**
+ * A file opened with the app (see the manifest's intent filters); its content tells whether it
+ * is a backup. Not file://: another app could point it at this app's private files.
+ */
+private fun Intent.backupFile(): Uri? = data?.takeIf { action == Intent.ACTION_VIEW && it.scheme == "content" }
 
 private fun Intent.deepLink(): DeepLink? {
     val uri = data
@@ -176,6 +192,7 @@ private fun LockGate(app: TalosApp, targets: LaunchTargets, onWiped: () -> Unit)
 private fun Root(app: TalosApp, targets: LaunchTargets) {
     val link by targets.deepLink.collectAsStateWithLifecycle()
     val cluster by targets.cluster.collectAsStateWithLifecycle()
+    val backup by targets.backupFile.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val lockEnabled by app.appLock.enabled.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
@@ -210,6 +227,8 @@ private fun Root(app: TalosApp, targets: LaunchTargets) {
                 onDeepLinkHandled = { targets.deepLink.value = null },
                 openCluster = cluster,
                 onClusterOpened = { targets.cluster.value = null },
+                incomingBackup = backup,
+                onIncomingBackupRead = { targets.backupFile.value = null },
             )
         }
     }
