@@ -33,6 +33,7 @@ class FeatureTest {
         assertTrue(op.allows(Feature.PACKET_CAPTURE))
         assertFalse(op.allows(Feature.UPGRADE))
         assertFalse(op.allows(Feature.ETCD_MEMBER_ACTIONS))
+        assertFalse(op.allows(Feature.CGROUPS))
         assertTrue(op.allows(Feature.RESOURCE_BROWSER))
         assertTrue(op.allows(Feature.SUPPORT_BUNDLE))
     }

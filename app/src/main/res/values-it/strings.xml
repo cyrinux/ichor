@@ -598,6 +598,29 @@
     <string name="overview_action_events">Eventi</string>
     <string name="node_menu_events">Eventi</string>
     <string name="node_tab_pods">Pod</string>
+    <string name="node_tab_cgroups">Cgroup</string>
+    <string name="node_section_pressure">Pressione</string>
+    <string name="node_pressure_caption">Parte degli ultimi 10 s in cui i processi hanno atteso ciascuna risorsa</string>
+    <string name="node_pressure_cpu">CPU</string>
+    <string name="node_pressure_memory">Memoria</string>
+    <string name="node_pressure_io">I/O disco</string>
+    <string name="node_pressure_most">Più colpito: %1$s</string>
+    <string name="node_pressure_details">Dettagli</string>
+    <string name="node_pressure_unavailable">Pressione non disponibile: %1$s</string>
+    <plurals name="node_cgroups_oom">
+        <item quantity="one">%1$s: terminato %2$d volta per memoria esaurita dall\'avvio</item>
+        <item quantity="other">%1$s: terminato %2$d volte per memoria esaurita dall\'avvio</item>
+    </plurals>
+    <string name="node_cgroups_near_limit">%1$s: memoria al %2$d%% del limite</string>
+    <string name="node_cgroups_caption" formatted="false">CPU (% di un core) e I/O disco dall\'ultimo aggiornamento; pressione degli ultimi 10 s</string>
+    <string name="node_cgroups_limit">limite %1$s</string>
+    <string name="node_cgroups_io">disco %1$s/s</string>
+    <plurals name="node_cgroups_oom_short">
+        <item quantity="one">terminato %1$d volta (OOM)</item>
+        <item quantity="other">terminato %1$d volte (OOM)</item>
+    </plurals>
+    <string name="node_cgroups_waiting">attende %1$s %2$s</string>
+    <string name="common_feature_cgroups">Cgroup e pressione</string>
     <plurals name="node_pods_summary">
         <item quantity="one">%1$d container · %2$s in memoria</item>
         <item quantity="other">%1$d container · %2$s in memoria</item>

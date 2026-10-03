@@ -599,6 +599,29 @@
     <string name="overview_action_events">Events</string>
     <string name="node_menu_events">Events</string>
     <string name="node_tab_pods">Pods</string>
+    <string name="node_tab_cgroups">Cgroups</string>
+    <string name="node_section_pressure">Pressure</string>
+    <string name="node_pressure_caption">Share of the last 10 s that tasks waited for each resource</string>
+    <string name="node_pressure_cpu">CPU</string>
+    <string name="node_pressure_memory">Memory</string>
+    <string name="node_pressure_io">Disk I/O</string>
+    <string name="node_pressure_most">Most affected: %1$s</string>
+    <string name="node_pressure_details">Details</string>
+    <string name="node_pressure_unavailable">Pressure unavailable: %1$s</string>
+    <plurals name="node_cgroups_oom">
+        <item quantity="one">%1$s: OOM-killed %2$d time since boot</item>
+        <item quantity="other">%1$s: OOM-killed %2$d times since boot</item>
+    </plurals>
+    <string name="node_cgroups_near_limit">%1$s: memory at %2$d%% of its limit</string>
+    <string name="node_cgroups_caption" formatted="false">CPU (% of one core) and disk I/O since the last refresh; pressure over the last 10 s</string>
+    <string name="node_cgroups_limit">limit %1$s</string>
+    <string name="node_cgroups_io">disk %1$s/s</string>
+    <plurals name="node_cgroups_oom_short">
+        <item quantity="one">OOM-killed %1$d time</item>
+        <item quantity="other">OOM-killed %1$d times</item>
+    </plurals>
+    <string name="node_cgroups_waiting">waits for %1$s %2$s</string>
+    <string name="common_feature_cgroups">Cgroups and pressure</string>
     <plurals name="node_pods_summary">
         <item quantity="one">%1$d container · %2$s in memory</item>
         <item quantity="other">%1$d containers · %2$s in memory</item>
