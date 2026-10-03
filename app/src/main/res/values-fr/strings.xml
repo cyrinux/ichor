@@ -1153,4 +1153,15 @@
         <item quantity="one">%1$d redémarrage</item>
         <item quantity="other">%1$d redémarrages</item>
     </plurals>
+    <string name="evidence_service">État du service</string>
+    <string name="evidence_link">Liaison réseau modifiée</string>
+    <string name="evidence_unavailable">Données indisponibles</string>
+    <string name="evidence_recovered">Collecte des données rétablie</string>
+    <string name="evidence_available">Cette section peut à nouveau être échantillonnée.</string>
+    <string name="evidence_details">Détails techniques</string>
+    <string name="evidence_hide_details">Masquer les détails techniques</string>
+    <string name="evidence_legacy_metrics">Cet ancien échantillon est incomplet. Enregistrez une nouvelle session pour voir les métriques mises en forme.</string>
+    <string name="evidence_stage">Phase : %1$s</string>
+    <string name="evidence_link_change">Liaison : %1$s → %2$s</string>
+    <string name="evidence_omitted">Autres entrées de périphériques ou erreurs omises : %1$d</string>
 </resources>

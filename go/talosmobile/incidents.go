@@ -11,13 +11,15 @@ const incidentLimit = 600
 const incidentDetailLimit = 2048
 
 type incidentEntry struct {
-	ID       string `json:"id"`
-	At       int64  `json:"at"`
-	Node     string `json:"node"`
-	Kind     string `json:"kind"`
-	Subject  string `json:"subject"`
-	Detail   string `json:"detail"`
-	Severity string `json:"severity"`
+	ID             string       `json:"id"`
+	At             int64        `json:"at"`
+	Node           string       `json:"node"`
+	Kind           string       `json:"kind"`
+	Subject        string       `json:"subject"`
+	Detail         string       `json:"detail"`
+	Severity       string       `json:"severity"`
+	Metrics        *bottlenecks `json:"metrics,omitempty"`
+	MetricsOmitted int          `json:"metricsOmitted,omitempty"`
 }
 type incidentDocument struct {
 	Scope     string             `json:"scope"`
@@ -159,7 +161,13 @@ func UpdateIncident(previousJSON, observationJSON, eventsJSON string) (out strin
 					Counters *nodeStats  `json:"counters"`
 					Rates    bottlenecks `json:"rates"`
 				}{n.Stats, rates})
-				entry("metrics", n.Status.Hostname, raw, "info")
+				// Keep a bounded, independently decodable presentation payload even when
+				// the raw counter detail is truncated. Never turn missing rates into zeros.
+				compact, omitted := incidentMetrics(rates)
+				if n.Stats.At <= old.Stats.At || (old.Stats.BootTime != 0 && n.Stats.BootTime != 0 && old.Stats.BootTime != n.Stats.BootTime) {
+					compact.Errors["sample"] = "Rates unavailable: samples overlap or the node restarted. Wait for two consecutive samples."
+				}
+				add(incidentEntry{ID: fmt.Sprintf("sample/%d/%s/metrics/%s", observation.At, node, n.Status.Hostname), At: observation.At, Node: node, Kind: "metrics", Subject: n.Status.Hostname, Detail: raw, Severity: "info", Metrics: &compact, MetricsOmitted: omitted})
 			}
 		}
 	}
@@ -185,4 +193,46 @@ func UpdateIncident(previousJSON, observationJSON, eventsJSON string) (out strin
 	doc.Last = observation
 	doc.UpdatedAt = observation.At
 	return toJSON(doc)
+}
+
+func incidentMetrics(rates bottlenecks) (bottlenecks, int) {
+	const limit = 8
+	omitted := 0
+	clip := func(devices []deviceRate) []deviceRate {
+		if len(devices) > limit {
+			omitted += len(devices) - limit
+			devices = devices[:limit]
+		}
+		out := append([]deviceRate{}, devices...)
+		for i := range out {
+			if len(out[i].Name) > 128 {
+				out[i].Name = strings.ToValidUTF8(out[i].Name[:128], "") + "…"
+			}
+		}
+		return out
+	}
+	rates.Network = clip(rates.Network)
+	rates.Disks = clip(rates.Disks)
+	errors := map[string]string{}
+	keys := make([]string, 0, len(rates.Errors))
+	for key := range rates.Errors {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for i, key := range keys {
+		if i >= limit {
+			omitted++
+			continue
+		}
+		value := rates.Errors[key]
+		if len(value) > 256 {
+			value = strings.ToValidUTF8(value[:256], "") + "…"
+		}
+		if len(key) > 128 {
+			key = strings.ToValidUTF8(key[:128], "") + "…"
+		}
+		errors[key] = value
+	}
+	rates.Errors = errors
+	return rates, omitted
 }

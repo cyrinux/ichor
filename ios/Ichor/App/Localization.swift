@@ -22,6 +22,7 @@ extension Feature {
         case .etcdMemberActions: String(localized: "etcd member actions")
         case .resourceBrowser: String(localized: "Resources browser")
         case .supportBundle: String(localized: "Support bundle")
+        case .workloads: String(localized: "Kubernetes workloads")
         }
     }
 }

@@ -1153,4 +1153,15 @@
         <item quantity="one">%1$d reinicio</item>
         <item quantity="other">%1$d reinicios</item>
     </plurals>
+    <string name="evidence_service">Estado del servicio</string>
+    <string name="evidence_link">Enlace de red cambiado</string>
+    <string name="evidence_unavailable">Datos no disponibles</string>
+    <string name="evidence_recovered">Recopilación de datos restablecida</string>
+    <string name="evidence_available">Esta sección puede volver a muestrearse.</string>
+    <string name="evidence_details">Detalles técnicos</string>
+    <string name="evidence_hide_details">Ocultar detalles técnicos</string>
+    <string name="evidence_legacy_metrics">Esta muestra anterior está incompleta. Graba una nueva sesión para ver las métricas con formato.</string>
+    <string name="evidence_stage">Etapa: %1$s</string>
+    <string name="evidence_link_change">Enlace: %1$s → %2$s</string>
+    <string name="evidence_omitted">Entradas adicionales de dispositivos o errores omitidas: %1$d</string>
 </resources>

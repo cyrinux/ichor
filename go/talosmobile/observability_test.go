@@ -221,3 +221,45 @@ func TestObservabilityScreenshotModeMasksNames(t *testing.T) {
 		t.Fatal("masking leaked names or changed cluster scope")
 	}
 }
+
+func TestIncidentMetricSummarySurvivesDetailTruncation(t *testing.T) {
+	stats := nodeStats{At: 1000, BootTime: 10, CPUTotal: 100, CPUWait: 1, Errors: map[string]string{}}
+	for i := 0; i < 30; i++ {
+		stats.NetworkDevices = append(stats.NetworkDevices, networkCounters{Name: strings.Repeat("n", 100) + strings.Repeat("x", i), Rx: 100})
+	}
+	observation := clusterObservation{Scope: "cluster", At: 1000, Nodes: []observedNode{{Status: nodeOverview{Node: "node", Reachable: true}, Stats: &stats, Services: []serviceInfo{}, Links: map[string]string{}, Errors: map[string]string{}}}}
+	raw, _ := toJSON(observation)
+	previous, err := UpdateIncident("", raw, "[]")
+	if err != nil {
+		t.Fatal(err)
+	}
+	stats.At = 2000
+	stats.CPUTotal = 200
+	stats.CPUWait = 3
+	observation.At = 2000
+	raw, _ = toJSON(observation)
+	updated, err := UpdateIncident(previous, raw, "[]")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc incidentDocument
+	if err := json.Unmarshal([]byte(updated), &doc); err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range doc.Entries {
+		if entry.Kind != "metrics" {
+			continue
+		}
+		if entry.Metrics == nil || len(entry.Metrics.Network) != 8 || entry.MetricsOmitted != 22 || entry.Metrics.Wait != 2 {
+			t.Fatalf("lost bounded summary: %+v", entry)
+		}
+		if json.Valid([]byte(entry.Detail)) {
+			t.Fatal("fixture must exercise truncated raw details")
+		}
+		if len(entry.Detail) > incidentDetailLimit+3 {
+			t.Fatal("raw detail exceeded limit")
+		}
+		return
+	}
+	t.Fatal("missing metric entry")
+}

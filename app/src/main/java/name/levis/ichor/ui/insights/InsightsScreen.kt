@@ -114,14 +114,7 @@ fun InsightsScreen(onBack: () -> Unit) {
                             }
                         }
                         items(document.entries.asReversed().filter { metrics || it.kind != "metrics" }, key = { it.id }) { entry ->
-                            Card(Modifier.fillMaxWidth()) {
-                                Column(Modifier.padding(16.dp)) {
-                                    Text("${time(entry.at)} · ${entry.node}", style = MaterialTheme.typography.bodySmall)
-                                    Text("${entry.kind} · ${entry.subject}", style = MaterialTheme.typography.titleSmall,
-                                        color = if (entry.severity == "warning" || entry.severity == "error") MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
-                                    if (entry.detail.isNotBlank()) Text(entry.detail, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
-                                }
-                            }
+                            IncidentEvidenceCard(entry, time(entry.at))
                         }
                     } ?: item { Text(stringResource(R.string.insights_no_recording)) }
                 }

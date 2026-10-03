@@ -1152,4 +1152,15 @@
         <item quantity="one">%1$d Neustart</item>
         <item quantity="other">%1$d Neustarts</item>
     </plurals>
+    <string name="evidence_service">Dienststatus</string>
+    <string name="evidence_link">Netzwerkverbindung geändert</string>
+    <string name="evidence_unavailable">Daten nicht verfügbar</string>
+    <string name="evidence_recovered">Datenerfassung wiederhergestellt</string>
+    <string name="evidence_available">Dieser Bereich kann wieder erfasst werden.</string>
+    <string name="evidence_details">Technische Details</string>
+    <string name="evidence_hide_details">Technische Details ausblenden</string>
+    <string name="evidence_legacy_metrics">Dieses ältere Sample ist unvollständig. Zeichnen Sie eine neue Sitzung auf, um formatierte Metriken zu sehen.</string>
+    <string name="evidence_stage">Phase: %1$s</string>
+    <string name="evidence_link_change">Verbindung: %1$s → %2$s</string>
+    <string name="evidence_omitted">Weitere Geräte- oder Fehlereinträge ausgelassen: %1$d</string>
 </resources>

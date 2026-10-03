@@ -32,4 +32,17 @@ final class ObservabilityTests: XCTestCase {
         XCTAssertEqual(object["id"] as? String, "talos-id")
         XCTAssertNil(object["eventId"])
     }
+    func testStructuredEvidenceSurvivesTruncatedDetails() throws {
+        let raw = Data(#"{"id":"sample","at":1,"node":"cp-a","kind":"metrics","subject":"node","severity":"info","detail":"{…","metrics":{"wait":0.45,"steal":0,"network":[],"disks":[],"errors":{"disk":"unavailable"}},"metricsOmitted":2}"#.utf8)
+        let entry = try JSONDecoder().decode(IncidentEntry.self, from: raw)
+        XCTAssertNil(entry.evidenceDetail)
+        XCTAssertEqual(entry.evidenceMetrics?.wait, 0.45)
+        XCTAssertEqual(entry.evidenceMetrics?.errors["disk"], "unavailable")
+        XCTAssertEqual(entry.metricsOmitted, 2)
+    }
+    func testLegacyTruncatedMetricsAreUnavailable() throws {
+        let raw = Data(#"{"id":"sample","at":1,"node":"cp-a","kind":"metrics","subject":"node","severity":"info","detail":"{…"}"#.utf8)
+        let entry = try JSONDecoder().decode(IncidentEntry.self, from: raw)
+        XCTAssertNil(entry.evidenceMetrics)
+    }
 }

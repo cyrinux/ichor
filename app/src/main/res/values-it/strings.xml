@@ -1153,4 +1153,15 @@
         <item quantity="one">%1$d riavvio</item>
         <item quantity="other">%1$d riavvii</item>
     </plurals>
+    <string name="evidence_service">Stato del servizio</string>
+    <string name="evidence_link">Collegamento di rete cambiato</string>
+    <string name="evidence_unavailable">Dati non disponibili</string>
+    <string name="evidence_recovered">Raccolta dei dati ripristinata</string>
+    <string name="evidence_available">Questa sezione può essere nuovamente campionata.</string>
+    <string name="evidence_details">Dettagli tecnici</string>
+    <string name="evidence_hide_details">Nascondi dettagli tecnici</string>
+    <string name="evidence_legacy_metrics">Questo campione precedente è incompleto. Registra una nuova sessione per vedere le metriche formattate.</string>
+    <string name="evidence_stage">Fase: %1$s</string>
+    <string name="evidence_link_change">Collegamento: %1$s → %2$s</string>
+    <string name="evidence_omitted">Ulteriori voci di dispositivi o errori omesse: %1$d</string>
 </resources>
