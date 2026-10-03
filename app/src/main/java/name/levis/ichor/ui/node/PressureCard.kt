@@ -70,9 +70,9 @@ fun PressureCard(state: UiState<CgroupReport>, onDetails: () -> Unit) {
 @Composable
 private fun PressureContent(report: CgroupReport) {
     val most = report.hotspots.associateBy { it.resource }
-    PressureRow(stringResource(R.string.node_pressure_cpu), report.pressure.cpu, most["cpu"]?.name)
-    PressureRow(stringResource(R.string.node_pressure_memory), report.pressure.memory, most["memory"]?.name)
-    PressureRow(stringResource(R.string.node_pressure_io), report.pressure.io, most["io"]?.name)
+    PressureRow(stringResource(R.string.node_pressure_cpu), report.pressure.cpu, most["cpu"]?.who)
+    PressureRow(stringResource(R.string.node_pressure_memory), report.pressure.memory, most["memory"]?.who)
+    PressureRow(stringResource(R.string.node_pressure_io), report.pressure.io, most["io"]?.who)
     report.alerts.forEach { AlertRow(it) }
 }
 
@@ -102,10 +102,9 @@ private fun PressureRow(label: String, psi: CgroupPsi, mostAffected: String?) {
 
 @Composable
 private fun AlertRow(alert: CgroupAlert) {
-    val who = if (alert.parent.isBlank()) alert.name else "${alert.name} (${alert.parent})"
     val text = when (alert.kind) {
-        "oomKill" -> pluralStringResource(R.plurals.node_cgroups_oom, alert.count.toInt(), who, alert.count.toInt())
-        else -> stringResource(R.string.node_cgroups_near_limit, who, alert.percent.toInt())
+        "oomKill" -> pluralStringResource(R.plurals.node_cgroups_oom, alert.count.toInt(), alert.who, alert.count.toInt())
+        else -> stringResource(R.string.node_cgroups_near_limit, alert.who, alert.percent.toInt())
     }
     Text(
         "⚠ $text",

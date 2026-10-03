@@ -17,11 +17,11 @@ func demoCgroups(n nodeOverview, at int64) cgroupReport {
 	}
 
 	podruntime := []*cgroupNode{
-		{Name: "kubelet", MemCurrent: 96 << 20, MemPeak: 110 << 20, MemLow: 192 << 20, MemMin: 96 << 20, CPUUsec: cpu(0.08), IORead: io(2e3), Pressure: psi(0, 0, 0)},
-		{Name: "runtime", MemCurrent: 80 << 20, MemPeak: 90 << 20, MemLow: 392 << 20, MemMin: 196 << 20, CPUUsec: cpu(0.03), IOWrite: io(8e3), Pressure: psi(0, 0, 0)},
+		{Name: "kubelet", MemCurrent: 96 << 20, CPUUsec: cpu(0.08), IORead: io(2e3), Pressure: psi(0, 0, 0)},
+		{Name: "runtime", MemCurrent: 80 << 20, CPUUsec: cpu(0.03), IOWrite: io(8e3), Pressure: psi(0, 0, 0)},
 	}
 	if n.Role == "controlplane" {
-		podruntime = append([]*cgroupNode{{Name: "etcd", MemCurrent: 180 << 20, MemPeak: 240 << 20, MemLow: 256 << 20, CPUUsec: cpu(0.12), IOWrite: io(4e4), Pressure: psi(0, 0, 3*wave)}}, podruntime...)
+		podruntime = append([]*cgroupNode{{Name: "etcd", MemCurrent: 180 << 20, CPUUsec: cpu(0.12), IOWrite: io(4e4), Pressure: psi(0, 0, 3*wave)}}, podruntime...)
 	}
 
 	pod := func(name, container string, mem, limit uint64, share float64, ooms uint64) *cgroupNode {
@@ -32,11 +32,11 @@ func demoCgroups(n nodeOverview, at int64) cgroupReport {
 	}
 
 	root := &cgroupNode{Name: ".", Pressure: psi(0.4*wave, 0, 1.5*wave), children: map[string]*cgroupNode{
-		"init": {Name: "init", MemCurrent: 60 << 20, MemLow: 192 << 20, MemMin: 96 << 20, CPUUsec: cpu(0.01), Pressure: psi(0, 0, 0)},
+		"init": {Name: "init", MemCurrent: 60 << 20, CPUUsec: cpu(0.01), Pressure: psi(0, 0, 0)},
 		"system": {Name: "system", MemCurrent: 120 << 20, CPUUsec: cpu(0.02), Pressure: psi(0, 0, 0), children: map[string]*cgroupNode{
-			"apid":   {Name: "apid", MemCurrent: 24 << 20, MemMax: 40 << 20, MemLow: 32 << 20, CPUUsec: cpu(0.01), Pressure: psi(0, 0, 0)},
-			"trustd": {Name: "trustd", MemCurrent: 12 << 20, MemMax: 24 << 20, MemLow: 16 << 20, CPUUsec: cpu(0.001), Pressure: psi(0, 0, 0)},
-			"udevd":  {Name: "udevd", MemCurrent: 8 << 20, MemLow: 16 << 20, CPUUsec: cpu(0.001), Pressure: psi(0, 0, 0)},
+			"apid":   {Name: "apid", MemCurrent: 24 << 20, MemMax: 40 << 20, CPUUsec: cpu(0.01), Pressure: psi(0, 0, 0)},
+			"trustd": {Name: "trustd", MemCurrent: 12 << 20, MemMax: 24 << 20, CPUUsec: cpu(0.001), Pressure: psi(0, 0, 0)},
+			"udevd":  {Name: "udevd", MemCurrent: 8 << 20, CPUUsec: cpu(0.001), Pressure: psi(0, 0, 0)},
 		}},
 		"podruntime": {Name: "podruntime", MemCurrent: 356 << 20, CPUUsec: cpu(0.23), Pressure: psi(0, 0, 2*wave), children: cgroupChildren(podruntime)},
 		"kubepods": {Name: "kubepods", MemCurrent: 120 << 20, MemMax: n.MemTotal * 9 / 10, CPUUsec: cpu(0.3), Pressure: psi(0.3*wave, 0, 0), children: map[string]*cgroupNode{

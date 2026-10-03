@@ -78,6 +78,7 @@ reads those roles and explains up front when a feature needs more.
 | **Kubeconfig export** | `Kubeconfig` | **`os:admin`** |
 | **Kubernetes workloads and pods, rollout restart, pod delete** | `Kubeconfig`, then the Kubernetes API | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
+| **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
 
 Notes:
 

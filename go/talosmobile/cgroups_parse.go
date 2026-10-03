@@ -28,27 +28,20 @@ type cgroupPressure struct {
 	IO     cgroupPSI `json:"io"`
 }
 
-// cgroupNode is one cgroup. Limits of 0 mean none (the kernel's "max"); CPU and IO are
-// cumulative since boot, the apps turn two samples into rates.
+// cgroupNode is one cgroup, with only what the apps show. A memMax of 0 means no limit
+// (the kernel's "max"); CPU and IO are cumulative since boot, the apps turn two samples
+// into rates.
 type cgroupNode struct {
-	Name          string          `json:"name"`
-	Kind          string          `json:"kind"` // group, service, pod, container
-	MemCurrent    uint64          `json:"memCurrent,omitempty"`
-	MemPeak       uint64          `json:"memPeak,omitempty"`
-	MemMax        uint64          `json:"memMax,omitempty"`
-	MemHigh       uint64          `json:"memHigh,omitempty"`
-	MemLow        uint64          `json:"memLow,omitempty"`
-	MemMin        uint64          `json:"memMin,omitempty"`
-	SwapCurrent   uint64          `json:"swapCurrent,omitempty"`
-	OOMKills      uint64          `json:"oomKills,omitempty"`
-	CPUUsec       uint64          `json:"cpuUsec,omitempty"`
-	ThrottledUsec uint64          `json:"throttledUsec,omitempty"`
-	CPUWeight     uint64          `json:"cpuWeight,omitempty"`
-	CPULimit      float64         `json:"cpuLimit,omitempty"` // cores, from cpu.max
-	IORead        uint64          `json:"ioRead,omitempty"`
-	IOWrite       uint64          `json:"ioWrite,omitempty"`
-	Pressure      *cgroupPressure `json:"pressure,omitempty"`
-	Children      []*cgroupNode   `json:"children,omitempty"`
+	Name       string          `json:"name"`
+	Kind       string          `json:"kind"` // group, service, pod, container
+	MemCurrent uint64          `json:"memCurrent,omitempty"`
+	MemMax     uint64          `json:"memMax,omitempty"`
+	OOMKills   uint64          `json:"oomKills,omitempty"`
+	CPUUsec    uint64          `json:"cpuUsec,omitempty"`
+	IORead     uint64          `json:"ioRead,omitempty"`
+	IOWrite    uint64          `json:"ioWrite,omitempty"`
+	Pressure   *cgroupPressure `json:"pressure,omitempty"`
+	Children   []*cgroupNode   `json:"children,omitempty"`
 
 	children map[string]*cgroupNode
 }
@@ -114,26 +107,12 @@ func (n *cgroupNode) parse(file string, r io.Reader) error {
 	switch file {
 	case "memory.current":
 		return parseCgroupValue(r, &n.MemCurrent)
-	case "memory.peak":
-		return parseCgroupValue(r, &n.MemPeak)
 	case "memory.max":
 		return parseCgroupValue(r, &n.MemMax)
-	case "memory.high":
-		return parseCgroupValue(r, &n.MemHigh)
-	case "memory.low":
-		return parseCgroupValue(r, &n.MemLow)
-	case "memory.min":
-		return parseCgroupValue(r, &n.MemMin)
-	case "memory.swap.current":
-		return parseCgroupValue(r, &n.SwapCurrent)
 	case "memory.events":
 		return parseCgroupFlat(r, map[string]*uint64{"oom_kill": &n.OOMKills})
 	case "cpu.stat":
-		return parseCgroupFlat(r, map[string]*uint64{"usage_usec": &n.CPUUsec, "throttled_usec": &n.ThrottledUsec})
-	case "cpu.weight":
-		return parseCgroupValue(r, &n.CPUWeight)
-	case "cpu.max":
-		return n.parseCPUMax(r)
+		return parseCgroupFlat(r, map[string]*uint64{"usage_usec": &n.CPUUsec})
 	case "io.stat":
 		return n.parseIOStat(r)
 	case "cpu.pressure":
@@ -184,33 +163,6 @@ func parseCgroupFlat(r io.Reader, want map[string]*uint64) error {
 	}
 
 	return scanner.Err()
-}
-
-// parseCPUMax reads "quota period" (or "max period") as a number of cores.
-func (n *cgroupNode) parseCPUMax(r io.Reader) error {
-	line, err := firstLine(r)
-	if err != nil {
-		return err
-	}
-
-	quota, period, ok := strings.Cut(line, " ")
-	if !ok || quota == "max" {
-		return nil
-	}
-
-	q, err := strconv.ParseFloat(quota, 64)
-	if err != nil {
-		return err
-	}
-
-	p, err := strconv.ParseFloat(period, 64)
-	if err != nil || p == 0 {
-		return err
-	}
-
-	n.CPULimit = q / p
-
-	return nil
 }
 
 // parseIOStat sums rbytes and wbytes over every device ("8:0 rbytes=… wbytes=… …").

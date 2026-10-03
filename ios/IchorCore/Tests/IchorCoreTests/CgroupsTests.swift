@@ -22,7 +22,7 @@ final class CgroupsTests: XCTestCase {
         """
         let r = try TalosJSON.decode(CgroupReport.self, from: json)
         XCTAssertEqual(r.pressure.cpu.some10, 1.5)
-        XCTAssertEqual(r.mostAffected("io"), "etcd")
+        XCTAssertEqual(r.mostAffected("io"), "etcd (podruntime)")
         XCTAssertNil(r.mostAffected("cpu"))
         XCTAssertEqual(r.alerts.first?.who, "apid (system)")
         XCTAssertEqual(r.alerts.last?.percent, 95)
@@ -62,7 +62,7 @@ final class CgroupsTests: XCTestCase {
         XCTAssertEqual(pressureLevel(20), .bad)
     }
 
-    func testDefaultExpansionOpensGroupsAndQoSClasses() {
+    func testDefaultExpansionKeepsKubepodsClosed() {
         let r = CgroupReport(at: 0, root: CgroupNode(name: ".", children: [
             CgroupNode(name: "kubepods", children: [
                 CgroupNode(name: "burstable", children: [CgroupNode(name: "ns/p", kind: "pod")]),
@@ -71,7 +71,8 @@ final class CgroupsTests: XCTestCase {
             CgroupNode(name: "init", kind: "service"),
         ]))
         let rows = cgroupRows(previous: nil, current: r, expanded: defaultExpandedCgroups(r), sort: .memory)
-        XCTAssertEqual(rows.map(\.node.name), ["kubepods", "burstable", "ns/p", "ns/g", "init"])
+        // kubepods stays closed: its pods are the Pods tab's.
+        XCTAssertEqual(rows.map(\.node.name), ["kubepods", "init"])
     }
 
     func testOnlyAdminsReadCgroups() {

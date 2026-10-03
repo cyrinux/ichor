@@ -92,6 +92,19 @@ public struct CgroupNode: Decodable, Equatable, Sendable {
 public struct CgroupHotspot: Decodable, Equatable, Sendable {
     public let resource: String
     public let name: String
+    public let parent: String
+
+    private enum CodingKeys: String, CodingKey { case resource, name, parent }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        resource = try c.decode(String.self, forKey: .resource)
+        name = try c.decode(String.self, forKey: .name)
+        parent = try c.decodeIfPresent(String.self, forKey: .parent) ?? ""
+    }
+
+    /// "name (parent)": Talos has both system/runtime and podruntime/runtime.
+    public var who: String { parent.isEmpty ? name : "\(name) (\(parent))" }
 }
 
 public struct CgroupAlert: Decodable, Equatable, Hashable, Sendable {
@@ -145,7 +158,7 @@ public struct CgroupReport: Decodable, Equatable, Sendable {
 
     /// The workload that waits the most on resource ("cpu", "memory", "io"), if any.
     public func mostAffected(_ resource: String) -> String? {
-        hotspots.first { $0.resource == resource }?.name
+        hotspots.first { $0.resource == resource }?.who
     }
 }
 
@@ -213,10 +226,13 @@ private func sortedChildren(_ node: CgroupNode, path: String, sort: CgroupSort,
         switch sort {
         case .memory: return a.0.memCurrent > b.0.memCurrent
         case .pressure: return (a.0.pressure?.worst ?? 0) > (b.0.pressure?.worst ?? 0)
+        // CPU since the previous sample; without one, nothing to compare (not the since-boot total).
         case .cpu:
-            let ca = a.0.cpuUsec &- min(before[a.1]?.cpuUsec ?? 0, a.0.cpuUsec)
-            let cb = b.0.cpuUsec &- min(before[b.1]?.cpuUsec ?? 0, b.0.cpuUsec)
-            return ca > cb
+            func delta(_ node: CgroupNode, _ path: String) -> UInt64 {
+                guard let old = before[path]?.cpuUsec, node.cpuUsec >= old else { return 0 }
+                return node.cpuUsec - old
+            }
+            return delta(a.0, a.1) > delta(b.0, b.1)
         }
     }
 }
@@ -238,14 +254,8 @@ public func cgroupsByPath(_ root: CgroupNode) -> [String: CgroupNode] {
     return out
 }
 
-/// Paths open on first show: the top groups and kubepods' QoS classes.
+/// Paths open on first show: the Talos groups (system, podruntime), so their services are
+/// visible. kubepods stays closed: its pods are the Pods tab's, open it to compare them.
 public func defaultExpandedCgroups(_ report: CgroupReport) -> Set<String> {
-    let top = report.root?.children ?? []
-    var open = Set(top.filter { !$0.children.isEmpty }.map(\.name))
-    for kubepods in top where kubepods.name == "kubepods" {
-        for qos in kubepods.children where qos.kind == "group" {
-            open.insert(childPath(kubepods.name, qos.name))
-        }
-    }
-    return open
+    Set((report.root?.children ?? []).filter { !$0.children.isEmpty && $0.name != "kubepods" }.map(\.name))
 }

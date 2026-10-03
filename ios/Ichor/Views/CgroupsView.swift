@@ -5,8 +5,8 @@ import IchorCore
 @Observable
 @MainActor
 final class CgroupMonitor {
-    /// A copy of /sys/fs/cgroup is heavier than a stats call: less often than the Live tab.
-    static let pollSeconds: Double = 5
+    /// A copy of /sys/fs/cgroup (several MB on a busy node) is heavy on mobile data: poll slowly.
+    static let pollSeconds: Double = 10
 
     private(set) var previous: CgroupReport?
     private(set) var current: CgroupReport?
@@ -55,7 +55,7 @@ struct CgroupsView: View {
                 }
                 .pickerStyle(.segmented)
             } footer: {
-                Text("CPU as a share of one core and disk I/O since the last refresh, every 5s; pressure over the last 10 s. Tap a group to open it.")
+                Text("CPU as a share of one core and disk I/O since the last refresh, every 10 s; pressure over the last 10 s. Tap a group to open it.")
             }
             if let current = monitor.current {
                 let open = expanded ?? defaultExpandedCgroups(current)
@@ -93,7 +93,7 @@ private struct CgroupRowView: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(verbatim: row.node.name)
-                        .font(row.node.kind == "service" || row.node.kind == "pod" ? .subheadline.weight(.semibold) : .subheadline)
+                        .font(row.node.kind == "service" || row.node.kind == "pod" ? Font.subheadline.weight(.semibold) : Font.subheadline)
                         .lineLimit(1)
                     Spacer()
                     Text(verbatim: row.cpuPercent.map { String(format: "%.1f%%", $0) } ?? "—")

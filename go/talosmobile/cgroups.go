@@ -27,6 +27,7 @@ type cgroupReport struct {
 }
 
 // cgroupHotspot is the workload whose tasks stall the most on a resource (PSI some avg10).
+// Parent tells same-named services apart (system/runtime and podruntime/runtime).
 type cgroupHotspot struct {
 	Resource string  `json:"resource"` // cpu, memory, io
 	Name     string  `json:"name"`
@@ -119,10 +120,23 @@ func buildCgroupReport(root *cgroupNode, names map[string]string, at int64) cgro
 	}
 
 	walkCgroups(root, "", func(n *cgroupNode, parent string) {
+		// A pod's parent is its QoS class (burstable…): noise next to "namespace/pod".
+		if n.Kind == "pod" {
+			parent = ""
+		}
+
 		report.Alerts = append(report.Alerts, cgroupAlerts(n, parent)...)
 
 		if n.Kind == "service" || n.Kind == "pod" {
 			report.Hotspots = hotter(report.Hotspots, n, parent)
+		}
+	})
+
+	// The tree stops at pods: their containers' CPU and memory are the Pods tab's, and
+	// their alerts were taken above.
+	walkCgroups(root, "", func(n *cgroupNode, _ string) {
+		if n.Kind == "pod" {
+			n.Children = nil
 		}
 	})
 

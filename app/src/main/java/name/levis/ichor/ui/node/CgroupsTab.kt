@@ -62,8 +62,8 @@ import name.levis.ichor.ui.userMessage
 import name.levis.ichor.util.formatBytes
 import java.util.Locale
 
-/** A copy of /sys/fs/cgroup is heavier than a stats call: poll less often than the Live tab. */
-private const val CGROUPS_POLL_SECONDS = 5L
+/** A copy of /sys/fs/cgroup (several MB on a busy node) is heavy on mobile data: poll slowly. */
+private const val CGROUPS_POLL_SECONDS = 10L
 
 data class CgroupsState(val previous: CgroupReport? = null, val current: CgroupReport? = null, val error: String? = null)
 
@@ -175,7 +175,7 @@ private fun CgroupItem(row: CgroupRow, expanded: Boolean, onToggle: () -> Unit) 
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    String.format(Locale.ROOT, "%.1f%%", row.cpuPercent),
+                    row.cpuPercent?.let { String.format(Locale.ROOT, "%.1f%%", it) } ?: "—",
                     style = MaterialTheme.typography.bodySmall,
                     fontFamily = FontFamily.Monospace,
                     modifier = Modifier.padding(start = 8.dp),
@@ -198,7 +198,7 @@ private fun CgroupNotes(row: CgroupRow) {
     val n = row.node
     val notes = buildList {
         if (n.memMax > 0) add(stringResource(R.string.node_cgroups_limit, formatBytes(n.memMax)))
-        if (row.ioPerSecond >= 1024) add(stringResource(R.string.node_cgroups_io, formatBytes(row.ioPerSecond.toLong())))
+        row.ioPerSecond?.takeIf { it >= 1024 }?.let { add(stringResource(R.string.node_cgroups_io, formatBytes(it.toLong()))) }
         if (n.oomKills > 0) add(pluralStringResource(R.plurals.node_cgroups_oom_short, n.oomKills.toInt(), n.oomKills.toInt()))
     }
     val pressure = n.pressure

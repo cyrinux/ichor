@@ -2,6 +2,7 @@ package name.levis.ichor.model
 
 import name.levis.ichor.data.TalosJson
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class CgroupsTest {
@@ -51,17 +52,17 @@ class CgroupsTest {
         assertEquals(listOf("podruntime", "kubelet", "etcd", "init"), rows.map { it.node.name })
         val etcd = rows.first { it.node.name == "etcd" }
         // 1 CPU second over 2 wall seconds; 4000 bytes over 2 seconds.
-        assertEquals(50.0, etcd.cpuPercent, 1e-9)
-        assertEquals(2_000.0, etcd.ioPerSecond, 1e-9)
-        assertEquals(200.0, rows.first { it.node.name == "kubelet" }.cpuPercent, 1e-9)
+        assertEquals(50.0, etcd.cpuPercent!!, 1e-9)
+        assertEquals(2_000.0, etcd.ioPerSecond!!, 1e-9)
+        assertEquals(200.0, rows.first { it.node.name == "kubelet" }.cpuPercent!!, 1e-9)
         assertEquals(1, etcd.depth)
     }
 
     @Test
     fun noPreviousOrCounterResetIsZero() {
-        assertEquals(0.0, cgroupRows(null, report(2_000, 5, 5), setOf("podruntime"), CgroupSort.CPU)[1].cpuPercent, 0.0)
+        assertNull(cgroupRows(null, report(2_000, 5, 5), setOf("podruntime"), CgroupSort.CPU)[1].cpuPercent)
         val rows = cgroupRows(report(1_000, 9_000_000, 0), report(2_000, 1, 0), setOf("podruntime"), CgroupSort.MEMORY)
-        assertEquals(0.0, rows.first { it.node.name == "etcd" }.cpuPercent, 0.0)
+        assertNull(rows.first { it.node.name == "etcd" }.cpuPercent)
     }
 
     @Test
@@ -78,7 +79,7 @@ class CgroupsTest {
     }
 
     @Test
-    fun defaultExpansionOpensGroupsAndQosClasses() {
+    fun defaultExpansionKeepsKubepodsClosed() {
         val r = CgroupReport(
             at = 0,
             root = CgroupNode(
@@ -90,6 +91,7 @@ class CgroupsTest {
             ),
         )
         val rows = cgroupRows(null, r, defaultExpandedCgroups(r), CgroupSort.MEMORY)
-        assertEquals(listOf("kubepods", "burstable", "ns/p", "ns/g", "init"), rows.map { it.node.name })
+        // kubepods stays closed: its pods are the Pods tab's.
+        assertEquals(listOf("kubepods", "init"), rows.map { it.node.name })
     }
 }

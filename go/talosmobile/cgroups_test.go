@@ -64,12 +64,8 @@ func TestCgroupTreeFromTarGz(t *testing.T) {
 	}
 
 	apid := root.children["system"].children["apid"]
-	if apid.MemCurrent != 38797312 || apid.MemMax != 41943040 || apid.MemHigh != 0 || apid.OOMKills != 1 {
-		t.Errorf("apid memory = %+v", apid)
-	}
-
-	if apid.CPUUsec != 2000000 || apid.ThrottledUsec != 9000 || apid.CPULimit != 0.5 || apid.CPUWeight != 20 {
-		t.Errorf("apid cpu = %+v", apid)
+	if apid.MemCurrent != 38797312 || apid.MemMax != 41943040 || apid.OOMKills != 1 || apid.CPUUsec != 2000000 {
+		t.Errorf("apid = %+v", apid)
 	}
 
 	if apid.IORead != 150 || apid.IOWrite != 200 {
@@ -113,19 +109,27 @@ func TestBuildCgroupReport(t *testing.T) {
 	}
 
 	kinds := map[string]string{}
-	walkCgroups(report.Root, "", func(n *cgroupNode, _ string) { kinds[n.Name] = n.Kind })
+	walkCgroups(report.Root, "", func(n *cgroupNode, _ string) {
+		kinds[n.Name] = n.Kind
+
+		// The tree stops at pods: containers are the Pods tab's.
+		if n.Kind == "pod" && len(n.Children) > 0 {
+			t.Errorf("pod %s keeps its containers", n.Name)
+		}
+	})
 
 	for name, kind := range map[string]string{
 		"init": "service", "apid": "service", "etcd": "service", "system": "group", "kubepods": "group",
-		"burstable": "group", "podguaranteed": "pod", "default/web-0": "pod", "web": "container", "sandbox": "container",
+		"burstable": "group", "podguaranteed": "pod", "default/web-0": "pod", "web": "", "sandbox": "",
 	} {
 		if kinds[name] != kind {
 			t.Errorf("kind of %s = %q, want %q", name, kinds[name], kind)
 		}
 	}
 
+	// A pod's QoS class is not worth naming next to it; a service's group is.
 	want := []cgroupHotspot{
-		{Resource: "cpu", Name: "podguaranteed", Parent: "kubepods", Some10: 9},
+		{Resource: "cpu", Name: "podguaranteed", Parent: "", Some10: 9},
 		{Resource: "io", Name: "etcd", Parent: "podruntime", Some10: 7},
 	}
 	if len(report.Hotspots) != len(want) {
@@ -145,7 +149,8 @@ func TestBuildCgroupReport(t *testing.T) {
 		got[a.Kind+" "+a.Name] = a
 	}
 
-	if len(report.Alerts) != 4 || got["oomKill apid"].Count != 2 || got["oomKill default/web-0"].Count != 1 ||
+	if len(report.Alerts) != 4 || got["oomKill apid"].Count != 2 || got["oomKill apid"].Parent != "system" ||
+		got["oomKill default/web-0"].Count != 1 || got["oomKill default/web-0"].Parent != "" ||
 		got["memoryLimit web"].Parent != "default/web-0" || got["memoryLimit kubepods"].Percent != 95 {
 		t.Errorf("alerts = %+v", report.Alerts)
 	}

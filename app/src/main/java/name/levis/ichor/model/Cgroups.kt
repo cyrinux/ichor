@@ -14,34 +14,36 @@ data class CgroupPressure(val cpu: CgroupPsi = CgroupPsi(), val memory: CgroupPs
     val worst: Double get() = maxOf(cpu.some10, memory.some10, io.some10)
 }
 
-/** One cgroup; limits of 0 mean none, CPU (µs) and IO (bytes) are cumulative since boot. */
+/**
+ * One cgroup; a memMax of 0 means no limit, CPU (µs) and IO (bytes) are cumulative since
+ * boot. The tree stops at pods: their containers are the Pods tab's.
+ */
 @Serializable
 data class CgroupNode(
     val name: String,
     val kind: String = "group",
     val memCurrent: Long = 0,
-    val memPeak: Long = 0,
     val memMax: Long = 0,
-    val memHigh: Long = 0,
-    val memLow: Long = 0,
-    val memMin: Long = 0,
-    val swapCurrent: Long = 0,
     val oomKills: Long = 0,
     val cpuUsec: Long = 0,
-    val throttledUsec: Long = 0,
-    val cpuWeight: Long = 0,
-    val cpuLimit: Double = 0.0,
     val ioRead: Long = 0,
     val ioWrite: Long = 0,
     val pressure: CgroupPressure? = null,
     val children: List<CgroupNode> = emptyList(),
 )
 
-@Serializable
-data class CgroupHotspot(val resource: String, val name: String, val parent: String = "", val some10: Double = 0.0)
+/** "name (parent)": Talos has both system/runtime and podruntime/runtime. */
+private fun who(name: String, parent: String) = if (parent.isBlank()) name else "$name ($parent)"
 
 @Serializable
-data class CgroupAlert(val kind: String, val name: String, val parent: String = "", val count: Long = 0, val percent: Double = 0.0)
+data class CgroupHotspot(val resource: String, val name: String, val parent: String = "", val some10: Double = 0.0) {
+    val who: String get() = who(name, parent)
+}
+
+@Serializable
+data class CgroupAlert(val kind: String, val name: String, val parent: String = "", val count: Long = 0, val percent: Double = 0.0) {
+    val who: String get() = who(name, parent)
+}
 
 @Serializable
 data class CgroupReport(
@@ -72,8 +74,10 @@ data class CgroupRow(
     val path: String,
     val depth: Int,
     val node: CgroupNode,
-    val cpuPercent: Double,
-    val ioPerSecond: Double,
+    /** Percent of one core (like top); null without a usable previous sample. */
+    val cpuPercent: Double?,
+    /** Bytes read + written per second; null without a usable previous sample. */
+    val ioPerSecond: Double?,
 ) {
     val hasChildren: Boolean get() = node.children.isNotEmpty()
 }
@@ -83,7 +87,7 @@ enum class CgroupSort { MEMORY, CPU, PRESSURE }
 /**
  * The tree as rows, depth first: children of [expanded] paths only, siblings sorted by
  * [sort]. CPU% is of one core (like top) and IO is bytes read + written per second, both
- * between [previous] and [current]; 0 without a previous sample or when a counter went back.
+ * between [previous] and [current]; null without a previous sample or when a counter went back.
  */
 fun cgroupRows(previous: CgroupReport?, current: CgroupReport, expanded: Set<String>, sort: CgroupSort): List<CgroupRow> {
     val root = current.root ?: return emptyList()
@@ -91,14 +95,13 @@ fun cgroupRows(previous: CgroupReport?, current: CgroupReport, expanded: Set<Str
     val before = previous?.root?.let { cgroupsByPath(it) }.orEmpty()
     val rows = mutableListOf<CgroupRow>()
 
+    fun rate(now: Long, old: Long?): Double? =
+        if (seconds > 0 && old != null && now >= old) (now - old) / seconds else null
+
     fun add(node: CgroupNode, path: String, depth: Int) {
         val old = before[path]
-        val cpu = if (seconds > 0 && old != null && node.cpuUsec >= old.cpuUsec) (node.cpuUsec - old.cpuUsec) / 1e6 / seconds * 100 else 0.0
-        val io = if (seconds > 0 && old != null && node.ioRead + node.ioWrite >= old.ioRead + old.ioWrite) {
-            (node.ioRead + node.ioWrite - old.ioRead - old.ioWrite) / seconds
-        } else {
-            0.0
-        }
+        val cpu = rate(node.cpuUsec, old?.cpuUsec)?.let { it / 1e6 * 100 }
+        val io = rate(node.ioRead + node.ioWrite, old?.let { it.ioRead + it.ioWrite })
         val row = CgroupRow(path, depth, node, cpu, io)
         rows += row
         if (path in expanded) {
@@ -122,9 +125,10 @@ private fun sortedChildren(
     return when (sort) {
         CgroupSort.MEMORY -> children.sortedByDescending { it.first.memCurrent }
         CgroupSort.PRESSURE -> children.sortedByDescending { it.first.pressure?.worst ?: 0.0 }
+        // CPU since the previous sample; without one, nothing to compare (not the since-boot total).
         CgroupSort.CPU -> children.sortedByDescending { (child, childPath) ->
             val old = before[childPath]
-            if (seconds > 0 && old != null) child.cpuUsec - old.cpuUsec else child.cpuUsec
+            if (seconds > 0 && old != null && child.cpuUsec >= old.cpuUsec) child.cpuUsec - old.cpuUsec else 0L
         }
     }
 }
@@ -144,8 +148,9 @@ fun cgroupsByPath(root: CgroupNode): Map<String, CgroupNode> {
     return out
 }
 
-/** Paths open on first show: the top groups, so services and QoS classes are visible. */
+/**
+ * Paths open on first show: the Talos groups (system, podruntime), so their services are
+ * visible. kubepods stays closed: its pods are the Pods tab's, open it to compare them.
+ */
 fun defaultExpandedCgroups(report: CgroupReport): Set<String> =
-    report.root?.children.orEmpty().filter { it.children.isNotEmpty() }.map { it.name }.toSet() +
-        report.root?.children.orEmpty().filter { it.name == "kubepods" }
-            .flatMap { k -> k.children.filter { it.kind == "group" }.map { childPath(k.name, it.name) } }
+    report.root?.children.orEmpty().filter { it.children.isNotEmpty() && it.name != "kubepods" }.map { it.name }.toSet()

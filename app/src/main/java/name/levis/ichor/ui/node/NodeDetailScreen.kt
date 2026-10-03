@@ -369,7 +369,11 @@ private fun ResourcesTab(
     LaunchedEffect(Unit) {
         if (state == UiState.Loading) vm.refresh()
         if (clockState == UiState.Loading) clock.refresh()
-        if (onPressureDetails != null && pressureState == UiState.Loading) pressure.refresh()
+    }
+    // Keyed on access: the config (and so the role) can arrive after the first frame.
+    val showsPressure = onPressureDetails != null
+    LaunchedEffect(showsPressure) {
+        if (showsPressure && pressureState == UiState.Loading) pressure.refresh()
     }
 
     when (val s = state) {

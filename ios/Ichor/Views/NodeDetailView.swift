@@ -66,7 +66,8 @@ struct NodeDetailView: View {
             .pickerStyle(.segmented)
             .padding()
 
-            switch tab {
+            // A role change (another config) can leave the hidden Cgroups tab selected.
+            switch (tab == .cgroups && !model.allows(.cgroups)) ? Tab.services : tab {
             case .services:
                 LoadStateView(state: services, retry: loadServices) { list in
                     List(list) { svc in serviceRow(svc) }
@@ -176,6 +177,10 @@ struct NodeDetailView: View {
 
     private func loadResources() async {
         guard let client = model.client else { return }
+        // The cgroups copy is the slow part: on its own, so pull-to-refresh ends with resources.
+        if model.allows(.cgroups) {
+            Task { pressure = pressure.refreshed(with: await .from { try await client.cgroups(node: ref.address) }) }
+        }
         resources = model.seeded(resources, from: .resources(node: ref.address))
         resources = resources.refreshed(with: await .from { try await model.fetch(.resources(node: ref.address), with: client) })
         // Best-effort: a node that cannot answer shows the error in its row.
@@ -183,9 +188,6 @@ struct NodeDetailView: View {
             clock = try await client.nodeTime(node: ref.address)
         } catch {
             clock = NodeTimeInfo(node: ref.address, error: error.localizedDescription)
-        }
-        if model.allows(.cgroups) {
-            pressure = await .from { try await client.cgroups(node: ref.address) }
         }
     }
 
