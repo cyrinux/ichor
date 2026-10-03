@@ -485,6 +485,19 @@
     <string name="debug_exited">Terminata con codice %1$d</string>
     <string name="debug_new_shell">Nuova shell</string>
     <string name="debug_connecting">Connessione…</string>
+    <string name="debug_snippets">Scorciatoie</string>
+    <string name="debug_snippets_hint">Tocca per eseguire. I comandi che finiscono con … vengono solo digitati, per aggiungere la destinazione.</string>
+    <string name="debug_group_interfaces">Interfacce</string>
+    <string name="debug_group_control_plane">Control plane</string>
+    <string name="debug_group_dns">DNS</string>
+    <string name="debug_group_reachability">Raggiungibilità</string>
+    <string name="debug_group_mtu">MTU</string>
+    <string name="debug_group_tls">TLS / HTTP</string>
+    <string name="debug_group_firewall">Firewall e servizi</string>
+    <string name="debug_group_kubespan">KubeSpan</string>
+    <string name="debug_group_capture">Cattura</string>
+    <string name="debug_group_node">Nodo</string>
+    <string name="debug_group_throughput">Banda</string>
 
     <!-- App lock -->
     <string name="lock_prompt">Sblocca Ichor</string>

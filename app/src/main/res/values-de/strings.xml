@@ -484,6 +484,19 @@
     <string name="debug_exited">Beendet mit Code %1$d</string>
     <string name="debug_new_shell">Neue Shell</string>
     <string name="debug_connecting">Verbindung wird hergestellt…</string>
+    <string name="debug_snippets">Snippets</string>
+    <string name="debug_snippets_hint">Zum Ausführen tippen. Befehle mit … am Ende werden nur eingetippt, um das Ziel zu ergänzen.</string>
+    <string name="debug_group_interfaces">Schnittstellen</string>
+    <string name="debug_group_control_plane">Control Plane</string>
+    <string name="debug_group_dns">DNS</string>
+    <string name="debug_group_reachability">Erreichbarkeit</string>
+    <string name="debug_group_mtu">MTU</string>
+    <string name="debug_group_tls">TLS / HTTP</string>
+    <string name="debug_group_firewall">Firewall &amp; Dienste</string>
+    <string name="debug_group_kubespan">KubeSpan</string>
+    <string name="debug_group_capture">Mitschnitt</string>
+    <string name="debug_group_node">Knoten</string>
+    <string name="debug_group_throughput">Durchsatz</string>
 
     <!-- App lock -->
     <string name="lock_prompt">Ichor entsperren</string>

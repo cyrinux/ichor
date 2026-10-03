@@ -19,6 +19,8 @@ struct DebugShellView: View {
     @AppStorage("debug.args") private var args = "/bin/sh"
     @State private var shell = DebugShell()
     @State private var error: String?
+    @State private var snippets: [DebugSnippet] = []
+    @State private var showSnippets = false
 
     var body: some View {
         Group {
@@ -60,10 +62,23 @@ struct DebugShellView: View {
         .navigationTitle("Debug shell")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            if shell.state == .running, !snippets.isEmpty {
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Snippets", systemImage: "text.badge.plus") { showSnippets = true }
+                }
+            }
             if shell.isActive {
                 ToolbarItem(placement: .primaryAction) { Button("Stop") { shell.stop() } }
             }
         }
+        // Back to the keyboard, to finish a typed snippet or run the next command.
+        .sheet(isPresented: $showSnippets, onDismiss: { shell.terminal.becomeFirstResponder() }) {
+            DebugSnippetsSheet(snippets: snippets) { snippet in
+                shell.write(ArraySlice(snippet.bytes))
+                showSnippets = false
+            }
+        }
+        .task { snippets = (try? await TalosClient.debugSnippets()) ?? [] }
         .onDisappear { shell.stop() }
     }
 
@@ -76,6 +91,69 @@ struct DebugShellView: View {
         }
         error = nil
         shell.start(client: client, node: node, image: image, args: args)
+    }
+}
+
+extension TalosClient {
+    /// The debug shell's ready-made commands (no network).
+    static func debugSnippets() async throws -> [DebugSnippet] {
+        try await json { TalosmobileDebugSnippets($0) }
+    }
+}
+
+/// Ready-made commands for typing on a phone: tap to send one to the shell.
+private struct DebugSnippetsSheet: View {
+    let snippets: [DebugSnippet]
+    let onPick: (DebugSnippet) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Text("Tap to run. Commands ending with … are only typed, so you can add the target.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+                ForEach(groupedDebugSnippets(snippets), id: \.group) { section in
+                    Section(Self.title(section.group)) {
+                        ForEach(section.snippets) { snippet in
+                            Button { onPick(snippet) } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(snippet.label).foregroundStyle(.primary)
+                                    Text(snippet.display)
+                                        .font(.footnote.monospaced()).foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Snippets")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    /// Title of a snippet group; an unknown group (from a newer core) shows its key.
+    private static func title(_ group: String) -> String {
+        switch group {
+        case "interfaces": String(localized: "Interfaces")
+        case "control_plane": String(localized: "Control plane")
+        case "dns": String(localized: "DNS")
+        case "reachability": String(localized: "Reachability")
+        case "mtu": String(localized: "MTU")
+        case "tls": String(localized: "TLS / HTTP")
+        case "firewall": String(localized: "Firewall & services")
+        case "kubespan": String(localized: "KubeSpan")
+        case "capture": String(localized: "Capture")
+        case "node": String(localized: "Node")
+        case "throughput": String(localized: "Throughput")
+        default: group
+        }
     }
 }
 

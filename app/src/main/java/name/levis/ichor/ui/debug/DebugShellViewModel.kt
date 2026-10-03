@@ -69,6 +69,11 @@ class DebugShellViewModel(private val configs: ConfigRepository, private val nod
         )
     }
 
+    /** The ready-made commands; none if the core cannot list them (the button then hides). */
+    val snippets: List<DebugSnippet> by lazy {
+        runCatching { decodeDebugSnippets(Talosmobile.debugSnippets()) }.getOrDefault(emptyList())
+    }
+
     /** Sends raw bytes (extra keys: Esc, Tab, arrows, Ctrl-C…). */
     fun send(bytes: ByteArray) {
         session?.write(bytes)
