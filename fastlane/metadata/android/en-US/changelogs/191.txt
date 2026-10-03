@@ -1,0 +1,8 @@
+• Network test tab in the Kubernetes screen
+• Measure the network between two nodes with netperf
+• Dragonfly instances in data services, with each pod's role
+• Ready-made commands in the debug shell
+• License and open-source licenses entries in About
+• Opt-in background alerts for Longhorn, Garage and CloudNativePG
+• Hide zones and flags on the cluster map in screenshot mode
+• Data services section and screen for Longhorn, Garage and CloudNativePG
