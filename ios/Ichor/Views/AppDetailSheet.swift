@@ -26,8 +26,11 @@ struct AppDetailSheet: View {
                 }
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
-                // Rollout restarts go through the Kubernetes API: only for a role that can reach it.
-                if model.allows(.workloads) { AppWorkloadsSection(app: app) }
+                // Routes and rollout restarts go through the Kubernetes API: only for a role that can reach it.
+                if model.allows(.workloads) {
+                    AppRoutesSection(app: app)
+                    AppWorkloadsSection(app: app)
+                }
                 if !app.images.isEmpty {
                     Section("Images") {
                         let drifting = app.driftingRepos
