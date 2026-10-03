@@ -60,6 +60,7 @@ import java.util.Date
 class ImagesViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<List<ImageInfo>>() {
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<List<ImageInfo>>? = talos.cached(imagesKey(node))
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.images(node)
 }
 

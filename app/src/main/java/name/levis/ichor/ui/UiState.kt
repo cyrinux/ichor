@@ -27,4 +27,14 @@ fun <T> UiState<T>.refreshFailed(message: UiText, fallback: Pair<T, Long>? = nul
     else -> UiState.Failed(message)
 }
 
+/**
+ * The state once the last known [restored] value (fetched at its epoch millis) was read from
+ * disk: shown while still loading, and instead of the error when [overFailure]; data on screen stays.
+ */
+fun <T> UiState<T>.orRestored(restored: Pair<T, Long>, overFailure: Boolean): UiState<T> = when (this) {
+    UiState.Loading -> UiState.Loaded(restored.first, refreshing = true, fetchedAt = restored.second)
+    is UiState.Failed -> if (overFailure) UiState.Loaded(restored.first, fetchedAt = restored.second, error = message) else this
+    is UiState.Loaded -> this
+}
+
 fun Throwable.userMessage(): String = message?.takeIf { it.isNotBlank() } ?: javaClass.simpleName

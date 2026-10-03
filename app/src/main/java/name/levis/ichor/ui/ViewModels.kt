@@ -10,6 +10,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.TalosRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,14 +39,23 @@ abstract class LoadingViewModel<T> : ViewModel() {
      */
     protected open val keepsDataOnFailure: Boolean = false
 
+    /**
+     * Emits when [cached] may have something new: the last known state was read from disk,
+     * which can finish after a refresh started with nothing to show.
+     */
+    protected open val restores: Flow<*>? = null
+    private var watch: Job? = null
+
     /** [reset] drops the current data first, e.g. when the data source (context) changed. */
     fun refresh(reset: Boolean = false) {
         job?.cancel()
+        watch?.cancel()
         val previous = _state.value
         _state.value = when {
             !reset && previous is UiState.Loaded -> previous.copy(refreshing = true)
             else -> cached()?.let { UiState.Loaded(it.value, refreshing = true, fetchedAt = it.at) } ?: UiState.Loading
         }
+        if (_state.value !is UiState.Loaded) watch = watchRestores()
         job = viewModelScope.launch {
             _state.value = try {
                 UiState.Loaded(fetch())
@@ -58,6 +68,16 @@ abstract class LoadingViewModel<T> : ViewModel() {
                 } else {
                     UiState.Failed(e.uiText())
                 }
+            }
+        }
+    }
+
+    /** Until something is on screen, shows the last known value as soon as it was read from disk. */
+    private fun watchRestores(): Job? = restores?.let { flow ->
+        viewModelScope.launch {
+            flow.collect {
+                val restored = cached() ?: return@collect
+                _state.value = _state.value.orRestored(restored.value to restored.at, keepsDataOnFailure)
             }
         }
     }

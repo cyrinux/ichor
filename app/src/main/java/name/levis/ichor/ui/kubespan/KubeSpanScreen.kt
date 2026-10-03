@@ -55,6 +55,7 @@ import name.levis.ichor.ui.components.localizedDuration
 class KubeSpanViewModel(private val talos: TalosRepository) : LoadingViewModel<KubeSpanOverview>() {
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<KubeSpanOverview>? = talos.cached(KUBESPAN)
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.kubespan()
 
     /** node address -> hostname, from the cached overview when available. */

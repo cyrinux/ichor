@@ -56,6 +56,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.KSerializer
@@ -121,10 +122,19 @@ class TalosRepository(
         return Timed(value, stored.at)
     }
 
+    private val _restores = MutableStateFlow(0)
+
+    /**
+     * Bumped once [restoreOffline] read what [offline] kept: a screen that started loading
+     * before (e.g. right after switching cluster) asks [cached] again.
+     */
+    val restores: StateFlow<Int> = _restores.asStateFlow()
+
     /** Reads what [offline] kept of the active cluster, so [cached] has it before the first fetch. */
     suspend fun restoreOffline() {
         val cluster = offlineCluster() ?: return
-        offline?.load(cluster)
+        offline?.load(cluster) ?: return
+        _restores.update { it + 1 }
     }
 
     private fun scoped(key: String): String {

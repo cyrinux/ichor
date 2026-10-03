@@ -70,6 +70,7 @@ data class DeleteResult(val pod: KubePod, val error: UiText?)
 class PodsViewModel(private val talos: TalosRepository) : LoadingViewModel<List<KubePod>>() {
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<List<KubePod>>? = talos.cached(PODS)
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.pods()
 
     private val _deleting = MutableStateFlow<Set<String>>(emptySet())

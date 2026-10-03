@@ -66,6 +66,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 class NetworkViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<NodeNetwork>() {
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<NodeNetwork>? = talos.cached(networkKey(node))
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.network(node)
 }
 
