@@ -526,6 +526,9 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .dragonfly: "Dragonfly"
         }
     }
+
+    /// The segmented picker's name: short enough for four segments.
+    public var tabTitle: String { self == .cnpg ? "CNPG" : title }
 }
 
 /// The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs.

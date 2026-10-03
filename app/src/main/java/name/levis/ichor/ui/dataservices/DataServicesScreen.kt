@@ -24,10 +24,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
@@ -139,7 +141,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>) {
         if (kinds.size > 1) {
             PrimaryTabRow(selectedTabIndex = kinds.indexOf(tab)) {
                 kinds.forEach { kind ->
-                    Tab(selected = kind == tab, onClick = { selected = kind }, text = { Text(kind.title) })
+                    Tab(selected = kind == tab, onClick = { selected = kind }, text = { TabLabel(kind) })
                 }
             }
         }
@@ -149,5 +151,15 @@ private fun Systems(services: DataServices, downNodes: Set<String>) {
             DataServiceKind.CNPG -> CnpgTab(services.cnpg!!)
             DataServiceKind.DRAGONFLY -> DragonflyTab(services.dragonfly!!)
         }
+    }
+}
+
+/** The tab's name, with the product's full name in small type under an abbreviation. */
+@Composable
+private fun TabLabel(kind: DataServiceKind) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(kind.tabTitle, maxLines = 1)
+        val caption = kind.tabCaption ?: return@Column
+        Text(caption, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, lineHeight = 10.sp), maxLines = 1)
     }
 }
