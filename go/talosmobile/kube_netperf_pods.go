@@ -96,9 +96,9 @@ func checkNetPerfNodes(ctx context.Context, k *kubeClient, opts netPerfOptions) 
 
 		switch {
 		case i < 0:
-			return fmt.Errorf("node %s is not in the cluster", name)
+			return netPerfRefused("node %s is not in the cluster", name)
 		case !list.Nodes[i].Ready:
-			return fmt.Errorf("node %s is not ready", name)
+			return netPerfRefused("node %s is not ready", name)
 		}
 	}
 
@@ -209,7 +209,11 @@ func netPerfPodSpec(name, node string, hostNetwork bool, deadline time.Duration,
 					"readOnlyRootFilesystem":   true,
 					"capabilities":             map[string]any{"drop": []string{"ALL"}},
 				},
+				// netserver's child for each test opens a debug file in /tmp, and exits
+				// (the client sees a connection reset) when it cannot.
+				"volumeMounts": []map[string]string{{"name": "tmp", "mountPath": "/tmp"}},
 			}},
+			"volumes": []map[string]any{{"name": "tmp", "emptyDir": map[string]string{"sizeLimit": "16Mi"}}},
 		},
 	}
 }
@@ -246,8 +250,9 @@ func (p netPerfPod) waiting() (reason, message string) {
 	return "", ""
 }
 
-// netPerfPullFailures are waiting reasons the pod does not recover from by itself.
-var netPerfPullFailures = []string{"ErrImagePull", "ImagePullBackOff", "InvalidImageName", "CreateContainerConfigError", "CreateContainerError"}
+// netPerfPullFailures are waiting reasons the pod does not recover from by itself
+// (the kubelet retries ErrImagePull; ImagePullBackOff follows when it keeps failing).
+var netPerfPullFailures = []string{"ImagePullBackOff", "InvalidImageName", "CreateContainerConfigError", "CreateContainerError"}
 
 // waitNetPerfPod reads the pod until done says so, it cannot start, or timeout. onWait gets
 // the container's waiting reason when it changes (ContainerCreating while the image is pulled).
@@ -273,9 +278,9 @@ func waitNetPerfPod(ctx context.Context, k *kubeClient, ns, name, node string, t
 		reason, message := pod.waiting()
 		switch {
 		case slices.Contains(netPerfPullFailures, reason):
-			return pod, fmt.Errorf("the netperf pod cannot start on %s: %s %s", node, reason, message)
+			return pod, netPerfRefused("the netperf pod cannot start on %s: %s %s", node, reason, message)
 		case pod.Status.Phase == "Failed":
-			return pod, fmt.Errorf("the netperf pod failed on %s: %s %s", node, pod.Status.Reason, pod.Status.Message)
+			return pod, netPerfRefused("the netperf pod failed on %s: %s %s", node, pod.Status.Reason, pod.Status.Message)
 		case reason != last && onWait != nil:
 			last = reason
 			onWait(reason)
@@ -283,7 +288,7 @@ func waitNetPerfPod(ctx context.Context, k *kubeClient, ns, name, node string, t
 
 		select {
 		case <-ctx.Done():
-			return pod, fmt.Errorf("the netperf pod did not start on %s in time (%s)", node, strings.TrimSpace(reason+" "+message))
+			return pod, netPerfRefused("the netperf pod did not start on %s in time (%s)", node, strings.TrimSpace(reason+" "+message))
 		case <-time.After(netPerfPoll):
 		}
 	}

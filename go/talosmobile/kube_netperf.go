@@ -58,6 +58,16 @@ var (
 	errNetPerfTimedOut = errors.New("network test timed out")
 )
 
+// netPerfRefusal is a test that cannot run as asked (a node not ready, a pod that cannot
+// start): reported as is, unlike a failed Kubernetes call it does not drop the client.
+type netPerfRefusal struct{ msg string }
+
+func (e *netPerfRefusal) Error() string { return e.msg }
+
+func netPerfRefused(format string, args ...any) error {
+	return &netPerfRefusal{fmt.Sprintf(format, args...)}
+}
+
 // NetPerfListener follows a network test (implemented in Kotlin/Swift).
 type NetPerfListener interface {
 	// OnProgress gets {"phase","path","test","step","steps","message","at","results"} on
@@ -197,9 +207,7 @@ func StartNetPerf(configYAML, contextName, kubeServer, serverNode, clientNode st
 		case isDemoContext(configYAML, contextName):
 			report, err = runDemoNetPerf(ctx, opts, emit)
 		default:
-			report, err = withKubeContext(ctx, kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (netPerfReport, error) {
-				return runNetPerf(ctx, k, opts, emit)
-			})
+			report, err = runNetPerfWith(ctx, kubeTarget{configYAML, contextName, kubeServer}, opts, emit)
 		}
 
 		listener.OnDone(netPerfDone(ctx, report, err))
@@ -208,16 +216,44 @@ func StartNetPerf(configYAML, contextName, kubeServer, serverNode, clientNode st
 	return &NetPerfRun{cancel: cancel}
 }
 
+// runNetPerfWith runs a test with target's client. A refusal is returned as is, outside
+// withKubeContext, which would take it for a failed call.
+func runNetPerfWith(ctx context.Context, target kubeTarget, opts netPerfOptions, emit func(netPerfProgress)) (netPerfReport, error) {
+	var (
+		report  netPerfReport
+		refusal error
+	)
+
+	_, err := withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (struct{}, error) {
+		var runErr error
+		report, runErr = runNetPerf(ctx, k, opts, emit)
+
+		var r *netPerfRefusal
+		if errors.As(runErr, &r) {
+			refusal, runErr = runErr, nil
+		}
+
+		return struct{}{}, runErr
+	})
+	if refusal != nil {
+		err = refusal
+	}
+
+	return report, err
+}
+
 // netPerfDone is what OnDone gets for a run that returned report and err.
 func netPerfDone(ctx context.Context, report netPerfReport, err error) (string, string) {
 	errMessage := ""
 
+	// A run that measured everything succeeded, even if the deadline fell during cleanup.
 	switch {
+	case err == nil:
 	case errors.Is(ctx.Err(), context.Canceled):
 		errMessage = errNetPerfStopped.Error()
 	case errors.Is(ctx.Err(), context.DeadlineExceeded):
 		errMessage = errNetPerfTimedOut.Error()
-	case err != nil:
+	default:
 		errMessage = err.Error()
 	}
 
@@ -235,12 +271,12 @@ func netPerfDone(ctx context.Context, report netPerfReport, err error) (string, 
 
 func (o netPerfOptions) validate() error {
 	if o.server == "" || o.client == "" {
-		return errors.New("choose a server node and a client node")
+		return netPerfRefused("choose a server node and a client node")
 	}
 
 	for _, n := range []string{o.server, o.client} {
 		if !kubeNamePattern.MatchString(n) || strings.Contains(n, "..") {
-			return fmt.Errorf("invalid Kubernetes node name %q", n)
+			return netPerfRefused("invalid Kubernetes node name %q", n)
 		}
 	}
 

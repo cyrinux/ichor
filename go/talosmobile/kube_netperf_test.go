@@ -83,6 +83,7 @@ func TestNetPerfPodSpecIsRestricted(t *testing.T) {
 	for _, want := range []string{
 		`"runAsNonRoot":true`, `"allowPrivilegeEscalation":false`, `"drop":["ALL"]`, `"type":"RuntimeDefault"`,
 		`"hostNetwork":false`, `"nodeName":"node-1"`, `"restartPolicy":"Never"`, `"activeDeadlineSeconds":60`,
+		`"mountPath":"/tmp"`, `"emptyDir":{"sizeLimit":"16Mi"}`,
 	} {
 		if !strings.Contains(string(js), want) {
 			t.Errorf("missing %s in %s", want, js)
@@ -381,6 +382,24 @@ func TestStartNetPerfDemo(t *testing.T) {
 
 	if len(rec.progress) != 7 {
 		t.Fatalf("%d progress events", len(rec.progress))
+	}
+}
+
+func TestNetPerfDone(t *testing.T) {
+	expired, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Second))
+	defer cancel()
+
+	// Measured everything, then the deadline fell during cleanup: still a success.
+	if _, msg := netPerfDone(expired, netPerfReport{}, nil); msg != "" {
+		t.Fatalf("got %q", msg)
+	}
+
+	if _, msg := netPerfDone(expired, netPerfReport{}, context.DeadlineExceeded); msg != errNetPerfTimedOut.Error() {
+		t.Fatalf("got %q", msg)
+	}
+
+	if _, msg := netPerfDone(context.Background(), netPerfReport{}, netPerfRefused("node %s is not ready", "x")); msg != "node x is not ready" {
+		t.Fatalf("got %q", msg)
 	}
 }
 
