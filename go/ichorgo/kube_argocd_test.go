@@ -495,3 +495,30 @@ func TestArgoActionOwnerNeedsAnExistingParent(t *testing.T) {
 		}
 	}
 }
+
+func TestArgoOpSelectiveAndOutOfSyncOnly(t *testing.T) {
+	resources := []argoResource{
+		{Kind: "ConfigMap", Name: "a", Sync: "Synced"},                     // in sync, left alone
+		{Kind: "ConfigMap", Name: "b", Sync: "OutOfSync", Wave: 1},         // not selected
+		{Kind: "Deployment", Name: "c", Sync: "OutOfSync", Wave: 2},        // selected, running
+		{Kind: "Service", Name: "d", Sync: "Synced", SyncResult: "Synced"}, // selected, done
+	}
+
+	var op argoOperationState
+	if err := json.Unmarshal([]byte(`{"phase":"Running","operation":{"sync":{"resources":[
+	  {"kind":"Deployment","name":"c"},{"kind":"Service","name":"d"}]}}}`), &op); err != nil {
+		t.Fatal(err)
+	}
+
+	got := argoOp(&op, resources, map[argoKey]argoResultEntry{})
+	if got.Done != 1 || got.Total != 2 || got.Wave != 2 {
+		t.Fatalf("selective: %d/%d wave %d", got.Done, got.Total, got.Wave)
+	}
+
+	op.Operation.Sync.Resources = nil
+
+	got = argoOp(&op, resources, map[argoKey]argoResultEntry{})
+	if got.Done != 2 || got.Total != 4 || got.Wave != 1 {
+		t.Fatalf("whole app: %d/%d wave %d", got.Done, got.Total, got.Wave)
+	}
+}

@@ -99,8 +99,9 @@ type argoHistoryObject struct {
 type argoOperationState struct {
 	Operation struct {
 		Sync *struct {
-			Revision string `json:"revision"`
-			DryRun   bool   `json:"dryRun"`
+			Revision  string            `json:"revision"`
+			DryRun    bool              `json:"dryRun"`
+			Resources []argoResourceRef `json:"resources"` // a selective sync
 		} `json:"sync"`
 		InitiatedBy argoInitiator `json:"initiatedBy"`
 	} `json:"operation"`
@@ -281,9 +282,10 @@ func argoResources(list []argoResourceStatus, results map[argoKey]argoResultEntr
 	return out
 }
 
-// argoOp sums the operation up. Progress counts the app's resources the operation already
-// synced (or pruned), plus its hooks once they ran; the current wave is the lowest one with
-// a resource not synced yet.
+// argoOp sums the operation up. Progress counts the app's resources (only the selected ones
+// for a selective sync) the operation already synced or pruned, or that were in sync and left
+// alone, plus its hooks once they ran; the current wave is the lowest one with a resource
+// still to sync.
 func argoOp(op *argoOperationState, resources []argoResource, results map[argoKey]argoResultEntry) *argoOperation {
 	if op == nil {
 		return nil
@@ -310,17 +312,29 @@ func argoOp(op *argoOperationState, resources []argoResource, results map[argoKe
 	waveSet := map[int]bool{}
 	pending := map[int]bool{}
 
+	var selected map[argoKey]bool
+	if s := op.Operation.Sync; s != nil && len(s.Resources) > 0 {
+		selected = map[argoKey]bool{}
+		for _, r := range s.Resources {
+			selected[argoKey{r.Group, r.Kind, r.Namespace, r.Name}] = true
+		}
+	}
+
 	for _, r := range resources {
-		if r.Hook {
+		if r.Hook || selected != nil && !selected[argoKey{r.Group, r.Kind, r.Namespace, r.Name}] {
 			continue
 		}
 
 		out.Total++
 		waveSet[r.Wave] = true
 
-		if r.SyncResult == "Synced" || r.SyncResult == "Pruned" || r.SyncResult == "PruneSkipped" {
+		switch {
+		case r.SyncResult == "Synced" || r.SyncResult == "Pruned" || r.SyncResult == "PruneSkipped":
 			out.Done++
-		} else {
+		case r.SyncResult == "" && r.Sync == "Synced":
+			// Already in sync and left alone (ApplyOutOfSyncOnly): nothing to wait for.
+			out.Done++
+		default:
 			pending[r.Wave] = true
 		}
 	}
