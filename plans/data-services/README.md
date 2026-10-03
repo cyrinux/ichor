@@ -23,7 +23,7 @@ Clusters without any of the three see nothing new and pay no extra cost.
 |---|----------|-----|
 | D1 | **Detection is two-stage.** (1) Free hint: the Overview already loads the app inventory from Talos container images (`AppsViewModel`, catalog ids `longhorn`, `garage`, `cloudnative-pg` in `go/talosmobile/appcatalog.json`). (2) Confirmation: Go checks the API groups (`GET /apis`) for `longhorn.io` and `postgresql.cnpg.io`, and finds Garage Services/StatefulSets. | Kubernetes is only called when a hint exists, so no admin kubeconfig is signed for clusters that don't need one. The `/apis` check covers operators whose images the catalog misses (mirrored registries). |
 | D2 | **Read CRD `status` through the existing minimal REST client** (`kubeClient.get`), not client-go and not each product's own HTTP API, for Longhorn and CNPG. | Matches `kube_workloads.go`. The CRD status is authoritative and needs only the os:admin kubeconfig Ichor already gets. |
-| D3 | **Garage: run its CLI inside a Garage pod** through a Kubernetes exec: `/garage json-api GetClusterHealth` / `GetClusterStatus` on Garage ≥ 2.0, and `/garage status` + `/garage stats` (parsed as text) on 1.x. Fallback: `/health` through the API server's service proxy to the admin port. Only fixed, read-only commands are run. | Garage has no CRDs. The CLI uses the RPC secret already in the pod, so it needs no admin token or `metrics_token` and gives the full sync picture (nodes, partitions, resync queue and errors, staged layout). Talos has no container exec, so this goes through Kubernetes `pods/exec`. |
+| D3 | **Garage: run its CLI inside a Garage pod** through a Kubernetes exec: `/garage json-api GetClusterHealth` / `GetClusterStatus` / `GetNodeStatistics` (Garage ≥ 2.0; the user runs v2.3.0). 1.x text parsing (`garage status`/`stats`) is deferred. Fallback: `/health` through the API server's service proxy to the admin port. Only fixed, read-only commands are run. | Garage has no CRDs. The CLI uses the RPC secret already in the pod, so it needs no admin token or `metrics_token` and gives the full sync picture (nodes, partitions, resync queue and errors, staged layout). Talos has no container exec, so this goes through Kubernetes `pods/exec`. |
 | D4 | **One aggregated Go call, `KubeDataServices`**, with an independent `error` per section. | One round trip for the Overview card and the background monitor. A missing RBAC verb or a down Garage doesn't hide Longhorn. |
 | D5 | **UI: an Overview card** (only when something is detected) **plus a new "Data services" screen** with one tab per detected system. | The Overview is where problems should show up. Detail lives on its own screen. It does *not* go into the existing Kubernetes screen (workloads/pods), which stays generic. |
 | D6 | **Gated by the existing `Feature.WORKLOADS`** (os:admin). | Same credential as the Kubernetes screen; no new role concept. |
@@ -75,8 +75,13 @@ Clusters without any of the three see nothing new and pay no extra cost.
       "partitions": 256, "partitionsQuorum": 256, "partitionsAllOk": 256,
       "resyncQueue": 0, "resyncErrors": 0,         // -1 when unknown
       "layoutStaged": false,        // staged layout changes not applied
-      "failedNodes": [{ "hostname": "garage-2", "lastSeenSecs": 420 }],
-      "raw": "",                    // cli-text only: raw CLI output (≤ 4 KB) for "Details"
+      "nodes": [{                   // GetClusterStatus + GetNodeStatistics, cli-json only
+        "id": "3f2a…", "hostname": "garage-0", "zone": "dc1",
+        "up": true, "lastSeenSecs": 0,
+        "dataAvail": 0, "dataTotal": 0,            // bytes, 0 when unknown
+        "resyncQueue": 0, "resyncErrors": 0         // -1 when that node's stats failed
+      }],
+      "raw": "",                    // cli-text only (deferred): raw CLI output (≤ 4 KB)
       "source": "cli-json"          // cli-json|cli-text|health
     }]
   },
@@ -105,10 +110,10 @@ system was detected but couldn't be read; the UI shows it inline in that tab onl
 - **Exec from the phone.** Ichor has no exec code yet. A minimal WebSocket exec client
   (`kube_exec.go`, on `golang.org/x/net/websocket`, already a dependency) has to be
   written and tested. It's the biggest new piece in phase 1, so build it first.
-- **Garage CLI output differs by version.** `garage json-api` exists since v2.0.0 (JSON,
-  stable). 1.x only has the human-readable `garage status`/`garage stats`, parsed
-  leniently, with fixtures from the user's cluster. Check the endpoint for per-node resync
-  counters with `/garage json-api --help` on the deployed version.
+- **Garage CLI version.** The user runs v2.3.0, so `garage json-api` (JSON, since v2.0.0)
+  is the target. Per-node resync counters come from `GetNodeStatistics` with `node=*`. How
+  the CLI takes that parameter still has to be checked with `/garage json-api --help`.
+  1.x support (text parsing) is deferred.
 - **`garage json-api` auth.** Assumed to run over the local RPC secret, like the other CLI
   commands, with no admin token needed. → Verify with `just probe dataservices garage` first.
 - **Exec can be refused** (RBAC, PodSecurity admission, a policy engine such as Kyverno).

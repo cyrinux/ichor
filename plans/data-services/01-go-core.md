@@ -145,6 +145,12 @@ the os:admin kubeconfig allows).
 
 ### Finding the pod
 
+0. If `/apis` lists the group `deuxfleurs.fr`, list `garagenodes` (preferred version) in
+   every namespace. Garage with `kubernetes-discovery` (the user's build has it) registers
+   one object per node, named after the node's public key, labelled
+   `garage.deuxfleurs.fr/service=<kubernetes_service_name>`, in `kubernetes_namespace`.
+   That gives the namespace and expected node count without guessing. The CRD isn't
+   always there (`kubernetes_skip_crd`, or discovery not configured), so it's only a hint.
 1. List pods (`/api/v1/pods`; reuse `listPods` from `kube_pods.go`). Keep those with a
    container whose image the catalog maps to `garage` (`loadAppCatalog()`; images
    `dxflrs/garage`, `dxflrs/amd64_garage`, `dxflrs/arm64_garage`). The
@@ -175,7 +181,11 @@ the os:admin kubeconfig allows).
 - The binary is `/garage`. The official image is a static binary on `scratch` (no shell,
   no `$PATH`), so always use the absolute path and never `sh -c`.
 
-### Commands (try in order, stop at the first that works)
+### Commands
+
+Target: **Garage v2.3.0** (the user's cluster). Step 1 is what gets built now. Step 2
+(1.x) is deferred until someone running 1.x asks for it: on a 1.x pod `json-api` fails
+with "unrecognized subcommand", and the code goes straight to step 3.
 
 1. **Garage ≥ 2.0: `garage json-api`** (added in v2.0.0; it calls admin API endpoints from
    the CLI and prints JSON):
@@ -185,12 +195,23 @@ the os:admin kubeconfig allows).
    - `/garage json-api GetClusterStatus` → nodes (id, hostname, `isUp`, `lastSeenSecsAgo`,
      zone/capacity from the layout, data partition free/total) and the layout version.
      Staged layout changes become the warning "layout changes not applied".
-   - Resync counters (`resyncQueueLen`, `resyncErrors` per node; the
-     `NodeBlockManagerStats` type of the v2 API) through `GetNodeStatistics` for all
-     nodes, or its equivalent. **Verify** the exact endpoint name and argument syntax on
-     the deployed version (`/garage json-api --help`).
+   - `/garage json-api GetNodeStatistics` with `node` = `*` (all nodes) → per node
+     `blockManager.resyncQueueLen`, `blockManager.resyncErrors` (`NodeBlockManagerStats`).
+     Sum them for the instance, and keep a per-node breakdown for the UI.
+     - Multi-node endpoints answer `{"success": {nodeId: …}, "error": {nodeId: "msg"}}`.
+       A node in `error` counts as unreachable and makes the status `degraded`.
+     - **Verify on v2.3.0** how `json-api` takes the `node` query parameter (positional
+       JSON `'{"node":"*"}'` or a flag) with `/garage json-api --help`; capture the output
+       as a fixture.
+   - Allow-list (exact argv, nothing else):
+     `["/garage","json-api","GetClusterHealth"]`, `["/garage","json-api","GetClusterStatus"]`,
+     and the `GetNodeStatistics` form found above.
+   - Run the three in parallel (three execs on the same pod), and each one's failure is
+     independent: health alone is enough for a status.
    - Set `source: "cli-json"`.
-2. **Garage 1.x: `/garage status` and `/garage stats`**, parsed leniently as text:
+   - Fixtures: the three outputs from v2.3.0 go in `testdata/garage/v2.3.0/`, captured from
+     the user's cluster with `just probe dataservices garage --raw`.
+2. **(Deferred) Garage 1.x: `/garage status` and `/garage stats`**, parsed leniently as text:
    - `status`: count the rows under the `==== HEALTHY NODES ====` and
      `==== FAILED NODES ====` headers → `storageNodesOk` / `storageNodes`. Rows under
      FAILED go into `failedNodes` (hostname, last seen).
@@ -199,8 +220,7 @@ the os:admin kubeconfig allows).
      are optional.
    - Anything unparsed stays unknown (`-1`). The raw output, capped at 4 KB, goes in `raw`
      so the UI can show it under "Details". Set `source: "cli-text"`.
-   - Keep fixtures of real output (1.x and 2.x) in `testdata/garage/`, captured from the
-     user's cluster with `just probe dataservices garage --raw`.
+   - Needs 1.x fixtures from a real 1.x install before it's written.
 3. **Fallback: the service proxy.** If exec fails or no pod is ready, find a Service in
    that namespace exposing port `admin`/3903 and call
    `GET /api/v1/namespaces/{ns}/services/{svc}:{port}/proxy/health`.
@@ -222,7 +242,8 @@ the os:admin kubeconfig allows).
   docs), so it's shown but not escalated.
 
 Tests: the argv allow-list, frame demux (stdout/stderr/status, non-zero exit), the
-`json-api` JSON mapping, the text parsers against fixtures, the status matrix, the
+`json-api` JSON mapping against the v2.3.0 fixtures (including a partial `error` map),
+the status matrix, the
 fallback path, and an `httptest` WebSocket server emulating the API server exec endpoint.
 
 ## CloudNativePG (`kube_cnpg.go`)

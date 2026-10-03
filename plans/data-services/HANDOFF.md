@@ -13,6 +13,10 @@ plus wire format), then the plan of the phase you're doing.
     Kubernetes API, with the `/health` service proxy as a fallback. The earlier admin-token
     idea (phase 1b) is dropped.
   - **Background alerts (phase 4) are opt-in**, off by default.
+  - **The user's Garage is v2.3.0**, built with `kubernetes-discovery`, `metrics`, `lmdb`,
+    `sqlite`, `fjall`, `k2v` and more. So `garage json-api` is the path to build; 1.x is
+    deferred. Garage may also register `garagenodes.deuxfleurs.fr` objects, which helps
+    detection.
 - Research done:
   - **Longhorn**: CRDs `longhorn.io` volumes/replicas/nodes. Volume `status.state`
     (creating/attached/detached/attaching/detaching/deleting) and `status.robustness`
@@ -72,9 +76,10 @@ Paste one of these into a fresh session in `/home/cyril/personal/ichor`:
 
 ## Questions for the user (answer before or during phase 1)
 
-1. Which Garage version runs on your cluster (2.x has `garage json-api`; 1.x needs text
-   parsing)? In which namespace, and with which pod and container names?
-2. Does anything block `kubectl exec` there (PodSecurity, Kyverno policy)?
+1. ~~Garage version~~ → v2.3.0 (answered 2026-10-03).
+2. In which namespace, and with which pod and container names, does Garage run? (`just probe`
+   will find out anyway.)
+3. Does anything block `kubectl exec` there (PodSecurity, Kyverno policy)?
 
 ## Progress log
 
@@ -83,3 +88,5 @@ Append a line per session: date, phase, what was done, what's next.
 - 2026-10-03: plans written (README, 01–04, HANDOFF). Next: phase 1.
 - 2026-10-03: Garage switched to in-container CLI via Kubernetes exec (user's suggestion);
   admin-token phase 1b dropped; alerts confirmed opt-in.
+- 2026-10-03: user runs Garage v2.3.0 → json-api only (GetClusterHealth, GetClusterStatus,
+  GetNodeStatistics node=*); 1.x text parsing deferred; garagenodes CRD added as a hint.
