@@ -120,6 +120,25 @@ fun NetPerfSetup.withNodes(nodes: List<NetPerfNode>): NetPerfSetup {
     )
 }
 
+/**
+ * [setup] testing from [client] to [server], checked against [nodes] like [withNodes]; as
+ * asked while the node list is not loaded (it is checked once it is).
+ */
+fun NetPerfSetup.between(client: String, server: String, nodes: List<NetPerfNode>?): NetPerfSetup {
+    val asked = copy(client = client, server = server)
+    return nodes?.let(asked::withNodes) ?: asked
+}
+
+/**
+ * The pair picked on the map after a tap on node [id]: the first node picked is the client,
+ * the second the server. Tapping a picked node drops it; a third node starts a new pair.
+ */
+fun List<String>.pickNode(id: String): List<String> = when {
+    id in this -> this - id
+    size >= 2 -> listOf(id)
+    else -> this + id
+}
+
 /** Finished tests kept per cluster on the phone. */
 const val NETPERF_HISTORY_LIMIT = 20
 

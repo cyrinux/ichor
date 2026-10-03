@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.kubespan
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -63,6 +64,8 @@ fun TopologyMap(
     modifier: Modifier = Modifier,
     /** Throughput last measured on a link by the network test, shown at its middle. */
     speeds: Map<TopologyLink, String> = emptyMap(),
+    /** Nodes picked for a network test: the client, then the server. */
+    picked: List<String> = emptyList(),
 ) {
     val colors = LocalStatusColors.current
     val siteFill = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -137,7 +140,7 @@ fun TopologyMap(
             topology.nodes.forEach { node ->
                 val at = layout.nodes[node.id] ?: return@forEach
                 NodeChip(
-                    node, topology.brokenLinks(node.id), maxWidth = (layout.cellWidth - 8f).dp,
+                    node, topology.brokenLinks(node.id), picked.indexOf(node.id), maxWidth = (layout.cellWidth - 8f).dp,
                     onClick = { onNode(node) },
                     modifier = Modifier.centeredAt(at.x, at.y),
                 )
@@ -195,7 +198,7 @@ private fun SiteHeader(site: TopologySite, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun NodeChip(node: TopologyNode, broken: Int, maxWidth: Dp, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun NodeChip(node: TopologyNode, broken: Int, pick: Int, maxWidth: Dp, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = LocalStatusColors.current
     val dot = when {
         node.error != null -> colors.bad
@@ -204,11 +207,18 @@ private fun NodeChip(node: TopologyNode, broken: Int, maxWidth: Dp, onClick: () 
         else -> colors.muted
     }
     val controlPlane = node.role == "controlplane"
+    // Picked for a network test: outlined, and its role in the test instead of its zone.
+    val pickLabel = when (pick) {
+        0 -> stringResource(R.string.topology_pick_client)
+        1 -> stringResource(R.string.topology_pick_server)
+        else -> null
+    }
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surface,
+        color = if (pickLabel != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         tonalElevation = 2.dp,
         shadowElevation = 1.dp,
+        border = pickLabel?.let { BorderStroke(2.dp, MaterialTheme.colorScheme.primary) },
         modifier = modifier.widthIn(max = maxWidth).clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick),
     ) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -222,7 +232,7 @@ private fun NodeChip(node: TopologyNode, broken: Int, maxWidth: Dp, onClick: () 
                 val flag = countryFlag(node.country)
                 val zone = node.zone.takeIf { it.isNotBlank() }?.let { listOf(flag, it).filter(String::isNotBlank).joinToString(" ") }
                 Text(
-                    zone ?: stringResource(if (controlPlane) R.string.topology_role_controlplane else R.string.topology_role_worker),
+                    pickLabel ?: zone ?: stringResource(if (controlPlane) R.string.topology_role_controlplane else R.string.topology_role_worker),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

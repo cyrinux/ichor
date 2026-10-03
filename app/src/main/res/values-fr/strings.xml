@@ -285,6 +285,13 @@
     <string name="topology_link_one_side">Une seule extrémité de ce lien a été interrogée : l\'autre nœud n\'est pas dans ce talosconfig.</string>
     <string name="topology_link_test">Dernier test réseau</string>
     <string name="topology_link_test_host">hôte à hôte %1$s</string>
+    <string name="topology_link_test_run">Tester ce lien</string>
+    <string name="topology_test_pick">Tester le débit</string>
+    <string name="topology_test_running">Test en cours…</string>
+    <string name="topology_pick_client_hint">Touchez le nœud client : il émet.</string>
+    <string name="topology_pick_server_hint">Touchez maintenant le nœud serveur.</string>
+    <string name="topology_pick_client">Client</string>
+    <string name="topology_pick_server">Serveur</string>
     <string name="topology_link_seen_from">Vu depuis %1$s</string>
     <string name="topology_not_queried">Les nœuds en gris ne sont pas dans ce talosconfig : ils sont dessinés d\'après leurs pairs.</string>
     <string name="topology_empty">Rien à cartographier : aucun membre du cluster ni pair KubeSpan trouvé.</string>
