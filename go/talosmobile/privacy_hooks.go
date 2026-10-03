@@ -47,6 +47,16 @@ func maskErr(err *error) {
 	*err = errors.New(privacy.maskPlain((*err).Error()))
 }
 
+type maskedNetPerfListener struct{ NetPerfListener }
+
+func (l maskedNetPerfListener) OnProgress(json string) {
+	l.NetPerfListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedNetPerfListener) OnDone(reportJSON string, errMessage string) {
+	l.NetPerfListener.OnDone(privacy.mask(reportJSON), privacy.maskPlain(errMessage))
+}
+
 type maskedEventListener struct{ EventListener }
 
 func (l maskedEventListener) OnEvent(json string) { l.EventListener.OnEvent(privacy.mask(json)) }
