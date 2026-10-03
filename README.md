@@ -21,7 +21,10 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   the phone sends the magic packet itself, so it has to reach the node's network). The MACs of
   each node's network cards are recorded on the phone while it is up, so a node that goes down
   before it was set up can still be woken.
-- **Kubernetes:** export a kubeconfig to open the cluster in kubenav.
+- **Kubernetes:** list Deployments, StatefulSets and DaemonSets with their rollout state and
+  restart one with a rolling update (`kubectl rollout restart`); list pods with their
+  `kubectl get pods` status and delete one so its controller starts a new one; or export a
+  kubeconfig to open the cluster in kubenav.
 - **Background:** alerts and a home-screen widget.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
@@ -72,6 +75,7 @@ reads those roles and explains up front when a feature needs more.
 | **Reboot (`-m default\|powercycle\|force`) / shutdown (`--force`)** | `Reboot`, `Shutdown` | **`os:operator`** |
 | **Cluster health check** | `ClusterService/HealthCheck` | **`os:admin`** |
 | **Kubeconfig export** | `Kubeconfig` | **`os:admin`** |
+| **Kubernetes workloads and pods, rollout restart, pod delete** | `Kubeconfig`, then the Kubernetes API | **`os:admin`** |
 
 Notes:
 
@@ -80,6 +84,10 @@ Notes:
   caller's roles, and the Kubernetes checks need an admin kubeconfig. With a lower role, the
   overview and etcd screens give the same node and etcd picture.
 - **Roles combine:** an `os:operator` config can do everything an `os:reader` one can.
+- **Kubernetes workloads:** the app asks Talos for an admin kubeconfig and keeps it in memory
+  only, for 30 minutes; it is never written to disk. The phone must reach the Kubernetes API
+  (port 6443): when the kubeconfig's address (often a VIP or an internal name) does not answer,
+  the app tries the Talos endpoints on the same port.
 
 ### Creating a talosconfig for the phone
 

@@ -163,6 +163,32 @@ struct TalosClient: Sendable {
         try await Self.run { [config, context] in TalosmobileKubeconfig(config, context, $0) }
     }
 
+    /// Deployments, StatefulSets and DaemonSets through the Kubernetes API (os:admin: Talos issues the kubeconfig).
+    func workloads() async throws -> [KubeWorkload] {
+        let list: KubeWorkloadList = try await Self.json { [config, context] in TalosmobileKubeWorkloads(config, context, $0) }
+        return list.workloads
+    }
+
+    /// `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin).
+    func rolloutRestart(_ workload: KubeWorkload) async throws {
+        try await Self.run { [config, context] error -> Void in
+            _ = TalosmobileKubeRolloutRestart(config, context, workload.kind, workload.namespace, workload.name, error)
+        }
+    }
+
+    /// Every pod with the status `kubectl get pods` shows (os:admin).
+    func pods() async throws -> [KubePod] {
+        let list: KubePodList = try await Self.json { [config, context] in TalosmobileKubePods(config, context, $0) }
+        return list.pods
+    }
+
+    /// `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one.
+    func deletePod(_ pod: KubePod) async throws {
+        try await Self.run { [config, context] error -> Void in
+            _ = TalosmobileKubeDeletePod(config, context, pod.namespace, pod.name, error)
+        }
+    }
+
     /// Starts `talosctl debug` on node; events go to the listener (from Go threads).
     func startDebugShell(node: String, image: String, args: String, cols: Int, rows: Int,
                          listener: TalosmobileDebugListenerProtocol) -> TalosmobileDebugSession? {

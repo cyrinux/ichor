@@ -17,16 +17,22 @@ func Kubeconfig(configYAML, contextName string) (out string, err error) {
 	contextName = unmaskContext(configYAML, contextName)
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		cps := classifyNodes(ctx, s.client, targetNodes(s.context)).GetControlPlaneNodes()
-		if len(cps) == 0 {
-			return "", errors.New("no reachable control-plane node found in this context")
-		}
-
-		data, err := s.client.Kubeconfig(client.WithNode(ctx, cps[0]))
-		if err != nil {
-			return "", errors.New(friendlyError(err))
-		}
-
-		return string(data), nil
+		return fetchKubeconfig(ctx, s)
 	})
+}
+
+// fetchKubeconfig asks a control-plane node for an admin kubeconfig. Talos signs a new
+// client certificate on every call.
+func fetchKubeconfig(ctx context.Context, s *session) (string, error) {
+	cps := classifyNodes(ctx, s.client, targetNodes(s.context)).GetControlPlaneNodes()
+	if len(cps) == 0 {
+		return "", errors.New("no reachable control-plane node found in this context")
+	}
+
+	data, err := s.client.Kubeconfig(client.WithNode(ctx, cps[0]))
+	if err != nil {
+		return "", errors.New(friendlyError(err))
+	}
+
+	return string(data), nil
 }

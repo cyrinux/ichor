@@ -53,6 +53,7 @@
     <string name="common_feature_power">Reboot / shutdown</string>
     <string name="common_feature_health">Cluster health check</string>
     <string name="common_feature_kubeconfig">Kubeconfig export</string>
+    <string name="common_feature_workloads">Kubernetes workloads</string>
     <string name="common_feature_debug_shell">Debug shell</string>
     <string name="common_feature_etcd_defrag">etcd defragmentation</string>
     <string name="common_role_notice_title">%1$s needs %2$s</string>
@@ -66,6 +67,7 @@
     <string name="overview_title">Cluster</string>
     <string name="overview_action_health">Cluster health</string>
     <string name="overview_action_settings">Settings</string>
+    <string name="overview_action_workloads">Kubernetes workloads</string>
     <plurals name="overview_summary_ready">
         <item quantity="one">ready</item>
         <item quantity="other">ready</item>
@@ -1113,6 +1115,45 @@
     <plurals name="apps_versions_running">
         <item quantity="one">%1$d version running</item>
         <item quantity="other">%1$d versions running</item>
+    </plurals>
+
+    <!-- Kubernetes workloads -->
+    <string name="workloads_title">Workloads</string>
+    <string name="workloads_search">Filter by name, kind or image</string>
+    <string name="workloads_all_namespaces">All namespaces</string>
+    <string name="workloads_empty">No workloads.</string>
+    <string name="workloads_no_match">No workload matches “%1$s”.</string>
+    <string name="workloads_ready_count">%1$d/%2$d ready</string>
+    <string name="workloads_state_ready">up to date</string>
+    <string name="workloads_state_progressing">rolling out</string>
+    <string name="workloads_state_degraded">degraded</string>
+    <string name="workloads_state_paused">paused</string>
+    <string name="workloads_state_scaled_down">scaled to zero</string>
+    <string name="workloads_state_unknown">unknown</string>
+    <string name="workloads_restarted_ago">restarted %1$s</string>
+    <string name="workloads_restart">Restart %1$s</string>
+    <string name="workloads_restart_title">Restart %1$s %2$s?</string>
+    <string name="workloads_restart_text">Its pods in %1$s are replaced with a rolling update, like kubectl rollout restart.</string>
+    <string name="workloads_restart_single">With a single pod, the workload is briefly unavailable.</string>
+    <string name="workloads_restart_confirm">Restart</string>
+    <string name="workloads_restart_done">%1$s is restarting</string>
+    <string name="workloads_restart_failed">Could not restart %1$s: %2$s</string>
+
+    <!-- Kubernetes pods -->
+    <string name="pods_title">Pods</string>
+    <string name="pods_empty">No pods.</string>
+    <string name="pods_no_match">No pod matches “%1$s”.</string>
+    <string name="pods_ready_count">%1$d/%2$d ready</string>
+    <string name="pods_delete">Delete %1$s</string>
+    <string name="pods_delete_title">Delete pod %1$s?</string>
+    <string name="pods_delete_text_owned">It is removed from %1$s after its grace period; %2$s starts a new one.</string>
+    <string name="pods_delete_text_bare">It is removed from %1$s after its grace period. No controller owns it: it will not come back.</string>
+    <string name="pods_delete_confirm">Delete</string>
+    <string name="pods_delete_done">%1$s is being deleted</string>
+    <string name="pods_delete_failed">Could not delete %1$s: %2$s</string>
+    <plurals name="pods_restarts">
+        <item quantity="one">%1$d restart</item>
+        <item quantity="other">%1$d restarts</item>
     </plurals>
     <string name="evidence_service">Service status</string>
     <string name="evidence_link">Network link changed</string>
