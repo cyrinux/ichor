@@ -3,6 +3,8 @@ package name.levis.ichor.ui
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,6 +17,7 @@ import name.levis.ichor.ui.capture.CaptureFileScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
 import name.levis.ichor.ui.settings.LicensesScreen
 import name.levis.ichor.ui.changelog.WhatsNewHost
+import name.levis.ichor.ui.backup.IncomingBackup
 import name.levis.ichor.ui.capture.CaptureScreen
 import name.levis.ichor.ui.capture.CapturesScreen
 import name.levis.ichor.ui.debug.DebugShellScreen
@@ -139,6 +142,7 @@ enum class DeepLink { ISSUE_CONFIG, DEMO }
 /**
  * [deepLink]: a screen to open once over the overview; [onDeepLinkHandled] then clears it.
  * [openCluster]: the fingerprint of a cluster to show (a launcher shortcut), cleared by [onClusterOpened].
+ * [incomingBackup]: a backup file opened from another app, to restore; cleared by [onIncomingBackupRead].
  */
 @Composable
 fun Navigation(
@@ -148,6 +152,8 @@ fun Navigation(
     onDeepLinkHandled: () -> Unit = {},
     openCluster: String? = null,
     onClusterOpened: () -> Unit = {},
+    incomingBackup: Uri? = null,
+    onIncomingBackupRead: () -> Unit = {},
 ) {
     val nav = rememberNavController()
 
@@ -461,6 +467,21 @@ fun Navigation(
                 },
             )
         }
+    }
+
+    // Its dialogs are windows over the lock screen: kept for after the unlock.
+    val locked by app.appLock.locked.collectAsStateWithLifecycle()
+    val config by app.configRepository.config.collectAsStateWithLifecycle()
+    if (!locked) {
+        IncomingBackup(
+            uri = incomingBackup,
+            hasConfig = config != null,
+            onRead = onIncomingBackupRead,
+            onRestored = {
+                app.launchSync(runNow = true)
+                nav.resetTo(Routes.OVERVIEW)
+            },
+        )
     }
 }
 

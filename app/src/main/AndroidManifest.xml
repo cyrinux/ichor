@@ -40,6 +40,26 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="ichor" android:host="demo" />
             </intent-filter>
+            <!-- A backup (.ichorbackup) opened from a file manager. Android knows no type for the
+                 extension: providers give it as a generic binary, or name it in the path. The
+                 file's header tells a backup from any other file. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.ichorbackup" />
+                <data android:pathPattern=".*\\..*\\.ichorbackup" />
+                <data android:pathPattern=".*\\..*\\..*\\.ichorbackup" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.ichorbackup" />
+            </intent-filter>
         </activity>
 
         <!-- Shares saved packet captures with the app the user picks. -->

@@ -117,3 +117,10 @@ private const val OPAQUE = 0xFF shl 24
 fun backupFileName(date: java.time.LocalDate): String = "ichor-$date.$BACKUP_EXTENSION"
 
 const val BACKUP_EXTENSION = "ichorbackup"
+
+/** The first bytes of every backup file (backupMagic in the Go core). */
+private val BACKUP_MAGIC = "ICHORBAK".toByteArray(Charsets.US_ASCII)
+
+/** Whether [file] starts like a backup: tells one opened from a file manager from any other file. */
+fun looksLikeBackup(file: ByteArray): Boolean =
+    file.size >= BACKUP_MAGIC.size && BACKUP_MAGIC.indices.all { file[it] == BACKUP_MAGIC[it] }
