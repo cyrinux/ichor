@@ -87,7 +87,6 @@ fun SettingsScreen(
             PrivacySection(LocalContext.current.applicationContext as TalosApp)
             MonitoringSection(LocalContext.current.applicationContext as TalosApp)
             AiSection(LocalContext.current.applicationContext as TalosApp)
-            if (BuildConfig.SELF_UPDATE) UpdateSection((LocalContext.current.applicationContext as TalosApp).updateManager)
             config?.activeSummary?.takeIf { it.allows(Feature.KUBECONFIG) }?.let { KubeconfigSection(talos, appLock, it) }
             SectionTitle(stringResource(R.string.settings_section_config))
             // Renewing the certificate or issuing a config for another device (os:admin).
@@ -126,6 +125,7 @@ fun SettingsScreen(
                 support.notice?.let { InfoNotice(it.text()) }
             }
             AboutSection(onChangelog, onLicenses)
+            if (BuildConfig.SELF_UPDATE) UpdateSection((LocalContext.current.applicationContext as TalosApp).updateManager)
         }
     }
 
