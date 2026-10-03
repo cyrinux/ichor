@@ -72,22 +72,6 @@ fun scanNetworks(local: List<LocalAddress>, known: List<String>): List<String> {
     }.map { (base, bits) -> "${formatIpv4(base)}/$bits" }
 }
 
-/**
- * Whether the cluster is reached on a local network (an endpoint or node with a private,
- * CGNAT or link-local address, or an mDNS name): what Android 17's local network permission
- * guards. A plain hostname may resolve anywhere, so it does not count.
- */
-fun ContextSummary.onLocalNetwork(): Boolean = (endpoints + nodes).any { isLocalAddress(hostOf(it)) }
-
-/** A private, CGNAT or link-local address (IPv4 or IPv6), or an mDNS `.local` name. */
-fun isLocalAddress(host: String): Boolean {
-    val bare = host.removePrefix("[").removeSuffix("]").lowercase()
-    parseIpv4(bare)?.let { return isPrivate(it) || inRange(it, "169.254.0.0", 16) }
-    if (':' in bare) return bare.startsWith("fe8") || bare.startsWith("fe9") || bare.startsWith("fea") ||
-        bare.startsWith("feb") || bare.startsWith("fc") || bare.startsWith("fd")
-    return bare.endsWith(".local")
-}
-
 /** The address or hostname of an endpoint, without its port (a bare IPv6 address left as is). */
 fun hostOf(endpoint: String): String {
     if (endpoint.startsWith("[")) return endpoint.substringBefore("]").removePrefix("[")
