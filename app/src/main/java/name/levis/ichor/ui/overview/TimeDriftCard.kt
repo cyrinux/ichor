@@ -50,6 +50,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 
 class ClusterTimeViewModel(private val talos: TalosRepository) : LoadingViewModel<ClusterTime>() {
     override fun cached(): TalosRepository.Timed<ClusterTime>? = talos.cached(CLUSTER_TIME)
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.clusterTime()
 }
 

@@ -76,6 +76,7 @@ data class RestartResult(val workload: KubeWorkload, val error: UiText?)
 class WorkloadsViewModel(private val talos: TalosRepository) : LoadingViewModel<List<KubeWorkload>>() {
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<List<KubeWorkload>>? = talos.cached(WORKLOADS)
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.workloads()
 
     private val _restarting = MutableStateFlow<Set<String>>(emptySet())

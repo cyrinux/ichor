@@ -105,6 +105,7 @@ class OverviewViewModel(
 ) : LoadingViewModel<ClusterOverview>() {
     override val keepsDataOnFailure = true
     override fun cached(): TalosRepository.Timed<ClusterOverview>? = talos.cached(OVERVIEW)
+    override val restores get() = talos.restores
     override suspend fun fetch() = talos.overview()
 }
 

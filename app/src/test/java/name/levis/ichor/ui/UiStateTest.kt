@@ -30,4 +30,28 @@ class UiStateTest {
         val state: UiState<String> = UiState.Loading
         assertEquals(UiState.Failed(error), state.refreshFailed(error))
     }
+
+    @Test
+    fun aRestoredValueShowsWhileStillLoading() {
+        val state: UiState<String> = UiState.Loading
+        assertEquals(UiState.Loaded("stored", refreshing = true, fetchedAt = 1_000), state.orRestored("stored" to 1_000L, overFailure = true))
+    }
+
+    @Test
+    fun aRestoredValueReplacesTheErrorWhereTheScreenKeepsData() {
+        val state: UiState<String> = UiState.Failed(error)
+        assertEquals(UiState.Loaded("stored", fetchedAt = 1_000, error = error), state.orRestored("stored" to 1_000L, overFailure = true))
+    }
+
+    @Test
+    fun aRestoredValueLeavesTheErrorElsewhere() {
+        val state: UiState<String> = UiState.Failed(error)
+        assertEquals(state, state.orRestored("stored" to 1_000L, overFailure = false))
+    }
+
+    @Test
+    fun aRestoredValueNeverReplacesTheDataOnScreen() {
+        val shown = UiState.Loaded("fresh", fetchedAt = 2_000)
+        assertEquals(shown, shown.orRestored("stored" to 1_000L, overFailure = true))
+    }
 }
