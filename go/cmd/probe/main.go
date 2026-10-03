@@ -1,4 +1,4 @@
-// Command probe exercises the talosmobile API against a real cluster from the desktop.
+// Command probe exercises the ichorgo API against a real cluster from the desktop.
 //
 //	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|workloads|rollout-restart KIND NAMESPACE NAME|pods|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|dataservices [HINTS]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai
 package main
@@ -13,14 +13,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cyrinux/ichor/go/talosmobile"
+	"github.com/cyrinux/ichor/go/ichorgo"
 )
 
 type printer struct{ done chan string }
 
 // eventPrinter prints the first max events, then cancels.
 type eventPrinter struct {
-	run  *talosmobile.EventsRun
+	run  *ichorgo.EventsRun
 	done chan string
 	max  int
 }
@@ -37,7 +37,7 @@ func (p *eventPrinter) OnDone(errMessage string) { p.done <- errMessage }
 // snapshotProbe cancels the snapshot after 20 MiB: it proves streaming works without
 // leaving a copy of the cluster's secrets on disk.
 type snapshotProbe struct {
-	run  *talosmobile.SnapshotRun
+	run  *ichorgo.SnapshotRun
 	done chan string
 }
 
@@ -85,119 +85,119 @@ func main() {
 	cfg := string(raw)
 
 	if *mask {
-		talosmobile.SetPrivacyMask(true, *maskWords)
+		ichorgo.SetPrivacyMask(true, *maskWords)
 		// Like the app, which shows the overview first: it teaches the mask the hostnames.
-		_, _ = talosmobile.ClusterOverview(cfg, *contextName) //nolint:errcheck
+		_, _ = ichorgo.ClusterOverview(cfg, *contextName) //nolint:errcheck
 	}
 
 	var out string
 
 	switch cmd := flag.Arg(0); cmd {
 	case "parse":
-		out, err = talosmobile.ParseConfig(cfg)
+		out, err = ichorgo.ParseConfig(cfg)
 	case "overview":
-		out, err = talosmobile.ClusterOverview(cfg, *contextName)
+		out, err = ichorgo.ClusterOverview(cfg, *contextName)
 	case "services":
-		out, err = talosmobile.NodeServices(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeServices(cfg, *contextName, flag.Arg(1))
 	case "resources":
-		out, err = talosmobile.NodeResources(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeResources(cfg, *contextName, flag.Arg(1))
 	case "logs":
-		out, err = talosmobile.ServiceLogs(cfg, *contextName, flag.Arg(1), flag.Arg(2), 20)
+		out, err = ichorgo.ServiceLogs(cfg, *contextName, flag.Arg(1), flag.Arg(2), 20)
 	case "dmesg":
-		out, err = talosmobile.KernelLogs(cfg, *contextName, flag.Arg(1), 20)
+		out, err = ichorgo.KernelLogs(cfg, *contextName, flag.Arg(1), 20)
 	case "logstats":
 		out = logStats(cfg, *contextName, flag.Arg(1), flag.Args()[2:])
 	case "kubeconfig":
 		// Never print the credential itself.
 		var kc string
-		if kc, err = talosmobile.Kubeconfig(cfg, *contextName, *kubeServer); err == nil {
+		if kc, err = ichorgo.Kubeconfig(cfg, *contextName, *kubeServer); err == nil {
 			out = fmt.Sprintf("kubeconfig: %d bytes, starts with %q", len(kc), firstLine(kc))
 		}
 	case "workloads":
-		out, err = talosmobile.KubeWorkloads(cfg, *contextName, *kubeServer)
+		out, err = ichorgo.KubeWorkloads(cfg, *contextName, *kubeServer)
 	case "rollout-restart":
 		// rollout-restart KIND NAMESPACE NAME
-		if err = talosmobile.KubeRolloutRestart(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3)); err == nil {
+		if err = ichorgo.KubeRolloutRestart(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3)); err == nil {
 			out = "restarted"
 		}
 	case "pods":
-		out, err = talosmobile.KubePods(cfg, *contextName, *kubeServer)
+		out, err = ichorgo.KubePods(cfg, *contextName, *kubeServer)
 	case "dataservices":
 		// dataservices [HINTS], e.g. "garage" or "longhorn,cloudnative-pg"; none checks all.
-		out, err = talosmobile.KubeDataServices(cfg, *contextName, *kubeServer, flag.Arg(1))
+		out, err = ichorgo.KubeDataServices(cfg, *contextName, *kubeServer, flag.Arg(1))
 	case "netperf-nodes":
-		out, err = talosmobile.NetPerfNodes(cfg, *contextName, *kubeServer)
+		out, err = ichorgo.NetPerfNodes(cfg, *contextName, *kubeServer)
 	case "netperf":
 		// netperf SERVER CLIENT [pod|host] [SECONDS]: creates pods in a temporary namespace.
 		out = netPerfRun(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	case "delete-pod":
 		// delete-pod NAMESPACE NAME
-		if err = talosmobile.KubeDeletePod(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2)); err == nil {
+		if err = ichorgo.KubeDeletePod(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2)); err == nil {
 			out = "deleted"
 		}
 	case "machineconfig":
 		// Redacted: never print secrets from the probe.
-		out, err = talosmobile.NodeMachineConfig(cfg, *contextName, flag.Arg(1), false)
+		out, err = ichorgo.NodeMachineConfig(cfg, *contextName, flag.Arg(1), false)
 	case "snapshot-probe":
 		dest := filepath.Join(os.TempDir(), "etcd-probe.snapshot")
 		p := &snapshotProbe{done: make(chan string, 1)}
-		p.run = talosmobile.StartEtcdSnapshot(cfg, *contextName, flag.Arg(1), dest, p)
+		p.run = ichorgo.StartEtcdSnapshot(cfg, *contextName, flag.Arg(1), dest, p)
 		out = <-p.done
 		if _, statErr := os.Stat(dest + ".part"); statErr == nil {
 			out += " (partial file left!)"
 		}
 	case "inventory":
-		out, err = talosmobile.ClusterInventory(cfg, *contextName)
+		out, err = ichorgo.ClusterInventory(cfg, *contextName)
 	case "containers":
-		out, err = talosmobile.NodeContainers(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeContainers(cfg, *contextName, flag.Arg(1))
 	case "events":
 		l := &eventPrinter{done: make(chan string, 1), max: 15}
-		l.run = talosmobile.StartEvents(cfg, *contextName, flag.Arg(1), 10, l)
+		l.run = ichorgo.StartEvents(cfg, *contextName, flag.Arg(1), 10, l)
 		out = "done: " + <-l.done
 	case "processes":
-		out, err = talosmobile.NodeProcesses(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeProcesses(cfg, *contextName, flag.Arg(1))
 	case "talosconfig-probe":
 		// Issue a short-lived read-only config, print only its summary (no key material) and
 		// discard it.
 		var tc string
-		if tc, err = talosmobile.GenerateTalosconfig(cfg, *contextName, "os:reader", 1); err == nil {
-			out, err = talosmobile.ParseConfig(tc)
+		if tc, err = ichorgo.GenerateTalosconfig(cfg, *contextName, "os:reader", 1); err == nil {
+			out, err = ichorgo.ParseConfig(tc)
 		}
 	case "network":
-		out, err = talosmobile.NodeNetwork(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeNetwork(cfg, *contextName, flag.Arg(1))
 	case "connections":
-		out, err = talosmobile.NodeConnections(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeConnections(cfg, *contextName, flag.Arg(1))
 	case "time":
-		out, err = talosmobile.NodeTime(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeTime(cfg, *contextName, flag.Arg(1))
 	case "cluster-time":
-		out, err = talosmobile.ClusterTime(cfg, *contextName)
+		out, err = ichorgo.ClusterTime(cfg, *contextName)
 	case "hardware":
-		out, err = talosmobile.NodeHardware(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeHardware(cfg, *contextName, flag.Arg(1))
 	case "images":
-		out, err = talosmobile.NodeImages(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeImages(cfg, *contextName, flag.Arg(1))
 	case "kubespan":
-		out, err = talosmobile.KubeSpanStatus(cfg, *contextName)
+		out, err = ichorgo.KubeSpanStatus(cfg, *contextName)
 	case "topology":
-		out, err = talosmobile.ClusterTopology(cfg, *contextName)
+		out, err = ichorgo.ClusterTopology(cfg, *contextName)
 	case "stats":
-		out, err = talosmobile.NodeStats(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeStats(cfg, *contextName, flag.Arg(1))
 	case "clusterstats":
-		out, err = talosmobile.ClusterStats(cfg, *contextName)
+		out, err = ichorgo.ClusterStats(cfg, *contextName)
 	case "etcd":
-		out, err = talosmobile.EtcdStatus(cfg, *contextName)
+		out, err = ichorgo.EtcdStatus(cfg, *contextName)
 	case "pcap":
 		out = pcapProbe(cfg, *contextName, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), *mask)
 	case "upgrade-plan":
 		// Read-only: never calls the upgrade itself.
-		out, err = talosmobile.UpgradePlan(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.UpgradePlan(cfg, *contextName, flag.Arg(1))
 	case "talos-releases":
-		out, err = talosmobile.TalosReleases()
+		out, err = ichorgo.TalosReleases()
 	case "container-logs":
-		out, err = talosmobile.ContainerLogs(cfg, *contextName, flag.Arg(1), flag.Arg(2), 20)
+		out, err = ichorgo.ContainerLogs(cfg, *contextName, flag.Arg(1), flag.Arg(2), 20)
 	case "container-follow":
 		// Follows for a few seconds and prints only how many lines came.
 		l := &lineCounter{done: make(chan string, 1)}
-		run := talosmobile.StartContainerLogFollow(cfg, *contextName, flag.Arg(1), flag.Arg(2), 10, l)
+		run := ichorgo.StartContainerLogFollow(cfg, *contextName, flag.Arg(1), flag.Arg(2), 10, l)
 
 		select {
 		case msg := <-l.done:
@@ -207,40 +207,40 @@ func main() {
 			out = fmt.Sprintf("%d lines in 5 s, then cancelled: %q", l.lines.Load(), <-l.done)
 		}
 	case "mounts":
-		out, err = talosmobile.NodeMounts(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeMounts(cfg, *contextName, flag.Arg(1))
 	case "volumes":
-		out, err = talosmobile.NodeVolumes(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeVolumes(cfg, *contextName, flag.Arg(1))
 	case "usage":
 		depth, _ := strconv.Atoi(flag.Arg(3)) //nolint:errcheck
-		out, err = talosmobile.NodeDiskUsage(cfg, *contextName, flag.Arg(1), flag.Arg(2), depth)
+		out, err = ichorgo.NodeDiskUsage(cfg, *contextName, flag.Arg(1), flag.Arg(2), depth)
 	case "resource-types":
-		out, err = talosmobile.ResourceTypes(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.ResourceTypes(cfg, *contextName, flag.Arg(1))
 	case "resource-list":
-		out, err = talosmobile.ResourceList(cfg, *contextName, flag.Arg(1), flag.Arg(3), flag.Arg(2))
+		out, err = ichorgo.ResourceList(cfg, *contextName, flag.Arg(1), flag.Arg(3), flag.Arg(2))
 	case "resource-get":
-		out, err = talosmobile.ResourceGet(cfg, *contextName, flag.Arg(1), flag.Arg(4), flag.Arg(2), flag.Arg(3))
+		out, err = ichorgo.ResourceGet(cfg, *contextName, flag.Arg(1), flag.Arg(4), flag.Arg(2), flag.Arg(3))
 	case "disk-health":
-		out, err = talosmobile.NodeDiskHealth(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeDiskHealth(cfg, *contextName, flag.Arg(1))
 	case "features":
-		out, err = talosmobile.NodeFeatures(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.NodeFeatures(cfg, *contextName, flag.Arg(1))
 	case "etcd-member-plan":
 		// Read-only: never removes a member.
-		out, err = talosmobile.EtcdMemberPlan(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.EtcdMemberPlan(cfg, *contextName, flag.Arg(1))
 	case "support-probe":
 		out = supportProbe(cfg, *contextName, flag.Arg(1))
 	case "diagnose-report":
 		// What the AI diagnosis would send, anonymized; nothing is sent.
-		var d *talosmobile.Diagnosis
-		if d, err = talosmobile.CollectDiagnosis(cfg, *contextName, true); err == nil {
+		var d *ichorgo.Diagnosis
+		if d, err = ichorgo.CollectDiagnosis(cfg, *contextName, true); err == nil {
 			out = d.Report()
 		}
 	case "diagnose":
 		err = diagnose(cfg, *contextName, flag.Arg(1), flag.Arg(2))
 	case "ai-models":
-		out, err = talosmobile.AIModels(flag.Arg(1), aiKey(flag.Arg(1)), os.Getenv("ICHOR_AI_BASE_URL"))
+		out, err = ichorgo.AIModels(flag.Arg(1), aiKey(flag.Arg(1)), os.Getenv("ICHOR_AI_BASE_URL"))
 	case "health":
 		p := printer{done: make(chan string, 1)}
-		talosmobile.StartClusterHealth(cfg, *contextName, p)
+		ichorgo.StartClusterHealth(cfg, *contextName, p)
 
 		if msg := <-p.done; msg != "" {
 			fail(fmt.Errorf("health check failed: %s", msg))
@@ -288,7 +288,7 @@ func aiKey(provider string) string {
 // cluster) and prints the model's answer. Unlike the rest of the probe, it sends cluster
 // data to the provider.
 func diagnose(cfg, contextName, provider, model string) error {
-	d, err := talosmobile.CollectDiagnosis(cfg, contextName, false)
+	d, err := ichorgo.CollectDiagnosis(cfg, contextName, false)
 	if err != nil {
 		return err
 	}

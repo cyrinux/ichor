@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cyrinux/ichor/go/talosmobile"
+	"github.com/cyrinux/ichor/go/ichorgo"
 )
 
 // captureProbe collects a packet capture's callbacks.
@@ -36,7 +36,7 @@ func (p *captureProbe) OnDone(path string, packets, bytes int64, errMessage stri
 func pcapProbe(cfg, contextName, node, iface, filter, seconds string, masked bool) string {
 	secs, _ := strconv.Atoi(seconds) //nolint:errcheck
 
-	if msg := talosmobile.ValidateCaptureFilter(filter); msg != "" {
+	if msg := ichorgo.ValidateCaptureFilter(filter); msg != "" {
 		return "invalid filter: " + msg
 	}
 
@@ -50,7 +50,7 @@ func pcapProbe(cfg, contextName, node, iface, filter, seconds string, masked boo
 	dest := filepath.Join(dir, "probe.pcap")
 	p := &captureProbe{done: make(chan string, 1)}
 
-	talosmobile.StartPacketCapture(cfg, contextName, node, iface, filter, false, 0, secs, 0, dest, p)
+	ichorgo.StartPacketCapture(cfg, contextName, node, iface, filter, false, 0, secs, 0, dest, p)
 
 	var b strings.Builder
 
@@ -63,7 +63,7 @@ func pcapProbe(cfg, contextName, node, iface, filter, seconds string, masked boo
 		}
 	}
 
-	page, err := talosmobile.ReadPcap(dest, 0, 1000)
+	page, err := ichorgo.ReadPcap(dest, 0, 1000)
 	if err != nil {
 		return b.String() + "ReadPcap: " + err.Error()
 	}
@@ -85,7 +85,7 @@ func pcapProbe(cfg, contextName, node, iface, filter, seconds string, masked boo
 	fmt.Fprintf(&b, "ReadPcap total=%d protocols=%v\n", parsed.Total, protos)
 
 	if parsed.Total > 0 {
-		detail, err := talosmobile.PacketDetail(dest, 0)
+		detail, err := ichorgo.PacketDetail(dest, 0)
 		if err != nil {
 			return b.String() + "PacketDetail: " + err.Error()
 		}

@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile/inventory.go.
+// Mirrors go/ichorgo/inventory.go.
 
 /** The applications running in the cluster, from every node's Kubernetes containers. */
 @Serializable

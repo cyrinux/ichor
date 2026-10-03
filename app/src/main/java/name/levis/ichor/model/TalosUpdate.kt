@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile TalosUpdateCheck.
+// Mirrors go/ichorgo TalosUpdateCheck.
 
 /** The latest Talos release compared with the versions the nodes run. */
 @Serializable

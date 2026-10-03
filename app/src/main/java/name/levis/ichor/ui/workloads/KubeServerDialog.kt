@@ -22,7 +22,7 @@ import name.levis.ichor.R
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.uiText
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.Ichorgo
 
 /** Longest address one can type: a host name, a port and a short path. */
 private const val KUBE_SERVER_MAX = 300
@@ -60,7 +60,7 @@ internal fun KubeServerDialog(saved: String, onSave: (String) -> Unit, onDismiss
         },
         confirmButton = {
             TextButton(onClick = {
-                runCatching { Talosmobile.normalizeKubeServer(input) }
+                runCatching { Ichorgo.normalizeKubeServer(input) }
                     .onSuccess(onSave)
                     .onFailure { error = it.uiText() }
             }) { Text(stringResource(R.string.common_ok)) }

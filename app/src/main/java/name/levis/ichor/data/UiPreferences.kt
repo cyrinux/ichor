@@ -114,7 +114,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
     }
 
     companion object {
-        const val FILE = "talosdev-mobile-ui"
+        const val FILE = "ichor-ui"
         private const val KEY_THEME = "theme_mode"
         private const val KEY_SCREENSHOTS = "allow_screenshots"
         private const val KEY_LANGUAGE = "language"

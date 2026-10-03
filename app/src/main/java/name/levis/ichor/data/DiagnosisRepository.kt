@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
-import name.levis.talosmobile.Diagnosis
-import name.levis.talosmobile.DiagnosisListener
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.Diagnosis
+import name.levis.ichorgo.DiagnosisListener
+import name.levis.ichorgo.Ichorgo
 
 /** What a model sends back: the whole answer so far, then how it ended. */
 sealed interface AnswerEvent {
@@ -28,18 +28,18 @@ class DiagnosisRepository(private val configs: ConfigRepository) {
 
     /** Providers and their default models, the same on Android and iOS. */
     val providers: List<AiProvider> by lazy {
-        TalosJson.decodeFromString(ListSerializer(AiProvider.serializer()), Talosmobile.aiProviders())
+        TalosJson.decodeFromString(ListSerializer(AiProvider.serializer()), Ichorgo.aiProviders())
     }
 
     /** The models the key can use, newest first; fails with a readable message on a bad key or URL. */
     suspend fun models(provider: String, apiKey: String, baseUrl: String): List<AiModel> = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(ListSerializer(AiModel.serializer()), Talosmobile.aiModels(provider, apiKey, baseUrl))
+        TalosJson.decodeFromString(ListSerializer(AiModel.serializer()), Ichorgo.aiModels(provider, apiKey, baseUrl))
     }
 
     /** Reads the cluster state into a report (os:reader calls only). Nothing leaves the phone here. */
     suspend fun collect(anonymize: Boolean): Diagnosis {
         val stored = configs.forCall()
-        return withContext(Dispatchers.IO) { Talosmobile.collectDiagnosis(stored.yaml, stored.activeContext, anonymize) }
+        return withContext(Dispatchers.IO) { Ichorgo.collectDiagnosis(stored.yaml, stored.activeContext, anonymize) }
     }
 
     /**

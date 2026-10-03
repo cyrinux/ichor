@@ -44,7 +44,7 @@ import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.readBounded
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.Ichorgo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,7 +53,7 @@ import java.time.LocalDate
 /** A backup is a few KB; anything much bigger is not one. */
 private const val MAX_BACKUP_BYTES = 5 * 1024 * 1024
 
-private val minPassphrase = Talosmobile.BackupMinPassphrase.toInt()
+private val minPassphrase = Ichorgo.BackupMinPassphrase.toInt()
 
 /**
  * Launches the file pickers and shows the dialogs of [vm]'s current step; returns a picker to start a restore.

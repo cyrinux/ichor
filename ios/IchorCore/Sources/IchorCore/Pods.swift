@@ -1,6 +1,6 @@
 import Foundation
 
-// Mirrors go/talosmobile/kube_pods.go.
+// Mirrors go/ichorgo/kube_pods.go.
 
 public struct KubePodList: Decodable, Equatable, Sendable {
     public let pods: [KubePod]

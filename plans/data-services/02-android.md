@@ -1,6 +1,6 @@
 # Phase 2: Android
 
-Prerequisite: phase 1 merged (the `Talosmobile.kubeDataServices` binding exists).
+Prerequisite: phase 1 merged (the `Ichorgo.kubeDataServices` binding exists).
 Paths are relative to `app/src/main/java/name/levis/ichor/`.
 
 ## 1. Model: `model/DataServices.kt` (+ `app/src/test/.../model/DataServicesTest.kt`)
@@ -24,7 +24,7 @@ Paths are relative to `app/src/main/java/name/levis/ichor/`.
 ```kotlin
 suspend fun dataServices(hints: String): DataServices = remember(DATA_SERVICES) {
     kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(DataServices.serializer(), Talosmobile.kubeDataServices(cfg, ctx, server, hints))
+        TalosJson.decodeFromString(DataServices.serializer(), Ichorgo.kubeDataServices(cfg, ctx, server, hints))
     }
 }
 ```

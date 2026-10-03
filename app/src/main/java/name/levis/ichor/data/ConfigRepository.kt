@@ -1,7 +1,7 @@
 package name.levis.ichor.data
 
 import android.content.Context
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ConfigSummary
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.EndpointMatch
@@ -38,7 +38,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
 
     /** Where the key protecting the stored config lives (null before the first import). */
     fun keyProtection(): KeyProtection? = runCatching { store.protection() }.getOrNull()
-    private val prefs = context.getSharedPreferences("talosdev-mobile", Context.MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences("ichor", Context.MODE_PRIVATE)
 
     private val writes = Mutex()
 
@@ -64,14 +64,14 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
 
     /** Adds the local demo alongside any imported clusters, replacing a demo added before. */
     suspend fun saveDemo() = withContext(Dispatchers.IO) {
-        val yaml = Talosmobile.demoConfig()
+        val yaml = Ichorgo.demoConfig()
         save(yaml, importConflicts(yaml).filter { it.sameAs != null }.map { ImportChoice(it.index, replace = true) })
     }
 
     /** The contexts of [yaml] named like a stored one (none before the first import). */
     suspend fun importConflicts(yaml: String): List<ImportConflict> = withContext(Dispatchers.IO) {
         val current = _config.value ?: return@withContext emptyList()
-        TalosJson.decodeFromString(ListSerializer(ImportConflict.serializer()), Talosmobile.importConflicts(current.yaml, yaml))
+        TalosJson.decodeFromString(ListSerializer(ImportConflict.serializer()), Ichorgo.importConflicts(current.yaml, yaml))
     }
 
     /**
@@ -83,7 +83,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      */
     suspend fun save(yaml: String, choices: List<ImportChoice> = emptyList()) = writing {
         val merged = _config.value?.let {
-            Talosmobile.mergeConfig(it.yaml, yaml, TalosJson.encodeToString(ListSerializer(ImportChoice.serializer()), choices))
+            Ichorgo.mergeConfig(it.yaml, yaml, TalosJson.encodeToString(ListSerializer(ImportChoice.serializer()), choices))
         } ?: yaml
         val summary = parse(merged)
         store.write(merged.encodeToByteArray())
@@ -121,7 +121,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
             clear()
             return@writing false
         }
-        val remaining = Talosmobile.removeContext(current.yaml, name)
+        val remaining = Ichorgo.removeContext(current.yaml, name)
         val summary = parse(remaining)
         // By position: the masked names of screenshot mode may change with the set of contexts.
         val active = contextAt(
@@ -142,7 +142,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      */
     suspend fun replaceCredentials(contextName: String, generatedYaml: String) = writing {
         val current = _config.value ?: throw NoConfigException()
-        val merged = Talosmobile.replaceContextCredentials(current.yaml, generatedYaml, contextName)
+        val merged = Ichorgo.replaceContextCredentials(current.yaml, generatedYaml, contextName)
         val summary = parse(merged)
         check(summary.contexts.any { it.name == current.activeContext }) { "context ${current.activeContext} disappeared" }
         store.write(merged.encodeToByteArray())
@@ -155,11 +155,11 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      * other contexts and the context the user is looking at.
      */
     suspend fun addNodes(contextName: String, nodes: List<String>) =
-        edit { Talosmobile.addContextNodes(it, contextName, nodes.joinToString(",")) }
+        edit { Ichorgo.addContextNodes(it, contextName, nodes.joinToString(",")) }
 
     /** Replaces the endpoints of [contextName] with [endpoints], in order. */
     suspend fun setEndpoints(contextName: String, endpoints: List<String>) =
-        edit { Talosmobile.setContextEndpoints(it, contextName, endpoints.joinToString(",")) }
+        edit { Ichorgo.setContextEndpoints(it, contextName, endpoints.joinToString(",")) }
 
     /**
      * Puts each endpoint a network search found first among the endpoints of the contexts it
@@ -167,7 +167,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      */
     suspend fun addEndpoints(found: List<EndpointMatch>) = edit { yaml ->
         found.fold(yaml) { acc, match ->
-            match.contexts.fold(acc) { config, name -> Talosmobile.addContextEndpoint(config, name, match.endpoint) }
+            match.contexts.fold(acc) { config, name -> Ichorgo.addContextEndpoint(config, name, match.endpoint) }
         }
     }
 
@@ -224,7 +224,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
     }
 
     private fun parse(yaml: String): ConfigSummary =
-        TalosJson.decodeFromString(ConfigSummary.serializer(), Talosmobile.parseConfig(yaml))
+        TalosJson.decodeFromString(ConfigSummary.serializer(), Ichorgo.parseConfig(yaml))
 
     private companion object {
         const val KEY_CONTEXT = "active_context"

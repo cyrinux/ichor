@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile/kube_workloads.go.
+// Mirrors go/ichorgo/kube_workloads.go.
 
 @Serializable
 data class KubeWorkloadList(val workloads: List<KubeWorkload> = emptyList())

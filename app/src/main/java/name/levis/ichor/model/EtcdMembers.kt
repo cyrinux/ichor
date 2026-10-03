@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile etcdMemberPlan, etcdForfeitLeadership and etcdRemoveMember.
+// Mirrors go/ichorgo etcdMemberPlan, etcdForfeitLeadership and etcdRemoveMember.
 
 @Serializable
 data class EtcdMemberRef(val id: String = "", val hostname: String = "")

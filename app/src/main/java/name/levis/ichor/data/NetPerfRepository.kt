@@ -9,8 +9,8 @@ import name.levis.ichor.model.NetPerfNodeList
 import name.levis.ichor.model.NetPerfProgress
 import name.levis.ichor.model.NetPerfReport
 import name.levis.ichor.model.NetPerfSetup
-import name.levis.talosmobile.NetPerfListener
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.NetPerfListener
+import name.levis.ichorgo.Ichorgo
 
 /** Events of a running network test. [Done.error] is null when it completed. */
 sealed interface NetPerfEvent {
@@ -29,7 +29,7 @@ class NetPerfRepository(private val configs: ConfigRepository, private val kubeS
     /** The Kubernetes nodes a test can run between, by name. */
     suspend fun nodes(): List<NetPerfNode> = withContext(Dispatchers.IO) {
         val (stored, server) = target()
-        TalosJson.decodeFromString(NetPerfNodeList.serializer(), Talosmobile.netPerfNodes(stored.yaml, stored.activeContext, server)).nodes
+        TalosJson.decodeFromString(NetPerfNodeList.serializer(), Ichorgo.netPerfNodes(stored.yaml, stored.activeContext, server)).nodes
     }
 
     /**
@@ -41,7 +41,7 @@ class NetPerfRepository(private val configs: ConfigRepository, private val kubeS
     fun start(setup: NetPerfSetup): NetPerfHandle {
         val (stored, server) = target()
         val events = Channel<NetPerfEvent>(Channel.UNLIMITED) // never drop the final Done
-        val run = Talosmobile.startNetPerf(
+        val run = Ichorgo.startNetPerf(
             stored.yaml,
             stored.activeContext,
             server,

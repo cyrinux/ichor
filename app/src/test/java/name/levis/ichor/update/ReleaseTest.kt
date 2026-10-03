@@ -27,9 +27,9 @@ class ReleaseTest {
         {"tag_name":"v0.2.0","html_url":"https://github.com/o/r/releases/tag/v0.2.0","body":"- fix\n",
          "draft":false,"prerelease":false,"assets":[
            {"name":"TalosViewer-0.2.0-unsigned.ipa","browser_download_url":"https://x/ipa","size":9},
-           {"name":"talos-viewer-v0.2.0-arm64-v8a-unsigned.apk","browser_download_url":"https://x/unsigned","size":1},
-           {"name":"talos-viewer-v0.2.0-armeabi-v7a.apk","browser_download_url":"https://x/arm32","size":12},
-           {"name":"talos-viewer-v0.2.0-arm64-v8a.apk","browser_download_url":"https://x/apk","size":16,
+           {"name":"ichor-v0.2.0-arm64-v8a-unsigned.apk","browser_download_url":"https://x/unsigned","size":1},
+           {"name":"ichor-v0.2.0-armeabi-v7a.apk","browser_download_url":"https://x/arm32","size":12},
+           {"name":"ichor-v0.2.0-arm64-v8a.apk","browser_download_url":"https://x/apk","size":16,
             "digest":"sha256:ABCDEF0123"}],
          "author":{"login":"someone"}}
     """.trimIndent()
@@ -62,9 +62,9 @@ class ReleaseTest {
     fun fileNamePrefixDoesNotMatter() {
         val renamed = """
             {"tag_name":"v0.4.0","assets":[
-              {"name":"talosdev-mobile-v0.4.0-unsigned.ipa","browser_download_url":"https://x/ipa","size":9},
-              {"name":"talosdev-mobile-v0.4.0-arm64-v8a-unsigned.apk","browser_download_url":"https://x/unsigned","size":1},
-              {"name":"talosdev-mobile-v0.4.0-arm64-v8a.apk","browser_download_url":"https://x/new","size":16}]}
+              {"name":"ichor-v0.4.0-unsigned.ipa","browser_download_url":"https://x/ipa","size":9},
+              {"name":"ichor-v0.4.0-arm64-v8a-unsigned.apk","browser_download_url":"https://x/unsigned","size":1},
+              {"name":"ichor-v0.4.0-arm64-v8a.apk","browser_download_url":"https://x/new","size":16}]}
         """.trimIndent()
         val update = selectUpdate(TalosJson.decodeFromString(GitHubRelease.serializer(), renamed), "0.3.0", arm64)
         assertEquals("https://x/new", update?.apkUrl)

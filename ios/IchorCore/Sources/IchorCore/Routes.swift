@@ -1,6 +1,6 @@
 import Foundation
 
-// Mirrors go/talosmobile/kube_routes.go.
+// Mirrors go/ichorgo/kube_routes.go.
 
 public struct KubeRouteList: Decodable, Equatable, Sendable {
     public let routes: [KubeRoute]

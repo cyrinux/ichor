@@ -3,7 +3,7 @@ package name.levis.ichor.model
 import androidx.annotation.StringRes
 import name.levis.ichor.R
 
-// Issuing a talosconfig through go/talosmobile/issueconfig.go (GenerateTalosconfig).
+// Issuing a talosconfig through go/ichorgo/issueconfig.go (GenerateTalosconfig).
 
 /** Roles a generated talosconfig may carry (the Go core rejects any other). */
 val ISSUABLE_ROLES = listOf("os:admin", "os:operator", "os:reader", "os:etcd:backup")

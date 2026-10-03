@@ -1,6 +1,6 @@
 import Foundation
 
-// Mirrors go/talosmobile/cgroups.go (NodeCgroups). Go omits zero fields and empty lists.
+// Mirrors go/ichorgo/cgroups.go (NodeCgroups). Go omits zero fields and empty lists.
 
 /// PSI averages: % of the last 10/60 s some (or all) tasks waited for the resource.
 public struct CgroupPSI: Decodable, Equatable, Sendable {

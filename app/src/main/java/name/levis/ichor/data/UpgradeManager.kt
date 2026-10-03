@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
-import name.levis.talosmobile.Talosmobile
-import name.levis.talosmobile.UpgradeListener
-import name.levis.talosmobile.UpgradeRun
+import name.levis.ichorgo.Ichorgo
+import name.levis.ichorgo.UpgradeListener
+import name.levis.ichorgo.UpgradeRun
 import name.levis.ichor.model.TalosRelease
 import name.levis.ichor.model.UpgradePlan
 import name.levis.ichor.model.UpgradeProgress
@@ -39,17 +39,17 @@ class UpgradeManager(private val configs: ConfigRepository, private val onFinish
     private var run: UpgradeRun? = null
 
     suspend fun plan(node: String): UpgradePlan = call { cfg, ctx ->
-        TalosJson.decodeFromString(UpgradePlan.serializer(), Talosmobile.upgradePlan(cfg, ctx, node))
+        TalosJson.decodeFromString(UpgradePlan.serializer(), Ichorgo.upgradePlan(cfg, ctx, node))
     }
 
     /** Known Talos releases, newest first (from the network; may fail offline). */
     suspend fun releases(): List<TalosRelease> = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(ListSerializer(TalosRelease.serializer()), Talosmobile.talosReleases())
+        TalosJson.decodeFromString(ListSerializer(TalosRelease.serializer()), Ichorgo.talosReleases())
     }
 
     /** The installer image for [version], keeping the registry and Image Factory schematic of [currentImage]. */
     suspend fun image(currentImage: String, version: String): String = withContext(Dispatchers.IO) {
-        Talosmobile.upgradeImage(currentImage, version)
+        Ichorgo.upgradeImage(currentImage, version)
     }
 
     /** Starts the upgrade unless one is already followed; returns false then. */
@@ -59,7 +59,7 @@ class UpgradeManager(private val configs: ConfigRepository, private val onFinish
         val stored = configs.forCall()
         _current.value = UpgradeRunState(node, hostname, fromVersion, image)
         run = try {
-            Talosmobile.startUpgrade(stored.yaml, stored.activeContext, node, image, stage, force, listener(node))
+            Ichorgo.startUpgrade(stored.yaml, stored.activeContext, node, image, stage, force, listener(node))
         } catch (e: Exception) {
             _current.value = null
             throw e

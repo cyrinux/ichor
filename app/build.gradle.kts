@@ -119,7 +119,7 @@ aboutLibraries {
 }
 
 dependencies {
-    implementation(files("libs/talosmobile.aar"))
+    implementation(files("libs/ichorgo.aar"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

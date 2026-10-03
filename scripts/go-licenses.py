@@ -26,7 +26,7 @@ GO_DIR = ROOT / "go"
 OUT = ROOT / "app/aboutlibraries/libraries"
 PREFIX = "go-"
 # The bound package, plus the gobind runtime gomobile links next to it.
-PACKAGES = ["./talosmobile", "golang.org/x/mobile/bind/seq"]
+PACKAGES = ["./ichorgo", "golang.org/x/mobile/bind/seq"]
 ANDROID_ENV = {"GOOS": "android", "GOARCH": "arm64", "CGO_ENABLED": "1"}
 LICENSE_FILES = re.compile(r"^(LICEN[CS]E|COPYING)(\.md|\.txt)?$", re.IGNORECASE)
 

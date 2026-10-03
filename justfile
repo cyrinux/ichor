@@ -91,7 +91,7 @@ i18n-check:
 site *args:
     python3 scripts/site-i18n.py {{ args }}
 
-# Refresh the bundled app-inventory icons from go/talosmobile/appcatalog.json (needs network
+# Refresh the bundled app-inventory icons from go/ichorgo/appcatalog.json (needs network
 # and ImageMagick). `just app-icons --check` only validates the catalog and the bundle.
 app-icons *args:
     python3 scripts/sync-app-icons.py {{ args }}
@@ -181,7 +181,7 @@ qr config="talosconfig-phone":
 
 # Remove build outputs and caches (Gradle, Go AAR, gomobile/NDK shims).
 clean:
-    rm -rf app/build build/reports .gradle .cache/ndk .cache/x-mobile .cache/gobin app/libs/talosmobile.aar
+    rm -rf app/build build/reports .gradle .cache/ndk .cache/x-mobile .cache/gobin app/libs/ichorgo.aar
 
 [private]
 _adb-install device build_type:

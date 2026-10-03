@@ -10,7 +10,7 @@ import name.levis.ichor.model.keepClusterNames
 /**
  * The Kubernetes API address the user set for clusters, by context fingerprint, to use
  * instead of the one in the kubeconfig Talos issues (a port forward, a load balancer, a
- * public name). Already checked by Talosmobile.normalizeKubeServer. Only on this device.
+ * public name). Already checked by Ichorgo.normalizeKubeServer. Only on this device.
  */
 class KubeServers(private val prefs: SharedPreferences) {
     private val _servers = MutableStateFlow(
@@ -35,6 +35,6 @@ class KubeServers(private val prefs: SharedPreferences) {
     }
 
     companion object {
-        const val FILE = "talosdev-mobile-kube-servers"
+        const val FILE = "ichor-kube-servers"
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-// Mirrors go/talosmobile/kube_workloads.go.
+// Mirrors go/ichorgo/kube_workloads.go.
 
 public struct KubeWorkloadList: Decodable, Equatable, Sendable {
     public let workloads: [KubeWorkload]

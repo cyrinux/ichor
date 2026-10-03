@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile resourceTypes, resourceList and resourceGet (`talosctl get`).
+// Mirrors go/ichorgo resourceTypes, resourceList and resourceGet (`talosctl get`).
 
 @Serializable
 data class ResourceType(

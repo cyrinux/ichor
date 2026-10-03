@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile/upgrade*.go.
+// Mirrors go/ichorgo/upgrade*.go.
 
 @Serializable
 data class UpgradePlan(

@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile/processes.go.
+// Mirrors go/ichorgo/processes.go.
 
 @Serializable
 data class ProcessSample(val at: Long, val processes: List<ProcessInfo> = emptyList())
