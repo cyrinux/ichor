@@ -13,7 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cyrinux/talosdev-apk/go/talosmobile"
+	"github.com/cyrinux/ichor/go/talosmobile"
 )
 
 type printer struct{ done chan string }

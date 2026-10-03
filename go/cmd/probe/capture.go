@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cyrinux/talosdev-apk/go/talosmobile"
+	"github.com/cyrinux/ichor/go/talosmobile"
 )
 
 // captureProbe collects a packet capture's callbacks.

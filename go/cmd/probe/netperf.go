@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"strconv"
 
-	"github.com/cyrinux/talosdev-apk/go/talosmobile"
+	"github.com/cyrinux/ichor/go/talosmobile"
 )
 
 // netPerfProbe prints a network test's progress as it comes.
