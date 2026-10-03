@@ -1,6 +1,9 @@
 package ichorgo
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // demoDataServices are the storage and database operators of the built-in demo cluster, in
 // every state the app shows: a degraded and a faulted volume, a Garage cluster with a node
@@ -40,11 +43,11 @@ func demoDataServices(now time.Time) dataServices {
 			ResyncQueue: 1310, ResyncErrors: 1294, TableSyncQueue: 4200, LayoutVersion: 12, Source: garageSourceCLI,
 			Nodes: []garageNode{
 				{ID: "9c2f61a0d4e8b7c3", Hostname: "garage-2xv9p", Storage: true, Zone: "zone-3", Tags: []string{"demo-worker-3"}, KubeNode: "demo-worker-3", LastSeenSecs: 172800,
-					DataTotal: 500 * gib, ResyncQueue: -1, ResyncErrors: -1, TableSyncQueue: -1, StatsError: "Network error: Not connected: 9c2f61a0d4e8b7c3"},
+					DataTotal: 500 * gib, ResyncQueue: -1, ResyncErrors: -1, TableSyncQueue: -1, Tranquility: -1, StatsError: "Network error: Not connected: 9c2f61a0d4e8b7c3"},
 				{ID: "1b7e44c9a2f03d58", Hostname: "garage-4kq7z", Storage: true, Zone: "zone-1", Tags: []string{"demo-worker-1"}, KubeNode: "demo-worker-1", Up: true, LastSeenSecs: -1,
-					DataAvail: 310 * gib, DataTotal: 500 * gib, ResyncQueue: 655, ResyncErrors: 648, TableSyncQueue: 2100},
+					DataAvail: 310 * gib, DataTotal: 500 * gib, ResyncQueue: 655, ResyncErrors: 648, TableSyncQueue: 2100, Tranquility: 0},
 				{ID: "6d03b8f15e9a2c47", Hostname: "garage-q8m2d", Storage: true, Zone: "zone-2", Tags: []string{"demo-worker-2"}, KubeNode: "demo-worker-2", Up: true, LastSeenSecs: -1,
-					DataAvail: 295 * gib, DataTotal: 500 * gib, ResyncQueue: 655, ResyncErrors: 646, TableSyncQueue: 2100},
+					DataAvail: 295 * gib, DataTotal: 500 * gib, ResyncQueue: 655, ResyncErrors: 646, TableSyncQueue: 2100, Tranquility: 2},
 			},
 		},
 		{
@@ -52,7 +55,7 @@ func demoDataServices(now time.Time) dataServices {
 			ConnectedNodes: 1, KnownNodes: 1, StorageNodes: 1, StorageNodesUp: 1, Partitions: 256, PartitionsQuorum: 256, PartitionsAllOk: 256,
 			TableSyncQueue: 12, LayoutVersion: 1, Source: garageSourceCLI,
 			Nodes: []garageNode{{ID: "e41a7f0c93b2d865", Hostname: "garage-archive-0", Storage: true, Zone: "nas", Tags: []string{"nas"}, KubeNode: "demo-worker-2", Up: true, LastSeenSecs: -1,
-				DataAvail: 1400 * gib, DataTotal: 2000 * gib, TableSyncQueue: 12}},
+				DataAvail: 1400 * gib, DataTotal: 2000 * gib, TableSyncQueue: 12, Tranquility: 2}},
 		},
 	}}
 
@@ -108,4 +111,28 @@ func demoDataServices(now time.Time) dataServices {
 	}}
 
 	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly}
+}
+
+// demoGarageBlockReport is the demo cluster's blocks failing to resync: one a live object
+// references, one kept by a stale reference, one deleted data awaiting cleanup.
+func demoGarageBlockReport() garageBlockReport {
+	hash := func(c byte) string { return strings.Repeat(string(c), 64) }
+
+	return garageBlockReport{
+		Errored: 1294, Detailed: 3, Live: 1, CleanupOnly: 2, StaleRefs: 1, RefcountMismatches: 1, Retryable: 1290,
+		Nodes: []garageBlockNode{
+			{ID: "1b7e44c9a2f03d58", Hostname: "garage-4kq7z", Errored: 648, Blocks: []garageBlock{
+				{Hash: hash('a'), Refcount: 1, Errors: 41, LastTrySecs: 300, NextTrySecs: 3300, Impact: garageImpactLive, Refs: []garageBlockRef{
+					{Kind: "object", Bucket: "4f1d0c2e9b7a6583", Key: "photos/2024/beach.jpg", Live: true},
+				}},
+				{Hash: hash('b'), Refcount: 1, Errors: 38, LastTrySecs: 600, NextTrySecs: 3000, Impact: garageImpactStale, StaleRef: true, RefcountMismatch: true, Refs: []garageBlockRef{
+					{Kind: "upload", Bucket: "4f1d0c2e9b7a6583", Key: "backups/db.tar", UploadID: "c3a9e1f07b2d4e68"},
+				}},
+			}},
+			{ID: "6d03b8f15e9a2c47", Hostname: "garage-q8m2d", Errored: 646, Blocks: []garageBlock{
+				{Hash: hash('c'), Errors: 12, LastTrySecs: 120, NextTrySecs: 1800, Impact: garageImpactCleanup, Refs: []garageBlockRef{}},
+			}},
+			{ID: "9c2f61a0d4e8b7c3", Hostname: "garage-2xv9p", Error: "Network error: Not connected: 9c2f61a0d4e8b7c3", Blocks: []garageBlock{}},
+		},
+	}
 }

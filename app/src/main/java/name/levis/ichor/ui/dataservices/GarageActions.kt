@@ -1,0 +1,188 @@
+package name.levis.ichor.ui.dataservices
+
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import name.levis.ichor.R
+import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.model.GARAGE_TRANQUILITY_FULL
+import name.levis.ichor.model.GarageBlockReport
+import name.levis.ichor.model.GarageInstance
+import name.levis.ichor.model.GarageNode
+import name.levis.ichor.model.GarageRepairOutcome
+import name.levis.ichor.model.GarageRepairResult
+import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.uiText
+
+/** The block report the sheet shows, for [instance]. */
+data class GarageBlocksState(
+    val instance: GarageInstance,
+    val report: GarageBlockReport? = null,
+    /** The last load failed (the report, if any, is the previous one). */
+    val error: UiText? = null,
+    val loading: Boolean = true,
+    val repairing: Boolean = false,
+)
+
+/** Outcome of a Garage action, shown once. */
+sealed interface GarageActionResult {
+    data class Tranquility(val node: String, val value: Long, val error: UiText?) : GarageActionResult
+    data class Repair(val result: GarageRepairResult?, val error: UiText?) : GarageActionResult
+}
+
+/**
+ * Garage maintenance run in [scope] (a ViewModel's): resync tranquility changes, the block
+ * error report and its repair. [onChanged] runs after an action that changed the cluster,
+ * e.g. to refresh the data services.
+ */
+class GarageActions(
+    private val scope: CoroutineScope,
+    private val talos: TalosRepository,
+    private val onChanged: () -> Unit,
+) {
+    private val _tuning = MutableStateFlow<Set<String>>(emptySet())
+    /** Keys ([tuningKey]) of the nodes whose tranquility change is in flight. */
+    val tuning: StateFlow<Set<String>> = _tuning.asStateFlow()
+
+    private val _sheet = MutableStateFlow<GarageBlocksState?>(null)
+    /** The open block report, null when closed. */
+    val sheet: StateFlow<GarageBlocksState?> = _sheet.asStateFlow()
+    private var loadJob: Job? = null
+
+    // A queue, not a state: two actions finishing together each get their message.
+    private val _results = Channel<GarageActionResult>(Channel.BUFFERED)
+    val results: Flow<GarageActionResult> = _results.receiveAsFlow()
+
+    fun setTranquility(instance: GarageInstance, node: GarageNode, value: Long) {
+        val key = tuningKey(instance, node)
+        if (key in _tuning.value) return
+        _tuning.update { it + key }
+        scope.launch {
+            val outcome = runCatching { talos.garageSetTranquility(instance, node.id, value) }
+            _tuning.update { it - key }
+            _results.send(GarageActionResult.Tranquility(node.label, value, outcome.exceptionOrNull()?.uiText()))
+            if (outcome.isSuccess) onChanged()
+        }
+    }
+
+    fun openReport(instance: GarageInstance) {
+        _sheet.value = GarageBlocksState(instance)
+        reload()
+    }
+
+    fun closeReport() {
+        loadJob?.cancel()
+        _sheet.value = null
+    }
+
+    /** Loads the open report again, keeping the previous one on screen meanwhile. */
+    fun reload() {
+        val instance = _sheet.value?.instance ?: return
+        loadJob?.cancel()
+        _sheet.update { it?.copy(loading = true, error = null) }
+        loadJob = scope.launch {
+            try {
+                val report = talos.garageBlockErrors(instance)
+                _sheet.update { it?.copy(report = report, loading = false) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                _sheet.update { it?.copy(error = e.uiText(), loading = false) }
+            }
+        }
+    }
+
+    /** Launches the repairs for the open report's cluster, then loads the report again. */
+    fun repair() {
+        val current = _sheet.value ?: return
+        if (current.repairing) return
+        _sheet.update { it?.copy(repairing = true) }
+        scope.launch {
+            val outcome = runCatching { talos.garageRepairBlocks(current.instance) }
+            _sheet.update { it?.copy(repairing = false) }
+            _results.send(GarageActionResult.Repair(outcome.getOrNull(), outcome.exceptionOrNull()?.uiText()))
+            if (outcome.isSuccess) {
+                reload()
+                onChanged()
+            }
+        }
+    }
+
+    companion object {
+        fun tuningKey(instance: GarageInstance, node: GarageNode) = "${instance.label}|${node.id}"
+    }
+}
+
+/** A toast for each outcome of [results]. */
+@Composable
+fun GarageResultToasts(results: Flow<GarageActionResult>) {
+    val context = LocalContext.current
+    LaunchedEffect(results) {
+        results.collect { r ->
+            val (text, failed) = when (r) {
+                is GarageActionResult.Tranquility -> r.error?.resolve(context)
+                    ?.let { context.getString(R.string.garage_tranquility_failed, r.node, it) to true }
+                    ?: (context.getString(R.string.garage_tranquility_done, r.node, r.value) to false)
+                is GarageActionResult.Repair -> r.error?.resolve(context)
+                    ?.let { context.getString(R.string.garage_repair_failed, it) to true }
+                    ?: (r.result!!.summary(context) to r.result.errors.isNotEmpty())
+            }
+            Toast.makeText(context, text, if (failed) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
+/** "Block-refs and block-rc repairs launched; 12 resyncs retried", then any error. */
+fun GarageRepairResult.summary(context: Context): String {
+    val parts = outcomes.map { outcome ->
+        when (outcome) {
+            GarageRepairOutcome.BOTH_LAUNCHED -> context.getString(R.string.garage_repair_both)
+            GarageRepairOutcome.REFS_LAUNCHED -> context.getString(R.string.garage_repair_refs)
+            GarageRepairOutcome.RC_LAUNCHED -> context.getString(R.string.garage_repair_rc)
+            GarageRepairOutcome.ALREADY_RUNNING -> context.getString(R.string.garage_repair_running)
+            GarageRepairOutcome.UNREACHABLE -> context.getString(R.string.garage_repair_unreachable)
+            GarageRepairOutcome.RETRIED -> context.resources.getQuantityString(R.plurals.garage_repair_retried, retried.toInt(), retried.toInt())
+            GarageRepairOutcome.NOTHING -> context.getString(R.string.garage_repair_nothing)
+        }
+    }
+    return (parts + errors).joinToString("\n")
+}
+
+/** Confirms a tranquility change: full speed costs disk and network IO. */
+@Composable
+fun TranquilityConfirmDialog(node: GarageNode, value: Long, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val full = value == GARAGE_TRANQUILITY_FULL
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(if (full) R.string.garage_tranquility_full_title else R.string.garage_tranquility_default_title, node.label)) },
+        text = { Text(stringResource(if (full) R.string.garage_tranquility_full_text else R.string.garage_tranquility_default_text)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    stringResource(R.string.garage_tranquility_confirm),
+                    color = if (full) LocalStatusColors.current.warn else Color.Unspecified,
+                )
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    )
+}

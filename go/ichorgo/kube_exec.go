@@ -22,6 +22,14 @@ const (
 	kubeExecMaxOutput = 1 << 20
 )
 
+// execLimits bound one command: how long it may run and how much it may write.
+type execLimits struct {
+	timeout   time.Duration
+	maxOutput int
+}
+
+var defaultExecLimits = execLimits{kubeExecTimeout, kubeExecMaxOutput}
+
 // kubeExecProtocols are the WebSocket subprotocols of `kubectl exec`, newest first: v5 adds
 // a close signal the app does not need, v4 is what every supported Kubernetes accepts.
 var kubeExecProtocols = []string{"v5.channel.k8s.io", "v4.channel.k8s.io"}
@@ -56,6 +64,11 @@ var errExecRefused = errors.New("exec refused by the Kubernetes API (forbidden, 
 // without stdin or a terminal, and returns what it wrote. Callers pass fixed commands only:
 // nothing a user types reaches argv. A non-zero exit returns the output with a *kubeExecError.
 func (k *kubeClient) exec(ctx context.Context, namespace, pod, container string, argv []string) (stdout, stderr []byte, err error) {
+	return k.execWith(ctx, defaultExecLimits, namespace, pod, container, argv)
+}
+
+// execWith is exec with its own limits, for the commands that answer more than a status.
+func (k *kubeClient) execWith(ctx context.Context, limits execLimits, namespace, pod, container string, argv []string) (stdout, stderr []byte, err error) {
 	if err := validateKubeName("pod", namespace, pod); err != nil {
 		return nil, nil, err
 	}
@@ -69,7 +82,7 @@ func (k *kubeClient) exec(ctx context.Context, namespace, pod, container string,
 		return nil, nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, kubeExecTimeout)
+	ctx, cancel := context.WithTimeout(ctx, limits.timeout)
 	defer cancel()
 
 	ws, err := cfg.DialContext(ctx)
@@ -92,9 +105,9 @@ func (k *kubeClient) exec(ctx context.Context, namespace, pod, container string,
 		_ = ws.SetDeadline(deadline)
 	}
 
-	ws.MaxPayloadBytes = kubeExecMaxOutput
+	ws.MaxPayloadBytes = limits.maxOutput
 
-	return readExecStream(ws)
+	return readExecStream(ws, limits.maxOutput)
 }
 
 func (k *kubeClient) execConfig(namespace, pod, container string, argv []string) (*websocket.Config, error) {
@@ -125,7 +138,7 @@ func (k *kubeClient) execConfig(namespace, pod, container string, argv []string)
 }
 
 // readExecStream demultiplexes the frames until the server closes the stream.
-func readExecStream(ws *websocket.Conn) (stdout, stderr []byte, err error) {
+func readExecStream(ws *websocket.Conn, maxOutput int) (stdout, stderr []byte, err error) {
 	var out, errOut, status bytes.Buffer
 
 	for {
@@ -156,8 +169,8 @@ func readExecStream(ws *websocket.Conn) (stdout, stderr []byte, err error) {
 			continue
 		}
 
-		if dst.Len()+len(frame)-1 > kubeExecMaxOutput {
-			return nil, nil, errors.New("exec output is larger than the app reads (1 MiB)")
+		if dst.Len()+len(frame)-1 > maxOutput {
+			return nil, nil, fmt.Errorf("exec output is larger than the app reads (%d MiB)", maxOutput>>20)
 		}
 
 		dst.Write(frame[1:])

@@ -70,6 +70,7 @@ fun DataServicesScreen(onBack: () -> Unit) {
     LaunchedEffect(config?.activeContext, generation, invalidations) {
         vm.load(Triple(config?.activeContext, generation, invalidations), vm.inventoryHints())
     }
+    GarageResultToasts(vm.garage.results)
 
     val fingerprint = config?.activeSummary?.takeIf { !it.isDemo && !mask.enabled }?.fingerprint?.takeIf { it.isNotBlank() }
     var editing by remember { mutableStateOf(false) }
@@ -112,7 +113,7 @@ fun DataServicesScreen(onBack: () -> Unit) {
                 }
                 Column(modifier.fillMaxSize()) {
                     PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                        Systems(s.data, downNodes)
+                        Systems(s.data, downNodes, vm.garage)
                     }
                     DataFreshness(s, edgeToEdge = false)
                 }
@@ -122,7 +123,7 @@ fun DataServicesScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun Systems(services: DataServices, downNodes: Set<String>) {
+private fun Systems(services: DataServices, downNodes: Set<String>, garage: GarageActions) {
     val kinds = services.detected
     if (kinds.isEmpty()) {
         Text(
@@ -147,7 +148,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>) {
         }
         when (tab) {
             DataServiceKind.LONGHORN -> LonghornTab(services.longhorn!!, garageDetected = services.garage != null, onGarage = { selected = DataServiceKind.GARAGE })
-            DataServiceKind.GARAGE -> GarageTab(services.garage!!)
+            DataServiceKind.GARAGE -> GarageTab(services.garage!!, garage)
             DataServiceKind.CNPG -> CnpgTab(services.cnpg!!)
             DataServiceKind.DRAGONFLY -> DragonflyTab(services.dragonfly!!)
         }

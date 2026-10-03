@@ -17,7 +17,7 @@ final class DataServicesTests: XCTestCase {
        "message":"1 node down (zone z3, tags node-3)","storageNodes":3,"storageNodesUp":2,"partitions":256,"partitionsQuorum":256,"partitionsAllOk":170,
        "resyncQueue":12,"resyncErrors":10,"tableSyncQueue":4,"layoutVersion":3,"source":"cli-json","futureField":true,
        "nodes":[{"id":"aa","hostname":"","zone":"z3","tags":["node-3"],"kubeNode":"","storage":true,"up":false,"lastSeenSecs":-1,"resyncQueue":-1,"resyncErrors":-1,"tableSyncQueue":-1,"statsError":"Not connected"},
-                {"id":"bb","hostname":"garage-a","zone":"z1","tags":["node-1"],"kubeNode":"node-1","storage":true,"up":true,"lastSeenSecs":-1,"dataAvail":1,"dataTotal":2,"resyncQueue":6,"resyncErrors":5,"tableSyncQueue":2}]},
+                {"id":"bb","hostname":"garage-a","zone":"z1","tags":["node-1"],"kubeNode":"node-1","storage":true,"up":true,"lastSeenSecs":-1,"dataAvail":1,"dataTotal":2,"resyncQueue":6,"resyncErrors":5,"tableSyncQueue":2,"tranquility":0}]},
       {"namespace":"nas","name":"garage-nas","pods":1,"podsReady":1,"status":"healthy","source":"cli-json"}]},
      "cnpg":{"version":"v1","error":"","clusters":[
       {"namespace":"app","name":"down-db","phase":"Waiting for the instances to become active","health":"critical","hibernated":false,"reasons":["noInstance","someNewReason"],
@@ -43,6 +43,8 @@ final class DataServicesTests: XCTestCase {
         XCTAssertTrue(garage.detailed)
         XCTAssertEqual(garage.nodes[0].label, "node-3")
         XCTAssertEqual(garage.nodes[1].label, "garage-a")
+        XCTAssertEqual(garage.nodes[0].tranquility, -1)
+        XCTAssertEqual(garage.nodes[1].tranquility, GarageTranquility.fullSpeed)
 
         let down = try XCTUnwrap(s.cnpg?.clusters.first)
         XCTAssertEqual(down.reasons, [.noInstance])

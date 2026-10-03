@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.dataservices
 
+import androidx.lifecycle.viewModelScope
 import name.levis.ichor.data.DATA_SERVICES
 import name.levis.ichor.data.INVENTORY
 import name.levis.ichor.data.TalosRepository
@@ -17,6 +18,9 @@ class DataServicesViewModel(private val talos: TalosRepository) : LoadingViewMod
     override fun cached(): TalosRepository.Timed<DataServices>? = talos.cached(DATA_SERVICES)
     override val restores get() = talos.restores
     override suspend fun fetch() = talos.dataServices(hints)
+
+    /** Garage maintenance; a change shows in a fresh reading (tranquility, repairs running). */
+    val garage = GarageActions(viewModelScope, talos, onChanged = { refresh() })
 
     /** Catalog ids from the inventory; "" checks everything (Garage needs a listing of every pod then). */
     private var hints = ""
