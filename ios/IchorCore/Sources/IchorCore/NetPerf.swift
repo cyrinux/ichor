@@ -66,7 +66,7 @@ public struct NetPerfNode: Decodable, Equatable, Identifiable, Sendable {
 }
 
 /// Round trip in microseconds.
-public struct NetPerfLatency: Decodable, Equatable, Sendable {
+public struct NetPerfLatency: Codable, Equatable, Sendable {
     public let min: Double
     public let mean: Double
     public let max: Double
@@ -96,7 +96,7 @@ public struct NetPerfLatency: Decodable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey { case min, mean, max, p50, p90, p99 }
 }
 
-public struct NetPerfResult: Decodable, Equatable, Sendable {
+public struct NetPerfResult: Codable, Equatable, Sendable {
     /// NetPerfPath.pod or .host.
     public let path: String
     /// NetPerfTest.throughput or .latency.
@@ -133,7 +133,7 @@ public struct NetPerfResult: Decodable, Equatable, Sendable {
     }
 }
 
-public struct NetPerfReport: Decodable, Equatable, Sendable {
+public struct NetPerfReport: Codable, Equatable, Sendable {
     public let server: String
     public let client: String
     public let hostNetwork: Bool
@@ -267,6 +267,22 @@ public func defaultNetPerfPair(_ nodes: [NetPerfNode]) -> NetPerfPair? {
     case 0: return nil
     case 1: return NetPerfPair(server: pick[0].name, client: pick[0].name)
     default: return NetPerfPair(server: pick[0].name, client: pick[1].name)
+    }
+}
+
+/// Finished tests kept per cluster on the phone.
+public let netPerfHistoryLimit = 20
+
+extension NetPerfReport {
+    /// What was tested, to show a saved report like the test that made it.
+    public var setup: NetPerfSetup { NetPerfSetup(server: server, client: client, hostNetwork: hostNetwork, seconds: seconds) }
+}
+
+extension Array where Element == NetPerfReport {
+    /// These saved tests, newest first, with `report` added in front and at most `limit` kept; a
+    /// test already there (same start) is replaced.
+    public func withReport(_ report: NetPerfReport, limit: Int = netPerfHistoryLimit) -> [NetPerfReport] {
+        Array(([report] + filter { $0.started != report.started }).prefix(limit))
     }
 }
 

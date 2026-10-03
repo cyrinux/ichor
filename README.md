@@ -115,6 +115,9 @@ and, optionally, host to host.
   report that netserver does not answer.
 - **Load:** each measurement saturates the link between the two nodes for its duration (5, 10 or
   20 s); run it when that is acceptable.
+- **Saved results:** the last 20 finished tests of each cluster (stopped ones too, with what they
+  measured) are listed under the setup, to compare over time. They are kept encrypted on the
+  phone, outside backups, apart for the privacy mask; open one to delete it (or swipe it away on iOS).
 
 ### Creating a talosconfig for the phone
 

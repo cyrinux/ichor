@@ -35,6 +35,10 @@ data class PrivacyMask(val enabled: Boolean = false, val extraWords: String = ""
     /** [extraWords] as the Go core takes them: trimmed, comma-separated, no empty entries. */
     val words: String
         get() = extraWords.split(',').map { it.trim() }.filter { it.isNotEmpty() }.distinct().joinToString(",")
+
+    /** Keeps what is saved while masked apart from the real data: "real", or a hash of the words. */
+    val storageKey: String
+        get() = if (enabled) java.security.MessageDigest.getInstance("SHA-256").digest(words.toByteArray()).take(8).joinToString("") { "%02x".format(it) } else "real"
 }
 
 class UiPreferences(private val prefs: SharedPreferences) {

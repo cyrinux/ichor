@@ -37112,6 +37112,76 @@
         }
       }
     },
+    "Previous tests" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tests précédents"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pruebas anteriores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередні тести"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frühere Tests"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test precedenti"
+          }
+        }
+      }
+    },
+    "Kept encrypted on this phone: the last %lld tests of this cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservés chiffrés sur ce téléphone : les %lld derniers tests de ce cluster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardadas cifradas en este teléfono: las últimas %lld pruebas de este clúster."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігаються зашифрованими на цьому телефоні: останні %lld тестів цього кластера."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschlüsselt auf diesem Telefon gespeichert: die letzten %lld Tests dieses Clusters."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservati cifrati su questo telefono: gli ultimi %lld test di questo cluster."
+          }
+        }
+      }
+    },
     "Test stopped." : {
       "extractionState" : "manual",
       "localizations" : {

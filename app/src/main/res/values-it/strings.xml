@@ -1408,6 +1408,8 @@
     <string name="netperf_stopped">Test interrotto.</string>
     <string name="netperf_failed">Test non riuscito: %1$s</string>
     <string name="netperf_again">Nuovo test</string>
+    <string name="netperf_history">Test precedenti</string>
+    <string name="netperf_history_note">Conservati cifrati su questo telefono: gli ultimi %d test di questo cluster.</string>
     <string name="netperf_path_pod">Da pod a pod</string>
     <string name="netperf_path_host">Da host a host</string>
     <string name="netperf_test_throughput">Throughput</string>

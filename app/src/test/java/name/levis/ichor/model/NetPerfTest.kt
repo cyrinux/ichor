@@ -1,5 +1,6 @@
 package name.levis.ichor.model
 
+import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.data.TalosJson
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -56,5 +57,29 @@ class NetPerfTest {
         assertEquals("4.2 Mbit/s", formatMbps(4.2))
         assertEquals("58 µs", formatMicros(58.0))
         assertEquals("3.54 ms", formatMicros(3542.0))
+    }
+
+    @Test
+    fun historyKeepsTheNewestFirstAndAtMostTheLimit() {
+        val history = listOf(3L, 2L, 1L).map { NetPerfReport(started = it) }
+        val added = history.withReport(NetPerfReport(started = 4), limit = 3)
+        assertEquals(listOf(4L, 3L, 2L), added.map { it.started })
+
+        // The same test again (same start) replaces the saved one rather than duplicating it.
+        val replaced = added.withReport(NetPerfReport(started = 3, client = "b"), limit = 3)
+        assertEquals(listOf(3L, 4L, 2L), replaced.map { it.started })
+        assertEquals("b", replaced[0].client)
+    }
+
+    @Test
+    fun savedHistoryReadsBackWithItsSetup() {
+        val report = NetPerfReport(
+            server = "a", client = "b", hostNetwork = true, seconds = 5, started = 1,
+            results = listOf(NetPerfResult(NETPERF_PATH_POD, NETPERF_LATENCY, transactionRate = 9.0, latency = NetPerfLatency(p50 = 58.0))),
+        )
+        val serializer = ListSerializer(NetPerfReport.serializer())
+        val read = TalosJson.decodeFromString(serializer, TalosJson.encodeToString(serializer, listOf(report)))
+        assertEquals(listOf(report), read)
+        assertEquals(NetPerfSetup(server = "a", client = "b", hostNetwork = true, seconds = 5), report.setup)
     }
 }

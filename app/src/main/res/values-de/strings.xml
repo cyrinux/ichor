@@ -1407,6 +1407,8 @@
     <string name="netperf_stopped">Test gestoppt.</string>
     <string name="netperf_failed">Test fehlgeschlagen: %1$s</string>
     <string name="netperf_again">Neuer Test</string>
+    <string name="netperf_history">Frühere Tests</string>
+    <string name="netperf_history_note">Verschlüsselt auf diesem Telefon gespeichert: die letzten %d Tests dieses Clusters.</string>
     <string name="netperf_path_pod">Pod zu Pod</string>
     <string name="netperf_path_host">Host zu Host</string>
     <string name="netperf_test_throughput">Durchsatz</string>

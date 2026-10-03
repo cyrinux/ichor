@@ -52,4 +52,25 @@ final class NetPerfTests: XCTestCase {
         XCTAssertEqual(formatMicros(58), "58 µs")
         XCTAssertEqual(formatMicros(3542), "3.54 ms")
     }
+
+    func testHistoryKeepsTheNewestFirstAndAtMostTheLimit() {
+        let history = [3, 2, 1].map { NetPerfReport(started: $0) }
+        let added = history.withReport(NetPerfReport(started: 4), limit: 3)
+        XCTAssertEqual(added.map(\.started), [4, 3, 2])
+
+        // The same test again (same start) replaces the saved one rather than duplicating it.
+        let replaced = added.withReport(NetPerfReport(client: "b", started: 3), limit: 3)
+        XCTAssertEqual(replaced.map(\.started), [3, 4, 2])
+        XCTAssertEqual(replaced[0].client, "b")
+    }
+
+    func testSavedHistoryReadsBackWithItsSetup() throws {
+        let report = NetPerfReport(
+            server: "a", client: "b", hostNetwork: true, seconds: 5, started: 1,
+            results: [NetPerfResult(path: NetPerfPath.pod, test: NetPerfTest.latency, transactionRate: 9, latency: NetPerfLatency(p50: 58))]
+        )
+        let json = String(decoding: try JSONEncoder().encode([report]), as: UTF8.self)
+        XCTAssertEqual(try TalosJSON.decode([NetPerfReport].self, from: json), [report])
+        XCTAssertEqual(report.setup, NetPerfSetup(server: "a", client: "b", hostNetwork: true, seconds: 5))
+    }
 }
