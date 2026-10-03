@@ -1,6 +1,6 @@
 # Data services: Longhorn, Garage and CloudNativePG health
 
-Status: **planned**. Pick up from [HANDOFF.md](HANDOFF.md).
+Status: **phase 1 (Go core) done**; phases 2–4 planned. Pick up from [HANDOFF.md](HANDOFF.md).
 
 ## Goal
 
@@ -68,27 +68,31 @@ Clusters without any of the three see nothing new and pay no extra cost.
   },
   "garage": {
     "error": "",
-    "instances": [{                 // one per namespace running Garage pods (usually 1)
-      "namespace": "garage", "pod": "garage-0",     // pod the CLI ran in
+    "instances": [{                 // one per namespace + app name running Garage pods
+      "namespace": "garage", "name": "garage",     // name: the pods' app.kubernetes.io/name (or controller)
+      "pod": "garage-0",            // pod the CLI ran in ("" when none was ready)
       "pods": 3, "podsReady": 3,
-      "version": "v2.1.0",          // from GetClusterStatus, "" when unknown
+      "version": "v2.3.0",          // from GetClusterStatus, "" when unknown
       "status": "healthy",          // healthy|degraded|unavailable|unknown
-      "message": "",                // why degraded, or the /health body, or "exec refused: ..."
+      "message": "",                // English, cause first: "1 node down (zone z, tags h); 128/256 partitions not fully replicated; …"
+                                    //   or the /health body + "(garage json-api: <why>)" on fallback
       "connectedNodes": 3, "knownNodes": 3,
       "storageNodes": 3, "storageNodesUp": 3,      // Garage v2.3.0 field name
-      "tableSyncQueue": 0,          // sum of tableStats insert/merkle/gc queues (metadata sync)
       "partitions": 256, "partitionsQuorum": 256, "partitionsAllOk": 256,
       "resyncQueue": 0, "resyncErrors": 0,         // -1 when unknown
-      "layoutStaged": false,        // staged layout changes not applied
-      "nodes": [{                   // GetClusterStatus + GetNodeStatistics, cli-json only
-        "id": "3f2a…", "hostname": "garage-0", "zone": "dc1",
-        "up": true, "lastSeenSecs": 0,
+      "tableSyncQueue": 0,          // sum of tableStats insert/merkle/gc queues (metadata sync), -1 when unknown
+      "layoutVersion": 47,
+      "nodes": [{                   // GetClusterStatus + GetNodeStatistics, cli-json only; down nodes first
+        "id": "3f2a…", "hostname": "garage-0", "zone": "dc1", "tags": ["host-1"],
+        "kubeNode": "worker-1",     // D9: node of the pod with that hostname, "" when none
+        "storage": true,            // holds a layout role; only those count as "down"
+        "up": true, "lastSeenSecs": -1,            // -1 when up or unknown (Garage forgets long-gone nodes)
+        "draining": false,
         "dataAvail": 0, "dataTotal": 0,            // bytes, 0 when unknown
         "resyncQueue": 0, "resyncErrors": 0,        // -1 when that node's stats failed
         "tableSyncQueue": 0, "statsError": ""        // GetNodeStatistics error map entry
       }],
-      "raw": "",                    // cli-text only (deferred): raw CLI output (≤ 4 KB)
-      "source": "cli-json"          // cli-json|cli-text|health
+      "source": "cli-json"          // cli-json|health (cli-text is deferred with 1.x support)
     }]
   },
   "cnpg": {
@@ -97,9 +101,13 @@ Clusters without any of the three see nothing new and pay no extra cost.
       "namespace": "db", "name": "pg",
       "phase": "Cluster in healthy state", "phaseReason": "",
       "health": "ok",               // ok|warning|critical (see 01 §CNPG)
+      "reasons": [],                // why not ok, for the app to word: noInstance|failover|instances|
+                                    //   switchover|notReady|archiving|backupFailed|backupStale
       "instances": 3, "readyInstances": 3,
       "currentPrimary": "pg-1", "targetPrimary": "pg-1",
-      "instancePods": [{ "name": "pg-1", "node": "worker-1", "ready": true }],  // D9: pods labelled cnpg.io/cluster=<name>
+      "hibernated": false,          // cnpg.io/hibernation=on: health "idle", no reasons
+      "instancePods": [{ "name": "pg-1", "node": "worker-1", "phase": "Running", "role": "primary", "ready": true }],
+                                    // D9: instance pods (cnpg.io/podRole=instance); node "" while Pending
       "archiving": "ok",            // ok|failing|off|unknown (off = no WAL archiver configured: neutral)
       "lastBackup": "ok",           // ok|failed|stale|none (plugin ObjectStore first, see 01 §CNPG)
       "backupMethod": "plugin",     // plugin|in-tree|none

@@ -376,7 +376,8 @@ garage image so the hint path is covered.
 
 ## Probe
 
-`go/cmd/probe`: add `dataservices [hints] [--raw]`, printing the JSON (`--raw` also prints the raw Garage CLI output, for test fixtures). This is how a human checks
+`go/cmd/probe`: `dataservices [HINTS]` prints the JSON (done). The planned `--raw` flag was
+dropped: the fixtures were captured with plain `kubectl` (see HANDOFF.md). This is how a human checks
 against a real cluster before any UI exists:
 
 ```sh
@@ -386,10 +387,10 @@ just probe dataservices garage     # Garage only
 
 ## Done when
 
-- [ ] `just test` (Go tests) green; new files ≥ 80% coverage (`go test -cover ./go/talosmobile/`)
-- [ ] `golangci-lint` clean, if CI runs it (check `.github/workflows/android.yml`)
-- [ ] `just probe dataservices` against the user's real cluster shows sensible Longhorn,
+- [x] `just test` (Go tests) green; new files ≥ 80% coverage (90.9%)
+- [x] ~~`golangci-lint`~~: CI runs `./build.sh check` (gofmt, vet, Go + Kotlin unit tests)
+- [x] `just probe dataservices` against the user's real cluster shows sensible Longhorn,
       Garage and CNPG output; README risks updated with what was learned
-- [ ] Garage CLI fixtures from the real cluster committed in `testdata/garage/`
-- [ ] Privacy test: with the mask on, the output contains no unmasked context or node names
-- [ ] gomobile binding builds (`just build` builds the AAR)
+- [x] Garage CLI fixtures from the real cluster committed in `testdata/garage/`
+- [x] Privacy test: with the mask on, the output contains no unmasked context or node names
+- [x] gomobile binding builds (`./build.sh check` built the AAR and ran the Kotlin tests)
