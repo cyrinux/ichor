@@ -326,6 +326,13 @@
     <string name="topology_link_one_side">Опитано лише один бік цього з\'єднання: інший вузол відсутній у цьому talosconfig.</string>
     <string name="topology_link_test">Останній тест мережі</string>
     <string name="topology_link_test_host">хост до хоста %1$s</string>
+    <string name="topology_link_test_run">Перевірити це з’єднання</string>
+    <string name="topology_test_pick">Перевірити швидкість</string>
+    <string name="topology_test_running">Тест триває…</string>
+    <string name="topology_pick_client_hint">Торкніться вузла-клієнта: він надсилає.</string>
+    <string name="topology_pick_server_hint">Тепер торкніться вузла-сервера.</string>
+    <string name="topology_pick_client">Клієнт</string>
+    <string name="topology_pick_server">Сервер</string>
     <string name="topology_link_seen_from">З боку %1$s</string>
     <string name="topology_not_queried">Сірі вузли відсутні у цьому talosconfig: їх показано за даними їхніх пірів.</string>
     <string name="topology_empty">Немає чого показати: не знайдено жодного учасника кластера чи піра KubeSpan.</string>

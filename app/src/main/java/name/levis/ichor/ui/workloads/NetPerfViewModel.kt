@@ -19,9 +19,11 @@ import name.levis.ichor.model.NetPerfProgress
 import name.levis.ichor.model.NetPerfReport
 import name.levis.ichor.model.NetPerfResult
 import name.levis.ichor.model.NetPerfSetup
+import name.levis.ichor.model.between
 import name.levis.ichor.model.withNodes
 import name.levis.ichor.model.withReport
 import name.levis.ichor.ui.LoadingViewModel
+import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.uiText
 
@@ -79,6 +81,17 @@ class NetPerfViewModel(
 
     fun update(transform: (NetPerfSetup) -> NetPerfSetup) {
         if (_session.value?.running != true) _setup.update(transform)
+    }
+
+    /**
+     * A new test from [client] to [server], picked outside the tab (on the topology map): back
+     * to the setup with them chosen. Ignored while a test runs.
+     */
+    fun prepare(client: String, server: String) {
+        if (_session.value?.running == true) return
+        _session.value = null
+        _viewing.value = null
+        _setup.update { it.between(client, server, (state.value as? UiState.Loaded)?.data) }
     }
 
     fun start() {

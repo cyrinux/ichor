@@ -284,6 +284,13 @@
     <string name="topology_link_one_side">Nur eine Seite dieser Verbindung wurde abgefragt: der andere Node ist nicht in dieser talosconfig.</string>
     <string name="topology_link_test">Letzter Netzwerktest</string>
     <string name="topology_link_test_host">Host zu Host %1$s</string>
+    <string name="topology_link_test_run">Diese Verbindung testen</string>
+    <string name="topology_test_pick">Geschwindigkeit testen</string>
+    <string name="topology_test_running">Test läuft…</string>
+    <string name="topology_pick_client_hint">Tippe auf den Client-Knoten: Er sendet.</string>
+    <string name="topology_pick_server_hint">Tippe jetzt auf den Server-Knoten.</string>
+    <string name="topology_pick_client">Client</string>
+    <string name="topology_pick_server">Server</string>
     <string name="topology_link_seen_from">Gesehen von %1$s</string>
     <string name="topology_not_queried">Graue Nodes sind nicht in dieser talosconfig: sie werden aus den Angaben ihrer Peers gezeichnet.</string>
     <string name="topology_empty">Nichts darzustellen: kein Cluster-Mitglied und kein KubeSpan-Peer gefunden.</string>

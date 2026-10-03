@@ -11,6 +11,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,6 +37,7 @@ import name.levis.ichor.model.NetPerfReport
 import name.levis.ichor.model.formatMbps
 import name.levis.ichor.model.formatMicros
 import name.levis.ichor.model.latestBetween
+import name.levis.ichor.model.pickNode
 import name.levis.ichor.model.podThroughputMbps
 import name.levis.ichor.ui.workloads.netPerfViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,27 +59,64 @@ class TopologyViewModel(private val talos: TalosRepository) : LoadingViewModel<C
     override suspend fun fetch() = talos.topology()
 }
 
-/** The map tab: a one-line summary, the map, its legend, and a sheet for a tapped link. */
+/**
+ * The map tab: a one-line summary, the map, its legend, and a sheet for a tapped link. Two
+ * nodes picked on the map, or a link, open the network test between them.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopologyContent(topology: ClusterTopology, onNode: (TopologyNode) -> Unit) {
     var link by remember { mutableStateOf<TopologyLink?>(null) }
     val names = topology.nodes.associate { it.id to it.hostname.ifBlank { it.id } }
     // Node names of the network test are Kubernetes node names: the hostnames on Talos.
-    val history by netPerfViewModel().history.collectAsStateWithLifecycle()
+    val netPerf = netPerfViewModel()
+    val history by netPerf.history.collectAsStateWithLifecycle()
+    val session by netPerf.session.collectAsStateWithLifecycle()
+    var picking by remember { mutableStateOf(false) }
+    var picked by remember { mutableStateOf(emptyList<String>()) }
+    var testing by remember { mutableStateOf(false) }
+    fun test(client: String, server: String) {
+        netPerf.prepare(client, server)
+        picking = false
+        picked = emptyList()
+        link = null
+        testing = true
+    }
     val tests = remember(topology, history) {
         topology.links.mapNotNull { l -> history.latestBetween(l.a, l.b)?.let { l to it } }.toMap()
     }
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { TopologySummary(topology) }
+        if (topology.nodes.isNotEmpty()) {
+            item {
+                NetPerfPickBar(
+                    picking, picked.size, running = session?.running == true,
+                    onToggle = {
+                        picking = !picking
+                        picked = emptyList()
+                    },
+                    onOpen = { testing = true },
+                )
+            }
+        }
         if (topology.nodes.isEmpty()) {
             item { Text(stringResource(R.string.topology_empty), style = MaterialTheme.typography.bodyMedium) }
         } else {
             item {
                 TopologyMap(
-                    topology, onNode = onNode, onLink = { link = it },
+                    topology,
+                    onNode = { node ->
+                        if (picking) {
+                            picked = picked.pickNode(node.id)
+                            if (picked.size == 2) test(client = picked[0], server = picked[1])
+                        } else {
+                            onNode(node)
+                        }
+                    },
+                    onLink = { link = it },
                     speeds = tests.mapValues { (_, test) -> formatMbps(test.podThroughputMbps ?: 0.0) },
+                    picked = picked,
                 )
             }
             item { TopologyLegend() }
@@ -95,9 +134,15 @@ fun TopologyContent(topology: ClusterTopology, onNode: (TopologyNode) -> Unit) {
 
     link?.let { shown ->
         ModalBottomSheet(onDismissRequest = { link = null }) {
-            LinkDetails(shown, names, tests[shown], Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp))
+            LinkDetails(
+                shown, names, tests[shown],
+                onTest = { test(client = shown.a, server = shown.b) }.takeUnless { session?.running == true },
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
+            )
         }
     }
+
+    if (testing) NetPerfSheet(netPerf, onDismiss = { testing = false })
 }
 
 @Composable
@@ -116,7 +161,14 @@ private fun TopologySummary(topology: ClusterTopology) {
 }
 
 @Composable
-private fun LinkDetails(link: TopologyLink, names: Map<String, String>, test: NetPerfReport?, modifier: Modifier = Modifier) {
+private fun LinkDetails(
+    link: TopologyLink,
+    names: Map<String, String>,
+    test: NetPerfReport?,
+    /** Opens the network test over this link; null while one runs. */
+    onTest: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("${names[link.a] ?: link.a}  ↔  ${names[link.b] ?: link.b}", style = MaterialTheme.typography.titleMedium)
         link.sides.forEachIndexed { i, side ->
@@ -133,6 +185,9 @@ private fun LinkDetails(link: TopologyLink, names: Map<String, String>, test: Ne
         test?.let {
             HorizontalDivider()
             LinkTest(it)
+        }
+        OutlinedButton(onClick = { onTest?.invoke() }, enabled = onTest != null, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.topology_link_test_run))
         }
     }
 }

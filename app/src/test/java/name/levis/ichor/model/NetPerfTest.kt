@@ -123,4 +123,30 @@ class NetPerfTest {
         assertNull(history.latestBetween("b", "c"))
         assertEquals(900.0, history.latestBetween("c", "a")?.podThroughputMbps)
     }
+
+    @Test
+    fun pickingOnTheMapTakesTheClientThenTheServer() {
+        assertEquals(listOf("a"), emptyList<String>().pickNode("a"))
+        assertEquals(listOf("a", "b"), listOf("a").pickNode("b"))
+        // Tapping the picked node again drops it.
+        assertEquals(emptyList<String>(), listOf("a").pickNode("a"))
+        assertEquals(listOf("a"), listOf("a", "b").pickNode("b"))
+        // A third node starts a new pair.
+        assertEquals(listOf("c"), listOf("a", "b").pickNode("c"))
+    }
+
+    @Test
+    fun betweenKeepsOnlyReadyNodes() {
+        val nodes = listOf(node("w-1"), node("w-2"), node("w-3", ready = false))
+        val setup = NetPerfSetup(seconds = 20).between("w-2", "w-1", nodes)
+        assertEquals("w-2", setup.client)
+        assertEquals("w-1", setup.server)
+        assertEquals(20, setup.seconds)
+        // Unknown or not ready: the default pair fills in, like a refreshed node list.
+        val fallback = NetPerfSetup().between("w-3", "gone", nodes)
+        assertEquals("w-2", fallback.client)
+        assertEquals("w-1", fallback.server)
+        // Node list not loaded yet: kept as asked, checked once it loads.
+        assertEquals("x", NetPerfSetup().between("x", "y", null).client)
+    }
 }
