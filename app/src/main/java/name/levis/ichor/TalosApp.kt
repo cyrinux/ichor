@@ -243,6 +243,17 @@ class TalosApp : Application() {
     private fun applyPrivacyMask(mask: PrivacyMask) = Talosmobile.setPrivacyMask(mask.enabled, mask.words)
 
     /**
+     * The key the Go core encrypts what it remembers with, created once and kept encrypted by
+     * a Keystore key ([SecureStore]). One that no longer decrypts is replaced: what was sealed
+     * with it is then forgotten. Null when the Keystore cannot be used: nothing is remembered.
+     */
+    private fun coreDataKey(): ByteArray? {
+        val store = SecureStore(java.io.File(noBackupFilesDir, "core-key.enc"), "ichor-core-key")
+        runCatching { store.read() }.getOrNull()?.takeIf { it.size == CORE_KEY_SIZE }?.let { return it }
+        return runCatching { ByteArray(CORE_KEY_SIZE).also { java.security.SecureRandom().nextBytes(it); store.write(it) } }.getOrNull()
+    }
+
+    /**
      * Turns "Keep last known state" on or off. Off deletes everything kept and its key; on
      * starts with what the screens fetch next.
      */
@@ -281,7 +292,7 @@ class TalosApp : Application() {
         // Before any Talos call: the monitor worker and the widget run in this process too.
         applyPrivacyMask(uiPreferences.privacyMask.value)
         // Where Go remembers node names, so a node that is down still shows its hostname.
-        Talosmobile.setDataDir(noBackupFilesDir.path)
+        Talosmobile.setDataDir(noBackupFilesDir.path, coreDataKey() ?: ByteArray(0))
         launchSync()
         // Every cluster of the stored config gets a color of its own, as soon as it shows up.
         ProcessLifecycleOwner.get().lifecycleScope.launch {
@@ -358,3 +369,6 @@ class TalosApp : Application() {
         }
     }
 }
+
+/** AES-256: what Talosmobile.setDataDir takes. */
+private const val CORE_KEY_SIZE = 32
