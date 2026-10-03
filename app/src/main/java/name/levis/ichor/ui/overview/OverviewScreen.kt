@@ -223,9 +223,6 @@ fun OverviewScreen(
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { liveVm.poll(config?.activeContext to invalidations) }
     }
 
-    // Android 17: a cluster on the Wi-Fi network needs local network access, asked up front.
-    AskLocalNetworkAccess(config?.activeSummary, onGranted = vm.talos::invalidate)
-
     // Members the talosconfig misses, once the overview loaded (its nodes answer, so will discovery).
     val discovered by discoveryVm.offer.collectAsStateWithLifecycle()
     var showDiscovered by remember { mutableStateOf(false) }

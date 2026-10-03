@@ -61,19 +61,8 @@ class EndpointScanTest {
     }
 
     @Test
-    fun localAddresses() {
-        listOf("10.1.2.3", "172.20.0.1", "192.168.1.1", "100.64.0.1", "169.254.3.4", "fd00::1", "fe80::1", "NAS.local")
-            .forEach { assertTrue(it, isLocalAddress(it)) }
-        listOf("8.8.8.8", "172.32.0.1", "2001:db8::1", "talos.example.com", "localnet")
-            .forEach { assertFalse(it, isLocalAddress(it)) }
+    fun hostOfUnwrapsBracketedIpv6() {
         assertEquals("fd00::1", hostOf("[fd00::1]:50000"))
-    }
-
-    @Test
-    fun clusterOnLocalNetwork() {
-        assertTrue(ContextSummary("lan", endpoints = listOf("talos.example.com"), nodes = listOf("192.168.1.10")).onLocalNetwork())
-        assertTrue(ContextSummary("lan", endpoints = listOf("10.0.0.1:50000")).onLocalNetwork())
-        assertFalse(ContextSummary("remote", endpoints = listOf("203.0.113.5", "talos.example.com")).onLocalNetwork())
     }
 
     @Test
