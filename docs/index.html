@@ -6,6 +6,7 @@
     <title>Ichor for Talos Linux</title>
     <meta
       name="description"
+      data-i18n-attr="content"
       content="Ichor is a free, open-source Talos Linux app for Android and iPhone: node health, logs, etcd, KubeSpan, live graphs, an inventory of the apps you run, Kubernetes workloads and pods, configuration drift, an incident recorder and alerts when a node goes down. Built on the same Go client as talosctl. Try the offline demo, no cluster needed."
     />
     <meta
@@ -13,13 +14,26 @@
       content="Talos, Talos Linux, talosctl, Kubernetes, k8s, Sidero, etcd, KubeSpan, cluster monitoring, app inventory, rollout restart, pods, configuration drift, incident timeline, Wake-on-LAN, Android, iOS"
     />
     <link rel="canonical" href="https://cyrinux.github.io/ichor/" />
+    <link rel="alternate" hreflang="en" href="https://cyrinux.github.io/ichor/" />
+    <link rel="alternate" hreflang="fr" href="https://cyrinux.github.io/ichor/fr/" />
+    <link rel="alternate" hreflang="es" href="https://cyrinux.github.io/ichor/es/" />
+    <link rel="alternate" hreflang="uk" href="https://cyrinux.github.io/ichor/uk/" />
+    <link rel="alternate" hreflang="de" href="https://cyrinux.github.io/ichor/de/" />
+    <link rel="alternate" hreflang="it" href="https://cyrinux.github.io/ichor/it/" />
+    <link rel="alternate" hreflang="x-default" href="https://cyrinux.github.io/ichor/" />
     <meta name="theme-color" content="#14243B" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Ichor" />
+    <meta property="og:locale" content="en_US" data-i18n-attr="content" />
     <meta property="og:url" content="https://cyrinux.github.io/ichor/" />
-    <meta property="og:title" content="Ichor for Talos Linux" />
+    <meta
+      property="og:title"
+      content="Ichor for Talos Linux"
+      data-i18n-attr="content"
+    />
     <meta
       property="og:description"
+      data-i18n-attr="content"
       content="Your Talos cluster, from your phone. Node health, logs, etcd, alerts, and now an inventory of the apps you run, Kubernetes workloads and pods, configuration drift and an incident recorder, with the same client as talosctl."
     />
     <meta
@@ -158,6 +172,58 @@
       }
       .top nav a:hover {
         color: var(--ink);
+      }
+
+      /* Language switcher */
+      .lang {
+        position: relative;
+      }
+      .lang summary {
+        list-style: none;
+        white-space: nowrap;
+        cursor: pointer;
+        color: var(--ink-2);
+        font: 500 0.85rem/1.6 "IBM Plex Mono", ui-monospace, monospace;
+      }
+      .lang summary::-webkit-details-marker {
+        display: none;
+      }
+      .lang summary::after {
+        content: " ▾";
+      }
+      .lang summary:hover {
+        color: var(--ink);
+      }
+      .lang summary:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 3px;
+        border-radius: 6px;
+      }
+      .lang ul {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 0.5rem);
+        z-index: 10;
+        min-width: 10rem;
+        margin: 0;
+        padding: 0.35rem;
+        list-style: none;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 12px 30px -12px rgba(20, 36, 59, 0.35);
+      }
+      .top nav .lang a {
+        display: block;
+        padding: 0.35rem 0.6rem;
+        border-radius: 6px;
+        color: var(--ink);
+      }
+      .top nav .lang a:hover {
+        background: var(--bg);
+      }
+      .top nav .lang a[aria-current] {
+        font-weight: 600;
       }
 
       /* Hero */
@@ -522,6 +588,22 @@
         }
         .map td.role::before {
           content: "Needs ";
+        }
+        /* The role names stay in English, so this prefix is translated here. */
+        :lang(fr) .map td.role::before {
+          content: "Rôle ";
+        }
+        :lang(es) .map td.role::before {
+          content: "Rol ";
+        }
+        :lang(uk) .map td.role::before {
+          content: "Роль ";
+        }
+        :lang(de) .map td.role::before {
+          content: "Rolle ";
+        }
+        :lang(it) .map td.role::before {
+          content: "Ruolo ";
         }
         .top nav a.optional {
           display: none;
@@ -993,23 +1075,34 @@
       <header class="top">
         <a class="brand" href="./">
           <img src="brand/ichor.svg" width="32" height="32" alt="" />
-          <span>Ichor <small>for Talos Linux</small></span>
+          <span data-i18n>Ichor <small>for Talos Linux</small></span>
         </a>
         <nav aria-label="Primary">
-          <a class="optional" href="#apps">What's new</a>
-          <a class="optional" href="#screens">Screens</a>
-          <a class="optional" href="#features">Features</a>
-          <a class="optional" href="#access">Access</a>
-          <a class="optional" href="#faq">FAQ</a>
-          <a href="#install">Install</a>
+          <a data-i18n class="optional" href="#apps">What's new</a>
+          <a data-i18n class="optional" href="#screens">Screens</a>
+          <a data-i18n class="optional" href="#features">Features</a>
+          <a data-i18n class="optional" href="#access">Access</a>
+          <a data-i18n class="optional" href="#faq">FAQ</a>
+          <a data-i18n href="#install">Install</a>
           <a href="https://github.com/cyrinux/ichor">GitHub</a>
+          <details class="lang">
+            <summary aria-label="Language">EN</summary>
+            <ul translate="no">
+              <li><a href="./" hreflang="en" lang="en" aria-current="true">English</a></li>
+              <li><a href="./fr/" hreflang="fr" lang="fr">Français</a></li>
+              <li><a href="./es/" hreflang="es" lang="es">Español</a></li>
+              <li><a href="./uk/" hreflang="uk" lang="uk">Українська</a></li>
+              <li><a href="./de/" hreflang="de" lang="de">Deutsch</a></li>
+              <li><a href="./it/" hreflang="it" lang="it">Italiano</a></li>
+            </ul>
+          </details>
         </nav>
       </header>
 
       <main>
         <div class="hero">
           <div>
-            <a class="newpill" href="#apps"
+            <a class="newpill" href="#apps" data-i18n
               ><b>New</b> App inventory, Kubernetes workloads and pods →</a
             >
             <h1>Your Talos cluster, from your phone.</h1>
@@ -1022,15 +1115,17 @@
             <div class="actions">
               <a
                 class="button primary"
+                data-i18n
                 href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor.foss%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D"
                 >Add to Obtainium</a
               >
               <a
                 class="button"
+                data-i18n
                 href="https://github.com/cyrinux/ichor/releases/latest"
                 >Download the APK</a
               >
-              <a class="button" href="#ios">iPhone</a>
+              <a class="button" href="#ios" translate="no">iPhone</a>
             </div>
             <p class="note">
               No cluster at hand? Tap <strong>Try demo</strong> on the first
@@ -1046,7 +1141,7 @@
           >
             <div class="screen" aria-hidden="true">
               <div class="clock">3:12</div>
-              <div class="date">Thursday, 1 October</div>
+              <div class="date" data-i18n>Thursday, 1 October</div>
               <div class="notification">
                 <header>
                   <svg
@@ -1065,19 +1160,19 @@
                       d="M256,8L228,24L240,116L256,132L272,116L284,24ZM256,100C190,100 152,144 152,204L152,300L192,350L320,350L360,300L360,204C360,144 322,100 256,100ZM162,184L256,210L350,184L344,232L302,250L280,250L280,350L232,350L232,250L210,250L168,232ZM256,380C256,380 214,430 214,456A42,42 0 0 0 298,456C298,430 256,380 256,380Z"
                     />
                   </svg>
-                  <span>Ichor</span><span>now</span>
+                  <span>Ichor</span><span data-i18n>now</span>
                 </header>
-                <strong>cp-2 is not ready</strong>
+                <strong data-i18n>cp-2 is not ready</strong>
                 <p>services: etcd not healthy</p>
               </div>
               <div class="glance">
                 <div>lab</div>
-                <div class="count">7/8 ready</div>
+                <div class="count" data-i18n>7/8 ready</div>
                 <div class="row">
-                  <span
+                  <span data-i18n
                     ><i class="dot" style="background: #f2c14e"></i>1 not
                     ready</span
-                  ><span
+                  ><span data-i18n
                     ><i class="dot" style="background: #5bd18b"></i>etcd: no
                     alarms</span
                   >
@@ -1140,14 +1235,14 @@
                 role="img"
                 aria-label="App inventory: a grid of apps such as Argo CD, Cilium, Grafana, Immich and Longhorn; Cilium and Uptime Kuma are flagged for a look."
               >
-                <div class="title">Apps · 24 running · 87 containers</div>
+                <div class="title" data-i18n>Apps · 24 running · 87 containers</div>
                 <div class="apps" aria-hidden="true">
                   <span class="app"
                     ><b style="background: #f7a26b">AC</b>v3.1.8</span
                   >
                   <span class="app warn"
                     ><b style="background: #8fc6f2">Ci</b
-                    ><span>2 versions</span></span
+                    ><span data-i18n>2 versions</span></span
                   >
                   <span class="app"
                     ><b style="background: #f2c14e">Gr</b>12.2.0</span
@@ -1187,13 +1282,13 @@
                 role="img"
                 aria-label="Kubernetes workloads: Grafana is ready, Immich is rolling out, Paperless has one of two pods ready; Paperless can be restarted."
               >
-                <div class="title">Kubernetes · workloads</div>
+                <div class="title" data-i18n>Kubernetes · workloads</div>
                 <div class="line" aria-hidden="true">
-                  <span>paperless</span><span>1/2 ready</span
-                  ><span class="tag diff">restart</span>
+                  <span>paperless</span><span data-i18n>1/2 ready</span
+                  ><span class="tag diff" data-i18n>restart</span>
                 </div>
                 <div class="line" aria-hidden="true">
-                  <span>immich</span><span>rolling out</span
+                  <span>immich</span><span data-i18n>rolling out</span
                   ><span class="tag diff">2/3</span>
                 </div>
                 <div class="line" aria-hidden="true">
@@ -1222,7 +1317,7 @@
                 role="img"
                 aria-label="Kubernetes pods: one pod in CrashLoopBackOff with 14 restarts, one terminating, two running."
               >
-                <div class="title">Kubernetes · pods</div>
+                <div class="title" data-i18n>Kubernetes · pods</div>
                 <div class="tl" aria-hidden="true">
                   <time>w-2</time
                   ><i class="dot" style="background: #ff6b6b"></i
@@ -1319,22 +1414,22 @@
                 role="img"
                 aria-label="Drift view: DNS and MTU differ on one node, Talos version is the same everywhere."
               >
-                <div class="title">Configuration drift · workers</div>
+                <div class="title" data-i18n>Configuration drift · workers</div>
                 <div class="line" aria-hidden="true">
                   <span>Talos</span><span>v1.12 ×4</span
-                  ><span class="tag same">same</span>
+                  ><span class="tag same" data-i18n>same</span>
                 </div>
                 <div class="line" aria-hidden="true">
                   <span>DNS</span><span>w-3: 9.9.9.9</span
-                  ><span class="tag diff">drift</span>
+                  ><span class="tag diff" data-i18n>drift</span>
                 </div>
                 <div class="line" aria-hidden="true">
                   <span>eth0 MTU</span><span>w-3: 1450</span
-                  ><span class="tag diff">drift</span>
+                  ><span class="tag diff" data-i18n>drift</span>
                 </div>
                 <div class="line" aria-hidden="true">
-                  <span>Secure Boot</span><span>on ×4</span
-                  ><span class="tag same">same</span>
+                  <span>Secure Boot</span><span data-i18n>on ×4</span
+                  ><span class="tag same" data-i18n>same</span>
                 </div>
               </div>
               <h3>Configuration drift</h3>
@@ -1354,26 +1449,26 @@
                 role="img"
                 aria-label="Incident timeline: etcd turns unhealthy, cp-2 becomes not ready, then link errors appear on eth0."
               >
-                <div class="title">Incident recorder · 03:12 → now</div>
+                <div class="title" data-i18n>Incident recorder · 03:12 → now</div>
                 <div class="tl" aria-hidden="true">
                   <time>03:12:04</time
                   ><i class="dot" style="background: #f2c14e"></i
-                  ><span>etcd: not healthy</span>
+                  ><span data-i18n>etcd: not healthy</span>
                 </div>
                 <div class="tl" aria-hidden="true">
                   <time>03:12:09</time
                   ><i class="dot" style="background: #ff6b6b"></i
-                  ><span>cp-2 not ready</span>
+                  ><span data-i18n>cp-2 not ready</span>
                 </div>
                 <div class="tl" aria-hidden="true">
                   <time>03:12:14</time
                   ><i class="dot" style="background: #ff6b6b"></i
-                  ><span>eth0 rx errors +42</span>
+                  ><span data-i18n>eth0 rx errors +42</span>
                 </div>
                 <div class="tl" aria-hidden="true">
                   <time>03:13:02</time
                   ><i class="dot" style="background: #5bd18b"></i
-                  ><span>cp-2 ready</span>
+                  ><span data-i18n>cp-2 ready</span>
                 </div>
               </div>
               <h3>Incident recorder</h3>
@@ -1392,24 +1487,24 @@
                 role="img"
                 aria-label="Bottleneck metrics: I/O wait is high, steal time is low, disk sda is busy, eth0 shows drops."
               >
-                <div class="title">Live · bottlenecks</div>
+                <div class="title" data-i18n>Live · bottlenecks</div>
                 <div class="bar" aria-hidden="true">
-                  <span>I/O wait</span
+                  <span data-i18n>I/O wait</span
                   ><span class="meter"><i class="hot" style="width: 68%"></i></span
                   ><span>34%</span>
                 </div>
                 <div class="bar" aria-hidden="true">
-                  <span>steal</span
+                  <span data-i18n>steal</span
                   ><span class="meter"><i style="width: 6%"></i></span
                   ><span>1%</span>
                 </div>
                 <div class="bar" aria-hidden="true">
-                  <span>sda busy</span
+                  <span data-i18n>sda busy</span
                   ><span class="meter"><i class="hot" style="width: 92%"></i></span
                   ><span>92%</span>
                 </div>
                 <div class="bar" aria-hidden="true">
-                  <span>eth0 drops</span
+                  <span data-i18n>eth0 drops</span
                   ><span class="meter"><i style="width: 12%"></i></span
                   ><span>3/s</span>
                 </div>
@@ -1593,7 +1688,7 @@
             </thead>
             <tbody>
               <tr>
-                <td class="cmd">talosctl get machinestatus</td>
+                <td class="cmd" translate="no">talosctl get machinestatus</td>
                 <td class="what">
                   <strong>Cluster overview</strong
                   ><span
@@ -1601,10 +1696,10 @@
                     conditions, clock drift and available Talos upgrades.</span
                   >
                 </td>
-                <td class="role">reader</td>
+                <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl services, talosctl logs -f</td>
+                <td class="cmd" translate="no">talosctl services, talosctl logs -f</td>
                 <td class="what">
                   <strong>Services and logs</strong
                   ><span
@@ -1612,10 +1707,10 @@
                     level, with repeats folded and a live follow mode.</span
                   >
                 </td>
-                <td class="role">reader</td>
+                <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl events</td>
+                <td class="cmd" translate="no">talosctl events</td>
                 <td class="what">
                   <strong>Events timeline</strong
                   ><span
@@ -1623,10 +1718,10 @@
                     cluster, as they happen.</span
                   >
                 </td>
-                <td class="role">reader</td>
+                <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl dashboard, talosctl processes</td>
+                <td class="cmd" translate="no">talosctl dashboard, talosctl processes</td>
                 <td class="what">
                   <strong>Live graphs and processes</strong
                   ><span
@@ -1634,10 +1729,10 @@
                     the process list sorted by CPU or memory.</span
                   >
                 </td>
-                <td class="role">reader</td>
+                <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl get members</td>
+                <td class="cmd" translate="no">talosctl get members</td>
                 <td class="what">
                   <strong>Node discovery</strong
                   ><span
@@ -1645,10 +1740,10 @@
                     added to the context in one tap.</span
                   >
                 </td>
-                <td class="role">reader</td>
+                <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd">diff of talosctl get … on every node</td>
+                <td class="cmd" translate="no">diff of talosctl get … on every node</td>
                 <td class="what">
                   <strong>Configuration drift</strong
                   ><span
@@ -1657,10 +1752,10 @@
                     baseline.</span
                   >
                 </td>
-                <td class="role">reader</td>
+                <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl events + watch, in a terminal</td>
+                <td class="cmd" translate="no">talosctl events + watch, in a terminal</td>
                 <td class="what">
                   <strong>Incident recorder</strong
                   ><span
@@ -1668,10 +1763,10 @@
                     into one saved timeline.</span
                   >
                 </td>
-                <td class="role">reader</td>
+                <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl read /proc/stat, /proc/diskstats</td>
+                <td class="cmd" translate="no">talosctl read /proc/stat, /proc/diskstats</td>
                 <td class="what">
                   <strong>Bottleneck metrics</strong
                   ><span
@@ -1679,18 +1774,18 @@
                     and drops, live.</span
                   >
                 </td>
-                <td class="role">reader</td>
+                <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl containers -k</td>
+                <td class="cmd" translate="no">talosctl containers -k</td>
                 <td class="what">
                   <strong>Pods</strong
                   ><span>Containers grouped by pod, with CPU and memory.</span>
                 </td>
-                <td class="role">reader</td>
+                <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl containers -k on every node</td>
+                <td class="cmd" translate="no">talosctl containers -k on every node</td>
                 <td class="what">
                   <strong>App inventory</strong
                   ><span
@@ -1699,10 +1794,10 @@
                     images.</span
                   >
                 </td>
-                <td class="role">reader</td>
+                <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl get links, talosctl netstat</td>
+                <td class="cmd" translate="no">talosctl get links, talosctl netstat</td>
                 <td class="what">
                   <strong>Network</strong
                   ><span
@@ -1710,10 +1805,10 @@
                     open connections.</span
                   >
                 </td>
-                <td class="role">reader</td>
+                <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl get machineconfig</td>
+                <td class="cmd" translate="no">talosctl get machineconfig</td>
                 <td class="what">
                   <strong>Machine config</strong
                   ><span
@@ -1721,10 +1816,10 @@
                     them.</span
                   >
                 </td>
-                <td class="role">admin</td>
+                <td class="role" translate="no">admin</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl etcd status, etcd snapshot</td>
+                <td class="cmd" translate="no">talosctl etcd status, etcd snapshot</td>
                 <td class="what">
                   <strong>etcd</strong
                   ><span
@@ -1732,10 +1827,10 @@
                     snapshot saved to the phone.</span
                   >
                 </td>
-                <td class="role">reader / backup</td>
+                <td class="role" translate="no">reader / backup</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl get kubespanpeerstatuses</td>
+                <td class="cmd" translate="no">talosctl get kubespanpeerstatuses</td>
                 <td class="what">
                   <strong>KubeSpan</strong
                   ><span
@@ -1743,10 +1838,10 @@
                     traffic.</span
                   >
                 </td>
-                <td class="role">reader</td>
+                <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl service restart</td>
+                <td class="cmd" translate="no">talosctl service restart</td>
                 <td class="what">
                   <strong>Service control</strong
                   ><span
@@ -1754,10 +1849,10 @@
                     critical ones.</span
                   >
                 </td>
-                <td class="role">operator</td>
+                <td class="role" translate="no">operator</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl reboot -m powercycle</td>
+                <td class="cmd" translate="no">talosctl reboot -m powercycle</td>
                 <td class="what">
                   <strong>Reboot, shutdown and wake</strong
                   ><span
@@ -1765,10 +1860,10 @@
                     to confirm. Wake a powered-off node with Wake-on-LAN.</span
                   >
                 </td>
-                <td class="role">operator</td>
+                <td class="role" translate="no">operator</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl pcap</td>
+                <td class="cmd" translate="no">talosctl pcap</td>
                 <td class="what">
                   <strong>Packet capture</strong
                   ><span
@@ -1776,10 +1871,10 @@
                     to open in Wireshark.</span
                   >
                 </td>
-                <td class="role">operator</td>
+                <td class="role" translate="no">operator</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl upgrade</td>
+                <td class="cmd" translate="no">talosctl upgrade</td>
                 <td class="what">
                   <strong>Talos upgrade</strong
                   ><span
@@ -1787,10 +1882,10 @@
                     progress until the node is back.</span
                   >
                 </td>
-                <td class="role">admin</td>
+                <td class="role" translate="no">admin</td>
               </tr>
               <tr>
-                <td class="cmd">kubectl get deploy,sts,ds, kubectl rollout restart</td>
+                <td class="cmd" translate="no">kubectl get deploy,sts,ds, kubectl rollout restart</td>
                 <td class="what">
                   <strong>Kubernetes workloads</strong
                   ><span
@@ -1799,10 +1894,10 @@
                     confirmation.</span
                   >
                 </td>
-                <td class="role">admin</td>
+                <td class="role" translate="no">admin</td>
               </tr>
               <tr>
-                <td class="cmd">kubectl get pods, kubectl delete pod</td>
+                <td class="cmd" translate="no">kubectl get pods, kubectl delete pod</td>
                 <td class="what">
                   <strong>Kubernetes pods</strong
                   ><span
@@ -1810,10 +1905,10 @@
                     delete a stuck pod so its controller recreates it.</span
                   >
                 </td>
-                <td class="role">admin</td>
+                <td class="role" translate="no">admin</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl config new</td>
+                <td class="cmd" translate="no">talosctl config new</td>
                 <td class="what">
                   <strong>Issue a talosconfig</strong
                   ><span
@@ -1821,18 +1916,18 @@
                     for another device as a QR code.</span
                   >
                 </td>
-                <td class="role">admin</td>
+                <td class="role" translate="no">admin</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl health</td>
+                <td class="cmd" translate="no">talosctl health</td>
                 <td class="what">
                   <strong>Cluster health check</strong
                   ><span>The server-side checks, streamed as they run.</span>
                 </td>
-                <td class="role">admin</td>
+                <td class="role" translate="no">admin</td>
               </tr>
               <tr>
-                <td class="cmd">talosctl debug</td>
+                <td class="cmd" translate="no">talosctl debug</td>
                 <td class="what">
                   <strong>Debug shell</strong
                   ><span
@@ -1840,7 +1935,7 @@
                     terminal.</span
                   >
                 </td>
-                <td class="role">admin</td>
+                <td class="role" translate="no">admin</td>
               </tr>
             </tbody>
           </table>
@@ -1934,6 +2029,7 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
               </p>
               <a
                 class="button"
+                data-i18n
                 href="https://github.com/cyrinux/ichor/releases/latest"
                 >Latest release</a
               >
@@ -1947,6 +2043,7 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
               </p>
               <a
                 class="button"
+                data-i18n
                 href="https://github.com/cyrinux/ichor/releases/latest"
                 >Latest release</a
               >
@@ -2052,10 +2149,11 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
           <div class="actions">
             <a
               class="button primary"
+              data-i18n
               href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://app/%7B%22id%22%3A%22name.levis.ichor.foss%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fcyrinux%2Fichor%22%2C%22author%22%3A%22cyrinux%22%2C%22name%22%3A%22Ichor%22%2C%22additionalSettings%22%3A%22%7B%5C%22apkFilterRegEx%5C%22%3A%20%5C%22%5E%28%3F%21.%2Aunsigned%29.%2A%5C%5C%5C%5C.apk%24%5C%22%7D%22%7D"
               >Get Ichor</a
             >
-            <a class="button" href="#install">How to install</a>
+            <a class="button" href="#install" data-i18n>How to install</a>
           </div>
         </section>
 
@@ -2071,7 +2169,7 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
           </p>
           <div class="donate">
             <div>
-              <h3>Bitcoin</h3>
+              <h3 translate="no">Bitcoin</h3>
               <img
                 src="donate/bitcoin.svg"
                 width="148"
@@ -2082,18 +2180,23 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
                 >bc1qc0dhqrgw6z08du94rkfequk8n5r3lgcr5lnxtl</code
               >
               <div class="row">
-                <button type="button" data-copy="btc-address">
+                <button
+                  type="button"
+                  data-copied="Copied"
+                  data-i18n-attr="data-copied"
+                  data-copy="btc-address">
                   Copy address
                 </button>
                 <a
                   class="wallet"
+                  data-i18n
                   href="bitcoin:bc1qc0dhqrgw6z08du94rkfequk8n5r3lgcr5lnxtl"
                   >Open in wallet</a
                 >
               </div>
             </div>
             <div>
-              <h3>Ethereum</h3>
+              <h3 translate="no">Ethereum</h3>
               <img
                 src="donate/ethereum.svg"
                 width="148"
@@ -2104,11 +2207,16 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
                 >0xb32676301F9c4abD35Eb2e4c7C8cdA754BA29804</code
               >
               <div class="row">
-                <button type="button" data-copy="eth-address">
+                <button
+                  type="button"
+                  data-copied="Copied"
+                  data-i18n-attr="data-copied"
+                  data-copy="eth-address">
                   Copy address
                 </button>
                 <a
                   class="wallet"
+                  data-i18n
                   href="ethereum:0xb32676301F9c4abD35Eb2e4c7C8cdA754BA29804"
                   >Open in wallet</a
                 >
@@ -2120,10 +2228,10 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
 
       <footer>
         <div class="links">
-          <a href="https://github.com/cyrinux/ichor">Source on GitHub</a>
-          <a href="https://www.talos.dev">Talos Linux</a>
-          <a href="#support">Support the project</a>
-          <a href="privacy.html">Privacy policy</a>
+          <a data-i18n href="https://github.com/cyrinux/ichor">Source on GitHub</a>
+          <a href="https://www.talos.dev" translate="no">Talos Linux</a>
+          <a data-i18n href="#support">Support the project</a>
+          <a data-i18n href="privacy.html">Privacy policy</a>
         </div>
         <p>
           Apache-2.0. Not affiliated with Sidero Labs; Talos is a trademark of
@@ -2132,13 +2240,47 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
       </footer>
     </div>
     <script>
+      // First visit to the English home: follow the browser's language when the site
+      // has it. Picking a language in the switcher is remembered and wins from then on.
+      (function () {
+        var supported = ["en", "fr", "es", "uk", "de", "it"];
+        try {
+          document.querySelectorAll(".lang a[hreflang]").forEach(function (link) {
+            link.addEventListener("click", function () {
+              localStorage.setItem("lang", link.hreflang);
+            });
+          });
+          if (document.documentElement.lang !== "en" || localStorage.getItem("lang")) {
+            return;
+          }
+          var wanted = (navigator.languages || [navigator.language || ""])
+            .map(function (tag) {
+              return tag.toLowerCase().split("-")[0];
+            })
+            .filter(function (code) {
+              return supported.indexOf(code) >= 0;
+            })[0];
+          if (wanted && wanted !== "en") {
+            location.replace(wanted + "/" + location.hash);
+          }
+        } catch (e) {}
+      })();
+
+      document.addEventListener("click", function (event) {
+        var open = document.querySelector(".lang[open]");
+        if (open && !open.contains(event.target)) {
+          open.removeAttribute("open");
+        }
+      });
+
       document.querySelectorAll("[data-copy]").forEach(function (button) {
+        var label = button.textContent;
         button.addEventListener("click", function () {
           var text = document.getElementById(button.dataset.copy).textContent;
           var done = function () {
-            button.textContent = "Copied";
+            button.textContent = button.dataset.copied;
             setTimeout(function () {
-              button.textContent = "Copy address";
+              button.textContent = label;
             }, 1500);
           };
           if (navigator.clipboard) {

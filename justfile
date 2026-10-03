@@ -80,9 +80,16 @@ build-play:
 check:
     ./build.sh check
 
-# Every UI string translated (fr, es, uk, de, it) with matching placeholders, Android and iOS.
+# Every UI string translated (fr, es, uk, de, it) with matching placeholders, Android and iOS,
+# and every website string in docs-i18n/.
 i18n-check:
     python3 scripts/check-translations.py
+    python3 scripts/site-i18n.py --check
+
+# Translated website: `just site` writes docs/<lang>/ (as CI does before publishing);
+# `just site --sync` lists new English strings in docs-i18n/*.json for translation.
+site *args:
+    python3 scripts/site-i18n.py {{ args }}
 
 # Refresh the bundled app-inventory icons from go/talosmobile/appcatalog.json (needs network
 # and ImageMagick). `just app-icons --check` only validates the catalog and the bundle.
