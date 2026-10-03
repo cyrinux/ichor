@@ -1136,6 +1136,9 @@
     <string name="workloads_restart_confirm">Redémarrer</string>
     <string name="workloads_restart_done">%1$s redémarre</string>
     <string name="workloads_restart_failed">Impossible de redémarrer %1$s : %2$s</string>
+    <string name="kube_server_title">Adresse de l’API Kubernetes</string>
+    <string name="kube_server_label">Adresse</string>
+    <string name="kube_server_hint">Utilisée à la place de l’adresse du kubeconfig fourni par Talos, par exemple une redirection de port, un répartiteur de charge ou un nom public : hôte, hôte:port ou URL https. Sans port, celui du kubeconfig est utilisé. Le certificat reste vérifié avec l’adresse propre du cluster. Laissez vide pour revenir à celle du kubeconfig. Sur cet appareil uniquement.</string>
 
     <!-- Kubernetes pods -->
     <string name="pods_title">Pods</string>

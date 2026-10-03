@@ -46,9 +46,16 @@ enum PrivacyKeys {
 struct TalosClient: Sendable {
     let config: String
     let context: String
+    /// The Kubernetes API address the user set for the cluster, "" for the kubeconfig's.
+    var kubeServer = ""
 
     static func parse(_ yaml: String) async throws -> ConfigSummary {
         try await json { TalosmobileParseConfig(yaml, $0) }
+    }
+
+    /// A Kubernetes API address the user typed, as the https URL to store ("" when blank).
+    static func normalizeKubeServer(_ input: String) async throws -> String {
+        try await run { TalosmobileNormalizeKubeServer(input, $0) }
     }
 
     static func demoConfig() async throws -> String {
@@ -160,32 +167,32 @@ struct TalosClient: Sendable {
 
     /// Admin kubeconfig (os:admin). A credential: only write it where the user chose.
     func kubeconfig() async throws -> String {
-        try await Self.run { [config, context] in TalosmobileKubeconfig(config, context, $0) }
+        try await Self.run { [config, context, kubeServer] in TalosmobileKubeconfig(config, context, kubeServer, $0) }
     }
 
     /// Deployments, StatefulSets and DaemonSets through the Kubernetes API (os:admin: Talos issues the kubeconfig).
     func workloads() async throws -> [KubeWorkload] {
-        let list: KubeWorkloadList = try await Self.json { [config, context] in TalosmobileKubeWorkloads(config, context, $0) }
+        let list: KubeWorkloadList = try await Self.json { [config, context, kubeServer] in TalosmobileKubeWorkloads(config, context, kubeServer, $0) }
         return list.workloads
     }
 
     /// `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin).
     func rolloutRestart(_ workload: KubeWorkload) async throws {
-        try await Self.run { [config, context] error -> Void in
-            _ = TalosmobileKubeRolloutRestart(config, context, workload.kind, workload.namespace, workload.name, error)
+        try await Self.run { [config, context, kubeServer] error -> Void in
+            _ = TalosmobileKubeRolloutRestart(config, context, kubeServer, workload.kind, workload.namespace, workload.name, error)
         }
     }
 
     /// Every pod with the status `kubectl get pods` shows (os:admin).
     func pods() async throws -> [KubePod] {
-        let list: KubePodList = try await Self.json { [config, context] in TalosmobileKubePods(config, context, $0) }
+        let list: KubePodList = try await Self.json { [config, context, kubeServer] in TalosmobileKubePods(config, context, kubeServer, $0) }
         return list.pods
     }
 
     /// `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one.
     func deletePod(_ pod: KubePod) async throws {
-        try await Self.run { [config, context] error -> Void in
-            _ = TalosmobileKubeDeletePod(config, context, pod.namespace, pod.name, error)
+        try await Self.run { [config, context, kubeServer] error -> Void in
+            _ = TalosmobileKubeDeletePod(config, context, kubeServer, pod.namespace, pod.name, error)
         }
     }
 

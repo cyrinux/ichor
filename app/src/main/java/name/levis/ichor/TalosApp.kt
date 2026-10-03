@@ -38,6 +38,7 @@ import name.levis.ichor.data.WakeOnLanStore
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.VpnMonitor
 import name.levis.ichor.data.VpnOnlyClusters
+import name.levis.ichor.data.KubeServers
 import name.levis.ichor.data.VpnRequiredException
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.heldBackForVpn
@@ -57,7 +58,7 @@ import kotlinx.coroutines.launch
 /** Holds app-wide singletons (manual DI; the app is small). */
 class TalosApp : Application() {
     val configRepository by lazy { ConfigRepository(this, guard = ::holdBackOffVpn) }
-    val talosRepository by lazy { TalosRepository(configRepository) }
+    val talosRepository by lazy { TalosRepository(configRepository, kubeServers) }
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
     val supportBundleRepository by lazy { SupportBundleRepository(configRepository, filesDir) }
     val upgradeManager by lazy { UpgradeManager(configRepository, onFinished = talosRepository::forgetFeatures) }
@@ -72,6 +73,7 @@ class TalosApp : Application() {
         )
     }
     val vpnOnly by lazy { VpnOnlyClusters(getSharedPreferences(VpnOnlyClusters.FILE, Context.MODE_PRIVATE)) }
+    val kubeServers by lazy { KubeServers(getSharedPreferences(KubeServers.FILE, Context.MODE_PRIVATE)) }
     val vpn by lazy { VpnMonitor(this) }
     val appLock by lazy {
         AppLock(
@@ -101,7 +103,7 @@ class TalosApp : Application() {
     /** Passphrase-sealed backups of the config and settings, restorable on another device (Android or iOS). */
     val backupManager by lazy {
         BackupManager(
-            configRepository, uiPreferences, clusterColors, clusterNames, vpnOnly, wakeOnLan, monitorStore,
+            configRepository, uiPreferences, clusterColors, clusterNames, vpnOnly, kubeServers, wakeOnLan, monitorStore,
             setPrivacyMask = ::setPrivacyMask,
             notificationsAllowed = { canPostNotifications(this) },
             onRestored = {
@@ -135,6 +137,15 @@ class TalosApp : Application() {
      */
     fun setVpnOnly(fingerprint: String, vpnOnly: Boolean) {
         this.vpnOnly.set(fingerprint, vpnOnly)
+        if (fingerprint == configRepository.config.value?.activeSummary?.fingerprint) talosRepository.invalidate()
+    }
+
+    /**
+     * Sets the Kubernetes API address of the cluster [fingerprint] ([server] checked by
+     * Talosmobile.normalizeKubeServer, blank for the kubeconfig's); its cached results go.
+     */
+    fun setKubeServer(fingerprint: String, server: String) {
+        kubeServers.set(fingerprint, server)
         if (fingerprint == configRepository.config.value?.activeSummary?.fingerprint) talosRepository.invalidate()
     }
 
@@ -224,6 +235,7 @@ class TalosApp : Application() {
                     clusterNames.sync(it.summary)
                     wakeOnLan.sync(it.summary)
                     vpnOnly.sync(it.summary)
+                    kubeServers.sync(it.summary)
                 }
             }
         }

@@ -81,7 +81,7 @@ sealed interface StreamItem<out T> {
 class NoConfigException : LocalizedException(UiText.Res(R.string.common_no_config))
 
 /** Read-only access to the Talos API through the Go core. All calls are blocking in Go, so run on IO. */
-class TalosRepository(private val configs: ConfigRepository) {
+class TalosRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers) {
 
     /**
      * Last successful results, in memory only (cluster data is never written to disk), so
@@ -307,25 +307,25 @@ class TalosRepository(private val configs: ConfigRepository) {
             ?: LogEntry.plain(line)
 
     /** Admin kubeconfig (os:admin role). A credential: only hand it to where the user chose. */
-    suspend fun kubeconfig(): String = call { cfg, ctx -> Talosmobile.kubeconfig(cfg, ctx) }
+    suspend fun kubeconfig(): String = kubeCall { cfg, ctx, server -> Talosmobile.kubeconfig(cfg, ctx, server) }
 
     /** Deployments, StatefulSets and DaemonSets through the Kubernetes API (os:admin: Talos issues the kubeconfig). */
     suspend fun workloads(): List<KubeWorkload> = remember(WORKLOADS) {
-        call { cfg, ctx -> TalosJson.decodeFromString(KubeWorkloadList.serializer(), Talosmobile.kubeWorkloads(cfg, ctx)).workloads }
+        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubeWorkloadList.serializer(), Talosmobile.kubeWorkloads(cfg, ctx, server)).workloads }
     }
 
     /** `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin). */
-    suspend fun rolloutRestart(workload: KubeWorkload) = call { cfg, ctx ->
-        Talosmobile.kubeRolloutRestart(cfg, ctx, workload.kind, workload.namespace, workload.name)
+    suspend fun rolloutRestart(workload: KubeWorkload) = kubeCall { cfg, ctx, server ->
+        Talosmobile.kubeRolloutRestart(cfg, ctx, server, workload.kind, workload.namespace, workload.name)
     }
 
     /** Every pod with the status `kubectl get pods` shows (os:admin). */
     suspend fun pods(): List<KubePod> = remember(PODS) {
-        call { cfg, ctx -> TalosJson.decodeFromString(KubePodList.serializer(), Talosmobile.kubePods(cfg, ctx)).pods }
+        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubePodList.serializer(), Talosmobile.kubePods(cfg, ctx, server)).pods }
     }
 
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
-    suspend fun deletePod(pod: KubePod) = call { cfg, ctx -> Talosmobile.kubeDeletePod(cfg, ctx, pod.namespace, pod.name) }
+    suspend fun deletePod(pod: KubePod) = kubeCall { cfg, ctx, server -> Talosmobile.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
 
     /** `talosctl reboot -m [mode]` (default, powercycle, force); needs os:operator or higher. */
     suspend fun reboot(node: String, mode: String) = call { cfg, ctx -> Talosmobile.reboot(cfg, ctx, node, mode) }
@@ -489,6 +489,13 @@ class TalosRepository(private val configs: ConfigRepository) {
     private suspend fun <T> call(block: (config: String, context: String) -> T): T {
         val stored = configs.forCall()
         return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) }
+    }
+
+    /** [call] with the Kubernetes API address the user set for the cluster ("" for the kubeconfig's). */
+    private suspend fun <T> kubeCall(block: (config: String, context: String, kubeServer: String) -> T): T {
+        val stored = configs.forCall()
+        val server = stored.activeSummary?.fingerprint?.let { kubeServers.servers.value[it] }.orEmpty()
+        return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext, server) }
     }
 }
 

@@ -30886,6 +30886,111 @@
           }
         }
       }
+    },
+    "Address" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dirección"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Адреса"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indirizzo"
+          }
+        }
+      }
+    },
+    "Kubernetes API address" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse de l’API Kubernetes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dirección de la API de Kubernetes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Адреса Kubernetes API"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes-API-Adresse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indirizzo dell’API Kubernetes"
+          }
+        }
+      }
+    },
+    "Used instead of the address in the kubeconfig Talos issues, e.g. a port forward, a load balancer or a public name: host, host:port or an https URL. Without a port, the kubeconfig’s is used. The certificate is still checked against the cluster’s own address. Leave empty to use the kubeconfig’s again. Only on this device." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilisée à la place de l’adresse du kubeconfig fourni par Talos, par exemple une redirection de port, un répartiteur de charge ou un nom public : hôte, hôte:port ou URL https. Sans port, celui du kubeconfig est utilisé. Le certificat reste vérifié avec l’adresse propre du cluster. Laissez vide pour revenir à celle du kubeconfig. Sur cet appareil uniquement."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se usa en lugar de la dirección del kubeconfig que emite Talos, por ejemplo una redirección de puertos, un balanceador de carga o un nombre público: host, host:puerto o una URL https. Sin puerto, se usa el del kubeconfig. El certificado se sigue verificando con la dirección propia del clúster. Déjalo vacío para volver a usar la del kubeconfig. Solo en este dispositivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовується замість адреси з kubeconfig, який видає Talos, наприклад переадресація порту, балансувальник навантаження або публічне ім’я: хост, хост:порт або https URL. Без порту використовується порт із kubeconfig. Сертифікат і далі перевіряється за власною адресою кластера. Залиште порожнім, щоб знову використовувати адресу з kubeconfig. Лише на цьому пристрої."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird statt der Adresse in der von Talos ausgestellten kubeconfig verwendet, z. B. eine Portweiterleitung, ein Load Balancer oder ein öffentlicher Name: Host, Host:Port oder eine https-URL. Ohne Port wird der aus der kubeconfig verwendet. Das Zertifikat wird weiterhin gegen die eigene Adresse des Clusters geprüft. Leer lassen, um wieder die der kubeconfig zu verwenden. Nur auf diesem Gerät."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usato al posto dell’indirizzo nel kubeconfig emesso da Talos, ad esempio un port forwarding, un load balancer o un nome pubblico: host, host:porta o un URL https. Senza porta, si usa quella del kubeconfig. Il certificato viene comunque verificato con l’indirizzo proprio del cluster. Lascia vuoto per tornare a quello del kubeconfig. Solo su questo dispositivo."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

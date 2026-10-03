@@ -27,7 +27,8 @@ enum AppBackup {
             clusters: backupClusters(
                 fingerprints: summary.contexts.map(\.fingerprint),
                 names: model.clusterNames,
-                colors: model.clusterColors
+                colors: model.clusterColors,
+                kubeServers: model.kubeServers
             )
         )
         let json = String(decoding: try JSONEncoder().encode(payload), as: UTF8.self)
@@ -45,7 +46,14 @@ enum AppBackup {
         // The config first: on failure nothing else changed. The screenshot mode re-parses it after.
         try await model.replace(yaml: payload.talosconfig, activeIndex: payload.activeContextIndex)
         let restored = restoredClusters(payload.clusters, fingerprints: model.summary?.contexts.map(\.fingerprint) ?? [])
-        model.restoreClusterSettings(names: restored.names, colors: restored.colors)
+        // Checked like a typed one: an address the Go core refuses is dropped.
+        var kubeServers: [String: String] = [:]
+        for (fp, server) in restored.kubeServers {
+            if let normalized = try? await TalosClient.normalizeKubeServer(server), !normalized.isEmpty {
+                kubeServers[fp] = normalized
+            }
+        }
+        model.restoreClusterSettings(names: restored.names, colors: restored.colors, kubeServers: kubeServers)
         if let mask = settings?.privacyMask {
             await model.setPrivacyMask(mask, words: settings?.privacyMaskWords ?? "")
         }

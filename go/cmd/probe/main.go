@@ -1,6 +1,6 @@
 // Command probe exercises the talosmobile API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|workloads|rollout-restart KIND NAMESPACE NAME|pods|delete-pod NAMESPACE NAME|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|workloads|rollout-restart KIND NAMESPACE NAME|pods|delete-pod NAMESPACE NAME|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai
 package main
 
 import (
@@ -68,6 +68,7 @@ func main() {
 	home, _ := os.UserHomeDir() //nolint:errcheck
 	configPath := flag.String("config", filepath.Join(home, ".talos", "config"), "talosconfig path")
 	contextName := flag.String("context", "", "context name (default: current)")
+	kubeServer := flag.String("kube-server", "", "Kubernetes API address to use instead of the kubeconfig's (host[:port] or https URL)")
 	mask := flag.Bool("mask", false, "screenshot mode: mask IPs, hostnames, domains and context names")
 	maskWords := flag.String("mask-words", "", "with -mask: comma-separated extra words to hide")
 	flag.Parse()
@@ -109,21 +110,21 @@ func main() {
 	case "kubeconfig":
 		// Never print the credential itself.
 		var kc string
-		if kc, err = talosmobile.Kubeconfig(cfg, *contextName); err == nil {
+		if kc, err = talosmobile.Kubeconfig(cfg, *contextName, *kubeServer); err == nil {
 			out = fmt.Sprintf("kubeconfig: %d bytes, starts with %q", len(kc), firstLine(kc))
 		}
 	case "workloads":
-		out, err = talosmobile.KubeWorkloads(cfg, *contextName)
+		out, err = talosmobile.KubeWorkloads(cfg, *contextName, *kubeServer)
 	case "rollout-restart":
 		// rollout-restart KIND NAMESPACE NAME
-		if err = talosmobile.KubeRolloutRestart(cfg, *contextName, flag.Arg(1), flag.Arg(2), flag.Arg(3)); err == nil {
+		if err = talosmobile.KubeRolloutRestart(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3)); err == nil {
 			out = "restarted"
 		}
 	case "pods":
-		out, err = talosmobile.KubePods(cfg, *contextName)
+		out, err = talosmobile.KubePods(cfg, *contextName, *kubeServer)
 	case "delete-pod":
 		// delete-pod NAMESPACE NAME
-		if err = talosmobile.KubeDeletePod(cfg, *contextName, flag.Arg(1), flag.Arg(2)); err == nil {
+		if err = talosmobile.KubeDeletePod(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2)); err == nil {
 			out = "deleted"
 		}
 	case "machineconfig":

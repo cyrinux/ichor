@@ -21,21 +21,23 @@ class BackupTest {
                 wolKey("aaaa", "10.0.0.2") to WolTarget("aa:bb:cc:dd:ee:ff", "10.0.0.255", 7),
                 wolKey("gone", "10.0.0.3") to WolTarget("aa:bb:cc:dd:ee:01"),
             ),
+            kubeServers = mapOf("bbbb" to "https://k8s.lan:6443", "gone" to "https://old.lan"),
         )
 
         assertEquals(setOf("aaaa", "bbbb"), clusters.keys)
         assertEquals(BackupCluster("Home", 0xAA0000, false, mapOf("10.0.0.2" to BackupWolTarget("aa:bb:cc:dd:ee:ff", "10.0.0.255", 7))), clusters["aaaa"])
-        assertEquals(BackupCluster(null, 1, true), clusters["bbbb"])
+        assertEquals(BackupCluster(null, 1, true, kubeServer = "https://k8s.lan:6443"), clusters["bbbb"])
     }
 
     @Test
     fun restoredClustersRoundTrip() {
         val wol = mapOf(wolKey("aaaa", "10.0.0.2") to WolTarget("aa:bb:cc:dd:ee:ff", "", 9))
-        val saved = backupClusters(listOf("aaaa"), mapOf("aaaa" to "Home"), mapOf("aaaa" to red), setOf("aaaa"), wol)
+        val servers = mapOf("aaaa" to "https://k8s.lan:6443")
+        val saved = backupClusters(listOf("aaaa"), mapOf("aaaa" to "Home"), mapOf("aaaa" to red), setOf("aaaa"), wol, servers)
 
         val restored = restoredClusters(saved, listOf("aaaa"))
 
-        assertEquals(RestoredClusters(mapOf("aaaa" to "Home"), mapOf("aaaa" to red), setOf("aaaa"), wol), restored)
+        assertEquals(RestoredClusters(mapOf("aaaa" to "Home"), mapOf("aaaa" to red), setOf("aaaa"), wol, servers), restored)
     }
 
     @Test
@@ -51,8 +53,9 @@ class BackupTest {
                         "10.0.0.4" to BackupWolTarget("aabbccddeeff", broadcast = "a|b"),
                         "10.0.0.5" to BackupWolTarget("AA-BB-CC-DD-EE-FF"),
                     ),
+                    kubeServer = "  ",
                 ),
-                "other" to BackupCluster(name = "Elsewhere", vpnOnly = true),
+                "other" to BackupCluster(name = "Elsewhere", vpnOnly = true, kubeServer = "https://k8s.lan"),
             ),
             fingerprints = listOf("aaaa"),
         )
@@ -60,6 +63,7 @@ class BackupTest {
         assertTrue(restored.names.isEmpty())
         assertEquals(mapOf("aaaa" to 0xFF123456.toInt()), restored.colors)
         assertTrue(restored.vpnOnly.isEmpty())
+        assertTrue(restored.kubeServers.isEmpty())
         assertEquals(mapOf(wolKey("aaaa", "10.0.0.5") to WolTarget("aa:bb:cc:dd:ee:ff")), restored.wakeOnLan)
     }
 
