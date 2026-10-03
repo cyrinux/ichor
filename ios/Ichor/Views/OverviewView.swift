@@ -123,7 +123,7 @@ struct OverviewView: View {
                         }
                     } header: {
                         HStack {
-                            Label("Nodes", systemImage: "cube")
+                            Text("Nodes")
                             Spacer()
                             Text(verbatim: "\(overview.nodes.count)")
                         }

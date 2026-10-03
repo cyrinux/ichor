@@ -8,7 +8,9 @@ import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Favorite
@@ -27,10 +28,11 @@ import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Timeline
-import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -474,42 +476,53 @@ private fun NodeList(
             val downNodes = remember(overview) { overview.downHostnames() }
             DataServicesCard(dataServices, hinted, appsById, downNodes, onDataServices)
         }
-        if (nodes.isNotEmpty()) item(key = "nodes-header") { NodesHeader(nodes.size) }
-        items(nodes, key = { it.node }) { node ->
-            SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {
-                NodeCard(node, onClick = { onNode(node) }, onLongClick = { sheetFor = node })
-            }
+        if (nodes.isNotEmpty()) item(key = "nodes") {
+            NodesCard(
+                nodes,
+                onNode = onNode,
+                onLive = { onNodeAction(it, NodeAction.LIVE) },
+                onMore = { sheetFor = it },
+            )
         }
         // After the nodes: they come first, the clocks are a secondary check.
         item { TimeDriftCard(time, overview.nodes.associate { it.node to it.hostname }) }
     }
 }
 
-/** Heads the node cards so they read as one section, apart from the cards above. */
+/** The nodes as one card, like Apps and Data services: a title, then a swipeable row per node. */
 @Composable
-private fun NodesHeader(count: Int) {
-    val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(
-        Modifier.fillMaxWidth().padding(start = 4.dp, top = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Icon(Icons.Outlined.ViewInAr, contentDescription = null, tint = muted, modifier = Modifier.size(18.dp))
-        Text(stringResource(R.string.overview_stat_nodes), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-        Text(count.toString(), style = MaterialTheme.typography.labelMedium, color = muted)
+private fun NodesCard(
+    nodes: List<NodeOverview>,
+    onNode: (NodeOverview) -> Unit,
+    onLive: (NodeOverview) -> Unit,
+    onMore: (NodeOverview) -> Unit,
+) {
+    Card(Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.overview_stat_nodes), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            Text(nodes.size.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        nodes.forEachIndexed { i, node ->
+            if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            SwipeableNode(node, onLive = { onLive(node) }, onMore = { onMore(node) }) {
+                NodeRow(node, onClick = { onNode(node) }, onLongClick = { onMore(node) })
+            }
+        }
+        Spacer(Modifier.height(4.dp))
     }
 }
 
 @Composable
-private fun NodeCard(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> Unit) {
-    Card(
-        Modifier.fillMaxWidth().combinedClickable(
+private fun NodeRow(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> Unit) {
+    // Opaque, so the swipe background only shows beside the row as it slides.
+    Box(
+        Modifier.fillMaxWidth().background(CardDefaults.cardColors().containerColor).combinedClickable(
             onClick = { if (node.reachable) onClick() },
             onLongClick = onLongClick,
             onLongClickLabel = stringResource(R.string.overview_node_actions),
         ),
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(node.hostname, style = MaterialTheme.typography.titleMedium)
