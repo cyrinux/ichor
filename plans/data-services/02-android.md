@@ -70,8 +70,11 @@ never polled; manual refresh with pull-to-refresh).
     (`scheduled/maximum`).
   - `GarageTab.kt`: one card per instance with a big status, the message, stat rows
     (storage nodes ok/total, partitions quorum/all-ok/total, connected/known nodes,
-    resync queue, resync errors in red when > 0). When `source == "health"`: an `InfoNotice`
-    "Detailed counters need Garage metrics without a token" (or, with 1b, the token field).
+    resync queue, resync errors in red when > 0). Failed nodes are listed with their
+    last-seen age, and staged layout changes get a warning chip. When
+    `source == "health"`: an `InfoNotice` with the `message` (for example "exec refused")
+    explaining why only the basic status is shown. When `source == "cli-text"`: an
+    expandable "Details" block with `raw` in a monospace font.
   - `CnpgTab.kt`: rows per cluster: `ns/name`, a phase chip, `ready/instances`, the primary
     (with "→ target" when switching), archiving and backup badges, last backup age, and the
     first recoverability point.

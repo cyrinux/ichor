@@ -41,6 +41,10 @@ Mirror it in `ios/IchorCore/Sources/IchorCore/Monitor.swift` (`snapshotOf`, `eva
 
 ## Cost note
 
+Garage adds one or two short execs (`garage json-api GetClusterHealth`, plus the resync
+counters) per run in one pod. That's cheap, but it shows up in the API server audit log
+every 15 minutes; mention this in the setting's hint text.
+
 Each background run in a fresh process fetches a new admin kubeconfig. Talos signs a new
 client certificate per `Kubeconfig` call. That's fine at WorkManager's 15-minute minimum,
 but it's the reason this is opt-in. A possible later improvement is to persist the

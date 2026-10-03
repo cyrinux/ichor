@@ -8,7 +8,8 @@ Read [README.md](README.md) first for the decisions (D1–D8) and the wire forma
 |------|---------|-------------|
 | `kube_dataservices.go` | Exported `KubeDataServices`, detection (`/apis`), fan-out, result type | ~150 lines |
 | `kube_longhorn.go` | Longhorn volume/replica/node objects, mapping, health derivation | ~250 |
-| `kube_garage.go` | Garage discovery, service-proxy calls, `/health` + `/metrics` parsing | ~250 |
+| `kube_garage.go` | Garage pod discovery, CLI commands (`json-api` / `status` / `stats`) and parsers, `/health` fallback | ~300 |
+| `kube_exec.go` | Minimal pods/exec over WebSocket (`x/net/websocket`), fixed argv only | ~150 |
 | `kube_cnpg.go` | CNPG Cluster objects, mapping, health derivation | ~180 |
 | `kube_dataservices_demo.go` | Demo data (one degraded Longhorn volume, a healthy Garage, a CNPG cluster mid-failover) | ~80 |
 | `kube_dataservices_test.go`, `kube_longhorn_test.go`, `kube_garage_test.go`, `kube_cnpg_test.go` | Table tests on mapping, plus an `httptest` API server | — |
@@ -130,55 +131,99 @@ Tests: table-driven `mapLonghornVolume` cases (healthy, degraded with 2/3 replic
 rebuilding, faulted detached, detached idle, unbound PVC), node/disk mapping, and the v1beta1
 field layout.
 
-## Garage (`kube_garage.go`)
+## Garage (`kube_garage.go`, `kube_exec.go`)
 
-For each discovered service `ns/svc:port`:
+**Primary source: run the Garage CLI inside a Garage pod** with a Kubernetes exec. The CLI
+talks to the cluster over Garage's own RPC with the `rpc_secret` already in the pod, so
+it needs no admin token, no `metrics_token` and no reachable admin port, and it sees the
+whole cluster from any one node. **Fallback:** the `/health` service proxy (step 3
+below), used when exec is refused (RBAC, PodSecurity admission), when no Garage pod is
+ready, or when the CLI output can't be read.
 
-1. `GET /api/v1/namespaces/{ns}/services/{svc}:{port}/proxy/health`
-   - 200 → `healthy`; 503 → `degraded`, or `unavailable` when the body says so; other →
-     `unknown`. `message` is the trimmed text body (cap 300 chars).
-   - The client's `do` currently JSON-decodes and treats non-2xx as an error. Add a small
-     `getRaw(ctx, path) (status int, body []byte, err error)` to `kube_client.go` that
-     returns the body for any HTTP status, still capped by `kubeMaxBody`. Proxy errors
-     (service has no endpoints) come back as 503 with a JSON `Status` body from the API
-     server, not from Garage. Tell them apart by `Content-Type: application/json` with
-     `"kind":"Status"` → status `unavailable`, message "no ready Garage pod behind service".
-2. `GET .../proxy/metrics`. When it returns 200, parse Prometheus text leniently
-   (`name{labels} value` lines, ignore comments). Sum across label sets:
-   - `block_resync_queue_length` → `resyncQueue`
-   - `block_resync_errored_blocks` → `resyncErrors`
-   - if present: `cluster_connected_nodes`, `cluster_known_nodes`, `cluster_storage_nodes`,
-     `cluster_storage_nodes_ok`, `cluster_partitions`, `cluster_partitions_quorum`,
-     `cluster_partitions_all_ok`
-   - 401/403 → metrics protected: leave the counters at `-1` and set `source: "health"`.
-3. Status refinement: `/health` 200 with `resyncErrors > 0` → `degraded`, message
-   "N blocks failed to resync". A non-zero `resyncQueue` alone is normal (see the Garage
-   monitoring docs) and only shown, not escalated.
+Talos has no container exec API, so this has to go through Kubernetes (`pods/exec`, which
+the os:admin kubeconfig allows).
 
-Tests: `parsePromText` (labels, NaN, missing), the status matrix, and an `httptest` server
-emulating the API server proxy paths (200/503/Status JSON/401 metrics).
+### Finding the pod
 
-### Phase 1b: Garage admin token (optional)
+1. List pods (`/api/v1/pods`; reuse `listPods` from `kube_pods.go`). Keep those with a
+   container whose image the catalog maps to `garage` (`loadAppCatalog()`; images
+   `dxflrs/garage`, `dxflrs/amd64_garage`, `dxflrs/arm64_garage`). The
+   `app.kubernetes.io/name=garage` label is a second signal.
+2. Group them by namespace: each namespace counts as one Garage cluster (an `instance` in
+   the wire format). Pick one pod that is `Running` with the Garage container ready,
+   preferring the lowest ordinal (`garage-0`). If none is ready, set status `unavailable`
+   with "no ready Garage pod" and still report the pod counts.
 
-Richer data (exact partitions, per-node status, layout staging) needs the admin API with a
-bearer token:
+### Exec (`kube_exec.go`, new, ~150 lines)
 
-- Endpoint: `GET .../proxy/v2/GetClusterHealth`, falling back to `/v1/health` on 404.
-  Fields: `status`, `knownNodes`, `connectedNodes`, `storageNodes`, `storageNodesOk`,
-  `partitions`, `partitionsQuorum`, `partitionsAllOk`.
-- The token comes from the user, entered per cluster in the Data services screen and
-  stored like `KubeServers` but in `SecureStore` (Android) or Keychain (iOS). Pass it as an
-  extra argument `garageToken`. **Do not** read it out of cluster Secrets automatically.
-  That's a silent secret read; if it's wanted later, make it an explicit button with
-  confirmation.
-- Header forwarding: the API server strips `Authorization` only when it used it to
-  authenticate (bearer token). Talos admin kubeconfigs authenticate with a **client
-  certificate**, so a `Authorization: Bearer <garage token>` header should reach Garage
-  through the service proxy. `kubeClient.do` must then let a per-request header override
-  the kubeconfig token. That's a conflict for the rare token-based kubeconfig, so in that
-  case refuse phase 1b with a clear message. **Verify on a real cluster first** with
-  `just probe`. If it doesn't work, drop 1b; `/health`+`/metrics` stays the design.
-  (This is why it's split off.)
+`func (k *kubeClient) exec(ctx, namespace, pod, container string, argv []string) (stdout, stderr []byte, err error)`
+
+- `GET {base}/api/v1/namespaces/{ns}/pods/{pod}/exec?container=..&command=a&command=b&stdout=true&stderr=true`,
+  upgraded to WebSocket with subprotocol `v5.channel.k8s.io`, falling back to
+  `v4.channel.k8s.io`, which every supported Kubernetes version accepts.
+- Use `golang.org/x/net/websocket`, already a direct dependency in `go/go.mod`, so no new
+  module. Dial with the client's own `*tls.Config` (client certificate) and the base
+  address `openKubeClient` picked. For a token kubeconfig, set `Authorization` on the
+  handshake.
+- Frames: the first byte is the channel. 1 = stdout, 2 = stderr, 3 = error/status (JSON
+  `metav1.Status`: `Success`, or `Failure` with reason `NonZeroExitCode`).
+- Bounds: 10 s per command and 1 MiB per stream (Garage output is a few KB).
+- **Safety:** `exec` is only ever called with fixed argv from an allow-list in
+  `kube_garage.go`; nothing the user types reaches the command. Namespace, pod and
+  container go through `validateKubeName`. Read-only commands only: never `garage layout`,
+  `repair`, `key` or `bucket`.
+- The binary is `/garage`. The official image is a static binary on `scratch` (no shell,
+  no `$PATH`), so always use the absolute path and never `sh -c`.
+
+### Commands (try in order, stop at the first that works)
+
+1. **Garage ≥ 2.0: `garage json-api`** (added in v2.0.0; it calls admin API endpoints from
+   the CLI and prints JSON):
+   - `/garage json-api GetClusterHealth` → `status` (healthy/degraded/unavailable),
+     `knownNodes`, `connectedNodes`, `storageNodes`, `storageNodesOk`, `partitions`,
+     `partitionsQuorum`, `partitionsAllOk`.
+   - `/garage json-api GetClusterStatus` → nodes (id, hostname, `isUp`, `lastSeenSecsAgo`,
+     zone/capacity from the layout, data partition free/total) and the layout version.
+     Staged layout changes become the warning "layout changes not applied".
+   - Resync counters (`resyncQueueLen`, `resyncErrors` per node; the
+     `NodeBlockManagerStats` type of the v2 API) through `GetNodeStatistics` for all
+     nodes, or its equivalent. **Verify** the exact endpoint name and argument syntax on
+     the deployed version (`/garage json-api --help`).
+   - Set `source: "cli-json"`.
+2. **Garage 1.x: `/garage status` and `/garage stats`**, parsed leniently as text:
+   - `status`: count the rows under the `==== HEALTHY NODES ====` and
+     `==== FAILED NODES ====` headers → `storageNodesOk` / `storageNodes`. Rows under
+     FAILED go into `failedNodes` (hostname, last seen).
+   - `stats`: the "resync queue length" and "blocks with resync errors" lines. Match the
+     label case-insensitively and take the trailing integer. Partition and table counts
+     are optional.
+   - Anything unparsed stays unknown (`-1`). The raw output, capped at 4 KB, goes in `raw`
+     so the UI can show it under "Details". Set `source: "cli-text"`.
+   - Keep fixtures of real output (1.x and 2.x) in `testdata/garage/`, captured from the
+     user's cluster with `just probe dataservices garage --raw`.
+3. **Fallback: the service proxy.** If exec fails or no pod is ready, find a Service in
+   that namespace exposing port `admin`/3903 and call
+   `GET /api/v1/namespaces/{ns}/services/{svc}:{port}/proxy/health`.
+   - 200 → `healthy`; 503 → `degraded`/`unavailable`, with the text body as `message`.
+   - Proxy errors (no endpoints) arrive as a JSON `Status` from the API server; treat
+     them as `unavailable`.
+   - This needs a small `getRaw(ctx, path) (status int, body []byte, err error)` in
+     `kube_client.go`.
+   - Set `source: "health"`, with the counters unknown. `exec` failing is noted in
+     `message` ("exec refused: …") so the user knows why the details are missing.
+
+### Status rules
+
+- `unavailable`: health says so, or `partitionsQuorum < partitions`, or no ready pod
+- `degraded`: `storageNodesOk < storageNodes`, `partitionsAllOk < partitions`,
+  `resyncErrors > 0` (blocks that failed to resync: risk of data loss), or staged layout
+  changes
+- `healthy`: otherwise. A non-zero `resyncQueue` on its own is normal (Garage monitoring
+  docs), so it's shown but not escalated.
+
+Tests: the argv allow-list, frame demux (stdout/stderr/status, non-zero exit), the
+`json-api` JSON mapping, the text parsers against fixtures, the status matrix, the
+fallback path, and an `httptest` WebSocket server emulating the API server exec endpoint.
 
 ## CloudNativePG (`kube_cnpg.go`)
 
@@ -221,14 +266,14 @@ a fresh cluster with no status.
 
 The demo must exercise every UI state: Longhorn with 4 volumes (ok, degraded 2/3 with
 1 rebuilding, idle detached, faulted), 3 nodes with one unschedulable disk; Garage healthy
-with resync queue 12 and errors 0; CNPG with 2 clusters (healthy, switchover in
+(`source: cli-json`) with resync queue 12 and errors 0; CNPG with 2 clusters (healthy, switchover in
 progress). Add `TestKubeDataServicesDemo` like `TestKubeDemo` (`kube_test.go:391`). The demo
 inventory (`demo_inventory.go`) already lists longhorn and cloudnative-pg images; add a
 garage image so the hint path is covered.
 
 ## Probe
 
-`go/cmd/probe`: add `dataservices [hints]`, printing the JSON. This is how a human checks
+`go/cmd/probe`: add `dataservices [hints] [--raw]`, printing the JSON (`--raw` also prints the raw Garage CLI output, for test fixtures). This is how a human checks
 against a real cluster before any UI exists:
 
 ```sh
@@ -242,5 +287,6 @@ just probe dataservices garage     # Garage only
 - [ ] `golangci-lint` clean, if CI runs it (check `.github/workflows/android.yml`)
 - [ ] `just probe dataservices` against the user's real cluster shows sensible Longhorn,
       Garage and CNPG output; README risks updated with what was learned
+- [ ] Garage CLI fixtures from the real cluster committed in `testdata/garage/`
 - [ ] Privacy test: with the mask on, the output contains no unmasked context or node names
 - [ ] gomobile binding builds (`just build` builds the AAR)
