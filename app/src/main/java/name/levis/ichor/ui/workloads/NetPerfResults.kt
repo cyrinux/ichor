@@ -79,6 +79,7 @@ private fun ResultRow(test: String, result: NetPerfResult?) {
                     style = MaterialTheme.typography.labelSmall,
                     color = muted,
                 )
+                NetPerfLatencyRange(l)
             }
         }
     }

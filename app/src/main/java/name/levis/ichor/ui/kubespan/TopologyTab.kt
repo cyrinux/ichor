@@ -28,6 +28,19 @@ import name.levis.ichor.data.TOPOLOGY
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.TopologyLink
+import name.levis.ichor.model.NETPERF_LATENCY
+import name.levis.ichor.model.NETPERF_PATH_HOST
+import name.levis.ichor.model.NETPERF_PATH_POD
+import name.levis.ichor.model.NETPERF_THROUGHPUT
+import name.levis.ichor.model.NetPerfReport
+import name.levis.ichor.model.formatMbps
+import name.levis.ichor.model.formatMicros
+import name.levis.ichor.model.latestBetween
+import name.levis.ichor.model.podThroughputMbps
+import name.levis.ichor.ui.workloads.netPerfViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.text.DateFormat
+import java.util.Date
 import name.levis.ichor.model.TopologyLinkSide
 import name.levis.ichor.model.TopologyNode
 import name.levis.ichor.model.isBroken
@@ -50,13 +63,23 @@ class TopologyViewModel(private val talos: TalosRepository) : LoadingViewModel<C
 fun TopologyContent(topology: ClusterTopology, onNode: (TopologyNode) -> Unit) {
     var link by remember { mutableStateOf<TopologyLink?>(null) }
     val names = topology.nodes.associate { it.id to it.hostname.ifBlank { it.id } }
+    // Node names of the network test are Kubernetes node names: the hostnames on Talos.
+    val history by netPerfViewModel().history.collectAsStateWithLifecycle()
+    val tests = remember(topology, history) {
+        topology.links.mapNotNull { l -> history.latestBetween(l.a, l.b)?.let { l to it } }.toMap()
+    }
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { TopologySummary(topology) }
         if (topology.nodes.isEmpty()) {
             item { Text(stringResource(R.string.topology_empty), style = MaterialTheme.typography.bodyMedium) }
         } else {
-            item { TopologyMap(topology, onNode = onNode, onLink = { link = it }) }
+            item {
+                TopologyMap(
+                    topology, onNode = onNode, onLink = { link = it },
+                    speeds = tests.mapValues { (_, test) -> formatMbps(test.podThroughputMbps ?: 0.0) },
+                )
+            }
             item { TopologyLegend() }
             if (topology.nodes.any { !it.queried }) {
                 item {
@@ -72,7 +95,7 @@ fun TopologyContent(topology: ClusterTopology, onNode: (TopologyNode) -> Unit) {
 
     link?.let { shown ->
         ModalBottomSheet(onDismissRequest = { link = null }) {
-            LinkDetails(shown, names, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp))
+            LinkDetails(shown, names, tests[shown], Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp))
         }
     }
 }
@@ -93,7 +116,7 @@ private fun TopologySummary(topology: ClusterTopology) {
 }
 
 @Composable
-private fun LinkDetails(link: TopologyLink, names: Map<String, String>, modifier: Modifier = Modifier) {
+private fun LinkDetails(link: TopologyLink, names: Map<String, String>, test: NetPerfReport?, modifier: Modifier = Modifier) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("${names[link.a] ?: link.a}  ↔  ${names[link.b] ?: link.b}", style = MaterialTheme.typography.titleMedium)
         link.sides.forEachIndexed { i, side ->
@@ -107,6 +130,35 @@ private fun LinkDetails(link: TopologyLink, names: Map<String, String>, modifier
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        test?.let {
+            HorizontalDivider()
+            LinkTest(it)
+        }
+    }
+}
+
+/** The last network test between the link's two nodes: direction, figures and when it ran. */
+@Composable
+private fun LinkTest(test: NetPerfReport) {
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val pod = test.results.filter { it.path == NETPERF_PATH_POD && it.error.isEmpty() }
+    val host = test.results.firstOrNull { it.path == NETPERF_PATH_HOST && it.test == NETPERF_THROUGHPUT && it.error.isEmpty() }
+    Column(Modifier.fillMaxWidth()) {
+        Text(stringResource(R.string.topology_link_test), style = MaterialTheme.typography.bodyMedium)
+        Text("${test.client} → ${test.server}", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+        Text(
+            listOfNotNull(
+                test.podThroughputMbps?.let(::formatMbps),
+                pod.firstOrNull { it.test == NETPERF_LATENCY }?.latency?.let { "p50 " + formatMicros(it.p50) },
+                host?.let { stringResource(R.string.topology_link_test_host, formatMbps(it.throughputMbps)) },
+            ).joinToString("  ·  "),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        Text(
+            DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(test.started)),
+            style = MaterialTheme.typography.bodySmall,
+            color = muted,
+        )
     }
 }
 

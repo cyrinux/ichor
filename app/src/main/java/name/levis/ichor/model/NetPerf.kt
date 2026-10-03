@@ -133,6 +133,35 @@ val NetPerfReport.setup: NetPerfSetup get() = NetPerfSetup(server, client, hostN
 fun List<NetPerfReport>.withReport(report: NetPerfReport, limit: Int = NETPERF_HISTORY_LIMIT): List<NetPerfReport> =
     (listOf(report) + filterNot { it.started == report.started }).take(limit)
 
+/** One saved test in a pair's trend: its pod-to-pod figures, null where not measured. */
+data class NetPerfTrendPoint(val started: Long, val throughputMbps: Double?, val p50Us: Double?)
+
+/** The saved tests from [client] to [server], oldest first, for the trend charts. */
+fun List<NetPerfReport>.trendOf(client: String, server: String): List<NetPerfTrendPoint> =
+    filter { it.client == client && it.server == server }
+        .sortedBy { it.started }
+        .map { report ->
+            val pod = report.results.filter { it.path == NETPERF_PATH_POD && it.error.isEmpty() }
+            NetPerfTrendPoint(
+                started = report.started,
+                throughputMbps = pod.firstOrNull { it.test == NETPERF_THROUGHPUT }?.throughputMbps,
+                p50Us = pod.firstOrNull { it.test == NETPERF_LATENCY }?.latency?.p50,
+            )
+        }
+
+/**
+ * The newest saved test between nodes [a] and [b], either way round, that measured pod-to-pod
+ * throughput: what the KubeSpan map shows on their link. Null when they were never tested.
+ */
+fun List<NetPerfReport>.latestBetween(a: String, b: String): NetPerfReport? =
+    filter { (it.client == a && it.server == b) || (it.client == b && it.server == a) }
+        .filter { it.podThroughputMbps != null }
+        .maxByOrNull { it.started }
+
+/** Pod-to-pod throughput of this test, null when not measured. */
+val NetPerfReport.podThroughputMbps: Double?
+    get() = results.firstOrNull { it.path == NETPERF_PATH_POD && it.test == NETPERF_THROUGHPUT && it.error.isEmpty() }?.throughputMbps
+
 /** "9.41 Gbit/s", "870 Mbit/s". */
 fun formatMbps(mbps: Double): String = when {
     mbps >= 1000 -> String.format(Locale.ROOT, "%.2f Gbit/s", mbps / 1000)

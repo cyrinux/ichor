@@ -56,6 +56,8 @@ fun LiveChart(
     gridColor: Color,
     modifier: Modifier = Modifier,
     fixedMax: Float? = null,
+    maxPoints: Int = MAX_POINTS,
+    pollSeconds: Long = POLL_SECONDS,
 ) {
     var selected by remember { mutableStateOf<Int?>(null) }
     val count = times.size
@@ -105,13 +107,13 @@ fun LiveChart(
                         .height(120.dp)
                         .semantics { contentDescription = chartDescription }
                         .pointerInput(count) {
-                            detectTapGestures { offset -> selected = indexAt(offset.x, size.width.toFloat(), count) }
+                            detectTapGestures { offset -> selected = indexAt(offset.x, size.width.toFloat(), count, maxPoints) }
                         }
                         .pointerInput(count) {
                             detectDragGestures(
                                 onDragEnd = { selected = null },
                                 onDragCancel = { selected = null },
-                            ) { change, _ -> selected = indexAt(change.position.x, size.width.toFloat(), count) }
+                            ) { change, _ -> selected = indexAt(change.position.x, size.width.toFloat(), count, maxPoints) }
                         },
                 ) {
                     val w = size.width
@@ -121,7 +123,7 @@ fun LiveChart(
                         drawLine(gridColor, Offset(0f, h * f), Offset(w, h * f), strokeWidth = 1.dp.toPx())
                     }
                     if (count < 2) return@Canvas
-                    val step = w / (MAX_POINTS - 1)
+                    val step = w / (maxPoints - 1)
                     val startX = w - step * (count - 1)
                     series.forEach { s ->
                         val path = Path()
@@ -150,16 +152,16 @@ fun LiveChart(
                 )
             }
             Row {
-                Text(stringResource(R.string.node_live_minutes_axis, (MAX_POINTS * POLL_SECONDS / 60).toInt()), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.node_live_minutes_axis, (maxPoints * pollSeconds / 60).toInt()), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
                 Text(stringResource(R.string.node_live_now), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
 }
 
-private fun indexAt(x: Float, width: Float, count: Int): Int? {
+private fun indexAt(x: Float, width: Float, count: Int, maxPoints: Int): Int? {
     if (count < 2 || width <= 0f) return null
-    val step = width / (MAX_POINTS - 1)
+    val step = width / (maxPoints - 1)
     val startX = width - step * (count - 1)
     return ((x - startX) / step).toInt().coerceIn(0, count - 1)
 }

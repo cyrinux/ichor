@@ -37112,6 +37112,286 @@
         }
       }
     },
+    "Test" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тест"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test"
+          }
+        }
+      }
+    },
+    "Over time" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dans le temps"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En el tiempo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У часі"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Zeitverlauf"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nel tempo"
+          }
+        }
+      }
+    },
+    "pod to pod" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pod à pod"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pod a pod"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "под до пода"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pod zu Pod"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "da pod a pod"
+          }
+        }
+      }
+    },
+    "%@ across the saved tests" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sur les tests conservés"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ en las pruebas guardadas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ у збережених тестах"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ über die gespeicherten Tests"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ nei test salvati"
+          }
+        }
+      }
+    },
+    "fastest %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "plus rapide %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "más rápida %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "найшвидший %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "schnellster %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "più veloce %@"
+          }
+        }
+      }
+    },
+    "slowest %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "plus lent %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "más lenta %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "найповільніший %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "langsamster %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "più lento %@"
+          }
+        }
+      }
+    },
+    "Round trips from %@ to %@, p50 %@, p99 %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allers-retours de %@ à %@, p50 %@, p99 %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idas y vueltas de %@ a %@, p50 %@, p99 %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цикли від %@ до %@, p50 %@, p99 %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Round-Trips von %@ bis %@, p50 %@, p99 %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Round trip da %@ a %@, p50 %@, p99 %@"
+          }
+        }
+      }
+    },
+    "The saved tests between the client and server chosen above, oldest on the left. Points are evenly spaced, whatever the time between tests.\n\nTap a point to see that test in both charts. A drop in throughput or a jump in latency after a change (CNI, MTU, encryption, a new switch) shows what it cost." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les tests conservés entre le client et le serveur choisis plus haut, le plus ancien à gauche. Les points sont espacés régulièrement, quel que soit le temps entre deux tests.\n\nTouchez un point pour voir ce test dans les deux graphiques. Une baisse de débit ou un saut de latence après un changement (CNI, MTU, chiffrement, nouveau switch) montre ce qu’il a coûté."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las pruebas guardadas entre el cliente y el servidor elegidos arriba, la más antigua a la izquierda. Los puntos están espaciados por igual, sea cual sea el tiempo entre pruebas.\n\nToca un punto para ver esa prueba en los dos gráficos. Una caída de rendimiento o un salto de latencia tras un cambio (CNI, MTU, cifrado, un switch nuevo) muestra lo que costó."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережені тести між клієнтом і сервером, вибраними вище, найстаріший ліворуч. Точки розташовані рівномірно, незалежно від часу між тестами.\n\nТоркніться точки, щоб побачити цей тест на обох графіках. Падіння пропускної здатності чи стрибок затримки після зміни (CNI, MTU, шифрування, новий комутатор) показує, чого вона коштувала."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die gespeicherten Tests zwischen dem oben gewählten Client und Server, der älteste links. Die Punkte sind gleichmäßig verteilt, egal wie viel Zeit zwischen den Tests lag.\n\nTippe auf einen Punkt, um diesen Test in beiden Diagrammen zu sehen. Ein Einbruch beim Durchsatz oder ein Sprung bei der Latenz nach einer Änderung (CNI, MTU, Verschlüsselung, neuer Switch) zeigt, was sie gekostet hat."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I test salvati tra il client e il server scelti sopra, il più vecchio a sinistra. I punti sono equidistanti, qualunque sia il tempo tra un test e l’altro.\n\nTocca un punto per vedere quel test in entrambi i grafici. Un calo di throughput o un salto di latenza dopo una modifica (CNI, MTU, cifratura, uno switch nuovo) mostra quanto è costata."
+          }
+        }
+      }
+    },
     "Previous tests" : {
       "extractionState" : "manual",
       "localizations" : {

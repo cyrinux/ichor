@@ -73,4 +73,26 @@ final class NetPerfTests: XCTestCase {
         XCTAssertEqual(try TalosJSON.decode([NetPerfReport].self, from: json), [report])
         XCTAssertEqual(report.setup, NetPerfSetup(server: "a", client: "b", hostNetwork: true, seconds: 5))
     }
+
+    func testTrendFollowsOnePairOldestFirst() {
+        let history = [
+            NetPerfReport(server: "b", client: "a", started: 3, results: [
+                NetPerfResult(path: NetPerfPath.pod, test: NetPerfTest.throughput, throughputMbps: 900),
+                NetPerfResult(path: NetPerfPath.host, test: NetPerfTest.throughput, throughputMbps: 5000),
+                NetPerfResult(path: NetPerfPath.pod, test: NetPerfTest.latency, latency: NetPerfLatency(p50: 60)),
+            ]),
+            NetPerfReport(server: "a", client: "b", started: 2, results: [
+                NetPerfResult(path: NetPerfPath.pod, test: NetPerfTest.throughput, throughputMbps: 1),
+            ]),
+            NetPerfReport(server: "b", client: "a", started: 1, results: [
+                NetPerfResult(path: NetPerfPath.pod, test: NetPerfTest.throughput, error: "refused"),
+                NetPerfResult(path: NetPerfPath.pod, test: NetPerfTest.latency, latency: NetPerfLatency(p50: 80)),
+            ]),
+        ]
+        let trend = history.trend(client: "a", server: "b")
+        XCTAssertEqual(trend.map(\.started), [1, 3])
+        XCTAssertEqual(trend.map(\.throughputMbps), [nil, 900])
+        XCTAssertEqual(trend.map(\.p50Us), [80, 60])
+        XCTAssertEqual(history.trend(client: "b", server: "a").count, 1)
+    }
 }

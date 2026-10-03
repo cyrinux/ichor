@@ -1,3 +1,4 @@
+import Charts
 import SwiftUI
 import IchorCore
 
@@ -7,10 +8,14 @@ import IchorCore
 final class CgroupMonitor {
     /// A copy of /sys/fs/cgroup (several MB on a busy node) is heavy on mobile data: poll slowly.
     static let pollSeconds: Double = 10
+    /// Pressure samples the chart keeps: 5 minutes at one per poll.
+    static let historyPoints = 30
 
     private(set) var previous: CgroupReport?
     private(set) var current: CgroupReport?
     private(set) var error: String?
+    /// The node's pressure at each poll, oldest first, for the chart.
+    private(set) var history: [PressureSample] = []
 
     func poll(_ client: TalosClient, node: String) async {
         while !Task.isCancelled {
@@ -18,6 +23,7 @@ final class CgroupMonitor {
                 let next = try await client.cgroups(node: node)
                 previous = current
                 current = next
+                history = Array((history + [PressureSample(at: next.at, pressure: next.pressure)]).suffix(Self.historyPoints))
                 error = nil
             } catch {
                 if !Task.isCancelled { self.error = error.localizedDescription }
@@ -56,6 +62,9 @@ struct CgroupsView: View {
                 .pickerStyle(.segmented)
             } footer: {
                 Text("CPU as a share of one core and disk I/O since the last refresh, every 10 s; pressure over the last 10 s. Tap a group to open it.")
+            }
+            if monitor.history.count >= 2 {
+                Section { PressureChart(samples: monitor.history) }
             }
             if let current = monitor.current {
                 let open = expanded ?? defaultExpandedCgroups(current)
@@ -128,6 +137,78 @@ private struct CgroupRowView: View {
             .foregroundStyle(.secondary)
             .lineLimit(1)
         }
+    }
+}
+
+/// One poll's pressure, for the chart.
+struct PressureSample: Identifiable {
+    /// Unix ms.
+    let at: Int64
+    let pressure: CgroupPressure
+
+    var id: Int64 { at }
+    var date: Date { Date(timeIntervalSince1970: Double(at) / 1000) }
+}
+
+/// The node's PSI "some" 10 s averages at each poll while the tab is open: how the waiting for
+/// CPU, memory and disk moves. The scale reaches at least 10 % so a quiet node reads as flat.
+private struct PressureChart: View {
+    let samples: [PressureSample]
+
+    @State private var selection: Date?
+
+    private var series: [(label: String, color: Color, value: KeyPath<CgroupPressure, CgroupPSI>)] {
+        [(String(localized: "CPU"), ChartPalette.first, \.cpu),
+         (String(localized: "Memory"), ChartPalette.second, \.memory),
+         (String(localized: "Disk I/O"), ChartPalette.third, \.io)]
+    }
+
+    private var shown: PressureSample? {
+        guard let selection else { return samples.last }
+        return samples.min { abs($0.date.timeIntervalSince(selection)) < abs($1.date.timeIntervalSince(selection)) }
+    }
+
+    var body: some View {
+        let peak = samples.flatMap { s in series.map { s.pressure[keyPath: $0.value].some10 } }.max() ?? 0
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Pressure").font(.subheadline.weight(.semibold))
+                Spacer()
+                if selection != nil, let shown, let last = samples.last {
+                    Text("\(Int(last.date.timeIntervalSince(shown.date)))s ago").font(.caption2).foregroundStyle(.secondary)
+                }
+            }
+            HStack(spacing: 14) {
+                ForEach(series, id: \.label) { s in
+                    HStack(spacing: 6) {
+                        Circle().fill(s.color).frame(width: 8, height: 8)
+                        Text(verbatim: s.label).font(.caption).foregroundStyle(.secondary)
+                        Text(verbatim: shown.map { String(format: "%.1f%%", $0.pressure[keyPath: s.value].some10) } ?? "—")
+                            .font(.subheadline.weight(.semibold))
+                            .monospacedDigit()
+                    }
+                }
+            }
+            Chart {
+                ForEach(series, id: \.label) { s in
+                    ForEach(samples) { p in
+                        LineMark(x: .value("Time", p.date), y: .value("Pressure", p.pressure[keyPath: s.value].some10), series: .value("Series", s.label))
+                            .foregroundStyle(s.color)
+                            .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                    }
+                }
+                if selection != nil, let shown {
+                    RuleMark(x: .value("Selected", shown.date)).foregroundStyle(.secondary.opacity(0.5))
+                }
+            }
+            .chartYScale(domain: 0...Swift.min(Swift.max(peak * 1.15, 10), 100))
+            .chartXAxis(.hidden)
+            .chartYAxis { AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { AxisGridLine() } }
+            .chartXSelection(value: $selection)
+            .frame(height: 120)
+            .accessibilityLabel(Text("\(String(localized: "Pressure")) chart"))
+        }
+        .padding(.vertical, 4)
     }
 }
 
