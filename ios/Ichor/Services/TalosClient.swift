@@ -428,13 +428,22 @@ struct TalosClient: Sendable {
         return try TalosJSON.decode(T.self, from: output)
     }
 
+    /// Go calls block their thread until the cluster answers or times out (20s when it cannot be
+    /// reached). On Swift's cooperative pool (one thread per core) a few of them, left from the
+    /// cluster switched away from, starved every later task: the overview spun forever. GCD
+    /// adds threads when they block.
     static func run<T: Sendable>(_ call: @escaping @Sendable (NSErrorPointer) -> T) async throws -> T {
-        try await Task.detached(priority: .userInitiated) {
-            var error: NSError?
-            let result = call(&error)
-            if let error { throw TalosError(message: error.localizedDescription) }
-            return result
-        }.value
+        try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                var error: NSError?
+                let result = call(&error)
+                if let error {
+                    continuation.resume(throwing: TalosError(message: error.localizedDescription))
+                } else {
+                    continuation.resume(returning: result)
+                }
+            }
+        }
     }
 }
 
