@@ -1,0 +1,207 @@
+{
+  "apiVersion": "v1",
+  "items": [
+    {
+      "apiVersion": "longhorn.io/v1beta2",
+      "kind": "Node",
+      "metadata": {
+        "name": "node-1",
+        "namespace": "longhorn-system"
+      },
+      "status": {
+        "conditions": [
+          {
+            "reason": "",
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "Schedulable"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "Multipathd"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "NFSClientInstalled"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "KernelModulesLoaded"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "MountPropagation"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "RequiredPackages"
+          }
+        ],
+        "diskStatus": {
+          "disk-1": {
+            "conditions": [
+              {
+                "reason": "",
+                "status": "True",
+                "type": "Ready"
+              },
+              {
+                "reason": "",
+                "status": "True",
+                "type": "Schedulable"
+              }
+            ],
+            "diskPath": "/var/lib/longhorn",
+            "storageAvailable": 47500492800,
+            "storageMaximum": 107288199168,
+            "storageScheduled": 35433480192
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "longhorn.io/v1beta2",
+      "kind": "Node",
+      "metadata": {
+        "name": "node-2",
+        "namespace": "longhorn-system"
+      },
+      "status": {
+        "conditions": [
+          {
+            "reason": "",
+            "status": "True",
+            "type": "Ready"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "Schedulable"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "Multipathd"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "NFSClientInstalled"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "KernelModulesLoaded"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "MountPropagation"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "RequiredPackages"
+          }
+        ],
+        "diskStatus": {
+          "disk-1": {
+            "conditions": [
+              {
+                "reason": "",
+                "status": "True",
+                "type": "Ready"
+              },
+              {
+                "reason": "",
+                "status": "True",
+                "type": "Schedulable"
+              }
+            ],
+            "diskPath": "/var/lib/longhorn",
+            "storageAvailable": 333237452800,
+            "storageMaximum": 997390106624,
+            "storageScheduled": 26843545600
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "longhorn.io/v1beta2",
+      "kind": "Node",
+      "metadata": {
+        "name": "node-6",
+        "namespace": "longhorn-system"
+      },
+      "status": {
+        "conditions": [
+          {
+            "reason": "KubernetesNodeNotReady",
+            "status": "False",
+            "type": "Ready"
+          },
+          {
+            "reason": "KubernetesNodeCordoned",
+            "status": "False",
+            "type": "Schedulable"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "RequiredPackages"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "Multipathd"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "NFSClientInstalled"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "KernelModulesLoaded"
+          },
+          {
+            "reason": "",
+            "status": "True",
+            "type": "MountPropagation"
+          }
+        ],
+        "diskStatus": {
+          "disk-1": {
+            "conditions": [
+              {
+                "reason": "NodeNotReady",
+                "status": "False",
+                "type": "Ready"
+              },
+              {
+                "reason": "NodeNotReady",
+                "status": "False",
+                "type": "Schedulable"
+              }
+            ],
+            "diskPath": "/var/lib/longhorn",
+            "storageAvailable": 678323814400,
+            "storageMaximum": 967722528768,
+            "storageScheduled": 89527418880
+          }
+        }
+      }
+    }
+  ],
+  "kind": "List"
+}

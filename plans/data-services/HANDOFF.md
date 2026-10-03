@@ -5,7 +5,21 @@ plus wire format), then the plan of the phase you're doing.
 
 ## State on 2026-10-03
 
-- Planning done. No code written yet.
+- Planning done. No feature code written yet.
+- **Live check done (user-approved, read-only).** Every API shape the plan relies on is
+  verified against the real cluster; corrections are folded into 01 and the README.
+  Anonymised fixtures are committed in `go/talosmobile/testdata/`:
+  - `garage/v2.3.0/degraded/` (7 nodes, 1 down): the three `json-api` outputs
+  - `garage/v2.3.0/single-node/`: the same three outputs from the standalone instance
+  - `garage/v2.3.0/json-api-help.txt` and `stderr-sample.txt` (ANSI logs + an `Error:` line)
+  - `longhorn/1.12/`: volumes (healthy, idle, faulted), their replicas, nodes (one not
+    ready), backup targets
+  - `cnpg/`: Clusters (healthy, backup-failed, short-instances, no-ready,
+    wal-archiver-off), their ScheduledBackups and ObjectStores (with an orphan window)
+  - `apis.json`: the API groups the detection reads
+
+  The raw captures were not kept (they contain real names). To refresh, rerun the
+  commands below with the user's OK and anonymise the same way.
 - Branch with the plans: `worktree-plan-data-services`.
 - User decisions:
   - **Garage status comes from its CLI run inside the Garage container**
@@ -27,7 +41,8 @@ plus wire format), then the plan of the phase you're doing.
   - **Garage**: no CRDs.
     - Since v2.0.0, `garage json-api <Endpoint>` runs admin API endpoints from the CLI.
       `GetClusterHealth` returns `status`, `connectedNodes`, `knownNodes`, `storageNodes`,
-      `storageNodesOk`, `partitions`, `partitionsQuorum`, `partitionsAllOk`.
+      `storageNodesUp` (v2.3.0; older docs say `storageNodesOk`), `partitions`,
+      `partitionsQuorum`, `partitionsAllOk`.
       `GetClusterStatus` returns nodes, the layout and staged changes.
     - `block_resync_queue_length` (non-zero is normal) and `block_resync_errored_blocks`
       (should be 0) are the "sync" signals. `garage stats` shows them as "resync queue
@@ -45,10 +60,10 @@ plus wire format), then the plan of the phase you're doing.
 
 ## Order of work
 
-1. **Phase 1, Go** ([01-go-core.md](01-go-core.md)). Start with `kube_exec.go` and the
-   Garage path against the user's real cluster (`just probe dataservices garage --raw`):
-   it's the least certain part, and its output becomes the test fixtures. Then Longhorn
-   and CNPG.
+1. **Phase 1, Go** ([01-go-core.md](01-go-core.md)). The mappers can be written TDD
+   straight away against the committed fixtures. `kube_exec.go` is the only part needing
+   new transport code; check it end to end with `just probe dataservices` on the user's
+   cluster (ask first).
 2. **Phases 2 and 3** in parallel (separate worktrees/agents): [02-android.md](02-android.md),
    [03-ios.md](03-ios.md).
 3. **Phase 4** ([04-monitoring.md](04-monitoring.md), opt-in), then optionally phase 5
@@ -90,7 +105,7 @@ placeholders from `~/hacklab/talos`:
 kubectl -n <garage-ns> exec ds/<garage-ds> -c garage -- /garage json-api --help
 kubectl -n <garage-ns> exec ds/<garage-ds> -c garage -- /garage json-api GetClusterHealth
 kubectl -n <garage-ns> exec ds/<garage-ds> -c garage -- /garage json-api GetClusterStatus
-kubectl -n <garage-ns> exec ds/<garage-ds> -c garage -- /garage json-api GetNodeStatistics '{"node":"*"}'   # syntax to confirm via --help
+kubectl -n <garage-ns> exec ds/<garage-ds> -c garage -- /garage json-api GetNodeStatistics '{"node":"*","body":null}'   # the {node, body} envelope is required
 kubectl -n <nas-ns> exec sts/<nas-sts> -c garage -- /garage json-api GetClusterHealth
 # Longhorn 1.12 / CNPG + plugin
 kubectl get volumes.longhorn.io,replicas.longhorn.io,nodes.longhorn.io,backuptargets.longhorn.io -A -o json
@@ -122,3 +137,10 @@ Append a line per session: date, phase, what was done, what's next.
   plugin backups (barman-cloud v0.13.0) → CNPG backup health now comes from ObjectStore
   `serverRecoveryWindow` + ScheduledBackups, and `isWALArchiver: false` is neutral.
   Next: fixtures (with the user's OK), then phase 1.
+- 2026-10-03: live read-only capture (user OK). Verified: json-api needs no token, logs go to
+  stderr, `storageNodesUp`, `blockManagerStats`, the `{node, body}` envelope; Longhorn 1.12
+  keeps healthyAt/failedAt in replica spec; Cluster `lastSuccessfulBackup` is empty with
+  the plugin; ObjectStores keep orphan windows; garagenodes are stale (17 for 7). The
+  cluster had one NotReady node at the time, which made it a perfect "degraded" sample.
+  This motivated D9 (likely-cause correlation). Anonymised fixtures committed.
+  Next: phase 1.

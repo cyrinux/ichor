@@ -1,0 +1,643 @@
+{
+  "error": {
+    "bcfcea641a42b1c86286bcf6662128298d1cb48f785ac1b8ccc48881af770992": "Network error: Not connected: bcfcea641a42b1c8"
+  },
+  "success": {
+    "63cd17ea419f41bb8eed6e4516bb33cb2726050838ecd42b07cffe75795c1768": {
+      "blockManagerStats": {
+        "rcEntries": 291,
+        "resyncErrors": 0,
+        "resyncQueueLen": 0
+      },
+      "freeform": "Node ID: (redacted)\nHostname: (redacted)\nGarage version: v2.3.0\n",
+      "tableStats": [
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 1,
+          "merkleItems": 1,
+          "merkleQueueLen": 0,
+          "tableName": "admin_token"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 35,
+          "merkleItems": 39,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_v2"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 36,
+          "merkleItems": 39,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_alias"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 31,
+          "merkleItems": 34,
+          "merkleQueueLen": 0,
+          "tableName": "key"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "object"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_object_counter"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "multipart_upload"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_mpu_counter"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "version"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "block_ref"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_item"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_index_counter_v2"
+        }
+      ]
+    },
+    "a2630873aa7e0eef955c98a8ca7c496a69e35012ee37c2babd2278e661100c1c": {
+      "blockManagerStats": {
+        "rcEntries": 503222,
+        "resyncErrors": 9331,
+        "resyncQueueLen": 9365
+      },
+      "freeform": "Node ID: (redacted)\nHostname: (redacted)\nGarage version: v2.3.0\n",
+      "tableStats": [
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 1,
+          "merkleItems": 1,
+          "merkleQueueLen": 0,
+          "tableName": "admin_token"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 35,
+          "merkleItems": 39,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_v2"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 36,
+          "merkleItems": 39,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_alias"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 31,
+          "merkleItems": 34,
+          "merkleQueueLen": 0,
+          "tableName": "key"
+        },
+        {
+          "gcQueueLen": 8969,
+          "insertQueueLen": 0,
+          "items": 952181,
+          "merkleItems": 1111978,
+          "merkleQueueLen": 0,
+          "tableName": "object"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 16,
+          "merkleItems": 19,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_object_counter"
+        },
+        {
+          "gcQueueLen": 68,
+          "insertQueueLen": 0,
+          "items": 119,
+          "merkleItems": 149,
+          "merkleQueueLen": 0,
+          "tableName": "multipart_upload"
+        },
+        {
+          "gcQueueLen": 1,
+          "insertQueueLen": 0,
+          "items": 4,
+          "merkleItems": 5,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_mpu_counter"
+        },
+        {
+          "gcQueueLen": 30003,
+          "insertQueueLen": 0,
+          "items": 388932,
+          "merkleItems": 430603,
+          "merkleQueueLen": 0,
+          "tableName": "version"
+        },
+        {
+          "gcQueueLen": 72641,
+          "insertQueueLen": 0,
+          "items": 582909,
+          "merkleItems": 635141,
+          "merkleQueueLen": 0,
+          "tableName": "block_ref"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_item"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_index_counter_v2"
+        }
+      ]
+    },
+    "bc62baf6be76bf416fb2a00b7bee4df8c4869a3f14d056acda95e9dc30217240": {
+      "blockManagerStats": {
+        "rcEntries": 343755,
+        "resyncErrors": 13071,
+        "resyncQueueLen": 13093
+      },
+      "freeform": "Node ID: (redacted)\nHostname: (redacted)\nGarage version: v2.3.0\n",
+      "tableStats": [
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 1,
+          "merkleItems": 1,
+          "merkleQueueLen": 0,
+          "tableName": "admin_token"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 35,
+          "merkleItems": 39,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_v2"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 36,
+          "merkleItems": 39,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_alias"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 31,
+          "merkleItems": 34,
+          "merkleQueueLen": 0,
+          "tableName": "key"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 733023,
+          "merkleItems": 860888,
+          "merkleQueueLen": 0,
+          "tableName": "object"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 11,
+          "merkleItems": 13,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_object_counter"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 104,
+          "merkleItems": 130,
+          "merkleQueueLen": 0,
+          "tableName": "multipart_upload"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 4,
+          "merkleItems": 5,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_mpu_counter"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 259669,
+          "merkleItems": 287426,
+          "merkleQueueLen": 0,
+          "tableName": "version"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 400052,
+          "merkleItems": 435799,
+          "merkleQueueLen": 0,
+          "tableName": "block_ref"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_item"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_index_counter_v2"
+        }
+      ]
+    },
+    "d32b33f6543d1b4923028ac0f443cb9a90b340b134b114a86d38cff714cc7690": {
+      "blockManagerStats": {
+        "rcEntries": 513758,
+        "resyncErrors": 20837,
+        "resyncQueueLen": 20869
+      },
+      "freeform": "Node ID: (redacted)\nHostname: (redacted)\nGarage version: v2.3.0\n",
+      "tableStats": [
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 1,
+          "merkleItems": 1,
+          "merkleQueueLen": 0,
+          "tableName": "admin_token"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 35,
+          "merkleItems": 39,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_v2"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 36,
+          "merkleItems": 39,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_alias"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 31,
+          "merkleItems": 34,
+          "merkleQueueLen": 0,
+          "tableName": "key"
+        },
+        {
+          "gcQueueLen": 5847,
+          "insertQueueLen": 0,
+          "items": 25496,
+          "merkleItems": 28336,
+          "merkleQueueLen": 0,
+          "tableName": "object"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 13,
+          "merkleItems": 14,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_object_counter"
+        },
+        {
+          "gcQueueLen": 111,
+          "insertQueueLen": 0,
+          "items": 158,
+          "merkleItems": 196,
+          "merkleQueueLen": 0,
+          "tableName": "multipart_upload"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 2,
+          "merkleItems": 2,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_mpu_counter"
+        },
+        {
+          "gcQueueLen": 22719,
+          "insertQueueLen": 0,
+          "items": 388632,
+          "merkleItems": 430224,
+          "merkleQueueLen": 0,
+          "tableName": "version"
+        },
+        {
+          "gcQueueLen": 60760,
+          "insertQueueLen": 0,
+          "items": 593307,
+          "merkleItems": 646383,
+          "merkleQueueLen": 0,
+          "tableName": "block_ref"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_item"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_index_counter_v2"
+        }
+      ]
+    },
+    "e405d9b8ff64ac30bcab474ccf521c474e57094bb4624f4fa78b15b4685bd3f5": {
+      "blockManagerStats": {
+        "rcEntries": 691657,
+        "resyncErrors": 29493,
+        "resyncQueueLen": 29535
+      },
+      "freeform": "Node ID: (redacted)\nHostname: (redacted)\nGarage version: v2.3.0\n",
+      "tableStats": [
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 1,
+          "merkleItems": 1,
+          "merkleQueueLen": 0,
+          "tableName": "admin_token"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 35,
+          "merkleItems": 39,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_v2"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 36,
+          "merkleItems": 39,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_alias"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 31,
+          "merkleItems": 34,
+          "merkleQueueLen": 0,
+          "tableName": "key"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 357207,
+          "merkleItems": 427185,
+          "merkleQueueLen": 0,
+          "tableName": "object"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 17,
+          "merkleItems": 19,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_object_counter"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 236,
+          "merkleItems": 300,
+          "merkleQueueLen": 0,
+          "tableName": "multipart_upload"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 2,
+          "merkleItems": 2,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_mpu_counter"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 520179,
+          "merkleItems": 575864,
+          "merkleQueueLen": 0,
+          "tableName": "version"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 791601,
+          "merkleItems": 862415,
+          "merkleQueueLen": 0,
+          "tableName": "block_ref"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_item"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_index_counter_v2"
+        }
+      ]
+    },
+    "ff454c19e244d02bc295675e192335b3235b099e00f01ead42f647d8677630d1": {
+      "blockManagerStats": {
+        "rcEntries": 509838,
+        "resyncErrors": 12369,
+        "resyncQueueLen": 12400
+      },
+      "freeform": "Node ID: (redacted)\nHostname: (redacted)\nGarage version: v2.3.0\n",
+      "tableStats": [
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 1,
+          "merkleItems": 1,
+          "merkleQueueLen": 0,
+          "tableName": "admin_token"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 35,
+          "merkleItems": 39,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_v2"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 36,
+          "merkleItems": 39,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_alias"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 31,
+          "merkleItems": 34,
+          "merkleQueueLen": 0,
+          "tableName": "key"
+        },
+        {
+          "gcQueueLen": 4177,
+          "insertQueueLen": 0,
+          "items": 739106,
+          "merkleItems": 867714,
+          "merkleQueueLen": 0,
+          "tableName": "object"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 12,
+          "merkleItems": 15,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_object_counter"
+        },
+        {
+          "gcQueueLen": 62,
+          "insertQueueLen": 0,
+          "items": 126,
+          "merkleItems": 160,
+          "merkleQueueLen": 0,
+          "tableName": "multipart_upload"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 4,
+          "merkleItems": 5,
+          "merkleQueueLen": 0,
+          "tableName": "bucket_mpu_counter"
+        },
+        {
+          "gcQueueLen": 9815,
+          "insertQueueLen": 0,
+          "items": 390227,
+          "merkleItems": 431934,
+          "merkleQueueLen": 0,
+          "tableName": "version"
+        },
+        {
+          "gcQueueLen": 34329,
+          "insertQueueLen": 0,
+          "items": 598252,
+          "merkleItems": 651806,
+          "merkleQueueLen": 0,
+          "tableName": "block_ref"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_item"
+        },
+        {
+          "gcQueueLen": 0,
+          "insertQueueLen": 0,
+          "items": 0,
+          "merkleItems": 0,
+          "merkleQueueLen": 0,
+          "tableName": "k2v_index_counter_v2"
+        }
+      ]
+    }
+  }
+}

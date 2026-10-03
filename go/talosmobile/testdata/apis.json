@@ -1,0 +1,71 @@
+{
+  "apiVersion": "v1",
+  "groups": [
+    {
+      "name": "apps",
+      "preferredVersion": {
+        "groupVersion": "apps/v1",
+        "version": "v1"
+      },
+      "versions": [
+        {
+          "groupVersion": "apps/v1",
+          "version": "v1"
+        }
+      ]
+    },
+    {
+      "name": "barmancloud.cnpg.io",
+      "preferredVersion": {
+        "groupVersion": "barmancloud.cnpg.io/v1",
+        "version": "v1"
+      },
+      "versions": [
+        {
+          "groupVersion": "barmancloud.cnpg.io/v1",
+          "version": "v1"
+        }
+      ]
+    },
+    {
+      "name": "deuxfleurs.fr",
+      "preferredVersion": {
+        "groupVersion": "deuxfleurs.fr/v1",
+        "version": "v1"
+      },
+      "versions": [
+        {
+          "groupVersion": "deuxfleurs.fr/v1",
+          "version": "v1"
+        }
+      ]
+    },
+    {
+      "name": "postgresql.cnpg.io",
+      "preferredVersion": {
+        "groupVersion": "postgresql.cnpg.io/v1",
+        "version": "v1"
+      },
+      "versions": [
+        {
+          "groupVersion": "postgresql.cnpg.io/v1",
+          "version": "v1"
+        }
+      ]
+    },
+    {
+      "name": "longhorn.io",
+      "preferredVersion": {
+        "groupVersion": "longhorn.io/v1beta2",
+        "version": "v1beta2"
+      },
+      "versions": [
+        {
+          "groupVersion": "longhorn.io/v1beta2",
+          "version": "v1beta2"
+        }
+      ]
+    }
+  ],
+  "kind": "APIGroupList"
+}

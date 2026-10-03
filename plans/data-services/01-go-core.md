@@ -116,8 +116,10 @@ type lhNode struct {
 }
 ```
 
-Note: on v1beta2, `healthyAt`/`failedAt` moved to `status` in recent releases. Decode both
-spec and status locations and take whichever is set. Check this against a v1.7+ install.
+Note: verified on Longhorn 1.12.0, `healthyAt`/`failedAt` are still in replica **`spec`**
+(the `status` has `currentState`). Decode both locations anyway and take whichever is set.
+Real-world mix (21 volumes): 17 attached/healthy, 3 detached/`unknown` (→ `idle`), and
+1 detached/`faulted` (a single-replica volume whose only replica was on the down node). Check this against a v1.7+ install.
 
 Derivations:
 
@@ -153,8 +155,10 @@ the os:admin kubeconfig allows).
    every namespace. Garage with `kubernetes-discovery` (the user's build has it) registers
    one object per node, named after the node's public key, labelled
    `garage.deuxfleurs.fr/service=<kubernetes_service_name>`, in `kubernetes_namespace`.
-   That gives the namespace and expected node count without guessing. The CRD isn't
-   always there (`kubernetes_skip_crd`, or discovery not configured), so it's only a hint.
+   That gives the namespace without guessing. **Not the node count:** on the user's
+   cluster there were 17 `garagenodes` for 7 live nodes, because stale objects stay
+   behind. The CRD isn't always there either (`kubernetes_skip_crd`, or discovery not
+   configured), so it's only a namespace hint.
 1. List pods (`/api/v1/pods`; reuse `listPods` from `kube_pods.go`). Keep those with a
    container whose image the catalog maps to `garage` (`loadAppCatalog()`; images
    `dxflrs/garage`, `dxflrs/amd64_garage`, `dxflrs/arm64_garage`). The
@@ -202,23 +206,39 @@ with "unrecognized subcommand", and the code goes straight to step 3.
 
 1. **Garage ≥ 2.0: `garage json-api`** (added in v2.0.0; it calls admin API endpoints from
    the CLI and prints JSON):
-   - `/garage json-api GetClusterHealth` → `status` (healthy/degraded/unavailable),
-     `knownNodes`, `connectedNodes`, `storageNodes`, `storageNodesOk`, `partitions`,
-     `partitionsQuorum`, `partitionsAllOk`.
-   - `/garage json-api GetClusterStatus` → nodes (id, hostname, `isUp`, `lastSeenSecsAgo`,
-     zone/capacity from the layout, data partition free/total) and the layout version.
-     Staged layout changes become the warning "layout changes not applied".
-   - `/garage json-api GetNodeStatistics` with `node` = `*` (all nodes) → per node
-     `blockManager.resyncQueueLen`, `blockManager.resyncErrors` (`NodeBlockManagerStats`).
-     Sum them for the instance, and keep a per-node breakdown for the UI.
-     - Multi-node endpoints answer `{"success": {nodeId: …}, "error": {nodeId: "msg"}}`.
-       A node in `error` counts as unreachable and makes the status `degraded`.
-     - **Verify on v2.3.0** how `json-api` takes the `node` query parameter (positional
-       JSON `'{"node":"*"}'` or a flag) with `/garage json-api --help`; capture the output
-       as a fixture.
+   **Verified on the user's v2.3.0 cluster (2026-10-03):**
+   - Usage is `garage json-api <endpoint> [payload]`, with an optional positional JSON
+     payload (default `null`). It works **without an admin token**: it connects to the
+     local RPC at `127.0.0.1:3901`.
+   - The CLI writes **ANSI-coloured INFO logs to stderr** ("Connected to 127.0.0.1:3901…").
+     Parse **stdout only**; keep stderr just for error messages (strip the ANSI codes,
+     take the `Error: …` line). The exit code is 1 on error.
+   - `/garage json-api GetClusterHealth` → `{"status","knownNodes","connectedNodes",
+     "storageNodes","storageNodesUp","partitions","partitionsQuorum","partitionsAllOk"}`.
+     Note **`storageNodesUp`**, not the `storageNodesOk` of older docs: decode both.
+   - `/garage json-api GetClusterStatus` → `{"layoutVersion", "nodes":[{"id","addr",
+     "hostname","garageVersion","isUp","lastSeenSecsAgo"(null when up),"draining",
+     "dataPartition":{"available","total"},"metadataPartition":{…},
+     "role":{"zone","capacity","tags"}}]}`. A node that is down keeps the hostname of its
+     *old* pod (DaemonSet pod names change), so show its zone and tags too.
+   - `/garage json-api GetNodeStatistics '{"node":"*","body":null}'`. The node-scoped
+     endpoints need the **`{node, body}` envelope**: a bare `{"node":"*"}` fails with
+     "missing field `body`". The answer is `{"success": {nodeId: {"blockManagerStats":
+     {"rcEntries","resyncErrors","resyncQueueLen"}, "tableStats":[{"tableName","items",
+     "merkleItems","insertQueueLen","merkleQueueLen","gcQueueLen"}], "freeform": "…"}},
+     "error": {nodeId: "Network error: Not connected: …"}}`. Map `blockManagerStats` per
+     node. Sum the `tableStats` queues (insert+merkle+gc) into `tableSyncQueue`: that's
+     the *metadata* sync backlog, next to block resync. A node in `error` counts as
+     unreachable. `freeform` is human text: ignore it (it also leaks build details).
    - Allow-list (exact argv, nothing else):
      `["/garage","json-api","GetClusterHealth"]`, `["/garage","json-api","GetClusterStatus"]`,
-     and the `GetNodeStatistics` form found above.
+     `["/garage","json-api","GetNodeStatistics","{\"node\":\"*\",\"body\":null}"]`.
+   - Real-world numbers while one of 7 nodes was down: `status: degraded`,
+     `storageNodesUp` 6/7, `partitionsAllOk` 128/256, `partitionsQuorum` 256/256. The other
+     nodes had 9k–29k blocks in **both** `resyncQueueLen` and `resyncErrors` (blocks that
+     can't be sent to the missing node) and table queues up to 110k. So `resyncErrors` is
+     a strong signal, but its *cause* is often a down node: show "node X down" first and
+     the resync numbers as consequences.
    - Run the three in parallel (three execs on the same pod), and each one's failure is
      independent: health alone is enough for a status.
    - Set `source: "cli-json"`.
@@ -248,9 +268,11 @@ with "unrecognized subcommand", and the code goes straight to step 3.
 ### Status rules
 
 - `unavailable`: health says so, or `partitionsQuorum < partitions`, or no ready pod
-- `degraded`: `storageNodesOk < storageNodes`, `partitionsAllOk < partitions`,
-  `resyncErrors > 0` (blocks that failed to resync: risk of data loss), or staged layout
-  changes
+- `degraded`: `storageNodesUp < storageNodes`, `partitionsAllOk < partitions`,
+  `resyncErrors > 0` (blocks that failed to resync: risk of data loss), a node in the
+  `GetNodeStatistics` error map, or staged layout changes. Build `message` in cause
+  order: "1 node down (zone Z, last seen 6 d)" first, then "128/256 partitions not fully
+  replicated", then "85k blocks failing to resync".
 - `healthy`: otherwise. A non-zero `resyncQueue` on its own is normal (Garage monitoring
   docs), so it's shown but not escalated.
 
@@ -296,6 +318,13 @@ In that setup the Cluster's own backup fields can be empty, so:
   `status.serverRecoveryWindow[<serverName>]`, where `serverName` defaults to the cluster
   name (the plugin parameter `serverName` overrides it). Read `firstRecoverabilityPoint`,
   `lastSuccessfulBackupTime` and `lastFailedBackupTime`.
+  - Verified on the user's cluster: the Cluster's `status.lastSuccessfulBackup` was
+    empty on **all** 28 clusters, so the ObjectStore really is the only backup-time source.
+  - ObjectStores keep **orphan windows** for servers that no longer exist (e.g. an old,
+    misspelled cluster name). Only look up the windows of existing clusters; never list
+    windows on their own.
+  - The condition `LastBackupSucceeded` *is* set with the plugin (False on 13 clusters
+    whose last backup failed). Use it alongside the timestamps.
 - List `/apis/postgresql.cnpg.io/{v}/scheduledbackups` to know which clusters are
   *expected* to have backups (`spec.cluster.name`, `spec.suspend`).
 - Fallback for in-tree setups: the Cluster's `status.lastSuccessfulBackup` /
@@ -319,8 +348,10 @@ Derivations:
   - `none`: no backup ever and none expected
   - `ok`: otherwise
 - `health`:
-  - `critical`: `readyInstances == 0`, or phase contains "Failing over"/"failover"
-  - `warning`: `readyInstances < spec.instances`, `currentPrimary != targetPrimary`
+  - `critical`: `readyInstances == 0` (missing `readyInstances` means 0), or phase
+    contains "Failing over"/"failover"
+  - `warning`: `readyInstances < spec.instances` (phase "Waiting for the instances to
+    become active": 15 of the user's 28 clusters while one node was down), `currentPrimary != targetPrimary`
     (switchover), `archiving == failing`, `lastBackup` `failed`/`stale`, or the `Ready`
     condition is not True
   - `ok`: otherwise

@@ -1,0 +1,213 @@
+{
+  "apiVersion": "v1",
+  "items": [
+    {
+      "apiVersion": "longhorn.io/v1beta2",
+      "kind": "Volume",
+      "metadata": {
+        "name": "pvc-9e4cae81",
+        "namespace": "longhorn-system"
+      },
+      "spec": {
+        "accessMode": "rwo",
+        "dataEngine": "v1",
+        "frontend": "blockdev",
+        "numberOfReplicas": 1,
+        "size": "262144000"
+      },
+      "status": {
+        "actualSize": 66527232,
+        "conditions": [
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-09-30T08:58:08Z",
+            "message": "",
+            "reason": "",
+            "status": "False",
+            "type": "WaitForBackingImage"
+          },
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-09-30T08:58:08Z",
+            "message": "",
+            "reason": "",
+            "status": "False",
+            "type": "TooManySnapshots"
+          },
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-10-02T03:20:01Z",
+            "message": "",
+            "reason": "",
+            "status": "True",
+            "type": "Scheduled"
+          },
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-09-30T08:58:08Z",
+            "message": "",
+            "reason": "",
+            "status": "False",
+            "type": "OfflineRebuilding"
+          },
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-09-30T08:58:08Z",
+            "message": "",
+            "reason": "",
+            "status": "False",
+            "type": "Restore"
+          }
+        ],
+        "currentNodeID": "node-7",
+        "kubernetesStatus": {
+          "namespace": "app-1",
+          "pvStatus": "Bound",
+          "pvcName": "data-1"
+        },
+        "lastBackupAt": "",
+        "robustness": "healthy",
+        "state": "attached"
+      }
+    },
+    {
+      "apiVersion": "longhorn.io/v1beta2",
+      "kind": "Volume",
+      "metadata": {
+        "name": "pvc-349c5d6e",
+        "namespace": "longhorn-system"
+      },
+      "spec": {
+        "accessMode": "rwo",
+        "dataEngine": "v1",
+        "frontend": "blockdev",
+        "numberOfReplicas": 3,
+        "size": "21474836480"
+      },
+      "status": {
+        "actualSize": 369098752,
+        "conditions": [
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-07-07T16:54:45Z",
+            "message": "",
+            "reason": "",
+            "status": "False",
+            "type": "WaitForBackingImage"
+          },
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-07-07T16:54:45Z",
+            "message": "",
+            "reason": "",
+            "status": "False",
+            "type": "TooManySnapshots"
+          },
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-07-07T16:54:45Z",
+            "message": "",
+            "reason": "",
+            "status": "True",
+            "type": "Scheduled"
+          },
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-07-07T16:54:45Z",
+            "message": "",
+            "reason": "",
+            "status": "False",
+            "type": "OfflineRebuilding"
+          },
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-07-07T16:55:16Z",
+            "message": "",
+            "reason": "",
+            "status": "False",
+            "type": "Restore"
+          }
+        ],
+        "currentNodeID": "",
+        "kubernetesStatus": {
+          "namespace": "app-2",
+          "pvStatus": "",
+          "pvcName": "data-2"
+        },
+        "lastBackupAt": "",
+        "robustness": "unknown",
+        "state": "detached"
+      }
+    },
+    {
+      "apiVersion": "longhorn.io/v1beta2",
+      "kind": "Volume",
+      "metadata": {
+        "name": "pvc-6b92a781",
+        "namespace": "longhorn-system"
+      },
+      "spec": {
+        "accessMode": "rwo",
+        "dataEngine": "v1",
+        "frontend": "blockdev",
+        "numberOfReplicas": 1,
+        "size": "5368709120"
+      },
+      "status": {
+        "actualSize": 0,
+        "conditions": [
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-05-09T12:56:23Z",
+            "message": "",
+            "reason": "",
+            "status": "False",
+            "type": "OfflineRebuilding"
+          },
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-05-09T12:56:25Z",
+            "message": "",
+            "reason": "",
+            "status": "False",
+            "type": "WaitForBackingImage"
+          },
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-05-09T12:56:25Z",
+            "message": "",
+            "reason": "",
+            "status": "False",
+            "type": "TooManySnapshots"
+          },
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-06-05T21:15:58Z",
+            "message": "",
+            "reason": "",
+            "status": "True",
+            "type": "Scheduled"
+          },
+          {
+            "lastProbeTime": "",
+            "lastTransitionTime": "2026-05-09T12:56:25Z",
+            "message": "",
+            "reason": "",
+            "status": "False",
+            "type": "Restore"
+          }
+        ],
+        "currentNodeID": "",
+        "kubernetesStatus": {
+          "namespace": "app-3",
+          "pvStatus": "Bound",
+          "pvcName": "data-3"
+        },
+        "lastBackupAt": "2026-09-08T03:58:53Z",
+        "robustness": "faulted",
+        "state": "detached"
+      }
+    }
+  ],
+  "kind": "List"
+}

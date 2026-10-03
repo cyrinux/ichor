@@ -28,6 +28,7 @@ Clusters without any of the three see nothing new and pay no extra cost.
 | D5 | **UI: an Overview card** (only when something is detected) **plus a new "Data services" screen** with one tab per detected system. | The Overview is where problems should show up. Detail lives on its own screen. It does *not* go into the existing Kubernetes screen (workloads/pods), which stays generic. |
 | D6 | **Gated by the existing `Feature.WORKLOADS`** (os:admin). | Same credential as the Kubernetes screen; no new role concept. |
 | D7 | **Background alerts are a separate, opt-in phase** (off by default; confirmed by the user). | The monitor runs in WorkManager; a fresh process signs a new kubeconfig per run (`kubeClientTTL` is in-memory). That's acceptable, but it should be opt-in and is decoupled from the UI work. |
+| D9 | **Point to the likely cause.** Every problem item carries the Kubernetes node(s) involved: Longhorn replica `nodeID`, CNPG instance pods' `spec.nodeName`, Garage `role.zone`/hostname mapped to pods. The UI joins that with the node health Ichor already has from Talos/Kubernetes and shows "likely cause: node X NotReady" once, at the top, instead of 40 separate red rows. | The first live run showed exactly this: one cordoned, NotReady node caused a degraded Garage, a faulted Longhorn volume, 15 CNPG clusters short of instances and 2 with none. |
 | D8 | **Read-only.** No actions (no volume salvage, no CNPG switchover) in this feature. | Smaller blast radius. Actions can follow later, using the `kubeMutationError` pattern. |
 
 ## Phases
@@ -54,6 +55,7 @@ Clusters without any of the three see nothing new and pay no extra cost.
       "robustness": "healthy",      // healthy|degraded|faulted|unknown
       "health": "ok",               // derived: ok|warning|critical|idle (see 01 §Longhorn)
       "replicasDesired": 3, "replicasHealthy": 3, "rebuilding": 0,
+      "replicaNodes": ["worker-1", "worker-2"],    // D9: nodes holding replicas (failed ones too)
       "node": "worker-1",           // status.currentNodeID
       "size": 10737418240, "actualSize": 2147483648,
       "lastBackupAt": 0             // unix ms, 0 = never
@@ -73,7 +75,8 @@ Clusters without any of the three see nothing new and pay no extra cost.
       "status": "healthy",          // healthy|degraded|unavailable|unknown
       "message": "",                // why degraded, or the /health body, or "exec refused: ..."
       "connectedNodes": 3, "knownNodes": 3,
-      "storageNodes": 3, "storageNodesOk": 3,
+      "storageNodes": 3, "storageNodesUp": 3,      // Garage v2.3.0 field name
+      "tableSyncQueue": 0,          // sum of tableStats insert/merkle/gc queues (metadata sync)
       "partitions": 256, "partitionsQuorum": 256, "partitionsAllOk": 256,
       "resyncQueue": 0, "resyncErrors": 0,         // -1 when unknown
       "layoutStaged": false,        // staged layout changes not applied
@@ -81,7 +84,8 @@ Clusters without any of the three see nothing new and pay no extra cost.
         "id": "3f2a…", "hostname": "garage-0", "zone": "dc1",
         "up": true, "lastSeenSecs": 0,
         "dataAvail": 0, "dataTotal": 0,            // bytes, 0 when unknown
-        "resyncQueue": 0, "resyncErrors": 0         // -1 when that node's stats failed
+        "resyncQueue": 0, "resyncErrors": 0,        // -1 when that node's stats failed
+        "tableSyncQueue": 0, "statsError": ""        // GetNodeStatistics error map entry
       }],
       "raw": "",                    // cli-text only (deferred): raw CLI output (≤ 4 KB)
       "source": "cli-json"          // cli-json|cli-text|health
@@ -95,6 +99,7 @@ Clusters without any of the three see nothing new and pay no extra cost.
       "health": "ok",               // ok|warning|critical (see 01 §CNPG)
       "instances": 3, "readyInstances": 3,
       "currentPrimary": "pg-1", "targetPrimary": "pg-1",
+      "instancePods": [{ "name": "pg-1", "node": "worker-1", "ready": true }],  // D9: pods labelled cnpg.io/cluster=<name>
       "archiving": "ok",            // ok|failing|off|unknown (off = no WAL archiver configured: neutral)
       "lastBackup": "ok",           // ok|failed|stale|none (plugin ObjectStore first, see 01 §CNPG)
       "backupMethod": "plugin",     // plugin|in-tree|none
@@ -141,11 +146,9 @@ because this repo is public. Shape, from a read-only survey on 2026-10-03:
   (`kube_exec.go`, on `golang.org/x/net/websocket`, already a dependency) has to be
   written and tested. It's the biggest new piece in phase 1, so build it first.
 - **Garage CLI version.** The user runs v2.3.0, so `garage json-api` (JSON, since v2.0.0)
-  is the target. Per-node resync counters come from `GetNodeStatistics` with `node=*`. How
-  the CLI takes that parameter still has to be checked with `/garage json-api --help`.
-  1.x support (text parsing) is deferred.
-- **`garage json-api` auth.** Assumed to run over the local RPC secret, like the other CLI
-  commands, with no admin token needed. → Verify with `just probe dataservices garage` first.
+  is the target, and it's verified live: no token needed, logs on stderr, and
+  `GetNodeStatistics` takes `{"node":"*","body":null}`. 1.x support (text parsing) is
+  deferred.
 - **Exec can be refused** (RBAC, PodSecurity admission, a policy engine such as Kyverno).
   The `/health` service-proxy fallback still gives healthy/degraded/unavailable.
 - **Longhorn API version.** Use the group's `preferredVersion` from `/apis` (v1beta2 on
