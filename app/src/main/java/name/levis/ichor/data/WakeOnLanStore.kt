@@ -13,23 +13,29 @@ import name.levis.ichor.model.encodeSeenMacs
 import name.levis.ichor.model.encodeWolTarget
 import name.levis.ichor.model.keepWolTargets
 import name.levis.ichor.model.wolKey
+import kotlinx.serialization.Serializable
 
 /**
  * How to wake each node (see [WolTarget]), by cluster fingerprint and node address: the
  * address is what the talosconfig names a node by, and all the app knows of one that is off.
  * Also the MACs each node was last seen with, recorded while it was up, so one that goes
- * down before it was set up can still be woken. Only on this device; forgotten with the cluster.
+ * down before it was set up can still be woken. Only on this device, encrypted ([sealed]: node
+ * addresses and MACs map the cluster's network); forgotten with the cluster.
  */
-class WakeOnLanStore(private val prefs: SharedPreferences, private val seenPrefs: SharedPreferences) {
-    private val _targets = MutableStateFlow(
-        prefs.all.mapNotNull { (key, value) -> (value as? String)?.let(::decodeWolTarget)?.let { key to it } }.toMap(),
-    )
+class WakeOnLanStore(private val sealed: SealedValue) {
+    /** What [sealed] holds: each map's values in the formats of [encodeWolTarget] and [encodeSeenMacs]. */
+    @Serializable
+    private data class Stored(val targets: Map<String, String> = emptyMap(), val seen: Map<String, String> = emptyMap())
+
+    private val stored = sealed.read()
+        ?.let { runCatching { TalosJson.decodeFromString(Stored.serializer(), it) }.getOrNull() }
+        ?: Stored()
+
+    private val _targets = MutableStateFlow(stored.targets.mapNotNull { (key, value) -> decodeWolTarget(value)?.let { key to it } }.toMap())
     val targets: StateFlow<Map<String, WolTarget>> = _targets.asStateFlow()
 
     private val _seen = MutableStateFlow(
-        seenPrefs.all.mapNotNull { (key, value) ->
-            (value as? String)?.let(::decodeSeenMacs)?.takeIf { it.isNotEmpty() }?.let { key to it }
-        }.toMap(),
+        stored.seen.mapNotNull { (key, value) -> decodeSeenMacs(value).takeIf { it.isNotEmpty() }?.let { key to it } }.toMap(),
     )
     val seen: StateFlow<Map<String, List<SeenMac>>> = _seen.asStateFlow()
 
@@ -64,22 +70,44 @@ class WakeOnLanStore(private val prefs: SharedPreferences, private val seenPrefs
 
     private fun store(targets: Map<String, WolTarget>) {
         if (targets == _targets.value) return
-        prefs.edit().clear().also { editor ->
-            targets.forEach { (key, target) -> editor.putString(key, encodeWolTarget(target)) }
-        }.apply()
         _targets.value = targets
+        persist()
     }
 
     private fun storeSeen(seen: Map<String, List<SeenMac>>) {
         if (seen == _seen.value) return
-        seenPrefs.edit().clear().also { editor ->
-            seen.forEach { (key, macs) -> editor.putString(key, encodeSeenMacs(macs)) }
-        }.apply()
         _seen.value = seen
+        persist()
+    }
+
+    /** Best effort: with the Keystore unavailable, the change only lasts until the app stops. */
+    private fun persist() {
+        val stored = Stored(
+            targets = _targets.value.mapValues { encodeWolTarget(it.value) },
+            seen = _seen.value.mapValues { encodeSeenMacs(it.value) },
+        )
+        runCatching {
+            if (stored == Stored()) sealed.delete() else sealed.write(TalosJson.encodeToString(Stored.serializer(), stored))
+        }
     }
 
     companion object {
+        /** Plaintext preferences of versions before encryption, moved by [migrate]. */
         const val FILE = "talosdev-mobile-wake-on-lan"
         const val SEEN_FILE = "talosdev-mobile-wake-on-lan-seen"
+
+        /** Moves what older versions kept in plaintext [targets] and [seen] preferences into [sealed]. */
+        fun migrate(sealed: SealedValue, targets: SharedPreferences, seen: SharedPreferences) {
+            if (targets.all.isEmpty() && seen.all.isEmpty()) return
+            val legacy = Stored(
+                targets = targets.all.mapNotNull { (key, value) -> (value as? String)?.let { key to it } }.toMap(),
+                seen = seen.all.mapNotNull { (key, value) -> (value as? String)?.let { key to it } }.toMap(),
+            )
+            if (sealed.read() == null && runCatching { sealed.write(TalosJson.encodeToString(Stored.serializer(), legacy)) }.isFailure) {
+                return // Keystore unavailable: left where it is, moved on a later start
+            }
+            targets.edit().clear().commit()
+            seen.edit().clear().commit()
+        }
     }
 }

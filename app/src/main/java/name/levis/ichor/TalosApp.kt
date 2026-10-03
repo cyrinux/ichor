@@ -16,6 +16,7 @@ import name.levis.ichor.data.ClusterColors
 import name.levis.ichor.data.DiagnosisRepository
 import name.levis.ichor.data.SecureStore
 import name.levis.ichor.data.KeystoreSealer
+import name.levis.ichor.data.KeystoreValue
 import name.levis.ichor.data.OfflineCache
 import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.TalosUpdateChecker
@@ -78,10 +79,13 @@ class TalosApp : Application() {
     val clusterColors by lazy { ClusterColors(getSharedPreferences(ClusterColors.FILE, Context.MODE_PRIVATE)) }
     val clusterNames by lazy { ClusterNames(getSharedPreferences(ClusterNames.FILE, Context.MODE_PRIVATE)) }
     val wakeOnLan by lazy {
-        WakeOnLanStore(
+        val sealed = KeystoreValue(java.io.File(noBackupFilesDir, "wake-on-lan.enc"), "ichor-wake-on-lan")
+        WakeOnLanStore.migrate(
+            sealed,
             getSharedPreferences(WakeOnLanStore.FILE, Context.MODE_PRIVATE),
             getSharedPreferences(WakeOnLanStore.SEEN_FILE, Context.MODE_PRIVATE),
         )
+        WakeOnLanStore(sealed)
     }
     val vpnOnly by lazy { VpnOnlyClusters(getSharedPreferences(VpnOnlyClusters.FILE, Context.MODE_PRIVATE)) }
     val kubeServers by lazy { KubeServers(getSharedPreferences(KubeServers.FILE, Context.MODE_PRIVATE)) }
@@ -100,7 +104,12 @@ class TalosApp : Application() {
     }
     /** Bundled app icons, and downloaded ones when the user allowed it (Settings → Privacy). */
     val appIcons by lazy { AppIconLoader(this) }
-    val monitorStore by lazy { MonitorStore(getSharedPreferences("talosdev-mobile-monitor", Context.MODE_PRIVATE)) }
+    val monitorStore by lazy {
+        MonitorStore(
+            getSharedPreferences("talosdev-mobile-monitor", Context.MODE_PRIVATE),
+            KeystoreValue(java.io.File(noBackupFilesDir, "monitor-snapshot.enc"), "ichor-monitor-snapshot"),
+        )
+    }
 
     /** The optional AI diagnosis: off until enabled in Settings. API keys get their own Keystore keys. */
     val diagnosisRepository by lazy { DiagnosisRepository(configRepository) }
