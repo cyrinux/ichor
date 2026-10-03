@@ -33,6 +33,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.InventoryImage
 import name.levis.ichor.model.InventoryPod
+import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.PodState
 import name.levis.ichor.model.driftVersions
@@ -40,21 +41,24 @@ import name.levis.ichor.model.driftingRepos
 import name.levis.ichor.model.memory
 import name.levis.ichor.model.shortDigest
 import name.levis.ichor.model.state
+import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 
 /**
- * One app: what it is, which versions run, its workloads to restart ([restart], null when the
- * role cannot), its images and its pods. [nodes] names the node addresses; tapping a pod opens
- * its node's pods ([onPodNode] with the node address).
+ * One app: what it is, which versions run, the URLs it is served at ([routes]) and its
+ * workloads to restart ([restart]), both null when the role cannot reach the Kubernetes API,
+ * its images and its pods. [nodes] names the node addresses; tapping a pod opens its node's
+ * pods ([onPodNode] with the node address).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppDetailSheet(
     app: InventoryApp,
     nodes: Map<String, NodeOverview>,
+    routes: UiState<List<KubeRoute>>?,
     restart: AppRestartUi?,
     onPodNode: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -67,6 +71,7 @@ fun AppDetailSheet(
             item { Header(app) }
             item { Badges(app) }
             item { Stats(app) }
+            routes?.let { appRoutesSection(it) }
             restart?.let { appWorkloadsSection(it) }
             if (app.images.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.apps_detail_images)) }

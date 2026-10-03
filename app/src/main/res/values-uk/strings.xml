@@ -1218,6 +1218,10 @@
     <string name="apps_detail_workloads_loading">Пошук його робочих навантажень…</string>
     <string name="apps_detail_workloads_none">Жоден Deployment, StatefulSet чи DaemonSet його не запускає.</string>
     <string name="apps_detail_workloads_failed">Не вдалося отримати його робочі навантаження: %1$s</string>
+    <string name="apps_detail_routes">Веб-доступ</string>
+    <string name="apps_detail_routes_loading">Пошук його адрес…</string>
+    <string name="apps_detail_routes_failed">Не вдалося знайти його адреси: %1$s</string>
+    <string name="apps_detail_routes_open">Відкрити в браузері</string>
     <string name="settings_remote_icons">Завантажувати відсутні значки застосунків</string>
     <string name="settings_remote_icons_desc">Близько 250 поширених застосунків мають вбудовані значки. Якщо увімкнено, значки інших розпізнаних застосунків завантажуються з jsDelivr (Dashboard Icons). Надсилається лише публічна назва значка, ніколи — назви ваших образів чи дані кластера.</string>
     <string name="settings_offline_cache">Зберігати останній відомий стан</string>

@@ -1129,6 +1129,10 @@
     <string name="apps_detail_workloads_loading">Recherche de ses charges de travail…</string>
     <string name="apps_detail_workloads_none">Aucun Deployment, StatefulSet ou DaemonSet ne l\'exécute.</string>
     <string name="apps_detail_workloads_failed">Impossible de lister ses charges de travail : %1$s</string>
+    <string name="apps_detail_routes">Accès web</string>
+    <string name="apps_detail_routes_loading">Recherche de ses adresses…</string>
+    <string name="apps_detail_routes_failed">Impossible de trouver ses adresses : %1$s</string>
+    <string name="apps_detail_routes_open">Ouvrir dans le navigateur</string>
     <string name="settings_remote_icons">Télécharger les icônes d’applications manquantes</string>
     <string name="settings_remote_icons_desc">Environ 250 applications courantes ont leur icône intégrée. Activé, les icônes des autres applications reconnues sont téléchargées depuis jsDelivr (Dashboard Icons). Seul le nom public de l’icône est envoyé, jamais vos noms d’images ni les détails du cluster.</string>
     <string name="settings_offline_cache">Garder le dernier état connu</string>
