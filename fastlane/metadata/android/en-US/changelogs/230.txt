@@ -1,0 +1,3 @@
+• Find cluster endpoints on the local network, edit endpoints, Android 17 LAN access
+• Restore a backup opened from a file manager
+• Pick nodes on the topology map to run a network test

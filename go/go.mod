@@ -1,4 +1,4 @@
-module github.com/cyrinux/talosdev-apk/go
+module github.com/cyrinux/ichor/go
 
 go 1.26.8
 
