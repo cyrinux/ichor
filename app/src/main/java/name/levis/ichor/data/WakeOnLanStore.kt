@@ -93,8 +93,8 @@ class WakeOnLanStore(private val sealed: SealedValue) {
 
     companion object {
         /** Plaintext preferences of versions before encryption, moved by [migrate]. */
-        const val FILE = "talosdev-mobile-wake-on-lan"
-        const val SEEN_FILE = "talosdev-mobile-wake-on-lan-seen"
+        const val FILE = "ichor-wake-on-lan"
+        const val SEEN_FILE = "ichor-wake-on-lan-seen"
 
         /** Moves what older versions kept in plaintext [targets] and [seen] preferences into [sealed]. */
         fun migrate(sealed: SealedValue, targets: SharedPreferences, seen: SharedPreferences) {

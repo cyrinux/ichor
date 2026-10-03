@@ -1,5 +1,5 @@
 import Foundation
-import Talosmobile
+import Ichorgo
 import IchorCore
 
 enum DiagnosisEvent: Sendable {
@@ -11,13 +11,13 @@ enum DiagnosisEvent: Sendable {
 /// A report about the cluster collected for the AI diagnosis. Go holds it in memory only,
 /// with what it needs to put the real names back in an answer written about placeholders.
 final class DiagnosisReport: @unchecked Sendable {
-    private let go: TalosmobileDiagnosis
+    private let go: IchorgoDiagnosis
     /// The text that would be sent, to show to the user first.
     let text: String
     /// Names and addresses in `text` are placeholders.
     let anonymized: Bool
 
-    fileprivate init(_ go: TalosmobileDiagnosis) {
+    fileprivate init(_ go: IchorgoDiagnosis) {
         self.go = go
         text = go.report()
         anonymized = go.anonymized()
@@ -55,25 +55,25 @@ final class DiagnosisReport: @unchecked Sendable {
 extension TalosClient {
     /// The providers the diagnosis can use, with their default model (no network).
     static func aiProviders() async throws -> [AIProvider] {
-        try await json { TalosmobileAIProviders($0) }
+        try await json { IchorgoAIProviders($0) }
     }
 
     /// The models the key can use, newest first; also tells whether the key and URL work.
     static func aiModels(provider: String, settings: AIProviderSettings) async throws -> [AIModel] {
-        try await json { TalosmobileAIModels(provider, settings.apiKey, settings.baseURL, $0) }
+        try await json { IchorgoAIModels(provider, settings.apiKey, settings.baseURL, $0) }
     }
 
     /// Reads the cluster state into a report (os:reader calls only). Nothing leaves the phone here.
     func collectDiagnosis(anonymize: Bool) async throws -> DiagnosisReport {
         let report: DiagnosisReport? = try await Self.run { [config, context] error in
-            TalosmobileCollectDiagnosis(config, context, anonymize, error).map(DiagnosisReport.init)
+            IchorgoCollectDiagnosis(config, context, anonymize, error).map(DiagnosisReport.init)
         }
         guard let report else { throw TalosError(message: "CollectDiagnosis returned no report") }
         return report
     }
 }
 
-private final class DiagnosisBridge: NSObject, TalosmobileDiagnosisListenerProtocol, @unchecked Sendable {
+private final class DiagnosisBridge: NSObject, IchorgoDiagnosisListenerProtocol, @unchecked Sendable {
     private let answer: @Sendable (String) -> Void
     private let done: @Sendable (String?) -> Void
 

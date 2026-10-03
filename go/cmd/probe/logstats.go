@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cyrinux/ichor/go/talosmobile"
+	"github.com/cyrinux/ichor/go/ichorgo"
 )
 
 type logEntry struct {
@@ -30,9 +30,9 @@ func logStats(cfg, contextName, node string, services []string) string {
 		)
 
 		if svc == "kernel" {
-			out, err = talosmobile.KernelLogs(cfg, contextName, node, 5000)
+			out, err = ichorgo.KernelLogs(cfg, contextName, node, 5000)
 		} else {
-			out, err = talosmobile.ServiceLogs(cfg, contextName, node, svc, 5000)
+			out, err = ichorgo.ServiceLogs(cfg, contextName, node, svc, 5000)
 		}
 
 		if err != nil {
@@ -68,7 +68,7 @@ func logStats(cfg, contextName, node string, services []string) string {
 			}
 
 			var again logEntry
-			if json.Unmarshal([]byte(talosmobile.ParseLogLine(tail.Lines[i])), &again) != nil ||
+			if json.Unmarshal([]byte(ichorgo.ParseLogLine(tail.Lines[i])), &again) != nil ||
 				again.Level != e.Level || again.TS != e.TS || len(again.Fields) != len(e.Fields) {
 				mismatch++
 			}

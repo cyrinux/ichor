@@ -1,4 +1,4 @@
-# Phase 1: Go core (`go/talosmobile`)
+# Phase 1: Go core (`go/ichorgo`)
 
 Read [README.md](README.md) first for the decisions (D1–D8) and the wire format.
 

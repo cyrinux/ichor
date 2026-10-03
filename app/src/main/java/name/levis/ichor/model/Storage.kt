@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile nodeMounts, nodeVolumes, nodeDiskUsage and nodeDiskHealth.
+// Mirrors go/ichorgo nodeMounts, nodeVolumes, nodeDiskUsage and nodeDiskHealth.
 
 @Serializable
 data class MountList(val mounts: List<Mount> = emptyList())

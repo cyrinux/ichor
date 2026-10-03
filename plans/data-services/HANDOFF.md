@@ -20,7 +20,7 @@ plus wire format), then the plan of the phase you're doing.
   cluster), the manual alert check, and optional phase 5 (support bundle and AI context).
 - **Live check done (user-approved, read-only).** Every API shape the plan relies on is
   verified against the real cluster; corrections are folded into 01 and the README.
-  Anonymised fixtures are committed in `go/talosmobile/testdata/`:
+  Anonymised fixtures are committed in `go/ichorgo/testdata/`:
   - `garage/v2.3.0/degraded/` (7 nodes, 1 down): the three `json-api` outputs
   - `garage/v2.3.0/single-node/`: the same three outputs from the standalone instance
   - `garage/v2.3.0/json-api-help.txt` and `stderr-sample.txt` (ANSI logs + an `Error:` line)
@@ -62,7 +62,7 @@ plus wire format), then the plan of the phase you're doing.
     - The image is a static `/garage` binary on scratch: no shell.
     - Admin port 3903 `/health` needs no auth (200, or 503 without quorum). This is the fallback.
 - Codebase facts used (verified 2026-10-03):
-  - Kube calls: `go/talosmobile/kube_client.go` (`withKube`, `kubeClient.get`). No exec code exists yet.
+  - Kube calls: `go/ichorgo/kube_client.go` (`withKube`, `kubeClient.get`). No exec code exists yet.
   - `golang.org/x/net` is a direct dependency (for `x/net/websocket`).
   - Function template: `kube_workloads.go`
   - Demo: `kube_demo.go`
@@ -127,7 +127,7 @@ kubectl get clusters.postgresql.cnpg.io,scheduledbackups.postgresql.cnpg.io,obje
 **This repo is public.** Trim fixtures to a few objects and replace real namespaces,
 names, hostnames, IPs, bucket names and node ids with neutral ones (`garage`, `db`,
 `node-1`…) before committing them under
-`go/talosmobile/testdata/{garage/v2.3.0,longhorn/1.12,cnpg}/`.
+`go/ichorgo/testdata/{garage/v2.3.0,longhorn/1.12,cnpg}/`.
 
 ## Questions for the user
 

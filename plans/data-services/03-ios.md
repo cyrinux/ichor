@@ -19,7 +19,7 @@ behaviour and wording; keep the Android plan open next to this one.
 ```swift
 func dataServices(hints: String) async throws -> DataServices {
     try await Self.json { [config, context, kubeServer] in
-        TalosmobileKubeDataServices(config, context, kubeServer, hints, $0)
+        IchorgoKubeDataServices(config, context, kubeServer, hints, $0)
     }
 }
 ```

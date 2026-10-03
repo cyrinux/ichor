@@ -4,7 +4,7 @@ import androidx.annotation.StringRes
 import kotlinx.serialization.Serializable
 import name.levis.ichor.R
 
-// Mirrors the JSON produced by the Go core (go/talosmobile).
+// Mirrors the JSON produced by the Go core (go/ichorgo).
 
 @Serializable
 data class ConfigSummary(

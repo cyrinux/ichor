@@ -31,7 +31,7 @@ class VpnOnlyClusters(private val prefs: SharedPreferences) {
     }
 
     companion object {
-        const val FILE = "talosdev-mobile-vpn-only"
+        const val FILE = "ichor-vpn-only"
         private const val KEY = "fingerprints"
     }
 }

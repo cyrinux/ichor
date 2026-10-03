@@ -9,7 +9,7 @@ import org.junit.Test
 
 class InventoryTest {
 
-    // Shaped like go/talosmobile/inventory.go's output (demo cluster, trimmed).
+    // Shaped like go/ichorgo/inventory.go's output (demo cluster, trimmed).
     private val json = """
         {"at":1790000000000,"nodes":5,"answered":4,"apps":[
           {"id":"cilium","name":"Cilium","category":"networking","icon":"cilium","known":true,"system":false,

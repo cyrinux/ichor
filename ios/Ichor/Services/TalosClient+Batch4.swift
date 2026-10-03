@@ -1,5 +1,5 @@
 import Foundation
-import Talosmobile
+import Ichorgo
 import IchorCore
 
 enum CaptureEvent: Sendable {
@@ -17,7 +17,7 @@ enum UpgradeEvent: Sendable {
 extension TalosClient {
     /// Go's message for an invalid BPF expression, "" when it compiles. Blocking.
     static func validateCaptureFilter(_ expression: String) -> String {
-        TalosmobileValidateCaptureFilter(expression)
+        IchorgoValidateCaptureFilter(expression)
     }
 
     /// `talosctl pcap` on node into destPath (os:operator or os:admin): stops after
@@ -35,7 +35,7 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = TalosmobileStartPacketCapture(config, context, node, options.interface, options.trimmedFilter,
+        let run = IchorgoStartPacketCapture(config, context, node, options.interface, options.trimmedFilter,
                                                 options.promiscuous, options.snapLen, options.duration.seconds,
                                                 options.sizeLimit.bytes, destPath, bridge)
         let flusher = Task.detached {
@@ -54,32 +54,32 @@ extension TalosClient {
 
     /// Up to `limit` packet summaries of a capture file from `offset` (0-based).
     static func readPcap(path: String, offset: Int, limit: Int = pcapPageSize) async throws -> PcapPage {
-        try await json { TalosmobileReadPcap(path, offset, limit, $0) }
+        try await json { IchorgoReadPcap(path, offset, limit, $0) }
     }
 
     /// Layers and hex dump of packet `index` (0-based) of a capture file.
     static func packetDetail(path: String, index: Int) async throws -> PacketDetail {
-        try await json { TalosmobilePacketDetail(path, index, $0) }
+        try await json { IchorgoPacketDetail(path, index, $0) }
     }
 
     /// Current version, installer image and what blocks an upgrade of node (os:admin).
     func upgradePlan(node: String) async throws -> UpgradePlan {
-        try await Self.json { [config, context] in TalosmobileUpgradePlan(config, context, node, $0) }
+        try await Self.json { [config, context] in IchorgoUpgradePlan(config, context, node, $0) }
     }
 
     /// Recent Talos releases from GitHub, newest first.
     static func talosReleases() async throws -> [TalosRelease] {
-        try await json { TalosmobileTalosReleases($0) }
+        try await json { IchorgoTalosReleases($0) }
     }
 
     /// Latest stable Talos against the given node versions (GitHub, no node call).
     static func talosUpdateCheck(versionsCSV: String) async throws -> TalosUpdateInfo {
-        try await json { TalosmobileTalosUpdateCheck(versionsCSV, $0) }
+        try await json { IchorgoTalosUpdateCheck(versionsCSV, $0) }
     }
 
     /// The installer image for `version` keeping currentImage's registry and schematic.
     static func upgradeImage(currentImage: String, version: String) async -> String {
-        await Task.detached(priority: .userInitiated) { TalosmobileUpgradeImage(currentImage, version) }.value
+        await Task.detached(priority: .userInitiated) { IchorgoUpgradeImage(currentImage, version) }.value
     }
 
     /// `talosctl upgrade` and following the node until it is back (os:admin). Cancelling the
@@ -93,7 +93,7 @@ extension TalosClient {
                     continuation.finish()
                 }
             )
-            let run = TalosmobileStartUpgrade(config, context, node, image, stage, force, bridge)
+            let run = IchorgoStartUpgrade(config, context, node, image, stage, force, bridge)
             continuation.onTermination = { _ in
                 run?.cancel()
                 _ = bridge // keep the listener alive while following
@@ -103,7 +103,7 @@ extension TalosClient {
 }
 
 /// Decodes packets on the Go thread and hands them over in batches (see flush).
-private final class CaptureBridge: NSObject, TalosmobileCaptureListenerProtocol, @unchecked Sendable {
+private final class CaptureBridge: NSObject, IchorgoCaptureListenerProtocol, @unchecked Sendable {
     private let packets: @Sendable ([PacketSummary]) -> Void
     private let stats: @Sendable (Int64, Int64) -> Void
     private let done: @Sendable (CaptureEvent) -> Void
@@ -145,7 +145,7 @@ private final class CaptureBridge: NSObject, TalosmobileCaptureListenerProtocol,
     }
 }
 
-private final class UpgradeBridge: NSObject, TalosmobileUpgradeListenerProtocol, @unchecked Sendable {
+private final class UpgradeBridge: NSObject, IchorgoUpgradeListenerProtocol, @unchecked Sendable {
     private let progress: @Sendable (UpgradeProgress) -> Void
     private let done: @Sendable (String, String?) -> Void
 

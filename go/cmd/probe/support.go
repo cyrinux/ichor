@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cyrinux/ichor/go/talosmobile"
+	"github.com/cyrinux/ichor/go/ichorgo"
 )
 
 type supportDone struct {
@@ -45,7 +45,7 @@ func supportProbe(cfg, contextName, nodes string) string {
 	dest := filepath.Join(dir, "support.zip")
 	p := &supportPrinter{done: make(chan supportDone, 1)}
 
-	talosmobile.StartSupportBundle(cfg, contextName, nodes, dest, p)
+	ichorgo.StartSupportBundle(cfg, contextName, nodes, dest, p)
 
 	res := <-p.done
 	if res.err != "" {

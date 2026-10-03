@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile nodeFeatures: what a node's Talos version can do.
+// Mirrors go/ichorgo nodeFeatures: what a node's Talos version can do.
 
 @Serializable
 data class FeatureSupport(

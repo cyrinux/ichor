@@ -3,11 +3,11 @@ package name.levis.ichor.data
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.R
-import name.levis.talosmobile.EventListener
-import name.levis.talosmobile.HealthListener
-import name.levis.talosmobile.LogListener
-import name.levis.talosmobile.SnapshotListener
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.EventListener
+import name.levis.ichorgo.HealthListener
+import name.levis.ichorgo.LogListener
+import name.levis.ichorgo.SnapshotListener
+import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.DataServices
@@ -197,45 +197,45 @@ class TalosRepository(
     }
 
     suspend fun kubespan(): KubeSpanOverview = remember(KUBESPAN) {
-        call { cfg, ctx -> TalosJson.decodeFromString(KubeSpanOverview.serializer(), Talosmobile.kubeSpanStatus(cfg, ctx)) }
+        call { cfg, ctx -> TalosJson.decodeFromString(KubeSpanOverview.serializer(), Ichorgo.kubeSpanStatus(cfg, ctx)) }
     }
 
     /** The cluster map: nodes, KubeSpan links and sites (zones or shared LANs). */
     suspend fun topology(): ClusterTopology = remember(TOPOLOGY) {
-        call { cfg, ctx -> TalosJson.decodeFromString(ClusterTopology.serializer(), Talosmobile.clusterTopology(cfg, ctx)) }
+        call { cfg, ctx -> TalosJson.decodeFromString(ClusterTopology.serializer(), Ichorgo.clusterTopology(cfg, ctx)) }
     }
 
     /** `talosctl -n NODE etcd defrag` (os:operator or os:admin); one member at a time. */
-    suspend fun etcdDefragment(node: String) = call { cfg, ctx -> Talosmobile.etcdDefragment(cfg, ctx, node) }
+    suspend fun etcdDefragment(node: String) = call { cfg, ctx -> Ichorgo.etcdDefragment(cfg, ctx, node) }
 
     /** One sample of node counters for the live graphs (not cached: always fresh). */
     suspend fun stats(node: String): NodeStats = call { cfg, ctx ->
-        TalosJson.decodeFromString(NodeStats.serializer(), Talosmobile.nodeStats(cfg, ctx, node))
+        TalosJson.decodeFromString(NodeStats.serializer(), Ichorgo.nodeStats(cfg, ctx, node))
     }
 
     /** One sample of every node's CPU and memory counters for the live cluster summary (not cached). */
     suspend fun clusterStats(): ClusterStatsSample = call { cfg, ctx ->
-        TalosJson.decodeFromString(ClusterStatsSample.serializer(), Talosmobile.clusterStats(cfg, ctx))
+        TalosJson.decodeFromString(ClusterStatsSample.serializer(), Ichorgo.clusterStats(cfg, ctx))
     }
 
     /** One sample of the node's processes for the Processes tab (not cached: always fresh). */
     suspend fun processes(node: String): ProcessSample = call { cfg, ctx ->
-        TalosJson.decodeFromString(ProcessSample.serializer(), Talosmobile.nodeProcesses(cfg, ctx, node))
+        TalosJson.decodeFromString(ProcessSample.serializer(), Ichorgo.nodeProcesses(cfg, ctx, node))
     }
 
     /** The node's cgroup tree with pressure, for the pressure card and the Cgroups tab (os:admin; not cached). */
     suspend fun cgroups(node: String): CgroupReport = call { cfg, ctx ->
-        TalosJson.decodeFromString(CgroupReport.serializer(), Talosmobile.nodeCgroups(cfg, ctx, node))
+        TalosJson.decodeFromString(CgroupReport.serializer(), Ichorgo.nodeCgroups(cfg, ctx, node))
     }
 
     /** One sample of the node's CRI containers for the Pods tab (not cached: always fresh). */
     suspend fun containers(node: String): ContainerSample = call { cfg, ctx ->
-        TalosJson.decodeFromString(ContainerSample.serializer(), Talosmobile.nodeContainers(cfg, ctx, node))
+        TalosJson.decodeFromString(ContainerSample.serializer(), Ichorgo.nodeContainers(cfg, ctx, node))
     }
 
     /** `talosctl -n NODE service ID start|stop|restart` (os:operator or os:admin). */
     suspend fun serviceAction(node: String, service: String, action: ServiceAction) = call { cfg, ctx ->
-        Talosmobile.serviceAction(cfg, ctx, node, service, action.cli)
+        Ichorgo.serviceAction(cfg, ctx, node, service, action.cli)
     }
 
     /**
@@ -244,7 +244,7 @@ class TalosRepository(
      */
     fun events(nodes: List<String>, tail: Int): Flow<StreamItem<TalosEvent>> = callbackFlow {
         val stored = configs.forCall()
-        val run = Talosmobile.startEvents(
+        val run = Ichorgo.startEvents(
             stored.yaml,
             stored.activeContext,
             nodes.joinToString(","),
@@ -270,7 +270,7 @@ class TalosRepository(
      */
     fun followLogs(node: String, service: String?, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
         val stored = configs.forCall()
-        val run = Talosmobile.startLogFollow(
+        val run = Ichorgo.startLogFollow(
             stored.yaml,
             stored.activeContext,
             node,
@@ -293,7 +293,7 @@ class TalosRepository(
     /** Like [followLogs] for one CRI container (`talosctl logs -k -f`). */
     fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
         val stored = configs.forCall()
-        val run = Talosmobile.startContainerLogFollow(
+        val run = Ichorgo.startContainerLogFollow(
             stored.yaml,
             stored.activeContext,
             node,
@@ -318,11 +318,11 @@ class TalosRepository(
      * [revealSecrets]. Never cached: it may hold secrets.
      */
     suspend fun machineConfig(node: String, revealSecrets: Boolean): String = call { cfg, ctx ->
-        Talosmobile.nodeMachineConfig(cfg, ctx, node, revealSecrets)
+        Ichorgo.nodeMachineConfig(cfg, ctx, node, revealSecrets)
     }
 
     /** `talosctl etcd alarm disarm` through [node] (os:operator or os:admin); alarms are cluster-wide. */
-    suspend fun etcdAlarmDisarm(node: String) = call { cfg, ctx -> Talosmobile.etcdAlarmDisarm(cfg, ctx, node) }
+    suspend fun etcdAlarmDisarm(node: String) = call { cfg, ctx -> Ichorgo.etcdAlarmDisarm(cfg, ctx, node) }
 
     /**
      * Streams `talosctl -n NODE etcd snapshot` into [destPath] (written atomically by Go).
@@ -330,7 +330,7 @@ class TalosRepository(
      */
     fun etcdSnapshot(node: String, destPath: String): Flow<SnapshotEvent> = callbackFlow {
         val stored = configs.forCall()
-        val run = Talosmobile.startEtcdSnapshot(
+        val run = Ichorgo.startEtcdSnapshot(
             stored.yaml,
             stored.activeContext,
             node,
@@ -361,37 +361,37 @@ class TalosRepository(
     }
 
     private suspend fun overviewUncached(): ClusterOverview = call { cfg, ctx ->
-        TalosJson.decodeFromString(ClusterOverview.serializer(), Talosmobile.clusterOverview(cfg, ctx))
+        TalosJson.decodeFromString(ClusterOverview.serializer(), Ichorgo.clusterOverview(cfg, ctx))
     }
 
     suspend fun services(node: String): List<ServiceInfo> = remember(servicesKey(node)) { servicesUncached(node) }
 
     private suspend fun servicesUncached(node: String): List<ServiceInfo> = call { cfg, ctx ->
-        TalosJson.decodeFromString(ListSerializer(ServiceInfo.serializer()), Talosmobile.nodeServices(cfg, ctx, node))
+        TalosJson.decodeFromString(ListSerializer(ServiceInfo.serializer()), Ichorgo.nodeServices(cfg, ctx, node))
     }
 
     suspend fun resources(node: String): NodeResources = remember(resourcesKey(node)) { resourcesUncached(node) }
 
     private suspend fun resourcesUncached(node: String): NodeResources = call { cfg, ctx ->
-        TalosJson.decodeFromString(NodeResources.serializer(), Talosmobile.nodeResources(cfg, ctx, node))
+        TalosJson.decodeFromString(NodeResources.serializer(), Ichorgo.nodeResources(cfg, ctx, node))
     }
 
     suspend fun etcd(): EtcdOverview = remember(ETCD) { etcdUncached() }
 
     private suspend fun etcdUncached(): EtcdOverview = call { cfg, ctx ->
-        TalosJson.decodeFromString(EtcdOverview.serializer(), Talosmobile.etcdStatus(cfg, ctx))
+        TalosJson.decodeFromString(EtcdOverview.serializer(), Ichorgo.etcdStatus(cfg, ctx))
     }
 
     /** Last [lines] lines of a Talos service log, or of the kernel log when [service] is null. */
     suspend fun logs(node: String, service: String?, lines: Int = 500): LogTail = call { cfg, ctx ->
-        val json = if (service == null) Talosmobile.kernelLogs(cfg, ctx, node, lines.toLong())
-        else Talosmobile.serviceLogs(cfg, ctx, node, service, lines.toLong())
+        val json = if (service == null) Ichorgo.kernelLogs(cfg, ctx, node, lines.toLong())
+        else Ichorgo.serviceLogs(cfg, ctx, node, service, lines.toLong())
         decodeLogTail(TalosJson, json)
     }
 
     /** Last [lines] lines of a CRI container's log (`talosctl logs -k`). */
     suspend fun containerLogs(node: String, containerId: String, lines: Int = 500): LogTail = call { cfg, ctx ->
-        decodeLogTail(TalosJson, Talosmobile.containerLogs(cfg, ctx, node, containerId, lines.toLong()))
+        decodeLogTail(TalosJson, Ichorgo.containerLogs(cfg, ctx, node, containerId, lines.toLong()))
     }
 
     /**
@@ -399,33 +399,33 @@ class TalosRepository(
      * the plain line if it cannot be decoded. Call off the main thread.
      */
     fun parseLogLine(line: String): LogEntry =
-        runCatching { TalosJson.decodeFromString(LogEntry.serializer(), Talosmobile.parseLogLine(line)) }
+        runCatching { TalosJson.decodeFromString(LogEntry.serializer(), Ichorgo.parseLogLine(line)) }
             .getOrNull()
             ?.let { if (it.raw.isEmpty()) it.copy(raw = line) else it }
             ?: LogEntry.plain(line)
 
     /** Admin kubeconfig (os:admin role). A credential: only hand it to where the user chose. */
-    suspend fun kubeconfig(): String = kubeCall { cfg, ctx, server -> Talosmobile.kubeconfig(cfg, ctx, server) }
+    suspend fun kubeconfig(): String = kubeCall { cfg, ctx, server -> Ichorgo.kubeconfig(cfg, ctx, server) }
 
     /** Deployments, StatefulSets and DaemonSets through the Kubernetes API (os:admin: Talos issues the kubeconfig). */
     suspend fun workloads(): List<KubeWorkload> = remember(WORKLOADS) {
-        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubeWorkloadList.serializer(), Talosmobile.kubeWorkloads(cfg, ctx, server)).workloads }
+        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubeWorkloadList.serializer(), Ichorgo.kubeWorkloads(cfg, ctx, server)).workloads }
     }
 
     /** `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin). */
     suspend fun rolloutRestart(workload: KubeWorkload) = kubeCall { cfg, ctx, server ->
-        Talosmobile.kubeRolloutRestart(cfg, ctx, server, workload.kind, workload.namespace, workload.name)
+        Ichorgo.kubeRolloutRestart(cfg, ctx, server, workload.kind, workload.namespace, workload.name)
     }
 
     /** The Ingress and HTTPRoute URLs serving [pods] (os:admin). */
     suspend fun appRoutes(pods: List<RoutePod>): List<KubeRoute> = kubeCall { cfg, ctx, server ->
         val json = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
-        TalosJson.decodeFromString(KubeRouteList.serializer(), Talosmobile.kubeAppRoutes(cfg, ctx, server, json)).routes
+        TalosJson.decodeFromString(KubeRouteList.serializer(), Ichorgo.kubeAppRoutes(cfg, ctx, server, json)).routes
     }
 
     /** Every pod with the status `kubectl get pods` shows (os:admin). */
     suspend fun pods(): List<KubePod> = remember(PODS) {
-        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubePodList.serializer(), Talosmobile.kubePods(cfg, ctx, server)).pods }
+        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubePodList.serializer(), Ichorgo.kubePods(cfg, ctx, server)).pods }
     }
 
     /**
@@ -433,22 +433,22 @@ class TalosRepository(
      * the inventory (see [name.levis.ichor.model.dataServiceHints]); "" checks everything.
      */
     suspend fun dataServices(hints: String): DataServices = remember(DATA_SERVICES) {
-        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(DataServices.serializer(), Talosmobile.kubeDataServices(cfg, ctx, server, hints)) }
+        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(DataServices.serializer(), Ichorgo.kubeDataServices(cfg, ctx, server, hints)) }
     }
 
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
-    suspend fun deletePod(pod: KubePod) = kubeCall { cfg, ctx, server -> Talosmobile.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
+    suspend fun deletePod(pod: KubePod) = kubeCall { cfg, ctx, server -> Ichorgo.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
 
     /** `talosctl reboot -m [mode]` (default, powercycle, force); needs os:operator or higher. */
-    suspend fun reboot(node: String, mode: String) = call { cfg, ctx -> Talosmobile.reboot(cfg, ctx, node, mode) }
+    suspend fun reboot(node: String, mode: String) = call { cfg, ctx -> Ichorgo.reboot(cfg, ctx, node, mode) }
 
     /** `talosctl shutdown [--force]` (force skips cordon/drain); needs os:operator or higher. */
-    suspend fun shutdown(node: String, force: Boolean) = call { cfg, ctx -> Talosmobile.shutdown(cfg, ctx, node, force) }
+    suspend fun shutdown(node: String, force: Boolean) = call { cfg, ctx -> Ichorgo.shutdown(cfg, ctx, node, force) }
 
     /** Streams the server-side health check; cancelling the collector cancels the check. */
     fun health(): Flow<HealthEvent> = callbackFlow {
         val stored = configs.forCall()
-        val run = Talosmobile.startClusterHealth(
+        val run = Ichorgo.startClusterHealth(
             stored.yaml,
             stored.activeContext,
             object : HealthListener {
@@ -466,34 +466,34 @@ class TalosRepository(
     }.buffer(Channel.UNLIMITED) // never drop progress lines or the final Done event
 
     suspend fun network(node: String): NodeNetwork = remember(networkKey(node)) {
-        call { cfg, ctx -> TalosJson.decodeFromString(NodeNetwork.serializer(), Talosmobile.nodeNetwork(cfg, ctx, node)) }
+        call { cfg, ctx -> TalosJson.decodeFromString(NodeNetwork.serializer(), Ichorgo.nodeNetwork(cfg, ctx, node)) }
     }
 
     /** The node's sockets, like `talosctl netstat -a -p` (not cached: always fresh). */
     suspend fun connections(node: String): List<ConnectionInfo> = call { cfg, ctx ->
-        TalosJson.decodeFromString(ListSerializer(ConnectionInfo.serializer()), Talosmobile.nodeConnections(cfg, ctx, node))
+        TalosJson.decodeFromString(ListSerializer(ConnectionInfo.serializer()), Ichorgo.nodeConnections(cfg, ctx, node))
     }
 
     /** The node's clock compared with its NTP server (not cached: an offset goes stale fast). */
     suspend fun nodeTime(node: String): NodeTime = call { cfg, ctx ->
-        TalosJson.decodeFromString(NodeTime.serializer(), Talosmobile.nodeTime(cfg, ctx, node))
+        TalosJson.decodeFromString(NodeTime.serializer(), Ichorgo.nodeTime(cfg, ctx, node))
     }
 
     suspend fun clusterTime(): ClusterTime = remember(CLUSTER_TIME) {
-        call { cfg, ctx -> TalosJson.decodeFromString(ClusterTime.serializer(), Talosmobile.clusterTime(cfg, ctx)) }
+        call { cfg, ctx -> TalosJson.decodeFromString(ClusterTime.serializer(), Ichorgo.clusterTime(cfg, ctx)) }
     }
 
     suspend fun hardware(node: String): NodeHardware = remember(hardwareKey(node)) {
-        call { cfg, ctx -> TalosJson.decodeFromString(NodeHardware.serializer(), Talosmobile.nodeHardware(cfg, ctx, node)) }
+        call { cfg, ctx -> TalosJson.decodeFromString(NodeHardware.serializer(), Ichorgo.nodeHardware(cfg, ctx, node)) }
     }
 
     suspend fun images(node: String): List<ImageInfo> = remember(imagesKey(node)) {
-        call { cfg, ctx -> TalosJson.decodeFromString(ListSerializer(ImageInfo.serializer()), Talosmobile.nodeImages(cfg, ctx, node)) }
+        call { cfg, ctx -> TalosJson.decodeFromString(ListSerializer(ImageInfo.serializer()), Ichorgo.nodeImages(cfg, ctx, node)) }
     }
 
     /** The apps running in the cluster. One container listing per node: on demand, never polled. */
     suspend fun inventory(): Inventory = remember(INVENTORY) {
-        call { cfg, ctx -> TalosJson.decodeFromString(Inventory.serializer(), Talosmobile.clusterInventory(cfg, ctx)) }
+        call { cfg, ctx -> TalosJson.decodeFromString(Inventory.serializer(), Ichorgo.clusterInventory(cfg, ctx)) }
     }
 
     /**
@@ -501,7 +501,7 @@ class TalosRepository(
      * valid [ttlHours] (os:admin). A credential: never cached, logged or written by this class.
      */
     suspend fun generateTalosconfig(roles: String, ttlHours: Int): String = call { cfg, ctx ->
-        Talosmobile.generateTalosconfig(cfg, ctx, roles, ttlHours.toLong())
+        Ichorgo.generateTalosconfig(cfg, ctx, roles, ttlHours.toLong())
     }
 
     /**
@@ -510,7 +510,7 @@ class TalosRepository(
      */
     suspend fun features(node: String): NodeFeatures = cached<NodeFeatures>(featuresKey(node))?.value
         ?: remember(featuresKey(node)) {
-            call { cfg, ctx -> TalosJson.decodeFromString(NodeFeatures.serializer(), Talosmobile.nodeFeatures(cfg, ctx, node)) }
+            call { cfg, ctx -> TalosJson.decodeFromString(NodeFeatures.serializer(), Ichorgo.nodeFeatures(cfg, ctx, node)) }
         }
 
     /** [features] of each of [nodes], in parallel; nodes that do not answer are left out. */
@@ -537,52 +537,52 @@ class TalosRepository(
 
     /** Mounted filesystems with their usage, like `talosctl mounts`. */
     suspend fun mounts(node: String): MountList = call { cfg, ctx ->
-        TalosJson.decodeFromString(MountList.serializer(), Talosmobile.nodeMounts(cfg, ctx, node))
+        TalosJson.decodeFromString(MountList.serializer(), Ichorgo.nodeMounts(cfg, ctx, node))
     }
 
     /** Volume status (`talosctl get volumestatus`); [VolumeList.supported] false on older Talos. */
     suspend fun volumes(node: String): VolumeList = call { cfg, ctx ->
-        TalosJson.decodeFromString(VolumeList.serializer(), Talosmobile.nodeVolumes(cfg, ctx, node))
+        TalosJson.decodeFromString(VolumeList.serializer(), Ichorgo.nodeVolumes(cfg, ctx, node))
     }
 
     /** `talosctl usage PATH -d DEPTH`. */
     suspend fun diskUsage(node: String, path: String, depth: Int): DiskUsage = call { cfg, ctx ->
-        TalosJson.decodeFromString(DiskUsage.serializer(), Talosmobile.nodeDiskUsage(cfg, ctx, node, path, depth.toLong()))
+        TalosJson.decodeFromString(DiskUsage.serializer(), Ichorgo.nodeDiskUsage(cfg, ctx, node, path, depth.toLong()))
     }
 
     /** SMART/NVMe health per disk; [DiskHealthReport.supported] false on older Talos. */
     suspend fun diskHealth(node: String): DiskHealthReport = call { cfg, ctx ->
-        TalosJson.decodeFromString(DiskHealthReport.serializer(), Talosmobile.nodeDiskHealth(cfg, ctx, node))
+        TalosJson.decodeFromString(DiskHealthReport.serializer(), Ichorgo.nodeDiskHealth(cfg, ctx, node))
     }
 
     /** `talosctl -n NODE etcd forfeit-leadership` (os:admin); [node] must be the leader. */
     suspend fun etcdForfeitLeadership(node: String): EtcdForfeitResult = call { cfg, ctx ->
-        TalosJson.decodeFromString(EtcdForfeitResult.serializer(), Talosmobile.etcdForfeitLeadership(cfg, ctx, node))
+        TalosJson.decodeFromString(EtcdForfeitResult.serializer(), Ichorgo.etcdForfeitLeadership(cfg, ctx, node))
     }
 
     /** `talosctl -n NODE etcd remove-member MEMBER` (os:admin), asked to another member's [node]. */
     suspend fun etcdRemoveMember(node: String, memberId: String) = call { cfg, ctx ->
-        Talosmobile.etcdRemoveMember(cfg, ctx, node, memberId)
+        Ichorgo.etcdRemoveMember(cfg, ctx, node, memberId)
     }
 
     /** What removing [memberId] would leave (members, quorum) and what forbids it. Read-only. */
     suspend fun etcdMemberPlan(memberId: String): EtcdMemberPlan = call { cfg, ctx ->
-        TalosJson.decodeFromString(EtcdMemberPlan.serializer(), Talosmobile.etcdMemberPlan(cfg, ctx, memberId))
+        TalosJson.decodeFromString(EtcdMemberPlan.serializer(), Ichorgo.etcdMemberPlan(cfg, ctx, memberId))
     }
 
     /** Resource types the node knows (`talosctl get rd`). */
     suspend fun resourceTypes(node: String): List<ResourceType> = remember(resourceTypesKey(node)) {
-        call { cfg, ctx -> TalosJson.decodeFromString(ListSerializer(ResourceType.serializer()), Talosmobile.resourceTypes(cfg, ctx, node)) }
+        call { cfg, ctx -> TalosJson.decodeFromString(ListSerializer(ResourceType.serializer()), Ichorgo.resourceTypes(cfg, ctx, node)) }
     }
 
     /** `talosctl get TYPE -n NODE --namespace NAMESPACE` (never cached: may be sensitive). */
     suspend fun resourceList(node: String, namespace: String, type: String): ResourceList = call { cfg, ctx ->
-        TalosJson.decodeFromString(ResourceList.serializer(), Talosmobile.resourceList(cfg, ctx, node, namespace, type))
+        TalosJson.decodeFromString(ResourceList.serializer(), Ichorgo.resourceList(cfg, ctx, node, namespace, type))
     }
 
     /** The cluster's members (Talos cluster discovery), flagged when the context already targets them. */
     suspend fun discoverNodes(): NodeDiscovery = call { cfg, ctx ->
-        TalosJson.decodeFromString(NodeDiscovery.serializer(), Talosmobile.discoverNodes(cfg, ctx))
+        TalosJson.decodeFromString(NodeDiscovery.serializer(), Ichorgo.discoverNodes(cfg, ctx))
     }
 
     /**
@@ -594,7 +594,7 @@ class TalosRepository(
         return withContext(Dispatchers.IO) {
             TalosJson.decodeFromString(
                 ListSerializer(EndpointMatch.serializer()),
-                Talosmobile.findEndpoints(stored.yaml, networks.joinToString(",")),
+                Ichorgo.findEndpoints(stored.yaml, networks.joinToString(",")),
             )
         }
     }
@@ -603,19 +603,19 @@ class TalosRepository(
     suspend fun probeEndpoint(contextName: String, endpoint: String): EndpointProbe {
         val stored = configs.config.value ?: throw NoConfigException()
         return withContext(Dispatchers.IO) {
-            TalosJson.decodeFromString(EndpointProbe.serializer(), Talosmobile.probeEndpoint(stored.yaml, contextName, endpoint))
+            TalosJson.decodeFromString(EndpointProbe.serializer(), Ichorgo.probeEndpoint(stored.yaml, contextName, endpoint))
         }
     }
 
     /** `talosctl get TYPE ID -o yaml` (never cached: may hold secrets). */
     suspend fun resourceGet(node: String, namespace: String, type: String, id: String): String = call { cfg, ctx ->
-        TalosJson.decodeFromString(ResourceDetail.serializer(), Talosmobile.resourceGet(cfg, ctx, node, namespace, type, id)).yaml
+        TalosJson.decodeFromString(ResourceDetail.serializer(), Ichorgo.resourceGet(cfg, ctx, node, namespace, type, id)).yaml
     }
 
-    suspend fun driftSnapshot(): String = call { cfg, ctx -> Talosmobile.clusterDriftSnapshot(cfg, ctx) }
-    suspend fun observation(): String = call { cfg, ctx -> Talosmobile.clusterObservation(cfg, ctx) }
+    suspend fun driftSnapshot(): String = call { cfg, ctx -> Ichorgo.clusterDriftSnapshot(cfg, ctx) }
+    suspend fun observation(): String = call { cfg, ctx -> Ichorgo.clusterObservation(cfg, ctx) }
     suspend fun bottlenecks(previous: NodeStats, current: NodeStats): name.levis.ichor.model.Bottlenecks = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(name.levis.ichor.model.Bottlenecks.serializer(), Talosmobile.calculateBottlenecks(
+        TalosJson.decodeFromString(name.levis.ichor.model.Bottlenecks.serializer(), Ichorgo.calculateBottlenecks(
             TalosJson.encodeToString(NodeStats.serializer(), previous), TalosJson.encodeToString(NodeStats.serializer(), current),
         ))
     }

@@ -80,7 +80,7 @@ class ChangelogRepository(private val context: Context, private val prefs: Share
     }
 
     companion object {
-        const val PREFS = "talosdev-mobile-changelog"
+        const val PREFS = "ichor-changelog"
         private const val ASSET = "changelog.json"
         private const val KEY_LAST_BUILD = "last_launched_build"
         private const val FETCH_TIMEOUT_MS = 10_000

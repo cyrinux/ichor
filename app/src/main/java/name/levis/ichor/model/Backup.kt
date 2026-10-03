@@ -5,7 +5,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 /**
- * What an app backup holds once the Go core opened it (Talosmobile.decryptBackup): the
+ * What an app backup holds once the Go core opened it (Ichorgo.decryptBackup): the
  * talosconfig and the settings that go with it. The iOS app writes and reads the same JSON,
  * so a backup moves between platforms; a setting one app does not have is left out (null)
  * and the restoring app keeps its current value.

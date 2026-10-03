@@ -7,9 +7,9 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import name.levis.talosmobile.DebugListener
-import name.levis.talosmobile.DebugSession
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.DebugListener
+import name.levis.ichorgo.DebugSession
+import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.data.ConfigRepository
 import org.connectbot.terminal.TerminalEmulator
 import org.connectbot.terminal.TerminalEmulatorFactory
@@ -49,7 +49,7 @@ class DebugShellViewModel(private val configs: ConfigRepository, private val nod
         stop()
         emulator.clearScreen()
         _state.value = ShellState.Starting(UiText.Res(R.string.debug_connecting))
-        session = Talosmobile.startDebugShell(
+        session = Ichorgo.startDebugShell(
             stored.yaml, stored.activeContext, node, image, args,
             size.first.toLong(), size.second.toLong(),
             object : DebugListener {
@@ -71,7 +71,7 @@ class DebugShellViewModel(private val configs: ConfigRepository, private val nod
 
     /** The ready-made commands; none if the core cannot list them (the button then hides). */
     val snippets: List<DebugSnippet> by lazy {
-        runCatching { decodeDebugSnippets(Talosmobile.debugSnippets()) }.getOrDefault(emptyList())
+        runCatching { decodeDebugSnippets(Ichorgo.debugSnippets()) }.getOrDefault(emptyList())
     }
 
     /** Sends raw bytes (extra keys: Esc, Tab, arrows, Ctrl-C…). */

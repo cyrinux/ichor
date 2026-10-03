@@ -4,8 +4,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.withContext
-import name.levis.talosmobile.CaptureListener
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.CaptureListener
+import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.CAPTURE_SNAP_LEN
 import name.levis.ichor.model.CaptureOptions
 import name.levis.ichor.model.PacketDetail
@@ -39,7 +39,7 @@ class CaptureRepository(private val configs: ConfigRepository, filesDir: File) {
 
     /** "" when [expression] is a valid capture filter, else why not. Local, no network. */
     fun validateFilter(expression: String): String =
-        runCatching { Talosmobile.validateCaptureFilter(expression) }.getOrElse { it.message.orEmpty().ifEmpty { "invalid filter" } }
+        runCatching { Ichorgo.validateCaptureFilter(expression) }.getOrElse { it.message.orEmpty().ifEmpty { "invalid filter" } }
 
     /**
      * Starts capturing on [node] into [dest]. Events arrive on [CaptureHandle.events], which
@@ -50,7 +50,7 @@ class CaptureRepository(private val configs: ConfigRepository, filesDir: File) {
         val stored = configs.forCall()
         dest.parentFile?.mkdirs()
         val events = Channel<CaptureEvent>(Channel.UNLIMITED) // never drop packets or the final Done
-        val run = Talosmobile.startPacketCapture(
+        val run = Ichorgo.startPacketCapture(
             stored.yaml,
             stored.activeContext,
             node,
@@ -81,11 +81,11 @@ class CaptureRepository(private val configs: ConfigRepository, filesDir: File) {
     }
 
     suspend fun read(file: File, offset: Int, limit: Int): PcapPage = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(PcapPage.serializer(), Talosmobile.readPcap(file.path, offset.toLong(), limit.toLong()))
+        TalosJson.decodeFromString(PcapPage.serializer(), Ichorgo.readPcap(file.path, offset.toLong(), limit.toLong()))
     }
 
     suspend fun detail(file: File, index: Long): PacketDetail = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(PacketDetail.serializer(), Talosmobile.packetDetail(file.path, index))
+        TalosJson.decodeFromString(PacketDetail.serializer(), Ichorgo.packetDetail(file.path, index))
     }
 
     /** Saved captures, newest first. */

@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.TalosUpdateCheck
 import name.levis.ichor.model.talosUpdateFresh
 
@@ -31,7 +31,7 @@ class TalosUpdateChecker {
             lastKey = versionsCsv
         }
         val check = runCatching {
-            withContext(Dispatchers.IO) { TalosJson.decodeFromString(TalosUpdateCheck.serializer(), Talosmobile.talosUpdateCheck(versionsCsv)) }
+            withContext(Dispatchers.IO) { TalosJson.decodeFromString(TalosUpdateCheck.serializer(), Ichorgo.talosUpdateCheck(versionsCsv)) }
         }.getOrNull() ?: return
         _result.value = versionsCsv to check
     }

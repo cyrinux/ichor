@@ -36,6 +36,6 @@ class ClusterNames(private val prefs: SharedPreferences) {
     }
 
     companion object {
-        const val FILE = "talosdev-mobile-cluster-names"
+        const val FILE = "ichor-cluster-names"
     }
 }

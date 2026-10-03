@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
-import name.levis.talosmobile.SupportListener
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.SupportListener
+import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.SupportProgress
 import name.levis.ichor.model.isSupportBundleName
 import java.io.File
@@ -37,7 +37,7 @@ class SupportBundleRepository(private val configs: ConfigRepository, filesDir: F
     fun collect(nodes: List<String>, dest: File): Flow<SupportEvent> = callbackFlow {
         val stored = configs.forCall()
         dest.parentFile?.mkdirs()
-        val run = Talosmobile.startSupportBundle(
+        val run = Ichorgo.startSupportBundle(
             stored.yaml,
             stored.activeContext,
             nodes.joinToString(","),

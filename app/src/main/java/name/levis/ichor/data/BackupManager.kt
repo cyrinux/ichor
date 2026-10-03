@@ -9,7 +9,7 @@ import name.levis.ichor.model.restoredClusters
 import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
-import name.levis.talosmobile.Talosmobile
+import name.levis.ichorgo.Ichorgo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -64,7 +64,7 @@ class BackupManager(
                     kubeServers.servers.value,
                 ),
             )
-            backupCall { Talosmobile.encryptBackup(TalosJson.encodeToString(BackupPayload.serializer(), payload), passphrase) }
+            backupCall { Ichorgo.encryptBackup(TalosJson.encodeToString(BackupPayload.serializer(), payload), passphrase) }
         }
 
     /**
@@ -73,7 +73,7 @@ class BackupManager(
      */
     suspend fun restore(file: ByteArray, passphrase: String): RestoreOutcome {
         val payload = withContext(Dispatchers.Default) {
-            val json = backupCall { Talosmobile.decryptBackup(file, passphrase) }
+            val json = backupCall { Ichorgo.decryptBackup(file, passphrase) }
             TalosJson.decodeFromString(BackupPayload.serializer(), json)
         }
         val settings = payload.settings
@@ -90,7 +90,7 @@ class BackupManager(
             names.set(fp, restored.names[fp].orEmpty())
             vpnOnly.set(fp, fp in restored.vpnOnly)
             // Checked like a typed one: an address the Go core refuses is dropped.
-            kubeServers.set(fp, restored.kubeServers[fp]?.let { runCatching { Talosmobile.normalizeKubeServer(it) }.getOrNull() }.orEmpty())
+            kubeServers.set(fp, restored.kubeServers[fp]?.let { runCatching { Ichorgo.normalizeKubeServer(it) }.getOrNull() }.orEmpty())
         }
         (wakeOnLan.targets.value.keys - restored.wakeOnLan.keys)
             .filter { it.substringBefore('|') in fingerprints }
@@ -128,11 +128,11 @@ private inline fun <T> backupCall(block: () -> T): T = try {
 
 /** The localized error for a Go core backup error [message] (prefixed with its code), if it has one. */
 internal fun backupException(message: String): LocalizedException? = when {
-    message.startsWith(Talosmobile.BackupErrWrongPassphrase) -> BackupPassphraseException()
-    message.startsWith(Talosmobile.BackupErrPassphraseShort) ->
-        LocalizedException(UiText.Res(R.string.backup_err_passphrase_short, Talosmobile.BackupMinPassphrase.toInt()))
-    message.startsWith(Talosmobile.BackupErrNotBackup) -> LocalizedException(UiText.Res(R.string.backup_err_not_backup))
-    message.startsWith(Talosmobile.BackupErrUnsupported) -> LocalizedException(UiText.Res(R.string.backup_err_unsupported))
-    message.startsWith(Talosmobile.BackupErrInvalidContent) -> LocalizedException(UiText.Res(R.string.backup_err_invalid))
+    message.startsWith(Ichorgo.BackupErrWrongPassphrase) -> BackupPassphraseException()
+    message.startsWith(Ichorgo.BackupErrPassphraseShort) ->
+        LocalizedException(UiText.Res(R.string.backup_err_passphrase_short, Ichorgo.BackupMinPassphrase.toInt()))
+    message.startsWith(Ichorgo.BackupErrNotBackup) -> LocalizedException(UiText.Res(R.string.backup_err_not_backup))
+    message.startsWith(Ichorgo.BackupErrUnsupported) -> LocalizedException(UiText.Res(R.string.backup_err_unsupported))
+    message.startsWith(Ichorgo.BackupErrInvalidContent) -> LocalizedException(UiText.Res(R.string.backup_err_invalid))
     else -> null
 }

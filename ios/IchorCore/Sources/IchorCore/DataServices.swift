@@ -1,6 +1,6 @@
 import Foundation
 
-// Mirrors go/talosmobile/kube_dataservices.go, kube_longhorn.go, kube_garage.go and kube_cnpg.go
+// Mirrors go/ichorgo/kube_dataservices.go, kube_longhorn.go, kube_garage.go and kube_cnpg.go
 // (the wire format is documented in plans/data-services/README.md).
 
 private extension KeyedDecodingContainer {

@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile/topology_build.go.
+// Mirrors go/ichorgo/topology_build.go.
 
 @Serializable
 data class ClusterTopology(

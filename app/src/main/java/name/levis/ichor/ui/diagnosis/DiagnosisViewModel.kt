@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import name.levis.talosmobile.Diagnosis
+import name.levis.ichorgo.Diagnosis
 import name.levis.ichor.data.AiPreferences
 import name.levis.ichor.data.AnswerEvent
 import name.levis.ichor.data.DiagnosisRepository

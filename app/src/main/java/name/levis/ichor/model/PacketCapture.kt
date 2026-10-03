@@ -6,7 +6,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-// Mirrors go/talosmobile/pcap*.go.
+// Mirrors go/ichorgo/pcap*.go.
 
 /**
  * One captured packet as summarized by the Go core; [n] is its index in the pcap file, from 0.

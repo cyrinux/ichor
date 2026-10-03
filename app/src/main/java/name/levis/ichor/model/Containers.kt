@@ -2,7 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/talosmobile/containers.go.
+// Mirrors go/ichorgo/containers.go.
 
 @Serializable
 data class ContainerSample(val at: Long, val containers: List<ContainerInfo> = emptyList())

@@ -7,7 +7,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-// Mirrors the structured log entries of go/talosmobile (NodeLogs `entries`, ParseLogLine).
+// Mirrors the structured log entries of go/ichorgo (NodeLogs `entries`, ParseLogLine).
 
 @Serializable
 data class LogField(val k: String = "", val v: String = "")

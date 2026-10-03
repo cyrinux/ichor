@@ -3,7 +3,7 @@ package name.levis.ichor.model
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
 
-// Mirrors go/talosmobile/nodetime.go.
+// Mirrors go/ichorgo/nodetime.go.
 
 @Serializable
 data class NodeTime(
