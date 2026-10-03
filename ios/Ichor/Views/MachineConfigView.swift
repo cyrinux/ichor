@@ -72,7 +72,7 @@ struct MachineConfigView: View {
     }
 
     private var loadedYAML: String? {
-        if case .loaded(let yaml, _) = state { return yaml }
+        if case .loaded(let yaml, _, _) = state { return yaml }
         return nil
     }
 

@@ -55,7 +55,8 @@ struct KubeSpanView: View {
         if let overview = try? await client.overview() {
             hostnames = Dictionary(overview.nodes.map { ($0.node, $0.hostname) }, uniquingKeysWith: { a, _ in a })
         }
-        state = await .from { try await client.kubespan() }
+        state = model.seeded(state, from: .kubespan)
+        state = state.refreshed(with: await .from { try await model.fetch(.kubespan, with: client) })
     }
 }
 

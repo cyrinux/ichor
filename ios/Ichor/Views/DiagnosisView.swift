@@ -31,7 +31,7 @@ struct DiagnosisView: View {
                 } actions: {
                     Button("Retry") { Task { await collect() } }
                 }
-            case .loaded(let report, let at):
+            case .loaded(let report, let at, _):
                 content(report)
                     .safeAreaInset(edge: .bottom, spacing: 0) { FreshnessFooter(at: at) }
             }

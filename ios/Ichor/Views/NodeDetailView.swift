@@ -161,12 +161,14 @@ struct NodeDetailView: View {
 
     private func loadServices() async {
         guard let client = model.client else { return }
-        services = await .from { try await client.services(node: ref.address) }
+        services = model.seeded(services, from: .services(node: ref.address))
+        services = services.refreshed(with: await .from { try await model.fetch(.services(node: ref.address), with: client) })
     }
 
     private func loadResources() async {
         guard let client = model.client else { return }
-        resources = await .from { try await client.resources(node: ref.address) }
+        resources = model.seeded(resources, from: .resources(node: ref.address))
+        resources = resources.refreshed(with: await .from { try await model.fetch(.resources(node: ref.address), with: client) })
         // Best-effort: a node that cannot answer shows the error in its row.
         do {
             clock = try await client.nodeTime(node: ref.address)

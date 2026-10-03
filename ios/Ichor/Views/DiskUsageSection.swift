@@ -46,7 +46,7 @@ struct DiskUsageSection: View {
         case .failed(let message):
             // Go's own words, e.g. that the folder is too large to measure in time.
             ErrorOrNoticeText(message: message)
-        case .loaded(let usage, _):
+        case .loaded(let usage, _, _):
             let rows = diskUsageRows(usage.entries, root: path)
             LabeledContent("Total", value: formatBytes(diskUsageTotal(usage.entries, root: path)))
             if rows.isEmpty {

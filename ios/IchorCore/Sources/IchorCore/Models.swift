@@ -77,16 +77,22 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     }
 }
 
-public struct ClusterOverview: Decodable, Equatable, Sendable {
+public struct ClusterOverview: Codable, Equatable, Sendable {
     public let context: String
     public let nodes: [NodeOverview]
+
+    public init(context: String, nodes: [NodeOverview]) {
+        self.context = context
+        self.nodes = nodes
+    }
 }
 
 public enum NodeHealth: String, Sendable, CaseIterable {
     case ready, notReady, unreachable
 }
 
-public struct NodeOverview: Decodable, Equatable, Identifiable, Hashable, Sendable {
+/// Codable: the last known overview is stored as it was shown (see mergeLastKnown).
+public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable {
     public let node: String
     public let hostname: String
     public let reachable: Bool
@@ -100,6 +106,13 @@ public struct NodeOverview: Decodable, Equatable, Identifiable, Hashable, Sendab
     public let stage: String
     public let ready: Bool
     public let unmetConditions: [UnmetCondition]
+    /// Capacity; 0 when the node did not say.
+    public let cpuCount: Int
+    public let memTotal: UInt64 // bytes
+    public let memAvailable: UInt64 // bytes
+    /// An unreachable node shown with what it said last: when that was (epoch ms). Never
+    /// from Go, set by mergeLastKnown.
+    public let lastSeen: Int64?
 
     public var id: String { node }
 
@@ -107,11 +120,66 @@ public struct NodeOverview: Decodable, Equatable, Identifiable, Hashable, Sendab
         if !reachable { return .unreachable }
         return ready ? .ready : .notReady
     }
+
+    public init(
+        node: String, hostname: String, reachable: Bool, error: String? = nil, errorKind: String? = nil,
+        version: String = "", arch: String = "", platform: String = "", role: String = "", stage: String = "",
+        ready: Bool = false, unmetConditions: [UnmetCondition] = [], cpuCount: Int = 0, memTotal: UInt64 = 0,
+        memAvailable: UInt64 = 0, lastSeen: Int64? = nil
+    ) {
+        self.node = node
+        self.hostname = hostname
+        self.reachable = reachable
+        self.error = error
+        self.errorKind = errorKind
+        self.version = version
+        self.arch = arch
+        self.platform = platform
+        self.role = role
+        self.stage = stage
+        self.ready = ready
+        self.unmetConditions = unmetConditions
+        self.cpuCount = cpuCount
+        self.memTotal = memTotal
+        self.memAvailable = memAvailable
+        self.lastSeen = lastSeen
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case node, hostname, reachable, error, errorKind, version, arch, platform, role, stage, ready
+        case unmetConditions, cpuCount, memTotal, memAvailable, lastSeen
+    }
+
+    // Older cores send no capacity; Go encodes an empty (nil) slice as null.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        node = try c.decode(String.self, forKey: .node)
+        hostname = try c.decode(String.self, forKey: .hostname)
+        reachable = try c.decode(Bool.self, forKey: .reachable)
+        error = try c.decodeIfPresent(String.self, forKey: .error)
+        errorKind = try c.decodeIfPresent(String.self, forKey: .errorKind)
+        version = try c.decode(String.self, forKey: .version)
+        arch = try c.decode(String.self, forKey: .arch)
+        platform = try c.decode(String.self, forKey: .platform)
+        role = try c.decode(String.self, forKey: .role)
+        stage = try c.decode(String.self, forKey: .stage)
+        ready = try c.decode(Bool.self, forKey: .ready)
+        unmetConditions = try c.decodeIfPresent([UnmetCondition].self, forKey: .unmetConditions) ?? []
+        cpuCount = try c.decodeIfPresent(Int.self, forKey: .cpuCount) ?? 0
+        memTotal = try c.decodeIfPresent(UInt64.self, forKey: .memTotal) ?? 0
+        memAvailable = try c.decodeIfPresent(UInt64.self, forKey: .memAvailable) ?? 0
+        lastSeen = try c.decodeIfPresent(Int64.self, forKey: .lastSeen)
+    }
 }
 
-public struct UnmetCondition: Decodable, Equatable, Hashable, Sendable {
+public struct UnmetCondition: Codable, Equatable, Hashable, Sendable {
     public let name: String
     public let reason: String
+
+    public init(name: String, reason: String) {
+        self.name = name
+        self.reason = reason
+    }
 }
 
 public struct ServiceInfo: Decodable, Equatable, Identifiable, Sendable {

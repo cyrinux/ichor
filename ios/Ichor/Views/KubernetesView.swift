@@ -158,7 +158,8 @@ private struct WorkloadsList: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        state = await .from { try await client.workloads() }
+        state = model.seeded(state, from: .workloads, as: KubeWorkloadList.self) { $0.workloads }
+        state = state.refreshed(with: await .from { try await model.fetch(.workloads, as: KubeWorkloadList.self, with: client).workloads })
     }
 
     private func restart(_ workload: KubeWorkload) async {
