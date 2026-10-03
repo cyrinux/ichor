@@ -1285,6 +1285,41 @@
         }
       }
     },
+    "Could not list its workloads: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workloads konnten nicht aufgelistet werden: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudieron listar sus cargas de trabajo: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de lister ses charges de travail : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile elencare i suoi workload: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося отримати його робочі навантаження: %@"
+          }
+        }
+      }
+    },
     "Databases" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1486,6 +1521,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Face ID, Touch ID або код-пароль"
+          }
+        }
+      }
+    },
+    "Finding its workloads…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workloads werden gesucht…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando sus cargas de trabajo…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche de ses charges de travail…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricerca dei suoi workload…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пошук його робочих навантажень…"
           }
         }
       }
@@ -1896,6 +1966,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Немає застосунків"
+          }
+        }
+      }
+    },
+    "No Deployment, StatefulSet or DaemonSet runs it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Deployment, StatefulSet oder DaemonSet führt sie aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún Deployment, StatefulSet o DaemonSet la ejecuta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun Deployment, StatefulSet ou DaemonSet ne l'exécute."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun Deployment, StatefulSet o DaemonSet la esegue."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жоден Deployment, StatefulSet чи DaemonSet його не запускає."
           }
         }
       }

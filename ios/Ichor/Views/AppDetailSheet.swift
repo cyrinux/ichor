@@ -1,12 +1,14 @@
 import SwiftUI
 import IchorCore
 
-/// One app of the inventory: what needs a look, where it runs, its images and pods.
+/// One app of the inventory: what needs a look, where it runs, its workloads to restart
+/// (os:admin), its images and pods.
 struct AppDetailSheet: View {
     let app: InventoryApp
     /// Address → hostname of the overview's nodes.
     let hostnames: [String: String]
 
+    @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -24,6 +26,8 @@ struct AppDetailSheet: View {
                 }
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
+                // Rollout restarts go through the Kubernetes API: only for a role that can reach it.
+                if model.allows(.workloads) { AppWorkloadsSection(app: app) }
                 if !app.images.isEmpty {
                     Section("Images") {
                         let drifting = app.driftingRepos

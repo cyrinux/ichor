@@ -1,7 +1,6 @@
 package name.levis.ichor.ui.workloads
 
 import android.text.format.DateUtils
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,7 +15,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -25,7 +23,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,14 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.WORKLOADS
@@ -61,17 +49,12 @@ import name.levis.ichor.model.filtered
 import name.levis.ichor.model.namespaces
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
-import name.levis.ichor.ui.uiText
-
-/** Outcome of a rollout restart, shown once. */
-data class RestartResult(val workload: KubeWorkload, val error: UiText?)
 
 class WorkloadsViewModel(private val talos: TalosRepository) : LoadingViewModel<List<KubeWorkload>>() {
     override val keepsDataOnFailure = true
@@ -79,25 +62,8 @@ class WorkloadsViewModel(private val talos: TalosRepository) : LoadingViewModel<
     override val restores get() = talos.restores
     override suspend fun fetch() = talos.workloads()
 
-    private val _restarting = MutableStateFlow<Set<String>>(emptySet())
-    /** Keys of the workloads whose restart request is in flight. */
-    val restarting: StateFlow<Set<String>> = _restarting.asStateFlow()
-
-    // A queue, not a state: two restarts finishing together each get their message.
-    private val _results = Channel<RestartResult>(Channel.BUFFERED)
-    val results: Flow<RestartResult> = _results.receiveAsFlow()
-
-    fun restart(workload: KubeWorkload) {
-        if (workload.key in _restarting.value) return
-        _restarting.update { it + workload.key }
-        viewModelScope.launch {
-            val outcome = runCatching { talos.rolloutRestart(workload) }
-            _restarting.update { it - workload.key }
-            _results.send(RestartResult(workload, outcome.exceptionOrNull()?.uiText()))
-            // Show the rollout starting: the controller already bumped the generation.
-            if (outcome.isSuccess) refresh()
-        }
-    }
+    // Show the rollout starting: the controller already bumped the generation.
+    val restarts = WorkloadRestarts(viewModelScope, talos) { refresh() }
 }
 
 /**
@@ -114,25 +80,18 @@ fun WorkloadsTab(
     vm: WorkloadsViewModel = viewModel(factory = factory { WorkloadsViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val restarting by vm.restarting.collectAsStateWithLifecycle()
+    val restarting by vm.restarts.restarting.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
 
-    val context = LocalContext.current
-    LaunchedEffect(vm) {
-        vm.results.collect { r ->
-            val text = r.error?.resolve(context)?.let { context.getString(R.string.workloads_restart_failed, r.workload.name, it) }
-                ?: context.getString(R.string.workloads_restart_done, r.workload.name)
-            Toast.makeText(context, text, if (r.error == null) Toast.LENGTH_SHORT else Toast.LENGTH_LONG).show()
-        }
-    }
+    RestartResultToasts(vm.restarts.results)
 
     confirm?.let { w ->
         RestartConfirmDialog(
             workload = w,
             onConfirm = {
                 confirm = null
-                vm.restart(w)
+                vm.restarts.restart(w)
             },
             onDismiss = { confirm = null },
         )
@@ -234,26 +193,6 @@ private fun WorkloadRow(workload: KubeWorkload, showNamespace: Boolean, restarti
             }
         }
     }
-}
-
-@Composable
-private fun RestartConfirmDialog(workload: KubeWorkload, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.workloads_restart_title, workload.kind, workload.name)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.workloads_restart_text, workload.namespace))
-                if (workload.desired <= 1) {
-                    Text(stringResource(R.string.workloads_restart_single), color = LocalStatusColors.current.warn)
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) { Text(stringResource(R.string.workloads_restart_confirm), color = LocalStatusColors.current.bad) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
-    )
 }
 
 private val WorkloadState.label: Int

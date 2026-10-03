@@ -1085,6 +1085,10 @@
     <string name="apps_stat_memory">Memoria</string>
     <string name="apps_detail_images">Imágenes</string>
     <string name="apps_detail_pods">Pods</string>
+    <string name="apps_detail_workloads">Cargas de trabajo</string>
+    <string name="apps_detail_workloads_loading">Buscando sus cargas de trabajo…</string>
+    <string name="apps_detail_workloads_none">Ningún Deployment, StatefulSet o DaemonSet la ejecuta.</string>
+    <string name="apps_detail_workloads_failed">No se pudieron listar sus cargas de trabajo: %1$s</string>
     <string name="settings_remote_icons">Descargar los iconos de aplicaciones que faltan</string>
     <string name="settings_remote_icons_desc">Unas 250 aplicaciones comunes tienen su icono incluido. Si se activa, los iconos de otras aplicaciones reconocidas se descargan de jsDelivr (Dashboard Icons). Solo se envía el nombre público del icono, nunca los nombres de tus imágenes ni los detalles del clúster.</string>
     <string name="settings_offline_cache">Conservar el último estado conocido</string>

@@ -31,8 +31,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.OVERVIEW
+import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.Feature
+import name.levis.ichor.model.allows
 import name.levis.ichor.model.Inventory
+import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
@@ -40,6 +44,8 @@ import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.workloads.RestartConfirmDialog
+import name.levis.ichor.ui.workloads.RestartResultToasts
 
 /**
  * Every app running in the cluster as a grid of icons, with search and filters; tapping one
@@ -51,6 +57,7 @@ fun AppsScreen(
     onBack: () -> Unit,
     onNode: (addr: String, host: String, role: String) -> Unit,
     vm: AppsViewModel = viewModel(factory = factory { AppsViewModel(app.talosRepository) }),
+    workloadsVm: AppWorkloadsViewModel = viewModel(factory = factory { AppWorkloadsViewModel(app.talosRepository) }),
 ) {
     val application = LocalContext.current.applicationContext as TalosApp
     val state by vm.state.collectAsStateWithLifecycle()
@@ -65,6 +72,22 @@ fun AppsScreen(
         application.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.nodes.orEmpty().associateBy { it.node }
     }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
+    // Rollout restarts go through the Kubernetes API: only for a role that can reach it.
+    val canRestart = config?.activeSummary?.allows(Feature.WORKLOADS) == true
+    val workloads by workloadsVm.state.collectAsStateWithLifecycle()
+    val restarting by workloadsVm.restarts.restarting.collectAsStateWithLifecycle()
+    var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
+    RestartResultToasts(workloadsVm.restarts.results)
+    confirm?.let { w ->
+        RestartConfirmDialog(
+            workload = w,
+            onConfirm = {
+                confirm = null
+                workloadsVm.restarts.restart(w)
+            },
+            onDismiss = { confirm = null },
+        )
+    }
 
     Scaffold(
         bottomBar = { DataFreshness(state) },
@@ -104,9 +127,11 @@ fun AppsScreen(
             ) {
                 AppsGrid(s.data, onOpen = { selected = it.id })
                 s.data.apps.firstOrNull { it.id == selected }?.let { detail ->
+                    if (canRestart) LaunchedEffect(detail) { workloadsVm.load(detail) }
                     AppDetailSheet(
                         app = detail,
                         nodes = nodes,
+                        restart = if (canRestart) AppRestartUi(workloads, restarting) { confirm = it } else null,
                         onPodNode = { addr -> nodes.openNode(addr, onNode) },
                         onDismiss = { selected = null },
                     )

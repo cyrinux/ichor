@@ -1085,6 +1085,10 @@
     <string name="apps_stat_memory">Mémoire</string>
     <string name="apps_detail_images">Images</string>
     <string name="apps_detail_pods">Pods</string>
+    <string name="apps_detail_workloads">Charges de travail</string>
+    <string name="apps_detail_workloads_loading">Recherche de ses charges de travail…</string>
+    <string name="apps_detail_workloads_none">Aucun Deployment, StatefulSet ou DaemonSet ne l\'exécute.</string>
+    <string name="apps_detail_workloads_failed">Impossible de lister ses charges de travail : %1$s</string>
     <string name="settings_remote_icons">Télécharger les icônes d’applications manquantes</string>
     <string name="settings_remote_icons_desc">Environ 250 applications courantes ont leur icône intégrée. Activé, les icônes des autres applications reconnues sont téléchargées depuis jsDelivr (Dashboard Icons). Seul le nom public de l’icône est envoyé, jamais vos noms d’images ni les détails du cluster.</string>
     <string name="settings_offline_cache">Garder le dernier état connu</string>
