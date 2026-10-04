@@ -104,6 +104,7 @@
         <item quantity="other">%d nodes</item>
     </plurals>
     <string name="overview_stat_nodes">Nodes</string>
+    <string name="overview_nodes_unplaced">Not on the map</string>
     <string name="overview_stat_cpu">CPU cores</string>
     <string name="overview_stat_memory">Memory</string>
     <string name="overview_stat_memory_used">%d%% used</string>

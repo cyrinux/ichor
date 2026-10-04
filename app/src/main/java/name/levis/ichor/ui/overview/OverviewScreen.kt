@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import name.levis.ichor.TalosApp
 import androidx.compose.material3.TextButton
 import name.levis.ichor.data.ConfigRepository
@@ -79,6 +80,11 @@ import name.levis.ichor.model.clusterSupport
 import name.levis.ichor.ui.components.rememberClusterFeatures
 import name.levis.ichor.update.UpdateState
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.TOPOLOGY
+import name.levis.ichor.model.ClusterTopology
+import name.levis.ichor.model.NodeGroup
+import name.levis.ichor.model.groupNodes
+import name.levis.ichor.ui.kubespan.siteTitle
 import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.OverviewCard
@@ -428,6 +434,8 @@ fun OverviewScreen(
                         .takeIf { config?.activeSummary?.demo == false && !clusterLabels.masked },
                 ) else NodeList(
                     overview = s.data,
+                    // In the map's order, site by site, once the KubeSpan map was fetched (or kept from before).
+                    topology = remember(s.data) { vm.talos.cached<ClusterTopology>(TOPOLOGY)?.value },
                     outage = down?.takeIf { s.data.hasLastKnown },
                     onRetry = vm::refresh,
                     clusterName = config?.activeSummary?.let(clusterLabels::of),
@@ -466,6 +474,7 @@ fun OverviewScreen(
 @Composable
 private fun NodeList(
     overview: ClusterOverview,
+    topology: ClusterTopology?,
     outage: ClusterOutage?,
     onRetry: () -> Unit,
     clusterName: String?,
@@ -510,7 +519,7 @@ private fun NodeList(
             onDismiss = { sheetFor = null },
         )
     }
-    val nodes = overview.nodes.sortedWith(compareBy({ it.role != "controlplane" }, { it.hostname }))
+    val nodeGroups = remember(overview, topology) { topology.groupNodes(overview.nodes) }
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -557,9 +566,9 @@ private fun NodeList(
                     val downNodes = remember(overview) { overview.downHostnames() }
                     Box(Modifier.longPressToCustomize(onCustomize)) { ArgoCard(argo, argoTile, downNodes, onArgoCD) }
                 }
-                OverviewCard.NODES -> if (nodes.isNotEmpty()) item(key = card.name) {
+                OverviewCard.NODES -> if (overview.nodes.isNotEmpty()) item(key = card.name) {
                     NodesCard(
-                        nodes,
+                        nodeGroups,
                         publicIps,
                         onNode = onNode,
                         onLive = { onNodeAction(it, NodeAction.LIVE) },
@@ -586,7 +595,7 @@ private fun NodeList(
 /** The nodes as one card, like Apps and Data services: a title, then a swipeable row per node. */
 @Composable
 private fun NodesCard(
-    nodes: List<NodeOverview>,
+    groups: List<NodeGroup>,
     publicIps: PublicIpDetection,
     onNode: (NodeOverview) -> Unit,
     onLive: (NodeOverview) -> Unit,
@@ -598,12 +607,23 @@ private fun NodesCard(
             Text(stringResource(R.string.overview_stat_nodes), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
             DetectPublicIpsButton(publicIps)
             Spacer(Modifier.width(8.dp))
-            Text(nodes.size.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(groups.sumOf { it.nodes.size }.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        nodes.forEachIndexed { i, node ->
-            if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-            SwipeableNode(node, onLive = { onLive(node) }, onMore = { onMore(node) }) {
-                NodeRow(node, node.shownPublicIps(publicIps.probed), onClick = { onNode(node) }, onLongClick = { onMore(node) })
+        groups.forEachIndexed { g, group ->
+            // Site headers only when there is more than one: a single site says nothing.
+            if (groups.size > 1) Text(
+                group.site?.let { siteTitle(it) } ?: stringResource(R.string.overview_nodes_unplaced),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = if (g > 0) 12.dp else 4.dp, bottom = 2.dp),
+            )
+            group.nodes.forEachIndexed { i, node ->
+                if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                SwipeableNode(node, onLive = { onLive(node) }, onMore = { onMore(node) }) {
+                    NodeRow(node, node.shownPublicIps(publicIps.probed), onClick = { onNode(node) }, onLongClick = { onMore(node) })
+                }
             }
         }
         Spacer(Modifier.height(4.dp))

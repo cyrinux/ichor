@@ -37,4 +37,37 @@ class TopologyTest {
         assertEquals(0, topology.brokenLinks("nobody"))
         assertEquals("203.0.113.5:51820", topology.links[0].sides[0].endpoint)
     }
+
+    private fun node(hostname: String, role: String = "worker", target: String = hostname) =
+        NodeOverview(node = target, hostname = hostname, reachable = true, role = role)
+
+    @Test
+    fun groupsNodesSiteBySiteInTheMapOrder() {
+        val topology = ClusterTopology(
+            nodes = listOf(TopologyNode("cp-1", node = "10.0.0.1"), TopologyNode("w-2", node = "10.0.0.3")),
+            sites = listOf(
+                TopologySite("site-1", label = "fr-par-1", nodes = listOf("w-2", "renamed")),
+                TopologySite("site-2", label = "nl-ams-1", nodes = listOf("cp-1", "w-1")),
+                TopologySite("site-3", nodes = listOf("gone")),
+            ),
+        )
+        val nodes = listOf(node("w-1"), node("cp-1", "controlplane"), node("new-name", target = "10.0.0.3"), node("w-9"))
+
+        val groups = topology.groupNodes(nodes)
+
+        assertEquals(listOf("site-1", "site-2", null), groups.map { it.site?.id })
+        assertEquals(listOf(listOf("new-name"), listOf("cp-1", "w-1"), listOf("w-9")), groups.map { g -> g.nodes.map { it.hostname } })
+    }
+
+    @Test
+    fun oneGroupWithoutAMap() {
+        val nodes = listOf(node("w-1"), node("cp-1", "controlplane"))
+
+        val groups = (null as ClusterTopology?).groupNodes(nodes)
+
+        assertEquals(1, groups.size)
+        assertEquals(null, groups[0].site)
+        assertEquals(listOf("cp-1", "w-1"), groups[0].nodes.map { it.hostname })
+        assertEquals(groups, ClusterTopology().groupNodes(nodes))
+    }
 }
