@@ -22,8 +22,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   each node's network cards are recorded on the phone while it is up, so a node that goes down
   before it was set up can still be woken.
 - **Kubernetes:** list Deployments, StatefulSets and DaemonSets with their rollout state and
-  restart one with a rolling update (`kubectl rollout restart`); list pods with their
-  `kubectl get pods` status and delete one so its controller starts a new one; measure the
+  restart one with a rolling update (`kubectl rollout restart`), then follow it live with its
+  old and new pods (`kubectl rollout status`); list pods with their `kubectl get pods` status
+  and delete one so its controller starts a new one; measure the
   network between two nodes (TCP throughput and latency, see [Network test](#network-test));
   open an app in the browser from its sheet, at the hosts of the Ingresses and Gateway API
   HTTPRoutes whose Services select its pods; or export a kubeconfig to open the cluster in kubenav.
