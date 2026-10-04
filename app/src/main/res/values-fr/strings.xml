@@ -1296,6 +1296,15 @@
     <string name="workloads_restart_confirm">Redémarrer</string>
     <string name="workloads_restart_done">%1$s redémarre</string>
     <string name="workloads_restart_failed">Impossible de redémarrer %1$s : %2$s</string>
+    <string name="rollout_starting">Démarrage du déploiement…</string>
+    <string name="rollout_done">Déploiement terminé</string>
+    <string name="rollout_failed">Bloqué : le délai de progression est dépassé</string>
+    <string name="rollout_manual">Les pods ne sont remplacés que lorsqu’on les supprime (OnDelete) : supprimez-les pour les redémarrer.</string>
+    <string name="rollout_counts">À jour %1$d/%2$d · prêts %3$d/%2$d · disponibles %4$d/%2$d</string>
+    <string name="rollout_pod_new">nouveau</string>
+    <string name="rollout_pod_old">ancien</string>
+    <string name="rollout_no_pods">Aucun pod pour l’instant.</string>
+    <string name="rollout_leave_hint">Le déploiement continue dans le cluster si vous fermez ceci.</string>
     <string name="cronjobs_title">CronJobs</string>
     <string name="cronjobs_search">Filtrer par nom, planning ou image</string>
     <string name="cronjobs_empty">Aucun CronJob.</string>

@@ -29,6 +29,7 @@ import name.levis.ichor.model.KubePodList
 import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.KubeRouteList
 import name.levis.ichor.model.RoutePod
+import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.LogEntry
@@ -425,6 +426,11 @@ class TalosRepository(
     /** `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin). */
     suspend fun rolloutRestart(workload: KubeWorkload) = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeRolloutRestart(cfg, ctx, server, workload.kind, workload.namespace, workload.name)
+    }
+
+    /** `kubectl rollout status KIND/NAME -n NAMESPACE` with the pods (os:admin). Never cached: polled. */
+    suspend fun rolloutStatus(workload: KubeWorkload): KubeRolloutStatus = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeRolloutStatus.serializer(), Ichorgo.kubeRolloutStatus(cfg, ctx, server, workload.kind, workload.namespace, workload.name))
     }
 
     /** CronJobs with their recent runs through the Kubernetes API (os:admin). */

@@ -1297,6 +1297,15 @@
     <string name="workloads_restart_confirm">Restart</string>
     <string name="workloads_restart_done">%1$s is restarting</string>
     <string name="workloads_restart_failed">Could not restart %1$s: %2$s</string>
+    <string name="rollout_starting">Starting the rollout…</string>
+    <string name="rollout_done">Rollout complete</string>
+    <string name="rollout_failed">Stalled: the progress deadline was exceeded</string>
+    <string name="rollout_manual">Pods are only replaced when deleted (OnDelete): delete them to restart them.</string>
+    <string name="rollout_counts">Updated %1$d/%2$d · ready %3$d/%2$d · available %4$d/%2$d</string>
+    <string name="rollout_pod_new">new</string>
+    <string name="rollout_pod_old">old</string>
+    <string name="rollout_no_pods">No pods yet.</string>
+    <string name="rollout_leave_hint">The rollout goes on in the cluster if you close this.</string>
     <string name="cronjobs_title">CronJobs</string>
     <string name="cronjobs_search">Filter by name, schedule or image</string>
     <string name="cronjobs_empty">No CronJobs.</string>

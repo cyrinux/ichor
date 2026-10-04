@@ -68,14 +68,18 @@ type kubeWorkloadList struct {
 // appsObject holds the fields of a Deployment, StatefulSet or DaemonSet the app reads.
 type appsObject struct {
 	Metadata struct {
-		Name              string    `json:"name"`
-		Namespace         string    `json:"namespace"`
-		Generation        int64     `json:"generation"`
-		CreationTimestamp time.Time `json:"creationTimestamp"`
+		Name              string            `json:"name"`
+		Namespace         string            `json:"namespace"`
+		Generation        int64             `json:"generation"`
+		CreationTimestamp time.Time         `json:"creationTimestamp"`
+		Annotations       map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
-		Replicas       *int32 `json:"replicas"`
-		Paused         bool   `json:"paused"`
+		Replicas *int32 `json:"replicas"`
+		Selector struct {
+			MatchLabels map[string]string `json:"matchLabels"`
+		} `json:"selector"`
+		Paused         bool `json:"paused"`
 		UpdateStrategy struct {
 			Type          string `json:"type"` // OnDelete: pods are only replaced when deleted
 			RollingUpdate *struct {
@@ -105,6 +109,14 @@ type appsObject struct {
 		NumberReady            int32 `json:"numberReady"`
 		UpdatedNumberScheduled int32 `json:"updatedNumberScheduled"`
 		NumberAvailable        int32 `json:"numberAvailable"`
+		// StatefulSet: the revision of the latest pod template.
+		UpdateRevision string `json:"updateRevision"`
+		// Deployment.
+		Conditions []struct {
+			Type   string `json:"type"`
+			Status string `json:"status"`
+			Reason string `json:"reason"`
+		} `json:"conditions"`
 	} `json:"status"`
 }
 

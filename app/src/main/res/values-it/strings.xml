@@ -1296,6 +1296,15 @@
     <string name="workloads_restart_confirm">Riavvia</string>
     <string name="workloads_restart_done">%1$s si sta riavviando</string>
     <string name="workloads_restart_failed">Impossibile riavviare %1$s: %2$s</string>
+    <string name="rollout_starting">Avvio del rollout…</string>
+    <string name="rollout_done">Rollout completato</string>
+    <string name="rollout_failed">Bloccato: superata la scadenza di avanzamento</string>
+    <string name="rollout_manual">I pod vengono sostituiti solo quando li elimini (OnDelete): eliminali per riavviarli.</string>
+    <string name="rollout_counts">Aggiornati %1$d/%2$d · pronti %3$d/%2$d · disponibili %4$d/%2$d</string>
+    <string name="rollout_pod_new">nuovo</string>
+    <string name="rollout_pod_old">vecchio</string>
+    <string name="rollout_no_pods">Ancora nessun pod.</string>
+    <string name="rollout_leave_hint">Il rollout prosegue nel cluster se chiudi questa finestra.</string>
     <string name="cronjobs_title">CronJob</string>
     <string name="cronjobs_search">Filtra per nome, pianificazione o immagine</string>
     <string name="cronjobs_empty">Nessun CronJob.</string>

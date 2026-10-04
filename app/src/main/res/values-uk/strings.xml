@@ -1404,6 +1404,15 @@
     <string name="workloads_restart_confirm">Перезапустити</string>
     <string name="workloads_restart_done">%1$s перезапускається</string>
     <string name="workloads_restart_failed">Не вдалося перезапустити %1$s: %2$s</string>
+    <string name="rollout_starting">Запуск розгортання…</string>
+    <string name="rollout_done">Розгортання завершено</string>
+    <string name="rollout_failed">Застрягло: перевищено термін виконання</string>
+    <string name="rollout_manual">Поди замінюються лише після видалення (OnDelete): видаліть їх, щоб перезапустити.</string>
+    <string name="rollout_counts">Оновлено %1$d/%2$d · готово %3$d/%2$d · доступно %4$d/%2$d</string>
+    <string name="rollout_pod_new">новий</string>
+    <string name="rollout_pod_old">старий</string>
+    <string name="rollout_no_pods">Подів ще немає.</string>
+    <string name="rollout_leave_hint">Розгортання триває в кластері, навіть якщо ви це закриєте.</string>
     <string name="cronjobs_title">CronJobs</string>
     <string name="cronjobs_search">Фільтр за назвою, розкладом або образом</string>
     <string name="cronjobs_empty">Немає CronJob.</string>

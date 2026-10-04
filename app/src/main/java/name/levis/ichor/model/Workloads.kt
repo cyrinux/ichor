@@ -33,6 +33,36 @@ data class KubeWorkload(
     val canRestart: Boolean get() = workloadState != WorkloadState.PAUSED
 }
 
+/** One workload's rollout with its pods, old and new (KubeRolloutStatus), polled while it rolls out. */
+@Serializable
+data class KubeRolloutStatus(
+    val workload: KubeWorkload,
+    /** Every pod runs the latest template and is ready, as `kubectl rollout status` ends. */
+    val done: Boolean = false,
+    /** The Deployment exceeded its progress deadline. */
+    val failed: Boolean = false,
+    /** Pods are only replaced when deleted (OnDelete, StatefulSet partition): a restart replaces none. */
+    val manual: Boolean = false,
+    /** The new pods first, the newest first. */
+    val pods: List<KubeRolloutPod> = emptyList(),
+)
+
+@Serializable
+data class KubeRolloutPod(
+    val name: String,
+    /** As `kubectl get pods`: Running, Pending, ContainerCreating, Terminating... */
+    val status: String = "",
+    val healthy: Boolean = false,
+    val ready: Int = 0,
+    val containers: Int = 0,
+    val restarts: Int = 0,
+    val node: String = "",
+    /** Unix millis. */
+    val created: Long = 0,
+    /** Runs the latest pod template. */
+    val updated: Boolean = false,
+)
+
 enum class WorkloadState(val wire: String) {
     READY("ready"),
     PROGRESSING("progressing"),
