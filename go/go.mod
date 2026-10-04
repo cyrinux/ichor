@@ -3,6 +3,7 @@ module github.com/cyrinux/ichor/go
 go 1.26.8
 
 require (
+	filippo.io/age v1.3.2
 	github.com/cosi-project/runtime v1.16.3
 	github.com/gopacket/gopacket v1.7.3
 	github.com/siderolabs/talos/pkg/machinery v1.14.2
@@ -15,6 +16,9 @@ require (
 
 require (
 	cel.dev/expr v0.25.3 // indirect
+	filippo.io/edwards25519 v1.2.0 // indirect
+	filippo.io/hpke v0.4.0 // indirect
+	filippo.io/nistec v0.0.4 // indirect
 	github.com/ProtonMail/go-crypto v1.5.2 // indirect
 	github.com/ProtonMail/gopenpgp/v3 v3.5.2 // indirect
 	github.com/adrg/xdg v0.5.3 // indirect
@@ -66,6 +70,7 @@ require (
 	golang.org/x/mod v0.41.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/term v0.46.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/time v0.16.0 // indirect
 	golang.org/x/tools v0.51.0 // indirect

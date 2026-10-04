@@ -173,7 +173,7 @@ private fun UnlockDialog(
 }
 
 @Composable
-private fun PassphraseField(value: String, onValue: (String) -> Unit, label: String, enabled: Boolean = true) {
+internal fun PassphraseField(value: String, onValue: (String) -> Unit, label: String, enabled: Boolean = true) {
     var visible by remember { mutableStateOf(false) }
     OutlinedTextField(
         value = value,

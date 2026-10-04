@@ -25,7 +25,7 @@ Every idea was checked against the code (Go core, Android, iOS) on 2026-10-04. S
 
 | # | Feature | Status today | Size |
 |---|---------|--------------|------|
-| S1 | etcd care | **exists**: snapshot, rolling defrag, disarm, forfeit, planned member remove. Plan: node reset + guided control-plane replacement, NOSPACE playbook | M |
+| S1 | etcd care | **exists**: snapshot (in clear), rolling defrag, disarm, forfeit, planned member remove. Plan: [encrypted snapshots](../etcd-encrypted-snapshot/README.md) first, then node reset + guided control-plane replacement, NOSPACE playbook | M |
 | S2 | Alertmanager | **partial**: Prometheus queries/presets exist, Alertmanager is excluded from discovery | M |
 | S3 | Push without polling (relay, UnifiedPush/ntfy) | **missing**: WorkManager / BGAppRefresh polling, active cluster only | L |
 | S4 | Packet capture | **exists** (`pcap*.go`, `ui/capture`). No plan beyond small gaps | — |
@@ -53,6 +53,7 @@ Every idea was checked against the code (Go core, Android, iOS) on 2026-10-04. S
 
 ## Order
 
+0. **Encrypted etcd snapshots** (S1, small, closes a data-exposure risk).
 1. **D1 node maintenance**, then D2 (they share the eviction, scale and patch helpers).
 2. **D3 try patches**, then **D4 rolling upgrade**: D4 reuses D1's drain and the "gated steps"
    run screen built for D1.

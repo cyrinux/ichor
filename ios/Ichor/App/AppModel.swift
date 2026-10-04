@@ -30,6 +30,7 @@ final class AppModel {
         static let clusterColors = "clusterColors"
         static let clusterNames = "clusterNames"
         static let kubeServers = "kubeServers"
+        static let snapshotKeys = "snapshotKeys"
         static let keepLastKnown = "keepLastKnownState"
     }
 
@@ -60,6 +61,10 @@ final class AppModel {
     /// The Kubernetes API address the user set for clusters, by context fingerprint, to use
     /// instead of the one in the kubeconfig Talos issues (checked by TalosClient.normalizeKubeServer).
     private(set) var kubeServers: [String: String]
+
+    /// The public keys (age, SSH or YubiKey, one per line) each cluster's etcd snapshots were
+    /// last encrypted for, by context fingerprint. Not secret; only on this device.
+    private(set) var snapshotKeys: [String: String]
 
     var theme: ThemeMode {
         didSet { UserDefaults.standard.set(theme.rawValue, forKey: Keys.theme) }
@@ -95,6 +100,7 @@ final class AppModel {
         clusterColors = UserDefaults.standard.dictionary(forKey: Keys.clusterColors) as? [String: Int] ?? [:]
         clusterNames = UserDefaults.standard.dictionary(forKey: Keys.clusterNames) as? [String: String] ?? [:]
         kubeServers = UserDefaults.standard.dictionary(forKey: Keys.kubeServers) as? [String: String] ?? [:]
+        snapshotKeys = UserDefaults.standard.dictionary(forKey: Keys.snapshotKeys) as? [String: String] ?? [:]
     }
 
     var client: TalosClient? {
@@ -134,6 +140,23 @@ final class AppModel {
         var servers = kubeServers
         servers[context.fingerprint] = server.isEmpty ? nil : server
         storeKubeServers(servers)
+    }
+
+    /// Remembers the public keys the active cluster's snapshots are encrypted for ("" forgets them).
+    func setSnapshotKeys(_ keys: String) {
+        guard let fingerprint = activeSummary?.fingerprint, !fingerprint.isEmpty else { return }
+        var saved = snapshotKeys
+        let trimmed = keys.trimmingCharacters(in: .whitespacesAndNewlines)
+        saved[fingerprint] = trimmed.isEmpty ? nil : trimmed
+        storeSnapshotKeys(saved)
+    }
+
+    var activeSnapshotKeys: String { activeSummary.flatMap { snapshotKeys[$0.fingerprint] } ?? "" }
+
+    private func storeSnapshotKeys(_ keys: [String: String]) {
+        guard keys != snapshotKeys else { return }
+        snapshotKeys = keys
+        UserDefaults.standard.set(keys, forKey: Keys.snapshotKeys)
     }
 
     private func storeKubeServers(_ servers: [String: String]) {
@@ -422,6 +445,7 @@ final class AppModel {
         storeColors(assignClusterColors(saved: clusterColors, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeNames(keepClusterNames(saved: clusterNames, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeKubeServers(keepClusterNames(saved: kubeServers, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        storeSnapshotKeys(keepClusterNames(saved: snapshotKeys, fingerprints: newSummary.contexts.map(\.fingerprint)))
         LastKnownStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         MetricsStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         let kept = publicIPReports.filter { report in newSummary.contexts.contains { $0.fingerprint == report.key } }

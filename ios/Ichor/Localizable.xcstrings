@@ -58597,6 +58597,531 @@
           }
         }
       }
+    },
+    "Protection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schutz"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protection"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protezione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Захист"
+          }
+        }
+      }
+    },
+    "Public keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffentliche Schlüssel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claves públicas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clés publiques"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiavi pubbliche"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Публічні ключі"
+          }
+        }
+      }
+    },
+    "Protect the snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot schützen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proteger la copia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protéger la sauvegarde"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proteggi lo snapshot"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Захистити знімок"
+          }
+        }
+      }
+    },
+    "The snapshot from %@ contains every Kubernetes Secret. Encrypt it with age: it can then be restored from any Unix machine with the age and talosctl commands." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Snapshot von %@ enthält alle Kubernetes-Secrets. Verschlüssele ihn mit age: Er lässt sich dann auf jedem Unix-Rechner mit den Befehlen age und talosctl wiederherstellen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La copia de %@ contiene todos los Secrets de Kubernetes. Cífrala con age: podrás restaurarla desde cualquier máquina Unix con los comandos age y talosctl."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sauvegarde prise sur %@ contient tous les Secrets Kubernetes. Chiffrez-la avec age : elle pourra être restaurée depuis n’importe quelle machine Unix avec les commandes age et talosctl."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo snapshot di %@ contiene tutti i Secret di Kubernetes. Cifralo con age: potrai ripristinarlo da qualsiasi macchina Unix con i comandi age e talosctl."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімок з %@ містить усі Secrets Kubernetes. Зашифруйте його за допомогою age: тоді його можна відновити на будь-якій Unix-машині командами age і talosctl."
+          }
+        }
+      }
+    },
+    "Encrypted for: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschlüsselt für: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifrada para: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiffrée pour : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifrato per: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зашифровано для: %@"
+          }
+        }
+      }
+    },
+    "Public keys, one per line" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffentliche Schlüssel, einer pro Zeile"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claves públicas, una por línea"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clés publiques, une par ligne"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiavi pubbliche, una per riga"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Публічні ключі, по одному на рядок"
+          }
+        }
+      }
+    },
+    "An age key (age1…), an SSH key (ssh-ed25519, ssh-rsa, for example ~/.ssh/id_ed25519.pub) or a YubiKey key (age1tag1…, from age-plugin-yubikey). Only the matching private keys can decrypt the snapshot; the phone cannot." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein age-Schlüssel (age1…), SSH-Schlüssel (ssh-ed25519, ssh-rsa, zum Beispiel ~/.ssh/id_ed25519.pub) oder YubiKey-Schlüssel (age1tag1…, von age-plugin-yubikey). Nur die passenden privaten Schlüssel können den Snapshot entschlüsseln, das Handy nicht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una clave age (age1…), SSH (ssh-ed25519, ssh-rsa, por ejemplo ~/.ssh/id_ed25519.pub) o YubiKey (age1tag1…, de age-plugin-yubikey). Solo las claves privadas correspondientes pueden descifrar la copia; el móvil no."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une clé age (age1…), SSH (ssh-ed25519, ssh-rsa, par exemple ~/.ssh/id_ed25519.pub) ou YubiKey (age1tag1…, via age-plugin-yubikey). Seules les clés privées correspondantes peuvent déchiffrer la sauvegarde, pas le téléphone."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una chiave age (age1…), SSH (ssh-ed25519, ssh-rsa, per esempio ~/.ssh/id_ed25519.pub) o YubiKey (age1tag1…, da age-plugin-yubikey). Solo le chiavi private corrispondenti possono decifrare lo snapshot, il telefono no."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключ age (age1…), SSH (ssh-ed25519, ssh-rsa, наприклад ~/.ssh/id_ed25519.pub) або YubiKey (age1tag1…, з age-plugin-yubikey). Розшифрувати знімок можуть лише відповідні приватні ключі, телефон — ні."
+          }
+        }
+      }
+    },
+    "The passphrase is not stored anywhere: without it, the snapshot cannot be restored." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Passphrase wird nirgends gespeichert: Ohne sie lässt sich der Snapshot nicht wiederherstellen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La frase de contraseña no se guarda en ningún sitio: sin ella, la copia no se puede restaurar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La phrase secrète n’est enregistrée nulle part : sans elle, la sauvegarde ne peut pas être restaurée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La passphrase non viene salvata da nessuna parte: senza di essa lo snapshot non si può ripristinare."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Парольна фраза ніде не зберігається: без неї знімок неможливо відновити."
+          }
+        }
+      }
+    },
+    "Encrypted with age for your public keys." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit age für deine öffentlichen Schlüssel verschlüsselt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifrada con age para tus claves públicas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiffrée avec age pour vos clés publiques."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifrato con age per le tue chiavi pubbliche."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зашифровано age для ваших публічних ключів."
+          }
+        }
+      }
+    },
+    "Encrypted with age and your passphrase." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit age und deiner Passphrase verschlüsselt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifrada con age y tu frase de contraseña."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiffrée avec age et votre phrase secrète."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifrato con age e la tua passphrase."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зашифровано age і вашою парольною фразою."
+          }
+        }
+      }
+    },
+    "Not encrypted: every Secret is readable in this file." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht verschlüsselt: Alle Secrets sind in dieser Datei lesbar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin cifrar: todos los Secrets se pueden leer en este archivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non chiffrée : tous les Secrets sont lisibles dans ce fichier."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non cifrato: tutti i Secret sono leggibili in questo file."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не зашифровано: усі Secrets у цьому файлі можна прочитати."
+          }
+        }
+      }
+    },
+    "SHA-256 of the decrypted snapshot" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SHA-256 des entschlüsselten Snapshots"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SHA-256 de la copia descifrada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SHA-256 de la sauvegarde déchiffrée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SHA-256 dello snapshot decifrato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SHA-256 розшифрованого знімка"
+          }
+        }
+      }
+    },
+    "How to restore" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiederherstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cómo restaurar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comment restaurer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Come ripristinare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як відновити"
+          }
+        }
+      }
+    },
+    "Copy the file to a machine with talosctl access, then run these commands (replace <control-plane-ip>)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiere die Datei auf einen Rechner mit talosctl-Zugang und führe diese Befehle aus (ersetze <control-plane-ip>)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia el archivo a una máquina con acceso a talosctl y ejecuta estos comandos (sustituye <control-plane-ip>)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiez le fichier sur une machine qui a accès à talosctl, puis lancez ces commandes (remplacez <control-plane-ip>)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia il file su una macchina con accesso a talosctl, poi esegui questi comandi (sostituisci <control-plane-ip>)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопіюйте файл на машину з доступом до talosctl і виконайте ці команди (замініть <control-plane-ip>)."
+          }
+        }
+      }
+    },
+    "Copy commands" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Befehle kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar comandos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier les commandes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia i comandi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати команди"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

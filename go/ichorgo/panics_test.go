@@ -100,7 +100,7 @@ func TestLineSplitterCapsEndlessLine(t *testing.T) {
 }
 
 func TestOutputPathsMustBeAbsolute(t *testing.T) {
-	if _, _, err := writeSnapshot(strings.NewReader("x"), "snapshot.db", nil); err == nil {
+	if _, _, err := writeSnapshot(strings.NewReader("x"), "snapshot.db", nil, nil); err == nil {
 		t.Error("snapshot: relative path accepted")
 	}
 

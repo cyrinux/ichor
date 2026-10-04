@@ -290,9 +290,16 @@ struct TalosClient: Sendable {
         }
     }
 
-    /// Streams `talosctl -n NODE etcd snapshot` into destPath; cancelling the consuming task
-    /// cancels the transfer (Go then removes the partial file).
-    func etcdSnapshot(node: String, destPath: String) -> AsyncStream<SnapshotEvent> {
+    /// Checks the public keys typed for an encrypted snapshot (one per line); throws with the line at fault.
+    static func checkSnapshotRecipients(_ text: String) async throws -> [SnapshotRecipient] {
+        let json = try await run { IchorgoCheckSnapshotRecipients(text, $0) }
+        return try TalosJSON.decode([SnapshotRecipient].self, from: json)
+    }
+
+    /// Streams `talosctl -n NODE etcd snapshot` into destPath, age-encrypted while it streams
+    /// unless `encryption` is .none; cancelling the consuming task cancels the transfer (Go
+    /// then removes the partial file).
+    func etcdSnapshot(node: String, destPath: String, encryption: SnapshotEncryption) -> AsyncStream<SnapshotEvent> {
         AsyncStream { continuation in
             let bridge = SnapshotBridge(
                 progress: { continuation.yield(.progress(bytes: $0)) },
@@ -301,7 +308,15 @@ struct TalosClient: Sendable {
                     continuation.finish()
                 }
             )
-            let run = IchorgoStartEtcdSnapshot(config, context, node, destPath, bridge)
+            let run: IchorgoSnapshotRun?
+            switch encryption {
+            case .none:
+                run = IchorgoStartEtcdSnapshot(config, context, node, destPath, bridge)
+            case .keys(let keys):
+                run = IchorgoStartEtcdSnapshotEncrypted(config, context, node, destPath, keys, "", bridge)
+            case .passphrase(let passphrase):
+                run = IchorgoStartEtcdSnapshotEncrypted(config, context, node, destPath, "", passphrase, bridge)
+            }
             continuation.onTermination = { _ in
                 run?.cancel()
                 _ = bridge // keep the listener alive for the whole transfer
