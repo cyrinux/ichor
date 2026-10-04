@@ -108,6 +108,12 @@ func netPerfNamespacePath(ns string) string { return "/api/v1/namespaces/" + url
 // createNetPerfNamespace creates a namespace with a random name, so a test never meets the
 // one before it still terminating. The host network needs the privileged pod security level.
 func createNetPerfNamespace(ctx context.Context, k *kubeClient, hostNetwork bool) (string, error) {
+	return createRunNamespace(ctx, k, netPerfName, hostNetwork)
+}
+
+// createRunNamespace creates a namespace for one run of app's pods, named and labelled after
+// app with a random suffix.
+func createRunNamespace(ctx context.Context, k *kubeClient, app string, hostNetwork bool) (string, error) {
 	suffix := make([]byte, 5)
 	alphabet := "abcdefghijklmnopqrstuvwxyz0123456789"
 
@@ -119,9 +125,9 @@ func createNetPerfNamespace(ctx context.Context, k *kubeClient, hostNetwork bool
 		suffix[i] = alphabet[int(b)%len(alphabet)]
 	}
 
-	ns := netPerfName + "-" + string(suffix)
+	ns := app + "-" + string(suffix)
 	labels := map[string]string{
-		"app.kubernetes.io/name":       netPerfName,
+		"app.kubernetes.io/name":       app,
 		"app.kubernetes.io/managed-by": "ichor",
 	}
 
@@ -148,6 +154,11 @@ func deleteNetPerfNamespace(ctx context.Context, k *kubeClient, ns string) {
 
 // sweepNetPerfNamespaces deletes the test namespaces of runs the app could not finish.
 func sweepNetPerfNamespaces(ctx context.Context, k *kubeClient, now time.Time) {
+	sweepRunNamespaces(ctx, k, netPerfName, now)
+}
+
+// sweepRunNamespaces deletes the namespaces of app's runs the app could not finish.
+func sweepRunNamespaces(ctx context.Context, k *kubeClient, app string, now time.Time) {
 	var list struct {
 		Items []struct {
 			Metadata struct {
@@ -158,14 +169,14 @@ func sweepNetPerfNamespaces(ctx context.Context, k *kubeClient, now time.Time) {
 		} `json:"items"`
 	}
 
-	selector := url.QueryEscape("app.kubernetes.io/name=" + netPerfName)
+	selector := url.QueryEscape("app.kubernetes.io/name=" + app)
 	if k.get(ctx, "/api/v1/namespaces?labelSelector="+selector, &list) != nil {
 		return
 	}
 
 	for _, ns := range list.Items {
 		m := ns.Metadata
-		if m.DeletionTimestamp == nil && strings.HasPrefix(m.Name, netPerfName+"-") && now.Sub(m.CreationTimestamp) > netPerfStaleAge {
+		if m.DeletionTimestamp == nil && strings.HasPrefix(m.Name, app+"-") && now.Sub(m.CreationTimestamp) > netPerfStaleAge {
 			deleteNetPerfNamespace(ctx, k, m.Name)
 		}
 	}
@@ -175,12 +186,21 @@ func sweepNetPerfNamespaces(ctx context.Context, k *kubeClient, now time.Time) {
 // pod security level (netperf needs no privilege); hostNetwork alone needs "privileged".
 // It tolerates every taint, so control plane nodes can be tested too.
 func netPerfPodSpec(name, node string, hostNetwork bool, deadline time.Duration, command ...string) map[string]any {
+	return runPodSpec(runPodImage{app: netPerfName, image: netPerfImage, container: netPerfContainer},
+		name, node, hostNetwork, deadline, command...)
+}
+
+// runPodImage is what a run's pods are: their app label, image and container name.
+type runPodImage struct{ app, image, container string }
+
+// runPodSpec is netPerfPodSpec for any run's pods.
+func runPodSpec(img runPodImage, name, node string, hostNetwork bool, deadline time.Duration, command ...string) map[string]any {
 	return map[string]any{
 		"apiVersion": "v1",
 		"kind":       "Pod",
 		"metadata": map[string]any{
 			"name":   name,
-			"labels": map[string]string{"app.kubernetes.io/name": netPerfName, "app.kubernetes.io/managed-by": "ichor"},
+			"labels": map[string]string{"app.kubernetes.io/name": img.app, "app.kubernetes.io/managed-by": "ichor"},
 		},
 		"spec": map[string]any{
 			"nodeName":                      node,
@@ -198,8 +218,8 @@ func netPerfPodSpec(name, node string, hostNetwork bool, deadline time.Duration,
 				"seccompProfile": map[string]string{"type": "RuntimeDefault"},
 			},
 			"containers": []map[string]any{{
-				"name":            netPerfContainer,
-				"image":           netPerfImage,
+				"name":            img.container,
+				"image":           img.image,
 				"imagePullPolicy": "IfNotPresent",
 				"command":         command,
 				"securityContext": map[string]any{
@@ -257,6 +277,13 @@ var netPerfPullFailures = []string{"ImagePullBackOff", "InvalidImageName", "Crea
 func waitNetPerfPod(ctx context.Context, k *kubeClient, ns, name, node string, timeout time.Duration,
 	onWait func(string), done func(netPerfPod) bool,
 ) (netPerfPod, error) {
+	return waitRunPod(ctx, k, "netperf", ns, name, node, timeout, onWait, done)
+}
+
+// waitRunPod is waitNetPerfPod for any run's pods; what names them in the errors.
+func waitRunPod(ctx context.Context, k *kubeClient, what, ns, name, node string, timeout time.Duration,
+	onWait func(string), done func(netPerfPod) bool,
+) (netPerfPod, error) {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
@@ -276,9 +303,9 @@ func waitNetPerfPod(ctx context.Context, k *kubeClient, ns, name, node string, t
 		reason, message := pod.waiting()
 		switch {
 		case slices.Contains(netPerfPullFailures, reason):
-			return pod, netPerfRefused("the netperf pod cannot start on %s: %s %s", node, reason, message)
+			return pod, netPerfRefused("the %s pod cannot start on %s: %s %s", what, node, reason, message)
 		case pod.Status.Phase == "Failed":
-			return pod, netPerfRefused("the netperf pod failed on %s: %s %s", node, pod.Status.Reason, pod.Status.Message)
+			return pod, netPerfRefused("the %s pod failed on %s: %s %s", what, node, pod.Status.Reason, pod.Status.Message)
 		case reason != last && onWait != nil:
 			last = reason
 			onWait(reason)
@@ -286,7 +313,7 @@ func waitNetPerfPod(ctx context.Context, k *kubeClient, ns, name, node string, t
 
 		select {
 		case <-ctx.Done():
-			return pod, netPerfRefused("the netperf pod did not start on %s in time (%s)", node, strings.TrimSpace(reason+" "+message))
+			return pod, netPerfRefused("the %s pod did not start on %s in time (%s)", what, node, strings.TrimSpace(reason+" "+message))
 		case <-time.After(netPerfPoll):
 		}
 	}

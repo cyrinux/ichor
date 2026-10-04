@@ -181,6 +181,8 @@ func (f *fakeNetPerfAPI) serve(w http.ResponseWriter, r *http.Request) {
 		write(201, string(body))
 	case len(parts) == 4 && parts[3] == "log":
 		switch name := parts[2]; {
+		case strings.HasPrefix(name, "probe-"): // a public IP probe (kube_publicip_test.go)
+			write(200, "203.0.113.9\n")
 		case strings.Contains(name, "-host-"):
 			write(200, netPerfNoServerOutput)
 		case strings.HasSuffix(name, netPerfThroughput):

@@ -1,6 +1,216 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Find public IPs" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffentliche IPs finden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar IP públicas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouver les IP publiques"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trova IP pubblici"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайти публічні IP"
+          }
+        }
+      }
+    },
+    "Find the public IPs?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffentliche IPs finden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Buscar las IP públicas?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouver les IP publiques ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trovare gli IP pubblici?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайти публічні IP-адреси?"
+          }
+        }
+      }
+    },
+    "Find" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouver"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trova"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайти"
+          }
+        }
+      }
+    },
+    "Finding public IPs…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffentliche IPs werden gesucht…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando IP públicas…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche des IP publiques…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricerca degli IP pubblici…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пошук публічних IP…"
+          }
+        }
+      }
+    },
+    "Public IPs" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffentliche IPs"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IP públicas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IP publiques"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IP pubblici"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Публічні IP"
+          }
+        }
+      }
+    },
+    "Talos does not know the public IP of every node. Ichor can start a short-lived pod on each node, in a temporary namespace deleted afterwards, that asks ifconfig.co (else api.ipify.org or icanhazip.com) which address it comes from. Pulling the curl image can take a minute." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos kennt nicht die öffentliche IP jedes Knotens. Ichor kann auf jedem Knoten einen kurzlebigen Pod in einem temporären, danach gelöschten Namespace starten, der ifconfig.co (sonst api.ipify.org oder icanhazip.com) fragt, von welcher Adresse er kommt. Das Laden des curl-Images kann eine Minute dauern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos no conoce la IP pública de cada nodo. Ichor puede iniciar un pod efímero en cada nodo, en un namespace temporal que se elimina después, que pregunta a ifconfig.co (si no, a api.ipify.org o icanhazip.com) desde qué dirección llega. Descargar la imagen de curl puede tardar un minuto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos ne connaît pas l’IP publique de chaque nœud. Ichor peut lancer un pod éphémère sur chaque nœud, dans un namespace temporaire supprimé ensuite, qui demande à ifconfig.co (sinon api.ipify.org ou icanhazip.com) de quelle adresse il vient. Télécharger l’image curl peut prendre une minute."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos non conosce l’IP pubblico di ogni nodo. Ichor può avviare un pod temporaneo su ogni nodo, in un namespace temporaneo eliminato alla fine, che chiede a ifconfig.co (altrimenti api.ipify.org o icanhazip.com) da quale indirizzo arriva. Scaricare l’immagine di curl può richiedere un minuto."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos знає публічну IP-адресу не кожного вузла. Ichor може запустити на кожному вузлі короткочасний под у тимчасовому просторі імен, який потім видаляється; под запитує ifconfig.co (або api.ipify.org чи icanhazip.com), з якої адреси він приходить. Завантаження образу curl може тривати хвилину."
+          }
+        }
+      }
+    },
     "Public IP: %@" : {
       "extractionState" : "manual",
       "localizations" : {

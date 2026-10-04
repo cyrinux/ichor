@@ -13,6 +13,7 @@ import name.levis.ichor.data.AiPreferences
 import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.data.NetPerfHistory
 import name.levis.ichor.data.NetPerfRepository
+import name.levis.ichor.data.PublicIpRepository
 import name.levis.ichor.data.ChangelogRepository
 import name.levis.ichor.data.ClusterColors
 import name.levis.ichor.data.DiagnosisRepository
@@ -80,6 +81,14 @@ class TalosApp : Application() {
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
     val netPerfRepository by lazy { NetPerfRepository(configRepository, kubeServers) }
     val netPerfHistory by lazy { NetPerfHistory(java.io.File(noBackupFilesDir, "netperf")) }
+    val publicIps by lazy {
+        PublicIpRepository(
+            configRepository,
+            kubeServers,
+            KeystoreValue(java.io.File(noBackupFilesDir, "public-ips.enc"), "ichor-public-ips"),
+            masked = { uiPreferences.privacyMask.value.enabled },
+        )
+    }
     val supportBundleRepository by lazy { SupportBundleRepository(configRepository, filesDir) }
     val upgradeManager by lazy { UpgradeManager(configRepository, onFinished = talosRepository::forgetFeatures) }
     val talosUpdateChecker by lazy { TalosUpdateChecker() }
@@ -328,6 +337,7 @@ class TalosApp : Application() {
                     clusterColors.sync(it.summary)
                     clusterNames.sync(it.summary)
                     wakeOnLan.sync(it.summary)
+                    publicIps.sync(it.summary)
                     vpnOnly.sync(it.summary)
                     kubeServers.sync(it.summary)
                 }

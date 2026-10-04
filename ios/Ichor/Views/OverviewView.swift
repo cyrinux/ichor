@@ -26,6 +26,9 @@ struct OverviewView: View {
     @State private var dataHints = ""
     /// Argo CD: only asked when the inventory shows it and the role may use the Kubernetes API.
     @State private var argo: LoadState<ArgoStatus>?
+    /// Finding the public IPs Talos does not know (AppModel.detectPublicIPs).
+    @State private var confirmDetectIPs = false
+    @State private var detectIPsError: String?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -76,9 +79,9 @@ struct OverviewView: View {
                             let ref = NodeRef(address: node.node, hostname: node.hostname, role: node.role)
                             Group {
                                 if node.reachable {
-                                    NavigationLink(value: Route.node(ref)) { NodeRow(node: node) }
+                                    NavigationLink(value: Route.node(ref)) { NodeRow(node: node, publicIPs: node.shownPublicIPs(probed: model.activePublicIPs)) }
                                 } else {
-                                    NodeRow(node: node)
+                                    NodeRow(node: node, publicIPs: node.shownPublicIPs(probed: model.activePublicIPs))
                                 }
                             }
                             // Swipe right: live graphs. Swipe left: logs, shell, reboot (which only opens
@@ -130,6 +133,9 @@ struct OverviewView: View {
                         HStack {
                             Text("Nodes")
                             Spacer()
+                            if model.isDetectingPublicIPs || canDetectIPs(overview) {
+                                DetectPublicIPsButton(running: model.isDetectingPublicIPs) { confirmDetectIPs = true }
+                            }
                             Text(verbatim: "\(overview.nodes.count)")
                         }
                     }
@@ -201,6 +207,17 @@ struct OverviewView: View {
         }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
+        .alert("Find the public IPs?", isPresented: $confirmDetectIPs) {
+            Button("Find") { detectPublicIPs() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(publicIPDetectionNotice)
+        }
+        .alert("Public IPs", isPresented: Binding(get: { detectIPsError != nil }, set: { if !$0 { detectIPsError = nil } })) {
+            Button("OK") {}
+        } message: {
+            Text(verbatim: detectIPsError ?? "")
+        }
         // Nothing answered: try again on a timer, not only on a pull to refresh.
         // Keyed on the cluster only: a retry that succeeds must not cancel its own load().
         .task(id: loadID) {
@@ -279,6 +296,21 @@ struct OverviewView: View {
     private var loadedAt: Date? {
         if case .loaded(_, let at, _) = state { return at }
         return nil
+    }
+
+    /// Whether the public IPs Talos does not know can be asked from the internet now.
+    private func canDetectIPs(_ overview: ClusterOverview) -> Bool {
+        model.allows(.kubeconfig) && !model.privacyMask && overview.lacksPublicIPs
+    }
+
+    private func detectPublicIPs() {
+        Task {
+            do {
+                if let error = try await model.detectPublicIPs()?.firstError, !error.isEmpty { detectIPsError = error }
+            } catch {
+                detectIPsError = error.localizedDescription
+            }
+        }
     }
 
     /// What the loaded overview belongs to: the context and the screenshot mode generation.
@@ -432,6 +464,8 @@ private struct Summary: View {
 
 private struct NodeRow: View {
     let node: NodeOverview
+    /// What Talos knows, else what a probe found (see shownPublicIPs).
+    var publicIPs: [String] = []
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -439,12 +473,12 @@ private struct NodeRow: View {
                 VStack(alignment: .leading) {
                     Text(node.hostname).font(.headline)
                     Text(node.node).font(.caption.monospaced()).foregroundStyle(.secondary)
-                    if node.reachable && !node.publicIPs.isEmpty {
-                        let addresses = node.publicIPs.joined(separator: "  ·  ")
+                    if node.reachable && !publicIPs.isEmpty {
+                        let addresses = publicIPs.joined(separator: "  ·  ")
                         Label { Text(verbatim: addresses) } icon: { Image(systemName: "globe") }
                             .font(.caption.monospaced()).foregroundStyle(.secondary)
                             .accessibilityElement(children: .ignore)
-                            .accessibilityLabel(Text("Public IP: \(node.publicIPs.joined(separator: ", "))"))
+                            .accessibilityLabel(Text("Public IP: \(publicIPs.joined(separator: ", "))"))
                     }
                 }
                 Spacer()

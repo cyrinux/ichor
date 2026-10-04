@@ -78,6 +78,12 @@ final class AppModel {
     /// What each node's Talos version can do (Go NodeFeatures), by node address; loaded once
     /// per node and Talos version, see loadFeatures.
     private(set) var nodeFeatures: [String: NodeFeatures] = [:]
+
+    /// Public IPs Talos does not know, found by a curl pod per node (PublicIPStore), by cluster
+    /// fingerprint, and the clusters being probed: here, not in a view, since a probe takes
+    /// minutes and outlives the screen that started it.
+    private(set) var publicIPReports: [String: PublicIPReport] = PublicIPStore.read() ?? [:]
+    private(set) var detectingPublicIPs: Set<String> = []
     @ObservationIgnored private var featuresGeneration = 0
 
     init() {
@@ -163,6 +169,28 @@ final class AppModel {
 
     /// Privileged actions are only shown when the imported config's role allows them.
     func allows(_ feature: Feature) -> Bool { activeSummary?.allows(feature) ?? false }
+
+    /// The active cluster's public IP probe; none in screenshot mode (kept unmasked).
+    var activePublicIPs: PublicIPReport? {
+        privacyMask ? nil : activeSummary.flatMap { publicIPReports[$0.fingerprint] }
+    }
+
+    var isDetectingPublicIPs: Bool { activeSummary.map { detectingPublicIPs.contains($0.fingerprint) } ?? false }
+
+    /// Probes the active cluster's public IPs (see TalosClient.detectPublicIPs) and keeps the
+    /// answer, unless screenshot mode came on meanwhile: Go then returned placeholders. Nil when
+    /// a probe of this cluster is already running.
+    func detectPublicIPs() async throws -> PublicIPReport? {
+        guard let client, let fingerprint = activeSummary?.fingerprint, !fingerprint.isEmpty,
+              !detectingPublicIPs.contains(fingerprint) else { return nil }
+        detectingPublicIPs.insert(fingerprint)
+        defer { detectingPublicIPs.remove(fingerprint) }
+        let report = try await client.detectPublicIPs()
+        guard !privacyMask, summary?.contexts.contains(where: { $0.fingerprint == fingerprint }) == true else { return report }
+        publicIPReports[fingerprint] = report
+        try? PublicIPStore.save(publicIPReports)
+        return report
+    }
 
     /// Whether node's Talos version has `feature`; supported while its features are unknown.
     func support(_ feature: NodeFeature, node: String) -> FeatureSupport {
@@ -318,6 +346,8 @@ final class AppModel {
     func clear() {
         SecureConfigStore.delete()
         LastKnownStore.wipe()
+        PublicIPStore.wipe()
+        publicIPReports = [:]
         SharedStore.save(nil) // the widget stops showing the old cluster
         forgetFeatures()
         yaml = nil
@@ -392,6 +422,11 @@ final class AppModel {
         storeNames(keepClusterNames(saved: clusterNames, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeKubeServers(keepClusterNames(saved: kubeServers, fingerprints: newSummary.contexts.map(\.fingerprint)))
         LastKnownStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
+        let kept = publicIPReports.filter { report in newSummary.contexts.contains { $0.fingerprint == report.key } }
+        if kept.count != publicIPReports.count {
+            publicIPReports = kept
+            try? PublicIPStore.save(kept)
+        }
         QuickActions.update(summary: newSummary, labels: labels)
     }
 }

@@ -19,6 +19,14 @@ extension TalosClient {
         return list.nodes
     }
 
+    /// Asks every ready node's public IP from the internet: one curl pod per node in a temporary
+    /// namespace (os:admin). It takes up to a few minutes (the image pull).
+    func detectPublicIPs() async throws -> PublicIPReport {
+        try await Self.json { [config, context, kubeServer] in
+            IchorgoDetectPublicIPs(config, context, kubeServer, $0)
+        }
+    }
+
     /// Starts a test. The stream finishes after `done`; `stop` ends the test early, and `done`
     /// follows once Go deleted the test namespace, so stop rather than cancel the consuming
     /// task (which also stops the test, but drops that last event).
