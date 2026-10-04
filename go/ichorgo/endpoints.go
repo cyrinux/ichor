@@ -472,7 +472,8 @@ func preferControlPlanes(matches []endpointMatch) []endpointMatch {
 		}
 	}
 
-	var out []endpointMatch
+	// Never nil: no match is encoded [], the list the apps decode, not null.
+	out := []endpointMatch{}
 
 	for _, m := range matches {
 		if !isControlPlane(m.Role) {

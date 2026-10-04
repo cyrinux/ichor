@@ -236,6 +236,20 @@ func TestPreferControlPlanes(t *testing.T) {
 	}
 }
 
+// A search that finds nothing answers [], which the apps decode as a list, never null.
+func TestPreferControlPlanesNoMatchIsEmptyList(t *testing.T) {
+	for _, matches := range [][]endpointMatch{nil, {{Endpoint: "192.168.1.10", Role: "worker"}}} {
+		out, err := toJSON(preferControlPlanes(matches))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if out != "[]" {
+			t.Errorf("%+v: got %s, want []", matches, out)
+		}
+	}
+}
+
 func TestAddContextEndpointDefaultPort(t *testing.T) {
 	out, err := AddContextEndpoint(mergeStored, "prod", "10.0.0.2:50000")
 	if err != nil {
