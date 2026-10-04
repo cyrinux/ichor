@@ -1614,6 +1614,22 @@
         <item quantity="many">%1$d екземплярів Dragonfly</item>
         <item quantity="other">%1$d екземпляра Dragonfly</item>
     </plurals>
+    <string name="mariadb_empty">Немає кластерів MariaDB.</string>
+    <string name="mariadb_role_member">учасник</string>
+    <string name="mariadb_suspended">призупинено</string>
+    <string name="mariadb_topology_standalone">автономний</string>
+    <string name="mariadb_topology_replication">реплікація</string>
+    <string name="mariadb_reason_no_primary">немає первинного</string>
+    <string name="mariadb_reason_galera_recovery">триває відновлення Galera</string>
+    <string name="mariadb_last_backup">остання резервна копія %1$s</string>
+    <string name="mariadb_last_failure">збій %1$s</string>
+    <string name="mariadb_schedule">розклад %1$s</string>
+    <plurals name="mariadb_clusters">
+        <item quantity="one">%1$d кластер MariaDB</item>
+        <item quantity="few">%1$d кластери MariaDB</item>
+        <item quantity="many">%1$d кластерів MariaDB</item>
+        <item quantity="other">%1$d кластера MariaDB</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s не готовий: імовірна причина %2$d проблеми</item>
         <item quantity="few">%1$s не готовий: імовірна причина %2$d проблем</item>

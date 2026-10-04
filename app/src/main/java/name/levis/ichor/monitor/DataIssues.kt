@@ -4,6 +4,7 @@ import name.levis.ichor.model.CnpgReason
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.DragonflyReason
 import name.levis.ichor.model.GarageState
+import name.levis.ichor.model.MariaDbReason
 import name.levis.ichor.model.ServiceHealth
 
 /** Severities of a data-service issue in a snapshot. */
@@ -12,6 +13,9 @@ const val DATA_WARNING = "warning"
 
 /** Postgres reasons worth waking someone for; a switchover or a missing replica is usually planned. */
 private val CNPG_ALERT_REASONS = setOf(CnpgReason.ARCHIVING, CnpgReason.BACKUP_FAILED, CnpgReason.BACKUP_STALE)
+
+/** MariaDB reasons worth waking someone for; a replica rolling out or a busy operator is usually planned. */
+private val MARIADB_ALERT_REASONS = setOf(MariaDbReason.GALERA_RECOVERY, MariaDbReason.BACKUP_FAILED, MariaDbReason.BACKUP_STALE)
 
 /**
  * The problems of [services] worth a notification, keyed "system|label" (e.g. "longhorn|db/data")
@@ -45,6 +49,12 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
             d.serviceHealth == ServiceHealth.CRITICAL -> out["dragonfly|${d.label}"] = DATA_CRITICAL
             // A rolling update is planned; a replica down or two masters are not.
             d.reasonList.any { it == DragonflyReason.PODS || it == DragonflyReason.MASTERS } -> out["dragonfly|${d.label}"] = DATA_WARNING
+        }
+    }
+    services.mariadb?.clusters.orEmpty().forEach { m ->
+        when {
+            m.serviceHealth == ServiceHealth.CRITICAL -> out["mariadb|${m.label}"] = DATA_CRITICAL
+            m.reasonList.any { it in MARIADB_ALERT_REASONS } -> out["mariadb|${m.label}"] = DATA_WARNING
         }
     }
     return out

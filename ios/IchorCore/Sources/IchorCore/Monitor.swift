@@ -133,6 +133,15 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
             out["dragonfly|\(d.label)"] = dataWarning
         }
     }
+    // A replica rolling out or a busy operator is usually planned; a Galera recovery or backups are not.
+    let mariadbAlerting: Set<MariaDbReason> = [.galeraRecovery, .backupFailed, .backupStale]
+    for m in services.mariadb?.clusters ?? [] {
+        if m.health == .critical {
+            out["mariadb|\(m.label)"] = dataCritical
+        } else if m.reasons.contains(where: mariadbAlerting.contains) {
+            out["mariadb|\(m.label)"] = dataWarning
+        }
+    }
     return out
 }
 
@@ -142,6 +151,7 @@ private func dataSystemTitle(_ key: String) -> String {
     case "longhorn": "Longhorn"
     case "garage": "Garage"
     case "dragonfly": "Dragonfly"
+    case "mariadb": "MariaDB"
     default: "CloudNativePG"
     }
 }

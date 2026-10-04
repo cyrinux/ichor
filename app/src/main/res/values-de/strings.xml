@@ -1500,6 +1500,20 @@
         <item quantity="one">%1$d Dragonfly-Instanz</item>
         <item quantity="other">%1$d Dragonfly-Instanzen</item>
     </plurals>
+    <string name="mariadb_empty">Keine MariaDB-Cluster.</string>
+    <string name="mariadb_role_member">Mitglied</string>
+    <string name="mariadb_suspended">angehalten</string>
+    <string name="mariadb_topology_standalone">eigenständig</string>
+    <string name="mariadb_topology_replication">Replikation</string>
+    <string name="mariadb_reason_no_primary">keine primäre Instanz</string>
+    <string name="mariadb_reason_galera_recovery">Galera-Wiederherstellung läuft</string>
+    <string name="mariadb_last_backup">letztes Backup %1$s</string>
+    <string name="mariadb_last_failure">fehlgeschlagen %1$s</string>
+    <string name="mariadb_schedule">Zeitplan %1$s</string>
+    <plurals name="mariadb_clusters">
+        <item quantity="one">%1$d MariaDB-Cluster</item>
+        <item quantity="other">%1$d MariaDB-Cluster</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s ist nicht bereit: vermutlich die Ursache von %2$d Problem</item>
         <item quantity="other">%1$s ist nicht bereit: vermutlich die Ursache von %2$d Problemen</item>

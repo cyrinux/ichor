@@ -9,12 +9,15 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let garage: GarageStatus?
     public let cnpg: CnpgStatus?
     public let dragonfly: DragonflyStatus?
+    public let mariadb: MariaDbStatus?
 
-    public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil, dragonfly: DragonflyStatus? = nil) {
+    public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil, dragonfly: DragonflyStatus? = nil,
+                mariadb: MariaDbStatus? = nil) {
         self.longhorn = longhorn
         self.garage = garage
         self.cnpg = cnpg
         self.dragonfly = dragonfly
+        self.mariadb = mariadb
     }
 }
 
@@ -509,6 +512,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     case garage = "garage"
     case cnpg = "cloudnative-pg"
     case dragonfly = "dragonfly"
+    case mariadb = "mariadb"
 
     public var id: String { rawValue }
     public var catalogID: String { rawValue }
@@ -520,6 +524,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .garage: "Garage"
         case .cnpg: "CloudNativePG"
         case .dragonfly: "Dragonfly"
+        case .mariadb: "MariaDB"
         }
     }
 
@@ -564,7 +569,7 @@ public extension DataServices {
     /// The installed systems, in display order.
     var detected: [DataServiceKind] {
         [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
-         dragonfly != nil ? .dragonfly : nil].compactMap { $0 }
+         dragonfly != nil ? .dragonfly : nil, mariadb != nil ? .mariadb : nil].compactMap { $0 }
     }
 
     func summary(_ kind: DataServiceKind) -> ServiceSummary? {
@@ -591,6 +596,8 @@ public extension DataServices {
             if !d.error.isEmpty && d.instances.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: d.error) }
             let healths = d.instances.map(\.health)
             return ServiceSummary(total: d.instances.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: d.error)
+        case .mariadb:
+            return mariadb?.summary
         }
     }
 
@@ -615,6 +622,9 @@ public extension DataServices {
         }
         for instance in dragonfly?.instances ?? [] where instance.health.needsAttention {
             count(instance.pods.filter { !$0.ready }.map(\.node))
+        }
+        for cluster in mariadb?.clusters ?? [] where cluster.health.needsAttention {
+            count(cluster.pods.filter { !$0.ready }.map(\.node))
         }
         return hits.map { LikelyCause(node: $0.key, problems: $0.value) }
             .sorted { $0.problems != $1.problems ? $0.problems > $1.problems : $0.node < $1.node }

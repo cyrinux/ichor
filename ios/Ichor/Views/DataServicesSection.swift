@@ -57,6 +57,7 @@ func dataServiceSummary(_ kind: DataServiceKind, _ services: DataServices) -> St
     case .longhorn: head = String(localized: "\(summary.total) volumes")
     case .cnpg: head = String(localized: "\(summary.total) Postgres clusters")
     case .dragonfly: head = String(localized: "\(summary.total) Dragonfly instances")
+    case .mariadb: head = String(localized: "\(summary.total) MariaDB clusters")
     case .garage:
         // One Garage cluster: its own state says more than "1 cluster".
         if let single = services.garage?.instances.first, services.garage?.instances.count == 1 {
@@ -179,6 +180,7 @@ struct KindIcon: View {
         case .garage: "cloud"
         case .cnpg: "cylinder.split.1x2"
         case .dragonfly: "memorychip"
+        case .mariadb: "tablecells"
         }
     }
 }

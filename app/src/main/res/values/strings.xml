@@ -1503,6 +1503,20 @@
         <item quantity="one">%1$d Dragonfly instance</item>
         <item quantity="other">%1$d Dragonfly instances</item>
     </plurals>
+    <string name="mariadb_empty">No MariaDB clusters.</string>
+    <string name="mariadb_role_member">member</string>
+    <string name="mariadb_suspended">suspended</string>
+    <string name="mariadb_topology_standalone">standalone</string>
+    <string name="mariadb_topology_replication">replication</string>
+    <string name="mariadb_reason_no_primary">no primary</string>
+    <string name="mariadb_reason_galera_recovery">Galera recovery in progress</string>
+    <string name="mariadb_last_backup">last backup %1$s</string>
+    <string name="mariadb_last_failure">failed %1$s</string>
+    <string name="mariadb_schedule">schedule %1$s</string>
+    <plurals name="mariadb_clusters">
+        <item quantity="one">%1$d MariaDB cluster</item>
+        <item quantity="other">%1$d MariaDB clusters</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s is not ready: the likely cause of %2$d problem</item>
         <item quantity="other">%1$s is not ready: the likely cause of %2$d problems</item>
