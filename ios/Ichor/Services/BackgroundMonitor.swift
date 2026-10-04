@@ -125,6 +125,7 @@ enum BackgroundMonitor {
             case "garage": "Garage"
             case "dragonfly": "Dragonfly"
             case "mariadb": "MariaDB"
+            case "percona": "Percona XtraDB Cluster"
             default: "CloudNativePG"
             }
             guard alert.problem else { return (String(localized: "\(label) is healthy again"), system) }

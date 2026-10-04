@@ -173,6 +173,41 @@ Alerts (phase 4 rules): `noReady`/`noPrimary` → critical; `galeraRecovery`/`ba
 `backupStale` → warning; a replica rolling out (`pods`) or the operator busy (`notReady`) doesn't
 alert.
 
+Percona XtraDB Cluster (operator `pxc.percona.com/v1`, detected by its API group; clusters from
+`perconaxtradbclusters`, backups from `perconaxtradbclusterbackups` by `spec.pxcCluster`; pods
+selected with `app.kubernetes.io/name=percona-xtradb-cluster`, cluster from
+`app.kubernetes.io/instance`, members where `app.kubernetes.io/component=pxc`):
+
+```jsonc
+  "percona": {
+    "version": "v1", "error": "",
+    "clusters": [{
+      "namespace": "db", "name": "shop",
+      "state": "ready",             // the operator's own word (ready|initializing|paused|stopping|error|unknown)
+      "message": "",                // the operator's messages, "; "-joined
+      "crVersion": "1.18.0",
+      "paused": false,              // spec.pause: health idle, no reasons
+      "health": "ok",               // critical: error/noMember; warning: the others; idle when paused
+      "reasons": [],                // error|noMember|members|proxy|initializing|backupFailed|backupStale
+      "pxcSize": 3, "pxcReady": 3,  // status.pxc (spec.pxc.size before the operator's first pass)
+      "proxy": "haproxy",           // the enabled one: haproxy|proxysql|""
+      "proxySize": 2, "proxyReady": 2,
+      "pods": [{ "name": "shop-pxc-0", "node": "worker-1", "phase": "Running", "ready": true }],
+      "lastBackupAt": 1767225600000,       // latest Succeeded backup (status.completed), 0 if none
+      "lastBackupFailedAt": 0,             // latest Failed backup (completed, else created), 0 if none
+      "backupSchedules": [{ "name": "daily", "schedule": "0 2 * * *", "keep": 7, "storageName": "s3" }]
+    }]
+  }
+```
+
+`initializing` is only listed when nothing more precise (`members`, `proxy`) explains it: the
+operator says initializing whenever a pod is not ready. `backupFailed`: the latest failure is
+newer than the latest success. `backupStale`: no success for twice the most frequent schedule
+(counted from the cluster's creation when it never had one).
+
+Alerts (phase 4 rules): `error`/`noMember` → critical; `members`/`backupFailed`/`backupStale` →
+warning; `initializing` and `proxy` alone don't alert.
+
 A section key is **absent/null** when the system isn't installed. An **empty list with no
 error** means it's installed but has nothing in it. A **non-empty `error`** means the
 system was detected but couldn't be read; the UI shows it inline in that tab only.

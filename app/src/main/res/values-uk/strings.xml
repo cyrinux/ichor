@@ -1630,6 +1630,22 @@
         <item quantity="many">%1$d кластерів MariaDB</item>
         <item quantity="other">%1$d кластера MariaDB</item>
     </plurals>
+    <string name="percona_empty">Немає кластерів Percona XtraDB.</string>
+    <string name="percona_paused">призупинено</string>
+    <string name="percona_reason_error">помилка оператора</string>
+    <string name="percona_reason_no_member">жоден учасник не готовий</string>
+    <string name="percona_reason_members">бракує учасників</string>
+    <string name="percona_reason_proxy">бракує подів проксі</string>
+    <string name="percona_reason_initializing">ініціалізація</string>
+    <string name="percona_last_backup">остання резервна копія %1$s</string>
+    <string name="percona_last_failure">остання помилка %1$s</string>
+    <string name="percona_schedules">розклади: %1$s</string>
+    <plurals name="percona_clusters">
+        <item quantity="one">%1$d кластер Percona</item>
+        <item quantity="few">%1$d кластери Percona</item>
+        <item quantity="many">%1$d кластерів Percona</item>
+        <item quantity="other">%1$d кластера Percona</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s не готовий: імовірна причина %2$d проблеми</item>
         <item quantity="few">%1$s не готовий: імовірна причина %2$d проблем</item>

@@ -5,6 +5,7 @@ import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.DragonflyReason
 import name.levis.ichor.model.GarageState
 import name.levis.ichor.model.MariaDbReason
+import name.levis.ichor.model.PerconaReason
 import name.levis.ichor.model.ServiceHealth
 
 /** Severities of a data-service issue in a snapshot. */
@@ -16,6 +17,8 @@ private val CNPG_ALERT_REASONS = setOf(CnpgReason.ARCHIVING, CnpgReason.BACKUP_F
 
 /** MariaDB reasons worth waking someone for; a replica rolling out or a busy operator is usually planned. */
 private val MARIADB_ALERT_REASONS = setOf(MariaDbReason.GALERA_RECOVERY, MariaDbReason.BACKUP_FAILED, MariaDbReason.BACKUP_STALE)
+/** Percona reasons worth waking someone for; the operator still initializing is not one. */
+private val PERCONA_ALERT_REASONS = setOf(PerconaReason.MEMBERS, PerconaReason.BACKUP_FAILED, PerconaReason.BACKUP_STALE)
 
 /**
  * The problems of [services] worth a notification, keyed "system|label" (e.g. "longhorn|db/data")
@@ -55,6 +58,12 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
         when {
             m.serviceHealth == ServiceHealth.CRITICAL -> out["mariadb|${m.label}"] = DATA_CRITICAL
             m.reasonList.any { it in MARIADB_ALERT_REASONS } -> out["mariadb|${m.label}"] = DATA_WARNING
+        }
+    }
+    services.percona?.clusters.orEmpty().forEach { c ->
+        when {
+            c.serviceHealth == ServiceHealth.CRITICAL -> out["percona|${c.label}"] = DATA_CRITICAL
+            c.reasonList.any { it in PERCONA_ALERT_REASONS } -> out["percona|${c.label}"] = DATA_WARNING
         }
     }
     return out

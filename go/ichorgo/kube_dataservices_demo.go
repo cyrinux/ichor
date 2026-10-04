@@ -129,7 +129,34 @@ func demoDataServices(now time.Time) dataServices {
 			}},
 	}}
 
-	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb}
+	pxcPods := func(name string, ready ...bool) []perconaPod {
+		out := []perconaPod{}
+		for i, r := range ready {
+			pod := perconaPod{Name: name + "-pxc-" + string(rune('0'+i)), Phase: "Pending"}
+			if r {
+				pod.Node, pod.Phase, pod.Ready = "demo-worker-"+string(rune('1'+i)), "Running", true
+			}
+
+			out = append(out, pod)
+		}
+
+		return out
+	}
+
+	daily := []perconaSchedule{{Name: "daily-backup", Schedule: "0 2 * * *", Keep: 7, StorageName: "s3-garage"}}
+
+	percona := &perconaStatus{Version: "v1", Clusters: []perconaCluster{
+		{Namespace: "demo", Name: "shop-mysql", State: "initializing", CRVersion: "1.18.0", Health: healthWarning,
+			Reasons: []string{perconaReasonMembers, perconaReasonBackupStale}, PXCSize: 3, PXCReady: 2, Pods: pxcPods("shop-mysql", true, true, false),
+			Proxy: "haproxy", ProxySize: 2, ProxyReady: 2, LastBackupAt: ms(4 * 24 * time.Hour), BackupSchedules: daily},
+		{Namespace: "demo", Name: "crm-mysql", State: "ready", CRVersion: "1.18.0", Health: healthOK, Reasons: []string{},
+			PXCSize: 3, PXCReady: 3, Pods: pxcPods("crm-mysql", true, true, true),
+			Proxy: "proxysql", ProxySize: 2, ProxyReady: 2, LastBackupAt: ms(10 * time.Hour), BackupSchedules: daily},
+		{Namespace: "demo", Name: "legacy-mysql", State: "paused", CRVersion: "1.17.0", Paused: true, Health: healthIdle, Reasons: []string{},
+			PXCSize: 1, Pods: []perconaPod{}, LastBackupAt: ms(30 * 24 * time.Hour), BackupSchedules: []perconaSchedule{}},
+	}}
+
+	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona}
 }
 
 // demoGarageBlockReport is the demo cluster's blocks failing to resync: one a live object

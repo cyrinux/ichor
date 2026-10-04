@@ -10,14 +10,16 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let cnpg: CnpgStatus?
     public let dragonfly: DragonflyStatus?
     public let mariadb: MariaDbStatus?
+    public let percona: PerconaStatus?
 
     public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil, dragonfly: DragonflyStatus? = nil,
-                mariadb: MariaDbStatus? = nil) {
+                mariadb: MariaDbStatus? = nil, percona: PerconaStatus? = nil) {
         self.longhorn = longhorn
         self.garage = garage
         self.cnpg = cnpg
         self.dragonfly = dragonfly
         self.mariadb = mariadb
+        self.percona = percona
     }
 }
 
@@ -95,6 +97,117 @@ public struct DragonflyPod: Decodable, Equatable, Identifiable, Sendable {
 /// Why a Dragonfly instance is not ok, as the Go core names it.
 public enum DragonflyReason: String, Sendable {
     case noReady, noMaster, masters, pods, notReady
+}
+
+public struct PerconaStatus: Decodable, Equatable, Sendable {
+    public let version: String
+    public let error: String
+    public let clusters: [PerconaCluster]
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        version = try c.field(.version, "")
+        error = try c.field(.error, "")
+        clusters = try c.field(.clusters, [])
+    }
+
+    private enum CodingKeys: String, CodingKey { case version, error, clusters }
+}
+
+public struct PerconaCluster: Decodable, Equatable, Identifiable, Sendable {
+    public let namespace: String
+    public let name: String
+    /// The operator's own word: ready, initializing, paused, stopping, error or unknown.
+    public let state: String
+    /// The operator's messages, "; "-joined.
+    public let message: String
+    public let crVersion: String
+    public let paused: Bool
+    public let health: ServiceHealth
+    /// Known reasons only; values from newer cores are dropped.
+    public let reasons: [PerconaReason]
+    public let pxcSize: Int
+    public let pxcReady: Int
+    /// haproxy, proxysql or "" for none.
+    public let proxy: String
+    public let proxySize: Int
+    public let proxyReady: Int
+    /// The PXC members, by name.
+    public let pods: [PerconaPod]
+    public let lastBackupAt: Int64
+    public let lastBackupFailedAt: Int64
+    public let backupSchedules: [PerconaSchedule]
+
+    public var id: String { label }
+    public var label: String { "\(namespace)/\(name)" }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+        state = try c.field(.state, "")
+        message = try c.field(.message, "")
+        crVersion = try c.field(.crVersion, "")
+        paused = try c.field(.paused, false)
+        health = ServiceHealth(wire: try c.field(.health, ""))
+        reasons = (try c.field(.reasons, [String]())).compactMap(PerconaReason.init(rawValue:))
+        pxcSize = try c.field(.pxcSize, 0)
+        pxcReady = try c.field(.pxcReady, 0)
+        proxy = try c.field(.proxy, "")
+        proxySize = try c.field(.proxySize, 0)
+        proxyReady = try c.field(.proxyReady, 0)
+        pods = try c.field(.pods, [])
+        lastBackupAt = try c.field(.lastBackupAt, 0)
+        lastBackupFailedAt = try c.field(.lastBackupFailedAt, 0)
+        backupSchedules = try c.field(.backupSchedules, [])
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case namespace, name, state, message, crVersion, paused, health, reasons, pxcSize, pxcReady, proxy, proxySize, proxyReady, pods
+        case lastBackupAt, lastBackupFailedAt, backupSchedules
+    }
+}
+
+public struct PerconaPod: Decodable, Equatable, Identifiable, Sendable {
+    public let name: String
+    /// "" while Pending: not scheduled anywhere.
+    public let node: String
+    public let phase: String
+    public let ready: Bool
+
+    public var id: String { name }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decode(String.self, forKey: .name)
+        node = try c.field(.node, "")
+        phase = try c.field(.phase, "")
+        ready = try c.field(.ready, false)
+    }
+
+    private enum CodingKeys: String, CodingKey { case name, node, phase, ready }
+}
+
+public struct PerconaSchedule: Decodable, Equatable, Sendable {
+    public let name: String
+    public let schedule: String
+    public let keep: Int
+    public let storageName: String
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.field(.name, "")
+        schedule = try c.field(.schedule, "")
+        keep = try c.field(.keep, 0)
+        storageName = try c.field(.storageName, "")
+    }
+
+    private enum CodingKeys: String, CodingKey { case name, schedule, keep, storageName }
+}
+
+/// Why a Percona XtraDB cluster is not ok, as the Go core names it.
+public enum PerconaReason: String, Sendable {
+    case error, noMember, members, proxy, initializing, backupFailed, backupStale
 }
 
 public struct LonghornStatus: Decodable, Equatable, Sendable {
@@ -513,6 +626,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     case cnpg = "cloudnative-pg"
     case dragonfly = "dragonfly"
     case mariadb = "mariadb"
+    case percona = "percona-xtradb"
 
     public var id: String { rawValue }
     public var catalogID: String { rawValue }
@@ -525,11 +639,18 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .cnpg: "CloudNativePG"
         case .dragonfly: "Dragonfly"
         case .mariadb: "MariaDB"
+        case .percona: "Percona XtraDB Cluster"
         }
     }
 
     /// The segmented picker's name: short enough for four segments.
-    public var tabTitle: String { self == .cnpg ? "CNPG" : title }
+    public var tabTitle: String {
+        switch self {
+        case .cnpg: "CNPG"
+        case .percona: "Percona"
+        default: title
+        }
+    }
 }
 
 /// The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs.
@@ -569,7 +690,7 @@ public extension DataServices {
     /// The installed systems, in display order.
     var detected: [DataServiceKind] {
         [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
-         dragonfly != nil ? .dragonfly : nil, mariadb != nil ? .mariadb : nil].compactMap { $0 }
+         dragonfly != nil ? .dragonfly : nil, mariadb != nil ? .mariadb : nil, percona != nil ? .percona : nil].compactMap { $0 }
     }
 
     func summary(_ kind: DataServiceKind) -> ServiceSummary? {
@@ -598,6 +719,11 @@ public extension DataServices {
             return ServiceSummary(total: d.instances.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: d.error)
         case .mariadb:
             return mariadb?.summary
+        case .percona:
+            guard let p = percona else { return nil }
+            if !p.error.isEmpty && p.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: p.error) }
+            let healths = p.clusters.map(\.health)
+            return ServiceSummary(total: p.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: p.error)
         }
     }
 
@@ -624,6 +750,9 @@ public extension DataServices {
             count(instance.pods.filter { !$0.ready }.map(\.node))
         }
         for cluster in mariadb?.clusters ?? [] where cluster.health.needsAttention {
+            count(cluster.pods.filter { !$0.ready }.map(\.node))
+        }
+        for cluster in percona?.clusters ?? [] where cluster.health.needsAttention {
             count(cluster.pods.filter { !$0.ready }.map(\.node))
         }
         return hits.map { LikelyCause(node: $0.key, problems: $0.value) }
