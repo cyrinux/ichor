@@ -247,11 +247,12 @@ func addMariaDBBackup(acc mariadbBackups, b mariadbBackupObject, run mariadbCron
 			continue
 		}
 
+		// The reason first: a failed Job leaves Complete True with reason JobFailed.
 		switch t := unixMilli(c.LastTransitionTime); {
-		case c.Status == "True":
-			acc.lastSuccess = max(acc.lastSuccess, t)
 		case strings.Contains(strings.ToLower(c.Reason), "fail"): // JobFailed, CronJobFailed
 			acc.lastFailure = max(acc.lastFailure, t)
+		case c.Status == "True":
+			acc.lastSuccess = max(acc.lastSuccess, t)
 		}
 	}
 

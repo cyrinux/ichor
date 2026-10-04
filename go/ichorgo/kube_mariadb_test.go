@@ -39,7 +39,7 @@ const mariadbBackupFixture = `{"items":[
 // A physical backup of nightly whose last run failed after an earlier success.
 const mariadbPhysicalFixture = `{"items":[
   {"metadata":{"name":"nightly-snap","namespace":"app"},"spec":{"mariaDbRef":{"name":"nightly"},"schedule":{"cron":"0 1 * * *"}},
-   "status":{"conditions":[{"type":"Complete","status":"False","reason":"JobFailed","message":"Failed","lastTransitionTime":"2026-10-03T01:10:00Z"}]}},
+   "status":{"conditions":[{"type":"Complete","status":"True","reason":"JobFailed","message":"Failed","lastTransitionTime":"2026-10-03T01:10:00Z"}]}},
   {"metadata":{"name":"nightly-once","namespace":"app"},"spec":{"mariaDbRef":{"name":"nightly"}},
    "status":{"conditions":[{"type":"Complete","status":"True","reason":"JobComplete","lastTransitionTime":"2026-10-02T01:10:00Z"}]}}]}`
 
