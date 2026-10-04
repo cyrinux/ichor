@@ -65,6 +65,13 @@ func (l maskedNetPerfListener) OnDone(reportJSON string, errMessage string) {
 	l.NetPerfListener.OnDone(privacy.mask(reportJSON), privacy.maskPlain(errMessage))
 }
 
+type maskedHubbleListener struct{ HubbleListener }
+
+func (l maskedHubbleListener) OnUpdate(json string) { l.HubbleListener.OnUpdate(privacy.mask(json)) }
+func (l maskedHubbleListener) OnDone(errMessage string) {
+	l.HubbleListener.OnDone(privacy.maskPlain(errMessage))
+}
+
 type maskedEventListener struct{ EventListener }
 
 func (l maskedEventListener) OnEvent(json string) { l.EventListener.OnEvent(privacy.mask(json)) }

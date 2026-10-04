@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Stream
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -105,6 +106,7 @@ fun PodsTab(
     onNamespace: (String?) -> Unit,
     onQuery: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onFlows: ((KubePod) -> Unit)? = null,
     vm: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -147,7 +149,13 @@ fun PodsTab(
                 } else {
                     LazyColumn(Modifier.fillMaxSize()) {
                         items(rows, key = { it.key }) { pod ->
-                            PodRow(pod, showNamespace = selected == null, deleting = pod.key in deleting, onDelete = { confirm = pod })
+                            PodRow(
+                                pod,
+                                showNamespace = selected == null,
+                                deleting = pod.key in deleting,
+                                onDelete = { confirm = pod },
+                                onFlows = onFlows?.let { open -> { open(pod) } },
+                            )
                             HorizontalDivider()
                         }
                     }
@@ -159,7 +167,7 @@ fun PodsTab(
 }
 
 @Composable
-private fun PodRow(pod: KubePod, showNamespace: Boolean, deleting: Boolean, onDelete: () -> Unit) {
+private fun PodRow(pod: KubePod, showNamespace: Boolean, deleting: Boolean, onDelete: () -> Unit, onFlows: (() -> Unit)?) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
@@ -181,6 +189,11 @@ private fun PodRow(pod: KubePod, showNamespace: Boolean, deleting: Boolean, onDe
                         color = if (pod.healthy) muted else LocalStatusColors.current.warn,
                     )
                 }
+            }
+        }
+        if (onFlows != null) {
+            IconButton(onClick = onFlows) {
+                Icon(Icons.Outlined.Stream, stringResource(R.string.pods_live_flows, pod.name))
             }
         }
         if (deleting) {
