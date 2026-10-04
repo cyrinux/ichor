@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The open-source builds (debug, release) next to the Play one on a home screen: their own
+     launcher name and a green icon background. The splash keeps ic_launcher_background. -->
+<resources>
+    <string name="app_name" translatable="false">Ichor FOSS</string>
+    <color name="ic_launcher_background_foss">#FF123A2C</color>
+</resources>
