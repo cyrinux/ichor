@@ -367,6 +367,10 @@
     <string name="clusters_rename_label">Назва</string>
     <string name="clusters_rename_hint">Показується лише на цьому пристрої, talosconfig зберігає %1$s. Залиште порожнім, щоб повернути її.</string>
     <string name="clusters_vpn_only">Лише VPN</string>
+    <string name="clusters_options">Параметри %1$s</string>
+    <string name="clusters_menu_rename">Перейменувати</string>
+    <string name="clusters_menu_color">Колір</string>
+    <string name="clusters_menu_remove">Вилучити</string>
     <string name="clusters_vpn_only_hint">Лише VPN: без підключеного VPN застосунок не звертається до кластера, а фонові перевірки чекають на нього.</string>
     <string name="shortcut_cluster_removed">Цей кластер видалено</string>
 
