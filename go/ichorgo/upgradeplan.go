@@ -98,13 +98,7 @@ func gatherPlan(ctx context.Context, s *session, node string) upgradePlan {
 	nodes := targetNodes(s.context)
 	peers := make([]planPeer, len(nodes))
 
-	var wg sync.WaitGroup
-
-	for i, n := range nodes {
-		wg.Go(func() { peers[i] = peerFromProbe(n, probeNode(ctx, s.client, n)) })
-	}
-
-	wg.Wait()
+	forEachNode(nodes, func(i int, n string) { peers[i] = peerFromProbe(n, probeNode(ctx, s.client, n)) })
 
 	in := planInput{}
 

@@ -7,6 +7,7 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import name.levis.ichor.model.LocalAddress
 import java.net.Inet4Address
+import java.net.Inet6Address
 
 /**
  * Android 17's local network permission: from it on, an app targeting it reaches hosts on
@@ -23,7 +24,10 @@ fun hasLocalNetworkAccess(context: Context): Boolean =
     !localNetworkPermissionNeeded() ||
         context.checkSelfPermission(LOCAL_NETWORK_PERMISSION) == PackageManager.PERMISSION_GRANTED
 
-/** The phone's IPv4 addresses on its Wi-Fi and Ethernet networks (not mobile data, not a VPN). */
+/**
+ * The phone's IPv4 and IPv6 addresses on its Wi-Fi and Ethernet networks (not mobile data,
+ * not a VPN). Link-local IPv6 addresses are left out: reaching a host on them needs a zone.
+ */
 fun localAddresses(context: Context): List<LocalAddress> {
     val connectivity = context.getSystemService(ConnectivityManager::class.java) ?: return emptyList()
     @Suppress("DEPRECATION") // allNetworks: the replacement needs a callback, for a one-off lookup
@@ -33,7 +37,7 @@ fun localAddresses(context: Context): List<LocalAddress> {
             (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
     }.flatMap { network ->
         connectivity.getLinkProperties(network)?.linkAddresses.orEmpty()
-            .filter { it.address is Inet4Address }
-            .mapNotNull { link -> link.address.hostAddress?.let { LocalAddress(it, link.prefixLength) } }
+            .filter { it.address is Inet4Address || (it.address is Inet6Address && !it.address.isLinkLocalAddress) }
+            .mapNotNull { link -> link.address.hostAddress?.let { LocalAddress(it.substringBefore('%'), link.prefixLength) } }
     }
 }

@@ -3,11 +3,18 @@ import IchorCore
 
 /// The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
 /// issues (os:admin): workloads with rollout restart, pods, and a network test between two
-/// nodes. The namespace filter and the search carry over between the lists. The toolbar sets
-/// the API address to use instead of the kubeconfig's, for a cluster the phone reaches another
-/// way (not in screenshot mode: the alert would show the real address).
+/// nodes. The namespace filter and the search carry over between the lists. The toolbar opens
+/// the network policies and, with Cilium, the live flows; it also sets the API address to use
+/// instead of the kubeconfig's, for a cluster the phone reaches another way (not in screenshot
+/// mode: the alert would show the real address).
 struct KubernetesView: View {
     enum Tab: Hashable { case workloads, pods, network }
+
+    /// A network screen pushed from the toolbar or a pod.
+    enum NetScreen: Hashable {
+        case policies
+        case flows(HubbleFilter)
+    }
 
     @Environment(AppModel.self) private var model
     @State private var tab = Tab.workloads
@@ -18,6 +25,9 @@ struct KubernetesView: View {
     @State private var serverError: String?
     /// Kept across tabs: only leaving the screen stops a running network test.
     @State private var netPerf = NetPerfSession()
+    /// Read once on open: Live flows needs Cilium.
+    @State private var cilium: CiliumStatus?
+    @State private var netScreen: NetScreen?
 
     /// The cluster whose API address can be set: not the demo, not in screenshot mode.
     private var editable: ContextSummary? {
@@ -28,13 +38,25 @@ struct KubernetesView: View {
         Group {
             switch tab {
             case .workloads: WorkloadsList(namespace: $namespace, query: query)
-            case .pods: PodsList(namespace: $namespace, query: query)
+            case .pods: PodsList(namespace: $namespace, query: query, onFlows: podFlows)
             case .network: NetPerfView(session: netPerf)
             }
         }
         // A new address: the lists load again through it.
         .id(model.client?.kubeServer)
         .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button { netScreen = .policies } label: { Label("Network policies", systemImage: "shield.lefthalf.filled") }
+                    if let cilium, cilium.installed {
+                        Button { netScreen = .flows(HubbleFilter()) } label: {
+                            Label("Live flows", systemImage: "point.3.filled.connected.trianglepath.dotted")
+                        }
+                    }
+                } label: {
+                    Label("Network policies and flows", systemImage: "shield.lefthalf.filled")
+                }
+            }
             if editable != nil {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -57,6 +79,16 @@ struct KubernetesView: View {
             Text("Used instead of the address in the kubeconfig Talos issues, e.g. a port forward, a load balancer or a public name: host, host:port or an https URL. Without a port, the kubeconfig’s is used. The certificate is still checked against the cluster’s own address. Leave empty to use the kubeconfig’s again. Only on this device.")
         }
         .messageAlert($serverError)
+        .navigationDestination(item: $netScreen) { screen in
+            switch screen {
+            case .policies: NetPoliciesView()
+            case .flows(let filter): LiveFlowsView(cilium: cilium ?? CiliumStatus(), filter: filter)
+            }
+        }
+        .task(id: model.client?.kubeServer) {
+            guard let client = model.client else { return }
+            cilium = try? await client.cilium()
+        }
         .safeAreaInset(edge: .top) {
             Picker(selection: $tab) {
                 Text("Workloads").tag(Tab.workloads)
@@ -75,6 +107,12 @@ struct KubernetesView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: model.privacyMask) { _, masked in if masked { editingServer = false } }
         .onDisappear { if netPerf.isRunning { netPerf.leave() } }
+    }
+
+    /// Opens a pod's live flows from the Pods list: with Cilium only.
+    private var podFlows: ((KubePod) -> Void)? {
+        guard cilium?.installed == true else { return nil }
+        return { pod in netScreen = .flows(HubbleFilter(namespace: pod.namespace, pod: pod.name)) }
     }
 
     private func saveServer() async {

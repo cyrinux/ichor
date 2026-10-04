@@ -6,6 +6,8 @@ import IchorCore
 struct PodsList: View {
     @Binding var namespace: String?
     let query: String
+    /// Opens the pod's live flows; nil without Cilium.
+    var onFlows: ((KubePod) -> Void)?
 
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<[KubePod]> = .loading
@@ -23,6 +25,13 @@ struct PodsList: View {
                 Section {
                     ForEach(shown) { pod in
                         PodRow(pod: pod, showNamespace: selected == nil, deleting: deleting.contains(pod.id)) { confirm = pod }
+                            .contextMenu {
+                                if let onFlows {
+                                    Button { onFlows(pod) } label: {
+                                        Label("Live flows of this pod", systemImage: "point.3.filled.connected.trianglepath.dotted")
+                                    }
+                                }
+                            }
                     }
                 }
             }

@@ -407,7 +407,7 @@ func recentProblemEvents(ctx context.Context, c *client.Client, nodes []string) 
 	done := make(chan error, 1)
 
 	go func() {
-		done <- watchEvents(client.WithNodes(ctx, nodes...), c, diagnosisEventTail, ch)
+		done <- safeCall(func() error { return watchEvents(client.WithNodes(ctx, nodes...), c, diagnosisEventTail, ch) })
 	}()
 
 	var (

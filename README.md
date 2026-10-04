@@ -38,6 +38,16 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   Ingress/HTTPRoute → Service → pods → node, every box coloured by health, traffic flowing along
   the healthy paths, and the likely root cause named (a node not ready, a crash-looping pod, a
   Service without ready pods).
+- **Network policies:** every NetworkPolicy and, with Cilium, CiliumNetworkPolicy and
+  CiliumClusterwideNetworkPolicy, in plain words: the pods each one selects, whether they are
+  isolated in each direction, and what each rule lets in or out (pods, namespaces, CIDRs, entities,
+  FQDNs, ports, HTTP/DNS rules), with each namespace's share of isolated pods.
+- **Live flows (Cilium + Hubble):** follow the cluster's traffic like Hubble UI, or only what is
+  dropped, for a namespace or a pod. Ichor runs `hubble observe --follow` in each cilium-agent pod
+  (the CLI ships in the agent image, so nothing is installed and Hubble Relay is not needed), groups
+  repeated drops, explains the drop reason and names the policy behind it: the deny rule that
+  matched, or, for the usual default-deny, the policies that isolate the pod. History is what the
+  agents still hold in their flow buffer.
 - **Background:** alerts and a home-screen widget.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).

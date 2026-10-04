@@ -1,0 +1,15 @@
+{"items":[
+ {"metadata":{"name":"api-l7","namespace":"shop","creationTimestamp":"2026-09-04T10:00:00Z"},
+  "spec":{"description":"Only the frontend may call the API","endpointSelector":{"matchLabels":{"k8s:app":"api"}},
+   "ingress":[{"fromEndpoints":[{"matchLabels":{"app":"frontend"}}],
+               "toPorts":[{"ports":[{"port":"8080","protocol":"TCP"}],"rules":{"http":[{"method":"GET","path":"/cart.*"}]}}]}]}},
+ {"metadata":{"name":"deny-external-dns","namespace":"jobs","creationTimestamp":"2026-09-05T10:00:00Z"},
+  "specs":[{"endpointSelector":{"matchLabels":{"app":"batch"}},
+   "egressDeny":[{"toEntities":["world"],"toPorts":[{"ports":[{"port":"53","protocol":"UDP"}]}]}],
+   "egress":[{"toEndpoints":[{"matchLabels":{"k8s:io.kubernetes.pod.namespace":"kube-system","k8s-app":"kube-dns"}}],
+              "toPorts":[{"ports":[{"port":"53","protocol":"ANY"}],"rules":{"dns":[{"matchPattern":"*"}]}}]},
+             {"toFQDNs":[{"matchPattern":"*.example.org"}],"toCIDRSet":[{"cidr":"192.0.2.0/24","except":["192.0.2.1/32"]}],
+              "toServices":[{"k8sService":{"serviceName":"store","namespace":"shop"}}],"icmps":[{"fields":[{"type":8,"family":"IPv4"}]}]}]}]},
+ {"metadata":{"name":"audit-only","namespace":"shop","creationTimestamp":"2026-09-06T10:00:00Z"},
+  "spec":{"endpointSelector":{},"enableDefaultDeny":{"ingress":false},"ingress":[{"fromEntities":["cluster"]}]}}
+]}

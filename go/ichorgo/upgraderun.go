@@ -81,6 +81,7 @@ func StartUpgrade(configYAML, contextName, node, image string, stage, force bool
 
 	go func() {
 		defer cancel()
+		defer onPanic(func(msg string) { listener.OnDone("", msg) })
 
 		version, err := runUpgrade(ctx, configYAML, contextName, node, strings.TrimSpace(image), stage, force, listener)
 
