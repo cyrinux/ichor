@@ -108,7 +108,7 @@ func runEvents(ctx context.Context, configYAML, contextName, nodes string, tail 
 	go func() {
 		// Multi-node proxying (WithNodes, answers tagged through common.Metadata) is deprecated
 		// since Talos 1.14 and planned for removal in 2.0: by then, open one stream per node.
-		err := watchEvents(client.WithNodes(ctx, targets...), s.client, tail, ch)
+		err := safeCall(func() error { return watchEvents(client.WithNodes(ctx, targets...), s.client, tail, ch) })
 		if err != nil && ctx.Err() == nil {
 			select {
 			case ch <- eventItem{err: err}:

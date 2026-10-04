@@ -17,6 +17,14 @@ func recoverPanic(err *error) {
 	}
 }
 
+// safeCall runs fn, returning a panic as an error: for the package's inner goroutines,
+// whose caller waits for that error.
+func safeCall(fn func() error) (err error) {
+	defer recoverPanic(&err)
+
+	return fn()
+}
+
 // onPanic reports a panic in a background run through done, so that its listener still gets
 // OnDone (use with defer at the top of the run's goroutine).
 func onPanic(done func(errMessage string)) {

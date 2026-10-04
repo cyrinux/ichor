@@ -431,7 +431,13 @@ func matchEndpoints(ctx context.Context, contexts map[string]*clientconfig.Conte
 					return
 				}
 
-				p, err := probe(ctx, cfgCtx, endpoint)
+				var p endpointProbe
+
+				err := safeCall(func() (err error) {
+					p, err = probe(ctx, cfgCtx, endpoint)
+
+					return err
+				})
 				if err != nil {
 					return
 				}

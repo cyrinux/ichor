@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 )
 
 const (
@@ -20,10 +21,13 @@ const (
 // checkPcapng walks the blocks of a pcapng file before gopacket reads it: gopacket allocates
 // each packet from the length the block declares, so a crafted file of a few bytes could
 // make it allocate GiBs (an out-of-memory abort, not a recoverable panic). Every packet
-// must fit in its block. A truncated last block ends the walk quietly, as it ends reading.
-func checkPcapng(r io.Reader) error {
+// must fit in its block and in the file (size bytes): a last block still being written may
+// be cut short, but not before the end of its packet.
+func checkPcapng(r io.Reader, size int64) error {
 	br := bufio.NewReaderSize(r, 64<<10)
 	hdr := make([]byte, 24)
+
+	var pos int64 // offset of the current block
 
 	var (
 		order     binary.ByteOrder = binary.LittleEndian
@@ -75,18 +79,21 @@ func checkPcapng(r io.Reader) error {
 			read = need
 		}
 
-		if err := checkNgBlock(typ, length, hdr, order, &snaplen, &haveIface); err != nil {
+		if err := checkNgBlock(typ, length, size-pos, hdr, order, &snaplen, &haveIface); err != nil {
 			return err
 		}
 
 		if _, err := br.Discard(int(length) - read); err != nil {
 			return truncatedOK(err)
 		}
+
+		pos += int64(length)
 	}
 }
 
-// checkNgBlock checks that the packet a block declares fits in it (header, fields, trailer).
-func checkNgBlock(typ, length uint32, hdr []byte, order binary.ByteOrder, snaplen *uint32, haveIface *bool) error {
+// checkNgBlock checks that the packet a block declares fits in it (header, fields, trailer)
+// and in the room left in the file from the block on.
+func checkNgBlock(typ, length uint32, room int64, hdr []byte, order binary.ByteOrder, snaplen *uint32, haveIface *bool) error {
 	switch typ {
 	case ngInterface:
 		// gopacket caps simple packets with the first interface's snaplen.
@@ -94,7 +101,8 @@ func checkNgBlock(typ, length uint32, hdr []byte, order binary.ByteOrder, snaple
 			*snaplen, *haveIface = order.Uint32(hdr[12:16]), true
 		}
 	case ngPacket, ngEnhancedPacket:
-		if uint64(order.Uint32(hdr[20:24]))+32 > uint64(length) {
+		caplen := order.Uint32(hdr[20:24])
+		if uint64(caplen)+32 > uint64(length) || int64(caplen)+28 > room {
 			return errors.New("pcapng packet larger than its block")
 		}
 	case ngSimplePacket:
@@ -103,12 +111,22 @@ func checkNgBlock(typ, length uint32, hdr []byte, order binary.ByteOrder, snaple
 			captured = *snaplen
 		}
 
-		if uint64(captured)+16 > uint64(length) {
+		if uint64(captured)+16 > uint64(length) || int64(captured)+12 > room {
 			return errors.New("pcapng packet larger than its block")
 		}
 	}
 
 	return nil
+}
+
+// checkPcapngFile is checkPcapng on f, read with ReadAt: f's offset is left alone.
+func checkPcapngFile(f *os.File) error {
+	info, err := f.Stat()
+	if err != nil {
+		return err
+	}
+
+	return checkPcapng(io.NewSectionReader(f, 0, info.Size()), info.Size())
 }
 
 func truncatedOK(err error) error {

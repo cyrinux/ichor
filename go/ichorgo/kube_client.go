@@ -88,7 +88,7 @@ func openKubeClient(ctx context.Context, kubeconfig string, talosEndpoints []str
 
 	for i, base := range candidates {
 		clients[i], results[i] = newKubeClient(base, creds), make(chan error, 1)
-		go func() { results[i] <- clients[i].probe(ctx) }()
+		go func() { results[i] <- safeCall(func() error { return clients[i].probe(ctx) }) }()
 	}
 
 	// Once decided, the other probes finish in the background and their clients are closed.
@@ -428,6 +428,7 @@ func (c *kubeClientCache) get(target kubeTarget) (k *kubeClient, fresh bool, err
 	defer func() {
 		if op.client == nil && op.err == nil {
 			op.err = errors.New("kubernetes client not opened")
+			err = op.err
 		}
 
 		c.mu.Lock()

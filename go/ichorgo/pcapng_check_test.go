@@ -53,17 +53,19 @@ func writeFile(t *testing.T, content []byte) string {
 func TestReadPcapngValid(t *testing.T) {
 	file := writeNg(t, 3)
 
-	if err := checkPcapng(bytes.NewReader(file)); err != nil {
+	if err := checkPcapng(bytes.NewReader(file), int64(len(file))); err != nil {
 		t.Fatalf("valid file refused: %v", err)
 	}
 
 	out, err := ReadPcap(writeFile(t, file), 0, 10)
-	if err != nil || !strings.Contains(out, `"10.0.0.2"`) && !strings.Contains(out, "10.0.0.2") {
+	if err != nil || !strings.Contains(out, "10.0.0.2") {
 		t.Fatalf("out=%s err=%v", out, err)
 	}
 
-	// A capture still being written ends on a partial block: read what is there.
-	if err := checkPcapng(bytes.NewReader(file[:len(file)-10])); err != nil {
+	// A capture still being written ends on a partial block (here part of its trailer):
+	// read what is there.
+	cut := file[:len(file)-2]
+	if err := checkPcapng(bytes.NewReader(cut), int64(len(cut))); err != nil {
 		t.Errorf("truncated file refused: %v", err)
 	}
 }
@@ -103,8 +105,15 @@ func crafted() []byte {
 }
 
 func TestReadPcapngRefusesOversizedPacket(t *testing.T) {
-	if err := checkPcapng(bytes.NewReader(crafted())); err == nil || !strings.Contains(err.Error(), "larger than its block") {
+	c := crafted()
+	if err := checkPcapng(bytes.NewReader(c), int64(len(c))); err == nil || !strings.Contains(err.Error(), "larger than its block") {
 		t.Fatalf("check: %v", err)
+	}
+
+	// The same packet in a block that claims to hold it but where the file ends.
+	binary.LittleEndian.PutUint32(c[52:56], 0xfffffff0)
+	if err := checkPcapng(bytes.NewReader(c), int64(len(c))); err == nil {
+		t.Fatal("a packet past the end of the file was accepted")
 	}
 
 	if _, err := ReadPcap(writeFile(t, crafted()), 0, 10); err == nil {

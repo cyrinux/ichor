@@ -71,7 +71,7 @@ func openPcap(path string) (packetReader, io.Closer, error) {
 
 	if bytes.Equal(magic, []byte{0x0a, 0x0d, 0x0d, 0x0a}) {
 		// ReadAt leaves the offset br reads from alone.
-		if err = checkPcapng(io.NewSectionReader(f, 0, 1<<62)); err == nil {
+		if err = checkPcapngFile(f); err == nil {
 			r, err = pcapgo.NewNgReader(br, pcapgo.DefaultNgReaderOptions)
 		}
 	} else {
