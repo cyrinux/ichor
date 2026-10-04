@@ -26,6 +26,19 @@ class WorkloadsTest {
     }
 
     @Test
+    fun decodesTheRolloutStatus() {
+        val json = """{"workload":{"kind":"Deployment","namespace":"shop","name":"web","desired":2,"updated":1,"state":"progressing"},""" +
+            """"done":false,"failed":true,"pods":[{"name":"web-new-a","status":"ContainerCreating","ready":0,"containers":1,"updated":true},""" +
+            """{"name":"web-old-a","status":"Running","healthy":true,"ready":1,"containers":1,"restarts":2,"node":"w1","created":5}]}"""
+        val st = TalosJson.decodeFromString(KubeRolloutStatus.serializer(), json)
+        assertEquals(WorkloadState.PROGRESSING, st.workload.workloadState)
+        assertFalse(st.done)
+        assertTrue(st.failed)
+        assertEquals(listOf(true, false), st.pods.map { it.updated })
+        assertEquals(2, st.pods[1].restarts)
+    }
+
+    @Test
     fun attentionFirstThenByNamespaceAndName() {
         assertEquals(listOf("db", "proxy", "frozen", "web"), workloads.filtered(null, "").map { it.name })
     }

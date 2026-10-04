@@ -1292,6 +1292,15 @@
     <string name="workloads_restart_confirm">Redémarrer</string>
     <string name="workloads_restart_done">%1$s redémarre</string>
     <string name="workloads_restart_failed">Impossible de redémarrer %1$s : %2$s</string>
+    <string name="rollout_starting">Démarrage du déploiement…</string>
+    <string name="rollout_done">Déploiement terminé</string>
+    <string name="rollout_failed">Bloqué : le délai de progression est dépassé</string>
+    <string name="rollout_manual">Les pods ne sont remplacés que lorsqu’on les supprime (OnDelete) : supprimez-les pour les redémarrer.</string>
+    <string name="rollout_counts">À jour %1$d/%2$d · prêts %3$d/%2$d · disponibles %4$d/%2$d</string>
+    <string name="rollout_pod_new">nouveau</string>
+    <string name="rollout_pod_old">ancien</string>
+    <string name="rollout_no_pods">Aucun pod pour l’instant.</string>
+    <string name="rollout_leave_hint">Le déploiement continue dans le cluster si vous fermez ceci.</string>
     <string name="kube_server_title">Adresse de l’API Kubernetes</string>
     <string name="kube_server_label">Adresse</string>
     <string name="kube_server_hint">Utilisée à la place de l’adresse du kubeconfig fourni par Talos, par exemple une redirection de port, un répartiteur de charge ou un nom public : hôte, hôte:port ou URL https. Sans port, celui du kubeconfig est utilisé. Le certificat reste vérifié avec l’adresse propre du cluster. Laissez vide pour revenir à celle du kubeconfig. Sur cet appareil uniquement.</string>

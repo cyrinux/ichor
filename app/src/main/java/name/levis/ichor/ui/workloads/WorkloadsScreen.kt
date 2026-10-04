@@ -87,6 +87,7 @@ fun WorkloadsTab(
     var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
 
     RestartResultToasts(vm.restarts.results)
+    RolloutStatusSheet(vm.restarts)
 
     confirm?.let { w ->
         RestartConfirmDialog(

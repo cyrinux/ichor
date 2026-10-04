@@ -1293,6 +1293,15 @@
     <string name="workloads_restart_confirm">Restart</string>
     <string name="workloads_restart_done">%1$s is restarting</string>
     <string name="workloads_restart_failed">Could not restart %1$s: %2$s</string>
+    <string name="rollout_starting">Starting the rollout…</string>
+    <string name="rollout_done">Rollout complete</string>
+    <string name="rollout_failed">Stalled: the progress deadline was exceeded</string>
+    <string name="rollout_manual">Pods are only replaced when deleted (OnDelete): delete them to restart them.</string>
+    <string name="rollout_counts">Updated %1$d/%2$d · ready %3$d/%2$d · available %4$d/%2$d</string>
+    <string name="rollout_pod_new">new</string>
+    <string name="rollout_pod_old">old</string>
+    <string name="rollout_no_pods">No pods yet.</string>
+    <string name="rollout_leave_hint">The rollout goes on in the cluster if you close this.</string>
     <string name="kube_server_title">Kubernetes API address</string>
     <string name="kube_server_label">Address</string>
     <string name="kube_server_hint">Used instead of the address in the kubeconfig Talos issues, e.g. a port forward, a load balancer or a public name: host, host:port or an https URL. Without a port, the kubeconfig’s is used. The certificate is still checked against the cluster’s own address. Leave empty to use the kubeconfig’s again. Only on this device.</string>

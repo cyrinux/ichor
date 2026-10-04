@@ -1400,6 +1400,15 @@
     <string name="workloads_restart_confirm">Перезапустити</string>
     <string name="workloads_restart_done">%1$s перезапускається</string>
     <string name="workloads_restart_failed">Не вдалося перезапустити %1$s: %2$s</string>
+    <string name="rollout_starting">Запуск розгортання…</string>
+    <string name="rollout_done">Розгортання завершено</string>
+    <string name="rollout_failed">Застрягло: перевищено термін виконання</string>
+    <string name="rollout_manual">Поди замінюються лише після видалення (OnDelete): видаліть їх, щоб перезапустити.</string>
+    <string name="rollout_counts">Оновлено %1$d/%2$d · готово %3$d/%2$d · доступно %4$d/%2$d</string>
+    <string name="rollout_pod_new">новий</string>
+    <string name="rollout_pod_old">старий</string>
+    <string name="rollout_no_pods">Подів ще немає.</string>
+    <string name="rollout_leave_hint">Розгортання триває в кластері, навіть якщо ви це закриєте.</string>
     <string name="kube_server_title">Адреса Kubernetes API</string>
     <string name="kube_server_label">Адреса</string>
     <string name="kube_server_hint">Використовується замість адреси з kubeconfig, який видає Talos, наприклад переадресація порту, балансувальник навантаження або публічне ім’я: хост, хост:порт або https URL. Без порту використовується порт із kubeconfig. Сертифікат і далі перевіряється за власною адресою кластера. Залиште порожнім, щоб знову використовувати адресу з kubeconfig. Лише на цьому пристрої.</string>

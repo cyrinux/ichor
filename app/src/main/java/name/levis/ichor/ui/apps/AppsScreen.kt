@@ -55,6 +55,7 @@ import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
+import name.levis.ichor.ui.workloads.RolloutStatusSheet
 import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
@@ -94,6 +95,7 @@ fun AppsScreen(
     val restarting by workloadsVm.restarts.restarting.collectAsStateWithLifecycle()
     var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
     RestartResultToasts(workloadsVm.restarts.results)
+    RolloutStatusSheet(workloadsVm.restarts)
     confirm?.let { w ->
         RestartConfirmDialog(
             workload = w,

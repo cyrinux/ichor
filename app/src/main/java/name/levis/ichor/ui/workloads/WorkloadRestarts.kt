@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -31,8 +32,10 @@ import name.levis.ichor.ui.uiText
 data class RestartResult(val workload: KubeWorkload, val error: UiText?)
 
 /**
- * Rollout restarts run in [scope] (a ViewModel's): which are in flight and how each ended.
- * [onRestarted] runs after a successful one, e.g. to show the rollout starting.
+ * Rollout restarts run in [scope] (a ViewModel's): which are in flight, how each ended, and
+ * the one whose rollout is followed live after it started (see [RolloutStatusSheet]).
+ * [onRestarted] runs after a successful one, e.g. to show the rollout starting, and again
+ * when the followed rollout ends.
  */
 class WorkloadRestarts(
     private val scope: CoroutineScope,
@@ -47,6 +50,10 @@ class WorkloadRestarts(
     private val _results = Channel<RestartResult>(Channel.BUFFERED)
     val results: Flow<RestartResult> = _results.receiveAsFlow()
 
+    private val _following = MutableStateFlow<KubeWorkload?>(null)
+    /** The workload whose rollout is shown live; null once the user stops following it. */
+    val following: StateFlow<KubeWorkload?> = _following.asStateFlow()
+
     fun restart(workload: KubeWorkload) {
         if (workload.key in _restarting.value) return
         _restarting.update { it + workload.key }
@@ -54,20 +61,32 @@ class WorkloadRestarts(
             val outcome = runCatching { talos.rolloutRestart(workload) }
             _restarting.update { it - workload.key }
             _results.send(RestartResult(workload, outcome.exceptionOrNull()?.uiText()))
-            if (outcome.isSuccess) onRestarted()
+            if (outcome.isSuccess) {
+                _following.value = workload
+                onRestarted()
+            }
         }
     }
+
+    suspend fun rolloutStatus(workload: KubeWorkload): KubeRolloutStatus = talos.rolloutStatus(workload)
+
+    /** Stops following the rollout: it goes on in the cluster. */
+    fun stopFollowing() {
+        _following.value = null
+    }
+
+    /** The followed rollout ended: show its final state. */
+    fun rolloutEnded() = onRestarted()
 }
 
-/** A toast for each restart outcome of [results]. */
+/** A toast for each failed restart of [results]; a successful one opens [RolloutStatusSheet]. */
 @Composable
 fun RestartResultToasts(results: Flow<RestartResult>) {
     val context = LocalContext.current
     LaunchedEffect(results) {
         results.collect { r ->
-            val text = r.error?.resolve(context)?.let { context.getString(R.string.workloads_restart_failed, r.workload.name, it) }
-                ?: context.getString(R.string.workloads_restart_done, r.workload.name)
-            Toast.makeText(context, text, if (r.error == null) Toast.LENGTH_SHORT else Toast.LENGTH_LONG).show()
+            val error = r.error?.resolve(context) ?: return@collect
+            Toast.makeText(context, context.getString(R.string.workloads_restart_failed, r.workload.name, error), Toast.LENGTH_LONG).show()
         }
     }
 }
