@@ -24,6 +24,10 @@ data class KubePod(
     /** Unix millis. */
     val created: Long = 0,
     val images: List<String> = emptyList(),
+    /** The pod's containers, to pick one for its logs; empty from older cores. */
+    val containerNames: List<String> = emptyList(),
+    /** Why a restarted container last stopped ("OOMKilled (exit 137)"), "" when none did. */
+    val lastTermination: String = "",
 ) {
     val key: String get() = "$namespace/$name"
 

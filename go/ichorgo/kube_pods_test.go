@@ -46,12 +46,19 @@ func TestPodStatusLikeKubectl(t *testing.T) {
 func TestMapPod(t *testing.T) {
 	p := mapPod(decodePod(t, `{"metadata":{"name":"web-1","namespace":"shop","creationTimestamp":"2026-01-02T03:04:05Z",
 		"ownerReferences":[{"kind":"ReplicaSet","name":"web-5d8f"}]},
-		"spec":{"nodeName":"w1","containers":[{"image":"nginx"},{"image":"envoy"}]},
-		"status":{"phase":"Running","containerStatuses":[{"ready":true,"restartCount":2,"state":{"running":{}}},{"ready":false,"restartCount":1,"state":{"running":{}}}]}}`))
+		"spec":{"nodeName":"w1","containers":[{"name":"web","image":"nginx"},{"name":"proxy","image":"envoy"}]},
+		"status":{"phase":"Running","containerStatuses":[
+			{"ready":true,"restartCount":2,"state":{"running":{}},"lastState":{"terminated":{"reason":"OOMKilled","exitCode":137}}},
+			{"ready":false,"restartCount":1,"state":{"running":{}},"lastState":{"terminated":{"reason":"Error","exitCode":1}}}]}}`))
 
 	if p.Status != "Running" || p.Healthy || p.Ready != 1 || p.Containers != 2 || p.Restarts != 3 ||
 		p.Node != "w1" || p.Owner != "ReplicaSet/web-5d8f" || strings.Join(p.Images, ",") != "nginx,envoy" {
 		t.Fatalf("unexpected pod %+v", p)
+	}
+
+	// The container that restarted most explains the previous run.
+	if strings.Join(p.ContainerNames, ",") != "web,proxy" || p.LastTermination != "OOMKilled (exit 137)" {
+		t.Errorf("containers %v, last termination %q", p.ContainerNames, p.LastTermination)
 	}
 }
 

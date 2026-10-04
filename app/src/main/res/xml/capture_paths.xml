@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Only packet captures (see CaptureRepository) and support bundles (see SupportBundleRepository) can be shared. -->
+<!-- Only packet captures (see CaptureRepository), support bundles (see SupportBundleRepository) and the pod log being shared (see PodLogSheet) can be shared. -->
 <paths>
     <files-path name="captures" path="captures/" />
     <files-path name="support" path="support/" />
+    <cache-path name="logs" path="logs/" />
 </paths>

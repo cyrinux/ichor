@@ -192,6 +192,35 @@ func main() {
 		if err = ichorgo.KubeDeletePod(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2)); err == nil {
 			out = "deleted"
 		}
+	case "scale":
+		// scale KIND NAMESPACE NAME REPLICAS
+		replicas, convErr := strconv.Atoi(flag.Arg(4))
+		if convErr != nil {
+			fmt.Fprintf(os.Stderr, "scale: replicas %q is not a number\n", flag.Arg(4)) // never scale to 0 by mistake
+			os.Exit(2)
+		}
+
+		out, err = ichorgo.KubeScale(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), replicas)
+	case "suspend-cronjob", "resume-cronjob":
+		if err = ichorgo.KubeSuspendCronJob(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), cmd == "suspend-cronjob"); err == nil {
+			out = "done"
+		}
+	case "revisions":
+		out, err = ichorgo.KubeDeploymentRevisions(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2))
+	case "rollback":
+		// rollback NAMESPACE DEPLOYMENT REVISION
+		revision, convErr := strconv.Atoi(flag.Arg(3))
+		if convErr != nil {
+			fmt.Fprintf(os.Stderr, "rollback: revision %q is not a number\n", flag.Arg(3))
+			os.Exit(2)
+		}
+
+		if err = ichorgo.KubeRollbackDeployment(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), revision); err == nil {
+			out = "rolled back"
+		}
+	case "pod-logs":
+		// pod-logs NAMESPACE POD [CONTAINER] (previous run with -previous via the 4th arg "previous")
+		out, err = ichorgo.KubePodLogs(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4) == "previous", 50)
 	case "maintenance-plan":
 		out, err = ichorgo.NodeMaintenancePlan(cfg, *contextName, *kubeServer, flag.Arg(1))
 	case "cordon", "uncordon":

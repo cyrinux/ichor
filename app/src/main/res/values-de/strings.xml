@@ -1908,7 +1908,6 @@
     <string name="overview_card_desc_nodes">Jeder Node mit seinem Zustand</string>
     <string name="overview_card_desc_time_drift">Uhrabweichung jedes Nodes gegenüber NTP</string>
     <string name="overview_edit_all_hidden">Alle Karten sind ausgeblendet. Tippe, um die anzuzeigenden auszuwählen.</string>
-||||||| a97dc89
 
     <!-- Network policies and Cilium live flows (Hubble) -->
     <string name="netpol_title">Netzwerkrichtlinien</string>
@@ -2123,6 +2122,43 @@
     <string name="clusters_color_hue">Farbton</string>
     <string name="ai_api_key_show">API-Schlüssel anzeigen</string>
     <string name="ai_api_key_hide">API-Schlüssel verbergen</string>
+    <string name="workloads_scale">Skalieren</string>
+    <string name="workloads_scale_less">Ein Replikat weniger</string>
+    <string name="workloads_scale_more">Ein Replikat mehr</string>
+    <string name="workloads_scale_change">%1$d → %2$d</string>
+    <string name="workloads_scale_apply">Anwenden</string>
+    <string name="workloads_scale_done">%1$s auf %2$d skaliert</string>
+    <string name="workloads_scale_failed">%1$s konnte nicht skaliert werden: %2$s</string>
+    <string name="workloads_scale_zero_title">%1$s auf 0 skalieren?</string>
+    <string name="workloads_scale_zero_text">Alle seine Pods in %1$s stoppen, und nichts antwortet mehr, bis du wieder hochskalierst.</string>
+    <string name="workloads_scale_zero_confirm">Auf 0 skalieren</string>
+    <string name="workloads_history">Verlauf</string>
+    <string name="workloads_history_empty">Keine Revision aufbewahrt.</string>
+    <string name="workloads_revision">Revision %1$d</string>
+    <string name="workloads_revision_current">Aktuell</string>
+    <string name="workloads_rollback">Zurückrollen</string>
+    <string name="workloads_rollback_title">%1$s auf Revision %2$d zurückrollen?</string>
+    <string name="workloads_rollback_text">Seine Pods in %1$s werden durch solche mit %2$s ersetzt, wie mit kubectl rollout undo.</string>
+    <string name="workloads_rollback_failed">%1$s konnte nicht zurückgerollt werden: %2$s</string>
+    <string name="cronjobs_suspend">Aussetzen</string>
+    <string name="cronjobs_resume">Fortsetzen</string>
+    <string name="cronjobs_suspend_title">%1$s aussetzen?</string>
+    <string name="cronjobs_resume_title">%1$s fortsetzen?</string>
+    <string name="cronjobs_suspend_text">In %1$s startet planmäßig kein neuer Lauf, bis er fortgesetzt wird. Ein laufender Job läuft weiter.</string>
+    <string name="cronjobs_resume_text">Planmäßige Läufe starten in %1$s wieder.</string>
+    <string name="cronjobs_suspend_failed">%1$s konnte nicht ausgesetzt werden: %2$s</string>
+    <string name="cronjobs_resume_failed">%1$s konnte nicht fortgesetzt werden: %2$s</string>
+    <string name="pod_logs_open">Logs von %1$s</string>
+    <string name="pod_logs_copy">Kopieren</string>
+    <string name="pod_logs_copied">Log kopiert</string>
+    <string name="pod_logs_share">Teilen</string>
+    <string name="pod_logs_share_chooser">Log teilen</string>
+    <string name="pod_logs_previous">Vorheriger Lauf</string>
+    <string name="pod_logs_tail">Die letzten %1$d Zeilen.</string>
+    <string name="pod_logs_empty">Keine Logzeile.</string>
+    <string name="pod_logs_last_termination">Zuletzt beendet: %1$s</string>
+    <string name="workloads_scale_down_title">%1$s auf %2$d herunterskalieren?</string>
+    <string name="workloads_scale_down_text">%1$d seiner Pods in %2$s stoppen.</string>
     <string name="node_menu_maintenance">Wartung…</string>
     <string name="node_menu_cordon">Absperren (cordon)</string>
     <string name="node_menu_uncordon">Freigeben (uncordon)</string>

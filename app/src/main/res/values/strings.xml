@@ -1912,7 +1912,6 @@
     <string name="overview_card_desc_nodes">Every node with its state</string>
     <string name="overview_card_desc_time_drift">Clock offset of each node against NTP</string>
     <string name="overview_edit_all_hidden">Every card is hidden. Tap to choose the ones to show.</string>
-||||||| a97dc89
 
     <!-- Network policies and Cilium live flows (Hubble) -->
     <string name="netpol_title">Network policies</string>
@@ -2127,6 +2126,43 @@
     <string name="clusters_color_hue">Hue</string>
     <string name="ai_api_key_show">Show API key</string>
     <string name="ai_api_key_hide">Hide API key</string>
+    <string name="workloads_scale">Scale</string>
+    <string name="workloads_scale_less">One replica less</string>
+    <string name="workloads_scale_more">One replica more</string>
+    <string name="workloads_scale_change">%1$d → %2$d</string>
+    <string name="workloads_scale_apply">Apply</string>
+    <string name="workloads_scale_done">%1$s scaled to %2$d</string>
+    <string name="workloads_scale_failed">Could not scale %1$s: %2$s</string>
+    <string name="workloads_scale_zero_title">Scale %1$s to 0?</string>
+    <string name="workloads_scale_zero_text">Every pod of it in %1$s stops, and nothing serves until you scale it up again.</string>
+    <string name="workloads_scale_zero_confirm">Scale to 0</string>
+    <string name="workloads_history">History</string>
+    <string name="workloads_history_empty">No revision kept.</string>
+    <string name="workloads_revision">Revision %1$d</string>
+    <string name="workloads_revision_current">Current</string>
+    <string name="workloads_rollback">Roll back</string>
+    <string name="workloads_rollback_title">Roll %1$s back to revision %2$d?</string>
+    <string name="workloads_rollback_text">Its pods in %1$s are replaced by ones running %2$s, like kubectl rollout undo.</string>
+    <string name="workloads_rollback_failed">Could not roll back %1$s: %2$s</string>
+    <string name="cronjobs_suspend">Suspend</string>
+    <string name="cronjobs_resume">Resume</string>
+    <string name="cronjobs_suspend_title">Suspend %1$s?</string>
+    <string name="cronjobs_resume_title">Resume %1$s?</string>
+    <string name="cronjobs_suspend_text">No new run starts on schedule in %1$s until it is resumed. A running Job goes on.</string>
+    <string name="cronjobs_resume_text">Runs start on schedule again in %1$s.</string>
+    <string name="cronjobs_suspend_failed">Could not suspend %1$s: %2$s</string>
+    <string name="cronjobs_resume_failed">Could not resume %1$s: %2$s</string>
+    <string name="pod_logs_open">Logs of %1$s</string>
+    <string name="pod_logs_copy">Copy</string>
+    <string name="pod_logs_copied">Log copied</string>
+    <string name="pod_logs_share">Share</string>
+    <string name="pod_logs_share_chooser">Share the log</string>
+    <string name="pod_logs_previous">Previous run</string>
+    <string name="pod_logs_tail">The last %1$d lines.</string>
+    <string name="pod_logs_empty">No log line.</string>
+    <string name="pod_logs_last_termination">Last stopped: %1$s</string>
+    <string name="workloads_scale_down_title">Scale %1$s down to %2$d?</string>
+    <string name="workloads_scale_down_text">%1$d of its pods in %2$s stop.</string>
     <string name="node_menu_maintenance">Maintenance…</string>
     <string name="node_menu_cordon">Cordon</string>
     <string name="node_menu_uncordon">Uncordon</string>

@@ -2,7 +2,8 @@ import SwiftUI
 import IchorCore
 
 /// Every pod of the cluster with the status `kubectl get pods` shows, unhealthy ones first,
-/// and a delete action so a controller starts a fresh one (os:admin).
+/// its logs through the Kubernetes API (the previous run's too), and a delete action so a
+/// controller starts a fresh one (os:admin).
 struct PodsList: View {
     @Binding var namespace: String?
     let query: String
@@ -14,6 +15,7 @@ struct PodsList: View {
     @State private var confirm: KubePod?
     @State private var deleting: Set<String> = []
     @State private var resultMessage: String?
+    @State private var logsPod: KubePod?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { pods in
@@ -24,8 +26,10 @@ struct PodsList: View {
                 Section { NamespacePicker(namespaces: namespaces, namespace: $namespace) }
                 Section {
                     ForEach(shown) { pod in
-                        PodRow(pod: pod, showNamespace: selected == nil, deleting: deleting.contains(pod.id)) { confirm = pod }
+                        PodRow(pod: pod, showNamespace: selected == nil, deleting: deleting.contains(pod.id),
+                               onLogs: { logsPod = pod }) { confirm = pod }
                             .contextMenu {
+                                Button { logsPod = pod } label: { Label("Logs", systemImage: "doc.text") }
                                 if let onFlows {
                                     Button { onFlows(pod) } label: {
                                         Label("Live flows of this pod", systemImage: "point.3.filled.connected.trianglepath.dotted")
@@ -64,6 +68,7 @@ struct PodsList: View {
             }
         }
         .messageAlert($resultMessage)
+        .sheet(item: $logsPod) { PodLogsSheet(pod: $0) }
     }
 
     private func load() async {
@@ -91,6 +96,7 @@ private struct PodRow: View {
     let pod: KubePod
     let showNamespace: Bool
     let deleting: Bool
+    let onLogs: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -118,6 +124,13 @@ private struct PodRow: View {
                 .monospacedDigit()
             }
             Spacer()
+            Button(action: onLogs) {
+                Image(systemName: "doc.text")
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(Text("Logs of \(pod.name)"))
             if deleting {
                 ProgressView()
             } else {

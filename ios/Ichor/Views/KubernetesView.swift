@@ -140,7 +140,8 @@ struct NamespacePicker: View {
     }
 }
 
-/// Deployments, StatefulSets and DaemonSets with a rolling restart like `kubectl rollout restart`.
+/// Deployments, StatefulSets and DaemonSets with a rolling restart like `kubectl rollout restart`;
+/// tap one for scale and, for a Deployment, its revisions to roll back to.
 private struct WorkloadsList: View {
     @Binding var namespace: String?
     let query: String
@@ -152,6 +153,8 @@ private struct WorkloadsList: View {
     @State private var resultMessage: String?
     /// Just restarted: its rollout is shown live until the sheet is closed.
     @State private var following: KubeWorkload?
+    /// Its scale and history sheet is open.
+    @State private var actions: KubeWorkload?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { workloads in
@@ -163,7 +166,8 @@ private struct WorkloadsList: View {
                 Section {
                     ForEach(shown) { workload in
                         WorkloadRow(workload: workload, showNamespace: selected == nil,
-                                    restarting: restarting.contains(workload.id)) { confirm = workload }
+                                    restarting: restarting.contains(workload.id),
+                                    onOpen: { actions = workload }) { confirm = workload }
                     }
                 }
             }
@@ -182,6 +186,7 @@ private struct WorkloadsList: View {
         .task { await load() }
         .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
         .sheet(item: $following) { workload in RolloutStatusSheet(workload: workload) { await load() } }
+        .sheet(item: $actions) { workload in WorkloadActionsSheet(workload: workload) { await load() } }
         .messageAlert($resultMessage)
     }
 
@@ -210,9 +215,30 @@ private struct WorkloadRow: View {
     let workload: KubeWorkload
     let showNamespace: Bool
     let restarting: Bool
+    let onOpen: () -> Void
     let onRestart: () -> Void
 
     var body: some View {
+        HStack {
+            Button(action: onOpen) { details }
+                .buttonStyle(.plain)
+            if restarting {
+                ProgressView()
+            } else {
+                Button(action: onRestart) {
+                    Image(systemName: "arrow.clockwise.circle")
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                    .buttonStyle(.borderless)
+                    .disabled(!workload.canRestart)
+                    .accessibilityLabel(Text("Restart \(workload.name)"))
+            }
+        }
+    }
+
+    /// Name, kind, readiness and last restart: opens the workload's actions.
+    private var details: some View {
         HStack {
             VStack(alignment: .leading, spacing: 3) {
                 Text(verbatim: workload.name)
@@ -236,19 +262,8 @@ private struct WorkloadRow: View {
                 }
             }
             Spacer()
-            if restarting {
-                ProgressView()
-            } else {
-                Button(action: onRestart) {
-                    Image(systemName: "arrow.clockwise.circle")
-                        .frame(minWidth: 44, minHeight: 44)
-                        .contentShape(Rectangle())
-                }
-                    .buttonStyle(.borderless)
-                    .disabled(!workload.canRestart)
-                    .accessibilityLabel(Text("Restart \(workload.name)"))
-            }
         }
+        .contentShape(Rectangle())
     }
 
     private var stateLabel: LocalizedStringKey {

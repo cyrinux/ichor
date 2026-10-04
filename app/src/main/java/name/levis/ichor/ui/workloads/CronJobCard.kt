@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.PauseCircle
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.TouchApp
 import androidx.compose.material.icons.outlined.Update
@@ -51,18 +52,21 @@ import name.levis.ichor.model.KubeCronJob
 import name.levis.ichor.model.KubeJobRun
 import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.components.StatusPill
+import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.theme.LocalStatusColors
 
-/** One CronJob: who it is, when it runs, how its last runs went, and Run now. Tap for the runs. */
+/** One CronJob: who it is, when it runs, how its last runs went, Suspend/Resume and Run now. Tap for the runs. */
 @Composable
 internal fun CronJobCard(
     cronJob: KubeCronJob,
     showNamespace: Boolean,
     expanded: Boolean,
     triggering: Boolean,
+    suspending: Boolean,
     onToggle: () -> Unit,
     onRun: () -> Unit,
+    onSuspend: () -> Unit,
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Card(
@@ -82,6 +86,7 @@ internal fun CronJobCard(
                     RunHistoryStrip(cronJob.runs)
                     LastRunText(cronJob.runs.firstOrNull())
                 }
+                SuspendButton(cronJob, suspending, onSuspend)
                 RunNowButton(cronJob, triggering, onRun)
             }
             AnimatedVisibility(expanded) { RunList(cronJob.runs) }
@@ -176,6 +181,20 @@ private fun LastRunText(run: KubeJobRun?) {
         listOfNotNull(stringResource(R.string.cronjobs_last_run, ago), duration).joinToString("  ·  ")
     } ?: stringResource(R.string.cronjobs_no_runs)
     Text(text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+/** Pauses the schedule, or resumes it when suspended. */
+@Composable
+private fun SuspendButton(cronJob: KubeCronJob, suspending: Boolean, onSuspend: () -> Unit) {
+    if (suspending) {
+        CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
+        return
+    }
+    TooltipIconButton(
+        if (cronJob.suspended) Icons.Outlined.PlayCircle else Icons.Outlined.PauseCircle,
+        stringResource(if (cronJob.suspended) R.string.cronjobs_resume else R.string.cronjobs_suspend),
+        onClick = onSuspend,
+    )
 }
 
 @Composable

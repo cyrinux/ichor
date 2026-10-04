@@ -35,6 +35,8 @@ import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.KubeRouteList
 import name.levis.ichor.model.RoutePod
 import name.levis.ichor.model.KubeRolloutStatus
+import name.levis.ichor.model.KubeRevision
+import name.levis.ichor.model.KubeRevisionList
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.LogEntry
@@ -450,6 +452,24 @@ class TalosRepository(
         TalosJson.decodeFromString(KubeRolloutStatus.serializer(), Ichorgo.kubeRolloutStatus(cfg, ctx, server, workload.kind, workload.namespace, workload.name))
     }
 
+    /**
+     * `kubectl scale KIND/NAME --replicas=N -n NAMESPACE` (os:admin): a warning ("" when none)
+     * when a HorizontalPodAutoscaler manages the replicas and will change them again.
+     */
+    suspend fun scale(workload: KubeWorkload, replicas: Int): String = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeScale(cfg, ctx, server, workload.kind, workload.namespace, workload.name, replicas.toLong())
+    }
+
+    /** `kubectl rollout history deployment/NAME -n NAMESPACE`, newest first (os:admin). Never cached. */
+    suspend fun deploymentRevisions(workload: KubeWorkload): List<KubeRevision> = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeRevisionList.serializer(), Ichorgo.kubeDeploymentRevisions(cfg, ctx, server, workload.namespace, workload.name)).revisions
+    }
+
+    /** `kubectl rollout undo deployment/NAME --to-revision=N -n NAMESPACE` (os:admin). */
+    suspend fun rollbackDeployment(workload: KubeWorkload, revision: Int) = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeRollbackDeployment(cfg, ctx, server, workload.namespace, workload.name, revision.toLong())
+    }
+
     /** CronJobs with their recent runs through the Kubernetes API (os:admin). */
     suspend fun cronJobs(): List<KubeCronJob> = remember(CRON_JOBS) {
         kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubeCronJobList.serializer(), Ichorgo.kubeCronJobs(cfg, ctx, server)).cronJobs }
@@ -460,10 +480,24 @@ class TalosRepository(
         Ichorgo.kubeTriggerCronJob(cfg, ctx, server, cronJob.namespace, cronJob.name)
     }
 
+    /** Suspends (no new runs) or resumes [cronJob] (os:admin). */
+    suspend fun suspendCronJob(cronJob: KubeCronJob, suspend: Boolean) = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeSuspendCronJob(cfg, ctx, server, cronJob.namespace, cronJob.name, suspend)
+    }
+
     /** The Ingress and HTTPRoute URLs serving [pods] (os:admin). */
     suspend fun appRoutes(pods: List<RoutePod>): List<KubeRoute> = kubeCall { cfg, ctx, server ->
         val json = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
         TalosJson.decodeFromString(KubeRouteList.serializer(), Ichorgo.kubeAppRoutes(cfg, ctx, server, json)).routes
+    }
+
+    /**
+     * `kubectl logs POD [-c CONTAINER] [--previous] --tail=N` through the Kubernetes API
+     * (os:admin): [previous] reads the container's last terminated run. [container] "" for a
+     * pod with one container.
+     */
+    suspend fun podLogs(pod: KubePod, container: String, previous: Boolean, tailLines: Int): String = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubePodLogs(cfg, ctx, server, pod.namespace, pod.name, container, previous, tailLines.toLong())
     }
 
     /** Every pod with the status `kubectl get pods` shows (os:admin). */
