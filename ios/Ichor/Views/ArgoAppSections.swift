@@ -17,7 +17,7 @@ struct ArgoHero: View {
             VStack(spacing: 12) {
                 AppIconView(app: app.iconApp, size: 64)
                 VStack(spacing: 2) {
-                    Text(verbatim: app.name).font(.title2.bold()).multilineTextAlignment(.center)
+                    Text(verbatim: app.name).font(.title2.bold()).multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)
                     Text(verbatim: app.revisionLabel).font(.subheadline.monospaced()).foregroundStyle(.secondary)
                 }
                 HStack(spacing: 8) {
@@ -174,10 +174,10 @@ struct ArgoOperationSection: View {
             ForEach(operation.failed) { failed in
                 VStack(alignment: .leading, spacing: 2) {
                     Label { Text(verbatim: "\(failed.kind) \(failed.name)").font(.callout.monospaced()) } icon: {
-                        Image(systemName: "xmark.octagon.fill").foregroundStyle(.red)
+                        Image(systemName: "xmark.octagon.fill").foregroundStyle(.statusBad)
                     }
                     if !failed.message.isEmpty {
-                        Text(verbatim: failed.message).font(.caption).foregroundStyle(.red).textSelection(.enabled)
+                        Text(verbatim: failed.message).font(.caption).foregroundStyle(.statusBad).textSelection(.enabled)
                     }
                 }
             }

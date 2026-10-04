@@ -57,7 +57,7 @@ struct PowerSheet: View {
                 if role == "controlplane" {
                     Section {
                         Text("Control-plane node: it leaves etcd while down. Make sure the other members are healthy, or the cluster can lose quorum.")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(.statusWarn)
                     }
                 }
                 Section("Type \(hostname) to confirm") {

@@ -18,7 +18,7 @@ struct KubeSpanView: View {
                 }
                 ForEach(overview.nodes) { node in
                     Section {
-                        if let error = node.error { Text(error).font(.caption).foregroundStyle(.red) }
+                        if let error = node.error { Text(error).font(.caption).foregroundStyle(.statusBad) }
                         ForEach(node.peers) { PeerRow(peer: $0) }
                     } header: {
                         HStack {

@@ -124,7 +124,7 @@ private struct DiskUsageRowView: View {
             }
             ProgressView(value: row.fraction)
             if !row.error.isEmpty {
-                Text(verbatim: row.error).font(.caption).foregroundStyle(.red)
+                Text(verbatim: row.error).font(.caption).foregroundStyle(.statusBad)
             }
         }
         .contentShape(Rectangle())

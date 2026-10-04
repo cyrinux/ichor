@@ -1811,4 +1811,20 @@
         <item quantity="one">%1$d pod</item>
         <item quantity="other">%1$d pods</item>
     </plurals>
+    <string name="argo_health_healthy">Sain</string>
+    <string name="argo_health_progressing">En cours</string>
+    <string name="argo_health_degraded">Dégradé</string>
+    <string name="argo_health_suspended">Suspendu</string>
+    <string name="argo_health_missing">Absent</string>
+    <string name="argo_health_unknown">Inconnu</string>
+    <string name="argo_sync_state_synced">Synchronisé</string>
+    <string name="argo_sync_state_out_of_sync">Désynchronisé</string>
+    <string name="argo_sync_state_unknown">Synchro inconnue</string>
+    <string name="pod_state_running">En cours</string>
+    <string name="pod_state_starting">Démarrage</string>
+    <string name="pod_state_stopped">Arrêté</string>
+    <string name="upgrade_step_done">Terminé</string>
+    <string name="upgrade_step_current">En cours</string>
+    <string name="upgrade_step_failed">Échec</string>
+    <string name="upgrade_step_pending">Pas commencé</string>
 </resources>

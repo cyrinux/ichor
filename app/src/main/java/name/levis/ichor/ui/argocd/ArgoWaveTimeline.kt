@@ -40,6 +40,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -140,8 +142,9 @@ private fun ResourceRow(r: ArgoResource, selecting: Boolean, checked: Boolean, o
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (selecting) Checkbox(checked = checked, onCheckedChange = { onToggle() }, modifier = Modifier.size(32.dp))
-        Dot(ArgoSync.from(r.sync).color())
-        if (r.health.isNotEmpty()) Dot(ArgoHealth.from(r.health).color(), Modifier.padding(start = 3.dp))
+        val sync = ArgoSync.from(r.sync)
+        Dot(sync.color(), sync.label())
+        if (r.health.isNotEmpty()) ArgoHealth.from(r.health).let { Dot(it.color(), it.label(), Modifier.padding(start = 3.dp)) }
         Column(Modifier.weight(1f).padding(start = 8.dp)) {
             Text(r.name, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -160,8 +163,8 @@ private fun ResourceRow(r: ArgoResource, selecting: Boolean, checked: Boolean, o
 }
 
 @Composable
-private fun Dot(color: Color, modifier: Modifier = Modifier) {
-    Box(modifier.size(8.dp).background(color, CircleShape))
+private fun Dot(color: Color, description: String, modifier: Modifier = Modifier) {
+    Box(modifier.size(8.dp).background(color, CircleShape).semantics { contentDescription = description })
 }
 
 @Composable

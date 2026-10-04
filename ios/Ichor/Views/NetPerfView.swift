@@ -60,7 +60,7 @@ struct NetPerfView: View {
             } footer: {
                 if session.setup.ready && session.setup.server == session.setup.client {
                     Text("Same node: this measures the node’s own network stack, not a link.")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(.statusWarn)
                 }
             }
             Section {
@@ -190,7 +190,7 @@ private struct NetPerfStatusSection: View {
                     .disabled(run.stopping)
             } else {
                 if let error = run.error {
-                    Text("The test failed: \(error)").foregroundStyle(.red)
+                    Text("The test failed: \(error)").foregroundStyle(.statusBad)
                 }
                 if run.stopped { Text("Test stopped.") }
                 Button("New test", action: reset)
@@ -257,7 +257,7 @@ private struct NetPerfResultRow: View {
             }
             if let result {
                 if !result.error.isEmpty {
-                    Text(verbatim: result.error).font(.caption).foregroundStyle(.red)
+                    Text(verbatim: result.error).font(.caption).foregroundStyle(.statusBad)
                 } else if test == NetPerfTest.latency, let l = result.latency {
                     let rate = result.transactionRate.formatted(.number.precision(.fractionLength(0)))
                     (Text("p50 \(formatMicros(l.p50)) · p90 \(formatMicros(l.p90)) · p99 \(formatMicros(l.p99))") +

@@ -62,6 +62,7 @@ struct AppDetailSheet: View {
             Text(verbatim: app.name)
                 .font(.title2.bold())
                 .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
             Text(verbatim: ([app.category.label] + app.namespaces).joined(separator: " · "))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)

@@ -71,7 +71,7 @@ private struct DiskHealthCard: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                 }
                 .font(.caption)
-                .foregroundStyle(.red)
+                .foregroundStyle(.statusBad)
             }
             if !disk.attributes.isEmpty {
                 DisclosureGroup {

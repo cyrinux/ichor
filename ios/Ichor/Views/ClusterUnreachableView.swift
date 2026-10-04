@@ -15,7 +15,8 @@ struct ClusterUnreachableView: View {
                 Image(systemName: outage.cause.icon)
                     .font(.system(size: 44))
                     .foregroundStyle(outage.cause.tint)
-                Text("Can’t reach the cluster").font(.title2.bold()).multilineTextAlignment(.center)
+                    .accessibilityHidden(true)
+                Text("Can’t reach the cluster").font(.title2.bold()).multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)
                 Text(outage.cause.explanation).font(.callout).multilineTextAlignment(.center)
                 if !endpoints.isEmpty {
                     Text("Endpoints: \(endpoints.joined(separator: ", "))")
@@ -24,7 +25,7 @@ struct ClusterUnreachableView: View {
                         .multilineTextAlignment(.center)
                 }
                 ForEach(outage.errors, id: \.self) { error in
-                    Text(error).font(.caption).foregroundStyle(.red).multilineTextAlignment(.center)
+                    Text(error).font(.caption).foregroundStyle(.statusBad).multilineTextAlignment(.center)
                 }
                 Button("Retry") { Task { await retry() } }
                     .buttonStyle(.borderedProminent)

@@ -44,8 +44,8 @@ struct EtcdView: View {
                 }
                 if !etcd.alarms.isEmpty || alarmMessage != nil || etcd.alarmsError != nil {
                     Section("Alarms") {
-                        if let alarmsError = etcd.alarmsError { Text("Could not check alarms: \(alarmsError)").foregroundStyle(.red) }
-                        ForEach(etcd.alarms, id: \.self) { Text(verbatim: "\(hostnames[$0.memberId] ?? $0.memberId): \($0.alarm)").foregroundStyle(.red) }
+                        if let alarmsError = etcd.alarmsError { Text("Could not check alarms: \(alarmsError)").foregroundStyle(.statusBad) }
+                        ForEach(etcd.alarms, id: \.self) { Text(verbatim: "\(hostnames[$0.memberId] ?? $0.memberId): \($0.alarm)").foregroundStyle(.statusBad) }
                         if let alarmMessage { Text(alarmMessage).font(.footnote).foregroundStyle(.secondary) }
                         if model.allows(.etcdDefrag) && !etcd.alarms.isEmpty {
                             if disarming {
@@ -225,13 +225,13 @@ private struct MemberStatusRow: View {
                 pill
             }
             if let error = status.error {
-                Text(error).font(.caption).foregroundStyle(.red)
+                Text(error).font(.caption).foregroundStyle(.statusBad)
             } else {
                 LabeledContent("Member ID", value: status.memberId).font(.caption.monospaced())
                 LabeledContent("DB size", value: String(localized: "\(formatBytes(status.dbSizeInUse)) in use / \(formatBytes(status.dbSize))")).font(.caption)
                 UsageBar(fraction: status.dbSize > 0 ? Double(status.dbSizeInUse) / Double(status.dbSize) : 0)
                 LabeledContent("Raft term / index", value: "\(status.raftTerm) / \(status.raftIndex)").font(.caption)
-                ForEach(status.errors, id: \.self) { Text($0).font(.caption).foregroundStyle(.red) }
+                ForEach(status.errors, id: \.self) { Text($0).font(.caption).foregroundStyle(.statusBad) }
             }
         }
     }

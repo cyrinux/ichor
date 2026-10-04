@@ -123,8 +123,8 @@ private struct NewBackupPassphraseSheet: View {
                 Section {
                     SecureField("Passphrase", text: $passphrase).textContentType(.newPassword)
                     SecureField("Passphrase again", text: $again).textContentType(.newPassword)
-                    if let problem, !again.isEmpty { Text(problem).font(.footnote).foregroundStyle(.red) }
-                    if let error { Text(error).font(.footnote).foregroundStyle(.red) }
+                    if let problem, !again.isEmpty { Text(problem).font(.footnote).foregroundStyle(.statusBad) }
+                    if let error { Text(error).font(.footnote).foregroundStyle(.statusBad) }
                 } footer: {
                     Text("The backup holds your clusters’ credentials. Choose a passphrase of at least \(backupMinPassphrase) characters; it is needed to restore and cannot be recovered.")
                 }
@@ -177,7 +177,7 @@ private struct UnlockBackupSheet: View {
             Form {
                 Section {
                     SecureField("Passphrase", text: $passphrase).textContentType(.password)
-                    if let error { Text(error).font(.footnote).foregroundStyle(.red) }
+                    if let error { Text(error).font(.footnote).foregroundStyle(.statusBad) }
                 } footer: {
                     Text("Enter the passphrase the backup was encrypted with.")
                 }

@@ -82,7 +82,7 @@ struct ImportView: View {
             }
             .pickerStyle(.segmented)
 
-            if let error { Text(error).foregroundStyle(.red).font(.footnote) }
+            if let error { Text(error).foregroundStyle(.statusBad).font(.footnote) }
             if busy { ProgressView() }
 
             switch source {

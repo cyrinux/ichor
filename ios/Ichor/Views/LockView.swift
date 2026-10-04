@@ -9,10 +9,10 @@ struct LockView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "lock.fill").font(.system(size: 44))
+            Image(systemName: "lock.fill").font(.system(size: 44)).accessibilityHidden(true)
             if available {
-                Text("Ichor is locked").font(.headline)
-                if let error { Text(error).foregroundStyle(.red).multilineTextAlignment(.center) }
+                Text("Ichor is locked").font(.headline).accessibilityAddTraits(.isHeader)
+                if let error { Text(error).foregroundStyle(.statusBad).multilineTextAlignment(.center) }
                 Button("Unlock") { Task { await unlock() } }.buttonStyle(.borderedProminent)
             } else {
                 Text("This device no longer has a passcode, so the app lock cannot verify you.")
@@ -32,6 +32,7 @@ struct LockView: View {
     private func unlock() async {
         if let message = await Authenticator.authenticate(reason: String(localized: "Unlock Ichor")) {
             error = message
+            announce(message)
         } else {
             model.unlock()
         }

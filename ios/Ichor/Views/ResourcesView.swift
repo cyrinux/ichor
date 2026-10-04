@@ -70,7 +70,7 @@ private struct ResourceTypeRow: View {
                 if type.isSensitive {
                     Image(systemName: "lock.fill")
                         .font(.caption)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(.statusWarn)
                         .accessibilityLabel(Text("Sensitive"))
                 }
             }
@@ -258,7 +258,7 @@ struct ResourceDetailView: View {
             if type.isSensitive {
                 Label("This resource contains secrets (keys, tokens). Show it only where nobody else can see your screen.", systemImage: "lock.fill")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(.statusWarn)
             }
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
         }

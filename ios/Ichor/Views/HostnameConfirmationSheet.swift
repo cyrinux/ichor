@@ -29,7 +29,7 @@ struct HostnameConfirmationSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Text(message).foregroundStyle(.orange)
+                    Text(message).foregroundStyle(.statusWarn)
                 }
                 Section("Type \(hostname) to confirm") {
                     TextField(hostname, text: $typed)

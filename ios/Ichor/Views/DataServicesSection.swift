@@ -44,7 +44,10 @@ struct HealthDot: View {
     let health: ServiceHealth
     var size: CGFloat = 10
 
-    var body: some View { Circle().fill(health.color).frame(width: size, height: size) }
+    var body: some View {
+        Circle().fill(health.color).frame(width: size, height: size)
+            .accessibilityLabel(Text(health.label))
+    }
 }
 
 /// One line about a system: "12 volumes · 1 needs a look", "Degraded · 6/7 nodes up"...
@@ -82,7 +85,7 @@ struct LikelyCauseBanner: View {
                 Image(systemName: "exclamationmark.triangle.fill")
             }
             .font(.callout)
-            .foregroundStyle(.red)
+            .foregroundStyle(.statusBad)
         }
     }
 }

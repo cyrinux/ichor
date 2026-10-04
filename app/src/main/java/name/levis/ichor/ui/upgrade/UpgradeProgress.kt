@@ -32,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
@@ -116,8 +118,16 @@ fun UpgradeProgress(run: UpgradeRunState, onStopFollowing: () -> Unit, onClose: 
 private fun TimelineRow(step: TimelineStep) {
     val colors = LocalStatusColors.current
     val time = remember(step.at) { if (step.at > 0) formatTime(step.at) else "" }
+    val state = stringResource(
+        when (step.status) {
+            StepStatus.DONE -> R.string.upgrade_step_done
+            StepStatus.CURRENT -> R.string.upgrade_step_current
+            StepStatus.FAILED -> R.string.upgrade_step_failed
+            StepStatus.PENDING -> R.string.upgrade_step_pending
+        },
+    )
     Row(verticalAlignment = Alignment.Top) {
-        Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(24.dp).semantics { contentDescription = state }, contentAlignment = Alignment.Center) {
             when (step.status) {
                 StepStatus.DONE -> Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = colors.ok)
                 StepStatus.CURRENT -> CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)

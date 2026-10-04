@@ -105,7 +105,7 @@ struct NodeDetailView: View {
                     ProgressView()
                 } else {
                     Menu { menuItems } label: {
-                        Image(systemName: "ellipsis.circle")
+                        Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
                     }
                 }
             }

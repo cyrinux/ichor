@@ -44,7 +44,7 @@ struct ArgoNetDetails: View {
             }
             actions
             if let failure {
-                Text(verbatim: failure).font(.caption).foregroundStyle(.red)
+                Text(verbatim: failure).font(.caption).foregroundStyle(.statusBad)
             }
         }
         .padding()

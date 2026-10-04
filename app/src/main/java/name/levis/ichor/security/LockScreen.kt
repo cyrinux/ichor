@@ -28,6 +28,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -67,10 +71,15 @@ fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit) {
             Icon(Icons.Outlined.Lock, contentDescription = null, modifier = Modifier.size(48.dp))
             Spacer(Modifier.height(16.dp))
             if (available) {
-                Text(stringResource(R.string.lock_locked), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.lock_locked), style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
                 error?.let {
                     Spacer(Modifier.height(8.dp))
-                    Text(it, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
+                    Text(
+                        it,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    )
                 }
                 Spacer(Modifier.height(16.dp))
                 Button(onClick = ::prompt) { Text(stringResource(R.string.lock_unlock)) }

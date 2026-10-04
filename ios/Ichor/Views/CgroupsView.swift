@@ -128,7 +128,7 @@ private struct CgroupRowView: View {
             HStack(spacing: 8) {
                 if n.memMax > 0 { Text("limit \(formatBytes(n.memMax))") }
                 if let io = row.ioPerSecond, io >= 1024 { Text("disk \(formatBytes(UInt64(io)))/s") }
-                if n.oomKills > 0 { Text("OOM-killed \(Int(n.oomKills)) times").foregroundStyle(.red) }
+                if n.oomKills > 0 { Text("OOM-killed \(Int(n.oomKills)) times").foregroundStyle(.statusBad) }
                 ForEach(waiting, id: \.0) { label, value in
                     Text("waits for \(label) \(String(format: "%.1f%%", value))").foregroundStyle(pressureColor(value))
                 }
@@ -224,7 +224,7 @@ struct PressureSection: View {
             case .loading:
                 ProgressView()
             case .failed(let message):
-                Text("Pressure unavailable: \(message)").font(.caption).foregroundStyle(.red)
+                Text("Pressure unavailable: \(message)").font(.caption).foregroundStyle(.statusBad)
             case .loaded(let report, _, _):
                 pressureRow("CPU", report.pressure.cpu, report.mostAffected("cpu"))
                 pressureRow("Memory", report.pressure.memory, report.mostAffected("memory"))

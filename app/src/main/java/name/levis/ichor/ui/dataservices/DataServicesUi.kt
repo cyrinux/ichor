@@ -26,6 +26,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
@@ -101,7 +103,8 @@ fun GarageState.label(): String = stringResource(
 
 @Composable
 fun HealthDot(health: ServiceHealth, modifier: Modifier = Modifier) {
-    Box(modifier.size(10.dp).background(health.color(), CircleShape))
+    val label = health.label()
+    Box(modifier.size(10.dp).background(health.color(), CircleShape).semantics { contentDescription = label })
 }
 
 /** The app's own icon when the inventory has it, else a generic one. */

@@ -248,7 +248,7 @@ private struct IssuedConfigSection: View {
     @ViewBuilder
     private var sections: some View {
         Section {
-            Label("Talosconfig created", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+            Label("Talosconfig created", systemImage: "checkmark.seal.fill").foregroundStyle(.statusOK)
             LabeledContent("Roles", value: issued.roles.replacingOccurrences(of: ",", with: ", "))
             LabeledContent("Expires", value: issued.expires.formatted(date: .abbreviated, time: .omitted))
         } footer: {
@@ -260,7 +260,7 @@ private struct IssuedConfigSection: View {
             } else {
                 Label("Too large for a QR code: save it to a file and transfer it securely (e.g. AirDrop).", systemImage: "qrcode")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(.statusWarn)
             }
         } header: {
             Text("QR code")

@@ -110,7 +110,7 @@ struct CaptureView: View {
         case .loading:
             ProgressView()
         case .failed(let message):
-            Text(message).font(.footnote).foregroundStyle(.red)
+            Text(message).font(.footnote).foregroundStyle(.statusBad)
             Button("Retry") { Task { await loadLinks() } }
         case .loaded(let all, _, _):
             let shown = captureInterfaces(all, includeVirtual: showVirtual || all.first { $0.name == options.interface }?.virtual == true)
@@ -140,7 +140,7 @@ struct CaptureView: View {
             }
             switch problem {
             case .invalidFilter(let message):
-                Text(message).font(.footnote).foregroundStyle(.red)
+                Text(message).font(.footnote).foregroundStyle(.statusBad)
             case .checkingFilter:
                 Text("Checking the filter…").font(.footnote).foregroundStyle(.secondary)
             default:
@@ -294,7 +294,7 @@ private struct CaptureLiveView: View {
 
     private func finishedBar(file: URL?, error: String?) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            if let error { Text(error).font(.footnote).foregroundStyle(.red) }
+            if let error { Text(error).font(.footnote).foregroundStyle(.statusBad) }
             if let file {
                 Text(verbatim: file.lastPathComponent).font(.caption.monospaced()).foregroundStyle(.secondary)
                 CaptureFileActions(url: file, onDelete: { deleted = true })

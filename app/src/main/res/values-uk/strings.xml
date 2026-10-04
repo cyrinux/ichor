@@ -1957,4 +1957,20 @@
         <item quantity="many">%1$d подів</item>
         <item quantity="other">%1$d пода</item>
     </plurals>
+    <string name="argo_health_healthy">Справний</string>
+    <string name="argo_health_progressing">Триває</string>
+    <string name="argo_health_degraded">Погіршений</string>
+    <string name="argo_health_suspended">Призупинено</string>
+    <string name="argo_health_missing">Відсутній</string>
+    <string name="argo_health_unknown">Невідомо</string>
+    <string name="argo_sync_state_synced">Синхронізовано</string>
+    <string name="argo_sync_state_out_of_sync">Розсинхронізовано</string>
+    <string name="argo_sync_state_unknown">Синхронізація невідома</string>
+    <string name="pod_state_running">Працює</string>
+    <string name="pod_state_starting">Запускається</string>
+    <string name="pod_state_stopped">Зупинено</string>
+    <string name="upgrade_step_done">Виконано</string>
+    <string name="upgrade_step_current">Виконується</string>
+    <string name="upgrade_step_failed">Помилка</string>
+    <string name="upgrade_step_pending">Не розпочато</string>
 </resources>

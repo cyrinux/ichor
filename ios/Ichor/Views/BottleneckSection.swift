@@ -34,7 +34,7 @@ struct BottleneckContent: View {
             Text("Rates use consecutive samples. Disk activity and average I/O time are evidence, not proof of saturation.")
                 .font(.caption).foregroundStyle(.secondary)
             ForEach(detail.errors.keys.sorted(), id: \.self) { key in
-                Text(verbatim: "\(key): \(detail.errors[key] ?? "")").foregroundStyle(.red)
+                Text(verbatim: "\(key): \(detail.errors[key] ?? "")").foregroundStyle(.statusBad)
             }
         }
     }

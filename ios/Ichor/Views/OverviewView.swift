@@ -190,6 +190,7 @@ struct OverviewView: View {
                 }
                 if model.allows(.health) {
                     NavigationLink(value: Route.health) { Image(systemName: "heart.text.square") }
+                        .accessibilityLabel(Text("Cluster health"))
                 }
                 NavigationLink(value: Route.events(node: nil, hostnames: hostnames)) {
                     Image(systemName: "list.bullet.rectangle")
@@ -201,8 +202,11 @@ struct OverviewView: View {
                         .accessibilityLabel(Text("Kubernetes workloads"))
                 }
                 NavigationLink(value: Route.kubespan) { Image(systemName: "point.3.connected.trianglepath.dotted") }
+                    .accessibilityLabel(Text("KubeSpan"))
                 NavigationLink(value: Route.etcd) { Image(systemName: "cylinder.split.1x2") }
+                    .accessibilityLabel(Text(verbatim: "etcd"))
                 NavigationLink(value: Route.settings) { Image(systemName: "gearshape") }
+                    .accessibilityLabel(Text("Settings"))
             }
         }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
@@ -497,10 +501,10 @@ private struct NodeRow: View {
                     .foregroundStyle(.secondary)
             }
             ForEach(node.unmetConditions, id: \.self) {
-                Text(verbatim: "\($0.name): \($0.reason)").font(.caption).foregroundStyle(.orange)
+                Text(verbatim: "\($0.name): \($0.reason)").font(.caption).foregroundStyle(.statusWarn)
             }
             if let error = node.error, !error.isEmpty {
-                Text(error).font(.caption).foregroundStyle(.red)
+                Text(error).font(.caption).foregroundStyle(.statusBad)
             }
         }
         .padding(.vertical, 2)

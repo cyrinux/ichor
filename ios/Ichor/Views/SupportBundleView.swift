@@ -55,7 +55,7 @@ struct SupportBundleView: View {
                 Label("The bundle contains logs and cluster details. It is NOT masked by screenshot mode: review it before sharing.",
                       systemImage: "exclamationmark.triangle.fill")
                     .font(.footnote)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(.statusWarn)
                 Text("Parts your talosconfig role cannot read are left out and noted in the bundle (machine config needs os:admin, etcd status os:operator).")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -105,7 +105,7 @@ struct SupportBundleView: View {
             Button("Create bundle") { Task { await start(all) } }
                 .disabled(chosen.isEmpty)
             outcome
-            if let message { Text(message).font(.footnote).foregroundStyle(.red) }
+            if let message { Text(message).font(.footnote).foregroundStyle(.statusBad) }
         } footer: {
             Text("Collecting takes a few minutes per node. Keep the app open: the screen stays on meanwhile.")
         }
@@ -121,12 +121,12 @@ struct SupportBundleView: View {
                 Image(systemName: "checkmark.circle.fill")
             }
             .font(.footnote)
-            .foregroundStyle(.green)
+            .foregroundStyle(.statusOK)
         case .failed(let error):
             if versionNotice(error) != nil {
                 ErrorOrNoticeText(message: error)
             } else {
-                Text("Bundle failed: \(error)").font(.footnote).foregroundStyle(.red)
+                Text("Bundle failed: \(error)").font(.footnote).foregroundStyle(.statusBad)
             }
         case .cancelled:
             Text("The collection was interrupted").font(.footnote).foregroundStyle(.secondary)
@@ -226,7 +226,7 @@ private struct SupportNodeRow: View {
                     }
                 case .done:
                     Text("done").font(.caption).foregroundStyle(.secondary)
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.statusOK)
                 }
             }
             if case .collecting(let progress) = state {

@@ -71,7 +71,7 @@ struct AISection: View {
                 }
             }
         }
-        if let modelsMessage { Text(modelsMessage).font(.footnote).foregroundStyle(.red) }
+        if let modelsMessage { Text(modelsMessage).font(.footnote).foregroundStyle(.statusBad) }
     }
 
     private func listModels(_ provider: AIProvider) async {

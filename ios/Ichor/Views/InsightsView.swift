@@ -42,7 +42,7 @@ private struct InsightsContent: View {
             } else {
                 List {
                     picker
-                    if let error = session.error { Text(verbatim: error).foregroundStyle(.red) }
+                    if let error = session.error { Text(verbatim: error).foregroundStyle(.statusBad) }
                     if tab == 0 { drift } else { recorder }
                 }
             }
@@ -86,7 +86,7 @@ private struct InsightsContent: View {
             }
             ForEach(snapshot.nodes.filter { !$0.errors.isEmpty }) { node in
                 Text(verbatim: "\(node.hostname): \(node.errors.keys.sorted().map { "\($0): \(node.errors[$0] ?? "")" }.joined(separator: "; "))")
-                    .font(.caption).foregroundStyle(.red)
+                    .font(.caption).foregroundStyle(.statusBad)
             }
         }
     }
@@ -177,7 +177,7 @@ private struct IncidentEvidenceCard: View {
                 } else { Text("This older sample has incomplete details. Record a new session to see formatted metrics.") }
             case "status":
                 if !value("stage").isEmpty { Text("Stage: \(value("stage"))") }
-                if !value("error").isEmpty { Text(verbatim: value("error")).foregroundStyle(.red) }
+                if !value("error").isEmpty { Text(verbatim: value("error")).foregroundStyle(.statusBad) }
                 if let conditions = detail["conditions"] as? [[String: Any]] {
                     ForEach(Array(conditions.enumerated()), id: \.offset) { _, condition in
                         Text(verbatim: "\(condition["name"] as? String ?? ""): \(condition["reason"] as? String ?? "")")

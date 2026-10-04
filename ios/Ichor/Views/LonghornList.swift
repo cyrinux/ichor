@@ -103,7 +103,7 @@ private struct BackupTargetRow: View {
                            color: target.available ? .green : .red)
             }
             if !target.available && !target.message.isEmpty {
-                Text(verbatim: target.message).font(.caption).foregroundStyle(.red)
+                Text(verbatim: target.message).font(.caption).foregroundStyle(.statusBad)
             }
         }
     }
@@ -119,7 +119,7 @@ private struct NodeRow: View {
                 Text(verbatim: node.name).font(.subheadline.monospaced())
                 Spacer()
                 if !node.ready {
-                    Text("not ready").font(.caption).foregroundStyle(.red)
+                    Text("not ready").font(.caption).foregroundStyle(.statusBad)
                 } else if !node.schedulable {
                     Text("scheduling disabled").font(.caption).foregroundStyle(attentionColor)
                 }

@@ -60,6 +60,8 @@ struct EventsView: View {
                 } label: {
                     Image(systemName: filter == .all
                           ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                    .accessibilityLabel(Text("Filter"))
+                    .accessibilityValue(Text(filter.localizedLabel))
                 }
             }
         }

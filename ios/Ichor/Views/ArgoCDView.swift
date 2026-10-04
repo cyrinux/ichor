@@ -191,7 +191,7 @@ struct ArgoCDView: View {
         } else {
             failure = await store.run(action, on: apps, with: client)
         }
-        if let failure { message = failure } else { succeeded += 1 }
+        if let failure { message = failure } else { succeeded += 1; announce(String(localized: "Done")) }
         if action == .sync { editMode = .inactive }
         await load()
     }

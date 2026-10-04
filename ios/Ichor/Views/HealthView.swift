@@ -33,7 +33,7 @@ struct HealthView: View {
                         if !running { Button("Re-run") { runID += 1 } }
                     }
                     if let error {
-                        Text(error).foregroundStyle(.red)
+                        Text(error).foregroundStyle(.statusBad)
                         // Only with the optional AI diagnosis turned on in the settings.
                         if finished, ai.enabled {
                             NavigationLink("Diagnose with AI", value: Route.diagnosis(note: healthFailureNote(error)))
