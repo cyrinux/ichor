@@ -47,6 +47,10 @@ func NodeStats(configYAML, contextName, node string) (out string, err error) {
 	}
 
 	return withSession(configYAML, contextName, statsTimeout, func(ctx context.Context, s *session) (string, error) {
+		if err := validatePowerTarget(s.context, node); err != nil {
+			return "", err
+		}
+
 		nodeCtx := client.WithNode(ctx, node)
 		mc := s.client.MachineClient
 		empty := &emptypb.Empty{}

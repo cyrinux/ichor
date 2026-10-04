@@ -643,7 +643,7 @@ class TalosRepository(
     }
 
     /**
-     * Hosts of [networks] (IPv4 CIDRs) answering the Talos API with the credentials of one of
+     * Hosts of [networks] (IPv4 or IPv6 CIDRs) answering the Talos API with the credentials of one of
      * the stored contexts. Not through [call]: it looks for any cluster, on whatever network.
      */
     suspend fun findEndpoints(networks: List<String>): List<EndpointMatch> {

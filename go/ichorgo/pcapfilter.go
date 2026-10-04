@@ -27,6 +27,12 @@ const ethernetHeaderLen = 14
 // parentheses. Host names, VLAN, portrange and byte offsets (tcp[13]) are not supported.
 func ValidateCaptureFilter(expr string) (out string) {
 	defer maskResult(&out, new(error))
+	// Runs first: maskResult would turn a panic into "", which means valid here.
+	defer func() {
+		if r := recover(); r != nil {
+			out = "invalid filter"
+		}
+	}()
 
 	if _, err := compileFilter(expr); err != nil {
 		return err.Error()
@@ -42,6 +48,11 @@ func compileFilter(expr string) ([]bpf.Instruction, error) {
 		return nil, nil
 	}
 
+	// Parsing recurses per parenthesis and operator: refuse before, not after the whole emit.
+	if len(expr) > maxFilterLen {
+		return nil, errors.New("filter too long")
+	}
+
 	ins, err := parseFilter(expr)
 	if err != nil {
 		return nil, err
@@ -53,6 +64,9 @@ func compileFilter(expr string) ([]bpf.Instruction, error) {
 
 	return ins, nil
 }
+
+// maxFilterLen is far above any filter typed by hand.
+const maxFilterLen = 1024
 
 func assembleFilter(ins []bpf.Instruction) ([]bpf.RawInstruction, error) {
 	if len(ins) > maxBPFInstructions {

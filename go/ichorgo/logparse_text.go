@@ -81,10 +81,14 @@ func isFacility(s string) bool {
 	return true
 }
 
+// maxStructuredLine: longer lines are shown as they are, without their trailing JSON parsed.
+const maxStructuredLine = 16 << 10
+
 // splitTrailingJSON splits "message {json object}" into the message and the object's
 // fields; anything else is all message.
 func splitTrailingJSON(s string) (string, []logField) {
-	if !strings.HasSuffix(s, "}") {
+	// Each " {" is a parse attempt to the end of the line: quadratic on a long crafted line.
+	if !strings.HasSuffix(s, "}") || len(s) > maxStructuredLine {
 		return s, nil
 	}
 

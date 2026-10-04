@@ -115,6 +115,7 @@ func (d *Diagnosis) Ask(provider, apiKey, model, baseURL, language, note string,
 
 	go func() {
 		defer cancel()
+		defer onPanic(listener.OnDone)
 
 		listener.OnDone(strings.ToValidUTF8(d.ask(ctx, provider, apiKey, model, baseURL, language, note, listener), "�"))
 	}()

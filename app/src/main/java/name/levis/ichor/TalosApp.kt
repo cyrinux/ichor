@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import name.levis.ichor.data.BackupManager
 import name.levis.ichor.data.AiPreferences
 import name.levis.ichor.data.CaptureRepository
+import name.levis.ichor.data.CiliumRepository
 import name.levis.ichor.data.NetPerfHistory
 import name.levis.ichor.data.NetPerfRepository
 import name.levis.ichor.data.PublicIpRepository
@@ -83,6 +84,7 @@ class TalosApp : Application() {
     val debugShells by lazy { DebugShells(this, configRepository) }
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
     val netPerfRepository by lazy { NetPerfRepository(configRepository, kubeServers) }
+    val ciliumRepository by lazy { CiliumRepository(configRepository, kubeServers) }
     val netPerfHistory by lazy { NetPerfHistory(java.io.File(noBackupFilesDir, "netperf")) }
     val publicIps by lazy {
         PublicIpRepository(

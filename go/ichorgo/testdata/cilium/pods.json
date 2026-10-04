@@ -1,0 +1,10 @@
+{"items":[
+ {"metadata":{"name":"db-0","namespace":"shop","labels":{"app":"db","tier":"data"}},"spec":{"serviceAccountName":"db"},"status":{"phase":"Running"}},
+ {"metadata":{"name":"api-5f6d-k8s2p","namespace":"shop","labels":{"app":"api","tier":"backend"}},"spec":{},"status":{"phase":"Running"}},
+ {"metadata":{"name":"frontend-7d9c8b6f5-x2k4q","namespace":"shop","labels":{"app":"frontend"}},"spec":{},"status":{"phase":"Running"}},
+ {"metadata":{"name":"batch-28761234-abcde","namespace":"jobs","labels":{"app":"batch"}},"spec":{},"status":{"phase":"Running"}},
+ {"metadata":{"name":"batch-28761000-zzzzz","namespace":"jobs","labels":{"app":"batch"}},"spec":{},"status":{"phase":"Succeeded"}},
+ {"metadata":{"name":"coredns-1","namespace":"kube-system","labels":{"k8s-app":"kube-dns"}},"spec":{},"status":{"phase":"Running"}},
+ {"metadata":{"name":"cilium-abcde","namespace":"kube-system","labels":{"k8s-app":"cilium"}},"spec":{"hostNetwork":true},"status":{"phase":"Running"}},
+ {"metadata":{"name":"web-1","namespace":"team-a-web","labels":{"app":"web"}},"spec":{},"status":{"phase":"Running"}}
+]}

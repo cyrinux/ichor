@@ -71,6 +71,7 @@ func StartContainerLogFollow(configYAML, contextName, node, containerID string, 
 
 	go func() {
 		defer cancel()
+		defer onPanic(listener.OnDone)
 
 		listener.OnDone(followLog(ctx, configYAML, contextName, node, open, listener, containerID, tailLines))
 	}()

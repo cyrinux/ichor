@@ -1,0 +1,12 @@
+{"items":[
+ {"metadata":{"name":"db-allow-api","namespace":"shop","creationTimestamp":"2026-09-01T10:00:00Z"},
+  "spec":{"podSelector":{"matchLabels":{"app":"db"}},"policyTypes":["Ingress"],
+   "ingress":[{"from":[{"podSelector":{"matchLabels":{"app":"api"}}}],"ports":[{"protocol":"TCP","port":5432}]}]}},
+ {"metadata":{"name":"default-deny-egress","namespace":"jobs","creationTimestamp":"2026-09-02T10:00:00Z"},
+  "spec":{"podSelector":{},"policyTypes":["Egress"]}},
+ {"metadata":{"name":"allow-monitoring","namespace":"shop","creationTimestamp":"2026-09-03T10:00:00Z"},
+  "spec":{"podSelector":{"matchExpressions":[{"key":"tier","operator":"In","values":["backend","data"]}]},
+   "ingress":[{"from":[{"namespaceSelector":{"matchLabels":{"team":"observability"}},"podSelector":{"matchLabels":{"app":"prometheus"}}},
+                       {"namespaceSelector":{}},{"ipBlock":{"cidr":"10.0.0.0/8","except":["10.1.0.0/16"]}}],
+              "ports":[{"port":"metrics"},{"protocol":"UDP","port":8000,"endPort":8100}]}]}}
+]}
