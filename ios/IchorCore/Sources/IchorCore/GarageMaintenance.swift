@@ -1,5 +1,12 @@
 import Foundation
 
+private extension KeyedDecodingContainer {
+    /// A field the Go core may leave out (older cores, empty values): its default then.
+    func field<T: Decodable>(_ key: Key, _ fallback: T) throws -> T {
+        try decodeIfPresent(T.self, forKey: key) ?? fallback
+    }
+}
+
 /// Resync tranquility of a Garage node: 0 resyncs at full speed, 2 is Garage's default.
 public enum GarageTranquility {
     public static let fullSpeed: Int64 = 0
