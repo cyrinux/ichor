@@ -114,6 +114,9 @@ them in. Locales without their own images use the en-US ones.
 
 ## App content
 
+Left menu: **Monitor and improve → Policy and programs → App content** (older Console
+layouts: **Policy → App content**). The Console's search bar also finds it: type "App content".
+
 ### Privacy policy
 
 `https://cyrinux.github.io/ichor/privacy.html` (from `docs/privacy.html`, published
@@ -241,11 +244,16 @@ declaration of its own.
 **To do in the Console before the first release with it** (Play rejects or blocks the release
 without it):
 
-1. **App content → Foreground service permissions → Start** (or **Manage**). The Console lists
-   it once a bundle declaring `FOREGROUND_SERVICE_SPECIAL_USE` is uploaded to any track; upload
-   to the internal track first if it is not listed yet.
-2. Tick **Special use** only. Leave every other type unticked.
-3. **Description** of the feature (what the user does, and why it must keep running):
+1. Upload a bundle with the service first: the declaration only appears once a bundle declaring
+   `FOREGROUND_SERVICE_SPECIAL_USE` is on a track. The next tag does it (CI rolls out on the
+   internal track); by hand, `just build-play` then the upload under [Release](#release).
+2. **Monitor and improve → Policy and programs → App content**, then in the declarations
+   list, **Foreground service permissions → Start** (or **Manage**). Not listed yet: it is
+   still processing the upload, or the bundle lacks the permission (check the merged manifest
+   with `aapt dump permissions` or the Console's **App bundle explorer**). Any pending
+   declaration also shows under **Inbox** and on the release's review screen.
+3. Tick **Special use** only. Leave every other type unticked.
+4. **Description** of the feature (what the user does, and why it must keep running):
 
    > Ichor manages Talos Linux clusters. An administrator can open a debug shell: an
    > interactive terminal in a privileged container on one of their own nodes, started only by
@@ -257,15 +265,15 @@ without it):
    > the notification) or the shell ends. No data is synced, uploaded or downloaded in the
    > background.
 
-4. **Impact if deferred or interrupted**: *the user's terminal session on the node is cut, and
+5. **Impact if deferred or interrupted**: *the user's terminal session on the node is cut, and
    whatever command they were running in it (a packet capture, a long diagnostic) is killed;
    they must start a new privileged container.*
-5. **Video**: a short screen recording on a real (test) cluster, as the demo has no debug
+6. **Video**: a short screen recording on a real (test) cluster, as the demo has no debug
    shell, with screenshot mode on (Settings → Privacy) to mask names, showing: node → **Debug shell** → **Start shell** → a command running → back
    button → the notification "Debug shell on <node>" stays → tap it, back in the same
    terminal → **Exit** on the notification → notification gone. Upload it as unlisted on
    YouTube (or Drive with link sharing) and paste the link.
-6. **Save → Send for review**. The Console blocks the release until this is filled.
+7. **Save → Send for review**. The Console blocks the release until this is filled.
 
 **In `AndroidManifest.xml`** the subtype the declaration matches is the
 `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` property of `DebugShellService`: keep both texts saying the
