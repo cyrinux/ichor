@@ -77,6 +77,9 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _overviewLayout = MutableStateFlow(OverviewLayout.parse(prefs.getString(KEY_OVERVIEW_LAYOUT, null)))
     val overviewLayout: StateFlow<OverviewLayout> = _overviewLayout.asStateFlow()
 
+    /** The overview's nodes card with a full row per node; collapsed (a chip each) by default. */
+    private val _nodesExpanded = MutableStateFlow(prefs.getBoolean(KEY_NODES_EXPANDED, false))
+    val nodesExpanded: StateFlow<Boolean> = _nodesExpanded.asStateFlow()
     /** The overview's app-bar actions: their order and which are icons or in its menu. */
     private val _overviewBar = MutableStateFlow(OverviewBar.parse(prefs.getString(KEY_OVERVIEW_BAR, null)))
     val overviewBar: StateFlow<OverviewBar> = _overviewBar.asStateFlow()
@@ -117,6 +120,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _overviewLayout.value = layout
     }
 
+    fun setNodesExpanded(expanded: Boolean) {
+        prefs.edit().putBoolean(KEY_NODES_EXPANDED, expanded).apply()
+        _nodesExpanded.value = expanded
+    }
+
     fun setOverviewBar(bar: OverviewBar) {
         prefs.edit().putString(KEY_OVERVIEW_BAR, bar.encode()).apply()
         _overviewBar.value = bar
@@ -144,6 +152,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_REMOTE_APP_ICONS = "remote_app_icons"
         private const val KEY_OFFLINE_CACHE = "offline_cache"
         private const val KEY_OVERVIEW_LAYOUT = "overview_layout"
+        private const val KEY_NODES_EXPANDED = "overview_nodes_expanded"
         private const val KEY_OVERVIEW_BAR = "overview_bar"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */

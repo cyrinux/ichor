@@ -29,6 +29,8 @@ struct OverviewView: View {
     /// Finding the public IPs Talos does not know (AppModel.detectPublicIPs).
     @State private var confirmDetectIPs = false
     @State private var detectIPsError: String?
+    /// The nodes section with a full row per node; collapsed (a chip each) by default.
+    @AppStorage("overview.nodesExpanded") private var nodesExpanded = false
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -75,66 +77,23 @@ struct OverviewView: View {
                         ArgoSection(state: argo, app: inventoryApps[argoCDCatalogID], downNodes: overview.downHostnames)
                     }
                     Section {
-                        ForEach(sorted(overview.nodes)) { node in
-                            let ref = NodeRef(address: node.node, hostname: node.hostname, role: node.role)
-                            Group {
-                                if node.reachable {
-                                    NavigationLink(value: Route.node(ref)) { NodeRow(node: node, publicIPs: node.shownPublicIPs(probed: model.activePublicIPs)) }
-                                } else {
-                                    NodeRow(node: node, publicIPs: node.shownPublicIPs(probed: model.activePublicIPs))
+                        // Collapsed (the default): a chip per calm node, a full row only for those
+                        // needing attention, so a problem never hides behind the fold.
+                        let nodes = sorted(overview.nodes)
+                        let calm = nodesExpanded ? [] : nodes.filter { !$0.needsAttention }
+                        let version = overview.nodes.sharedVersion
+                        if !calm.isEmpty {
+                            ChipFlow(spacing: 8) {
+                                ForEach(calm) { node in
+                                    NodeChip(node: node) { path.append(.node(nodeRef(node))) }
+                                        .contextMenu { nodeMenu(node) }
                                 }
                             }
-                            // Swipe right: live graphs. Swipe left: logs, shell, reboot (which only opens
-                            // its confirmation). Long press: everything, plus Copy IP.
-                            .swipeActions(edge: .leading) {
-                                if node.reachable {
-                                    Button { path.append(.nodeLive(ref)) } label: { Label("Live", systemImage: "chart.xyaxis.line") }
-                                        .tint(.blue)
-                                }
-                            }
-                            .swipeActions(edge: .trailing) {
-                                if node.reachable {
-                                    if model.allows(.power) {
-                                        Button { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot", systemImage: "power") }
-                                            .tint(.red)
-                                    }
-                                    if model.allows(.debugShell) {
-                                        Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
-                                            Label("Shell", systemImage: "apple.terminal")
-                                        }
-                                        .tint(.indigo)
-                                    }
-                                    Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
-                                        Label("Logs", systemImage: "text.alignleft")
-                                    }
-                                }
-                            }
-                            .contextMenu {
-                                if node.reachable {
-                                    Button { path.append(.nodeLive(ref)) } label: { Label("Live graphs", systemImage: "chart.xyaxis.line") }
-                                    Button { path.append(.node(ref)) } label: { Label("Services and logs", systemImage: "list.bullet") }
-                                    Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
-                                        Label("Kernel log", systemImage: "text.alignleft")
-                                    }
-                                    if model.allows(.debugShell) {
-                                        Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
-                                            Label("Debug shell", systemImage: "apple.terminal")
-                                        }
-                                    }
-                                    if model.allows(.power) {
-                                        Button(role: .destructive) { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot…", systemImage: "power") }
-                                        Button(role: .destructive) { path.append(.nodePower(ref, .shutdown)) } label: { Label("Shut down…", systemImage: "power") }
-                                    }
-                                }
-                                Button { UIPasteboard.general.string = node.node } label: { Label("Copy IP", systemImage: "doc.on.doc") }
-                            }
-                            // VoiceOver already lists the swipe actions; these are only in the context menu.
-                            .accessibilityActions {
-                                if node.reachable && model.allows(.power) {
-                                    Button("Shut down…") { path.append(.nodePower(ref, .shutdown)) }
-                                }
-                                Button("Copy IP") { UIPasteboard.general.string = node.node }
-                            }
+                            .buttonStyle(.borderless)
+                            .padding(.vertical, 4)
+                        }
+                        ForEach(nodesExpanded ? nodes : nodes.filter(\.needsAttention)) { node in
+                            nodeRow(node, sharedVersion: version)
                         }
                     } header: {
                         HStack {
@@ -144,6 +103,10 @@ struct OverviewView: View {
                                 DetectPublicIPsButton(running: model.isDetectingPublicIPs) { confirmDetectIPs = true }
                             }
                             Text(verbatim: "\(overview.nodes.count)")
+                            Button { withAnimation { nodesExpanded.toggle() } } label: {
+                                Image(systemName: nodesExpanded ? "chevron.up" : "chevron.down")
+                            }
+                            .accessibilityLabel(nodesExpanded ? Text("Show less") : Text("Show all"))
                         }
                     }
                     // Re-checked with every overview refresh (the load time is the task id).
@@ -430,6 +393,79 @@ struct OverviewView: View {
         discovered = discovery?.offer(dismissed: model.dismissedNodes(of: model.activeContext)) ?? []
     }
 
+    private func nodeRef(_ node: NodeOverview) -> NodeRef {
+        NodeRef(address: node.node, hostname: node.hostname, role: node.role)
+    }
+
+    /// A node's full row. Swipe right: live graphs. Swipe left: logs, shell, reboot (which only
+    /// opens its confirmation). Long press: everything, plus Copy IP.
+    @ViewBuilder
+    private func nodeRow(_ node: NodeOverview, sharedVersion: String?) -> some View {
+        let ref = nodeRef(node)
+        let row = NodeRow(node: node, publicIPs: node.shownPublicIPs(probed: model.activePublicIPs), sharedVersion: sharedVersion)
+        Group {
+            if node.reachable {
+                NavigationLink(value: Route.node(ref)) { row }
+            } else {
+                row
+            }
+        }
+        .swipeActions(edge: .leading) {
+            if node.reachable {
+                Button { path.append(.nodeLive(ref)) } label: { Label("Live", systemImage: "chart.xyaxis.line") }
+                    .tint(.blue)
+            }
+        }
+        .swipeActions(edge: .trailing) {
+            if node.reachable {
+                if model.allows(.power) {
+                    Button { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot", systemImage: "power") }
+                        .tint(.red)
+                }
+                if model.allows(.debugShell) {
+                    Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
+                        Label("Shell", systemImage: "apple.terminal")
+                    }
+                    .tint(.indigo)
+                }
+                Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
+                    Label("Logs", systemImage: "text.alignleft")
+                }
+            }
+        }
+        .contextMenu { nodeMenu(node) }
+        // VoiceOver already lists the swipe actions; these are only in the context menu.
+        .accessibilityActions {
+            if node.reachable && model.allows(.power) {
+                Button("Shut down…") { path.append(.nodePower(ref, .shutdown)) }
+            }
+            Button("Copy IP") { UIPasteboard.general.string = node.node }
+        }
+    }
+
+    /// Everything a node offers, for a row's or a chip's long press.
+    @ViewBuilder
+    private func nodeMenu(_ node: NodeOverview) -> some View {
+        let ref = nodeRef(node)
+        if node.reachable {
+            Button { path.append(.nodeLive(ref)) } label: { Label("Live graphs", systemImage: "chart.xyaxis.line") }
+            Button { path.append(.node(ref)) } label: { Label("Services and logs", systemImage: "list.bullet") }
+            Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
+                Label("Kernel log", systemImage: "text.alignleft")
+            }
+            if model.allows(.debugShell) {
+                Button { path.append(.debugShell(node: node.node, hostname: node.hostname)) } label: {
+                    Label("Debug shell", systemImage: "apple.terminal")
+                }
+            }
+            if model.allows(.power) {
+                Button(role: .destructive) { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot…", systemImage: "power") }
+                Button(role: .destructive) { path.append(.nodePower(ref, .shutdown)) } label: { Label("Shut down…", systemImage: "power") }
+            }
+        }
+        Button { UIPasteboard.general.string = node.node } label: { Label("Copy IP", systemImage: "doc.on.doc") }
+    }
+
     private func sorted(_ nodes: [NodeOverview]) -> [NodeOverview] {
         // Control-plane nodes first, then by hostname.
         nodes.sorted { (rank($0), $0.hostname) < (rank($1), $1.hostname) }
@@ -477,10 +513,32 @@ private struct Summary: View {
     }
 }
 
+/// A calm node in the collapsed nodes section: its status dot and hostname; tap opens it.
+private struct NodeChip: View {
+    let node: NodeOverview
+    let open: () -> Void
+
+    var body: some View {
+        Button(action: open) {
+            HStack(spacing: 6) {
+                Circle().fill(node.health.color).frame(width: 8, height: 8)
+                Text(verbatim: node.hostname).font(.subheadline).lineLimit(1)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Color.secondary.opacity(0.12), in: Capsule())
+        }
+        .foregroundStyle(.primary)
+        .accessibilityLabel(Text(verbatim: "\(node.hostname), \(node.health.label)"))
+    }
+}
+
 private struct NodeRow: View {
     let node: NodeOverview
     /// What Talos knows, else what a probe found (see shownPublicIPs).
     var publicIPs: [String] = []
+    /// The version every node runs, which the summary shows: left out of the row.
+    var sharedVersion: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -501,7 +559,8 @@ private struct NodeRow: View {
                 }
             }
             if node.reachable {
-                Text([role, node.version, node.stage, node.arch].filter { !$0.isEmpty }.joined(separator: "  ·  "))
+                Text([role, node.version == sharedVersion ? "" : node.version, node.stage, node.arch]
+                    .filter { !$0.isEmpty }.joined(separator: "  ·  "))
                     .font(.caption)
             } else if let lastSeen = node.lastSeenDate {
                 // Not answering, known from before: what it was, dimmed, and since when.
