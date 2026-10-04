@@ -328,6 +328,10 @@
     <string name="clusters_rename_label">Nome</string>
     <string name="clusters_rename_hint">Mostrato solo su questo dispositivo, il talosconfig mantiene %1$s. Lascia vuoto per usarlo di nuovo.</string>
     <string name="clusters_vpn_only">Solo VPN</string>
+    <string name="clusters_options">Opzioni di %1$s</string>
+    <string name="clusters_menu_rename">Rinomina</string>
+    <string name="clusters_menu_color">Colore</string>
+    <string name="clusters_menu_remove">Rimuovi</string>
     <string name="clusters_vpn_only_hint">Solo VPN: senza una VPN connessa l\'app non prova a raggiungere il cluster e i controlli in background la attendono.</string>
     <string name="shortcut_cluster_removed">Questo cluster è stato rimosso</string>
 
