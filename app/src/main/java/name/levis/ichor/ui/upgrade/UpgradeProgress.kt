@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.data.UpgradeRunState
 import name.levis.ichor.model.StepStatus
-import name.levis.ichor.model.TimelineStep
 import name.levis.ichor.model.UpgradePhase
 import name.levis.ichor.model.upgradeTimeline
 import name.levis.ichor.ui.components.KeepScreenOn
@@ -73,7 +72,7 @@ fun UpgradeProgress(run: UpgradeRunState, onStopFollowing: () -> Unit, onClose: 
         Text(run.image, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                steps.forEach { TimelineRow(it) }
+                steps.forEach { TimelineRow(stringResource(it.phase.label), it.status, it.at, it.message) }
             }
         }
         when {
@@ -114,12 +113,13 @@ fun UpgradeProgress(run: UpgradeRunState, onStopFollowing: () -> Unit, onClose: 
     }
 }
 
+/** One step of a run's timeline: its state icon, [label], first time ([at], 0: none) and last [message]. */
 @Composable
-private fun TimelineRow(step: TimelineStep) {
+fun TimelineRow(label: String, status: StepStatus, at: Long, message: String) {
     val colors = LocalStatusColors.current
-    val time = remember(step.at) { if (step.at > 0) formatTime(step.at) else "" }
+    val time = remember(at) { if (at > 0) formatTime(at) else "" }
     val state = stringResource(
-        when (step.status) {
+        when (status) {
             StepStatus.DONE -> R.string.upgrade_step_done
             StepStatus.CURRENT -> R.string.upgrade_step_current
             StepStatus.FAILED -> R.string.upgrade_step_failed
@@ -128,7 +128,7 @@ private fun TimelineRow(step: TimelineStep) {
     )
     Row(verticalAlignment = Alignment.Top) {
         Box(Modifier.size(24.dp).semantics { contentDescription = state }, contentAlignment = Alignment.Center) {
-            when (step.status) {
+            when (status) {
                 StepStatus.DONE -> Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = colors.ok)
                 StepStatus.CURRENT -> CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                 StepStatus.FAILED -> Icon(Icons.Outlined.Error, contentDescription = null, tint = colors.bad)
@@ -138,17 +138,17 @@ private fun TimelineRow(step: TimelineStep) {
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
             Row {
                 Text(
-                    stringResource(step.phase.label),
+                    label,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = if (step.status == StepStatus.PENDING) colors.muted else MaterialTheme.colorScheme.onSurface,
+                    color = if (status == StepStatus.PENDING) colors.muted else MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f),
                 )
                 if (time.isNotEmpty()) {
                     Text(time, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            if (step.message.isNotEmpty()) {
-                MutedText(step.message)
+            if (message.isNotEmpty()) {
+                MutedText(message)
             }
         }
     }

@@ -1,6 +1,6 @@
 # D1. Node maintenance: cordon → drain → reboot → wait Ready → uncordon
 
-Status: **missing**. Size L. Read [../README.md](../README.md) for the conventions.
+Status: **implemented** (phases 1–3: Go core, Android, iOS). Remaining: overview "cordoned" chip, standalone Drain action, upgrade "drain first" (M8). Size L. Read [../README.md](../README.md) for the conventions.
 
 ## What exists today
 

@@ -12,7 +12,7 @@ Every idea was checked against the code (Go core, Android, iOS) on 2026-10-04. S
 
 | # | Feature | Status today | Plan | Size |
 |---|---------|--------------|------|------|
-| D1 | Node maintenance (cordon → drain → reboot → wait Ready → uncordon) | **missing**: reboot has no cordon/drain; nothing evicts pods or reads PDBs | [01-node-maintenance.md](devops/01-node-maintenance.md) | L |
+| D1 | Node maintenance (cordon → drain → reboot → wait Ready → uncordon) | **implemented** (M8 "drain first" for upgrades remains) | [01-node-maintenance.md](devops/01-node-maintenance.md) | L |
 | D2 | Small kubectl actions (scale, suspend CronJob, Deployment rollback, previous logs, pod logs from Workloads) | **implemented** (Argo self-heal warning remains) | [02-kubectl-actions.md](devops/02-kubectl-actions.md) | M |
 | D3 | Machineconfig patches in try mode | **partial**: machine config is read-only (`machineconfig.go`); no `ApplyConfiguration` anywhere | [03-machineconfig-try-patches.md](devops/03-machineconfig-try-patches.md) | L |
 | D4 | Rolling Talos upgrade (whole cluster), extension check, later `upgrade-k8s` | **partial**: one node at a time with a pre-flight plan, lock, progress (`upgrade*.go`, `ui/upgrade`) | [04-rolling-upgrade.md](devops/04-rolling-upgrade.md) | L |

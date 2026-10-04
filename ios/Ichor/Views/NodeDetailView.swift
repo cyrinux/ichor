@@ -39,6 +39,9 @@ struct NodeDetailView: View {
     @State private var showingUpgrade = false
     @State private var showingStorage = false
     @State private var showingResources = false
+    @State private var showingMaintenance = false
+    /// The cordon / uncordon choice is shown (the node's current state is not known here).
+    @State private var showingCordon = false
     /// Service start/stop/restart waiting for confirmation.
     @State private var serviceRequest: ServiceRequest?
 
@@ -142,6 +145,17 @@ struct NodeDetailView: View {
         }
         .navigationDestination(isPresented: $showingResources) {
             ResourceTypesView(node: ref.address, hostname: ref.hostname)
+        }
+        .navigationDestination(isPresented: $showingMaintenance) {
+            MaintenanceView(node: ref.address, hostname: ref.hostname)
+        }
+        .confirmationDialog(String(localized: "Kubernetes scheduling on \(ref.hostname)"), isPresented: $showingCordon,
+                            titleVisibility: .visible) {
+            Button("Cordon", role: .destructive) { Task { await cordon(true) } }
+            Button("Uncordon") { Task { await cordon(false) } }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("A cordoned node gets no new pods; the pods it runs stay. Uncordon it to schedule pods on it again.")
         }
         .sheet(item: $powerAction) { action in
             PowerSheet(action: action, hostname: ref.hostname, role: ref.role) { request in
@@ -268,6 +282,17 @@ extension NodeDetailView {
                     showingUpgrade = true
                 }
             }
+            // Cordon and drain go through the Kubernetes API (os:admin, like the workloads).
+            if model.allows(.workloads) {
+                Button { showingMaintenance = true } label: {
+                    Label("Maintenance…", systemImage: "wrench.and.screwdriver")
+                }
+                // An uncordon mid-drain lets the evicted pods come back before the reboot.
+                Button { showingCordon = true } label: {
+                    Label("Cordon / uncordon…", systemImage: "nosign")
+                }
+                .disabled(maintenanceRunning)
+            }
         }
         // Power actions only exist for configs whose role allows them.
         if model.allows(.power) {
@@ -278,6 +303,35 @@ extension NodeDetailView {
                 }
             }
         }
+    }
+}
+
+extension NodeDetailView {
+    /// A maintenance of this node runs: it owns the node's cordon until it ends.
+    private var maintenanceRunning: Bool {
+        MaintenanceJob.shared.isActive && MaintenanceJob.shared.target?.node == ref.address
+    }
+
+    /// `kubectl cordon` / `uncordon`, after the app lock when it is on.
+    private func cordon(_ on: Bool) async {
+        guard let client = model.client else { return }
+        let title = on ? String(localized: "Cordon \(ref.hostname)") : String(localized: "Uncordon \(ref.hostname)")
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: title) {
+            succeeded = false
+            resultMessage = failure
+            return
+        }
+        running = true
+        defer { running = false }
+        do {
+            try await client.cordon(node: ref.address, on: on)
+            resultMessage = on ? String(localized: "\(ref.hostname) is cordoned: no new pods are scheduled on it.")
+                : String(localized: "\(ref.hostname) is uncordoned: pods can be scheduled on it again.")
+        } catch {
+            resultMessage = error.localizedDescription
+        }
+        // Not `succeeded`: that dismisses the screen (power actions); the node stays usable here.
+        succeeded = false
     }
 }
 

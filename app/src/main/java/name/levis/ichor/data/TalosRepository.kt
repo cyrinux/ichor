@@ -6,6 +6,8 @@ import name.levis.ichor.R
 import name.levis.ichorgo.EventListener
 import name.levis.ichorgo.HealthListener
 import name.levis.ichorgo.LogListener
+import name.levis.ichorgo.MaintenanceListener
+import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ArgoAction
@@ -20,6 +22,8 @@ import name.levis.ichor.model.GarageBlockReport
 import name.levis.ichor.model.GarageInstance
 import name.levis.ichor.model.GarageRepairResult
 import name.levis.ichor.model.LonghornAction
+import name.levis.ichor.model.MaintenanceAction
+import name.levis.ichor.model.MaintenancePlan
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
@@ -556,6 +560,30 @@ class TalosRepository(
 
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
     suspend fun deletePod(pod: KubePod) = kubeCall { cfg, ctx, server -> Ichorgo.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
+
+    /** What a maintenance of [node] would do: pods to evict, budgets, reboot checks (os:admin). Never cached. */
+    suspend fun maintenancePlan(node: String): MaintenancePlan = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(MaintenancePlan.serializer(), Ichorgo.nodeMaintenancePlan(cfg, ctx, server, node))
+    }
+
+    /** `kubectl cordon` ([on]) or `uncordon` of [node] (os:admin). */
+    suspend fun cordon(node: String, on: Boolean) = kubeCall { cfg, ctx, server -> Ichorgo.kubeCordon(cfg, ctx, server, node, on) }
+
+    /**
+     * Starts the maintenance of [node] (cordon, drain, then [action]); returns at once, the
+     * run reports to [listener]. The core refuses blockers, and acknowledgments unless [acknowledged].
+     */
+    fun startMaintenance(
+        node: String,
+        action: MaintenanceAction,
+        includeBare: Boolean,
+        acknowledged: Boolean,
+        listener: MaintenanceListener,
+    ): MaintenanceRun {
+        val stored = configs.forCall()
+        val server = stored.activeSummary?.fingerprint?.let { kubeServers.servers.value[it] }.orEmpty()
+        return Ichorgo.startNodeMaintenance(stored.yaml, stored.activeContext, server, node, action.wire, includeBare, acknowledged, listener)
+    }
 
     /** `talosctl reboot -m [mode]` (default, powercycle, force); needs os:operator or higher. */
     suspend fun reboot(node: String, mode: String) = call { cfg, ctx -> Ichorgo.reboot(cfg, ctx, node, mode) }
