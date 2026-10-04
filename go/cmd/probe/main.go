@@ -1,6 +1,6 @@
 // Command probe exercises the ichorgo API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|workloads|rollout-restart KIND NAMESPACE NAME|pods|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|dataservices [HINTS]|argocd|argocd-network NAMESPACE NAME|argocd-action NAMESPACE NAME ACTION [OPTIONS]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|workloads|rollout-restart KIND NAMESPACE NAME|pods|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|dataservices [HINTS]|argocd|argocd-network NAMESPACE NAME|argocd-action NAMESPACE NAME ACTION [OPTIONS]|cilium|netpol|hubble [SECONDS] [all|drops] [NAMESPACE [POD]]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai
 package main
 
 import (
@@ -74,7 +74,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|clusterstats|inventory|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|topology|kubeconfig|pods|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|workloads|rollout-restart KIND NAMESPACE NAME|dataservices [HINTS]|argocd|argocd-network NAMESPACE NAME|argocd-action NAMESPACE NAME ACTION [OPTIONS]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai"))
+		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|clusterstats|inventory|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|topology|kubeconfig|pods|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|workloads|rollout-restart KIND NAMESPACE NAME|dataservices [HINTS]|argocd|argocd-network NAMESPACE NAME|argocd-action NAMESPACE NAME ACTION [OPTIONS]|cilium|netpol|hubble [SECONDS] [all|drops] [NAMESPACE [POD]]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai"))
 	}
 
 	raw, err := os.ReadFile(*configPath)
@@ -149,6 +149,13 @@ func main() {
 		if err = ichorgo.KubeArgoAction(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4)); err == nil {
 			out = "requested"
 		}
+	case "cilium":
+		out, err = ichorgo.KubeCilium(cfg, *contextName, *kubeServer)
+	case "netpol":
+		out, err = ichorgo.KubeNetworkPolicies(cfg, *contextName, *kubeServer)
+	case "hubble":
+		// hubble [SECONDS] [all|drops] [NAMESPACE [POD]]: read-only exec in the cilium agents.
+		out = hubbleRun(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
 	case "netperf-nodes":
 		out, err = ichorgo.NetPerfNodes(cfg, *contextName, *kubeServer)
 	case "netperf":
