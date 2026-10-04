@@ -1,0 +1,3 @@
+• Show lagging etcd members
+• Name etcd nodes by hostname even when they did not answer
+• Keep room for the cluster name in the overview bar
