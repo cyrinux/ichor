@@ -30,6 +30,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.ETCD
+import name.levis.ichor.data.OVERVIEW
+import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.EtcdMember
 import name.levis.ichor.model.EtcdNodeStatus
 import name.levis.ichor.model.EtcdOverview
@@ -79,6 +81,7 @@ import name.levis.ichor.model.VersionNotice
 import name.levis.ichor.model.clusterSupport
 import name.levis.ichor.model.confirmToken
 import name.levis.ichor.model.notice
+import name.levis.ichor.model.nodeHostnames
 import name.levis.ichor.model.removalNode
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.components.FeatureGate
@@ -99,15 +102,19 @@ class EtcdViewModel(private val talos: TalosRepository) : LoadingViewModel<EtcdO
     override val restores get() = talos.restores
     override suspend fun fetch() = talos.etcd()
 
+    /** node address -> hostname, from the cached overview when available. */
+    fun knownHostnames(): Map<String, String> =
+        talos.cached<ClusterOverview>(OVERVIEW)?.value?.nodes?.associate { it.node to it.hostname }.orEmpty()
+
     private val _defrag = MutableStateFlow<DefragState>(DefragState.Idle)
     val defrag: StateFlow<DefragState> = _defrag.asStateFlow()
 
-    /** Defragments [targets] strictly one after another; stops at the first failure. */
+    /** Defragments [targets] (named by [hostnames], node -> hostname) strictly one after another; stops at the first failure. */
     fun defragment(targets: List<EtcdNodeStatus>, hostnames: Map<String, String>) {
         if (_defrag.value is DefragState.Running || targets.isEmpty()) return
         viewModelScope.launch {
             targets.forEachIndexed { i, member ->
-                val name = hostnames[member.memberId] ?: member.node
+                val name = hostnames[member.node] ?: member.node
                 _defrag.value = DefragState.Running(name, i + 1, targets.size)
                 val result = runCatching { talos.etcdDefragment(member.node) }
                 refresh()
@@ -236,6 +243,7 @@ fun EtcdScreen(
                 ) {
                     EtcdContent(
                         etcd = s.data,
+                        knownHostnames = remember { vm.knownHostnames() },
                         defrag = defrag,
                         canDefrag = canDefrag,
                         onDefrag = { confirm = it },
@@ -274,7 +282,7 @@ fun EtcdScreen(
     }
 
     confirmForfeit?.let { leader ->
-        val hostname = (state as? UiState.Loaded)?.data?.members?.firstOrNull { it.id == leader.memberId }?.hostname ?: leader.node
+        val hostname = (state as? UiState.Loaded)?.data?.nodeHostnames(vm.knownHostnames())?.get(leader.node) ?: leader.node
         ForfeitConfirmDialog(
             hostname = hostname,
             onConfirm = {
@@ -355,12 +363,13 @@ private data class SnapshotActions(
     val onDismiss: () -> Unit,
 )
 
-/** What the confirmation dialog is about to defragment. */
+/** What the confirmation dialog is about to defragment; [hostnames] maps node -> hostname. */
 data class DefragRequest(val targets: List<EtcdNodeStatus>, val hostnames: Map<String, String>)
 
 @Composable
 private fun EtcdContent(
     etcd: EtcdOverview,
+    knownHostnames: Map<String, String>,
     defrag: DefragState,
     canDefrag: Boolean,
     onDefrag: (DefragRequest) -> Unit,
@@ -371,6 +380,8 @@ private fun EtcdContent(
 ) {
     val colors = LocalStatusColors.current
     val hostnames = etcd.members.associate { it.id to it.hostname }
+    // Nodes are addresses; a node that did not answer has no member id to name it by.
+    val nodeNames = remember(etcd, knownHostnames) { etcd.nodeHostnames(knownHostnames) }
     val running = defrag is DefragState.Running
 
     LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -380,7 +391,7 @@ private fun EtcdContent(
                 DefragPanel(
                     defrag = defrag,
                     order = defragOrder(etcd.statuses),
-                    hostnames = hostnames,
+                    hostnames = nodeNames,
                     canDefrag = canDefrag,
                     onDefrag = onDefrag,
                     onDismiss = onDismissDefrag,
@@ -420,13 +431,13 @@ private fun EtcdContent(
         }
         item { SectionTitle(stringResource(R.string.etcd_section_members, etcd.members.size)) }
         items(etcd.statuses, key = { it.node }) { status ->
-            val hostname = hostnames[status.memberId] ?: status.node
+            val hostname = nodeNames[status.node] ?: status.node
             MemberStatusCard(
                 status = status,
                 hostname = hostname,
                 actions = members.actionsFor(status.memberId, hostname, status.takeIf { it.isLeader && it.error == null }),
                 onDefrag = if (canDefrag && !running && status.error == null) {
-                    { onDefrag(DefragRequest(listOf(status), hostnames)) }
+                    { onDefrag(DefragRequest(listOf(status), nodeNames)) }
                 } else {
                     null
                 },
@@ -545,7 +556,7 @@ private fun DefragPanel(
 
 @Composable
 private fun DefragConfirmDialog(request: DefragRequest, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    val names = request.targets.map { request.hostnames[it.memberId] ?: it.node }
+    val names = request.targets.map { request.hostnames[it.node] ?: it.node }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {

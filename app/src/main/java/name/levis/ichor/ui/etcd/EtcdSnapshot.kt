@@ -58,6 +58,7 @@ import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.openTruncating
 import name.levis.ichor.ui.components.text
+import name.levis.ichor.model.nodeHostnames
 import name.levis.ichor.model.snapshotCandidates
 import name.levis.ichor.model.snapshotFileName
 import name.levis.ichor.security.AuthResult
@@ -224,8 +225,8 @@ fun rememberSnapshotFlow(vm: EtcdSnapshotViewModel, contextName: String): (EtcdO
     }
 
     return { etcd ->
-        val hostnames = etcd.members.associate { it.id to it.hostname }
-        val targets = snapshotCandidates(etcd.statuses).map { SnapshotTarget(it.node, hostnames[it.memberId] ?: it.node, it.dbSize) }
+        val hostnames = etcd.nodeHostnames()
+        val targets = snapshotCandidates(etcd.statuses).map { SnapshotTarget(it.node, hostnames[it.node] ?: it.node, it.dbSize) }
         when {
             targets.isEmpty() -> vm.fail(UiText.Res(R.string.etcd_snapshot_no_member))
             targets.size == 1 -> warning = targets.single()
