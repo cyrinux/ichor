@@ -200,7 +200,9 @@ func attachPolicyPods(policies []netPolicy, pods []npPod, namespaces []npNamespa
 
 		for i := range policies {
 			p := &policies[i]
-			if !p.selects(m.Namespace, labels) {
+
+			selected, in, out := p.isolation(m.Namespace, labels)
+			if !selected {
 				continue
 			}
 
@@ -209,7 +211,7 @@ func attachPolicyPods(policies []netPolicy, pods []npPod, namespaces []npNamespa
 				p.Pods = append(p.Pods, m.Namespace+"/"+m.Name)
 			}
 
-			ingress, egress = ingress || p.Ingress, egress || p.Egress
+			ingress, egress = ingress || in, egress || out
 		}
 
 		if ingress {
@@ -237,7 +239,7 @@ func isolatingPolicies(policies []netPolicy, namespace string, labels labelSet, 
 	var out []policyRef
 
 	for i := range policies {
-		if policies[i].isolates(direction) && policies[i].selects(namespace, labels) {
+		if policies[i].isolates(namespace, labels, direction) {
 			out = append(out, policies[i].ref())
 		}
 	}

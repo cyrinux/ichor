@@ -19,7 +19,7 @@ func collectLines(t *testing.T, k *kubeClient) ([]string, error) {
 
 	var lines []string
 
-	err := k.execLines(context.Background(), "kube-system", "cilium-abcde", "cilium-agent", []string{"hubble", "observe"}, func(b []byte) {
+	err := k.execLines(context.Background(), "kube-system", "cilium-abcde", "cilium-agent", []string{"hubble", "observe"}, nil, func(b []byte) {
 		lines = append(lines, string(b))
 	})
 
@@ -100,7 +100,7 @@ func TestExecLinesStopsOnCancel(t *testing.T) {
 	got := make(chan string, 1)
 	start := time.Now()
 
-	err := k.execLines(ctx, "kube-system", "cilium-abcde", "cilium-agent", []string{"hubble"}, func(b []byte) {
+	err := k.execLines(ctx, "kube-system", "cilium-abcde", "cilium-agent", []string{"hubble"}, nil, func(b []byte) {
 		got <- string(b)
 
 		cancel()
@@ -114,11 +114,11 @@ func TestExecLinesStopsOnCancel(t *testing.T) {
 func TestExecLinesValidates(t *testing.T) {
 	k := &kubeClient{}
 
-	if err := k.execLines(context.Background(), "Bad NS", "p", "c", []string{"x"}, nil); err == nil {
+	if err := k.execLines(context.Background(), "Bad NS", "p", "c", []string{"x"}, nil, nil); err == nil {
 		t.Fatal("expected a name error")
 	}
 
-	if err := k.execLines(context.Background(), "ns", "p", "c", nil, nil); err == nil {
+	if err := k.execLines(context.Background(), "ns", "p", "c", nil, nil, nil); err == nil {
 		t.Fatal("expected an argv error")
 	}
 }

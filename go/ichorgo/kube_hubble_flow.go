@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"bytes"
 	"encoding/json"
 	"strconv"
 	"strings"
@@ -211,18 +212,25 @@ type hubbleLine struct {
 // parseHubbleLine parses one `hubble observe -o jsonpb` line; ok is false for what is not
 // JSON (a warning on stdout) or neither a flow nor lost events (node status).
 func parseHubbleLine(line []byte) (hubbleLine, bool) {
-	var raw any
-	if err := json.Unmarshal(line, &raw); err != nil {
-		return hubbleLine{}, false
-	}
+	// encoding/json matches keys without regard to case, so the JSON names (dropReasonDesc)
+	// decode straight into the lowercase tags. Proto names (drop_reason_desc) are normalised
+	// first, a slower path: the response's node_name tells that output apart.
+	if bytes.Contains(line, []byte(`"node_name"`)) {
+		var raw any
+		if err := json.Unmarshal(line, &raw); err != nil {
+			return hubbleLine{}, false
+		}
 
-	normalised, err := json.Marshal(normaliseKeys(raw))
-	if err != nil {
-		return hubbleLine{}, false
+		normalised, err := json.Marshal(normaliseKeys(raw))
+		if err != nil {
+			return hubbleLine{}, false
+		}
+
+		line = normalised
 	}
 
 	var resp wireFlowResponse
-	if err := json.Unmarshal(normalised, &resp); err != nil {
+	if err := json.Unmarshal(line, &resp); err != nil {
 		return hubbleLine{}, false
 	}
 

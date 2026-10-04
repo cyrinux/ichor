@@ -36,11 +36,19 @@ type netPolicy struct {
 	Pods     []string `json:"pods"`
 	PodCount int      `json:"podCount"`
 
-	subjects []*labelSelector // what selects the pods (several for a Cilium policy with specs)
+	subjects []policySubject // what selects the pods (several for a Cilium policy with specs)
+}
+
+// policySubject is one selector of a policy and the directions it isolates: the specs of a
+// Cilium policy each have their own.
+type policySubject struct {
+	selector        *labelSelector
+	ingress, egress bool
 }
 
 // netRule is one rule of a direction: traffic from/to any of Peers on any of Ports passes
-// (or is denied when Deny). No peers means any peer, no ports any port.
+// (or is denied when Deny). No peers means any peer, no ports any port; a "none" peer
+// means the rule matches nothing (Cilium's empty rule, a deny-all).
 type netRule struct {
 	Deny  bool      `json:"deny,omitempty"`
 	Peers []netPeer `json:"peers"`
@@ -57,6 +65,8 @@ type netRule struct {
 //   - fqdn: Value (a name or a pattern, "*.example.org")
 //   - service: Value ("namespace/name")
 //   - nodes: Selector
+//   - none: nothing (the rule allows or denies no traffic)
+//   - other: a peer the app does not describe; Value is its field (toGroups, cidrGroupSelector…)
 type netPeer struct {
 	Kind              string   `json:"kind"`
 	Namespace         string   `json:"namespace,omitempty"`
@@ -79,22 +89,31 @@ func (p *netPolicy) ref() policyRef {
 	return policyRef{Kind: p.Kind, Namespace: p.Namespace, Name: p.Name}
 }
 
-// selects tells whether p applies to an endpoint with labels in namespace.
-func (p *netPolicy) selects(namespace string, labels labelSet) bool {
-	if p.Nodes || (p.Namespace != "" && p.Namespace != namespace) {
-		return false
+// isolation tells whether p applies to an endpoint with labels in namespace, and whether it
+// puts it in default-deny for ingress and egress.
+func (p *netPolicy) isolation(namespace string, labels labelSet) (selected, ingress, egress bool) {
+	if p.Namespace != "" && p.Namespace != namespace {
+		return false, false, false
 	}
 
-	return slices.ContainsFunc(p.subjects, func(s *labelSelector) bool { return s.matches(labels) })
+	for _, s := range p.subjects {
+		if s.selector.matches(labels) {
+			selected, ingress, egress = true, ingress || s.ingress, egress || s.egress
+		}
+	}
+
+	return selected, ingress, egress
 }
 
-// isolates tells whether p turns default-deny on for direction (INGRESS or EGRESS).
-func (p *netPolicy) isolates(direction string) bool {
+// isolates tells whether p puts the endpoint in default-deny for direction (INGRESS or EGRESS).
+func (p *netPolicy) isolates(namespace string, labels labelSet, direction string) bool {
+	_, ingress, egress := p.isolation(namespace, labels)
+
 	switch direction {
 	case "INGRESS":
-		return p.Ingress
+		return ingress
 	case "EGRESS":
-		return p.Egress
+		return egress
 	default:
 		return false
 	}
@@ -143,7 +162,6 @@ func mapNetworkPolicy(o npObject) netPolicy {
 	p := netPolicy{
 		Kind: kindNetworkPolicy, Namespace: o.Metadata.Namespace, Name: o.Metadata.Name,
 		Created: unixMilli(o.Metadata.CreationTimestamp), Subject: s.PodSelector.String(),
-		subjects: []*labelSelector{&s.PodSelector},
 	}
 
 	// Without policyTypes: Ingress always, Egress when there are egress rules.
@@ -156,6 +174,7 @@ func mapNetworkPolicy(o npObject) netPolicy {
 	}
 
 	p.Ingress, p.Egress = slices.Contains(types, "Ingress"), slices.Contains(types, "Egress")
+	p.subjects = []policySubject{{selector: &s.PodSelector, ingress: p.Ingress, egress: p.Egress}}
 	p.IngressRules, p.EgressRules = []netRule{}, []netRule{}
 
 	if p.Ingress {

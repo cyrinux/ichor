@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 )
@@ -96,7 +97,7 @@ func TestHubbleAggRingAndGroupCaps(t *testing.T) {
 }
 
 func TestHubbleCommand(t *testing.T) {
-	base := []string{"hubble", "observe", "--follow", "--last", hubbleBackfill, "-o", "jsonpb"}
+	base := []string{"hubble", "observe", "--follow", "-o", "jsonpb", "--last", hubbleBackfill}
 
 	cases := []struct {
 		filter hubbleFilter
@@ -108,9 +109,16 @@ func TestHubbleCommand(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if got := hubbleCommand(c.filter); !slices.Equal(got, append(slices.Clone(base), c.extra...)) {
+		if got := hubbleCommand(c.filter, 0); !slices.Equal(got, append(slices.Clone(base), c.extra...)) {
 			t.Errorf("%+v: %v", c.filter, got)
 		}
+	}
+
+	// Following again resumes after the last flow instead of replaying the backfill.
+	since := time.Date(2026, 10, 4, 10, 15, 2, 123e6, time.UTC).UnixMilli()
+	want := []string{"hubble", "observe", "--follow", "-o", "jsonpb", "--since", "2026-10-04T10:15:02.124Z"}
+	if got := hubbleCommand(hubbleFilter{}, since); !slices.Equal(got, want) {
+		t.Errorf("since: %v", got)
 	}
 
 	for _, bad := range []hubbleFilter{{namespace: "Shop"}, {pod: "db-0"}, {namespace: "shop", pod: "--all"}} {
@@ -131,38 +139,63 @@ func TestFollowAgentFeedsTheAggregate(t *testing.T) {
 	agent := ciliumAgent{Node: "worker-2", Pod: "cilium-b"}
 	agg := newHubbleAgg(ciliumStatus{Agents: []ciliumAgent{agent}})
 
-	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
+	followAgent(context.Background(), k, "kube-system", agent, hubbleFilter{dropsOnly: true}, agg)
 
-	go func() {
-		followAgent(ctx, k, "kube-system", agent, hubbleFilter{dropsOnly: true}, agg)
-		close(done)
-	}()
-
-	deadline := time.Now().Add(3 * time.Second)
-	for {
-		s, _ := agg.snapshot(true)
-		if s.Nodes[0].State == hubbleNodeError {
-			if s.Seen != 1 || s.Lost != 17 || s.Nodes[0].Error != "the flow stream ended" {
-				t.Fatalf("snapshot %+v", s)
-			}
-
-			break
-		}
-
-		if time.Now().After(deadline) {
-			t.Fatalf("no error state: %+v", s.Nodes)
-		}
-
-		time.Sleep(10 * time.Millisecond)
+	s, _ := agg.snapshot(true)
+	if s.Seen != 1 || s.Lost != 17 || s.Nodes[0].State != hubbleNodeError || s.Nodes[0].Error != "the flow stream ended" {
+		t.Fatalf("snapshot %+v", s)
 	}
 
-	cancel()
-	<-done
-
-	q := *query
-	if q.Get("container") != ciliumAgentContainer || !slices.Contains(q["command"], "--verdict") {
+	if q := *query; q.Get("container") != ciliumAgentContainer || !slices.Contains(q["command"], "--last") || !slices.Contains(q["command"], "--verdict") {
 		t.Fatalf("query %v", q)
+	}
+
+	// Following again picks up after the flow already seen.
+	followAgent(context.Background(), k, "kube-system", agent, hubbleFilter{}, agg)
+
+	if q := *query; !slices.Contains(q["command"], "--since") || slices.Contains(q["command"], "--last") {
+		t.Fatalf("second query %v", q)
+	}
+}
+
+type recordingHubbleListener struct{ updates []string }
+
+func (l *recordingHubbleListener) OnUpdate(js string) { l.updates = append(l.updates, js) }
+func (l *recordingHubbleListener) OnDone(string)      {}
+
+func TestHubbleListenerIsMasked(t *testing.T) {
+	agg := newHubbleAgg(ciliumStatus{Agents: []ciliumAgent{{Node: "worker-2", Pod: "cilium-b"}}})
+	agg.add("worker-2", fixtureFlow(t, 0, 1000))
+
+	s, _ := agg.snapshot(true)
+
+	js, err := toJSON(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	SetPrivacyMask(true, "shop")
+	defer SetPrivacyMask(false, "")
+
+	rec := &recordingHubbleListener{}
+	maskedHubbleListener{rec}.OnUpdate(js)
+
+	for _, secret := range []string{"10.244.1.23", "10.244.2.41", `"shop"`} {
+		if strings.Contains(rec.updates[0], secret) {
+			t.Errorf("%s leaks through the mask", secret)
+		}
+	}
+}
+
+func TestHubbleAggSyncAgents(t *testing.T) {
+	agg := newHubbleAgg(ciliumStatus{Agents: []ciliumAgent{{Node: "a", Pod: "cilium-1"}, {Node: "b", Pod: "cilium-2"}}})
+	agg.syncAgents([]ciliumAgent{{Node: "a", Pod: "cilium-9"}, {Node: "c", Pod: "cilium-3"}})
+
+	s, _ := agg.snapshot(true)
+	want := []hubbleNodeState{{Node: "a", Pod: "cilium-9", State: hubbleNodeConnecting}, {Node: "c", Pod: "cilium-3", State: hubbleNodeConnecting}}
+
+	if !reflect.DeepEqual(s.Nodes, want) {
+		t.Fatalf("nodes %+v", s.Nodes)
 	}
 }
 

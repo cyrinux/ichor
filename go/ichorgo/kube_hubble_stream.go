@@ -11,8 +11,9 @@ import (
 const (
 	// hubbleEmitInterval is the most often a live flow view sends a snapshot.
 	hubbleEmitInterval = time.Second
-	// hubbleRetryDelay is the wait before following an agent again after its stream ended.
-	hubbleRetryDelay = 5 * time.Second
+	// hubbleAgentRefresh is how often the agents are listed again: a stream that ended is
+	// started again then, on the node's current agent pod (Cilium rollouts replace them).
+	hubbleAgentRefresh = 10 * time.Second
 	// hubbleBackfill is how many stored flows each agent sends before following.
 	hubbleBackfill = "200"
 )
@@ -75,9 +76,17 @@ func (f hubbleFilter) validate() error {
 }
 
 // hubbleCommand follows the agent's flows like `hubble observe --follow`, on its local
-// Hubble socket: no Relay, no TLS, nothing to install.
-func hubbleCommand(f hubbleFilter) []string {
-	return append([]string{"hubble", "observe", "--follow", "--last", hubbleBackfill, "-o", "jsonpb"}, f.args()...)
+// Hubble socket: no Relay, no TLS, nothing to install. It starts with the last
+// hubbleBackfill stored flows, or, following again, with those after since (unix ms).
+func hubbleCommand(f hubbleFilter, since int64) []string {
+	argv := []string{"hubble", "observe", "--follow", "-o", "jsonpb"}
+	if since > 0 {
+		argv = append(argv, "--since", time.UnixMilli(since+1).UTC().Format(time.RFC3339Nano))
+	} else {
+		argv = append(argv, "--last", hubbleBackfill)
+	}
+
+	return append(argv, f.args()...)
 }
 
 // StartHubbleFlows follows the cluster's network flows live, like Hubble UI, when Cilium
@@ -115,9 +124,7 @@ func StartHubbleFlows(configYAML, contextName, kubeServer, namespace, pod string
 		case isDemoContext(configYAML, contextName):
 			err = runDemoHubble(ctx, filter, emit)
 		default:
-			_, err = withKubeContext(ctx, kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (struct{}, error) {
-				return struct{}{}, followHubble(ctx, k, filter, emit)
-			})
+			err = startHubble(ctx, kubeTarget{configYAML, contextName, kubeServer}, filter, emit)
 		}
 
 		if errors.Is(err, context.Canceled) {
@@ -135,9 +142,10 @@ func StartHubbleFlows(configYAML, contextName, kubeServer, namespace, pod string
 	return &HubbleRun{cancel: cancel}
 }
 
-// followHubble streams every agent until ctx ends.
-func followHubble(ctx context.Context, k *kubeClient, filter hubbleFilter, emit func(hubbleSnapshot)) error {
-	status, err := readCiliumStatus(ctx, k)
+// startHubble checks that Cilium records flows, then follows them until ctx ends. The
+// checks answer outside withKube: a cluster without Hubble keeps its working client.
+func startHubble(ctx context.Context, target kubeTarget, filter hubbleFilter, emit func(hubbleSnapshot)) error {
+	status, err := withKube(target, readCiliumStatus)
 
 	switch {
 	case err != nil:
@@ -148,15 +156,21 @@ func followHubble(ctx context.Context, k *kubeClient, filter hubbleFilter, emit 
 		return errHubbleOff
 	}
 
+	_, err = withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (struct{}, error) {
+		return struct{}{}, followHubble(ctx, k, status, filter, emit)
+	})
+
+	return err
+}
+
+// followHubble streams every agent until ctx ends.
+func followHubble(ctx context.Context, k *kubeClient, status ciliumStatus, filter hubbleFilter, emit func(hubbleSnapshot)) error {
 	agg := newHubbleAgg(status)
 
 	var wg sync.WaitGroup
 
 	wg.Go(func() { refreshPolicies(ctx, k, agg) })
-
-	for _, agent := range status.Agents {
-		wg.Go(func() { followAgent(ctx, k, status.Namespace, agent, filter, agg) })
-	}
+	wg.Go(func() { superviseAgents(ctx, k, status, filter, agg) })
 
 	emitSnapshots(ctx, agg, emit)
 	wg.Wait()
@@ -182,38 +196,6 @@ func refreshPolicies(ctx context.Context, k *kubeClient, agg *hubbleAgg) {
 			return
 		case <-time.After(policyRefreshInterval):
 		}
-	}
-}
-
-// followAgent follows one agent, again after hubbleRetryDelay when its stream ends.
-func followAgent(ctx context.Context, k *kubeClient, namespace string, agent ciliumAgent, filter hubbleFilter, agg *hubbleAgg) {
-	argv := hubbleCommand(filter)
-
-	for {
-		err := k.execLines(ctx, namespace, agent.Pod, ciliumAgentContainer, argv, func(line []byte) {
-			if parsed, ok := parseHubbleLine(line); ok {
-				agg.add(agent.Node, parsed)
-			}
-		})
-
-		if ctx.Err() != nil {
-			return
-		}
-
-		msg := "the flow stream ended"
-		if err != nil {
-			msg = kubeError(err).Error()
-		}
-
-		agg.setNode(agent.Node, hubbleNodeError, msg)
-
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(hubbleRetryDelay):
-		}
-
-		agg.setNode(agent.Node, hubbleNodeConnecting, "")
 	}
 }
 

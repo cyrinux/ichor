@@ -16,8 +16,9 @@ const kubeExecMaxLine = 256 << 10
 // execLines runs argv in a container like exec, but for a command that keeps writing
 // (`hubble observe --follow`): every complete stdout line goes to onLine as it arrives,
 // until the command ends or ctx is cancelled (then the error is ctx's). Stderr is kept, up
-// to kubeExecMaxOutput, for the error of a command that failed.
-func (k *kubeClient) execLines(ctx context.Context, namespace, pod, container string, argv []string, onLine func([]byte)) error {
+// to kubeExecMaxOutput, for the error of a command that failed. onStart, when set, is called
+// once the command runs.
+func (k *kubeClient) execLines(ctx context.Context, namespace, pod, container string, argv []string, onStart func(), onLine func([]byte)) error {
 	if err := validateKubeName("pod", namespace, pod); err != nil {
 		return err
 	}
@@ -51,6 +52,10 @@ func (k *kubeClient) execLines(ctx context.Context, namespace, pod, container st
 	defer ws.Close() //nolint:errcheck
 
 	ws.MaxPayloadBytes = kubeExecMaxLine
+
+	if onStart != nil {
+		onStart()
+	}
 
 	err = readExecLines(ws, onLine)
 	if ctx.Err() != nil {

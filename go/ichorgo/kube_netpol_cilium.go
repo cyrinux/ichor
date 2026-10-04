@@ -17,10 +17,10 @@ type cnpSpec struct {
 	EndpointSelector  *labelSelector `json:"endpointSelector"`
 	NodeSelector      *labelSelector `json:"nodeSelector"`
 	Description       string         `json:"description"`
-	Ingress           *[]cnpRule     `json:"ingress"`
-	IngressDeny       *[]cnpRule     `json:"ingressDeny"`
-	Egress            *[]cnpRule     `json:"egress"`
-	EgressDeny        *[]cnpRule     `json:"egressDeny"`
+	Ingress           []cnpRule      `json:"ingress"`
+	IngressDeny       []cnpRule      `json:"ingressDeny"`
+	Egress            []cnpRule      `json:"egress"`
+	EgressDeny        []cnpRule      `json:"egressDeny"`
 	EnableDefaultDeny struct {
 		Ingress *bool `json:"ingress"`
 		Egress  *bool `json:"egress"`
@@ -71,7 +71,10 @@ type cnpRule struct {
 			} `json:"dns"`
 		} `json:"rules"`
 	} `json:"toPorts"`
-	ICMPs []struct {
+	// Peers the app does not describe, decoded only so a rule using them is not shown as "any".
+	FromGroups []any `json:"fromGroups"`
+	ToGroups   []any `json:"toGroups"`
+	ICMPs      []struct {
 		Fields []struct {
 			Family string `json:"family"`
 			Type   any    `json:"type"`
@@ -80,9 +83,10 @@ type cnpRule struct {
 }
 
 type cidrRule struct {
-	CIDR         string   `json:"cidr"`
-	CIDRGroupRef string   `json:"cidrGroupRef"`
-	Except       []string `json:"except"`
+	CIDR              string         `json:"cidr"`
+	CIDRGroupRef      string         `json:"cidrGroupRef"`
+	CIDRGroupSelector *labelSelector `json:"cidrGroupSelector"`
+	Except            []string       `json:"except"`
 }
 
 func mapCiliumPolicy(o cnpObject, clusterwide bool) netPolicy {
@@ -107,12 +111,16 @@ func mapCiliumPolicy(o cnpObject, clusterwide bool) netPolicy {
 			p.Description = policyDescription(o.Metadata, s.Description)
 		}
 
+		ingress := s.isolates(s.Ingress, s.IngressDeny, s.EnableDefaultDeny.Ingress)
+		egress := s.isolates(s.Egress, s.EgressDeny, s.EnableDefaultDeny.Egress)
+
 		switch {
 		case s.NodeSelector != nil:
+			// A host policy: it selects nodes, never pods.
 			p.Nodes = true
 			subjects = append(subjects, s.NodeSelector.String())
 		case s.EndpointSelector != nil:
-			p.subjects = append(p.subjects, s.EndpointSelector)
+			p.subjects = append(p.subjects, policySubject{selector: s.EndpointSelector, ingress: ingress, egress: egress})
 			subjects = append(subjects, s.EndpointSelector.String())
 
 			if ns := s.EndpointSelector.namespaceOf(); ns != "" && clusterwide {
@@ -120,8 +128,7 @@ func mapCiliumPolicy(o cnpObject, clusterwide bool) netPolicy {
 			}
 		}
 
-		p.Ingress = p.Ingress || s.isolates(s.Ingress, s.IngressDeny, s.EnableDefaultDeny.Ingress)
-		p.Egress = p.Egress || s.isolates(s.Egress, s.EgressDeny, s.EnableDefaultDeny.Egress)
+		p.Ingress, p.Egress = p.Ingress || ingress, p.Egress || egress
 		p.IngressRules = appendCiliumRules(p.IngressRules, s.Ingress, false, true)
 		p.IngressRules = appendCiliumRules(p.IngressRules, s.IngressDeny, true, true)
 		p.EgressRules = appendCiliumRules(p.EgressRules, s.Egress, false, false)
@@ -134,21 +141,18 @@ func mapCiliumPolicy(o cnpObject, clusterwide bool) netPolicy {
 }
 
 // isolates: a Cilium rule puts its endpoints in default-deny for a direction when it has
-// rules for it (even empty ones), unless enableDefaultDeny turns that off.
-func (cnpSpec) isolates(allow, deny *[]cnpRule, defaultDeny *bool) bool {
+// rules for it (an empty rule {} counts, an empty list does not), unless enableDefaultDeny
+// says otherwise.
+func (cnpSpec) isolates(allow, deny []cnpRule, defaultDeny *bool) bool {
 	if defaultDeny != nil {
 		return *defaultDeny
 	}
 
-	return allow != nil || deny != nil
+	return len(allow) > 0 || len(deny) > 0
 }
 
-func appendCiliumRules(out []netRule, rules *[]cnpRule, deny, ingress bool) []netRule {
-	if rules == nil {
-		return out
-	}
-
-	for _, r := range *rules {
+func appendCiliumRules(out []netRule, rules []cnpRule, deny, ingress bool) []netRule {
+	for _, r := range rules {
 		rule := r.toRule(ingress)
 		rule.Deny = deny
 		out = append(out, rule)
@@ -175,12 +179,12 @@ func (r cnpRule) toRule(ingress bool) netRule {
 	}
 
 	for _, c := range cidrSets {
-		value := c.CIDR
-		if value == "" {
-			value = c.CIDRGroupRef
+		switch {
+		case c.CIDR != "" || c.CIDRGroupRef != "":
+			out.Peers = append(out.Peers, netPeer{Kind: "cidr", Value: c.CIDR + c.CIDRGroupRef, Except: c.Except})
+		default:
+			out.Peers = append(out.Peers, netPeer{Kind: "other", Value: "cidrGroupSelector", Selector: c.CIDRGroupSelector.String()})
 		}
-
-		out.Peers = append(out.Peers, netPeer{Kind: "cidr", Value: value, Except: c.Except})
 	}
 
 	for _, e := range entities {
@@ -191,11 +195,25 @@ func (r cnpRule) toRule(ingress bool) netRule {
 		out.Peers = append(out.Peers, netPeer{Kind: "nodes", Selector: n.String()})
 	}
 
+	groups, groupsField := r.ToGroups, "toGroups"
+	if ingress {
+		groups, groupsField = r.FromGroups, "fromGroups"
+	}
+
+	if len(groups) > 0 {
+		out.Peers = append(out.Peers, netPeer{Kind: "other", Value: groupsField})
+	}
+
 	if !ingress {
 		out.Peers = append(out.Peers, r.egressOnlyPeers()...)
 	}
 
 	out.Ports, out.L7 = r.ports()
+
+	// Unlike a Kubernetes one, an empty Cilium rule selects no peer: it allows (or denies) nothing.
+	if len(out.Peers) == 0 && len(out.Ports) == 0 && len(out.L7) == 0 {
+		out.Peers = append(out.Peers, netPeer{Kind: "none"})
+	}
 
 	return out
 }

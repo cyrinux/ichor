@@ -241,3 +241,42 @@ func TestFlowLabels(t *testing.T) {
 		t.Fatalf("got %v", got)
 	}
 }
+
+func TestCiliumPolicySemantics(t *testing.T) {
+	var list kubeList[cnpObject]
+
+	err := json.Unmarshal([]byte(`{"items":[
+	 {"metadata":{"name":"deny-all","namespace":"shop"},"spec":{"endpointSelector":{},"ingress":[{}]}},
+	 {"metadata":{"name":"empty-list","namespace":"shop"},"spec":{"endpointSelector":{},"ingress":[]}},
+	 {"metadata":{"name":"split","namespace":"shop"},"specs":[
+	   {"endpointSelector":{"matchLabels":{"app":"a"}},"ingress":[{"fromEntities":["cluster"]}]},
+	   {"endpointSelector":{"matchLabels":{"app":"b"}},"egress":[{"toPorts":[{"ports":[{"port":"443"}]}]},
+	                                                           {"toGroups":[{"aws":{"labels":{"x":"y"}}}]}]}]}
+	]}`), &list)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	denyAll, emptyList, split := mapCiliumPolicy(list.Items[0], false), mapCiliumPolicy(list.Items[1], false), mapCiliumPolicy(list.Items[2], false)
+
+	if !denyAll.Ingress || !reflect.DeepEqual(denyAll.IngressRules[0].Peers, []netPeer{{Kind: "none"}}) {
+		t.Fatalf("an empty Cilium rule is a deny-all: %+v", denyAll)
+	}
+
+	if emptyList.Ingress {
+		t.Fatal("an empty rule list does not isolate")
+	}
+
+	a := labelSet{"app": "a", ciliumNamespaceLabel: "shop"}
+	b := labelSet{"app": "b", ciliumNamespaceLabel: "shop"}
+
+	if !split.isolates("shop", a, "INGRESS") || split.isolates("shop", a, "EGRESS") ||
+		split.isolates("shop", b, "INGRESS") || !split.isolates("shop", b, "EGRESS") {
+		t.Fatal("each spec isolates its own pods in its own directions")
+	}
+
+	// A ports-only rule allows any peer on those ports; an undescribed peer is not "any".
+	if len(split.EgressRules[0].Peers) != 0 || !reflect.DeepEqual(split.EgressRules[1].Peers, []netPeer{{Kind: "other", Value: "toGroups"}}) {
+		t.Fatalf("egress rules %+v", split.EgressRules)
+	}
+}

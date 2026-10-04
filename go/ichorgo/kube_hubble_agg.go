@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	// hubbleMaxFlows is how many recent flows a snapshot carries.
-	hubbleMaxFlows = 200
-	// hubbleMaxGroups caps the drop groups kept; the oldest go first.
-	hubbleMaxGroups = 200
+	// hubbleMaxFlows is how many recent flows a snapshot carries: it is sent every second.
+	hubbleMaxFlows = 100
+	// hubbleMaxGroups caps the drop groups kept, and sent; the oldest go first.
+	hubbleMaxGroups = 100
 )
 
 // Node states of a live flow view.
@@ -41,6 +41,7 @@ type hubbleNodeState struct {
 	State string `json:"state"`
 	Error string `json:"error,omitempty"`
 	Flows int64  `json:"flows"`
+	last  int64  // time of the newest flow the node sent, unix ms
 }
 
 // dropGroup is the same denied traffic seen again and again: one client retrying.
@@ -98,6 +99,46 @@ func (a *hubbleAgg) setNode(node, state, errMessage string) {
 	}
 }
 
+// syncAgents follows the agents listed again: new nodes start connecting, a replaced pod is
+// renamed, nodes gone are dropped.
+func (a *hubbleAgg) syncAgents(agents []ciliumAgent) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	current := map[string]bool{}
+
+	for _, agent := range agents {
+		current[agent.Node] = true
+
+		switch n, ok := a.nodes[agent.Node]; {
+		case !ok:
+			a.nodes[agent.Node] = &hubbleNodeState{Node: agent.Node, Pod: agent.Pod, State: hubbleNodeConnecting}
+			a.dirty = true
+		case n.Pod != agent.Pod:
+			n.Pod, a.dirty = agent.Pod, true
+		}
+	}
+
+	for node := range a.nodes {
+		if !current[node] {
+			delete(a.nodes, node)
+			a.dirty = true
+		}
+	}
+}
+
+// lastFlow is the time of the newest flow node sent, 0 when none yet.
+func (a *hubbleAgg) lastFlow(node string) int64 {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	if n, ok := a.nodes[node]; ok {
+		return n.last
+	}
+
+	return 0
+}
+
 func (a *hubbleAgg) setPolicies(policies []netPolicy, err error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -135,6 +176,7 @@ func (a *hubbleAgg) add(node string, line hubbleLine) {
 	if n, ok := a.nodes[node]; ok {
 		n.Flows++
 		n.State, n.Error = hubbleNodeLive, ""
+		n.last = max(n.last, f.Time)
 	}
 
 	if len(a.flows) < hubbleMaxFlows {
