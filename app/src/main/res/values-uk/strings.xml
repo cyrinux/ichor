@@ -2019,4 +2019,67 @@
         <item quantity="many">%1$d подів</item>
         <item quantity="other">%1$d пода</item>
     </plurals>
+
+    <!-- Metrics: PromQL panels -->
+    <string name="metrics_title">Метрики</string>
+    <string name="metrics_source">Джерело метрик</string>
+    <string name="metrics_source_line">Джерело: %1$s</string>
+    <string name="metrics_add_panel">Додати панель</string>
+    <string name="metrics_edit_panel">Редагувати панель</string>
+    <string name="metrics_edit">Редагувати</string>
+    <string name="metrics_move_up">Вгору</string>
+    <string name="metrics_move_down">Вниз</string>
+    <string name="metrics_save">Зберегти</string>
+    <string name="metrics_run">Виконати запит</string>
+    <string name="metrics_no_panels">Панелей ще немає: додайте з шаблону або напишіть PromQL.</string>
+    <string name="metrics_no_data">Немає даних за цей період.</string>
+    <string name="metrics_searching">Пошук Prometheus у кластері…</string>
+    <string name="metrics_none_found">У кластері не знайдено Prometheus, Mimir, Thanos чи VictoriaMetrics</string>
+    <string name="metrics_none_found_hint">Виберіть Service вручну або вкажіть URL сервера, доступного з телефона.</string>
+    <string name="metrics_set_up">Налаштувати джерело</string>
+    <string name="metrics_search_again">Шукати в кластері знову</string>
+    <string name="metrics_range_15m">15 хв</string>
+    <string name="metrics_range_1h">1 год</string>
+    <string name="metrics_range_6h">6 год</string>
+    <string name="metrics_range_1d">1 д</string>
+    <string name="metrics_range_7d">7 д</string>
+    <string name="metrics_chart_description">Графік %1$s у часі</string>
+    <string name="metrics_panel_title">Назва</string>
+    <string name="metrics_panel_query">Запит PromQL</string>
+    <string name="metrics_panel_legend">Легенда</string>
+    <string name="metrics_panel_legend_hint">Мітки в {{ }}, напр. {{namespace}}/{{pod}}. Порожньо: назва серії.</string>
+    <string name="metrics_panel_unit">Одиниця: %1$s</string>
+    <string name="metrics_from_preset">Почати з шаблону</string>
+    <string name="metrics_unit_none">Число</string>
+    <string name="metrics_unit_percent">Відсотки</string>
+    <string name="metrics_unit_bytes">Байти</string>
+    <string name="metrics_unit_cores">Ядра CPU</string>
+    <string name="metrics_unit_persec">За секунду</string>
+    <string name="metrics_unit_count">Кількість</string>
+    <string name="metrics_mode_cluster">У кластері</string>
+    <string name="metrics_mode_url">URL</string>
+    <string name="metrics_proxy_hint">Доступ через сервісний проксі Kubernetes API з адмінським kubeconfig кластера: додаткові облікові дані не потрібні.</string>
+    <string name="metrics_namespace">Namespace</string>
+    <string name="metrics_service">Service</string>
+    <string name="metrics_port">Порт</string>
+    <string name="metrics_path_prefix">Префікс шляху (Mimir: /prometheus)</string>
+    <string name="metrics_url">URL (напр. https://mimir.example.com/prometheus)</string>
+    <string name="metrics_tenant">Тенант (X-Scope-OrgID, необов\'язково)</string>
+    <string name="metrics_auth_none">Немає</string>
+    <string name="metrics_auth_bearer">Токен</string>
+    <string name="metrics_auth_basic">Basic</string>
+    <string name="metrics_username">Ім\'я користувача</string>
+    <string name="metrics_token">Bearer-токен</string>
+    <string name="metrics_password">Пароль</string>
+    <string name="metrics_https_only">Облікові дані надсилаються лише через https і зберігаються зашифрованими на цьому телефоні.</string>
+    <string name="metrics_ca">Додатковий центр сертифікації (PEM, необов\'язково)</string>
+    <string name="metrics_skip_verify">Не перевіряти сертифікат</string>
+    <string name="metrics_test">Перевірити</string>
+    <string name="metrics_reachable">API запитів відповідає.</string>
+    <plurals name="metrics_truncated">
+        <item quantity="one">Показано %1$d серію з %2$d</item>
+        <item quantity="few">Показано %1$d серії з %2$d</item>
+        <item quantity="many">Показано %1$d серій з %2$d</item>
+        <item quantity="other">Показано %1$d серії з %2$d</item>
+    </plurals>
 </resources>

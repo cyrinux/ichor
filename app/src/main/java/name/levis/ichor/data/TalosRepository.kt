@@ -36,6 +36,10 @@ import name.levis.ichor.model.LogEntry
 import name.levis.ichor.model.LogTail
 import name.levis.ichor.model.decodeLogTail
 import name.levis.ichor.model.NodeStats
+import name.levis.ichor.model.PromDiscovery
+import name.levis.ichor.model.PromPanel
+import name.levis.ichor.model.PromResult
+import name.levis.ichor.model.PromSource
 import name.levis.ichor.model.ClusterStatsSample
 import name.levis.ichor.model.NodeResources
 import name.levis.ichor.model.ServiceInfo
@@ -673,6 +677,30 @@ class TalosRepository(
     /** `talosctl get TYPE ID -o yaml` (never cached: may hold secrets). */
     suspend fun resourceGet(node: String, namespace: String, type: String, id: String): String = call { cfg, ctx ->
         TalosJson.decodeFromString(ResourceDetail.serializer(), Ichorgo.resourceGet(cfg, ctx, node, namespace, type, id)).yaml
+    }
+
+    /** Prometheus-compatible query APIs among the cluster's Services, the likeliest first. */
+    suspend fun promDiscover(): List<PromSource> = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(PromDiscovery.serializer(), Ichorgo.promDiscover(cfg, ctx, server)).sources
+    }
+
+    /** [query] from [start] to [end] (unix seconds) against [source], about 250 points. */
+    suspend fun promRange(source: PromSource, query: String, start: Long, end: Long): PromResult = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.promQueryRange(cfg, ctx, server, TalosJson.encodeToString(PromSource.serializer(), source), query, start, end, 0)
+        TalosJson.decodeFromString(PromResult.serializer(), json)
+    }
+
+    /** The built-in panels. */
+    suspend fun promPresets(): List<PromPanel> = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(ListSerializer(PromPanel.serializer()), Ichorgo.promPresets())
+    }
+
+    /** [source] checked and cleaned up by Go, its secret kept. */
+    suspend fun normalizePromSource(source: PromSource): PromSource = withContext(Dispatchers.IO) {
+        val json = Ichorgo.normalizePromSource(TalosJson.encodeToString(PromSource.serializer(), source))
+        val checked = TalosJson.decodeFromString(PromSource.serializer(), json)
+        // Go never returns the secret; without authentication there is none to keep.
+        checked.copy(secret = if (checked.auth == PromSource.AUTH_NONE) "" else source.secret.trim())
     }
 
     suspend fun driftSnapshot(): String = call { cfg, ctx -> Ichorgo.clusterDriftSnapshot(cfg, ctx) }

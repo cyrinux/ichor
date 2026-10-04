@@ -50,6 +50,7 @@ import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.VpnMonitor
 import name.levis.ichor.data.VpnOnlyClusters
 import name.levis.ichor.data.KubeServers
+import name.levis.ichor.data.MetricsStore
 import name.levis.ichor.data.VpnRequiredException
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.EndpointMatch
@@ -111,6 +112,8 @@ class TalosApp : Application() {
     }
     val vpnOnly by lazy { VpnOnlyClusters(getSharedPreferences(VpnOnlyClusters.FILE, Context.MODE_PRIVATE)) }
     val kubeServers by lazy { KubeServers(getSharedPreferences(KubeServers.FILE, Context.MODE_PRIVATE)) }
+    /** Each cluster's Prometheus/Mimir source and saved PromQL panels (Metrics screen). */
+    val metricsStore by lazy { MetricsStore(this) }
     val vpn by lazy { VpnMonitor(this) }
     val appLock by lazy {
         AppLock(
@@ -345,7 +348,11 @@ class TalosApp : Application() {
                     publicIps.sync(it.summary)
                     vpnOnly.sync(it.summary)
                     kubeServers.sync(it.summary)
+                    val fingerprints = it.summary.contexts.map { c -> c.fingerprint }
+                    launch(Dispatchers.IO) { metricsStore.sync(fingerprints) }
                 }
+                // The deleted config takes the metrics setups (and their credentials) with it.
+                if (stored == null && configRepository.generation.value > 0) launch(Dispatchers.IO) { metricsStore.sync(emptyList()) }
                 // A removed cluster (or the deleted config) takes its shells with it.
                 if (stored != null || configRepository.generation.value > 0) {
                     debugShells.retainContexts(stored?.summary?.contexts.orEmpty().map { c -> c.name }.toSet())
