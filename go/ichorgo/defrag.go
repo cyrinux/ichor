@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -18,17 +17,9 @@ func EtcdDefragment(configYAML, contextName, node string) (err error) {
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
-	_, err = withSession(configYAML, contextName, defragTimeout, func(ctx context.Context, s *session) (struct{}, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return struct{}{}, err
-		}
+	return nodeAction(configYAML, contextName, node, defragTimeout, func(ctx context.Context, c *client.Client) error {
+		_, err := c.EtcdDefragment(ctx)
 
-		if _, err := s.client.EtcdDefragment(client.WithNode(ctx, node)); err != nil {
-			return struct{}{}, errors.New(s.friendly(node, err))
-		}
-
-		return struct{}{}, nil
+		return err
 	})
-
-	return err
 }

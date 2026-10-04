@@ -52,11 +52,7 @@ func ResourceTypes(configYAML, contextName, node string) (out string, err error)
 		return demoRead("ResourceTypes", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		defs, err := s.resourceDefinitions(ctx, node)
 		if err != nil {
 			return "", errors.New(s.friendly(node, err))
@@ -115,11 +111,7 @@ func ResourceList(configYAML, contextName, node, namespace, resourceType string)
 		return demoRead("ResourceList", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		rd, err := s.resolveResourceType(ctx, node, resourceType)
 		if err != nil {
 			return "", err
@@ -129,7 +121,7 @@ func ResourceList(configYAML, contextName, node, namespace, resourceType string)
 			namespace = rd.DefaultNamespace
 		}
 
-		list, err := s.client.COSI.List(withNode(ctx, node), resource.NewMetadata(namespace, rd.Type, "", resource.VersionUndefined))
+		list, err := s.client.COSI.List(ctx, resource.NewMetadata(namespace, rd.Type, "", resource.VersionUndefined))
 		if err != nil {
 			return "", errors.New(s.friendly(node, err))
 		}
@@ -175,11 +167,7 @@ func ResourceGet(configYAML, contextName, node, namespace, resourceType, id stri
 	}
 	id = privacy.unmaskText(id)
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		rd, err := s.resolveResourceType(ctx, node, resourceType)
 		if err != nil {
 			return "", err
@@ -189,7 +177,7 @@ func ResourceGet(configYAML, contextName, node, namespace, resourceType, id stri
 			namespace = rd.DefaultNamespace
 		}
 
-		r, err := s.client.COSI.Get(withNode(ctx, node), resource.NewMetadata(namespace, rd.Type, id, resource.VersionUndefined))
+		r, err := s.client.COSI.Get(ctx, resource.NewMetadata(namespace, rd.Type, id, resource.VersionUndefined))
 		if err != nil {
 			if state.IsNotFoundError(err) {
 				return "", fmt.Errorf("%s %q not found in namespace %s", rd.Type, id, namespace)

@@ -53,12 +53,8 @@ func NodeMounts(configYAML, contextName, node string) (out string, err error) {
 		return demoRead("NodeMounts", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
-		resp, err := s.client.Mounts(withNode(ctx, node))
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
+		resp, err := s.client.Mounts(ctx)
 		if err != nil {
 			return "", errors.New(s.friendly(node, err))
 		}
@@ -121,13 +117,7 @@ func NodeVolumes(configYAML, contextName, node string) (out string, err error) {
 		return demoRead("NodeVolumes", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
-		nodeCtx := withNode(ctx, node)
-
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		known, err := s.hasResourceType(ctx, node, block.VolumeStatusType)
 		if err != nil {
 			return "", errors.New(s.friendly(node, err))
@@ -140,7 +130,7 @@ func NodeVolumes(configYAML, contextName, node string) (out string, err error) {
 			})
 		}
 
-		volumes, err := safe.StateListAll[*block.VolumeStatus](nodeCtx, s.client.COSI)
+		volumes, err := safe.StateListAll[*block.VolumeStatus](ctx, s.client.COSI)
 		if err != nil {
 			return "", errors.New(s.friendly(node, err))
 		}
@@ -148,7 +138,7 @@ func NodeVolumes(configYAML, contextName, node string) (out string, err error) {
 		// Mount statuses came later than volume statuses: without them, only mountedOn is empty.
 		var mounts []*block.MountStatus
 
-		if list, err := safe.StateListAll[*block.MountStatus](nodeCtx, s.client.COSI); err == nil {
+		if list, err := safe.StateListAll[*block.MountStatus](ctx, s.client.COSI); err == nil {
 			mounts = safe.ToSlice(list, identity)
 		}
 
@@ -237,17 +227,12 @@ func NodeDiskUsage(configYAML, contextName, node, path string, depth int) (out s
 	}
 	path = privacy.unmaskText(path)
 
-	return withSession(configYAML, contextName, diskUsageTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
+	return withNodeSession(configYAML, contextName, node, diskUsageTimeout, func(ctx context.Context, s *session) (string, error) {
 		root, err := cleanUsagePath(path)
 		if err != nil {
 			return "", err
 		}
 
-		nodeCtx := withNode(ctx, node)
 		depth := clampUsageDepth(depth)
 
 		var (
@@ -257,9 +242,9 @@ func NodeDiskUsage(configYAML, contextName, node, path string, depth int) (out s
 		)
 
 		// The usage API does not say what is a directory: the (cheap) file listing does.
-		wg.Go(func() { dirs, dirsErr = listDirectories(nodeCtx, s, root, depth) })
+		wg.Go(func() { dirs, dirsErr = listDirectories(ctx, s, root, depth) })
 
-		all, err := readDiskUsage(nodeCtx, s, root, depth)
+		all, err := readDiskUsage(ctx, s, root, depth)
 
 		wg.Wait()
 
@@ -293,14 +278,7 @@ func cleanUsagePath(p string) (string, error) {
 }
 
 func clampUsageDepth(depth int) int {
-	switch {
-	case depth <= 0:
-		return defaultUsageDepth
-	case depth > maxUsageDepth:
-		return maxUsageDepth
-	default:
-		return depth
-	}
+	return clampOr(depth, defaultUsageDepth, maxUsageDepth)
 }
 
 func readDiskUsage(ctx context.Context, s *session, root string, depth int) ([]*machineapi.DiskUsageInfo, error) {

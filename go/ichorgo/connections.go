@@ -32,12 +32,8 @@ func NodeConnections(configYAML, contextName, node string) (out string, err erro
 		return demoRead("NodeConnections", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
-		resp, err := s.client.Netstat(withNode(ctx, node), &machineapi.NetstatRequest{
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
+		resp, err := s.client.Netstat(ctx, &machineapi.NetstatRequest{
 			Filter:  machineapi.NetstatRequest_ALL,
 			Feature: &machineapi.NetstatRequest_Feature{Pid: true},
 			L4Proto: &machineapi.NetstatRequest_L4Proto{Tcp: true, Tcp6: true, Udp: true, Udp6: true},

@@ -24,9 +24,8 @@ const (
 	netPerfControlPort = 12866
 	netPerfDataPort    = 12867
 
-	netPerfMinSeconds     = 3
-	netPerfMaxSeconds     = 30
-	netPerfDefaultSeconds = 10
+	netPerfMinSeconds = 3
+	netPerfMaxSeconds = 30
 	// netPerfTimeout bounds a whole run.
 	netPerfTimeout = 15 * time.Minute
 	// netPerfStartTimeout bounds the start of a pod, image pull included.
@@ -158,16 +157,7 @@ func NetPerfNodes(configYAML, contextName, kubeServer string) (out string, err e
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	if isDemoContext(configYAML, contextName) {
-		return toJSON(netPerfNodeList{Nodes: demoNetPerfNodes()})
-	}
-
-	list, err := withKube(kubeTarget{configYAML, contextName, kubeServer}, listNetPerfNodes)
-	if err != nil {
-		return "", err
-	}
-
-	return toJSON(list)
+	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, func() netPerfNodeList { return netPerfNodeList{Nodes: demoNetPerfNodes()} }, listNetPerfNodes)
 }
 
 // StartNetPerf measures the network from clientNode to serverNode (Kubernetes node names,

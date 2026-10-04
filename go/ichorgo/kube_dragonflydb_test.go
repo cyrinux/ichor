@@ -41,7 +41,7 @@ func dragonflyPods() []dsPod {
 }
 
 func TestMapDragonfly(t *testing.T) {
-	var list lhList[dragonflyObject]
+	var list kubeList[dragonflyObject]
 	if err := json.Unmarshal([]byte(dragonflyFixture), &list); err != nil {
 		t.Fatal(err)
 	}

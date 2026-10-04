@@ -163,17 +163,9 @@ func EtcdAlarmDisarm(configYAML, contextName, node string) (err error) {
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
-	_, err = withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (struct{}, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return struct{}{}, err
-		}
+	return nodeAction(configYAML, contextName, node, callTimeout, func(ctx context.Context, c *client.Client) error {
+		_, err := c.EtcdAlarmDisarm(ctx)
 
-		if _, err := s.client.EtcdAlarmDisarm(client.WithNode(ctx, node)); err != nil {
-			return struct{}{}, errors.New(s.friendly(node, err))
-		}
-
-		return struct{}{}, nil
+		return err
 	})
-
-	return err
 }

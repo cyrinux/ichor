@@ -3,9 +3,9 @@ package ichorgo
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/url"
 	"slices"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -366,12 +366,7 @@ func peerWarnings(t planPeer, others []planPeer) []string {
 	}
 
 	if len(versions) > 1 {
-		list := make([]string, 0, len(versions))
-		for v := range versions {
-			list = append(list, v)
-		}
-
-		sort.Strings(list)
+		list := slices.Sorted(maps.Keys(versions))
 		out = append(out, "nodes run different Talos versions: "+strings.Join(list, ", ")+" (upgrade one minor version at a time)")
 	}
 

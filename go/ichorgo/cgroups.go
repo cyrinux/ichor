@@ -55,14 +55,8 @@ func NodeCgroups(configYAML, contextName, node string) (out string, err error) {
 		return demoRead("NodeCgroups", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, cgroupsTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
-		nodeCtx := withNode(ctx, node)
-
-		r, err := s.client.Copy(nodeCtx, constants.CgroupMountPath)
+	return withNodeSession(configYAML, contextName, node, cgroupsTimeout, func(ctx context.Context, s *session) (string, error) {
+		r, err := s.client.Copy(ctx, constants.CgroupMountPath)
 		if err != nil {
 			return "", errors.New(s.friendly(node, err))
 		}
@@ -77,7 +71,7 @@ func NodeCgroups(configYAML, contextName, node string) (out string, err error) {
 		// Without CRI the pods keep their pod<uid> and container id names.
 		names := map[string]string{}
 
-		if list, err := s.client.Containers(nodeCtx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI); err == nil {
+		if list, err := s.client.Containers(ctx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI); err == nil {
 			for _, c := range first(list.GetMessages()).GetContainers() {
 				names = cgroupNames(names, c.GetUid(), c.GetPodId(), c.GetInternalId(), c.GetName())
 			}

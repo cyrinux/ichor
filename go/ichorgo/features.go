@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 )
 
 // featureRule is the Talos version range a feature of the app needs on the node.
@@ -118,11 +119,7 @@ func NodeFeatures(configYAML, contextName, node string) (out string, err error) 
 		return demoRead("NodeFeatures", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		previous, _ := s.versions.Load(node)
 
 		version := s.refreshNodeVersion(ctx, node)
@@ -193,17 +190,7 @@ func unsupportedReason(r featureRule, version, need string) string {
 func compareMinor(a, b string) int {
 	na, nb := versionNumbers(a), versionNumbers(b)
 
-	for i := range 2 {
-		if na[i] != nb[i] {
-			if na[i] < nb[i] {
-				return -1
-			}
-
-			return 1
-		}
-	}
-
-	return 0
+	return slices.Compare(na[:2], nb[:2])
 }
 
 // featureMinVersion returns the minimum Talos version of a feature ("" when none).

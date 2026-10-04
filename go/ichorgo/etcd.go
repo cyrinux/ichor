@@ -197,8 +197,8 @@ func buildEtcdOverview(
 		out.Members = append(out.Members, etcdMember{
 			ID:         hexID(m.GetId()),
 			Hostname:   m.GetHostname(),
-			PeerURLs:   nonNil(m.GetPeerUrls()),
-			ClientURLs: nonNil(m.GetClientUrls()),
+			PeerURLs:   orEmpty(m.GetPeerUrls()),
+			ClientURLs: orEmpty(m.GetClientUrls()),
 			IsLearner:  m.GetIsLearner(),
 		})
 	}
@@ -219,7 +219,7 @@ func buildEtcdOverview(
 			st.RaftIndex = s.GetRaftIndex()
 			st.RaftTerm = s.GetRaftTerm()
 			st.Version = s.GetStorageVersion()
-			st.Errors = nonNil(s.GetErrors())
+			st.Errors = orEmpty(s.GetErrors())
 
 			if out.LeaderID == "" && s.GetLeader() != 0 {
 				out.LeaderID = hexID(s.GetLeader())
@@ -238,12 +238,4 @@ func buildEtcdOverview(
 
 func hexID(id uint64) string {
 	return strconv.FormatUint(id, 16)
-}
-
-func nonNil(s []string) []string {
-	if s == nil {
-		return []string{}
-	}
-
-	return s
 }

@@ -66,19 +66,14 @@ func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
 		return demoRead("NodeNetwork", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
-		nodeCtx := withNode(ctx, node)
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		st := s.client.COSI
 		out := nodeNetwork{
 			Links: []linkInfo{}, Addresses: []addressInfo{}, Routes: []routeInfo{},
 			Resolvers: []string{}, TimeServers: []string{}, Errors: map[string]string{},
 		}
 
-		if links, err := safe.StateListAll[*network.LinkStatus](nodeCtx, st); err != nil {
+		if links, err := safe.StateListAll[*network.LinkStatus](ctx, st); err != nil {
 			out.Errors["links"] = s.friendly(node, err)
 		} else {
 			out.Links = mapLinks(safe.ToSlice(links, identity))
@@ -86,19 +81,19 @@ func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
 
 		virtual := virtualLinkNames(out.Links)
 
-		if addrs, err := safe.StateListAll[*network.AddressStatus](nodeCtx, st); err != nil {
+		if addrs, err := safe.StateListAll[*network.AddressStatus](ctx, st); err != nil {
 			out.Errors["addresses"] = s.friendly(node, err)
 		} else {
 			out.Addresses = mapAddresses(safe.ToSlice(addrs, identity), virtual)
 		}
 
-		if routes, err := safe.StateListAll[*network.RouteStatus](nodeCtx, st); err != nil {
+		if routes, err := safe.StateListAll[*network.RouteStatus](ctx, st); err != nil {
 			out.Errors["routes"] = s.friendly(node, err)
 		} else {
 			out.Routes = mapRoutes(safe.ToSlice(routes, identity), virtual)
 		}
 
-		if res, err := safe.StateListAll[*network.ResolverStatus](nodeCtx, st); err != nil {
+		if res, err := safe.StateListAll[*network.ResolverStatus](ctx, st); err != nil {
 			out.Errors["resolvers"] = s.friendly(node, err)
 		} else {
 			resolvers := safe.ToSlice(res, identity)
@@ -106,7 +101,7 @@ func NodeNetwork(configYAML, contextName, node string) (out string, err error) {
 			learnSearchDomains(resolvers)
 		}
 
-		if ts, err := safe.StateListAll[*network.TimeServerStatus](nodeCtx, st); err != nil {
+		if ts, err := safe.StateListAll[*network.TimeServerStatus](ctx, st); err != nil {
 			out.Errors["timeServers"] = s.friendly(node, err)
 		} else {
 			out.TimeServers = mapTimeServers(safe.ToSlice(ts, identity))

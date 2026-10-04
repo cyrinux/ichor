@@ -85,22 +85,11 @@ func KubePods(configYAML, contextName, kubeServer string) (out string, err error
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	if isDemoContext(configYAML, contextName) {
-		return toJSON(kubePodList{Pods: demoPods()})
-	}
-
-	list, err := withKube(kubeTarget{configYAML, contextName, kubeServer}, listPods)
-	if err != nil {
-		return "", err
-	}
-
-	return toJSON(list)
+	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, func() kubePodList { return kubePodList{Pods: demoPods()} }, listPods)
 }
 
 func listPods(ctx context.Context, k *kubeClient) (kubePodList, error) {
-	var list struct {
-		Items []podObject `json:"items"`
-	}
+	var list kubeList[podObject]
 
 	if err := k.get(ctx, "/api/v1/pods", &list); err != nil {
 		return kubePodList{}, err
@@ -240,15 +229,9 @@ func KubeDeletePod(configYAML, contextName, kubeServer, namespace, name string) 
 		return err
 	}
 
-	if isDemoContext(configYAML, contextName) {
-		return demoUnavailable
-	}
-
-	_, err = withKube(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (struct{}, error) {
-		return struct{}{}, k.do(ctx, http.MethodDelete, podPath(namespace, name), "", nil, nil)
+	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
+		return k.do(ctx, http.MethodDelete, podPath(namespace, name), "", nil, nil)
 	})
-
-	return kubeMutationError(err)
 }
 
 func podPath(namespace, name string) string {

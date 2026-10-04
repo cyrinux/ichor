@@ -83,14 +83,16 @@ func KernelLogs(configYAML, contextName, node string, tailLines int) (out string
 }
 
 func clampTail(n int) int {
-	switch {
-	case n <= 0:
-		return defaultLogLines
-	case n > maxLogLines:
-		return maxLogLines
-	default:
-		return n
+	return clampOr(n, defaultLogLines, maxLogLines)
+}
+
+// clampOr is v capped at maxV, or def when v is not positive (unset).
+func clampOr[T int | int64](v, def, maxV T) T {
+	if v <= 0 {
+		return def
 	}
+
+	return min(v, maxV)
 }
 
 // drainStream reads a Talos byte stream to EOF, keeping only the last n lines.
@@ -119,28 +121,19 @@ func drainStream(recv func() (*common.Data, error), n int) (logTail, error) {
 type tailLines struct {
 	max       int
 	lines     []string
-	partial   strings.Builder
+	split     *lineSplitter
 	truncated bool
 }
 
 func newTailLines(maxLines int) *tailLines {
-	return &tailLines{max: maxLines}
+	t := &tailLines{max: maxLines}
+	t.split = newLineSplitter(t.push)
+
+	return t
 }
 
 func (t *tailLines) write(b []byte) {
-	for len(b) > 0 {
-		i := strings.IndexByte(string(b), '\n')
-		if i < 0 {
-			t.partial.Write(b)
-
-			return
-		}
-
-		t.partial.Write(b[:i])
-		t.push(strings.TrimSuffix(t.partial.String(), "\r"))
-		t.partial.Reset()
-		b = b[i+1:]
-	}
+	t.split.write(b)
 }
 
 func (t *tailLines) push(line string) {
@@ -152,10 +145,7 @@ func (t *tailLines) push(line string) {
 }
 
 func (t *tailLines) result() logTail {
-	if t.partial.Len() > 0 {
-		t.push(t.partial.String())
-		t.partial.Reset()
-	}
+	t.split.flush()
 
 	lines := append([]string{}, t.lines...)
 

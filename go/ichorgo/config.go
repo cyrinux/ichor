@@ -5,8 +5,8 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -142,14 +142,7 @@ func resolveContext(configYAML, name string) (string, *clientconfig.Context, err
 }
 
 func sortedContextNames(cfg *clientconfig.Config) []string {
-	names := make([]string, 0, len(cfg.Contexts))
-	for name := range cfg.Contexts {
-		names = append(names, name)
-	}
-
-	sort.Strings(names)
-
-	return names
+	return slices.Sorted(maps.Keys(cfg.Contexts))
 }
 
 // defaultContextName is the config's current context, or the first one if it is dangling.

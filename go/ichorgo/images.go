@@ -29,15 +29,11 @@ func NodeImages(configYAML, contextName, node string) (out string, err error) {
 		return demoRead("NodeImages", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
-		msgs, err := listImagesLegacy(withNode(ctx, node), s.client)
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
+		msgs, err := listImagesLegacy(ctx, s.client)
 		if isUnavailableAPI(err) {
 			// MachineService.ImageList is deprecated for the ImageService (Talos 1.13+) and will go.
-			msgs, err = listImagesService(withNode(ctx, node), s.client)
+			msgs, err = listImagesService(ctx, s.client)
 		}
 
 		if err != nil {

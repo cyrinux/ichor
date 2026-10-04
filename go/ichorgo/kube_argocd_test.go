@@ -18,7 +18,7 @@ func readArgoFixture[T any](t *testing.T, name string) []T {
 		t.Fatal(err)
 	}
 
-	var list lhList[T]
+	var list kubeList[T]
 	if err := json.Unmarshal(data, &list); err != nil {
 		t.Fatal(err)
 	}

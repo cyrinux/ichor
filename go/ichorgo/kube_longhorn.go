@@ -157,19 +157,15 @@ type lhBackupTargetObject struct {
 	} `json:"status"`
 }
 
-type lhList[T any] struct {
-	Items []T `json:"items"`
-}
-
 // readLonghorn lists volumes, replicas, nodes and backup targets of every namespace.
 func readLonghorn(ctx context.Context, k *kubeClient, version string) *longhornStatus {
 	base := "/apis/" + groupLonghorn + "/" + version + "/"
 
 	var (
-		volumes  lhList[lhVolumeObject]
-		replicas lhList[lhReplicaObject]
-		nodes    lhList[lhNodeObject]
-		targets  lhList[lhBackupTargetObject]
+		volumes  kubeList[lhVolumeObject]
+		replicas kubeList[lhReplicaObject]
+		nodes    kubeList[lhNodeObject]
+		targets  kubeList[lhBackupTargetObject]
 		errs     = make([]error, 3)
 		wg       sync.WaitGroup
 	)

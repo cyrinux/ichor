@@ -55,18 +55,11 @@ func KubeDataServices(configYAML, contextName, kubeServer, hints string) (out st
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	if isDemoContext(configYAML, contextName) {
-		return toJSON(demoDataServices(time.Now()))
-	}
+	demo := func() dataServices { return demoDataServices(time.Now()) }
 
-	res, err := withKube(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (dataServices, error) {
+	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demo, func(ctx context.Context, k *kubeClient) (dataServices, error) {
 		return readDataServices(ctx, k, k.exec, parseHints(hints), time.Now())
 	})
-	if err != nil {
-		return "", err
-	}
-
-	return toJSON(res)
 }
 
 // execFunc runs a command in a container: kubeClient.exec, or a fake in tests.
@@ -228,9 +221,7 @@ func listDSPods(ctx context.Context, k *kubeClient, selector string) ([]dsPod, e
 		path += "?labelSelector=" + url.QueryEscape(selector)
 	}
 
-	var list struct {
-		Items []dsPod `json:"items"`
-	}
+	var list kubeList[dsPod]
 
 	if err := k.get(ctx, path, &list); err != nil {
 		return nil, err

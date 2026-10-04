@@ -85,15 +85,9 @@ func KubeArgoAction(configYAML, contextName, kubeServer, namespace, name, action
 		}
 	}
 
-	if isDemoContext(configYAML, contextName) {
-		return demoUnavailable
-	}
-
-	_, err = withKube(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (struct{}, error) {
-		return struct{}{}, argoAction(ctx, k, namespace, name, action, opts, time.Now())
+	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
+		return argoAction(ctx, k, namespace, name, action, opts, time.Now())
 	})
-
-	return kubeMutationError(err)
 }
 
 func argoAction(ctx context.Context, k *kubeClient, namespace, name, action string, opts argoSyncOptions, now time.Time) error {

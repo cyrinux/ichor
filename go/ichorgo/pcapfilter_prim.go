@@ -25,14 +25,6 @@ const (
 	ipProtoICMPv6 = 58
 )
 
-type portProto int
-
-const (
-	anyTransport portProto = iota
-	tcpOnly
-	udpOnly
-)
-
 func loadAbs(off uint32, size int) []bpf.Instruction {
 	return []bpf.Instruction{bpf.LoadAbsolute{Off: off, Size: size}}
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"strings"
+
+	"github.com/siderolabs/talos/pkg/machinery/client"
 )
 
 // ServiceAction starts, stops or restarts a Talos service on node, like
@@ -18,32 +20,20 @@ func ServiceAction(configYAML, contextName, node, service, action string) (err e
 		return err
 	}
 
-	_, err = withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (struct{}, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return struct{}{}, err
-		}
-
-		nodeCtx := withNode(ctx, node)
-
+	return nodeAction(configYAML, contextName, node, callTimeout, func(ctx context.Context, c *client.Client) error {
 		var err error
 
 		switch action {
 		case "start":
-			_, err = s.client.ServiceStart(nodeCtx, service)
+			_, err = c.ServiceStart(ctx, service)
 		case "stop":
-			_, err = s.client.ServiceStop(nodeCtx, service)
+			_, err = c.ServiceStop(ctx, service)
 		case "restart":
-			_, err = s.client.ServiceRestart(nodeCtx, service)
+			_, err = c.ServiceRestart(ctx, service)
 		}
 
-		if err != nil {
-			return struct{}{}, errors.New(s.friendly(node, err))
-		}
-
-		return struct{}{}, nil
+		return err
 	})
-
-	return err
 }
 
 func validateServiceAction(service, action string) error {

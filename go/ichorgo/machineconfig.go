@@ -27,11 +27,7 @@ func NodeMachineConfig(configYAML, contextName, node string, revealSecrets bool)
 		return demoRead("NodeMachineConfig", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		out, err := machineConfigYAML(ctx, s, node, revealSecrets)
 		if err != nil {
 			return "", err

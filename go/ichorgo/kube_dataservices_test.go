@@ -41,10 +41,10 @@ func loadFixture[T any](t *testing.T, path string) T {
 
 func TestMapLonghornFixtures(t *testing.T) {
 	out := mapLonghorn("v1beta2",
-		loadFixture[lhList[lhVolumeObject]](t, "longhorn/1.12/volumes.json").Items,
-		loadFixture[lhList[lhReplicaObject]](t, "longhorn/1.12/replicas.json").Items,
-		loadFixture[lhList[lhNodeObject]](t, "longhorn/1.12/nodes.json").Items,
-		loadFixture[lhList[lhBackupTargetObject]](t, "longhorn/1.12/backuptargets.json").Items, "")
+		loadFixture[kubeList[lhVolumeObject]](t, "longhorn/1.12/volumes.json").Items,
+		loadFixture[kubeList[lhReplicaObject]](t, "longhorn/1.12/replicas.json").Items,
+		loadFixture[kubeList[lhNodeObject]](t, "longhorn/1.12/nodes.json").Items,
+		loadFixture[kubeList[lhBackupTargetObject]](t, "longhorn/1.12/backuptargets.json").Items, "")
 
 	var healths []string
 	for _, v := range out.Volumes {
@@ -130,9 +130,9 @@ func TestMapCNPGFixtures(t *testing.T) {
 	}
 
 	out := mapCNPG(
-		loadFixture[lhList[cnpgClusterObject]](t, "cnpg/clusters.json").Items,
-		loadFixture[lhList[cnpgScheduledBackupObject]](t, "cnpg/scheduledbackups.json").Items,
-		loadFixture[lhList[cnpgObjectStoreObject]](t, "cnpg/objectstores.json").Items,
+		loadFixture[kubeList[cnpgClusterObject]](t, "cnpg/clusters.json").Items,
+		loadFixture[kubeList[cnpgScheduledBackupObject]](t, "cnpg/scheduledbackups.json").Items,
+		loadFixture[kubeList[cnpgObjectStoreObject]](t, "cnpg/objectstores.json").Items,
 		pods, fixtureNow)
 
 	type summary struct {

@@ -1,10 +1,5 @@
 package ichorgo
 
-import (
-	"cmp"
-	"slices"
-)
-
 // reveal is the inverse of mask for text written about masked data (an AI answer about a
 // masked report): fake hostnames and addresses are swapped back for the real ones, and the
 // fake domain too when it stands for a single real one. Context names, extra words and
@@ -12,6 +7,12 @@ import (
 //
 // It only reads right when the fakes cannot be mistaken for real text (see setAvoid).
 func (m *privacyMask) reveal(s string) string {
+	return m.unmaskFakes(s, true)
+}
+
+// unmaskFakes swaps fake hostnames and addresses back for the real ones and, withDomain,
+// the fake domain when it stands for a single real one.
+func (m *privacyMask) unmaskFakes(s string, withDomain bool) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -24,15 +25,13 @@ func (m *privacyMask) reveal(s string) string {
 		terms = append(terms, maskTerm{match: fake, repl: real})
 	}
 
-	if len(m.domains) == 1 {
+	if withDomain && len(m.domains) == 1 {
 		for domain := range m.domains {
 			terms = append(terms, maskTerm{match: maskedDomain, repl: domain})
 		}
 	}
 
-	slices.SortFunc(terms, func(a, b maskTerm) int {
-		return cmp.Or(cmp.Compare(len(b.match), len(a.match)), cmp.Compare(a.match, b.match))
-	})
+	sortTerms(terms)
 
 	back := func(fake string) (string, bool) {
 		real, ok := m.ipsBack[fake]

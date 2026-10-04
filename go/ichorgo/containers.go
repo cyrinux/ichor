@@ -40,19 +40,13 @@ func NodeContainers(configYAML, contextName, node string) (out string, err error
 		return demoRead("NodeContainers", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, statsTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
-		nodeCtx := withNode(ctx, node)
-
-		list, err := s.client.Containers(nodeCtx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI)
+	return withNodeSession(configYAML, contextName, node, statsTimeout, func(ctx context.Context, s *session) (string, error) {
+		list, err := s.client.Containers(ctx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI)
 		if err != nil {
 			return "", errors.New(s.friendly(node, err))
 		}
 
-		stats, _ := s.client.Stats(nodeCtx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI) //nolint:errcheck
+		stats, _ := s.client.Stats(ctx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI) //nolint:errcheck
 
 		return toJSON(containerList{
 			At:         time.Now().UnixMilli(),

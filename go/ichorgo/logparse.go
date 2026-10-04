@@ -1,7 +1,6 @@
 package ichorgo
 
 import (
-	"cmp"
 	"slices"
 	"strconv"
 	"strings"
@@ -308,27 +307,5 @@ func pairMillis(p logPair) int64 {
 // so that masking it again yields the same fakes instead of minting new ones. Only for text
 // the app got from a masked result, unmasked once on entry like the other arguments.
 func (m *privacyMask) unmaskText(s string) string {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if !m.enabled || s == "" {
-		return s
-	}
-
-	terms := make([]maskTerm, 0, len(m.hostsBack))
-	for fake, real := range m.hostsBack {
-		terms = append(terms, maskTerm{match: fake, repl: real})
-	}
-
-	slices.SortFunc(terms, func(a, b maskTerm) int {
-		return cmp.Or(cmp.Compare(len(b.match), len(a.match)), cmp.Compare(a.match, b.match))
-	})
-
-	back := func(fake string) (string, bool) {
-		real, ok := m.ipsBack[fake]
-
-		return real, ok
-	}
-
-	return replaceIPv6(replaceIPv4(replaceTerms(s, terms), back), back)
+	return m.unmaskFakes(s, false)
 }

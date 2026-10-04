@@ -65,7 +65,7 @@ type dragonflyObject struct {
 // app.kubernetes.io/name=dragonfly, app=<instance> and role=master|replica).
 func readDragonfly(ctx context.Context, k *kubeClient, version string) *dragonflyStatus {
 	var (
-		list lhList[dragonflyObject]
+		list kubeList[dragonflyObject]
 		pods []dsPod
 		errs = make([]error, 2)
 		wg   sync.WaitGroup

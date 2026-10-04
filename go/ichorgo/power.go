@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -26,7 +27,7 @@ func Reboot(configYAML, contextName, node, mode string) (err error) {
 		return err
 	}
 
-	return powerAction(configYAML, contextName, node, func(ctx context.Context, c *client.Client) error {
+	return nodeAction(configYAML, contextName, node, callTimeout, func(ctx context.Context, c *client.Client) error {
 		return c.Reboot(ctx, client.WithRebootMode(m))
 	})
 }
@@ -38,7 +39,7 @@ func Shutdown(configYAML, contextName, node string, force bool) (err error) {
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
-	return powerAction(configYAML, contextName, node, func(ctx context.Context, c *client.Client) error {
+	return nodeAction(configYAML, contextName, node, callTimeout, func(ctx context.Context, c *client.Client) error {
 		return c.Shutdown(ctx, client.WithShutdownForce(force))
 	})
 }
@@ -56,13 +57,10 @@ func parseRebootMode(mode string) (machineapi.RebootRequest_Mode, error) {
 	}
 }
 
-func powerAction(configYAML, contextName, node string, action func(context.Context, *client.Client) error) error {
-	_, err := withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (struct{}, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return struct{}{}, err
-		}
-
-		if err := action(client.WithNode(ctx, node), s.client); err != nil {
+// nodeAction runs action against node, bounded by timeout, with Talos errors made friendly.
+func nodeAction(configYAML, contextName, node string, timeout time.Duration, action func(context.Context, *client.Client) error) error {
+	_, err := withNodeSession(configYAML, contextName, node, timeout, func(ctx context.Context, s *session) (struct{}, error) {
+		if err := action(ctx, s.client); err != nil {
 			return struct{}{}, errors.New(s.friendly(node, err))
 		}
 

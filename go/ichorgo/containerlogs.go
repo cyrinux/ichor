@@ -23,18 +23,14 @@ func ContainerLogs(configYAML, contextName, node, containerID string, tailLines 
 	}
 	containerID = privacy.unmaskText(containerID)
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		if strings.TrimSpace(containerID) == "" {
 			return "", errors.New("no container given")
 		}
 
 		n := clampTail(tailLines)
 
-		stream, err := s.client.Logs(withNode(ctx, node), constants.K8sContainerdNamespace,
+		stream, err := s.client.Logs(ctx, constants.K8sContainerdNamespace,
 			common.ContainerDriver_CRI, containerID, false, int32(n))
 		if err != nil {
 			return "", errors.New(s.friendly(node, err))
