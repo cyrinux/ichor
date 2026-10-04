@@ -562,7 +562,7 @@ func garageProxyHealth(ctx context.Context, k *kubeClient, g garageGroup) (strin
 
 			path := fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy/health", url.PathEscape(g.namespace), url.PathEscape(s.Metadata.Name), p.Port)
 
-			status, ctype, body, err := k.getRaw(ctx, path)
+			status, ctype, body, err := k.getRaw(ctx, path, nil)
 			if err != nil {
 				return garageUnknown, kubeError(err).Error()
 			}
