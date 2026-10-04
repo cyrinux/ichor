@@ -103,6 +103,8 @@ data class NodeOverview(
     val cpuCount: Int = 0,
     val memTotal: Long = 0,
     val memAvailable: Long = 0,
+    /** Internet-facing addresses, IPv4 first; empty when none (or from an older core). */
+    val publicIPs: List<String> = emptyList(),
     /**
      * Set by the app, never by the core: when an unreachable node last answered (epoch millis);
      * its hostname, role, version and capacity are then the ones it had (see [withLastKnown]).

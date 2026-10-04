@@ -97,6 +97,7 @@
     <string name="overview_unreachable_title">Кластер недосяжний</string>
     <string name="overview_last_known_state">Показано останній відомий стан.</string>
     <string name="overview_node_last_seen">Востаннє на зв\'язку %1$s</string>
+    <string name="overview_node_public_ip">Публічна IP-адреса</string>
     <string name="overview_unreachable_network">Жоден вузол не відповів. Схоже, телефон не в мережі кластера: перевірте, чи підключено VPN або чи ви в потрібній мережі Wi-Fi.</string>
     <string name="overview_unreachable_credentials">Кластер відповів, але відхилив цей talosconfig: його сертифікат, CA або роль можуть бути хибними чи простроченими.</string>
     <string name="overview_unreachable_other">Жоден вузол не відповів. Подробиці нижче.</string>

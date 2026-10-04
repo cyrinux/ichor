@@ -83,6 +83,7 @@
     <string name="overview_unreachable_title">Cluster irraggiungibile</string>
     <string name="overview_last_known_state">Viene mostrato l\'ultimo stato noto.</string>
     <string name="overview_node_last_seen">Visto l\'ultima volta %1$s</string>
+    <string name="overview_node_public_ip">IP pubblico</string>
     <string name="overview_unreachable_network">Nessun nodo ha risposto. Probabilmente il telefono non è sulla rete del cluster: verifica che la VPN sia connessa o di essere sulla Wi-Fi giusta.</string>
     <string name="overview_unreachable_credentials">Il cluster ha risposto ma ha rifiutato questo talosconfig: il certificato, la CA o il ruolo potrebbero essere errati o scaduti.</string>
     <string name="overview_unreachable_other">Nessun nodo ha risposto. I dettagli sono qui sotto.</string>

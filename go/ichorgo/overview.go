@@ -36,6 +36,8 @@ type nodeOverview struct {
 	CPUCount     int    `json:"cpuCount"`
 	MemTotal     uint64 `json:"memTotal"`     // bytes
 	MemAvailable uint64 `json:"memAvailable"` // bytes
+	// Internet-facing addresses, IPv4 first; empty when the node has none or did not say.
+	PublicIPs []string `json:"publicIPs,omitempty"`
 }
 
 type unmetCondition struct {
@@ -56,6 +58,7 @@ type nodeProbe struct {
 	hostnameErr error
 	memory      *machineapi.Memory   // nil when unknown
 	cpu         *machineapi.CPUsInfo // nil when unknown
+	publicIPs   []string
 }
 
 // ClusterOverview queries every node of the context in parallel and returns a JSON clusterOverview.
@@ -139,6 +142,8 @@ func probeNode(ctx context.Context, c *client.Client, node string) nodeProbe {
 		p.cpu = first(cpu.GetMessages())
 	}
 
+	p.publicIPs = probePublicIPs(nodeCtx, c)
+
 	return p
 }
 
@@ -175,6 +180,7 @@ func buildNodeOverview(node string, p nodeProbe) nodeOverview {
 	out.CPUCount = len(p.cpu.GetCpuInfo())
 	out.MemTotal = p.memory.GetMeminfo().GetMemtotal() * kib
 	out.MemAvailable = p.memory.GetMeminfo().GetMemavailable() * kib
+	out.PublicIPs = p.publicIPs
 
 	var errs []string
 

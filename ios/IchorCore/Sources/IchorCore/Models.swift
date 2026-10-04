@@ -110,6 +110,8 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
     public let cpuCount: Int
     public let memTotal: UInt64 // bytes
     public let memAvailable: UInt64 // bytes
+    /// Internet-facing addresses, IPv4 first; empty when none (or from an older core).
+    public let publicIPs: [String]
     /// An unreachable node shown with what it said last: when that was (epoch ms). Never
     /// from Go, set by mergeLastKnown.
     public let lastSeen: Int64?
@@ -125,7 +127,7 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
         node: String, hostname: String, reachable: Bool, error: String? = nil, errorKind: String? = nil,
         version: String = "", arch: String = "", platform: String = "", role: String = "", stage: String = "",
         ready: Bool = false, unmetConditions: [UnmetCondition] = [], cpuCount: Int = 0, memTotal: UInt64 = 0,
-        memAvailable: UInt64 = 0, lastSeen: Int64? = nil
+        memAvailable: UInt64 = 0, publicIPs: [String] = [], lastSeen: Int64? = nil
     ) {
         self.node = node
         self.hostname = hostname
@@ -142,12 +144,13 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
         self.cpuCount = cpuCount
         self.memTotal = memTotal
         self.memAvailable = memAvailable
+        self.publicIPs = publicIPs
         self.lastSeen = lastSeen
     }
 
     private enum CodingKeys: String, CodingKey {
         case node, hostname, reachable, error, errorKind, version, arch, platform, role, stage, ready
-        case unmetConditions, cpuCount, memTotal, memAvailable, lastSeen
+        case unmetConditions, cpuCount, memTotal, memAvailable, publicIPs, lastSeen
     }
 
     // Older cores send no capacity; Go encodes an empty (nil) slice as null.
@@ -168,6 +171,7 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
         cpuCount = try c.decodeIfPresent(Int.self, forKey: .cpuCount) ?? 0
         memTotal = try c.decodeIfPresent(UInt64.self, forKey: .memTotal) ?? 0
         memAvailable = try c.decodeIfPresent(UInt64.self, forKey: .memAvailable) ?? 0
+        publicIPs = try c.decodeIfPresent([String].self, forKey: .publicIPs) ?? []
         lastSeen = try c.decodeIfPresent(Int64.self, forKey: .lastSeen)
     }
 }

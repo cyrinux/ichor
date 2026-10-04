@@ -70,9 +70,12 @@ android {
 
     // The store behind feature funding: Play Billing in src/play, none in src/foss (shared by
     // the open-source builds), so the proprietary billing library never reaches their APKs.
+    // src/foss/res tells them apart from the Play build on a home screen (name and icon).
     sourceSets {
         getByName("debug").kotlin.directories.add("src/foss/java")
         getByName("release").kotlin.directories.add("src/foss/java")
+        getByName("debug").res.directories.add("src/foss/res")
+        getByName("release").res.directories.add("src/foss/res")
     }
 
     // One APK per ABI (app-<abi>-<buildType>.apk), each with only its own native libraries.
