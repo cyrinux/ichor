@@ -121,7 +121,11 @@ private struct PodRow: View {
             if deleting {
                 ProgressView()
             } else {
-                Button(action: onDelete) { Image(systemName: "trash") }
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
                     .buttonStyle(.borderless)
                     .disabled(pod.status == "Terminating")
                     .accessibilityLabel(Text("Delete \(pod.name)"))

@@ -54,7 +54,8 @@ struct ClusterBar: View {
                     .frame(width: active ? 10 : 7, height: active ? 10 : 7)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 28)
+        // 44 pt: the minimum touch target; the dots stay small.
+        .frame(maxWidth: .infinity, minHeight: 44)
         .background(.bar)
         .contentShape(Rectangle())
         .onTapGesture(perform: onOpen)
@@ -115,7 +116,7 @@ struct ClustersView: View {
             isPresented: $renaming.isPresent(),
             presenting: renaming
         ) { context in
-            TextField(context.name, text: $newName)
+            TextField("Name", text: $newName, prompt: Text(verbatim: context.name))
             Button("OK") { model.rename(context, to: newName) }
             Button("Cancel", role: .cancel) {}
         } message: { context in
@@ -135,6 +136,7 @@ struct ClustersView: View {
                 HStack {
                     Image(systemName: active ? "checkmark.circle.fill" : "circle")
                         .foregroundStyle(active ? Color.accentColor : Color.secondary)
+                        .accessibilityHidden(true)
                     VStack(alignment: .leading) {
                         Text(model.labels.of(context)).foregroundStyle(Color.primary)
                         // Renamed: which talosconfig context that is.
@@ -150,6 +152,7 @@ struct ClustersView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityAddTraits(active ? .isSelected : [])
             ColorPicker(String(localized: "Color of \(model.labels.of(context))"), selection: color(of: context), supportsOpacity: false)
                 .labelsHidden()
         }

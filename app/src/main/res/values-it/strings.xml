@@ -2076,4 +2076,13 @@
     <string name="upgrade_step_current">In corso</string>
     <string name="upgrade_step_failed">Non riuscito</string>
     <string name="upgrade_step_pending">Non iniziato</string>
+    <string name="common_open">Apri</string>
+    <string name="common_expand">Espandi</string>
+    <string name="common_collapse">Comprimi</string>
+    <string name="common_expanded">Espanso</string>
+    <string name="common_collapsed">Compresso</string>
+    <string name="clusters_color_swatch">Colore %1$d</string>
+    <string name="clusters_color_hue">Tonalità</string>
+    <string name="ai_api_key_show">Mostra chiave API</string>
+    <string name="ai_api_key_hide">Nascondi chiave API</string>
 </resources>

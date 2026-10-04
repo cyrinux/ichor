@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -88,7 +89,7 @@ fun DebugSnippetsSheet(snippets: List<DebugSnippet>, onPick: (DebugSnippet) -> U
 
 @Composable
 private fun SnippetRow(snippet: DebugSnippet, onPick: (DebugSnippet) -> Unit) {
-    Column(Modifier.fillMaxWidth().clickable { onPick(snippet) }.padding(horizontal = 16.dp, vertical = 8.dp)) {
+    Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { onPick(snippet) }.padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(snippet.label, style = MaterialTheme.typography.bodyMedium)
         Text(
             snippet.display,

@@ -64,6 +64,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.mutableStateOf
@@ -175,6 +176,8 @@ fun NodeDetailScreen(
                         s.request.service,
                         s.message.resolve(context),
                     ),
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Long,
                 )
                 serviceControl.dismiss()
             }
@@ -194,7 +197,7 @@ fun NodeDetailScreen(
             val title = context.getString(request.action.label)
             when (val auth = authenticate(activity, title, "${request.service} · $hostname")) {
                 AuthResult.Success -> serviceControl.run(request)
-                is AuthResult.Failure -> snackbar.showSnackbar(auth.message)
+                is AuthResult.Failure -> snackbar.showSnackbar(auth.message, withDismissAction = true, duration = SnackbarDuration.Long)
             }
         }
     }
@@ -207,7 +210,7 @@ fun NodeDetailScreen(
                 onBack()
             }
             is PowerState.Failed -> {
-                snackbar.showSnackbar(s.message.resolve(context))
+                snackbar.showSnackbar(s.message.resolve(context), withDismissAction = true, duration = SnackbarDuration.Long)
                 power.dismiss()
             }
             else -> Unit
@@ -225,7 +228,7 @@ fun NodeDetailScreen(
         scope.launch {
             when (val auth = authenticate(activity, context.getString(R.string.power_auth_title, context.getString(request.title), hostname))) {
                 AuthResult.Success -> power.run(request)
-                is AuthResult.Failure -> snackbar.showSnackbar(auth.message)
+                is AuthResult.Failure -> snackbar.showSnackbar(auth.message, withDismissAction = true, duration = SnackbarDuration.Long)
             }
         }
     }

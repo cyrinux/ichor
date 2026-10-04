@@ -149,6 +149,7 @@ private struct FeatureRow: View {
                 .foregroundStyle(.tint)
                 .frame(width: 44, height: 44)
                 .background(.tint.opacity(0.15), in: Circle())
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.subheadline.weight(.semibold))
                 Text(detail).font(.footnote).foregroundStyle(.secondary)

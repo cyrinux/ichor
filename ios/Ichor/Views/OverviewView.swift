@@ -128,6 +128,13 @@ struct OverviewView: View {
                                 }
                                 Button { UIPasteboard.general.string = node.node } label: { Label("Copy IP", systemImage: "doc.on.doc") }
                             }
+                            // VoiceOver already lists the swipe actions; these are only in the context menu.
+                            .accessibilityActions {
+                                if node.reachable && model.allows(.power) {
+                                    Button("Shut down…") { path.append(.nodePower(ref, .shutdown)) }
+                                }
+                                Button("Copy IP") { UIPasteboard.general.string = node.node }
+                            }
                         }
                     } header: {
                         HStack {
@@ -464,6 +471,7 @@ private struct Summary: View {
                     Text(verbatim: "\(count)").font(.title.bold()).foregroundStyle(count > 0 ? health.color : .secondary)
                     Text(health.label.lowercased()).font(.caption).foregroundStyle(.secondary)
                 }
+                .accessibilityElement(children: .combine)
             }
         }
     }
@@ -512,6 +520,7 @@ private struct NodeRow: View {
             }
         }
         .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
     }
 
     private var role: String {

@@ -210,6 +210,7 @@ struct ArgoPodsSection: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 8) {
                         Circle().fill(pod.transitional ? attentionColor : .red).frame(width: 8, height: 8)
+                            .accessibilityHidden(true)
                         Text(verbatim: pod.name).font(.callout.monospaced()).lineLimit(1).truncationMode(.middle)
                     }
                     Text(verbatim: [pod.status, String(localized: "\(pod.ready)/\(pod.containers) ready"),
@@ -223,6 +224,7 @@ struct ArgoPodsSection: View {
                             .foregroundStyle(downNodes.contains(pod.node) ? Color.red : Color.secondary)
                     }
                 }
+                .accessibilityElement(children: .combine)
             }
         }
     }

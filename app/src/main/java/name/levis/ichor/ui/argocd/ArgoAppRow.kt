@@ -32,6 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -96,11 +100,30 @@ fun ArgoAppRow(
     busy: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
+    onClickLabel: String? = null,
+    onSync: (() -> Unit)? = null,
+    onRefresh: (() -> Unit)? = null,
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val background = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface
+    // The swipes, for TalkBack and switch access: offered only while the row can swipe.
+    val syncLabel = stringResource(R.string.argo_sync)
+    val refreshLabel = stringResource(R.string.argo_refresh)
     Row(
-        Modifier.fillMaxWidth().background(background).combinedClickable(onClick = onClick, onLongClick = onLongClick)
+        Modifier.fillMaxWidth().background(background)
+            .combinedClickable(
+                onClick = onClick,
+                onClickLabel = onClickLabel,
+                onLongClick = onLongClick,
+                onLongClickLabel = stringResource(R.string.argo_select),
+            )
+            .semantics {
+                this.selected = selected
+                customActions = listOfNotNull(
+                    onSync?.let { CustomAccessibilityAction(syncLabel) { it(); true } },
+                    onRefresh?.let { CustomAccessibilityAction(refreshLabel) { it(); true } },
+                )
+            }
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -73,6 +73,7 @@ private struct ClusterRow: View {
                         .lineLimit(2)
                 }
             }
+            .accessibilityElement(children: .combine)
         }
     }
 

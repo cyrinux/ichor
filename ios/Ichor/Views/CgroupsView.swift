@@ -70,12 +70,17 @@ struct CgroupsView: View {
                 let open = expanded ?? defaultExpandedCgroups(current)
                 Section {
                     ForEach(cgroupRows(previous: monitor.previous, current: current, expanded: open, sort: sort)) { row in
+                        let toggle: () -> Void = {
+                            guard row.hasChildren else { return }
+                            expanded = open.symmetricDifference([row.id])
+                        }
                         CgroupRowView(row: row, expanded: open.contains(row.id))
                             .contentShape(Rectangle())
-                            .onTapGesture {
-                                guard row.hasChildren else { return }
-                                expanded = open.symmetricDifference([row.id])
-                            }
+                            .onTapGesture(perform: toggle)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityValue(cgroupAccessibilityValue(row, expanded: open.contains(row.id)))
+                            .accessibilityAddTraits(row.hasChildren ? .isButton : [])
+                            .accessibilityAction { toggle() }
                     }
                 }
             }
@@ -89,6 +94,13 @@ struct CgroupsView: View {
     }
 }
 
+/// The indentation and, for a group with children, whether it is open: what VoiceOver cannot see.
+private func cgroupAccessibilityValue(_ row: CgroupRow, expanded: Bool) -> Text {
+    let level = Text("Level \(row.depth + 1)")
+    guard row.hasChildren else { return level }
+    return level + Text(verbatim: ", ") + (expanded ? Text("Expanded") : Text("Collapsed"))
+}
+
 private struct CgroupRowView: View {
     let row: CgroupRow
     let expanded: Bool
@@ -99,6 +111,7 @@ private struct CgroupRowView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .opacity(row.hasChildren ? 1 : 0)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(verbatim: row.node.name)

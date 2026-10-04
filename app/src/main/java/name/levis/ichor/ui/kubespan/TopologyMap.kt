@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +36,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -225,7 +227,8 @@ private fun NodeChip(node: TopologyNode, broken: Int, pick: Int, maxWidth: Dp, o
         tonalElevation = 2.dp,
         shadowElevation = 1.dp,
         border = pickLabel?.let { BorderStroke(2.dp, MaterialTheme.colorScheme.primary) },
-        modifier = modifier.widthIn(max = maxWidth).clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick),
+        modifier = modifier.minimumInteractiveComponentSize().widthIn(max = maxWidth).clip(RoundedCornerShape(12.dp))
+            .clickable(role = Role.Button, onClick = onClick),
     ) {
         Row(Modifier.padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             // Filled for a control plane, a ring for a worker.

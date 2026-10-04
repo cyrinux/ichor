@@ -1,7 +1,6 @@
 package name.levis.ichor.ui.dataservices
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -46,6 +45,7 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
+import name.levis.ichor.ui.components.expandable
 
 /**
  * Every CloudNativePG cluster, built for dozens: a summary, the ones that need a look by
@@ -106,7 +106,7 @@ fun CnpgTab(status: CnpgStatus) {
 @Composable
 private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Column(Modifier.fillMaxWidth().clickable(onClick = onToggle).animateContentSize().padding(horizontal = 16.dp, vertical = 8.dp)) {
+    Column(Modifier.fillMaxWidth().expandable(open, onToggle = onToggle).animateContentSize().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             HealthDot(c.serviceHealth)
             Spacer(Modifier.size(12.dp))

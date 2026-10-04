@@ -48,6 +48,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.components.expandable
 
 class ClusterTimeViewModel(private val talos: TalosRepository) : LoadingViewModel<ClusterTime>() {
     override fun cached(): TalosRepository.Timed<ClusterTime>? = talos.cached(CLUSTER_TIME)
@@ -77,7 +78,11 @@ fun TimeDriftCard(state: UiState<ClusterTime>, hostnames: Map<String, String>) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             // Title and summary toggle the per-node list.
             Column(
-                Modifier.fillMaxWidth().clickable(enabled = summary != null) { expanded = !expanded },
+                Modifier.fillMaxWidth().expandable(
+                    expanded,
+                    enabled = summary != null,
+                    actionLabel = stringResource(if (expanded) R.string.time_drift_collapse else R.string.time_drift_expand),
+                ) { expanded = !expanded },
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -95,7 +100,7 @@ fun TimeDriftCard(state: UiState<ClusterTime>, hostnames: Map<String, String>) {
                     if (summary != null) {
                         Icon(
                             if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                            stringResource(if (expanded) R.string.time_drift_collapse else R.string.time_drift_expand),
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(start = 8.dp),
                         )

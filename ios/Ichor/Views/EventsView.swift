@@ -100,6 +100,7 @@ private struct EventRow: View {
             Image(systemName: event.eventKind.symbol)
                 .foregroundStyle(event.eventSeverity.color)
                 .frame(width: 24)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     if let icon = event.eventSeverity.symbol {
@@ -116,6 +117,7 @@ private struct EventRow: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 1)
                             .background(Color.secondary.opacity(0.15), in: Capsule())
+                            .accessibilityLabel(Text("Repeated \(group.count) times"))
                     }
                 }
                 if !event.message.isEmpty {
@@ -139,6 +141,7 @@ private struct EventRow: View {
             }
         }
         .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
     }
 
     private func title(_ event: NodeEvent) -> String {

@@ -141,7 +141,7 @@ private fun ResourceRow(r: ArgoResource, selecting: Boolean, checked: Boolean, o
         Modifier.fillMaxWidth().then(if (selecting) Modifier.clickable(onClick = onToggle) else Modifier).padding(vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (selecting) Checkbox(checked = checked, onCheckedChange = { onToggle() }, modifier = Modifier.size(32.dp))
+        if (selecting) Checkbox(checked = checked, onCheckedChange = { onToggle() })
         val sync = ArgoSync.from(r.sync)
         Dot(sync.color(), sync.label())
         if (r.health.isNotEmpty()) ArgoHealth.from(r.health).let { Dot(it.color(), it.label(), Modifier.padding(start = 3.dp)) }
@@ -155,7 +155,7 @@ private fun ResourceRow(r: ArgoResource, selecting: Boolean, checked: Boolean, o
             }
         }
         if (onRestart != null && !selecting) {
-            IconButton(onClick = onRestart, modifier = Modifier.size(32.dp)) {
+            IconButton(onClick = onRestart) {
                 Icon(Icons.Outlined.RestartAlt, contentDescription = stringResource(R.string.workloads_restart_confirm), tint = muted, modifier = Modifier.size(18.dp))
             }
         }

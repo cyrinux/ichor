@@ -127,6 +127,7 @@ struct LogEntryRow: View {
         .contentShape(Rectangle())
         .onTapGesture(perform: toggle)
         .accessibilityAddTraits(.isButton)
+        .accessibilityValue(expanded ? Text("Expanded") : Text("Collapsed"))
         .accessibilityHint(group.count > 1 ? Text("Repeated \(group.count) times") : Text(verbatim: ""))
     }
 

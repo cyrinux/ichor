@@ -2076,4 +2076,13 @@
     <string name="upgrade_step_current">En cours</string>
     <string name="upgrade_step_failed">Échec</string>
     <string name="upgrade_step_pending">Pas commencé</string>
+    <string name="common_open">Ouvrir</string>
+    <string name="common_expand">Déplier</string>
+    <string name="common_collapse">Replier</string>
+    <string name="common_expanded">Déplié</string>
+    <string name="common_collapsed">Replié</string>
+    <string name="clusters_color_swatch">Couleur %1$d</string>
+    <string name="clusters_color_hue">Teinte</string>
+    <string name="ai_api_key_show">Afficher la clé d’API</string>
+    <string name="ai_api_key_hide">Masquer la clé d’API</string>
 </resources>

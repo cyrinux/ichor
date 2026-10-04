@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -48,6 +49,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -64,6 +66,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -513,11 +517,20 @@ private fun ClusterColorDialog(name: String, color: Int, onPick: (Int) -> Unit, 
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(R.string.clusters_color_hint), style = MaterialTheme.typography.bodySmall)
-                CLUSTER_SEEDS.chunked(SWATCHES_PER_ROW).forEach { seeds ->
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        seeds.forEach { seed ->
-                            IconButton(onClick = { picked = seed }) {
-                                Swatch(Color(seed), selected = seed == picked)
+                Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    CLUSTER_SEEDS.chunked(SWATCHES_PER_ROW).forEachIndexed { row, seeds ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            seeds.forEachIndexed { i, seed ->
+                                val swatchName = stringResource(R.string.clusters_color_swatch, row * SWATCHES_PER_ROW + i + 1)
+                                Box(
+                                    Modifier
+                                        .minimumInteractiveComponentSize()
+                                        .selectable(selected = seed == picked, role = Role.RadioButton) { picked = seed }
+                                        .semantics { contentDescription = swatchName },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Swatch(Color(seed), selected = seed == picked)
+                                }
                             }
                         }
                     }
@@ -529,10 +542,12 @@ private fun ClusterColorDialog(name: String, color: Int, onPick: (Int) -> Unit, 
                         .height(10.dp)
                         .background(Brush.horizontalGradient(HUE_BAR), MaterialTheme.shapes.small),
                 )
+                val hueLabel = stringResource(R.string.clusters_color_hue)
                 Slider(
                     value = hueOf(picked),
                     onValueChange = { picked = seedFromHue(it) },
                     valueRange = 0f..MAX_HUE,
+                    modifier = Modifier.semantics { contentDescription = hueLabel },
                 )
                 Box(Modifier.fillMaxWidth().height(28.dp).background(Color(picked), MaterialTheme.shapes.small))
             }

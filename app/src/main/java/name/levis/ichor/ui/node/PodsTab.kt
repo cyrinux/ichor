@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -192,7 +193,7 @@ private fun ContainerItem(row: ContainerRow, onClick: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val warn = LocalStatusColors.current.warn
     // Tapping a container opens its log.
-    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(start = 28.dp, end = 16.dp, top = 6.dp, bottom = 6.dp)) {
+    Column(Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = stringResource(R.string.common_open), onClick = onClick).padding(start = 28.dp, end = 16.dp, top = 6.dp, bottom = 6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 c.name.ifEmpty { c.id.take(12) },

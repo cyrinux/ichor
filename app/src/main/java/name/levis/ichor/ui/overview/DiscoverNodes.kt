@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.overview
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,6 +7,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -110,9 +111,9 @@ fun AddDiscoveredNodesDialog(
                         val toggle = { selected = if (checked) selected - node.address else selected + node.address }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().clickable(onClick = toggle),
+                            modifier = Modifier.fillMaxWidth().toggleable(value = checked, role = Role.Checkbox) { toggle() },
                         ) {
-                            Checkbox(checked = checked, onCheckedChange = { toggle() })
+                            Checkbox(checked = checked, onCheckedChange = null)
                             Column {
                                 Text(node.hostname.ifBlank { node.address }, style = MaterialTheme.typography.bodyLarge)
                                 Text(

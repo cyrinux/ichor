@@ -239,7 +239,11 @@ private struct WorkloadRow: View {
             if restarting {
                 ProgressView()
             } else {
-                Button(action: onRestart) { Image(systemName: "arrow.clockwise.circle") }
+                Button(action: onRestart) {
+                    Image(systemName: "arrow.clockwise.circle")
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
                     .buttonStyle(.borderless)
                     .disabled(!workload.canRestart)
                     .accessibilityLabel(Text("Restart \(workload.name)"))

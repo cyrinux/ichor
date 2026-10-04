@@ -56,6 +56,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -622,7 +624,13 @@ private fun NodesCard(
             group.nodes.forEachIndexed { i, node ->
                 if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
                 SwipeableNode(node, onLive = { onLive(node) }, onMore = { onMore(node) }) {
-                    NodeRow(node, node.shownPublicIps(publicIps.probed), onClick = { onNode(node) }, onLongClick = { onMore(node) })
+                    NodeRow(
+                        node,
+                        node.shownPublicIps(publicIps.probed),
+                        onClick = { onNode(node) },
+                        onLongClick = { onMore(node) },
+                        onLive = { onLive(node) }.takeIf { node.reachable },
+                    )
                 }
             }
         }
@@ -631,14 +639,18 @@ private fun NodesCard(
 }
 
 @Composable
-private fun NodeRow(node: NodeOverview, publicIps: List<String>, onClick: () -> Unit, onLongClick: () -> Unit) {
+private fun NodeRow(node: NodeOverview, publicIps: List<String>, onClick: () -> Unit, onLongClick: () -> Unit, onLive: (() -> Unit)?) {
+    val liveLabel = stringResource(R.string.overview_action_live_graphs)
     // Opaque, so the swipe background only shows beside the row as it slides.
     Box(
         Modifier.fillMaxWidth().background(CardDefaults.cardColors().containerColor).combinedClickable(
             onClick = { if (node.reachable) onClick() },
             onLongClick = onLongClick,
             onLongClickLabel = stringResource(R.string.overview_node_actions),
-        ),
+        ).semantics {
+            // Swiping right, without the gesture; swiping left is the long-press above.
+            customActions = listOfNotNull(onLive?.let { CustomAccessibilityAction(liveLabel) { it(); true } })
+        },
     ) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {

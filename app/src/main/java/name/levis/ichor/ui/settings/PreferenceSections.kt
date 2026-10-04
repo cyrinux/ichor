@@ -87,7 +87,7 @@ private fun LanguageSetting(prefs: UiPreferences) {
     val systemLabel = stringResource(R.string.settings_language_system)
     fun labelOf(tag: String) = AppLocale.languages.firstOrNull { it.tag == tag }?.nativeName ?: systemLabel
 
-    Card(Modifier.fillMaxWidth().clickable { picking = true }) {
+    Card(Modifier.fillMaxWidth().clickable(role = Role.Button) { picking = true }) {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.titleMedium)
             MutedText(labelOf(current))

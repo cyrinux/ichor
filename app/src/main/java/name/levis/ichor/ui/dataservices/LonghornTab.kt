@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -209,7 +210,7 @@ private fun BackupTargetRow(target: LonghornBackupTarget, garageDetected: Boolea
     val colors = LocalStatusColors.current
     val linkToGarage = !target.available && garageDetected
     Column(
-        Modifier.fillMaxWidth().then(if (linkToGarage) Modifier.clickable(onClick = onGarage) else Modifier).padding(horizontal = 16.dp, vertical = 8.dp),
+        Modifier.fillMaxWidth().then(if (linkToGarage) Modifier.clickable(role = Role.Button, onClick = onGarage) else Modifier).padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {

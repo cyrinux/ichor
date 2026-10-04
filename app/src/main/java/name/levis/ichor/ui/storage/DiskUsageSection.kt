@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -127,7 +128,7 @@ private fun Breadcrumb(path: String, onOpen: (String) -> Unit) {
 
 @Composable
 private fun UsageRow(row: DiskUsageRow, onOpen: (String) -> Unit) {
-    val modifier = if (row.isDir) Modifier.clickable { onOpen(row.path) } else Modifier
+    val modifier = if (row.isDir) Modifier.clickable(role = Role.Button, onClickLabel = stringResource(R.string.common_open)) { onOpen(row.path) } else Modifier
     Column(modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(

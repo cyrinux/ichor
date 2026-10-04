@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.node
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -65,6 +64,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
 import name.levis.ichor.util.formatBytes
 import name.levis.ichor.util.formatPercent
+import name.levis.ichor.ui.components.expandable
 
 /** A copy of /sys/fs/cgroup (several MB on a busy node) is heavy on mobile data: poll slowly. */
 private const val CGROUPS_POLL_SECONDS = 10L
@@ -168,7 +168,7 @@ private fun CgroupItem(row: CgroupRow, expanded: Boolean, onToggle: () -> Unit) 
     Row(
         Modifier
             .fillMaxWidth()
-            .clickable(enabled = row.hasChildren, onClick = onToggle)
+            .expandable(expanded, enabled = row.hasChildren, onToggle = onToggle)
             .padding(start = 8.dp + 16.dp * row.depth, end = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

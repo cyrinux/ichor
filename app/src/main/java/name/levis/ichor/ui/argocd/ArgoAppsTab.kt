@@ -102,11 +102,10 @@ fun ArgoAppsTab(
             if (groupBy != ArgoGroupBy.NONE && list.isNotEmpty()) item(key = "group-$name") { GroupHeader(groupTitle(groupBy, name), list.size) }
             items(list, key = { it.key }) { app ->
                 val toggle = { onSelection(if (app.key in selection) selection - app.key else selection + app.key) }
-                SwipeableArgoRow(
-                    swipeEnabled = !selecting && app.key !in busy && !app.isRunning,
-                    onSync = { onAct(app, ArgoAction.SYNC) },
-                    onRefresh = { onAct(app, ArgoAction.REFRESH) },
-                ) {
+                val swipeEnabled = !selecting && app.key !in busy && !app.isRunning
+                val sync = { onAct(app, ArgoAction.SYNC) }
+                val refresh = { onAct(app, ArgoAction.REFRESH) }
+                SwipeableArgoRow(swipeEnabled = swipeEnabled, onSync = sync, onRefresh = refresh) {
                     ArgoAppRow(
                         app = app,
                         downNodes = downNodes,
@@ -114,6 +113,9 @@ fun ArgoAppsTab(
                         busy = app.key in busy,
                         onClick = { if (selecting) toggle() else onOpen(app) },
                         onLongClick = toggle,
+                        onClickLabel = if (selecting) null else stringResource(R.string.common_open),
+                        onSync = sync.takeIf { swipeEnabled },
+                        onRefresh = refresh.takeIf { swipeEnabled },
                     )
                 }
                 HorizontalDivider()

@@ -162,6 +162,7 @@ struct ArgoNetCard: View {
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(health.color)
                 .frame(width: 18)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: title).font(.caption.weight(.semibold)).lineLimit(1).truncationMode(.middle)
                 if !detail.isEmpty {

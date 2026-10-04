@@ -88,6 +88,7 @@ struct DiskUsageSection: View {
                 ForEach(crumbs) { crumb in
                     if crumb.path != "/" {
                         Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
+                            .accessibilityHidden(true)
                     }
                     Button { open(crumb.path) } label: {
                         Text(verbatim: crumb.name).font(.callout.monospaced())
@@ -120,6 +121,7 @@ private struct DiskUsageRowView: View {
                 Text(verbatim: formatBytes(row.size)).font(.caption).monospacedDigit().foregroundStyle(.secondary)
                 if row.isDir {
                     Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
+                        .accessibilityHidden(true)
                 }
             }
             ProgressView(value: row.fraction)
