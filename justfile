@@ -18,11 +18,19 @@ version:
 # Tag a release. The APK's versionName/versionCode derive from the tag and the
 # commit count, so this is the only step a release needs. The tree must be
 # clean, the tag is annotated with the changelog, and nothing is pushed for you.
-release-tag version:
+# --yes accepts the drafted Google Play notes as is: no editor, terminal or not.
+release-tag version *flags:
     #!/usr/bin/env bash
     set -euo pipefail
     version="{{ version }}"
     version="${version#v}"
+    yes=0
+    for flag in {{ flags }}; do
+        case "$flag" in
+            -y|--yes) yes=1 ;;
+            *) echo "Unknown flag: $flag (expected --yes)" >&2; exit 2 ;;
+        esac
+    done
     if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         echo "Expected a MAJOR.MINOR.PATCH version, got: {{ version }}" >&2
         exit 2
@@ -42,10 +50,11 @@ release-tag version:
     fi
     # Google Play's "What's new": drafted from the changelog for the commit about to be
     # tagged (HEAD + 1), edited, then committed. Empty it to let CI generate the notes;
-    # without a terminal CI always does. A file written beforehand is kept as is.
-    if [[ -t 0 ]]; then
+    # without a terminal CI always does, unless --yes commits the draft unedited.
+    # A file written beforehand is kept as is.
+    if [[ "$yes" == 1 || -t 0 ]]; then
         notes="$(scripts/play-notes.py --build "$(( $(git rev-list --count HEAD) + 1 ))")"
-        sh -c "${VISUAL:-${EDITOR:-vi}} \"\$1\"" editor "$notes" # as git runs it: "code --wait" works
+        [[ "$yes" == 1 ]] || sh -c "${VISUAL:-${EDITOR:-vi}} \"\$1\"" editor "$notes" # as git runs it: "code --wait" works
         if [[ ! -s "$notes" ]]; then
             rm -f "$notes"
         elif [[ -n "$(git status --porcelain -- "$notes")" ]]; then
