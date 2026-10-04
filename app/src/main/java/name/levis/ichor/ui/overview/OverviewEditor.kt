@@ -105,6 +105,19 @@ fun overviewCardLabel(card: OverviewCard): String = stringResource(
     },
 )
 
+/** One line on what the card shows, so the editor's names need no guessing. */
+@Composable
+fun overviewCardDescription(card: OverviewCard): String = stringResource(
+    when (card) {
+        OverviewCard.SUMMARY -> R.string.overview_card_desc_summary
+        OverviewCard.APPS -> R.string.overview_card_desc_apps
+        OverviewCard.DATA_SERVICES -> R.string.overview_card_desc_data_services
+        OverviewCard.ARGO_CD -> R.string.overview_card_desc_argo_cd
+        OverviewCard.NODES -> R.string.overview_card_desc_nodes
+        OverviewCard.TIME_DRIFT -> R.string.overview_card_desc_time_drift
+    },
+)
+
 /**
  * The overview's cards as a list to arrange: drag a shown card by its handle to move it, hide
  * it, or add a hidden one back (at the end). Every change is applied at once through [onChange].
@@ -238,6 +251,7 @@ private fun HiddenCardRow(card: OverviewCard, onShow: () -> Unit, modifier: Modi
 private fun CardName(card: OverviewCard, modifier: Modifier) {
     Column(modifier.padding(vertical = 12.dp)) {
         Text(overviewCardLabel(card), style = MaterialTheme.typography.titleMedium)
+        MutedText(overviewCardDescription(card))
         if (card.whenDetected) MutedText(stringResource(R.string.overview_edit_when_detected))
     }
 }

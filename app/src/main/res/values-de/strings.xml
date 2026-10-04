@@ -1879,6 +1879,12 @@
     <string name="overview_edit_hidden">Ausgeblendete Karten</string>
     <string name="overview_edit_reset">Zurücksetzen</string>
     <string name="overview_edit_when_detected">Nur wenn im Cluster vorhanden</string>
+    <string name="overview_card_desc_summary">Nodes, Talos-Version, CPU und Speicher auf einen Blick</string>
+    <string name="overview_card_desc_apps">Apps im Cluster und die, die Aufmerksamkeit brauchen</string>
+    <string name="overview_card_desc_data_services">Zustand von Longhorn, Garage und CloudNativePG</string>
+    <string name="overview_card_desc_argo_cd">Sync und Zustand der Argo-CD-Apps, laufende Syncs</string>
+    <string name="overview_card_desc_nodes">Jeder Node mit seinem Zustand</string>
+    <string name="overview_card_desc_time_drift">Uhrabweichung jedes Nodes gegenüber NTP</string>
     <string name="overview_edit_all_hidden">Alle Karten sind ausgeblendet. Tippe, um die anzuzeigenden auszuwählen.</string>
 ||||||| a97dc89
 
