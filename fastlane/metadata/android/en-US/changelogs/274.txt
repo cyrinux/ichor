@@ -1,0 +1,7 @@
+• Argo CD on Android, iOS: GitOps card, apps, sync waves and actions
+• Fund features with Google Play in-app purchases (Play build)
+• Argo CD core: list Applications and drive them through their CRDs
+• Garage block-error diagnosis, repair and resync tranquility
+• Show tooltips on top app bar action icons
+• Nodes as one titled card on the home screen
+• Keep the field decoding helper file-private, as ArgoCD.swift does
