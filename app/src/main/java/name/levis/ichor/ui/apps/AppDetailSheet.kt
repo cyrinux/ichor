@@ -26,6 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -180,16 +182,16 @@ private fun ImageRow(image: InventoryImage, drifting: Boolean) {
 @Composable
 private fun PodRow(pod: InventoryPod, host: String, onClick: () -> Unit) {
     val colors = LocalStatusColors.current
-    val dot = when (pod.state) {
-        PodState.RUNNING -> colors.ok
-        PodState.STARTING -> colors.warn
-        PodState.STOPPED -> colors.bad
+    val (dot, state) = when (pod.state) {
+        PodState.RUNNING -> colors.ok to stringResource(R.string.pod_state_running)
+        PodState.STARTING -> colors.warn to stringResource(R.string.pod_state_starting)
+        PodState.STOPPED -> colors.bad to stringResource(R.string.pod_state_stopped)
     }
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(8.dp).background(dot, CircleShape))
+        Box(Modifier.size(8.dp).background(dot, CircleShape).semantics { contentDescription = state })
         Column(Modifier.padding(start = 12.dp)) {
             Text(pod.pod, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             MutedText(

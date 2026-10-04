@@ -14,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.outlined.Info
 import name.levis.ichor.R
@@ -35,7 +38,8 @@ fun LiveIndicator(streaming: Boolean, error: String?, modifier: Modifier = Modif
         error != null -> Triple(Icons.Outlined.ErrorOutline, colors.bad, stringResource(R.string.common_stream_failed, error))
         else -> Triple(Icons.Outlined.SensorsOff, colors.muted, stringResource(R.string.common_stream_stopped))
     }
-    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+    // Polite: a stream starting, failing or stopping is announced without cutting speech off.
+    Row(modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }, verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
         Text(text, color = color, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(start = 6.dp))
     }

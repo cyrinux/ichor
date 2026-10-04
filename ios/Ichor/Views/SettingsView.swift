@@ -30,7 +30,7 @@ struct SettingsView: View {
             Section {
                 Toggle("App lock", isOn: Binding(get: { model.lock.enabled }, set: { setLock($0) }))
                     .disabled(lockRequired && model.lock.enabled)
-                if let lockError { Text(lockError).font(.footnote).foregroundStyle(.red) }
+                if let lockError { Text(lockError).font(.footnote).foregroundStyle(.statusBad) }
             } header: {
                 Text("Security")
             } footer: {

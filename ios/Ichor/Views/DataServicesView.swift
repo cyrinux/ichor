@@ -76,7 +76,7 @@ struct ErrorLine: View {
         if !error.isEmpty {
             Label { Text("Could not read: \(error)") } icon: { Image(systemName: "exclamationmark.triangle") }
                 .font(.callout)
-                .foregroundStyle(.red)
+                .foregroundStyle(.statusBad)
         }
     }
 }

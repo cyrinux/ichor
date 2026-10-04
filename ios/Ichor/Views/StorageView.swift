@@ -190,7 +190,7 @@ private struct VolumeRow: View {
                 LabeledContent("Mounted on") { Text(verbatim: volume.mountedOn).font(.caption.monospaced()) }.font(.caption)
             }
             if !volume.error.isEmpty {
-                Text(verbatim: volume.error).font(.caption).foregroundStyle(.red)
+                Text(verbatim: volume.error).font(.caption).foregroundStyle(.statusBad)
             }
             if !volume.encryption.isEmpty {
                 Label {

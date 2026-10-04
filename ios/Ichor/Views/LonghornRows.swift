@@ -90,7 +90,7 @@ struct LonghornBackupTargetRow: View {
                            color: target.available ? .green : .red)
             }
             if !target.available && !target.message.isEmpty {
-                Text(verbatim: target.message).font(.caption).foregroundStyle(.red)
+                Text(verbatim: target.message).font(.caption).foregroundStyle(.statusBad)
             }
         }
     }
@@ -110,7 +110,7 @@ struct LonghornNodeRow: View {
                 if busy {
                     ProgressView()
                 } else if !node.ready {
-                    Text("not ready").font(.caption).foregroundStyle(.red)
+                    Text("not ready").font(.caption).foregroundStyle(.statusBad)
                 } else if node.evictionRequested {
                     Text("Evicting · \(node.replicas) replicas left").font(.caption).foregroundStyle(attentionColor)
                 } else if !node.allowScheduling {

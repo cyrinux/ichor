@@ -73,6 +73,28 @@ val ArgoHealth.icon: ImageVector
         ArgoHealth.UNKNOWN -> Icons.AutoMirrored.Outlined.HelpOutline
     }
 
+/** The state in the user's language, for screen readers ([ArgoHealth.wire] is Argo CD's English word). */
+@Composable
+fun ArgoHealth.label(): String = stringResource(
+    when (this) {
+        ArgoHealth.HEALTHY -> R.string.argo_health_healthy
+        ArgoHealth.PROGRESSING -> R.string.argo_health_progressing
+        ArgoHealth.DEGRADED -> R.string.argo_health_degraded
+        ArgoHealth.SUSPENDED -> R.string.argo_health_suspended
+        ArgoHealth.MISSING -> R.string.argo_health_missing
+        ArgoHealth.UNKNOWN -> R.string.argo_health_unknown
+    },
+)
+
+@Composable
+fun ArgoSync.label(): String = stringResource(
+    when (this) {
+        ArgoSync.SYNCED -> R.string.argo_sync_state_synced
+        ArgoSync.OUT_OF_SYNC -> R.string.argo_sync_state_out_of_sync
+        ArgoSync.UNKNOWN -> R.string.argo_sync_state_unknown
+    },
+)
+
 @Composable
 fun ArgoSync.color(): Color {
     val colors = LocalStatusColors.current
@@ -97,17 +119,17 @@ fun ArgoAppIcon(app: ArgoApp, size: Dp, modifier: Modifier = Modifier) {
     AppIconTile(tile, modifier, size = size)
 }
 
-/** A small coloured glyph with the state's Argo CD name as its description. */
+/** A small coloured glyph with the state's localized name as its description. */
 @Composable
 fun ArgoGlyph(icon: ImageVector, color: Color, description: String, size: Dp = 18.dp) {
     Icon(icon, contentDescription = description, tint = color, modifier = Modifier.size(size))
 }
 
 @Composable
-fun HealthGlyph(health: ArgoHealth, size: Dp = 18.dp) = ArgoGlyph(health.icon, health.color(), health.wire, size)
+fun HealthGlyph(health: ArgoHealth, size: Dp = 18.dp) = ArgoGlyph(health.icon, health.color(), health.label(), size)
 
 @Composable
-fun SyncGlyph(sync: ArgoSync, size: Dp = 18.dp) = ArgoGlyph(sync.icon, sync.color(), sync.wire, size)
+fun SyncGlyph(sync: ArgoSync, size: Dp = 18.dp) = ArgoGlyph(sync.icon, sync.color(), sync.label(), size)
 
 /** A big tinted badge: glyph and Argo CD's word for the state. */
 @Composable

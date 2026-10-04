@@ -43,7 +43,7 @@ struct HostnameConfirmationSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    Text(message).foregroundStyle(.orange)
+                    Text(message).foregroundStyle(.statusWarn)
                 }
                 if !acknowledgments.isEmpty {
                     Section("I understand") {

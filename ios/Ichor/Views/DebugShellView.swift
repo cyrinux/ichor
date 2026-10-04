@@ -39,7 +39,7 @@ struct DebugShellView: View {
                         TextField("Command", text: $args).font(.body.monospaced())
                             .autocorrectionDisabled().textInputAutocapitalization(.never)
                     }
-                    if let error { Text(error).foregroundStyle(.red) }
+                    if let error { Text(error).foregroundStyle(.statusBad) }
                     Button("Start shell") { Task { await start() } }
                         .disabled(image.trimmingCharacters(in: .whitespaces).isEmpty)
                 }

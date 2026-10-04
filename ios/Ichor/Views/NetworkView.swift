@@ -132,7 +132,7 @@ struct SectionError: View {
         if let message, !message.isEmpty {
             Label(message, systemImage: "exclamationmark.triangle")
                 .font(.footnote)
-                .foregroundStyle(.red)
+                .foregroundStyle(.statusBad)
         }
     }
 }
@@ -223,7 +223,7 @@ struct TimeOffsetRow: View {
                 }
             }
             if let error = info.error {
-                Text(error).font(.caption).foregroundStyle(.red)
+                Text(error).font(.caption).foregroundStyle(.statusBad)
             } else if !info.server.isEmpty && info.server != title {
                 Text(verbatim: info.server).font(.caption).foregroundStyle(.secondary)
             }

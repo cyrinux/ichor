@@ -59,7 +59,7 @@ struct DiscoveredNodesSheet: View {
                     Text("Cluster discovery knows these nodes, but the talosconfig does not list them. Add the ones to show and manage here.")
                 }
                 if let error {
-                    Section { Text(error).foregroundStyle(.red) }
+                    Section { Text(error).foregroundStyle(.statusBad) }
                 }
             }
             .navigationTitle("Add discovered nodes")

@@ -21,7 +21,7 @@ struct GarageBlockErrorsView: View {
                     if report.repairsRunning {
                         Label("A metadata repair is running: let it finish, then reload.", systemImage: "gearshape.2")
                             .font(.callout)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(.statusWarn)
                     }
                 }
                 Section("Summary") { SummaryRows(report: report) }
@@ -100,11 +100,11 @@ private struct VerdictRow: View {
         switch verdict {
         case .clean:
             Label("No block is failing to resync.", systemImage: "checkmark.circle")
-                .foregroundStyle(.green)
+                .foregroundStyle(.statusOK)
         case .liveAffected:
             Label("Some failing blocks back live objects: check those objects through S3 before declaring data loss.",
                   systemImage: "exclamationmark.triangle")
-                .foregroundStyle(.red)
+                .foregroundStyle(.statusBad)
         case .deletedOnly:
             Label("No live object affected: these blocks only hold deleted data.", systemImage: "info.circle")
                 .foregroundStyle(.secondary)
@@ -134,7 +134,7 @@ private struct NodeSection: View {
     var body: some View {
         Section {
             if !node.error.isEmpty {
-                Text("Could not read: \(node.error)").font(.caption).foregroundStyle(.red)
+                Text("Could not read: \(node.error)").font(.caption).foregroundStyle(.statusBad)
             }
             ForEach(node.blocks) { BlockRow(block: $0) }
         } header: {
@@ -161,14 +161,14 @@ private struct BlockRow: View {
             }
             Text(verbatim: details).font(.caption).foregroundStyle(.secondary).monospacedDigit()
             if !block.error.isEmpty {
-                Text(verbatim: block.error).font(.caption).foregroundStyle(.red)
+                Text(verbatim: block.error).font(.caption).foregroundStyle(.statusBad)
             }
             ForEach(Array(block.refs.enumerated()), id: \.offset) { _, ref in
                 HStack(alignment: .firstTextBaseline) {
                     Image(systemName: ref.live ? "doc" : "trash").foregroundStyle(ref.live ? .red : .secondary)
                     Text(verbatim: ref.label).lineLimit(2).truncationMode(.middle)
                     Spacer()
-                    if ref.live { Text("live").foregroundStyle(.red) } else { Text("deleted").foregroundStyle(.secondary) }
+                    if ref.live { Text("live").foregroundStyle(.statusBad) } else { Text("deleted").foregroundStyle(.secondary) }
                 }
                 .font(.caption)
             }
@@ -189,8 +189,8 @@ private struct ImpactLabel: View {
 
     var body: some View {
         switch impact {
-        case .live: Text("Live object").font(.caption).foregroundStyle(.red)
-        case .staleRef: Text("Stale reference").font(.caption).foregroundStyle(.orange)
+        case .live: Text("Live object").font(.caption).foregroundStyle(.statusBad)
+        case .staleRef: Text("Stale reference").font(.caption).foregroundStyle(.statusWarn)
         case .cleanup: Text("Deleted data").font(.caption).foregroundStyle(.secondary)
         case .unknown: Text("Not looked up").font(.caption).foregroundStyle(.secondary)
         }

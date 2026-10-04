@@ -158,6 +158,7 @@ struct AppArgoSection: View {
             message = failure
         } else {
             succeeded += 1
+            announce(String(localized: "Done"))
         }
         await load()
     }

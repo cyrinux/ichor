@@ -107,15 +107,15 @@ struct EtcdRemoveMemberSheet: View {
                 Section("Checks") {
                     ForEach(plan.blockers, id: \.self) { blocker in
                         Label { Text(verbatim: blocker) } icon: { Image(systemName: "xmark.octagon.fill") }
-                            .foregroundStyle(.red)
+                            .foregroundStyle(.statusBad)
                     }
                     if throughNode == nil {
                         Label("No other reachable member can take the request.", systemImage: "xmark.octagon.fill")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(.statusBad)
                     }
                     ForEach(plan.warnings, id: \.self) { warning in
                         Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(.statusWarn)
                     }
                 }
             }
@@ -126,7 +126,7 @@ struct EtcdRemoveMemberSheet: View {
                     Button(role: .destructive) { Task { await requestRemoval() } } label: { Text("Remove member…") }
                         .disabled(!gate.canRemove || throughNode == nil)
                 }
-                if let message { Text(message).font(.footnote).foregroundStyle(.red) }
+                if let message { Text(message).font(.footnote).foregroundStyle(.statusBad) }
             } footer: {
                 Text("The member leaves the etcd cluster. This cannot be undone: the node must be reset or rejoin to become a member again.")
             }

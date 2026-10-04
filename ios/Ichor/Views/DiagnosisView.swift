@@ -91,7 +91,7 @@ struct DiagnosisView: View {
                         Text(verbatim: answer).textSelection(.enabled)
                     }
                     // A failure keeps what was already written above it.
-                    if let answerError { Text(verbatim: answerError).foregroundStyle(.red) }
+                    if let answerError { Text(verbatim: answerError).foregroundStyle(.statusBad) }
                     if asking == nil, !answer.isEmpty {
                         Button { UIPasteboard.general.string = answer } label: { Label("Copy", systemImage: "doc.on.doc") }
                     }

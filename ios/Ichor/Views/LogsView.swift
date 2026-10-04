@@ -121,13 +121,14 @@ struct LogsView: View {
                 .toggleStyle(.button)
                 if !following {
                     Button { Task { await load() } } label: { Image(systemName: "arrow.clockwise") }
+                        .accessibilityLabel(Text("Refresh"))
                 }
                 Menu {
                     Toggle(isOn: $display.raw) {
                         Label("Raw lines", systemImage: "text.alignleft")
                     }
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
                 }
             }
         }

@@ -55,7 +55,7 @@ struct ArgoSyncSheet: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Label(String(localized: "\(pruned.count) resources will be deleted"), systemImage: "trash")
                                     .font(.callout.weight(.semibold))
-                                    .foregroundStyle(.red)
+                                    .foregroundStyle(.statusBad)
                                 ForEach(pruned) { resource in
                                     Text(verbatim: "\(resource.kind) \(resource.namespace.isEmpty ? "" : resource.namespace + "/")\(resource.name)")
                                         .font(.caption.monospaced())

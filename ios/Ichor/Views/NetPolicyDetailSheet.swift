@@ -98,11 +98,11 @@ private struct NetDirectionSection: View {
         case .isolated:
             Label("Isolated: only the rules below are allowed", systemImage: "lock.fill")
                 .font(.callout)
-                .foregroundStyle(.green)
+                .foregroundStyle(.statusOK)
         case .denyAll:
             Label("Deny all: no traffic is allowed", systemImage: "nosign")
                 .font(.callout)
-                .foregroundStyle(.red)
+                .foregroundStyle(.statusBad)
         case .rulesOnly:
             Label("Not isolated by this policy: its rules add to other policies", systemImage: "lock.open")
                 .font(.callout)

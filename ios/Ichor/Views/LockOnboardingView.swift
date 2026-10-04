@@ -27,6 +27,7 @@ struct LockOnboardingView: View {
                     Text(done ? "Your clusters are protected" : "Lock your clusters away")
                         .font(.title2.bold())
                         .contentTransition(.opacity)
+                        .accessibilityAddTraits(.isHeader)
                     Text("Your talosconfig holds client keys with direct access to your nodes. Ichor keeps them behind the app lock.")
                         .foregroundStyle(.secondary)
                 }
@@ -73,7 +74,7 @@ struct LockOnboardingView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                if let error { Text(error).font(.footnote).foregroundStyle(.red).multilineTextAlignment(.center) }
+                if let error { Text(error).font(.footnote).foregroundStyle(.statusBad).multilineTextAlignment(.center) }
             } else {
                 VStack(alignment: .leading, spacing: 8) {
                     Label("No screen lock on this device", systemImage: "exclamationmark.lock.fill").font(.headline)

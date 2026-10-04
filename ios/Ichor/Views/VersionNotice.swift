@@ -96,7 +96,7 @@ struct ErrorOrNoticeText: View {
         if let notice = versionNotice(message) {
             VersionNoticeRow(text: notice.minVersion.isEmpty ? message : notice.localizedMessage)
         } else {
-            Text(message).font(.footnote).foregroundStyle(.red)
+            Text(message).font(.footnote).foregroundStyle(.statusBad)
         }
     }
 }

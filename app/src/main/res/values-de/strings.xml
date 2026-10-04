@@ -2058,4 +2058,20 @@
         <item quantity="one">%1$d Replikat</item>
         <item quantity="other">%1$d Replikate</item>
     </plurals>
+    <string name="argo_health_healthy">Gesund</string>
+    <string name="argo_health_progressing">In Arbeit</string>
+    <string name="argo_health_degraded">Beeinträchtigt</string>
+    <string name="argo_health_suspended">Angehalten</string>
+    <string name="argo_health_missing">Fehlt</string>
+    <string name="argo_health_unknown">Unbekannt</string>
+    <string name="argo_sync_state_synced">Synchron</string>
+    <string name="argo_sync_state_out_of_sync">Nicht synchron</string>
+    <string name="argo_sync_state_unknown">Sync unbekannt</string>
+    <string name="pod_state_running">Läuft</string>
+    <string name="pod_state_starting">Startet</string>
+    <string name="pod_state_stopped">Gestoppt</string>
+    <string name="upgrade_step_done">Erledigt</string>
+    <string name="upgrade_step_current">Läuft</string>
+    <string name="upgrade_step_failed">Fehlgeschlagen</string>
+    <string name="upgrade_step_pending">Nicht begonnen</string>
 </resources>

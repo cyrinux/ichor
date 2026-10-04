@@ -83,7 +83,7 @@ private struct ArgoWaveStepView: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Text("Wave \(step.wave)").font(.subheadline.weight(.semibold)).monospacedDigit()
+            Text("Wave \(step.wave)").font(.subheadline.weight(.semibold)).monospacedDigit().accessibilityAddTraits(.isHeader)
             if step.hasHooks {
                 Text("hooks")
                     .font(.caption2.weight(.medium))

@@ -210,7 +210,7 @@ struct ArgoAppSetsList: View {
                 Text(verbatim: set.name).font(.callout.weight(.medium))
                 Text("\(set.apps) apps").font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 if let error = set.error {
-                    Text(verbatim: error).font(.caption).foregroundStyle(.red).lineLimit(3)
+                    Text(verbatim: error).font(.caption).foregroundStyle(.statusBad).lineLimit(3)
                 }
             }
         }

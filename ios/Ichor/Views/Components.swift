@@ -31,20 +31,52 @@ struct LoadStateView<T, Content: View>: View {
     }
 }
 
+/// The label stays in the primary colour: system green or orange text on a tint of itself
+/// is about 2:1, unreadable for many; the dot and the tint carry the colour.
 struct StatusPill: View {
     let label: String
     let color: Color
 
     var body: some View {
         HStack(spacing: 6) {
-            Circle().fill(color).frame(width: 8, height: 8)
-            Text(label).font(.caption.weight(.medium))
+            Circle().fill(color).frame(width: 8, height: 8).accessibilityHidden(true)
+            Text(label).font(.caption.weight(.medium)).foregroundStyle(.primary)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 4)
-        .foregroundStyle(color)
         .background(color.opacity(0.15), in: Capsule())
     }
+}
+
+/// Status colours readable as text (at least 4.5:1 on light and dark list backgrounds), the
+/// same tones as on Android; the system green, orange and red are 2.1 to 3.4:1 on white.
+extension ShapeStyle where Self == Color {
+    static var statusOK: Color { Color(light: 0x17703C, dark: 0x5BD18B) }
+    static var statusWarn: Color { Color(light: 0x8A6100, dark: 0xF2C14E) }
+    static var statusBad: Color { Color(light: 0xC0282D, dark: 0xFF7B7B) }
+}
+
+extension Color {
+    init(light: UInt32, dark: UInt32) {
+        self.init(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(rgb: dark) : UIColor(rgb: light) })
+    }
+}
+
+private extension UIColor {
+    convenience init(rgb: UInt32) {
+        self.init(
+            red: CGFloat((rgb >> 16) & 0xFF) / 255,
+            green: CGFloat((rgb >> 8) & 0xFF) / 255,
+            blue: CGFloat(rgb & 0xFF) / 255,
+            alpha: 1
+        )
+    }
+}
+
+/// Reads `message` out with VoiceOver: what changed when nothing on screen moves focus to it.
+@MainActor
+func announce(_ message: String) {
+    AccessibilityNotification.Announcement(message).post()
 }
 
 extension NodeHealth {
@@ -179,7 +211,7 @@ struct FreshnessFooter: View {
                         Text("Couldn't refresh: \(refreshError)").lineLimit(2)
                         Text("Showing data from \(time) (\(ago))")
                     }
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(.statusWarn)
                 } else {
                     Text("Updated \(time) · \(ago)").foregroundStyle(.secondary)
                 }
@@ -189,6 +221,9 @@ struct FreshnessFooter: View {
             .padding(.horizontal)
             .padding(.vertical, 6)
             .background(.bar)
+        }
+        .onChange(of: refreshError) { _, error in
+            if let error { announce(String(localized: "Couldn't refresh: \(error)")) }
         }
     }
 

@@ -23,7 +23,7 @@ struct MachineConfigView: View {
                     Label("Secrets are shown in clear: CA keys and tokens give full control of the cluster. Don't share screenshots.",
                           systemImage: "exclamationmark.triangle.fill")
                         .font(.footnote)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(.statusWarn)
                 }
                 if let message {
                     Text(message).font(.footnote).foregroundStyle(.secondary)

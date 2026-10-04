@@ -92,7 +92,7 @@ struct ClustersView: View {
                 Text("The app takes the colors of the cluster on screen.")
             }
             if let error {
-                Section { Text(error).font(.footnote).foregroundStyle(.red) }
+                Section { Text(error).font(.footnote).foregroundStyle(.statusBad) }
             }
             Section {
                 NavigationLink(value: Route.importConfig) { Label("Add a cluster", systemImage: "plus") }

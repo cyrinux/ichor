@@ -69,7 +69,7 @@ struct UpgradeView: View {
             if job.isActive, let other = job.target {
                 Section {
                     Text("An upgrade of \(other.hostname) is in progress. The app runs one upgrade at a time.")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(.statusWarn)
                 }
             }
             currentSection(plan)
@@ -82,7 +82,7 @@ struct UpgradeView: View {
                         .fontWeight(force ? .bold : .regular)
                 }
                 .disabled(!gate.canRequest || image.isEmpty || versionRisk == nil)
-                if let message { Text(message).font(.footnote).foregroundStyle(.red) }
+                if let message { Text(message).font(.footnote).foregroundStyle(.statusBad) }
             } footer: {
                 Text("The node reboots into the new version. An upgrade cannot be cancelled once requested.")
             }
@@ -96,7 +96,7 @@ struct UpgradeView: View {
                             Label("Force upgrade…", systemImage: "exclamationmark.triangle")
                         }
                     } label: {
-                        Image(systemName: "ellipsis.circle")
+                        Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
                     }
                 }
             }
@@ -160,7 +160,7 @@ struct UpgradeView: View {
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.never)
             if gate.invalidVersion && !version.trimmingCharacters(in: .whitespaces).isEmpty {
-                Text("Not a Talos version (vMAJOR.MINOR.PATCH).").font(.footnote).foregroundStyle(.red)
+                Text("Not a Talos version (vMAJOR.MINOR.PATCH).").font(.footnote).foregroundStyle(.statusBad)
             }
             let suggestions = upgradeSuggestions(releases, current: plan.currentVersion, includePrerelease: showPrereleases)
             ForEach(suggestions.prefix(8)) { release in
@@ -196,21 +196,21 @@ struct UpgradeView: View {
             Section("Checks") {
                 ForEach(plan.blockers, id: \.self) { blocker in
                     Label { Text(verbatim: blocker) } icon: { Image(systemName: "xmark.octagon.fill") }
-                        .foregroundStyle(.red)
+                        .foregroundStyle(.statusBad)
                 }
                 ForEach(plan.warnings, id: \.self) { warning in
                     Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(.statusWarn)
                 }
                 // Confirmed one by one in the confirmation sheet.
                 ForEach(gate.acknowledgments, id: \.self) { risk in
                     Label { Text(verbatim: risk) } icon: { Image(systemName: "hand.raised.fill") }
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(.statusWarn)
                 }
                 // Go's version risk already says it.
                 if gate.downgrade && (versionRisk ?? "").isEmpty {
                     Label("This is a downgrade: not every Talos version supports going back.", systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(.statusWarn)
                 }
                 if gate.sameVersion {
                     Label("This node already runs this version: the image is reinstalled.", systemImage: "info.circle")
@@ -219,7 +219,7 @@ struct UpgradeView: View {
                 if force {
                     HStack {
                         Label("Force: etcd checks skipped", systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.red).fontWeight(.semibold)
+                            .foregroundStyle(.statusBad).fontWeight(.semibold)
                         Spacer()
                         Button("Turn off") { force = false }.buttonStyle(.borderless)
                     }
@@ -356,10 +356,10 @@ private struct UpgradeProgressView: View {
                 Label {
                     Text("\(hostname) runs \(version)")
                 } icon: {
-                    Image(systemName: "checkmark.seal.fill").foregroundStyle(.green)
+                    Image(systemName: "checkmark.seal.fill").foregroundStyle(.statusOK)
                 }
             case .failed(let error)?:
-                Label { Text(verbatim: error) } icon: { Image(systemName: "xmark.octagon.fill").foregroundStyle(.red) }
+                Label { Text(verbatim: error) } icon: { Image(systemName: "xmark.octagon.fill").foregroundStyle(.statusBad) }
             case .unfollowed?:
                 Text("Stopped following. The node keeps upgrading: check its version later.")
                     .foregroundStyle(.secondary)
@@ -409,9 +409,9 @@ private struct StepRow: View {
 
     @ViewBuilder private var icon: some View {
         switch step.state {
-        case .done: Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+        case .done: Image(systemName: "checkmark.circle.fill").foregroundStyle(.statusOK)
         case .current: ProgressView()
-        case .failed: Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
+        case .failed: Image(systemName: "xmark.circle.fill").foregroundStyle(.statusBad)
         case .pending: Image(systemName: "circle").foregroundStyle(.secondary)
         }
     }

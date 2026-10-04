@@ -32,12 +32,12 @@ data class StatusColors(val ok: Color, val warn: Color, val bad: Color, val mute
 private val DarkStatus = StatusColors(
     ok = Color(0xFF5BD18B),
     warn = Color(0xFFF2C14E),
-    bad = Color(0xFFFF6B6B),
-    muted = Color(0xFF8A939C),
+    bad = Color(0xFFFF7B7B),
+    muted = Color(0xFF9AA3AC),
 )
 
 private val LightStatus = StatusColors(
-    ok = Color(0xFF1B7F45),
+    ok = Color(0xFF17703C),
     warn = Color(0xFF8A6100),
     bad = Color(0xFFC0282D),
     muted = Color(0xFF5F6870),

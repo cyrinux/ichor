@@ -2061,4 +2061,20 @@
         <item quantity="one">%1$d replica</item>
         <item quantity="other">%1$d replicas</item>
     </plurals>
+    <string name="argo_health_healthy">Healthy</string>
+    <string name="argo_health_progressing">Progressing</string>
+    <string name="argo_health_degraded">Degraded</string>
+    <string name="argo_health_suspended">Suspended</string>
+    <string name="argo_health_missing">Missing</string>
+    <string name="argo_health_unknown">Unknown</string>
+    <string name="argo_sync_state_synced">Synced</string>
+    <string name="argo_sync_state_out_of_sync">Out of sync</string>
+    <string name="argo_sync_state_unknown">Sync unknown</string>
+    <string name="pod_state_running">Running</string>
+    <string name="pod_state_starting">Starting</string>
+    <string name="pod_state_stopped">Stopped</string>
+    <string name="upgrade_step_done">Done</string>
+    <string name="upgrade_step_current">In progress</string>
+    <string name="upgrade_step_failed">Failed</string>
+    <string name="upgrade_step_pending">Not started</string>
 </resources>
