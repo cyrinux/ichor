@@ -3,13 +3,6 @@ import Foundation
 // Mirrors go/ichorgo/kube_dataservices.go, kube_longhorn.go, kube_garage.go and kube_cnpg.go
 // (the wire format is documented in plans/data-services/README.md).
 
-private extension KeyedDecodingContainer {
-    /// A field the Go core may leave out (older cores, empty values): its default then.
-    func field<T: Decodable>(_ key: Key, _ fallback: T) throws -> T {
-        try decodeIfPresent(T.self, forKey: key) ?? fallback
-    }
-}
-
 /// Health of the storage and database operators a cluster runs; a nil section is not installed.
 public struct DataServices: Decodable, Equatable, Sendable {
     public let longhorn: LonghornStatus?
