@@ -139,6 +139,13 @@ func main() {
 				out = "set"
 			}
 		}
+	case "longhorn-action":
+		// longhorn-action NAMESPACE NAME ACTION [VALUE], e.g. "longhorn-system pvc-1 backup"
+		// or "longhorn-system worker-1 evict"; VALUE is the replica count of "replicas".
+		value, _ := strconv.Atoi(flag.Arg(4))
+		if err = ichorgo.KubeLonghornAction(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), value); err == nil {
+			out = "requested"
+		}
 	case "argocd":
 		out, err = ichorgo.KubeArgoCD(cfg, *contextName, *kubeServer)
 	case "argocd-network":

@@ -48,8 +48,20 @@ data class LonghornVolume(
     val actualSize: Long = 0,
     /** Unix millis, 0 when never. */
     val lastBackupAt: Long = 0,
+    /** Slowest replica rebuild, 0-100, with [rebuilding] > 0. */
+    val rebuildProgress: Int = 0,
+    val backingUp: Boolean = false,
+    val backupProgress: Int = 0,
+    val restoring: Boolean = false,
+    val restoreProgress: Int = 0,
+    /** Why a replica cannot be placed (English, from Longhorn), "" when it can. */
+    val scheduleError: String = "",
+    /** Close to Longhorn's snapshot limit. */
+    val tooManySnapshots: Boolean = false,
 ) {
     val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+
+    val attached: Boolean get() = state == "attached"
 
     /** The claim it backs ("namespace/name"), or the volume's own name when unbound. */
     val label: String get() = if (pvcName.isNotEmpty()) "$pvcNamespace/$pvcName" else name
@@ -58,8 +70,15 @@ data class LonghornVolume(
 @Serializable
 data class LonghornNode(
     val name: String,
+    /** Longhorn's own, where the node object lives. */
+    val namespace: String = "",
     val ready: Boolean = false,
     val schedulable: Boolean = false,
+    /** What the user asked: new replicas on the node, its replicas moved away. */
+    val allowScheduling: Boolean = false,
+    val evictionRequested: Boolean = false,
+    /** Replicas it holds, failed ones too. */
+    val replicas: Int = 0,
     val disks: List<LonghornDisk> = emptyList(),
 )
 

@@ -1714,4 +1714,39 @@
         <item quantity="one">%1$d fenêtre de sync</item>
         <item quantity="other">%1$d fenêtres de sync</item>
     </plurals>
+    <string name="longhorn_action_failed">%1$s : %2$s</string>
+    <string name="longhorn_backup_started">Sauvegarde de %1$s lancée</string>
+    <string name="longhorn_trim_started">Libération de l\'espace de %1$s</string>
+    <string name="longhorn_replicas_set">%1$s : nombre de réplicas réglé à %2$d</string>
+    <string name="longhorn_scheduling_on_done">%1$s accepte de nouveaux réplicas</string>
+    <string name="longhorn_scheduling_off_done">%1$s ne prend plus de nouveaux réplicas</string>
+    <string name="longhorn_evict_started">Déplacement des réplicas hors de %1$s</string>
+    <string name="longhorn_evict_cancelled">Évacuation de %1$s annulée</string>
+    <string name="longhorn_action_backup">Sauvegarder maintenant</string>
+    <string name="longhorn_action_trim">Libérer l\'espace (trim)</string>
+    <string name="longhorn_action_replicas">Nombre de réplicas…</string>
+    <string name="longhorn_action_scheduling_on">Autoriser la planification</string>
+    <string name="longhorn_action_scheduling_off">Désactiver la planification</string>
+    <string name="longhorn_action_evict">Évacuer les réplicas</string>
+    <string name="longhorn_action_cancel_eviction">Annuler l\'évacuation</string>
+    <string name="longhorn_replicas_title">Réplicas de %1$s</string>
+    <string name="longhorn_replicas_text">Longhorn ajoute ou retire des réplicas en conséquence. Un nouveau réplica copie tout le volume par le réseau.</string>
+    <string name="longhorn_replicas_fewer">Moins de réplicas : le volume survit à moins de pannes de nœuds.</string>
+    <string name="longhorn_replicas_confirm">Appliquer</string>
+    <string name="longhorn_evict_title">Évacuer %1$s ?</string>
+    <string name="longhorn_evict_text">Longhorn copie chaque réplica de %1$s sur d\'autres nœuds, puis le supprime de %1$s. Les autres nœuds doivent avoir la place, et beaucoup de données transitent. La planification reste désactivée sur %1$s jusqu\'à ce que vous la réautorisiez.</string>
+    <string name="longhorn_rebuild_progress">Reconstruction %1$d %%</string>
+    <string name="longhorn_backup_progress">Sauvegarde %1$d %%</string>
+    <string name="longhorn_restore_progress">Restauration %1$d %%</string>
+    <string name="longhorn_schedule_error">Impossible de placer un réplica : %1$s</string>
+    <string name="longhorn_too_many_snapshots">Proche de la limite de snapshots : supprimez les anciens</string>
+    <string name="longhorn_node_scheduling_off">planification désactivée</string>
+    <plurals name="longhorn_node_evicting">
+        <item quantity="one">évacuation · %1$d réplica restant</item>
+        <item quantity="other">évacuation · %1$d réplicas restants</item>
+    </plurals>
+    <plurals name="longhorn_node_replicas">
+        <item quantity="one">%1$d réplica</item>
+        <item quantity="other">%1$d réplicas</item>
+    </plurals>
 </resources>

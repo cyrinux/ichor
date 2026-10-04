@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"slices"
 	"strconv"
@@ -32,13 +33,26 @@ type longhornVolume struct {
 	Size            int64    `json:"size"`
 	ActualSize      int64    `json:"actualSize"`
 	LastBackupAt    int64    `json:"lastBackupAt"` // unix ms, 0 when never
+	// Progress of what the engine is doing, 0-100, read when the flag beside it is set.
+	RebuildProgress  int    `json:"rebuildProgress"` // slowest replica rebuild, with Rebuilding > 0
+	BackingUp        bool   `json:"backingUp"`
+	BackupProgress   int    `json:"backupProgress"`
+	Restoring        bool   `json:"restoring"`
+	RestoreProgress  int    `json:"restoreProgress"`
+	ScheduleError    string `json:"scheduleError"`    // why a replica cannot be placed, "" when it can
+	TooManySnapshots bool   `json:"tooManySnapshots"` // near Longhorn's snapshot limit
 }
 
 type longhornNode struct {
-	Name        string         `json:"name"`
-	Ready       bool           `json:"ready"`
-	Schedulable bool           `json:"schedulable"`
-	Disks       []longhornDisk `json:"disks"`
+	Name        string `json:"name"`
+	Namespace   string `json:"namespace"` // Longhorn's own, where the node object lives
+	Ready       bool   `json:"ready"`
+	Schedulable bool   `json:"schedulable"`
+	// What the user asked: new replicas on the node, its replicas moved away.
+	AllowScheduling   bool           `json:"allowScheduling"`
+	EvictionRequested bool           `json:"evictionRequested"`
+	Replicas          int            `json:"replicas"` // replicas it holds, failed ones too
+	Disks             []longhornDisk `json:"disks"`
 }
 
 type longhornDisk struct {
@@ -84,11 +98,12 @@ type lhVolumeObject struct {
 		Size             string `json:"size"` // bytes, as a string
 	} `json:"spec"`
 	Status struct {
-		State            string `json:"state"`
-		Robustness       string `json:"robustness"`
-		CurrentNodeID    string `json:"currentNodeID"`
-		ActualSize       int64  `json:"actualSize"`
-		LastBackupAt     string `json:"lastBackupAt"`
+		State            string          `json:"state"`
+		Robustness       string          `json:"robustness"`
+		CurrentNodeID    string          `json:"currentNodeID"`
+		ActualSize       int64           `json:"actualSize"`
+		LastBackupAt     string          `json:"lastBackupAt"`
+		Conditions       []kubeCondition `json:"conditions"`
 		KubernetesStatus struct {
 			Namespace string `json:"namespace"`
 			PVCName   string `json:"pvcName"`
@@ -130,8 +145,14 @@ func (r lhReplicaObject) times() lhReplicaTimes {
 
 type lhNodeObject struct {
 	Metadata struct {
-		Name string `json:"name"`
+		Name            string `json:"name"`
+		Namespace       string `json:"namespace"`
+		ResourceVersion string `json:"resourceVersion"`
 	} `json:"metadata"`
+	Spec struct {
+		AllowScheduling   bool `json:"allowScheduling"`
+		EvictionRequested bool `json:"evictionRequested"`
+	} `json:"spec"`
 	Status struct {
 		Conditions []kubeCondition `json:"conditions"`
 		DiskStatus map[string]struct {
@@ -141,6 +162,29 @@ type lhNodeObject struct {
 			StorageMaximum   int64           `json:"storageMaximum"`
 			StorageScheduled int64           `json:"storageScheduled"`
 		} `json:"diskStatus"`
+	} `json:"status"`
+}
+
+// lhEngineObject is a volume's engine: what it is rebuilding, backing up or restoring.
+// Its maps are keyed by replica address (rebuild, restore) or backup name.
+type lhEngineObject struct {
+	Spec struct {
+		VolumeName string `json:"volumeName"`
+	} `json:"spec"`
+	Status struct {
+		RebuildStatus map[string]*struct {
+			IsRebuilding bool   `json:"isRebuilding"`
+			Progress     int    `json:"progress"`
+			State        string `json:"state"`
+		} `json:"rebuildStatus"`
+		BackupStatus map[string]*struct {
+			Progress int    `json:"progress"`
+			State    string `json:"state"` // in_progress|complete|error
+		} `json:"backupStatus"`
+		RestoreStatus map[string]*struct {
+			IsRestoring bool `json:"isRestoring"`
+			Progress    int  `json:"progress"`
+		} `json:"restoreStatus"`
 	} `json:"status"`
 }
 
@@ -166,6 +210,7 @@ func readLonghorn(ctx context.Context, k *kubeClient, version string) *longhornS
 		replicas kubeList[lhReplicaObject]
 		nodes    kubeList[lhNodeObject]
 		targets  kubeList[lhBackupTargetObject]
+		engines  kubeList[lhEngineObject]
 		errs     = make([]error, 3)
 		wg       sync.WaitGroup
 	)
@@ -175,9 +220,14 @@ func readLonghorn(ctx context.Context, k *kubeClient, version string) *longhornS
 	wg.Go(func() { errs[2] = k.get(ctx, base+"nodes", &nodes) })
 	// Older releases have no BackupTarget resource: its absence is not an error.
 	wg.Go(func() { _ = k.get(ctx, base+"backuptargets", &targets) })
+	// Engines only add progress: without them the volumes still read right.
+	wg.Go(func() { _ = k.get(ctx, base+"engines", &engines) })
 	wg.Wait()
 
-	return mapLonghorn(version, volumes.Items, replicas.Items, nodes.Items, targets.Items, sectionError(errs...))
+	out := mapLonghorn(version, volumes.Items, replicas.Items, nodes.Items, targets.Items, sectionError(errs...))
+	addLonghornProgress(out.Volumes, engines.Items)
+
+	return out
 }
 
 func mapLonghorn(version string, volumes []lhVolumeObject, replicas []lhReplicaObject, nodes []lhNodeObject, targets []lhBackupTargetObject, errMsg string) *longhornStatus {
@@ -200,8 +250,15 @@ func mapLonghorn(version string, volumes []lhVolumeObject, replicas []lhReplicaO
 		return strings.Compare(a.PVCNamespace+"/"+a.PVCName+"/"+a.Name, b.PVCNamespace+"/"+b.PVCName+"/"+b.Name)
 	})
 
+	perNode := map[string]int{}
+	for _, r := range replicas {
+		perNode[r.Spec.NodeID]++
+	}
+
 	for _, n := range nodes {
-		out.Nodes = append(out.Nodes, mapLonghornNode(n))
+		node := mapLonghornNode(n)
+		node.Replicas = perNode[node.Name]
+		out.Nodes = append(out.Nodes, node)
 	}
 
 	slices.SortFunc(out.Nodes, func(a, b longhornNode) int { return strings.Compare(a.Name, b.Name) })
@@ -250,6 +307,15 @@ func mapLonghornVolume(v lhVolumeObject, replicas []lhReplicaObject) longhornVol
 
 	slices.Sort(out.ReplicaNodes)
 
+	for _, c := range st.Conditions {
+		switch {
+		case c.Type == "Scheduled" && c.Status == "False":
+			out.ScheduleError = cmp.Or(c.Message, c.Reason, "replica scheduling failed")
+		case c.Type == "TooManySnapshots" && c.Status == "True":
+			out.TooManySnapshots = true
+		}
+	}
+
 	out.Health = longhornVolumeHealth(st.State, st.Robustness)
 
 	return out
@@ -273,9 +339,12 @@ func longhornVolumeHealth(state, robustness string) string {
 func mapLonghornNode(n lhNodeObject) longhornNode {
 	out := longhornNode{
 		Name:        n.Metadata.Name,
+		Namespace:   n.Metadata.Namespace,
 		Ready:       conditionStatus(n.Status.Conditions, "Ready") == "True",
 		Schedulable: conditionStatus(n.Status.Conditions, "Schedulable") == "True",
 		Disks:       []longhornDisk{},
+
+		AllowScheduling: n.Spec.AllowScheduling, EvictionRequested: n.Spec.EvictionRequested,
 	}
 
 	for _, d := range n.Status.DiskStatus {
@@ -288,4 +357,58 @@ func mapLonghornNode(n lhNodeObject) longhornNode {
 	slices.SortFunc(out.Disks, func(a, b longhornDisk) int { return strings.Compare(a.Path, b.Path) })
 
 	return out
+}
+
+// addLonghornProgress fills in the rebuilds, backups and restores the volumes' engines run.
+// Each reports its least advanced replica or backup.
+func addLonghornProgress(volumes []longhornVolume, engines []lhEngineObject) {
+	byVolume := map[string]lhEngineObject{}
+	for _, e := range engines {
+		byVolume[e.Spec.VolumeName] = e
+	}
+
+	for i := range volumes {
+		e, ok := byVolume[volumes[i].Name]
+		if !ok {
+			continue
+		}
+
+		v := &volumes[i]
+		rebuilding := false
+
+		for _, r := range e.Status.RebuildStatus {
+			if r != nil && (r.IsRebuilding || r.State == "in_progress") {
+				v.RebuildProgress = lowestProgress(rebuilding, v.RebuildProgress, r.Progress)
+				rebuilding = true
+			}
+		}
+
+		if rebuilding && v.Rebuilding == 0 {
+			v.Rebuilding = 1
+		}
+
+		for _, b := range e.Status.BackupStatus {
+			if b != nil && b.State == "in_progress" {
+				v.BackupProgress = lowestProgress(v.BackingUp, v.BackupProgress, b.Progress)
+				v.BackingUp = true
+			}
+		}
+
+		for _, r := range e.Status.RestoreStatus {
+			if r != nil && r.IsRestoring {
+				v.RestoreProgress = lowestProgress(v.Restoring, v.RestoreProgress, r.Progress)
+				v.Restoring = true
+			}
+		}
+	}
+}
+
+// lowestProgress is p clamped to 0-100, or the lower of it and current once one is known.
+func lowestProgress(known bool, current, p int) int {
+	p = min(max(p, 0), 100)
+	if known {
+		return min(current, p)
+	}
+
+	return p
 }

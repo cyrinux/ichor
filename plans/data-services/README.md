@@ -58,11 +58,19 @@ Clusters without any of the three see nothing new and pay no extra cost.
       "replicaNodes": ["worker-1", "worker-2"],    // D9: nodes holding replicas (failed ones too)
       "node": "worker-1",           // status.currentNodeID
       "size": 10737418240, "actualSize": 2147483648,
-      "lastBackupAt": 0             // unix ms, 0 = never
+      "lastBackupAt": 0,            // unix ms, 0 = never
+      // From the volume's engine (engines.longhorn.io status), 0-100:
+      "rebuildProgress": 0,         // slowest replica rebuild, with rebuilding > 0
+      "backingUp": false, "backupProgress": 0,
+      "restoring": false, "restoreProgress": 0,
+      "scheduleError": "",          // message of a False "Scheduled" condition
+      "tooManySnapshots": false     // "TooManySnapshots" condition
     }],
     "backupTargets": [{ "name": "default", "url": "s3://longhorn-backups@garage/",
                         "available": true, "message": "" }],
-    "nodes": [{ "name": "worker-1", "ready": true, "schedulable": true,
+    "nodes": [{ "name": "worker-1", "namespace": "longhorn-system", "ready": true, "schedulable": true,
+                "allowScheduling": true, "evictionRequested": false, // node spec, set by KubeLonghornAction
+                "replicas": 4,      // replicas the node holds
                 "disks": [{ "path": "/var/lib/longhorn", "schedulable": true,
                             "available": 0, "maximum": 0, "scheduled": 0 }] }]
   },

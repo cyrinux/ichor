@@ -136,6 +136,17 @@ public struct LonghornVolume: Decodable, Equatable, Identifiable, Sendable {
     public let actualSize: Int64
     /// Unix ms, 0 when never.
     public let lastBackupAt: Int64
+    /// Progress of what the engine runs, 0-100: the slowest replica rebuild (with rebuilding > 0),
+    /// a backup and a restore in flight.
+    public let rebuildProgress: Int
+    public let backingUp: Bool
+    public let backupProgress: Int
+    public let restoring: Bool
+    public let restoreProgress: Int
+    /// Why a replica cannot be placed, "" when it can.
+    public let scheduleError: String
+    /// Close to Longhorn's snapshot limit.
+    public let tooManySnapshots: Bool
 
     public var id: String { name }
 
@@ -159,18 +170,33 @@ public struct LonghornVolume: Decodable, Equatable, Identifiable, Sendable {
         size = try c.field(.size, 0)
         actualSize = try c.field(.actualSize, 0)
         lastBackupAt = try c.field(.lastBackupAt, 0)
+        rebuildProgress = try c.field(.rebuildProgress, 0)
+        backingUp = try c.field(.backingUp, false)
+        backupProgress = try c.field(.backupProgress, 0)
+        restoring = try c.field(.restoring, false)
+        restoreProgress = try c.field(.restoreProgress, 0)
+        scheduleError = try c.field(.scheduleError, "")
+        tooManySnapshots = try c.field(.tooManySnapshots, false)
     }
 
     private enum CodingKeys: String, CodingKey {
         case name, namespace, pvcNamespace, pvcName, state, robustness, health, replicasDesired, replicasHealthy
         case rebuilding, replicaNodes, node, size, actualSize, lastBackupAt
+        case rebuildProgress, backingUp, backupProgress, restoring, restoreProgress, scheduleError, tooManySnapshots
     }
 }
 
 public struct LonghornNode: Decodable, Equatable, Identifiable, Sendable {
     public let name: String
+    /// Longhorn's own, where the node object lives.
+    public let namespace: String
     public let ready: Bool
     public let schedulable: Bool
+    /// What the user asked: new replicas on the node, its replicas moved away.
+    public let allowScheduling: Bool
+    public let evictionRequested: Bool
+    /// Replicas it holds, failed ones too.
+    public let replicas: Int
     public let disks: [LonghornDisk]
 
     public var id: String { name }
@@ -178,12 +204,19 @@ public struct LonghornNode: Decodable, Equatable, Identifiable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         name = try c.decode(String.self, forKey: .name)
+        namespace = try c.field(.namespace, "")
         ready = try c.field(.ready, false)
         schedulable = try c.field(.schedulable, false)
+        // An older core did not send it: scheduling was on as far as the app knew.
+        allowScheduling = try c.field(.allowScheduling, true)
+        evictionRequested = try c.field(.evictionRequested, false)
+        replicas = try c.field(.replicas, 0)
         disks = try c.field(.disks, [])
     }
 
-    private enum CodingKeys: String, CodingKey { case name, ready, schedulable, disks }
+    private enum CodingKeys: String, CodingKey {
+        case name, namespace, ready, schedulable, allowScheduling, evictionRequested, replicas, disks
+    }
 }
 
 public struct LonghornDisk: Decodable, Equatable, Sendable {

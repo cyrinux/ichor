@@ -1712,4 +1712,39 @@
         <item quantity="one">%1$d Sync-Fenster</item>
         <item quantity="other">%1$d Sync-Fenster</item>
     </plurals>
+    <string name="longhorn_action_failed">%1$s: %2$s</string>
+    <string name="longhorn_backup_started">Backup von %1$s gestartet</string>
+    <string name="longhorn_trim_started">%1$s wird getrimmt</string>
+    <string name="longhorn_replicas_set">%1$s: Replikatanzahl auf %2$d gesetzt</string>
+    <string name="longhorn_scheduling_on_done">%1$s nimmt neue Replikate an</string>
+    <string name="longhorn_scheduling_off_done">%1$s nimmt keine neuen Replikate an</string>
+    <string name="longhorn_evict_started">Replikate werden von %1$s verschoben</string>
+    <string name="longhorn_evict_cancelled">Räumung von %1$s abgebrochen</string>
+    <string name="longhorn_action_backup">Jetzt sichern</string>
+    <string name="longhorn_action_trim">Dateisystem trimmen</string>
+    <string name="longhorn_action_replicas">Replikatanzahl…</string>
+    <string name="longhorn_action_scheduling_on">Scheduling erlauben</string>
+    <string name="longhorn_action_scheduling_off">Scheduling deaktivieren</string>
+    <string name="longhorn_action_evict">Replikate räumen</string>
+    <string name="longhorn_action_cancel_eviction">Räumung abbrechen</string>
+    <string name="longhorn_replicas_title">Replikate von %1$s</string>
+    <string name="longhorn_replicas_text">Longhorn fügt Replikate hinzu oder entfernt sie entsprechend. Ein neues Replikat kopiert das ganze Volume über das Netzwerk.</string>
+    <string name="longhorn_replicas_fewer">Weniger Replikate: Das Volume übersteht weniger Knotenausfälle.</string>
+    <string name="longhorn_replicas_confirm">Anwenden</string>
+    <string name="longhorn_evict_title">%1$s räumen?</string>
+    <string name="longhorn_evict_text">Longhorn kopiert jedes Replikat auf %1$s auf andere Knoten und entfernt es dann dort. Die anderen Knoten brauchen den Platz, und es werden viele Daten bewegt. Scheduling bleibt auf %1$s aus, bis Sie es wieder erlauben.</string>
+    <string name="longhorn_rebuild_progress">Wiederaufbau %1$d %%</string>
+    <string name="longhorn_backup_progress">Sicherung %1$d %%</string>
+    <string name="longhorn_restore_progress">Wiederherstellung %1$d %%</string>
+    <string name="longhorn_schedule_error">Replikat kann nicht platziert werden: %1$s</string>
+    <string name="longhorn_too_many_snapshots">Nahe am Snapshot-Limit: alte Snapshots löschen</string>
+    <string name="longhorn_node_scheduling_off">Scheduling aus</string>
+    <plurals name="longhorn_node_evicting">
+        <item quantity="one">Räumung · noch %1$d Replikat</item>
+        <item quantity="other">Räumung · noch %1$d Replikate</item>
+    </plurals>
+    <plurals name="longhorn_node_replicas">
+        <item quantity="one">%1$d Replikat</item>
+        <item quantity="other">%1$d Replikate</item>
+    </plurals>
 </resources>

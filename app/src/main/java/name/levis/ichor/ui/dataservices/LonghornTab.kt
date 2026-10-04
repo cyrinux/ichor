@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,18 +29,24 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
+import name.levis.ichor.model.LonghornAction
 import name.levis.ichor.model.LonghornBackupTarget
 import name.levis.ichor.model.LonghornNode
 import name.levis.ichor.model.LonghornStatus
 import name.levis.ichor.model.LonghornVolume
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.VolumeFilter
+import name.levis.ichor.model.actions
 import name.levis.ichor.model.filtered
+import name.levis.ichor.model.longhornActionKey
+import name.levis.ichor.model.replicaChoices
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.SearchField
@@ -50,11 +58,43 @@ import name.levis.ichor.util.formatBytes
 
 /** Longhorn volumes (problems first), the backup targets and each node's disks. */
 @Composable
-fun LonghornTab(status: LonghornStatus, garageDetected: Boolean, onGarage: () -> Unit) {
+fun LonghornTab(status: LonghornStatus, actions: LonghornActions, garageDetected: Boolean, onGarage: () -> Unit) {
     val hasProblems = remember(status) { status.volumes.any { it.serviceHealth.needsAttention } }
     var filter by rememberSaveable { mutableStateOf(if (hasProblems) VolumeFilter.PROBLEMS else VolumeFilter.ALL) }
     var query by rememberSaveable { mutableStateOf("") }
     val rows = remember(status, filter, query) { status.volumes.filtered(filter, query) }
+    val busy by actions.busy.collectAsStateWithLifecycle()
+    var replicasOf by remember { mutableStateOf<LonghornVolume?>(null) }
+    var evicting by remember { mutableStateOf<LonghornNode?>(null) }
+
+    replicasOf?.let { v ->
+        ReplicaCountDialog(
+            label = v.label,
+            current = v.replicasDesired,
+            choices = status.replicaChoices(v),
+            onConfirm = { count ->
+                replicasOf = null
+                actions.run(v.key, v.namespace, v.name, v.label, LonghornAction.REPLICAS, count)
+            },
+            onDismiss = { replicasOf = null },
+        )
+    }
+    evicting?.let { n ->
+        EvictConfirmDialog(
+            node = n.name,
+            onConfirm = {
+                evicting = null
+                actions.run(n.key, n.namespace, n.name, n.name, LonghornAction.EVICT)
+            },
+            onDismiss = { evicting = null },
+        )
+    }
+    val onVolume = { v: LonghornVolume, action: LonghornAction ->
+        if (action == LonghornAction.REPLICAS) replicasOf = v else actions.run(v.key, v.namespace, v.name, v.label, action)
+    }
+    val onNode = { n: LonghornNode, action: LonghornAction ->
+        if (action == LonghornAction.EVICT) evicting = n else actions.run(n.key, n.namespace, n.name, n.name, action)
+    }
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
         if (status.error.isNotEmpty()) item {
@@ -87,20 +127,24 @@ fun LonghornTab(status: LonghornStatus, garageDetected: Boolean, onGarage: () ->
             )
         }
         items(rows, key = { "v:${it.name}" }) { v ->
-            VolumeRow(v)
+            VolumeRow(v, v.key in busy) { onVolume(v, it) }
             HorizontalDivider()
         }
         if (status.nodes.isNotEmpty()) item(key = "nodes") {
             SectionTitle(stringResource(R.string.longhorn_nodes), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         }
-        items(status.nodes, key = { "n:${it.name}" }) { NodeRow(it) }
+        items(status.nodes, key = { "n:${it.name}" }) { n -> NodeRow(n, n.key in busy) { onNode(n, it) } }
     }
 }
 
+private val LonghornVolume.key get() = longhornActionKey(namespace, name)
+private val LonghornNode.key get() = longhornActionKey(namespace, "node/$name")
+
 @Composable
-private fun VolumeRow(v: LonghornVolume) {
+private fun VolumeRow(v: LonghornVolume, busy: Boolean, onAction: (LonghornAction) -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    val colors = LocalStatusColors.current
+    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         HealthDot(v.serviceHealth)
         Spacer(Modifier.size(12.dp))
         Column(Modifier.weight(1f)) {
@@ -131,7 +175,32 @@ private fun VolumeRow(v: LonghornVolume) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            // 0 is also what an unread engine gives: the status line already counts the rebuilds.
+            if (v.rebuilding > 0 && v.rebuildProgress > 0) OperationProgress(stringResource(R.string.longhorn_rebuild_progress, v.rebuildProgress), v.rebuildProgress)
+            if (v.backingUp) OperationProgress(stringResource(R.string.longhorn_backup_progress, v.backupProgress), v.backupProgress)
+            if (v.restoring) OperationProgress(stringResource(R.string.longhorn_restore_progress, v.restoreProgress), v.restoreProgress)
+            if (v.scheduleError.isNotEmpty()) {
+                Text(stringResource(R.string.longhorn_schedule_error, v.scheduleError), style = MaterialTheme.typography.labelSmall, color = colors.warn)
+            }
+            if (v.tooManySnapshots) {
+                Text(stringResource(R.string.longhorn_too_many_snapshots), style = MaterialTheme.typography.labelSmall, color = colors.warn)
+            }
         }
+        LonghornActionMenu(v.actions, busy, onAction)
+    }
+}
+
+/** "Rebuilding 42%" over a thin bar. */
+@Composable
+private fun OperationProgress(label: String, percent: Int) {
+    Column(Modifier.padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+        LinearProgressIndicator(
+            progress = { percent / 100f },
+            modifier = Modifier.fillMaxWidth().height(4.dp),
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            drawStopIndicator = {},
+        )
     }
 }
 
@@ -163,17 +232,29 @@ private fun BackupTargetRow(target: LonghornBackupTarget, garageDetected: Boolea
 }
 
 @Composable
-private fun NodeRow(node: LonghornNode) {
+private fun NodeRow(node: LonghornNode, busy: Boolean, onAction: (LonghornAction) -> Unit) {
     val colors = LocalStatusColors.current
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             HealthDot(if (node.ready) ServiceHealth.OK else ServiceHealth.CRITICAL)
             Spacer(Modifier.size(12.dp))
             Text(node.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
             when {
                 !node.ready -> Text(stringResource(R.string.longhorn_node_not_ready), style = MaterialTheme.typography.labelSmall, color = colors.bad)
+                node.evictionRequested -> Text(
+                    pluralStringResource(R.plurals.longhorn_node_evicting, node.replicas, node.replicas),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colors.warn,
+                )
+                !node.allowScheduling -> Text(stringResource(R.string.longhorn_node_scheduling_off), style = MaterialTheme.typography.labelSmall, color = colors.warn)
                 !node.schedulable -> Text(stringResource(R.string.longhorn_node_unschedulable), style = MaterialTheme.typography.labelSmall, color = colors.warn)
+                else -> Text(
+                    pluralStringResource(R.plurals.longhorn_node_replicas, node.replicas, node.replicas),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
+            LonghornActionMenu(node.actions, busy, onAction)
         }
         node.disks.forEach { d ->
             if (d.maximum > 0) {
