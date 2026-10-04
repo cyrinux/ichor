@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"time"
@@ -159,6 +160,10 @@ type bundleFile struct {
 // writeBundle runs every step and writes the zip atomically (destPath.part, then rename).
 // It fails, leaving no file, only when ctx ends or the file cannot be written.
 func writeBundle(ctx context.Context, destPath string, sections []bundleSection, progress func(supportProgress), now time.Time) (int64, error) {
+	if !filepath.IsAbs(destPath) {
+		return 0, fmt.Errorf("destination %q is not an absolute path", destPath)
+	}
+
 	part := destPath + ".part"
 
 	f, err := os.OpenFile(part, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o600)

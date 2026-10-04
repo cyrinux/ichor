@@ -111,6 +111,13 @@ func (d *DebugSession) run(ctx context.Context, configYAML, contextName, node, i
 
 	defer release()
 
+	// A privileged container: never let a missing node fall through to the endpoint.
+	if err := validatePowerTarget(s.context, node); err != nil {
+		d.exit(-1, err.Error())
+
+		return
+	}
+
 	nodeCtx := client.WithNode(ctx, node)
 
 	// Masked here: the scanner leaves an address glued to the ellipsis alone.

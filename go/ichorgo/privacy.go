@@ -10,7 +10,6 @@ import (
 	"slices"
 	"strings"
 	"sync"
-
 )
 
 // Screenshot mode: while enabled, everything the app displays goes through a mask that

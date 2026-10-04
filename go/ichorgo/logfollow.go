@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -107,6 +108,10 @@ func followLog(ctx context.Context, configYAML, contextName, node string, open l
 
 	defer release()
 
+	if err := validatePowerTarget(s.context, node); err != nil {
+		return err.Error()
+	}
+
 	recv, err := open(withNode(ctx, node), s)
 	if err != nil {
 		return s.friendly(node, err)
@@ -140,6 +145,10 @@ func followLog(ctx context.Context, configYAML, contextName, node string, open l
 	}
 }
 
+// maxLineBytes cuts a line that never ends (progress bars redrawn with \r, binary output):
+// a follow can run for hours.
+const maxLineBytes = 64 << 10
+
 // lineSplitter emits complete lines from a byte stream that may split them anywhere.
 type lineSplitter struct {
 	emit    func(string)
@@ -152,9 +161,13 @@ func newLineSplitter(emit func(string)) *lineSplitter {
 
 func (l *lineSplitter) write(b []byte) {
 	for len(b) > 0 {
-		i := strings.IndexByte(string(b), '\n')
+		i := bytes.IndexByte(b, '\n')
 		if i < 0 {
 			l.partial.Write(b)
+
+			if l.partial.Len() >= maxLineBytes {
+				l.flush()
+			}
 
 			return
 		}

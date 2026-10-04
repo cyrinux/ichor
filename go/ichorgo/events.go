@@ -98,9 +98,9 @@ func runEvents(ctx context.Context, configYAML, contextName, nodes string, tail 
 
 	defer release()
 
-	targets := targetNodes(s.context)
-	if nodes = strings.TrimSpace(nodes); nodes != "" {
-		targets = strings.Split(nodes, ",")
+	targets, err := supportTargets(targetNodes(s.context), nodes)
+	if err != nil {
+		return err.Error()
 	}
 
 	ch := make(chan eventItem)
