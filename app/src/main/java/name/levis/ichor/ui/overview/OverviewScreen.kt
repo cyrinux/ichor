@@ -26,16 +26,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Public
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Storage
-import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material.icons.outlined.QueryStats
-import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -77,9 +70,6 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
-import name.levis.ichor.model.TalosFeature
-import name.levis.ichor.model.clusterSupport
-import name.levis.ichor.ui.components.rememberClusterFeatures
 import name.levis.ichor.update.UpdateState
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.TOPOLOGY
@@ -132,7 +122,6 @@ import name.levis.ichor.model.inventoryBadges
 import name.levis.ichor.ui.argocd.ArgoViewModel
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.dataservices.downHostnames
-import name.levis.ichor.ui.components.TooltipIconButton
 
 class OverviewViewModel(
     val talos: TalosRepository,
@@ -307,38 +296,12 @@ fun OverviewScreen(
                     }
                 },
                 actions = {
-                    // Only offered when the config's role can run it.
-                    if (config?.activeSummary?.allows(Feature.HEALTH) == true) {
-                        TooltipIconButton(Icons.Outlined.Favorite, stringResource(R.string.overview_action_health), onClick = onHealth)
-                    }
-                    // Cluster-wide screens: only disabled when no reachable node's Talos has them.
-                    val reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node }
-                    val features = rememberClusterFeatures(reachable)
-                    TooltipIconButton(
-                        Icons.Outlined.Timeline,
-                        stringResource(R.string.overview_action_events),
-                        onClick = onEvents,
-                        enabled = clusterSupport(features, TalosFeature.EVENTS).supported,
+                    OverviewActions(
+                        nav = OverviewNavigation(onHealth, onEvents, onWorkloads, onMetrics, onKubeSpan, onEtcd, onSettings),
+                        reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node },
+                        health = config?.activeSummary?.allows(Feature.HEALTH) == true,
+                        workloads = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
                     )
-                    // Kubernetes workloads: the API is reached with the admin kubeconfig Talos issues.
-                    if (config?.activeSummary?.allows(Feature.WORKLOADS) == true) {
-                        TooltipIconButton(Icons.Outlined.Widgets, stringResource(R.string.overview_action_workloads), onClick = onWorkloads)
-                        // PromQL panels, through the same kubeconfig (or a URL set on the screen).
-                        TooltipIconButton(Icons.Outlined.QueryStats, stringResource(R.string.metrics_title), onClick = onMetrics)
-                    }
-                    TooltipIconButton(
-                        Icons.Outlined.Hub,
-                        "KubeSpan",
-                        onClick = onKubeSpan,
-                        enabled = clusterSupport(features, TalosFeature.KUBESPAN).supported,
-                    )
-                    TooltipIconButton(
-                        Icons.Outlined.Storage,
-                        "etcd",
-                        onClick = onEtcd,
-                        enabled = clusterSupport(features, TalosFeature.ETCD).supported,
-                    )
-                    TooltipIconButton(Icons.Outlined.Settings, stringResource(R.string.overview_action_settings), onClick = onSettings)
                 },
             )
         },
