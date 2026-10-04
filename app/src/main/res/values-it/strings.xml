@@ -1565,7 +1565,7 @@
     <string name="argo_no_app_sets">Nessun ApplicationSet.</string>
     <string name="argo_projects">Progetti</string>
     <string name="argo_no_projects">Nessun progetto.</string>
-    <string name="argo_search">Filtra per nome, progetto o namespace</string>
+    <string name="argo_search">Filtra</string>
     <string name="argo_filter_attention">Attenzione</string>
     <string name="argo_filter_out_of_sync">OutOfSync</string>
     <string name="argo_filter_progressing">Progressing</string>
