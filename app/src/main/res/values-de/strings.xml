@@ -1545,6 +1545,35 @@
         <item quantity="one">%1$d fehlgeschlagener Versuch</item>
         <item quantity="other">%1$d fehlgeschlagene Versuche</item>
     </plurals>
+    <string name="velero_empty">Keine Velero-Zeitpläne.</string>
+    <string name="velero_location">Speicherort %1$s</string>
+    <string name="velero_default">Standard</string>
+    <string name="velero_paused">pausiert</string>
+    <string name="velero_in_progress">Sicherung läuft</string>
+    <string name="velero_schedule">Zeitplan</string>
+    <string name="velero_storage_location">Speicherort</string>
+    <string name="velero_namespaces">Namespaces</string>
+    <string name="velero_all_namespaces">alle</string>
+    <string name="velero_last_success">Letzter Erfolg</string>
+    <string name="velero_no_backup">noch keine Sicherung</string>
+    <string name="velero_adhoc">Fehlgeschlagene manuelle Sicherungen (letzte 7 Tage)</string>
+    <string name="velero_reason_failed">letzte Sicherung fehlgeschlagen</string>
+    <string name="velero_reason_location">Speicherort nicht verfügbar</string>
+    <string name="velero_reason_partially_failed">letzte Sicherung teilweise fehlgeschlagen</string>
+    <string name="velero_reason_stale">keine aktuelle Sicherung</string>
+    <string name="velero_reason_invalid">ungültiger Zeitplan</string>
+    <plurals name="velero_schedules">
+        <item quantity="one">%1$d Velero-Zeitplan</item>
+        <item quantity="other">%1$d Velero-Zeitpläne</item>
+    </plurals>
+    <plurals name="velero_errors">
+        <item quantity="one">%1$d Fehler</item>
+        <item quantity="other">%1$d Fehler</item>
+    </plurals>
+    <plurals name="velero_warnings">
+        <item quantity="one">%1$d Warnung</item>
+        <item quantity="other">%1$d Warnungen</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s ist nicht bereit: vermutlich die Ursache von %2$d Problem</item>
         <item quantity="other">%1$s ist nicht bereit: vermutlich die Ursache von %2$d Problemen</item>

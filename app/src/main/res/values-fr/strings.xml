@@ -1547,6 +1547,35 @@
         <item quantity="one">%1$d tentative échouée</item>
         <item quantity="other">%1$d tentatives échouées</item>
     </plurals>
+    <string name="velero_empty">Aucune planification Velero.</string>
+    <string name="velero_location">Emplacement de stockage %1$s</string>
+    <string name="velero_default">par défaut</string>
+    <string name="velero_paused">en pause</string>
+    <string name="velero_in_progress">sauvegarde en cours</string>
+    <string name="velero_schedule">Planification</string>
+    <string name="velero_storage_location">Emplacement de stockage</string>
+    <string name="velero_namespaces">Namespaces</string>
+    <string name="velero_all_namespaces">tous</string>
+    <string name="velero_last_success">Dernier succès</string>
+    <string name="velero_no_backup">pas encore de sauvegarde</string>
+    <string name="velero_adhoc">Sauvegardes manuelles en échec (7 derniers jours)</string>
+    <string name="velero_reason_failed">dernière sauvegarde en échec</string>
+    <string name="velero_reason_location">emplacement de stockage indisponible</string>
+    <string name="velero_reason_partially_failed">dernière sauvegarde partiellement en échec</string>
+    <string name="velero_reason_stale">pas de sauvegarde récente</string>
+    <string name="velero_reason_invalid">planification invalide</string>
+    <plurals name="velero_schedules">
+        <item quantity="one">%1$d planification Velero</item>
+        <item quantity="other">%1$d planifications Velero</item>
+    </plurals>
+    <plurals name="velero_errors">
+        <item quantity="one">%1$d erreur</item>
+        <item quantity="other">%1$d erreurs</item>
+    </plurals>
+    <plurals name="velero_warnings">
+        <item quantity="one">%1$d avertissement</item>
+        <item quantity="other">%1$d avertissements</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s n’est pas prêt : cause probable de %2$d problème</item>
         <item quantity="other">%1$s n’est pas prêt : cause probable de %2$d problèmes</item>

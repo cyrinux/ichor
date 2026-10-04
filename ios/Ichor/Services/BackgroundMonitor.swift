@@ -127,6 +127,7 @@ enum BackgroundMonitor {
             case "mariadb": "MariaDB"
             case "percona": "Percona XtraDB Cluster"
             case "certmanager": "cert-manager"
+            case "velero": "Velero"
             default: "CloudNativePG"
             }
             guard alert.problem else { return (String(localized: "\(label) is healthy again"), system) }

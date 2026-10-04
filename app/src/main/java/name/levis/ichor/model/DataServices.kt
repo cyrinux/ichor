@@ -16,6 +16,7 @@ data class DataServices(
     val mariadb: MariaDbStatus? = null,
     val percona: PerconaStatus? = null,
     val certManager: CertManagerStatus? = null,
+    val velero: VeleroStatus? = null,
 )
 
 @Serializable
@@ -455,6 +456,106 @@ enum class PerconaReason(val wire: String) {
     }
 }
 
+@Serializable
+data class VeleroStatus(
+    val version: String = "",
+    val error: String = "",
+    /** Problems first. */
+    val schedules: List<VeleroSchedule> = emptyList(),
+    /** Backups taken by hand (no schedule) that failed in the last week, newest first. */
+    val adhoc: List<VeleroAdhocBackup> = emptyList(),
+    /** Unavailable first. */
+    val locations: List<VeleroLocation> = emptyList(),
+)
+
+@Serializable
+data class VeleroSchedule(
+    val namespace: String = "",
+    val name: String = "",
+    /** Cron, as written. */
+    val schedule: String = "",
+    val paused: Boolean = false,
+    /** The schedule's own: New, Enabled or FailedValidation. */
+    val phase: String = "",
+    val validationErrors: List<String> = emptyList(),
+    val health: String = "",
+    /** Wire values of [VeleroReason]. */
+    val reasons: List<String> = emptyList(),
+    val storageLocation: String = "",
+    /** Empty or "*": every namespace. */
+    val includedNamespaces: List<String> = emptyList(),
+    /** The latest finished backup, null when none is left. */
+    val lastBackup: VeleroBackup? = null,
+    /** The latest Completed backup (unix ms), 0 when none. */
+    val lastSuccessAt: Long = 0,
+    val inProgress: Boolean = false,
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+    val reasonList: List<VeleroReason> get() = reasons.mapNotNull(VeleroReason::from)
+}
+
+@Serializable
+data class VeleroBackup(
+    val name: String = "",
+    /** Completed, PartiallyFailed, Failed or FailedValidation. */
+    val phase: String = "",
+    val startedAt: Long = 0,
+    val completedAt: Long = 0,
+    val errors: Int = 0,
+    val warnings: Int = 0,
+    val failureReason: String = "",
+)
+
+/** A backup taken by hand that failed: a warning. */
+@Serializable
+data class VeleroAdhocBackup(
+    val namespace: String = "",
+    val name: String = "",
+    val phase: String = "",
+    val startedAt: Long = 0,
+    val completedAt: Long = 0,
+    val errors: Int = 0,
+    val warnings: Int = 0,
+    val failureReason: String = "",
+    val storageLocation: String = "",
+    val health: String = "",
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+}
+
+@Serializable
+data class VeleroLocation(
+    val namespace: String = "",
+    val name: String = "",
+    val provider: String = "",
+    val bucket: String = "",
+    val default: Boolean = false,
+    /** Available or Unavailable, "" before the first check. */
+    val phase: String = "",
+    val message: String = "",
+    val lastValidatedAt: Long = 0,
+    val health: String = "",
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+}
+
+/** Why a Velero schedule is not ok, as the Go core names it. */
+enum class VeleroReason(val wire: String) {
+    FAILED("failed"),
+    LOCATION("location"),
+    PARTIALLY_FAILED("partiallyFailed"),
+    STALE("stale"),
+    INVALID("invalid"),
+    ;
+
+    companion object {
+        fun from(wire: String): VeleroReason? = entries.firstOrNull { it.wire == wire }
+    }
+}
+
 /** Health of one item (a volume, a Postgres cluster), worst first. */
 enum class ServiceHealth(val wire: String) {
     CRITICAL("critical"),
@@ -512,6 +613,7 @@ enum class DataServiceKind(val catalogId: String) {
     MARIADB("mariadb"),
     PERCONA("percona-xtradb"),
     CERT_MANAGER("cert-manager"),
+    VELERO("velero"),
 }
 
 /** The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs. */
@@ -530,6 +632,7 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.MARIADB.takeIf { mariadb != null },
         DataServiceKind.PERCONA.takeIf { percona != null },
         DataServiceKind.CERT_MANAGER.takeIf { certManager != null },
+        DataServiceKind.VELERO.takeIf { velero != null },
     )
 
 /**
@@ -546,6 +649,7 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.MARIADB -> mariadb?.summary()
     DataServiceKind.PERCONA -> percona?.summary()
     DataServiceKind.CERT_MANAGER -> certManager?.summary()
+    DataServiceKind.VELERO -> velero?.summary()
 }
 
 fun MariaDbStatus.summary(): ServiceSummary {
@@ -565,6 +669,13 @@ fun CertManagerStatus.summary(): ServiceSummary {
     // An issuer that is not ready needs a look as much as a certificate.
     val healths = certificates.map { it.serviceHealth } + issuers.map { it.serviceHealth }
     return ServiceSummary(certificates.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
+}
+
+/** [ServiceSummary.total] counts the schedules; a storage location down or a failed backup taken by hand needs a look too. */
+fun VeleroStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty() && schedules.isEmpty() && locations.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
+    val healths = schedules.map { it.serviceHealth } + locations.map { it.serviceHealth } + adhoc.map { it.serviceHealth }
+    return ServiceSummary(schedules.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
 }
 
 fun DragonflyStatus.summary(): ServiceSummary {

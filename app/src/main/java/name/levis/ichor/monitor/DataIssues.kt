@@ -8,6 +8,7 @@ import name.levis.ichor.model.GarageState
 import name.levis.ichor.model.MariaDbReason
 import name.levis.ichor.model.PerconaReason
 import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.model.VeleroReason
 
 /** Severities of a data-service issue in a snapshot. */
 const val DATA_CRITICAL = "critical"
@@ -22,6 +23,7 @@ private val MARIADB_ALERT_REASONS = setOf(MariaDbReason.GALERA_RECOVERY, MariaDb
 private val PERCONA_ALERT_REASONS = setOf(PerconaReason.MEMBERS, PerconaReason.BACKUP_FAILED, PerconaReason.BACKUP_STALE)
 /** Certificate reasons worth a warning; an issuer not ready alerts on its own. */
 private val CERT_ALERT_REASONS = setOf(CertReason.EXPIRING, CertReason.RENEWAL_OVERDUE, CertReason.NOT_READY)
+private val VELERO_ALERT_REASONS = setOf(VeleroReason.STALE, VeleroReason.PARTIALLY_FAILED, VeleroReason.INVALID)
 
 /**
  * The problems of [services] worth a notification, keyed "system|label" (e.g. "longhorn|db/data")
@@ -29,7 +31,8 @@ private val CERT_ALERT_REASONS = setOf(CertReason.EXPIRING, CertReason.RENEWAL_O
  * any instance are critical; a degraded volume, a degraded Garage cluster (or blocks failing to
  * resync) and failing Postgres backups or archiving are warnings. An expired certificate (or one not
  * ready a week before it expires) is critical; one expiring, overdue or not ready, or an issuer not
- * ready, is a warning.
+ * ready, is a warning. A Velero schedule whose last backup failed or whose storage location is
+ * unavailable is critical, a stale, partially failed or invalid one a warning.
  */
 fun dataIssuesOf(services: DataServices): Map<String, String> {
     val out = sortedMapOf<String, String>()
@@ -78,5 +81,15 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
         }
     }
     services.certManager?.issuers.orEmpty().filter { !it.ready }.forEach { out["certmanager|${it.label}"] = DATA_WARNING }
+    services.velero?.schedules.orEmpty().forEach { s ->
+        when {
+            s.serviceHealth == ServiceHealth.CRITICAL -> out["velero|${s.label}"] = DATA_CRITICAL
+            s.reasonList.any { it in VELERO_ALERT_REASONS } -> out["velero|${s.label}"] = DATA_WARNING
+        }
+    }
+    // A failed backup taken by hand was seen by whoever took it: shown, not alerted.
+    services.velero?.locations.orEmpty().filter { it.serviceHealth == ServiceHealth.CRITICAL }.forEach { l ->
+        out["velero|BackupStorageLocation/${l.label}"] = DATA_CRITICAL
+    }
     return out
 }

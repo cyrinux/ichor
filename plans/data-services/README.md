@@ -247,6 +247,52 @@ critical; `expiring`/`renewalOverdue`/`notReady` → warning; an issuer not read
 own key. Keys: `certmanager|<ns>/<name>` for a certificate, `certmanager|Issuer/<ns>/<name>` and
 `certmanager|ClusterIssuer/<name>` for an issuer.
 
+Velero (phase 5, API group `velero.io`, detected by its group but always read at `v1`: the group
+also serves `v2alpha1` (DataUpload/DataDownload), which has no schedules, backups or locations).
+Three listings: `schedules`, `backups` (only the latest finished one per schedule, from the
+`velero.io/schedule-name` label, plus whether one is running, and the failed ones without a
+schedule from the last 7 days are kept) and `backupstoragelocations`:
+
+```jsonc
+  "velero": {
+    "version": "v1", "error": "",
+    "schedules": [{
+      "namespace": "velero", "name": "daily",
+      "schedule": "0 2 * * *", "paused": false,
+      "phase": "Enabled",             // New|Enabled|FailedValidation
+      "validationErrors": [],
+      "health": "ok",                 // critical: failed/location; warning: partiallyFailed/stale/invalid; idle: paused
+      "reasons": [],                  // failed|location|partiallyFailed|stale|invalid
+      "storageLocation": "default",   // the namespace's default location when the template names none
+      "includedNamespaces": ["app"],  // empty or "*": every namespace
+      "lastBackup": {                 // latest finished backup, null when none is left
+        "name": "daily-20261003020000", "phase": "Completed",  // Completed|PartiallyFailed|Failed|FailedValidation
+        "startedAt": 1759456800000, "completedAt": 1759457040000, "errors": 0, "warnings": 1, "failureReason": ""
+      },
+      "lastSuccessAt": 1759457040000, // latest Completed backup, 0 when none
+      "inProgress": true              // a backup of it is New/InProgress/WaitingForPluginOperations*/Finalizing*
+    }],
+    "adhoc": [{                       // failed/partially failed backups without a schedule, last 7 days, newest first
+      "namespace": "velero", "name": "before-upgrade", "phase": "PartiallyFailed",
+      "startedAt": 0, "completedAt": 0, "errors": 1, "warnings": 0, "failureReason": "",
+      "storageLocation": "default", "health": "warning"
+    }],
+    "locations": [{
+      "namespace": "velero", "name": "default", "provider": "aws", "bucket": "backups", "default": true,
+      "phase": "Available",           // Available|Unavailable, "" before the first validation
+      "message": "", "lastValidatedAt": 1759492740000,
+      "health": "ok"                  // critical when Unavailable
+    }]
+  }
+```
+
+`stale` is no Completed backup within twice the schedule's interval (the same rough
+`cronInterval` as CNPG), counted from the schedule's creation when it has none yet (from its last run when
+every backup has expired since). Alerts (key
+`velero|ns/name`, `velero|BackupStorageLocation/ns/name` for a location): a critical schedule or
+an unavailable location → critical;
+`stale`/`partiallyFailed`/`invalid` → warning; a failed backup taken by hand is shown, not alerted.
+
 A section key is **absent/null** when the system isn't installed. An **empty list with no
 error** means it's installed but has nothing in it. A **non-empty `error`** means the
 system was detected but couldn't be read; the UI shows it inline in that tab only.

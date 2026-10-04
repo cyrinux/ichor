@@ -106,7 +106,8 @@ public let dataWarning = "warning"
 /// resync) and failing Postgres backups or archiving are warnings. A switchover or a missing
 /// replica is usually planned and does not alert. An expired certificate (or one not ready a week
 /// before it expires) is critical; one expiring, overdue or not ready, or an issuer not ready, is a
-/// warning.
+/// warning. A Velero schedule whose last backup failed or whose storage location is unavailable is
+/// critical, a stale, partially failed or invalid one a warning.
 public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     var out: [String: String] = [:]
     for v in services.longhorn?.volumes ?? [] {
@@ -165,6 +166,18 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     for i in services.certManager?.issuers ?? [] where !i.ready {
         out["certmanager|\(i.label)"] = dataWarning
     }
+    let veleroAlerting: Set<VeleroReason> = [.stale, .partiallyFailed, .invalid]
+    for s in services.velero?.schedules ?? [] {
+        if s.health == .critical {
+            out["velero|\(s.label)"] = dataCritical
+        } else if s.reasons.contains(where: veleroAlerting.contains) {
+            out["velero|\(s.label)"] = dataWarning
+        }
+    }
+    // A failed backup taken by hand was seen by whoever took it: shown, not alerted.
+    for l in services.velero?.locations ?? [] where l.health == .critical {
+        out["velero|BackupStorageLocation/\(l.label)"] = dataCritical
+    }
     return out
 }
 
@@ -177,6 +190,7 @@ private func dataSystemTitle(_ key: String) -> String {
     case "mariadb": "MariaDB"
     case "percona": "Percona XtraDB Cluster"
     case "certmanager": "cert-manager"
+    case "velero": "Velero"
     default: "CloudNativePG"
     }
 }

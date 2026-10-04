@@ -1548,6 +1548,35 @@
         <item quantity="one">%1$d failed attempt</item>
         <item quantity="other">%1$d failed attempts</item>
     </plurals>
+    <string name="velero_empty">No Velero schedules.</string>
+    <string name="velero_location">Storage location %1$s</string>
+    <string name="velero_default">default</string>
+    <string name="velero_paused">paused</string>
+    <string name="velero_in_progress">backup running</string>
+    <string name="velero_schedule">Schedule</string>
+    <string name="velero_storage_location">Storage location</string>
+    <string name="velero_namespaces">Namespaces</string>
+    <string name="velero_all_namespaces">all</string>
+    <string name="velero_last_success">Last success</string>
+    <string name="velero_no_backup">no backup yet</string>
+    <string name="velero_adhoc">Failed manual backups (last 7 days)</string>
+    <string name="velero_reason_failed">last backup failed</string>
+    <string name="velero_reason_location">storage location unavailable</string>
+    <string name="velero_reason_partially_failed">last backup partially failed</string>
+    <string name="velero_reason_stale">no recent backup</string>
+    <string name="velero_reason_invalid">invalid schedule</string>
+    <plurals name="velero_schedules">
+        <item quantity="one">%1$d Velero schedule</item>
+        <item quantity="other">%1$d Velero schedules</item>
+    </plurals>
+    <plurals name="velero_errors">
+        <item quantity="one">%1$d error</item>
+        <item quantity="other">%1$d errors</item>
+    </plurals>
+    <plurals name="velero_warnings">
+        <item quantity="one">%1$d warning</item>
+        <item quantity="other">%1$d warnings</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s is not ready: the likely cause of %2$d problem</item>
         <item quantity="other">%1$s is not ready: the likely cause of %2$d problems</item>

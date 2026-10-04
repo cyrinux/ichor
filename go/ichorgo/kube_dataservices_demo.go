@@ -9,7 +9,8 @@ import (
 // every state the app shows: a degraded and a faulted volume, a Garage cluster with a node
 // down next to a healthy single-node one, Postgres clusters with failed and stale backups,
 // a MariaDB cluster whose last backup failed next to a healthy Galera one and a suspended one,
-// an expired certificate and one failing to renew.
+// an expired certificate and one failing to renew,
+// Velero schedules with a failed and a partially failed backup and a storage location down.
 func demoDataServices(now time.Time) dataServices {
 	ms := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
 
@@ -186,7 +187,37 @@ func demoDataServices(now time.Time) dataServices {
 		},
 	}
 
-	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager}
+	backup := func(name, phase string, ago time.Duration, errs, warns int) *veleroBackup {
+		return &veleroBackup{Name: name, Phase: phase, StartedAt: ms(ago + 10*time.Minute), CompletedAt: ms(ago), Errors: errs, Warnings: warns}
+	}
+
+	velero := &veleroStatus{Version: "v1",
+		Schedules: []veleroSchedule{
+			{Namespace: "velero", Name: "offsite-weekly", Schedule: "0 3 * * 0", Phase: "Enabled", ValidationErrors: []string{}, Health: healthCritical,
+				Reasons: []string{veleroReasonFailed, veleroReasonLocation}, StorageLocation: "offsite", IncludedNamespaces: []string{"*"},
+				LastBackup:    &veleroBackup{Name: "offsite-weekly-20261004030000", Phase: "Failed", StartedAt: ms(9 * time.Hour), CompletedAt: ms(9 * time.Hour), FailureReason: "backup storage location offsite is unavailable"},
+				LastSuccessAt: ms(8 * 24 * time.Hour)},
+			{Namespace: "velero", Name: "apps-daily", Schedule: "0 2 * * *", Phase: "Enabled", ValidationErrors: []string{}, Health: healthWarning,
+				Reasons: []string{veleroReasonPartial}, StorageLocation: "default", IncludedNamespaces: []string{"demo", "monitoring"},
+				LastBackup: backup("apps-daily-20261004020000", "PartiallyFailed", 10*time.Hour, 2, 5), LastSuccessAt: ms(34 * time.Hour)},
+			{Namespace: "velero", Name: "cluster-hourly", Schedule: "@every 1h", Phase: "Enabled", ValidationErrors: []string{}, Health: healthOK,
+				Reasons: []string{}, StorageLocation: "default", IncludedNamespaces: []string{},
+				LastBackup: backup("cluster-hourly-20261004110000", "Completed", 40*time.Minute, 0, 0), LastSuccessAt: ms(40 * time.Minute), InProgress: true},
+			{Namespace: "velero", Name: "media-monthly", Schedule: "0 4 1 * *", Paused: true, Phase: "Enabled", ValidationErrors: []string{}, Health: healthIdle,
+				Reasons: []string{}, StorageLocation: "default", IncludedNamespaces: []string{"media"},
+				LastBackup: backup("media-monthly-20260901040000", "Completed", 33*24*time.Hour, 0, 0), LastSuccessAt: ms(33 * 24 * time.Hour)},
+		},
+		Adhoc: []veleroAdhoc{
+			{Namespace: "velero", veleroBackup: *backup("before-upgrade", "PartiallyFailed", 2*24*time.Hour, 1, 0), StorageLocation: "default", Health: healthWarning},
+		},
+		Locations: []veleroLocation{
+			{Namespace: "velero", Name: "offsite", Provider: "aws", Bucket: "offsite-backups", Phase: "Unavailable", Health: healthCritical,
+				Message: "rpc error: code = Unknown desc = operation error S3: ListObjectsV2, https response error StatusCode: 403", LastValidatedAt: ms(2 * time.Minute)},
+			{Namespace: "velero", Name: "default", Provider: "aws", Bucket: "velero", Default: true, Phase: "Available", Health: healthOK, LastValidatedAt: ms(time.Minute)},
+		},
+	}
+
+	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero}
 }
 
 // demoGarageBlockReport is the demo cluster's blocks failing to resync: one a live object

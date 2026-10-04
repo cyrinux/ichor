@@ -14,6 +14,7 @@ import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Memory
+import androidx.compose.material.icons.outlined.SettingsBackupRestore
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.TableChart
 import androidx.compose.material.icons.outlined.VerifiedUser
@@ -55,6 +56,7 @@ val DataServiceKind.title: String
         DataServiceKind.MARIADB -> "MariaDB"
         DataServiceKind.PERCONA -> "Percona XtraDB Cluster"
         DataServiceKind.CERT_MANAGER -> "cert-manager"
+        DataServiceKind.VELERO -> "Velero"
     }
 
 /** The tab's name, short enough for four tabs. */
@@ -74,6 +76,7 @@ private val DataServiceKind.fallbackIcon: ImageVector
         DataServiceKind.MARIADB -> Icons.Outlined.TableChart
         DataServiceKind.PERCONA -> Icons.Outlined.Hub
         DataServiceKind.CERT_MANAGER -> Icons.Outlined.VerifiedUser
+        DataServiceKind.VELERO -> Icons.Outlined.SettingsBackupRestore
     }
 
 /** Hostnames of the nodes Talos reports not ready or unreachable: candidates for a likely cause. */
@@ -144,6 +147,7 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
         DataServiceKind.MARIADB -> pluralStringResource(R.plurals.mariadb_clusters, summary.total, summary.total)
         DataServiceKind.PERCONA -> pluralStringResource(R.plurals.percona_clusters, summary.total, summary.total)
         DataServiceKind.CERT_MANAGER -> pluralStringResource(R.plurals.certmanager_certificates, summary.total, summary.total)
+        DataServiceKind.VELERO -> pluralStringResource(R.plurals.velero_schedules, summary.total, summary.total)
         DataServiceKind.GARAGE -> {
             val single = services.garage?.instances?.singleOrNull()
             if (single != null) {

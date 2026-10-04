@@ -95,6 +95,7 @@ private fun dataAlertText(context: Context, alert: Alert): String {
         "mariadb" -> "MariaDB"
         "percona" -> "Percona XtraDB Cluster"
         "certmanager" -> "cert-manager"
+        "velero" -> "Velero"
         else -> "CloudNativePG"
     }
     if (!alert.problem) return system
