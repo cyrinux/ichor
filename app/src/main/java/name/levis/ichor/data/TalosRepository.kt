@@ -23,6 +23,8 @@ import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubePod
+import name.levis.ichor.model.KubeCronJob
+import name.levis.ichor.model.KubeCronJobList
 import name.levis.ichor.model.KubePodList
 import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.KubeRouteList
@@ -425,6 +427,16 @@ class TalosRepository(
         Ichorgo.kubeRolloutRestart(cfg, ctx, server, workload.kind, workload.namespace, workload.name)
     }
 
+    /** CronJobs with their recent runs through the Kubernetes API (os:admin). */
+    suspend fun cronJobs(): List<KubeCronJob> = remember(CRON_JOBS) {
+        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubeCronJobList.serializer(), Ichorgo.kubeCronJobs(cfg, ctx, server)).cronJobs }
+    }
+
+    /** `kubectl create job --from=cronjob/NAME -n NAMESPACE` (os:admin): the new Job's name. */
+    suspend fun triggerCronJob(cronJob: KubeCronJob): String = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeTriggerCronJob(cfg, ctx, server, cronJob.namespace, cronJob.name)
+    }
+
     /** The Ingress and HTTPRoute URLs serving [pods] (os:admin). */
     suspend fun appRoutes(pods: List<RoutePod>): List<KubeRoute> = kubeCall { cfg, ctx, server ->
         val json = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
@@ -685,6 +697,7 @@ const val TOPOLOGY = "topology"
 const val INVENTORY = "inventory"
 const val WORKLOADS = "workloads"
 const val PODS = "pods"
+const val CRON_JOBS = "cronjobs"
 const val DATA_SERVICES = "dataservices"
 const val ARGO_CD = "argocd"
 fun servicesKey(node: String) = "services|$node"
@@ -707,6 +720,7 @@ private val PERSISTED: Map<String, KSerializer<*>> = mapOf(
     INVENTORY to Inventory.serializer(),
     WORKLOADS to ListSerializer(KubeWorkload.serializer()),
     PODS to ListSerializer(KubePod.serializer()),
+    CRON_JOBS to ListSerializer(KubeCronJob.serializer()),
     "services" to ListSerializer(ServiceInfo.serializer()),
     "resources" to NodeResources.serializer(),
     "network" to NodeNetwork.serializer(),
