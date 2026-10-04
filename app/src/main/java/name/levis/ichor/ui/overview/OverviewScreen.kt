@@ -2,6 +2,7 @@ package name.levis.ichor.ui.overview
 
 import name.levis.ichor.BuildConfig
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.VersionFooter
 import name.levis.ichor.ui.components.rememberClusterLabels
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -155,6 +156,7 @@ fun OverviewScreen(
     onDiagnose: () -> Unit,
     onAddCluster: () -> Unit,
     onClustersCleared: () -> Unit,
+    onChangelog: () -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
@@ -439,6 +441,7 @@ fun OverviewScreen(
                     canDetectPublicIps = config?.activeSummary?.allows(Feature.KUBECONFIG) == true,
                     layout = layout,
                     onCustomize = customize,
+                    onChangelog = onChangelog,
                 )
             }
         }
@@ -478,6 +481,7 @@ private fun NodeList(
     canDetectPublicIps: Boolean,
     layout: OverviewLayout,
     onCustomize: () -> Unit,
+    onChangelog: () -> Unit,
 ) {
     var sheetFor by remember { mutableStateOf<NodeOverview?>(null) }
     val wakeOnLan = rememberWakeOnLan(fingerprint)
@@ -563,6 +567,7 @@ private fun NodeList(
                 MutedText(stringResource(R.string.overview_edit_all_hidden), modifier = Modifier.padding(16.dp))
             }
         }
+        item(key = "version") { VersionFooter(onClick = onChangelog) }
     }
 }
 

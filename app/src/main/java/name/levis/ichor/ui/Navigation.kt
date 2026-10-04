@@ -267,6 +267,7 @@ fun Navigation(
                 onDiagnose = { nav.navigate(Routes.diagnosis()) },
                 onAddCluster = { nav.navigate(Routes.IMPORT) },
                 onClustersCleared = { nav.resetTo(Routes.IMPORT) },
+                onChangelog = { nav.navigate(Routes.CHANGELOG) },
             )
             // After an update: what changed since the build that ran before.
             WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })

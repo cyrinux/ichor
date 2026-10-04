@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">Ichor</string>
+    <string name="version_footer" translatable="false">Ichor %1$s</string>
 
     <!-- Common -->
     <string name="common_back">Back</string>

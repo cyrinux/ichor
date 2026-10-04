@@ -2,6 +2,7 @@ package name.levis.ichor.ui.importconfig
 
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.VersionFooter
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.LocalizedException
@@ -186,11 +187,14 @@ private fun SourcePicker(
                 modifier = Modifier.padding(16.dp),
             )
         }
-        when (tab) {
-            0 -> FileSource(onYaml)
-            1 -> PasteSource(pasted, onPasted, onYaml)
-            else -> QrScanner(onScanned = onYaml)
+        Box(Modifier.weight(1f)) {
+            when (tab) {
+                0 -> FileSource(onYaml)
+                1 -> PasteSource(pasted, onPasted, onYaml)
+                else -> QrScanner(onScanned = onYaml)
+            }
         }
+        VersionFooter()
     }
 }
 
