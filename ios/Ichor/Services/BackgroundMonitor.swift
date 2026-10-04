@@ -124,6 +124,7 @@ enum BackgroundMonitor {
             case "longhorn": "Longhorn"
             case "garage": "Garage"
             case "dragonfly": "Dragonfly"
+            case "mariadb": "MariaDB"
             default: "CloudNativePG"
             }
             guard alert.problem else { return (String(localized: "\(label) is healthy again"), system) }

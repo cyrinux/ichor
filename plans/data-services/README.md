@@ -141,6 +141,38 @@ and CNPG; pods selected with `app.kubernetes.io/name=dragonfly`, instance from `
 Alerts (phase 4 rules): `noReady`/`noMaster` → critical; `pods`/`masters` → warning; a rolling
 update (`notReady`) doesn't alert.
 
+MariaDB (operator `k8s.mariadb.com/v1alpha1`, detected by its API group; `mariadbs`, `backups`
+and `physicalbackups` when served; pods selected with `app.kubernetes.io/name=mariadb`, cluster
+from `app.kubernetes.io/instance`, StatefulSet pods `<cluster>-<n>` only; role from
+`status.currentPrimary`). A scheduled logical backup's last run comes from its CronJob
+(`batch/v1`, listed only when one exists): the Complete condition's transition time stays put
+while runs keep succeeding.
+
+```jsonc
+  "mariadb": {
+    "version": "v1alpha1", "error": "",
+    "clusters": [{
+      "namespace": "app", "name": "shop",
+      "topology": "replication",    // standalone|replication|galera
+      "health": "ok",               // critical: noReady/noPrimary; warning: the others; idle: spec.suspend
+      "reasons": [],                // noReady|noPrimary|pods|galeraRecovery|backupFailed|backupStale|notReady
+      "suspended": false,
+      "message": "",                // the Ready condition's message when it is not True
+      "replicas": 2, "readyPods": 2,
+      "primary": "shop-0",          // status.currentPrimary, "" when none
+      "pods": [{ "name": "shop-0", "node": "worker-1", "phase": "Running", "role": "primary", "ready": true }],
+                                    // role: primary|replica|member (Galera)
+      "lastBackupAt": 1759460640000,       // ms, latest success over its backups, 0 = never
+      "lastBackupFailedAt": 0,             // ms, latest failure; failed when after the success
+      "backupSchedule": "0 3 * * *"        // most frequent active cron; stale past 2× its interval
+    }]
+  }
+```
+
+Alerts (phase 4 rules): `noReady`/`noPrimary` → critical; `galeraRecovery`/`backupFailed`/
+`backupStale` → warning; a replica rolling out (`pods`) or the operator busy (`notReady`) doesn't
+alert.
+
 A section key is **absent/null** when the system isn't installed. An **empty list with no
 error** means it's installed but has nothing in it. A **non-empty `error`** means the
 system was detected but couldn't be read; the UI shows it inline in that tab only.

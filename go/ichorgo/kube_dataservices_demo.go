@@ -7,7 +7,8 @@ import (
 
 // demoDataServices are the storage and database operators of the built-in demo cluster, in
 // every state the app shows: a degraded and a faulted volume, a Garage cluster with a node
-// down next to a healthy single-node one, Postgres clusters with failed and stale backups.
+// down next to a healthy single-node one, Postgres clusters with failed and stale backups,
+// a MariaDB cluster whose last backup failed next to a healthy Galera one and a suspended one.
 func demoDataServices(now time.Time) dataServices {
 	ms := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
 
@@ -110,7 +111,25 @@ func demoDataServices(now time.Time) dataServices {
 			}},
 	}}
 
-	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly}
+	mariadb := &mariadbStatus{Version: "v1alpha1", Clusters: []mariadbCluster{
+		{Namespace: "demo", Name: "shop-db", Topology: "replication", Health: healthWarning, Reasons: []string{mariadbReasonBackupFailed},
+			Replicas: 2, ReadyPods: 2, Primary: "shop-db-0", Pods: []mariadbPod{
+				{Name: "shop-db-0", Node: "demo-worker-2", Phase: "Running", Role: "primary", Ready: true},
+				{Name: "shop-db-1", Node: "demo-worker-3", Phase: "Running", Role: "replica", Ready: true},
+			}, LastBackupAt: ms(3 * 24 * time.Hour), LastBackupFailedAt: ms(20 * time.Hour), BackupSchedule: "0 3 * * *"},
+		{Namespace: "demo", Name: "forum-db", Topology: "galera", Health: healthOK, Reasons: []string{},
+			Replicas: 3, ReadyPods: 3, Primary: "forum-db-1", Pods: []mariadbPod{
+				{Name: "forum-db-1", Node: "demo-worker-2", Phase: "Running", Role: "primary", Ready: true},
+				{Name: "forum-db-0", Node: "demo-worker-1", Phase: "Running", Role: "member", Ready: true},
+				{Name: "forum-db-2", Node: "demo-worker-3", Phase: "Running", Role: "member", Ready: true},
+			}, LastBackupAt: ms(9 * time.Hour), BackupSchedule: "0 */12 * * *"},
+		{Namespace: "demo", Name: "legacy-db", Topology: "standalone", Health: healthIdle, Reasons: []string{}, Suspended: true,
+			Replicas: 1, ReadyPods: 1, Primary: "legacy-db-0", Pods: []mariadbPod{
+				{Name: "legacy-db-0", Node: "demo-worker-1", Phase: "Running", Role: "primary", Ready: true},
+			}},
+	}}
+
+	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb}
 }
 
 // demoGarageBlockReport is the demo cluster's blocks failing to resync: one a live object
