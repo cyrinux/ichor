@@ -38,13 +38,16 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
     public let etcd: Etcd?
     public let blockers: [String]
     public let warnings: [String]
+    /// Risks the user confirms one by one before starting (StartUpgrade refuses them
+    /// unacknowledged; force does not skip them).
+    public let acknowledge: [String]
     /// Every blocker is an etcd check that force skips (nil from an older core: guessed
     /// from the blocker texts).
     public let forceable: Bool?
 
     public init(node: String, hostname: String = "", controlPlane: Bool = false, currentVersion: String = "",
                 currentImage: String = "", schematic: String = "", etcd: Etcd? = nil,
-                blockers: [String] = [], warnings: [String] = [], forceable: Bool? = nil) {
+                blockers: [String] = [], warnings: [String] = [], acknowledge: [String] = [], forceable: Bool? = nil) {
         self.node = node
         self.hostname = hostname
         self.controlPlane = controlPlane
@@ -54,11 +57,12 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
         self.etcd = etcd
         self.blockers = blockers
         self.warnings = warnings
+        self.acknowledge = acknowledge
         self.forceable = forceable
     }
 
     private enum CodingKeys: String, CodingKey {
-        case node, hostname, controlPlane, currentVersion, currentImage, schematic, etcd, blockers, warnings, forceable
+        case node, hostname, controlPlane, currentVersion, currentImage, schematic, etcd, blockers, warnings, acknowledge, forceable
     }
 
     // Go encodes empty slices as null and may omit empty strings.
@@ -73,6 +77,7 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
         etcd = try c.decodeIfPresent(Etcd.self, forKey: .etcd)
         blockers = try c.decodeIfPresent([String].self, forKey: .blockers) ?? []
         warnings = try c.decodeIfPresent([String].self, forKey: .warnings) ?? []
+        acknowledge = try c.decodeIfPresent([String].self, forKey: .acknowledge) ?? []
         forceable = try c.decodeIfPresent(Bool.self, forKey: .forceable)
     }
 }
@@ -142,6 +147,12 @@ public func isEtcdBlocker(_ text: String) -> Bool {
 public struct UpgradeGate: Equatable, Sendable {
     /// Force is offered only when every blocker is an etcd check that --force skips.
     public let forceAvailable: Bool
+    /// The plan's risks to acknowledge, then the target version's (UpgradeVersionCheck).
+    public let acknowledgments: [String]
+    /// The form can ask for confirmation: everything but the acknowledgments, which the
+    /// confirmation collects.
+    public let canRequest: Bool
+    /// canRequest, and the acknowledgments (if any) are confirmed.
     public let canStart: Bool
     /// The typed version does not parse.
     public let invalidVersion: Bool
@@ -150,14 +161,19 @@ public struct UpgradeGate: Equatable, Sendable {
     /// Same as the running version (reinstalls it, e.g. to apply a new schematic).
     public let sameVersion: Bool
 
-    public init(plan: UpgradePlan, targetVersion: String, force: Bool, busy: Bool) {
+    /// `versionRisk` is UpgradeVersionCheck's answer for the target ("" for none).
+    public init(plan: UpgradePlan, targetVersion: String, versionRisk: String = "", force: Bool, busy: Bool,
+                acknowledged: Bool = false) {
         let target = normalizedTalosVersion(targetVersion)
         forceAvailable = !plan.blockers.isEmpty && (plan.forceable ?? plan.blockers.allSatisfy(isEtcdBlocker))
         invalidVersion = target == nil
         downgrade = target.map { isTalosDowngrade(from: plan.currentVersion, to: $0) } ?? false
         sameVersion = target != nil && target == normalizedTalosVersion(plan.currentVersion)
+        let risk = versionRisk.trimmingCharacters(in: .whitespacesAndNewlines)
+        acknowledgments = plan.acknowledge + (risk.isEmpty ? [] : [risk])
         let unblocked = plan.blockers.isEmpty || (force && forceAvailable)
-        canStart = unblocked && target != nil && !busy
+        canRequest = unblocked && target != nil && !busy
+        canStart = canRequest && (acknowledgments.isEmpty || acknowledged)
     }
 }
 
@@ -177,6 +193,10 @@ public enum UpgradePhase: String, CaseIterable, Comparable, Sendable {
         default: return nil
         }
     }
+
+    /// Until the node reboots the app may drive the upgrade (on Talos 1.18+ it pulls and
+    /// installs through the app's connection): suspending the app stalls it.
+    public var needsApp: Bool { self < .rebooting }
 
     public static func < (a: Self, b: Self) -> Bool {
         allCases.firstIndex(of: a)! < allCases.firstIndex(of: b)!

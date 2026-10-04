@@ -7,7 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -133,7 +133,8 @@ private fun Systems(services: DataServices, downNodes: Set<String>, garage: Gara
     Column(Modifier.fillMaxSize()) {
         LikelyCauseBanner(causes, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
         if (kinds.size > 1) {
-            PrimaryTabRow(selectedTabIndex = kinds.indexOf(tab)) {
+            // Scrollable: a cluster can run more systems than fit across the screen.
+            PrimaryScrollableTabRow(selectedTabIndex = kinds.indexOf(tab), edgePadding = 0.dp) {
                 kinds.forEach { kind ->
                     Tab(selected = kind == tab, onClick = { selected = kind }, text = { Text(kind.tabTitle, maxLines = 1) })
                 }
@@ -144,6 +145,11 @@ private fun Systems(services: DataServices, downNodes: Set<String>, garage: Gara
             DataServiceKind.GARAGE -> GarageTab(services.garage!!, garage)
             DataServiceKind.CNPG -> CnpgTab(services.cnpg!!)
             DataServiceKind.DRAGONFLY -> DragonflyTab(services.dragonfly!!)
+            DataServiceKind.MARIADB -> MariaDbTab(services.mariadb!!)
+            DataServiceKind.PERCONA -> PerconaTab(services.percona!!)
+            DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!)
+            DataServiceKind.VELERO -> VeleroTab(services.velero!!)
+            DataServiceKind.CEPH -> CephTab(services.ceph!!)
         }
     }
 }

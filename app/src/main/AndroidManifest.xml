@@ -9,7 +9,8 @@
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Keeps a debug shell open while the user is elsewhere, until they exit it. -->
+    <!-- Keeps a debug shell open while the user is elsewhere, until they exit it, and follows
+         a Talos upgrade to its end while the app is in the background. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- Self-update from GitHub releases (the user still confirms each install). -->
@@ -88,6 +89,18 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Keeps an interactive debug shell (a remote terminal on a Talos node) open while the user switches screens or apps, until they exit it from the app or its notification." />
+        </service>
+
+        <!-- Following a Talos upgrade keeps the app talking to the node (install, reboot, wait
+             for it to come back) for up to 30 minutes: no data is synced, so dataSync does not
+             fit (and it is time-limited from API 35); it runs only while the upgrade does. -->
+        <service
+            android:name=".ui.upgrade.UpgradeService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Follows a Talos OS upgrade the user started on one of their nodes (install, reboot, wait for the node to come back) while they switch apps, so the upgrade is not cut off mid-install; it stops when the upgrade ends." />
         </service>
 
         <receiver

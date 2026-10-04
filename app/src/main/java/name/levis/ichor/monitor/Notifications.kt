@@ -92,6 +92,11 @@ private fun dataAlertText(context: Context, alert: Alert): String {
         "longhorn" -> "Longhorn"
         "garage" -> "Garage"
         "dragonfly" -> "Dragonfly"
+        "mariadb" -> "MariaDB"
+        "percona" -> "Percona XtraDB Cluster"
+        "certmanager" -> "cert-manager"
+        "velero" -> "Velero"
+        "ceph" -> "Rook Ceph"
         else -> "CloudNativePG"
     }
     if (!alert.problem) return system

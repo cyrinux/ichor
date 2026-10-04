@@ -60,6 +60,7 @@ import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
+import name.levis.ichor.ui.workloads.RolloutStatusSheet
 
 /**
  * One Argo CD Application: the hero, its conditions, the running or last sync, the sync-waves
@@ -81,6 +82,7 @@ fun ArgoAppScreen(namespace: String, name: String, onBack: () -> Unit, onNode: (
     val snackbar = remember { SnackbarHostState() }
     ArgoActionMessages(vm.results) { snackbar.showSnackbar(it) }
     RestartResultToasts(vm.restarts.results)
+    RolloutStatusSheet(vm.restarts)
     val app = (state as? UiState.Loaded)?.data?.apps?.firstOrNull { it.namespace == namespace && it.name == name }
 
     Scaffold(

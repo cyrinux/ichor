@@ -12,8 +12,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Memory
+import androidx.compose.material.icons.outlined.SettingsBackupRestore
 import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.TableChart
+import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -51,11 +55,20 @@ val DataServiceKind.title: String
         DataServiceKind.GARAGE -> "Garage"
         DataServiceKind.CNPG -> "CloudNativePG"
         DataServiceKind.DRAGONFLY -> "Dragonfly"
+        DataServiceKind.MARIADB -> "MariaDB"
+        DataServiceKind.PERCONA -> "Percona XtraDB Cluster"
+        DataServiceKind.CERT_MANAGER -> "cert-manager"
+        DataServiceKind.VELERO -> "Velero"
+        DataServiceKind.CEPH -> "Rook Ceph"
     }
 
 /** The tab's name, short enough for four tabs. */
 val DataServiceKind.tabTitle: String
-    get() = if (this == DataServiceKind.CNPG) "CNPG" else title
+    get() = when (this) {
+        DataServiceKind.CNPG -> "CNPG"
+        DataServiceKind.PERCONA -> "Percona"
+        else -> title
+    }
 
 private val DataServiceKind.fallbackIcon: ImageVector
     get() = when (this) {
@@ -63,6 +76,11 @@ private val DataServiceKind.fallbackIcon: ImageVector
         DataServiceKind.GARAGE -> Icons.Outlined.Cloud
         DataServiceKind.CNPG -> Icons.Outlined.Dns
         DataServiceKind.DRAGONFLY -> Icons.Outlined.Memory
+        DataServiceKind.MARIADB -> Icons.Outlined.TableChart
+        DataServiceKind.PERCONA -> Icons.Outlined.Hub
+        DataServiceKind.CERT_MANAGER -> Icons.Outlined.VerifiedUser
+        DataServiceKind.VELERO -> Icons.Outlined.SettingsBackupRestore
+        DataServiceKind.CEPH -> Icons.Outlined.Storage
     }
 
 /** Hostnames of the nodes Talos reports not ready or unreachable: candidates for a likely cause. */
@@ -131,6 +149,11 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
         DataServiceKind.LONGHORN -> pluralStringResource(R.plurals.longhorn_volumes, summary.total, summary.total)
         DataServiceKind.CNPG -> pluralStringResource(R.plurals.cnpg_clusters, summary.total, summary.total)
         DataServiceKind.DRAGONFLY -> pluralStringResource(R.plurals.dragonfly_instances, summary.total, summary.total)
+        DataServiceKind.MARIADB -> pluralStringResource(R.plurals.mariadb_clusters, summary.total, summary.total)
+        DataServiceKind.PERCONA -> pluralStringResource(R.plurals.percona_clusters, summary.total, summary.total)
+        DataServiceKind.CERT_MANAGER -> pluralStringResource(R.plurals.certmanager_certificates, summary.total, summary.total)
+        DataServiceKind.VELERO -> pluralStringResource(R.plurals.velero_schedules, summary.total, summary.total)
+        DataServiceKind.CEPH -> pluralStringResource(R.plurals.ceph_clusters, summary.total, summary.total)
         DataServiceKind.GARAGE -> {
             val single = services.garage?.instances?.singleOrNull()
             if (single != null) {
