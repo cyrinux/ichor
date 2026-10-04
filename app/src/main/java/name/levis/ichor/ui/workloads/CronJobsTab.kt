@@ -41,6 +41,7 @@ import name.levis.ichor.model.filteredCronJobs
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
@@ -77,6 +78,29 @@ class CronJobsViewModel(private val talos: TalosRepository) : LoadingViewModel<L
             if (outcome.isSuccess) refresh()
         }
     }
+
+    private val _suspending = MutableStateFlow<Set<String>>(emptySet())
+    /** Keys of the CronJobs whose suspend or resume is in flight. */
+    val suspending: StateFlow<Set<String>> = _suspending.asStateFlow()
+
+    private val _suspendFailures = Channel<UiText>(Channel.BUFFERED)
+    /** Why a suspend or resume failed, shown once. */
+    val suspendFailures: Flow<UiText> = _suspendFailures.receiveAsFlow()
+
+    /** Suspends (no new runs) or resumes [cronJob], like `kubectl patch` of spec.suspend. */
+    fun setSuspended(cronJob: KubeCronJob, suspend: Boolean) {
+        if (cronJob.key in _suspending.value) return
+        _suspending.update { it + cronJob.key }
+        viewModelScope.launch {
+            val outcome = cancellableCatching { talos.suspendCronJob(cronJob, suspend) }
+            _suspending.update { it - cronJob.key }
+            outcome.exceptionOrNull()?.let {
+                val action = if (suspend) R.string.cronjobs_suspend_failed else R.string.cronjobs_resume_failed
+                _suspendFailures.send(UiText.Res(action, cronJob.displayName, it.uiText()))
+            }
+            if (outcome.isSuccess) refresh()
+        }
+    }
 }
 
 /**
@@ -96,11 +120,29 @@ fun CronJobsTab(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val triggering by vm.triggering.collectAsStateWithLifecycle()
+    val suspending by vm.suspending.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var confirm by remember { mutableStateOf<KubeCronJob?>(null) }
+    var confirmSuspend by remember { mutableStateOf<KubeCronJob?>(null) }
     var expanded by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     CronRunToasts(vm.results)
+    val context = LocalContext.current
+    LaunchedEffect(vm) { vm.suspendFailures.collect { Toast.makeText(context, it.resolve(context), Toast.LENGTH_LONG).show() } }
+
+    confirmSuspend?.let { c ->
+        val suspend = !c.suspended
+        ConfirmDialog(
+            title = stringResource(if (suspend) R.string.cronjobs_suspend_title else R.string.cronjobs_resume_title, c.displayName),
+            text = stringResource(if (suspend) R.string.cronjobs_suspend_text else R.string.cronjobs_resume_text, c.namespace),
+            confirm = stringResource(if (suspend) R.string.cronjobs_suspend else R.string.cronjobs_resume),
+            onConfirm = {
+                confirmSuspend = null
+                vm.setSuspended(c, suspend)
+            },
+            onDismiss = { confirmSuspend = null },
+        )
+    }
 
     confirm?.let { c ->
         CronRunConfirmDialog(
@@ -137,8 +179,10 @@ fun CronJobsTab(
                                 showNamespace = selected == null,
                                 expanded = c.key in expanded,
                                 triggering = c.key in triggering,
+                                suspending = c.key in suspending,
                                 onToggle = { expanded = if (c.key in expanded) expanded - c.key else expanded + c.key },
                                 onRun = { confirm = c },
+                                onSuspend = { confirmSuspend = c },
                             )
                         }
                     }

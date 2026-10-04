@@ -24,6 +24,11 @@ type kubePod struct {
 	Owner      string   `json:"owner"` // "ReplicaSet/web-5d8f", "" when none
 	Created    int64    `json:"created"`
 	Images     []string `json:"images"`
+	// ContainerNames are the pod's containers, to pick one for its logs.
+	ContainerNames []string `json:"containerNames"`
+	// LastTermination is why a restarted container last stopped ("OOMKilled (exit 137)"),
+	// "" when none did: what the previous run's log explains.
+	LastTermination string `json:"lastTermination"`
 }
 
 type kubePodList struct {
@@ -45,6 +50,7 @@ type containerStatus struct {
 	Ready        bool           `json:"ready"`
 	RestartCount int            `json:"restartCount"`
 	State        containerState `json:"state"`
+	LastState    containerState `json:"lastState"`
 }
 
 type podObject struct {
@@ -65,6 +71,7 @@ type podObject struct {
 			Image string `json:"image"`
 		} `json:"initContainers"`
 		Containers []struct {
+			Name  string `json:"name"`
 			Image string `json:"image"`
 		} `json:"containers"`
 	} `json:"spec"`
@@ -114,11 +121,12 @@ func listPods(ctx context.Context, k *kubeClient) (kubePodList, error) {
 
 func mapPod(obj podObject) kubePod {
 	p := kubePod{
-		Namespace:  obj.Metadata.Namespace,
-		Name:       obj.Metadata.Name,
-		Node:       obj.Spec.NodeName,
-		Containers: len(obj.Spec.Containers),
-		Images:     []string{},
+		Namespace:      obj.Metadata.Namespace,
+		Name:           obj.Metadata.Name,
+		Node:           obj.Spec.NodeName,
+		Containers:     len(obj.Spec.Containers),
+		Images:         []string{},
+		ContainerNames: []string{},
 	}
 
 	if !obj.Metadata.CreationTimestamp.IsZero() {
@@ -131,12 +139,20 @@ func mapPod(obj podObject) kubePod {
 
 	for _, c := range obj.Spec.Containers {
 		p.Images = append(p.Images, c.Image)
+		p.ContainerNames = append(p.ContainerNames, c.Name)
 	}
+
+	mostRestarts := 0
 
 	for _, cs := range obj.Status.ContainerStatuses {
 		p.Restarts += cs.RestartCount
 		if cs.Ready {
 			p.Ready++
+		}
+
+		if t := cs.LastState.Terminated; t != nil && cs.RestartCount > mostRestarts {
+			mostRestarts = cs.RestartCount
+			p.LastTermination = fmt.Sprintf("%s (exit %d)", terminatedReason(t.Reason, t.Signal, t.ExitCode), t.ExitCode)
 		}
 	}
 

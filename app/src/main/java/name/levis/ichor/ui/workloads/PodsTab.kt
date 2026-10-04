@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Stream
 import androidx.compose.material3.CircularProgressIndicator
@@ -97,7 +98,7 @@ class PodsViewModel(private val talos: TalosRepository) : LoadingViewModel<List<
 
 /**
  * Every pod of the cluster with the status `kubectl get pods` shows, unhealthy ones first,
- * and a delete action so a controller starts a fresh one.
+ * its logs, and a delete action so a controller starts a fresh one.
  */
 @Composable
 fun PodsTab(
@@ -113,6 +114,8 @@ fun PodsTab(
     val deleting by vm.deleting.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var confirm by remember { mutableStateOf<KubePod?>(null) }
+    var logs by remember { mutableStateOf<KubePod?>(null) }
+    logs?.let { PodLogSheet(it, onDismiss = { logs = null }) }
 
     val context = LocalContext.current
     LaunchedEffect(vm) {
@@ -154,6 +157,7 @@ fun PodsTab(
                                 showNamespace = selected == null,
                                 deleting = pod.key in deleting,
                                 onDelete = { confirm = pod },
+                                onLogs = { logs = pod },
                                 onFlows = onFlows?.let { open -> { open(pod) } },
                             )
                             HorizontalDivider()
@@ -167,7 +171,7 @@ fun PodsTab(
 }
 
 @Composable
-private fun PodRow(pod: KubePod, showNamespace: Boolean, deleting: Boolean, onDelete: () -> Unit, onFlows: (() -> Unit)?) {
+private fun PodRow(pod: KubePod, showNamespace: Boolean, deleting: Boolean, onDelete: () -> Unit, onLogs: () -> Unit, onFlows: (() -> Unit)?) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
@@ -190,6 +194,9 @@ private fun PodRow(pod: KubePod, showNamespace: Boolean, deleting: Boolean, onDe
                     )
                 }
             }
+        }
+        IconButton(onClick = onLogs) {
+            Icon(Icons.AutoMirrored.Outlined.Article, stringResource(R.string.pod_logs_open, pod.name))
         }
         if (onFlows != null) {
             IconButton(onClick = onFlows) {

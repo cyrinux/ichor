@@ -70,6 +70,11 @@ class WorkloadRestarts(
 
     suspend fun rolloutStatus(workload: KubeWorkload): KubeRolloutStatus = talos.rolloutStatus(workload)
 
+    /** Follows [workload]'s rollout live, e.g. after a rollback. */
+    fun follow(workload: KubeWorkload) {
+        _following.value = workload
+    }
+
     /** Stops following the rollout: it goes on in the cluster. */
     fun stopFollowing() {
         _following.value = null

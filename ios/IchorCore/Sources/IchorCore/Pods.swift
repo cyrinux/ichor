@@ -32,6 +32,10 @@ public struct KubePod: Decodable, Equatable, Identifiable, Sendable {
     /// Unix ms.
     public let created: Int64
     public let images: [String]
+    /// The pod's containers (not the init ones), in spec order.
+    public let containerNames: [String]
+    /// How a container last stopped, e.g. "OOMKilled (exit 137)"; "" when none did.
+    public let lastTermination: String
 
     public var id: String { "\(namespace)/\(name)" }
 
@@ -41,7 +45,8 @@ public struct KubePod: Decodable, Equatable, Identifiable, Sendable {
     }
 
     public init(namespace: String, name: String, status: String = "", healthy: Bool = false, ready: Int = 0, containers: Int = 0,
-                restarts: Int = 0, node: String = "", owner: String = "", created: Int64 = 0, images: [String] = []) {
+                restarts: Int = 0, node: String = "", owner: String = "", created: Int64 = 0, images: [String] = [],
+                containerNames: [String] = [], lastTermination: String = "") {
         self.namespace = namespace
         self.name = name
         self.status = status
@@ -53,6 +58,8 @@ public struct KubePod: Decodable, Equatable, Identifiable, Sendable {
         self.owner = owner
         self.created = created
         self.images = images
+        self.containerNames = containerNames
+        self.lastTermination = lastTermination
     }
 
     public init(from decoder: Decoder) throws {
@@ -68,10 +75,12 @@ public struct KubePod: Decodable, Equatable, Identifiable, Sendable {
         owner = try c.decodeIfPresent(String.self, forKey: .owner) ?? ""
         created = try c.decodeIfPresent(Int64.self, forKey: .created) ?? 0
         images = try c.decodeIfPresent([String].self, forKey: .images) ?? []
+        containerNames = try c.decodeIfPresent([String].self, forKey: .containerNames) ?? []
+        lastTermination = try c.decodeIfPresent(String.self, forKey: .lastTermination) ?? ""
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, status, healthy, ready, containers, restarts, node, owner, created, images
+        case namespace, name, status, healthy, ready, containers, restarts, node, owner, created, images, containerNames, lastTermination
     }
 }
 

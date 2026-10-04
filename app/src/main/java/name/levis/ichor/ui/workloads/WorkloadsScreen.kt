@@ -2,6 +2,7 @@ package name.levis.ichor.ui.workloads
 
 import android.text.format.DateUtils
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -43,6 +44,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.WORKLOADS
+import name.levis.ichor.model.KubeRevision
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.WorkloadState
 import name.levis.ichor.model.filtered
@@ -50,6 +52,7 @@ import name.levis.ichor.model.namespaces
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
@@ -67,11 +70,14 @@ class WorkloadsViewModel(private val talos: TalosRepository) : LoadingViewModel<
 
     // Show the rollout starting: the controller already bumped the generation.
     val restarts = WorkloadRestarts(viewModelScope, talos) { refresh() }
+
+    val actions = WorkloadActions(viewModelScope, talos, restarts) { refresh() }
 }
 
 /**
  * Deployments, StatefulSets and DaemonSets of the cluster with a rolling restart like
- * `kubectl rollout restart`. [namespace] and [query] are shared with the Pods tab.
+ * `kubectl rollout restart`; a tap opens the workload's sheet (scale, history and rollback).
+ * [namespace] and [query] are shared with the Pods tab.
  */
 @Composable
 fun WorkloadsTab(
@@ -86,9 +92,38 @@ fun WorkloadsTab(
     val restarting by vm.restarts.restarting.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
+    var opened by remember { mutableStateOf<String?>(null) }
+    var rollback by remember { mutableStateOf<Pair<KubeWorkload, KubeRevision>?>(null) }
 
     RestartResultToasts(vm.restarts.results)
+    ActionMessageToasts(vm.actions.messages)
     RolloutStatusSheet(vm.restarts)
+
+    // The live row, so the sheet follows a refresh (new replica count, new revision).
+    (state as? UiState.Loaded)?.data?.firstOrNull { it.key == opened }?.let { w ->
+        WorkloadSheet(
+            workload = w,
+            actions = vm.actions,
+            onRestart = { confirm = w },
+            onRollback = { rollback = w to it },
+            onDismiss = { opened = null },
+        )
+    }
+    rollback?.let { (w, revision) ->
+        ConfirmDialog(
+            title = stringResource(R.string.workloads_rollback_title, w.name, revision.revision),
+            text = stringResource(R.string.workloads_rollback_text, w.namespace, revision.images.joinToString(", ").ifEmpty { revision.replicaSet }),
+            confirm = stringResource(R.string.workloads_rollback),
+            onConfirm = {
+                rollback = null
+                // The rollout sheet takes over once the rollback is accepted.
+                opened = null
+                vm.actions.rollback(w, revision)
+            },
+            onDismiss = { rollback = null },
+            destructive = true,
+        )
+    }
 
     confirm?.let { w ->
         RestartConfirmDialog(
@@ -116,7 +151,13 @@ fun WorkloadsTab(
                 } else {
                     LazyColumn(Modifier.fillMaxSize()) {
                         items(rows, key = { it.key }) { w ->
-                            WorkloadRow(w, showNamespace = selected == null, restarting = w.key in restarting, onRestart = { confirm = w })
+                            WorkloadRow(
+                                w,
+                                showNamespace = selected == null,
+                                restarting = w.key in restarting,
+                                onRestart = { confirm = w },
+                                onOpen = { opened = w.key },
+                            )
                             HorizontalDivider()
                         }
                     }
@@ -151,9 +192,9 @@ internal fun KubeFilters(
 }
 
 @Composable
-private fun WorkloadRow(workload: KubeWorkload, showNamespace: Boolean, restarting: Boolean, onRestart: () -> Unit) {
+private fun WorkloadRow(workload: KubeWorkload, showNamespace: Boolean, restarting: Boolean, onRestart: () -> Unit, onOpen: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().clickable(onClick = onOpen).padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(
                 workload.name,

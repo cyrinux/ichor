@@ -3,7 +3,8 @@ import IchorCore
 
 /// The cluster's CronJobs, each with its icon (the ichor.levis.name/icon label, else guessed
 /// from its image, else a clock), schedule, next run and recent runs, and Run now: a Job from
-/// its template, like `kubectl create job --from`. Tap a row for its runs.
+/// its template, like `kubectl create job --from`, and Suspend / Resume of its schedule. Tap a
+/// row for its runs.
 struct CronJobsList: View {
     @Binding var namespace: String?
     let query: String
@@ -12,6 +13,9 @@ struct CronJobsList: View {
     @State private var state: LoadState<[KubeCronJob]> = .loading
     @State private var confirm: KubeCronJob?
     @State private var triggering: Set<String> = []
+    /// Suspend or resume waiting for confirmation.
+    @State private var confirmSuspend: KubeCronJob?
+    @State private var suspending: Set<String> = []
     @State private var expanded: Set<String> = []
     @State private var resultMessage: String?
 
@@ -27,8 +31,10 @@ struct CronJobsList: View {
                         CronJobRow(cronJob: cronJob, showNamespace: selected == nil,
                                    expanded: expanded.contains(cronJob.id),
                                    triggering: triggering.contains(cronJob.id),
+                                   suspending: suspending.contains(cronJob.id),
                                    onToggle: { toggle(cronJob) },
-                                   onRun: { confirm = cronJob })
+                                   onRun: { confirm = cronJob },
+                                   onSuspend: { confirmSuspend = cronJob })
                     }
                 }
             }
@@ -55,6 +61,22 @@ struct CronJobsList: View {
         } message: { cronJob in
             confirmMessage(cronJob)
         }
+        .confirmationDialog(confirmSuspend.map { suspendTitle($0) } ?? "",
+                            isPresented: $confirmSuspend.isPresent(),
+                            titleVisibility: .visible,
+                            presenting: confirmSuspend) { cronJob in
+            Button(cronJob.suspended ? String(localized: "Resume") : String(localized: "Suspend"),
+                   role: cronJob.suspended ? nil : ButtonRole.destructive) {
+                Task { await setSuspended(cronJob, !cronJob.suspended) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { cronJob in
+            if cronJob.suspended {
+                Text("Its schedule starts again in \(cronJob.namespace). Missed runs may start at once, depending on its starting deadline.")
+            } else {
+                Text("No new run starts on schedule until it is resumed; a run in progress goes on. Run now still works.")
+            }
+        }
         .messageAlert($resultMessage)
     }
 
@@ -67,6 +89,24 @@ struct CronJobsList: View {
             text = text + Text(verbatim: " ") + Text("The CronJob is suspended: it runs once, its schedule stays off.")
         }
         return text
+    }
+
+    private func suspendTitle(_ cronJob: KubeCronJob) -> String {
+        cronJob.suspended ? String(localized: "Resume \(cronJob.displayName)?") : String(localized: "Suspend \(cronJob.displayName)?")
+    }
+
+    private func setSuspended(_ cronJob: KubeCronJob, _ suspend: Bool) async {
+        guard let client = model.client, !suspending.contains(cronJob.id) else { return }
+        suspending.insert(cronJob.id)
+        defer { suspending.remove(cronJob.id) }
+        do {
+            try await client.suspendCronJob(cronJob, suspend: suspend)
+            resultMessage = suspend ? String(localized: "\(cronJob.displayName) is suspended")
+                : String(localized: "\(cronJob.displayName) is resumed")
+            await load()
+        } catch {
+            resultMessage = String(localized: "Could not change \(cronJob.displayName): \(error.localizedDescription)")
+        }
     }
 
     private func toggle(_ cronJob: KubeCronJob) {
@@ -105,8 +145,10 @@ private struct CronJobRow: View {
     let showNamespace: Bool
     let expanded: Bool
     let triggering: Bool
+    let suspending: Bool
     let onToggle: () -> Void
     let onRun: () -> Void
+    let onSuspend: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -124,6 +166,7 @@ private struct CronJobRow: View {
                     lastRun
                 }
                 Spacer()
+                suspendButton
                 runButton
             }
             if expanded {
@@ -177,6 +220,20 @@ private struct CronJobRow: View {
                 .foregroundStyle(.secondary)
         } else {
             Text("No run kept.").font(.caption).foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder private var suspendButton: some View {
+        if suspending {
+            ProgressView()
+        } else {
+            Button(action: onSuspend) {
+                Image(systemName: cronJob.suspended ? "play.circle" : "pause.circle")
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(cronJob.suspended ? Text("Resume \(cronJob.displayName)") : Text("Suspend \(cronJob.displayName)"))
         }
     }
 
