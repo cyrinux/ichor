@@ -17,6 +17,7 @@ final class EtcdSnapshotJob {
         let name: String
         let size: Int64
         let sha256: String
+        let mode: SnapshotMode
     }
 
     private(set) var transfer: Transfer?
@@ -31,13 +32,14 @@ final class EtcdSnapshotJob {
 
     var isBusy: Bool { task != nil || file != nil }
 
-    func start(client: TalosClient, node: String, hostname: String, context: String, expected: Int64, lockEnabled: Bool) {
+    func start(client: TalosClient, node: String, hostname: String, context: String, expected: Int64,
+               encryption: SnapshotEncryption, lockEnabled: Bool) {
         guard !isBusy else { return }
         saved = nil
         message = nil
         task = Task {
             await run(client: client, node: node, hostname: hostname, context: context,
-                      expected: expected, lockEnabled: lockEnabled)
+                      expected: expected, encryption: encryption, lockEnabled: lockEnabled)
             task = nil
         }
     }
@@ -54,7 +56,7 @@ final class EtcdSnapshotJob {
         switch result {
         case .success(let url):
             if let pending {
-                saved = Saved(name: url.lastPathComponent, size: pending.size, sha256: pending.sha256)
+                saved = Saved(name: url.lastPathComponent, size: pending.size, sha256: pending.sha256, mode: pending.mode)
             }
             message = nil
         case .failure(let error):
@@ -68,7 +70,8 @@ final class EtcdSnapshotJob {
         discard()
     }
 
-    private func run(client: TalosClient, node: String, hostname: String, context: String, expected: Int64, lockEnabled: Bool) async {
+    private func run(client: TalosClient, node: String, hostname: String, context: String, expected: Int64,
+                     encryption: SnapshotEncryption, lockEnabled: Bool) async {
         if lockEnabled, let failure = await Authenticator.authenticate(reason: String(localized: "Save an etcd snapshot")) {
             message = failure
             return
@@ -81,10 +84,11 @@ final class EtcdSnapshotJob {
             message = error.localizedDescription
             return
         }
-        let url = folder.appendingPathComponent(etcdSnapshotFilename(context: context, hostname: hostname, date: Date()))
+        let url = folder.appendingPathComponent(etcdSnapshotFilename(context: context, hostname: hostname, date: Date(),
+                                                                     encrypted: encryption.mode != .none))
         transfer = Transfer(hostname: hostname, bytes: 0, expected: expected)
         var outcome: SnapshotEvent?
-        for await event in client.etcdSnapshot(node: node, destPath: url.path) {
+        for await event in client.etcdSnapshot(node: node, destPath: url.path, encryption: encryption) {
             if case .progress(let bytes) = event {
                 transfer = Transfer(hostname: hostname, bytes: bytes, expected: expected)
             } else {
@@ -94,7 +98,7 @@ final class EtcdSnapshotJob {
         transfer = nil
 
         if !Task.isCancelled, case .finished(_, let size, let sha256)? = outcome {
-            pending = Saved(name: url.lastPathComponent, size: size, sha256: sha256)
+            pending = Saved(name: url.lastPathComponent, size: size, sha256: sha256, mode: encryption.mode)
             file = url
             moving = true
             return
@@ -145,10 +149,12 @@ struct EtcdSnapshotSection: View {
                 }
                 Button("Save snapshot…") { confirming = true }
                     .disabled(target == nil || job.isBusy)
-                    .confirmationDialog(Text("Save an etcd snapshot?"), isPresented: $confirming, titleVisibility: .visible) {
-                        Button("Save snapshot") { start() }
-                    } message: {
-                        Text("The snapshot contains every Kubernetes Secret in clear. Anyone with the file can read them: keep it somewhere safe and delete it when no longer needed.")
+                    .sheet(isPresented: $confirming) {
+                        SnapshotProtectionSheet(hostname: target.map(name(of:)) ?? "", savedKeys: model.activeSnapshotKeys) { encryption in
+                            confirming = false
+                            if case .keys(let keys) = encryption { model.setSnapshotKeys(keys) }
+                            start(encryption)
+                        }
                     }
             }
             if let message = job.message {
@@ -158,8 +164,21 @@ struct EtcdSnapshotSection: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Saved \(saved.name)").font(.footnote)
                     LabeledContent("Size", value: formatBytes(saved.size)).font(.caption)
-                    Text(verbatim: "SHA-256").font(.caption).foregroundStyle(.secondary)
+                    Text(protectionText(saved.mode)).font(.caption)
+                        .foregroundStyle(saved.mode == .none ? Color.statusBad : Color.secondary)
+                    if saved.mode == .none {
+                        Text(verbatim: "SHA-256").font(.caption).foregroundStyle(.secondary)
+                    } else {
+                        Text("SHA-256 of the decrypted snapshot").font(.caption).foregroundStyle(.secondary)
+                    }
                     Text(verbatim: saved.sha256).font(.caption2.monospaced()).textSelection(.enabled)
+                }
+                DisclosureGroup("How to restore") {
+                    let commands = snapshotRestoreCommands(fileName: saved.name, mode: saved.mode, sha256: saved.sha256)
+                    Text("Copy the file to a machine with talosctl access, then run these commands (replace <control-plane-ip>).")
+                        .font(.caption)
+                    Text(verbatim: commands).font(.caption2.monospaced()).textSelection(.enabled)
+                    Button("Copy commands") { UIPasteboard.general.string = commands }
                 }
             }
         } header: {
@@ -189,9 +208,18 @@ struct EtcdSnapshotSection: View {
         return status.isLeader ? "\(hostname) (\(String(localized: "Leader")))" : hostname
     }
 
-    private func start() {
+    private func protectionText(_ mode: SnapshotMode) -> String {
+        switch mode {
+        case .keys: return String(localized: "Encrypted with age for your public keys.")
+        case .passphrase: return String(localized: "Encrypted with age and your passphrase.")
+        case .none: return String(localized: "Not encrypted: every Secret is readable in this file.")
+        }
+    }
+
+    private func start(_ encryption: SnapshotEncryption) {
         guard let client = model.client, let target else { return }
         job.start(client: client, node: target.node, hostname: hostnames[target.memberId] ?? target.node,
-                  context: model.activeContext, expected: target.dbSize, lockEnabled: model.lock.enabled)
+                  context: model.activeContext, expected: target.dbSize, encryption: encryption,
+                  lockEnabled: model.lock.enabled)
     }
 }

@@ -196,7 +196,7 @@ fun EtcdScreen(
     val scope = rememberCoroutineScope()
     var confirm by remember { mutableStateOf<DefragRequest?>(null) }
     var confirmDisarm by remember { mutableStateOf<String?>(null) }
-    val startSnapshot = rememberSnapshotFlow(snapshotVm, config?.activeSummary?.name.orEmpty())
+    val startSnapshot = rememberSnapshotFlow(snapshotVm, config?.activeSummary?.name.orEmpty(), config?.activeSummary?.fingerprint.orEmpty())
 
     // With the app lock on, defragmentation needs a fresh fingerprint/PIN, like reboot.
     fun confirmed(request: DefragRequest) {

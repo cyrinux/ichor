@@ -305,6 +305,36 @@ a fresh install. Backups move between Android and iOS.
 - **Kubeconfig export:** the kubeconfig is written only to the file you choose. kubenav has no
   app-to-app import, so add the cluster from that file in kubenav, then delete the file.
 
+## etcd snapshots
+
+**etcd → Backup → Save snapshot…** saves the etcd database, like `talosctl etcd snapshot`
+(`os:operator`, `os:etcd:backup` or `os:admin`), to a file you choose. The snapshot holds every
+Kubernetes Secret, so it is **encrypted with [age](https://age-encryption.org) by default**, while
+it downloads: the clear database never touches the phone's storage. Choose how:
+
+- **Public keys** (default once you have saved some for the cluster): one or more age (`age1…`),
+  SSH (`ssh-ed25519`, `ssh-rsa`, e.g. `~/.ssh/id_ed25519.pub`) or YubiKey keys. For a YubiKey,
+  paste the `age1tag1…` form of its key, printed by a recent
+  [age-plugin-yubikey](https://github.com/str4d/age-plugin-yubikey); the older `age1yubikey1…`
+  form needs the plugin to encrypt and is refused. The phone holds nothing that can decrypt the
+  file. The keys are remembered per cluster (they are not secret).
+- **Passphrase**: at least 12 characters, never stored.
+- **None**: the old clear file, with a warning.
+
+The file is named `etcd-<cluster>-<node>-<date>.snapshot.age`. After saving, **How to restore**
+shows the commands for the file. On any Unix machine:
+
+```sh
+# install age: apt install age | dnf install age | pacman -S age | brew install age
+age -d -i ~/.ssh/id_ed25519 -o etcd.snapshot etcd-….snapshot.age   # public key (or -i key.txt)
+age -d -i age-yubikey-identity-….txt -o etcd.snapshot etcd-….snapshot.age  # YubiKey, needs age-plugin-yubikey
+age -d -o etcd.snapshot etcd-….snapshot.age                         # passphrase (prompts)
+sha256sum etcd.snapshot   # must match the SHA-256 the app showed
+talosctl -n <control-plane-ip> bootstrap --recover-from=./etcd.snapshot
+```
+
+Post-quantum `age1pq1…` / `age1tagpq1…` keys need age 1.3 or later to decrypt.
+
 ## AI diagnosis (optional)
 
 Off by default. Turn it on in Settings → AI diagnosis; until then the app shows no trace of it

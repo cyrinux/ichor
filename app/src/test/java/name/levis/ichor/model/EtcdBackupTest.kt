@@ -39,6 +39,31 @@ class EtcdBackupTest {
         assertEquals("etcd-prod-cp-1-20260921-1413.snapshot", snapshotFileName("prod", "cp-1", at, TimeZone.getTimeZone("UTC")))
         assertEquals("etcd-admin-home-cp-1.lan-20260921-1613.snapshot", snapshotFileName("admin@home", "cp 1.lan", at, TimeZone.getTimeZone("Europe/Paris")))
         assertEquals("etcd-unknown-unknown-20260921-1413.snapshot", snapshotFileName("/", "", at, TimeZone.getTimeZone("UTC")))
+        assertEquals("etcd-prod-cp-1-20260921-1413.snapshot.age", snapshotFileName("prod", "cp-1", at, TimeZone.getTimeZone("UTC"), encrypted = true))
+    }
+
+    @Test
+    fun restoreCommandsDecryptCheckAndRecover() {
+        val keys = snapshotRestoreCommands("etcd-prod.snapshot.age", SnapshotMode.KEYS, "abc")
+        assertTrue(keys.contains("age -d -i ~/.ssh/id_ed25519 -o etcd.snapshot etcd-prod.snapshot.age"))
+        assertTrue(keys.contains("age-yubikey-identity"))
+        assertTrue(keys.contains("sha256sum etcd.snapshot  # expect abc"))
+        assertTrue(keys.endsWith("bootstrap --recover-from=./etcd.snapshot"))
+
+        val pass = snapshotRestoreCommands("etcd-prod.snapshot.age", SnapshotMode.PASSPHRASE, "abc")
+        assertTrue(pass.contains("age -d -o etcd.snapshot etcd-prod.snapshot.age"))
+        assertFalse(pass.contains("-i "))
+
+        // A clear snapshot is used as is; a name with spaces or quotes is shell-quoted.
+        val clear = snapshotRestoreCommands("my etcd's.snapshot", SnapshotMode.NONE, "abc")
+        assertFalse(clear.contains("age "))
+        assertTrue(clear.contains("sha256sum 'my etcd'\\''s.snapshot'"))
+        assertTrue(clear.endsWith("--recover-from=./'my etcd'\\''s.snapshot'"))
+    }
+
+    @Test
+    fun passphraseIsNeverPrinted() {
+        assertEquals("Passphrase(***)", SnapshotEncryption.Passphrase("correct horse battery").toString())
     }
 
     @Test

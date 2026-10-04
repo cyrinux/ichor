@@ -37,19 +37,48 @@ func (r *SnapshotRun) Cancel() {
 // StartEtcdSnapshot streams an etcd snapshot from node into destPath, like
 // `talosctl -n NODE etcd snapshot FILE` (os:operator, os:etcd:backup or os:admin).
 // The file is written to destPath.part and renamed when complete, so destPath only ever
-// holds a whole snapshot. It contains every Kubernetes Secret: treat it accordingly.
+// holds a whole snapshot. It contains every Kubernetes Secret in clear: prefer
+// StartEtcdSnapshotEncrypted.
 func StartEtcdSnapshot(configYAML, contextName, node, destPath string, listener SnapshotListener) *SnapshotRun {
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
 	listener = maskedSnapshotListener{listener}
 
+	return startSnapshot(configYAML, contextName, node, destPath, nil, nil, listener)
+}
+
+// StartEtcdSnapshotEncrypted is StartEtcdSnapshot writing an age-encrypted file
+// (https://age-encryption.org), for the public keys in recipients (age or SSH, one per
+// line) or, when recipients is empty, for passphrase. The snapshot is encrypted while it
+// streams: the clear database never reaches the phone's storage. size and sha256 in OnDone
+// are the clear snapshot's, to check it after `age -d` on any Unix machine
+// (see plans/etcd-encrypted-snapshot/README.md).
+func StartEtcdSnapshotEncrypted(configYAML, contextName, node, destPath, recipients, passphrase string, listener SnapshotListener) *SnapshotRun {
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	listener = maskedSnapshotListener{listener}
+
+	wrap, err := snapshotEncryptor(recipients, passphrase)
+
+	return startSnapshot(configYAML, contextName, node, destPath, wrap, err, listener)
+}
+
+// startSnapshot runs the snapshot in the background; the target is already unmasked and the
+// listener masked by the exported callers.
+func startSnapshot(configYAML, contextName, node, destPath string, wrap snapshotWrap, setupErr error, listener SnapshotListener) *SnapshotRun {
 	ctx, cancel := context.WithTimeout(context.Background(), snapshotTimeout)
 
 	go func() {
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", 0, "", msg) })
 
-		size, sum, err := runSnapshot(ctx, configYAML, contextName, node, destPath, listener)
+		if setupErr != nil {
+			listener.OnDone("", 0, "", setupErr.Error())
+
+			return
+		}
+
+		size, sum, err := runSnapshot(ctx, configYAML, contextName, node, destPath, wrap, listener)
 		if err != nil {
 			listener.OnDone("", 0, "", err.Error())
 
@@ -62,7 +91,10 @@ func StartEtcdSnapshot(configYAML, contextName, node, destPath string, listener 
 	return &SnapshotRun{cancel: cancel}
 }
 
-func runSnapshot(ctx context.Context, configYAML, contextName, node, destPath string, listener SnapshotListener) (int64, string, error) {
+// snapshotWrap wraps the snapshot file for encryption; nil writes the snapshot as is.
+type snapshotWrap func(io.Writer) (io.WriteCloser, error)
+
+func runSnapshot(ctx context.Context, configYAML, contextName, node, destPath string, wrap snapshotWrap, listener SnapshotListener) (int64, string, error) {
 	s, release, err := sessions.acquire(configYAML, contextName)
 	if err != nil {
 		return 0, "", err
@@ -81,7 +113,7 @@ func runSnapshot(ctx context.Context, configYAML, contextName, node, destPath st
 
 	defer r.Close() //nolint:errcheck
 
-	size, sum, err := writeSnapshot(r, destPath, listener.OnProgress)
+	size, sum, err := writeSnapshot(r, destPath, wrap, listener.OnProgress)
 	if err != nil && ctx.Err() != nil {
 		return 0, "", errors.New(friendlyError(ctx.Err()))
 	}
@@ -89,9 +121,10 @@ func runSnapshot(ctx context.Context, configYAML, contextName, node, destPath st
 	return size, sum, err
 }
 
-// writeSnapshot copies r to destPath atomically (via destPath.part), reporting progress
-// about every MiB, and returns the size and SHA-256 of what was written.
-func writeSnapshot(r io.Reader, destPath string, progress func(int64)) (int64, string, error) {
+// writeSnapshot copies r to destPath atomically (via destPath.part), through wrap when it
+// is set (encryption), reporting progress about every MiB, and returns the size and SHA-256
+// of what r sent (the clear snapshot).
+func writeSnapshot(r io.Reader, destPath string, wrap snapshotWrap, progress func(int64)) (int64, string, error) {
 	if !filepath.IsAbs(destPath) {
 		return 0, "", fmt.Errorf("destination %q is not an absolute path", destPath)
 	}
@@ -103,6 +136,18 @@ func writeSnapshot(r io.Reader, destPath string, progress func(int64)) (int64, s
 		return 0, "", err
 	}
 
+	var out io.Writer = f
+
+	var sealed io.WriteCloser
+
+	if wrap != nil {
+		if sealed, err = wrap(f); err != nil {
+			return abort(f, part, err)
+		}
+
+		out = sealed
+	}
+
 	hash := sha256.New()
 	buf := make([]byte, 256*1024)
 
@@ -111,7 +156,7 @@ func writeSnapshot(r io.Reader, destPath string, progress func(int64)) (int64, s
 	for {
 		n, readErr := r.Read(buf)
 		if n > 0 {
-			if _, err := f.Write(buf[:n]); err != nil {
+			if _, err := out.Write(buf[:n]); err != nil {
 				return abort(f, part, err)
 			}
 
@@ -130,6 +175,13 @@ func writeSnapshot(r io.Reader, destPath string, progress func(int64)) (int64, s
 
 		if readErr != nil {
 			return abort(f, part, fmt.Errorf("snapshot stream: %w", readErr))
+		}
+	}
+
+	if sealed != nil {
+		// Writes the last encrypted chunk: without it the file does not decrypt.
+		if err := sealed.Close(); err != nil {
+			return abort(f, part, err)
 		}
 	}
 

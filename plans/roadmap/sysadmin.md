@@ -10,6 +10,8 @@ when work starts. Conventions: [README.md](README.md#conventions-every-plan-foll
 `EtcdForfeitLeadership` (`etcdmembers.go`), `ETCD_ALARM` background alert. UI: `ui/etcd/*`, `EtcdView.swift`.
 
 **Plan:**
+0. **Encrypted snapshots** (age, public keys or passphrase, restorable with `age -d` on any
+   Unix machine): [../etcd-encrypted-snapshot/README.md](../etcd-encrypted-snapshot/README.md). First.
 1. **Node reset** (`talosctl reset`): `Reset(cfg, ctx, node, graceful, reboot bool, wipe string)`
    with `MachineService.Reset` (graceful = leave etcd first; wipe system/ephemeral/all). Through
    `nodeAction`, typed hostname, os:admin. Refused on the last control plane and when
