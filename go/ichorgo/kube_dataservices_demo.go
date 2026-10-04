@@ -10,7 +10,8 @@ import (
 // down next to a healthy single-node one, Postgres clusters with failed and stale backups,
 // a MariaDB cluster whose last backup failed next to a healthy Galera one and a suspended one,
 // an expired certificate and one failing to renew,
-// Velero schedules with a failed and a partially failed backup and a storage location down.
+// Velero schedules with a failed and a partially failed backup and a storage location down, a
+// nearly full Ceph cluster with an OSD down.
 func demoDataServices(now time.Time) dataServices {
 	ms := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
 
@@ -217,7 +218,32 @@ func demoDataServices(now time.Time) dataServices {
 		},
 	}
 
-	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero}
+	tib := 1024 * gib
+	ceph := &cephStatus{Version: "v1",
+		Clusters: []cephCluster{
+			{Namespace: "rook-ceph", Name: "rook-ceph", Phase: "Ready", Message: "Cluster created successfully", CephHealth: "HEALTH_WARN",
+				Health: healthWarning, Reasons: []string{cephReasonHealthWarn, cephReasonNearFull, cephReasonOSDs},
+				Checks: []cephCheck{
+					{Name: "OSD_DOWN", Severity: "HEALTH_WARN", Message: "1 osds down"},
+					{Name: "OSD_NEARFULL", Severity: "HEALTH_WARN", Message: "1 nearfull osd(s)"},
+					{Name: "PG_DEGRADED", Severity: "HEALTH_WARN", Message: "Degraded data redundancy: 2114/6342 objects degraded (33.333%), 97 pgs degraded"},
+				},
+				BytesTotal: 3 * tib, BytesUsed: 2662 * gib, OSDsUp: 2, OSDsTotal: 3, MonsReady: 3, MonsTotal: 3,
+				NotReadyNodes: []string{"demo-worker-3"}, Version: "19.2.3-0"},
+		},
+		Pools: []cephPool{
+			{Namespace: "rook-ceph", Name: "ceph-objectstore", Kind: "objectStore", Phase: "Progressing", Health: healthWarning},
+			{Namespace: "rook-ceph", Name: "ceph-blockpool", Kind: "blockPool", Phase: "Ready", Health: healthOK},
+			{Namespace: "rook-ceph", Name: "ceph-filesystem", Kind: "filesystem", Phase: "Ready", Health: healthOK},
+		},
+		OSDs: []cephOSD{
+			{Namespace: "rook-ceph", ID: "0", Pod: "rook-ceph-osd-0-6d8f9c7b5-x2k4p", Node: "demo-worker-1", Phase: "Running", Ready: true},
+			{Namespace: "rook-ceph", ID: "1", Pod: "rook-ceph-osd-1-7c9b8d6f4-q8m2d", Node: "demo-worker-2", Phase: "Running", Ready: true},
+			{Namespace: "rook-ceph", ID: "2", Pod: "rook-ceph-osd-2-5f7d6c8b9-r4t7n", Node: "demo-worker-3", Phase: "Running"},
+		},
+	}
+
+	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, Ceph: ceph}
 }
 
 // demoGarageBlockReport is the demo cluster's blocks failing to resync: one a live object

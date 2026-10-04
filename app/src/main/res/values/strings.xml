@@ -1577,6 +1577,29 @@
         <item quantity="one">%1$d warning</item>
         <item quantity="other">%1$d warnings</item>
     </plurals>
+    <string name="ceph_empty">No Ceph clusters.</string>
+    <string name="ceph_external">external</string>
+    <string name="ceph_osds">OSDs %1$d/%2$d up</string>
+    <string name="ceph_mons">mons %1$d/%2$d ready</string>
+    <string name="ceph_capacity">%1$s of %2$s used (%3$s)</string>
+    <string name="ceph_osds_title">OSDs</string>
+    <string name="ceph_pools_title">Pools and stores</string>
+    <string name="ceph_kind_block_pool">block pool</string>
+    <string name="ceph_kind_filesystem">filesystem</string>
+    <string name="ceph_kind_object_store">object store</string>
+    <string name="ceph_reason_health_err">Ceph reports errors</string>
+    <string name="ceph_reason_failure">Rook reports a failure</string>
+    <string name="ceph_reason_full">full</string>
+    <string name="ceph_reason_no_osd">no OSD up</string>
+    <string name="ceph_reason_no_quorum">mon quorum lost</string>
+    <string name="ceph_reason_health_warn">Ceph reports warnings</string>
+    <string name="ceph_reason_near_full">nearly full</string>
+    <string name="ceph_reason_osds">OSDs down</string>
+    <string name="ceph_reason_mons">mons down</string>
+    <plurals name="ceph_clusters">
+        <item quantity="one">%1$d Ceph cluster</item>
+        <item quantity="other">%1$d Ceph clusters</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s is not ready: the likely cause of %2$d problem</item>
         <item quantity="other">%1$s is not ready: the likely cause of %2$d problems</item>

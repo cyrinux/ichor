@@ -1702,6 +1702,31 @@
         <item quantity="many">%1$d попереджень</item>
         <item quantity="other">%1$d попередження</item>
     </plurals>
+    <string name="ceph_empty">Немає кластерів Ceph.</string>
+    <string name="ceph_external">зовнішній</string>
+    <string name="ceph_osds">OSD %1$d/%2$d працюють</string>
+    <string name="ceph_mons">mon %1$d/%2$d готові</string>
+    <string name="ceph_capacity">%1$s з %2$s використано (%3$s)</string>
+    <string name="ceph_osds_title">OSD</string>
+    <string name="ceph_pools_title">Пули та сховища</string>
+    <string name="ceph_kind_block_pool">блоковий пул</string>
+    <string name="ceph_kind_filesystem">файлова система</string>
+    <string name="ceph_kind_object_store">об’єктне сховище</string>
+    <string name="ceph_reason_health_err">Ceph повідомляє про помилки</string>
+    <string name="ceph_reason_failure">Rook повідомляє про збій</string>
+    <string name="ceph_reason_full">заповнено</string>
+    <string name="ceph_reason_no_osd">жоден OSD не працює</string>
+    <string name="ceph_reason_no_quorum">кворум mon втрачено</string>
+    <string name="ceph_reason_health_warn">Ceph повідомляє про попередження</string>
+    <string name="ceph_reason_near_full">майже заповнено</string>
+    <string name="ceph_reason_osds">OSD не працюють</string>
+    <string name="ceph_reason_mons">mon не працюють</string>
+    <plurals name="ceph_clusters">
+        <item quantity="one">%1$d кластер Ceph</item>
+        <item quantity="few">%1$d кластери Ceph</item>
+        <item quantity="many">%1$d кластерів Ceph</item>
+        <item quantity="other">%1$d кластера Ceph</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s не готовий: імовірна причина %2$d проблеми</item>
         <item quantity="few">%1$s не готовий: імовірна причина %2$d проблем</item>

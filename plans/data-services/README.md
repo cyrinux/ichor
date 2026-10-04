@@ -293,6 +293,47 @@ every backup has expired since). Alerts (key
 an unavailable location → critical;
 `stale`/`partiallyFailed`/`invalid` → warning; a failed backup taken by hand is shown, not alerted.
 
+Rook Ceph (phase 5, operator `ceph.rook.io/v1`, detected by its API group; `cephclusters`,
+`cephblockpools`, `cephfilesystems` and `cephobjectstores`, plus one pod listing selected with
+`app in (rook-ceph-osd,rook-ceph-mon)`, matched to a cluster by namespace, OSD number from
+`ceph-osd-id`). An external cluster (`spec.external.enable`) has no pods of its own:
+
+```jsonc
+  "ceph": {
+    "version": "v1", "error": "",
+    "clusters": [{
+      "namespace": "rook-ceph", "name": "rook-ceph",
+      "phase": "Ready",             // Rook's own word (Ready, Connected when external, Progressing, Failure…)
+      "message": "Cluster created successfully",
+      "cephHealth": "HEALTH_WARN",  // status.ceph.health; "" before Ceph reported
+      "health": "warning",          // critical: healthErr/failure/full/noOSD/noQuorum; warning: the rest
+      "reasons": ["healthWarn"],    // healthErr|failure|full|noOSD|noQuorum|healthWarn|nearFull|osds|mons|notReady
+      "checks": [{ "name": "MON_DOWN", "severity": "HEALTH_WARN", "message": "1/3 mons down" }], // errors first
+      "bytesTotal": 3298534883328, "bytesUsed": 1099511627776, // raw capacity (status.ceph.capacity)
+      "osdsUp": 3, "osdsTotal": 3,  // OSD pods ready
+      "monsReady": 2, "monsTotal": 3,
+      "notReadyNodes": ["worker-3"], // nodes of its OSD and mon pods that are not ready
+      "version": "19.2.3-0",        // status.version.version
+      "external": false
+    }],
+    "pools": [{                     // block pools, filesystems and object stores
+      "namespace": "rook-ceph", "name": "replicapool",
+      "kind": "blockPool",          // blockPool|filesystem|objectStore
+      "phase": "Ready",
+      "health": "ok"                // critical on Failure, warning when not Ready (Connected)
+    }],
+    "osds": [{ "namespace": "rook-ceph", "id": "0", "pod": "rook-ceph-osd-0-…", "node": "worker-1", "phase": "Running", "ready": true }]
+  }
+```
+
+`full`/`nearFull` use Ceph's own default ratios: more than 95% / 85% of the raw capacity used.
+`noQuorum` is half the mons or more not ready (Ceph stops answering, its reported health goes
+stale); `noOSD` is no OSD pod ready while some exist. `notReady` only shows when nothing else is
+wrong. Alerts (phase 4 rules, key `ceph|ns/name`, `ceph|kind/ns/name` for a pool): a critical cluster or a failed pool →
+critical; `healthWarn`/`nearFull`/`osds` → warning; a mon down (Ceph's `MON_DOWN` warns anyway)
+or a reconcile in progress (`notReady`) doesn't alert on its own. The likely cause counts the
+`notReadyNodes` of a cluster that needs attention.
+
 A section key is **absent/null** when the system isn't installed. An **empty list with no
 error** means it's installed but has nothing in it. A **non-empty `error`** means the
 system was detected but couldn't be read; the UI shows it inline in that tab only.

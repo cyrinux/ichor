@@ -1576,6 +1576,29 @@
         <item quantity="one">%1$d avviso</item>
         <item quantity="other">%1$d avvisi</item>
     </plurals>
+    <string name="ceph_empty">Nessun cluster Ceph.</string>
+    <string name="ceph_external">esterno</string>
+    <string name="ceph_osds">OSD %1$d/%2$d attivi</string>
+    <string name="ceph_mons">mon %1$d/%2$d pronti</string>
+    <string name="ceph_capacity">%1$s di %2$s usati (%3$s)</string>
+    <string name="ceph_osds_title">OSD</string>
+    <string name="ceph_pools_title">Pool e archivi</string>
+    <string name="ceph_kind_block_pool">pool di blocchi</string>
+    <string name="ceph_kind_filesystem">file system</string>
+    <string name="ceph_kind_object_store">archivio oggetti</string>
+    <string name="ceph_reason_health_err">Ceph segnala errori</string>
+    <string name="ceph_reason_failure">Rook segnala un guasto</string>
+    <string name="ceph_reason_full">pieno</string>
+    <string name="ceph_reason_no_osd">nessun OSD attivo</string>
+    <string name="ceph_reason_no_quorum">quorum dei mon perso</string>
+    <string name="ceph_reason_health_warn">Ceph segnala avvisi</string>
+    <string name="ceph_reason_near_full">quasi pieno</string>
+    <string name="ceph_reason_osds">OSD non attivi</string>
+    <string name="ceph_reason_mons">mon non attivi</string>
+    <plurals name="ceph_clusters">
+        <item quantity="one">%1$d cluster Ceph</item>
+        <item quantity="other">%1$d cluster Ceph</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s non è pronto: la causa probabile di %2$d problema</item>
         <item quantity="other">%1$s non è pronto: la causa probabile di %2$d problemi</item>

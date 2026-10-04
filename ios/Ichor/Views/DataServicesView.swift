@@ -31,6 +31,7 @@ struct DataServicesView: View {
                     case .percona: PerconaList(status: services.percona!, refresh: load)
                     case .certManager: CertificatesList(status: services.certManager!, refresh: load)
                     case .velero: VeleroList(status: services.velero!, refresh: load)
+                    case .ceph: CephList(status: services.ceph!, refresh: load)
                     }
                 }
                 .safeAreaInset(edge: .top) {
