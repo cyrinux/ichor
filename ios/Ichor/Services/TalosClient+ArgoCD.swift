@@ -9,6 +9,12 @@ extension TalosClient {
         try await Self.json { [config, context, kubeServer] in IchorgoKubeArgoCD(config, context, kubeServer, $0) }
     }
 
+    /// How traffic reaches the Application namespace/name (os:admin): hosts, Gateways, routes,
+    /// Services, pods and the nodes they run on, with the likely root cause.
+    func argoNetwork(namespace: String, name: String) async throws -> ArgoNetwork {
+        try await Self.json { [config, context, kubeServer] in IchorgoKubeArgoNetwork(config, context, kubeServer, namespace, name, $0) }
+    }
+
     /// Runs action on the Application namespace/name (os:admin): one merge patch the
     /// application controller picks up. options: the sync sheet's choices, or the rollback target.
     func argoAction(namespace: String, name: String, action: ArgoAction, options: ArgoSyncOptions? = nil) async throws {
