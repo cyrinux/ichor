@@ -31,6 +31,7 @@ import name.levis.ichor.model.ArgoHistory
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.shortRevision
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.util.timeAgo
 
 /** A pod that is not ready next to the app: name, status, node, and a warning when Talos says the node is down. */
 @Composable

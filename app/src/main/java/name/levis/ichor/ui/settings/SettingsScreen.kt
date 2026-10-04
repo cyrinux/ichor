@@ -9,13 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -39,7 +34,9 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.notice
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.InfoNotice
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.rememberClusterSupport
 import name.levis.ichor.ui.components.text
 import name.levis.ichor.model.allows
@@ -75,7 +72,7 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
@@ -92,11 +89,7 @@ fun SettingsScreen(
             SectionTitle(stringResource(R.string.settings_section_config))
             // Renewing the certificate or issuing a config for another device (os:admin).
             if (config?.activeSummary?.allows(Feature.ISSUE_CONFIG) == true) {
-                Text(
-                    stringResource(R.string.settings_issue_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.settings_issue_desc))
                 val issue = rememberClusterSupport(TalosFeature.ISSUE_CONFIG)
                 OutlinedButton(onClick = onIssueConfig, enabled = issue.supported, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.settings_issue_open))
@@ -114,11 +107,7 @@ fun SettingsScreen(
             // `talosctl support` reads logs and resources of every chosen node (any role).
             if (config?.activeSummary?.allows(Feature.SUPPORT_BUNDLE) == true) {
                 SectionTitle(stringResource(R.string.support_bundle_title))
-                Text(
-                    stringResource(R.string.settings_support_bundle_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.settings_support_bundle_desc))
                 val support = rememberClusterSupport(TalosFeature.SUPPORT_BUNDLE)
                 OutlinedButton(onClick = onSupportBundle, enabled = support.supported, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.settings_support_bundle_open))

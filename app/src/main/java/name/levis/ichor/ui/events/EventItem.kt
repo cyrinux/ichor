@@ -36,7 +36,8 @@ import name.levis.ichor.model.EventRow
 import name.levis.ichor.ui.components.agoLabel
 import name.levis.ichor.ui.theme.LocalStatusColors
 import java.text.DateFormat
-import java.util.Date
+import name.levis.ichor.util.formatDateTime
+import name.levis.ichor.util.formatTime
 
 private fun kindIcon(kind: String): Pair<ImageVector, Int> = when (kind) {
     "service" -> Icons.Outlined.MiscellaneousServices to R.string.events_kind_service
@@ -52,8 +53,8 @@ private fun kindIcon(kind: String): Pair<ImageVector, Int> = when (kind) {
 
 /** Time of day for today's events, date and time for older ones. */
 private fun absoluteTime(at: Long): String =
-    if (DateUtils.isToday(at)) DateFormat.getTimeInstance(DateFormat.MEDIUM).format(Date(at))
-    else DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(Date(at))
+    if (DateUtils.isToday(at)) formatTime(at)
+    else formatDateTime(at, DateFormat.SHORT, DateFormat.MEDIUM)
 
 @Composable
 fun EventItem(row: EventRow, hostname: String, showNode: Boolean, now: Long) {

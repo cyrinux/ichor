@@ -3,8 +3,6 @@ package name.levis.ichor.ui.insights
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -19,13 +17,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.data.activeSummary
-import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.KeepScreenOn
 import name.levis.ichor.ui.workloads.NetPerfTab
 import name.levis.ichor.ui.workloads.netPerfViewModel
 import java.text.DateFormat
-import java.util.Date
+import name.levis.ichor.util.formatDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,10 +51,10 @@ fun InsightsScreen(onBack: () -> Unit) {
         onDispose { lifecycle.removeObserver(observer); vm.stop() }
     }
     if (state.recording) KeepScreenOn()
-    fun time(at: Long) = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(Date(at))
+    fun time(at: Long) = formatDateTime(at, DateFormat.SHORT, DateFormat.MEDIUM)
     Scaffold(topBar = {
         TopAppBar(title = { Text(stringResource(R.string.insights_title)) }, navigationIcon = {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
+            BackButton(onBack)
         })
     }) { padding ->
         Column(Modifier.padding(padding)) {

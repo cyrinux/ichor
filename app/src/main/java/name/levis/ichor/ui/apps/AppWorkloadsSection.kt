@@ -25,6 +25,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 
 /** What the app sheet needs to offer rollout restarts; null where the role cannot run them. */
@@ -39,19 +40,14 @@ data class AppRestartUi(
 fun LazyListScope.appWorkloadsSection(restart: AppRestartUi) {
     item { SectionTitle(stringResource(R.string.apps_detail_workloads)) }
     when (val s = restart.state) {
-        UiState.Loading -> item { Note(stringResource(R.string.apps_detail_workloads_loading)) }
-        is UiState.Failed -> item { Note(stringResource(R.string.apps_detail_workloads_failed, s.message.asString())) }
+        UiState.Loading -> item { MutedText(stringResource(R.string.apps_detail_workloads_loading)) }
+        is UiState.Failed -> item { MutedText(stringResource(R.string.apps_detail_workloads_failed, s.message.asString())) }
         is UiState.Loaded -> if (s.data.isEmpty()) {
-            item { Note(stringResource(R.string.apps_detail_workloads_none)) }
+            item { MutedText(stringResource(R.string.apps_detail_workloads_none)) }
         } else {
             items(s.data, key = { it.key }) { w -> WorkloadRestartRow(w, w.key in restart.restarting) { restart.onRestart(w) } }
         }
     }
-}
-
-@Composable
-private fun Note(text: String) {
-    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /** Name, "Deployment · 2/3 ready", and the restart button (a spinner while it runs). */
@@ -66,11 +62,7 @@ private fun WorkloadRestartRow(workload: KubeWorkload, restarting: Boolean, onRe
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                workload.kind + " · " + stringResource(R.string.workloads_ready_count, workload.ready, workload.desired),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(workload.kind + " · " + stringResource(R.string.workloads_ready_count, workload.ready, workload.desired))
         }
         if (restarting) {
             CircularProgressIndicator(Modifier.padding(horizontal = 24.dp).size(24.dp), strokeWidth = 2.dp)

@@ -12,14 +12,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,9 +55,12 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
@@ -142,11 +143,7 @@ fun PodsTab(
             HorizontalDivider()
             PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
                 if (rows.isEmpty()) {
-                    Text(
-                        if (query.isBlank()) stringResource(R.string.pods_empty) else stringResource(R.string.pods_no_match, query.trim()),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(16.dp),
-                    )
+                    EmptyText(emptyOrNoMatch(query, R.string.pods_empty, R.string.pods_no_match))
                 } else {
                     LazyColumn(Modifier.fillMaxSize()) {
                         items(rows, key = { it.key }) { pod ->
@@ -198,22 +195,17 @@ private fun PodRow(pod: KubePod, showNamespace: Boolean, deleting: Boolean, onDe
 
 @Composable
 private fun DeleteConfirmDialog(pod: KubePod, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.pods_delete_title, pod.name)) },
-        text = {
-            Text(
-                if (pod.owner.isNotEmpty()) {
-                    stringResource(R.string.pods_delete_text_owned, pod.namespace, pod.owner)
-                } else {
-                    stringResource(R.string.pods_delete_text_bare, pod.namespace)
-                },
-            )
+    ConfirmDialog(
+        title = stringResource(R.string.pods_delete_title, pod.name),
+        text = if (pod.owner.isNotEmpty()) {
+            stringResource(R.string.pods_delete_text_owned, pod.namespace, pod.owner)
+        } else {
+            stringResource(R.string.pods_delete_text_bare, pod.namespace)
         },
-        confirmButton = {
-            TextButton(onClick = onConfirm) { Text(stringResource(R.string.pods_delete_confirm), color = LocalStatusColors.current.bad) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+        confirm = stringResource(R.string.pods_delete_confirm),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        destructive = true,
     )
 }
 

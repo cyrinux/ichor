@@ -45,6 +45,7 @@ import name.levis.ichor.model.levelCounts
 import name.levis.ichor.model.logRows
 import name.levis.ichor.model.matchingText
 import java.time.ZoneId
+import name.levis.ichor.ui.components.EmptyText
 
 /** How the log is shown: text [filter], [level] filter, or the [raw] lines as received. */
 data class LogView(val filter: String, val level: LogLevelFilter, val raw: Boolean, val onLevel: (LogLevelFilter) -> Unit)
@@ -108,15 +109,13 @@ private fun LevelChips(selected: LogLevelFilter, counts: LogLevelCounts, onSelec
 @Composable
 private fun LogBody(count: Int, header: Boolean, version: Any, view: LogView, live: Boolean, content: LazyListScope.() -> Unit) {
     if (count == 0) {
-        Text(
+        EmptyText(
             when {
                 view.filter.isNotBlank() -> stringResource(R.string.logs_no_match, view.filter)
                 !view.raw && view.level != LogLevelFilter.ALL -> stringResource(R.string.logs_no_level_match)
                 live -> stringResource(R.string.logs_waiting)
                 else -> stringResource(R.string.logs_empty)
             },
-            modifier = Modifier.padding(16.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         return
     }

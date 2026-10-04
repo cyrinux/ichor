@@ -70,10 +70,6 @@
     <string name="overview_action_health">Cluster health</string>
     <string name="overview_action_settings">Settings</string>
     <string name="overview_action_workloads">Kubernetes workloads</string>
-    <plurals name="overview_summary_ready">
-        <item quantity="one">ready</item>
-        <item quantity="other">ready</item>
-    </plurals>
     <plurals name="overview_summary_not_ready">
         <item quantity="one">not ready</item>
         <item quantity="other">not ready</item>

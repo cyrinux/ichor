@@ -29,14 +29,15 @@ import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.RoleNotice
 import name.levis.ichor.security.AppLock
 import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.writeText
 import name.levis.ichor.ui.theme.LocalStatusColors
-import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.uiText
@@ -73,7 +74,7 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
         scope.launch {
             state = runCatching {
                 val kubeconfig = talos.kubeconfig()
-                withContext(Dispatchers.IO) { writeText(context, uri, kubeconfig) }
+                withContext(Dispatchers.IO) { writeText(context, uri, kubeconfig, R.string.settings_kube_open_failed) }
             }.fold(
                 onSuccess = { ExportState.Saved },
                 onFailure = { ExportState.Failed(it.uiText()) },
@@ -98,11 +99,7 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
     SectionTitle(stringResource(R.string.settings_kube_section))
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                stringResource(R.string.settings_kube_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(R.string.settings_kube_desc))
             if (!talosContext.allows(Feature.KUBECONFIG)) {
                 RoleNotice(Feature.KUBECONFIG, talosContext.roles)
             } else OutlinedButton(
@@ -118,12 +115,6 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
             OutlinedButton(onClick = { openKubenav(context) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.settings_kube_open_kubenav)) }
         }
     }
-}
-
-private fun writeText(context: Context, uri: Uri, text: String) {
-    // "wt" truncates when the user picked an existing file.
-    val stream = context.contentResolver.openOutputStream(uri, "wt") ?: throw LocalizedException(UiText.Res(R.string.settings_kube_open_failed))
-    stream.use { it.write(text.encodeToByteArray()) }
 }
 
 private fun openKubenav(context: Context) {

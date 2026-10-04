@@ -14,13 +14,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,7 +39,9 @@ import name.levis.ichor.model.LonghornVolume
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.VolumeFilter
 import name.levis.ichor.model.filtered
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
+import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.UsageBar
@@ -79,7 +78,7 @@ fun LonghornTab(status: LonghornStatus, garageDetected: Boolean, onGarage: () ->
             HorizontalDivider()
         }
         if (rows.isEmpty()) item(key = "empty") {
-            EmptyLine(
+            EmptyText(
                 when {
                     query.isNotBlank() -> stringResource(R.string.data_services_no_match, query.trim())
                     filter == VolumeFilter.PROBLEMS -> stringResource(R.string.data_services_all_fine)
@@ -217,23 +216,11 @@ private fun robustnessLabel(robustness: String): String = when (robustness) {
 @Composable
 internal fun <T> Filters(query: String, onQuery: (String) -> Unit, chips: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit) {
     Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = onQuery,
-            placeholder = { Text(stringResource(R.string.data_services_search)) },
-            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-        )
+        SearchField(query, onQuery, stringResource(R.string.data_services_search), Modifier.fillMaxWidth().padding(horizontal = 16.dp))
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(chips, key = { it.first.toString() }) { (value, label) ->
                 FilterChip(selected = selected == value, onClick = { onSelect(value) }, label = { Text(label) })
             }
         }
     }
-}
-
-@Composable
-internal fun EmptyLine(text: String) {
-    Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp))
 }

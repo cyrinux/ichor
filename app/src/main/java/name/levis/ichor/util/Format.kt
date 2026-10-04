@@ -1,5 +1,8 @@
 package name.levis.ichor.util
 
+import android.text.format.DateUtils
+import java.text.DateFormat
+import java.util.Date
 import java.util.Locale
 
 private val UNITS = listOf("B", "KiB", "MiB", "GiB", "TiB", "PiB")
@@ -51,3 +54,23 @@ fun usedFraction(total: Long, available: Long): Float =
 /** Days until an epoch-seconds deadline, negative when past. */
 fun daysUntil(epochSeconds: Long, nowMillis: Long = System.currentTimeMillis()): Long =
     Math.floorDiv(epochSeconds * 1000 - nowMillis, 86_400_000L)
+
+/** Epoch millis as a date and time in the user's locale (java.text.DateFormat styles). */
+fun formatDateTime(millis: Long, dateStyle: Int = DateFormat.MEDIUM, timeStyle: Int = DateFormat.SHORT): String =
+    DateFormat.getDateTimeInstance(dateStyle, timeStyle).format(Date(millis))
+
+/** Epoch millis as a date in the user's locale. */
+fun formatDate(millis: Long, style: Int = DateFormat.MEDIUM): String =
+    DateFormat.getDateInstance(style).format(Date(millis))
+
+/** Epoch millis as a time of day in the user's locale. */
+fun formatTime(millis: Long, style: Int = DateFormat.MEDIUM): String =
+    DateFormat.getTimeInstance(style).format(Date(millis))
+
+/** "3 hours ago"; "" when unknown. */
+fun timeAgo(millis: Long, now: Long = System.currentTimeMillis()): String =
+    if (millis <= 0) "" else DateUtils.getRelativeTimeSpanString(millis, now, DateUtils.MINUTE_IN_MILLIS).toString()
+
+/** 0.423 -> "42.3%" with [decimals] digits (Locale.ROOT). */
+fun formatPercent(value: Double, decimals: Int = 1): String =
+    String.format(Locale.ROOT, "%.${decimals}f%%", value)

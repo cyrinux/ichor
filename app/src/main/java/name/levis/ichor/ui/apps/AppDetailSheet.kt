@@ -42,6 +42,7 @@ import name.levis.ichor.model.memory
 import name.levis.ichor.model.shortDigest
 import name.levis.ichor.model.state
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -97,10 +98,8 @@ private fun Header(app: InventoryApp) {
         AppIconTile(app, size = 64.dp)
         Column(Modifier.padding(start = 16.dp)) {
             Text(app.name, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(
+            MutedText(
                 (listOf(categoryLabel(app.category)) + app.namespaces).joinToString(" · "),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -193,14 +192,12 @@ private fun PodRow(pod: InventoryPod, host: String, onClick: () -> Unit) {
         Box(Modifier.size(8.dp).background(dot, CircleShape))
         Column(Modifier.padding(start = 12.dp)) {
             Text(pod.pod, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(
+            MutedText(
                 listOfNotNull(
                     host,
                     pod.containers.joinToString(", ") { it.name }.takeIf { it.isNotEmpty() },
                     pod.memory.takeIf { it > 0 }?.let(::formatBytes),
                 ).joinToString(" · "),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )

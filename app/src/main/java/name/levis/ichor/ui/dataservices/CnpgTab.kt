@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.dataservices
 
-import android.text.format.DateUtils
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,9 +41,11 @@ import name.levis.ichor.model.CnpgStatus
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.filtered
 import name.levis.ichor.model.pendingInstances
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.util.timeAgo
 
 /**
  * Every CloudNativePG cluster, built for dozens: a summary, the ones that need a look by
@@ -87,7 +88,7 @@ fun CnpgTab(status: CnpgStatus) {
             HorizontalDivider()
         }
         if (rows.isEmpty()) item(key = "empty") {
-            EmptyLine(
+            EmptyText(
                 when {
                     query.isNotBlank() -> stringResource(R.string.data_services_no_match, query.trim())
                     problemsOnly -> stringResource(R.string.data_services_all_fine)
@@ -202,6 +203,4 @@ private fun archivingText(archiving: String): String = when (archiving) {
 }
 
 @Composable
-private fun ago(millis: Long): String =
-    if (millis <= 0) stringResource(R.string.cnpg_never)
-    else DateUtils.getRelativeTimeSpanString(millis, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS).toString()
+private fun ago(millis: Long): String = timeAgo(millis).ifEmpty { stringResource(R.string.cnpg_never) }

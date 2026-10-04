@@ -6,14 +6,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -51,6 +48,7 @@ import name.levis.ichor.model.PacketSummary
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
@@ -123,7 +121,7 @@ fun CaptureFileScreen(
                         Text(name, style = MaterialTheme.typography.labelMedium)
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
                 actions = {
                     if (file != null) {
                         Box {

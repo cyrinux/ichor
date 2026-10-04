@@ -12,14 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -43,6 +39,8 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.healthCheckNote
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
+import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.RoleNotice
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.ui.app
@@ -107,18 +105,14 @@ fun HealthScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.health_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (!allowed) {
                 RoleNotice(Feature.HEALTH, summary.roles)
-                Text(
-                    stringResource(R.string.health_any_role_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.health_any_role_hint))
                 return@Column
             }
             HealthHeader(state, onRerun = vm::start)

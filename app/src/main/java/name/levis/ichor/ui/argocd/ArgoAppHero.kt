@@ -37,6 +37,7 @@ import name.levis.ichor.model.ArgoCondition
 import name.levis.ichor.model.ArgoSource
 import name.levis.ichor.model.shortRevision
 import name.levis.ichor.ui.components.InfoRow
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -51,11 +52,7 @@ fun ArgoAppHero(app: ArgoApp, autoSyncBusy: Boolean, onAutoSync: (Boolean) -> Un
             ArgoAppIcon(app, 64.dp)
             Column(Modifier.padding(start = 16.dp).weight(1f)) {
                 Text(app.name, style = MaterialTheme.typography.headlineSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(
-                    listOf(app.project, app.namespace).filter { it.isNotEmpty() }.joinToString(" · "),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(listOf(app.project, app.namespace).filter { it.isNotEmpty() }.joinToString(" · "))
                 app.owner?.let { OwnerChip(it, Modifier.padding(top = 4.dp)) }
             }
         }
@@ -116,7 +113,7 @@ private fun AutoSyncRow(app: ArgoApp, busy: Boolean, onAutoSync: (Boolean) -> Un
                     ).joinToString(" · ")
                     else -> stringResource(R.string.argo_auto_sync_paused)
                 }
-                if (detail.isNotEmpty()) Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (detail.isNotEmpty()) MutedText(detail)
             }
             Switch(checked = app.autoSync.enabled, onCheckedChange = onAutoSync, enabled = app.canChangeSpec && !busy)
         }

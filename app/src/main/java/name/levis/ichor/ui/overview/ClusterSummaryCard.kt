@@ -32,6 +32,7 @@ import name.levis.ichor.model.ClusterStatus
 import name.levis.ichor.model.ClusterSummary
 import name.levis.ichor.model.ClusterUsage
 import name.levis.ichor.model.displayVersion
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -60,11 +61,7 @@ fun ClusterSummaryCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(
-                        headline(summary),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    MutedText(headline(summary))
                 }
                 ClusterStatusPill(summary.status)
             }
@@ -135,7 +132,7 @@ private fun Breakdown(summary: ClusterSummary) {
     if (parts.isEmpty()) return
     Row(Modifier.padding(top = 6.dp)) {
         parts.forEachIndexed { i, (text, color) ->
-            if (i > 0) Text("  ·  ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (i > 0) MutedText("  ·  ")
             Text(text, style = MaterialTheme.typography.bodySmall, color = color)
         }
     }

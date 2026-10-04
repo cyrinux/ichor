@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.BuildConfig
 import name.levis.ichor.ui.changelog.ReleaseNotesList
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.update.UpdateInfo
@@ -51,11 +52,7 @@ fun UpdateSection(updates: UpdateManager) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.update_auto_check), style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        stringResource(R.string.update_auto_check_desc, BuildConfig.UPDATE_REPO),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    MutedText(stringResource(R.string.update_auto_check_desc, BuildConfig.UPDATE_REPO))
                 }
                 Switch(checked = autoCheck, onCheckedChange = updates::setAutoCheck, modifier = Modifier.padding(start = 12.dp))
             }

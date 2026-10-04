@@ -30,9 +30,10 @@ import name.levis.ichor.model.NetPerfReport
 import name.levis.ichor.model.formatMbps
 import name.levis.ichor.model.formatMicros
 import name.levis.ichor.model.setup
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.factory
 import java.text.DateFormat
-import java.util.Date
+import name.levis.ichor.util.formatDateTime
 
 /**
  * The network test of the active cluster, for the screen showing it (Kubernetes or Cluster
@@ -86,7 +87,7 @@ internal fun NetPerfSaved(report: NetPerfReport, onBack: () -> Unit, onDelete: (
             style = MaterialTheme.typography.titleSmall,
             fontFamily = FontFamily.Monospace,
         )
-        Text(testedAt(report), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        MutedText(testedAt(report))
     }
     NetPerfResults(report.setup, report.results, running = false)
     Row(gutter.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -96,7 +97,7 @@ internal fun NetPerfSaved(report: NetPerfReport, onBack: () -> Unit, onDelete: (
 }
 
 private fun testedAt(report: NetPerfReport): String =
-    DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(report.started))
+    formatDateTime(report.started, DateFormat.SHORT)
 
 /** Pod-to-pod throughput and p50 latency, the figures the list compares tests by. */
 private fun headline(report: NetPerfReport): String? {

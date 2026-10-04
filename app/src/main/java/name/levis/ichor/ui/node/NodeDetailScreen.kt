@@ -12,16 +12,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material.icons.outlined.Timeline
 import kotlinx.coroutines.delay
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -47,6 +44,7 @@ import name.levis.ichor.model.ServiceInfo
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoRow
@@ -60,16 +58,8 @@ import name.levis.ichor.util.usedFraction
 import java.util.Locale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.FolderOpen
-import androidx.compose.material.icons.outlined.NetworkCheck
-import androidx.compose.material.icons.outlined.SystemUpdateAlt
-import androidx.compose.material.icons.outlined.Lan
-import androidx.compose.material.icons.outlined.Layers
-import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PowerSettingsNew
-import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -251,7 +241,7 @@ fun NodeDetailScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
+                    BackButton(onBack)
                 },
                 actions = {
                     if (powerState is PowerState.Running || controlState is ServiceControlState.Running) {

@@ -1,13 +1,11 @@
 package name.levis.ichor.ui.capture
 
 import android.content.Context
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.rememberSaveFile
 import name.levis.ichor.ui.components.shareFile
 import java.io.File
@@ -26,11 +24,11 @@ fun rememberSaveCapture(onResult: (UiText) -> Unit): (File) -> Unit =
 /** "Delete this capture?" for [file]. */
 @Composable
 fun DeleteCaptureDialog(file: File, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.capture_delete_title)) },
-        text = { Text(stringResource(R.string.capture_delete_body, file.name)) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.common_delete)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    ConfirmDialog(
+        title = stringResource(R.string.capture_delete_title),
+        text = stringResource(R.string.capture_delete_body, file.name),
+        confirm = stringResource(R.string.common_delete),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
     )
 }

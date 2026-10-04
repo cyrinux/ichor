@@ -25,6 +25,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 
 /**
@@ -44,7 +45,7 @@ fun LazyListScope.appRoutesSection(state: UiState<List<KubeRoute>>) {
 
 @Composable
 private fun RouteNote(text: String) {
-    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    MutedText(text)
 }
 
 /** The URL, "Ingress · namespace/name", and an open icon; the whole row opens it. */
@@ -64,10 +65,8 @@ private fun RouteRow(route: KubeRoute) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
+            MutedText(
                 "${route.kind} · ${route.namespace}/${route.name}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

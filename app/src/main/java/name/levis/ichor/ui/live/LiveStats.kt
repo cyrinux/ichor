@@ -36,6 +36,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
 import name.levis.ichor.util.formatBytes
 import java.util.Locale
+import name.levis.ichor.util.formatPercent
 
 const val POLL_SECONDS = 2L
 const val MAX_POINTS = 90 // 3 minutes of history
@@ -109,7 +110,7 @@ fun LiveStatsTab(
                 },
                 series = listOf(Series(stringResource(R.string.node_live_cpu), colors.first, points.map { it.cpuPercent })),
                 times = times,
-                format = { String.format(Locale.ROOT, "%.0f%%", it) },
+                format = { formatPercent(it.toDouble(), 0) },
                 gridColor = colors.grid,
                 fixedMax = 100f,
             )
@@ -120,7 +121,7 @@ fun LiveStatsTab(
                     ?: stringResource(R.string.node_live_memory),
                 series = listOf(Series(stringResource(R.string.node_live_memory), colors.first, points.map { it.memPercent })),
                 times = times,
-                format = { String.format(Locale.ROOT, "%.0f%%", it) },
+                format = { formatPercent(it.toDouble(), 0) },
                 gridColor = colors.grid,
                 fixedMax = 100f,
             )

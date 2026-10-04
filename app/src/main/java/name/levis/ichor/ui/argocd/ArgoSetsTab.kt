@@ -30,9 +30,9 @@ import name.levis.ichor.R
 import name.levis.ichor.model.ArgoAppSet
 import name.levis.ichor.model.ArgoProject
 import name.levis.ichor.model.ArgoStatus
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.SectionTitle
-import name.levis.ichor.ui.dataservices.EmptyLine
 import name.levis.ichor.ui.dataservices.HealthDot
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -44,13 +44,13 @@ fun ArgoSetsTab(status: ArgoStatus) {
         if (status.appSetsError.isNotEmpty()) item(key = "sets-error") {
             InlineError(stringResource(R.string.data_services_unreadable, status.appSetsError), Modifier.padding(16.dp))
         }
-        if (status.appSets.isEmpty() && status.appSetsError.isEmpty()) item(key = "sets-empty") { EmptyLine(stringResource(R.string.argo_no_app_sets)) }
+        if (status.appSets.isEmpty() && status.appSetsError.isEmpty()) item(key = "sets-empty") { EmptyText(stringResource(R.string.argo_no_app_sets)) }
         items(status.appSets.sortedBy { it.serviceHealth.ordinal }, key = { "set/${it.namespace}/${it.name}" }) { set ->
             AppSetRow(set)
             HorizontalDivider()
         }
         item(key = "projects-title") { SectionTitle(stringResource(R.string.argo_projects), Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp)) }
-        if (status.projects.isEmpty()) item(key = "projects-empty") { EmptyLine(stringResource(R.string.argo_no_projects)) }
+        if (status.projects.isEmpty()) item(key = "projects-empty") { EmptyText(stringResource(R.string.argo_no_projects)) }
         items(status.projects, key = { "project/${it.namespace}/${it.name}" }) { project ->
             ProjectRow(project)
             HorizontalDivider()

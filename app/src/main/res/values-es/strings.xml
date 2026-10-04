@@ -69,10 +69,6 @@
     <string name="overview_action_health">Estado del clúster</string>
     <string name="overview_action_settings">Ajustes</string>
     <string name="overview_action_workloads">Cargas de trabajo de Kubernetes</string>
-    <plurals name="overview_summary_ready">
-        <item quantity="one">listo</item>
-        <item quantity="other">listos</item>
-    </plurals>
     <plurals name="overview_summary_not_ready">
         <item quantity="one">no listo</item>
         <item quantity="other">no listos</item>

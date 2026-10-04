@@ -5,16 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -24,14 +21,11 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -44,11 +38,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -69,10 +61,13 @@ import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.ToggleRow
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -148,7 +143,7 @@ fun UpgradeScreen(
                         Text(hostname, style = MaterialTheme.typography.labelMedium)
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
                 actions = {
                     // Force is tucked away and only offered when etcd checks block the upgrade.
                     if (following == null && showForce) {
@@ -291,16 +286,12 @@ private fun UpgradeSetup(
             Text(stringResource(R.string.upgrade_same_version, plan.currentVersion), color = colors.warn, style = MaterialTheme.typography.bodySmall)
         }
 
-        Row(
-            Modifier.fillMaxWidth().toggleable(value = stage, role = Role.Switch, onValueChange = { stage = it }),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.upgrade_stage), style = MaterialTheme.typography.bodyLarge)
-                Text(stringResource(R.string.upgrade_stage_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Switch(checked = stage, onCheckedChange = null, modifier = Modifier.padding(start = 8.dp))
-        }
+        ToggleRow(
+            title = stringResource(R.string.upgrade_stage),
+            description = stringResource(R.string.upgrade_stage_desc),
+            checked = stage,
+            onChange = { stage = it },
+        )
 
         PlanChecks(plan)
         if (force) Text(stringResource(R.string.upgrade_force_on), color = colors.bad, style = MaterialTheme.typography.bodyMedium)
@@ -320,11 +311,7 @@ private fun UpgradeSetup(
 private fun ReleaseChips(releases: UiState<List<TalosRelease>>, currentVersion: String, selected: String, onPick: (String) -> Unit) {
     when (releases) {
         UiState.Loading -> Unit
-        is UiState.Failed -> Text(
-            stringResource(R.string.upgrade_releases_failed, releases.message.asString()),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        is UiState.Failed -> MutedText(stringResource(R.string.upgrade_releases_failed, releases.message.asString()))
         is UiState.Loaded -> FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             releaseSuggestions(releases.data).filter { it.version != currentVersion }.take(MAX_RELEASE_CHIPS).forEach { r ->
                 FilterChip(

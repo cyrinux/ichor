@@ -21,7 +21,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -51,8 +50,11 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.DataFreshness
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.SearchField
+import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -108,11 +110,7 @@ fun WorkloadsTab(
             HorizontalDivider()
             PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
                 if (rows.isEmpty()) {
-                    Text(
-                        if (query.isBlank()) stringResource(R.string.workloads_empty) else stringResource(R.string.workloads_no_match, query.trim()),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(16.dp),
-                    )
+                    EmptyText(emptyOrNoMatch(query, R.string.workloads_empty, R.string.workloads_no_match))
                 } else {
                     LazyColumn(Modifier.fillMaxSize()) {
                         items(rows, key = { it.key }) { w ->
@@ -137,14 +135,7 @@ internal fun KubeFilters(
     onQuery: (String) -> Unit,
 ) {
     Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = onQuery,
-            placeholder = { Text(stringResource(R.string.workloads_search)) },
-            leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-        )
+        SearchField(query, onQuery, stringResource(R.string.workloads_search), Modifier.fillMaxWidth().padding(horizontal = 16.dp))
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             item {
                 FilterChip(selected = selected == null, onClick = { onNamespace(null) }, label = { Text(stringResource(R.string.workloads_all_namespaces)) })

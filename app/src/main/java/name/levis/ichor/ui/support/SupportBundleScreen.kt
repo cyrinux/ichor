@@ -10,15 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -57,9 +53,11 @@ import name.levis.ichor.model.allows
 import name.levis.ichor.model.notice
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.KeepScreenOn
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.RoleNotice
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.rememberClusterSupport
@@ -70,8 +68,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import java.io.File
-import java.text.DateFormat
-import java.util.Date
+import name.levis.ichor.util.formatDateTime
 
 const val SUPPORT_BUNDLE_MIME = "application/zip"
 
@@ -105,7 +102,7 @@ fun SupportBundleScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.support_bundle_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
@@ -120,10 +117,8 @@ fun SupportBundleScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = LocalStatusColors.current.warn,
                 )
-                Text(
+                MutedText(
                     stringResource(R.string.support_bundle_role_note),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp),
                 )
             }
@@ -246,15 +241,11 @@ private fun NodeProgress(label: String, node: String, progress: BundleProgress) 
 
 @Composable
 private fun BundleRow(file: SupportBundleFile, onSave: () -> Unit, onShare: () -> Unit, onDelete: () -> Unit) {
-    val date = remember(file.modified) { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(file.modified)) }
+    val date = remember(file.modified) { formatDateTime(file.modified) }
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)) {
             Text(file.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
-            Text(
-                "${formatBytes(file.size)} · $date",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText("${formatBytes(file.size)} · $date")
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = onSave) { Text(stringResource(R.string.capture_save)) }
                 TextButton(onClick = onShare) { Text(stringResource(R.string.capture_share)) }

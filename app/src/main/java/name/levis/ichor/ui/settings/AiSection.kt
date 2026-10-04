@@ -39,6 +39,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.AiModel
 import name.levis.ichor.data.AiProvider
 import name.levis.ichor.data.AiSettings
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
@@ -76,7 +77,7 @@ private fun SwitchRow(title: String, description: String, checked: Boolean, onCh
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.titleMedium)
-            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            MutedText(description)
         }
         Switch(checked = checked, onCheckedChange = onChange, modifier = Modifier.padding(start = 12.dp))
     }

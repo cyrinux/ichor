@@ -10,20 +10,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,9 +44,12 @@ import name.levis.ichor.model.support
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
-import name.levis.ichor.ui.components.ErrorBox
+import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.FeatureGate
-import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.Loaded
+import name.levis.ichor.ui.components.SearchField
+import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.components.rememberNodeFeatures
 import name.levis.ichor.ui.factory
 
@@ -85,27 +83,14 @@ fun ResourceTypesScreen(
                         Text(hostname, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
         FeatureGate(support, Modifier.padding(padding)) {
             Column(Modifier.padding(padding).fillMaxSize()) {
-                OutlinedTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    placeholder = { Text(stringResource(R.string.resources_search_types)) },
-                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-                )
-                when (val s = state) {
-                    UiState.Loading -> LoadingBox()
-                    is UiState.Failed -> ErrorBox(s.message, vm::refresh)
-                    is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
-                        TypeList(s.data, query, onType)
-                    }
-                }
+                SearchField(query, { query = it }, stringResource(R.string.resources_search_types), Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
+                Loaded(state, vm::refresh) { TypeList(it, query, onType) }
             }
         }
     }
@@ -117,11 +102,7 @@ private fun TypeList(types: List<ResourceType>, query: String, onType: (Resource
     LazyColumn(Modifier.fillMaxSize()) {
         if (groups.isEmpty()) {
             item {
-                Text(
-                    if (query.isBlank()) stringResource(R.string.resources_types_empty) else stringResource(R.string.resources_no_match, query.trim()),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(16.dp),
-                )
+                EmptyText(emptyOrNoMatch(query, R.string.resources_types_empty, R.string.resources_no_match))
             }
         }
         groups.forEach { group ->

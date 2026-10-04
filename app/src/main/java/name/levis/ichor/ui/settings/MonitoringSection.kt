@@ -34,6 +34,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.monitor.canPostNotifications
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -75,11 +76,7 @@ fun MonitoringSection(app: TalosApp) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.monitor_background_alerts), style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        stringResource(R.string.monitor_background_alerts_desc, CERT_WARN_DAYS),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    MutedText(stringResource(R.string.monitor_background_alerts_desc, CERT_WARN_DAYS))
                 }
                 Switch(checked = enabled, onCheckedChange = ::toggle, modifier = Modifier.padding(start = 12.dp))
             }
@@ -87,11 +84,7 @@ fun MonitoringSection(app: TalosApp) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.monitor_data_services), style = MaterialTheme.typography.titleSmall)
-                    Text(
-                        stringResource(R.string.monitor_data_services_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    MutedText(stringResource(R.string.monitor_data_services_desc))
                 }
                 Switch(
                     checked = dataWatched,
@@ -113,11 +106,7 @@ fun MonitoringSection(app: TalosApp) {
                     ) { Text(if (minutes < 60) stringResource(R.string.monitor_interval_minutes, minutes.toInt()) else stringResource(R.string.monitor_interval_hours, (minutes / 60).toInt())) }
                 }
             }
-            Text(
-                stringResource(R.string.monitor_widget_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(R.string.monitor_widget_hint))
             OutlinedButton(onClick = { app.launchSync(runNow = true) }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.common_check_now))
             }

@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.settings.openUrl
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -60,11 +61,7 @@ fun TalosUpdateBanner(nodes: List<NodeOverview>, canUpgrade: Boolean, onUpgrade:
                 color = MaterialTheme.colorScheme.primary,
             )
             if (tappable) {
-                Text(
-                    stringResource(R.string.overview_talos_tap_upgrade),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.overview_talos_tap_upgrade))
             }
             if (check.notes.startsWith("https://")) {
                 TextButton(onClick = { openUrl(context, check.notes) }) { Text(stringResource(R.string.overview_talos_release_notes)) }
@@ -81,10 +78,8 @@ fun TalosUpdateBanner(nodes: List<NodeOverview>, canUpgrade: Boolean, onUpgrade:
             text = {
                 // Scrolls: right after a release, a large cluster lists more nodes than fit the dialog.
                 Column(Modifier.verticalScroll(rememberScrollState())) {
-                    Text(
+                    MutedText(
                         stringResource(R.string.overview_talos_pick_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
                     outdated.forEach { node ->

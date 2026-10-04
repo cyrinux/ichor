@@ -11,14 +11,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -50,9 +48,11 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
@@ -87,7 +87,7 @@ fun FundingScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.funding_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
@@ -111,10 +111,8 @@ private fun FundingList(roadmap: Roadmap, store: StoreState, backed: Set<String>
     ) {
         item {
             Text(stringResource(R.string.funding_intro), style = MaterialTheme.typography.bodyMedium)
-            Text(
+            MutedText(
                 stringResource(R.string.funding_disclaimer),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp),
             )
         }
@@ -135,11 +133,7 @@ private fun FundingList(roadmap: Roadmap, store: StoreState, backed: Set<String>
         if (tips.isNotEmpty()) {
             item {
                 SectionTitle(stringResource(R.string.funding_tips_title))
-                Text(
-                    stringResource(R.string.funding_tips_body),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.funding_tips_body))
                 PriceButtons(tips, onBuy)
             }
         }

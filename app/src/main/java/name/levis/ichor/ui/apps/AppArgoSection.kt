@@ -14,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -22,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,12 +39,14 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.argocd.HealthGlyph
 import name.levis.ichor.ui.argocd.OwnerChip
 import name.levis.ichor.ui.argocd.SyncGlyph
-import name.levis.ichor.ui.argocd.timeAgo
 import name.levis.ichor.ui.argocd.waveProgress
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.overview.ArgoSummary
 import name.levis.ichor.ui.overview.SyncingLine
+import name.levis.ichor.util.timeAgo
 
 /** What the app sheet needs to show the app's Argo CD Applications; null where Argo CD is not offered. */
 data class AppArgoUi(
@@ -75,7 +75,7 @@ fun LazyListScope.appArgoSection(argo: AppArgoUi) {
     if (loaded == null || argo.apps.isEmpty()) {
         if (argo.state is UiState.Failed) item(key = "argo-failed") {
             SectionTitle(stringResource(R.string.argo_title))
-            Note(stringResource(R.string.data_services_unreadable, argo.state.message.asString()))
+            MutedText(stringResource(R.string.data_services_unreadable, argo.state.message.asString()))
         }
         return
     }
@@ -89,8 +89,8 @@ fun LazyListScope.appArgoSection(argo: AppArgoUi) {
 private fun ArgoCDSummary(state: UiState<ArgoStatus>, onOpen: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         when (state) {
-            UiState.Loading -> Note(stringResource(R.string.argo_loading))
-            is UiState.Failed -> Note(stringResource(R.string.data_services_unreadable, state.message.asString()))
+            UiState.Loading -> MutedText(stringResource(R.string.argo_loading))
+            is UiState.Failed -> MutedText(stringResource(R.string.data_services_unreadable, state.message.asString()))
             is UiState.Loaded -> {
                 ArgoSummary(state.data)
                 state.data.apps.filter { it.isRunning }.forEach { SyncingLine(it) }
@@ -110,12 +110,12 @@ private fun ArgoCDSummary(state: UiState<ArgoStatus>, onOpen: () -> Unit) {
 private fun ArgoAppCard(app: ArgoApp, busy: Boolean, onSync: () -> Unit, onRefresh: () -> Unit, onOpen: () -> Unit) {
     var confirm by remember { mutableStateOf(false) }
     if (confirm) {
-        AlertDialog(
-            onDismissRequest = { confirm = false },
-            title = { Text(stringResource(R.string.argo_sync_title, app.name)) },
-            text = { Text(stringResource(R.string.argo_sync_quick_text, app.versionLabel)) },
-            confirmButton = { TextButton(onClick = { confirm = false; onSync() }) { Text(stringResource(R.string.argo_sync)) } },
-            dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.common_cancel)) } },
+        ConfirmDialog(
+            title = stringResource(R.string.argo_sync_title, app.name),
+            text = stringResource(R.string.argo_sync_quick_text, app.versionLabel),
+            confirm = stringResource(R.string.argo_sync),
+            onConfirm = { confirm = false; onSync() },
+            onDismiss = { confirm = false },
         )
     }
     Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
@@ -161,9 +161,4 @@ private fun ArgoAppCard(app: ArgoApp, busy: Boolean, onSync: () -> Unit, onRefre
             }
         }
     }
-}
-
-@Composable
-private fun Note(text: String) {
-    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }

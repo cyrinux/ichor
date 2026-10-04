@@ -69,10 +69,6 @@
     <string name="overview_action_health">Integrità del cluster</string>
     <string name="overview_action_settings">Impostazioni</string>
     <string name="overview_action_workloads">Workload Kubernetes</string>
-    <plurals name="overview_summary_ready">
-        <item quantity="one">pronto</item>
-        <item quantity="other">pronti</item>
-    </plurals>
     <plurals name="overview_summary_not_ready">
         <item quantity="one">non pronto</item>
         <item quantity="other">non pronti</item>

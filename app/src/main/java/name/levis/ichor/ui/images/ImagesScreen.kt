@@ -8,16 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -49,13 +43,17 @@ import name.levis.ichor.model.totalSize
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.DataFreshness
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SearchField
+import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.util.formatBytes
-import java.text.DateFormat
-import java.util.Date
+import name.levis.ichor.util.formatDate
 
 class ImagesViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<List<ImageInfo>>() {
     override val keepsDataOnFailure = true
@@ -88,7 +86,7 @@ fun ImagesScreen(
                         Text(hostname, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
@@ -98,19 +96,8 @@ fun ImagesScreen(
             is UiState.Loaded -> Column(Modifier.padding(padding).fillMaxSize()) {
                 val rows = remember(s.data, query, sort) { s.data.filteredSorted(query, sort) }
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        pluralStringResource(R.plurals.images_summary, s.data.size, s.data.size, formatBytes(s.data.totalSize)),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    OutlinedTextField(
-                        value = query,
-                        onValueChange = { query = it },
-                        placeholder = { Text(stringResource(R.string.images_search)) },
-                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    MutedText(pluralStringResource(R.plurals.images_summary, s.data.size, s.data.size, formatBytes(s.data.totalSize)))
+                    SearchField(query, { query = it }, stringResource(R.string.images_search), Modifier.fillMaxWidth())
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(stringResource(R.string.node_processes_sort), style = MaterialTheme.typography.labelMedium)
                         SortChip(ImageSort.NAME, sort, R.string.images_sort_name) { sort = it }
@@ -121,11 +108,7 @@ fun ImagesScreen(
                 HorizontalDivider()
                 PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
                     if (rows.isEmpty()) {
-                        Text(
-                            if (query.isBlank()) stringResource(R.string.images_empty) else stringResource(R.string.images_no_match, query.trim()),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(16.dp),
-                        )
+                        EmptyText(emptyOrNoMatch(query, R.string.images_empty, R.string.images_no_match))
                     } else {
                         LazyColumn(Modifier.fillMaxSize()) {
                             items(rows, key = { "${it.name}|${it.digest}" }) { image ->
@@ -165,7 +148,7 @@ private fun ImageRow(image: ImageInfo) {
                 modifier = Modifier.padding(start = 12.dp),
             )
         }
-        val created = if (image.created > 0) DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(image.created)) else null
+        val created = if (image.created > 0) formatDate(image.created) else null
         Text(
             listOfNotNull(image.digest.takeIf { it.isNotEmpty() }?.let(::shortDigest), created).joinToString("  ·  "),
             style = MaterialTheme.typography.labelSmall,

@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ClusterOutage
 import name.levis.ichor.model.OutageCause
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /** While no node answers, the overview tries again this often (and at once when the network changes). */
@@ -149,10 +150,8 @@ fun LastKnownBanner(outage: ClusterOutage, onRetry: () -> Unit, modifier: Modifi
                 Text(stringResource(R.string.overview_unreachable_title), style = MaterialTheme.typography.titleMedium)
             }
             Text(stringResource(body), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
-            Text(
+            MutedText(
                 stringResource(R.string.overview_last_known_state),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp),
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {

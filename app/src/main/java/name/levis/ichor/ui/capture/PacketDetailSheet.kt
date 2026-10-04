@@ -34,7 +34,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.CancellationException
 import name.levis.ichor.R
 import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.model.PacketDetail
@@ -43,7 +42,7 @@ import name.levis.ichor.model.PacketSummary
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.theme.LocalStatusColors
-import name.levis.ichor.ui.uiText
+import name.levis.ichor.ui.uiStateOf
 import java.io.File
 
 /** Layers of one packet as expandable sections (all open at first), then its bytes. */
@@ -51,13 +50,7 @@ import java.io.File
 @Composable
 fun PacketDetailSheet(captures: CaptureRepository, file: File, packet: PacketSummary, onDismiss: () -> Unit) {
     val state by produceState<UiState<PacketDetail>>(UiState.Loading, file, packet.n) {
-        value = try {
-            UiState.Loaded(captures.detail(file, packet.n))
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Throwable) {
-            UiState.Failed(e.uiText())
-        }
+        value = uiStateOf { captures.detail(file, packet.n) }
     }
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Text(

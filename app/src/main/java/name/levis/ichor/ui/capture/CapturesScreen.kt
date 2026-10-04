@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -52,14 +51,16 @@ import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import java.io.File
-import java.text.DateFormat
-import java.util.Date
+import name.levis.ichor.util.formatDateTime
 
 class CapturesViewModel(private val captures: CaptureRepository) : LoadingViewModel<List<CaptureFile>>() {
     override suspend fun fetch() = captures.list()
@@ -95,7 +96,7 @@ fun CapturesScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.captures_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
@@ -145,11 +146,7 @@ private fun CaptureFiles(
         }
         if (files.isEmpty()) {
             item {
-                Text(
-                    stringResource(R.string.captures_empty),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(16.dp),
-                )
+                EmptyText(stringResource(R.string.captures_empty))
             }
         }
         items(files, key = { it.name }) { f ->
@@ -161,18 +158,14 @@ private fun CaptureFiles(
 @Composable
 private fun CaptureFileRow(file: CaptureFile, onOpen: () -> Unit, onSave: () -> Unit, onShare: () -> Unit, onDelete: () -> Unit) {
     var menuOpen by remember { mutableStateOf(false) }
-    val date = remember(file.modified) { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(file.modified)) }
+    val date = remember(file.modified) { formatDateTime(file.modified) }
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onOpen).padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
             Text(file.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
-            Text(
-                "${formatBytes(file.size)} · $date",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText("${formatBytes(file.size)} · $date")
         }
         Box {
             IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, stringResource(R.string.common_more)) }

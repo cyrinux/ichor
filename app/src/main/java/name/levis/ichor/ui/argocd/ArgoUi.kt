@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.argocd
 
-import android.text.format.DateUtils
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -156,10 +155,6 @@ fun ArgoTileBadge(critical: Boolean, modifier: Modifier = Modifier, size: Dp = 1
         )
     }
 }
-
-/** "3 hours ago"; "" when unknown. */
-fun timeAgo(millis: Long, now: Long = System.currentTimeMillis()): String =
-    if (millis <= 0) "" else DateUtils.getRelativeTimeSpanString(millis, now, DateUtils.MINUTE_IN_MILLIS).toString()
 
 @Composable
 fun causeText(cause: ArgoCause): String = when (cause) {

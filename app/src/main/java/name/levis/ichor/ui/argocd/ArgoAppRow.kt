@@ -39,6 +39,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.likelyCause
 import name.levis.ichor.ui.dataservices.color
+import name.levis.ichor.util.timeAgo
 
 private val ICON = 40.dp
 

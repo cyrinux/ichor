@@ -9,13 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -50,6 +47,8 @@ import name.levis.ichor.model.formatElapsed
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.KeepScreenOn
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -107,7 +106,7 @@ fun CaptureScreen(
                         Text(hostname, style = MaterialTheme.typography.labelMedium)
                     }
                 },
-                navigationIcon = { IconButton(onClick = ::back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(::back) },
                 actions = {
                     if (!running) {
                         TooltipIconButton(Icons.Outlined.FolderOpen, stringResource(R.string.captures_title), onClick = onCaptures)
@@ -147,11 +146,7 @@ fun CaptureScreen(
                     )
                     PcapFileList(fileVm, onPacket = { detail = it })
                 } else {
-                    Text(
-                        stringResource(R.string.capture_no_packets),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(16.dp),
-                    )
+                    EmptyText(stringResource(R.string.capture_no_packets))
                 }
             }
         }

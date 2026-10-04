@@ -8,20 +8,16 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -61,6 +57,8 @@ import name.levis.ichor.model.LogSource
 import name.levis.ichor.model.LogTail
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.support
+import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.rememberNodeFeatures
 import androidx.compose.ui.text.style.TextOverflow
 import name.levis.ichor.model.SeqLogEntry
@@ -223,7 +221,7 @@ fun LogsScreen(
                         }
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
                 actions = {
                     FilterChip(
                         selected = follow,
@@ -254,14 +252,7 @@ fun LogsScreen(
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            OutlinedTextField(
-                value = filter,
-                onValueChange = { filter = it },
-                placeholder = { Text(stringResource(R.string.logs_filter)) },
-                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-            )
+            SearchField(filter, { filter = it }, stringResource(R.string.logs_filter), Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
             val view = LogView(filter, level, raw, onLevel = { level = it })
             if (follow) {
                 LogContent(followState.entries, truncated = false, view, live = true)

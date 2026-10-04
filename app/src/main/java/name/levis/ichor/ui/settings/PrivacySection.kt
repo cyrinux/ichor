@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 
 /** Typing pauses this long before the extra words apply (each change refetches everything). */
@@ -48,11 +49,7 @@ fun PrivacySection(app: TalosApp) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_screenshot_mode), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    stringResource(R.string.settings_screenshot_mode_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.settings_screenshot_mode_desc))
             }
             Switch(
                 checked = mask.enabled,
@@ -85,11 +82,7 @@ private fun OfflineCacheSetting(app: TalosApp) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_offline_cache), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    stringResource(R.string.settings_offline_cache_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.settings_offline_cache_desc))
             }
             Switch(checked = enabled, onCheckedChange = app::setOfflineCache, modifier = Modifier.padding(start = 12.dp))
         }
@@ -104,11 +97,7 @@ private fun RemoteAppIconsSetting(app: TalosApp) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_remote_icons), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    stringResource(R.string.settings_remote_icons_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.settings_remote_icons_desc))
             }
             Switch(checked = enabled, onCheckedChange = app.uiPreferences::setRemoteAppIcons, modifier = Modifier.padding(start = 12.dp))
         }

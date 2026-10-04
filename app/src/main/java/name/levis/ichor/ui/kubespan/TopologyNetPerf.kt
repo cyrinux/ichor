@@ -11,7 +11,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -21,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.workloads.NetPerfTab
 import name.levis.ichor.ui.workloads.NetPerfViewModel
 
@@ -46,10 +46,8 @@ internal fun NetPerfPickBar(picking: Boolean, picked: Int, running: Boolean, onT
             )
         }
         if (picking && !running) {
-            Text(
+            MutedText(
                 stringResource(if (picked == 0) R.string.topology_pick_client_hint else R.string.topology_pick_server_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f),
             )
         }

@@ -18,6 +18,7 @@ import name.levis.ichor.model.UpgradePlan
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.uiStateOf
 import name.levis.ichor.ui.uiText
 
 class UpgradePlanViewModel(private val upgrades: UpgradeManager, private val node: String) : LoadingViewModel<UpgradePlan>() {
@@ -40,13 +41,7 @@ class UpgradeTargetViewModel(private val upgrades: UpgradeManager) : ViewModel()
 
     init {
         viewModelScope.launch {
-            _releases.value = try {
-                UiState.Loaded(upgrades.releases())
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                UiState.Failed(e.uiText())
-            }
+            _releases.value = uiStateOf { upgrades.releases() }
         }
     }
 

@@ -16,14 +16,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -52,6 +49,8 @@ import name.levis.ichor.data.canAsk
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
@@ -95,7 +94,7 @@ fun DiagnosisScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.ai_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
                 actions = {
                     TooltipIconButton(
                         Icons.Outlined.Refresh,
@@ -126,11 +125,7 @@ fun DiagnosisScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.ai_ask, providerName)) }
             } else {
-                Text(
-                    stringResource(R.string.ai_no_key),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.ai_no_key))
                 OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.overview_action_settings))
                 }
@@ -140,11 +135,7 @@ fun DiagnosisScreen(
                 enabled = ready,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.ai_share)) }
-            Text(
-                stringResource(R.string.ai_share_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(R.string.ai_share_hint))
             AnswerCard(answer, providerName, onStop = vm::stop)
         }
     }
@@ -176,11 +167,7 @@ private fun ReportCard(report: UiState<Report>, onRetry: () -> Unit) {
                             Text(stringResource(if (expanded) R.string.ai_report_hide else R.string.ai_report_show))
                         }
                     }
-                    Text(
-                        stringResource(if (data.anonymized) R.string.ai_notice_anonymized else R.string.ai_notice_real),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    MutedText(stringResource(if (data.anonymized) R.string.ai_notice_anonymized else R.string.ai_notice_real))
                     if (expanded) {
                         SelectionContainer {
                             Text(data.text, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
@@ -218,11 +205,7 @@ private fun AnswerCard(answer: AnswerState, providerName: String, onStop: () -> 
                 Text(stringResource(R.string.common_stream_failed, it), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium)
             }
             if (answer.text.isNotEmpty()) {
-                Text(
-                    stringResource(R.string.ai_disclaimer),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.ai_disclaimer))
             }
         }
     }

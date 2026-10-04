@@ -27,6 +27,7 @@ import name.levis.ichor.model.DragonflyPod
 import name.levis.ichor.model.DragonflyReason
 import name.levis.ichor.model.DragonflyStatus
 import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -35,7 +36,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 fun DragonflyTab(status: DragonflyStatus) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
         if (status.error.isNotEmpty()) item { InlineError(stringResource(R.string.data_services_unreadable, status.error), Modifier.padding(16.dp)) }
-        if (status.instances.isEmpty()) item { EmptyLine(stringResource(R.string.dragonfly_empty)) }
+        if (status.instances.isEmpty()) item { EmptyText(stringResource(R.string.dragonfly_empty)) }
         items(status.instances, key = { it.label }) { inst ->
             InstanceRow(inst)
             HorizontalDivider()

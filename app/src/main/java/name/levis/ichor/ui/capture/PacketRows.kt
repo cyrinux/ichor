@@ -43,6 +43,7 @@ import name.levis.ichor.model.PacketSummary
 import name.levis.ichor.model.ProtoKind
 import name.levis.ichor.model.protoKind
 import name.levis.ichor.model.relativeTime
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.theme.LocalChartColors
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -120,7 +121,7 @@ fun PacketList(
     footer: (LazyListScope.() -> Unit)? = null,
 ) {
     if (packets.isEmpty()) {
-        Text(empty, modifier = modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        EmptyText(empty, modifier)
         return
     }
     val palette = rememberPacketPalette()

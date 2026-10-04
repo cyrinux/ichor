@@ -40,6 +40,7 @@ import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.canAuthenticate
 import name.levis.ichor.security.findFragmentActivity
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
 import kotlinx.coroutines.launch
@@ -70,11 +71,7 @@ private fun LiveClusterStatsSetting(prefs: UiPreferences) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_live_cluster_stats), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    stringResource(R.string.settings_live_cluster_stats_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.settings_live_cluster_stats_desc))
             }
             Switch(checked = enabled, onCheckedChange = prefs::setLiveClusterStats, modifier = Modifier.padding(start = 12.dp))
         }
@@ -93,11 +90,7 @@ private fun LanguageSetting(prefs: UiPreferences) {
     Card(Modifier.fillMaxWidth().clickable { picking = true }) {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.titleMedium)
-            Text(
-                labelOf(current),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(labelOf(current))
         }
     }
 
@@ -171,11 +164,7 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_app_lock), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    stringResource(R.string.settings_app_lock_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.settings_app_lock_desc))
                 if (required && enabled) {
                     Text(
                         stringResource(R.string.settings_app_lock_required),
@@ -195,11 +184,7 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
             Row(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.settings_allow_screenshots), style = MaterialTheme.typography.titleSmall)
-                    Text(
-                        stringResource(R.string.settings_allow_screenshots_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    MutedText(stringResource(R.string.settings_allow_screenshots_desc))
                 }
                 Switch(
                     checked = allowScreenshots,

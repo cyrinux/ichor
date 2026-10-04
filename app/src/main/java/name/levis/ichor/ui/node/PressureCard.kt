@@ -27,9 +27,10 @@ import name.levis.ichor.model.pressureLevel
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
-import java.util.Locale
+import name.levis.ichor.util.formatPercent
 
 /** One read of the node's cgroups for the pressure card: loaded with the Resources tab. */
 class PressureViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<CgroupReport>() {
@@ -49,11 +50,7 @@ fun PressureCard(state: UiState<CgroupReport>, onDetails: () -> Unit) {
                 Column(Modifier.weight(1f)) { SectionTitle(stringResource(R.string.node_section_pressure)) }
                 TextButton(onClick = onDetails) { Text(stringResource(R.string.node_pressure_details)) }
             }
-            Text(
-                stringResource(R.string.node_pressure_caption),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(R.string.node_pressure_caption))
             when (state) {
                 UiState.Loading -> Text("…", style = MaterialTheme.typography.bodyMedium)
                 is UiState.Failed -> Text(
@@ -83,7 +80,7 @@ private fun PressureRow(label: String, psi: CgroupPsi, mostAffected: String?) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
             Text(
-                String.format(Locale.ROOT, "%.1f%%", psi.some10),
+                formatPercent(psi.some10),
                 style = MaterialTheme.typography.bodyMedium,
                 fontFamily = FontFamily.Monospace,
                 color = levelColor(level),
@@ -91,11 +88,7 @@ private fun PressureRow(label: String, psi: CgroupPsi, mostAffected: String?) {
         }
         // Who waits the most is only worth naming once the node itself waits.
         if (mostAffected != null && level != PressureLevel.OK) {
-            Text(
-                stringResource(R.string.node_pressure_most, mostAffected),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(R.string.node_pressure_most, mostAffected))
         }
     }
 }

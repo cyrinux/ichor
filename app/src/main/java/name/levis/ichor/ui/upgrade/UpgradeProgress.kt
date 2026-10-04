@@ -41,9 +41,9 @@ import name.levis.ichor.model.TimelineStep
 import name.levis.ichor.model.UpgradePhase
 import name.levis.ichor.model.upgradeTimeline
 import name.levis.ichor.ui.components.KeepScreenOn
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.theme.LocalStatusColors
-import java.text.DateFormat
-import java.util.Date
+import name.levis.ichor.util.formatTime
 
 @get:StringRes
 val UpgradePhase.label: Int
@@ -115,7 +115,7 @@ fun UpgradeProgress(run: UpgradeRunState, onStopFollowing: () -> Unit, onClose: 
 @Composable
 private fun TimelineRow(step: TimelineStep) {
     val colors = LocalStatusColors.current
-    val time = remember(step.at) { if (step.at > 0) DateFormat.getTimeInstance(DateFormat.MEDIUM).format(Date(step.at)) else "" }
+    val time = remember(step.at) { if (step.at > 0) formatTime(step.at) else "" }
     Row(verticalAlignment = Alignment.Top) {
         Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
             when (step.status) {
@@ -138,7 +138,7 @@ private fun TimelineRow(step: TimelineStep) {
                 }
             }
             if (step.message.isNotEmpty()) {
-                Text(step.message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                MutedText(step.message)
             }
         }
     }
