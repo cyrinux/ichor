@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Hub
+import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
@@ -54,8 +55,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.platform.LocalContext
@@ -574,17 +577,13 @@ private fun NodeRow(node: NodeOverview, publicIps: List<String>, onClick: () -> 
     ) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(node.hostname, style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        node.node,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (node.reachable && publicIps.isNotEmpty()) PublicAddresses(publicIps)
-                }
+                Text(node.hostname, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 NodeHealthPill(node.health)
+            }
+            // Below the pill rather than beside it: the full width keeps an IPv6 on one line.
+            Column(Modifier.padding(top = 2.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                AddressLine(Icons.Outlined.Lan, node.node)
+                if (node.reachable && publicIps.isNotEmpty()) PublicAddresses(publicIps)
             }
             if (node.reachable) {
                 Spacer(Modifier.width(4.dp))
@@ -624,25 +623,34 @@ private fun NodeRow(node: NodeOverview, publicIps: List<String>, onClick: () -> 
     }
 }
 
-/** The node's internet-facing addresses, under its talosconfig one. */
+/** The node's internet-facing addresses, one per line under its talosconfig one. */
 @Composable
 private fun PublicAddresses(addresses: List<String>) {
     val label = stringResource(R.string.overview_node_public_ip)
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        verticalArrangement = Arrangement.spacedBy(2.dp),
         modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = "$label: ${addresses.joinToString()}" },
     ) {
+        addresses.forEach { AddressLine(Icons.Outlined.Public, it) }
+    }
+}
+
+/** An address behind a fixed-size icon, so private and public ones line up. */
+@Composable
+private fun AddressLine(icon: ImageVector, address: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
-            Icons.Outlined.Public,
+            icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(12.dp),
+            modifier = Modifier.size(14.dp),
         )
-        Spacer(Modifier.width(4.dp))
+        Spacer(Modifier.width(6.dp))
         Text(
-            addresses.joinToString("  ·  "),
-            style = MaterialTheme.typography.bodySmall,
+            address,
+            style = MaterialTheme.typography.labelSmall,
             fontFamily = FontFamily.Monospace,
+            letterSpacing = 0.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
