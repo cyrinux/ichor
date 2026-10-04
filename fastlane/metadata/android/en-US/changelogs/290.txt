@@ -1,0 +1,9 @@
+• Keep debug shells running after leaving the screen
+• Argo CD network view on iOS
+• Argo CD network view on Android
+• Argo CD network view core: how traffic reaches an app
+• Find the public IPs Talos does not know with a pod per node
+• Learn the nodes' public IPs from KubeSpan too
+• Tell the FOSS build apart on the home screen
+• Show the nodes' public IP in the overview
+• Answer an empty list, not null, when a network search finds no node
