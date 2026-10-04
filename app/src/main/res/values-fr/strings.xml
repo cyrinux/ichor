@@ -1889,6 +1889,12 @@
     <string name="overview_edit_cards">Cartes</string>
     <string name="overview_edit_reset">Rétablir par défaut</string>
     <string name="overview_edit_when_detected">Seulement si présent sur le cluster</string>
+    <string name="overview_card_desc_summary">Nœuds, version de Talos, CPU et mémoire en un coup d’œil</string>
+    <string name="overview_card_desc_apps">Applications du cluster et celles qui demandent attention</string>
+    <string name="overview_card_desc_data_services">État de Longhorn, Garage et CloudNativePG</string>
+    <string name="overview_card_desc_argo_cd">Synchro et santé des applications Argo CD, synchros en cours</string>
+    <string name="overview_card_desc_nodes">Chaque nœud avec son état</string>
+    <string name="overview_card_desc_time_drift">Décalage de l’horloge de chaque nœud par rapport à NTP</string>
     <string name="overview_edit_all_hidden">Toutes les cartes sont masquées. Touchez pour choisir celles à afficher.</string>
 ||||||| a97dc89
 

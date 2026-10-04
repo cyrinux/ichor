@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">Ichor</string>
+    <string name="version_footer" translatable="false">Ichor %1$s</string>
 
     <!-- Common -->
     <string name="common_back">Back</string>
@@ -1888,6 +1889,12 @@
     <string name="overview_edit_cards">Cards</string>
     <string name="overview_edit_reset">Reset to default</string>
     <string name="overview_edit_when_detected">Only when found on the cluster</string>
+    <string name="overview_card_desc_summary">Nodes, Talos version, CPU and memory at a glance</string>
+    <string name="overview_card_desc_apps">Apps running on the cluster and those that need a look</string>
+    <string name="overview_card_desc_data_services">Health of Longhorn, Garage and CloudNativePG</string>
+    <string name="overview_card_desc_argo_cd">Sync and health of the Argo CD apps, syncs in progress</string>
+    <string name="overview_card_desc_nodes">Every node with its state</string>
+    <string name="overview_card_desc_time_drift">Clock offset of each node against NTP</string>
     <string name="overview_edit_all_hidden">Every card is hidden. Tap to choose the ones to show.</string>
 ||||||| a97dc89
 

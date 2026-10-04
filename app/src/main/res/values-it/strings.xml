@@ -1889,6 +1889,12 @@
     <string name="overview_edit_cards">Schede</string>
     <string name="overview_edit_reset">Ripristina predefinito</string>
     <string name="overview_edit_when_detected">Solo se presente nel cluster</string>
+    <string name="overview_card_desc_summary">Nodi, versione di Talos, CPU e memoria a colpo d’occhio</string>
+    <string name="overview_card_desc_apps">App del cluster e quelle che richiedono attenzione</string>
+    <string name="overview_card_desc_data_services">Stato di Longhorn, Garage e CloudNativePG</string>
+    <string name="overview_card_desc_argo_cd">Sincronizzazione e salute delle app Argo CD, sincronizzazioni in corso</string>
+    <string name="overview_card_desc_nodes">Ogni nodo con il suo stato</string>
+    <string name="overview_card_desc_time_drift">Scostamento dell’orologio di ogni nodo rispetto a NTP</string>
     <string name="overview_edit_all_hidden">Tutte le schede sono nascoste. Tocca per scegliere quali mostrare.</string>
 ||||||| a97dc89
 
