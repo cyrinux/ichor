@@ -1530,6 +1530,23 @@
         <item quantity="one">%1$d cluster Percona</item>
         <item quantity="other">%1$d clusters Percona</item>
     </plurals>
+    <string name="certmanager_empty">Aucun certificat.</string>
+    <string name="certmanager_issuers">Émetteurs</string>
+    <string name="certmanager_expires">expire %1$s</string>
+    <string name="certmanager_expired">expiré %1$s</string>
+    <string name="certmanager_not_issued">pas encore émis</string>
+    <string name="certmanager_reason_not_ready">pas prêt</string>
+    <string name="certmanager_reason_renewal_overdue">renouvellement en retard</string>
+    <string name="certmanager_reason_issuer">émetteur pas prêt</string>
+    <string name="certmanager_type_self_signed">auto-signé</string>
+    <plurals name="certmanager_certificates">
+        <item quantity="one">%1$d certificat</item>
+        <item quantity="other">%1$d certificats</item>
+    </plurals>
+    <plurals name="certmanager_failed_attempts">
+        <item quantity="one">%1$d tentative échouée</item>
+        <item quantity="other">%1$d tentatives échouées</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s n’est pas prêt : cause probable de %2$d problème</item>
         <item quantity="other">%1$s n’est pas prêt : cause probable de %2$d problèmes</item>

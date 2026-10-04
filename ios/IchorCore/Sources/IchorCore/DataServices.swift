@@ -1,6 +1,6 @@
 import Foundation
 
-// Mirrors go/ichorgo/kube_dataservices.go, kube_longhorn.go, kube_garage.go and kube_cnpg.go
+// Mirrors go/ichorgo/kube_dataservices.go, kube_longhorn.go, kube_garage.go, kube_cnpg.go and kube_certmanager.go
 // (the wire format is documented in plans/data-services/README.md).
 
 /// Health of the storage and database operators a cluster runs; a nil section is not installed.
@@ -11,16 +11,120 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let dragonfly: DragonflyStatus?
     public let mariadb: MariaDbStatus?
     public let percona: PerconaStatus?
+    public let certManager: CertManagerStatus?
 
     public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil, dragonfly: DragonflyStatus? = nil,
-                mariadb: MariaDbStatus? = nil, percona: PerconaStatus? = nil) {
+                mariadb: MariaDbStatus? = nil, percona: PerconaStatus? = nil, certManager: CertManagerStatus? = nil) {
         self.longhorn = longhorn
         self.garage = garage
         self.cnpg = cnpg
         self.dragonfly = dragonfly
         self.mariadb = mariadb
         self.percona = percona
+        self.certManager = certManager
     }
+}
+
+public struct CertManagerStatus: Decodable, Equatable, Sendable {
+    public let version: String
+    public let error: String
+    /// Worst first, then the soonest expiry.
+    public let certificates: [Certificate]
+    public let issuers: [CertIssuer]
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        version = try c.field(.version, "")
+        error = try c.field(.error, "")
+        certificates = try c.field(.certificates, [])
+        issuers = try c.field(.issuers, [])
+    }
+
+    private enum CodingKeys: String, CodingKey { case version, error, certificates, issuers }
+}
+
+public struct Certificate: Decodable, Equatable, Identifiable, Sendable {
+    public let namespace: String
+    public let name: String
+    public let secretName: String
+    /// The common name then the DNS names, the first few; dnsNameCount counts them all.
+    public let dnsNames: [String]
+    public let dnsNameCount: Int
+    /// "ClusterIssuer/letsencrypt", "Issuer/internal-ca".
+    public let issuer: String
+    public let health: ServiceHealth
+    /// Known reasons only; values from newer cores are dropped.
+    public let reasons: [CertReason]
+    public let ready: Bool
+    /// The Ready condition's message when not ready.
+    public let message: String
+    /// Unix ms, 0 before the first issuance.
+    public let notAfter: Int64
+    /// Unix ms, 0 when no renewal is planned.
+    public let renewalTime: Int64
+    public let failedAttempts: Int
+
+    public var id: String { label }
+    public var label: String { "\(namespace)/\(name)" }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+        secretName = try c.field(.secretName, "")
+        dnsNames = try c.field(.dnsNames, [])
+        dnsNameCount = try c.field(.dnsNameCount, 0)
+        issuer = try c.field(.issuer, "")
+        health = ServiceHealth(wire: try c.field(.health, ""))
+        reasons = (try c.field(.reasons, [String]())).compactMap(CertReason.init(rawValue:))
+        ready = try c.field(.ready, false)
+        message = try c.field(.message, "")
+        notAfter = try c.field(.notAfter, 0)
+        renewalTime = try c.field(.renewalTime, 0)
+        failedAttempts = try c.field(.failedAttempts, 0)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case namespace, name, secretName, dnsNames, dnsNameCount, issuer, health, reasons, ready, message, notAfter, renewalTime, failedAttempts
+    }
+}
+
+public struct CertIssuer: Decodable, Equatable, Identifiable, Sendable {
+    /// Issuer or ClusterIssuer.
+    public let kind: String
+    /// "" for a ClusterIssuer.
+    public let namespace: String
+    public let name: String
+    /// acme, ca, selfSigned, vault or venafi; "" for another.
+    public let type: String
+    /// The ACME server's host.
+    public let server: String
+    public let ready: Bool
+    public let message: String
+    public let health: ServiceHealth
+
+    public var id: String { label }
+    /// "ClusterIssuer/letsencrypt", "Issuer/app/internal-ca": unique across both kinds.
+    public var label: String { [kind, namespace, name].filter { !$0.isEmpty }.joined(separator: "/") }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try c.field(.kind, "")
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+        type = try c.field(.type, "")
+        server = try c.field(.server, "")
+        ready = try c.field(.ready, false)
+        message = try c.field(.message, "")
+        health = ServiceHealth(wire: try c.field(.health, ""))
+    }
+
+    private enum CodingKeys: String, CodingKey { case kind, namespace, name, type, server, ready, message, health }
+}
+
+/// Why a certificate is not ok, as the Go core names it.
+public enum CertReason: String, Sendable {
+    case expired, expiring, renewalOverdue, notReady, issuer
 }
 
 public struct DragonflyStatus: Decodable, Equatable, Sendable {
@@ -627,6 +731,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     case dragonfly = "dragonfly"
     case mariadb = "mariadb"
     case percona = "percona-xtradb"
+    case certManager = "cert-manager"
 
     public var id: String { rawValue }
     public var catalogID: String { rawValue }
@@ -640,6 +745,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .dragonfly: "Dragonfly"
         case .mariadb: "MariaDB"
         case .percona: "Percona XtraDB Cluster"
+        case .certManager: "cert-manager"
         }
     }
 
@@ -690,7 +796,8 @@ public extension DataServices {
     /// The installed systems, in display order.
     var detected: [DataServiceKind] {
         [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
-         dragonfly != nil ? .dragonfly : nil, mariadb != nil ? .mariadb : nil, percona != nil ? .percona : nil].compactMap { $0 }
+         dragonfly != nil ? .dragonfly : nil, mariadb != nil ? .mariadb : nil, percona != nil ? .percona : nil,
+         certManager != nil ? .certManager : nil].compactMap { $0 }
     }
 
     func summary(_ kind: DataServiceKind) -> ServiceSummary? {
@@ -724,6 +831,12 @@ public extension DataServices {
             if !p.error.isEmpty && p.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: p.error) }
             let healths = p.clusters.map(\.health)
             return ServiceSummary(total: p.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: p.error)
+        case .certManager:
+            guard let cm = certManager else { return nil }
+            if !cm.error.isEmpty && cm.certificates.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: cm.error) }
+            // An issuer that is not ready needs a look as much as a certificate.
+            let healths = cm.certificates.map(\.health) + cm.issuers.map(\.health)
+            return ServiceSummary(total: cm.certificates.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: cm.error)
         }
     }
 

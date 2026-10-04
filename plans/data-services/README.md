@@ -208,6 +208,45 @@ newer than the latest success. `backupStale`: no success for twice the most freq
 Alerts (phase 4 rules): `error`/`noMember` → critical; `members`/`backupFailed`/`backupStale` →
 warning; `initializing` and `proxy` alone don't alert.
 
+cert-manager (phase 5, `cert-manager.io/v1`, detected by its API group; certificates, issuers
+and clusterissuers, read-only). Expiry math uses the read time; certificates aren't on nodes, so
+they take no part in the likely-cause correlation:
+
+```jsonc
+  "certManager": {
+    "version": "v1", "error": "",
+    "certificates": [{              // worst first, then the soonest expiry (never issued last)
+      "namespace": "app", "name": "web", "secretName": "web-tls",
+      "dnsNames": ["web.example.com"], // commonName then dnsNames, the first 5
+      "dnsNameCount": 1,            // all of them
+      "issuer": "ClusterIssuer/letsencrypt",
+      "health": "ok",               // critical: expired, or not Ready within 7 days of notAfter
+      "reasons": [],                // expired|expiring|renewalOverdue|notReady|issuer
+      "ready": true,
+      "message": "",                // the Ready condition's message when not ready
+      "notAfter": 1764547200000,    // unix ms, 0 before the first issuance
+      "renewalTime": 1761955200000, // unix ms, 0 when none
+      "failedAttempts": 0           // status.failedIssuanceAttempts
+    }],
+    "issuers": [{                   // not ready first
+      "kind": "ClusterIssuer",      // or Issuer (with its namespace)
+      "namespace": "", "name": "letsencrypt",
+      "type": "acme",               // acme|ca|selfSigned|vault|venafi, "" for another
+      "server": "acme-v02.api.letsencrypt.org", // ACME server host only
+      "ready": true, "message": "...",
+      "health": "ok"                // warning when not ready
+    }]
+  }
+```
+
+Warnings: `notReady` (a first issuance, DoesNotExist/Issuing, included), `renewalOverdue`
+(renewalTime passed over an hour ago), `expiring` (under 14 days left and no renewal still
+planned: a short-lived certificate renewed hours ahead is fine), `issuer` (its cert-manager
+issuer is not ready; external issuer groups are not checked). Alerts: a critical certificate →
+critical; `expiring`/`renewalOverdue`/`notReady` → warning; an issuer not ready → warning on its
+own key. Keys: `certmanager|<ns>/<name>` for a certificate, `certmanager|Issuer/<ns>/<name>` and
+`certmanager|ClusterIssuer/<name>` for an issuer.
+
 A section key is **absent/null** when the system isn't installed. An **empty list with no
 error** means it's installed but has nothing in it. A **non-empty `error`** means the
 system was detected but couldn't be read; the UI shows it inline in that tab only.

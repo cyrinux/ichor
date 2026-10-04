@@ -8,7 +8,8 @@ import (
 // demoDataServices are the storage and database operators of the built-in demo cluster, in
 // every state the app shows: a degraded and a faulted volume, a Garage cluster with a node
 // down next to a healthy single-node one, Postgres clusters with failed and stale backups,
-// a MariaDB cluster whose last backup failed next to a healthy Galera one and a suspended one.
+// a MariaDB cluster whose last backup failed next to a healthy Galera one and a suspended one,
+// an expired certificate and one failing to renew.
 func demoDataServices(now time.Time) dataServices {
 	ms := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
 
@@ -156,7 +157,36 @@ func demoDataServices(now time.Time) dataServices {
 			PXCSize: 1, Pods: []perconaPod{}, LastBackupAt: ms(30 * 24 * time.Hour), BackupSchedules: []perconaSchedule{}},
 	}}
 
-	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona}
+	in := func(d time.Duration) int64 { return now.Add(d).UnixMilli() }
+
+	const day = 24 * time.Hour
+
+	certManager := &certManagerStatus{Version: "v1",
+		Certificates: []certManagerCert{
+			{Namespace: "demo", Name: "legacy-tls", SecretName: "legacy-tls", DNSNames: []string{"legacy.example.com"}, DNSNameCount: 1,
+				Issuer: "Issuer/internal-ca", Health: healthCritical, Reasons: []string{certReasonExpired, certReasonIssuer},
+				Message:  "Certificate expired; issuing a new one is waiting for its issuer",
+				NotAfter: ms(2 * day), RenewalTime: ms(32 * day), FailedAttempts: 6},
+			{Namespace: "demo", Name: "shop-tls", SecretName: "shop-tls", DNSNames: []string{"shop.example.com", "www.shop.example.com"}, DNSNameCount: 2,
+				Issuer: "ClusterIssuer/letsencrypt", Health: healthWarning, Reasons: []string{certReasonNotReady, certReasonExpiring, certReasonRenewalOverdue},
+				Message:  "The certificate request has failed to complete and will be retried: Failed to wait for order resource \"shop-tls-1-2468\" to become ready",
+				NotAfter: in(11 * day), RenewalTime: ms(19 * day), FailedAttempts: 3},
+			{Namespace: "demo", Name: "wildcard-tls", SecretName: "wildcard-tls", DNSNames: []string{"*.example.com", "example.com"}, DNSNameCount: 2,
+				Issuer: "ClusterIssuer/letsencrypt", Health: healthOK, Reasons: []string{}, Ready: true,
+				NotAfter: in(63 * day), RenewalTime: in(33 * day)},
+			{Namespace: "monitoring", Name: "grafana-tls", SecretName: "grafana-tls", DNSNames: []string{"grafana.example.com"}, DNSNameCount: 1,
+				Issuer: "ClusterIssuer/letsencrypt", Health: healthOK, Reasons: []string{}, Ready: true,
+				NotAfter: in(81 * day), RenewalTime: in(51 * day)},
+		},
+		Issuers: []certIssuer{
+			{Kind: "Issuer", Namespace: "demo", Name: "internal-ca", Type: "ca", Health: healthWarning,
+				Message: "Error getting keypair for CA issuer: secrets \"internal-ca\" not found"},
+			{Kind: "ClusterIssuer", Name: "letsencrypt", Type: "acme", Server: "acme-v02.api.letsencrypt.org", Ready: true, Health: healthOK,
+				Message: "The ACME account was registered with the ACME server"},
+		},
+	}
+
+	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager}
 }
 
 // demoGarageBlockReport is the demo cluster's blocks failing to resync: one a live object
