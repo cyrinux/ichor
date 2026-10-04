@@ -424,16 +424,23 @@ func (c *kubeClientCache) get(target kubeTarget) (k *kubeClient, fresh bool, err
 	c.opening[key] = op
 	c.mu.Unlock()
 
+	// Deferred so that a panic in open still releases the callers waiting on op.done.
+	defer func() {
+		if op.client == nil && op.err == nil {
+			op.err = errors.New("kubernetes client not opened")
+		}
+
+		c.mu.Lock()
+		delete(c.opening, key)
+
+		if op.err == nil {
+			c.entries[key] = kubeClientEntry{client: op.client, expires: time.Now().Add(kubeClientTTL)}
+		}
+		c.mu.Unlock()
+		close(op.done)
+	}()
+
 	op.client, op.err = c.open(target)
-
-	c.mu.Lock()
-	delete(c.opening, key)
-
-	if op.err == nil {
-		c.entries[key] = kubeClientEntry{client: op.client, expires: time.Now().Add(kubeClientTTL)}
-	}
-	c.mu.Unlock()
-	close(op.done)
 
 	return op.client, true, op.err
 }
@@ -491,10 +498,18 @@ type kubeList[T any] struct {
 // (the phone may have changed networks). A client just opened and probed is kept on a
 // timeout: the address answered a moment ago, the call itself was slow.
 func withKube[T any](target kubeTarget, fn func(context.Context, *kubeClient) (T, error)) (T, error) {
+	k, fresh, err := kubeClients.get(target)
+	if err != nil {
+		var zero T
+
+		return zero, err
+	}
+
+	// Started after opening: a cold open (kubeconfig fetch and probe) must not eat the budget.
 	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
 	defer cancel()
 
-	return withKubeContext(ctx, target, fn)
+	return callKube(ctx, target, k, fresh, fn)
 }
 
 // withKubeContext is withKube bounded by ctx instead of callTimeout, for the calls that run
@@ -506,6 +521,13 @@ func withKubeContext[T any](ctx context.Context, target kubeTarget, fn func(cont
 	if err != nil {
 		return zero, err
 	}
+
+	return callKube(ctx, target, k, fresh, fn)
+}
+
+// callKube runs fn with k, dropping the client when the call shows it no longer works.
+func callKube[T any](ctx context.Context, target kubeTarget, k *kubeClient, fresh bool, fn func(context.Context, *kubeClient) (T, error)) (T, error) {
+	var zero T
 
 	out, err := fn(ctx, k)
 	if err != nil {
