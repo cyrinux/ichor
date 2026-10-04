@@ -1,5 +1,6 @@
 package name.levis.ichor.monitor
 
+import name.levis.ichor.model.CertReason
 import name.levis.ichor.model.CnpgReason
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.DragonflyReason
@@ -19,12 +20,16 @@ private val CNPG_ALERT_REASONS = setOf(CnpgReason.ARCHIVING, CnpgReason.BACKUP_F
 private val MARIADB_ALERT_REASONS = setOf(MariaDbReason.GALERA_RECOVERY, MariaDbReason.BACKUP_FAILED, MariaDbReason.BACKUP_STALE)
 /** Percona reasons worth waking someone for; the operator still initializing is not one. */
 private val PERCONA_ALERT_REASONS = setOf(PerconaReason.MEMBERS, PerconaReason.BACKUP_FAILED, PerconaReason.BACKUP_STALE)
+/** Certificate reasons worth a warning; an issuer not ready alerts on its own. */
+private val CERT_ALERT_REASONS = setOf(CertReason.EXPIRING, CertReason.RENEWAL_OVERDUE, CertReason.NOT_READY)
 
 /**
  * The problems of [services] worth a notification, keyed "system|label" (e.g. "longhorn|db/data")
  * with their severity: a faulted volume, an unavailable Garage cluster or a Postgres cluster without
  * any instance are critical; a degraded volume, a degraded Garage cluster (or blocks failing to
- * resync) and failing Postgres backups or archiving are warnings.
+ * resync) and failing Postgres backups or archiving are warnings. An expired certificate (or one not
+ * ready a week before it expires) is critical; one expiring, overdue or not ready, or an issuer not
+ * ready, is a warning.
  */
 fun dataIssuesOf(services: DataServices): Map<String, String> {
     val out = sortedMapOf<String, String>()
@@ -66,5 +71,12 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
             c.reasonList.any { it in PERCONA_ALERT_REASONS } -> out["percona|${c.label}"] = DATA_WARNING
         }
     }
+    services.certManager?.certificates.orEmpty().forEach { c ->
+        when {
+            c.serviceHealth == ServiceHealth.CRITICAL -> out["certmanager|${c.label}"] = DATA_CRITICAL
+            c.reasonList.any { it in CERT_ALERT_REASONS } -> out["certmanager|${c.label}"] = DATA_WARNING
+        }
+    }
+    services.certManager?.issuers.orEmpty().filter { !it.ready }.forEach { out["certmanager|${it.label}"] = DATA_WARNING }
     return out
 }

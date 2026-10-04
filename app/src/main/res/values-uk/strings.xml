@@ -1646,6 +1646,27 @@
         <item quantity="many">%1$d кластерів Percona</item>
         <item quantity="other">%1$d кластера Percona</item>
     </plurals>
+    <string name="certmanager_empty">Немає сертифікатів.</string>
+    <string name="certmanager_issuers">Видавці</string>
+    <string name="certmanager_expires">спливає %1$s</string>
+    <string name="certmanager_expired">сплив %1$s</string>
+    <string name="certmanager_not_issued">ще не видано</string>
+    <string name="certmanager_reason_not_ready">не готовий</string>
+    <string name="certmanager_reason_renewal_overdue">поновлення прострочено</string>
+    <string name="certmanager_reason_issuer">видавець не готовий</string>
+    <string name="certmanager_type_self_signed">самопідписаний</string>
+    <plurals name="certmanager_certificates">
+        <item quantity="one">%1$d сертифікат</item>
+        <item quantity="few">%1$d сертифікати</item>
+        <item quantity="many">%1$d сертифікатів</item>
+        <item quantity="other">%1$d сертифіката</item>
+    </plurals>
+    <plurals name="certmanager_failed_attempts">
+        <item quantity="one">%1$d невдала спроба</item>
+        <item quantity="few">%1$d невдалі спроби</item>
+        <item quantity="many">%1$d невдалих спроб</item>
+        <item quantity="other">%1$d невдалої спроби</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s не готовий: імовірна причина %2$d проблеми</item>
         <item quantity="few">%1$s не готовий: імовірна причина %2$d проблем</item>

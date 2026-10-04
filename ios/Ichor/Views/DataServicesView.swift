@@ -29,6 +29,7 @@ struct DataServicesView: View {
                     case .dragonfly: DragonflyList(status: services.dragonfly!, refresh: load)
                     case .mariadb: MariaDbList(status: services.mariadb!, refresh: load)
                     case .percona: PerconaList(status: services.percona!, refresh: load)
+                    case .certManager: CertificatesList(status: services.certManager!, refresh: load)
                     }
                 }
                 .safeAreaInset(edge: .top) {

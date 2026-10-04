@@ -104,7 +104,9 @@ public let dataWarning = "warning"
 /// Android): a faulted volume, an unavailable Garage cluster or a Postgres cluster without any
 /// instance are critical; a degraded volume, a degraded Garage cluster (or blocks failing to
 /// resync) and failing Postgres backups or archiving are warnings. A switchover or a missing
-/// replica is usually planned and does not alert.
+/// replica is usually planned and does not alert. An expired certificate (or one not ready a week
+/// before it expires) is critical; one expiring, overdue or not ready, or an issuer not ready, is a
+/// warning.
 public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     var out: [String: String] = [:]
     for v in services.longhorn?.volumes ?? [] {
@@ -151,6 +153,18 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
             out["percona|\(c.label)"] = dataWarning
         }
     }
+    // An issuer not ready alerts on its own, not through each of its certificates.
+    let certAlerting: Set<CertReason> = [.expiring, .renewalOverdue, .notReady]
+    for c in services.certManager?.certificates ?? [] {
+        if c.health == .critical {
+            out["certmanager|\(c.label)"] = dataCritical
+        } else if c.reasons.contains(where: certAlerting.contains) {
+            out["certmanager|\(c.label)"] = dataWarning
+        }
+    }
+    for i in services.certManager?.issuers ?? [] where !i.ready {
+        out["certmanager|\(i.label)"] = dataWarning
+    }
     return out
 }
 
@@ -162,6 +176,7 @@ private func dataSystemTitle(_ key: String) -> String {
     case "dragonfly": "Dragonfly"
     case "mariadb": "MariaDB"
     case "percona": "Percona XtraDB Cluster"
+    case "certmanager": "cert-manager"
     default: "CloudNativePG"
     }
 }

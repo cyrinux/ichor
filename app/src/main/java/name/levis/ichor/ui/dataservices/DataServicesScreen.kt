@@ -147,6 +147,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>, garage: Gara
             DataServiceKind.DRAGONFLY -> DragonflyTab(services.dragonfly!!)
             DataServiceKind.MARIADB -> MariaDbTab(services.mariadb!!)
             DataServiceKind.PERCONA -> PerconaTab(services.percona!!)
+            DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!)
         }
     }
 }
