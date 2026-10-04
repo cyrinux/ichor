@@ -1693,7 +1693,7 @@
     <string name="argo_no_app_sets">Немає ApplicationSets.</string>
     <string name="argo_projects">Проєкти</string>
     <string name="argo_no_projects">Немає проєктів.</string>
-    <string name="argo_search">Фільтр за назвою, проєктом або простором імен</string>
+    <string name="argo_search">Фільтр</string>
     <string name="argo_filter_attention">Увага</string>
     <string name="argo_filter_out_of_sync">OutOfSync</string>
     <string name="argo_filter_progressing">Progressing</string>
