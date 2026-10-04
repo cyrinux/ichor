@@ -204,6 +204,17 @@ val NodeOverview.health: NodeHealth
         else -> NodeHealth.NOT_READY
     }
 
+/** Worth a full row even in the collapsed nodes card: down, not ready, or reporting a problem. */
+val NodeOverview.needsAttention: Boolean
+    get() = health != NodeHealth.READY || unmetConditions.isNotEmpty() || !error.isNullOrBlank()
+
+/**
+ * The Talos version every answering node runs, which the cluster summary already shows, so the
+ * node rows can leave it out; null while they differ or none answered.
+ */
+fun List<NodeOverview>.sharedVersion(): String? =
+    filter { it.reachable }.map { it.version }.distinct().singleOrNull()?.takeIf { it.isNotBlank() }
+
 @Serializable
 data class KubeSpanOverview(val nodes: List<KubeSpanNode> = emptyList())
 

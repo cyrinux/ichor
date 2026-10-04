@@ -29,6 +29,29 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(overview.nodes[2].error, "timed out")
     }
 
+    func testNodeNeedsAttention() {
+        XCTAssertFalse(NodeOverview(node: "a", hostname: "a", reachable: true, ready: true).needsAttention)
+        XCTAssertTrue(NodeOverview(node: "a", hostname: "a", reachable: true, ready: false).needsAttention)
+        XCTAssertTrue(NodeOverview(node: "a", hostname: "a", reachable: false).needsAttention)
+        XCTAssertTrue(NodeOverview(
+            node: "a", hostname: "a", reachable: true, ready: true,
+            unmetConditions: [UnmetCondition(name: "services", reason: "etcd not healthy")]
+        ).needsAttention)
+        XCTAssertTrue(NodeOverview(node: "a", hostname: "a", reachable: true, error: "disk full", ready: true).needsAttention)
+        XCTAssertFalse(NodeOverview(node: "a", hostname: "a", reachable: true, error: " ", ready: true).needsAttention)
+    }
+
+    func testSharedVersion() {
+        func node(_ name: String, _ version: String, reachable: Bool = true) -> NodeOverview {
+            NodeOverview(node: name, hostname: name, reachable: reachable, version: version)
+        }
+        XCTAssertEqual([node("a", "v1.11.2"), node("b", "v1.11.2"), node("c", "v1.10.0", reachable: false)].sharedVersion, "v1.11.2")
+        XCTAssertNil([node("a", "v1.11.2"), node("b", "v1.12.0")].sharedVersion)
+        XCTAssertNil([node("a", "v1.11.2", reachable: false)].sharedVersion)
+        XCTAssertNil([node("a", "")].sharedVersion)
+        XCTAssertNil([NodeOverview]().sharedVersion)
+    }
+
     func testServicesWithOmittedFields() throws {
         let json = #"[{"id":"apid","state":"Running","health":"unknown"},{"id":"etcd","state":"Running","health":"unhealthy","message":"context deadline exceeded","lastChange":1700000000}]"#
         let services = try TalosJSON.decode([ServiceInfo].self, from: json)

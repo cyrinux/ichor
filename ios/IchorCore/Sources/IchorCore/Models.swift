@@ -123,6 +123,11 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
         return ready ? .ready : .notReady
     }
 
+    /// Worth a full row even in the collapsed nodes section: down, not ready, or reporting a problem.
+    public var needsAttention: Bool {
+        health != .ready || !unmetConditions.isEmpty || !(error ?? "").trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
     public init(
         node: String, hostname: String, reachable: Bool, error: String? = nil, errorKind: String? = nil,
         version: String = "", arch: String = "", platform: String = "", role: String = "", stage: String = "",
@@ -379,4 +384,14 @@ public func defragOrder(_ statuses: [EtcdNodeStatus]) -> [EtcdNodeStatus] {
             if a.isLeader != b.isLeader { return !a.isLeader }
             return a.reclaimable > b.reclaimable
         }
+}
+
+public extension Array where Element == NodeOverview {
+    /// The Talos version every answering node runs, which the cluster summary already shows, so
+    /// the node rows can leave it out; nil while they differ or none answered.
+    var sharedVersion: String? {
+        let versions = Set(filter(\.reachable).map(\.version))
+        guard versions.count == 1, let version = versions.first, !version.isEmpty else { return nil }
+        return version
+    }
 }

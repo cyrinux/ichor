@@ -76,6 +76,10 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _overviewLayout = MutableStateFlow(OverviewLayout.parse(prefs.getString(KEY_OVERVIEW_LAYOUT, null)))
     val overviewLayout: StateFlow<OverviewLayout> = _overviewLayout.asStateFlow()
 
+    /** The overview's nodes card with a full row per node; collapsed (a chip each) by default. */
+    private val _nodesExpanded = MutableStateFlow(prefs.getBoolean(KEY_NODES_EXPANDED, false))
+    val nodesExpanded: StateFlow<Boolean> = _nodesExpanded.asStateFlow()
+
     private val _privacyMask = MutableStateFlow(
         PrivacyMask(prefs.getBoolean(KEY_PRIVACY_MASK, false), prefs.getString(KEY_PRIVACY_WORDS, "").orEmpty()),
     )
@@ -112,6 +116,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _overviewLayout.value = layout
     }
 
+    fun setNodesExpanded(expanded: Boolean) {
+        prefs.edit().putBoolean(KEY_NODES_EXPANDED, expanded).apply()
+        _nodesExpanded.value = expanded
+    }
+
     fun setThemeMode(mode: ThemeMode) {
         prefs.edit().putString(KEY_THEME, mode.name).apply()
         _themeMode.value = mode
@@ -134,6 +143,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_REMOTE_APP_ICONS = "remote_app_icons"
         private const val KEY_OFFLINE_CACHE = "offline_cache"
         private const val KEY_OVERVIEW_LAYOUT = "overview_layout"
+        private const val KEY_NODES_EXPANDED = "overview_nodes_expanded"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */
         fun storedLanguage(context: Context): String =
