@@ -39,6 +39,7 @@ func StartLogFollow(configYAML, contextName, node, service string, tailLines int
 
 	go func() {
 		defer cancel()
+		defer onPanic(listener.OnDone)
 
 		listener.OnDone(followLog(ctx, configYAML, contextName, node, serviceLogOpener(strings.TrimSpace(service), clampTail(tailLines)), listener, service, tailLines))
 	}()

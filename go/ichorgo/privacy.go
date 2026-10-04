@@ -11,7 +11,6 @@ import (
 	"strings"
 	"sync"
 
-	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 )
 
 // Screenshot mode: while enabled, everything the app displays goes through a mask that
@@ -405,7 +404,7 @@ func (m *privacyMask) learnConfig(configYAML string) {
 		return
 	}
 
-	cfg, err := clientconfig.FromString(configYAML)
+	cfg, err := parseTalosconfig(configYAML)
 	if err != nil {
 		return
 	}

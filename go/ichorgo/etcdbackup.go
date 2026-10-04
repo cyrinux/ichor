@@ -46,6 +46,7 @@ func StartEtcdSnapshot(configYAML, contextName, node, destPath string, listener 
 
 	go func() {
 		defer cancel()
+		defer onPanic(func(msg string) { listener.OnDone("", 0, "", msg) })
 
 		size, sum, err := runSnapshot(ctx, configYAML, contextName, node, destPath, listener)
 		if err != nil {

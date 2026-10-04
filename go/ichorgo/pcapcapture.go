@@ -98,6 +98,7 @@ func StartPacketCapture(
 
 	go func() {
 		defer cancel()
+		defer onPanic(func(msg string) { listener.OnDone("", 0, 0, msg) })
 
 		res, path, err := runCapture(ctx, configYAML, contextName, node, destPath, opts, listener)
 

@@ -52,6 +52,7 @@ func StartEvents(configYAML, contextName, nodes string, tail int, listener Event
 
 	go func() {
 		defer cancel()
+		defer onPanic(listener.OnDone)
 
 		listener.OnDone(runEvents(ctx, configYAML, contextName, nodes, tail, listener))
 	}()

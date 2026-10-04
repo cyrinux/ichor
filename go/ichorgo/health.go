@@ -44,6 +44,7 @@ func StartClusterHealth(configYAML, contextName string, listener HealthListener)
 
 	go func() {
 		defer cancel()
+		defer onPanic(listener.OnDone)
 
 		listener.OnDone(runHealth(ctx, configYAML, contextName, listener))
 	}()

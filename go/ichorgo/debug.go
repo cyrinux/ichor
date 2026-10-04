@@ -94,6 +94,7 @@ func (d *DebugSession) exit(code int, message string) {
 
 func (d *DebugSession) run(ctx context.Context, configYAML, contextName, node, image string, args []string, cols, rows int) {
 	defer d.cancel()
+	defer onPanic(func(msg string) { d.exit(-1, msg) })
 
 	if err := validateDebugImage(image); err != nil {
 		d.exit(-1, err.Error())

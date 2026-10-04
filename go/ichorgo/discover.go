@@ -214,7 +214,7 @@ func AddContextNodes(storedYAML, contextName, nodes string) (out string, err err
 
 	contextName, nodes = unmaskTargets(storedYAML, contextName, nodes)
 
-	stored, err := clientconfig.FromString(storedYAML)
+	stored, err := parseTalosconfig(storedYAML)
 	if err != nil {
 		return "", fmt.Errorf("stored talosconfig: %w", err)
 	}

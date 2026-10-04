@@ -62,6 +62,7 @@ func StartSupportBundle(configYAML, contextName, nodes, destPath string, listene
 
 	go func() {
 		defer cancel()
+		defer onPanic(func(msg string) { listener.OnDone("", 0, msg) })
 
 		size, err := runSupportBundle(ctx, configYAML, contextName, nodes, destPath, listener)
 		if err != nil {
