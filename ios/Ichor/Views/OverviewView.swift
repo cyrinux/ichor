@@ -439,6 +439,13 @@ private struct NodeRow: View {
                 VStack(alignment: .leading) {
                     Text(node.hostname).font(.headline)
                     Text(node.node).font(.caption.monospaced()).foregroundStyle(.secondary)
+                    if node.reachable && !node.publicIPs.isEmpty {
+                        let addresses = node.publicIPs.joined(separator: "  ·  ")
+                        Label { Text(verbatim: addresses) } icon: { Image(systemName: "globe") }
+                            .font(.caption.monospaced()).foregroundStyle(.secondary)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(Text("Public IP: \(node.publicIPs.joined(separator: ", "))"))
+                    }
                 }
                 Spacer()
                 StatusPill(label: node.health.label, color: node.health.color)

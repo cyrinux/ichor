@@ -88,6 +88,7 @@
     <string name="overview_unreachable_title">Can\'t reach the cluster</string>
     <string name="overview_last_known_state">Showing the last known state.</string>
     <string name="overview_node_last_seen">Last seen %1$s</string>
+    <string name="overview_node_public_ip">Public IP</string>
     <string name="overview_unreachable_network">No node answered. Your phone is probably not on the cluster\'s network: check that your VPN is connected, or that you are on the right Wi-Fi.</string>
     <string name="overview_unreachable_credentials">The cluster answered but refused this talosconfig: its certificate, CA or role may be wrong or expired.</string>
     <string name="overview_unreachable_other">No node answered. The details are below.</string>

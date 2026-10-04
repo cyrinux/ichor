@@ -69,6 +69,9 @@ func demoNodes() []nodeOverview {
 			role, host, address, cores, memory = "worker", fmt.Sprintf("demo-worker-%d", i-2), fmt.Sprintf("192.0.2.%d", 17+i), 8, 16<<30
 		}
 		nodes[i] = nodeOverview{Node: address, Hostname: host, Reachable: true, Version: "v1.14.0", Arch: "amd64", Platform: "metal", Role: role, Stage: "running", Ready: true, CPUCount: cores, MemTotal: memory, MemAvailable: memory * 3 / 5, UnmetConditions: []unmetCondition{}}
+		if i >= 3 { // the workers sit behind a NAT the discovery service sees
+			nodes[i].PublicIPs = []string{fmt.Sprintf("203.0.113.%d", 40+i)}
+		}
 	}
 	return nodes
 }
