@@ -32,12 +32,17 @@ const (
 // garageCommands are the only commands the app runs in a Garage container: read-only
 // admin API calls through the CLI, which uses the node's own RPC secret (no admin token).
 // The image is a static binary on scratch: no shell, absolute path.
-var garageCommands = struct{ health, status, stats []string }{
+var garageCommands = struct{ health, status, stats, tranquility []string }{
 	health: []string{"/garage", "json-api", "GetClusterHealth"},
 	status: []string{"/garage", "json-api", "GetClusterStatus"},
 	// Node-scoped endpoints take a {node, body} envelope; "*" asks every node.
 	stats: []string{"/garage", "json-api", "GetNodeStatistics", `{"node":"*","body":null}`},
+	// How hard each node's block resync works: 0 is full speed, Garage's default is 2.
+	tranquility: []string{"/garage", "json-api", "GetWorkerVariable", `{"node":"*","body":{"variable":"` + garageTranquilityVar + `"}}`},
 }
+
+// garageTranquilityVar is the worker variable that throttles block resync.
+const garageTranquilityVar = "resync-tranquility"
 
 type garageStatus struct {
 	Error     string           `json:"error"`
@@ -84,6 +89,7 @@ type garageNode struct {
 	ResyncErrors   int64    `json:"resyncErrors"`   // -1 when its statistics failed
 	TableSyncQueue int64    `json:"tableSyncQueue"` // -1 when its statistics failed
 	StatsError     string   `json:"statsError"`
+	Tranquility    int64    `json:"tranquility"` // resync-tranquility, -1 when unknown
 }
 
 // garageGroup is the pods of one Garage cluster and the container Garage runs in.
@@ -198,12 +204,12 @@ func readGarageInstance(ctx context.Context, run execFunc, g garageGroup, fallba
 	}
 
 	var (
-		outs [3][]byte
-		errs [3]error
+		outs [4][]byte
+		errs [4]error
 		wg   sync.WaitGroup
 	)
 
-	for i, argv := range [][]string{garageCommands.health, garageCommands.status, garageCommands.stats} {
+	for i, argv := range [][]string{garageCommands.health, garageCommands.status, garageCommands.stats, garageCommands.tranquility} {
 		wg.Go(func() {
 			var stderr []byte
 
@@ -236,6 +242,10 @@ func readGarageInstance(ctx context.Context, run execFunc, g garageGroup, fallba
 
 	if errs[2] == nil {
 		applyGarageStats(&inst, outs[2])
+	}
+
+	if errs[3] == nil {
+		applyGarageTranquility(&inst, outs[3])
 	}
 
 	inst.Status, inst.Message = garageVerdict(inst)
@@ -327,7 +337,7 @@ func applyGarageStatus(inst *garageInstance, data []byte, pods []dsPod) {
 	for _, n := range st.Nodes {
 		node := garageNode{
 			ID: n.ID, Hostname: n.Hostname, KubeNode: nodeOfPod[n.Hostname], Up: n.IsUp, Draining: n.Draining,
-			LastSeenSecs: -1, Tags: []string{}, ResyncQueue: -1, ResyncErrors: -1, TableSyncQueue: -1,
+			LastSeenSecs: -1, Tags: []string{}, ResyncQueue: -1, ResyncErrors: -1, TableSyncQueue: -1, Tranquility: -1,
 		}
 
 		if n.LastSeenSecsAgo != nil && !n.IsUp {
@@ -411,6 +421,23 @@ func applyGarageStats(inst *garageInstance, data []byte) {
 	for id, msg := range stats.Error {
 		if i, ok := byID[id]; ok {
 			inst.Nodes[i].StatsError = msg
+		}
+	}
+}
+
+// applyGarageTranquility reads GetWorkerVariable's {success: {nodeId: {variable: value}}}.
+func applyGarageTranquility(inst *garageInstance, data []byte) {
+	var vars struct {
+		Success map[string]map[string]string `json:"success"`
+	}
+
+	if json.Unmarshal(data, &vars) != nil {
+		return
+	}
+
+	for i, n := range inst.Nodes {
+		if v, err := strconv.ParseInt(vars.Success[n.ID][garageTranquilityVar], 10, 64); err == nil && v >= 0 {
+			inst.Nodes[i].Tranquility = v
 		}
 	}
 }

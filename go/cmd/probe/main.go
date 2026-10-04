@@ -125,6 +125,20 @@ func main() {
 	case "dataservices":
 		// dataservices [HINTS], e.g. "garage" or "longhorn,cloudnative-pg"; none checks all.
 		out, err = ichorgo.KubeDataServices(cfg, *contextName, *kubeServer, flag.Arg(1))
+	case "garage-blocks":
+		// garage-blocks NAMESPACE POD: what the blocks failing to resync are (read-only).
+		out, err = ichorgo.KubeGarageBlockErrors(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2))
+	case "garage-repair":
+		// garage-repair NAMESPACE POD: metadata repairs if needed, retry of unreferenced blocks.
+		out, err = ichorgo.KubeGarageRepairBlocks(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2))
+	case "garage-tranquility":
+		// garage-tranquility NAMESPACE POD NODE_ID|* VALUE (0 full speed, 2 Garage's default)
+		var value int
+		if value, err = strconv.Atoi(flag.Arg(4)); err == nil {
+			if err = ichorgo.KubeGarageSetTranquility(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), value); err == nil {
+				out = "set"
+			}
+		}
 	case "argocd":
 		out, err = ichorgo.KubeArgoCD(cfg, *contextName, *kubeServer)
 	case "argocd-action":

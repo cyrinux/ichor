@@ -140,6 +140,8 @@ data class GarageNode(
     val resyncErrors: Long = -1,
     val tableSyncQueue: Long = -1,
     val statsError: String = "",
+    /** Resync tranquility: 0 resyncs at full speed, 2 is Garage's default, -1 when unknown. */
+    val tranquility: Long = -1,
 ) {
     /** What names the node best: Garage forgets a long-gone node's hostname, its tags often name the host. */
     val label: String get() = hostname.ifEmpty { tags.joinToString(",").ifEmpty { id.take(16) } }

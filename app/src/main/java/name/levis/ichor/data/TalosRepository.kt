@@ -15,6 +15,9 @@ import name.levis.ichor.model.ArgoSyncOptions
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.DataServices
+import name.levis.ichor.model.GarageBlockReport
+import name.levis.ichor.model.GarageInstance
+import name.levis.ichor.model.GarageRepairResult
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
@@ -438,6 +441,21 @@ class TalosRepository(
      */
     suspend fun dataServices(hints: String): DataServices = remember(DATA_SERVICES) {
         kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(DataServices.serializer(), Ichorgo.kubeDataServices(cfg, ctx, server, hints)) }
+    }
+
+    /** What the blocks failing to resync in a Garage cluster are, run in its ready pod (os:admin). Never cached. */
+    suspend fun garageBlockErrors(instance: GarageInstance): GarageBlockReport = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(GarageBlockReport.serializer(), Ichorgo.kubeGarageBlockErrors(cfg, ctx, server, instance.namespace, instance.pod))
+    }
+
+    /** Launches the safe repairs for those blocks (os:admin); Garage runs them in the background. */
+    suspend fun garageRepairBlocks(instance: GarageInstance): GarageRepairResult = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(GarageRepairResult.serializer(), Ichorgo.kubeGarageRepairBlocks(cfg, ctx, server, instance.namespace, instance.pod))
+    }
+
+    /** Sets a node's resync tranquility (os:admin); [nodeId] is a Garage node ID, or "*" for every node. */
+    suspend fun garageSetTranquility(instance: GarageInstance, nodeId: String, value: Long) = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeGarageSetTranquility(cfg, ctx, server, instance.namespace, instance.pod, nodeId, value)
     }
 
     /**

@@ -271,6 +271,8 @@ func fixtureRunner(t *testing.T, dir string) execFunc {
 			return readFixture(t, dir+"/GetClusterStatus.json"), nil, nil
 		case slices.Equal(argv, garageCommands.stats):
 			return readFixture(t, dir+"/GetNodeStatistics.json"), nil, nil
+		case slices.Equal(argv, garageCommands.tranquility):
+			return readFixture(t, dir+"/GetWorkerVariable.json"), nil, nil
 		default:
 			t.Errorf("command outside the allow-list: %v", argv)
 
@@ -316,8 +318,17 @@ func TestReadGarageDegradedFixture(t *testing.T) {
 	}
 
 	down := inst.Nodes[0]
-	if down.Up || down.Hostname != "garage-d" || down.LastSeenSecs != 595830 || down.StatsError == "" || down.ResyncErrors != -1 {
+	if down.Up || down.Hostname != "garage-d" || down.LastSeenSecs != 595830 || down.StatsError == "" || down.ResyncErrors != -1 || down.Tranquility != -1 {
 		t.Errorf("down node first: %+v", down)
+	}
+
+	tranquility := map[string]int64{}
+	for _, n := range inst.Nodes {
+		tranquility[n.Hostname] = n.Tranquility
+	}
+
+	if tranquility["garage-a"] != 0 || tranquility["garage-b"] != 2 {
+		t.Errorf("tranquility per node: %v", tranquility)
 	}
 
 	if inst.Nodes[1].KubeNode == "" || !inst.Nodes[1].Up {

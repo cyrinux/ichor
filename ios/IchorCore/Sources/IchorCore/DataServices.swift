@@ -3,13 +3,6 @@ import Foundation
 // Mirrors go/ichorgo/kube_dataservices.go, kube_longhorn.go, kube_garage.go and kube_cnpg.go
 // (the wire format is documented in plans/data-services/README.md).
 
-private extension KeyedDecodingContainer {
-    /// A field the Go core may leave out (older cores, empty values): its default then.
-    func field<T: Decodable>(_ key: Key, _ fallback: T) throws -> T {
-        try decodeIfPresent(T.self, forKey: key) ?? fallback
-    }
-}
-
 /// Health of the storage and database operators a cluster runs; a nil section is not installed.
 public struct DataServices: Decodable, Equatable, Sendable {
     public let longhorn: LonghornStatus?
@@ -326,6 +319,8 @@ public struct GarageNode: Decodable, Equatable, Identifiable, Sendable {
     public let resyncErrors: Int64
     public let tableSyncQueue: Int64
     public let statsError: String
+    /// Resync tranquility: 0 resyncs at full speed, 2 is Garage's default; -1 when unknown.
+    public let tranquility: Int64
 
     public var id: String { nodeID.isEmpty ? label : nodeID }
 
@@ -353,11 +348,12 @@ public struct GarageNode: Decodable, Equatable, Identifiable, Sendable {
         resyncErrors = try c.field(.resyncErrors, -1)
         tableSyncQueue = try c.field(.tableSyncQueue, -1)
         statsError = try c.field(.statsError, "")
+        tranquility = try c.field(.tranquility, -1)
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, hostname, zone, tags, kubeNode, storage, up, lastSeenSecs, draining, dataAvail, dataTotal
-        case resyncQueue, resyncErrors, tableSyncQueue, statsError
+        case resyncQueue, resyncErrors, tableSyncQueue, statsError, tranquility
     }
 }
 
