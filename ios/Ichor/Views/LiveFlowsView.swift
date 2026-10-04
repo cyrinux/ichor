@@ -186,7 +186,7 @@ private struct HubbleStatusSection: View {
                     }
                 }
                 ForEach(snapshot.nodes.filter { $0.state == .error && !$0.error.isEmpty }) { agent in
-                    Text(verbatim: "\(agent.node): \(agent.error)").font(.caption).foregroundStyle(.red)
+                    Text(verbatim: "\(agent.node): \(agent.error)").font(.caption).foregroundStyle(.statusBad)
                 }
                 HStack {
                     counter(String(localized: "Seen"), snapshot.seen, color: .primary)
