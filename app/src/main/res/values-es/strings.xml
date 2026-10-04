@@ -1889,6 +1889,12 @@
     <string name="overview_edit_cards">Tarjetas</string>
     <string name="overview_edit_reset">Restablecer</string>
     <string name="overview_edit_when_detected">Solo si está en el clúster</string>
+    <string name="overview_card_desc_summary">Nodos, versión de Talos, CPU y memoria de un vistazo</string>
+    <string name="overview_card_desc_apps">Apps del clúster y las que necesitan atención</string>
+    <string name="overview_card_desc_data_services">Estado de Longhorn, Garage y CloudNativePG</string>
+    <string name="overview_card_desc_argo_cd">Sincronización y salud de las apps de Argo CD, sincronizaciones en curso</string>
+    <string name="overview_card_desc_nodes">Cada nodo con su estado</string>
+    <string name="overview_card_desc_time_drift">Desfase del reloj de cada nodo respecto a NTP</string>
     <string name="overview_edit_all_hidden">Todas las tarjetas están ocultas. Toca para elegir cuáles mostrar.</string>
 ||||||| a97dc89
 

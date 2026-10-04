@@ -2049,6 +2049,12 @@
     <string name="overview_edit_cards">Картки</string>
     <string name="overview_edit_reset">Скинути</string>
     <string name="overview_edit_when_detected">Лише якщо є в кластері</string>
+    <string name="overview_card_desc_summary">Вузли, версія Talos, CPU і пам’ять одним поглядом</string>
+    <string name="overview_card_desc_apps">Застосунки кластера й ті, що потребують уваги</string>
+    <string name="overview_card_desc_data_services">Стан Longhorn, Garage і CloudNativePG</string>
+    <string name="overview_card_desc_argo_cd">Синхронізація й стан застосунків Argo CD, поточні синхронізації</string>
+    <string name="overview_card_desc_nodes">Кожен вузол і його стан</string>
+    <string name="overview_card_desc_time_drift">Зсув годинника кожного вузла відносно NTP</string>
     <string name="overview_edit_all_hidden">Усі картки приховано. Торкніться, щоб вибрати, які показувати.</string>
 ||||||| a97dc89
 
