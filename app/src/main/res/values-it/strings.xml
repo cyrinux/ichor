@@ -521,6 +521,12 @@
     <string name="debug_start">Avvia shell</string>
     <string name="debug_exited">Terminata con codice %1$d</string>
     <string name="debug_new_shell">Nuova shell</string>
+    <string name="debug_channel_name">Shell di debug</string>
+    <string name="debug_channel_desc">Le shell di debug rimaste aperte, per tornarci o chiuderle</string>
+    <string name="debug_notification_title">Shell di debug su %1$s</string>
+    <string name="debug_notification_text">Ancora attiva. Tocca per tornare al terminale.</string>
+    <string name="debug_notification_exit">Esci</string>
+    <string name="debug_notification_public">Shell di debug attiva</string>
     <string name="debug_connecting">Connessione…</string>
     <string name="debug_snippets">Scorciatoie</string>
     <string name="debug_snippets_hint">Tocca per eseguire. I comandi che finiscono con … vengono solo digitati, per aggiungere la destinazione.</string>

@@ -521,6 +521,12 @@
     <string name="debug_start">Démarrer le shell</string>
     <string name="debug_exited">Terminé avec le code %1$d</string>
     <string name="debug_new_shell">Nouveau shell</string>
+    <string name="debug_channel_name">Shells de débogage</string>
+    <string name="debug_channel_desc">Les shells de débogage restés ouverts, pour y revenir ou les quitter</string>
+    <string name="debug_notification_title">Shell de débogage sur %1$s</string>
+    <string name="debug_notification_text">Toujours actif. Touchez pour revenir au terminal.</string>
+    <string name="debug_notification_exit">Quitter</string>
+    <string name="debug_notification_public">Shell de débogage actif</string>
     <string name="debug_connecting">Connexion…</string>
     <string name="debug_snippets">Raccourcis</string>
     <string name="debug_snippets_hint">Touchez pour lancer. Les commandes finissant par … sont seulement tapées, pour ajouter la cible.</string>

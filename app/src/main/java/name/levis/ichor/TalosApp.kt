@@ -42,6 +42,7 @@ import name.levis.ichor.monitor.syncMonitoring
 import name.levis.ichor.security.AppLock
 import name.levis.ichor.security.PrefsLockSettings
 import name.levis.ichor.update.UpdateManager
+import name.levis.ichor.ui.debug.DebugShells
 import name.levis.ichor.data.ClusterNames
 import name.levis.ichor.data.WakeOnLanStore
 import name.levis.ichor.data.StoredConfig
@@ -78,6 +79,8 @@ class TalosApp : Application() {
             enabled = { uiPreferences.offlineCache.value },
         )
     }
+    /** Debug shells, kept open across screens until exited (see DebugShellService). */
+    val debugShells by lazy { DebugShells(this, configRepository) }
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
     val netPerfRepository by lazy { NetPerfRepository(configRepository, kubeServers) }
     val netPerfHistory by lazy { NetPerfHistory(java.io.File(noBackupFilesDir, "netperf")) }
@@ -340,6 +343,10 @@ class TalosApp : Application() {
                     publicIps.sync(it.summary)
                     vpnOnly.sync(it.summary)
                     kubeServers.sync(it.summary)
+                }
+                // A removed cluster (or the deleted config) takes its shells with it.
+                if (stored != null || configRepository.generation.value > 0) {
+                    debugShells.retainContexts(stored?.summary?.contexts.orEmpty().map { c -> c.name }.toSet())
                 }
             }
         }

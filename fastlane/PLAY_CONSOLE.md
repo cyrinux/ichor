@@ -221,16 +221,57 @@ Everything else: **not collected**. Reasoning for the borderline cases:
 | Permission | Declaration needed | Note |
 |---|---|---|
 | `INTERNET`, `POST_NOTIFICATIONS` | No | |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE` | **Yes**, see [Foreground services](#foreground-services) | open debug shells |
 | `CAMERA` | No form; covered by the privacy policy | QR code import |
 | `REQUEST_INSTALL_PACKAGES` | No | removed from the Play build |
 | `<queries>` for `io.kubenav.kubenav` | No | a single named package, not `QUERY_ALL_PACKAGES` |
 
 ### Foreground services
 
-None of the app's own. WorkManager merges `FOREGROUND_SERVICE` and its
-`SystemForegroundService`, without a `foregroundServiceType` or any `FOREGROUND_SERVICE_*`
-permission, and the background checks never run in the foreground, so the Console asks for
-no foreground service declaration.
+One of the app's own: `DebugShellService` (type **`specialUse`**), which keeps the debug shells
+the user opened running after they leave the shell screen or the app. It runs only while a
+shell runs, and shows one notification per shell (tap to go back to it, **Exit** to end it).
+It is not `dataSync`: since Android 15 the system stops that type after about 6 hours a day, and
+a terminal moves no data in the background. No other type fits a remote terminal.
+
+WorkManager also merges `FOREGROUND_SERVICE` and its `SystemForegroundService`, without a
+`foregroundServiceType`; the background checks never run in the foreground, so it needs no
+declaration of its own.
+
+**To do in the Console before the first release with it** (Play rejects or blocks the release
+without it):
+
+1. **App content → Foreground service permissions → Start** (or **Manage**). The Console lists
+   it once a bundle declaring `FOREGROUND_SERVICE_SPECIAL_USE` is uploaded to any track; upload
+   to the internal track first if it is not listed yet.
+2. Tick **Special use** only. Leave every other type unticked.
+3. **Description** of the feature (what the user does, and why it must keep running):
+
+   > Ichor manages Talos Linux clusters. An administrator can open a debug shell: an
+   > interactive terminal in a privileged container on one of their own nodes, started only by
+   > an explicit tap (and a fingerprint/PIN when the app lock is on). The foreground service
+   > keeps that terminal session open while the user switches to another screen or app, for
+   > example to copy a command or check documentation, so the command running in it is not
+   > killed. It runs only while at least one shell is open, shows one notification per shell
+   > with an Exit button, and stops as soon as the user exits the last shell (from the app or
+   > the notification) or the shell ends. No data is synced, uploaded or downloaded in the
+   > background.
+
+4. **Impact if deferred or interrupted**: *the user's terminal session on the node is cut, and
+   whatever command they were running in it (a packet capture, a long diagnostic) is killed;
+   they must start a new privileged container.*
+5. **Video**: a short screen recording on a real (test) cluster, as the demo has no debug
+   shell, with screenshot mode on (Settings → Privacy) to mask names, showing: node → **Debug shell** → **Start shell** → a command running → back
+   button → the notification "Debug shell on <node>" stays → tap it, back in the same
+   terminal → **Exit** on the notification → notification gone. Upload it as unlisted on
+   YouTube (or Drive with link sharing) and paste the link.
+6. **Save → Send for review**. The Console blocks the release until this is filled.
+
+**In `AndroidManifest.xml`** the subtype the declaration matches is the
+`PROPERTY_SPECIAL_USE_FGS_SUBTYPE` property of `DebugShellService`: keep both texts saying the
+same thing.
+
+**Data safety**: unchanged. The shell talks only to the user's own node.
 
 ## Release
 

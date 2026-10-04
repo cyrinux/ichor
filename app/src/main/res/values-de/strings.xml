@@ -520,6 +520,12 @@
     <string name="debug_start">Shell starten</string>
     <string name="debug_exited">Beendet mit Code %1$d</string>
     <string name="debug_new_shell">Neue Shell</string>
+    <string name="debug_channel_name">Debug-Shells</string>
+    <string name="debug_channel_desc">Offene Debug-Shells, um zu ihnen zurückzukehren oder sie zu beenden</string>
+    <string name="debug_notification_title">Debug-Shell auf %1$s</string>
+    <string name="debug_notification_text">Läuft weiter. Tippen, um zum Terminal zurückzukehren.</string>
+    <string name="debug_notification_exit">Beenden</string>
+    <string name="debug_notification_public">Debug-Shell läuft</string>
     <string name="debug_connecting">Verbindung wird hergestellt…</string>
     <string name="debug_snippets">Snippets</string>
     <string name="debug_snippets_hint">Zum Ausführen tippen. Befehle mit … am Ende werden nur eingetippt, um das Ziel zu ergänzen.</string>

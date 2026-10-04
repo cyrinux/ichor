@@ -35,6 +35,9 @@ import name.levis.ichor.model.seedOf
 import name.levis.ichor.ui.DeepLink
 import name.levis.ichor.ui.Navigation
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.debug.DebugShellService
+import name.levis.ichor.ui.debug.LiveShell
+import name.levis.ichor.ui.debug.shellKey
 import name.levis.ichor.ui.theme.TalosTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -50,6 +53,9 @@ class MainActivity : FragmentActivity() {
 
     /** A backup file opened from another app (a file manager), consumed once read. */
     private val backupFile = MutableStateFlow<Uri?>(null)
+
+    /** A debug shell to go back to, from its notification; consumed once by Navigation. */
+    private val openShell = MutableStateFlow<LiveShell?>(null)
 
     // Below API 33, the in-app language is applied here (API 33+ uses LocaleManager).
     override fun attachBaseContext(newBase: Context) {
@@ -88,6 +94,7 @@ class MainActivity : FragmentActivity() {
             deepLink.value = intent.deepLink()
             openCluster.value = intent.clusterFingerprint()
             backupFile.value = intent.backupFile()
+            openShell.value = intent.debugShell()
         }
         if (BuildConfig.SELF_UPDATE) app.updateManager.maybeAutoCheck(lifecycleScope)
         if (BuildConfig.FEATURE_FUNDING) {
@@ -114,7 +121,7 @@ class MainActivity : FragmentActivity() {
             val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
             TalosTheme(themeMode, seed = clusterColors.seedOf(stored?.activeSummary)) {
                 Surface {
-                    LockGate(app, LaunchTargets(deepLink, openCluster, backupFile), onWiped = ::recreate)
+                    LockGate(app, LaunchTargets(deepLink, openCluster, backupFile, openShell), onWiped = ::recreate)
                 }
             }
         }
@@ -126,6 +133,7 @@ class MainActivity : FragmentActivity() {
         intent.deepLink()?.let { deepLink.value = it }
         intent.clusterFingerprint()?.let { openCluster.value = it }
         intent.backupFile()?.let { backupFile.value = it }
+        intent.debugShell()?.let { openShell.value = it }
     }
 
     companion object {
@@ -133,6 +141,11 @@ class MainActivity : FragmentActivity() {
 
         /** The fingerprint of the cluster a launcher shortcut opens. */
         const val EXTRA_CLUSTER = "name.levis.ichor.CLUSTER"
+
+        /** The debug shell a notification opens: its cluster (context), node and hostname. */
+        const val EXTRA_SHELL_CONTEXT = "name.levis.ichor.SHELL_CONTEXT"
+        const val EXTRA_SHELL_NODE = "name.levis.ichor.SHELL_NODE"
+        const val EXTRA_SHELL_HOST = "name.levis.ichor.SHELL_HOST"
     }
 }
 
@@ -141,7 +154,14 @@ private class LaunchTargets(
     val deepLink: MutableStateFlow<DeepLink?>,
     val cluster: MutableStateFlow<String?>,
     val backupFile: MutableStateFlow<Uri?>,
+    val shell: MutableStateFlow<LiveShell?>,
 )
+
+private fun Intent.debugShell(): LiveShell? {
+    if (action != DebugShellService.ACTION_OPEN) return null
+    val key = shellKey() ?: return null
+    return LiveShell(key, getStringExtra(MainActivity.EXTRA_SHELL_HOST)?.takeIf { it.isNotBlank() } ?: key.node)
+}
 
 private fun Intent.clusterFingerprint(): String? = getStringExtra(MainActivity.EXTRA_CLUSTER)?.takeIf { it.isNotBlank() }
 
@@ -196,6 +216,7 @@ private fun Root(app: TalosApp, targets: LaunchTargets) {
     val link by targets.deepLink.collectAsStateWithLifecycle()
     val cluster by targets.cluster.collectAsStateWithLifecycle()
     val backup by targets.backupFile.collectAsStateWithLifecycle()
+    val shell by targets.shell.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val lockEnabled by app.appLock.enabled.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
@@ -232,6 +253,8 @@ private fun Root(app: TalosApp, targets: LaunchTargets) {
                 onClusterOpened = { targets.cluster.value = null },
                 incomingBackup = backup,
                 onIncomingBackupRead = { targets.backupFile.value = null },
+                openShell = shell,
+                onShellOpened = { targets.shell.value = null },
             )
         }
     }

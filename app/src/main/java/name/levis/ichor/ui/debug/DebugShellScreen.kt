@@ -34,7 +34,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -53,7 +52,6 @@ import org.connectbot.terminal.Terminal
 
 private const val DEFAULT_IMAGE = "nicolaka/netshoot:latest"
 private const val DEFAULT_ARGS = "/bin/sh"
-private val TerminalBackground = Color(0xFF0B1220)
 
 /** `talosctl debug -n NODE IMAGE --args ARGS`: a privileged container with a terminal. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,8 +59,12 @@ private val TerminalBackground = Color(0xFF0B1220)
 fun DebugShellScreen(
     node: String,
     hostname: String,
+    context: String,
     onBack: () -> Unit,
-    vm: DebugShellViewModel = viewModel(key = "debug-$node", factory = factory { DebugShellViewModel(app.configRepository, node) }),
+    vm: DebugShellViewModel = viewModel(
+        key = "debug-$context-$node",
+        factory = factory { DebugShellViewModel(app.debugShells, ShellKey(context, node), hostname) },
+    ),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     var showSnippets by rememberSaveable { mutableStateOf(false) }
@@ -87,12 +89,8 @@ fun DebugShellScreen(
                         Text(hostname, style = MaterialTheme.typography.labelMedium)
                     }
                 },
-                navigationIcon = {
-                    BackButton(onClick = {
-                        vm.stop()
-                        onBack()
-                    })
-                },
+                // Back leaves the shell running: its notification opens it again.
+                navigationIcon = { BackButton(onClick = onBack) },
                 actions = {
                     if (state is ShellState.Running || state is ShellState.Starting) {
                         TextButton(onClick = vm::stop) { Text(stringResource(R.string.debug_stop)) }
@@ -110,7 +108,7 @@ fun DebugShellScreen(
                         terminalEmulator = vm.emulator,
                         modifier = Modifier.weight(1f).fillMaxWidth(),
                         backgroundColor = TerminalBackground,
-                        foregroundColor = Color(0xFFE4EAF1),
+                        foregroundColor = TerminalForeground,
                         keyboardEnabled = s is ShellState.Running,
                     )
                     if (s is ShellState.Running) {
