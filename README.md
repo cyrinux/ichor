@@ -33,6 +33,10 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   patches the Application resources with the admin kubeconfig, like `argocd --core`, so no
   Argo CD token is needed. An app an ApplicationSet or a parent app manages keeps its spec:
   only sync, refresh and terminate are offered there, since its owner would revert the rest.
+  Each app also has a network view, like Argo CD's own but down to the nodes: host → Gateway →
+  Ingress/HTTPRoute → Service → pods → node, every box coloured by health, traffic flowing along
+  the healthy paths, and the likely root cause named (a node not ready, a crash-looping pod, a
+  Service without ready pods).
 - **Background:** alerts and a home-screen widget.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).

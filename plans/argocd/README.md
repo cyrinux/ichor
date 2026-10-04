@@ -122,6 +122,17 @@ Its detail sheet gets an "Argo CD" section (health, sync, revision, running sync
 Refresh, a link to the app page); a tile shows a badge when its app is failing or OutOfSync,
 from data already loaded only. The Argo CD tile's own sheet shows the GitOps summary.
 
+### Network view
+
+Like the Network tab of Argo CD's UI, one column further: host / load balancer → Gateway →
+Ingress / HTTPRoute → Service → Pod → node (`KubeArgoNetwork`, `kube_argocd_network*.go`). It is
+built from the app's Services and routes, plus the shared routes elsewhere that send traffic to
+them. Health goes from the inside out: pods by status, nodes by readiness, a Service by the
+pods it selects, and the boxes in front of it by the best path they serve. The deepest broken
+box is named as the likely root cause. The phone draws it left to right with animated flow on
+healthy edges; tapping a box highlights its path and opens what Ichor already does for it
+(the URL, the pod, the node).
+
 ### ApplicationSets and projects (second tab)
 
 - ApplicationSets with their generated apps rolled up (worst health first), `ErrorOccurred` /
