@@ -110,6 +110,8 @@ private struct WorkloadsList: View {
     @State private var confirm: KubeWorkload?
     @State private var restarting: Set<String> = []
     @State private var resultMessage: String?
+    /// Just restarted: its rollout is shown live until the sheet is closed.
+    @State private var following: KubeWorkload?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { workloads in
@@ -139,6 +141,7 @@ private struct WorkloadsList: View {
         }
         .task { await load() }
         .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
+        .sheet(item: $following) { workload in RolloutStatusSheet(workload: workload) { await load() } }
         .messageAlert($resultMessage)
     }
 
@@ -154,7 +157,7 @@ private struct WorkloadsList: View {
         defer { restarting.remove(workload.id) }
         do {
             try await client.rolloutRestart(workload)
-            resultMessage = String(localized: "\(workload.name) is restarting")
+            following = workload
             // Show the rollout starting: the controller already bumped the generation.
             await load()
         } catch {
