@@ -142,6 +142,15 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
             out["mariadb|\(m.label)"] = dataWarning
         }
     }
+    // The operator still initializing is not worth an alert; a member lost or backups failing are.
+    let perconaAlerting: Set<PerconaReason> = [.members, .backupFailed, .backupStale]
+    for c in services.percona?.clusters ?? [] {
+        if c.health == .critical {
+            out["percona|\(c.label)"] = dataCritical
+        } else if c.reasons.contains(where: perconaAlerting.contains) {
+            out["percona|\(c.label)"] = dataWarning
+        }
+    }
     return out
 }
 
@@ -152,6 +161,7 @@ private func dataSystemTitle(_ key: String) -> String {
     case "garage": "Garage"
     case "dragonfly": "Dragonfly"
     case "mariadb": "MariaDB"
+    case "percona": "Percona XtraDB Cluster"
     default: "CloudNativePG"
     }
 }

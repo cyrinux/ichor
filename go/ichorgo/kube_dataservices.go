@@ -39,16 +39,17 @@ type dataServices struct {
 	CNPG      *cnpgStatus      `json:"cnpg,omitempty"`
 	Dragonfly *dragonflyStatus `json:"dragonfly,omitempty"`
 	MariaDB   *mariadbStatus   `json:"mariadb,omitempty"`
+	Percona   *perconaStatus   `json:"percona,omitempty"`
 }
 
 // KubeDataServices reports the health of the storage and database operators the cluster
-// runs (Longhorn, Garage, CloudNativePG, Dragonfly, MariaDB), through the Kubernetes API with the admin
-// kubeconfig Talos issues (os:admin): Longhorn and CloudNativePG from their custom
-// resources, Garage by running its own CLI (`garage json-api`) in one of its pods.
+// runs (the sections of dataServices), through the Kubernetes API with the admin kubeconfig
+// Talos issues (os:admin): the operators from their custom resources, Garage by running its
+// own CLI (`garage json-api`) in one of its pods.
 //
 // hints is a comma-separated list of catalog app ids the app saw in the inventory
-// ("longhorn,garage,cloudnative-pg,dragonfly,mariadb"); "" checks everything. Longhorn, CloudNativePG,
-// Dragonfly and MariaDB are found by their API groups (their CRDs) either way; Garage, which has no API of its own, is only
+// ("longhorn,garage,cloudnative-pg"); "" checks everything. The operators are found by their
+// API groups (their CRDs) either way; Garage, which has no API of its own, is only
 // looked for (a listing of every pod) when hinted or when hints is "".
 // See plans/data-services/README.md for the JSON. kubeServer: see KubePods.
 func KubeDataServices(configYAML, contextName, kubeServer, hints string) (out string, err error) {
@@ -134,6 +135,10 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 
 	if v, ok := groups[groupMariaDB]; ok {
 		wg.Go(func() { out.MariaDB = readMariaDB(ctx, k, v, now) })
+	}
+
+	if v, ok := groups[groupPercona]; ok {
+		wg.Go(func() { out.Percona = readPercona(ctx, k, v, now) })
 	}
 
 	if hints.wants("garage") {

@@ -1517,6 +1517,20 @@
         <item quantity="one">%1$d MariaDB cluster</item>
         <item quantity="other">%1$d MariaDB clusters</item>
     </plurals>
+    <string name="percona_empty">No Percona XtraDB clusters.</string>
+    <string name="percona_paused">paused</string>
+    <string name="percona_reason_error">operator error</string>
+    <string name="percona_reason_no_member">no member ready</string>
+    <string name="percona_reason_members">members missing</string>
+    <string name="percona_reason_proxy">proxy pods missing</string>
+    <string name="percona_reason_initializing">initializing</string>
+    <string name="percona_last_backup">last backup %1$s</string>
+    <string name="percona_last_failure">last failure %1$s</string>
+    <string name="percona_schedules">schedules: %1$s</string>
+    <plurals name="percona_clusters">
+        <item quantity="one">%1$d Percona cluster</item>
+        <item quantity="other">%1$d Percona clusters</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s is not ready: the likely cause of %2$d problem</item>
         <item quantity="other">%1$s is not ready: the likely cause of %2$d problems</item>
