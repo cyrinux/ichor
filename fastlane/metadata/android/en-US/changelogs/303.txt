@@ -1,0 +1,7 @@
+• Tidier cluster switcher, settings behind a per-cluster menu
+• Close review gaps in the pcapng check and inner goroutines
+• Bound untrusted input in pcap, filters and parsers
+• Kube client budget, cache release and netperf sweep
+• Validate node targets and bound per-node work
+• Never let a Go panic abort the app
+• Shorten Argo CD filter hint to one line
