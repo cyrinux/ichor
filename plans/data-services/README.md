@@ -141,6 +141,199 @@ and CNPG; pods selected with `app.kubernetes.io/name=dragonfly`, instance from `
 Alerts (phase 4 rules): `noReady`/`noMaster` → critical; `pods`/`masters` → warning; a rolling
 update (`notReady`) doesn't alert.
 
+MariaDB (operator `k8s.mariadb.com/v1alpha1`, detected by its API group; `mariadbs`, `backups`
+and `physicalbackups` when served; pods selected with `app.kubernetes.io/name=mariadb`, cluster
+from `app.kubernetes.io/instance`, StatefulSet pods `<cluster>-<n>` only; role from
+`status.currentPrimary`). A scheduled logical backup's last run comes from its CronJob
+(`batch/v1`, listed only when one exists): the Complete condition's transition time stays put
+while runs keep succeeding.
+
+```jsonc
+  "mariadb": {
+    "version": "v1alpha1", "error": "",
+    "clusters": [{
+      "namespace": "app", "name": "shop",
+      "topology": "replication",    // standalone|replication|galera
+      "health": "ok",               // critical: noReady/noPrimary; warning: the others; idle: spec.suspend
+      "reasons": [],                // noReady|noPrimary|pods|galeraRecovery|backupFailed|backupStale|notReady
+      "suspended": false,
+      "message": "",                // the Ready condition's message when it is not True
+      "replicas": 2, "readyPods": 2,
+      "primary": "shop-0",          // status.currentPrimary, "" when none
+      "pods": [{ "name": "shop-0", "node": "worker-1", "phase": "Running", "role": "primary", "ready": true }],
+                                    // role: primary|replica|member (Galera)
+      "lastBackupAt": 1759460640000,       // ms, latest success over its backups, 0 = never
+      "lastBackupFailedAt": 0,             // ms, latest failure; failed when after the success
+      "backupSchedule": "0 3 * * *"        // most frequent active cron; stale past 2× its interval
+    }]
+  }
+```
+
+Alerts (phase 4 rules): `noReady`/`noPrimary` → critical; `galeraRecovery`/`backupFailed`/
+`backupStale` → warning; a replica rolling out (`pods`) or the operator busy (`notReady`) doesn't
+alert.
+
+Percona XtraDB Cluster (operator `pxc.percona.com/v1`, detected by its API group; clusters from
+`perconaxtradbclusters`, backups from `perconaxtradbclusterbackups` by `spec.pxcCluster`; pods
+selected with `app.kubernetes.io/name=percona-xtradb-cluster`, cluster from
+`app.kubernetes.io/instance`, members where `app.kubernetes.io/component=pxc`):
+
+```jsonc
+  "percona": {
+    "version": "v1", "error": "",
+    "clusters": [{
+      "namespace": "db", "name": "shop",
+      "state": "ready",             // the operator's own word (ready|initializing|paused|stopping|error|unknown)
+      "message": "",                // the operator's messages, "; "-joined
+      "crVersion": "1.18.0",
+      "paused": false,              // spec.pause: health idle, no reasons
+      "health": "ok",               // critical: error/noMember; warning: the others; idle when paused
+      "reasons": [],                // error|noMember|members|proxy|initializing|backupFailed|backupStale
+      "pxcSize": 3, "pxcReady": 3,  // status.pxc (spec.pxc.size before the operator's first pass)
+      "proxy": "haproxy",           // the enabled one: haproxy|proxysql|""
+      "proxySize": 2, "proxyReady": 2,
+      "pods": [{ "name": "shop-pxc-0", "node": "worker-1", "phase": "Running", "ready": true }],
+      "lastBackupAt": 1767225600000,       // latest Succeeded backup (status.completed), 0 if none
+      "lastBackupFailedAt": 0,             // latest Failed backup (completed, else created), 0 if none
+      "backupSchedules": [{ "name": "daily", "schedule": "0 2 * * *", "keep": 7, "storageName": "s3" }]
+    }]
+  }
+```
+
+`initializing` is only listed when nothing more precise (`members`, `proxy`) explains it: the
+operator says initializing whenever a pod is not ready. `backupFailed`: the latest failure is
+newer than the latest success. `backupStale`: no success for twice the most frequent schedule
+(counted from the cluster's creation when it never had one).
+
+Alerts (phase 4 rules): `error`/`noMember` → critical; `members`/`backupFailed`/`backupStale` →
+warning; `initializing` and `proxy` alone don't alert.
+
+cert-manager (phase 5, `cert-manager.io/v1`, detected by its API group; certificates, issuers
+and clusterissuers, read-only). Expiry math uses the read time; certificates aren't on nodes, so
+they take no part in the likely-cause correlation:
+
+```jsonc
+  "certManager": {
+    "version": "v1", "error": "",
+    "certificates": [{              // worst first, then the soonest expiry (never issued last)
+      "namespace": "app", "name": "web", "secretName": "web-tls",
+      "dnsNames": ["web.example.com"], // commonName then dnsNames, the first 5
+      "dnsNameCount": 1,            // all of them
+      "issuer": "ClusterIssuer/letsencrypt",
+      "health": "ok",               // critical: expired, or not Ready within 7 days of notAfter
+      "reasons": [],                // expired|expiring|renewalOverdue|notReady|issuer
+      "ready": true,
+      "message": "",                // the Ready condition's message when not ready
+      "notAfter": 1764547200000,    // unix ms, 0 before the first issuance
+      "renewalTime": 1761955200000, // unix ms, 0 when none
+      "failedAttempts": 0           // status.failedIssuanceAttempts
+    }],
+    "issuers": [{                   // not ready first
+      "kind": "ClusterIssuer",      // or Issuer (with its namespace)
+      "namespace": "", "name": "letsencrypt",
+      "type": "acme",               // acme|ca|selfSigned|vault|venafi, "" for another
+      "server": "acme-v02.api.letsencrypt.org", // ACME server host only
+      "ready": true, "message": "...",
+      "health": "ok"                // warning when not ready
+    }]
+  }
+```
+
+Warnings: `notReady` (a first issuance, DoesNotExist/Issuing, included), `renewalOverdue`
+(renewalTime passed over an hour ago), `expiring` (under 14 days left and no renewal still
+planned: a short-lived certificate renewed hours ahead is fine), `issuer` (its cert-manager
+issuer is not ready; external issuer groups are not checked). Alerts: a critical certificate →
+critical; `expiring`/`renewalOverdue`/`notReady` → warning; an issuer not ready → warning on its
+own key. Keys: `certmanager|<ns>/<name>` for a certificate, `certmanager|Issuer/<ns>/<name>` and
+`certmanager|ClusterIssuer/<name>` for an issuer.
+
+Velero (phase 5, API group `velero.io`, detected by its group but always read at `v1`: the group
+also serves `v2alpha1` (DataUpload/DataDownload), which has no schedules, backups or locations).
+Three listings: `schedules`, `backups` (only the latest finished one per schedule, from the
+`velero.io/schedule-name` label, plus whether one is running, and the failed ones without a
+schedule from the last 7 days are kept) and `backupstoragelocations`:
+
+```jsonc
+  "velero": {
+    "version": "v1", "error": "",
+    "schedules": [{
+      "namespace": "velero", "name": "daily",
+      "schedule": "0 2 * * *", "paused": false,
+      "phase": "Enabled",             // New|Enabled|FailedValidation
+      "validationErrors": [],
+      "health": "ok",                 // critical: failed/location; warning: partiallyFailed/stale/invalid; idle: paused
+      "reasons": [],                  // failed|location|partiallyFailed|stale|invalid
+      "storageLocation": "default",   // the namespace's default location when the template names none
+      "includedNamespaces": ["app"],  // empty or "*": every namespace
+      "lastBackup": {                 // latest finished backup, null when none is left
+        "name": "daily-20261003020000", "phase": "Completed",  // Completed|PartiallyFailed|Failed|FailedValidation
+        "startedAt": 1759456800000, "completedAt": 1759457040000, "errors": 0, "warnings": 1, "failureReason": ""
+      },
+      "lastSuccessAt": 1759457040000, // latest Completed backup, 0 when none
+      "inProgress": true              // a backup of it is New/InProgress/WaitingForPluginOperations*/Finalizing*
+    }],
+    "adhoc": [{                       // failed/partially failed backups without a schedule, last 7 days, newest first
+      "namespace": "velero", "name": "before-upgrade", "phase": "PartiallyFailed",
+      "startedAt": 0, "completedAt": 0, "errors": 1, "warnings": 0, "failureReason": "",
+      "storageLocation": "default", "health": "warning"
+    }],
+    "locations": [{
+      "namespace": "velero", "name": "default", "provider": "aws", "bucket": "backups", "default": true,
+      "phase": "Available",           // Available|Unavailable, "" before the first validation
+      "message": "", "lastValidatedAt": 1759492740000,
+      "health": "ok"                  // critical when Unavailable
+    }]
+  }
+```
+
+`stale` is no Completed backup within twice the schedule's interval (the same rough
+`cronInterval` as CNPG), counted from the schedule's creation when it has none yet (from its last run when
+every backup has expired since). Alerts (key
+`velero|ns/name`, `velero|BackupStorageLocation/ns/name` for a location): a critical schedule or
+an unavailable location → critical;
+`stale`/`partiallyFailed`/`invalid` → warning; a failed backup taken by hand is shown, not alerted.
+
+Rook Ceph (phase 5, operator `ceph.rook.io/v1`, detected by its API group; `cephclusters`,
+`cephblockpools`, `cephfilesystems` and `cephobjectstores`, plus one pod listing selected with
+`app in (rook-ceph-osd,rook-ceph-mon)`, matched to a cluster by namespace, OSD number from
+`ceph-osd-id`). An external cluster (`spec.external.enable`) has no pods of its own:
+
+```jsonc
+  "ceph": {
+    "version": "v1", "error": "",
+    "clusters": [{
+      "namespace": "rook-ceph", "name": "rook-ceph",
+      "phase": "Ready",             // Rook's own word (Ready, Connected when external, Progressing, Failure…)
+      "message": "Cluster created successfully",
+      "cephHealth": "HEALTH_WARN",  // status.ceph.health; "" before Ceph reported
+      "health": "warning",          // critical: healthErr/failure/full/noOSD/noQuorum; warning: the rest
+      "reasons": ["healthWarn"],    // healthErr|failure|full|noOSD|noQuorum|healthWarn|nearFull|osds|mons|notReady
+      "checks": [{ "name": "MON_DOWN", "severity": "HEALTH_WARN", "message": "1/3 mons down" }], // errors first
+      "bytesTotal": 3298534883328, "bytesUsed": 1099511627776, // raw capacity (status.ceph.capacity)
+      "osdsUp": 3, "osdsTotal": 3,  // OSD pods ready
+      "monsReady": 2, "monsTotal": 3,
+      "notReadyNodes": ["worker-3"], // nodes of its OSD and mon pods that are not ready
+      "version": "19.2.3-0",        // status.version.version
+      "external": false
+    }],
+    "pools": [{                     // block pools, filesystems and object stores
+      "namespace": "rook-ceph", "name": "replicapool",
+      "kind": "blockPool",          // blockPool|filesystem|objectStore
+      "phase": "Ready",
+      "health": "ok"                // critical on Failure, warning when not Ready (Connected)
+    }],
+    "osds": [{ "namespace": "rook-ceph", "id": "0", "pod": "rook-ceph-osd-0-…", "node": "worker-1", "phase": "Running", "ready": true }]
+  }
+```
+
+`full`/`nearFull` use Ceph's own default ratios: more than 95% / 85% of the raw capacity used.
+`noQuorum` is half the mons or more not ready (Ceph stops answering, its reported health goes
+stale); `noOSD` is no OSD pod ready while some exist. `notReady` only shows when nothing else is
+wrong. Alerts (phase 4 rules, key `ceph|ns/name`, `ceph|kind/ns/name` for a pool): a critical cluster or a failed pool →
+critical; `healthWarn`/`nearFull`/`osds` → warning; a mon down (Ceph's `MON_DOWN` warns anyway)
+or a reconcile in progress (`notReady`) doesn't alert on its own. The likely cause counts the
+`notReadyNodes` of a cluster that needs attention.
+
 A section key is **absent/null** when the system isn't installed. An **empty list with no
 error** means it's installed but has nothing in it. A **non-empty `error`** means the
 system was detected but couldn't be read; the UI shows it inline in that tab only.

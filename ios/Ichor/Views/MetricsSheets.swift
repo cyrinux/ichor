@@ -1,0 +1,238 @@
+import SwiftUI
+import IchorCore
+
+/// Picks where queries go: a query API found in the cluster, a Service typed in (both through
+/// the Kubernetes API), or a URL with its credentials. Go checks it before it is saved.
+struct SourceSheet: View {
+    let current: PromSource?
+    let discovered: [PromSource]?
+    let discovering: Bool
+    let discoveryError: String?
+    let discover: () async -> Void
+    /// Nil when the query API answers, else why not.
+    let test: (PromSource) async -> String?
+    /// Nil when saved, else why not.
+    let save: (PromSource) async -> String?
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var source = PromSource()
+    @State private var port = ""
+    @State private var busy = false
+    @State private var outcome: Result<Void, TalosError>?
+
+    private var edited: PromSource {
+        var s = source
+        if s.mode == PromSource.proxy { s.port = Int(port) ?? 0 }
+        return s
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Picker("Mode", selection: Binding(get: { source.mode }, set: { source = source.switched(to: $0); outcome = nil })) {
+                        Text("In the cluster").tag(PromSource.proxy)
+                        Text("URL").tag(PromSource.url)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                if source.mode == PromSource.proxy {
+                    discoveredSection
+                    Section {
+                        TextField("Namespace", text: $source.namespace)
+                        TextField("Service", text: $source.service)
+                        TextField("Port", text: $port).keyboardType(.numberPad)
+                        TextField("Path prefix (Mimir: /prometheus)", text: $source.pathPrefix)
+                    } footer: {
+                        Text("Reached through the Kubernetes API service proxy with the cluster's admin kubeconfig: no extra credentials.")
+                    }
+                } else {
+                    urlSection
+                }
+                Section {
+                    TextField("Tenant (X-Scope-OrgID, optional)", text: $source.tenant)
+                }
+                if busy {
+                    ProgressView()
+                } else if let outcome {
+                    switch outcome {
+                    case .success: Text("The query API answers.").foregroundStyle(.green)
+                    case .failure(let error): Text(error.message).foregroundStyle(.red).font(.footnote)
+                    }
+                }
+            }
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .navigationTitle("Metrics source")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItemGroup(placement: .confirmationAction) {
+                    Button("Test") { run(test) }.disabled(busy)
+                    Button("Save") { run(save, then: { dismiss() }) }.disabled(busy)
+                }
+            }
+            .onAppear {
+                source = current ?? discovered?.first ?? PromSource()
+                port = source.port > 0 ? String(source.port) : ""
+            }
+        }
+    }
+
+    @ViewBuilder private var discoveredSection: some View {
+        Section {
+            if discovering { ProgressView() }
+            if let discoveryError { Text(discoveryError).foregroundStyle(.red).font(.footnote) }
+            if discovered?.isEmpty == true { Text("No Prometheus, Mimir, Thanos or VictoriaMetrics found in the cluster").foregroundStyle(.secondary) }
+            ForEach(discovered ?? [], id: \.self) { found in
+                Button {
+                    var picked = found
+                    picked.tenant = source.tenant
+                    source = picked
+                    port = String(found.port)
+                    outcome = nil
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(verbatim: found.label)
+                            if !found.kind.isEmpty { Text(verbatim: found.kind).font(.caption).foregroundStyle(.secondary) }
+                        }
+                        Spacer()
+                        if found.sameEndpoint(as: edited) { Image(systemName: "checkmark").foregroundStyle(.tint) }
+                    }
+                }
+                .foregroundStyle(.primary)
+            }
+            Button("Search the cluster again") { Task { await discover() } }.disabled(discovering)
+        }
+    }
+
+    @ViewBuilder private var urlSection: some View {
+        Section {
+            TextField("URL (e.g. https://mimir.example.com/prometheus)", text: $source.url).keyboardType(.URL)
+            Picker("Authentication", selection: $source.auth) {
+                Text("None").tag(PromSource.authNone)
+                Text("Token").tag(PromSource.authBearer)
+                Text("Basic").tag(PromSource.authBasic)
+            }
+            if source.auth == PromSource.authBasic { TextField("User name", text: $source.username) }
+            if source.auth == PromSource.authBearer { SecureField("Bearer token", text: $source.secret) }
+            if source.auth == PromSource.authBasic { SecureField("Password", text: $source.secret) }
+        } footer: {
+            if source.auth != PromSource.authNone {
+                Text("Credentials are only sent over https, and stay encrypted on this phone.")
+            }
+        }
+        Section {
+            TextField("Extra certificate authority (PEM, optional)", text: $source.ca, axis: .vertical).lineLimit(2...6)
+            Toggle("Skip certificate verification", isOn: $source.insecureSkipVerify)
+        }
+    }
+
+    private func run(_ action: @escaping (PromSource) async -> String?, then: @escaping () -> Void = {}) {
+        busy = true
+        let candidate = edited
+        Task {
+            let error = await action(candidate)
+            busy = false
+            outcome = error.map { .failure(TalosError(message: $0)) } ?? .success(())
+            if error == nil { then() }
+        }
+    }
+}
+
+/// Adds (empty `initial` id) or edits a panel, from a preset or plain PromQL, with a preview run.
+struct PanelEditorSheet: View {
+    let initial: PromPanel
+    let presets: [PromPanel]
+    let preview: (PromPanel) async -> Result<PromResult, Error>
+    let onSave: (PromPanel) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var panel = PromPanel()
+    @State private var running = false
+    @State private var result: Result<PromResult, Error>?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                if initial.id.isEmpty && !presets.isEmpty {
+                    Section {
+                        Menu("Start from a preset") {
+                            ForEach(presets) { preset in
+                                Button(preset.title) {
+                                    panel = PromPanel(title: preset.title, query: preset.query, unit: preset.unit, legend: preset.legend)
+                                    result = nil
+                                }
+                            }
+                        }
+                    }
+                }
+                Section {
+                    TextField("Title", text: $panel.title)
+                    TextField("PromQL query", text: $panel.query, axis: .vertical)
+                        .lineLimit(3...8)
+                        .font(.body.monospaced())
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    Picker("Unit", selection: $panel.unit) {
+                        ForEach(PromPanel.units, id: \.self) { Text(unitLabel($0)).tag($0) }
+                    }
+                }
+                Section {
+                    TextField("Legend", text: $panel.legend)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                } footer: {
+                    Text("Labels in {{ }}, e.g. {{namespace}}/{{pod}}. Empty: the series name.")
+                }
+                Section {
+                    Button("Run query") {
+                        running = true
+                        let candidate = panel
+                        Task {
+                            result = await preview(candidate)
+                            running = false
+                        }
+                    }
+                    .disabled(panel.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || running)
+                    if running { ProgressView() }
+                    switch result {
+                    case .success(let res): PromChartView(panel: panel, result: res)
+                    case .failure(let error): Text(error.localizedDescription).foregroundStyle(.red).font(.footnote)
+                    case nil: EmptyView()
+                    }
+                }
+            }
+            .navigationTitle(initial.id.isEmpty ? String(localized: "Add panel") : String(localized: "Edit panel"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        var saved = panel
+                        saved.id = initial.id
+                        saved.title = saved.title.trimmingCharacters(in: .whitespacesAndNewlines)
+                        saved.query = saved.query.trimmingCharacters(in: .whitespacesAndNewlines)
+                        saved.legend = saved.legend.trimmingCharacters(in: .whitespacesAndNewlines)
+                        onSave(saved)
+                        dismiss()
+                    }
+                    .disabled(panel.title.trimmingCharacters(in: .whitespaces).isEmpty || panel.query.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+            .onAppear { panel = initial }
+        }
+    }
+
+    private func unitLabel(_ unit: String) -> String {
+        switch unit {
+        case "percent": String(localized: "Percent")
+        case "bytes": String(localized: "Bytes")
+        case "cores": String(localized: "CPU cores")
+        case "persec": String(localized: "Per second")
+        case "count": String(localized: "Count")
+        default: String(localized: "Plain number")
+        }
+    }
+}

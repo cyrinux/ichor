@@ -223,8 +223,9 @@ func (k *kubeClient) endpoint(path string) (*url.URL, error) {
 
 // getRaw reads path whatever the HTTP status: a service proxy answers with the backend's
 // own status and body, which the caller interprets. ctype is the answer's Content-Type.
-func (k *kubeClient) getRaw(ctx context.Context, path string) (status int, ctype string, body []byte, err error) {
-	resp, data, err := k.send(ctx, http.MethodGet, path, "application/json", "", nil)
+// header is passed on to the backend (a Mimir tenant), nil for none.
+func (k *kubeClient) getRaw(ctx context.Context, path string, header map[string]string) (status int, ctype string, body []byte, err error) {
+	resp, data, err := k.send(ctx, http.MethodGet, path, "application/json", "", nil, header)
 	if err != nil {
 		return 0, "", nil, err
 	}
@@ -243,7 +244,7 @@ func (k *kubeClient) post(ctx context.Context, path string, body any, out any) e
 
 // getText reads a plain-text answer, such as a pod log.
 func (k *kubeClient) getText(ctx context.Context, path string) (string, error) {
-	resp, data, err := k.send(ctx, http.MethodGet, path, "text/plain, */*", "", nil)
+	resp, data, err := k.send(ctx, http.MethodGet, path, "text/plain, */*", "", nil, nil)
 	if err != nil {
 		return "", err
 	}
@@ -256,7 +257,7 @@ func (k *kubeClient) getText(ctx context.Context, path string) (string, error) {
 }
 
 func (k *kubeClient) do(ctx context.Context, method, path, contentType string, body []byte, out any) error {
-	resp, data, err := k.send(ctx, method, path, "application/json", contentType, body)
+	resp, data, err := k.send(ctx, method, path, "application/json", contentType, body, nil)
 	if err != nil {
 		return err
 	}
@@ -276,8 +277,9 @@ func (k *kubeClient) do(ctx context.Context, method, path, contentType string, b
 	return nil
 }
 
-// send makes one request and reads its answer, capped at kubeMaxBody.
-func (k *kubeClient) send(ctx context.Context, method, path, accept, contentType string, body []byte) (*http.Response, []byte, error) {
+// send makes one request and reads its answer, capped at kubeMaxBody. header adds request
+// headers, nil for none; it cannot replace the client's own.
+func (k *kubeClient) send(ctx context.Context, method, path, accept, contentType string, body []byte, header map[string]string) (*http.Response, []byte, error) {
 	u, err := k.endpoint(path)
 	if err != nil {
 		return nil, nil, err
@@ -286,6 +288,10 @@ func (k *kubeClient) send(ctx context.Context, method, path, accept, contentType
 	req, err := http.NewRequestWithContext(ctx, method, u.String(), bytes.NewReader(body))
 	if err != nil {
 		return nil, nil, err
+	}
+
+	for name, value := range header {
+		req.Header.Set(name, value)
 	}
 
 	req.Header.Set("Accept", accept)

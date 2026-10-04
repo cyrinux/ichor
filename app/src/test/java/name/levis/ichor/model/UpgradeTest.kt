@@ -22,6 +22,7 @@ class UpgradeTest {
         assertTrue(p.controlPlane)
         assertEquals(EtcdUpgradeCheck(3, 2, thisNodeMember = true, quorumAfterLoss = false), p.etcd)
         assertTrue(p.warnings.isEmpty())
+        assertTrue(p.acknowledge.isEmpty()) // absent: nothing to acknowledge
         assertTrue(p.etcdBlocked)
         assertNull(TalosJson.decodeFromString(UpgradePlan.serializer(), """{"node":"n","etcd":null}""").etcd)
     }
@@ -55,6 +56,29 @@ class UpgradeTest {
         assertFalse(upgradeGate(plan, "v1.14.2", "img", force = false, otherRunning = true).canStart)
         // Warnings never block.
         assertTrue(upgradeGate(plan.copy(warnings = listOf("w")), "v1.14.2", "img", force = false, otherRunning = false).canStart)
+    }
+
+    @Test
+    fun decodesAcknowledge() {
+        val p = TalosJson.decodeFromString(UpgradePlan.serializer(), """{"node":"n","acknowledge":["single control plane"]}""")
+        assertEquals(listOf("single control plane"), p.acknowledge)
+    }
+
+    @Test
+    fun risksAreThePlansThenTheVersions() {
+        val risky = plan.copy(acknowledge = listOf("single control plane"))
+        assertEquals(listOf("single control plane", "skips v1.15"), upgradeRisks(risky, "skips v1.15"))
+        assertEquals(listOf("single control plane"), upgradeRisks(risky, " "))
+        assertTrue(upgradeRisks(plan, "").isEmpty())
+        // Acknowledgments never block the screen's Start: the confirmation asks for them.
+        assertTrue(upgradeGate(risky, "v1.14.2", "img", force = false, otherRunning = false).canStart)
+    }
+
+    @Test
+    fun risksMustBeAcknowledged() {
+        assertTrue(upgradeAcknowledged(emptyList(), understood = false))
+        assertFalse(upgradeAcknowledged(listOf("single control plane"), understood = false))
+        assertTrue(upgradeAcknowledged(listOf("single control plane"), understood = true))
     }
 
     @Test

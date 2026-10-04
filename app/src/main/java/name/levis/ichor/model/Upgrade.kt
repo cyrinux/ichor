@@ -16,6 +16,8 @@ data class UpgradePlan(
     /** Hard stops: the core refuses to start while there are any (unless [forceable] and forced). */
     val blockers: List<String> = emptyList(),
     val warnings: List<String> = emptyList(),
+    /** Risks the user must accept to start: the core refuses unless acknowledged (force does not skip them). */
+    val acknowledge: List<String> = emptyList(),
     /** Every blocker is an etcd check, which "force" skips like `talosctl upgrade --force`. */
     val forceable: Boolean = false,
 )
@@ -72,6 +74,13 @@ fun upgradeGate(plan: UpgradePlan, version: String, image: String, force: Boolea
         canStart = version.isNotBlank() && image.isNotBlank() && !blocked && !otherRunning,
     )
 }
+
+/** What the user must accept to start: the plan's risks, then the chosen version's [versionRisk] if any. */
+fun upgradeRisks(plan: UpgradePlan, versionRisk: String): List<String> =
+    plan.acknowledge + listOfNotNull(versionRisk.trim().takeIf { it.isNotEmpty() })
+
+/** The confirmation allows starting only once the user ticked that they [understood] the [risks], if any. */
+fun upgradeAcknowledged(risks: List<String>, understood: Boolean): Boolean = risks.isEmpty() || understood
 
 /** Releases suggested in the version picker: stable first, newest first as listed by Go. */
 fun releaseSuggestions(releases: List<TalosRelease>, includePrerelease: Boolean = true): List<TalosRelease> =

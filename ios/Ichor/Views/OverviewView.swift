@@ -199,6 +199,9 @@ struct OverviewView: View {
                 if model.allows(.workloads) {
                     NavigationLink(value: Route.workloads) { Image(systemName: "square.stack.3d.up") }
                         .accessibilityLabel(Text("Kubernetes workloads"))
+                    // PromQL panels, through the same kubeconfig (or a URL set on the screen).
+                    NavigationLink(value: Route.metrics) { Image(systemName: "chart.xyaxis.line") }
+                        .accessibilityLabel(Text("Metrics"))
                 }
                 NavigationLink(value: Route.kubespan) { Image(systemName: "point.3.connected.trianglepath.dotted") }
                 NavigationLink(value: Route.etcd) { Image(systemName: "cylinder.split.1x2") }

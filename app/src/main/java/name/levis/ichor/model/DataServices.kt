@@ -13,6 +13,11 @@ data class DataServices(
     val garage: GarageStatus? = null,
     val cnpg: CnpgStatus? = null,
     val dragonfly: DragonflyStatus? = null,
+    val mariadb: MariaDbStatus? = null,
+    val percona: PerconaStatus? = null,
+    val certManager: CertManagerStatus? = null,
+    val velero: VeleroStatus? = null,
+    val ceph: CephStatus? = null,
 )
 
 @Serializable
@@ -235,6 +240,176 @@ data class DragonflyPod(
     val ready: Boolean = false,
 )
 
+@Serializable
+data class CertManagerStatus(
+    val version: String = "",
+    val error: String = "",
+    /** Worst first, then the soonest expiry. */
+    val certificates: List<Certificate> = emptyList(),
+    val issuers: List<CertIssuer> = emptyList(),
+)
+
+@Serializable
+data class Certificate(
+    val namespace: String = "",
+    val name: String = "",
+    val secretName: String = "",
+    /** The common name then the DNS names, the first few; [dnsNameCount] counts them all. */
+    val dnsNames: List<String> = emptyList(),
+    val dnsNameCount: Int = 0,
+    /** "ClusterIssuer/letsencrypt", "Issuer/internal-ca". */
+    val issuer: String = "",
+    val health: String = "",
+    /** Wire values of [CertReason]. */
+    val reasons: List<String> = emptyList(),
+    val ready: Boolean = false,
+    /** The Ready condition's message when not ready. */
+    val message: String = "",
+    /** Unix ms, 0 before the first issuance. */
+    val notAfter: Long = 0,
+    /** Unix ms, 0 when no renewal is planned. */
+    val renewalTime: Long = 0,
+    val failedAttempts: Int = 0,
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+    val reasonList: List<CertReason> get() = reasons.mapNotNull(CertReason::from)
+}
+
+@Serializable
+data class CertIssuer(
+    /** Issuer or ClusterIssuer. */
+    val kind: String = "",
+    /** "" for a ClusterIssuer. */
+    val namespace: String = "",
+    val name: String = "",
+    /** acme, ca, selfSigned, vault or venafi; "" for another. */
+    val type: String = "",
+    /** The ACME server's host. */
+    val server: String = "",
+    val ready: Boolean = false,
+    val message: String = "",
+    val health: String = "",
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+
+    /** "ClusterIssuer/letsencrypt", "Issuer/app/internal-ca": unique across both kinds. */
+    val label: String get() = listOf(kind, namespace, name).filter { it.isNotEmpty() }.joinToString("/")
+}
+
+/** Why a certificate is not ok, as the Go core names it. */
+enum class CertReason(val wire: String) {
+    EXPIRED("expired"),
+    EXPIRING("expiring"),
+    RENEWAL_OVERDUE("renewalOverdue"),
+    NOT_READY("notReady"),
+    ISSUER("issuer"),
+    ;
+
+    companion object {
+        fun from(wire: String): CertReason? = entries.firstOrNull { it.wire == wire }
+    }
+}
+
+@Serializable
+data class CephStatus(
+    val version: String = "",
+    val error: String = "",
+    val clusters: List<CephCluster> = emptyList(),
+    val pools: List<CephPool> = emptyList(),
+    /** By namespace, then OSD number. */
+    val osds: List<CephOsd> = emptyList(),
+)
+
+@Serializable
+data class CephCluster(
+    val namespace: String = "",
+    val name: String = "",
+    /** Rook's own word: Ready (Connected when external), Progressing, Failure... */
+    val phase: String = "",
+    val message: String = "",
+    /** HEALTH_OK, HEALTH_WARN or HEALTH_ERR; "" before Ceph reported. */
+    val cephHealth: String = "",
+    val health: String = "",
+    /** Wire values of [CephReason]. */
+    val reasons: List<String> = emptyList(),
+    /** Ceph's health checks, errors first. */
+    val checks: List<CephCheck> = emptyList(),
+    val bytesTotal: Long = 0,
+    val bytesUsed: Long = 0,
+    val osdsUp: Int = 0,
+    val osdsTotal: Int = 0,
+    val monsReady: Int = 0,
+    val monsTotal: Int = 0,
+    /** Nodes of its OSD and mon pods that are not ready. */
+    val notReadyNodes: List<String> = emptyList(),
+    /** Ceph's version, e.g. 19.2.3-0. */
+    val version: String = "",
+    val external: Boolean = false,
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+    val reasonList: List<CephReason> get() = reasons.mapNotNull(CephReason::from)
+
+    /** Raw capacity used, 0 when Ceph has not reported it. */
+    val usedFraction: Double get() = if (bytesTotal > 0) bytesUsed.toDouble() / bytesTotal else 0.0
+}
+
+@Serializable
+data class CephCheck(
+    /** MON_DOWN, OSD_NEARFULL... */
+    val name: String,
+    /** HEALTH_WARN or HEALTH_ERR. */
+    val severity: String = "",
+    val message: String = "",
+)
+
+/** A block pool, a filesystem or an object store. */
+@Serializable
+data class CephPool(
+    val namespace: String = "",
+    val name: String = "",
+    /** blockPool, filesystem or objectStore. */
+    val kind: String = "",
+    val phase: String = "",
+    val health: String = "",
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+}
+
+@Serializable
+data class CephOsd(
+    /** The cluster's. */
+    val namespace: String = "",
+    /** The ceph-osd-id label. */
+    val id: String = "",
+    val pod: String = "",
+    val node: String = "",
+    val phase: String = "",
+    val ready: Boolean = false,
+)
+
+/** Why a Ceph cluster is not ok, as the Go core names it. */
+enum class CephReason(val wire: String) {
+    HEALTH_ERR("healthErr"),
+    FAILURE("failure"),
+    FULL("full"),
+    NO_OSD("noOSD"),
+    NO_QUORUM("noQuorum"),
+    HEALTH_WARN("healthWarn"),
+    NEAR_FULL("nearFull"),
+    OSDS("osds"),
+    MONS("mons"),
+    NOT_READY("notReady"),
+    ;
+
+    companion object {
+        fun from(wire: String): CephReason? = entries.firstOrNull { it.wire == wire }
+    }
+}
+
+
 /** Why a Dragonfly instance is not ok, as the Go core names it. */
 enum class DragonflyReason(val wire: String) {
     NO_READY("noReady"),
@@ -246,6 +421,238 @@ enum class DragonflyReason(val wire: String) {
 
     companion object {
         fun from(wire: String): DragonflyReason? = entries.firstOrNull { it.wire == wire }
+    }
+}
+
+@Serializable
+data class MariaDbStatus(
+    val version: String = "",
+    val error: String = "",
+    val clusters: List<MariaDbCluster> = emptyList(),
+)
+
+@Serializable
+data class MariaDbCluster(
+    val namespace: String = "",
+    val name: String = "",
+    /** standalone, replication or galera. */
+    val topology: String = "",
+    val health: String = "",
+    /** Wire values of [MariaDbReason]. */
+    val reasons: List<String> = emptyList(),
+    val suspended: Boolean = false,
+    /** The operator's Ready condition message when it is not True. */
+    val message: String = "",
+    val replicas: Int = 0,
+    val readyPods: Int = 0,
+    /** The operator's current primary, "" when none. */
+    val primary: String = "",
+    /** The primary first. */
+    val pods: List<MariaDbPod> = emptyList(),
+    /** Last successful and failed backup (logical or physical), unix ms, 0 when none. */
+    val lastBackupAt: Long = 0,
+    val lastBackupFailedAt: Long = 0,
+    /** The most frequent active backup cron, "" when none. */
+    val backupSchedule: String = "",
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+    val reasonList: List<MariaDbReason> get() = reasons.mapNotNull(MariaDbReason::from)
+}
+
+@Serializable
+data class MariaDbPod(
+    val name: String,
+    val node: String = "",
+    val phase: String = "",
+    /** primary, replica or member (Galera), "" when unknown. */
+    val role: String = "",
+    val ready: Boolean = false,
+)
+
+/** Why a MariaDB cluster is not ok, as the Go core names it. */
+enum class MariaDbReason(val wire: String) {
+    NO_READY("noReady"),
+    NO_PRIMARY("noPrimary"),
+    PODS("pods"),
+    GALERA_RECOVERY("galeraRecovery"),
+    BACKUP_FAILED("backupFailed"),
+    BACKUP_STALE("backupStale"),
+    NOT_READY("notReady"),
+    ;
+
+    companion object {
+        fun from(wire: String): MariaDbReason? = entries.firstOrNull { it.wire == wire }
+    }
+}
+
+@Serializable
+data class PerconaStatus(
+    val version: String = "",
+    val error: String = "",
+    val clusters: List<PerconaCluster> = emptyList(),
+)
+
+@Serializable
+data class PerconaCluster(
+    val namespace: String = "",
+    val name: String = "",
+    /** The operator's own word: ready, initializing, paused, stopping, error or unknown. */
+    val state: String = "",
+    /** The operator's messages, "; "-joined. */
+    val message: String = "",
+    val crVersion: String = "",
+    val paused: Boolean = false,
+    val health: String = "",
+    /** Wire values of [PerconaReason]. */
+    val reasons: List<String> = emptyList(),
+    val pxcSize: Int = 0,
+    val pxcReady: Int = 0,
+    /** haproxy, proxysql or "" for none. */
+    val proxy: String = "",
+    val proxySize: Int = 0,
+    val proxyReady: Int = 0,
+    /** The PXC members, by name. */
+    val pods: List<PerconaPod> = emptyList(),
+    val lastBackupAt: Long = 0,
+    val lastBackupFailedAt: Long = 0,
+    val backupSchedules: List<PerconaSchedule> = emptyList(),
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+    val reasonList: List<PerconaReason> get() = reasons.mapNotNull(PerconaReason::from)
+}
+
+@Serializable
+data class PerconaPod(
+    val name: String,
+    /** "" while Pending: not scheduled anywhere. */
+    val node: String = "",
+    val phase: String = "",
+    val ready: Boolean = false,
+)
+
+@Serializable
+data class PerconaSchedule(
+    val name: String = "",
+    val schedule: String = "",
+    val keep: Int = 0,
+    val storageName: String = "",
+)
+
+/** Why a Percona XtraDB cluster is not ok, as the Go core names it. */
+enum class PerconaReason(val wire: String) {
+    ERROR("error"),
+    NO_MEMBER("noMember"),
+    MEMBERS("members"),
+    PROXY("proxy"),
+    INITIALIZING("initializing"),
+    BACKUP_FAILED("backupFailed"),
+    BACKUP_STALE("backupStale"),
+    ;
+
+    companion object {
+        fun from(wire: String): PerconaReason? = entries.firstOrNull { it.wire == wire }
+    }
+}
+
+@Serializable
+data class VeleroStatus(
+    val version: String = "",
+    val error: String = "",
+    /** Problems first. */
+    val schedules: List<VeleroSchedule> = emptyList(),
+    /** Backups taken by hand (no schedule) that failed in the last week, newest first. */
+    val adhoc: List<VeleroAdhocBackup> = emptyList(),
+    /** Unavailable first. */
+    val locations: List<VeleroLocation> = emptyList(),
+)
+
+@Serializable
+data class VeleroSchedule(
+    val namespace: String = "",
+    val name: String = "",
+    /** Cron, as written. */
+    val schedule: String = "",
+    val paused: Boolean = false,
+    /** The schedule's own: New, Enabled or FailedValidation. */
+    val phase: String = "",
+    val validationErrors: List<String> = emptyList(),
+    val health: String = "",
+    /** Wire values of [VeleroReason]. */
+    val reasons: List<String> = emptyList(),
+    val storageLocation: String = "",
+    /** Empty or "*": every namespace. */
+    val includedNamespaces: List<String> = emptyList(),
+    /** The latest finished backup, null when none is left. */
+    val lastBackup: VeleroBackup? = null,
+    /** The latest Completed backup (unix ms), 0 when none. */
+    val lastSuccessAt: Long = 0,
+    val inProgress: Boolean = false,
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+    val reasonList: List<VeleroReason> get() = reasons.mapNotNull(VeleroReason::from)
+}
+
+@Serializable
+data class VeleroBackup(
+    val name: String = "",
+    /** Completed, PartiallyFailed, Failed or FailedValidation. */
+    val phase: String = "",
+    val startedAt: Long = 0,
+    val completedAt: Long = 0,
+    val errors: Int = 0,
+    val warnings: Int = 0,
+    val failureReason: String = "",
+)
+
+/** A backup taken by hand that failed: a warning. */
+@Serializable
+data class VeleroAdhocBackup(
+    val namespace: String = "",
+    val name: String = "",
+    val phase: String = "",
+    val startedAt: Long = 0,
+    val completedAt: Long = 0,
+    val errors: Int = 0,
+    val warnings: Int = 0,
+    val failureReason: String = "",
+    val storageLocation: String = "",
+    val health: String = "",
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+}
+
+@Serializable
+data class VeleroLocation(
+    val namespace: String = "",
+    val name: String = "",
+    val provider: String = "",
+    val bucket: String = "",
+    val default: Boolean = false,
+    /** Available or Unavailable, "" before the first check. */
+    val phase: String = "",
+    val message: String = "",
+    val lastValidatedAt: Long = 0,
+    val health: String = "",
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+}
+
+/** Why a Velero schedule is not ok, as the Go core names it. */
+enum class VeleroReason(val wire: String) {
+    FAILED("failed"),
+    LOCATION("location"),
+    PARTIALLY_FAILED("partiallyFailed"),
+    STALE("stale"),
+    INVALID("invalid"),
+    ;
+
+    companion object {
+        fun from(wire: String): VeleroReason? = entries.firstOrNull { it.wire == wire }
     }
 }
 
@@ -303,6 +710,11 @@ enum class DataServiceKind(val catalogId: String) {
     GARAGE("garage"),
     CNPG("cloudnative-pg"),
     DRAGONFLY("dragonfly"),
+    MARIADB("mariadb"),
+    PERCONA("percona-xtradb"),
+    CERT_MANAGER("cert-manager"),
+    VELERO("velero"),
+    CEPH("rook"),
 }
 
 /** The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs. */
@@ -318,6 +730,11 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.GARAGE.takeIf { garage != null },
         DataServiceKind.CNPG.takeIf { cnpg != null },
         DataServiceKind.DRAGONFLY.takeIf { dragonfly != null },
+        DataServiceKind.MARIADB.takeIf { mariadb != null },
+        DataServiceKind.PERCONA.takeIf { percona != null },
+        DataServiceKind.CERT_MANAGER.takeIf { certManager != null },
+        DataServiceKind.VELERO.takeIf { velero != null },
+        DataServiceKind.CEPH.takeIf { ceph != null },
     )
 
 /**
@@ -331,6 +748,44 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.GARAGE -> garage?.summary()
     DataServiceKind.CNPG -> cnpg?.summary()
     DataServiceKind.DRAGONFLY -> dragonfly?.summary()
+    DataServiceKind.MARIADB -> mariadb?.summary()
+    DataServiceKind.PERCONA -> percona?.summary()
+    DataServiceKind.CERT_MANAGER -> certManager?.summary()
+    DataServiceKind.VELERO -> velero?.summary()
+    DataServiceKind.CEPH -> ceph?.summary()
+}
+
+/** Ceph clusters are the items; a pool that is not ready needs a look as much as a cluster. */
+fun CephStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty() && clusters.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
+    val healths = clusters.map { it.serviceHealth } + pools.map { it.serviceHealth }
+    return ServiceSummary(clusters.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
+}
+
+fun MariaDbStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty() && clusters.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
+    val healths = clusters.map { it.serviceHealth }
+    return ServiceSummary(clusters.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
+}
+
+fun PerconaStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty() && clusters.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
+    val healths = clusters.map { it.serviceHealth }
+    return ServiceSummary(clusters.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
+}
+
+fun CertManagerStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty() && certificates.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
+    // An issuer that is not ready needs a look as much as a certificate.
+    val healths = certificates.map { it.serviceHealth } + issuers.map { it.serviceHealth }
+    return ServiceSummary(certificates.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
+}
+
+/** [ServiceSummary.total] counts the schedules; a storage location down or a failed backup taken by hand needs a look too. */
+fun VeleroStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty() && schedules.isEmpty() && locations.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
+    val healths = schedules.map { it.serviceHealth } + locations.map { it.serviceHealth } + adhoc.map { it.serviceHealth }
+    return ServiceSummary(schedules.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
 }
 
 fun DragonflyStatus.summary(): ServiceSummary {
@@ -390,6 +845,13 @@ fun DataServices.likelyCauses(downNodes: Set<String> = emptySet()): List<LikelyC
     dragonfly?.instances.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { d ->
         count(d.pods.filter { !it.ready }.map { it.node })
     }
+    mariadb?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { m ->
+        count(m.pods.filter { !it.ready }.map { it.node })
+    }
+    percona?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { c ->
+        count(c.pods.filter { !it.ready }.map { it.node })
+    }
+    ceph?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { count(it.notReadyNodes) }
 
     return hits.map { (node, n) -> LikelyCause(node, n) }.sortedWith(compareByDescending<LikelyCause> { it.problems }.thenBy { it.node })
 }

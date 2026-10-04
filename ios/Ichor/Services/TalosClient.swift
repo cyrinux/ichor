@@ -218,6 +218,7 @@ struct TalosClient: Sendable {
     func rolloutStatus(_ workload: KubeWorkload) async throws -> KubeRolloutStatus {
         try await Self.json { [config, context, kubeServer] in
             IchorgoKubeRolloutStatus(config, context, kubeServer, workload.kind, workload.namespace, workload.name, $0)
+        }
     }
 
     /// `kubectl create job --from=cronjob/NAME -n NAMESPACE` (os:admin): the new Job's name.

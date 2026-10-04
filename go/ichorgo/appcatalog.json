@@ -125,6 +125,7 @@
 {"id":"pgadmin","name":"pgAdmin","cat":"database","match":["pgadmin4","pgadmin"]},
 {"id":"mysql","name":"MySQL","cat":"database","match":["mysql","mysql-server","mysql-operator"]},
 {"id":"mariadb","name":"MariaDB","cat":"database","match":["mariadb","mariadb-operator"]},
+{"id":"percona-xtradb","name":"Percona XtraDB Cluster","cat":"database","icon":"mysql","match":["percona-xtradb-cluster","percona-xtradb-cluster-operator"],"prefixes":["percona/percona-xtradb-cluster","docker.io/percona/percona-xtradb-cluster"]},
 {"id":"mongodb","name":"MongoDB","cat":"database","match":["mongo","mongodb","mongodb-community-server"]},
 {"id":"redis","name":"Redis","cat":"database","match":["redis","redis-stack","redis-sentinel"]},
 {"id":"valkey","name":"Valkey","cat":"database"},
