@@ -1860,6 +1860,20 @@
         <item quantity="many">%1$d вікон синхронізації</item>
         <item quantity="other">%1$d вікна синхронізації</item>
     </plurals>
+    <string name="overview_card_summary">Зведення кластера</string>
+    <string name="overview_edit_title">Упорядкувати картки</string>
+    <string name="overview_edit_done">Готово</string>
+    <string name="overview_edit_hint">Перетягніть картку за маркер, щоб перемістити її. Приховані картки можна повернути нижче.</string>
+    <string name="overview_edit_drag">Перетягніть, щоб перемістити</string>
+    <string name="overview_edit_move_up">Вгору</string>
+    <string name="overview_edit_move_down">Вниз</string>
+    <string name="overview_edit_hide">Приховати</string>
+    <string name="overview_edit_show">Показати</string>
+    <string name="overview_edit_hidden">Приховані картки</string>
+    <string name="overview_edit_reset">Скинути</string>
+    <string name="overview_edit_when_detected">Лише якщо є в кластері</string>
+    <string name="overview_edit_all_hidden">Усі картки приховано. Торкніться, щоб вибрати, які показувати.</string>
+||||||| a97dc89
 
     <!-- Network policies and Cilium live flows (Hubble) -->
     <string name="netpol_title">Мережеві політики</string>

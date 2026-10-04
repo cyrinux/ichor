@@ -1718,6 +1718,20 @@
         <item quantity="one">%1$d ventana de sync</item>
         <item quantity="other">%1$d ventanas de sync</item>
     </plurals>
+    <string name="overview_card_summary">Resumen del clúster</string>
+    <string name="overview_edit_title">Organizar tarjetas</string>
+    <string name="overview_edit_done">Listo</string>
+    <string name="overview_edit_hint">Arrastra una tarjeta por su asa para moverla. Las tarjetas ocultas se pueden volver a añadir abajo.</string>
+    <string name="overview_edit_drag">Arrastrar para mover</string>
+    <string name="overview_edit_move_up">Subir</string>
+    <string name="overview_edit_move_down">Bajar</string>
+    <string name="overview_edit_hide">Ocultar</string>
+    <string name="overview_edit_show">Mostrar</string>
+    <string name="overview_edit_hidden">Tarjetas ocultas</string>
+    <string name="overview_edit_reset">Restablecer</string>
+    <string name="overview_edit_when_detected">Solo si está en el clúster</string>
+    <string name="overview_edit_all_hidden">Todas las tarjetas están ocultas. Toca para elegir cuáles mostrar.</string>
+||||||| a97dc89
 
     <!-- Network policies and Cilium live flows (Hubble) -->
     <string name="netpol_title">Políticas de red</string>
