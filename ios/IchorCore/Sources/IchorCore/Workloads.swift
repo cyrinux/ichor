@@ -139,3 +139,86 @@ private func workloadKey(namespace: String, owner: String) -> String? {
         return nil
     }
 }
+
+/// One workload's rollout with its pods, old and new (KubeRolloutStatus), polled while it rolls out.
+public struct KubeRolloutStatus: Decodable, Equatable, Sendable {
+    public let workload: KubeWorkload
+    /// Every pod runs the latest template and is ready, as `kubectl rollout status` ends.
+    public let done: Bool
+    /// The Deployment exceeded its progress deadline.
+    public let failed: Bool
+    /// Pods are only replaced when deleted (OnDelete, StatefulSet partition): a restart replaces none.
+    public let manual: Bool
+    /// The new pods first, the newest first.
+    public let pods: [KubeRolloutPod]
+
+    public init(workload: KubeWorkload, done: Bool = false, failed: Bool = false, manual: Bool = false, pods: [KubeRolloutPod] = []) {
+        self.workload = workload
+        self.done = done
+        self.failed = failed
+        self.manual = manual
+        self.pods = pods
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        workload = try c.decode(KubeWorkload.self, forKey: .workload)
+        done = try c.decodeIfPresent(Bool.self, forKey: .done) ?? false
+        failed = try c.decodeIfPresent(Bool.self, forKey: .failed) ?? false
+        manual = try c.decodeIfPresent(Bool.self, forKey: .manual) ?? false
+        pods = try c.decodeIfPresent([KubeRolloutPod].self, forKey: .pods) ?? []
+    }
+
+    /// New pods running and ready.
+    public var newReady: Int { pods.filter { $0.updated && $0.healthy }.count }
+
+    private enum CodingKeys: String, CodingKey { case workload, done, failed, manual, pods }
+}
+
+/// A pod of a workload during a rollout.
+public struct KubeRolloutPod: Decodable, Equatable, Identifiable, Sendable {
+    public let name: String
+    /// As `kubectl get pods`: Running, Pending, ContainerCreating, Terminating...
+    public let status: String
+    public let healthy: Bool
+    public let ready: Int
+    public let containers: Int
+    public let restarts: Int
+    public let node: String
+    /// Unix ms.
+    public let created: Int64
+    /// Runs the latest pod template.
+    public let updated: Bool
+
+    public var id: String { name }
+
+    public init(name: String, status: String = "", healthy: Bool = false, ready: Int = 0, containers: Int = 0,
+                restarts: Int = 0, node: String = "", created: Int64 = 0, updated: Bool = false) {
+        self.name = name
+        self.status = status
+        self.healthy = healthy
+        self.ready = ready
+        self.containers = containers
+        self.restarts = restarts
+        self.node = node
+        self.created = created
+        self.updated = updated
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decode(String.self, forKey: .name)
+        status = try c.decodeIfPresent(String.self, forKey: .status) ?? ""
+        healthy = try c.decodeIfPresent(Bool.self, forKey: .healthy) ?? false
+        ready = try c.decodeIfPresent(Int.self, forKey: .ready) ?? 0
+        containers = try c.decodeIfPresent(Int.self, forKey: .containers) ?? 0
+        restarts = try c.decodeIfPresent(Int.self, forKey: .restarts) ?? 0
+        node = try c.decodeIfPresent(String.self, forKey: .node) ?? ""
+        created = try c.decodeIfPresent(Int64.self, forKey: .created) ?? 0
+        updated = try c.decodeIfPresent(Bool.self, forKey: .updated) ?? false
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case name, status, healthy, ready, containers, restarts, node, created, updated
+    }
+}

@@ -88,7 +88,7 @@ func openKubeClient(ctx context.Context, kubeconfig string, talosEndpoints []str
 
 	for i, base := range candidates {
 		clients[i], results[i] = newKubeClient(base, creds), make(chan error, 1)
-		go func() { results[i] <- clients[i].probe(ctx) }()
+		go func() { results[i] <- safeCall(func() error { return clients[i].probe(ctx) }) }()
 	}
 
 	// Once decided, the other probes finish in the background and their clients are closed.
@@ -223,8 +223,9 @@ func (k *kubeClient) endpoint(path string) (*url.URL, error) {
 
 // getRaw reads path whatever the HTTP status: a service proxy answers with the backend's
 // own status and body, which the caller interprets. ctype is the answer's Content-Type.
-func (k *kubeClient) getRaw(ctx context.Context, path string) (status int, ctype string, body []byte, err error) {
-	resp, data, err := k.send(ctx, http.MethodGet, path, "application/json", "", nil)
+// header is passed on to the backend (a Mimir tenant), nil for none.
+func (k *kubeClient) getRaw(ctx context.Context, path string, header map[string]string) (status int, ctype string, body []byte, err error) {
+	resp, data, err := k.send(ctx, http.MethodGet, path, "application/json", "", nil, header)
 	if err != nil {
 		return 0, "", nil, err
 	}
@@ -243,7 +244,7 @@ func (k *kubeClient) post(ctx context.Context, path string, body any, out any) e
 
 // getText reads a plain-text answer, such as a pod log.
 func (k *kubeClient) getText(ctx context.Context, path string) (string, error) {
-	resp, data, err := k.send(ctx, http.MethodGet, path, "text/plain, */*", "", nil)
+	resp, data, err := k.send(ctx, http.MethodGet, path, "text/plain, */*", "", nil, nil)
 	if err != nil {
 		return "", err
 	}
@@ -256,7 +257,7 @@ func (k *kubeClient) getText(ctx context.Context, path string) (string, error) {
 }
 
 func (k *kubeClient) do(ctx context.Context, method, path, contentType string, body []byte, out any) error {
-	resp, data, err := k.send(ctx, method, path, "application/json", contentType, body)
+	resp, data, err := k.send(ctx, method, path, "application/json", contentType, body, nil)
 	if err != nil {
 		return err
 	}
@@ -276,8 +277,9 @@ func (k *kubeClient) do(ctx context.Context, method, path, contentType string, b
 	return nil
 }
 
-// send makes one request and reads its answer, capped at kubeMaxBody.
-func (k *kubeClient) send(ctx context.Context, method, path, accept, contentType string, body []byte) (*http.Response, []byte, error) {
+// send makes one request and reads its answer, capped at kubeMaxBody. header adds request
+// headers, nil for none; it cannot replace the client's own.
+func (k *kubeClient) send(ctx context.Context, method, path, accept, contentType string, body []byte, header map[string]string) (*http.Response, []byte, error) {
 	u, err := k.endpoint(path)
 	if err != nil {
 		return nil, nil, err
@@ -286,6 +288,10 @@ func (k *kubeClient) send(ctx context.Context, method, path, accept, contentType
 	req, err := http.NewRequestWithContext(ctx, method, u.String(), bytes.NewReader(body))
 	if err != nil {
 		return nil, nil, err
+	}
+
+	for name, value := range header {
+		req.Header.Set(name, value)
 	}
 
 	req.Header.Set("Accept", accept)
@@ -424,16 +430,24 @@ func (c *kubeClientCache) get(target kubeTarget) (k *kubeClient, fresh bool, err
 	c.opening[key] = op
 	c.mu.Unlock()
 
+	// Deferred so that a panic in open still releases the callers waiting on op.done.
+	defer func() {
+		if op.client == nil && op.err == nil {
+			op.err = errors.New("kubernetes client not opened")
+			err = op.err
+		}
+
+		c.mu.Lock()
+		delete(c.opening, key)
+
+		if op.err == nil {
+			c.entries[key] = kubeClientEntry{client: op.client, expires: time.Now().Add(kubeClientTTL)}
+		}
+		c.mu.Unlock()
+		close(op.done)
+	}()
+
 	op.client, op.err = c.open(target)
-
-	c.mu.Lock()
-	delete(c.opening, key)
-
-	if op.err == nil {
-		c.entries[key] = kubeClientEntry{client: op.client, expires: time.Now().Add(kubeClientTTL)}
-	}
-	c.mu.Unlock()
-	close(op.done)
 
 	return op.client, true, op.err
 }
@@ -491,10 +505,18 @@ type kubeList[T any] struct {
 // (the phone may have changed networks). A client just opened and probed is kept on a
 // timeout: the address answered a moment ago, the call itself was slow.
 func withKube[T any](target kubeTarget, fn func(context.Context, *kubeClient) (T, error)) (T, error) {
+	k, fresh, err := kubeClients.get(target)
+	if err != nil {
+		var zero T
+
+		return zero, err
+	}
+
+	// Started after opening: a cold open (kubeconfig fetch and probe) must not eat the budget.
 	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
 	defer cancel()
 
-	return withKubeContext(ctx, target, fn)
+	return callKube(ctx, target, k, fresh, fn)
 }
 
 // withKubeContext is withKube bounded by ctx instead of callTimeout, for the calls that run
@@ -506,6 +528,13 @@ func withKubeContext[T any](ctx context.Context, target kubeTarget, fn func(cont
 	if err != nil {
 		return zero, err
 	}
+
+	return callKube(ctx, target, k, fresh, fn)
+}
+
+// callKube runs fn with k, dropping the client when the call shows it no longer works.
+func callKube[T any](ctx context.Context, target kubeTarget, k *kubeClient, fresh bool, fn func(context.Context, *kubeClient) (T, error)) (T, error) {
+	var zero T
 
 	out, err := fn(ctx, k)
 	if err != nil {

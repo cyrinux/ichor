@@ -12,8 +12,6 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,17 +23,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Router
 import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material.icons.outlined.VpnLock
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -44,7 +45,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -64,8 +64,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -265,10 +263,13 @@ fun ClusterSheet(
                     onEndpoints = onEndpoints?.let { edit -> { edit(context) } }?.takeIf { !labels.masked && !context.demo },
                 )
             }
-            MutedText(
-                stringResource(R.string.clusters_vpn_only_hint),
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-            )
+            // What the lock on a row means, once there is one.
+            if (contexts.any { it.fingerprint in vpnOnly }) {
+                MutedText(
+                    stringResource(R.string.clusters_vpn_only_hint),
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                )
+            }
             if (contexts.size > 1) {
                 MutedText(
                     stringResource(R.string.clusters_swipe_hint),
@@ -322,7 +323,10 @@ fun ClusterSheet(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * One cluster: tapping it shows that cluster. The row stays a choice, its settings (name,
+ * color, VPN only, endpoints, removal) are in the menu at its end.
+ */
 @Composable
 private fun ClusterRow(
     context: ContextSummary,
@@ -346,11 +350,20 @@ private fun ClusterRow(
                 if (labels.given(context) != null) {
                     Text(context.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                Text(
-                    listOfNotNull(context.endpoints.firstOrNull(), stringResource(context.accessLabel)).joinToString(" · "),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (vpnOnly) {
+                        Icon(
+                            Icons.Outlined.VpnLock,
+                            contentDescription = stringResource(R.string.clusters_vpn_only),
+                            modifier = Modifier.padding(end = 4.dp).size(16.dp),
+                        )
+                    }
+                    Text(
+                        listOfNotNull(context.endpoints.firstOrNull(), stringResource(context.accessLabel)).joinToString(" · "),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 // Which cluster needs a new talosconfig soon, without having to open each.
                 if (context.certNotAfter > 0 && daysUntil(context.certNotAfter) <= CERT_WARN_DAYS) {
                     Text(
@@ -358,58 +371,107 @@ private fun ClusterRow(
                         color = LocalStatusColors.current.warn,
                     )
                 }
-                // Wraps: beside the trailing actions there is not always room for both chips.
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    onVpnOnly?.let { toggle ->
-                        FilterChip(
-                            selected = vpnOnly,
-                            onClick = { toggle(!vpnOnly) },
-                            label = { Text(stringResource(R.string.clusters_vpn_only), maxLines = 1) },
-                            leadingIcon = {
-                                Icon(Icons.Outlined.VpnLock, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize))
-                            },
-                        )
-                    }
-                    onEndpoints?.let {
-                        AssistChip(
-                            onClick = it,
-                            label = { Text(stringResource(R.string.common_label_endpoints), maxLines = 1) },
-                            leadingIcon = {
-                                Icon(Icons.Outlined.Router, contentDescription = null, modifier = Modifier.size(AssistChipDefaults.IconSize))
-                            },
-                        )
-                    }
-                }
             }
         },
-        leadingContent = { RadioButton(selected = selected, onClick = null) },
+        leadingContent = { ClusterDot(color, selected) },
         trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                onRename?.let {
-                    IconButton(onClick = it) { Icon(Icons.Outlined.Edit, stringResource(R.string.clusters_rename, label)) }
-                }
-                IconButton(onClick = onColor) {
-                    Swatch(color, contentDescription = stringResource(R.string.clusters_color, label))
-                }
-                IconButton(onClick = onRemove) {
-                    Icon(Icons.Outlined.Delete, stringResource(R.string.clusters_remove, label))
-                }
-            }
+            ClusterRowMenu(
+                label = label,
+                onRename = onRename,
+                onColor = onColor,
+                vpnOnly = vpnOnly,
+                onVpnOnly = onVpnOnly,
+                onEndpoints = onEndpoints,
+                onRemove = onRemove,
+            )
         },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        modifier = Modifier.fillMaxWidth().selectable(selected = selected, role = Role.RadioButton, onClick = onSelect),
+        colors = ListItemDefaults.colors(
+            containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent,
+        ),
+        modifier = Modifier
+            .padding(horizontal = 8.dp)
+            .clip(MaterialTheme.shapes.large)
+            .fillMaxWidth()
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onSelect),
     )
 }
 
+/** The cluster's color, checked for the one on screen. */
 @Composable
-private fun Swatch(color: Color, contentDescription: String?, selected: Boolean = false) {
+private fun ClusterDot(color: Color, selected: Boolean) {
+    Box(Modifier.size(28.dp).background(color, CircleShape), contentAlignment = Alignment.Center) {
+        if (selected) Icon(Icons.Outlined.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+    }
+}
+
+@Composable
+private fun ClusterRowMenu(
+    label: String,
+    onRename: (() -> Unit)?,
+    onColor: () -> Unit,
+    vpnOnly: Boolean,
+    onVpnOnly: ((Boolean) -> Unit)?,
+    onEndpoints: (() -> Unit)?,
+    onRemove: () -> Unit,
+) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { open = true }) {
+            Icon(Icons.Outlined.MoreVert, stringResource(R.string.clusters_options, label))
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            // Each item closes the menu, then acts.
+            fun item(action: () -> Unit): () -> Unit = {
+                open = false
+                action()
+            }
+            onRename?.let {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.clusters_menu_rename)) },
+                    leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) },
+                    onClick = item(it),
+                )
+            }
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.clusters_menu_color)) },
+                leadingIcon = { Icon(Icons.Outlined.Palette, contentDescription = null) },
+                onClick = item(onColor),
+            )
+            onVpnOnly?.let { toggle ->
+                // A setting, not an action: the menu stays open to show it changed.
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.clusters_vpn_only)) },
+                    leadingIcon = { Icon(Icons.Outlined.VpnLock, contentDescription = null) },
+                    trailingIcon = { Checkbox(checked = vpnOnly, onCheckedChange = null) },
+                    onClick = { toggle(!vpnOnly) },
+                )
+            }
+            onEndpoints?.let {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.common_label_endpoints)) },
+                    leadingIcon = { Icon(Icons.Outlined.Router, contentDescription = null) },
+                    onClick = item(it),
+                )
+            }
+            HorizontalDivider()
+            val danger = MaterialTheme.colorScheme.error
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.clusters_menu_remove), color = danger) },
+                leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null, tint = danger) },
+                onClick = item(onRemove),
+            )
+        }
+    }
+}
+
+@Composable
+private fun Swatch(color: Color, selected: Boolean) {
     val outline = MaterialTheme.colorScheme.onSurface
     Box(
         Modifier
             .size(24.dp)
             .background(color, CircleShape)
-            .then(if (selected) Modifier.border(2.dp, outline, CircleShape) else Modifier)
-            .semantics { contentDescription?.let { this.contentDescription = it } },
+            .then(if (selected) Modifier.border(2.dp, outline, CircleShape) else Modifier),
     )
 }
 
@@ -455,7 +517,7 @@ private fun ClusterColorDialog(name: String, color: Int, onPick: (Int) -> Unit, 
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         seeds.forEach { seed ->
                             IconButton(onClick = { picked = seed }) {
-                                Swatch(Color(seed), contentDescription = null, selected = seed == picked)
+                                Swatch(Color(seed), selected = seed == picked)
                             }
                         }
                     }

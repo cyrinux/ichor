@@ -199,6 +199,9 @@ struct OverviewView: View {
                 if model.allows(.workloads) {
                     NavigationLink(value: Route.workloads) { Image(systemName: "square.stack.3d.up") }
                         .accessibilityLabel(Text("Kubernetes workloads"))
+                    // PromQL panels, through the same kubeconfig (or a URL set on the screen).
+                    NavigationLink(value: Route.metrics) { Image(systemName: "chart.xyaxis.line") }
+                        .accessibilityLabel(Text("Metrics"))
                 }
                 NavigationLink(value: Route.kubespan) { Image(systemName: "point.3.connected.trianglepath.dotted") }
                 NavigationLink(value: Route.etcd) { Image(systemName: "cylinder.split.1x2") }
@@ -470,19 +473,20 @@ private struct NodeRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                VStack(alignment: .leading) {
-                    Text(node.hostname).font(.headline)
-                    Text(node.node).font(.caption.monospaced()).foregroundStyle(.secondary)
-                    if node.reachable && !publicIPs.isEmpty {
-                        let addresses = publicIPs.joined(separator: "  ·  ")
-                        Label { Text(verbatim: addresses) } icon: { Image(systemName: "globe") }
-                            .font(.caption.monospaced()).foregroundStyle(.secondary)
-                            .accessibilityElement(children: .ignore)
-                            .accessibilityLabel(Text("Public IP: \(publicIPs.joined(separator: ", "))"))
-                    }
-                }
+                Text(node.hostname).font(.headline)
                 Spacer()
                 StatusPill(label: node.health.label, color: node.health.color)
+            }
+            // Below the pill rather than beside it: the full width keeps an IPv6 on one line.
+            VStack(alignment: .leading, spacing: 2) {
+                AddressLine(symbol: "network", address: node.node)
+                if node.reachable && !publicIPs.isEmpty {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(publicIPs, id: \.self) { AddressLine(symbol: "globe", address: $0) }
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(Text("Public IP: \(publicIPs.joined(separator: ", "))"))
+                }
             }
             if node.reachable {
                 Text([role, node.version, node.stage, node.arch].filter { !$0.isEmpty }.joined(separator: "  ·  "))
@@ -508,5 +512,20 @@ private struct NodeRow: View {
 
     private var role: String {
         node.role == "controlplane" ? String(localized: "control plane") : node.role
+    }
+}
+
+/// An address behind a fixed-width symbol, so private and public ones line up.
+private struct AddressLine: View {
+    let symbol: String
+    let address: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: symbol).frame(width: 14)
+            Text(verbatim: address)
+        }
+        .font(.caption2.monospaced())
+        .foregroundStyle(.secondary)
     }
 }

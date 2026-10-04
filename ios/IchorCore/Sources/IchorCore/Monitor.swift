@@ -104,7 +104,11 @@ public let dataWarning = "warning"
 /// Android): a faulted volume, an unavailable Garage cluster or a Postgres cluster without any
 /// instance are critical; a degraded volume, a degraded Garage cluster (or blocks failing to
 /// resync) and failing Postgres backups or archiving are warnings. A switchover or a missing
-/// replica is usually planned and does not alert.
+/// replica is usually planned and does not alert. An expired certificate (or one not ready a week
+/// before it expires) is critical; one expiring, overdue or not ready, or an issuer not ready, is a
+/// warning. A Velero schedule whose last backup failed or whose storage location is unavailable is
+/// critical, a stale, partially failed or invalid one a warning. A Ceph cluster alerts when
+/// critical, or on HEALTH_WARN, near-full capacity or an OSD down; a pool only when failed.
 public func dataIssuesOf(_ services: DataServices) -> [String: String] {
     var out: [String: String] = [:]
     for v in services.longhorn?.volumes ?? [] {
@@ -133,6 +137,59 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
             out["dragonfly|\(d.label)"] = dataWarning
         }
     }
+    // A replica rolling out or a busy operator is usually planned; a Galera recovery or backups are not.
+    let mariadbAlerting: Set<MariaDbReason> = [.galeraRecovery, .backupFailed, .backupStale]
+    for m in services.mariadb?.clusters ?? [] {
+        if m.health == .critical {
+            out["mariadb|\(m.label)"] = dataCritical
+        } else if m.reasons.contains(where: mariadbAlerting.contains) {
+            out["mariadb|\(m.label)"] = dataWarning
+        }
+    }
+    // The operator still initializing is not worth an alert; a member lost or backups failing are.
+    let perconaAlerting: Set<PerconaReason> = [.members, .backupFailed, .backupStale]
+    for c in services.percona?.clusters ?? [] {
+        if c.health == .critical {
+            out["percona|\(c.label)"] = dataCritical
+        } else if c.reasons.contains(where: perconaAlerting.contains) {
+            out["percona|\(c.label)"] = dataWarning
+        }
+    }
+    // An issuer not ready alerts on its own, not through each of its certificates.
+    let certAlerting: Set<CertReason> = [.expiring, .renewalOverdue, .notReady]
+    for c in services.certManager?.certificates ?? [] {
+        if c.health == .critical {
+            out["certmanager|\(c.label)"] = dataCritical
+        } else if c.reasons.contains(where: certAlerting.contains) {
+            out["certmanager|\(c.label)"] = dataWarning
+        }
+    }
+    for i in services.certManager?.issuers ?? [] where !i.ready {
+        out["certmanager|\(i.label)"] = dataWarning
+    }
+    let veleroAlerting: Set<VeleroReason> = [.stale, .partiallyFailed, .invalid]
+    for s in services.velero?.schedules ?? [] {
+        if s.health == .critical {
+            out["velero|\(s.label)"] = dataCritical
+        } else if s.reasons.contains(where: veleroAlerting.contains) {
+            out["velero|\(s.label)"] = dataWarning
+        }
+    }
+    // A failed backup taken by hand was seen by whoever took it: shown, not alerted.
+    for l in services.velero?.locations ?? [] where l.health == .critical {
+        out["velero|BackupStorageLocation/\(l.label)"] = dataCritical
+    }
+    // A mon down or a reconcile in progress shows in Ceph's health anyway.
+    let cephAlerting: Set<CephReason> = [.healthWarn, .nearFull, .osds]
+    for c in services.ceph?.clusters ?? [] {
+        if c.health == .critical {
+            out["ceph|\(c.label)"] = dataCritical
+        } else if c.reasons.contains(where: cephAlerting.contains) {
+            out["ceph|\(c.label)"] = dataWarning
+        }
+    }
+    // A pool alerts only when Rook reports it failed.
+    for p in services.ceph?.pools ?? [] where p.health == .critical { out["ceph|\(p.kind)/\(p.label)"] = dataCritical }
     return out
 }
 
@@ -142,6 +199,11 @@ private func dataSystemTitle(_ key: String) -> String {
     case "longhorn": "Longhorn"
     case "garage": "Garage"
     case "dragonfly": "Dragonfly"
+    case "mariadb": "MariaDB"
+    case "percona": "Percona XtraDB Cluster"
+    case "certmanager": "cert-manager"
+    case "velero": "Velero"
+    case "ceph": "Rook Ceph"
     default: "CloudNativePG"
     }
 }

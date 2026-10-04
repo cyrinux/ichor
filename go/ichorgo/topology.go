@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"slices"
-	"sync"
 
 	"github.com/cosi-project/runtime/pkg/safe"
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -32,13 +31,7 @@ func ClusterTopology(configYAML, contextName string) (out string, err error) {
 		targets := targetNodes(s.context)
 		observations := make([]topologyObservation, len(targets))
 
-		var wg sync.WaitGroup
-
-		for i, node := range targets {
-			wg.Go(func() { observations[i] = observeTopology(ctx, s.client, node) })
-		}
-
-		wg.Wait()
+		forEachNode(targets, func(i int, node string) { observations[i] = observeTopology(ctx, s.client, node) })
 
 		members, _ := listMembers(ctx, s.client, targets) // no discovery: the targets and their peers
 

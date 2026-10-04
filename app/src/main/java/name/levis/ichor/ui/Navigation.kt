@@ -27,6 +27,8 @@ import name.levis.ichor.ui.debug.DebugShellScreen
 import name.levis.ichor.ui.debug.LiveShell
 import name.levis.ichor.ui.diagnosis.DiagnosisScreen
 import name.levis.ichor.ui.etcd.EtcdScreen
+import name.levis.ichor.ui.flows.FlowsScreen
+import name.levis.ichor.ui.netpol.NetworkPoliciesScreen
 import name.levis.ichor.ui.events.EventsScreen
 import name.levis.ichor.ui.hardware.HardwareScreen
 import name.levis.ichor.ui.health.HealthScreen
@@ -72,6 +74,7 @@ private object Routes {
     const val FUNDING = "funding"
     const val INSIGHTS = "insights"
     const val APPS = "apps"
+    const val METRICS = "metrics"
 
     fun storage(addr: String, host: String) = "storage?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
@@ -91,6 +94,11 @@ private object Routes {
     const val ETCD = "etcd"
     const val KUBESPAN = "kubespan"
     const val WORKLOADS = "workloads"
+    const val NETWORK_POLICIES = "netpol"
+    const val FLOWS = "flows?ns={ns}&pod={pod}"
+
+    /** Empty [namespace] for all of them; [pod] narrows to one of [namespace]. */
+    fun flows(namespace: String?, pod: String?) = "flows?ns=${Uri.encode(namespace.orEmpty())}&pod=${Uri.encode(pod.orEmpty())}"
     const val DATA_SERVICES = "data-services"
     const val ARGO_CD = "argocd"
     const val ARGO_APP = "argocd-app?ns={ns}&name={name}"
@@ -208,6 +216,7 @@ fun Navigation(
 
     NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW) {
         composable(Routes.INSIGHTS) { name.levis.ichor.ui.insights.InsightsScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.METRICS) { name.levis.ichor.ui.metrics.MetricsScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.IMPORT) {
             ImportScreen(
                 onImported = {
@@ -244,6 +253,7 @@ fun Navigation(
                 onEtcd = { nav.navigate(Routes.ETCD) },
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
                 onWorkloads = { nav.navigate(Routes.WORKLOADS) },
+                onMetrics = { nav.navigate(Routes.METRICS) },
                 onDataServices = { nav.navigate(Routes.DATA_SERVICES) },
                 onArgoCD = { nav.navigate(Routes.ARGO_CD) },
                 onHealth = { nav.navigate(Routes.HEALTH) },
@@ -472,7 +482,27 @@ fun Navigation(
                 onNode = { n -> if (n.node.isNotBlank()) nav.navigate(Routes.node(n.node, n.hostname, n.role)) },
             )
         }
-        composable(Routes.WORKLOADS) { name.levis.ichor.ui.workloads.KubernetesScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.WORKLOADS) {
+            name.levis.ichor.ui.workloads.KubernetesScreen(
+                onBack = { nav.popBackStack() },
+                onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
+                onFlows = { ns, pod -> nav.navigate(Routes.flows(ns, pod)) },
+            )
+        }
+        composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
+        composable(
+            Routes.FLOWS,
+            arguments = listOf(
+                navArgument("ns") { type = NavType.StringType; defaultValue = "" },
+                navArgument("pod") { type = NavType.StringType; defaultValue = "" },
+            ),
+        ) { entry ->
+            FlowsScreen(
+                onBack = { nav.popBackStack() },
+                namespace = entry.arguments?.getString("ns")?.ifEmpty { null },
+                pod = entry.arguments?.getString("pod")?.ifEmpty { null },
+            )
+        }
         composable(Routes.DATA_SERVICES) { name.levis.ichor.ui.dataservices.DataServicesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.ARGO_CD) {
             ArgoAppsScreen(onBack = { nav.popBackStack() }, onApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) })

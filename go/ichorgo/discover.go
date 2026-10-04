@@ -85,7 +85,7 @@ func listMembers(ctx context.Context, c *client.Client, targets []string) ([]clu
 			return members, nil
 		}
 
-		errs = append(errs, fmt.Errorf("%s: %w", node, err))
+		errs = append(errs, fmt.Errorf("%s: %s", node, friendlyError(err)))
 	}
 
 	if len(errs) == 0 {
@@ -136,9 +136,10 @@ func targetHostnames(ctx context.Context, c *client.Client, targets []string) []
 func classifyMembers(targets, hostnames []string, members []clusterMember) []discoveredNode {
 	known := make(map[string]bool, len(targets)+len(hostnames))
 
+	// A target address matches however it is written: bracketed, with a port, in capitals.
 	for _, t := range append(slices.Clone(targets), hostnames...) {
 		if t != "" {
-			known[strings.ToLower(t)] = true
+			known[strings.ToLower(endpointHost(t))] = true
 		}
 	}
 
@@ -214,7 +215,7 @@ func AddContextNodes(storedYAML, contextName, nodes string) (out string, err err
 
 	contextName, nodes = unmaskTargets(storedYAML, contextName, nodes)
 
-	stored, err := clientconfig.FromString(storedYAML)
+	stored, err := parseTalosconfig(storedYAML)
 	if err != nil {
 		return "", fmt.Errorf("stored talosconfig: %w", err)
 	}
@@ -228,7 +229,8 @@ func AddContextNodes(storedYAML, contextName, nodes string) (out string, err err
 	updated.Nodes = targetNodes(target)
 
 	for _, n := range strings.Split(nodes, ",") {
-		n = strings.TrimSpace(n)
+		// "[fd00::1]" is the node fd00::1: talosconfig nodes are never bracketed.
+		n = normalizeEndpoint(n)
 		if n == "" {
 			continue
 		}
@@ -237,7 +239,7 @@ func AddContextNodes(storedYAML, contextName, nodes string) (out string, err err
 			return "", fmt.Errorf("invalid node address %q", n)
 		}
 
-		if !slices.Contains(updated.Nodes, n) {
+		if !slices.ContainsFunc(updated.Nodes, func(known string) bool { return strings.EqualFold(endpointHost(known), n) }) {
 			updated.Nodes = append(updated.Nodes, n)
 		}
 	}

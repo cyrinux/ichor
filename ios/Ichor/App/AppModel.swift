@@ -347,6 +347,7 @@ final class AppModel {
         SecureConfigStore.delete()
         LastKnownStore.wipe()
         PublicIPStore.wipe()
+        MetricsStore.keep(fingerprints: []) // their credentials go with the config
         publicIPReports = [:]
         SharedStore.save(nil) // the widget stops showing the old cluster
         forgetFeatures()
@@ -422,6 +423,7 @@ final class AppModel {
         storeNames(keepClusterNames(saved: clusterNames, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeKubeServers(keepClusterNames(saved: kubeServers, fingerprints: newSummary.contexts.map(\.fingerprint)))
         LastKnownStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
+        MetricsStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         let kept = publicIPReports.filter { report in newSummary.contexts.contains { $0.fingerprint == report.key } }
         if kept.count != publicIPReports.count {
             publicIPReports = kept

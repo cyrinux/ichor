@@ -41,7 +41,7 @@ extension NodeOverview {
 /// What may be kept on the phone for a cluster: the screens worth showing offline. Never logs,
 /// live stats, processes, connections, machine config, resources, kubeconfig or time.
 public enum LastKnownDomain: Hashable, Sendable {
-    case overview, etcd, kubespan, inventory, workloads, pods
+    case overview, etcd, kubespan, inventory, workloads, pods, cronJobs
     case services(node: String)
     case resources(node: String)
     case hardware(node: String)
@@ -57,6 +57,7 @@ public enum LastKnownDomain: Hashable, Sendable {
         case .inventory: "inventory"
         case .workloads: "workloads"
         case .pods: "pods"
+        case .cronJobs: "cronjobs"
         case .services(let node): "services/\(node)"
         case .resources(let node): "resources/\(node)"
         case .hardware(let node): "hardware/\(node)"

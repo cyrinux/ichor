@@ -114,7 +114,7 @@ func MergeConfig(storedYAML, addedYAML, choicesJSON string) (out string, err err
 }
 
 func loadMergeInputs(storedYAML, addedYAML string) (stored, added *clientconfig.Config, err error) {
-	stored, err = clientconfig.FromString(storedYAML)
+	stored, err = parseTalosconfig(storedYAML)
 	if err != nil {
 		return nil, nil, fmt.Errorf("stored talosconfig: %w", err)
 	}
@@ -236,7 +236,7 @@ func RemoveContext(storedYAML, contextName string) (out string, err error) {
 
 	contextName = unmaskContext(storedYAML, contextName)
 
-	stored, err := clientconfig.FromString(storedYAML)
+	stored, err := parseTalosconfig(storedYAML)
 	if err != nil {
 		return "", fmt.Errorf("stored talosconfig: %w", err)
 	}

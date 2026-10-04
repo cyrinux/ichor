@@ -31,13 +31,23 @@ func unmaskTargets(configYAML, contextName, nodes string) (string, string) {
 }
 
 // maskResult masks a returned display value and error (use with defer and named results).
+// Like maskErr it turns a panic into an error: gomobile would abort the app instead.
 func maskResult(out *string, err *error) {
+	if r := recover(); r != nil {
+		*out, *err = "", panicError(r)
+	}
+
 	*out = privacy.mask(*out)
 	maskErr(err)
 }
 
-// maskErr masks a returned error message (use with defer and a named result).
+// maskErr masks a returned error message (use with defer and a named result), and turns a
+// panic into an error (see panics.go).
 func maskErr(err *error) {
+	if r := recover(); r != nil {
+		*err = panicError(r)
+	}
+
 	if *err == nil || !privacy.isEnabled() {
 		return
 	}
@@ -53,6 +63,13 @@ func (l maskedNetPerfListener) OnProgress(json string) {
 
 func (l maskedNetPerfListener) OnDone(reportJSON string, errMessage string) {
 	l.NetPerfListener.OnDone(privacy.mask(reportJSON), privacy.maskPlain(errMessage))
+}
+
+type maskedHubbleListener struct{ HubbleListener }
+
+func (l maskedHubbleListener) OnUpdate(json string) { l.HubbleListener.OnUpdate(privacy.mask(json)) }
+func (l maskedHubbleListener) OnDone(errMessage string) {
+	l.HubbleListener.OnDone(privacy.maskPlain(errMessage))
 }
 
 type maskedEventListener struct{ EventListener }

@@ -17,12 +17,12 @@ func ReplaceContextCredentials(storedYAML, generatedYAML, contextName string) (o
 
 	contextName = unmaskContext(storedYAML, contextName)
 
-	stored, err := clientconfig.FromString(storedYAML)
+	stored, err := parseTalosconfig(storedYAML)
 	if err != nil {
 		return "", fmt.Errorf("stored talosconfig: %w", err)
 	}
 
-	generated, err := clientconfig.FromString(generatedYAML)
+	generated, err := parseTalosconfig(generatedYAML)
 	if err != nil {
 		return "", fmt.Errorf("new talosconfig: %w", err)
 	}

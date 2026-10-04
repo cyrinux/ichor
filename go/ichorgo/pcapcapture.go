@@ -98,6 +98,7 @@ func StartPacketCapture(
 
 	go func() {
 		defer cancel()
+		defer onPanic(func(msg string) { listener.OnDone("", 0, 0, msg) })
 
 		res, path, err := runCapture(ctx, configYAML, contextName, node, destPath, opts, listener)
 
@@ -249,6 +250,16 @@ func writeCapture(
 	if err != nil {
 		return captureResult{}, "", err
 	}
+
+	// A panic (reported by the run's onPanic) must not leave the file open and the part behind.
+	defer func() {
+		if r := recover(); r != nil {
+			_ = f.Close()       //nolint:errcheck
+			_ = os.Remove(part) //nolint:errcheck
+
+			panic(r)
+		}
+	}()
 
 	snaplen := uint32(readSnaplen)
 	if opts.snapLen > 0 {

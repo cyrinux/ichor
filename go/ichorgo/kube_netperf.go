@@ -187,6 +187,7 @@ func StartNetPerf(configYAML, contextName, kubeServer, serverNode, clientNode st
 
 	go func() {
 		defer cancel()
+		defer onPanic(func(msg string) { listener.OnDone("", msg) })
 
 		var (
 			report netPerfReport
