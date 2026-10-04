@@ -74,6 +74,7 @@ private object Routes {
     const val FUNDING = "funding"
     const val INSIGHTS = "insights"
     const val APPS = "apps"
+    const val METRICS = "metrics"
 
     fun storage(addr: String, host: String) = "storage?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
@@ -215,6 +216,7 @@ fun Navigation(
 
     NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW) {
         composable(Routes.INSIGHTS) { name.levis.ichor.ui.insights.InsightsScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.METRICS) { name.levis.ichor.ui.metrics.MetricsScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.IMPORT) {
             ImportScreen(
                 onImported = {
@@ -251,6 +253,7 @@ fun Navigation(
                 onEtcd = { nav.navigate(Routes.ETCD) },
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
                 onWorkloads = { nav.navigate(Routes.WORKLOADS) },
+                onMetrics = { nav.navigate(Routes.METRICS) },
                 onDataServices = { nav.navigate(Routes.DATA_SERVICES) },
                 onArgoCD = { nav.navigate(Routes.ARGO_CD) },
                 onHealth = { nav.navigate(Routes.HEALTH) },

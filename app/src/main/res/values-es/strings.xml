@@ -1857,4 +1857,65 @@
         <item quantity="one">%1$d pod</item>
         <item quantity="other">%1$d pods</item>
     </plurals>
+
+    <!-- Metrics: PromQL panels -->
+    <string name="metrics_title">Métricas</string>
+    <string name="metrics_source">Origen de las métricas</string>
+    <string name="metrics_source_line">Origen: %1$s</string>
+    <string name="metrics_add_panel">Añadir panel</string>
+    <string name="metrics_edit_panel">Editar panel</string>
+    <string name="metrics_edit">Editar</string>
+    <string name="metrics_move_up">Subir</string>
+    <string name="metrics_move_down">Bajar</string>
+    <string name="metrics_save">Guardar</string>
+    <string name="metrics_run">Ejecutar consulta</string>
+    <string name="metrics_no_panels">Aún no hay paneles: añade uno desde una plantilla o escribe PromQL.</string>
+    <string name="metrics_no_data">No hay datos en este intervalo.</string>
+    <string name="metrics_searching">Buscando Prometheus en el clúster…</string>
+    <string name="metrics_none_found">No se encontró Prometheus, Mimir, Thanos ni VictoriaMetrics en el clúster</string>
+    <string name="metrics_none_found_hint">Elige un Service a mano o indica la URL de un servidor al que llegue el teléfono.</string>
+    <string name="metrics_set_up">Configurar un origen</string>
+    <string name="metrics_search_again">Buscar de nuevo en el clúster</string>
+    <string name="metrics_range_15m">15 min</string>
+    <string name="metrics_range_1h">1 h</string>
+    <string name="metrics_range_6h">6 h</string>
+    <string name="metrics_range_1d">1 d</string>
+    <string name="metrics_range_7d">7 d</string>
+    <string name="metrics_chart_description">Gráfico de %1$s en el tiempo</string>
+    <string name="metrics_panel_title">Título</string>
+    <string name="metrics_panel_query">Consulta PromQL</string>
+    <string name="metrics_panel_legend">Leyenda</string>
+    <string name="metrics_panel_legend_hint">Etiquetas entre {{ }}, p. ej. {{namespace}}/{{pod}}. Vacío: el nombre de la serie.</string>
+    <string name="metrics_panel_unit">Unidad: %1$s</string>
+    <string name="metrics_from_preset">Partir de una plantilla</string>
+    <string name="metrics_unit_none">Número</string>
+    <string name="metrics_unit_percent">Porcentaje</string>
+    <string name="metrics_unit_bytes">Bytes</string>
+    <string name="metrics_unit_cores">Núcleos de CPU</string>
+    <string name="metrics_unit_persec">Por segundo</string>
+    <string name="metrics_unit_count">Recuento</string>
+    <string name="metrics_mode_cluster">En el clúster</string>
+    <string name="metrics_mode_url">URL</string>
+    <string name="metrics_proxy_hint">Se accede por el proxy de servicios de la API de Kubernetes con el kubeconfig de administrador del clúster: sin credenciales extra.</string>
+    <string name="metrics_namespace">Namespace</string>
+    <string name="metrics_service">Service</string>
+    <string name="metrics_port">Puerto</string>
+    <string name="metrics_path_prefix">Prefijo de ruta (Mimir: /prometheus)</string>
+    <string name="metrics_url">URL (p. ej. https://mimir.example.com/prometheus)</string>
+    <string name="metrics_tenant">Tenant (X-Scope-OrgID, opcional)</string>
+    <string name="metrics_auth_none">Ninguna</string>
+    <string name="metrics_auth_bearer">Token</string>
+    <string name="metrics_auth_basic">Basic</string>
+    <string name="metrics_username">Usuario</string>
+    <string name="metrics_token">Token bearer</string>
+    <string name="metrics_password">Contraseña</string>
+    <string name="metrics_https_only">Las credenciales solo se envían por https y se guardan cifradas en este teléfono.</string>
+    <string name="metrics_ca">Autoridad de certificación adicional (PEM, opcional)</string>
+    <string name="metrics_skip_verify">No verificar el certificado</string>
+    <string name="metrics_test">Probar</string>
+    <string name="metrics_reachable">La API de consultas responde.</string>
+    <plurals name="metrics_truncated">
+        <item quantity="one">Se muestra %1$d serie de %2$d</item>
+        <item quantity="other">Se muestran %1$d series de %2$d</item>
+    </plurals>
 </resources>

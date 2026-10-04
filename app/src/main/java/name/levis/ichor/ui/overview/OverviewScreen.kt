@@ -34,6 +34,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -143,6 +144,7 @@ fun OverviewScreen(
     onEtcd: () -> Unit,
     onKubeSpan: () -> Unit,
     onWorkloads: () -> Unit,
+    onMetrics: () -> Unit,
     onDataServices: () -> Unit,
     onArgoCD: () -> Unit,
     onHealth: () -> Unit,
@@ -313,6 +315,8 @@ fun OverviewScreen(
                     // Kubernetes workloads: the API is reached with the admin kubeconfig Talos issues.
                     if (config?.activeSummary?.allows(Feature.WORKLOADS) == true) {
                         TooltipIconButton(Icons.Outlined.Widgets, stringResource(R.string.overview_action_workloads), onClick = onWorkloads)
+                        // PromQL panels, through the same kubeconfig (or a URL set on the screen).
+                        TooltipIconButton(Icons.Outlined.QueryStats, stringResource(R.string.metrics_title), onClick = onMetrics)
                     }
                     TooltipIconButton(
                         Icons.Outlined.Hub,

@@ -1858,4 +1858,65 @@
         <item quantity="one">%1$d pod</item>
         <item quantity="other">%1$d pods</item>
     </plurals>
+
+    <!-- Metrics: PromQL panels -->
+    <string name="metrics_title">Metrics</string>
+    <string name="metrics_source">Metrics source</string>
+    <string name="metrics_source_line">Source: %1$s</string>
+    <string name="metrics_add_panel">Add panel</string>
+    <string name="metrics_edit_panel">Edit panel</string>
+    <string name="metrics_edit">Edit</string>
+    <string name="metrics_move_up">Move up</string>
+    <string name="metrics_move_down">Move down</string>
+    <string name="metrics_save">Save</string>
+    <string name="metrics_run">Run query</string>
+    <string name="metrics_no_panels">No panels yet: add one from a preset or write PromQL.</string>
+    <string name="metrics_no_data">No data for this range.</string>
+    <string name="metrics_searching">Looking for Prometheus in the cluster…</string>
+    <string name="metrics_none_found">No Prometheus, Mimir, Thanos or VictoriaMetrics found in the cluster</string>
+    <string name="metrics_none_found_hint">Pick a Service by hand, or set the URL of a server the phone can reach.</string>
+    <string name="metrics_set_up">Set up a source</string>
+    <string name="metrics_search_again">Search the cluster again</string>
+    <string name="metrics_range_15m">15m</string>
+    <string name="metrics_range_1h">1h</string>
+    <string name="metrics_range_6h">6h</string>
+    <string name="metrics_range_1d">1d</string>
+    <string name="metrics_range_7d">7d</string>
+    <string name="metrics_chart_description">Chart of %1$s over time</string>
+    <string name="metrics_panel_title">Title</string>
+    <string name="metrics_panel_query">PromQL query</string>
+    <string name="metrics_panel_legend">Legend</string>
+    <string name="metrics_panel_legend_hint">Labels in {{ }}, e.g. {{namespace}}/{{pod}}. Empty: the series name.</string>
+    <string name="metrics_panel_unit">Unit: %1$s</string>
+    <string name="metrics_from_preset">Start from a preset</string>
+    <string name="metrics_unit_none">Plain number</string>
+    <string name="metrics_unit_percent">Percent</string>
+    <string name="metrics_unit_bytes">Bytes</string>
+    <string name="metrics_unit_cores">CPU cores</string>
+    <string name="metrics_unit_persec">Per second</string>
+    <string name="metrics_unit_count">Count</string>
+    <string name="metrics_mode_cluster">In the cluster</string>
+    <string name="metrics_mode_url">URL</string>
+    <string name="metrics_proxy_hint">Reached through the Kubernetes API service proxy with the cluster\'s admin kubeconfig: no extra credentials.</string>
+    <string name="metrics_namespace">Namespace</string>
+    <string name="metrics_service">Service</string>
+    <string name="metrics_port">Port</string>
+    <string name="metrics_path_prefix">Path prefix (Mimir: /prometheus)</string>
+    <string name="metrics_url">URL (e.g. https://mimir.example.com/prometheus)</string>
+    <string name="metrics_tenant">Tenant (X-Scope-OrgID, optional)</string>
+    <string name="metrics_auth_none">None</string>
+    <string name="metrics_auth_bearer">Token</string>
+    <string name="metrics_auth_basic">Basic</string>
+    <string name="metrics_username">User name</string>
+    <string name="metrics_token">Bearer token</string>
+    <string name="metrics_password">Password</string>
+    <string name="metrics_https_only">Credentials are only sent over https, and stay encrypted on this phone.</string>
+    <string name="metrics_ca">Extra certificate authority (PEM, optional)</string>
+    <string name="metrics_skip_verify">Skip certificate verification</string>
+    <string name="metrics_test">Test</string>
+    <string name="metrics_reachable">The query API answers.</string>
+    <plurals name="metrics_truncated">
+        <item quantity="one">Showing %1$d of %2$d series</item>
+        <item quantity="other">Showing %1$d of %2$d series</item>
+    </plurals>
 </resources>
