@@ -32,14 +32,20 @@ data class UpgradeRunState(
  * `talosctl upgrade` through the Go core. The run is app-wide (not tied to a screen), so
  * leaving the progress screen keeps following it and no second upgrade can start meanwhile.
  * An upgrade cannot be cancelled once requested: [stopFollowing] only stops watching it.
+ * [onStarted] runs once an upgrade is followed (to keep the app alive meanwhile).
  */
-class UpgradeManager(private val configs: ConfigRepository, private val onFinished: (node: String) -> Unit = {}) {
+class UpgradeManager(
+    private val configs: ConfigRepository,
+    private val kubeServers: KubeServers,
+    private val onStarted: () -> Unit = {},
+    private val onFinished: (node: String) -> Unit = {},
+) {
     private val _current = MutableStateFlow<UpgradeRunState?>(null)
     val current: StateFlow<UpgradeRunState?> = _current.asStateFlow()
     private var run: UpgradeRun? = null
 
-    suspend fun plan(node: String): UpgradePlan = call { cfg, ctx ->
-        TalosJson.decodeFromString(UpgradePlan.serializer(), Ichorgo.upgradePlan(cfg, ctx, node))
+    suspend fun plan(node: String): UpgradePlan = call { cfg, ctx, server ->
+        TalosJson.decodeFromString(UpgradePlan.serializer(), Ichorgo.upgradePlan(cfg, ctx, server, node))
     }
 
     /** Known Talos releases, newest first (from the network; may fail offline). */
@@ -52,18 +58,35 @@ class UpgradeManager(private val configs: ConfigRepository, private val onFinish
         Ichorgo.upgradeImage(currentImage, version)
     }
 
-    /** Starts the upgrade unless one is already followed; returns false then. */
+    /** Why going from [from] to [to] is risky (skips minor versions, downgrade), or "": to acknowledge before starting. */
+    suspend fun versionRisk(from: String, to: String): String = withContext(Dispatchers.IO) {
+        Ichorgo.upgradeVersionCheck(from, to)
+    }
+
+    /**
+     * Starts the upgrade unless one is already followed; returns false then. The core refuses
+     * it while the plan has risks to acknowledge and [acknowledged] is false (whatever [force]).
+     */
     @Synchronized
-    fun start(node: String, hostname: String, fromVersion: String, image: String, stage: Boolean, force: Boolean): Boolean {
+    fun start(
+        node: String,
+        hostname: String,
+        fromVersion: String,
+        image: String,
+        stage: Boolean,
+        force: Boolean,
+        acknowledged: Boolean,
+    ): Boolean {
         if (_current.value?.running == true) return false
         val stored = configs.forCall()
         _current.value = UpgradeRunState(node, hostname, fromVersion, image)
         run = try {
-            Ichorgo.startUpgrade(stored.yaml, stored.activeContext, node, image, stage, force, listener(node))
+            Ichorgo.startUpgrade(stored.yaml, stored.activeContext, kubeServer(stored), node, image, stage, force, acknowledged, listener(node))
         } catch (e: Exception) {
             _current.value = null
             throw e
         }
+        onStarted()
         return true
     }
 
@@ -103,8 +126,12 @@ class UpgradeManager(private val configs: ConfigRepository, private val onFinish
         }
     }
 
-    private suspend fun <T> call(block: (config: String, context: String) -> T): T {
+    private suspend fun <T> call(block: (config: String, context: String, kubeServer: String) -> T): T {
         val stored = configs.forCall()
-        return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) }
+        return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext, kubeServer(stored)) }
     }
+
+    /** The Kubernetes API address the user set for the active cluster ("" for the kubeconfig's). */
+    private fun kubeServer(stored: StoredConfig): String =
+        stored.activeSummary?.fingerprint?.let { kubeServers.servers.value[it] }.orEmpty()
 }

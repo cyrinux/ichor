@@ -84,7 +84,7 @@ func TestComputePlanQuorum(t *testing.T) {
 	}
 
 	single := cp(1, 1, true)
-	if len(single.Blockers) != 0 || single.Etcd.QuorumAfterLoss || !containsText(single.Warnings, "single control plane") {
+	if len(single.Blockers) != 0 || single.Etcd.QuorumAfterLoss || !containsText(single.Acknowledge, "single control plane") || containsText(single.Warnings, "single control plane") {
 		t.Fatalf("single member: %+v", single)
 	}
 }

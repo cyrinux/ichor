@@ -353,7 +353,7 @@ func cnpgHealth(c cnpgCluster, ready string) (string, []string) {
 	}
 }
 
-// cronInterval is roughly how often a CNPG schedule (6 fields with seconds, or 5) fires:
+// cronInterval is roughly how often a CNPG (6 fields with seconds) or Velero (5) schedule fires:
 // weekly when it names weekdays, monthly when it names days of the month, else daily.
 // Good enough to tell a backup that is late; an unreadable schedule counts as weekly + 1 day.
 func cronInterval(schedule string) time.Duration {

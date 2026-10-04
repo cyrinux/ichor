@@ -64,13 +64,37 @@ func loadConfig(configYAML string) (*clientconfig.Config, error) {
 		return nil, errors.New("talosconfig is empty")
 	}
 
-	cfg, err := clientconfig.FromString(configYAML)
+	cfg, err := parseTalosconfig(configYAML)
 	if err != nil {
 		return nil, fmt.Errorf("invalid talosconfig YAML: %w", err)
 	}
 
 	if len(cfg.Contexts) == 0 {
 		return nil, errors.New("talosconfig has no contexts")
+	}
+
+	return cfg, nil
+}
+
+// parseTalosconfig is clientconfig.FromString, safe on malformed input: the library
+// dereferences null contexts (`contexts: {a: ~}`) while upgrading them, and the internals
+// assume every context is set.
+func parseTalosconfig(configYAML string) (cfg *clientconfig.Config, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			cfg, err = nil, errors.New("malformed context")
+		}
+	}()
+
+	cfg, err = clientconfig.FromString(configYAML)
+	if err != nil {
+		return nil, err
+	}
+
+	for name, ctx := range cfg.Contexts {
+		if ctx == nil {
+			return nil, fmt.Errorf("context %q is empty", name)
+		}
 	}
 
 	return cfg, nil

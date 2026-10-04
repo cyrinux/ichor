@@ -83,6 +83,13 @@ func requestUpgrade(ctx context.Context, u upgrader, image string, stage, force 
 		}
 	})
 	if err != nil {
+		// The installer was running: the node may finish it on its own, and nothing
+		// reboots it then (the app was suspended or lost the network).
+		if last != "" {
+			return errors.New("the connection broke while installing (" + friendlyError(err) +
+				"): the node may have installed the upgrade without rebooting; check its version and reboot it to apply it")
+		}
+
 		if isUnavailableAPI(err) {
 			return err
 		}

@@ -25,8 +25,17 @@ class UpgradePlanViewModel(private val upgrades: UpgradeManager, private val nod
     override suspend fun fetch() = upgrades.plan(node)
 }
 
-/** The installer image for the typed version, or why it cannot be built. */
-data class TargetImage(val version: String = "", val image: String = "", val error: UiText? = null, val pending: Boolean = false)
+/**
+ * The installer image for the typed version, or why it cannot be built, and the [risk] of
+ * going to that version (to acknowledge before starting; "" when fine).
+ */
+data class TargetImage(
+    val version: String = "",
+    val image: String = "",
+    val error: UiText? = null,
+    val pending: Boolean = false,
+    val risk: String = "",
+)
 
 /** Debounce of the image computation while typing a version. */
 private const val IMAGE_CHECK_MS = 300L
@@ -45,8 +54,11 @@ class UpgradeTargetViewModel(private val upgrades: UpgradeManager) : ViewModel()
         }
     }
 
-    /** Recomputes the target image for [version] from [currentImage] (same registry and schematic). */
-    fun setVersion(currentImage: String, version: String) {
+    /**
+     * Recomputes the target image for [version] from [currentImage] (same registry and
+     * schematic) and the risk of going there from [currentVersion].
+     */
+    fun setVersion(currentImage: String, currentVersion: String, version: String) {
         imageJob?.cancel()
         val v = version.trim()
         if (v.isEmpty()) {
@@ -59,7 +71,11 @@ class UpgradeTargetViewModel(private val upgrades: UpgradeManager) : ViewModel()
             _target.value = try {
                 val image = withContext(Dispatchers.IO) { upgrades.image(currentImage, v) }
                 // The core returns "" for anything that is not a Talos version.
-                if (image.isEmpty()) TargetImage(v, error = UiText.Res(R.string.upgrade_bad_version)) else TargetImage(v, image = image)
+                if (image.isEmpty()) {
+                    TargetImage(v, error = UiText.Res(R.string.upgrade_bad_version))
+                } else {
+                    TargetImage(v, image = image, risk = upgrades.versionRisk(currentVersion, v))
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {

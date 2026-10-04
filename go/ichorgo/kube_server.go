@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/netip"
 	"net/url"
 	"strings"
 
@@ -36,7 +37,7 @@ func parseKubeServer(input string) (*url.URL, error) {
 		input = "https://" + input
 	}
 
-	u, err := url.Parse(input)
+	u, err := url.Parse(bracketIPv6Host(input))
 	if err != nil {
 		return nil, fmt.Errorf("not a valid address: %q", input)
 	}
@@ -63,7 +64,38 @@ func parseKubeServer(input string) (*url.URL, error) {
 	u.Path = strings.TrimSuffix(u.Path, "/")
 	u.RawPath = ""
 
+	// One address, one way of writing it: canonical, an IPv6 one bracketed.
+	if a, err := netip.ParseAddr(u.Hostname()); err == nil {
+		switch {
+		case u.Port() != "":
+			u.Host = net.JoinHostPort(a.String(), u.Port())
+		case a.Is6():
+			u.Host = "[" + a.String() + "]"
+		default:
+			u.Host = a.String()
+		}
+	}
+
 	return u, nil
+}
+
+// bracketIPv6Host brackets the host of rawURL when it is a bare IPv6 address, which a URL
+// parser reads as a host and a port ("fd00::1": host "fd00:", port "1"). An IPv6 address
+// with a port must be typed bracketed: "fd00::1:6443" is an address.
+func bracketIPv6Host(rawURL string) string {
+	scheme, rest, _ := strings.Cut(rawURL, "://")
+
+	host, path := rest, ""
+	if i := strings.IndexByte(rest, '/'); i >= 0 {
+		host, path = rest[:i], rest[i:]
+	}
+
+	// A zone ("fe80::1%eth0") is written %25 in a URL.
+	if a, err := netip.ParseAddr(host); err == nil && a.Is6() {
+		return scheme + "://[" + strings.Replace(host, "%", "%25", 1) + "]" + path
+	}
+
+	return rawURL
 }
 
 // applyKubeServer points creds at server (see NormalizeKubeServer), with the kubeconfig's

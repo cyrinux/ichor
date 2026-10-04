@@ -114,6 +114,10 @@ func NodeResources(configYAML, contextName, node string) (out string, err error)
 	}
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
+		if err := validatePowerTarget(s.context, node); err != nil {
+			return "", err
+		}
+
 		r, err := fetchNodeResources(ctx, s.client, node)
 		if err != nil {
 			return "", err

@@ -49,10 +49,11 @@ type containerStatus struct {
 
 type podObject struct {
 	Metadata struct {
-		Name              string     `json:"name"`
-		Namespace         string     `json:"namespace"`
-		CreationTimestamp time.Time  `json:"creationTimestamp"`
-		DeletionTimestamp *time.Time `json:"deletionTimestamp"`
+		Name              string            `json:"name"`
+		Namespace         string            `json:"namespace"`
+		CreationTimestamp time.Time         `json:"creationTimestamp"`
+		DeletionTimestamp *time.Time        `json:"deletionTimestamp"`
+		Labels            map[string]string `json:"labels"`
 		OwnerReferences   []struct {
 			Kind string `json:"kind"`
 			Name string `json:"name"`

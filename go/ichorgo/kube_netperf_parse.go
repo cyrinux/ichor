@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -28,7 +29,8 @@ func parseNetPerf(test, log string) (netPerfResult, error) {
 		ok := true
 		for j := range values {
 			v, err := strconv.ParseFloat(fields[j], 64)
-			ok = ok && err == nil
+			// ParseFloat takes "nan" and "inf", which json.Marshal refuses: the whole report would fail.
+			ok = ok && err == nil && !math.IsNaN(v) && !math.IsInf(v, 0)
 			values[j] = v
 		}
 

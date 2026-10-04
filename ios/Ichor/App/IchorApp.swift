@@ -29,6 +29,7 @@ struct IchorApp: App {
                 .task { support.onLaunch() }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .background, BackgroundMonitor.alertsEnabled { BackgroundMonitor.schedule() }
+                    if phase == .background { UpgradeJob.shared.didEnterBackground() }
                 }
                 .preferredColorScheme(model.theme.colorScheme)
                 // The accent color follows the cluster on screen.
@@ -111,6 +112,8 @@ enum Route: Hashable {
     /// Log of one Kubernetes container (from the Pods tab).
     case containerLogs(node: String, hostname: String, container: LogContainer)
     case insights
+    /// PromQL panels from the cluster's Prometheus, Mimir, Thanos or VictoriaMetrics.
+    case metrics
     case supportBundle
     /// The bundled release history.
     case changelog
@@ -162,6 +165,7 @@ struct MainNavigation: View {
                     case .containerLogs(let node, let hostname, let container):
                         LogsView(node: node, hostname: hostname, service: nil, container: container)
                     case .insights: InsightsView()
+                    case .metrics: MetricsView()
                     case .supportBundle: SupportBundleView()
                     case .changelog: ChangelogView()
                     case .etcd: EtcdView()

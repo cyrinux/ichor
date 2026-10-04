@@ -36,6 +36,10 @@ func ServiceLogs(configYAML, contextName, node, service string, tailLines int) (
 	}
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
+		if err := validatePowerTarget(s.context, node); err != nil {
+			return "", err
+		}
+
 		if strings.TrimSpace(service) == "" {
 			return "", errors.New("no service given")
 		}
@@ -68,6 +72,10 @@ func KernelLogs(configYAML, contextName, node string, tailLines int) (out string
 	}
 
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
+		if err := validatePowerTarget(s.context, node); err != nil {
+			return "", err
+		}
+
 		stream, err := s.client.Dmesg(client.WithNode(ctx, node), false, false)
 		if err != nil {
 			return "", errors.New(s.friendly(node, err))

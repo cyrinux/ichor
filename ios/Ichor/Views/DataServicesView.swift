@@ -27,18 +27,18 @@ struct DataServicesView: View {
                     case .garage: GarageList(status: services.garage!, refresh: load)
                     case .cnpg: CnpgList(status: services.cnpg!, refresh: load)
                     case .dragonfly: DragonflyList(status: services.dragonfly!, refresh: load)
+                    case .mariadb: MariaDbList(status: services.mariadb!, refresh: load)
+                    case .percona: PerconaList(status: services.percona!, refresh: load)
+                    case .certManager: CertificatesList(status: services.certManager!, refresh: load)
+                    case .velero: VeleroList(status: services.velero!, refresh: load)
+                    case .ceph: CephList(status: services.ceph!, refresh: load)
                     }
                 }
                 .safeAreaInset(edge: .top) {
                     VStack(alignment: .leading, spacing: 8) {
                         LikelyCauseBanner(causes: services.likelyCauses(downNodes: downNodes))
                         if kinds.count > 1 {
-                            Picker(selection: Binding(get: { tab }, set: { selected = $0 })) {
-                                ForEach(kinds) { Text(verbatim: $0.tabTitle).tag($0) }
-                            } label: {
-                                EmptyView()
-                            }
-                            .pickerStyle(.segmented)
+                            SystemPicker(kinds: kinds, selection: Binding(get: { tab }, set: { selected = $0 }))
                         }
                     }
                     .padding(.horizontal)
@@ -77,6 +77,25 @@ struct ErrorLine: View {
             Label { Text("Could not read: \(error)") } icon: { Image(systemName: "exclamationmark.triangle") }
                 .font(.callout)
                 .foregroundStyle(.red)
+        }
+    }
+}
+
+/// One segment per system; past a few, segments get too narrow to read, so a menu instead.
+private struct SystemPicker: View {
+    let kinds: [DataServiceKind]
+    @Binding var selection: DataServiceKind
+
+    var body: some View {
+        let picker = Picker(selection: $selection) {
+            ForEach(kinds) { Text(verbatim: $0.tabTitle).tag($0) }
+        } label: {
+            EmptyView()
+        }
+        if kinds.count <= 3 {
+            picker.pickerStyle(.segmented)
+        } else {
+            picker.pickerStyle(.menu).frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }

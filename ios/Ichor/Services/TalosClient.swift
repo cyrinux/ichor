@@ -214,6 +214,20 @@ struct TalosClient: Sendable {
         }
     }
 
+    /// `kubectl rollout status KIND/NAME -n NAMESPACE` with the pods (os:admin). Never cached: polled.
+    func rolloutStatus(_ workload: KubeWorkload) async throws -> KubeRolloutStatus {
+        try await Self.json { [config, context, kubeServer] in
+            IchorgoKubeRolloutStatus(config, context, kubeServer, workload.kind, workload.namespace, workload.name, $0)
+        }
+    }
+
+    /// `kubectl create job --from=cronjob/NAME -n NAMESPACE` (os:admin): the new Job's name.
+    func triggerCronJob(_ cronJob: KubeCronJob) async throws -> String {
+        try await Self.run { [config, context, kubeServer] error -> String in
+            IchorgoKubeTriggerCronJob(config, context, kubeServer, cronJob.namespace, cronJob.name, error)
+        }
+    }
+
     /// The Ingress and HTTPRoute URLs serving pods (os:admin).
     func appRoutes(pods: [RoutePod]) async throws -> [KubeRoute] {
         let encoded = String(decoding: try JSONEncoder().encode(pods), as: UTF8.self)
