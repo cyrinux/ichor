@@ -35,6 +35,30 @@ final class EtcdBackupTests: XCTestCase {
                        "etcd-prod-cp-1-20270115-0800.snapshot")
         XCTAssertEqual(etcdSnapshotFilename(context: "admin@home lab", hostname: "a/b", date: date, timeZone: utc),
                        "etcd-admin-home-lab-a-b-20270115-0800.snapshot")
+        XCTAssertEqual(etcdSnapshotFilename(context: "prod", hostname: "cp-1", date: date, timeZone: utc, encrypted: true),
+                       "etcd-prod-cp-1-20270115-0800.snapshot.age")
+    }
+
+    func testRestoreCommands() {
+        let keys = snapshotRestoreCommands(fileName: "etcd-prod.snapshot.age", mode: .keys, sha256: "abc")
+        XCTAssertTrue(keys.contains("age -d -i ~/.ssh/id_ed25519 -o etcd.snapshot etcd-prod.snapshot.age"))
+        XCTAssertTrue(keys.contains("age-yubikey-identity"))
+        XCTAssertTrue(keys.contains("sha256sum etcd.snapshot  # expect abc"))
+        XCTAssertTrue(keys.hasSuffix("bootstrap --recover-from=./etcd.snapshot"))
+
+        let pass = snapshotRestoreCommands(fileName: "etcd-prod.snapshot.age", mode: .passphrase, sha256: "abc")
+        XCTAssertTrue(pass.contains("age -d -o etcd.snapshot etcd-prod.snapshot.age"))
+        XCTAssertFalse(pass.contains("-i "))
+
+        let clear = snapshotRestoreCommands(fileName: "my etcd's.snapshot", mode: .none, sha256: "abc")
+        XCTAssertFalse(clear.contains("age "))
+        XCTAssertTrue(clear.contains("sha256sum 'my etcd'\\''s.snapshot'"))
+        XCTAssertTrue(clear.hasSuffix("--recover-from=./'my etcd'\\''s.snapshot'"))
+    }
+
+    func testPassphraseIsNeverPrinted() {
+        XCTAssertEqual(SnapshotEncryption.passphrase("correct horse battery").description, "passphrase(***)")
+        XCTAssertEqual(SnapshotRecipient(type: "ssh-ed25519", comment: "me@laptop").label, "ssh-ed25519 (me@laptop)")
     }
 
     func testFraction() {

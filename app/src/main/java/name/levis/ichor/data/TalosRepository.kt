@@ -59,6 +59,8 @@ import name.levis.ichor.model.DiskHealthReport
 import name.levis.ichor.model.DiskUsage
 import name.levis.ichor.model.EtcdForfeitResult
 import name.levis.ichor.model.EtcdMemberPlan
+import name.levis.ichor.model.SnapshotEncryption
+import name.levis.ichor.model.SnapshotRecipient
 import name.levis.ichor.model.MountList
 import name.levis.ichor.model.NodeDiscovery
 import name.levis.ichor.model.EndpointMatch
@@ -340,28 +342,34 @@ class TalosRepository(
     /** `talosctl etcd alarm disarm` through [node] (os:operator or os:admin); alarms are cluster-wide. */
     suspend fun etcdAlarmDisarm(node: String) = call { cfg, ctx -> Ichorgo.etcdAlarmDisarm(cfg, ctx, node) }
 
+    /** Checks the public keys typed for an encrypted snapshot (one per line); throws with the line at fault. */
+    suspend fun checkSnapshotRecipients(text: String): List<SnapshotRecipient> = withContext(Dispatchers.Default) {
+        TalosJson.decodeFromString(ListSerializer(SnapshotRecipient.serializer()), Ichorgo.checkSnapshotRecipients(text))
+    }
+
     /**
-     * Streams `talosctl -n NODE etcd snapshot` into [destPath] (written atomically by Go).
+     * Streams `talosctl -n NODE etcd snapshot` into [destPath] (written atomically by Go),
+     * age-encrypted while it streams unless [encryption] is [SnapshotEncryption.None].
      * Cancelling the collector cancels the download.
      */
-    fun etcdSnapshot(node: String, destPath: String): Flow<SnapshotEvent> = callbackFlow {
+    fun etcdSnapshot(node: String, destPath: String, encryption: SnapshotEncryption): Flow<SnapshotEvent> = callbackFlow {
         val stored = configs.forCall()
-        val run = Ichorgo.startEtcdSnapshot(
-            stored.yaml,
-            stored.activeContext,
-            node,
-            destPath,
-            object : SnapshotListener {
-                override fun onProgress(bytes: Long) {
-                    trySend(SnapshotEvent.Progress(bytes))
-                }
+        val listener = object : SnapshotListener {
+            override fun onProgress(bytes: Long) {
+                trySend(SnapshotEvent.Progress(bytes))
+            }
 
-                override fun onDone(path: String, size: Long, sha256: String, errMessage: String) {
-                    trySend(if (errMessage.isEmpty()) SnapshotEvent.Done(path, size, sha256) else SnapshotEvent.Failed(errMessage))
-                    close()
-                }
-            },
-        )
+            override fun onDone(path: String, size: Long, sha256: String, errMessage: String) {
+                trySend(if (errMessage.isEmpty()) SnapshotEvent.Done(path, size, sha256) else SnapshotEvent.Failed(errMessage))
+                close()
+            }
+        }
+        val (yaml, context) = stored.yaml to stored.activeContext
+        val run = when (encryption) {
+            SnapshotEncryption.None -> Ichorgo.startEtcdSnapshot(yaml, context, node, destPath, listener)
+            is SnapshotEncryption.Keys -> Ichorgo.startEtcdSnapshotEncrypted(yaml, context, node, destPath, encryption.recipients, "", listener)
+            is SnapshotEncryption.Passphrase -> Ichorgo.startEtcdSnapshotEncrypted(yaml, context, node, destPath, "", encryption.passphrase, listener)
+        }
         awaitClose { run.cancel() }
     }.buffer(Channel.CONFLATED) // progress may be dropped, the final event is always kept
 

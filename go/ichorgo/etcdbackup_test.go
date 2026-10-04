@@ -16,7 +16,7 @@ func TestWriteSnapshotAtomicWithProgressAndHash(t *testing.T) {
 
 	var reports []int64
 
-	size, sum, err := writeSnapshot(strings.NewReader(data), dest, func(n int64) { reports = append(reports, n) })
+	size, sum, err := writeSnapshot(strings.NewReader(data), dest, nil, func(n int64) { reports = append(reports, n) })
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +54,7 @@ func (f *failingReader) Read(p []byte) (int, error) {
 func TestWriteSnapshotFailureLeavesNoFile(t *testing.T) {
 	dest := filepath.Join(t.TempDir(), "etcd.snapshot")
 
-	if _, _, err := writeSnapshot(&failingReader{n: 3}, dest, func(int64) {}); err == nil {
+	if _, _, err := writeSnapshot(&failingReader{n: 3}, dest, nil, func(int64) {}); err == nil {
 		t.Fatal("expected error")
 	}
 

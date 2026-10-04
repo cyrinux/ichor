@@ -71,6 +71,7 @@ func main() {
 	kubeServer := flag.String("kube-server", "", "Kubernetes API address to use instead of the kubeconfig's (host[:port] or https URL)")
 	mask := flag.Bool("mask", false, "screenshot mode: mask IPs, hostnames, domains and context names")
 	maskWords := flag.String("mask-words", "", "with -mask: comma-separated extra words to hide")
+	ageRecipient := flag.String("age-recipient", "", "snapshot-probe: encrypt for this age or SSH public key")
 	flag.Parse()
 
 	if flag.NArg() == 0 {
@@ -191,7 +192,12 @@ func main() {
 	case "snapshot-probe":
 		dest := filepath.Join(os.TempDir(), "etcd-probe.snapshot")
 		p := &snapshotProbe{done: make(chan string, 1)}
-		p.run = ichorgo.StartEtcdSnapshot(cfg, *contextName, flag.Arg(1), dest, p)
+		if *ageRecipient != "" {
+			dest += ".age"
+			p.run = ichorgo.StartEtcdSnapshotEncrypted(cfg, *contextName, flag.Arg(1), dest, *ageRecipient, "", p)
+		} else {
+			p.run = ichorgo.StartEtcdSnapshot(cfg, *contextName, flag.Arg(1), dest, p)
+		}
 		out = <-p.done
 		if _, statErr := os.Stat(dest + ".part"); statErr == nil {
 			out += " (partial file left!)"
