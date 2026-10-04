@@ -169,7 +169,8 @@ func sweepRunNamespaces(ctx context.Context, k *kubeClient, app string, now time
 		} `json:"items"`
 	}
 
-	selector := url.QueryEscape("app.kubernetes.io/name=" + app)
+	// Only namespaces this app created: a name prefix and an app label alone may match others.
+	selector := url.QueryEscape("app.kubernetes.io/name=" + app + ",app.kubernetes.io/managed-by=ichor")
 	if k.get(ctx, "/api/v1/namespaces?labelSelector="+selector, &list) != nil {
 		return
 	}

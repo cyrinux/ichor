@@ -85,7 +85,7 @@ func listMembers(ctx context.Context, c *client.Client, targets []string) ([]clu
 			return members, nil
 		}
 
-		errs = append(errs, fmt.Errorf("%s: %w", node, err))
+		errs = append(errs, fmt.Errorf("%s: %s", node, friendlyError(err)))
 	}
 
 	if len(errs) == 0 {
@@ -214,7 +214,7 @@ func AddContextNodes(storedYAML, contextName, nodes string) (out string, err err
 
 	contextName, nodes = unmaskTargets(storedYAML, contextName, nodes)
 
-	stored, err := clientconfig.FromString(storedYAML)
+	stored, err := parseTalosconfig(storedYAML)
 	if err != nil {
 		return "", fmt.Errorf("stored talosconfig: %w", err)
 	}

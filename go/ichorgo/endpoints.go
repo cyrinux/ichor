@@ -181,7 +181,7 @@ func AddContextEndpoint(storedYAML, contextName, node string) (out string, err e
 // editContext returns storedYAML with a copy of contextName changed by edit, the other
 // contexts untouched.
 func editContext(storedYAML, contextName string, edit func(*clientconfig.Context)) (string, error) {
-	stored, err := clientconfig.FromString(storedYAML)
+	stored, err := parseTalosconfig(storedYAML)
 	if err != nil {
 		return "", fmt.Errorf("stored talosconfig: %w", err)
 	}
@@ -431,7 +431,13 @@ func matchEndpoints(ctx context.Context, contexts map[string]*clientconfig.Conte
 					return
 				}
 
-				p, err := probe(ctx, cfgCtx, endpoint)
+				var p endpointProbe
+
+				err := safeCall(func() (err error) {
+					p, err = probe(ctx, cfgCtx, endpoint)
+
+					return err
+				})
 				if err != nil {
 					return
 				}

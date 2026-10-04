@@ -31,13 +31,23 @@ func unmaskTargets(configYAML, contextName, nodes string) (string, string) {
 }
 
 // maskResult masks a returned display value and error (use with defer and named results).
+// Like maskErr it turns a panic into an error: gomobile would abort the app instead.
 func maskResult(out *string, err *error) {
+	if r := recover(); r != nil {
+		*out, *err = "", panicError(r)
+	}
+
 	*out = privacy.mask(*out)
 	maskErr(err)
 }
 
-// maskErr masks a returned error message (use with defer and a named result).
+// maskErr masks a returned error message (use with defer and a named result), and turns a
+// panic into an error (see panics.go).
 func maskErr(err *error) {
+	if r := recover(); r != nil {
+		*err = panicError(r)
+	}
+
 	if *err == nil || !privacy.isEnabled() {
 		return
 	}

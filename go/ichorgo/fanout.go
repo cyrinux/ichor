@@ -18,6 +18,8 @@ func forEachNode[T any](items []T, fn func(i int, item T)) {
 
 		wg.Go(func() {
 			defer func() { <-slots }()
+			// A panic must not abort the app: the item keeps its zero result.
+			defer func() { _ = recover() }()
 
 			fn(i, item)
 		})

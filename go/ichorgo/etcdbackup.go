@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
@@ -46,6 +47,7 @@ func StartEtcdSnapshot(configYAML, contextName, node, destPath string, listener 
 
 	go func() {
 		defer cancel()
+		defer onPanic(func(msg string) { listener.OnDone("", 0, "", msg) })
 
 		size, sum, err := runSnapshot(ctx, configYAML, contextName, node, destPath, listener)
 		if err != nil {
@@ -90,6 +92,10 @@ func runSnapshot(ctx context.Context, configYAML, contextName, node, destPath st
 // writeSnapshot copies r to destPath atomically (via destPath.part), reporting progress
 // about every MiB, and returns the size and SHA-256 of what was written.
 func writeSnapshot(r io.Reader, destPath string, progress func(int64)) (int64, string, error) {
+	if !filepath.IsAbs(destPath) {
+		return 0, "", fmt.Errorf("destination %q is not an absolute path", destPath)
+	}
+
 	part := destPath + ".part"
 
 	f, err := os.OpenFile(part, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o600)
