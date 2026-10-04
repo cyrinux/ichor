@@ -1719,4 +1719,17 @@
         <item quantity="one">%1$d sync window</item>
         <item quantity="other">%1$d sync windows</item>
     </plurals>
+    <string name="overview_card_summary">Cluster summary</string>
+    <string name="overview_edit_title">Arrange cards</string>
+    <string name="overview_edit_done">Done</string>
+    <string name="overview_edit_hint">Drag a card by its handle to move it. Hidden cards can be added back below.</string>
+    <string name="overview_edit_drag">Drag to move</string>
+    <string name="overview_edit_move_up">Move up</string>
+    <string name="overview_edit_move_down">Move down</string>
+    <string name="overview_edit_hide">Hide</string>
+    <string name="overview_edit_show">Show</string>
+    <string name="overview_edit_hidden">Hidden cards</string>
+    <string name="overview_edit_reset">Reset to default</string>
+    <string name="overview_edit_when_detected">Only when found on the cluster</string>
+    <string name="overview_edit_all_hidden">Every card is hidden. Tap to choose the ones to show.</string>
 </resources>

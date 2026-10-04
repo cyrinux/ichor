@@ -1716,4 +1716,17 @@
         <item quantity="one">%1$d Sync-Fenster</item>
         <item quantity="other">%1$d Sync-Fenster</item>
     </plurals>
+    <string name="overview_card_summary">Cluster-Übersicht</string>
+    <string name="overview_edit_title">Karten anordnen</string>
+    <string name="overview_edit_done">Fertig</string>
+    <string name="overview_edit_hint">Ziehe eine Karte am Griff, um sie zu verschieben. Ausgeblendete Karten lassen sich unten wieder hinzufügen.</string>
+    <string name="overview_edit_drag">Zum Verschieben ziehen</string>
+    <string name="overview_edit_move_up">Nach oben</string>
+    <string name="overview_edit_move_down">Nach unten</string>
+    <string name="overview_edit_hide">Ausblenden</string>
+    <string name="overview_edit_show">Einblenden</string>
+    <string name="overview_edit_hidden">Ausgeblendete Karten</string>
+    <string name="overview_edit_reset">Zurücksetzen</string>
+    <string name="overview_edit_when_detected">Nur wenn im Cluster vorhanden</string>
+    <string name="overview_edit_all_hidden">Alle Karten sind ausgeblendet. Tippe, um die anzuzeigenden auszuwählen.</string>
 </resources>
