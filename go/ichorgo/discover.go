@@ -85,7 +85,7 @@ func listMembers(ctx context.Context, c *client.Client, targets []string) ([]clu
 			return members, nil
 		}
 
-		errs = append(errs, fmt.Errorf("%s: %w", node, err))
+		errs = append(errs, fmt.Errorf("%s: %s", node, friendlyError(err)))
 	}
 
 	if len(errs) == 0 {

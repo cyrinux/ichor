@@ -23,7 +23,14 @@ var releaseCache struct {
 	sync.Mutex
 	at       time.Time
 	releases []talosRelease
+
+	// The last failure, kept a while: offline or rate limited (60 requests an hour without
+	// a token), every screen asking again would wait for the fetch timeout.
+	failedAt time.Time
+	err      error
 }
+
+const updateCheckRetry = 5 * time.Minute
 
 // TalosUpdateCheck tells whether a newer stable Talos release than the nodes run exists.
 // nodeVersions is comma-separated, one entry per node ("v1.14.1,v1.14.1,v1.13.4"); entries
@@ -47,12 +54,18 @@ func cachedReleases() ([]talosRelease, error) {
 		return releaseCache.releases, nil
 	}
 
+	if releaseCache.err != nil && time.Since(releaseCache.failedAt) < updateCheckRetry {
+		return nil, releaseCache.err
+	}
+
 	releases, err := fetchReleases()
 	if err != nil {
+		releaseCache.failedAt, releaseCache.err = time.Now(), err
+
 		return nil, err
 	}
 
-	releaseCache.at, releaseCache.releases = time.Now(), releases
+	releaseCache.at, releaseCache.releases, releaseCache.err = time.Now(), releases, nil
 
 	return releases, nil
 }

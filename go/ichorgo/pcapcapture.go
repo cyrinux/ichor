@@ -251,6 +251,16 @@ func writeCapture(
 		return captureResult{}, "", err
 	}
 
+	// A panic (reported by the run's onPanic) must not leave the file open and the part behind.
+	defer func() {
+		if r := recover(); r != nil {
+			_ = f.Close()       //nolint:errcheck
+			_ = os.Remove(part) //nolint:errcheck
+
+			panic(r)
+		}
+	}()
+
 	snaplen := uint32(readSnaplen)
 	if opts.snapLen > 0 {
 		snaplen = uint32(opts.snapLen)

@@ -106,6 +106,10 @@ func main() {
 	case "dmesg":
 		out, err = ichorgo.KernelLogs(cfg, *contextName, flag.Arg(1), 20)
 	case "logstats":
+		if flag.NArg() < 2 {
+			fail(fmt.Errorf("usage: probe logstats NODE [SERVICE...]"))
+		}
+
 		out = logStats(cfg, *contextName, flag.Arg(1), flag.Args()[2:])
 	case "kubeconfig":
 		// Never print the credential itself.
