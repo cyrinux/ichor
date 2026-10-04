@@ -41,6 +41,7 @@ type dataServices struct {
 	MariaDB     *mariadbStatus     `json:"mariadb,omitempty"`
 	Percona     *perconaStatus     `json:"percona,omitempty"`
 	CertManager *certManagerStatus `json:"certManager,omitempty"`
+	Velero      *veleroStatus      `json:"velero,omitempty"`
 }
 
 // KubeDataServices reports the health of the storage and database operators the cluster
@@ -144,6 +145,10 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 
 	if v, ok := groups[groupCertManager]; ok {
 		wg.Go(func() { out.CertManager = readCertManager(ctx, k, v, now) })
+	}
+
+	if _, ok := groups[groupVelero]; ok {
+		wg.Go(func() { out.Velero = readVelero(ctx, k, now) })
 	}
 
 	if hints.wants("garage") {

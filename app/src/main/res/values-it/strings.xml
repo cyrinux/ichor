@@ -1547,6 +1547,35 @@
         <item quantity="one">%1$d tentativo fallito</item>
         <item quantity="other">%1$d tentativi falliti</item>
     </plurals>
+    <string name="velero_empty">Nessuna pianificazione Velero.</string>
+    <string name="velero_location">Posizione di archiviazione %1$s</string>
+    <string name="velero_default">predefinita</string>
+    <string name="velero_paused">in pausa</string>
+    <string name="velero_in_progress">backup in corso</string>
+    <string name="velero_schedule">Pianificazione</string>
+    <string name="velero_storage_location">Posizione di archiviazione</string>
+    <string name="velero_namespaces">Namespace</string>
+    <string name="velero_all_namespaces">tutti</string>
+    <string name="velero_last_success">Ultimo successo</string>
+    <string name="velero_no_backup">ancora nessun backup</string>
+    <string name="velero_adhoc">Backup manuali non riusciti (ultimi 7 giorni)</string>
+    <string name="velero_reason_failed">ultimo backup non riuscito</string>
+    <string name="velero_reason_location">posizione di archiviazione non disponibile</string>
+    <string name="velero_reason_partially_failed">ultimo backup parzialmente non riuscito</string>
+    <string name="velero_reason_stale">nessun backup recente</string>
+    <string name="velero_reason_invalid">pianificazione non valida</string>
+    <plurals name="velero_schedules">
+        <item quantity="one">%1$d pianificazione Velero</item>
+        <item quantity="other">%1$d pianificazioni Velero</item>
+    </plurals>
+    <plurals name="velero_errors">
+        <item quantity="one">%1$d errore</item>
+        <item quantity="other">%1$d errori</item>
+    </plurals>
+    <plurals name="velero_warnings">
+        <item quantity="one">%1$d avviso</item>
+        <item quantity="other">%1$d avvisi</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s non è pronto: la causa probabile di %2$d problema</item>
         <item quantity="other">%1$s non è pronto: la causa probabile di %2$d problemi</item>

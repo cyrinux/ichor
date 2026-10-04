@@ -1667,6 +1667,41 @@
         <item quantity="many">%1$d невдалих спроб</item>
         <item quantity="other">%1$d невдалої спроби</item>
     </plurals>
+    <string name="velero_empty">Немає розкладів Velero.</string>
+    <string name="velero_location">Сховище %1$s</string>
+    <string name="velero_default">типове</string>
+    <string name="velero_paused">призупинено</string>
+    <string name="velero_in_progress">резервне копіювання триває</string>
+    <string name="velero_schedule">Розклад</string>
+    <string name="velero_storage_location">Сховище</string>
+    <string name="velero_namespaces">Простори імен</string>
+    <string name="velero_all_namespaces">усі</string>
+    <string name="velero_last_success">Останній успіх</string>
+    <string name="velero_no_backup">ще немає резервної копії</string>
+    <string name="velero_adhoc">Невдалі ручні резервні копії (за 7 днів)</string>
+    <string name="velero_reason_failed">остання резервна копія невдала</string>
+    <string name="velero_reason_location">сховище недоступне</string>
+    <string name="velero_reason_partially_failed">остання резервна копія частково невдала</string>
+    <string name="velero_reason_stale">немає свіжої резервної копії</string>
+    <string name="velero_reason_invalid">недійсний розклад</string>
+    <plurals name="velero_schedules">
+        <item quantity="one">%1$d розклад Velero</item>
+        <item quantity="few">%1$d розклади Velero</item>
+        <item quantity="many">%1$d розкладів Velero</item>
+        <item quantity="other">%1$d розкладу Velero</item>
+    </plurals>
+    <plurals name="velero_errors">
+        <item quantity="one">%1$d помилка</item>
+        <item quantity="few">%1$d помилки</item>
+        <item quantity="many">%1$d помилок</item>
+        <item quantity="other">%1$d помилки</item>
+    </plurals>
+    <plurals name="velero_warnings">
+        <item quantity="one">%1$d попередження</item>
+        <item quantity="few">%1$d попередження</item>
+        <item quantity="many">%1$d попереджень</item>
+        <item quantity="other">%1$d попередження</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s не готовий: імовірна причина %2$d проблеми</item>
         <item quantity="few">%1$s не готовий: імовірна причина %2$d проблем</item>

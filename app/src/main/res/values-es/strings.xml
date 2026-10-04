@@ -1547,6 +1547,35 @@
         <item quantity="one">%1$d intento fallido</item>
         <item quantity="other">%1$d intentos fallidos</item>
     </plurals>
+    <string name="velero_empty">Sin programaciones de Velero.</string>
+    <string name="velero_location">Ubicación de almacenamiento %1$s</string>
+    <string name="velero_default">predeterminada</string>
+    <string name="velero_paused">en pausa</string>
+    <string name="velero_in_progress">copia en curso</string>
+    <string name="velero_schedule">Programación</string>
+    <string name="velero_storage_location">Ubicación de almacenamiento</string>
+    <string name="velero_namespaces">Namespaces</string>
+    <string name="velero_all_namespaces">todos</string>
+    <string name="velero_last_success">Último éxito</string>
+    <string name="velero_no_backup">aún sin copia</string>
+    <string name="velero_adhoc">Copias manuales fallidas (últimos 7 días)</string>
+    <string name="velero_reason_failed">última copia fallida</string>
+    <string name="velero_reason_location">ubicación de almacenamiento no disponible</string>
+    <string name="velero_reason_partially_failed">última copia fallida en parte</string>
+    <string name="velero_reason_stale">sin copia reciente</string>
+    <string name="velero_reason_invalid">programación no válida</string>
+    <plurals name="velero_schedules">
+        <item quantity="one">%1$d programación de Velero</item>
+        <item quantity="other">%1$d programaciones de Velero</item>
+    </plurals>
+    <plurals name="velero_errors">
+        <item quantity="one">%1$d error</item>
+        <item quantity="other">%1$d errores</item>
+    </plurals>
+    <plurals name="velero_warnings">
+        <item quantity="one">%1$d advertencia</item>
+        <item quantity="other">%1$d advertencias</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s no está listo: la causa probable de %2$d problema</item>
         <item quantity="other">%1$s no está listo: la causa probable de %2$d problemas</item>
