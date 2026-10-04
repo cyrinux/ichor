@@ -40,10 +40,15 @@ private sealed interface IconImage {
 
 /**
  * The app's icon in a rounded tile on a subtle surface, so logos with transparency read on
- * both themes; a monogram in the app's own colour when there is no icon.
+ * both themes; a monogram in the app's own colour when there is no icon, or [fallback] when given.
  */
 @Composable
-fun AppIconTile(app: InventoryApp, modifier: Modifier = Modifier, size: Dp = 52.dp) {
+fun AppIconTile(
+    app: InventoryApp,
+    modifier: Modifier = Modifier,
+    size: Dp = 52.dp,
+    fallback: (@Composable () -> Unit)? = null,
+) {
     val shape = RoundedCornerShape(size * CORNER_RATIO)
     val image = rememberIcon(app)
     Box(
@@ -57,7 +62,7 @@ fun AppIconTile(app: InventoryApp, modifier: Modifier = Modifier, size: Dp = 52.
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize().padding(size * PADDING_RATIO),
             )
-            IconImage.None -> Monogram(app, size)
+            IconImage.None -> fallback?.invoke() ?: Monogram(app, size)
             IconImage.Pending -> Unit
         }
     }

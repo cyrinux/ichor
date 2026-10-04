@@ -1305,6 +1305,29 @@
     <string name="rollout_pod_old">vecchio</string>
     <string name="rollout_no_pods">Ancora nessun pod.</string>
     <string name="rollout_leave_hint">Il rollout prosegue nel cluster se chiudi questa finestra.</string>
+    <string name="cronjobs_title">CronJob</string>
+    <string name="cronjobs_search">Filtra per nome, pianificazione o immagine</string>
+    <string name="cronjobs_empty">Nessun CronJob.</string>
+    <string name="cronjobs_no_match">Nessun CronJob corrisponde a «%1$s».</string>
+    <string name="cronjobs_state_running">in corso</string>
+    <string name="cronjobs_state_succeeded">riuscito</string>
+    <string name="cronjobs_state_failed">fallito</string>
+    <string name="cronjobs_state_never">mai eseguito</string>
+    <string name="cronjobs_suspended">sospeso</string>
+    <string name="cronjobs_next_run">prossimo %1$s</string>
+    <string name="cronjobs_last_run">ultima esecuzione %1$s</string>
+    <string name="cronjobs_no_runs">Nessuna esecuzione conservata.</string>
+    <string name="cronjobs_runs">Esecuzioni recenti</string>
+    <string name="cronjobs_manual">manuale</string>
+    <string name="cronjobs_run_now">Esegui ora</string>
+    <string name="cronjobs_schedule_only">Solo pianificato</string>
+    <string name="cronjobs_run_title">Eseguire %1$s ora?</string>
+    <string name="cronjobs_run_text">Viene creato un Job dal suo modello in %1$s, come kubectl create job --from.</string>
+    <string name="cronjobs_run_active">Un’esecuzione è già in corso: questa ne avvia un’altra.</string>
+    <string name="cronjobs_run_suspended">Il CronJob è sospeso: viene eseguito una volta, la pianificazione resta disattivata.</string>
+    <string name="cronjobs_run_confirm">Esegui</string>
+    <string name="cronjobs_run_done">%1$s avviato</string>
+    <string name="cronjobs_run_failed">Impossibile eseguire %1$s: %2$s</string>
     <string name="kube_server_title">Indirizzo dell’API Kubernetes</string>
     <string name="kube_server_label">Indirizzo</string>
     <string name="kube_server_hint">Usato al posto dell’indirizzo nel kubeconfig emesso da Talos, ad esempio un port forwarding, un load balancer o un nome pubblico: host, host:porta o un URL https. Senza porta, si usa quella del kubeconfig. Il certificato viene comunque verificato con l’indirizzo proprio del cluster. Lascia vuoto per tornare a quello del kubeconfig. Solo su questo dispositivo.</string>
@@ -1727,6 +1750,20 @@
         <item quantity="one">%1$d finestra di sync</item>
         <item quantity="other">%1$d finestre di sync</item>
     </plurals>
+    <string name="overview_card_summary">Riepilogo del cluster</string>
+    <string name="overview_edit_title">Disponi le schede</string>
+    <string name="overview_edit_done">Fine</string>
+    <string name="overview_edit_hint">Trascina una scheda dalla maniglia per spostarla. Le schede nascoste si possono aggiungere di nuovo qui sotto.</string>
+    <string name="overview_edit_drag">Trascina per spostare</string>
+    <string name="overview_edit_move_up">Sposta su</string>
+    <string name="overview_edit_move_down">Sposta giù</string>
+    <string name="overview_edit_hide">Nascondi</string>
+    <string name="overview_edit_show">Mostra</string>
+    <string name="overview_edit_hidden">Schede nascoste</string>
+    <string name="overview_edit_reset">Ripristina predefinito</string>
+    <string name="overview_edit_when_detected">Solo se presente nel cluster</string>
+    <string name="overview_edit_all_hidden">Tutte le schede sono nascoste. Tocca per scegliere quali mostrare.</string>
+||||||| a97dc89
 
     <!-- Network policies and Cilium live flows (Hubble) -->
     <string name="netpol_title">Policy di rete</string>

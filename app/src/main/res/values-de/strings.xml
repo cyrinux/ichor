@@ -1303,6 +1303,29 @@
     <string name="rollout_pod_old">alt</string>
     <string name="rollout_no_pods">Noch keine Pods.</string>
     <string name="rollout_leave_hint">Der Rollout läuft im Cluster weiter, wenn du dies schließt.</string>
+    <string name="cronjobs_title">CronJobs</string>
+    <string name="cronjobs_search">Nach Name, Zeitplan oder Image filtern</string>
+    <string name="cronjobs_empty">Keine CronJobs.</string>
+    <string name="cronjobs_no_match">Kein CronJob passt zu „%1$s“.</string>
+    <string name="cronjobs_state_running">läuft</string>
+    <string name="cronjobs_state_succeeded">erfolgreich</string>
+    <string name="cronjobs_state_failed">fehlgeschlagen</string>
+    <string name="cronjobs_state_never">nie ausgeführt</string>
+    <string name="cronjobs_suspended">pausiert</string>
+    <string name="cronjobs_next_run">nächster Lauf %1$s</string>
+    <string name="cronjobs_last_run">letzter Lauf %1$s</string>
+    <string name="cronjobs_no_runs">Keine Läufe gespeichert.</string>
+    <string name="cronjobs_runs">Letzte Läufe</string>
+    <string name="cronjobs_manual">manuell</string>
+    <string name="cronjobs_run_now">Jetzt ausführen</string>
+    <string name="cronjobs_schedule_only">Nur nach Zeitplan</string>
+    <string name="cronjobs_run_title">%1$s jetzt ausführen?</string>
+    <string name="cronjobs_run_text">Aus der Vorlage wird ein Job in %1$s erstellt, wie mit kubectl create job --from.</string>
+    <string name="cronjobs_run_active">Ein Lauf ist bereits aktiv: dies startet einen weiteren.</string>
+    <string name="cronjobs_run_suspended">Der CronJob ist pausiert: er läuft einmal, sein Zeitplan bleibt aus.</string>
+    <string name="cronjobs_run_confirm">Ausführen</string>
+    <string name="cronjobs_run_done">%1$s gestartet</string>
+    <string name="cronjobs_run_failed">%1$s konnte nicht ausgeführt werden: %2$s</string>
     <string name="kube_server_title">Kubernetes-API-Adresse</string>
     <string name="kube_server_label">Adresse</string>
     <string name="kube_server_hint">Wird statt der Adresse in der von Talos ausgestellten kubeconfig verwendet, z. B. eine Portweiterleitung, ein Load Balancer oder ein öffentlicher Name: Host, Host:Port oder eine https-URL. Ohne Port wird der aus der kubeconfig verwendet. Das Zertifikat wird weiterhin gegen die eigene Adresse des Clusters geprüft. Leer lassen, um wieder die der kubeconfig zu verwenden. Nur auf diesem Gerät.</string>
@@ -1725,6 +1748,20 @@
         <item quantity="one">%1$d Sync-Fenster</item>
         <item quantity="other">%1$d Sync-Fenster</item>
     </plurals>
+    <string name="overview_card_summary">Cluster-Übersicht</string>
+    <string name="overview_edit_title">Karten anordnen</string>
+    <string name="overview_edit_done">Fertig</string>
+    <string name="overview_edit_hint">Ziehe eine Karte am Griff, um sie zu verschieben. Ausgeblendete Karten lassen sich unten wieder hinzufügen.</string>
+    <string name="overview_edit_drag">Zum Verschieben ziehen</string>
+    <string name="overview_edit_move_up">Nach oben</string>
+    <string name="overview_edit_move_down">Nach unten</string>
+    <string name="overview_edit_hide">Ausblenden</string>
+    <string name="overview_edit_show">Einblenden</string>
+    <string name="overview_edit_hidden">Ausgeblendete Karten</string>
+    <string name="overview_edit_reset">Zurücksetzen</string>
+    <string name="overview_edit_when_detected">Nur wenn im Cluster vorhanden</string>
+    <string name="overview_edit_all_hidden">Alle Karten sind ausgeblendet. Tippe, um die anzuzeigenden auszuwählen.</string>
+||||||| a97dc89
 
     <!-- Network policies and Cilium live flows (Hubble) -->
     <string name="netpol_title">Netzwerkrichtlinien</string>

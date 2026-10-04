@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.workloads
 
 import android.text.format.DateUtils
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -126,7 +127,7 @@ fun WorkloadsTab(
     }
 }
 
-/** Search field and namespace chips, shared by the Workloads and Pods tabs. */
+/** Search field and namespace chips, shared by the Workloads, Pods and CronJobs tabs. */
 @Composable
 internal fun KubeFilters(
     namespaces: List<String>,
@@ -134,9 +135,10 @@ internal fun KubeFilters(
     query: String,
     onNamespace: (String?) -> Unit,
     onQuery: (String) -> Unit,
+    @StringRes placeholder: Int = R.string.workloads_search,
 ) {
     Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        SearchField(query, onQuery, stringResource(R.string.workloads_search), Modifier.fillMaxWidth().padding(horizontal = 16.dp))
+        SearchField(query, onQuery, stringResource(placeholder), Modifier.fillMaxWidth().padding(horizontal = 16.dp))
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             item {
                 FilterChip(selected = selected == null, onClick = { onNamespace(null) }, label = { Text(stringResource(R.string.workloads_all_namespaces)) })

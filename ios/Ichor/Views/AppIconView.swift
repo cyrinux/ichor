@@ -2,11 +2,12 @@ import SwiftUI
 import IchorCore
 
 /// An app's icon on a rounded tile: the bundled logo (its light variant in dark mode), the
-/// downloaded one when the user allowed it, else a monogram. The tile's subtle fill keeps
-/// transparent logos readable in both themes.
+/// downloaded one when the user allowed it, else a monogram (or fallbackSymbol, an SF Symbol,
+/// when given). The tile's subtle fill keeps transparent logos readable in both themes.
 struct AppIconView: View {
     let app: InventoryApp
     var size: CGFloat = 52
+    var fallbackSymbol: String?
 
     @Environment(\.colorScheme) private var scheme
     @AppStorage(AppIconSettings.remoteKey) private var remoteIcons = false
@@ -21,6 +22,14 @@ struct AppIconView: View {
                     .interpolation(.high)
                     .scaledToFit()
                     .padding(size * 0.16)
+            } else if let fallbackSymbol {
+                RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
+                    .fill(Color.accentColor.opacity(0.18))
+                    .overlay {
+                        Image(systemName: fallbackSymbol)
+                            .font(.system(size: size * 0.46, weight: .medium))
+                            .foregroundStyle(Color.accentColor)
+                    }
             } else {
                 MonogramView(app: app, size: size)
             }

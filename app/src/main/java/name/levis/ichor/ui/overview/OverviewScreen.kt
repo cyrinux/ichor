@@ -4,6 +4,8 @@ import name.levis.ichor.BuildConfig
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.rememberClusterLabels
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -26,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Hub
+import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
@@ -54,8 +57,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.platform.LocalContext
@@ -75,6 +80,8 @@ import name.levis.ichor.update.UpdateState
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.OverviewCard
+import name.levis.ichor.model.OverviewLayout
 import name.levis.ichor.model.ClusterTime
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.monitor.CERT_WARN_DAYS
@@ -246,6 +253,11 @@ fun OverviewScreen(
 
     // Members the talosconfig misses, once the overview loaded (its nodes answer, so will discovery).
     val discovered by discoveryVm.offer.collectAsStateWithLifecycle()
+    // Long-press a card to arrange them: order, hide, show again.
+    val layout by app.uiPreferences.overviewLayout.collectAsStateWithLifecycle()
+    var customizing by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = customizing) { customizing = false }
+    val customize = rememberCustomizeTrigger { customizing = true }
     var showDiscovered by remember { mutableStateOf(false) }
     LaunchedEffect(loaded, config?.activeContext, invalidations) {
         if (loaded) discoveryVm.discover() else discoveryVm.clear()
@@ -255,14 +267,17 @@ fun OverviewScreen(
         bottomBar = { DataFreshness(state) },
         // The AI diagnosis is optional: no trace of it unless it was turned on in Settings.
         floatingActionButton = {
-            if (ai.enabled) {
+            if (ai.enabled && !customizing) {
                 SmallFloatingActionButton(onClick = onDiagnose) {
                     Icon(Icons.Outlined.AutoAwesome, stringResource(R.string.ai_title))
                 }
             }
         },
         topBar = {
-            TopAppBar(
+            if (customizing) TopAppBar(
+                title = { Text(stringResource(R.string.overview_edit_title)) },
+                actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
+            ) else TopAppBar(
                 // Swipe the bar sideways for the previous/next cluster, tap the title for the menu.
                 modifier = Modifier.clusterSwipe(config, app::selectCluster),
                 title = {
@@ -380,7 +395,8 @@ fun OverviewScreen(
                 onDismiss = { showDiscovered = false },
             )
         }
-        when (val s = state) {
+        if (customizing) OverviewEditor(layout, app.uiPreferences::setOverviewLayout, Modifier.padding(padding))
+        else when (val s = state) {
             UiState.Loading -> LoadingBox(Modifier.padding(padding))
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.padding(padding))
             is UiState.Loaded -> PullToRefreshBox(
@@ -435,6 +451,8 @@ fun OverviewScreen(
                     discovered = discovered.size,
                     onDiscovered = { showDiscovered = true },
                     canDetectPublicIps = config?.activeSummary?.allows(Feature.KUBECONFIG) == true,
+                    layout = layout,
+                    onCustomize = customize,
                 )
             }
         }
@@ -471,6 +489,8 @@ private fun NodeList(
     discovered: Int,
     onDiscovered: () -> Unit,
     canDetectPublicIps: Boolean,
+    layout: OverviewLayout,
+    onCustomize: () -> Unit,
 ) {
     var sheetFor by remember { mutableStateOf<NodeOverview?>(null) }
     val wakeOnLan = rememberWakeOnLan(fingerprint)
@@ -503,36 +523,59 @@ private fun NodeList(
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
         if (certificate?.isDemo != true) item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
-        item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes), live, onInsights) }
-        item {
-            val argoData = (argo as? UiState.Loaded)?.data
-            val inventory = (apps as? UiState.Loaded)?.data
-            val badges = remember(argoData, inventory) { if (argoData != null && inventory != null) argoData.inventoryBadges(inventory.apps) else emptyMap() }
-            AppsCard(apps, onApps, badges)
+        // The cards, as arranged; a long press on one opens the arrangement.
+        layout.visible.forEach { card ->
+            when (card) {
+                OverviewCard.SUMMARY -> item(key = card.name) {
+                    ClusterSummaryCard(
+                        clusterName ?: overview.context,
+                        clusterSummary(overview.nodes),
+                        live,
+                        onInsights,
+                        Modifier.longPressToCustomize(onCustomize),
+                    )
+                }
+                OverviewCard.APPS -> item(key = card.name) {
+                    val argoData = (argo as? UiState.Loaded)?.data
+                    val inventory = (apps as? UiState.Loaded)?.data
+                    val badges = remember(argoData, inventory) { if (argoData != null && inventory != null) argoData.inventoryBadges(inventory.apps) else emptyMap() }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { AppsCard(apps, onApps, badges) }
+                }
+                OverviewCard.DATA_SERVICES -> if (dataServices != null) item(key = card.name) {
+                    val inventory = (apps as? UiState.Loaded)?.data
+                    val appsById = remember(inventory) { inventory?.apps.orEmpty().associateBy { it.id } }
+                    val hinted = remember(dataHints) { DataServiceKind.entries.filter { it.catalogId in dataHints.split(',') } }
+                    val downNodes = remember(overview) { overview.downHostnames() }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { DataServicesCard(dataServices, hinted, appsById, downNodes, onDataServices) }
+                }
+                OverviewCard.ARGO_CD -> if (argo != null) item(key = card.name) {
+                    val argoTile = (apps as? UiState.Loaded)?.data?.apps?.firstOrNull { it.id == ARGO_CD_CATALOG_ID }
+                    val downNodes = remember(overview) { overview.downHostnames() }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { ArgoCard(argo, argoTile, downNodes, onArgoCD) }
+                }
+                OverviewCard.NODES -> if (nodes.isNotEmpty()) item(key = card.name) {
+                    NodesCard(
+                        nodes,
+                        publicIps,
+                        onNode = onNode,
+                        onLive = { onNodeAction(it, NodeAction.LIVE) },
+                        onMore = { sheetFor = it },
+                        // Only on the title: a long press on a node row opens its actions.
+                        titleModifier = Modifier.longPressToCustomize(onCustomize),
+                    )
+                }
+                OverviewCard.TIME_DRIFT -> item(key = card.name) {
+                    Box(Modifier.longPressToCustomize(onCustomize)) {
+                        TimeDriftCard(time, overview.nodes.associate { it.node to it.hostname })
+                    }
+                }
+            }
         }
-        if (dataServices != null) item {
-            val inventory = (apps as? UiState.Loaded)?.data
-            val appsById = remember(inventory) { inventory?.apps.orEmpty().associateBy { it.id } }
-            val hinted = remember(dataHints) { DataServiceKind.entries.filter { it.catalogId in dataHints.split(',') } }
-            val downNodes = remember(overview) { overview.downHostnames() }
-            DataServicesCard(dataServices, hinted, appsById, downNodes, onDataServices)
+        if (layout.visible.isEmpty()) item(key = "all-hidden") {
+            Card(onClick = onCustomize, modifier = Modifier.fillMaxWidth()) {
+                MutedText(stringResource(R.string.overview_edit_all_hidden), modifier = Modifier.padding(16.dp))
+            }
         }
-        if (argo != null) item(key = "argocd") {
-            val argoTile = (apps as? UiState.Loaded)?.data?.apps?.firstOrNull { it.id == ARGO_CD_CATALOG_ID }
-            val downNodes = remember(overview) { overview.downHostnames() }
-            ArgoCard(argo, argoTile, downNodes, onArgoCD)
-        }
-        if (nodes.isNotEmpty()) item(key = "nodes") {
-            NodesCard(
-                nodes,
-                publicIps,
-                onNode = onNode,
-                onLive = { onNodeAction(it, NodeAction.LIVE) },
-                onMore = { sheetFor = it },
-            )
-        }
-        // After the nodes: they come first, the clocks are a secondary check.
-        item { TimeDriftCard(time, overview.nodes.associate { it.node to it.hostname }) }
     }
 }
 
@@ -544,9 +587,10 @@ private fun NodesCard(
     onNode: (NodeOverview) -> Unit,
     onLive: (NodeOverview) -> Unit,
     onMore: (NodeOverview) -> Unit,
+    titleModifier: Modifier = Modifier,
 ) {
     Card(Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(titleModifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.overview_stat_nodes), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
             DetectPublicIpsButton(publicIps)
             Spacer(Modifier.width(8.dp))
@@ -574,17 +618,13 @@ private fun NodeRow(node: NodeOverview, publicIps: List<String>, onClick: () -> 
     ) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(node.hostname, style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        node.node,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (node.reachable && publicIps.isNotEmpty()) PublicAddresses(publicIps)
-                }
+                Text(node.hostname, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 NodeHealthPill(node.health)
+            }
+            // Below the pill rather than beside it: the full width keeps an IPv6 on one line.
+            Column(Modifier.padding(top = 2.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                AddressLine(Icons.Outlined.Lan, node.node)
+                if (node.reachable && publicIps.isNotEmpty()) PublicAddresses(publicIps)
             }
             if (node.reachable) {
                 Spacer(Modifier.width(4.dp))
@@ -624,25 +664,34 @@ private fun NodeRow(node: NodeOverview, publicIps: List<String>, onClick: () -> 
     }
 }
 
-/** The node's internet-facing addresses, under its talosconfig one. */
+/** The node's internet-facing addresses, one per line under its talosconfig one. */
 @Composable
 private fun PublicAddresses(addresses: List<String>) {
     val label = stringResource(R.string.overview_node_public_ip)
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        verticalArrangement = Arrangement.spacedBy(2.dp),
         modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = "$label: ${addresses.joinToString()}" },
     ) {
+        addresses.forEach { AddressLine(Icons.Outlined.Public, it) }
+    }
+}
+
+/** An address behind a fixed-size icon, so private and public ones line up. */
+@Composable
+private fun AddressLine(icon: ImageVector, address: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
-            Icons.Outlined.Public,
+            icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(12.dp),
+            modifier = Modifier.size(14.dp),
         )
-        Spacer(Modifier.width(4.dp))
+        Spacer(Modifier.width(6.dp))
         Text(
-            addresses.joinToString("  ·  "),
-            style = MaterialTheme.typography.bodySmall,
+            address,
+            style = MaterialTheme.typography.labelSmall,
             fontFamily = FontFamily.Monospace,
+            letterSpacing = 0.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }

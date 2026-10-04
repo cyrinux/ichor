@@ -904,6 +904,41 @@
         color: #ff9466;
         background: rgba(255, 122, 69, 0.16);
       }
+      .tag.bad {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.14);
+      }
+      .tag.run {
+        color: #7cb7ff;
+        background: rgba(124, 183, 255, 0.14);
+      }
+      .tag.off {
+        color: var(--phone-ink-2);
+        background: rgba(147, 163, 184, 0.14);
+      }
+      /* A card as wide as the grid: the mock beside its text. */
+      .insight.wide {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+        gap: 1.5rem;
+        align-items: start;
+      }
+      .insight.wide h3 {
+        margin-top: 0;
+      }
+      .insight.wide p + p {
+        margin-top: 0.6rem;
+      }
+      .mock .runbtn {
+        display: inline-block;
+        margin-top: 0.7rem;
+        padding: 0.25rem 0.8rem;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #14243b;
+        font-weight: 600;
+      }
       .mock .tl {
         display: grid;
         grid-template-columns: 4.2rem 0.6rem 1fr;
@@ -1050,6 +1085,9 @@
         .spotlight {
           grid-template-columns: 1fr;
           max-width: 34rem;
+        }
+        .insight.wide {
+          grid-template-columns: 1fr;
         }
         .alsonew {
           grid-template-columns: 1fr 1fr;
@@ -1553,6 +1591,55 @@
                 the confirmation tells you whether anything brings it back.
               </p>
               <p class="ask">"Why is it still restarting?" → gone, recreated.</p>
+            </article>
+
+            <article class="insight wide" id="cronjobs">
+              <div
+                class="mock"
+                role="img"
+                aria-label="Kubernetes CronJobs: the database backup succeeded and runs again in 4 hours, the weekly report failed, a snapshot cleanup is running, and a staging wipe runs on schedule only. A Run now button starts the backup."
+              >
+                <div class="title" data-i18n>Kubernetes · CronJobs</div>
+                <div class="line" aria-hidden="true">
+                  <span>db-backup</span><span data-i18n>next in 4 h</span
+                  ><span class="tag same" data-i18n>succeeded</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>report</span><span data-i18n>5 days ago</span
+                  ><span class="tag bad" data-i18n>failed</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>snapshots</span><span data-i18n>for 40 s</span
+                  ><span class="tag run" data-i18n>running</span>
+                </div>
+                <div class="line" aria-hidden="true">
+                  <span>wipe-staging</span><span data-i18n>schedule only</span
+                  ><span class="tag off">🔒</span>
+                </div>
+                <span class="runbtn" aria-hidden="true" data-i18n>▶ Run now</span>
+              </div>
+              <div>
+                <h3>CronJobs, run on demand</h3>
+                <p>
+                  Every CronJob with its schedule, next run and how its last
+                  runs went, the failed and running ones first. Run one now,
+                  like <code>kubectl create job --from</code>, after a
+                  confirmation: the Job stays owned by its CronJob, so history
+                  and cleanup still apply.
+                </p>
+                <p>
+                  Give each one a logo, a name and a line of description with a
+                  label or an annotation; without an icon, Ichor picks the one
+                  of the app its image belongs to, else a clock. Set
+                  <code>ichor.levis.name/trigger=false</code> to keep a job on
+                  its schedule only.
+                </p>
+                <pre><code>kubectl label cronjob db-backup ichor.levis.name/icon=postgresql
+kubectl annotate cronjob db-backup ichor.levis.name/title="Database backup"
+kubectl annotate cronjob db-backup ichor.levis.name/description="Nightly dump to S3"
+kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
+                <p class="ask">"The backup failed last night." → re-run, from the couch.</p>
+              </div>
             </article>
           </div>
 
@@ -2099,6 +2186,18 @@
                   ><span
                     >Readiness and rollout state of every Deployment,
                     StatefulSet and DaemonSet, and a rolling restart after a
+                    confirmation.</span
+                  >
+                </td>
+                <td class="role" translate="no">admin</td>
+              </tr>
+              <tr>
+                <td class="cmd" translate="no">kubectl get cronjobs, kubectl create job --from</td>
+                <td class="what">
+                  <strong>Kubernetes CronJobs</strong
+                  ><span
+                    >Schedule, next run and recent runs of every CronJob, with
+                    the icon and name you give it, and a manual run after a
                     confirmation.</span
                   >
                 </td>

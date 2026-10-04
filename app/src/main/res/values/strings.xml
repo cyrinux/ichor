@@ -1306,6 +1306,29 @@
     <string name="rollout_pod_old">old</string>
     <string name="rollout_no_pods">No pods yet.</string>
     <string name="rollout_leave_hint">The rollout goes on in the cluster if you close this.</string>
+    <string name="cronjobs_title">CronJobs</string>
+    <string name="cronjobs_search">Filter by name, schedule or image</string>
+    <string name="cronjobs_empty">No CronJobs.</string>
+    <string name="cronjobs_no_match">No CronJob matches “%1$s”.</string>
+    <string name="cronjobs_state_running">running</string>
+    <string name="cronjobs_state_succeeded">succeeded</string>
+    <string name="cronjobs_state_failed">failed</string>
+    <string name="cronjobs_state_never">never run</string>
+    <string name="cronjobs_suspended">suspended</string>
+    <string name="cronjobs_next_run">next %1$s</string>
+    <string name="cronjobs_last_run">last run %1$s</string>
+    <string name="cronjobs_no_runs">No run kept.</string>
+    <string name="cronjobs_runs">Recent runs</string>
+    <string name="cronjobs_manual">manual</string>
+    <string name="cronjobs_run_now">Run now</string>
+    <string name="cronjobs_schedule_only">Schedule only</string>
+    <string name="cronjobs_run_title">Run %1$s now?</string>
+    <string name="cronjobs_run_text">A Job is created from its template in %1$s, like kubectl create job --from.</string>
+    <string name="cronjobs_run_active">A run is already in progress: this starts another one.</string>
+    <string name="cronjobs_run_suspended">The CronJob is suspended: it runs once, its schedule stays off.</string>
+    <string name="cronjobs_run_confirm">Run</string>
+    <string name="cronjobs_run_done">%1$s started</string>
+    <string name="cronjobs_run_failed">Could not run %1$s: %2$s</string>
     <string name="kube_server_title">Kubernetes API address</string>
     <string name="kube_server_label">Address</string>
     <string name="kube_server_hint">Used instead of the address in the kubeconfig Talos issues, e.g. a port forward, a load balancer or a public name: host, host:port or an https URL. Without a port, the kubeconfig’s is used. The certificate is still checked against the cluster’s own address. Leave empty to use the kubeconfig’s again. Only on this device.</string>
@@ -1728,6 +1751,20 @@
         <item quantity="one">%1$d sync window</item>
         <item quantity="other">%1$d sync windows</item>
     </plurals>
+    <string name="overview_card_summary">Cluster summary</string>
+    <string name="overview_edit_title">Arrange cards</string>
+    <string name="overview_edit_done">Done</string>
+    <string name="overview_edit_hint">Drag a card by its handle to move it. Hidden cards can be added back below.</string>
+    <string name="overview_edit_drag">Drag to move</string>
+    <string name="overview_edit_move_up">Move up</string>
+    <string name="overview_edit_move_down">Move down</string>
+    <string name="overview_edit_hide">Hide</string>
+    <string name="overview_edit_show">Show</string>
+    <string name="overview_edit_hidden">Hidden cards</string>
+    <string name="overview_edit_reset">Reset to default</string>
+    <string name="overview_edit_when_detected">Only when found on the cluster</string>
+    <string name="overview_edit_all_hidden">Every card is hidden. Tap to choose the ones to show.</string>
+||||||| a97dc89
 
     <!-- Network policies and Cilium live flows (Hubble) -->
     <string name="netpol_title">Network policies</string>
