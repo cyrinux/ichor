@@ -43,6 +43,7 @@ import name.levis.ichor.model.ArgoHistory
 import name.levis.ichor.model.ArgoSyncOptions
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeWorkload
+import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.shortRevision
 import name.levis.ichor.model.waveSteps
 import name.levis.ichor.ui.UiState
@@ -67,7 +68,7 @@ import name.levis.ichor.ui.workloads.RestartResultToasts
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ArgoAppScreen(namespace: String, name: String, onBack: () -> Unit) {
+fun ArgoAppScreen(namespace: String, name: String, onBack: () -> Unit, onNode: ((NodeOverview, Int) -> Unit)? = null) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(talos.talosRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
@@ -101,10 +102,10 @@ fun ArgoAppScreen(namespace: String, name: String, onBack: () -> Unit) {
                     if (app == null) {
                         EmptyText(stringResource(R.string.argo_app_gone, name))
                     } else {
-                        val downNodes = remember(s.data) {
-                            talos.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
-                        }
-                        AppDetail(app, downNodes, app.key in busy, vm)
+                        val overview = remember(s.data) { talos.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value }
+                        val downNodes = remember(overview) { overview?.downHostnames().orEmpty() }
+                        val network = NetworkContext(s.fetchedAt, downNodes, overview?.nodes.orEmpty(), onNode)
+                        AppDetail(app, downNodes, app.key in busy, vm, network)
                     }
                 }
                 DataFreshness(s, edgeToEdge = false)
@@ -114,7 +115,7 @@ fun ArgoAppScreen(namespace: String, name: String, onBack: () -> Unit) {
 }
 
 @Composable
-private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: ArgoViewModel) {
+private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: ArgoViewModel, network: NetworkContext) {
     var selecting by rememberSaveable { mutableStateOf(false) }
     var selected by rememberSaveable { mutableStateOf(setOf<String>()) }
     var sheet by remember { mutableStateOf(false) }
@@ -174,6 +175,9 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
         }
         if (app.conditions.isNotEmpty()) item(key = "conditions") { ConditionBanners(app.conditions) }
         app.operation?.let { op -> item(key = "operation") { ArgoOperationCard(app, op, busy) { terminate = true } } }
+        item(key = "network") {
+            ArgoNetworkSection(app, network.fetchedAt, network.downNodes, network.talosNodes, network.onNode)
+        }
         if (app.unhealthyPods.isNotEmpty()) {
             item(key = "pods-title") { SectionTitle(stringResource(R.string.argo_unhealthy_pods)) }
             items(app.unhealthyPods, key = { "pod/${it.key}" }) { UnhealthyPodRow(it, it.node.isNotEmpty() && it.node in downNodes) }
@@ -201,6 +205,14 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
         history(app) { rollback = it }
     }
 }
+
+/** What the network section needs from the screen: when the app was fetched, and the Talos nodes. */
+private data class NetworkContext(
+    val fetchedAt: Long,
+    val downNodes: Set<String>,
+    val talosNodes: List<NodeOverview>,
+    val onNode: ((NodeOverview, Int) -> Unit)?,
+)
 
 private fun LazyListScope.history(app: ArgoApp, onRollback: (ArgoHistory) -> Unit) {
     if (app.history.isEmpty()) return

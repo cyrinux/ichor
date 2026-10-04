@@ -105,7 +105,7 @@ fun AppsScreen(
         )
     }
 
-    // Argo CD: through the Kubernetes API too, and only when the inventory shows it (or in the demo).
+    // Argo CD: through the Kubernetes API too, and only when the inventory shows it.
     val inventory = (state as? UiState.Loaded)?.data
     val argoOffered = canRestart && inventory?.hasArgoCD == true
     val argoState by argoVm.state.collectAsStateWithLifecycle()
