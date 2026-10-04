@@ -7,9 +7,10 @@ final class DataServicesTests: XCTestCase {
     {"longhorn":{"version":"v1beta2","error":"","volumes":[
       {"name":"pvc-1","namespace":"longhorn-system","pvcNamespace":"app","pvcName":"search","state":"detached","robustness":"faulted","health":"critical",
        "replicasDesired":1,"replicasHealthy":0,"rebuilding":0,"replicaNodes":["node-3"],"node":"","size":10,"actualSize":5,"lastBackupAt":0},
-      {"name":"pvc-2","pvcNamespace":"app","pvcName":"db","state":"attached","robustness":"healthy","health":"ok","replicasDesired":3,"replicasHealthy":3,"replicaNodes":["node-1","node-2","node-3"]},
+      {"name":"pvc-2","namespace":"longhorn-system","pvcNamespace":"app","pvcName":"db","state":"attached","robustness":"healthy","health":"ok","replicasDesired":3,"replicasHealthy":3,"replicaNodes":["node-1","node-2","node-3"],
+       "rebuilding":1,"rebuildProgress":42,"backingUp":true,"backupProgress":63,"restoring":false,"restoreProgress":0,"scheduleError":"insufficient storage","tooManySnapshots":true},
       {"name":"pvc-3","state":"detached","robustness":"unknown","health":"idle","replicaNodes":["node-1"]}],
-     "nodes":[{"name":"node-1","ready":true,"schedulable":true,"disks":[{"path":"/var/lib/longhorn","schedulable":true,"available":1,"maximum":2,"scheduled":1}]},
+     "nodes":[{"name":"node-1","namespace":"longhorn-system","ready":true,"schedulable":false,"allowScheduling":false,"evictionRequested":true,"replicas":2,"disks":[{"path":"/var/lib/longhorn","schedulable":true,"available":1,"maximum":2,"scheduled":1}]},
               {"name":"node-3","ready":false,"schedulable":false,"disks":[]}],
      "backupTargets":[{"name":"default","url":"s3://b@garage/","available":true,"message":""}]},
      "garage":{"error":"","instances":[
@@ -102,6 +103,62 @@ final class DataServicesTests: XCTestCase {
         XCTAssertEqual(s.likelyCauses(), [LikelyCause(node: "node-3", problems: 3)])
         // A node reported down elsewhere (Talos) that explains nothing is not listed.
         XCTAssertEqual(s.likelyCauses(downNodes: ["node-9"]), [LikelyCause(node: "node-3", problems: 3)])
+    }
+
+    func testDecodesTheLonghornProgressAndNodeSettings() throws {
+        let lh = try XCTUnwrap(try services.longhorn)
+        let busy = lh.volumes[1]
+        XCTAssertEqual(busy.rebuildProgress, 42)
+        XCTAssertTrue(busy.backingUp)
+        XCTAssertEqual(busy.backupProgress, 63)
+        XCTAssertFalse(busy.restoring)
+        XCTAssertEqual(busy.scheduleError, "insufficient storage")
+        XCTAssertTrue(busy.tooManySnapshots)
+        // Fields an older core does not send fall back to their defaults.
+        let old = lh.volumes[2]
+        XCTAssertEqual(old.rebuildProgress, 0)
+        XCTAssertFalse(old.backingUp)
+        XCTAssertEqual(old.scheduleError, "")
+        XCTAssertFalse(old.tooManySnapshots)
+
+        let evicting = lh.nodes[0]
+        XCTAssertEqual(evicting.namespace, "longhorn-system")
+        XCTAssertFalse(evicting.allowScheduling)
+        XCTAssertTrue(evicting.evictionRequested)
+        XCTAssertEqual(evicting.replicas, 2)
+        let down = lh.nodes[1]
+        XCTAssertEqual(down.namespace, "")
+        XCTAssertTrue(down.allowScheduling)
+        XCTAssertFalse(down.evictionRequested)
+        XCTAssertEqual(down.replicas, 0)
+    }
+
+    func testLonghornActions() throws {
+        let lh = try XCTUnwrap(try services.longhorn)
+        // Detached: only the replica count; attached: backup and trim too.
+        XCTAssertEqual(lh.volumes[0].actions, [.replicas])
+        XCTAssertEqual(lh.volumes[1].actions, [.backup, .trim, .replicas])
+        // No Longhorn namespace (an older core): nothing to act on.
+        XCTAssertEqual(lh.volumes[2].actions, [])
+        XCTAssertEqual(lh.nodes[0].actions, [.schedulingOn, .cancelEviction])
+        XCTAssertEqual(lh.nodes[1].actions, [])
+
+        let node = try TalosJSON.decode(LonghornNode.self, from: #"{"name":"n","namespace":"longhorn-system","allowScheduling":true}"#)
+        XCTAssertEqual(node.actions, [.schedulingOff, .evict])
+        XCTAssertEqual(LonghornAction.cancelEviction.rawValue, "cancelEviction")
+        XCTAssertEqual(LonghornAction.schedulingOff.rawValue, "schedulingOff")
+    }
+
+    func testReplicaBounds() throws {
+        let three = try XCTUnwrap(try services.longhorn?.volumes[1])
+        XCTAssertEqual(three.maxReplicas(nodes: 5), 5)
+        // Never below the current count, even with fewer nodes.
+        XCTAssertEqual(three.maxReplicas(nodes: 2), 3)
+        XCTAssertEqual(three.maxReplicas(nodes: 40), LonghornReplicas.max)
+        XCTAssertEqual(three.defaultReplicas(nodes: 2), 3)
+        let unset = try TalosJSON.decode(LonghornVolume.self, from: #"{"name":"v"}"#)
+        XCTAssertEqual(unset.maxReplicas(nodes: 0), 1)
+        XCTAssertEqual(unset.defaultReplicas(nodes: 3), 1)
     }
 
     func testFilters() throws {

@@ -2026,4 +2026,39 @@
         <item quantity="one">Showing %1$d of %2$d series</item>
         <item quantity="other">Showing %1$d of %2$d series</item>
     </plurals>
+    <string name="longhorn_action_failed">%1$s: %2$s</string>
+    <string name="longhorn_backup_started">Backup of %1$s started</string>
+    <string name="longhorn_trim_started">Trimming %1$s</string>
+    <string name="longhorn_replicas_set">%1$s: replica count set to %2$d</string>
+    <string name="longhorn_scheduling_on_done">%1$s accepts new replicas</string>
+    <string name="longhorn_scheduling_off_done">%1$s takes no new replicas</string>
+    <string name="longhorn_evict_started">Moving the replicas off %1$s</string>
+    <string name="longhorn_evict_cancelled">Eviction of %1$s cancelled</string>
+    <string name="longhorn_action_backup">Back up now</string>
+    <string name="longhorn_action_trim">Trim filesystem</string>
+    <string name="longhorn_action_replicas">Replica count…</string>
+    <string name="longhorn_action_scheduling_on">Allow scheduling</string>
+    <string name="longhorn_action_scheduling_off">Disable scheduling</string>
+    <string name="longhorn_action_evict">Evict replicas</string>
+    <string name="longhorn_action_cancel_eviction">Cancel eviction</string>
+    <string name="longhorn_replicas_title">Replicas of %1$s</string>
+    <string name="longhorn_replicas_text">Longhorn adds or removes replicas to match. A new replica copies the whole volume over the network.</string>
+    <string name="longhorn_replicas_fewer">Fewer replicas: the volume survives fewer node failures.</string>
+    <string name="longhorn_replicas_confirm">Apply</string>
+    <string name="longhorn_evict_title">Evict %1$s?</string>
+    <string name="longhorn_evict_text">Longhorn copies every replica on %1$s to other nodes, then removes it there. The other nodes need the room, and a lot of data moves. Scheduling stays off on %1$s until you allow it again.</string>
+    <string name="longhorn_rebuild_progress">Rebuilding %1$d%%</string>
+    <string name="longhorn_backup_progress">Backing up %1$d%%</string>
+    <string name="longhorn_restore_progress">Restoring %1$d%%</string>
+    <string name="longhorn_schedule_error">Cannot place a replica: %1$s</string>
+    <string name="longhorn_too_many_snapshots">Close to the snapshot limit: delete old snapshots</string>
+    <string name="longhorn_node_scheduling_off">scheduling off</string>
+    <plurals name="longhorn_node_evicting">
+        <item quantity="one">evicting · %1$d replica left</item>
+        <item quantity="other">evicting · %1$d replicas left</item>
+    </plurals>
+    <plurals name="longhorn_node_replicas">
+        <item quantity="one">%1$d replica</item>
+        <item quantity="other">%1$d replicas</item>
+    </plurals>
 </resources>

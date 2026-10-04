@@ -2189,4 +2189,43 @@
         <item quantity="many">Показано %1$d серій з %2$d</item>
         <item quantity="other">Показано %1$d серії з %2$d</item>
     </plurals>
+    <string name="longhorn_action_failed">%1$s: %2$s</string>
+    <string name="longhorn_backup_started">Резервне копіювання %1$s розпочато</string>
+    <string name="longhorn_trim_started">Обрізання %1$s</string>
+    <string name="longhorn_replicas_set">%1$s: кількість реплік змінено на %2$d</string>
+    <string name="longhorn_scheduling_on_done">%1$s приймає нові репліки</string>
+    <string name="longhorn_scheduling_off_done">%1$s не приймає нових реплік</string>
+    <string name="longhorn_evict_started">Репліки переносяться з %1$s</string>
+    <string name="longhorn_evict_cancelled">Евакуацію %1$s скасовано</string>
+    <string name="longhorn_action_backup">Створити резервну копію</string>
+    <string name="longhorn_action_trim">Обрізати файлову систему</string>
+    <string name="longhorn_action_replicas">Кількість реплік…</string>
+    <string name="longhorn_action_scheduling_on">Дозволити планування</string>
+    <string name="longhorn_action_scheduling_off">Вимкнути планування</string>
+    <string name="longhorn_action_evict">Евакуювати репліки</string>
+    <string name="longhorn_action_cancel_eviction">Скасувати евакуацію</string>
+    <string name="longhorn_replicas_title">Репліки %1$s</string>
+    <string name="longhorn_replicas_text">Longhorn додасть або прибере репліки відповідно. Нова репліка копіює весь том мережею.</string>
+    <string name="longhorn_replicas_fewer">Менше реплік: том переживе менше відмов вузлів.</string>
+    <string name="longhorn_replicas_confirm">Застосувати</string>
+    <string name="longhorn_evict_title">Евакуювати %1$s?</string>
+    <string name="longhorn_evict_text">Longhorn копіює кожну репліку з %1$s на інші вузли, а потім видаляє її з %1$s. Інші вузли мають мати місце, і переміщується багато даних. Планування на %1$s лишається вимкненим, доки ви знову його не дозволите.</string>
+    <string name="longhorn_rebuild_progress">Відновлення реплік %1$d%%</string>
+    <string name="longhorn_backup_progress">Резервне копіювання %1$d%%</string>
+    <string name="longhorn_restore_progress">Відновлення з копії %1$d%%</string>
+    <string name="longhorn_schedule_error">Неможливо розмістити репліку: %1$s</string>
+    <string name="longhorn_too_many_snapshots">Близько до ліміту знімків: видаліть старі</string>
+    <string name="longhorn_node_scheduling_off">планування вимкнено</string>
+    <plurals name="longhorn_node_evicting">
+        <item quantity="one">евакуація · лишилася %1$d репліка</item>
+        <item quantity="few">евакуація · лишилося %1$d репліки</item>
+        <item quantity="many">евакуація · лишилося %1$d реплік</item>
+        <item quantity="other">евакуація · лишилося %1$d репліки</item>
+    </plurals>
+    <plurals name="longhorn_node_replicas">
+        <item quantity="one">%1$d репліка</item>
+        <item quantity="few">%1$d репліки</item>
+        <item quantity="many">%1$d реплік</item>
+        <item quantity="other">%1$d репліки</item>
+    </plurals>
 </resources>

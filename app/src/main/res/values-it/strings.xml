@@ -2025,4 +2025,39 @@
         <item quantity="one">%1$d di %2$d serie mostrate</item>
         <item quantity="other">%1$d di %2$d serie mostrate</item>
     </plurals>
+    <string name="longhorn_action_failed">%1$s: %2$s</string>
+    <string name="longhorn_backup_started">Backup di %1$s avviato</string>
+    <string name="longhorn_trim_started">Trim di %1$s in corso</string>
+    <string name="longhorn_replicas_set">%1$s: numero di repliche impostato a %2$d</string>
+    <string name="longhorn_scheduling_on_done">%1$s accetta nuove repliche</string>
+    <string name="longhorn_scheduling_off_done">%1$s non accetta nuove repliche</string>
+    <string name="longhorn_evict_started">Spostamento delle repliche da %1$s</string>
+    <string name="longhorn_evict_cancelled">Evacuazione di %1$s annullata</string>
+    <string name="longhorn_action_backup">Esegui backup ora</string>
+    <string name="longhorn_action_trim">Trim del filesystem</string>
+    <string name="longhorn_action_replicas">Numero di repliche…</string>
+    <string name="longhorn_action_scheduling_on">Consenti scheduling</string>
+    <string name="longhorn_action_scheduling_off">Disattiva scheduling</string>
+    <string name="longhorn_action_evict">Evacua repliche</string>
+    <string name="longhorn_action_cancel_eviction">Annulla evacuazione</string>
+    <string name="longhorn_replicas_title">Repliche di %1$s</string>
+    <string name="longhorn_replicas_text">Longhorn aggiunge o rimuove repliche di conseguenza. Una nuova replica copia l\'intero volume in rete.</string>
+    <string name="longhorn_replicas_fewer">Meno repliche: il volume sopravvive a meno guasti dei nodi.</string>
+    <string name="longhorn_replicas_confirm">Applica</string>
+    <string name="longhorn_evict_title">Evacuare %1$s?</string>
+    <string name="longhorn_evict_text">Longhorn copia ogni replica di %1$s su altri nodi, poi la rimuove da %1$s. Gli altri nodi devono avere spazio e si spostano molti dati. Lo scheduling resta disattivato su %1$s finché non lo riabiliti.</string>
+    <string name="longhorn_rebuild_progress">Ricostruzione %1$d%%</string>
+    <string name="longhorn_backup_progress">Backup %1$d%%</string>
+    <string name="longhorn_restore_progress">Ripristino %1$d%%</string>
+    <string name="longhorn_schedule_error">Impossibile collocare una replica: %1$s</string>
+    <string name="longhorn_too_many_snapshots">Vicino al limite di snapshot: elimina quelli vecchi</string>
+    <string name="longhorn_node_scheduling_off">scheduling disattivato</string>
+    <plurals name="longhorn_node_evicting">
+        <item quantity="one">evacuazione · resta %1$d replica</item>
+        <item quantity="other">evacuazione · restano %1$d repliche</item>
+    </plurals>
+    <plurals name="longhorn_node_replicas">
+        <item quantity="one">%1$d replica</item>
+        <item quantity="other">%1$d repliche</item>
+    </plurals>
 </resources>
