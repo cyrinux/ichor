@@ -137,9 +137,10 @@ private fun LazyItemScope.BarRow(
             .onSizeChanged { drag.heights[slot(action)] = it.height }
             .then(if (lifted) Modifier.zIndex(1f).graphicsLayer { translationY = drag.offset } else Modifier.animateItem())
             .semantics {
-                customActions = listOf(
-                    CustomAccessibilityAction(moveUp) { onChange(current().up(action)); true },
-                    CustomAccessibilityAction(moveDown) { onChange(current().down(action)); true },
+                val order = current().order
+                customActions = listOfNotNull(
+                    CustomAccessibilityAction(moveUp) { onChange(current().up(action)); true }.takeIf { order.first() != action },
+                    CustomAccessibilityAction(moveDown) { onChange(current().down(action)); true }.takeIf { order.last() != action },
                 )
             },
     ) {
