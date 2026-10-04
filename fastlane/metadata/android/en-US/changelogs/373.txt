@@ -1,0 +1,9 @@
+• Reach every gesture and control without touch
+• Talos upgrade safety locks
+• Metrics screen with PromQL panels on iOS
+• Rook Ceph clusters, pools and OSDs in data services
+• Velero schedules, failed backups and storage locations in data services
+• Cert-manager certificates and issuers in data services
+• Percona XtraDB clusters in data services, with backups
+• Metrics screen with PromQL panels on Android
+• MariaDB clusters in data services, with topology, roles and backups
