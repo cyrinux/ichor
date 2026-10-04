@@ -147,7 +147,7 @@ struct PressureSample: Identifiable {
     let pressure: CgroupPressure
 
     var id: Int64 { at }
-    var date: Date { Date(timeIntervalSince1970: Double(at) / 1000) }
+    var date: Date { Date(epochMillis: at) }
 }
 
 /// The node's PSI "some" 10 s averages at each poll while the tab is open: how the waiting for

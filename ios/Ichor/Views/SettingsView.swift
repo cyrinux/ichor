@@ -3,7 +3,6 @@ import IchorCore
 
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @State private var confirmDelete = false
     @State private var lockError: String?

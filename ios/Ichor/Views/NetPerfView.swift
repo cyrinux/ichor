@@ -132,7 +132,7 @@ struct NetPerfView: View {
     }
 
     private func testedAt(_ report: NetPerfReport) -> String {
-        Date(timeIntervalSince1970: Double(report.started) / 1000).formatted(date: .abbreviated, time: .shortened)
+        Date(epochMillis: report.started).formatted(date: .abbreviated, time: .shortened)
     }
 
     /// Pod-to-pod throughput and p50 latency, the figures the list compares tests by.

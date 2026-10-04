@@ -34,7 +34,7 @@ extension ClusterOverview {
 extension NodeOverview {
     /// When an unreachable node last answered, nil when unknown.
     public var lastSeenDate: Date? {
-        lastSeen.map { Date(timeIntervalSince1970: TimeInterval($0) / 1000) }
+        lastSeen.map { Date(epochMillis: $0) }
     }
 }
 
@@ -78,7 +78,7 @@ public struct LastKnownEntry: Codable, Equatable, Sendable {
         self.json = json
     }
 
-    public var date: Date { Date(timeIntervalSince1970: TimeInterval(at) / 1000) }
+    public var date: Date { Date(epochMillis: at) }
 
     /// Older than lastKnownMaxAge is too old to show; so is one from the future beyond a few
     /// minutes (the clock was moved back), whose age cannot be told.

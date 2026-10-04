@@ -22,9 +22,9 @@ struct NetPerfTrendSection: View {
                         Text(verbatim: "\(client) → \(server)").font(.caption.monospaced())
                         Text("pod to pod").font(.caption)
                         Spacer()
-                        Text(Date(timeIntervalSince1970: Double(shown.started) / 1000), style: .date)
+                        Text(Date(epochMillis: shown.started), style: .date)
                             .font(.caption2)
-                        Text(Date(timeIntervalSince1970: Double(shown.started) / 1000), style: .time)
+                        Text(Date(epochMillis: shown.started), style: .time)
                             .font(.caption2)
                     }
                     .foregroundStyle(.secondary)

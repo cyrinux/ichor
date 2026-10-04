@@ -11,8 +11,7 @@ struct Entry: TimelineEntry {
 
 struct Provider: TimelineProvider {
     private var snapshot: ClusterSnapshot? {
-        UserDefaults(suiteName: "group.name.levis.ichor")?.data(forKey: "snapshot")
-            .flatMap { try? JSONDecoder().decode(ClusterSnapshot.self, from: $0) }
+        SharedSnapshot.load(from: UserDefaults(suiteName: SharedSnapshot.suite))
     }
 
     func placeholder(in context: Context) -> Entry { Entry(date: .now, snapshot: nil) }

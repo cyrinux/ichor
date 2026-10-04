@@ -90,7 +90,7 @@ struct ArgoCDView: View {
             }
         }
         .confirmationDialog(confirmSync.map { String(localized: "Sync \($0.count) apps?") } ?? "",
-                            isPresented: Binding(get: { confirmSync != nil }, set: { if !$0 { confirmSync = nil } }),
+                            isPresented: $confirmSync.isPresent(),
                             titleVisibility: .visible, presenting: confirmSync) { apps in
             Button("Sync") { Task { await run(.sync, on: apps) } }
             Button("Cancel", role: .cancel) {}
@@ -98,7 +98,7 @@ struct ArgoCDView: View {
             Text(verbatim: apps.prefix(8).map(\.name).joined(separator: ", ") + (apps.count > 8 ? "…" : "")) +
                 Text(verbatim: "\n\n") + Text("Each app syncs to its target revision with its own sync options. Nothing is pruned.")
         }
-        .restartResult($message)
+        .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
     }
 

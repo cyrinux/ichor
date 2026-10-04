@@ -64,7 +64,7 @@ struct TimeDriftSection: View {
             Text("Offset of each node's clock from its NTP server. Drift breaks etcd and certificate checks: warning from 500 ms, critical from 5 s.")
         }
         .task(id: refreshID) { await load() }
-        .alert(shownError.map { title($0) } ?? "", isPresented: Binding(get: { shownError != nil }, set: { if !$0 { shownError = nil } })) {
+        .alert(shownError.map { title($0) } ?? "", isPresented: $shownError.isPresent()) {
             Button("OK") { shownError = nil }
         } message: {
             Text(shownError?.error ?? "")

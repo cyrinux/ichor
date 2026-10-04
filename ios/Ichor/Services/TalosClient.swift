@@ -463,7 +463,7 @@ private final class HealthBridge: NSObject, IchorgoHealthListenerProtocol, @unch
     }
 
     func onDone(_ errMessage: String?) {
-        done(errMessage.flatMap { $0.isEmpty ? nil : $0 })
+        done(errMessage.nonEmpty)
     }
 }
 
@@ -504,7 +504,7 @@ private final class EventsBridge: NSObject, IchorgoEventListenerProtocol, @unche
     }
 
     func onDone(_ errMessage: String?) {
-        done(errMessage.flatMap { $0.isEmpty ? nil : $0 })
+        done(errMessage.nonEmpty)
     }
 }
 
@@ -522,6 +522,6 @@ final class LogBridge: NSObject, IchorgoLogListenerProtocol, @unchecked Sendable
     }
 
     func onDone(_ errMessage: String?) {
-        done(errMessage.flatMap { $0.isEmpty ? nil : $0 })
+        done(errMessage.nonEmpty)
     }
 }

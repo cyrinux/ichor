@@ -231,11 +231,7 @@ public func captureInterfaces(_ links: [NetLink], includeVirtual: Bool) -> [NetL
 /// "<host>-<iface>-<yyyyMMdd-HHmmss>.pcap", with characters that are awkward in file names
 /// replaced by "-".
 public func captureFilename(hostname: String, interface: String, date: Date, timeZone: TimeZone = .current) -> String {
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.timeZone = timeZone
-    formatter.dateFormat = "yyyyMMdd-HHmmss"
-    return "\(captureFileSafe(hostname, fallback: "node"))-\(captureFileSafe(interface, fallback: "any"))-\(formatter.string(from: date)).pcap"
+    return "\(captureFileSafe(hostname, fallback: "node"))-\(captureFileSafe(interface, fallback: "any"))-\(fileTimestamp(date, format: "yyyyMMdd-HHmmss", timeZone: timeZone)).pcap"
 }
 
 private func captureFileSafe(_ text: String, fallback: String) -> String {

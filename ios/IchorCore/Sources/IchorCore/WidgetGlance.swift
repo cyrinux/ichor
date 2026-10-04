@@ -38,3 +38,14 @@ public func glanceItems(_ snapshot: ClusterSnapshot) -> [GlanceItem] {
 public func isGlanceStale(_ snapshot: ClusterSnapshot, now: Date) -> Bool {
     now.timeIntervalSince(snapshot.takenAt) > glanceStaleAfter
 }
+
+/// The last background check's snapshot, shared by the app and its widget (App Group).
+public enum SharedSnapshot {
+    public static let suite = "group.name.levis.ichor"
+    public static let key = "snapshot"
+
+    /// The snapshot saved in `defaults`, nil when there is none or it does not decode.
+    public static func load(from defaults: UserDefaults?) -> ClusterSnapshot? {
+        defaults?.data(forKey: key).flatMap { try? JSONDecoder().decode(ClusterSnapshot.self, from: $0) }
+    }
+}

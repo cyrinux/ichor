@@ -3,13 +3,6 @@ import Foundation
 // Mirrors go/ichorgo/kube_argocd.go and kube_argocd_actions.go (the wire format and the UX are
 // described in plans/argocd/README.md). The logic on top lives in ArgoCDLogic.swift.
 
-private extension KeyedDecodingContainer {
-    /// A field the Go core may leave out (older cores, empty values): its default then.
-    func field<T: Decodable>(_ key: Key, _ fallback: T) throws -> T {
-        try decodeIfPresent(T.self, forKey: key) ?? fallback
-    }
-}
-
 /// The catalog id of Argo CD in the inventory: only clusters running it are asked (KubeArgoCD).
 public let argoCDCatalogID = "argo-cd"
 

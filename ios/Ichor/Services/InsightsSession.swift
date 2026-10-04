@@ -27,8 +27,8 @@ final class InsightsSession {
     func load(client: TalosClient) async {
         do {
             baselineJSON = try store.read("baseline")
-            if let baselineJSON { baselineAt = try decode(DriftSnapshot.self, baselineJSON).at }
-            if let raw = try store.read("incident") { document = try decode(IncidentDocument.self, raw) }
+            if let baselineJSON { baselineAt = try TalosJSON.decode(DriftSnapshot.self, from: baselineJSON).at }
+            if let raw = try store.read("incident") { document = try TalosJSON.decode(IncidentDocument.self, from: raw) }
         } catch { self.error = error.localizedDescription }
         await refresh(client: client)
     }
@@ -39,7 +39,7 @@ final class InsightsSession {
         do {
             let raw = try await client.driftSnapshot()
             try Task.checkCancellation()
-            let value = try decode(DriftSnapshot.self, raw)
+            let value = try TalosJSON.decode(DriftSnapshot.self, from: raw)
             guard value.scope == cluster else { return }
             let differences = try await TalosClient.compareDrift(baseline: baselineJSON ?? "", current: raw)
             try Task.checkCancellation()
@@ -131,9 +131,6 @@ final class InsightsSession {
         let raw = try await TalosClient.updateIncident(previous: documentJSON, observation: observation, events: events)
         try store.save("incident", json: raw)
         documentJSON = raw
-        document = try decode(IncidentDocument.self, raw)
-    }
-    private func decode<T: Decodable>(_ type: T.Type, _ raw: String) throws -> T {
-        try JSONDecoder().decode(type, from: Data(raw.utf8))
+        document = try TalosJSON.decode(IncidentDocument.self, from: raw)
     }
 }
