@@ -1,5 +1,6 @@
 package name.levis.ichor.monitor
 
+import name.levis.ichor.model.CephReason
 import name.levis.ichor.model.CertReason
 import name.levis.ichor.model.CnpgReason
 import name.levis.ichor.model.DataServices
@@ -13,6 +14,9 @@ import name.levis.ichor.model.VeleroReason
 /** Severities of a data-service issue in a snapshot. */
 const val DATA_CRITICAL = "critical"
 const val DATA_WARNING = "warning"
+
+/** Ceph warnings worth a notification; a mon down or a reconcile in progress shows in Ceph's health anyway. */
+private val CEPH_ALERT_REASONS = setOf(CephReason.HEALTH_WARN, CephReason.NEAR_FULL, CephReason.OSDS)
 
 /** Postgres reasons worth waking someone for; a switchover or a missing replica is usually planned. */
 private val CNPG_ALERT_REASONS = setOf(CnpgReason.ARCHIVING, CnpgReason.BACKUP_FAILED, CnpgReason.BACKUP_STALE)
@@ -32,7 +36,8 @@ private val VELERO_ALERT_REASONS = setOf(VeleroReason.STALE, VeleroReason.PARTIA
  * resync) and failing Postgres backups or archiving are warnings. An expired certificate (or one not
  * ready a week before it expires) is critical; one expiring, overdue or not ready, or an issuer not
  * ready, is a warning. A Velero schedule whose last backup failed or whose storage location is
- * unavailable is critical, a stale, partially failed or invalid one a warning.
+ * unavailable is critical, a stale, partially failed or invalid one a warning. A Ceph cluster alerts
+ * when critical, or on HEALTH_WARN, near-full capacity or an OSD down; a pool only when failed.
  */
 fun dataIssuesOf(services: DataServices): Map<String, String> {
     val out = sortedMapOf<String, String>()
@@ -91,5 +96,13 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
     services.velero?.locations.orEmpty().filter { it.serviceHealth == ServiceHealth.CRITICAL }.forEach { l ->
         out["velero|BackupStorageLocation/${l.label}"] = DATA_CRITICAL
     }
+    services.ceph?.clusters.orEmpty().forEach { c ->
+        when {
+            c.serviceHealth == ServiceHealth.CRITICAL -> out["ceph|${c.label}"] = DATA_CRITICAL
+            c.reasonList.any { it in CEPH_ALERT_REASONS } -> out["ceph|${c.label}"] = DATA_WARNING
+        }
+    }
+    // A pool alerts only when Rook reports it failed.
+    services.ceph?.pools.orEmpty().filter { it.serviceHealth == ServiceHealth.CRITICAL }.forEach { out["ceph|${it.kind}/${it.label}"] = DATA_CRITICAL }
     return out
 }

@@ -13,10 +13,11 @@ public struct DataServices: Decodable, Equatable, Sendable {
     public let percona: PerconaStatus?
     public let certManager: CertManagerStatus?
     public let velero: VeleroStatus?
+    public let ceph: CephStatus?
 
     public init(longhorn: LonghornStatus? = nil, garage: GarageStatus? = nil, cnpg: CnpgStatus? = nil, dragonfly: DragonflyStatus? = nil,
                 mariadb: MariaDbStatus? = nil, percona: PerconaStatus? = nil, certManager: CertManagerStatus? = nil,
-                velero: VeleroStatus? = nil) {
+                velero: VeleroStatus? = nil, ceph: CephStatus? = nil) {
         self.longhorn = longhorn
         self.garage = garage
         self.cnpg = cnpg
@@ -25,6 +26,7 @@ public struct DataServices: Decodable, Equatable, Sendable {
         self.percona = percona
         self.certManager = certManager
         self.velero = velero
+        self.ceph = ceph
     }
 }
 
@@ -471,6 +473,159 @@ public enum PerconaReason: String, Sendable {
     case error, noMember, members, proxy, initializing, backupFailed, backupStale
 }
 
+public struct CephStatus: Decodable, Equatable, Sendable {
+    public let version: String
+    public let error: String
+    public let clusters: [CephCluster]
+    public let pools: [CephPool]
+    /// By namespace, then OSD number.
+    public let osds: [CephOSD]
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        version = try c.field(.version, "")
+        error = try c.field(.error, "")
+        clusters = try c.field(.clusters, [])
+        pools = try c.field(.pools, [])
+        osds = try c.field(.osds, [])
+    }
+
+    private enum CodingKeys: String, CodingKey { case version, error, clusters, pools, osds }
+}
+
+public struct CephCluster: Decodable, Equatable, Identifiable, Sendable {
+    public let namespace: String
+    public let name: String
+    /// Rook's own word: Ready (Connected when external), Progressing, Failure...
+    public let phase: String
+    public let message: String
+    /// HEALTH_OK, HEALTH_WARN or HEALTH_ERR; "" before Ceph reported.
+    public let cephHealth: String
+    public let health: ServiceHealth
+    /// Known reasons only; values from newer cores are dropped.
+    public let reasons: [CephReason]
+    /// Ceph's health checks, errors first.
+    public let checks: [CephCheck]
+    public let bytesTotal: Int64
+    public let bytesUsed: Int64
+    public let osdsUp: Int
+    public let osdsTotal: Int
+    public let monsReady: Int
+    public let monsTotal: Int
+    /// Nodes of its OSD and mon pods that are not ready.
+    public let notReadyNodes: [String]
+    /// Ceph's version, e.g. 19.2.3-0.
+    public let version: String
+    public let external: Bool
+
+    public var id: String { label }
+    public var label: String { "\(namespace)/\(name)" }
+    /// Raw capacity used, 0 when Ceph has not reported it.
+    public var usedFraction: Double { bytesTotal > 0 ? Double(bytesUsed) / Double(bytesTotal) : 0 }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+        phase = try c.field(.phase, "")
+        message = try c.field(.message, "")
+        cephHealth = try c.field(.cephHealth, "")
+        health = ServiceHealth(wire: try c.field(.health, ""))
+        reasons = (try c.field(.reasons, [String]())).compactMap(CephReason.init(rawValue:))
+        checks = try c.field(.checks, [])
+        bytesTotal = try c.field(.bytesTotal, 0)
+        bytesUsed = try c.field(.bytesUsed, 0)
+        osdsUp = try c.field(.osdsUp, 0)
+        osdsTotal = try c.field(.osdsTotal, 0)
+        monsReady = try c.field(.monsReady, 0)
+        monsTotal = try c.field(.monsTotal, 0)
+        notReadyNodes = try c.field(.notReadyNodes, [])
+        version = try c.field(.version, "")
+        external = try c.field(.external, false)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case namespace, name, phase, message, cephHealth, health, reasons, checks, bytesTotal, bytesUsed
+        case osdsUp, osdsTotal, monsReady, monsTotal, notReadyNodes, version, external
+    }
+}
+
+public struct CephCheck: Decodable, Equatable, Identifiable, Sendable {
+    /// MON_DOWN, OSD_NEARFULL...
+    public let name: String
+    /// HEALTH_WARN or HEALTH_ERR.
+    public let severity: String
+    public let message: String
+
+    public var id: String { name }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decode(String.self, forKey: .name)
+        severity = try c.field(.severity, "")
+        message = try c.field(.message, "")
+    }
+
+    private enum CodingKeys: String, CodingKey { case name, severity, message }
+}
+
+/// A block pool, a filesystem or an object store.
+public struct CephPool: Decodable, Equatable, Identifiable, Sendable {
+    public let namespace: String
+    public let name: String
+    /// blockPool, filesystem or objectStore.
+    public let kind: String
+    public let phase: String
+    public let health: ServiceHealth
+
+    public var id: String { "\(kind)/\(label)" }
+    public var label: String { "\(namespace)/\(name)" }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+        kind = try c.field(.kind, "")
+        phase = try c.field(.phase, "")
+        health = ServiceHealth(wire: try c.field(.health, ""))
+    }
+
+    private enum CodingKeys: String, CodingKey { case namespace, name, kind, phase, health }
+}
+
+public struct CephOSD: Decodable, Equatable, Identifiable, Sendable {
+    /// The cluster's.
+    public let namespace: String
+    /// The ceph-osd-id label ("id" on the wire).
+    public let osdID: String
+    public let pod: String
+    public let node: String
+    public let phase: String
+    public let ready: Bool
+
+    public var id: String { "\(namespace)/\(pod)" }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        namespace = try c.field(.namespace, "")
+        osdID = try c.field(.osdID, "")
+        pod = try c.field(.pod, "")
+        node = try c.field(.node, "")
+        phase = try c.field(.phase, "")
+        ready = try c.field(.ready, false)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case namespace, pod, node, phase, ready
+        case osdID = "id"
+    }
+}
+
+/// Why a Ceph cluster is not ok, as the Go core names it.
+public enum CephReason: String, Sendable {
+    case healthErr, failure, full, noOSD, noQuorum, healthWarn, nearFull, osds, mons, notReady
+}
+
 public struct LonghornStatus: Decodable, Equatable, Sendable {
     public let version: String
     /// Installed but could not be read.
@@ -890,6 +1045,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
     case percona = "percona-xtradb"
     case certManager = "cert-manager"
     case velero = "velero"
+    case ceph = "rook"
 
     public var id: String { rawValue }
     public var catalogID: String { rawValue }
@@ -905,6 +1061,7 @@ public enum DataServiceKind: String, Sendable, CaseIterable, Identifiable, Hasha
         case .percona: "Percona XtraDB Cluster"
         case .certManager: "cert-manager"
         case .velero: "Velero"
+        case .ceph: "Rook Ceph"
         }
     }
 
@@ -956,7 +1113,8 @@ public extension DataServices {
     var detected: [DataServiceKind] {
         [longhorn != nil ? .longhorn : nil, garage != nil ? .garage : nil, cnpg != nil ? .cnpg : nil,
          dragonfly != nil ? .dragonfly : nil, mariadb != nil ? .mariadb : nil, percona != nil ? .percona : nil,
-         certManager != nil ? .certManager : nil, velero != nil ? .velero : nil].compactMap { $0 }
+         certManager != nil ? .certManager : nil, velero != nil ? .velero : nil,
+         ceph != nil ? .ceph : nil].compactMap { $0 }
     }
 
     func summary(_ kind: DataServiceKind) -> ServiceSummary? {
@@ -1002,6 +1160,12 @@ public extension DataServices {
             if !v.error.isEmpty && v.schedules.isEmpty && v.locations.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: v.error) }
             let healths = v.schedules.map(\.health) + v.locations.map(\.health) + v.adhoc.map(\.health)
             return ServiceSummary(total: v.schedules.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: v.error)
+        case .ceph:
+            guard let c = ceph else { return nil }
+            if !c.error.isEmpty && c.clusters.isEmpty { return ServiceSummary(total: 0, attention: 0, health: .unknown, error: c.error) }
+            // Clusters are the items; a pool that is not ready needs a look as much as a cluster.
+            let healths = c.clusters.map(\.health) + c.pools.map(\.health)
+            return ServiceSummary(total: c.clusters.count, attention: healths.filter(\.needsAttention).count, health: .worst(healths), error: c.error)
         }
     }
 
@@ -1033,6 +1197,7 @@ public extension DataServices {
         for cluster in percona?.clusters ?? [] where cluster.health.needsAttention {
             count(cluster.pods.filter { !$0.ready }.map(\.node))
         }
+        for cluster in ceph?.clusters ?? [] where cluster.health.needsAttention { count(cluster.notReadyNodes) }
         return hits.map { LikelyCause(node: $0.key, problems: $0.value) }
             .sorted { $0.problems != $1.problems ? $0.problems > $1.problems : $0.node < $1.node }
     }

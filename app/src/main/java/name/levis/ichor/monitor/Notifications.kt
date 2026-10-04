@@ -96,6 +96,7 @@ private fun dataAlertText(context: Context, alert: Alert): String {
         "percona" -> "Percona XtraDB Cluster"
         "certmanager" -> "cert-manager"
         "velero" -> "Velero"
+        "ceph" -> "Rook Ceph"
         else -> "CloudNativePG"
     }
     if (!alert.problem) return system

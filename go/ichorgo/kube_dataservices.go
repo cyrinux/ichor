@@ -42,6 +42,7 @@ type dataServices struct {
 	Percona     *perconaStatus     `json:"percona,omitempty"`
 	CertManager *certManagerStatus `json:"certManager,omitempty"`
 	Velero      *veleroStatus      `json:"velero,omitempty"`
+	Ceph        *cephStatus        `json:"ceph,omitempty"`
 }
 
 // KubeDataServices reports the health of the storage and database operators the cluster
@@ -149,6 +150,10 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 
 	if _, ok := groups[groupVelero]; ok {
 		wg.Go(func() { out.Velero = readVelero(ctx, k, now) })
+	}
+
+	if v, ok := groups[groupCeph]; ok {
+		wg.Go(func() { out.Ceph = readCeph(ctx, k, v) })
 	}
 
 	if hints.wants("garage") {

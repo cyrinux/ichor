@@ -57,6 +57,7 @@ val DataServiceKind.title: String
         DataServiceKind.PERCONA -> "Percona XtraDB Cluster"
         DataServiceKind.CERT_MANAGER -> "cert-manager"
         DataServiceKind.VELERO -> "Velero"
+        DataServiceKind.CEPH -> "Rook Ceph"
     }
 
 /** The tab's name, short enough for four tabs. */
@@ -77,6 +78,7 @@ private val DataServiceKind.fallbackIcon: ImageVector
         DataServiceKind.PERCONA -> Icons.Outlined.Hub
         DataServiceKind.CERT_MANAGER -> Icons.Outlined.VerifiedUser
         DataServiceKind.VELERO -> Icons.Outlined.SettingsBackupRestore
+        DataServiceKind.CEPH -> Icons.Outlined.Storage
     }
 
 /** Hostnames of the nodes Talos reports not ready or unreachable: candidates for a likely cause. */
@@ -148,6 +150,7 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
         DataServiceKind.PERCONA -> pluralStringResource(R.plurals.percona_clusters, summary.total, summary.total)
         DataServiceKind.CERT_MANAGER -> pluralStringResource(R.plurals.certmanager_certificates, summary.total, summary.total)
         DataServiceKind.VELERO -> pluralStringResource(R.plurals.velero_schedules, summary.total, summary.total)
+        DataServiceKind.CEPH -> pluralStringResource(R.plurals.ceph_clusters, summary.total, summary.total)
         DataServiceKind.GARAGE -> {
             val single = services.garage?.instances?.singleOrNull()
             if (single != null) {

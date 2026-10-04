@@ -17,6 +17,7 @@ data class DataServices(
     val percona: PerconaStatus? = null,
     val certManager: CertManagerStatus? = null,
     val velero: VeleroStatus? = null,
+    val ceph: CephStatus? = null,
 )
 
 @Serializable
@@ -309,6 +310,105 @@ enum class CertReason(val wire: String) {
         fun from(wire: String): CertReason? = entries.firstOrNull { it.wire == wire }
     }
 }
+
+@Serializable
+data class CephStatus(
+    val version: String = "",
+    val error: String = "",
+    val clusters: List<CephCluster> = emptyList(),
+    val pools: List<CephPool> = emptyList(),
+    /** By namespace, then OSD number. */
+    val osds: List<CephOsd> = emptyList(),
+)
+
+@Serializable
+data class CephCluster(
+    val namespace: String = "",
+    val name: String = "",
+    /** Rook's own word: Ready (Connected when external), Progressing, Failure... */
+    val phase: String = "",
+    val message: String = "",
+    /** HEALTH_OK, HEALTH_WARN or HEALTH_ERR; "" before Ceph reported. */
+    val cephHealth: String = "",
+    val health: String = "",
+    /** Wire values of [CephReason]. */
+    val reasons: List<String> = emptyList(),
+    /** Ceph's health checks, errors first. */
+    val checks: List<CephCheck> = emptyList(),
+    val bytesTotal: Long = 0,
+    val bytesUsed: Long = 0,
+    val osdsUp: Int = 0,
+    val osdsTotal: Int = 0,
+    val monsReady: Int = 0,
+    val monsTotal: Int = 0,
+    /** Nodes of its OSD and mon pods that are not ready. */
+    val notReadyNodes: List<String> = emptyList(),
+    /** Ceph's version, e.g. 19.2.3-0. */
+    val version: String = "",
+    val external: Boolean = false,
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+    val reasonList: List<CephReason> get() = reasons.mapNotNull(CephReason::from)
+
+    /** Raw capacity used, 0 when Ceph has not reported it. */
+    val usedFraction: Double get() = if (bytesTotal > 0) bytesUsed.toDouble() / bytesTotal else 0.0
+}
+
+@Serializable
+data class CephCheck(
+    /** MON_DOWN, OSD_NEARFULL... */
+    val name: String,
+    /** HEALTH_WARN or HEALTH_ERR. */
+    val severity: String = "",
+    val message: String = "",
+)
+
+/** A block pool, a filesystem or an object store. */
+@Serializable
+data class CephPool(
+    val namespace: String = "",
+    val name: String = "",
+    /** blockPool, filesystem or objectStore. */
+    val kind: String = "",
+    val phase: String = "",
+    val health: String = "",
+) {
+    val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
+    val label: String get() = "$namespace/$name"
+}
+
+@Serializable
+data class CephOsd(
+    /** The cluster's. */
+    val namespace: String = "",
+    /** The ceph-osd-id label. */
+    val id: String = "",
+    val pod: String = "",
+    val node: String = "",
+    val phase: String = "",
+    val ready: Boolean = false,
+)
+
+/** Why a Ceph cluster is not ok, as the Go core names it. */
+enum class CephReason(val wire: String) {
+    HEALTH_ERR("healthErr"),
+    FAILURE("failure"),
+    FULL("full"),
+    NO_OSD("noOSD"),
+    NO_QUORUM("noQuorum"),
+    HEALTH_WARN("healthWarn"),
+    NEAR_FULL("nearFull"),
+    OSDS("osds"),
+    MONS("mons"),
+    NOT_READY("notReady"),
+    ;
+
+    companion object {
+        fun from(wire: String): CephReason? = entries.firstOrNull { it.wire == wire }
+    }
+}
+
 
 /** Why a Dragonfly instance is not ok, as the Go core names it. */
 enum class DragonflyReason(val wire: String) {
@@ -614,6 +714,7 @@ enum class DataServiceKind(val catalogId: String) {
     PERCONA("percona-xtradb"),
     CERT_MANAGER("cert-manager"),
     VELERO("velero"),
+    CEPH("rook"),
 }
 
 /** The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs. */
@@ -633,6 +734,7 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.PERCONA.takeIf { percona != null },
         DataServiceKind.CERT_MANAGER.takeIf { certManager != null },
         DataServiceKind.VELERO.takeIf { velero != null },
+        DataServiceKind.CEPH.takeIf { ceph != null },
     )
 
 /**
@@ -650,6 +752,14 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.PERCONA -> percona?.summary()
     DataServiceKind.CERT_MANAGER -> certManager?.summary()
     DataServiceKind.VELERO -> velero?.summary()
+    DataServiceKind.CEPH -> ceph?.summary()
+}
+
+/** Ceph clusters are the items; a pool that is not ready needs a look as much as a cluster. */
+fun CephStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty() && clusters.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
+    val healths = clusters.map { it.serviceHealth } + pools.map { it.serviceHealth }
+    return ServiceSummary(clusters.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
 }
 
 fun MariaDbStatus.summary(): ServiceSummary {
@@ -741,6 +851,7 @@ fun DataServices.likelyCauses(downNodes: Set<String> = emptySet()): List<LikelyC
     percona?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { c ->
         count(c.pods.filter { !it.ready }.map { it.node })
     }
+    ceph?.clusters.orEmpty().filter { it.serviceHealth.needsAttention }.forEach { count(it.notReadyNodes) }
 
     return hits.map { (node, n) -> LikelyCause(node, n) }.sortedWith(compareByDescending<LikelyCause> { it.problems }.thenBy { it.node })
 }

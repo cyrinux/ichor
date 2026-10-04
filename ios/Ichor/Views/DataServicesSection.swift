@@ -61,6 +61,7 @@ func dataServiceSummary(_ kind: DataServiceKind, _ services: DataServices) -> St
     case .percona: head = String(localized: "\(summary.total) Percona clusters")
     case .certManager: head = String(localized: "\(summary.total) certificates")
     case .velero: head = String(localized: "\(summary.total) Velero schedules")
+    case .ceph: head = String(localized: "\(summary.total) Ceph clusters")
     case .garage:
         // One Garage cluster: its own state says more than "1 cluster".
         if let single = services.garage?.instances.first, services.garage?.instances.count == 1 {
@@ -187,6 +188,7 @@ struct KindIcon: View {
         case .percona: "point.3.connected.trianglepath.dotted"
         case .certManager: "checkmark.seal"
         case .velero: "clock.arrow.circlepath"
+        case .ceph: "internaldrive"
         }
     }
 }
