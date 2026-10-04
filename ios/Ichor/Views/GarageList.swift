@@ -198,6 +198,7 @@ private struct NodeRow: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
+        .accessibilityElement(children: .combine)
     }
 
     private var details: String {

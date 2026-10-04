@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -53,7 +54,9 @@ private fun RouteNote(text: String) {
 private fun RouteRow(route: KubeRoute) {
     val uriHandler = LocalUriHandler.current
     Row(
-        Modifier.fillMaxWidth().clickable { runCatching { uriHandler.openUri(route.url) } }.padding(vertical = 6.dp),
+        Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = stringResource(R.string.apps_detail_routes_open)) {
+            runCatching { uriHandler.openUri(route.url) }
+        }.padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {

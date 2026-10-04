@@ -84,6 +84,7 @@ struct ArgoSection: View {
             let part = status.healthCounts[i]
             HStack(spacing: 4) {
                 Circle().fill(part.health.color).frame(width: 7, height: 7)
+                    .accessibilityHidden(true)
                 Text(verbatim: "\(part.count) \(part.health.label.lowercased())")
             }
         }

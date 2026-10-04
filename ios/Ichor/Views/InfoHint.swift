@@ -20,6 +20,8 @@ struct InfoHint: View {
             Image(systemName: "info.circle")
                 .imageScale(.medium)
                 .foregroundStyle(.secondary)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         // Borderless, so a tap inside a list row or a section header only opens the hint.
         .buttonStyle(.borderless)

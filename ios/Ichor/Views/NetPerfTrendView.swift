@@ -53,7 +53,8 @@ private struct NetPerfTrendChart: View {
     @Binding var selected: Int?
 
     var body: some View {
-        let shown = values[min(selected ?? values.count - 1, values.count - 1)]
+        let current = min(selected ?? values.count - 1, values.count - 1)
+        let shown = values[current]
         let peak = values.compactMap { $0 }.max() ?? 0
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
@@ -99,7 +100,17 @@ private struct NetPerfTrendChart: View {
                 }
             }
             .frame(height: 80)
+            // The tap overlay is out of VoiceOver's reach: swipe up or down to pick a test instead.
+            .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text("\(label) across the saved tests"))
+            .accessibilityValue(Text("Test \(current + 1) of \(values.count): \(shown.map(format) ?? "—")"))
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment: selected = Swift.min(current + 1, values.count - 1)
+                case .decrement: selected = Swift.max(current - 1, 0)
+                @unknown default: break
+                }
+            }
         }
         .padding(.vertical, 4)
     }

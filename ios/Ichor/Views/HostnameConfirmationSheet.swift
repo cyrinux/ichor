@@ -54,7 +54,7 @@ struct HostnameConfirmationSheet: View {
                     }
                 }
                 Section("Type \(hostname) to confirm") {
-                    TextField(hostname, text: $typed)
+                    TextField("Hostname", text: $typed, prompt: Text(verbatim: hostname))
                         .font(.body.monospaced())
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)

@@ -142,6 +142,7 @@ private struct ArgoResourceLine: View {
         if selecting {
             Button(action: toggle) { content }
                 .buttonStyle(.plain)
+                .accessibilityAddTraits(selected ? .isSelected : [])
         } else {
             content
         }
@@ -152,11 +153,13 @@ private struct ArgoResourceLine: View {
             if selecting {
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(selected ? Color.accentColor : Color.secondary)
+                    .accessibilityHidden(true)
             }
             Image(systemName: argoKindSymbol(resource.kind))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(width: 16)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 0) {
                 Text(verbatim: resource.name)
                     .font(.caption.monospaced())

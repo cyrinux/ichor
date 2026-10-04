@@ -1,7 +1,6 @@
 package name.levis.ichor.ui.capture
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,6 +43,7 @@ import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiStateOf
 import java.io.File
+import name.levis.ichor.ui.components.expandable
 
 /** Layers of one packet as expandable sections (all open at first), then its bytes. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -117,7 +117,7 @@ private fun DetailContent(detail: PacketDetail) {
 private fun LayerSection(layer: PacketLayer, expanded: Boolean, onToggle: () -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         Row(
-            Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(vertical = 8.dp),
+            Modifier.fillMaxWidth().expandable(expanded, onToggle = onToggle).padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(layer.name, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))

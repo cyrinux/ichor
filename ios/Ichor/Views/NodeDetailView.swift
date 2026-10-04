@@ -384,6 +384,7 @@ private struct ServiceRow: View {
                 Text(detail).font(.caption).foregroundStyle(service.health == "unhealthy" ? .red : .secondary)
             }
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

@@ -47,6 +47,7 @@ struct DiscoveredNodesSheet: View {
                             HStack {
                                 Image(systemName: selected.contains(node.address) ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(selected.contains(node.address) ? Color.accentColor : .secondary)
+                                    .accessibilityHidden(true)
                                 VStack(alignment: .leading) {
                                     Text(node.hostname.isEmpty ? node.address : node.hostname).foregroundStyle(.primary)
                                     Text(verbatim: "\(node.address)  ·  \(roleText(node.role))")
@@ -54,6 +55,7 @@ struct DiscoveredNodesSheet: View {
                                 }
                             }
                         }
+                        .accessibilityAddTraits(selected.contains(node.address) ? .isSelected : [])
                     }
                 } footer: {
                     Text("Cluster discovery knows these nodes, but the talosconfig does not list them. Add the ones to show and manage here.")

@@ -81,6 +81,7 @@ struct SupportBundleView: View {
                     HStack {
                         Image(systemName: selected.contains(node.node) ? "checkmark.circle.fill" : "circle")
                             .foregroundStyle(selected.contains(node.node) ? Color.accentColor : Color.secondary)
+                            .accessibilityHidden(true)
                         VStack(alignment: .leading) {
                             Text(verbatim: node.hostname).foregroundStyle(.primary)
                             Text(verbatim: node.reachable ? node.node : "\(node.node)  ·  \(NodeHealth.unreachable.label)")
@@ -89,6 +90,7 @@ struct SupportBundleView: View {
                     }
                 }
                 .disabled(!node.reachable)
+                .accessibilityAddTraits(selected.contains(node.node) ? .isSelected : [])
             }
         } header: {
             HStack {

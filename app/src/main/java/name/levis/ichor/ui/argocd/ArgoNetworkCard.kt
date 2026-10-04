@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -114,7 +115,7 @@ fun ArgoNetColumnHeader(layer: Int, count: Int, modifier: Modifier = Modifier) {
 fun ArgoNetMoreChip(hidden: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
-        modifier = modifier.height(28.dp),
+        modifier = modifier.heightIn(min = 28.dp),
         shape = RoundedCornerShape(50),
         color = MaterialTheme.colorScheme.secondaryContainer,
     ) {

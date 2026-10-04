@@ -2074,4 +2074,13 @@
     <string name="upgrade_step_current">Läuft</string>
     <string name="upgrade_step_failed">Fehlgeschlagen</string>
     <string name="upgrade_step_pending">Nicht begonnen</string>
+    <string name="common_open">Öffnen</string>
+    <string name="common_expand">Ausklappen</string>
+    <string name="common_collapse">Einklappen</string>
+    <string name="common_expanded">Ausgeklappt</string>
+    <string name="common_collapsed">Eingeklappt</string>
+    <string name="clusters_color_swatch">Farbe %1$d</string>
+    <string name="clusters_color_hue">Farbton</string>
+    <string name="ai_api_key_show">API-Schlüssel anzeigen</string>
+    <string name="ai_api_key_hide">API-Schlüssel verbergen</string>
 </resources>

@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -134,7 +135,7 @@ private fun ItemRow(item: ResourceItem, onClick: () -> Unit) {
     val updated = remember(item.updated) {
         item.updated.takeIf { it > 0 }?.let { formatDateTime(it) }
     }
-    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp)) {
+    Column(Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = stringResource(R.string.common_open), onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp)) {
         Text(item.id, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
         val facts = listOfNotNull(
             item.phase.takeIf { it.isNotBlank() },

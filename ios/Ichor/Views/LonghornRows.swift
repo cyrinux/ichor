@@ -36,6 +36,7 @@ struct LonghornVolumeRow: View {
                 }
             }
         }
+        .accessibilityElement(children: .combine)
     }
 
     private var facts: String {
@@ -93,6 +94,7 @@ struct LonghornBackupTargetRow: View {
                 Text(verbatim: target.message).font(.caption).foregroundStyle(.statusBad)
             }
         }
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -129,6 +131,7 @@ struct LonghornNodeRow: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

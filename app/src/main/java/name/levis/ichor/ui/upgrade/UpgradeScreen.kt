@@ -288,6 +288,7 @@ private fun UpgradeSetup(
         OutlinedTextField(
             value = version,
             onValueChange = { version = it },
+            label = { Text(stringResource(R.string.upgrade_target_version)) },
             placeholder = { Text(stringResource(R.string.upgrade_target_hint)) },
             singleLine = true,
             isError = target.error != null && target.version == version.trim(),

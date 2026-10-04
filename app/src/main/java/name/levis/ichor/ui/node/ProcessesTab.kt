@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.node
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -56,6 +55,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
 import name.levis.ichor.util.formatBytes
 import name.levis.ichor.util.formatPercent
+import name.levis.ichor.ui.components.expandable
 
 data class ProcessesState(val rows: List<ProcessRow>? = null, val error: String? = null)
 
@@ -151,7 +151,7 @@ private fun ProcessItem(row: ProcessRow, expanded: Boolean, onClick: () -> Unit)
     Column(
         Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .expandable(expanded, onToggle = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

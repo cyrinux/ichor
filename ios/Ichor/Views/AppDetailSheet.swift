@@ -123,6 +123,7 @@ private struct ImageLine: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
+                .accessibilityLabel(Text("\(image.containers) containers"))
         }
     }
 }

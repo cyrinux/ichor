@@ -7,12 +7,13 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -32,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -240,13 +242,14 @@ private fun MemberPickerDialog(members: List<SnapshotTarget>, onPick: (SnapshotT
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.etcd_snapshot_pick_member)) },
         text = {
-            Column {
+            Column(Modifier.selectableGroup()) {
                 members.forEach { member ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth().clickable { selected = member },
+                        modifier = Modifier.fillMaxWidth()
+                            .selectable(selected = member == selected, role = Role.RadioButton) { selected = member },
                     ) {
-                        RadioButton(selected = member == selected, onClick = { selected = member })
+                        RadioButton(selected = member == selected, onClick = null)
                         Column {
                             Text(member.hostname)
                             Text(member.node, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)

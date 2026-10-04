@@ -1,7 +1,6 @@
 package name.levis.ichor.ui.logs
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,6 +35,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import name.levis.ichor.ui.components.expandable
 
 private val LogFontSize = 11.sp
 private val LogLineHeight = 14.sp
@@ -122,7 +122,7 @@ fun LogEntryRow(row: LogRow.Entry, palette: LogPalette, zone: ZoneId, expanded: 
     Column(
         Modifier
             .fillMaxWidth()
-            .clickable(onClick = onToggle)
+            .expandable(expanded, onToggle = onToggle)
             .then(if (level == LogLevel.DEBUG) Modifier.alpha(DEBUG_ALPHA) else Modifier)
             .drawBehind { if (stripe != null) drawRect(stripe, size = Size(StripeWidth.toPx(), size.height)) }
             .padding(start = StripeWidth + 5.dp, top = 1.dp, bottom = 1.dp),

@@ -122,6 +122,7 @@ fun CaptureSetup(
         OutlinedTextField(
             value = options.filter,
             onValueChange = { value -> onChange { it.copy(filter = value) } },
+            label = { Text(stringResource(R.string.capture_filter)) },
             placeholder = { Text(stringResource(R.string.capture_filter_hint)) },
             isError = options.filter.isNotBlank() && filterError.isNotEmpty(),
             supportingText = if (options.filter.isNotBlank() && filterError.isNotEmpty()) {

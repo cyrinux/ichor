@@ -40,6 +40,7 @@ private struct InstanceRow: View {
                 }
             }
         }
+        .accessibilityElement(children: .combine)
     }
 
     private var summary: String {

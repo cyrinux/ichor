@@ -2244,4 +2244,13 @@
     <string name="upgrade_step_current">Виконується</string>
     <string name="upgrade_step_failed">Помилка</string>
     <string name="upgrade_step_pending">Не розпочато</string>
+    <string name="common_open">Відкрити</string>
+    <string name="common_expand">Розгорнути</string>
+    <string name="common_collapse">Згорнути</string>
+    <string name="common_expanded">Розгорнуто</string>
+    <string name="common_collapsed">Згорнуто</string>
+    <string name="clusters_color_swatch">Колір %1$d</string>
+    <string name="clusters_color_hue">Відтінок</string>
+    <string name="ai_api_key_show">Показати ключ API</string>
+    <string name="ai_api_key_hide">Сховати ключ API</string>
 </resources>

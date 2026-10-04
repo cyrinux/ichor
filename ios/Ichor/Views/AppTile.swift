@@ -103,7 +103,7 @@ struct FilterChip: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                if let dot { Circle().fill(dot).frame(width: 7, height: 7) }
+                if let dot { Circle().fill(dot).frame(width: 7, height: 7).accessibilityHidden(true) }
                 Text(verbatim: label)
                 Text(verbatim: "\(count)").monospacedDigit().opacity(0.7)
             }
@@ -112,6 +112,9 @@ struct FilterChip: View {
             .padding(.vertical, 7)
             .foregroundStyle(selected ? AnyShapeStyle(Color.white) : AnyShapeStyle(HierarchicalShapeStyle.primary))
             .background(selected ? AnyShapeStyle(TintShapeStyle.tint) : AnyShapeStyle(Color(.tertiarySystemFill)), in: Capsule())
+            // A 44 pt touch target around the smaller capsule.
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])

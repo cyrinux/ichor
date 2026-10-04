@@ -62,9 +62,12 @@ struct ProcessesView: View {
             }
             Section {
                 ForEach(shown) { row in
-                    ProcessRowView(row: row, expanded: expanded.contains(row.id))
-                        .contentShape(Rectangle())
-                        .onTapGesture { expanded = expanded.symmetricDifference([row.id]) }
+                    Button { expanded = expanded.symmetricDifference([row.id]) } label: {
+                        ProcessRowView(row: row, expanded: expanded.contains(row.id))
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityValue(expanded.contains(row.id) ? Text("Expanded") : Text("Collapsed"))
                 }
             }
         }
