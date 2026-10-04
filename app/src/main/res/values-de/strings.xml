@@ -84,6 +84,11 @@
     <string name="overview_last_known_state">Letzter bekannter Zustand.</string>
     <string name="overview_node_last_seen">Zuletzt gesehen %1$s</string>
     <string name="overview_node_public_ip">Öffentliche IP</string>
+    <string name="overview_public_ip_detect">Öffentliche IPs finden</string>
+    <string name="overview_public_ip_detect_title">Öffentliche IPs finden?</string>
+    <string name="overview_public_ip_detect_body">Talos kennt nicht die öffentliche IP jedes Knotens. Ichor kann auf jedem Knoten einen kurzlebigen Pod in einem temporären, danach gelöschten Namespace starten, der ifconfig.co (sonst api.ipify.org oder icanhazip.com) fragt, von welcher Adresse er kommt. Das Laden des curl-Images kann eine Minute dauern.</string>
+    <string name="overview_public_ip_detect_run">Finden</string>
+    <string name="overview_public_ip_detecting">Öffentliche IPs werden gesucht…</string>
     <string name="overview_unreachable_network">Kein Node hat geantwortet. Dein Telefon ist wahrscheinlich nicht im Netzwerk des Clusters: Prüfe, ob dein VPN verbunden ist oder ob du im richtigen WLAN bist.</string>
     <string name="overview_unreachable_credentials">Der Cluster hat geantwortet, aber diese talosconfig abgelehnt: Zertifikat, CA oder Rolle sind möglicherweise falsch oder abgelaufen.</string>
     <string name="overview_unreachable_other">Kein Node hat geantwortet. Details siehe unten.</string>

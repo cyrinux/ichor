@@ -84,6 +84,11 @@
     <string name="overview_last_known_state">Dernier état connu affiché.</string>
     <string name="overview_node_last_seen">Vu pour la dernière fois %1$s</string>
     <string name="overview_node_public_ip">IP publique</string>
+    <string name="overview_public_ip_detect">Trouver les IP publiques</string>
+    <string name="overview_public_ip_detect_title">Trouver les IP publiques ?</string>
+    <string name="overview_public_ip_detect_body">Talos ne connaît pas l\'IP publique de chaque nœud. Ichor peut lancer un pod éphémère sur chaque nœud, dans un namespace temporaire supprimé ensuite, qui demande à ifconfig.co (sinon api.ipify.org ou icanhazip.com) de quelle adresse il vient. Télécharger l\'image curl peut prendre une minute.</string>
+    <string name="overview_public_ip_detect_run">Trouver</string>
+    <string name="overview_public_ip_detecting">Recherche des IP publiques…</string>
     <string name="overview_unreachable_network">Aucun nœud n\'a répondu. Votre téléphone n\'est sans doute pas sur le réseau du cluster : vérifiez que votre VPN est connecté, ou que vous êtes sur le bon Wi-Fi.</string>
     <string name="overview_unreachable_credentials">Le cluster a répondu mais a refusé ce talosconfig : son certificat, sa CA ou son rôle est peut-être erroné ou expiré.</string>
     <string name="overview_unreachable_other">Aucun nœud n\'a répondu. Les détails sont ci-dessous.</string>

@@ -84,6 +84,8 @@ import name.levis.ichor.model.clusterSummary
 import name.levis.ichor.model.outage
 import name.levis.ichor.model.ClusterOutage
 import name.levis.ichor.model.hasLastKnown
+import name.levis.ichor.model.lacksPublicIps
+import name.levis.ichor.model.shownPublicIps
 import name.levis.ichor.ui.components.agoLabel
 import name.levis.ichor.model.health
 import name.levis.ichor.ui.LoadingViewModel
@@ -432,6 +434,7 @@ fun OverviewScreen(
                     live = liveState.takeIf { liveEnabled },
                     discovered = discovered.size,
                     onDiscovered = { showDiscovered = true },
+                    canDetectPublicIps = config?.activeSummary?.allows(Feature.KUBECONFIG) == true,
                 )
             }
         }
@@ -467,9 +470,11 @@ private fun NodeList(
     live: ClusterLiveState?,
     discovered: Int,
     onDiscovered: () -> Unit,
+    canDetectPublicIps: Boolean,
 ) {
     var sheetFor by remember { mutableStateOf<NodeOverview?>(null) }
     val wakeOnLan = rememberWakeOnLan(fingerprint)
+    val publicIps = rememberPublicIpDetection(fingerprint, canDetectPublicIps && overview.lacksPublicIps())
     RecordNodeMacs(fingerprint, overview.nodes)
     sheetFor?.let { node ->
         NodeActionsSheet(
@@ -520,6 +525,7 @@ private fun NodeList(
         if (nodes.isNotEmpty()) item(key = "nodes") {
             NodesCard(
                 nodes,
+                publicIps,
                 onNode = onNode,
                 onLive = { onNodeAction(it, NodeAction.LIVE) },
                 onMore = { sheetFor = it },
@@ -534,6 +540,7 @@ private fun NodeList(
 @Composable
 private fun NodesCard(
     nodes: List<NodeOverview>,
+    publicIps: PublicIpDetection,
     onNode: (NodeOverview) -> Unit,
     onLive: (NodeOverview) -> Unit,
     onMore: (NodeOverview) -> Unit,
@@ -541,12 +548,14 @@ private fun NodesCard(
     Card(Modifier.fillMaxWidth()) {
         Row(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.overview_stat_nodes), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            DetectPublicIpsButton(publicIps)
+            Spacer(Modifier.width(8.dp))
             Text(nodes.size.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         nodes.forEachIndexed { i, node ->
             if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
             SwipeableNode(node, onLive = { onLive(node) }, onMore = { onMore(node) }) {
-                NodeRow(node, onClick = { onNode(node) }, onLongClick = { onMore(node) })
+                NodeRow(node, node.shownPublicIps(publicIps.probed), onClick = { onNode(node) }, onLongClick = { onMore(node) })
             }
         }
         Spacer(Modifier.height(4.dp))
@@ -554,7 +563,7 @@ private fun NodesCard(
 }
 
 @Composable
-private fun NodeRow(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> Unit) {
+private fun NodeRow(node: NodeOverview, publicIps: List<String>, onClick: () -> Unit, onLongClick: () -> Unit) {
     // Opaque, so the swipe background only shows beside the row as it slides.
     Box(
         Modifier.fillMaxWidth().background(CardDefaults.cardColors().containerColor).combinedClickable(
@@ -573,7 +582,7 @@ private fun NodeRow(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> 
                         fontFamily = FontFamily.Monospace,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    if (node.reachable && node.publicIPs.isNotEmpty()) PublicAddresses(node.publicIPs)
+                    if (node.reachable && publicIps.isNotEmpty()) PublicAddresses(publicIps)
                 }
                 NodeHealthPill(node.health)
             }

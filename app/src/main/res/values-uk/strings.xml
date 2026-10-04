@@ -98,6 +98,11 @@
     <string name="overview_last_known_state">Показано останній відомий стан.</string>
     <string name="overview_node_last_seen">Востаннє на зв\'язку %1$s</string>
     <string name="overview_node_public_ip">Публічна IP-адреса</string>
+    <string name="overview_public_ip_detect">Знайти публічні IP</string>
+    <string name="overview_public_ip_detect_title">Знайти публічні IP-адреси?</string>
+    <string name="overview_public_ip_detect_body">Talos знає публічну IP-адресу не кожного вузла. Ichor може запустити на кожному вузлі короткочасний под у тимчасовому просторі імен, який потім видаляється; под запитує ifconfig.co (або api.ipify.org чи icanhazip.com), з якої адреси він приходить. Завантаження образу curl може тривати хвилину.</string>
+    <string name="overview_public_ip_detect_run">Знайти</string>
+    <string name="overview_public_ip_detecting">Пошук публічних IP…</string>
     <string name="overview_unreachable_network">Жоден вузол не відповів. Схоже, телефон не в мережі кластера: перевірте, чи підключено VPN або чи ви в потрібній мережі Wi-Fi.</string>
     <string name="overview_unreachable_credentials">Кластер відповів, але відхилив цей talosconfig: його сертифікат, CA або роль можуть бути хибними чи простроченими.</string>
     <string name="overview_unreachable_other">Жоден вузол не відповів. Подробиці нижче.</string>
