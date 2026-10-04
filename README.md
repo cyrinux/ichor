@@ -23,7 +23,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   before it was set up can still be woken.
 - **Kubernetes:** list Deployments, StatefulSets and DaemonSets with their rollout state and
   restart one with a rolling update (`kubectl rollout restart`); list pods with their
-  `kubectl get pods` status and delete one so its controller starts a new one; measure the
+  `kubectl get pods` status and delete one so its controller starts a new one; list CronJobs
+  with their schedule, next run and recent runs, and run one now (`kubectl create job --from`,
+  with an icon and a title of your choice, see [CronJobs](#cronjobs)); measure the
   network between two nodes (TCP throughput and latency, see [Network test](#network-test));
   open an app in the browser from its sheet, at the hosts of the Ingresses and Gateway API
   HTTPRoutes whose Services select its pods; or export a kubeconfig to open the cluster in kubenav.
@@ -98,6 +100,7 @@ reads those roles and explains up front when a feature needs more.
 | **Cluster health check** | `ClusterService/HealthCheck` | **`os:admin`** |
 | **Kubeconfig export** | `Kubeconfig` | **`os:admin`** |
 | **Kubernetes workloads and pods, rollout restart, pod delete** | `Kubeconfig`, then the Kubernetes API | **`os:admin`** |
+| **Kubernetes CronJobs, run now** | `Kubeconfig`, then the Kubernetes API (cronjobs, jobs) | **`os:admin`** |
 | **App web addresses (Ingress, HTTPRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, gateways) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
@@ -143,6 +146,57 @@ and, optionally, host to host.
   latency result also draws where the round trips fell, from the fastest to the slowest, with
   p50 to p99 as a bar. On Android, the KubeSpan map shows the last pod-to-pod throughput measured
   between two nodes on their link, and the link's sheet the rest of that test.
+
+### CronJobs
+
+**Kubernetes → CronJobs** lists every CronJob on a card: its icon and name, schedule (and time
+zone), when it runs next or that it is suspended, the state of its latest run, a strip of its
+recent runs (a hollow bar is a manual one) and how long the last one took. Running and failed
+ones come first; tap a card for its recent runs.
+
+**Run now** creates a Job from the CronJob's template after a confirmation, exactly like
+`kubectl create job --from=cronjob/NAME`: named `NAME-manual-xxxxx`, annotated
+`cronjob.kubernetes.io/instantiate: manual` and owned by the CronJob, so its history limits and
+cleanup apply. A suspended CronJob can be run once without resuming its schedule; the
+confirmation warns when a run is already in progress, since a manual run ignores the
+`concurrencyPolicy`.
+
+Tune how a CronJob looks with these optional keys, as labels or annotations (an annotation wins;
+the title and description hold spaces, so they must be annotations):
+
+| Key | Value | Default |
+|---|---|---|
+| `ichor.levis.name/icon` | An icon name: one of the app's bundled logos (`postgresql`, `longhorn`, `velero`…) or any [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons) slug, downloaded only when *Download missing app icons* is on in Settings | The app its image belongs to, as on the Apps screen, else a clock |
+| `ichor.levis.name/title` | A display name, e.g. `Database backup` | The CronJob's name |
+| `ichor.levis.name/description` | One line on what it does | None |
+| `ichor.levis.name/trigger` | `"false"` hides **Run now** (a job that must only run on schedule); the Go core refuses it too | Manual runs allowed |
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: db-backup
+  labels:
+    ichor.levis.name/icon: postgresql
+  annotations:
+    ichor.levis.name/title: Database backup
+    ichor.levis.name/description: Dumps the shop database to S3
+spec:
+  schedule: "0 3 * * *"
+  # …
+```
+
+Or on an existing CronJob:
+
+```sh
+kubectl -n shop label cronjob db-backup ichor.levis.name/icon=postgresql
+kubectl -n shop annotate cronjob db-backup ichor.levis.name/title="Database backup"
+kubectl -n shop label cronjob wipe-staging ichor.levis.name/trigger=false
+```
+
+An icon name that is not a lowercase slug (letters, digits, dashes) is ignored. The next run is
+computed on the phone from the schedule and `timeZone` (UTC without one, like the controller on
+Talos); the app shows none for a schedule it cannot read.
 
 ### Creating a talosconfig for the phone
 

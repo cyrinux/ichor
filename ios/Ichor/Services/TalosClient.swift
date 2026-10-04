@@ -214,6 +214,13 @@ struct TalosClient: Sendable {
         }
     }
 
+    /// `kubectl create job --from=cronjob/NAME -n NAMESPACE` (os:admin): the new Job's name.
+    func triggerCronJob(_ cronJob: KubeCronJob) async throws -> String {
+        try await Self.run { [config, context, kubeServer] error -> String in
+            IchorgoKubeTriggerCronJob(config, context, kubeServer, cronJob.namespace, cronJob.name, error)
+        }
+    }
+
     /// The Ingress and HTTPRoute URLs serving pods (os:admin).
     func appRoutes(pods: [RoutePod]) async throws -> [KubeRoute] {
         let encoded = String(decoding: try JSONEncoder().encode(pods), as: UTF8.self)
