@@ -136,9 +136,9 @@ func readCNPG(ctx context.Context, k *kubeClient, src cnpgSources, now time.Time
 	base := "/apis/" + groupCNPG + "/" + src.version + "/"
 
 	var (
-		clusters  lhList[cnpgClusterObject]
-		scheduled lhList[cnpgScheduledBackupObject]
-		stores    lhList[cnpgObjectStoreObject]
+		clusters  kubeList[cnpgClusterObject]
+		scheduled kubeList[cnpgScheduledBackupObject]
+		stores    kubeList[cnpgObjectStoreObject]
 		errs      = make([]error, 3)
 		wg        sync.WaitGroup
 	)

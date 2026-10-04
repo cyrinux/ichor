@@ -103,8 +103,8 @@ public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
         id = try c.decode(String.self, forKey: .id)
         name = try c.decodeIfPresent(String.self, forKey: .name) ?? id
         category = AppCategory(rawValue: try c.decodeIfPresent(String.self, forKey: .category) ?? "") ?? .other
-        icon = try c.decodeIfPresent(String.self, forKey: .icon).flatMap { $0.isEmpty ? nil : $0 }
-        remoteIcon = try c.decodeIfPresent(String.self, forKey: .remoteIcon).flatMap { $0.isEmpty ? nil : $0 }
+        icon = try c.decodeIfPresent(String.self, forKey: .icon).nonEmpty
+        remoteIcon = try c.decodeIfPresent(String.self, forKey: .remoteIcon).nonEmpty
         known = try c.decodeIfPresent(Bool.self, forKey: .known) ?? false
         system = try c.decodeIfPresent(Bool.self, forKey: .system) ?? false
         version = try c.decodeIfPresent(String.self, forKey: .version) ?? ""

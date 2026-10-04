@@ -147,7 +147,7 @@ private struct EventRow: View {
 
 /// Time of day, with the date when it is not today.
 private func eventTime(_ millis: Int64) -> String {
-    let date = Date(timeIntervalSince1970: TimeInterval(millis) / 1000)
+    let date = Date(epochMillis: millis)
     if Calendar.current.isDateInToday(date) {
         return date.formatted(date: .omitted, time: .standard)
     }

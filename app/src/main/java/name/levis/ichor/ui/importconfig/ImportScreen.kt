@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.importconfig
 
+import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.LocalizedException
@@ -28,8 +30,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.ui.platform.LocalContext
 import name.levis.ichor.TalosApp
@@ -102,7 +102,7 @@ fun ImportScreen(
                 title = { Text(stringResource(R.string.import_title)) },
                 navigationIcon = {
                     onBack?.let {
-                        IconButton(onClick = it) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
+                        BackButton(it)
                     }
                 },
                 actions = {
@@ -286,11 +286,7 @@ private fun PreviewCard(
         // The clusters already imported stay: say what this import does to them.
         if (adding) Text(stringResource(R.string.import_adds_cluster), style = MaterialTheme.typography.bodyMedium)
         preview.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
-        Text(
-            stringResource(R.string.import_stored_encrypted),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        MutedText(stringResource(R.string.import_stored_encrypted))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
             Button(onClick = onConfirm, enabled = preview.canImport, modifier = Modifier.weight(1f)) {

@@ -18,18 +18,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,9 +44,10 @@ import name.levis.ichor.model.KubeSpanPeer
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.DataFreshness
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.Loaded
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -90,7 +86,7 @@ fun KubeSpanScreen(
         topBar = {
             TopAppBar(
                 title = { Text("KubeSpan") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
@@ -116,19 +112,6 @@ fun KubeSpanScreen(
 
 private const val MAP_TAB = 0
 private const val PEERS_TAB = 1
-
-/** Loading, error or the data with pull-to-refresh. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun <T> Loaded(state: UiState<T>, refresh: () -> Unit, content: @Composable (T) -> Unit) {
-    when (state) {
-        UiState.Loading -> LoadingBox()
-        is UiState.Failed -> ErrorBox(state.message, refresh)
-        is UiState.Loaded -> PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = refresh, modifier = Modifier.fillMaxSize()) {
-            content(state.data)
-        }
-    }
-}
 
 @Composable
 private fun Summary(nodes: List<KubeSpanNode>) {
@@ -193,10 +176,6 @@ private fun PeerRow(peer: KubeSpanPeer) {
             handshake,
             "↓ ${formatBytes(peer.rx)} ↑ ${formatBytes(peer.tx)}",
         )
-        Text(
-            details.joinToString("  ·  "),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        MutedText(details.joinToString("  ·  "))
     }
 }

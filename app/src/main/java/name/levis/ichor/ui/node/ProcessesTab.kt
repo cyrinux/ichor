@@ -9,13 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,12 +48,14 @@ import name.levis.ichor.model.filterAndSort
 import name.levis.ichor.model.processRows
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.live.POLL_SECONDS
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
 import name.levis.ichor.util.formatBytes
-import java.util.Locale
+import name.levis.ichor.util.formatPercent
 
 data class ProcessesState(val rows: List<ProcessRow>? = null, val error: String? = null)
 
@@ -110,19 +108,8 @@ fun ProcessesTab(
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             state.error?.let { ProcessesError(it) }
-            Text(
-                pluralStringResource(R.plurals.node_processes_summary, rows.size, rows.size, formatBytes(rows.sumOf { it.info.rss })),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            OutlinedTextField(
-                value = filter,
-                onValueChange = { filter = it },
-                placeholder = { Text(stringResource(R.string.node_processes_filter)) },
-                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            MutedText(pluralStringResource(R.plurals.node_processes_summary, rows.size, rows.size, formatBytes(rows.sumOf { it.info.rss })))
+            SearchField(filter, { filter = it }, stringResource(R.string.node_processes_filter), Modifier.fillMaxWidth())
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.node_processes_sort), style = MaterialTheme.typography.labelMedium)
                 FilterChip(
@@ -177,7 +164,7 @@ private fun ProcessItem(row: ProcessRow, expanded: Boolean, onClick: () -> Unit)
                 modifier = Modifier.weight(1f),
             )
             Text(
-                String.format(Locale.ROOT, "%.1f%%", row.cpuPercent),
+                formatPercent(row.cpuPercent),
                 style = MaterialTheme.typography.bodyMedium,
                 fontFamily = FontFamily.Monospace,
                 modifier = Modifier.padding(start = 8.dp),

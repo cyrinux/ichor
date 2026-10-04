@@ -32,6 +32,7 @@ import name.levis.ichor.model.worst
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.apps.AppIconPlaceholder
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.dataservices.HealthDot
 import name.levis.ichor.ui.dataservices.KindIcon
@@ -62,10 +63,8 @@ fun DataServicesCard(
             hinted.forEach { kind -> Line(kind, apps, text = null, health = null) }
         }
         is UiState.Failed -> Frame(null, onOpen) {
-            Text(
+            MutedText(
                 stringResource(R.string.data_services_unreadable, state.message.asString()),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -111,7 +110,7 @@ private fun Line(kind: DataServiceKind, apps: Map<String, InventoryApp>, text: S
         Column(Modifier.weight(1f)) {
             Text(kind.title, style = MaterialTheme.typography.bodyMedium)
             if (text != null) {
-                Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                MutedText(text, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
         if (health != null) HealthDot(health)

@@ -305,13 +305,19 @@ func (m *privacyMask) termsLocked() []maskTerm {
 		add(maskTerm{match: w, repl: maskedWord})
 	}
 
-	slices.SortFunc(terms, func(a, b maskTerm) int {
-		return cmp.Or(cmp.Compare(len(b.match), len(a.match)), cmp.Compare(a.match, b.match))
-	})
+	sortTerms(terms)
 
 	m.terms = terms
 
 	return terms
+}
+
+// sortTerms puts the longest matches first (then by text), so that a term wins over the
+// shorter ones it contains.
+func sortTerms(terms []maskTerm) {
+	slices.SortFunc(terms, func(a, b maskTerm) int {
+		return cmp.Or(cmp.Compare(len(b.match), len(a.match)), cmp.Compare(a.match, b.match))
+	})
 }
 
 // --- reverse mapping ---

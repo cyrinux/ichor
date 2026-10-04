@@ -6,11 +6,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -24,7 +22,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -51,11 +48,13 @@ import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.ui.dataservices.EmptyLine
 import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
 
@@ -107,7 +106,7 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
                         loaded?.let { Subtitle(it) }
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
                 actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
             )
         },
@@ -135,7 +134,7 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
                 }
                 Column(modifier.fillMaxSize()) {
                     if (!s.data.installed && s.data.apps.isEmpty()) {
-                        EmptyLine(stringResource(R.string.argo_not_installed))
+                        EmptyText(stringResource(R.string.argo_not_installed))
                         return@Column
                     }
                     PrimaryTabRow(selectedTabIndex = tab) {
@@ -202,17 +201,13 @@ private fun SelectionBar(count: Int, onClear: () -> Unit, onSync: () -> Unit, on
 /** Syncing several apps at once: names them, says nothing gets pruned. */
 @Composable
 private fun SyncManyDialog(apps: List<ArgoApp>, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(pluralStringResource(R.plurals.argo_sync_many_title, apps.size, apps.size)) },
-        text = {
-            Text(
-                apps.take(MAX_NAMED).joinToString(", ") { it.name } + (if (apps.size > MAX_NAMED) ", …" else "") +
-                    "\n\n" + stringResource(R.string.argo_sync_many_text),
-            )
-        },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.argo_sync)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    ConfirmDialog(
+        title = pluralStringResource(R.plurals.argo_sync_many_title, apps.size, apps.size),
+        text = apps.take(MAX_NAMED).joinToString(", ") { it.name } + (if (apps.size > MAX_NAMED) ", …" else "") +
+            "\n\n" + stringResource(R.string.argo_sync_many_text),
+        confirm = stringResource(R.string.argo_sync),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
     )
 }
 

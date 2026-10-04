@@ -4,13 +4,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -41,7 +37,9 @@ import name.levis.ichor.model.detected
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.likelyCauses
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.DataFreshness
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
@@ -92,7 +90,7 @@ fun DataServicesScreen(onBack: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.data_services_title)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
                 actions = {
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh), onClick = { vm.refresh() })
                     if (fingerprint != null) {
@@ -125,11 +123,7 @@ fun DataServicesScreen(onBack: () -> Unit) {
 private fun Systems(services: DataServices, downNodes: Set<String>, garage: GarageActions) {
     val kinds = services.detected
     if (kinds.isEmpty()) {
-        Text(
-            stringResource(R.string.data_services_none),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(16.dp),
-        )
+        EmptyText(stringResource(R.string.data_services_none))
         return
     }
     var selected by rememberSaveable { mutableStateOf(kinds.first()) }

@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"cmp"
 	"context"
+	"maps"
 	"slices"
 	"strings"
 	"time"
@@ -366,16 +367,11 @@ func (b *appBuilder) add(p placedContainer) {
 
 func (b *appBuilder) build() inventoryApp {
 	app := b.app
-	app.Namespaces = sortedKeys(b.namespaces)
-	app.Nodes = sortedKeys(b.nodes)
-
-	keys := make([]string, 0, len(b.images))
-	for key := range b.images {
-		keys = append(keys, key)
-	}
+	app.Namespaces = orEmpty(slices.Sorted(maps.Keys(b.namespaces)))
+	app.Nodes = orEmpty(slices.Sorted(maps.Keys(b.nodes)))
 
 	// The most used image that identified the app first: its tag is the app's version.
-	slices.SortFunc(keys, func(x, y string) int {
+	keys := slices.SortedFunc(maps.Keys(b.images), func(x, y string) int {
 		ix, iy := b.images[x], b.images[y]
 
 		return cmp.Or(compareBool(b.primary[y], b.primary[x]), compareBool(b.live[y], b.live[x]), cmp.Compare(iy.Containers, ix.Containers), cmp.Compare(x, y))
@@ -450,15 +446,4 @@ func compareBool(a, b bool) int {
 	default:
 		return -1
 	}
-}
-
-func sortedKeys(set map[string]bool) []string {
-	keys := make([]string, 0, len(set))
-	for k := range set {
-		keys = append(keys, k)
-	}
-
-	slices.Sort(keys)
-
-	return keys
 }

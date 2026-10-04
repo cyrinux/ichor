@@ -79,12 +79,6 @@
     <string name="overview_action_health">Стан кластера</string>
     <string name="overview_action_settings">Налаштування</string>
     <string name="overview_action_workloads">Робочі навантаження Kubernetes</string>
-    <plurals name="overview_summary_ready">
-        <item quantity="one">готовий</item>
-        <item quantity="few">готові</item>
-        <item quantity="many">готових</item>
-        <item quantity="other">готових</item>
-    </plurals>
     <plurals name="overview_summary_not_ready">
         <item quantity="one">не готовий</item>
         <item quantity="few">не готові</item>

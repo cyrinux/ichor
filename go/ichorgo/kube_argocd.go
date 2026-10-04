@@ -176,16 +176,7 @@ func KubeArgoCD(configYAML, contextName, kubeServer string) (out string, err err
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	if isDemoContext(configYAML, contextName) {
-		return toJSON(demoArgoCD(time.Now()))
-	}
-
-	res, err := withKube(kubeTarget{configYAML, contextName, kubeServer}, readArgoCD)
-	if err != nil {
-		return "", err
-	}
-
-	return toJSON(res)
+	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, func() argoStatus { return demoArgoCD(time.Now()) }, readArgoCD)
 }
 
 func readArgoCD(ctx context.Context, k *kubeClient) (argoStatus, error) {
@@ -204,9 +195,9 @@ func readArgoCD(ctx context.Context, k *kubeClient) (argoStatus, error) {
 	base := "/apis/" + groupArgo + "/" + version
 
 	var (
-		apps     lhList[argoObject]
-		sets     lhList[argoAppSetObject]
-		projects lhList[argoProjectObject]
+		apps     kubeList[argoObject]
+		sets     kubeList[argoAppSetObject]
+		projects kubeList[argoProjectObject]
 		ctrl     []dsPod
 		errs     = make([]error, 3)
 		wg       sync.WaitGroup

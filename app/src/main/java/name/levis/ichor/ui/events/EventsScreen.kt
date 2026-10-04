@@ -9,13 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -45,6 +41,8 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.EventFilter
 import name.levis.ichor.model.timelineRows
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.LiveIndicator
 import name.levis.ichor.ui.factory
 
@@ -91,7 +89,7 @@ fun EventsScreen(
                         )
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
@@ -107,11 +105,7 @@ fun EventsScreen(
             LiveIndicator(state.streaming, state.error, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
             HorizontalDivider()
             if (rows.isEmpty()) {
-                Text(
-                    stringResource(if (filter == EventFilter.ALL) R.string.events_empty else R.string.events_empty_filtered),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(16.dp),
-                )
+                EmptyText(stringResource(if (filter == EventFilter.ALL) R.string.events_empty else R.string.events_empty_filtered))
             } else {
                 LazyColumn(Modifier.fillMaxSize()) {
                     itemsIndexed(rows, key = { i, row -> row.event.id.ifEmpty { "#$i" }.let { "${row.event.node}|$it" } }) { _, row ->

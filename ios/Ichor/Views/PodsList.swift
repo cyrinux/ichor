@@ -40,7 +40,7 @@ struct PodsList: View {
         }
         .task { await load() }
         .confirmationDialog(confirm.map { String(localized: "Delete pod \($0.name)?") } ?? "",
-                            isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }),
+                            isPresented: $confirm.isPresent(),
                             titleVisibility: .visible,
                             presenting: confirm) { pod in
             Button("Delete", role: .destructive) {
@@ -54,9 +54,7 @@ struct PodsList: View {
                 Text("It is removed from \(pod.namespace) after its grace period; \(pod.owner) starts a new one.")
             }
         }
-        .alert(resultMessage ?? "", isPresented: Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })) {
-            Button("OK") {}
-        }
+        .messageAlert($resultMessage)
     }
 
     private func load() async {

@@ -232,7 +232,7 @@ public func logRows(_ items: [LogItem], search: String, level: LogLevelFilter,
 }
 
 public func logDate(_ millis: Int64) -> Date {
-    Date(timeIntervalSince1970: TimeInterval(millis) / 1000)
+    Date(epochMillis: millis)
 }
 
 /// Local time of day as HH:mm:ss.SSS.

@@ -37,9 +37,7 @@ func summarize(n int, ci gopacket.CaptureInfo, data []byte, lt layers.LinkType) 
 
 	describe(decodePacket(data, lt), &s)
 
-	if len(s.Info) > maxInfoLen {
-		s.Info = s.Info[:maxInfoLen-1] + "…"
-	}
+	s.Info = truncate(s.Info, maxInfoLen)
 
 	return s
 }

@@ -76,3 +76,17 @@ func withSession[T any](configYAML, contextName string, timeout time.Duration, f
 
 	return fn(ctx, s)
 }
+
+// withNodeSession is withSession for a call to one node of the context: node is checked
+// against the context first, and fn gets a context targeting it.
+func withNodeSession[T any](configYAML, contextName, node string, timeout time.Duration, fn func(nodeCtx context.Context, s *session) (T, error)) (T, error) {
+	return withSession(configYAML, contextName, timeout, func(ctx context.Context, s *session) (T, error) {
+		if err := validatePowerTarget(s.context, node); err != nil {
+			var zero T
+
+			return zero, err
+		}
+
+		return fn(client.WithNode(ctx, node), s)
+	})
+}

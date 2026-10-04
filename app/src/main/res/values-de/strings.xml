@@ -69,10 +69,6 @@
     <string name="overview_action_health">Cluster-Zustand</string>
     <string name="overview_action_settings">Einstellungen</string>
     <string name="overview_action_workloads">Kubernetes-Workloads</string>
-    <plurals name="overview_summary_ready">
-        <item quantity="one">bereit</item>
-        <item quantity="other">bereit</item>
-    </plurals>
     <plurals name="overview_summary_not_ready">
         <item quantity="one">nicht bereit</item>
         <item quantity="other">nicht bereit</item>

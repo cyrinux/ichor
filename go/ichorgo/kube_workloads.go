@@ -108,10 +108,6 @@ type appsObject struct {
 	} `json:"status"`
 }
 
-type appsObjectList struct {
-	Items []appsObject `json:"items"`
-}
-
 // KubeWorkloads lists the Deployments, StatefulSets and DaemonSets of every namespace with
 // their rollout state, through the Kubernetes API with the admin kubeconfig Talos issues
 // (os:admin): {"workloads":[{kind,namespace,name,desired,ready,updated,available,state,
@@ -121,16 +117,7 @@ func KubeWorkloads(configYAML, contextName, kubeServer string) (out string, err 
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	if isDemoContext(configYAML, contextName) {
-		return toJSON(kubeWorkloadList{Workloads: demoKubeWorkloads()})
-	}
-
-	list, err := withKube(kubeTarget{configYAML, contextName, kubeServer}, listWorkloads)
-	if err != nil {
-		return "", err
-	}
-
-	return toJSON(list)
+	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, func() kubeWorkloadList { return kubeWorkloadList{Workloads: demoKubeWorkloads()} }, listWorkloads)
 }
 
 func listWorkloads(ctx context.Context, k *kubeClient) (kubeWorkloadList, error) {
@@ -141,7 +128,7 @@ func listWorkloads(ctx context.Context, k *kubeClient) (kubeWorkloadList, error)
 
 	for i, kind := range workloadKinds {
 		wg.Go(func() {
-			var list appsObjectList
+			var list kubeList[appsObject]
 
 			errs[i] = k.get(ctx, "/apis/apps/v1/"+kind.resource, &list)
 			for _, obj := range list.Items {
@@ -272,17 +259,6 @@ func validateKubeName(what, namespace, name string) error {
 	return nil
 }
 
-// kubeMutationError explains an action that got no answer: the API server may have
-// applied it anyway, so a blind retry could do it twice.
-func kubeMutationError(err error) error {
-	var apiErr *kubeAPIError
-	if err == nil || errors.As(err, &apiErr) {
-		return err
-	}
-
-	return fmt.Errorf("%w (it may have been applied: refresh before trying again)", err)
-}
-
 // KubeRolloutRestart restarts the pods of a Deployment, StatefulSet or DaemonSet with a
 // rolling update, like `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin): it
 // stamps the pod template with the restart time and the controller replaces the pods. A
@@ -302,15 +278,9 @@ func KubeRolloutRestart(configYAML, contextName, kubeServer, kind, namespace, na
 		return err
 	}
 
-	if isDemoContext(configYAML, contextName) {
-		return demoUnavailable
-	}
-
-	_, err = withKube(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (struct{}, error) {
-		return struct{}{}, rolloutRestart(ctx, k, wk, namespace, name, time.Now())
+	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
+		return rolloutRestart(ctx, k, wk, namespace, name, time.Now())
 	})
-
-	return kubeMutationError(err)
 }
 
 func rolloutRestart(ctx context.Context, k *kubeClient, wk workloadKind, namespace, name string, now time.Time) error {

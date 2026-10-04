@@ -2,7 +2,6 @@ package name.levis.ichor.ui.backup
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -24,6 +23,7 @@ import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.factory
 import kotlinx.coroutines.launch
 
@@ -50,11 +50,7 @@ fun BackupSection(hasConfig: Boolean, vm: BackupViewModel = viewModel(factory = 
         }
     }
 
-    Text(
-        stringResource(R.string.backup_desc),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    MutedText(stringResource(R.string.backup_desc))
     OutlinedButton(onClick = ::backup, enabled = hasConfig && !busy, modifier = Modifier.fillMaxWidth()) {
         Text(stringResource(R.string.backup_create))
     }

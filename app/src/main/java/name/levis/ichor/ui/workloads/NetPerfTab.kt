@@ -50,6 +50,7 @@ import name.levis.ichor.ui.components.InfoHint
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.KeepScreenOn
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -195,7 +196,7 @@ private fun NetPerfStatus(session: NetPerfSession, onStop: () -> Unit, onReset: 
                 modifier = gutter,
             )
             if (progress?.phase != NETPERF_PHASE_CLEANING) {
-                Text(stringResource(R.string.netperf_keep_open), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = gutter)
+                MutedText(stringResource(R.string.netperf_keep_open), modifier = gutter)
             }
             OutlinedButton(onClick = onStop, enabled = !session.stopping, modifier = gutter.fillMaxWidth()) { Text(stringResource(R.string.netperf_stop)) }
         }

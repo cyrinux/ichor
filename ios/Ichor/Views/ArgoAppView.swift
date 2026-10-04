@@ -55,7 +55,7 @@ struct ArgoAppView: View {
         }
         .navigationTitle(Text(verbatim: name))
         .navigationBarTitleDisplayMode(.inline)
-        .restartResult($message)
+        .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
     }
 
@@ -84,7 +84,7 @@ struct ArgoAppView: View {
             }
         }
         .confirmationDialog(confirmRollback.map { String(localized: "Roll \(app.name) back to \($0.label)?") } ?? "",
-                            isPresented: Binding(get: { confirmRollback != nil }, set: { if !$0 { confirmRollback = nil } }),
+                            isPresented: $confirmRollback.isPresent(),
                             titleVisibility: .visible, presenting: confirmRollback) { entry in
             Button("Roll back", role: .destructive) {
                 Task { await run(.rollback, on: app, options: ArgoSyncOptions(historyId: entry.id)) }

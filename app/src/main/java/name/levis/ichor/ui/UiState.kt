@@ -1,5 +1,7 @@
 package name.levis.ichor.ui
 
+import kotlinx.coroutines.CancellationException
+
 /** Load state for a screen; [Loaded.refreshing] keeps old data visible during pull-to-refresh. */
 sealed interface UiState<out T> {
     data object Loading : UiState<Nothing>
@@ -14,6 +16,15 @@ sealed interface UiState<out T> {
         val error: UiText? = null,
     ) : UiState<T>
     data class Failed(val message: UiText) : UiState<Nothing>
+}
+
+/** [block]'s result as [UiState.Loaded], or [UiState.Failed] when it throws; cancellation propagates. */
+inline fun <T> uiStateOf(block: () -> T): UiState<T> = try {
+    UiState.Loaded(block())
+} catch (e: CancellationException) {
+    throw e
+} catch (e: Throwable) {
+    UiState.Failed(e.uiText())
 }
 
 /**

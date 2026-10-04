@@ -74,7 +74,7 @@ private struct ImageRow: View {
             HStack(spacing: 12) {
                 Text(verbatim: ByteCountFormatter.string(fromByteCount: image.size, countStyle: .file))
                 if image.created > 0 {
-                    Text(Date(timeIntervalSince1970: TimeInterval(image.created) / 1000), format: .dateTime.year().month().day())
+                    Text(Date(epochMillis: image.created), format: .dateTime.year().month().day())
                 }
                 Text(verbatim: shortDigest).font(.caption.monospaced())
             }

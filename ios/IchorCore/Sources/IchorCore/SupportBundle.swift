@@ -100,10 +100,6 @@ public func supportNodesCSV(all: [String], selected: Set<String>) -> String {
 /// "support-<context>-<yyyyMMdd-HHmmss>.zip", safe as a file name whatever the context is
 /// called: runs of other characters become one "-", at most 40 characters of context.
 public func supportBundleFilename(context: String, date: Date, timeZone: TimeZone = .current) -> String {
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.timeZone = timeZone
-    formatter.dateFormat = "yyyyMMdd-HHmmss"
     var safe = ""
     for character in context {
         if isBundleNameCharacter(character) {
@@ -113,7 +109,7 @@ public func supportBundleFilename(context: String, date: Date, timeZone: TimeZon
         }
     }
     let name = String(safe.trimmingCharacters(in: CharacterSet(charactersIn: "-.")).prefix(40))
-    return "support-\(name.isEmpty ? "cluster" : name)-\(formatter.string(from: date)).zip"
+    return "support-\(name.isEmpty ? "cluster" : name)-\(fileTimestamp(date, format: "yyyyMMdd-HHmmss", timeZone: timeZone)).zip"
 }
 
 private func isBundleNameCharacter(_ character: Character) -> Bool {

@@ -8,13 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
@@ -55,9 +51,11 @@ import name.levis.ichor.model.visible
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
@@ -84,7 +82,7 @@ fun NetworkScreen(node: String, hostname: String, onBack: () -> Unit) {
                         Text(hostname, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
@@ -132,11 +130,7 @@ private fun NetworkContent(network: NodeNetwork, showVirtual: Boolean, onShowVir
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.network_show_virtual), style = MaterialTheme.typography.titleSmall)
-                    Text(
-                        pluralStringResource(R.plurals.network_virtual_hidden, hidden, hidden),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    MutedText(pluralStringResource(R.plurals.network_virtual_hidden, hidden, hidden))
                 }
                 Switch(checked = showVirtual, onCheckedChange = onShowVirtual)
             }
@@ -183,7 +177,7 @@ private fun Section(title: String, error: String?, empty: Boolean, content: @Com
             SectionTitle(title)
             when {
                 error != null -> Text(error, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
-                empty -> Text(stringResource(R.string.network_none), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                empty -> MutedText(stringResource(R.string.network_none))
                 else -> content()
             }
         }
@@ -196,11 +190,6 @@ private fun Mono(text: String) {
 }
 
 @Composable
-private fun Muted(text: String) {
-    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-}
-
-@Composable
 private fun LinkRow(link: LinkInfo) {
     val colors = LocalStatusColors.current
     Column(Modifier.padding(vertical = 4.dp)) {
@@ -210,7 +199,7 @@ private fun LinkRow(link: LinkInfo) {
         }
         val kind = link.kind.ifEmpty { link.type }
         val speed = if (link.speedMbit > 0) stringResource(R.string.network_speed_mbit, link.speedMbit) else null
-        Muted(listOfNotNull(kind.ifEmpty { null }, stringResource(R.string.network_mtu, link.mtu.toInt()), speed).joinToString("  ·  "))
+        MutedText(listOfNotNull(kind.ifEmpty { null }, stringResource(R.string.network_mtu, link.mtu.toInt()), speed).joinToString("  ·  "))
         if (link.hardwareAddr.isNotEmpty()) {
             Text(link.hardwareAddr, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -221,7 +210,7 @@ private fun LinkRow(link: LinkInfo) {
 private fun AddressRow(address: AddressInfo) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         Text(address.address, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
-        Muted(listOf(address.link, address.scope).filter { it.isNotEmpty() }.joinToString(" · "))
+        MutedText(listOf(address.link, address.scope).filter { it.isNotEmpty() }.joinToString(" · "))
     }
 }
 
@@ -238,10 +227,10 @@ private fun RouteRow(route: RouteInfo) {
                 color = if (route.isDefault) highlight else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
-            Muted(route.family)
+            MutedText(route.family)
         }
         val via = if (route.gateway.isNotEmpty()) stringResource(R.string.network_via, route.gateway) else null
         val dev = if (route.link.isNotEmpty()) stringResource(R.string.network_dev, route.link) else null
-        Muted(listOfNotNull(via, dev, stringResource(R.string.network_metric, route.metric.toInt())).joinToString("  ·  "))
+        MutedText(listOfNotNull(via, dev, stringResource(R.string.network_metric, route.metric.toInt())).joinToString("  ·  "))
     }
 }

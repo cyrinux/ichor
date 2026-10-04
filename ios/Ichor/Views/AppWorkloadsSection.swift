@@ -19,12 +19,12 @@ struct AppWorkloadsSection: View {
         Section("Workloads") {
             switch state {
             case .loading:
-                note(Text("Finding its workloads…"))
+                Text("Finding its workloads…").note()
             case .failed(let message):
-                note(Text("Could not list its workloads: \(message)"))
+                Text("Could not list its workloads: \(message)").note()
             case .loaded(let workloads, _, _):
                 if workloads.isEmpty {
-                    note(Text("No Deployment, StatefulSet or DaemonSet runs it."))
+                    Text("No Deployment, StatefulSet or DaemonSet runs it.").note()
                 } else {
                     ForEach(workloads) { workload in
                         AppWorkloadLine(workload: workload, restarting: restarting.contains(workload.id)) { confirm = workload }
@@ -38,11 +38,7 @@ struct AppWorkloadsSection: View {
             await load()
         }
         .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
-        .restartResult($resultMessage)
-    }
-
-    private func note(_ text: Text) -> some View {
-        text.font(.callout).foregroundStyle(.secondary)
+        .messageAlert($resultMessage)
     }
 
     private func load() async {

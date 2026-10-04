@@ -150,7 +150,7 @@ struct NodeDetailView: View {
             }
         }
         .confirmationDialog(serviceRequest.map { confirmationTitle($0) } ?? "",
-                            isPresented: Binding(get: { serviceRequest != nil }, set: { if !$0 { serviceRequest = nil } }),
+                            isPresented: $serviceRequest.isPresent(),
                             titleVisibility: .visible,
                             presenting: serviceRequest) { request in
             Button(request.action.localizedTitle, role: request.action == .start ? nil : ButtonRole.destructive) {
@@ -164,7 +164,7 @@ struct NodeDetailView: View {
                 Text(request.action.localizedDetails)
             }
         }
-        .alert(resultMessage ?? "", isPresented: Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })) {
+        .alert(resultMessage ?? "", isPresented: $resultMessage.isPresent()) {
             Button("OK") { if succeeded { dismiss() } }
         }
     }

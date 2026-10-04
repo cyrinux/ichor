@@ -362,7 +362,7 @@ private struct StepRow: View {
                         .foregroundStyle(step.state == .pending ? Color.secondary : Color.primary)
                     Spacer()
                     if step.at > 0 {
-                        Text(Date(timeIntervalSince1970: TimeInterval(step.at) / 1000), format: .dateTime.hour().minute().second())
+                        Text(Date(epochMillis: step.at), format: .dateTime.hour().minute().second())
                             .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
                     }
                 }

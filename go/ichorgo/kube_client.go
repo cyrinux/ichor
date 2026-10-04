@@ -480,6 +480,11 @@ func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
 	return openKubeClient(context.Background(), kubeconfig, endpoints, target.server)
 }
 
+// kubeList is the shape of a Kubernetes list response.
+type kubeList[T any] struct {
+	Items []T `json:"items"`
+}
+
 // withKube runs fn with the context's Kubernetes client, bounded by callTimeout once the
 // client is there. A call that gets no answer or is refused for its credentials drops the
 // client: the next one fetches a fresh kubeconfig and looks for a reachable address again
@@ -521,4 +526,44 @@ func withKubeContext[T any](ctx context.Context, target kubeTarget, fn func(cont
 	}
 
 	return out, nil
+}
+
+// kubeReadJSON reads with fn (demo() in the demo inventory) and returns the result as JSON.
+// target.context is the unmasked context name.
+func kubeReadJSON[T any](target kubeTarget, demo func() T, fn func(context.Context, *kubeClient) (T, error)) (string, error) {
+	if isDemoContext(target.config, target.context) {
+		return toJSON(demo())
+	}
+
+	res, err := withKube(target, fn)
+	if err != nil {
+		return "", err
+	}
+
+	return toJSON(res)
+}
+
+// kubeMutate runs the action fn, refused in the demo inventory. target.context is the
+// unmasked context name.
+func kubeMutate(target kubeTarget, fn func(context.Context, *kubeClient) error) error {
+	if isDemoContext(target.config, target.context) {
+		return demoUnavailable
+	}
+
+	_, err := withKube(target, func(ctx context.Context, k *kubeClient) (struct{}, error) {
+		return struct{}{}, fn(ctx, k)
+	})
+
+	return kubeMutationError(err)
+}
+
+// kubeMutationError explains an action that got no answer: the API server may have
+// applied it anyway, so a blind retry could do it twice.
+func kubeMutationError(err error) error {
+	var apiErr *kubeAPIError
+	if err == nil || errors.As(err, &apiErr) {
+		return err
+	}
+
+	return fmt.Errorf("%w (it may have been applied: refresh before trying again)", err)
 }

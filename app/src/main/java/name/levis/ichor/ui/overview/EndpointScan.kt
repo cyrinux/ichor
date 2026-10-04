@@ -46,6 +46,7 @@ import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.scanNetworks
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.userMessage
 
@@ -177,18 +178,10 @@ private fun ScanResult(s: EndpointScanState.Done, labelOf: (String) -> String) {
                 style = MaterialTheme.typography.bodyMedium,
                 fontFamily = FontFamily.Monospace,
             )
-            Text(
-                stringResource(R.string.endpoint_scan_added_to, match.contexts.joinToString(", ") { labelOf(it) }),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(R.string.endpoint_scan_added_to, match.contexts.joinToString(", ") { labelOf(it) }))
         }
     }
-    Text(
-        stringResource(R.string.endpoint_scan_discovery_hint),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    MutedText(stringResource(R.string.endpoint_scan_discovery_hint))
 }
 
 @Composable

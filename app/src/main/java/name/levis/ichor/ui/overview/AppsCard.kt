@@ -31,6 +31,7 @@ import name.levis.ichor.model.overviewTiles
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.apps.AppIconPlaceholder
 import name.levis.ichor.ui.apps.AppIconTile
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -84,7 +85,7 @@ private fun AppsCardFrame(subtitle: String?, attention: Int, onOpen: () -> Unit,
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.apps_title), style = MaterialTheme.typography.titleMedium)
                     if (subtitle != null) {
-                        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        MutedText(subtitle)
                     }
                 }
                 if (attention > 0) {

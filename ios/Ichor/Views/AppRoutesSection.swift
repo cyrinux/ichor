@@ -21,18 +21,14 @@ struct AppRoutesSection: View {
     @ViewBuilder private var content: some View {
         switch state {
         case .loading:
-            Section("Web access") { note(Text("Finding its addresses…")) }
+            Section("Web access") { Text("Finding its addresses…").note() }
         case .failed(let message):
-            Section("Web access") { note(Text("Could not find its addresses: \(message)")) }
+            Section("Web access") { Text("Could not find its addresses: \(message)").note() }
         case .loaded(let routes, _, _):
             if !routes.isEmpty {
                 Section("Web access") { ForEach(routes) { AppRouteLine(route: $0) } }
             }
         }
-    }
-
-    private func note(_ text: Text) -> some View {
-        text.font(.callout).foregroundStyle(.secondary)
     }
 
     private func load() async {

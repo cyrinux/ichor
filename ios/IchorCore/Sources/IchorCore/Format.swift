@@ -25,6 +25,27 @@ public func formatDuration(_ seconds: Int64) -> String {
     return "\(minutes)m"
 }
 
+public extension Optional where Wrapped == String {
+    /// The string, or nil when it is nil or empty.
+    var nonEmpty: String? { flatMap { $0.isEmpty ? nil : $0 } }
+}
+
+public extension Date {
+    /// A Unix-milliseconds instant.
+    init(epochMillis: Int64) {
+        self.init(timeIntervalSince1970: TimeInterval(epochMillis) / 1000)
+    }
+}
+
+/// `date` as `format` in `timeZone`, with the POSIX locale so file names never vary by region.
+func fileTimestamp(_ date: Date, format: String, timeZone: TimeZone) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = timeZone
+    formatter.dateFormat = format
+    return formatter.string(from: date)
+}
+
 /// Fraction used in [0, 1]; 0 when total is unknown.
 public func usedFraction(total: UInt64, available: UInt64) -> Double {
     guard total > 0 else { return 0 }

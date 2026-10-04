@@ -39,10 +39,10 @@ import name.levis.ichor.model.formatMicros
 import name.levis.ichor.model.latestBetween
 import name.levis.ichor.model.pickNode
 import name.levis.ichor.model.podThroughputMbps
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.workloads.netPerfViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.DateFormat
-import java.util.Date
 import name.levis.ichor.model.TopologyLinkSide
 import name.levis.ichor.model.TopologyNode
 import name.levis.ichor.model.isBroken
@@ -51,6 +51,7 @@ import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
+import name.levis.ichor.util.formatDateTime
 
 class TopologyViewModel(private val talos: TalosRepository) : LoadingViewModel<ClusterTopology>() {
     override val keepsDataOnFailure = true
@@ -122,11 +123,7 @@ fun TopologyContent(topology: ClusterTopology, onNode: (TopologyNode) -> Unit) {
             item { TopologyLegend() }
             if (topology.nodes.any { !it.queried }) {
                 item {
-                    Text(
-                        stringResource(R.string.topology_not_queried),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    MutedText(stringResource(R.string.topology_not_queried))
                 }
             }
         }
@@ -176,11 +173,7 @@ private fun LinkDetails(
             LinkSideRow(side, names)
         }
         if (link.sides.size < 2) {
-            Text(
-                stringResource(R.string.topology_link_one_side),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(R.string.topology_link_one_side))
         }
         test?.let {
             HorizontalDivider()
@@ -210,7 +203,7 @@ private fun LinkTest(test: NetPerfReport) {
             style = MaterialTheme.typography.bodySmall,
         )
         Text(
-            DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(test.started)),
+            formatDateTime(test.started, DateFormat.SHORT),
             style = MaterialTheme.typography.bodySmall,
             color = muted,
         )
@@ -240,10 +233,6 @@ private fun LinkSideRow(side: TopologyLinkSide, names: Map<String, String>) {
         val handshake = side.lastHandshake.takeIf { it > 0 }?.let {
             stringResource(R.string.kubespan_handshake_ago, localizedDuration(now - it))
         }
-        Text(
-            listOfNotNull(handshake, "↓ ${formatBytes(side.rx)} ↑ ${formatBytes(side.tx)}").joinToString("  ·  "),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        MutedText(listOfNotNull(handshake, "↓ ${formatBytes(side.rx)} ↑ ${formatBytes(side.tx)}").joinToString("  ·  "))
     }
 }

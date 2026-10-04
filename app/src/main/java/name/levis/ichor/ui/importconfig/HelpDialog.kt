@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.launch
+import name.levis.ichor.ui.components.MutedText
 
 /** What each Talos role unlocks in this app (rules from Talos v1.14). */
 private enum class PhoneRole(@StringRes val label: Int, val role: String, @StringRes val unlocks: Int) {
@@ -85,7 +86,7 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
                         }
                     }
                 }
-                Text(stringResource(role.unlocks), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                MutedText(stringResource(role.unlocks))
 
                 Step(stringResource(R.string.help_step1))
                 Command("talosctl -n <control-plane-ip> config new talosconfig-phone --roles ${role.role} --crt-ttl 8760h")
@@ -95,11 +96,7 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
                 Command("adb push talosconfig-phone /sdcard/Download/")
                 Step(stringResource(R.string.help_step_qr))
                 Command("qrencode -t ansiutf8 -r talosconfig-phone")
-                Text(
-                    stringResource(R.string.help_cleanup),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.help_cleanup))
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.help_got_it)) } },

@@ -11,11 +11,7 @@ public func defaultSnapshotMember(_ statuses: [EtcdNodeStatus]) -> EtcdNodeStatu
 /// file names replaced by "-".
 public func etcdSnapshotFilename(context: String, hostname: String, date: Date,
                                  timeZone: TimeZone = .current) -> String {
-    let formatter = DateFormatter()
-    formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.timeZone = timeZone
-    formatter.dateFormat = "yyyyMMdd-HHmm"
-    return "etcd-\(fileSafe(context))-\(fileSafe(hostname))-\(formatter.string(from: date)).snapshot"
+    return "etcd-\(fileSafe(context))-\(fileSafe(hostname))-\(fileTimestamp(date, format: "yyyyMMdd-HHmm", timeZone: timeZone)).snapshot"
 }
 
 private func fileSafe(_ text: String) -> String {

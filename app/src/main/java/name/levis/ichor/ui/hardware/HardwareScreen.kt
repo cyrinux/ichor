@@ -8,13 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -48,10 +44,12 @@ import name.levis.ichor.model.totalMemoryBytes
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
@@ -87,7 +85,7 @@ fun HardwareScreen(
                         Text(hostname, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
@@ -156,16 +154,11 @@ private fun Section(title: String, error: String?, empty: Boolean, content: @Com
             SectionTitle(title)
             when {
                 error != null -> Text(error, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall)
-                empty -> Muted(stringResource(R.string.hardware_none))
+                empty -> MutedText(stringResource(R.string.hardware_none))
                 else -> content()
             }
         }
     }
-}
-
-@Composable
-private fun Muted(text: String) {
-    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /** Versions longer than this (e.g. the schematic's 64-char hash) get their own line instead of squeezing the name. */
@@ -184,7 +177,7 @@ private fun ExtensionRow(ext: ExtensionInfo) {
         if (!inlineVersion) {
             Text(ext.version, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        if (ext.description.isNotBlank()) Muted(ext.description)
+        if (ext.description.isNotBlank()) MutedText(ext.description)
     }
 }
 
@@ -214,7 +207,7 @@ private fun ProcessorRow(cpu: ProcessorInfo) {
             fontWeight = FontWeight.Bold,
         )
         val speed = if (cpu.maxSpeedMhz > 0) stringResource(R.string.hardware_mhz, cpu.maxSpeedMhz) else null
-        Muted(
+        MutedText(
             listOfNotNull(
                 cpu.socket.ifBlank { null },
                 stringResource(R.string.hardware_cores_threads, cpu.cores, cpu.threads),
@@ -230,7 +223,7 @@ private fun MemoryRow(m: MemoryModule) {
         Column(Modifier.weight(1f)) {
             Text(m.slot.ifBlank { m.bank }, style = MaterialTheme.typography.bodyMedium)
             val speed = if (m.speed > 0) stringResource(R.string.hardware_mts, m.speed) else null
-            Muted(listOfNotNull(m.manufacturer.ifBlank { null }, m.type.ifBlank { null }, speed).joinToString("  ·  "))
+            MutedText(listOfNotNull(m.manufacturer.ifBlank { null }, m.type.ifBlank { null }, speed).joinToString("  ·  "))
         }
         Text(formatBytes(m.sizeMib * 1024 * 1024), style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
     }
@@ -252,7 +245,7 @@ private fun DiskRow(d: DiskInfo) {
                 textAlign = TextAlign.End,
             )
         }
-        Muted(listOf(d.type.uppercase(), d.model).filter { it.isNotBlank() }.joinToString("  ·  "))
+        MutedText(listOf(d.type.uppercase(), d.model).filter { it.isNotBlank() }.joinToString("  ·  "))
         if (d.serial.isNotBlank()) Text(d.serial, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

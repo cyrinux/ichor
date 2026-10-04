@@ -34,6 +34,7 @@ import name.levis.ichor.BuildConfig
 import name.levis.ichor.data.REPO_URL_BASE
 import name.levis.ichor.data.SPONSOR_URL
 import name.levis.ichor.data.TALOS_URL
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 
 private const val LICENSE_PATH = "/blob/main/LICENSE"
@@ -62,16 +63,12 @@ fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit, onFunding: () 
                 DonationRow(Donation.Bitcoin) { donating = Donation.Bitcoin }
                 DonationRow(Donation.Ethereum) { donating = Donation.Ethereum }
             }
-            Text(
+            MutedText(
                 stringResource(R.string.about_icon_credits),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
-            Text(
+            MutedText(
                 stringResource(R.string.about_disclaimer),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }

@@ -10,14 +10,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -51,12 +46,15 @@ import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.shortRevision
 import name.levis.ichor.model.waveSteps
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.ui.dataservices.EmptyLine
 import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
@@ -89,7 +87,7 @@ fun ArgoAppScreen(namespace: String, name: String, onBack: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text(name) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
                 actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
             )
         },
@@ -101,7 +99,7 @@ fun ArgoAppScreen(namespace: String, name: String, onBack: () -> Unit) {
             is UiState.Loaded -> Column(modifier.fillMaxSize()) {
                 PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
                     if (app == null) {
-                        EmptyLine(stringResource(R.string.argo_app_gone, name))
+                        EmptyText(stringResource(R.string.argo_app_gone, name))
                     } else {
                         val downNodes = remember(s.data) {
                             talos.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
@@ -220,11 +218,7 @@ private fun LazyListScope.history(app: ArgoApp, onRollback: (ArgoHistory) -> Uni
                 else -> null
             }
             if (!app.canRollback && app.history.size > 1 && rollbackHint != null) {
-                Text(
-                    stringResource(rollbackHint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(rollbackHint))
             }
         }
     }
@@ -241,15 +235,4 @@ private fun WavesHeader(selecting: Boolean, count: Int, onSelecting: (Boolean) -
             TextButton(onClick = { onSelecting(true) }, enabled = enabled) { Text(stringResource(R.string.argo_select)) }
         }
     }
-}
-
-@Composable
-private fun ConfirmDialog(title: String, text: String, confirm: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = { Text(text) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(confirm) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
-    )
 }

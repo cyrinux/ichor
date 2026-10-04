@@ -71,11 +71,7 @@ func NodeDiskHealth(configYAML, contextName, node string) (out string, err error
 		return demoRead("NodeDiskHealth", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		known, err := s.hasResourceType(ctx, node, smartStatusType)
 		if err != nil {
 			return "", errors.New(s.friendly(node, err))
@@ -85,9 +81,7 @@ func NodeDiskHealth(configYAML, contextName, node string) (out string, err error
 			return toJSON(diskHealth{Reason: unsupportedSMARTReason(s.nodeVersion(ctx, node)), Disks: []diskSMART{}})
 		}
 
-		nodeCtx := withNode(ctx, node)
-
-		list, err := s.client.COSI.List(nodeCtx, resource.NewMetadata(block.NamespaceName, smartStatusType, "", resource.VersionUndefined))
+		list, err := s.client.COSI.List(ctx, resource.NewMetadata(block.NamespaceName, smartStatusType, "", resource.VersionUndefined))
 		if err != nil {
 			return "", errors.New(s.friendly(node, err))
 		}
@@ -106,7 +100,7 @@ func NodeDiskHealth(configYAML, contextName, node string) (out string, err error
 		// Model and serial come from the disk resources; without them the SMART data still shows.
 		var disks []diskInfo
 
-		if cosiDisks, err := safe.StateListAll[*block.Disk](nodeCtx, s.client.COSI); err == nil {
+		if cosiDisks, err := safe.StateListAll[*block.Disk](ctx, s.client.COSI); err == nil {
 			disks = mapBlockDisks(safe.ToSlice(cosiDisks, identity))
 		}
 

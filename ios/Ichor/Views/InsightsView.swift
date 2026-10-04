@@ -23,7 +23,7 @@ private struct InsightsContent: View {
         _session = State(initialValue: InsightsSession(cluster: cluster, storageScope: storageScope))
     }
     private func time(_ at: Int64) -> String {
-        Date(timeIntervalSince1970: Double(at) / 1000).formatted(date: .abbreviated, time: .standard)
+        Date(epochMillis: at).formatted(date: .abbreviated, time: .standard)
     }
     private var picker: some View {
         Picker("Cluster insights", selection: $tab) {

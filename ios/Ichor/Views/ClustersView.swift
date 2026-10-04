@@ -102,7 +102,7 @@ struct ClustersView: View {
         .navigationTitle("Clusters")
         .confirmationDialog(
             removing.map { String(localized: "Remove \(model.labels.of($0))?") } ?? "",
-            isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
+            isPresented: $removing.isPresent(),
             titleVisibility: .visible,
             presenting: removing
         ) { context in
@@ -112,7 +112,7 @@ struct ClustersView: View {
         }
         .alert(
             renaming.map { String(localized: "Rename \(model.labels.of($0))") } ?? "",
-            isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } }),
+            isPresented: $renaming.isPresent(),
             presenting: renaming
         ) { context in
             TextField(context.name, text: $newName)

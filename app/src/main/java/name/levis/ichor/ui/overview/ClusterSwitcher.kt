@@ -82,6 +82,7 @@ import name.levis.ichor.model.hueOf
 import name.levis.ichor.model.seedFromHue
 import name.levis.ichor.model.seedOf
 import name.levis.ichor.monitor.CERT_WARN_DAYS
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.importconfig.certExpiry
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.daysUntil
@@ -264,17 +265,13 @@ fun ClusterSheet(
                     onEndpoints = onEndpoints?.let { edit -> { edit(context) } }?.takeIf { !labels.masked && !context.demo },
                 )
             }
-            Text(
+            MutedText(
                 stringResource(R.string.clusters_vpn_only_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
             )
             if (contexts.size > 1) {
-                Text(
+                MutedText(
                     stringResource(R.string.clusters_swipe_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
                 )
             }

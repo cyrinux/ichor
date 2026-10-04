@@ -28,23 +28,23 @@ struct AppArgoSection: View {
                 }
             }
             .confirmationDialog(confirmSync.map { String(localized: "Sync \($0.name)?") } ?? "",
-                                isPresented: Binding(get: { confirmSync != nil }, set: { if !$0 { confirmSync = nil } }),
+                                isPresented: $confirmSync.isPresent(),
                                 titleVisibility: .visible, presenting: confirmSync) { target in
                 Button("Sync") { Task { await run(.sync, on: target, options: ArgoSyncOptions(defaultsFor: target)) } }
                 Button("Cancel", role: .cancel) {}
             } message: { target in
                 Text("\(target.name) syncs to \(target.sources.first?.targetRevision ?? target.revision) with its own sync options. Nothing is pruned.")
             }
-            .restartResult($message)
+            .messageAlert($message)
             .sensoryFeedback(.success, trigger: succeeded)
     }
 
     @ViewBuilder private var content: some View {
         switch state {
         case .loading:
-            Section { note(Text("Reading Argo CD…")) } header: { Text(verbatim: "Argo CD") }
+            Section { Text("Reading Argo CD…").note() } header: { Text(verbatim: "Argo CD") }
         case .failed(let error):
-            Section { note(Text("Could not read: \(error)")) } header: { Text(verbatim: "Argo CD") }
+            Section { Text("Could not read: \(error)").note() } header: { Text(verbatim: "Argo CD") }
         case .loaded(let status, _, _):
             if app.id == argoCDCatalogID {
                 summary(status)
@@ -140,10 +140,6 @@ struct AppArgoSection: View {
             .controlSize(.small)
         }
         .padding(.vertical, 2)
-    }
-
-    private func note(_ text: Text) -> some View {
-        text.font(.callout).foregroundStyle(.secondary)
     }
 
     private func load() async {

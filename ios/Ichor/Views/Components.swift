@@ -140,6 +140,27 @@ struct ThemedBackground: ViewModifier {
 
 extension View {
     func themedBackground() -> some View { modifier(ThemedBackground()) }
+
+    /// An alert titled with `message` (how an action ended, or why it could not), until dismissed.
+    func messageAlert(_ message: Binding<String?>) -> some View {
+        alert(message.wrappedValue ?? "", isPresented: message.isPresent()) {
+            Button("OK") {}
+        }
+    }
+}
+
+extension Text {
+    /// A secondary line in a section: loading, empty or failed.
+    func note() -> some View {
+        font(.callout).foregroundStyle(.secondary)
+    }
+}
+
+extension Binding {
+    /// True while the optional holds a value; set to false (a dismissed alert or dialog), it clears it.
+    func isPresent<Wrapped>() -> Binding<Bool> where Value == Wrapped? {
+        Binding<Bool>(get: { wrappedValue != nil }, set: { if !$0 { wrappedValue = nil } })
+    }
 }
 
 /// "Updated 15:42:10 · 2 min ago", re-rendered every 15 s so the age stays true. After a

@@ -84,7 +84,7 @@ struct EtcdView: View {
             Text("Disarming does not fix the cause. For a NOSPACE alarm, free disk space and defragment first, or the alarm comes back. Once disarmed, etcd accepts writes again.")
         }
         .confirmationDialog(Text("Forfeit leadership?"),
-                            isPresented: Binding(get: { forfeit != nil }, set: { if !$0 { forfeit = nil } }),
+                            isPresented: $forfeit.isPresent(),
                             titleVisibility: .visible, presenting: forfeit) { leader in
             Button("Forfeit leadership", role: .destructive) { Task { await forfeitLeadership(leader) } }
         } message: { leader in

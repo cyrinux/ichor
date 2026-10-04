@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.overview
 
 import name.levis.ichor.BuildConfig
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.rememberClusterLabels
 import android.widget.Toast
 import androidx.compose.ui.res.pluralStringResource
@@ -584,17 +585,11 @@ private fun NodeRow(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> 
             }
             // No longer answering: what it was when it last did, dimmed.
             node.lastSeen?.let { seen ->
-                Text(
+                MutedText(
                     listOf(roleLabel(node.role), node.version, node.arch).filter { it.isNotBlank() }.joinToString("  ·  "),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp),
                 )
-                Text(
-                    stringResource(R.string.overview_node_last_seen, agoLabel(System.currentTimeMillis() - seen)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.overview_node_last_seen, agoLabel(System.currentTimeMillis() - seen)))
             }
             node.unmetConditions.forEach {
                 Text(
@@ -642,11 +637,7 @@ private fun CertificateBanner(summary: ContextSummary, onIssueConfig: () -> Unit
     val content: @Composable () -> Unit = {
         Column(Modifier.padding(16.dp)) {
             Text(text, style = MaterialTheme.typography.bodyMedium, color = color)
-            Text(
-                stringResource(if (canRenew) R.string.overview_cert_renew else R.string.overview_cert_ask_admin),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(if (canRenew) R.string.overview_cert_renew else R.string.overview_cert_ask_admin))
         }
     }
     if (canRenew) Card(onClick = onIssueConfig, modifier = Modifier.fillMaxWidth()) { content() }
@@ -699,11 +690,7 @@ private fun SupportCard(onFunding: () -> Unit) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(R.string.overview_support_title), style = MaterialTheme.typography.titleSmall)
-            Text(
-                stringResource(R.string.overview_support_body),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(R.string.overview_support_body))
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = prompt::never) { Text(stringResource(R.string.overview_support_never)) }
                 TextButton(onClick = prompt::later) { Text(stringResource(R.string.overview_support_later)) }

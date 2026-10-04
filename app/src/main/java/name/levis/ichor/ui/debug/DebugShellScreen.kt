@@ -16,13 +16,9 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -50,6 +46,7 @@ import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import org.connectbot.terminal.Terminal
@@ -91,10 +88,10 @@ fun DebugShellScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
+                    BackButton(onClick = {
                         vm.stop()
                         onBack()
-                    }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) }
+                    })
                 },
                 actions = {
                     if (state is ShellState.Running || state is ShellState.Starting) {

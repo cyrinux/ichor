@@ -8,12 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -62,9 +58,11 @@ import name.levis.ichor.model.usedFraction
 import name.levis.ichor.model.versionNotice
 import name.levis.ichor.model.shortList
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.Section
 import name.levis.ichor.ui.components.SectionBody
 import name.levis.ichor.ui.components.SectionTitle
@@ -156,7 +154,7 @@ fun StorageScreen(
                         Text(hostname, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
@@ -270,7 +268,7 @@ private fun VolumeRow(v: Volume) {
     Column {
         Row {
             Text(v.id, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            Text(v.phase, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            MutedText(v.phase)
         }
         val facts = listOfNotNull(
             v.type.takeIf { it.isNotBlank() },
@@ -278,7 +276,7 @@ private fun VolumeRow(v: Volume) {
             v.size.takeIf { it > 0 }?.let(::formatBytes),
         )
         if (facts.isNotEmpty()) {
-            Text(facts.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            MutedText(facts.joinToString(" · "))
         }
         if (v.location.isNotBlank()) InfoRow(stringResource(R.string.storage_volume_location), v.location, mono = true)
         if (v.mountedOn.isNotBlank()) InfoRow(stringResource(R.string.storage_volume_mounted), v.mountedOn, mono = true)

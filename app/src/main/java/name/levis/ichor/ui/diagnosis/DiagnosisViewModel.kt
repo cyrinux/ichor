@@ -2,7 +2,6 @@ package name.levis.ichor.ui.diagnosis
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,12 +9,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import name.levis.ichor.ui.uiStateOf
 import name.levis.ichorgo.Diagnosis
 import name.levis.ichor.data.AiPreferences
 import name.levis.ichor.data.AnswerEvent
 import name.levis.ichor.data.DiagnosisRepository
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.userMessage
 
 /** The collected report: [text] is exactly what would be sent. */
@@ -64,13 +63,9 @@ class DiagnosisViewModel(
         _answer.value = AnswerState()
         _report.value = UiState.Loading
         collectJob = viewModelScope.launch {
-            _report.value = try {
+            _report.value = uiStateOf {
                 val diagnosis = repository.collect(anonymize)
-                UiState.Loaded(Report(diagnosis, diagnosis.report(), diagnosis.anonymized()))
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                UiState.Failed(e.uiText())
+                Report(diagnosis, diagnosis.report(), diagnosis.anonymized())
             }
         }
     }

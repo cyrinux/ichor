@@ -39,10 +39,6 @@ type ingressObject struct {
 	} `json:"status"`
 }
 
-type ingressList struct {
-	Items []ingressObject `json:"items"`
-}
-
 // ingressRoutes lists a URL per host and path of the Ingresses sending traffic to one of
 // services. A rule without host, or the default backend, is reached at the load balancer
 // address the controller reports.

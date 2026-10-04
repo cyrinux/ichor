@@ -1,7 +1,5 @@
 package name.levis.ichor.ui.issueconfig
 
-import android.content.Context
-import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,7 +16,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -29,7 +26,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
@@ -73,19 +69,20 @@ import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.SecureWhile
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
-import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.InfoRow
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.RoleNotice
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.writeText
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.importconfig.certExpiry
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
-import java.text.DateFormat
-import java.util.Date
+import name.levis.ichor.util.formatDate
 
 /**
  * Issues a talosconfig (os:admin): renews this context's certificate in place, or creates
@@ -142,7 +139,7 @@ fun IssueConfigScreen(
                         summary?.let { Text(it.name, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace) }
                     }
                 },
-                navigationIcon = { IconButton(onClick = ::leave) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(::leave) },
             )
         },
     ) { padding ->
@@ -231,11 +228,7 @@ private fun IssueFormContent(
             FilterChip(selected = form.validity == v, onClick = { vm.setValidity(v) }, label = { Text(stringResource(v.label)) })
         }
     }
-    Text(
-        stringResource(R.string.issue_valid_until, formatDate(form.validity.expiresAt(System.currentTimeMillis()))),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    MutedText(stringResource(R.string.issue_valid_until, formatDate(form.validity.expiresAt(System.currentTimeMillis()))))
 
     (state as? IssueState.Failed)?.let {
         Text(it.message.asString(), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium)
@@ -262,7 +255,7 @@ private fun ModeOption(selected: Boolean, title: String, description: String, on
             RadioButton(selected = selected, onClick = null)
             Column(Modifier.padding(start = 12.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium)
-                Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                MutedText(description)
             }
         }
     }
@@ -277,7 +270,7 @@ private fun RoleOption(role: String, checked: Boolean, onToggle: () -> Unit) {
         Checkbox(checked = checked, onCheckedChange = null, modifier = Modifier.padding(end = 12.dp))
         Column {
             Text(role, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
-            Text(stringResource(roleDescription(role)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            MutedText(stringResource(roleDescription(role)))
         }
     }
 }
@@ -347,7 +340,7 @@ private fun IssuedContent(state: IssueState.Issued, onDone: () -> Unit) {
     val saver = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/yaml")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         scope.launch {
-            save = runCatching { withContext(Dispatchers.IO) { writeText(context, uri, state.yaml) } }.fold(
+            save = runCatching { withContext(Dispatchers.IO) { writeText(context, uri, state.yaml, R.string.issue_open_failed) } }.fold(
                 onSuccess = { SaveState.Saved },
                 onFailure = { SaveState.Failed(it.uiText()) },
             )
@@ -368,7 +361,7 @@ private fun IssuedContent(state: IssueState.Issued, onDone: () -> Unit) {
             contentDescription = stringResource(R.string.issue_qr_description),
             onTooLarge = { TooLargeForQr(state.size) },
         )
-        Text(stringResource(R.string.issue_qr_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        MutedText(stringResource(R.string.issue_qr_hint))
     } else {
         TooLargeForQr(state.size)
     }
@@ -381,7 +374,7 @@ private fun IssuedContent(state: IssueState.Issued, onDone: () -> Unit) {
         is SaveState.Failed -> Text(s.message.asString(), color = bad, style = MaterialTheme.typography.bodySmall)
         SaveState.Idle -> Unit
     }
-    Text(stringResource(R.string.issue_memory_only), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    MutedText(stringResource(R.string.issue_memory_only))
     Button(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.issue_done)) }
 }
 
@@ -392,12 +385,4 @@ private fun TooLargeForQr(size: Int) {
         color = LocalStatusColors.current.warn,
         style = MaterialTheme.typography.bodyMedium,
     )
-}
-
-private fun formatDate(epochMillis: Long): String = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(epochMillis))
-
-private fun writeText(context: Context, uri: Uri, text: String) {
-    // "wt" truncates when the user picked an existing file.
-    val stream = context.contentResolver.openOutputStream(uri, "wt") ?: throw LocalizedException(UiText.Res(R.string.issue_open_failed))
-    stream.use { it.write(text.encodeToByteArray()) }
 }

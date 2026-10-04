@@ -3,6 +3,8 @@ package ichorgo
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -68,9 +70,7 @@ func UpdateIncident(previousJSON, observationJSON, eventsJSON string) (out strin
 			return
 		}
 		seen[e.ID] = true
-		if len(e.Detail) > incidentDetailLimit {
-			e.Detail = strings.ToValidUTF8(e.Detail[:incidentDetailLimit], "") + "…"
-		}
+		e.Detail = clipUTF8(e.Detail, incidentDetailLimit)
 		doc.Entries = append(doc.Entries, e)
 	}
 	previous := map[string]observedNode{}
@@ -205,34 +205,28 @@ func incidentMetrics(rates bottlenecks) (bottlenecks, int) {
 		}
 		out := append([]deviceRate{}, devices...)
 		for i := range out {
-			if len(out[i].Name) > 128 {
-				out[i].Name = strings.ToValidUTF8(out[i].Name[:128], "") + "…"
-			}
+			out[i].Name = clipUTF8(out[i].Name, 128)
 		}
 		return out
 	}
 	rates.Network = clip(rates.Network)
 	rates.Disks = clip(rates.Disks)
 	errors := map[string]string{}
-	keys := make([]string, 0, len(rates.Errors))
-	for key := range rates.Errors {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	for i, key := range keys {
+	for i, key := range slices.Sorted(maps.Keys(rates.Errors)) {
 		if i >= limit {
 			omitted++
 			continue
 		}
-		value := rates.Errors[key]
-		if len(value) > 256 {
-			value = strings.ToValidUTF8(value[:256], "") + "…"
-		}
-		if len(key) > 128 {
-			key = strings.ToValidUTF8(key[:128], "") + "…"
-		}
-		errors[key] = value
+		errors[clipUTF8(key, 128)] = clipUTF8(rates.Errors[key], 256)
 	}
 	rates.Errors = errors
 	return rates, omitted
+}
+
+// clipUTF8 cuts s to n bytes plus an ellipsis, dropping a rune split by the cut.
+func clipUTF8(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return strings.ToValidUTF8(s[:n], "") + "…"
 }

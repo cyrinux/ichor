@@ -51,14 +51,16 @@ import name.levis.ichor.data.SnapshotEvent
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.VersionNotice
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.InfoNotice
+import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.openTruncating
 import name.levis.ichor.ui.components.text
 import name.levis.ichor.model.snapshotCandidates
 import name.levis.ichor.model.snapshotFileName
 import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
-import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -152,10 +154,7 @@ class EtcdSnapshotViewModel(private val talos: TalosRepository, private val app:
     }
 
     private fun copyToDocument(source: File, uri: Uri) {
-        // "wt" truncates when the user picked an existing file.
-        val out = app.contentResolver.openOutputStream(uri, "wt")
-            ?: throw LocalizedException(UiText.Res(R.string.etcd_snapshot_open_failed))
-        out.use { stream -> source.inputStream().use { it.copyTo(stream) } }
+        openTruncating(app, uri, R.string.etcd_snapshot_open_failed).use { stream -> source.inputStream().use { it.copyTo(stream) } }
     }
 
     private companion object {
@@ -213,12 +212,12 @@ fun rememberSnapshotFlow(vm: EtcdSnapshotViewModel, contextName: String): (EtcdO
         )
     }
     warning?.let { target ->
-        AlertDialog(
-            onDismissRequest = { warning = null },
-            title = { Text(stringResource(R.string.etcd_snapshot_warning_title)) },
-            text = { Text(stringResource(R.string.etcd_snapshot_warning_body, target.hostname)) },
-            confirmButton = { TextButton(onClick = { accepted(target) }) { Text(stringResource(R.string.etcd_snapshot_continue)) } },
-            dismissButton = { TextButton(onClick = { warning = null }) { Text(stringResource(R.string.common_cancel)) } },
+        ConfirmDialog(
+            title = stringResource(R.string.etcd_snapshot_warning_title),
+            text = stringResource(R.string.etcd_snapshot_warning_body, target.hostname),
+            confirm = stringResource(R.string.etcd_snapshot_continue),
+            onConfirm = { accepted(target) },
+            onDismiss = { warning = null },
         )
     }
 
@@ -270,11 +269,7 @@ fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit
             Text(stringResource(R.string.etcd_snapshot_title), style = MaterialTheme.typography.titleSmall)
             when (state) {
                 SnapshotState.Idle -> {
-                    Text(
-                        stringResource(R.string.etcd_snapshot_explainer),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    MutedText(stringResource(R.string.etcd_snapshot_explainer))
                     OutlinedButton(onClick = onSave, enabled = notice == null, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.etcd_snapshot_save))
                     }

@@ -15,6 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
+import java.io.OutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -68,8 +69,17 @@ fun rememberSaveFile(mime: String, @StringRes saved: Int, @StringRes failed: Int
 }
 
 private fun copyToDocument(context: Context, source: File, uri: Uri) {
-    // "wt" truncates when the user picked an existing file.
-    val out = context.contentResolver.openOutputStream(uri, "wt")
-        ?: throw LocalizedException(UiText.Res(R.string.capture_open_failed))
-    out.use { stream -> source.inputStream().use { it.copyTo(stream) } }
+    openTruncating(context, uri, R.string.capture_open_failed).use { stream -> source.inputStream().use { it.copyTo(stream) } }
+}
+
+/**
+ * Opens a document picked with the system file picker for writing, truncated ("wt") when the
+ * user picked an existing file; throws [failed] when it cannot be opened.
+ */
+fun openTruncating(context: Context, uri: Uri, @StringRes failed: Int): OutputStream =
+    context.contentResolver.openOutputStream(uri, "wt") ?: throw LocalizedException(UiText.Res(failed))
+
+/** Writes [text] (UTF-8) to a picked document, see [openTruncating]. Blocking. */
+fun writeText(context: Context, uri: Uri, text: String, @StringRes failed: Int) {
+    openTruncating(context, uri, failed).use { it.write(text.encodeToByteArray()) }
 }

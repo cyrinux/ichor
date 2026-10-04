@@ -531,7 +531,7 @@ func compactDuration(secs int64) string {
 
 // garageProxyHealth asks /health on the admin port through the API server's service proxy.
 func garageProxyHealth(ctx context.Context, k *kubeClient, g garageGroup) (string, string) {
-	var services lhList[struct {
+	var services kubeList[struct {
 		Metadata struct {
 			Name string `json:"name"`
 		} `json:"metadata"`
@@ -551,7 +551,7 @@ func garageProxyHealth(ctx context.Context, k *kubeClient, g garageGroup) (strin
 	labels := g.pods[0].Metadata.Labels
 
 	for _, s := range services.Items {
-		if len(s.Spec.Selector) == 0 || !selectorMatches(s.Spec.Selector, labels) {
+		if !selects(s.Spec.Selector, labels) {
 			continue
 		}
 
@@ -595,14 +595,4 @@ func garageHealthFromProxy(status int, ctype string, body []byte) (string, strin
 	default:
 		return garageUnknown, fmt.Sprintf("HTTP %d: %s", status, text)
 	}
-}
-
-func selectorMatches(selector, labels map[string]string) bool {
-	for k, v := range selector {
-		if labels[k] != v {
-			return false
-		}
-	}
-
-	return true
 }

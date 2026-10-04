@@ -4,11 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -43,7 +40,6 @@ import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.argoAppsFor
 import name.levis.ichor.model.hasArgoCD
 import name.levis.ichor.model.inventoryBadges
-import name.levis.ichor.model.isDemo
 import name.levis.ichor.data.ARGO_CD
 import name.levis.ichor.ui.argocd.ArgoActionToasts
 import name.levis.ichor.ui.argocd.ArgoPolling
@@ -52,6 +48,7 @@ import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
@@ -139,7 +136,7 @@ fun AppsScreen(
                         }
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
                 actions = {
                     val busy = state == UiState.Loading || (state as? UiState.Loaded)?.refreshing == true
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }, enabled = !busy)

@@ -24,6 +24,7 @@ import name.levis.ichor.model.DiskVerdict
 import name.levis.ichor.model.verdict
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.InfoRow
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -52,7 +53,7 @@ private fun DiskHealthCard(disk: DiskHealth) {
             Column(Modifier.weight(1f)) {
                 Text(disk.device, style = MaterialTheme.typography.titleSmall, fontFamily = FontFamily.Monospace)
                 if (disk.model.isNotBlank()) {
-                    Text(disk.model, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    MutedText(disk.model)
                 }
             }
             when (disk.verdict) {
@@ -62,7 +63,7 @@ private fun DiskHealthCard(disk: DiskHealth) {
             }
         }
         if (disk.message.isNotBlank()) {
-            Text(disk.message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            MutedText(disk.message)
         }
         if (disk.serial.isNotBlank()) InfoRow(stringResource(R.string.storage_health_serial), disk.serial, mono = true)
         disk.temperatureC?.let {

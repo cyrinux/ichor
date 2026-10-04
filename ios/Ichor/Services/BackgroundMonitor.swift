@@ -6,13 +6,12 @@ import WidgetKit
 
 /// Shared with the widget extension (App Group).
 enum SharedStore {
-    static let suite = "group.name.levis.ichor"
-    private static let snapshotKey = "snapshot"
+    private static let snapshotKey = SharedSnapshot.key
 
-    static var defaults: UserDefaults { UserDefaults(suiteName: suite) ?? .standard }
+    static var defaults: UserDefaults { UserDefaults(suiteName: SharedSnapshot.suite) ?? .standard }
 
     static func snapshot() -> ClusterSnapshot? {
-        defaults.data(forKey: snapshotKey).flatMap { try? JSONDecoder().decode(ClusterSnapshot.self, from: $0) }
+        SharedSnapshot.load(from: defaults)
     }
 
     static func save(_ snapshot: ClusterSnapshot?) {

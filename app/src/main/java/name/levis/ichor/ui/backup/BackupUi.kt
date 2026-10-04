@@ -42,6 +42,7 @@ import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.openTruncating
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.readBounded
 import name.levis.ichorgo.Ichorgo
@@ -202,9 +203,7 @@ internal fun newPassphraseError(passphrase: String, again: String): UiText? = wh
 }
 
 private suspend fun writeBytes(context: Context, uri: Uri, bytes: ByteArray) = withContext(Dispatchers.IO) {
-    // "wt" truncates when the user picked an existing file.
-    val stream = context.contentResolver.openOutputStream(uri, "wt") ?: throw LocalizedException(UiText.Res(R.string.backup_err_open))
-    stream.use { it.write(bytes) }
+    openTruncating(context, uri, R.string.backup_err_open).use { it.write(bytes) }
 }
 
 internal suspend fun readBytes(context: Context, uri: Uri): ByteArray = withContext(Dispatchers.IO) {

@@ -47,6 +47,7 @@ import name.levis.ichor.ui.argocd.HealthGlyph
 import name.levis.ichor.ui.argocd.causeText
 import name.levis.ichor.ui.argocd.waveProgress
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.dataservices.color
 import name.levis.ichor.ui.dataservices.label
 
@@ -67,7 +68,7 @@ fun ArgoCard(state: UiState<ArgoStatus>, argoTile: InventoryApp?, downNodes: Set
             Header(argoTile, (state as? UiState.Loaded)?.data)
             when (state) {
                 UiState.Loading -> Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh))
-                is UiState.Failed -> Muted(stringResource(R.string.data_services_unreadable, state.message.asString()))
+                is UiState.Failed -> MutedText(stringResource(R.string.data_services_unreadable, state.message.asString()), maxLines = 2, overflow = TextOverflow.Ellipsis)
                 is UiState.Loaded -> Body(state.data, downNodes)
             }
         }
@@ -99,12 +100,12 @@ private fun Header(argoTile: InventoryApp?, status: ArgoStatus?) {
 @Composable
 private fun Body(status: ArgoStatus, downNodes: Set<String>) {
     if (status.apps.isEmpty()) {
-        Muted(stringResource(R.string.argo_no_apps))
+        MutedText(stringResource(R.string.argo_no_apps), maxLines = 2, overflow = TextOverflow.Ellipsis)
         return
     }
     ArgoSummary(status)
     if (status.allFine) {
-        Muted(stringResource(R.string.argo_card_all_fine))
+        MutedText(stringResource(R.string.argo_card_all_fine), maxLines = 2, overflow = TextOverflow.Ellipsis)
         return
     }
     status.runningSyncs.forEach { SyncingLine(it) }
@@ -177,9 +178,4 @@ private fun ProblemLine(app: ArgoApp, downNodes: Set<String>) {
         }
         HealthGlyph(app.healthState)
     }
-}
-
-@Composable
-private fun Muted(text: String) {
-    Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
 }

@@ -87,6 +87,6 @@ private final class DiagnosisBridge: NSObject, IchorgoDiagnosisListenerProtocol,
     }
 
     func onDone(_ errMessage: String?) {
-        done(errMessage.flatMap { $0.isEmpty ? nil : $0 })
+        done(errMessage.nonEmpty)
     }
 }

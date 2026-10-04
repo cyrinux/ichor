@@ -9,10 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.ui.components.ToggleRow
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.uiText
@@ -124,7 +123,12 @@ fun PowerConfirmDialog(
     ) {
         when (action) {
             PowerAction.REBOOT -> RebootModePicker(mode) { mode = it }
-            PowerAction.SHUTDOWN -> ForceShutdownSwitch(forceShutdown) { forceShutdown = it }
+            PowerAction.SHUTDOWN -> ToggleRow(
+                title = stringResource(R.string.power_force_label),
+                description = stringResource(R.string.power_force_desc),
+                checked = forceShutdown,
+                onChange = { forceShutdown = it },
+            )
         }
         if (role == "controlplane") {
             Text(
@@ -165,23 +169,5 @@ private fun RebootModePicker(selected: RebootMode, onSelect: (RebootMode) -> Uni
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ForceShutdownSwitch(checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().toggleable(value = checked, role = Role.Switch, onValueChange = onChange),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(stringResource(R.string.power_force_label), style = MaterialTheme.typography.bodyLarge)
-            Text(
-                stringResource(R.string.power_force_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Switch(checked = checked, onCheckedChange = null, modifier = Modifier.padding(start = 8.dp))
     }
 }

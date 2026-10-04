@@ -10,19 +10,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,12 +41,15 @@ import name.levis.ichor.model.matching
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
-import name.levis.ichor.ui.components.ErrorBox
+import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InfoNotice
-import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.Loaded
+import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SearchField
+import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
-import java.text.DateFormat
-import java.util.Date
+import name.levis.ichor.util.formatDateTime
 
 /** A resource type of a node, as addressed by the list and detail screens. */
 data class ResourceRef(val node: String, val namespace: String, val type: String, val sensitive: Boolean)
@@ -101,26 +99,13 @@ fun ResourceListScreen(
                         )
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
             )
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                placeholder = { Text(stringResource(R.string.resources_search_items)) },
-                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-            )
-            when (val s = state) {
-                UiState.Loading -> LoadingBox()
-                is UiState.Failed -> ErrorBox(s.message, vm::refresh)
-                is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.fillMaxSize()) {
-                    ItemList(s.data, query, onItem)
-                }
-            }
+            SearchField(query, { query = it }, stringResource(R.string.resources_search_items), Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
+            Loaded(state, vm::refresh) { ItemList(it, query, onItem) }
         }
     }
 }
@@ -134,11 +119,7 @@ private fun ItemList(list: ResourceList, query: String, onItem: (ResourceItem) -
         }
         if (items.isEmpty()) {
             item {
-                Text(
-                    if (query.isBlank()) stringResource(R.string.resources_items_empty) else stringResource(R.string.resources_no_match, query.trim()),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(16.dp),
-                )
+                EmptyText(emptyOrNoMatch(query, R.string.resources_items_empty, R.string.resources_no_match))
             }
         }
         items(items, key = { "${it.namespace}|${it.id}" }) { item ->
@@ -151,7 +132,7 @@ private fun ItemList(list: ResourceList, query: String, onItem: (ResourceItem) -
 @Composable
 private fun ItemRow(item: ResourceItem, onClick: () -> Unit) {
     val updated = remember(item.updated) {
-        item.updated.takeIf { it > 0 }?.let { DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(it)) }
+        item.updated.takeIf { it > 0 }?.let { formatDateTime(it) }
     }
     Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp)) {
         Text(item.id, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
@@ -161,7 +142,7 @@ private fun ItemRow(item: ResourceItem, onClick: () -> Unit) {
             updated,
         )
         if (facts.isNotEmpty()) {
-            Text(facts.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            MutedText(facts.joinToString(" · "))
         }
     }
 }

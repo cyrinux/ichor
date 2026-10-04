@@ -56,9 +56,7 @@ struct KubernetesView: View {
         } message: {
             Text("Used instead of the address in the kubeconfig Talos issues, e.g. a port forward, a load balancer or a public name: host, host:port or an https URL. Without a port, the kubeconfig’s is used. The certificate is still checked against the cluster’s own address. Leave empty to use the kubeconfig’s again. Only on this device.")
         }
-        .alert(serverError ?? "", isPresented: Binding(get: { serverError != nil }, set: { if !$0 { serverError = nil } })) {
-            Button("OK") {}
-        }
+        .messageAlert($serverError)
         .safeAreaInset(edge: .top) {
             Picker(selection: $tab) {
                 Text("Workloads").tag(Tab.workloads)
@@ -141,7 +139,7 @@ private struct WorkloadsList: View {
         }
         .task { await load() }
         .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
-        .restartResult($resultMessage)
+        .messageAlert($resultMessage)
     }
 
     private func load() async {
@@ -188,7 +186,7 @@ private struct WorkloadRow: View {
                 .foregroundStyle(stateColor)
                 .monospacedDigit()
                 if workload.restartedAt > 0 {
-                    let at = Date(timeIntervalSince1970: TimeInterval(workload.restartedAt) / 1000)
+                    let at = Date(epochMillis: workload.restartedAt)
                     Text("restarted \(at.formatted(.relative(presentation: .named)))")
                         .font(.caption)
                         .foregroundStyle(.secondary)

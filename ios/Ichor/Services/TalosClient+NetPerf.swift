@@ -57,6 +57,6 @@ private final class NetPerfBridge: NSObject, IchorgoNetPerfListenerProtocol, @un
 
     func onDone(_ reportJSON: String?, errMessage: String?) {
         let report = reportJSON.flatMap { try? TalosJSON.decode(NetPerfReport.self, from: $0) } ?? NetPerfReport()
-        done(report, errMessage.flatMap { $0.isEmpty ? nil : $0 })
+        done(report, errMessage.nonEmpty)
     }
 }

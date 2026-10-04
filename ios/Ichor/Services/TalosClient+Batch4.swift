@@ -141,7 +141,7 @@ private final class CaptureBridge: NSObject, IchorgoCaptureListenerProtocol, @un
 
     func onDone(_ path: String?, packets: Int64, bytes: Int64, errMessage: String?) {
         flush()
-        done(.done(path: path ?? "", packets: packets, bytes: bytes, error: errMessage.flatMap { $0.isEmpty ? nil : $0 }))
+        done(.done(path: path ?? "", packets: packets, bytes: bytes, error: errMessage.nonEmpty))
     }
 }
 
@@ -160,6 +160,6 @@ private final class UpgradeBridge: NSObject, IchorgoUpgradeListenerProtocol, @un
     }
 
     func onDone(_ newVersion: String?, errMessage: String?) {
-        done(newVersion ?? "", errMessage.flatMap { $0.isEmpty ? nil : $0 })
+        done(newVersion ?? "", errMessage.nonEmpty)
     }
 }

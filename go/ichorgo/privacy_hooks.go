@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/cosi-project/runtime/pkg/safe"
 	"github.com/siderolabs/talos/pkg/machinery/client"
-	"github.com/siderolabs/talos/pkg/machinery/resources/cluster"
 	"github.com/siderolabs/talos/pkg/machinery/resources/network"
 )
 
@@ -135,22 +133,18 @@ func clusterHostEntries(ctx context.Context, c *client.Client, nodes []nodeOverv
 }
 
 func clusterMembers(ctx context.Context, c *client.Client, node string) []hostEntry {
-	ctx, cancel := context.WithTimeout(ctx, nodeTimeout)
-	defer cancel()
-
-	members, err := safe.StateListAll[*cluster.Member](client.WithNode(ctx, node), c.COSI)
+	members, err := nodeMembers(ctx, c, node)
 	if err != nil {
 		return nil
 	}
 
 	var out []hostEntry
 
-	for m := range members.All() {
-		spec := m.TypedSpec()
-		e := hostEntry{hostname: spec.Hostname, role: roleName(spec.MachineType, nil)}
+	for _, m := range members {
+		e := hostEntry{hostname: m.hostname, role: m.role}
 
-		if len(spec.Addresses) > 0 {
-			e.address = spec.Addresses[0].String()
+		if len(m.addresses) > 0 {
+			e.address = m.addresses[0].String()
 		}
 
 		out = append(out, e)

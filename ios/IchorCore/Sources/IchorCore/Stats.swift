@@ -52,7 +52,7 @@ public func ratesBetween(_ prev: NodeStats, _ cur: NodeStats) -> StatsPoint? {
     let mem = cur.memTotal > 0 ? Double(used) * 100 / Double(cur.memTotal) : 0
 
     return StatsPoint(
-        at: Date(timeIntervalSince1970: Double(cur.at) / 1000),
+        at: Date(epochMillis: cur.at),
         cpuPercent: cpu,
         memPercent: mem,
         memUsed: used,

@@ -29,7 +29,6 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,6 +57,8 @@ import name.levis.ichor.model.categoryCounts
 import name.levis.ichor.model.driftVersions
 import name.levis.ichor.model.filtered
 import name.levis.ichor.model.groups
+import name.levis.ichor.ui.components.SearchField
+import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /** Rounded like the mockup's cards. */
@@ -96,15 +97,7 @@ fun AppsGrid(inventory: Inventory, onOpen: (InventoryApp) -> Unit, argoBadges: M
         modifier = Modifier.fillMaxSize(),
     ) {
         fullWidth("search") {
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                placeholder = { Text(stringResource(R.string.apps_search)) },
-                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                singleLine = true,
-                shape = AppCardShape,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            SearchField(query, { query = it }, stringResource(R.string.apps_search), Modifier.fillMaxWidth(), shape = AppCardShape)
         }
         fullWidth("filters") {
             FilterRow(apps, categories, filter, onSelect = { filterKey = keyOf(it) })
@@ -115,7 +108,7 @@ fun AppsGrid(inventory: Inventory, onOpen: (InventoryApp) -> Unit, argoBadges: M
         }
         if (groups.main.isEmpty() && groups.system.isEmpty() && groups.unknown.isEmpty()) {
             fullWidth("nomatch") {
-                Message(if (query.isBlank()) stringResource(R.string.apps_no_filter_match) else stringResource(R.string.apps_no_match, query.trim()))
+                Message(emptyOrNoMatch(query, R.string.apps_no_filter_match, R.string.apps_no_match))
             }
             return@LazyVerticalGrid
         }

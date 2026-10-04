@@ -18,7 +18,6 @@ import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +48,7 @@ import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -119,7 +119,7 @@ private fun ServiceRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(svc.id, style = MaterialTheme.typography.titleSmall)
-                    Text(svc.state, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    MutedText(svc.state)
                 }
                 when (svc.health) {
                     "healthy" -> StatusPill(stringResource(R.string.common_status_healthy), colors.ok)

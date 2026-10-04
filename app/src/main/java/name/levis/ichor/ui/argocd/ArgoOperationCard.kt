@@ -32,6 +32,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoOperation
 import name.levis.ichor.model.shortRevision
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -53,7 +54,7 @@ fun ArgoOperationCard(app: ArgoApp, op: ArgoOperation, busy: Boolean, onTerminat
                 Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(22.dp))
                 Column(Modifier.weight(1f).padding(start = 10.dp)) {
                     Text(stringResource(R.string.argo_operation, op.phase), style = MaterialTheme.typography.titleMedium, color = color)
-                    Text(subtitle(op), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    MutedText(subtitle(op))
                 }
                 Text(elapsed(op), style = MaterialTheme.typography.labelLarge, fontFamily = FontFamily.Monospace)
             }
@@ -62,7 +63,7 @@ fun ArgoOperationCard(app: ArgoApp, op: ArgoOperation, busy: Boolean, onTerminat
             op.failed.forEach { f ->
                 Column(Modifier.padding(top = 2.dp)) {
                     Text("${f.kind}/${f.name}", style = MaterialTheme.typography.labelLarge, fontFamily = FontFamily.Monospace, color = colors.bad)
-                    if (f.message.isNotEmpty()) Text(f.message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (f.message.isNotEmpty()) MutedText(f.message)
                 }
             }
             if (op.phase == "Running") {

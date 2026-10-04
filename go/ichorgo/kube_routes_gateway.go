@@ -38,10 +38,6 @@ type httpRouteObject struct {
 	} `json:"spec"`
 }
 
-type httpRouteList struct {
-	Items []httpRouteObject `json:"items"`
-}
-
 type gatewayListener struct {
 	Name     string `json:"name"`
 	Hostname string `json:"hostname"`
@@ -62,10 +58,6 @@ type gatewayObject struct {
 			Value string `json:"value"`
 		} `json:"addresses"`
 	} `json:"status"`
-}
-
-type gatewayList struct {
-	Items []gatewayObject `json:"items"`
 }
 
 // routeTarget is a path of an HTTPRoute and the Service it sends it to.

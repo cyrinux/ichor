@@ -56,6 +56,7 @@ import name.levis.ichor.model.defaultExpandedCgroups
 import name.levis.ichor.model.pressureLevel
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.live.LiveChart
 import name.levis.ichor.ui.live.Series
@@ -63,7 +64,7 @@ import name.levis.ichor.ui.theme.LocalChartColors
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
 import name.levis.ichor.util.formatBytes
-import java.util.Locale
+import name.levis.ichor.util.formatPercent
 
 /** A copy of /sys/fs/cgroup (several MB on a busy node) is heavy on mobile data: poll slowly. */
 private const val CGROUPS_POLL_SECONDS = 10L
@@ -130,11 +131,7 @@ fun CgroupsTab(
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             state.error?.let { CgroupsError(it) }
-            Text(
-                stringResource(R.string.node_cgroups_caption),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(R.string.node_cgroups_caption))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.node_processes_sort), style = MaterialTheme.typography.labelMedium)
                 listOf(
@@ -195,7 +192,7 @@ private fun CgroupItem(row: CgroupRow, expanded: Boolean, onToggle: () -> Unit) 
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    row.cpuPercent?.let { String.format(Locale.ROOT, "%.1f%%", it) } ?: "—",
+                    row.cpuPercent?.let { formatPercent(it) } ?: "—",
                     style = MaterialTheme.typography.bodySmall,
                     fontFamily = FontFamily.Monospace,
                     modifier = Modifier.padding(start = 8.dp),
@@ -237,7 +234,7 @@ private fun CgroupNotes(row: CgroupRow) {
         waiting.forEachIndexed { i, (label, value) ->
             Text(
                 (if (i == 0 && notes.isEmpty()) "" else " · ") +
-                    stringResource(R.string.node_cgroups_waiting, label, String.format(Locale.ROOT, "%.1f%%", value)),
+                    stringResource(R.string.node_cgroups_waiting, label, formatPercent(value)),
                 style = MaterialTheme.typography.labelSmall,
                 color = levelColor(pressureLevel(value)),
             )
@@ -262,7 +259,7 @@ private fun PressureChart(history: List<CgroupReport>) {
         title = stringResource(R.string.node_section_pressure),
         series = series,
         times = history.map { it.at },
-        format = { String.format(Locale.ROOT, "%.1f%%", it) },
+        format = { formatPercent(it.toDouble()) },
         gridColor = colors.grid,
         modifier = Modifier.padding(16.dp),
         fixedMax = (peak * 1.15f).coerceIn(PRESSURE_CHART_FLOOR, 100f),

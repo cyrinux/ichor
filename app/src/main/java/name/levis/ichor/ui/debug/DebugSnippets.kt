@@ -22,6 +22,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosJson
+import name.levis.ichor.ui.components.MutedText
 
 /**
  * A ready-made debug shell command, listed by the Go core. A [run] snippet is sent with
@@ -65,10 +66,8 @@ fun DebugSnippetsSheet(snippets: List<DebugSnippet>, onPick: (DebugSnippet) -> U
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
-        Text(
+        MutedText(
             stringResource(R.string.debug_snippets_hint),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         )
         LazyColumn(contentPadding = PaddingValues(bottom = 32.dp)) {

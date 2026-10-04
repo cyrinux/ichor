@@ -90,10 +90,10 @@ func StartPacketCapture(
 		filter:      filter,
 		promiscuous: promiscuous,
 		snapLen:     clampSnapLen(snapLen),
-		maxBytes:    clampLimit(maxBytes, defaultCaptureBytes, maxCaptureBytes),
+		maxBytes:    clampOr(maxBytes, defaultCaptureBytes, maxCaptureBytes),
 	}
 
-	seconds := clampLimit(int64(maxSeconds), defaultCaptureSeconds, maxCaptureSeconds)
+	seconds := clampOr(int64(maxSeconds), defaultCaptureSeconds, maxCaptureSeconds)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(seconds)*time.Second)
 
 	go func() {
@@ -110,14 +110,6 @@ func StartPacketCapture(
 	}()
 
 	return &CaptureRun{cancel: cancel}
-}
-
-func clampLimit(v, def, maxV int64) int64 {
-	if v <= 0 {
-		return def
-	}
-
-	return min(v, maxV)
 }
 
 func clampSnapLen(n int) int {

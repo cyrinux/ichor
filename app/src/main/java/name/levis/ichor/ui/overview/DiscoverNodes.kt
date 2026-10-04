@@ -35,6 +35,7 @@ import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.DiscoveredNode
 import name.levis.ichor.model.NodeDiscovery
 import name.levis.ichor.model.toOffer
+import name.levis.ichor.ui.components.MutedText
 
 /**
  * Cluster members the talosconfig context does not target (cluster discovery), offered to
@@ -83,11 +84,7 @@ fun DiscoveredNodesBanner(count: Int, onClick: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
-            Text(
-                stringResource(R.string.overview_discovered_nodes_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(R.string.overview_discovered_nodes_hint))
         }
     }
 }

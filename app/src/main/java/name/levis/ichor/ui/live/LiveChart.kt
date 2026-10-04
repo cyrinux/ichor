@@ -39,6 +39,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlin.math.max
+import name.levis.ichor.ui.components.MutedText
 
 /** One line of a chart. Text never uses the series color; the legend dot carries identity. */
 data class Series(val label: String, val color: Color, val values: List<Float>)
@@ -88,7 +89,7 @@ fun LiveChart(
                         if (series.size > 1) {
                             Box(Modifier.size(8.dp).background(s.color, CircleShape))
                             Spacer(Modifier.width(6.dp))
-                            Text(s.label + " ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            MutedText(s.label + " ")
                         }
                         Text(
                             s.values.getOrNull(shownAt)?.let(format) ?: "—",

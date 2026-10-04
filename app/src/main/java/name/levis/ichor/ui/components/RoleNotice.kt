@@ -19,14 +19,12 @@ fun RoleNotice(feature: Feature, roles: List<String>, modifier: Modifier = Modif
     Card(modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(R.string.common_role_notice_title, stringResource(feature.label), feature.minimumRole), style = MaterialTheme.typography.titleSmall)
-            Text(
+            MutedText(
                 stringResource(
                     R.string.common_role_notice_body,
                     roles.joinToString().ifEmpty { stringResource(R.string.common_role_notice_no_roles) },
                     feature.minimumRole,
                 ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

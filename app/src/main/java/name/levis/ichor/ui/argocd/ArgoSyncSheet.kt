@@ -37,6 +37,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoResource
 import name.levis.ichor.model.ArgoSyncOptions
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -61,11 +62,9 @@ fun ArgoSyncSheet(app: ArgoApp, resources: List<ArgoResource>, onSync: (ArgoSync
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(stringResource(R.string.argo_sync_title, app.name), style = MaterialTheme.typography.titleLarge)
-            Text(
+            MutedText(
                 if (resources.isEmpty()) stringResource(R.string.argo_sync_all_resources, app.versionLabel)
                 else pluralStringResource(R.plurals.argo_sync_some_resources, resources.size, resources.size),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp),
             )
             Toggle(stringResource(R.string.argo_opt_prune), stringResource(R.string.argo_opt_prune_desc), prune) { prune = it }
@@ -101,7 +100,7 @@ private fun Toggle(title: String, description: String, checked: Boolean, onChang
     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f).padding(end = 12.dp)) {
             Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            MutedText(description)
         }
         Switch(checked = checked, onCheckedChange = onChange)
     }

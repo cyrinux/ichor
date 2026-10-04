@@ -317,7 +317,7 @@ struct PacketRow: View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 6) {
                 Text(verbatim: "\(packet.number)").foregroundStyle(.secondary)
-                Text(Date(timeIntervalSince1970: TimeInterval(packet.ts) / 1000), format: .dateTime.hour().minute().second().secondFraction(.fractional(3)))
+                Text(Date(epochMillis: packet.ts), format: .dateTime.hour().minute().second().secondFraction(.fractional(3)))
                     .foregroundStyle(.secondary)
                 Text(verbatim: packet.proto.isEmpty ? "?" : packet.proto)
                     .fontWeight(.semibold)

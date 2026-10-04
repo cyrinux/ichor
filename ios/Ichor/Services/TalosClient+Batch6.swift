@@ -127,6 +127,6 @@ private final class SupportBridge: NSObject, IchorgoSupportListenerProtocol, @un
     }
 
     func onDone(_ path: String?, size: Int64, errMessage: String?) {
-        done(.done(path: path ?? "", size: size, error: errMessage.flatMap { $0.isEmpty ? nil : $0 }))
+        done(.done(path: path ?? "", size: size, error: errMessage.nonEmpty))
     }
 }

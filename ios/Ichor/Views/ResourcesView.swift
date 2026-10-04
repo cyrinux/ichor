@@ -148,7 +148,7 @@ private struct ResourceItemRow: View {
                 if !item.version.isEmpty { Text("version \(item.version)") }
                 if !item.phase.isEmpty { Text(verbatim: item.phase) }
                 if item.updated > 0 {
-                    Text(Date(timeIntervalSince1970: TimeInterval(item.updated) / 1000), format: .relative(presentation: .named))
+                    Text(Date(epochMillis: item.updated), format: .relative(presentation: .named))
                 }
             }
             .font(.caption)

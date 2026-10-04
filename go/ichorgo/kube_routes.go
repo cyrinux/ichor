@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"maps"
 	"net"
-	"net/http"
 	"net/url"
 	"slices"
 	"sort"
@@ -54,18 +53,11 @@ func KubeAppRoutes(configYAML, contextName, kubeServer, pods string) (out string
 		return "", fmt.Errorf("invalid pod list: %w", err)
 	}
 
-	if isDemoContext(configYAML, contextName) {
-		return toJSON(kubeRouteList{Routes: demoRoutes(refs)})
-	}
+	demo := func() kubeRouteList { return kubeRouteList{Routes: demoRoutes(refs)} }
 
-	list, err := withKube(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) (kubeRouteList, error) {
+	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demo, func(ctx context.Context, k *kubeClient) (kubeRouteList, error) {
 		return appRoutes(ctx, k, refs)
 	})
-	if err != nil {
-		return "", err
-	}
-
-	return toJSON(list)
 }
 
 func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteList, error) {
@@ -75,9 +67,9 @@ func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteLi
 	}
 
 	var (
-		ingresses  ingressList
-		httpRoutes httpRouteList
-		gateways   gatewayList
+		ingresses  kubeList[ingressObject]
+		httpRoutes kubeList[httpRouteObject]
+		gateways   kubeList[gatewayObject]
 	)
 
 	errs := make([]error, 3)
@@ -103,8 +95,7 @@ func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteLi
 }
 
 func ignoreNotFound(err error) error {
-	var apiErr *kubeAPIError
-	if errors.As(err, &apiErr) && apiErr.Code == http.StatusNotFound {
+	if isNotFound(err) {
 		return nil
 	}
 
@@ -148,12 +139,12 @@ func servicesOfPods(ctx context.Context, k *kubeClient, pods []routePod) (map[se
 	for _, ns := range slices.Sorted(maps.Keys(wanted)) {
 		base := "/api/v1/namespaces/" + url.PathEscape(ns)
 
-		var podList struct{ Items []labeledObject }
+		var podList kubeList[labeledObject]
 		if err := k.get(ctx, base+"/pods", &podList); err != nil {
 			return nil, err
 		}
 
-		var svcList struct{ Items []serviceObject }
+		var svcList kubeList[serviceObject]
 		if err := k.get(ctx, base+"/services", &svcList); err != nil {
 			return nil, err
 		}

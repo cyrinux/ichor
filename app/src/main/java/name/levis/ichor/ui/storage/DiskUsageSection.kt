@@ -41,6 +41,7 @@ import name.levis.ichor.model.diskUsageTotal
 import name.levis.ichor.model.notice
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.InlineError
+import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.Section
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.text
@@ -65,11 +66,7 @@ fun LazyListScope.diskUsageSection(
                 InfoNotice(it.text())
                 return@Column
             }
-            Text(
-                stringResource(R.string.storage_usage_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(R.string.storage_usage_hint))
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 DISK_USAGE_SHORTCUTS.forEach { shortcut ->
                     FilterChip(
@@ -102,11 +99,7 @@ fun LazyListScope.diskUsageSection(
         is Section.Ok -> {
             val rows = diskUsageRows(usage.value.entries, path)
             item(key = "usage-total") {
-                Text(
-                    stringResource(R.string.storage_usage_total, formatBytes(diskUsageTotal(usage.value.entries, path))),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                MutedText(stringResource(R.string.storage_usage_total, formatBytes(diskUsageTotal(usage.value.entries, path))))
             }
             if (usage.value.truncated) {
                 item(key = "usage-truncated") { InfoNotice(stringResource(R.string.resources_truncated, rows.size)) }

@@ -41,8 +41,8 @@ import name.levis.ichor.model.trendOf
 import name.levis.ichor.ui.components.InfoHint
 import name.levis.ichor.ui.theme.LocalChartColors
 import java.text.DateFormat
-import java.util.Date
 import kotlin.math.max
+import name.levis.ichor.util.formatDateTime
 
 /**
  * Pod-to-pod throughput and p50 latency of the saved tests from [client] to [server], oldest
@@ -66,7 +66,7 @@ internal fun NetPerfTrend(history: List<NetPerfReport>, client: String, server: 
                     InfoHint(stringResource(R.string.netperf_trend), stringResource(R.string.netperf_hint_trend))
                     Spacer(Modifier.weight(1f))
                     Text(
-                        DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(shown.started)),
+                        formatDateTime(shown.started, DateFormat.SHORT),
                         style = MaterialTheme.typography.labelSmall,
                         color = muted,
                     )

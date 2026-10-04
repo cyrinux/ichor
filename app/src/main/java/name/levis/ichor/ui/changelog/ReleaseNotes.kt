@@ -25,6 +25,7 @@ import name.levis.ichor.model.publishedDate
 import name.levis.ichor.model.visibleSections
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import name.levis.ichor.ui.components.MutedText
 
 /** The heading of a section: translated for the known kinds, else the title of the JSON. */
 @Composable
@@ -46,11 +47,7 @@ fun ReleaseNotes(release: ChangelogRelease, modifier: Modifier = Modifier) {
         Text(listOfNotNull(release.version, date).joinToString(" · "), style = MaterialTheme.typography.titleSmall)
         val sections = release.visibleSections
         if (sections.isEmpty()) {
-            Text(
-                stringResource(R.string.changelog_maintenance),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            MutedText(stringResource(R.string.changelog_maintenance))
         }
         sections.forEach { section ->
             Text(

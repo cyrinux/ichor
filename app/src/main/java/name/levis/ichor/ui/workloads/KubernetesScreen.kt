@@ -4,11 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -32,6 +29,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.ui.LoadingViewModel
+import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.TooltipIconButton
 
@@ -81,7 +79,7 @@ fun KubernetesScreen(onBack: () -> Unit) {
         topBar = {
             TopAppBar(
                 title = { Text("Kubernetes") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
+                navigationIcon = { BackButton(onBack) },
                 actions = {
                     if (fingerprint != null) {
                         TooltipIconButton(Icons.Outlined.Dns, stringResource(R.string.kube_server_title), onClick = { editing = true })

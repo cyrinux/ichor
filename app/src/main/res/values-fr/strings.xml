@@ -69,10 +69,6 @@
     <string name="overview_action_health">État du cluster</string>
     <string name="overview_action_settings">Paramètres</string>
     <string name="overview_action_workloads">Charges de travail Kubernetes</string>
-    <plurals name="overview_summary_ready">
-        <item quantity="one">prêt</item>
-        <item quantity="other">prêts</item>
-    </plurals>
     <plurals name="overview_summary_not_ready">
         <item quantity="one">non prêt</item>
         <item quantity="other">non prêts</item>

@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.ViewAgenda
 import androidx.compose.material3.AssistChip
@@ -25,7 +24,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,7 +46,8 @@ import name.levis.ichor.model.filtered
 import name.levis.ichor.model.grouped
 import name.levis.ichor.model.sortedApps
 import name.levis.ichor.model.syncAllCandidates
-import name.levis.ichor.ui.dataservices.EmptyLine
+import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.components.SearchField
 
 /**
  * Every Application, worst first: filter chips with counts, a search field and a group-by
@@ -89,7 +88,7 @@ fun ArgoAppsTab(
         }
         item(key = "divider") { HorizontalDivider() }
         if (groups.all { it.second.isEmpty() }) item(key = "empty") {
-            EmptyLine(
+            EmptyText(
                 when {
                     apps.isEmpty() -> stringResource(R.string.argo_no_apps)
                     query.isNotBlank() -> stringResource(R.string.data_services_no_match, query.trim())
@@ -133,14 +132,7 @@ private fun Controls(
 ) {
     Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = onQuery,
-                placeholder = { Text(stringResource(R.string.argo_search)) },
-                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                singleLine = true,
-                modifier = Modifier.weight(1f),
-            )
+            SearchField(query, onQuery, stringResource(R.string.argo_search), Modifier.weight(1f))
             GroupByMenu(groupBy, onGroupBy, Modifier.padding(start = 8.dp))
         }
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -42,6 +42,7 @@ import name.levis.ichor.model.allowed
 import name.levis.ichor.model.confirmToken
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.FeatureMenuItem
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.InfoRow
@@ -233,11 +234,11 @@ fun RemoveMemberDialog(plan: EtcdMemberPlan, viaNode: String?, onConfirm: () -> 
 
 @Composable
 fun ForfeitConfirmDialog(hostname: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.etcd_forfeit_title)) },
-        text = { Text(stringResource(R.string.etcd_forfeit_body, hostname)) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.etcd_forfeit)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    ConfirmDialog(
+        title = stringResource(R.string.etcd_forfeit_title),
+        text = stringResource(R.string.etcd_forfeit_body, hostname),
+        confirm = stringResource(R.string.etcd_forfeit),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
     )
 }

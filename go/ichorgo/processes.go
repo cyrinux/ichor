@@ -7,7 +7,6 @@ import (
 	"time"
 
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
-	"github.com/siderolabs/talos/pkg/machinery/client"
 )
 
 type processList struct {
@@ -37,12 +36,8 @@ func NodeProcesses(configYAML, contextName, node string) (out string, err error)
 		return demoRead("NodeProcesses", configYAML, contextName, node)
 	}
 
-	return withSession(configYAML, contextName, statsTimeout, func(ctx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
-		resp, err := s.client.Processes(client.WithNode(ctx, node))
+	return withNodeSession(configYAML, contextName, node, statsTimeout, func(ctx context.Context, s *session) (string, error) {
+		resp, err := s.client.Processes(ctx)
 		if err != nil {
 			return "", errors.New(s.friendly(node, err))
 		}

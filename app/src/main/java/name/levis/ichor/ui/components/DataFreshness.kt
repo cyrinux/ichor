@@ -17,8 +17,7 @@ import kotlinx.coroutines.delay
 import name.levis.ichor.R
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
-import java.text.DateFormat
-import java.util.Date
+import name.levis.ichor.util.formatTime
 
 /**
  * Screen footer saying how fresh the data is: "Updated 15:42:10 · 2 min ago", or, while a
@@ -35,7 +34,7 @@ fun DataFreshness(state: UiState<*>, modifier: Modifier = Modifier, edgeToEdge: 
             value = System.currentTimeMillis()
         }
     }
-    val time = DateFormat.getTimeInstance(DateFormat.MEDIUM).format(Date(loaded.fetchedAt))
+    val time = formatTime(loaded.fetchedAt)
     val ago = agoText(age(now - loaded.fetchedAt))
     val error = loaded.error?.takeUnless { loaded.refreshing }
     val text = when {

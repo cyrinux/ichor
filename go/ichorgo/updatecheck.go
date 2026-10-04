@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -103,14 +104,8 @@ func checkUpdate(releases []talosRelease, nodeVersions string) talosUpdate {
 // before its release. Returns -1, 0 or 1.
 func compareVersions(a, b string) int {
 	na, nb := versionNumbers(a), versionNumbers(b)
-	for i := range 3 {
-		if na[i] != nb[i] {
-			if na[i] < nb[i] {
-				return -1
-			}
-
-			return 1
-		}
+	if c := slices.Compare(na[:], nb[:]); c != 0 {
+		return c
 	}
 
 	pa, pb := prereleaseOf(a), prereleaseOf(b)
