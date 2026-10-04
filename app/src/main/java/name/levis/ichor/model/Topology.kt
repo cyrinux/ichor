@@ -68,6 +68,27 @@ val TopologyLink.isBroken: Boolean get() = state == "down" || state == "degraded
 /** Links the node is an end of that are down or degraded. */
 fun ClusterTopology.brokenLinks(nodeId: String): Int = links.count { it.isBroken && (it.a == nodeId || it.b == nodeId) }
 
+/** A run of the overview's nodes on one site of the map; [site] null for nodes the map does not know. */
+data class NodeGroup(val site: TopologySite?, val nodes: List<NodeOverview>)
+
+/**
+ * [nodes] in the map's order: site by site as [ClusterTopology.sites] lists them, control planes
+ * first then by hostname within each, and the nodes the map misses last. Without a map (never
+ * fetched, or nothing to place), one group with every node in that same order.
+ */
+fun ClusterTopology?.groupNodes(nodes: List<NodeOverview>): List<NodeGroup> {
+    val ordered = nodes.sortedWith(compareBy({ it.role != "controlplane" }, { it.hostname }))
+    val sites = this?.sites.orEmpty()
+    if (sites.isEmpty()) return listOf(NodeGroup(null, ordered))
+    // The map keys nodes by hostname; its talosconfig target is the fallback for a renamed node.
+    val byId = sites.flatMap { site -> site.nodes.map { it to site } }.toMap()
+    val byTarget = this?.nodes.orEmpty().filter { it.node.isNotBlank() }.mapNotNull { n -> byId[n.id]?.let { n.node to it } }.toMap()
+    val siteOf = ordered.associateWith { byId[it.hostname] ?: byTarget[it.node] }
+    val placed = sites.mapNotNull { site -> ordered.filter { siteOf[it] == site }.takeIf { it.isNotEmpty() }?.let { NodeGroup(site, it) } }
+    val rest = ordered.filter { siteOf[it] == null }
+    return if (rest.isEmpty()) placed else placed + NodeGroup(null, rest)
+}
+
 /** "FR" -> 🇫🇷 (regional indicator symbols); "" for anything that is not two ASCII letters. */
 fun countryFlag(code: String): String {
     if (code.length != 2 || !code.all { it.uppercaseChar() in 'A'..'Z' }) return ""

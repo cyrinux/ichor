@@ -104,6 +104,7 @@
         <item quantity="other">%d nodos</item>
     </plurals>
     <string name="overview_stat_nodes">Nodos</string>
+    <string name="overview_nodes_unplaced">Fuera del mapa</string>
     <string name="overview_stat_cpu">Núcleos de CPU</string>
     <string name="overview_stat_memory">Memoria</string>
     <string name="overview_stat_memory_used">%d %% en uso</string>
@@ -2023,6 +2024,41 @@
     <plurals name="metrics_truncated">
         <item quantity="one">Se muestra %1$d serie de %2$d</item>
         <item quantity="other">Se muestran %1$d series de %2$d</item>
+    </plurals>
+    <string name="longhorn_action_failed">%1$s: %2$s</string>
+    <string name="longhorn_backup_started">Copia de seguridad de %1$s iniciada</string>
+    <string name="longhorn_trim_started">Liberando espacio de %1$s</string>
+    <string name="longhorn_replicas_set">%1$s: número de réplicas fijado en %2$d</string>
+    <string name="longhorn_scheduling_on_done">%1$s acepta nuevas réplicas</string>
+    <string name="longhorn_scheduling_off_done">%1$s no acepta nuevas réplicas</string>
+    <string name="longhorn_evict_started">Moviendo las réplicas fuera de %1$s</string>
+    <string name="longhorn_evict_cancelled">Desalojo de %1$s cancelado</string>
+    <string name="longhorn_action_backup">Hacer copia ahora</string>
+    <string name="longhorn_action_trim">Liberar espacio (trim)</string>
+    <string name="longhorn_action_replicas">Número de réplicas…</string>
+    <string name="longhorn_action_scheduling_on">Permitir programación</string>
+    <string name="longhorn_action_scheduling_off">Desactivar programación</string>
+    <string name="longhorn_action_evict">Desalojar réplicas</string>
+    <string name="longhorn_action_cancel_eviction">Cancelar desalojo</string>
+    <string name="longhorn_replicas_title">Réplicas de %1$s</string>
+    <string name="longhorn_replicas_text">Longhorn añade o quita réplicas para ajustarse. Una réplica nueva copia todo el volumen por la red.</string>
+    <string name="longhorn_replicas_fewer">Menos réplicas: el volumen sobrevive a menos fallos de nodos.</string>
+    <string name="longhorn_replicas_confirm">Aplicar</string>
+    <string name="longhorn_evict_title">¿Desalojar %1$s?</string>
+    <string name="longhorn_evict_text">Longhorn copia cada réplica de %1$s a otros nodos y luego la elimina de %1$s. Los otros nodos necesitan espacio y se mueven muchos datos. La programación sigue desactivada en %1$s hasta que la vuelvas a permitir.</string>
+    <string name="longhorn_rebuild_progress">Reconstruyendo %1$d %%</string>
+    <string name="longhorn_backup_progress">Copiando %1$d %%</string>
+    <string name="longhorn_restore_progress">Restaurando %1$d %%</string>
+    <string name="longhorn_schedule_error">No se puede colocar una réplica: %1$s</string>
+    <string name="longhorn_too_many_snapshots">Cerca del límite de snapshots: borra los antiguos</string>
+    <string name="longhorn_node_scheduling_off">programación desactivada</string>
+    <plurals name="longhorn_node_evicting">
+        <item quantity="one">desalojando · queda %1$d réplica</item>
+        <item quantity="other">desalojando · quedan %1$d réplicas</item>
+    </plurals>
+    <plurals name="longhorn_node_replicas">
+        <item quantity="one">%1$d réplica</item>
+        <item quantity="other">%1$d réplicas</item>
     </plurals>
     <string name="argo_health_healthy">Correcto</string>
     <string name="argo_health_progressing">En progreso</string>

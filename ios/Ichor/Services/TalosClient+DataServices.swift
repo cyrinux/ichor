@@ -32,4 +32,12 @@ extension TalosClient {
             _ = IchorgoKubeGarageSetTranquility(config, context, kubeServer, namespace, pod, node, value, error)
         }
     }
+
+    /// Runs action on the Longhorn volume or node namespace/name (os:admin); namespace is Longhorn's
+    /// own. value: the replica count for .replicas, ignored otherwise.
+    func longhornAction(namespace: String, name: String, action: LonghornAction, value: Int = 0) async throws {
+        try await Self.run { [config, context, kubeServer] error -> Void in
+            _ = IchorgoKubeLonghornAction(config, context, kubeServer, namespace, name, action.rawValue, value, error)
+        }
+    }
 }

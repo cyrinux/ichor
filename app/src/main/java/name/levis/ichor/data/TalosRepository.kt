@@ -19,6 +19,7 @@ import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.GarageBlockReport
 import name.levis.ichor.model.GarageInstance
 import name.levis.ichor.model.GarageRepairResult
+import name.levis.ichor.model.LonghornAction
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
@@ -479,6 +480,14 @@ class TalosRepository(
     /** Sets a node's resync tranquility (os:admin); [nodeId] is a Garage node ID, or "*" for every node. */
     suspend fun garageSetTranquility(instance: GarageInstance, nodeId: String, value: Long) = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeGarageSetTranquility(cfg, ctx, server, instance.namespace, instance.pod, nodeId, value)
+    }
+
+    /**
+     * Runs [action] on the Longhorn volume or node [namespace]/[name] (os:admin); [value] is the
+     * replica count of [LonghornAction.REPLICAS]. Throws when refused.
+     */
+    suspend fun longhornAction(namespace: String, name: String, action: LonghornAction, value: Int = 0) = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeLonghornAction(cfg, ctx, server, namespace, name, action.wire, value.toLong())
     }
 
     /**

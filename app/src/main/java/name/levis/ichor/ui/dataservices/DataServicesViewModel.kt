@@ -22,6 +22,9 @@ class DataServicesViewModel(private val talos: TalosRepository) : LoadingViewMod
     /** Garage maintenance; a change shows in a fresh reading (tranquility, repairs running). */
     val garage = GarageActions(viewModelScope, talos, onChanged = { refresh() })
 
+    /** Longhorn volume and node actions; their progress shows in a fresh reading. */
+    val longhorn = LonghornActions(viewModelScope, talos, onChanged = { refresh() })
+
     /** Catalog ids from the inventory; "" checks everything (Garage needs a listing of every pod then). */
     private var hints = ""
     private var source: Any? = null

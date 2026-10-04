@@ -181,14 +181,20 @@ private fun SpeedPill(speed: String, onClick: () -> Unit, modifier: Modifier = M
     }
 }
 
+/** The site's flag and zone, subnet or kind, as its header on the map says. */
 @Composable
-private fun SiteHeader(site: TopologySite, modifier: Modifier = Modifier) {
+fun siteTitle(site: TopologySite): String {
     val flag = countryFlag(site.country)
     val label = site.label.ifBlank {
         stringResource(if (site.kind == "lan") R.string.topology_site_lan else R.string.topology_site_alone)
     }
+    return listOf(flag, label).filter { it.isNotBlank() }.joinToString("  ")
+}
+
+@Composable
+private fun SiteHeader(site: TopologySite, modifier: Modifier = Modifier) {
     Text(
-        listOf(flag, label).filter { it.isNotBlank() }.joinToString("  "),
+        siteTitle(site),
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = 1,

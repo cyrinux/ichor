@@ -1,13 +1,20 @@
 import SwiftUI
 import IchorCore
 
-/// Longhorn volumes (problems first), the backup targets and each node's disks.
+/// Longhorn volumes (problems first), the backup targets and each node's disks, with the volume
+/// actions (backup, trim, replica count) and the node ones (scheduling, eviction) in each row's
+/// context menu and swipe actions.
 struct LonghornList: View {
     let status: LonghornStatus
     let refresh: () async -> Void
 
+    @Environment(AppModel.self) private var model
     @State private var filter: VolumeFilter?
     @State private var query = ""
+    @State private var replicasFor: LonghornVolume?
+    @State private var confirmEvict: LonghornNode?
+    @State private var running: Set<String> = []
+    @State private var resultMessage: String?
 
     var body: some View {
         let hasProblems = status.volumes.contains { $0.health.needsAttention }
@@ -16,7 +23,7 @@ struct LonghornList: View {
         List {
             if !status.error.isEmpty { Section { ErrorLine(error: status.error) } }
             if !status.backupTargets.isEmpty {
-                Section { ForEach(status.backupTargets) { BackupTargetRow(target: $0) } }
+                Section { ForEach(status.backupTargets) { LonghornBackupTargetRow(target: $0) } }
             }
             Section {
                 Picker(selection: Binding(get: { current }, set: { filter = $0 })) {
@@ -39,121 +46,68 @@ struct LonghornList: View {
                     }
                     .foregroundStyle(.secondary)
                 }
-                ForEach(rows) { VolumeRow(volume: $0) }
+                ForEach(rows) { volumeRow($0) }
             }
             if !status.nodes.isEmpty {
-                Section("Nodes") { ForEach(status.nodes) { NodeRow(node: $0) } }
+                Section("Nodes") { ForEach(status.nodes) { nodeRow($0) } }
             }
         }
         .searchable(text: $query, prompt: Text("Filter by namespace or name"))
         .refreshable { await refresh() }
         .themedBackground()
-    }
-}
-
-private struct VolumeRow: View {
-    let volume: LonghornVolume
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            HealthDot(health: volume.health).padding(.top, 5)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: volume.label).font(.subheadline.monospaced()).lineLimit(1)
-                Text(verbatim: facts).font(.caption).foregroundStyle(volume.health.needsAttention ? volume.health.color : .secondary)
-                Text(verbatim: details).font(.caption).foregroundStyle(.secondary).lineLimit(2).monospacedDigit()
+        .sheet(item: $replicasFor) { volume in
+            LonghornReplicaSheet(volume: volume, nodes: status.nodes.count) { count in
+                Task { await run(LonghornRequest(volume: volume, action: .replicas, value: count)) }
             }
+        }
+        .confirmationDialog(confirmEvict.map { String(localized: "Evict the replicas of \($0.name)?") } ?? "",
+                            isPresented: Binding(get: { confirmEvict != nil }, set: { if !$0 { confirmEvict = nil } }),
+                            titleVisibility: .visible,
+                            presenting: confirmEvict) { node in
+            Button("Evict replicas", role: .destructive) {
+                Task { await run(LonghornRequest(node: node, action: .evict)) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { node in
+            Text("Longhorn copies every replica on \(node.name) to other nodes, then removes them. Scheduling stays off until you turn it back on.")
+        }
+        .alert(resultMessage ?? "", isPresented: Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })) {
+            Button("OK") {}
         }
     }
 
-    private var facts: String {
-        var parts = [stateLabel(volume.state)]
-        if volume.health == .critical || (!volume.robustness.isEmpty && volume.robustness != "unknown") {
-            parts.append(robustnessLabel(volume.robustness))
+    private func volumeRow(_ volume: LonghornVolume) -> some View {
+        let busy = running.contains(LonghornRequest.key(namespace: volume.namespace, name: volume.name, node: false))
+        let actions = busy ? [] : volume.actions
+        let act = { (action: LonghornAction) in
+            if action == .replicas { replicasFor = volume } else { Task { await run(LonghornRequest(volume: volume, action: action)) } }
         }
-        parts.append(String(localized: "\(volume.replicasHealthy)/\(volume.replicasDesired) replicas"))
-        if volume.rebuilding > 0 { parts.append(String(localized: "\(volume.rebuilding) rebuilding")) }
-        return parts.joined(separator: " · ")
+        return LonghornVolumeRow(volume: volume, busy: busy)
+            .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, onAction: act) }
+            .contextMenu { LonghornActionButtons(actions: actions, inMenu: true, onAction: act) }
     }
 
-    private var details: String {
-        var parts: [String] = []
-        if !volume.node.isEmpty {
-            parts.append(String(localized: "on \(volume.node)"))
-        } else if !volume.replicaNodes.isEmpty {
-            parts.append(volume.replicaNodes.joined(separator: ", "))
+    private func nodeRow(_ node: LonghornNode) -> some View {
+        let busy = running.contains(LonghornRequest.key(namespace: node.namespace, name: node.name, node: true))
+        let actions = busy ? [] : node.actions
+        let act = { (action: LonghornAction) in
+            if action == .evict { confirmEvict = node } else { Task { await run(LonghornRequest(node: node, action: action)) } }
         }
-        parts.append("\(formatBytes(volume.actualSize)) / \(formatBytes(volume.size))")
-        parts.append(volume.lastBackupAt > 0 ? String(localized: "backup \(relativeTime(volume.lastBackupAt))") : String(localized: "never backed up"))
-        return parts.joined(separator: " · ")
+        return LonghornNodeRow(node: node, busy: busy)
+            .swipeActions(edge: .trailing) { LonghornActionButtons(actions: actions, onAction: act) }
+            .contextMenu { LonghornActionButtons(actions: actions, inMenu: true, onAction: act) }
     }
-}
 
-private struct BackupTargetRow: View {
-    let target: LonghornBackupTarget
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("Backup target").font(.subheadline)
-                    Text(verbatim: target.url).font(.caption.monospaced()).foregroundStyle(.secondary)
-                }
-                Spacer()
-                StatusPill(label: target.available ? String(localized: "available") : String(localized: "unavailable"),
-                           color: target.available ? .green : .red)
-            }
-            if !target.available && !target.message.isEmpty {
-                Text(verbatim: target.message).font(.caption).foregroundStyle(.statusBad)
-            }
+    private func run(_ request: LonghornRequest) async {
+        guard let client = model.client, !running.contains(request.id) else { return }
+        running.insert(request.id)
+        defer { running.remove(request.id) }
+        do {
+            try await client.longhornAction(namespace: request.namespace, name: request.name, action: request.action, value: request.value)
+            resultMessage = request.doneMessage
+            await refresh()
+        } catch {
+            resultMessage = String(localized: "Could not change \(request.label): \(error.localizedDescription)")
         }
-    }
-}
-
-private struct NodeRow: View {
-    let node: LonghornNode
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                HealthDot(health: node.ready ? .ok : .critical)
-                Text(verbatim: node.name).font(.subheadline.monospaced())
-                Spacer()
-                if !node.ready {
-                    Text("not ready").font(.caption).foregroundStyle(.statusBad)
-                } else if !node.schedulable {
-                    Text("scheduling disabled").font(.caption).foregroundStyle(attentionColor)
-                }
-            }
-            ForEach(Array(node.disks.enumerated()), id: \.offset) { _, disk in
-                if disk.maximum > 0 {
-                    ProgressView(value: min(1, Double(disk.scheduled) / Double(disk.maximum))).tint(disk.schedulable ? .accentColor : attentionColor)
-                }
-                Text(verbatim: [disk.path.isEmpty ? nil : disk.path,
-                                String(localized: "\(formatBytes(disk.scheduled)) of \(formatBytes(disk.maximum)) scheduled"),
-                                disk.schedulable ? nil : String(localized: "scheduling disabled")].compactMap { $0 }.joined(separator: " · "))
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-        }
-    }
-}
-
-private func stateLabel(_ state: String) -> String {
-    switch state {
-    case "attached": String(localized: "attached")
-    case "detached": String(localized: "detached")
-    case "attaching": String(localized: "attaching")
-    case "detaching": String(localized: "detaching")
-    case "creating": String(localized: "creating")
-    case "deleting": String(localized: "deleting")
-    default: state
-    }
-}
-
-private func robustnessLabel(_ robustness: String) -> String {
-    switch robustness {
-    case "healthy": String(localized: "healthy")
-    case "degraded": String(localized: "degraded")
-    case "faulted": String(localized: "faulted")
-    default: String(localized: "unknown")
     }
 }
