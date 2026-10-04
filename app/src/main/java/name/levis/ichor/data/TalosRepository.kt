@@ -8,6 +8,10 @@ import name.levis.ichorgo.HealthListener
 import name.levis.ichorgo.LogListener
 import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
+import name.levis.ichor.model.ArgoAction
+import name.levis.ichor.model.ArgoApp
+import name.levis.ichor.model.ArgoStatus
+import name.levis.ichor.model.ArgoSyncOptions
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.DataServices
@@ -436,6 +440,20 @@ class TalosRepository(
         kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(DataServices.serializer(), Ichorgo.kubeDataServices(cfg, ctx, server, hints)) }
     }
 
+    /**
+     * Argo CD Applications, ApplicationSets and projects through their custom resources
+     * (os:admin); `installed` is false without Argo CD.
+     */
+    suspend fun argoCD(): ArgoStatus = remember(ARGO_CD) {
+        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(ArgoStatus.serializer(), Ichorgo.kubeArgoCD(cfg, ctx, server)) }
+    }
+
+    /** Runs [action] on [app] (os:admin); [options] for a sync or a rollback. Throws when refused. */
+    suspend fun argoAction(app: ArgoApp, action: ArgoAction, options: ArgoSyncOptions? = null) = kubeCall { cfg, ctx, server ->
+        val json = options?.let { TalosJson.encodeToString(ArgoSyncOptions.serializer(), it) }.orEmpty()
+        Ichorgo.kubeArgoAction(cfg, ctx, server, app.namespace, app.name, action.wire, json)
+    }
+
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
     suspend fun deletePod(pod: KubePod) = kubeCall { cfg, ctx, server -> Ichorgo.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
 
@@ -641,6 +659,7 @@ const val INVENTORY = "inventory"
 const val WORKLOADS = "workloads"
 const val PODS = "pods"
 const val DATA_SERVICES = "dataservices"
+const val ARGO_CD = "argocd"
 fun servicesKey(node: String) = "services|$node"
 fun resourcesKey(node: String) = "resources|$node"
 const val CLUSTER_TIME = "clustertime"

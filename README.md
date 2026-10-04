@@ -27,6 +27,12 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   network between two nodes (TCP throughput and latency, see [Network test](#network-test));
   open an app in the browser from its sheet, at the hosts of the Ingresses and Gateway API
   HTTPRoutes whose Services select its pods; or export a kubeconfig to open the cluster in kubenav.
+- **Argo CD:** when the cluster runs it, list its Applications with their health and sync state,
+  follow a sync wave by wave, and sync (with prune, dry run, selected resources…), refresh,
+  terminate a sync, pause or resume auto-sync, or roll back to an earlier deployment. Ichor
+  patches the Application resources with the admin kubeconfig, like `argocd --core`, so no
+  Argo CD token is needed. An app an ApplicationSet or a parent app manages keeps its spec:
+  only sync, refresh and terminate are offered there, since its owner would revert the rest.
 - **Background:** alerts and a home-screen widget.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -46,6 +47,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.ui.argocd.ArgoTileBadge
 import name.levis.ichor.model.AppFilter
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.InventoryApp
@@ -65,7 +68,7 @@ internal val AppCardShape = RoundedCornerShape(18.dp)
  * the unrecognised apps in sections collapsed by default (opened while searching or filtering).
  */
 @Composable
-fun AppsGrid(inventory: Inventory, onOpen: (InventoryApp) -> Unit) {
+fun AppsGrid(inventory: Inventory, onOpen: (InventoryApp) -> Unit, argoBadges: Map<String, ServiceHealth> = emptyMap()) {
     var query by rememberSaveable { mutableStateOf("") }
     var filterKey by rememberSaveable { mutableStateOf(FILTER_ALL) }
     var systemOpen by rememberSaveable { mutableStateOf(false) }
@@ -116,9 +119,9 @@ fun AppsGrid(inventory: Inventory, onOpen: (InventoryApp) -> Unit) {
             }
             return@LazyVerticalGrid
         }
-        items(groups.main, key = { it.id }) { app -> AppTile(app) { onOpen(app) } }
-        section("system", systemTitle, groups.system, systemOpen || narrowed, { systemOpen = !systemOpen }, onOpen)
-        section("unknown", unknownTitle, groups.unknown, unknownOpen || narrowed, { unknownOpen = !unknownOpen }, onOpen)
+        items(groups.main, key = { it.id }) { app -> AppTile(app, argoBadges[app.id]) { onOpen(app) } }
+        section("system", systemTitle, groups.system, systemOpen || narrowed, { systemOpen = !systemOpen }, onOpen, argoBadges)
+        section("unknown", unknownTitle, groups.unknown, unknownOpen || narrowed, { unknownOpen = !unknownOpen }, onOpen, argoBadges)
     }
 }
 
@@ -133,10 +136,11 @@ private fun LazyGridScope.section(
     open: Boolean,
     onToggle: () -> Unit,
     onOpen: (InventoryApp) -> Unit,
+    argoBadges: Map<String, ServiceHealth>,
 ) {
     if (apps.isEmpty()) return
     fullWidth("section-$key") { SectionHeader(title, apps, open, onToggle) }
-    if (open) items(apps, key = { "$key-${it.id}" }) { app -> AppTile(app) { onOpen(app) } }
+    if (open) items(apps, key = { "$key-${it.id}" }) { app -> AppTile(app, argoBadges[app.id]) { onOpen(app) } }
 }
 
 @Composable
@@ -187,16 +191,24 @@ private fun CountChip(label: String, count: Int, selected: Boolean, leading: (@C
     )
 }
 
-/** Icon, name and version; an amber dot when the app needs a look. */
+/**
+ * Icon, name and version; an amber dot when the app needs a look, and a badge on the icon when
+ * its Argo CD app is critical or OutOfSync ([argo], null when not).
+ */
 @Composable
-private fun AppTile(app: InventoryApp, onClick: () -> Unit) {
+private fun AppTile(app: InventoryApp, argo: ServiceHealth?, onClick: () -> Unit) {
     Surface(onClick = onClick, shape = AppCardShape, color = MaterialTheme.colorScheme.surfaceContainer) {
         Box {
             Column(
                 Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                AppIconTile(app)
+                Box {
+                    AppIconTile(app)
+                    if (argo != null) {
+                        ArgoTileBadge(argo == ServiceHealth.CRITICAL, Modifier.align(Alignment.BottomEnd).offset(x = 4.dp, y = 4.dp))
+                    }
+                }
                 Spacer(Modifier.height(8.dp))
                 Text(
                     app.name,

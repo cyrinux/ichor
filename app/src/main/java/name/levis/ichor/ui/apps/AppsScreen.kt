@@ -36,6 +36,18 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.Inventory
+import name.levis.ichor.model.InventoryApp
+import name.levis.ichor.model.ARGO_CD_CATALOG_ID
+import name.levis.ichor.model.ArgoAction
+import name.levis.ichor.model.ArgoStatus
+import name.levis.ichor.model.argoAppsFor
+import name.levis.ichor.model.hasArgoCD
+import name.levis.ichor.model.inventoryBadges
+import name.levis.ichor.model.isDemo
+import name.levis.ichor.data.ARGO_CD
+import name.levis.ichor.ui.argocd.ArgoActionToasts
+import name.levis.ichor.ui.argocd.ArgoPolling
+import name.levis.ichor.ui.argocd.ArgoViewModel
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.ui.UiState
@@ -50,16 +62,20 @@ import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
  * Every app running in the cluster as a grid of icons, with search and filters; tapping one
- * opens its details. [onNode] opens a node's pods (address, hostname, role).
+ * opens its details. [onNode] opens a node's pods (address, hostname, role); [onArgoCD] the Argo
+ * CD screen and [onArgoApp] one of its apps (namespace, name).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppsScreen(
     onBack: () -> Unit,
     onNode: (addr: String, host: String, role: String) -> Unit,
+    onArgoCD: () -> Unit,
+    onArgoApp: (namespace: String, name: String) -> Unit,
     vm: AppsViewModel = viewModel(factory = factory { AppsViewModel(app.talosRepository) }),
     workloadsVm: AppWorkloadsViewModel = viewModel(factory = factory { AppWorkloadsViewModel(app.talosRepository) }),
     routesVm: AppRoutesViewModel = viewModel(factory = factory { AppRoutesViewModel(app.talosRepository) }),
+    argoVm: ArgoViewModel = viewModel(key = "apps-argocd", factory = factory { ArgoViewModel(app.talosRepository) }),
 ) {
     val application = LocalContext.current.applicationContext as TalosApp
     val state by vm.state.collectAsStateWithLifecycle()
@@ -90,6 +106,19 @@ fun AppsScreen(
             },
             onDismiss = { confirm = null },
         )
+    }
+
+    // Argo CD: through the Kubernetes API too, and only when the inventory shows it (or in the demo).
+    val inventory = (state as? UiState.Loaded)?.data
+    val argoOffered = canRestart && inventory?.hasArgoCD == true
+    val argoState by argoVm.state.collectAsStateWithLifecycle()
+    val argoBusy by argoVm.busy.collectAsStateWithLifecycle()
+    ArgoActionToasts(argoVm.results)
+    ArgoPolling(argoVm)
+    // Tile badges only from a result already at hand: the grid never asks Argo CD itself.
+    val argoBadges = remember(argoState, inventory, argoOffered) {
+        val status = (argoState as? UiState.Loaded)?.data ?: application.talosRepository.cached<ArgoStatus>(ARGO_CD)?.value
+        if (argoOffered && status != null && inventory != null) status.inventoryBadges(inventory.apps) else emptyMap()
     }
 
     Scaffold(
@@ -126,7 +155,7 @@ fun AppsScreen(
                 onRefresh = vm::refresh,
                 modifier = Modifier.padding(padding).fillMaxSize(),
             ) {
-                AppsGrid(s.data, onOpen = { selected = it.id })
+                AppsGrid(s.data, onOpen = { selected = it.id }, argoBadges = argoBadges)
                 s.data.apps.firstOrNull { it.id == selected }?.let { detail ->
                     if (canRestart) {
                         LaunchedEffect(detail) {
@@ -134,11 +163,15 @@ fun AppsScreen(
                             routesVm.load(detail)
                         }
                     }
+                    if (argoOffered) {
+                        LaunchedEffect(Unit) { argoVm.loadOrReuse(Triple(config?.activeContext, generation, invalidations)) }
+                    }
                     AppDetailSheet(
                         app = detail,
                         nodes = nodes,
                         routes = if (canRestart) routes else null,
                         restart = if (canRestart) AppRestartUi(workloads, restarting) { confirm = it } else null,
+                        argo = if (argoOffered) argoUi(detail, argoState, argoBusy, argoVm, onArgoCD, onArgoApp) else null,
                         onPodNode = { addr -> nodes.openNode(addr, onNode) },
                         onDismiss = { selected = null },
                     )
@@ -147,6 +180,25 @@ fun AppsScreen(
         }
     }
 }
+
+/** The Argo CD section of [detail]'s sheet. */
+private fun argoUi(
+    detail: InventoryApp,
+    state: UiState<ArgoStatus>,
+    busy: Set<String>,
+    vm: ArgoViewModel,
+    onArgoCD: () -> Unit,
+    onArgoApp: (String, String) -> Unit,
+) = AppArgoUi(
+    state = state,
+    apps = (state as? UiState.Loaded)?.data?.let { argoAppsFor(detail, it) }.orEmpty(),
+    isArgoCD = detail.id == ARGO_CD_CATALOG_ID,
+    busy = busy,
+    onSync = { vm.act(listOf(it), ArgoAction.SYNC) },
+    onRefresh = { vm.act(listOf(it), ArgoAction.REFRESH) },
+    onOpen = { onArgoApp(it.namespace, it.name) },
+    onOpenArgoCD = onArgoCD,
+)
 
 private fun Map<String, NodeOverview>.openNode(addr: String, onNode: (String, String, String) -> Unit) {
     val node = this[addr]
