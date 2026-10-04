@@ -103,6 +103,7 @@
         <item quantity="other">%d Knoten</item>
     </plurals>
     <string name="overview_stat_nodes">Knoten</string>
+    <string name="overview_nodes_unplaced">Nicht auf der Karte</string>
     <string name="overview_stat_cpu">CPU-Kerne</string>
     <string name="overview_stat_memory">Arbeitsspeicher</string>
     <string name="overview_stat_memory_used">%d %% belegt</string>

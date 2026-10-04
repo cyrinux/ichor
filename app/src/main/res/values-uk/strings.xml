@@ -121,6 +121,7 @@
         <item quantity="other">%d вузла</item>
     </plurals>
     <string name="overview_stat_nodes">Вузли</string>
+    <string name="overview_nodes_unplaced">Поза картою</string>
     <string name="overview_stat_cpu">Ядра CPU</string>
     <string name="overview_stat_memory">Пам\'ять</string>
     <string name="overview_stat_memory_used">%d%% використано</string>
