@@ -92,7 +92,7 @@ final class LastKnownTests: XCTestCase {
     }
 
     func testDomainKeysAreDistinctPerNode() {
-        let keys: [LastKnownDomain] = [.overview, .etcd, .kubespan, .inventory, .workloads, .pods,
+        let keys: [LastKnownDomain] = [.overview, .etcd, .kubespan, .inventory, .workloads, .pods, .cronJobs,
                                        .services(node: "a"), .services(node: "b"), .resources(node: "a"),
                                        .hardware(node: "a"), .network(node: "a"), .images(node: "a")]
         XCTAssertEqual(Set(keys.map(\.key)).count, keys.count)

@@ -2,12 +2,12 @@ import SwiftUI
 import IchorCore
 
 /// The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
-/// issues (os:admin): workloads with rollout restart, pods, and a network test between two
-/// nodes. The namespace filter and the search carry over between the lists. The toolbar sets
+/// issues (os:admin): workloads with rollout restart, pods, CronJobs with a manual run, and a
+/// network test between two nodes. The namespace filter and the search carry over between the lists. The toolbar sets
 /// the API address to use instead of the kubeconfig's, for a cluster the phone reaches another
 /// way (not in screenshot mode: the alert would show the real address).
 struct KubernetesView: View {
-    enum Tab: Hashable { case workloads, pods, network }
+    enum Tab: Hashable { case workloads, pods, cronJobs, network }
 
     @Environment(AppModel.self) private var model
     @State private var tab = Tab.workloads
@@ -29,6 +29,7 @@ struct KubernetesView: View {
             switch tab {
             case .workloads: WorkloadsList(namespace: $namespace, query: query)
             case .pods: PodsList(namespace: $namespace, query: query)
+            case .cronJobs: CronJobsList(namespace: $namespace, query: query)
             case .network: NetPerfView(session: netPerf)
             }
         }
@@ -61,6 +62,7 @@ struct KubernetesView: View {
             Picker(selection: $tab) {
                 Text("Workloads").tag(Tab.workloads)
                 Text("Pods").tag(Tab.pods)
+                Text("CronJobs").tag(Tab.cronJobs)
                 Text("Network").tag(Tab.network)
             } label: {
                 EmptyView()
@@ -70,7 +72,7 @@ struct KubernetesView: View {
             .padding(.bottom, 6)
             .background(.bar)
         }
-        .searchable(text: $query, prompt: Text("Name, kind or image"))
+        .searchable(text: $query, prompt: tab == .cronJobs ? Text("Name, schedule or image") : Text("Name, kind or image"))
         .navigationTitle(Text(verbatim: "Kubernetes"))
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: model.privacyMask) { _, masked in if masked { editingServer = false } }

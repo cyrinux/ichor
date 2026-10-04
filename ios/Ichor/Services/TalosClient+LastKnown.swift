@@ -20,6 +20,7 @@ extension TalosClient {
             case .inventory: return IchorgoClusterInventory(config, context, error)
             case .workloads: return IchorgoKubeWorkloads(config, context, kubeServer, error)
             case .pods: return IchorgoKubePods(config, context, kubeServer, error)
+            case .cronJobs: return IchorgoKubeCronJobs(config, context, kubeServer, error)
             case .services(let node): return IchorgoNodeServices(config, context, node, error)
             case .resources(let node): return IchorgoNodeResources(config, context, node, error)
             case .hardware(let node): return IchorgoNodeHardware(config, context, node, error)
