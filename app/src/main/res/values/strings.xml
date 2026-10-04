@@ -521,6 +521,12 @@
     <string name="debug_start">Start shell</string>
     <string name="debug_exited">Exited with code %1$d</string>
     <string name="debug_new_shell">New shell</string>
+    <string name="debug_channel_name">Debug shells</string>
+    <string name="debug_channel_desc">The debug shells left open, to go back to them or exit them</string>
+    <string name="debug_notification_title">Debug shell on %1$s</string>
+    <string name="debug_notification_text">Still running. Tap to go back to the terminal.</string>
+    <string name="debug_notification_exit">Exit</string>
+    <string name="debug_notification_public">Debug shell running</string>
     <string name="debug_connecting">Connecting…</string>
     <string name="debug_snippets">Snippets</string>
     <string name="debug_snippets_hint">Tap to run. Commands ending with … are only typed, so you can add the target.</string>

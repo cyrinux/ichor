@@ -24,6 +24,7 @@ import name.levis.ichor.ui.backup.IncomingBackup
 import name.levis.ichor.ui.capture.CaptureScreen
 import name.levis.ichor.ui.capture.CapturesScreen
 import name.levis.ichor.ui.debug.DebugShellScreen
+import name.levis.ichor.ui.debug.LiveShell
 import name.levis.ichor.ui.diagnosis.DiagnosisScreen
 import name.levis.ichor.ui.etcd.EtcdScreen
 import name.levis.ichor.ui.events.EventsScreen
@@ -95,7 +96,7 @@ private object Routes {
     const val ARGO_APP = "argocd-app?ns={ns}&name={name}"
 
     fun argoApp(namespace: String, name: String) = "argocd-app?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
-    const val DEBUG = "debug?addr={addr}&host={host}"
+    const val DEBUG = "debug?addr={addr}&host={host}&ctx={ctx}"
     const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}"
     const val NETWORK = "network?addr={addr}&host={host}"
     const val HARDWARE = "hardware?addr={addr}&host={host}"
@@ -127,7 +128,9 @@ private object Routes {
 
     fun machineConfig(addr: String, host: String) = "machineconfig?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
-    fun debug(addr: String, host: String) = "debug?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
+    /** [context]: the cluster (talosconfig context) of the node; blank for the one on screen. */
+    fun debug(addr: String, host: String, context: String = "") =
+        "debug?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&ctx=${Uri.encode(context)}"
     const val HEALTH = "health"
     const val SETTINGS = "settings"
     const val DIAGNOSIS = "diagnosis?note={note}"
@@ -151,6 +154,7 @@ enum class DeepLink { ISSUE_CONFIG, DEMO }
  * [deepLink]: a screen to open once over the overview; [onDeepLinkHandled] then clears it.
  * [openCluster]: the fingerprint of a cluster to show (a launcher shortcut), cleared by [onClusterOpened].
  * [incomingBackup]: a backup file opened from another app, to restore; cleared by [onIncomingBackupRead].
+ * [openShell]: a debug shell to go back to (its notification), cleared by [onShellOpened].
  */
 @Composable
 fun Navigation(
@@ -162,8 +166,22 @@ fun Navigation(
     onClusterOpened: () -> Unit = {},
     incomingBackup: Uri? = null,
     onIncomingBackupRead: () -> Unit = {},
+    openShell: LiveShell? = null,
+    onShellOpened: () -> Unit = {},
 ) {
     val nav = rememberNavController()
+
+    // Over whatever is on screen, unless it already is that shell.
+    LaunchedEffect(openShell) {
+        val shell = openShell ?: return@LaunchedEffect
+        val top = nav.currentBackStackEntry
+        val active = app.configRepository.config.value?.activeContext.orEmpty()
+        val showing = top?.destination?.route == Routes.DEBUG &&
+            top.arguments?.getString("addr") == shell.key.node &&
+            top.arguments?.getString("ctx").orEmpty().ifEmpty { active } == shell.key.context
+        if (!startWithImport && !showing) nav.navigate(Routes.debug(shell.key.node, shell.hostname, shell.key.context))
+        onShellOpened()
+    }
 
     // Back on that cluster's overview: a screen of the previous one must not stay open over it.
     LaunchedEffect(openCluster) {
@@ -411,10 +429,18 @@ fun Navigation(
             arguments = listOf(
                 navArgument("addr") { type = NavType.StringType },
                 navArgument("host") { type = NavType.StringType },
+                navArgument("ctx") { type = NavType.StringType; defaultValue = "" },
             ),
         ) { entry ->
             val addr = entry.arguments?.getString("addr").orEmpty()
-            DebugShellScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
+            val context = entry.arguments?.getString("ctx").orEmpty()
+                .ifEmpty { app.configRepository.config.value?.activeContext.orEmpty() }
+            DebugShellScreen(
+                node = addr,
+                hostname = entry.arguments?.getString("host") ?: addr,
+                context = context,
+                onBack = { nav.popBackStack() },
+            )
         }
         composable(
             Routes.EVENTS,

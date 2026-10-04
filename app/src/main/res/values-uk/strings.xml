@@ -564,6 +564,12 @@
     <string name="debug_start">Запустити оболонку</string>
     <string name="debug_exited">Завершено з кодом %1$d</string>
     <string name="debug_new_shell">Нова оболонка</string>
+    <string name="debug_channel_name">Налагоджувальні оболонки</string>
+    <string name="debug_channel_desc">Відкриті налагоджувальні оболонки, щоб повернутися до них або вийти</string>
+    <string name="debug_notification_title">Налагоджувальна оболонка на %1$s</string>
+    <string name="debug_notification_text">Досі працює. Торкніться, щоб повернутися до термінала.</string>
+    <string name="debug_notification_exit">Вийти</string>
+    <string name="debug_notification_public">Налагоджувальна оболонка працює</string>
     <string name="debug_connecting">Під\'єднання…</string>
     <string name="debug_snippets">Шаблони</string>
     <string name="debug_snippets_hint">Торкніться, щоб виконати. Команди з … в кінці лише вводяться, щоб додати ціль.</string>

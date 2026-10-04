@@ -9,6 +9,9 @@
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Keeps a debug shell open while the user is elsewhere, until they exit it. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- Self-update from GitHub releases (the user still confirms each install). -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
@@ -75,6 +78,17 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/capture_paths" />
         </provider>
+
+        <!-- A debug shell is an interactive terminal on a node: no other foreground service
+             type fits it, and it runs only while the user keeps a shell open. -->
+        <service
+            android:name=".ui.debug.DebugShellService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps an interactive debug shell (a remote terminal on a Talos node) open while the user switches screens or apps, until they exit it from the app or its notification." />
+        </service>
 
         <receiver
             android:name=".update.InstallResultReceiver"

@@ -1,73 +1,21 @@
 package name.levis.ichor.ui.debug
 
-import name.levis.ichor.ui.UiText
-import name.levis.ichor.R
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import name.levis.ichorgo.DebugListener
-import name.levis.ichorgo.DebugSession
 import name.levis.ichorgo.Ichorgo
-import name.levis.ichor.data.ConfigRepository
 import org.connectbot.terminal.TerminalEmulator
-import org.connectbot.terminal.TerminalEmulatorFactory
-
-sealed interface ShellState {
-    data object Setup : ShellState
-    data class Starting(val status: UiText) : ShellState
-    data object Running : ShellState
-    data class Exited(val code: Long, val message: String) : ShellState
-}
 
 /**
- * Bridges a Go debug session (`talosctl debug`) and a libvterm terminal: container output
- * is fed to the emulator, keystrokes and resizes go back to the container's TTY.
+ * The screen's view of the node's [DebugShell]. The shell is app-wide: leaving the screen
+ * keeps it running (its notification opens it again); only Stop or the notification's Exit end it.
  */
-class DebugShellViewModel(private val configs: ConfigRepository, private val node: String) : ViewModel() {
-    private val _state = MutableStateFlow<ShellState>(ShellState.Setup)
-    val state: StateFlow<ShellState> = _state.asStateFlow()
+class DebugShellViewModel(private val shells: DebugShells, key: ShellKey, hostname: String) : ViewModel() {
+    private val shell = shells.open(key, hostname)
 
-    private var session: DebugSession? = null
-    private var size = 80 to 24 // columns to rows, updated by the terminal view
+    val state: StateFlow<ShellState> = shell.state
+    val emulator: TerminalEmulator get() = shell.emulator
 
-    val emulator: TerminalEmulator = TerminalEmulatorFactory.create(
-        initialRows = size.second,
-        initialCols = size.first,
-        defaultForeground = Color(0xFFE4EAF1),
-        defaultBackground = Color(0xFF0B1220),
-        onKeyboardInput = { bytes -> session?.write(bytes) },
-        onResize = { dims ->
-            size = dims.columns to dims.rows
-            session?.resize(dims.columns.toLong(), dims.rows.toLong())
-        },
-    )
-
-    fun start(image: String, args: String) {
-        val stored = configs.config.value ?: return
-        stop()
-        emulator.clearScreen()
-        _state.value = ShellState.Starting(UiText.Res(R.string.debug_connecting))
-        session = Ichorgo.startDebugShell(
-            stored.yaml, stored.activeContext, node, image, args,
-            size.first.toLong(), size.second.toLong(),
-            object : DebugListener {
-                override fun onStatus(message: String) {
-                    _state.value = ShellState.Starting(UiText.Raw(message)) // from the Go core
-                }
-
-                override fun onOutput(data: ByteArray) {
-                    if (_state.value !is ShellState.Running) _state.value = ShellState.Running
-                    emulator.writeInput(data) // thread-safe in termlib
-                }
-
-                override fun onExit(code: Long, errMessage: String) {
-                    _state.value = ShellState.Exited(code, errMessage)
-                }
-            },
-        )
-    }
+    fun start(image: String, args: String) = shell.start(image, args)
 
     /** The ready-made commands; none if the core cannot list them (the button then hides). */
     val snippets: List<DebugSnippet> by lazy {
@@ -75,22 +23,14 @@ class DebugShellViewModel(private val configs: ConfigRepository, private val nod
     }
 
     /** Sends raw bytes (extra keys: Esc, Tab, arrows, Ctrl-C…). */
-    fun send(bytes: ByteArray) {
-        session?.write(bytes)
-    }
+    fun send(bytes: ByteArray) = shell.send(bytes)
 
     /** Back to the setup form for a new shell. */
-    fun reset() {
-        stop()
-        _state.value = ShellState.Setup
-    }
+    fun reset() = shell.reset()
 
-    fun stop() {
-        session?.close()
-        session = null
-    }
+    fun stop() = shell.stop()
 
     override fun onCleared() {
-        stop()
+        shells.release(shell.key)
     }
 }
