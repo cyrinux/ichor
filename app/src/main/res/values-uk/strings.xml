@@ -2032,7 +2032,7 @@
         <item quantity="other">%1$d вікна синхронізації</item>
     </plurals>
     <string name="overview_card_summary">Зведення кластера</string>
-    <string name="overview_edit_title">Упорядкувати картки</string>
+    <string name="overview_edit_title">Налаштувати огляд</string>
     <string name="overview_edit_done">Готово</string>
     <string name="overview_edit_hint">Перетягніть картку за маркер, щоб перемістити її. Приховані картки можна повернути нижче.</string>
     <string name="overview_edit_drag">Перетягніть, щоб перемістити</string>
@@ -2041,6 +2041,12 @@
     <string name="overview_edit_hide">Приховати</string>
     <string name="overview_edit_show">Показати</string>
     <string name="overview_edit_hidden">Приховані картки</string>
+    <string name="overview_edit_bar">Верхня панель</string>
+    <string name="overview_edit_bar_hint">Перетягніть дію над лінію, щоб показати її значком, або під неї, щоб перенести в меню ⋮.</string>
+    <string name="overview_edit_menu">У меню ⋮</string>
+    <string name="overview_edit_to_menu">Перенести в меню</string>
+    <string name="overview_edit_to_bar">Показати значком</string>
+    <string name="overview_edit_cards">Картки</string>
     <string name="overview_edit_reset">Скинути</string>
     <string name="overview_edit_when_detected">Лише якщо є в кластері</string>
     <string name="overview_edit_all_hidden">Усі картки приховано. Торкніться, щоб вибрати, які показувати.</string>

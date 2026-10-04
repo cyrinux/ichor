@@ -118,6 +118,7 @@ fun TopologyContent(topology: ClusterTopology, onNode: (TopologyNode) -> Unit) {
                     onLink = { link = it },
                     speeds = tests.mapValues { (_, test) -> formatMbps(test.podThroughputMbps ?: 0.0) },
                     picked = picked,
+                    selected = link,
                 )
             }
             item { TopologyLegend() }

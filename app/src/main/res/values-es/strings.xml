@@ -1872,7 +1872,7 @@
         <item quantity="other">%1$d ventanas de sync</item>
     </plurals>
     <string name="overview_card_summary">Resumen del clúster</string>
-    <string name="overview_edit_title">Organizar tarjetas</string>
+    <string name="overview_edit_title">Personalizar el resumen</string>
     <string name="overview_edit_done">Listo</string>
     <string name="overview_edit_hint">Arrastra una tarjeta por su asa para moverla. Las tarjetas ocultas se pueden volver a añadir abajo.</string>
     <string name="overview_edit_drag">Arrastrar para mover</string>
@@ -1881,6 +1881,12 @@
     <string name="overview_edit_hide">Ocultar</string>
     <string name="overview_edit_show">Mostrar</string>
     <string name="overview_edit_hidden">Tarjetas ocultas</string>
+    <string name="overview_edit_bar">Barra superior</string>
+    <string name="overview_edit_bar_hint">Arrastra una acción por encima de la línea para mostrarla como icono, o por debajo para ponerla en el menú ⋮.</string>
+    <string name="overview_edit_menu">En el menú ⋮</string>
+    <string name="overview_edit_to_menu">Mover al menú</string>
+    <string name="overview_edit_to_bar">Mostrar como icono</string>
+    <string name="overview_edit_cards">Tarjetas</string>
     <string name="overview_edit_reset">Restablecer</string>
     <string name="overview_edit_when_detected">Solo si está en el clúster</string>
     <string name="overview_edit_all_hidden">Todas las tarjetas están ocultas. Toca para elegir cuáles mostrar.</string>

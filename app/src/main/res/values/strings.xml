@@ -1871,7 +1871,7 @@
         <item quantity="other">%1$d sync windows</item>
     </plurals>
     <string name="overview_card_summary">Cluster summary</string>
-    <string name="overview_edit_title">Arrange cards</string>
+    <string name="overview_edit_title">Customize overview</string>
     <string name="overview_edit_done">Done</string>
     <string name="overview_edit_hint">Drag a card by its handle to move it. Hidden cards can be added back below.</string>
     <string name="overview_edit_drag">Drag to move</string>
@@ -1880,6 +1880,12 @@
     <string name="overview_edit_hide">Hide</string>
     <string name="overview_edit_show">Show</string>
     <string name="overview_edit_hidden">Hidden cards</string>
+    <string name="overview_edit_bar">Top bar</string>
+    <string name="overview_edit_bar_hint">Drag an action above the line to show it as an icon, or below to put it in the ⋮ menu.</string>
+    <string name="overview_edit_menu">In the ⋮ menu</string>
+    <string name="overview_edit_to_menu">Move to the menu</string>
+    <string name="overview_edit_to_bar">Show as an icon</string>
+    <string name="overview_edit_cards">Cards</string>
     <string name="overview_edit_reset">Reset to default</string>
     <string name="overview_edit_when_detected">Only when found on the cluster</string>
     <string name="overview_edit_all_hidden">Every card is hidden. Tap to choose the ones to show.</string>
