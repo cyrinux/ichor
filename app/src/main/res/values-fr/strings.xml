@@ -953,6 +953,15 @@
     <string name="upgrade_stop_following_body">La mise à jour de %1$s continue sur le nœud&#160;; l\'app arrête simplement de la suivre.</string>
     <string name="upgrade_failed">Échec de la mise à jour&#160;: %1$s</string>
     <string name="upgrade_done_versions">Mis à jour&#160;: %1$s → %2$s</string>
+    <string name="upgrade_acknowledge_title">Risques à accepter avant de démarrer</string>
+    <string name="upgrade_acknowledge_check">Je comprends ces risques</string>
+    <string name="upgrade_channel_name">Mises à jour de Talos</string>
+    <string name="upgrade_channel_desc">La progression et le résultat des mises à jour de Talos lancées depuis l\'application</string>
+    <string name="upgrade_notification_title">Mise à jour de %1$s</string>
+    <string name="upgrade_notification_public">Mise à jour de Talos en cours</string>
+    <string name="upgrade_notification_done">%1$s mis à jour</string>
+    <string name="upgrade_notification_failed">Échec de la mise à jour de %1$s</string>
+    <string name="upgrade_notification_result_public">Mise à jour de Talos terminée</string>
     <plurals name="capture_show_virtual">
         <item quantity="one">Afficher %1$d interface virtuelle</item>
         <item quantity="other">Afficher %1$d interfaces virtuelles</item>

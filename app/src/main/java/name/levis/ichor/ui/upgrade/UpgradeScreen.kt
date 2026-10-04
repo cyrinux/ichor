@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -38,10 +40,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -54,7 +59,9 @@ import name.levis.ichor.model.TalosRelease
 import name.levis.ichor.model.UpgradePlan
 import name.levis.ichor.model.etcdBlocked
 import name.levis.ichor.model.releaseSuggestions
+import name.levis.ichor.model.upgradeAcknowledged
 import name.levis.ichor.model.upgradeGate
+import name.levis.ichor.model.upgradeRisks
 import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
@@ -77,8 +84,14 @@ import name.levis.ichor.ui.components.TooltipIconButton
 /** Release suggestions shown as chips; any other version can be typed. */
 private const val MAX_RELEASE_CHIPS = 8
 
-/** Choices made on the upgrade screen, passed to the confirmation and the run. */
-private data class UpgradeChoice(val version: String, val image: String, val stage: Boolean, val force: Boolean)
+/** Choices made on the upgrade screen, passed to the confirmation and the run, with the [risks] to accept. */
+private data class UpgradeChoice(
+    val version: String,
+    val image: String,
+    val stage: Boolean,
+    val force: Boolean,
+    val risks: List<String> = emptyList(),
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,11 +132,13 @@ fun UpgradeScreen(
         }
     }
 
-    fun start(choice: UpgradeChoice, fromVersion: String) {
+    fun start(choice: UpgradeChoice, fromVersion: String, acknowledged: Boolean) {
         confirming = null
         scope.launch {
             val result = runCatching {
-                withContext(Dispatchers.IO) { upgrades.start(node, hostname, fromVersion, choice.image, choice.stage, choice.force) }
+                withContext(Dispatchers.IO) {
+                    upgrades.start(node, hostname, fromVersion, choice.image, choice.stage, choice.force, acknowledged)
+                }
             }
             result.exceptionOrNull()?.let { snackbar.showSnackbar(it.uiText().resolve(context)) }
             if (result.getOrNull() == false) {
@@ -213,18 +228,21 @@ fun UpgradeScreen(
     }
     confirming?.let { choice ->
         val from = (plan as? UiState.Loaded)?.data?.currentVersion.orEmpty()
+        var understood by remember(choice) { mutableStateOf(false) }
         HostnameConfirmDialog(
             title = stringResource(R.string.upgrade_confirm_title, hostname, choice.version),
             hostname = hostname,
             confirmLabel = stringResource(R.string.upgrade_start),
-            onConfirm = { start(choice, from) },
+            onConfirm = { start(choice, from, acknowledged = choice.risks.isNotEmpty() && understood) },
             onDismiss = { confirming = null },
             emphasized = choice.force,
+            enabled = upgradeAcknowledged(choice.risks, understood),
         ) {
             Text(stringResource(R.string.upgrade_confirm_body, choice.image), style = MaterialTheme.typography.bodyMedium)
             if (choice.force) {
                 Text(stringResource(R.string.upgrade_force_on), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium)
             }
+            if (choice.risks.isNotEmpty()) RiskAcknowledgment(choice.risks, understood) { understood = it }
         }
     }
 }
@@ -244,8 +262,9 @@ private fun UpgradeSetup(
     val target by targetVm.target.collectAsStateWithLifecycle()
     var version by rememberSaveable { mutableStateOf(initialVersion) }
     var stage by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(plan.currentImage, version) { targetVm.setVersion(plan.currentImage, version) }
+    LaunchedEffect(plan.currentImage, plan.currentVersion, version) { targetVm.setVersion(plan.currentImage, plan.currentVersion, version) }
     val image = if (target.version == version.trim() && !target.pending) target.image else ""
+    val versionRisk = if (image.isNotEmpty()) target.risk else ""
     val gate = upgradeGate(plan, version, image, force, otherRunning != null)
 
     Column(
@@ -293,13 +312,13 @@ private fun UpgradeSetup(
             onChange = { stage = it },
         )
 
-        PlanChecks(plan)
+        PlanChecks(plan, versionRisk)
         if (force) Text(stringResource(R.string.upgrade_force_on), color = colors.bad, style = MaterialTheme.typography.bodyMedium)
         if (otherRunning != null) {
             Text(stringResource(R.string.upgrade_other_running, otherRunning), color = colors.warn, style = MaterialTheme.typography.bodySmall)
         }
         Button(
-            onClick = { onStart(UpgradeChoice(version.trim(), image, stage, force)) },
+            onClick = { onStart(UpgradeChoice(version.trim(), image, stage, force, upgradeRisks(plan, versionRisk))) },
             enabled = gate.canStart,
             modifier = Modifier.fillMaxWidth(),
         ) { Text(stringResource(R.string.upgrade_start)) }
@@ -327,8 +346,9 @@ private fun ReleaseChips(releases: UiState<List<TalosRelease>>, currentVersion: 
 }
 
 @Composable
-private fun PlanChecks(plan: UpgradePlan) {
+private fun PlanChecks(plan: UpgradePlan, versionRisk: String) {
     val colors = LocalStatusColors.current
+    val risks = upgradeRisks(plan, versionRisk)
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             SectionTitle(stringResource(R.string.upgrade_checks))
@@ -341,10 +361,28 @@ private fun PlanChecks(plan: UpgradePlan) {
                 )
             }
             plan.blockers.forEach { Text("✕ $it", color = colors.bad, style = MaterialTheme.typography.bodyMedium) }
+            if (risks.isNotEmpty()) {
+                Text(stringResource(R.string.upgrade_acknowledge_title), style = MaterialTheme.typography.labelMedium)
+                risks.forEach { Text("⚠ $it", color = colors.warn, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium) }
+            }
             plan.warnings.forEach { Text("! $it", color = colors.warn, style = MaterialTheme.typography.bodyMedium) }
-            if (plan.blockers.isEmpty() && plan.warnings.isEmpty()) {
+            if (plan.blockers.isEmpty() && risks.isEmpty() && plan.warnings.isEmpty()) {
                 Text(stringResource(R.string.upgrade_no_issues), color = colors.ok, style = MaterialTheme.typography.bodyMedium)
             }
         }
+    }
+}
+
+/** The [risks] the confirmation lists, and the box to tick to accept them (required to start). */
+@Composable
+private fun RiskAcknowledgment(risks: List<String>, understood: Boolean, onChange: (Boolean) -> Unit) {
+    val colors = LocalStatusColors.current
+    risks.forEach { Text("⚠ $it", color = colors.warn, style = MaterialTheme.typography.bodyMedium) }
+    Row(
+        Modifier.fillMaxWidth().toggleable(value = understood, role = Role.Checkbox, onValueChange = onChange),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Checkbox(checked = understood, onCheckedChange = null, modifier = Modifier.padding(end = 12.dp, top = 8.dp, bottom = 8.dp))
+        Text(stringResource(R.string.upgrade_acknowledge_check), style = MaterialTheme.typography.bodyMedium)
     }
 }

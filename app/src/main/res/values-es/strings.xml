@@ -953,6 +953,15 @@
     <string name="upgrade_stop_following_body">La actualización de %1$s continúa en el nodo; la app solo deja de seguirla.</string>
     <string name="upgrade_failed">La actualización falló: %1$s</string>
     <string name="upgrade_done_versions">Actualizado: %1$s → %2$s</string>
+    <string name="upgrade_acknowledge_title">Riesgos que aceptar antes de empezar</string>
+    <string name="upgrade_acknowledge_check">Entiendo estos riesgos</string>
+    <string name="upgrade_channel_name">Actualizaciones de Talos</string>
+    <string name="upgrade_channel_desc">El progreso y el resultado de las actualizaciones de Talos iniciadas desde la app</string>
+    <string name="upgrade_notification_title">Actualizando %1$s</string>
+    <string name="upgrade_notification_public">Actualización de Talos en curso</string>
+    <string name="upgrade_notification_done">%1$s actualizado</string>
+    <string name="upgrade_notification_failed">Falló la actualización de %1$s</string>
+    <string name="upgrade_notification_result_public">Actualización de Talos terminada</string>
     <plurals name="capture_show_virtual">
         <item quantity="one">Mostrar %1$d interfaz virtual</item>
         <item quantity="other">Mostrar %1$d interfaces virtuales</item>

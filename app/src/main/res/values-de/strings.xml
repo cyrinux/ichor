@@ -952,6 +952,15 @@
     <string name="upgrade_stop_following_body">Das Upgrade von %1$s läuft auf dem Knoten weiter; die App verfolgt es nur nicht mehr.</string>
     <string name="upgrade_failed">Upgrade fehlgeschlagen: %1$s</string>
     <string name="upgrade_done_versions">Aktualisiert: %1$s → %2$s</string>
+    <string name="upgrade_acknowledge_title">Vor dem Start zu akzeptierende Risiken</string>
+    <string name="upgrade_acknowledge_check">Ich verstehe diese Risiken</string>
+    <string name="upgrade_channel_name">Talos-Upgrades</string>
+    <string name="upgrade_channel_desc">Fortschritt und Ergebnis der in der App gestarteten Talos-Upgrades</string>
+    <string name="upgrade_notification_title">%1$s wird aktualisiert</string>
+    <string name="upgrade_notification_public">Talos-Upgrade läuft</string>
+    <string name="upgrade_notification_done">%1$s aktualisiert</string>
+    <string name="upgrade_notification_failed">Upgrade von %1$s fehlgeschlagen</string>
+    <string name="upgrade_notification_result_public">Talos-Upgrade beendet</string>
     <plurals name="capture_show_virtual">
         <item quantity="one">%1$d virtuelle Schnittstelle anzeigen</item>
         <item quantity="other">%1$d virtuelle Schnittstellen anzeigen</item>

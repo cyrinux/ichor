@@ -19,6 +19,13 @@ final class UpgradeTests: XCTestCase {
         let worker = try TalosJSON.decode(UpgradePlan.self, from: #"{"node":"w","etcd":null}"#)
         XCTAssertNil(worker.etcd)
         XCTAssertFalse(worker.controlPlane)
+        XCTAssertEqual(worker.acknowledge, [])
+        XCTAssertEqual(plan.acknowledge, [])
+
+        let single = try TalosJSON.decode(UpgradePlan.self, from: #"{"node":"n","acknowledge":["single control plane"]}"#)
+        XCTAssertEqual(single.acknowledge, ["single control plane"])
+        let nullAck = try TalosJSON.decode(UpgradePlan.self, from: #"{"node":"n","acknowledge":null}"#)
+        XCTAssertEqual(nullAck.acknowledge, [])
     }
 
     func testReleasesDecoding() throws {
@@ -73,7 +80,38 @@ final class UpgradeTests: XCTestCase {
         XCTAssertFalse(UpgradeGate(plan: goRefuses, targetVersion: "v1.11.3", force: true, busy: false).forceAvailable)
     }
 
+    func testGateAcknowledgments() {
+        let clean = UpgradePlan(node: "n", currentVersion: "v1.11.2")
+        let none = UpgradeGate(plan: clean, targetVersion: "v1.11.3", force: false, busy: false)
+        XCTAssertEqual(none.acknowledgments, [])
+        XCTAssertTrue(none.canRequest)
+        XCTAssertTrue(none.canStart)
+
+        let single = UpgradePlan(node: "n", controlPlane: true, currentVersion: "v1.11.2", acknowledge: ["single control plane"])
+        let unconfirmed = UpgradeGate(plan: single, targetVersion: "v1.11.3", force: false, busy: false)
+        XCTAssertEqual(unconfirmed.acknowledgments, ["single control plane"])
+        XCTAssertTrue(unconfirmed.canRequest)
+        XCTAssertFalse(unconfirmed.canStart)
+        XCTAssertTrue(UpgradeGate(plan: single, targetVersion: "v1.11.3", force: false, busy: false, acknowledged: true).canStart)
+
+        // The version risk is one more, after the plan's; blank is none.
+        let risky = UpgradeGate(plan: single, targetVersion: "v1.13.0", versionRisk: "skips minor versions", force: false, busy: false)
+        XCTAssertEqual(risky.acknowledgments, ["single control plane", "skips minor versions"])
+        XCTAssertEqual(UpgradeGate(plan: clean, targetVersion: "v1.11.3", versionRisk: " ", force: false, busy: false).acknowledgments, [])
+        XCTAssertFalse(UpgradeGate(plan: clean, targetVersion: "v1.13.0", versionRisk: "skips minor versions", force: false, busy: false).canStart)
+
+        // Force skips etcd blockers, never the acknowledgments.
+        let blocked = UpgradePlan(node: "n", blockers: ["etcd is unhealthy"], acknowledge: ["only endpoint"], forceable: true)
+        let forced = UpgradeGate(plan: blocked, targetVersion: "v1.11.3", force: true, busy: false)
+        XCTAssertTrue(forced.canRequest)
+        XCTAssertFalse(forced.canStart)
+        XCTAssertTrue(UpgradeGate(plan: blocked, targetVersion: "v1.11.3", force: true, busy: false, acknowledged: true).canStart)
+        // Acknowledging does not lift blockers.
+        XCTAssertFalse(UpgradeGate(plan: blocked, targetVersion: "v1.11.3", force: false, busy: false, acknowledged: true).canStart)
+    }
+
     func testPhaseNamesAndOrder() {
+        XCTAssertEqual(UpgradePhase.allCases.filter(\.needsApp), [.requested, .installing])
         XCTAssertEqual(UpgradePhase.allCases, [.requested, .installing, .rebooting, .waiting, .booted, .done])
         XCTAssertTrue(UpgradePhase.requested < .installing)
         XCTAssertTrue(UpgradePhase.booted < .done)

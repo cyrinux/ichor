@@ -1,6 +1,216 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "I understand" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ich habe verstanden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo entiendo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "J'ai compris"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ho capito"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Я розумію"
+          }
+        }
+      }
+    },
+    "Keep Ichor open" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor geöffnet lassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén Ichor abierto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gardez Ichor ouvert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni Ichor aperto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не закривайте Ichor"
+          }
+        }
+      }
+    },
+    "The Talos upgrade can stall while Ichor is in the background. Open it until the node reboots." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Talos-Upgrade kann hängen bleiben, während Ichor im Hintergrund ist. Öffne die App, bis der Knoten neu startet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La actualización de Talos puede detenerse mientras Ichor está en segundo plano. Ábrelo hasta que el nodo se reinicie."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mise à jour Talos peut se bloquer tant qu'Ichor est en arrière-plan. Ouvrez-le jusqu'au redémarrage du nœud."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'aggiornamento di Talos può bloccarsi mentre Ichor è in background. Aprilo finché il nodo non si riavvia."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення Talos може зупинитися, поки Ichor у фоні. Відкрийте його, доки вузол не перезавантажиться."
+          }
+        }
+      }
+    },
+    "Keep Ichor open until the node reboots: in the background iOS can pause the app, and the upgrade with it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lass Ichor geöffnet, bis der Knoten neu startet: Im Hintergrund kann iOS die App pausieren und damit auch das Upgrade."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén Ichor abierto hasta que el nodo se reinicie: en segundo plano iOS puede pausar la app, y con ella la actualización."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gardez Ichor ouvert jusqu'au redémarrage du nœud : en arrière-plan, iOS peut mettre l'app en pause, et la mise à jour avec."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni Ichor aperto finché il nodo non si riavvia: in background iOS può sospendere l'app, e con essa l'aggiornamento."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не закривайте Ichor, доки вузол не перезавантажиться: у фоні iOS може призупинити застосунок, а разом з ним і оновлення."
+          }
+        }
+      }
+    },
+    "Keep Ichor open until the node reboots" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lass Ichor geöffnet, bis der Knoten neu startet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén Ichor abierto hasta que el nodo se reinicie"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gardez Ichor ouvert jusqu'au redémarrage du nœud"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni Ichor aperto finché il nodo non si riavvia"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не закривайте Ichor, доки вузол не перезавантажиться"
+          }
+        }
+      }
+    },
+    "Until the reboot Ichor may drive the download and install: in the background iOS pauses it, and the upgrade can stall." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bis zum Neustart steuert Ichor eventuell Download und Installation: Im Hintergrund pausiert iOS die App, und das Upgrade kann hängen bleiben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasta el reinicio, Ichor puede encargarse de la descarga y la instalación: en segundo plano iOS lo pausa y la actualización puede detenerse."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jusqu'au redémarrage, Ichor peut piloter le téléchargement et l'installation : en arrière-plan, iOS le met en pause et la mise à jour peut se bloquer."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fino al riavvio Ichor può gestire download e installazione: in background iOS lo sospende e l'aggiornamento può bloccarsi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "До перезавантаження Ichor може керувати завантаженням і встановленням: у фоні iOS призупиняє його, і оновлення може зупинитися."
+          }
+        }
+      }
+    },
     "Pods are only replaced when deleted (OnDelete): delete them to restart them." : {
       "extractionState" : "manual",
       "localizations" : {
