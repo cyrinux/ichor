@@ -136,7 +136,7 @@ fun NodeHealthPill(health: NodeHealth, modifier: Modifier = Modifier) {
 
 /** Label/value row used in detail cards. */
 @Composable
-fun InfoRow(label: String, value: String, mono: Boolean = false) {
+fun InfoRow(label: String, value: String, mono: Boolean = false, valueColor: Color = Color.Unspecified) {
     Row(Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
         Text(
             label,
@@ -148,6 +148,7 @@ fun InfoRow(label: String, value: String, mono: Boolean = false) {
             value,
             style = MaterialTheme.typography.bodyMedium,
             fontFamily = if (mono) FontFamily.Monospace else null,
+            color = valueColor,
             modifier = Modifier.weight(0.6f),
         )
     }

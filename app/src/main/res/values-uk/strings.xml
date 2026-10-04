@@ -250,11 +250,27 @@
     <string name="etcd_status_leader">Лідер</string>
     <string name="etcd_status_learner">Учень</string>
     <string name="etcd_status_follower">Послідовник</string>
+    <string name="etcd_status_lagging">Відстає</string>
     <string name="etcd_member_id">ID учасника</string>
     <string name="etcd_db_size">Розмір БД</string>
     <string name="etcd_db_size_value">%1$s використано / %2$s</string>
     <string name="etcd_raft">Термін / індекс Raft</string>
     <string name="etcd_storage_version">Версія сховища</string>
+    <string name="etcd_behind_leader">Відставання від лідера</string>
+    <string name="etcd_in_sync">Синхронізовано</string>
+    <string name="etcd_apply_backlog">Ще не застосовано</string>
+    <plurals name="etcd_entries">
+        <item quantity="one">%d запис</item>
+        <item quantity="few">%d записи</item>
+        <item quantity="many">%d записів</item>
+        <item quantity="other">%d запису</item>
+    </plurals>
+    <plurals name="etcd_lagging_members">
+        <item quantity="one">%1$d учасник відстає: %2$s</item>
+        <item quantity="few">%1$d учасники відстають: %2$s</item>
+        <item quantity="many">%1$d учасників відстають: %2$s</item>
+        <item quantity="other">%1$d учасника відстають: %2$s</item>
+    </plurals>
     <string name="etcd_peer_urls">URL-адреси пірів</string>
     <string name="etcd_defragment_member">Дефрагментувати (звільнить %1$s)</string>
     <string name="etcd_defragmenting">Дефрагментація %1$s (%2$d/%3$d)…</string>

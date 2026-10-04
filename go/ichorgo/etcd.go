@@ -32,17 +32,19 @@ type etcdMember struct {
 }
 
 type etcdNodeStatus struct {
-	Node        string   `json:"node"`
-	Error       string   `json:"error,omitempty"`
-	MemberID    string   `json:"memberId"`
-	IsLeader    bool     `json:"isLeader"`
-	IsLearner   bool     `json:"isLearner"`
-	DbSize      int64    `json:"dbSize"`
-	DbSizeInUse int64    `json:"dbSizeInUse"`
-	RaftIndex   uint64   `json:"raftIndex"`
-	RaftTerm    uint64   `json:"raftTerm"`
-	Version     string   `json:"version"`
-	Errors      []string `json:"errors"`
+	Node        string `json:"node"`
+	Error       string `json:"error,omitempty"`
+	MemberID    string `json:"memberId"`
+	IsLeader    bool   `json:"isLeader"`
+	IsLearner   bool   `json:"isLearner"`
+	DbSize      int64  `json:"dbSize"`
+	DbSizeInUse int64  `json:"dbSizeInUse"`
+	RaftIndex   uint64 `json:"raftIndex"`
+	RaftTerm    uint64 `json:"raftTerm"`
+	// RaftAppliedIndex trails RaftIndex (committed) while the member applies its backlog.
+	RaftAppliedIndex uint64   `json:"raftAppliedIndex"`
+	Version          string   `json:"version"`
+	Errors           []string `json:"errors"`
 }
 
 type etcdAlarm struct {
@@ -218,6 +220,7 @@ func buildEtcdOverview(
 			st.DbSizeInUse = s.GetDbSizeInUse()
 			st.RaftIndex = s.GetRaftIndex()
 			st.RaftTerm = s.GetRaftTerm()
+			st.RaftAppliedIndex = s.GetRaftAppliedIndex()
 			st.Version = s.GetStorageVersion()
 			st.Errors = orEmpty(s.GetErrors())
 

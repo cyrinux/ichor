@@ -225,11 +225,23 @@
     <string name="etcd_status_leader">Leader</string>
     <string name="etcd_status_learner">Learner</string>
     <string name="etcd_status_follower">Follower</string>
+    <string name="etcd_status_lagging">Lagging</string>
     <string name="etcd_member_id">Member ID</string>
     <string name="etcd_db_size">DB size</string>
     <string name="etcd_db_size_value">%1$s in use / %2$s</string>
     <string name="etcd_raft">Raft term / index</string>
     <string name="etcd_storage_version">Storage version</string>
+    <string name="etcd_behind_leader">Behind leader</string>
+    <string name="etcd_in_sync">In sync</string>
+    <string name="etcd_apply_backlog">Not yet applied</string>
+    <plurals name="etcd_entries">
+        <item quantity="one">%d entry</item>
+        <item quantity="other">%d entries</item>
+    </plurals>
+    <plurals name="etcd_lagging_members">
+        <item quantity="one">%1$d member is lagging: %2$s</item>
+        <item quantity="other">%1$d members are lagging: %2$s</item>
+    </plurals>
     <string name="etcd_peer_urls">Peer URLs</string>
     <string name="etcd_defragment_member">Defragment (reclaims %1$s)</string>
     <string name="etcd_defragmenting">Defragmenting %1$s (%2$d/%3$d)…</string>

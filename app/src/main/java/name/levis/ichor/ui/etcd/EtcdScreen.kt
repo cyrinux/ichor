@@ -24,6 +24,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -67,6 +68,10 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.defragOrder
+import name.levis.ichor.model.EtcdLag
+import name.levis.ichor.model.ETCD_LAG_ENTRIES
+import name.levis.ichor.model.etcdLag
+import name.levis.ichor.model.laggingMembers
 import name.levis.ichor.model.reclaimable
 import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.authenticate
@@ -419,11 +424,19 @@ private fun EtcdContent(
             }
         }
         item { SectionTitle(stringResource(R.string.etcd_section_members, etcd.members.size)) }
+        val lagging = laggingMembers(etcd.statuses)
+        if (lagging.isNotEmpty()) {
+            item {
+                val names = lagging.joinToString(", ") { hostnames[it.memberId] ?: it.node }
+                Text(pluralStringResource(R.plurals.etcd_lagging_members, lagging.size, lagging.size, names), color = colors.warn)
+            }
+        }
         items(etcd.statuses, key = { it.node }) { status ->
             val hostname = hostnames[status.memberId] ?: status.node
             MemberStatusCard(
                 status = status,
                 hostname = hostname,
+                lag = etcdLag(status, etcd.statuses),
                 actions = members.actionsFor(status.memberId, hostname, status.takeIf { it.isLeader && it.error == null }),
                 onDefrag = if (canDefrag && !running && status.error == null) {
                     { onDefrag(DefragRequest(listOf(status), hostnames)) }
@@ -441,7 +454,7 @@ private fun EtcdContent(
 }
 
 @Composable
-private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, actions: MemberActions?, onDefrag: (() -> Unit)?) {
+private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, lag: EtcdLag?, actions: MemberActions?, onDefrag: (() -> Unit)?) {
     val colors = LocalStatusColors.current
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
@@ -454,6 +467,7 @@ private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, actions: 
                     status.error != null -> StatusPill(stringResource(R.string.etcd_status_error), colors.bad)
                     status.errors.isNotEmpty() -> StatusPill(stringResource(R.string.etcd_status_errors), colors.bad)
                     status.isLeader -> StatusPill(stringResource(R.string.etcd_status_leader), colors.ok)
+                    lag?.lagging == true -> StatusPill(stringResource(R.string.etcd_status_lagging), colors.warn)
                     status.isLearner -> StatusPill(stringResource(R.string.etcd_status_learner), colors.warn)
                     else -> StatusPill(stringResource(R.string.etcd_status_follower), colors.muted)
                 }
@@ -470,6 +484,7 @@ private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, actions: 
                 Modifier.padding(vertical = 4.dp),
             )
             InfoRow(stringResource(R.string.etcd_raft), "${status.raftTerm} / ${status.raftIndex}")
+            lag?.let { LagRows(it, isLeader = status.isLeader) }
             InfoRow(stringResource(R.string.etcd_storage_version), status.version)
             status.errors.forEach { Text(it, color = colors.bad, style = MaterialTheme.typography.bodySmall) }
             if (onDefrag != null && status.reclaimable > 0) {
@@ -483,6 +498,27 @@ private fun MemberStatusCard(status: EtcdNodeStatus, hostname: String, actions: 
         }
     }
 }
+
+/** How far the member trails: behind the leader (followers), and its apply backlog when it matters. */
+@Composable
+private fun LagRows(lag: EtcdLag, isLeader: Boolean) {
+    val colors = LocalStatusColors.current
+    val behind = lag.behindLeader
+    if (!isLeader && behind != null) {
+        InfoRow(
+            label = stringResource(R.string.etcd_behind_leader),
+            value = if (behind == 0L) stringResource(R.string.etcd_in_sync) else entries(behind),
+            valueColor = if (behind >= ETCD_LAG_ENTRIES) colors.warn else Color.Unspecified,
+        )
+    }
+    if (lag.applyBacklog >= ETCD_LAG_ENTRIES) {
+        InfoRow(stringResource(R.string.etcd_apply_backlog), entries(lag.applyBacklog), valueColor = colors.warn)
+    }
+}
+
+@Composable
+private fun entries(count: Long): String =
+    pluralStringResource(R.plurals.etcd_entries, count.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(), count)
 
 @Composable
 private fun MemberCard(member: EtcdMember, actions: MemberActions?) {
