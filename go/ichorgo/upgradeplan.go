@@ -24,18 +24,22 @@ const (
 )
 
 type upgradePlan struct {
-	Node           string     `json:"node"`
-	Hostname       string     `json:"hostname"`
-	ControlPlane   bool       `json:"controlPlane"`
-	CurrentVersion string     `json:"currentVersion"`
-	CurrentImage   string     `json:"currentImage"`
-	Schematic      string     `json:"schematic"`
-	Etcd           *planEtcd  `json:"etcd"`
-	Blockers       []string   `json:"blockers"`
-	Warnings       []string   `json:"warnings"`
-	Forceable      bool       `json:"forceable"` // every blocker is an etcd check that force skips
-	etcdBlockers   []string   // the blockers force bypasses
-	peers          []planPeer // for tests
+	Node           string    `json:"node"`
+	Hostname       string    `json:"hostname"`
+	ControlPlane   bool      `json:"controlPlane"`
+	CurrentVersion string    `json:"currentVersion"`
+	CurrentImage   string    `json:"currentImage"`
+	Schematic      string    `json:"schematic"`
+	Etcd           *planEtcd `json:"etcd"`
+	Blockers       []string  `json:"blockers"`
+	Warnings       []string  `json:"warnings"`
+	// Acknowledge are risks the user must confirm to start: StartUpgrade refuses them
+	// unless acknowledged (force does not skip them).
+	Acknowledge  []string `json:"acknowledge"`
+	Forceable    bool     `json:"forceable"` // every blocker is an etcd check that force skips
+	etcdBlockers []string // the blockers force bypasses
+	target       planPeer
+	peers        []planPeer // the other nodes
 }
 
 type planEtcd struct {
@@ -74,13 +78,16 @@ type planInput struct {
 	imageErr     string
 	etcd         *etcdHealth
 	defaultImage string
+	endpoints    []string   // the talosconfig context's endpoints
+	lock         *lockState // nil when not checked
 }
 
 // UpgradePlan checks whether node can be upgraded now, read-only (os:reader, os:admin to read
 // the installer image from the machine config). See upgradePlan for the JSON. Blockers are
 // hard stops (StartUpgrade refuses them); when "forceable" is true they are all etcd
-// checks, which force skips like `talosctl upgrade --force`.
-func UpgradePlan(configYAML, contextName, node string) (out string, err error) {
+// checks, which force skips like `talosctl upgrade --force`. It also reads the cluster
+// upgrade lock (see upgradelock.go) through the Kubernetes API; kubeServer: see KubePods.
+func UpgradePlan(configYAML, contextName, kubeServer, node string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
@@ -90,11 +97,12 @@ func UpgradePlan(configYAML, contextName, node string) (out string, err error) {
 			return "", err
 		}
 
-		return toJSON(gatherPlan(ctx, s, node))
+		return toJSON(gatherPlan(ctx, s, node, kubeTarget{configYAML, contextName, kubeServer}))
 	})
 }
 
-func gatherPlan(ctx context.Context, s *session, node string) upgradePlan {
+// gatherPlan probes the cluster for the plan; a zero kube skips reading the upgrade lock.
+func gatherPlan(ctx context.Context, s *session, node string, kube kubeTarget) upgradePlan {
 	nodes := targetNodes(s.context)
 	peers := make([]planPeer, len(nodes))
 
@@ -106,7 +114,7 @@ func gatherPlan(ctx context.Context, s *session, node string) upgradePlan {
 
 	wg.Wait()
 
-	in := planInput{}
+	in := planInput{endpoints: s.context.Endpoints}
 
 	for _, p := range peers {
 		if p.node == node {
@@ -133,6 +141,8 @@ func gatherPlan(ctx context.Context, s *session, node string) upgradePlan {
 
 		in.etcd = gatherEtcdHealth(ctx, s.client, via, node, in.target.hostname)
 	}
+
+	in.lock = readUpgradeLock(ctx, kube, time.Now())
 
 	return computePlan(in)
 }
@@ -287,6 +297,8 @@ func computePlan(in planInput) upgradePlan {
 		CurrentVersion: t.version,
 		Blockers:       []string{},
 		Warnings:       []string{},
+		Acknowledge:    []string{},
+		target:         t,
 		peers:          in.others,
 	}
 
@@ -319,6 +331,13 @@ func computePlan(in planInput) upgradePlan {
 
 	plan.Blockers = append(plan.Blockers, peerBlockers(in.others)...)
 	plan.Warnings = append(plan.Warnings, peerWarnings(t, in.others)...)
+
+	applyLock(&plan, in.lock, append([]planPeer{t}, in.others...))
+
+	if onlyEndpoint(t, in.endpoints) {
+		plan.Acknowledge = append(plan.Acknowledge,
+			"this node is the only Talos endpoint of this context: the app loses access while it reboots, and if it does not boot again you need its console to recover")
+	}
 
 	if t.controlPlane {
 		applyEtcd(&plan, in.etcd)
@@ -405,7 +424,8 @@ func applyEtcd(plan *upgradePlan, h *etcdHealth) {
 
 	switch {
 	case h.members == 1:
-		plan.Warnings = append(plan.Warnings, "single control plane: etcd and the Kubernetes API are down while it upgrades")
+		plan.Acknowledge = append(plan.Acknowledge,
+			"single control plane: etcd and the Kubernetes API are down while it upgrades, and the cluster is down if it does not boot again")
 	case !plan.Etcd.QuorumAfterLoss:
 		block(fmt.Sprintf("etcd would lose quorum: %d of %d members would stay healthy, %d needed", max(remaining, 0), h.members, quorum))
 	}
@@ -417,4 +437,61 @@ func applyEtcd(plan *upgradePlan, h *etcdHealth) {
 	if !h.thisMember {
 		plan.Warnings = append(plan.Warnings, "this control-plane node is not an etcd member")
 	}
+}
+
+// applyLock turns the cluster upgrade lock into a blocker (another run holds it) or a
+// warning (it could not be read: the upgrade goes on without a lock).
+func applyLock(plan *upgradePlan, lock *lockState, peers []planPeer) {
+	switch {
+	case lock == nil:
+	case lock.err != "":
+		plan.Warnings = append(plan.Warnings, "cannot check the cluster upgrade lock ("+lock.err+"): make sure nobody else upgrades this cluster now")
+	case lock.held != nil && !lockSettled(lock.held, peers):
+		plan.Blockers = append(plan.Blockers, lock.held.describe())
+	}
+}
+
+// onlyEndpoint tells every endpoint of the context is node itself: rebooting it cuts the
+// app off. A hostname endpoint is compared by name only (best effort).
+func onlyEndpoint(t planPeer, endpoints []string) bool {
+	if len(endpoints) == 0 {
+		return false
+	}
+
+	for _, e := range endpoints {
+		if host := endpointHost(e); host != t.node && (t.hostname == "" || host != t.hostname) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// UpgradeVersionCheck returns the risk of upgrading from one Talos version to another, to
+// acknowledge before StartUpgrade, or "": Talos supports upgrading one minor version at a
+// time, and a downgrade is not an upgrade path it tests.
+func UpgradeVersionCheck(fromVersion, toVersion string) (out string) {
+	defer maskResult(&out, new(error))
+
+	return versionRisk(fromVersion, toVersion)
+}
+
+func versionRisk(fromVersion, toVersion string) string {
+	from, okFrom := normalizeTalosVersion(fromVersion)
+	to, okTo := normalizeTalosVersion(toVersion)
+
+	if !okFrom || !okTo {
+		return ""
+	}
+
+	a, b := versionNumbers(from), versionNumbers(to)
+
+	switch {
+	case slices.Compare(b[:], a[:]) < 0:
+		return fmt.Sprintf("%s is older than %s: downgrading Talos is not a tested path and may not boot", to, from)
+	case b[0] != a[0] || b[1] > a[1]+1:
+		return fmt.Sprintf("%s skips minor versions from %s: Talos supports upgrading one minor version at a time", to, from)
+	}
+
+	return ""
 }

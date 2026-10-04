@@ -72,7 +72,12 @@ var errStoppedFollowing = errors.New("stopped following: the upgrade itself cann
 // It uses MachineService.Upgrade while the node serves it (planned removal: Talos 1.18) and
 // falls back to the LifecycleService when the node answers Unimplemented: see requestUpgrade
 // for what differs.
-func StartUpgrade(configYAML, contextName, node, image string, stage, force bool, listener UpgradeListener) *UpgradeRun {
+//
+// The plan's acknowledgments (and UpgradeVersionCheck of the image's version) are refused
+// unless acknowledged, whatever force. The run holds the cluster upgrade lock (see
+// upgradelock.go) through the Kubernetes API (kubeServer: see KubePods); it goes on without
+// it when that API cannot be used.
+func StartUpgrade(configYAML, contextName, kubeServer, node, image string, stage, force, acknowledged bool, listener UpgradeListener) *UpgradeRun {
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
 	listener = maskedUpgradeListener{listener}
@@ -82,7 +87,8 @@ func StartUpgrade(configYAML, contextName, node, image string, stage, force bool
 	go func() {
 		defer cancel()
 
-		version, err := runUpgrade(ctx, configYAML, contextName, node, strings.TrimSpace(image), stage, force, listener)
+		opts := upgradeOptions{image: strings.TrimSpace(image), stage: stage, force: force, acknowledged: acknowledged}
+		version, err := runUpgrade(ctx, kubeTarget{configYAML, contextName, kubeServer}, node, opts, listener)
 
 		errMessage := ""
 		if err != nil {
@@ -102,14 +108,21 @@ func emitProgress(l UpgradeListener, phase, message string) {
 	}
 }
 
-func runUpgrade(
-	ctx context.Context, configYAML, contextName, node, image string, stage, force bool, listener UpgradeListener,
-) (string, error) {
-	if repo, tag := splitImageRef(image); repo == "" || tag == "" && !strings.Contains(image, "@") {
+// upgradeOptions are what StartUpgrade was asked.
+type upgradeOptions struct {
+	image                      string
+	stage, force, acknowledged bool
+}
+
+func runUpgrade(ctx context.Context, kube kubeTarget, node string, o upgradeOptions, listener UpgradeListener) (version string, err error) {
+	image := o.image
+
+	repo, tag := splitImageRef(image)
+	if repo == "" || tag == "" && !strings.Contains(image, "@") {
 		return "", fmt.Errorf("invalid installer image %q", image)
 	}
 
-	s, release, err := sessions.acquire(configYAML, contextName)
+	s, release, err := sessions.acquire(kube.config, kube.context)
 	if err != nil {
 		return "", err
 	}
@@ -120,12 +133,17 @@ func runUpgrade(
 		return "", err
 	}
 
+	// The lock is not read here: taking it below is what keeps two runs apart.
 	planCtx, planCancel := context.WithTimeout(ctx, planTimeout)
-	plan := gatherPlan(planCtx, s, node)
+	plan := gatherPlan(planCtx, s, node, kubeTarget{})
 
 	planCancel()
 
-	if err := upgradeRefusal(plan, force); err != nil {
+	if err := upgradeRefusal(plan, o.force); err != nil {
+		return "", err
+	}
+
+	if err := acknowledgmentRefusal(plan, tag, o.acknowledged); err != nil {
 		return "", err
 	}
 
@@ -133,13 +151,30 @@ func runUpgrade(
 		return "", errors.New("cancelled before the upgrade was requested")
 	}
 
-	emitProgress(listener, phaseRequested, "requesting the upgrade to "+image+"; the node pulls and checks the installer image first")
+	emit := func(phase, msg string) { emitProgress(listener, phase, msg) }
+
+	lock, err := takeUpgradeLock(ctx, kube,
+		upgradeLockRequest{holder: newLockHolder(), node: node, hostname: plan.Hostname, from: plan.CurrentVersion, to: tag},
+		func(info *upgradeLockInfo) bool {
+			return lockSettled(info, append([]planPeer{plan.target}, plan.peers...))
+		},
+		func(msg string) { emit(phaseRequested, msg) })
+	if err != nil {
+		return "", err
+	}
+
+	// A run the user stopped following is still upgrading: its lock expires on its own.
+	defer func() {
+		if !errors.Is(err, errStoppedFollowing) {
+			lock.release()
+		}
+	}()
+
+	emit(phaseRequested, "requesting the upgrade to "+image+"; the node pulls and checks the installer image first")
 
 	// The request is not tied to Cancel: once sent, it completes.
 	reqCtx, reqCancel := context.WithTimeout(context.Background(), upgradeRequestTimeout)
 	defer reqCancel()
-
-	emit := func(phase, msg string) { emitProgress(listener, phase, msg) }
 
 	// The node is about to change version: what the session cached about it is void.
 	defer func() {
@@ -147,7 +182,7 @@ func runUpgrade(
 		s.definitions.Delete(node)
 	}()
 
-	if err := requestUpgrade(withNode(reqCtx, node), talosUpgrader{s.client}, image, stage, force, func() error { return upgradeRefusal(plan, false) }, emit); err != nil {
+	if err := requestUpgrade(withNode(reqCtx, node), talosUpgrader{s.client}, image, o.stage, o.force, func() error { return upgradeRefusal(plan, false) }, emit); err != nil {
 		if isUnavailableAPI(err) {
 			return "", errors.New("upgrade: " + s.friendly(node, err))
 		}
@@ -155,16 +190,29 @@ func runUpgrade(
 		return "", err
 	}
 
-	_, tag := splitImageRef(image)
 	tracker := &upgradeTracker{
 		oldVersion: plan.CurrentVersion,
 		reinstall:  tag != "" && sameVersion(tag, plan.CurrentVersion),
-		staged:     stage,
+		staged:     o.stage,
 	}
 	observe := func(ctx context.Context) upgradeObservation { return observeNode(ctx, s.client, node) }
 
-	return followUpgrade(ctx, tracker, observe, func(phase, msg string) { emitProgress(listener, phase, msg) },
-		upgradePollInterval, time.Now)
+	return followUpgrade(ctx, tracker, observe, emit, upgradePollInterval, time.Now)
+}
+
+// acknowledgmentRefusal refuses the plan's acknowledgments, and the risk of going to
+// toVersion, unless the user acknowledged them.
+func acknowledgmentRefusal(plan upgradePlan, toVersion string, acknowledged bool) error {
+	risks := slices.Clone(plan.Acknowledge)
+	if risk := versionRisk(plan.CurrentVersion, toVersion); risk != "" {
+		risks = append(risks, risk)
+	}
+
+	if len(risks) == 0 || acknowledged {
+		return nil
+	}
+
+	return errors.New("upgrade refused until confirmed: " + strings.Join(risks, "; "))
 }
 
 // upgradeRefusal returns the plan's blockers as an error, minus the etcd ones when forced.

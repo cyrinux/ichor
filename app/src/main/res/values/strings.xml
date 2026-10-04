@@ -950,6 +950,15 @@
     <string name="upgrade_stop_following_body">The upgrade of %1$s continues on the node; the app just stops tracking it.</string>
     <string name="upgrade_failed">Upgrade failed: %1$s</string>
     <string name="upgrade_done_versions">Upgraded: %1$s → %2$s</string>
+    <string name="upgrade_acknowledge_title">Risks to accept before starting</string>
+    <string name="upgrade_acknowledge_check">I understand these risks</string>
+    <string name="upgrade_channel_name">Talos upgrades</string>
+    <string name="upgrade_channel_desc">The progress and result of the Talos upgrades started from the app</string>
+    <string name="upgrade_notification_title">Upgrading %1$s</string>
+    <string name="upgrade_notification_public">Talos upgrade running</string>
+    <string name="upgrade_notification_done">%1$s upgraded</string>
+    <string name="upgrade_notification_failed">Upgrade of %1$s failed</string>
+    <string name="upgrade_notification_result_public">Talos upgrade finished</string>
     <plurals name="capture_show_virtual">
         <item quantity="one">Show %1$d virtual interface</item>
         <item quantity="other">Show %1$d virtual interfaces</item>

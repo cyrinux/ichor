@@ -1026,6 +1026,15 @@
     <string name="upgrade_stop_following_body">Оновлення %1$s триває на вузлі; застосунок лише припиняє стежити за ним.</string>
     <string name="upgrade_failed">Оновлення не вдалося: %1$s</string>
     <string name="upgrade_done_versions">Оновлено: %1$s → %2$s</string>
+    <string name="upgrade_acknowledge_title">Ризики, які треба прийняти перед початком</string>
+    <string name="upgrade_acknowledge_check">Я розумію ці ризики</string>
+    <string name="upgrade_channel_name">Оновлення Talos</string>
+    <string name="upgrade_channel_desc">Перебіг і результат оновлень Talos, запущених із застосунку</string>
+    <string name="upgrade_notification_title">Оновлення %1$s</string>
+    <string name="upgrade_notification_public">Триває оновлення Talos</string>
+    <string name="upgrade_notification_done">%1$s оновлено</string>
+    <string name="upgrade_notification_failed">Не вдалося оновити %1$s</string>
+    <string name="upgrade_notification_result_public">Оновлення Talos завершено</string>
     <plurals name="capture_show_virtual">
         <item quantity="one">Показати %1$d віртуальний інтерфейс</item>
         <item quantity="few">Показати %1$d віртуальні інтерфейси</item>

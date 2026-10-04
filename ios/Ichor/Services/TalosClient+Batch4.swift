@@ -62,9 +62,10 @@ extension TalosClient {
         try await json { IchorgoPacketDetail(path, index, $0) }
     }
 
-    /// Current version, installer image and what blocks an upgrade of node (os:admin).
+    /// Current version, installer image and what blocks an upgrade of node (os:admin), with
+    /// the risks to acknowledge; also reads the cluster upgrade lock (Kubernetes API).
     func upgradePlan(node: String) async throws -> UpgradePlan {
-        try await Self.json { [config, context] in IchorgoUpgradePlan(config, context, node, $0) }
+        try await Self.json { [config, context, kubeServer] in IchorgoUpgradePlan(config, context, kubeServer, node, $0) }
     }
 
     /// Recent Talos releases from GitHub, newest first.
@@ -82,9 +83,16 @@ extension TalosClient {
         await Task.detached(priority: .userInitiated) { IchorgoUpgradeImage(currentImage, version) }.value
     }
 
+    /// The risk of going from one Talos version to another (skipped minor versions, downgrade)
+    /// to acknowledge before upgrading, "" for none.
+    static func versionRisk(from: String, to: String) async -> String {
+        await Task.detached(priority: .userInitiated) { IchorgoUpgradeVersionCheck(from, to) }.value
+    }
+
     /// `talosctl upgrade` and following the node until it is back (os:admin). Cancelling the
-    /// consuming task only stops following: the node keeps upgrading.
-    func upgrade(node: String, image: String, stage: Bool, force: Bool) -> AsyncStream<UpgradeEvent> {
+    /// consuming task only stops following: the node keeps upgrading. `acknowledged`: the user
+    /// confirmed the plan's and the version's risks (Go refuses them otherwise, even forced).
+    func upgrade(node: String, image: String, stage: Bool, force: Bool, acknowledged: Bool) -> AsyncStream<UpgradeEvent> {
         AsyncStream { continuation in
             let bridge = UpgradeBridge(
                 progress: { continuation.yield(.progress($0)) },
@@ -93,7 +101,7 @@ extension TalosClient {
                     continuation.finish()
                 }
             )
-            let run = IchorgoStartUpgrade(config, context, node, image, stage, force, bridge)
+            let run = IchorgoStartUpgrade(config, context, kubeServer, node, image, stage, force, acknowledged, bridge)
             continuation.onTermination = { _ in
                 run?.cancel()
                 _ = bridge // keep the listener alive while following

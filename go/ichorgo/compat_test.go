@@ -347,6 +347,21 @@ func TestRequestUpgrade(t *testing.T) {
 		}
 	})
 
+	t.Run("a broken install stream says the node may need a reboot", func(t *testing.T) {
+		f := &fakeUpgrader{legacyErr: unimplemented, messages: []string{"writing image"}, upgradeErr: status.Error(codes.Unavailable, "connection reset")}
+
+		_, err := run(f, false, false)
+		if err == nil || !strings.Contains(err.Error(), "without rebooting") || slices.Contains(f.calls, "reboot") {
+			t.Errorf("err = %v, calls = %v", err, f.calls)
+		}
+
+		// Before the installer said anything, it is the plain failure.
+		f = &fakeUpgrader{legacyErr: unimplemented, upgradeErr: errors.New("permission denied")}
+		if _, err := run(f, false, false); err == nil || strings.Contains(err.Error(), "without rebooting") {
+			t.Errorf("err = %v", err)
+		}
+	})
+
 	t.Run("the lifecycle API has no staged upgrade", func(t *testing.T) {
 		f := &fakeUpgrader{legacyErr: unimplemented}
 

@@ -213,7 +213,7 @@ func main() {
 		out = pcapProbe(cfg, *contextName, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), *mask)
 	case "upgrade-plan":
 		// Read-only: never calls the upgrade itself.
-		out, err = ichorgo.UpgradePlan(cfg, *contextName, flag.Arg(1))
+		out, err = ichorgo.UpgradePlan(cfg, *contextName, *kubeServer, flag.Arg(1))
 	case "talos-releases":
 		out, err = ichorgo.TalosReleases()
 	case "container-logs":

@@ -43,6 +43,7 @@ import name.levis.ichor.security.AppLock
 import name.levis.ichor.security.PrefsLockSettings
 import name.levis.ichor.update.UpdateManager
 import name.levis.ichor.ui.debug.DebugShells
+import name.levis.ichor.ui.upgrade.UpgradeService
 import name.levis.ichor.data.ClusterNames
 import name.levis.ichor.data.WakeOnLanStore
 import name.levis.ichor.data.StoredConfig
@@ -93,7 +94,10 @@ class TalosApp : Application() {
         )
     }
     val supportBundleRepository by lazy { SupportBundleRepository(configRepository, filesDir) }
-    val upgradeManager by lazy { UpgradeManager(configRepository, onFinished = talosRepository::forgetFeatures) }
+    /** The followed upgrade; UpgradeService keeps the app alive while it runs. */
+    val upgradeManager by lazy {
+        UpgradeManager(configRepository, kubeServers, onStarted = { UpgradeService.start(this) }, onFinished = talosRepository::forgetFeatures)
+    }
     val talosUpdateChecker by lazy { TalosUpdateChecker() }
     val uiPreferences by lazy { UiPreferences(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
     val clusterColors by lazy { ClusterColors(getSharedPreferences(ClusterColors.FILE, Context.MODE_PRIVATE)) }

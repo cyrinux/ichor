@@ -1,8 +1,9 @@
 import SwiftUI
 import IchorCore
 
-/// `talosctl upgrade` of one node (os:admin): plan with blockers and warnings, target version
-/// and image, then the progress until the node is back. One upgrade at a time in the app.
+/// `talosctl upgrade` of one node (os:admin): plan with blockers, warnings and risks to
+/// acknowledge, target version and image, then the progress until the node is back. One
+/// upgrade at a time in the app.
 struct UpgradeView: View {
     let node: String
     let hostname: String
@@ -21,6 +22,8 @@ struct UpgradeView: View {
     @State private var version = ""
     @State private var showPrereleases = false
     @State private var image = ""
+    /// UpgradeVersionCheck for the target: nil while it is computed.
+    @State private var versionRisk: String?
     @State private var stage = false
     @State private var force = false
     @State private var confirmForce = false
@@ -55,8 +58,9 @@ struct UpgradeView: View {
         return nil
     }
 
-    private func makeGate(_ plan: UpgradePlan) -> UpgradeGate {
-        UpgradeGate(plan: plan, targetVersion: version, force: force, busy: job.isActive)
+    private func makeGate(_ plan: UpgradePlan, acknowledged: Bool = false) -> UpgradeGate {
+        UpgradeGate(plan: plan, targetVersion: version, versionRisk: versionRisk ?? "", force: force, busy: job.isActive,
+                    acknowledged: acknowledged)
     }
 
     private func form(_ plan: UpgradePlan) -> some View {
@@ -77,7 +81,7 @@ struct UpgradeView: View {
                     Text(stage ? String(localized: "Stage upgrade") : String(localized: "Start upgrade"))
                         .fontWeight(force ? .bold : .regular)
                 }
-                .disabled(!gate.canStart || image.isEmpty)
+                .disabled(!gate.canRequest || image.isEmpty || versionRisk == nil)
                 if let message { Text(message).font(.footnote).foregroundStyle(.red) }
             } footer: {
                 Text("The node reboots into the new version. An upgrade cannot be cancelled once requested.")
@@ -108,7 +112,8 @@ struct UpgradeView: View {
                 title: String(localized: "Upgrade \(hostname)?"),
                 message: confirmationMessage(plan),
                 hostname: hostname,
-                actionTitle: stage ? String(localized: "Stage upgrade") : String(localized: "Start upgrade")
+                actionTitle: stage ? String(localized: "Stage upgrade") : String(localized: "Start upgrade"),
+                acknowledgments: gate.acknowledgments
             ) {
                 confirming = false
                 start(plan)
@@ -187,7 +192,7 @@ struct UpgradeView: View {
     }
 
     @ViewBuilder private func checksSection(_ plan: UpgradePlan, gate: UpgradeGate) -> some View {
-        if !plan.blockers.isEmpty || !plan.warnings.isEmpty || gate.downgrade || gate.sameVersion || force {
+        if !plan.blockers.isEmpty || !plan.warnings.isEmpty || !gate.acknowledgments.isEmpty || gate.downgrade || gate.sameVersion || force {
             Section("Checks") {
                 ForEach(plan.blockers, id: \.self) { blocker in
                     Label { Text(verbatim: blocker) } icon: { Image(systemName: "xmark.octagon.fill") }
@@ -197,7 +202,13 @@ struct UpgradeView: View {
                     Label { Text(verbatim: warning) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
                         .foregroundStyle(.orange)
                 }
-                if gate.downgrade {
+                // Confirmed one by one in the confirmation sheet.
+                ForEach(gate.acknowledgments, id: \.self) { risk in
+                    Label { Text(verbatim: risk) } icon: { Image(systemName: "hand.raised.fill") }
+                        .foregroundStyle(.orange)
+                }
+                // Go's version risk already says it.
+                if gate.downgrade && (versionRisk ?? "").isEmpty {
                     Label("This is a downgrade: not every Talos version supports going back.", systemImage: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
                 }
@@ -222,6 +233,7 @@ struct UpgradeView: View {
         var text = String(localized: "\(hostname) installs \(target) and reboots: its pods are drained and it is unavailable for several minutes.")
         if plan.controlPlane { text += "\n\n" + String(localized: "Control-plane node: it leaves etcd while down. Make sure the other members are healthy, or the cluster can lose quorum.") }
         if force { text += "\n\n" + String(localized: "Force is on: the etcd checks are skipped.") }
+        text += "\n\n" + String(localized: "Keep Ichor open until the node reboots: in the background iOS can pause the app, and the upgrade with it.")
         return text
     }
 
@@ -251,10 +263,15 @@ struct UpgradeView: View {
     }
 
     private func computeImage() async {
+        versionRisk = nil
         guard let plan = loadedPlan, let target = normalizedTalosVersion(version) else {
             image = ""
+            versionRisk = ""
             return
         }
+        let risk = await TalosClient.versionRisk(from: plan.currentVersion, to: target)
+        guard !Task.isCancelled else { return }
+        versionRisk = risk
         image = await TalosClient.upgradeImage(currentImage: plan.currentImage, version: target)
     }
 
@@ -268,11 +285,14 @@ struct UpgradeView: View {
         confirming = true
     }
 
+    /// After the confirmation sheet, which collected the acknowledgments.
     private func start(_ plan: UpgradePlan) {
-        guard let client = model.client, let target = normalizedTalosVersion(version), makeGate(plan).canStart, !image.isEmpty else { return }
+        let gate = makeGate(plan, acknowledged: true)
+        guard let client = model.client, let target = normalizedTalosVersion(version), gate.canStart, !image.isEmpty,
+              versionRisk != nil else { return }
         job.start(client: client, target: UpgradeJob.Target(node: node, hostname: hostname, fromVersion: plan.currentVersion,
                                                            toVersion: target, image: image, stage: stage),
-                  force: force && makeGate(plan).forceAvailable)
+                  force: force && gate.forceAvailable, acknowledged: !gate.acknowledgments.isEmpty)
     }
 }
 
@@ -301,6 +321,19 @@ private struct UpgradeProgressView: View {
 
     var body: some View {
         List {
+            if job.needsForeground {
+                Section {
+                    Label {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Keep Ichor open until the node reboots").fontWeight(.semibold)
+                            Text("Until the reboot Ichor may drive the download and install: in the background iOS pauses it, and the upgrade can stall.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        Image(systemName: "iphone").foregroundStyle(.orange)
+                    }
+                }
+            }
             if let target = job.target {
                 Section {
                     LabeledContent("Version", value: "\(target.fromVersion.isEmpty ? "—" : target.fromVersion) → \(target.toVersion)")
