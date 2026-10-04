@@ -17,7 +17,7 @@ func TestBuildEtcdOverview(t *testing.T) {
 	statuses := []etcdProbe{
 		{node: "10.0.0.2", status: &machineapi.EtcdMemberStatus{
 			MemberId: 0xabc, Leader: 0xbeef, DbSize: 2048, DbSizeInUse: 1024,
-			RaftIndex: 10, RaftTerm: 3, StorageVersion: "3.6.0",
+			RaftIndex: 10, RaftTerm: 3, RaftAppliedIndex: 9, StorageVersion: "3.6.0",
 		}},
 		{node: "10.0.0.3", status: &machineapi.EtcdMemberStatus{MemberId: 0xbeef, Leader: 0xbeef, Errors: []string{"NOSPACE"}}},
 		{node: "10.0.0.4", err: errors.New("down")},
@@ -44,7 +44,7 @@ func TestBuildEtcdOverview(t *testing.T) {
 	}
 
 	s0 := got.Statuses[0]
-	if s0.MemberID != "abc" || s0.IsLeader || s0.DbSize != 2048 || s0.Version != "3.6.0" {
+	if s0.MemberID != "abc" || s0.IsLeader || s0.DbSize != 2048 || s0.RaftAppliedIndex != 9 || s0.Version != "3.6.0" {
 		t.Errorf("status[0] = %+v", s0)
 	}
 

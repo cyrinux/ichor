@@ -244,6 +244,8 @@ public struct EtcdNodeStatus: Decodable, Equatable, Identifiable, Sendable {
     public let dbSizeInUse: Int64
     public let raftIndex: UInt64
     public let raftTerm: UInt64
+    /// Trails `raftIndex` (committed) while the member applies its backlog; nil from older cores.
+    public let raftAppliedIndex: UInt64?
     public let version: String
     public let errors: [String]
 

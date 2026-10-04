@@ -177,6 +177,8 @@ data class EtcdNodeStatus(
     val dbSizeInUse: Long = 0,
     val raftIndex: Long = 0,
     val raftTerm: Long = 0,
+    /** Trails [raftIndex] (committed) while the member applies its backlog; 0 from older cores. */
+    val raftAppliedIndex: Long = 0,
     val version: String = "",
     val errors: List<String> = emptyList(),
 )

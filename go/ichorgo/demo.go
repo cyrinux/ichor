@@ -152,7 +152,12 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 		for i, n := range nodes[:3] {
 			id := fmt.Sprintf("a%d", i+1)
 			result.Members = append(result.Members, etcdMember{ID: id, Hostname: n.Hostname, PeerURLs: []string{"https://" + n.Node + ":2380"}, ClientURLs: []string{"https://" + n.Node + ":2379"}})
-			result.Statuses = append(result.Statuses, etcdNodeStatus{Node: n.Node, MemberID: id, IsLeader: i == 0, DbSize: 64 << 20, DbSizeInUse: 42 << 20, RaftIndex: 125600, RaftTerm: 4, Version: "3.6.0", Errors: []string{}})
+			// The third member trails the leader, so the demo shows a lagging follower.
+			index := uint64(125600)
+			if i == 2 {
+				index -= 2400
+			}
+			result.Statuses = append(result.Statuses, etcdNodeStatus{Node: n.Node, MemberID: id, IsLeader: i == 0, DbSize: 64 << 20, DbSizeInUse: 42 << 20, RaftIndex: index, RaftAppliedIndex: index, RaftTerm: 4, Version: "3.6.0", Errors: []string{}})
 		}
 		return toJSON(result)
 	case "ServiceLogs", "KernelLogs", "ContainerLogs":

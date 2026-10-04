@@ -62,14 +62,23 @@ struct EtcdView: View {
                                              busy: memberBusy, message: memberMessage,
                                              onForfeit: { forfeit = $0 }, onRemove: { removing = $0 })
                 }
-                Section("Members (\(etcd.members.count))") {
+                Section {
                     ForEach(etcd.statuses) { status in
-                        MemberStatusRow(status: status, hostname: hostnames[status.memberId] ?? status.node)
+                        MemberStatusRow(status: status, hostname: hostnames[status.memberId] ?? status.node,
+                                        lag: etcdLag(status, in: etcd.statuses))
                             .swipeActions {
                                 if model.allows(.etcdDefrag) && progress == nil && status.error == nil {
                                     Button("Defragment") { confirm = [status] }.tint(.orange)
                                 }
                             }
+                    }
+                } header: {
+                    Text("Members (\(etcd.members.count))")
+                } footer: {
+                    let lagging = laggingMembers(etcd.statuses)
+                    if !lagging.isEmpty {
+                        Text("Lagging members: \(lagging.map { hostnames[$0.memberId] ?? $0.node }.joined(separator: ", "))")
+                            .foregroundStyle(.statusWarn)
                     }
                 }
             }
@@ -213,6 +222,7 @@ struct EtcdView: View {
 private struct MemberStatusRow: View {
     let status: EtcdNodeStatus
     let hostname: String
+    let lag: EtcdLag?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -231,7 +241,27 @@ private struct MemberStatusRow: View {
                 LabeledContent("DB size", value: String(localized: "\(formatBytes(status.dbSizeInUse)) in use / \(formatBytes(status.dbSize))")).font(.caption)
                 UsageBar(fraction: status.dbSize > 0 ? Double(status.dbSizeInUse) / Double(status.dbSize) : 0)
                 LabeledContent("Raft term / index", value: "\(status.raftTerm) / \(status.raftIndex)").font(.caption)
+                lagRows
                 ForEach(status.errors, id: \.self) { Text($0).font(.caption).foregroundStyle(.statusBad) }
+            }
+        }
+    }
+
+    /// How far the member trails: behind the leader (followers), and its apply backlog when it matters.
+    @ViewBuilder private var lagRows: some View {
+        if let lag {
+            if !status.isLeader, let behind = lag.behindLeader {
+                LabeledContent("Behind leader") {
+                    Text(behind == 0 ? String(localized: "In sync") : String(localized: "\(Int(clamping: behind)) entries"))
+                        .foregroundStyle(behind >= etcdLagEntries ? Color.statusWarn : Color.primary)
+                }
+                .font(.caption)
+            }
+            if lag.applyBacklog >= etcdLagEntries {
+                LabeledContent("Not yet applied") {
+                    Text(String(localized: "\(Int(clamping: lag.applyBacklog)) entries")).foregroundStyle(Color.statusWarn)
+                }
+                .font(.caption)
             }
         }
     }
@@ -241,6 +271,8 @@ private struct MemberStatusRow: View {
             StatusPill(label: String(localized: "Error"), color: .red)
         } else if status.isLeader {
             StatusPill(label: String(localized: "Leader"), color: .green)
+        } else if lag?.lagging == true {
+            StatusPill(label: String(localized: "Lagging"), color: .orange)
         } else if status.isLearner {
             StatusPill(label: String(localized: "Learner"), color: .orange)
         } else {
