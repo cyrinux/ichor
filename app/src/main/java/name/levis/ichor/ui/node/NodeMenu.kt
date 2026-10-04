@@ -3,6 +3,8 @@ package name.levis.ichor.ui.node
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountTree
+import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Lan
@@ -45,6 +47,10 @@ enum class NodeMenuEntry(@StringRes val label: Int, val needs: TalosFeature?, va
     CAPTURES(R.string.node_menu_captures, null, Feature.PACKET_CAPTURE),
     MACHINE_CONFIG(R.string.node_menu_machine_config, TalosFeature.MACHINE_CONFIG, Feature.MACHINE_CONFIG),
     UPGRADE(R.string.node_menu_upgrade, TalosFeature.UPGRADE, Feature.UPGRADE),
+    // Kubernetes calls with the admin kubeconfig (the reboot step needs less): os:admin.
+    MAINTENANCE(R.string.node_menu_maintenance, null, Feature.WORKLOADS),
+    // Labelled Uncordon when the node is known to be cordoned (see NodeMenuItems).
+    CORDON(R.string.node_menu_cordon, null, Feature.WORKLOADS),
 }
 
 private val NodeMenuEntry.icon: ImageVector
@@ -60,23 +66,29 @@ private val NodeMenuEntry.icon: ImageVector
         NodeMenuEntry.CAPTURES -> Icons.Outlined.FolderOpen
         NodeMenuEntry.MACHINE_CONFIG -> Icons.Outlined.Description
         NodeMenuEntry.UPGRADE -> Icons.Outlined.SystemUpdateAlt
+        NodeMenuEntry.MAINTENANCE -> Icons.Outlined.Build
+        NodeMenuEntry.CORDON -> Icons.Outlined.Block
     }
 
 /** Entries the talosconfig's roles allow, in menu order. */
 fun nodeMenuEntries(summary: ContextSummary?): List<NodeMenuEntry> =
     NodeMenuEntry.entries.filter { entry -> entry.role == null || summary?.allows(entry.role) == true }
 
-/** The items of the node menu; [busy] entries are disabled for another reason (e.g. an upgrade elsewhere). */
+/**
+ * The items of the node menu; [busy] entries are disabled for another reason (e.g. an upgrade
+ * elsewhere). [cordoned]: whether the node is cordoned, null when unknown.
+ */
 @Composable
 fun NodeMenuItems(
     summary: ContextSummary?,
     features: NodeFeatures?,
     busy: Set<NodeMenuEntry>,
     onPick: (NodeMenuEntry) -> Unit,
+    cordoned: Boolean? = null,
 ) {
     nodeMenuEntries(summary).forEach { entry ->
         FeatureMenuItem(
-            label = stringResource(entry.label),
+            label = stringResource(if (entry == NodeMenuEntry.CORDON && cordoned == true) R.string.node_menu_uncordon else entry.label),
             icon = entry.icon,
             support = entry.needs?.let { features.support(it) } ?: FeatureSupport.UNKNOWN,
             enabled = entry !in busy,

@@ -91,13 +91,17 @@ func (i upgradeLockInfo) describe() string {
 		who = "unknown node"
 	}
 
+	run := "upgrade"
+
 	upgrade := who
-	if i.to != "" {
+	if i.to == maintenanceLockTo {
+		run = "node maintenance"
+	} else if i.to != "" {
 		upgrade += " to " + i.to
 	}
 
-	return fmt.Sprintf("another Ichor upgrade (%s, started %s) holds the cluster upgrade lock until %s",
-		upgrade, i.since.Local().Format("15:04"), i.expires.Local().Format("15:04"))
+	return fmt.Sprintf("another Ichor %s (%s, started %s) holds the cluster upgrade lock until %s",
+		run, upgrade, i.since.Local().Format("15:04"), i.expires.Local().Format("15:04"))
 }
 
 // heldLock returns who holds l, nil when it is free or expired.
@@ -356,6 +360,27 @@ func takeUpgradeLock(ctx context.Context, kube kubeTarget, r upgradeLockRequest,
 	}
 
 	return lock, nil
+}
+
+// stillHeld checks, before an irreversible step, that the lock l took is still this run's
+// and not expired (the lease is not renewed, and a phone that slept may wake up after it
+// expired and another run took it). No lock taken (the API was unusable) passes.
+func (l *upgradeLock) stillHeld(ctx context.Context, k *kubeClient) error {
+	if l == nil || l.lease == nil {
+		return nil
+	}
+
+	current, err := kubeLeaseStore{k}.get(ctx)
+	if err != nil {
+		return fmt.Errorf("could not check the cluster upgrade lock: %w", err)
+	}
+
+	info := heldLock(current, time.Now())
+	if info == nil || info.holder != l.lease.Spec.HolderIdentity {
+		return errors.New("the cluster upgrade lock expired or was taken by another run")
+	}
+
+	return nil
 }
 
 func (l *upgradeLock) release() {

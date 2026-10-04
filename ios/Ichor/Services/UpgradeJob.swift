@@ -78,7 +78,7 @@ final class UpgradeJob {
             outcome = result
             task = nil
             leaveRequestPhase()
-            UIApplication.shared.isIdleTimerDisabled = false
+            UIApplication.shared.isIdleTimerDisabled = MaintenanceJob.shared.isActive
         }
     }
 

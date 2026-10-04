@@ -57,6 +57,7 @@ import name.levis.ichor.ui.overview.NodeAction
 import name.levis.ichor.ui.overview.OverviewScreen
 import name.levis.ichor.ui.settings.SettingsScreen
 import name.levis.ichor.ui.upgrade.UpgradeScreen
+import name.levis.ichor.ui.maintenance.MaintenanceScreen
 
 private object Routes {
     const val IMPORT = "import"
@@ -114,6 +115,9 @@ private object Routes {
     const val CAPTURES = "captures"
     const val CAPTURE_FILE = "capturefile?name={name}"
     const val UPGRADE = "upgrade?addr={addr}&host={host}&version={version}"
+    const val MAINTENANCE = "maintenance?addr={addr}&host={host}"
+
+    fun maintenance(addr: String, host: String) = "maintenance?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
     fun capture(addr: String, host: String) = "capture?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
@@ -300,22 +304,23 @@ fun Navigation(
                     nav.navigate(Routes.containerLogs(addr, host, c.id, containerLogTitle(c), containerLogSubtitle(c)))
                 },
                 onMenu = { item ->
-                    nav.navigate(
-                        when (item) {
-                            NodeMenuEntry.KERNEL_LOG -> Routes.logs(addr, host, null)
-                            NodeMenuEntry.EVENTS -> Routes.events(addr, host)
-                            NodeMenuEntry.NETWORK -> Routes.network(addr, host)
-                            NodeMenuEntry.HARDWARE -> Routes.hardware(addr, host)
-                            NodeMenuEntry.IMAGES -> Routes.images(addr, host)
-                            NodeMenuEntry.STORAGE -> Routes.storage(addr, host)
-                            NodeMenuEntry.RESOURCES -> Routes.resources(addr, host)
-                            NodeMenuEntry.DEBUG_SHELL -> Routes.debug(addr, host)
-                            NodeMenuEntry.CAPTURE -> Routes.capture(addr, host)
-                            NodeMenuEntry.CAPTURES -> Routes.CAPTURES
-                            NodeMenuEntry.MACHINE_CONFIG -> Routes.machineConfig(addr, host)
-                            NodeMenuEntry.UPGRADE -> Routes.upgrade(addr, host)
-                        },
-                    )
+                    when (item) {
+                        NodeMenuEntry.KERNEL_LOG -> Routes.logs(addr, host, null)
+                        NodeMenuEntry.EVENTS -> Routes.events(addr, host)
+                        NodeMenuEntry.NETWORK -> Routes.network(addr, host)
+                        NodeMenuEntry.HARDWARE -> Routes.hardware(addr, host)
+                        NodeMenuEntry.IMAGES -> Routes.images(addr, host)
+                        NodeMenuEntry.STORAGE -> Routes.storage(addr, host)
+                        NodeMenuEntry.RESOURCES -> Routes.resources(addr, host)
+                        NodeMenuEntry.DEBUG_SHELL -> Routes.debug(addr, host)
+                        NodeMenuEntry.CAPTURE -> Routes.capture(addr, host)
+                        NodeMenuEntry.CAPTURES -> Routes.CAPTURES
+                        NodeMenuEntry.MACHINE_CONFIG -> Routes.machineConfig(addr, host)
+                        NodeMenuEntry.UPGRADE -> Routes.upgrade(addr, host)
+                        NodeMenuEntry.MAINTENANCE -> Routes.maintenance(addr, host)
+                        // Handled on the node screen (a confirmation, no screen of its own).
+                        NodeMenuEntry.CORDON -> null
+                    }?.let { nav.navigate(it) }
                 },
             )
         }
@@ -367,6 +372,10 @@ fun Navigation(
                 initialVersion = entry.arguments?.getString("version").orEmpty(),
                 onBack = { nav.popBackStack() },
             )
+        }
+        composable(Routes.MAINTENANCE, arguments = nodeArguments()) { entry ->
+            val addr = entry.arguments?.getString("addr").orEmpty()
+            MaintenanceScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
         }
         composable(Routes.ISSUE_CONFIG) { IssueConfigScreen(onBack = { nav.popBackStack() }) }
         composable(

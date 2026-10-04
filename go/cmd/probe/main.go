@@ -52,6 +52,12 @@ func (p *snapshotProbe) OnDone(path string, size int64, sum, errMessage string) 
 	p.done <- fmt.Sprintf("done path=%q size=%d err=%q", path, size, errMessage)
 }
 
+// maintenanceProbe prints a maintenance run's progress.
+type maintenanceProbe struct{ done chan string }
+
+func (m maintenanceProbe) OnProgress(json string)   { fmt.Println(json) }
+func (m maintenanceProbe) OnDone(errMessage string) { m.done <- errMessage }
+
 // lineCounter counts followed log lines.
 type lineCounter struct {
 	lines atomic.Int64
@@ -185,6 +191,17 @@ func main() {
 		if err = ichorgo.KubeDeletePod(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2)); err == nil {
 			out = "deleted"
 		}
+	case "maintenance-plan":
+		out, err = ichorgo.NodeMaintenancePlan(cfg, *contextName, *kubeServer, flag.Arg(1))
+	case "cordon", "uncordon":
+		if err = ichorgo.KubeCordon(cfg, *contextName, *kubeServer, flag.Arg(1), cmd == "cordon"); err == nil {
+			out = cmd + "ed"
+		}
+	case "maintenance":
+		// maintenance NODE reboot|shutdown|none: cordons and drains the node for real.
+		m := maintenanceProbe{done: make(chan string, 1)}
+		ichorgo.StartNodeMaintenance(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), false, true, m)
+		out = "done: " + <-m.done
 	case "machineconfig":
 		// Redacted: never print secrets from the probe.
 		out, err = ichorgo.NodeMachineConfig(cfg, *contextName, flag.Arg(1), false)
