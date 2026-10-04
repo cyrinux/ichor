@@ -134,7 +134,7 @@ func TestScanHosts(t *testing.T) {
 		t.Errorf("/20: %d hosts, %v", len(hosts), err)
 	}
 
-	for _, bad := range []string{"10.0.0.0/8", "10.0.0.0/19", "fd00::/120", "nope", "10.0.0.0/20,10.1.0.0/24"} {
+	for _, bad := range []string{"10.0.0.0/8", "10.0.0.0/19", "fd00::/64", "nope", "10.0.0.0/20,10.1.0.0/24"} {
 		if _, err := scanHosts(bad); err == nil {
 			t.Errorf("%q: want an error", bad)
 		}

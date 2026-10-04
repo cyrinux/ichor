@@ -31,8 +31,9 @@ const (
 	// Each phase has its own budget, so a slow sweep does not starve the probes.
 	sweepTimeout = 60 * time.Second
 	matchTimeout = 60 * time.Second
-	// maxScanBits: /20, the widest network scanHosts takes (maxScanHosts addresses).
-	maxScanBits = 20
+	// maxScanHostBits: the host part of the widest network scanHosts takes (maxScanHosts
+	// addresses): an IPv4 /20, an IPv6 /116.
+	maxScanHostBits = 12
 )
 
 // errSearchTimeout: the probes ran out of time with nothing found, which is not "no node".
@@ -56,7 +57,7 @@ type endpointProbe struct {
 }
 
 // FindEndpoints looks for the clusters of configYAML on the networks in cidrs (comma-separated
-// IPv4 prefixes): hosts with the Talos API port open (that of the contexts' endpoints, 50000
+// IPv4 or IPv6 prefixes): hosts with the Talos API port open (that of the contexts' endpoints, 50000
 // by default) are asked their version with each context's credentials. A host only matches
 // the contexts whose CA it presents and whose client certificate it accepts, so the result
 // is nodes of the talosconfig's clusters, never another Talos on the network. Control plane
@@ -105,9 +106,10 @@ func ProbeEndpoint(configYAML, contextName, node string) (out string, err error)
 	defer maskResult(&out, &err)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
+	endpoint := normalizeEndpoint(node)
 
-	if !validEndpoint(node) {
-		return "", fmt.Errorf("invalid endpoint %q", node)
+	if !validEndpoint(endpoint) {
+		return "", fmt.Errorf("invalid endpoint %q", endpoint)
 	}
 
 	_, cfgCtx, err := resolveContext(configYAML, contextName)
@@ -119,7 +121,7 @@ func ProbeEndpoint(configYAML, contextName, node string) (out string, err error)
 		return "", demoUnavailable
 	}
 
-	probe, err := probeEndpoint(context.Background(), cfgCtx, node)
+	probe, err := probeEndpoint(context.Background(), cfgCtx, endpoint)
 	if err != nil {
 		return "", errors.New(friendlyError(err))
 	}
@@ -161,19 +163,20 @@ func AddContextEndpoint(storedYAML, contextName, node string) (out string, err e
 	defer maskErr(&err)
 
 	contextName, node = unmaskTarget(storedYAML, contextName, node)
+	endpoint := normalizeEndpoint(node)
 
-	if !validEndpoint(node) {
-		return "", fmt.Errorf("invalid endpoint %q", node)
+	if !validEndpoint(endpoint) {
+		return "", fmt.Errorf("invalid endpoint %q", endpoint)
 	}
 
 	return editContext(storedYAML, contextName, func(c *clientconfig.Context) {
 		if len(c.Nodes) == 0 {
-			c.Nodes = []string{endpointHost(node)}
+			c.Nodes = []string{endpointHost(endpoint)}
 		}
 
 		// The same endpoint written with or without the default port is listed once.
-		c.Endpoints = append([]string{node}, slices.DeleteFunc(slices.Clone(c.Endpoints), func(e string) bool {
-			return sameEndpoint(e, node)
+		c.Endpoints = append([]string{endpoint}, slices.DeleteFunc(slices.Clone(c.Endpoints), func(e string) bool {
+			return sameEndpoint(e, endpoint)
 		})...)
 	})
 }
@@ -207,12 +210,13 @@ func editContext(storedYAML, contextName string, edit func(*clientconfig.Context
 	return encodeConfig(&result)
 }
 
-// parseEndpoints splits a comma-separated endpoint list, dropping blanks and duplicates.
+// parseEndpoints splits a comma-separated endpoint list, normalized, dropping blanks and
+// duplicates.
 func parseEndpoints(list string) ([]string, error) {
 	var out []string
 
 	for _, e := range strings.Split(list, ",") {
-		e = strings.TrimSpace(e)
+		e = normalizeEndpoint(e)
 		if e == "" || slices.Contains(out, e) {
 			continue
 		}
@@ -227,8 +231,39 @@ func parseEndpoints(list string) ([]string, error) {
 	return out, nil
 }
 
-// validEndpoint: an address or hostname, with an optional port, as talosconfig endpoints are.
+// normalizeEndpoint writes an endpoint the way talosctl dials it: an IPv6 address bare
+// without a port and bracketed with one ("[fd00::1]" alone would be dialed as
+// "[[fd00::1]]:50000"), every address in its canonical form so that one address written two
+// ways is one endpoint. Anything else is only trimmed, for validEndpoint to judge.
+func normalizeEndpoint(s string) string {
+	s = strings.TrimSpace(s)
+
+	inner := s
+	if strings.HasPrefix(s, "[") && strings.HasSuffix(s, "]") {
+		inner = s[1 : len(s)-1]
+	}
+
+	if a, err := netip.ParseAddr(inner); err == nil {
+		return a.String()
+	}
+
+	host, port, err := net.SplitHostPort(s)
+	if err != nil {
+		return s
+	}
+
+	if a, err := netip.ParseAddr(host); err == nil {
+		return net.JoinHostPort(a.String(), port)
+	}
+
+	return s
+}
+
+// validEndpoint: an address or hostname, with an optional port, as talosconfig endpoints are
+// (a bracketed IPv6 address without a port too: normalizeEndpoint unwraps it).
 func validEndpoint(s string) bool {
+	s = normalizeEndpoint(s)
+
 	if _, err := netip.ParseAddr(s); err == nil {
 		return true
 	}
@@ -249,21 +284,24 @@ func validEndpoint(s string) bool {
 	return validHostname(host)
 }
 
-// sameEndpoint: a and b reach the same host and port (no port meaning the Talos API's).
+// sameEndpoint: a and b reach the same host and port (no port meaning the Talos API's),
+// however their addresses are written.
 func sameEndpoint(a, b string) bool {
-	return endpointHost(a) == endpointHost(b) && endpointPort(a) == endpointPort(b)
+	return strings.EqualFold(endpointHost(a), endpointHost(b)) && endpointPort(a) == endpointPort(b)
 }
 
 func endpointPort(endpoint string) string {
-	if _, port, err := net.SplitHostPort(endpoint); err == nil {
+	if _, port, err := net.SplitHostPort(normalizeEndpoint(endpoint)); err == nil {
 		return port
 	}
 
 	return strconv.Itoa(talosAPIPort)
 }
 
-// endpointHost is the address or hostname of an endpoint, without its port.
+// endpointHost is the address (canonical, never bracketed) or hostname of an endpoint,
+// without its port: what a talosconfig node is.
 func endpointHost(endpoint string) string {
+	endpoint = normalizeEndpoint(endpoint)
 	if host, _, err := net.SplitHostPort(endpoint); err == nil {
 		return host
 	}
@@ -280,8 +318,9 @@ func formatEndpoint(ap netip.AddrPort) string {
 	return ap.String()
 }
 
-// scanHosts lists the hosts of cidrs (comma-separated IPv4 prefixes), without network and
-// broadcast addresses, each once.
+// scanHosts lists the hosts of cidrs (comma-separated IPv4 or IPv6 prefixes), each once,
+// without the IPv4 network and broadcast addresses nor the IPv6 subnet-router anycast one.
+// An IPv6 network is at most a /116: a /64 holds far too many addresses to sweep.
 func scanHosts(cidrs string) ([]netip.Addr, error) {
 	seen := map[netip.Addr]bool{}
 
@@ -294,18 +333,18 @@ func scanHosts(cidrs string) ([]netip.Addr, error) {
 		}
 
 		prefix, err := netip.ParsePrefix(c)
-		if err != nil || !prefix.Addr().Is4() {
-			return nil, fmt.Errorf("invalid IPv4 network %q", c)
+		if err != nil {
+			return nil, fmt.Errorf("invalid network %q", c)
 		}
 
 		prefix = prefix.Masked()
-		if prefix.Bits() < maxScanBits {
+		if prefix.Addr().BitLen()-prefix.Bits() > maxScanHostBits {
 			return nil, fmt.Errorf("network %s is too large to scan (at most %d hosts)", c, maxScanHosts)
 		}
 
 		for a := prefix.Addr(); prefix.Contains(a); a = a.Next() {
-			if prefix.Bits() <= 30 && (a == prefix.Addr() || !prefix.Contains(a.Next())) {
-				continue // network or broadcast address
+			if notAHost(prefix, a) {
+				continue
 			}
 
 			if !seen[a] {
@@ -324,6 +363,16 @@ func scanHosts(cidrs string) ([]netip.Addr, error) {
 	}
 
 	return hosts, nil
+}
+
+// notAHost: a is prefix's IPv4 network or broadcast address, or the subnet-router anycast
+// address of its IPv6 /64 (all-zero interface ID), which the router answers.
+func notAHost(prefix netip.Prefix, a netip.Addr) bool {
+	if a.Is4() {
+		return prefix.Bits() <= 30 && (a == prefix.Addr() || !prefix.Contains(a.Next()))
+	}
+
+	return !a.Is4In6() && netip.PrefixFrom(a, 64).Masked().Addr() == a
 }
 
 // contextPorts lists the ports the contexts' endpoints use: the Talos API default plus any
