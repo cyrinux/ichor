@@ -58,4 +58,57 @@ class EtcdMembersTest {
         assertFalse(plan.quorumAfter)
         assertTrue(EtcdMemberPlan().allowed)
     }
+
+    private val members = listOf(
+        EtcdMember(id = "a", hostname = "cp-1", peerUrls = listOf("https://10.0.0.1:2380")),
+        EtcdMember(id = "b", hostname = "cp-2", clientUrls = listOf("https://[fd00::2]:2379")),
+        EtcdMember(id = "c", hostname = "", peerUrls = listOf("https://10.0.0.4:2380")),
+    )
+
+    @Test
+    fun namesANodeByItsMemberId() {
+        val etcd = EtcdOverview(members = members, statuses = listOf(EtcdNodeStatus(node = "10.9.9.9", memberId = "a")))
+        assertEquals("cp-1", etcd.nodeHostnames()["10.9.9.9"])
+    }
+
+    @Test
+    fun namesAFailedNodeByTheAddressInItsMemberUrls() {
+        val etcd = EtcdOverview(
+            members = members,
+            statuses = listOf(
+                EtcdNodeStatus(node = "10.0.0.1", error = "unreachable"),
+                EtcdNodeStatus(node = "fd00::2", error = "unreachable"),
+                EtcdNodeStatus(node = "[fd00::2]", error = "unreachable"),
+            ),
+        )
+        assertEquals(mapOf("10.0.0.1" to "cp-1", "fd00::2" to "cp-2", "[fd00::2]" to "cp-2"), etcd.nodeHostnames())
+    }
+
+    @Test
+    fun keepsTheAddressWhenNoMemberNamesIt() {
+        val etcd = EtcdOverview(
+            members = members,
+            statuses = listOf(
+                EtcdNodeStatus(node = "10.0.0.3", error = "unreachable"),
+                // A member without a hostname does not blank the address.
+                EtcdNodeStatus(node = "10.0.0.4", memberId = "c"),
+            ),
+        )
+        assertEquals(mapOf("10.0.0.3" to "10.0.0.3", "10.0.0.4" to "10.0.0.4"), etcd.nodeHostnames())
+    }
+
+    @Test
+    fun fallsBackToHostnamesKnownElsewhere() {
+        val etcd = EtcdOverview(
+            members = members,
+            statuses = listOf(
+                EtcdNodeStatus(node = "10.0.0.1", error = "unreachable"),
+                EtcdNodeStatus(node = "10.0.0.3", error = "unreachable"),
+                EtcdNodeStatus(node = "10.0.0.5", error = "unreachable"),
+            ),
+        )
+        val known = mapOf("10.0.0.1" to "stale", "10.0.0.3" to "cp-3", "10.0.0.5" to "")
+        // etcd's own name wins; a blank one is no name.
+        assertEquals(mapOf("10.0.0.1" to "cp-1", "10.0.0.3" to "cp-3", "10.0.0.5" to "10.0.0.5"), etcd.nodeHostnames(known))
+    }
 }

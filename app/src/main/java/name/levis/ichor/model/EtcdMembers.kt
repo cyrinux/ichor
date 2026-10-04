@@ -1,5 +1,6 @@
 package name.levis.ichor.model
 
+import java.net.URI
 import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo etcdMemberPlan, etcdForfeitLeadership and etcdRemoveMember.
@@ -38,3 +39,22 @@ fun removalNode(statuses: List<EtcdNodeStatus>, memberId: String): String? =
     statuses.filter { it.error == null && it.memberId.isNotEmpty() && it.memberId != memberId }
         .sortedWith(compareBy<EtcdNodeStatus> { it.errors.isNotEmpty() }.thenBy { it.isLeader })
         .firstOrNull()?.node
+
+/**
+ * The hostname of each probed node (keyed by [EtcdNodeStatus.node], usually an address): its
+ * member's, found by id or, when the node did not answer, by the address in the member's peer
+ * or client URLs; else the one [known] elsewhere (node -> hostname, e.g. the cluster overview).
+ * The node itself when nothing names it.
+ */
+fun EtcdOverview.nodeHostnames(known: Map<String, String> = emptyMap()): Map<String, String> {
+    val named = members.filter { it.hostname.isNotBlank() }
+    val byId = named.associate { it.id to it.hostname }
+    val byHost = named.flatMap { m -> (m.peerUrls + m.clientUrls).mapNotNull(::urlHost).map { it to m.hostname } }.toMap()
+    return statuses.associate { s ->
+        s.node to (byId[s.memberId] ?: byHost[bare(s.node)] ?: known[s.node]?.takeIf { it.isNotBlank() } ?: s.node)
+    }
+}
+
+private fun urlHost(url: String): String? = runCatching { URI(url).host }.getOrNull()?.let(::bare)
+
+private fun bare(host: String): String = host.removePrefix("[").removeSuffix("]")
