@@ -1,12 +1,14 @@
 import SwiftUI
 import IchorCore
 
-/// One app of the inventory: what needs a look, where it runs, its workloads to restart
-/// (os:admin), its images and pods.
+/// One app of the inventory: what needs a look, where it runs, its Argo CD Applications and
+/// workloads to restart (os:admin), its images and pods.
 struct AppDetailSheet: View {
     let app: InventoryApp
     /// Address → hostname of the overview's nodes.
     let hostnames: [String: String]
+    /// The inventory shows Argo CD: the Applications deploying the app are shown.
+    var argoCD = false
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -28,6 +30,7 @@ struct AppDetailSheet: View {
                 .listRowInsets(EdgeInsets())
                 // Routes and rollout restarts go through the Kubernetes API: only for a role that can reach it.
                 if model.allows(.workloads) {
+                    if argoCD { AppArgoSection(app: app) }
                     AppRoutesSection(app: app)
                     AppWorkloadsSection(app: app)
                 }

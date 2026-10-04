@@ -1,0 +1,64 @@
+{
+  "currency": "EUR",
+  "tips": [
+    "tip_2",
+    "tip_5",
+    "tip_10"
+  ],
+  "features": [
+    {
+      "id": "data-services-actions",
+      "title": {
+        "en": "Act on data services",
+        "fr": "Agir sur les services de données",
+        "de": "Aktionen für Datendienste",
+        "es": "Acciones sobre los servicios de datos",
+        "it": "Azioni sui servizi dati",
+        "uk": "Дії зі службами даних"
+      },
+      "description": {
+        "en": "Fix what the Data services screen finds, from the phone: switch a CloudNativePG cluster over to a healthy instance, salvage a faulted Longhorn volume.",
+        "fr": "Corriger depuis le téléphone ce que l'écran Services de données détecte : basculer un cluster CloudNativePG vers une instance saine, récupérer un volume Longhorn en échec.",
+        "de": "Beheben, was der Bildschirm Datendienste findet, direkt vom Handy: einen CloudNativePG-Cluster auf eine gesunde Instanz umschalten, ein fehlerhaftes Longhorn-Volume retten.",
+        "es": "Corregir desde el móvil lo que detecta la pantalla Servicios de datos: cambiar un clúster de CloudNativePG a una instancia sana, recuperar un volumen de Longhorn con fallos.",
+        "it": "Correggere dal telefono ciò che la schermata Servizi dati rileva: passare un cluster CloudNativePG a un'istanza sana, recuperare un volume Longhorn guasto.",
+        "uk": "Виправляти з телефона те, що знаходить екран «Служби даних»: перемикати кластер CloudNativePG на справний екземпляр, рятувати несправний том Longhorn."
+      },
+      "goal": 300,
+      "raised": 0,
+      "status": "open",
+      "products": [
+        "fund_data_actions_2",
+        "fund_data_actions_5",
+        "fund_data_actions_10"
+      ]
+    },
+    {
+      "id": "more-data-services",
+      "title": {
+        "en": "More data services",
+        "fr": "Plus de services de données",
+        "de": "Mehr Datendienste",
+        "es": "Más servicios de datos",
+        "it": "Più servizi dati",
+        "uk": "Більше служб даних"
+      },
+      "description": {
+        "en": "Health of CSI volume snapshots and backup CronJobs, next to Longhorn, CloudNativePG, Garage and Dragonfly.",
+        "fr": "État des instantanés de volumes CSI et des CronJobs de sauvegarde, à côté de Longhorn, CloudNativePG, Garage et Dragonfly.",
+        "de": "Zustand der CSI-Volume-Snapshots und der Backup-CronJobs, neben Longhorn, CloudNativePG, Garage und Dragonfly.",
+        "es": "Estado de las instantáneas de volúmenes CSI y de los CronJobs de copia de seguridad, junto a Longhorn, CloudNativePG, Garage y Dragonfly.",
+        "it": "Stato degli snapshot dei volumi CSI e dei CronJob di backup, accanto a Longhorn, CloudNativePG, Garage e Dragonfly.",
+        "uk": "Стан знімків томів CSI та CronJob резервного копіювання поруч із Longhorn, CloudNativePG, Garage і Dragonfly."
+      },
+      "goal": 200,
+      "raised": 0,
+      "status": "open",
+      "products": [
+        "fund_data_more_2",
+        "fund_data_more_5",
+        "fund_data_more_10"
+      ]
+    }
+  ]
+}

@@ -7,7 +7,6 @@ import (
 	"net/netip"
 	"slices"
 	"strings"
-	"sync"
 
 	"github.com/cosi-project/runtime/pkg/safe"
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -120,20 +119,14 @@ func nodeMembers(ctx context.Context, c *client.Client, node string) ([]clusterM
 func targetHostnames(ctx context.Context, c *client.Client, targets []string) []string {
 	out := make([]string, len(targets))
 
-	var wg sync.WaitGroup
+	forEachNode(targets, func(i int, node string) {
+		nodeCtx, cancel := context.WithTimeout(ctx, nodeTimeout)
+		defer cancel()
 
-	for i, node := range targets {
-		wg.Go(func() {
-			nodeCtx, cancel := context.WithTimeout(ctx, nodeTimeout)
-			defer cancel()
-
-			if hs, err := safe.StateGetByID[*network.HostnameStatus](client.WithNode(nodeCtx, node), c.COSI, network.HostnameID); err == nil {
-				out[i] = hs.TypedSpec().Hostname
-			}
-		})
-	}
-
-	wg.Wait()
+		if hs, err := safe.StateGetByID[*network.HostnameStatus](client.WithNode(nodeCtx, node), c.COSI, network.HostnameID); err == nil {
+			out[i] = hs.TypedSpec().Hostname
+		}
+	})
 
 	return out
 }

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +23,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.ui.argocd.ArgoTileBadge
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.attentionCount
 import name.levis.ichor.model.overviewTiles
@@ -37,10 +40,11 @@ private val TILE = 36.dp
 /**
  * The cluster's apps at a glance, opening the Apps screen: how many run, how many need a
  * look, and a few icons. A skeleton while loading; nothing on failure or without apps, so
- * the inventory never gets in the way of the overview.
+ * the inventory never gets in the way of the overview. [argoBadges] marks the apps whose Argo
+ * CD app is critical or OutOfSync (by inventory id).
  */
 @Composable
-fun AppsCard(state: UiState<Inventory>, onOpen: () -> Unit) {
+fun AppsCard(state: UiState<Inventory>, onOpen: () -> Unit, argoBadges: Map<String, ServiceHealth> = emptyMap()) {
     when (state) {
         UiState.Loading -> AppsCardFrame(subtitle = null, attention = 0, onOpen = onOpen) {
             repeat(TILES) { AppIconPlaceholder(size = TILE) }
@@ -57,7 +61,14 @@ fun AppsCard(state: UiState<Inventory>, onOpen: () -> Unit) {
             ).joinToString(" · ")
             AppsCardFrame(subtitle, apps.attentionCount, onOpen) {
                 val tiles = apps.overviewTiles(TILES)
-                tiles.forEach { AppIconTile(it, size = TILE) }
+                tiles.forEach { app ->
+                    Box {
+                        AppIconTile(app, size = TILE)
+                        argoBadges[app.id]?.let { level ->
+                            ArgoTileBadge(level == ServiceHealth.CRITICAL, Modifier.align(Alignment.BottomEnd).offset(x = 3.dp, y = 3.dp), size = 14.dp)
+                        }
+                    }
+                }
                 val rest = running - tiles.size
                 if (rest > 0) MoreTile(rest)
             }

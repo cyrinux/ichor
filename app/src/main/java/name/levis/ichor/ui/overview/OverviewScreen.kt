@@ -8,7 +8,9 @@ import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Favorite
@@ -27,13 +28,13 @@ import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Timeline
-import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
@@ -102,8 +103,14 @@ import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.dataServiceHints
+import name.levis.ichor.model.ARGO_CD_CATALOG_ID
+import name.levis.ichor.model.ArgoStatus
+import name.levis.ichor.model.hasArgoCD
+import name.levis.ichor.model.inventoryBadges
+import name.levis.ichor.ui.argocd.ArgoViewModel
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.dataservices.downHostnames
+import name.levis.ichor.ui.components.TooltipIconButton
 
 class OverviewViewModel(
     val talos: TalosRepository,
@@ -124,11 +131,13 @@ fun OverviewScreen(
     onKubeSpan: () -> Unit,
     onWorkloads: () -> Unit,
     onDataServices: () -> Unit,
+    onArgoCD: () -> Unit,
     onHealth: () -> Unit,
     onEvents: () -> Unit,
     onInsights: () -> Unit,
     onApps: () -> Unit,
     onSettings: () -> Unit,
+    onFunding: () -> Unit,
     onIssueConfig: () -> Unit,
     onUpgrade: (NodeOverview, String) -> Unit,
     onDiagnose: () -> Unit,
@@ -140,6 +149,7 @@ fun OverviewScreen(
     discoveryVm: NodeDiscoveryViewModel = viewModel(factory = factory { NodeDiscoveryViewModel(app.talosRepository) }),
     appsVm: AppsViewModel = viewModel(key = "overview-apps", factory = factory { AppsViewModel(app.talosRepository) }),
     dataVm: DataServicesViewModel = viewModel(key = "overview-data-services", factory = factory { DataServicesViewModel(app.talosRepository) }),
+    argoVm: ArgoViewModel = viewModel(key = "overview-argocd", factory = factory { ArgoViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -180,6 +190,13 @@ fun OverviewScreen(
         if (dataHints.isNotEmpty()) dataVm.load(listOf(config?.activeContext, generation, invalidations, dataHints), dataHints) else dataVm.forget()
     }
     val dataServices by dataVm.state.collectAsStateWithLifecycle()
+    // Argo CD likewise, when the inventory shows it.
+    val argoHinted = config?.activeSummary?.allows(Feature.WORKLOADS) == true &&
+        (apps as? UiState.Loaded)?.data?.hasArgoCD == true
+    LaunchedEffect(config?.activeContext, generation, invalidations, argoHinted) {
+        if (argoHinted) argoVm.load(listOf(config?.activeContext, generation, invalidations)) else argoVm.forget()
+    }
+    val argo by argoVm.state.collectAsStateWithLifecycle()
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     // No node answered (VPN off, another network): one notice instead of a list of red nodes.
@@ -221,9 +238,6 @@ fun OverviewScreen(
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { liveVm.poll(config?.activeContext to invalidations) }
     }
 
-    // Android 17: a cluster on the Wi-Fi network needs local network access, asked up front.
-    AskLocalNetworkAccess(config?.activeSummary, onGranted = vm.talos::invalidate)
-
     // Members the talosconfig misses, once the overview loaded (its nodes answer, so will discovery).
     val discovered by discoveryVm.offer.collectAsStateWithLifecycle()
     var showDiscovered by remember { mutableStateOf(false) }
@@ -264,25 +278,34 @@ fun OverviewScreen(
                 actions = {
                     // Only offered when the config's role can run it.
                     if (config?.activeSummary?.allows(Feature.HEALTH) == true) {
-                        IconButton(onClick = onHealth) { Icon(Icons.Outlined.Favorite, stringResource(R.string.overview_action_health)) }
+                        TooltipIconButton(Icons.Outlined.Favorite, stringResource(R.string.overview_action_health), onClick = onHealth)
                     }
                     // Cluster-wide screens: only disabled when no reachable node's Talos has them.
                     val reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node }
                     val features = rememberClusterFeatures(reachable)
-                    IconButton(onClick = onEvents, enabled = clusterSupport(features, TalosFeature.EVENTS).supported) {
-                        Icon(Icons.Outlined.Timeline, stringResource(R.string.overview_action_events))
-                    }
+                    TooltipIconButton(
+                        Icons.Outlined.Timeline,
+                        stringResource(R.string.overview_action_events),
+                        onClick = onEvents,
+                        enabled = clusterSupport(features, TalosFeature.EVENTS).supported,
+                    )
                     // Kubernetes workloads: the API is reached with the admin kubeconfig Talos issues.
                     if (config?.activeSummary?.allows(Feature.WORKLOADS) == true) {
-                        IconButton(onClick = onWorkloads) { Icon(Icons.Outlined.Widgets, stringResource(R.string.overview_action_workloads)) }
+                        TooltipIconButton(Icons.Outlined.Widgets, stringResource(R.string.overview_action_workloads), onClick = onWorkloads)
                     }
-                    IconButton(onClick = onKubeSpan, enabled = clusterSupport(features, TalosFeature.KUBESPAN).supported) {
-                        Icon(Icons.Outlined.Hub, "KubeSpan")
-                    }
-                    IconButton(onClick = onEtcd, enabled = clusterSupport(features, TalosFeature.ETCD).supported) {
-                        Icon(Icons.Outlined.Storage, "etcd")
-                    }
-                    IconButton(onClick = onSettings) { Icon(Icons.Outlined.Settings, stringResource(R.string.overview_action_settings)) }
+                    TooltipIconButton(
+                        Icons.Outlined.Hub,
+                        "KubeSpan",
+                        onClick = onKubeSpan,
+                        enabled = clusterSupport(features, TalosFeature.KUBESPAN).supported,
+                    )
+                    TooltipIconButton(
+                        Icons.Outlined.Storage,
+                        "etcd",
+                        onClick = onEtcd,
+                        enabled = clusterSupport(features, TalosFeature.ETCD).supported,
+                    )
+                    TooltipIconButton(Icons.Outlined.Settings, stringResource(R.string.overview_action_settings), onClick = onSettings)
                 },
             )
         },
@@ -392,8 +415,11 @@ fun OverviewScreen(
                     dataServices = dataServices.takeIf { dataHints.isNotEmpty() },
                     dataHints = dataHints,
                     onDataServices = onDataServices,
+                    argo = argo.takeIf { argoHinted },
+                    onArgoCD = onArgoCD,
                     onNode = onNode,
                     onSettings = onSettings,
+                    onFunding = onFunding,
                     onNodeAction = onNodeAction,
                     canPower = config?.activeSummary?.allows(Feature.POWER) == true,
                     canShell = config?.activeSummary?.allows(Feature.DEBUG_SHELL) == true,
@@ -424,8 +450,11 @@ private fun NodeList(
     dataServices: UiState<DataServices>?,
     dataHints: String,
     onDataServices: () -> Unit,
+    argo: UiState<ArgoStatus>?,
+    onArgoCD: () -> Unit,
     onNode: (NodeOverview) -> Unit,
     onSettings: () -> Unit,
+    onFunding: () -> Unit,
     onNodeAction: (NodeOverview, NodeAction) -> Unit,
     canPower: Boolean,
     canShell: Boolean,
@@ -461,12 +490,17 @@ private fun NodeList(
             }
         }
         if (BuildConfig.SELF_UPDATE) item { UpdateBanner(onClick = onSettings) }
-        if (BuildConfig.DONATIONS) item { SupportCard() }
+        if (BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) item { SupportCard(onFunding) }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
         if (certificate?.isDemo != true) item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
         item { ClusterSummaryCard(clusterName ?: overview.context, clusterSummary(overview.nodes), live, onInsights) }
-        item { AppsCard(apps, onApps) }
+        item {
+            val argoData = (argo as? UiState.Loaded)?.data
+            val inventory = (apps as? UiState.Loaded)?.data
+            val badges = remember(argoData, inventory) { if (argoData != null && inventory != null) argoData.inventoryBadges(inventory.apps) else emptyMap() }
+            AppsCard(apps, onApps, badges)
+        }
         if (dataServices != null) item {
             val inventory = (apps as? UiState.Loaded)?.data
             val appsById = remember(inventory) { inventory?.apps.orEmpty().associateBy { it.id } }
@@ -474,42 +508,58 @@ private fun NodeList(
             val downNodes = remember(overview) { overview.downHostnames() }
             DataServicesCard(dataServices, hinted, appsById, downNodes, onDataServices)
         }
-        if (nodes.isNotEmpty()) item(key = "nodes-header") { NodesHeader(nodes.size) }
-        items(nodes, key = { it.node }) { node ->
-            SwipeableNode(node, onLive = { onNodeAction(node, NodeAction.LIVE) }, onMore = { sheetFor = node }) {
-                NodeCard(node, onClick = { onNode(node) }, onLongClick = { sheetFor = node })
-            }
+        if (argo != null) item(key = "argocd") {
+            val argoTile = (apps as? UiState.Loaded)?.data?.apps?.firstOrNull { it.id == ARGO_CD_CATALOG_ID }
+            val downNodes = remember(overview) { overview.downHostnames() }
+            ArgoCard(argo, argoTile, downNodes, onArgoCD)
+        }
+        if (nodes.isNotEmpty()) item(key = "nodes") {
+            NodesCard(
+                nodes,
+                onNode = onNode,
+                onLive = { onNodeAction(it, NodeAction.LIVE) },
+                onMore = { sheetFor = it },
+            )
         }
         // After the nodes: they come first, the clocks are a secondary check.
         item { TimeDriftCard(time, overview.nodes.associate { it.node to it.hostname }) }
     }
 }
 
-/** Heads the node cards so they read as one section, apart from the cards above. */
+/** The nodes as one card, like Apps and Data services: a title, then a swipeable row per node. */
 @Composable
-private fun NodesHeader(count: Int) {
-    val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(
-        Modifier.fillMaxWidth().padding(start = 4.dp, top = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Icon(Icons.Outlined.ViewInAr, contentDescription = null, tint = muted, modifier = Modifier.size(18.dp))
-        Text(stringResource(R.string.overview_stat_nodes), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-        Text(count.toString(), style = MaterialTheme.typography.labelMedium, color = muted)
+private fun NodesCard(
+    nodes: List<NodeOverview>,
+    onNode: (NodeOverview) -> Unit,
+    onLive: (NodeOverview) -> Unit,
+    onMore: (NodeOverview) -> Unit,
+) {
+    Card(Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.overview_stat_nodes), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            Text(nodes.size.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        nodes.forEachIndexed { i, node ->
+            if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            SwipeableNode(node, onLive = { onLive(node) }, onMore = { onMore(node) }) {
+                NodeRow(node, onClick = { onNode(node) }, onLongClick = { onMore(node) })
+            }
+        }
+        Spacer(Modifier.height(4.dp))
     }
 }
 
 @Composable
-private fun NodeCard(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> Unit) {
-    Card(
-        Modifier.fillMaxWidth().combinedClickable(
+private fun NodeRow(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> Unit) {
+    // Opaque, so the swipe background only shows beside the row as it slides.
+    Box(
+        Modifier.fillMaxWidth().background(CardDefaults.cardColors().containerColor).combinedClickable(
             onClick = { if (node.reachable) onClick() },
             onLongClick = onLongClick,
             onLongClickLabel = stringResource(R.string.overview_node_actions),
         ),
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(node.hostname, style = MaterialTheme.typography.titleMedium)
@@ -636,9 +686,12 @@ private fun UpdateBanner(onClick: () -> Unit) {
     }
 }
 
-/** Occasional, dismissable ask to support the project (see SupportPrompt for the timing). */
+/**
+ * Occasional, dismissable ask to support the project (see SupportPrompt for the timing): GitHub
+ * Sponsors in the open-source builds, [onFunding] (Play in-app purchases) in the Play build.
+ */
 @Composable
-private fun SupportCard() {
+private fun SupportCard(onFunding: () -> Unit) {
     val context = LocalContext.current
     val prompt = (context.applicationContext as TalosApp).supportPrompt
     val visible by prompt.visible.collectAsStateWithLifecycle()
@@ -656,8 +709,8 @@ private fun SupportCard() {
                 TextButton(onClick = prompt::later) { Text(stringResource(R.string.overview_support_later)) }
                 TextButton(onClick = {
                     prompt.later()
-                    openUrl(context, SPONSOR_URL)
-                }) { Text(stringResource(R.string.overview_support_sponsor)) }
+                    if (BuildConfig.FEATURE_FUNDING) onFunding() else openUrl(context, SPONSOR_URL)
+                }) { Text(stringResource(if (BuildConfig.FEATURE_FUNDING) R.string.funding_title else R.string.overview_support_sponsor)) }
             }
         }
     }

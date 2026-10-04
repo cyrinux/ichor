@@ -72,6 +72,7 @@ import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.components.TooltipIconButton
 
 /** The node's machine config (os:admin). Redacted unless the user asked to reveal secrets. */
 class MachineConfigViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<String>() {
@@ -145,7 +146,9 @@ fun MachineConfigScreen(
                 },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
                 actions = {
-                    IconButton(
+                    TooltipIconButton(
+                        Icons.Outlined.ContentCopy,
+                        stringResource(R.string.machine_config_copy),
                         enabled = shown != null,
                         onClick = {
                             shown?.let {
@@ -153,7 +156,7 @@ fun MachineConfigScreen(
                                 scope.launch { snackbar.showSnackbar(context.getString(R.string.machine_config_copied)) }
                             }
                         },
-                    ) { Icon(Icons.Outlined.ContentCopy, stringResource(R.string.machine_config_copy)) }
+                    )
                 },
             )
         },

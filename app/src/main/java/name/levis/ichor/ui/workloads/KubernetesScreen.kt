@@ -33,6 +33,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
  * The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
@@ -83,7 +84,7 @@ fun KubernetesScreen(onBack: () -> Unit) {
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
                 actions = {
                     if (fingerprint != null) {
-                        IconButton(onClick = { editing = true }) { Icon(Icons.Outlined.Dns, stringResource(R.string.kube_server_title)) }
+                        TooltipIconButton(Icons.Outlined.Dns, stringResource(R.string.kube_server_title), onClick = { editing = true })
                     }
                 },
             )

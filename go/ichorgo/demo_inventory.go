@@ -36,6 +36,8 @@ var demoWorkloads = []struct {
 		{"grafana-sc-dashboard", "quay.io/kiwigrid/k8s-sidecar:1.30.10"},
 	}},
 	{3, "monitoring", "loki-0", [][2]string{{"loki", "docker.io/grafana/loki:3.5.5"}}},
+	{3, "argocd", "argocd-application-controller-0", [][2]string{{"application-controller", "quay.io/argoproj/argocd:v3.4.5"}}},
+	{4, "argocd", "argocd-server-6b9d-k2v8n", [][2]string{{"server", "quay.io/argoproj/argocd:v3.4.5"}}},
 	{4, "flux-system", "source-controller-7f9c-2xk8p", [][2]string{{"manager", "ghcr.io/fluxcd/source-controller:v1.7.0"}}},
 	{4, "flux-system", "kustomize-controller-5b8d-n4q9z", [][2]string{{"manager", "ghcr.io/fluxcd/kustomize-controller:v1.7.0"}}},
 	{3, "networking", "traefik-8c6d-w7r2m", [][2]string{{"traefik", "docker.io/traefik:v3.5.3"}}},

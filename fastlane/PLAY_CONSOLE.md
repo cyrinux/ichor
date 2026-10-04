@@ -17,6 +17,8 @@ the `play` build type, i.e. the release build with
 - **no donation links** (Payments policy: only charities may take donations outside Play
   Billing): `BuildConfig.DONATIONS` is false, so the support card, the Sponsors link and the
   crypto addresses are hidden. The website keeps them.
+- **feature funding** instead (`BuildConfig.FEATURE_FUNDING`): Settings → About → *Fund
+  features*, also offered by the occasional support card. See **Feature funding** below.
 
 CI builds it on every push (artifact `android-play`, with its R8 mapping). On a `v*` tag,
 `release.yml` runs `fastlane supply`, once the `WIF_PROVIDER` and `SERVICE_ACCOUNT` secrets
@@ -56,6 +58,31 @@ characters per language.
    days in a row before production access can be requested.
 6. **Reviewer access:** the app does nothing without a talosconfig, and reviewers reject apps
    they cannot get into. See **App access** below.
+
+## Feature funding (in-app products)
+
+Users back the features they want next with Play in-app purchases. There is no server: the
+list comes from `docs/roadmap.json` on the website, and what each feature raised comes from
+the Play Console reports.
+
+- **Products:** one-time, *consumable* products (the app consumes each purchase at once, so
+  it can be bought again and is acknowledged in time). Create each id `docs/roadmap.json`
+  lists under Monetize with Play → Products → In-app products, and activate it. An id missing
+  in the Console, or inactive, simply shows no button. Ids used now:
+  `tip_2`, `tip_5`, `tip_10`, and `fund_<feature>_2`, `_5`, `_10` per feature.
+  Name a product after its feature ("Act on data services: €5"), as Play shows that name on
+  the payment sheet and the receipt.
+- **Adding a feature:** create its products, add an entry to `docs/roadmap.json` (title and
+  description per language, `goal` in whole `currency` units, `status` `open`,
+  `in_progress` or `shipped` with `shippedIn`, optional https `issue` link) and push: the
+  website deploys it and the app picks it up the next time the screen opens.
+  `RoadmapTest.publishedRoadmapIsValid` fails if an entry would be dropped.
+- **Progress bars:** update `raised` by hand from Download reports → Financial → Estimated
+  sales (or Earnings), summed per product id, net of refunds.
+- **Wording:** the screen says backing supports development and buys neither the feature nor
+  a delivery date. Keep descriptions to what is planned; don't promise dates.
+- **Testing:** add testers under Settings → License testing; their purchases are free and
+  are refunded automatically. Purchases only work in a build installed from Play (any track).
 
 ## Main store listing
 
@@ -125,7 +152,7 @@ Instructions text (for option 1):
 - Does the app allow users to interact or exchange content? **No.** Sharing a report through
   the system share sheet is not in-app user interaction.
 - Does the app share the user's current location? **No.**
-- Does the app allow purchases of digital goods? **No.**
+- Does the app allow purchases of digital goods? **Yes** (feature funding, Play Billing).
 - Is the app a web browser or search engine? **No.**
 
 Expected rating: Everyone / PEGI 3 / USK 0.
@@ -179,7 +206,13 @@ Everything else: **not collected**. Reasoning for the borderline cases:
   App functionality.
 - **Camera**: frames are decoded on the device and never leave it, so photos and videos are
   not collected.
-- **GitHub requests** (Talos release list, release notes) send no user data; the IP address
+- **Feature funding**: Google Play processes the payment; the app sends no purchase data to the
+  developer or anyone else, and keeps the ids of the products bought only on the phone, so
+  **Financial info → Purchase history** is left undeclared: the purchase data is Google
+  Play's, not the app's. Check this against the Console's current help text when filling the
+  form; if it asks otherwise, declare Purchase history as collected, not shared, required for
+  App functionality.
+- **GitHub requests** (Talos release list, release notes, the funding list) send no user data; the IP address
   seen by any server is not declared as collection unless it is retained for the app's
   purposes.
 

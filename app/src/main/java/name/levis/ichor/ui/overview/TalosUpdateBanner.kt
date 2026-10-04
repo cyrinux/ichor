@@ -1,12 +1,12 @@
 package name.levis.ichor.ui.overview
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
+import name.levis.ichor.ui.settings.openUrl
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -79,7 +79,8 @@ fun TalosUpdateBanner(nodes: List<NodeOverview>, canUpgrade: Boolean, onUpgrade:
             onDismissRequest = { choosing = false },
             title = { Text(stringResource(R.string.overview_talos_pick_node, check.latest)) },
             text = {
-                Column {
+                // Scrolls: right after a release, a large cluster lists more nodes than fit the dialog.
+                Column(Modifier.verticalScroll(rememberScrollState())) {
                     Text(
                         stringResource(R.string.overview_talos_pick_hint),
                         style = MaterialTheme.typography.bodySmall,
@@ -107,13 +108,5 @@ fun TalosUpdateBanner(nodes: List<NodeOverview>, canUpgrade: Boolean, onUpgrade:
             confirmButton = {},
             dismissButton = { TextButton(onClick = { choosing = false }) { Text(stringResource(R.string.common_cancel)) } },
         )
-    }
-}
-
-private fun openUrl(context: android.content.Context, url: String) {
-    try {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-    } catch (_: ActivityNotFoundException) {
-        // No browser: nothing to do.
     }
 }

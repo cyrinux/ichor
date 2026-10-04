@@ -18,6 +18,7 @@ work = "2.12.0"
 glance = "1.2.0"
 termlib = "0.3.10"
 aboutLibraries = "15.2.0"
+billing = "9.1.0"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -47,6 +48,7 @@ androidx-glance-material3 = { module = "androidx.glance:glance-material3", versi
 termlib = { module = "org.connectbot:termlib", version.ref = "termlib" }
 androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycle" }
 aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
+billing = { module = "com.android.billingclient:billing", version.ref = "billing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

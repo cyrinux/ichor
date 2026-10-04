@@ -24,12 +24,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
@@ -48,6 +46,7 @@ import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.KubeServerDialog
+import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
  * Longhorn volumes, Garage clusters and CloudNativePG clusters, one tab per system the cluster
@@ -95,9 +94,9 @@ fun DataServicesScreen(onBack: () -> Unit) {
                 title = { Text(stringResource(R.string.data_services_title)) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.common_back)) } },
                 actions = {
-                    IconButton(onClick = { vm.refresh() }) { Icon(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh)) }
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.data_services_refresh), onClick = { vm.refresh() })
                     if (fingerprint != null) {
-                        IconButton(onClick = { editing = true }) { Icon(Icons.Outlined.Dns, stringResource(R.string.kube_server_title)) }
+                        TooltipIconButton(Icons.Outlined.Dns, stringResource(R.string.kube_server_title), onClick = { editing = true })
                     }
                 },
             )
@@ -142,7 +141,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>, garage: Gara
         if (kinds.size > 1) {
             PrimaryTabRow(selectedTabIndex = kinds.indexOf(tab)) {
                 kinds.forEach { kind ->
-                    Tab(selected = kind == tab, onClick = { selected = kind }, text = { TabLabel(kind) })
+                    Tab(selected = kind == tab, onClick = { selected = kind }, text = { Text(kind.tabTitle, maxLines = 1) })
                 }
             }
         }
@@ -152,15 +151,5 @@ private fun Systems(services: DataServices, downNodes: Set<String>, garage: Gara
             DataServiceKind.CNPG -> CnpgTab(services.cnpg!!)
             DataServiceKind.DRAGONFLY -> DragonflyTab(services.dragonfly!!)
         }
-    }
-}
-
-/** The tab's name, with the product's full name in small type under an abbreviation. */
-@Composable
-private fun TabLabel(kind: DataServiceKind) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(kind.tabTitle, maxLines = 1)
-        val caption = kind.tabCaption ?: return@Column
-        Text(caption, style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, lineHeight = 10.sp), maxLines = 1)
     }
 }
