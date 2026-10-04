@@ -1,0 +1,6 @@
+• Describe each card in the overview arrange editor
+• Show the app version at the foot of the first screen
+• Collapse the overview nodes card by default
+• Highlight the tapped link on the KubeSpan map
+• Choose the order of the overview bar actions and which go in its menu
+• Hide no-op move actions at the ends of the bar list
