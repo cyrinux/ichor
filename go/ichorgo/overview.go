@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"net/netip"
 	"strings"
 
 	"github.com/cosi-project/runtime/pkg/safe"
@@ -59,6 +60,8 @@ type nodeProbe struct {
 	memory      *machineapi.Memory   // nil when unknown
 	cpu         *machineapi.CPUsInfo // nil when unknown
 	publicIPs   []string
+	// KubeSpan peers that are up, by label: the addresses this node reaches them at.
+	peerEndpoints map[string][]netip.Addr
 }
 
 // ClusterOverview queries every node of the context in parallel and returns a JSON clusterOverview.
@@ -81,13 +84,16 @@ func ClusterOverview(configYAML, contextName string) (out string, err error) {
 		nodes := targetNodes(s.context)
 		result := clusterOverview{Context: name, Nodes: make([]nodeOverview, len(nodes))}
 		domains := make([]string, len(nodes))
+		peerEndpoints := make([]map[string][]netip.Addr, len(nodes))
 
 		forEachNode(nodes, func(i int, node string) {
 			p := probeNode(ctx, s.client, node)
-			result.Nodes[i], domains[i] = buildNodeOverview(node, p), p.domain
+			result.Nodes[i], domains[i], peerEndpoints[i] = buildNodeOverview(node, p), p.domain, p.peerEndpoints
 
 			s.rememberVersion(node, result.Nodes[i].Version)
 		})
+
+		result.Nodes = withPeerSeenPublicIPs(result.Nodes, peerEndpoints)
 
 		rememberNodeNames(contextFingerprints(configYAML), contextFingerprint(name, cfg), result.Nodes)
 		learnClusterHosts(ctx, s.client, result.Nodes, domains)
@@ -143,6 +149,7 @@ func probeNode(ctx context.Context, c *client.Client, node string) nodeProbe {
 	}
 
 	p.publicIPs = probePublicIPs(nodeCtx, c)
+	p.peerEndpoints = probePeerEndpoints(nodeCtx, c)
 
 	return p
 }
