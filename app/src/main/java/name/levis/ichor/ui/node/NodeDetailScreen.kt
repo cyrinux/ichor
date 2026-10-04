@@ -86,6 +86,7 @@ import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
 import kotlinx.coroutines.launch
+import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.components.TooltipIconButton
 
 /** Index of the Cgroups tab, after Pods. */
@@ -146,6 +147,12 @@ fun NodeDetailScreen(
     // One upgrade at a time in the app: the entry stays open for the node being upgraded.
     val upgrading by app.upgradeManager.current.collectAsStateWithLifecycle()
     val upgradeBusyElsewhere = upgrading?.let { it.running && it.node != node } ?: false
+    // Maintenance and upgrades share the cluster lock: one of them at a time in the app.
+    val maintenance by app.maintenanceManager.current.collectAsStateWithLifecycle()
+    val maintenanceRunning = maintenance?.running == true
+    val cordoned by app.maintenanceManager.cordoned.collectAsStateWithLifecycle()
+    var confirmingCordon by remember { mutableStateOf(false) }
+    var cordonBusy by remember { mutableStateOf(false) }
     val serviceControl: ServiceControlViewModel = viewModel(
         key = "service-control-$node",
         factory = factory { ServiceControlViewModel(app.talosRepository, node) },
@@ -233,6 +240,19 @@ fun NodeDetailScreen(
         }
     }
 
+    fun cordon(on: Boolean) {
+        confirmingCordon = false
+        cordonBusy = true
+        scope.launch {
+            val message = runCatching { app.maintenanceManager.cordon(node, on) }.fold(
+                onSuccess = { context.getString(if (on) R.string.cordon_done else R.string.uncordon_done, hostname) },
+                onFailure = { context.getString(R.string.cordon_failed, hostname, it.uiText().resolve(context)) },
+            )
+            cordonBusy = false
+            snackbar.showSnackbar(message, withDismissAction = true, duration = SnackbarDuration.Long)
+        }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
@@ -247,7 +267,7 @@ fun NodeDetailScreen(
                     BackButton(onBack)
                 },
                 actions = {
-                    if (powerState is PowerState.Running || controlState is ServiceControlState.Running) {
+                    if (powerState is PowerState.Running || controlState is ServiceControlState.Running || cordonBusy) {
                         CircularProgressIndicator(Modifier.size(20.dp).padding(end = 4.dp), strokeWidth = 2.dp)
                     }
                     Box {
@@ -257,11 +277,16 @@ fun NodeDetailScreen(
                                 summary = config?.activeSummary,
                                 features = features,
                                 // One upgrade at a time in the app.
-                                busy = if (upgradeBusyElsewhere) setOf(NodeMenuEntry.UPGRADE) else emptySet(),
+                                busy = buildSet {
+                                    if (upgradeBusyElsewhere || maintenanceRunning) add(NodeMenuEntry.UPGRADE)
+                                    if (upgrading?.running == true || (maintenanceRunning && maintenance?.node != node)) add(NodeMenuEntry.MAINTENANCE)
+                                    if (cordonBusy || (maintenanceRunning && maintenance?.node == node)) add(NodeMenuEntry.CORDON)
+                                },
                                 onPick = { entry ->
                                     menuOpen = false
-                                    onMenu(entry)
+                                    if (entry == NodeMenuEntry.CORDON) confirmingCordon = true else onMenu(entry)
                                 },
+                                cordoned = cordoned[node],
                             )
                             // Power actions only exist for configs whose role allows them.
                             if (canPower) {
@@ -334,6 +359,10 @@ fun NodeDetailScreen(
             onConfirm = { serviceConfirmed(request) },
             onDismiss = { confirmingService = null },
         )
+    }
+
+    if (confirmingCordon) {
+        CordonDialog(hostname, cordoned[node], onConfirm = ::cordon, onDismiss = { confirmingCordon = false })
     }
 
     confirming?.let { action ->

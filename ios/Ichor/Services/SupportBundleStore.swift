@@ -112,7 +112,7 @@ final class SupportBundleJob {
             try? FileManager.default.removeItem(at: partial.appendingPathExtension("part"))
         }
         state = result
-        // A followed upgrade keeps the screen on too.
-        UIApplication.shared.isIdleTimerDisabled = UpgradeJob.shared.isActive
+        // A followed upgrade or a node maintenance keeps the screen on too.
+        UIApplication.shared.isIdleTimerDisabled = UpgradeJob.shared.isActive || MaintenanceJob.shared.isActive
     }
 }
