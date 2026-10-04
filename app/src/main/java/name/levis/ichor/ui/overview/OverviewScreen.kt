@@ -254,6 +254,7 @@ fun OverviewScreen(
     val discovered by discoveryVm.offer.collectAsStateWithLifecycle()
     // Long-press a card to arrange them: order, hide, show again.
     val layout by app.uiPreferences.overviewLayout.collectAsStateWithLifecycle()
+    val bar by app.uiPreferences.overviewBar.collectAsStateWithLifecycle()
     var customizing by rememberSaveable { mutableStateOf(false) }
     BackHandler(enabled = customizing) { customizing = false }
     val customize = rememberCustomizeTrigger { customizing = true }
@@ -297,10 +298,12 @@ fun OverviewScreen(
                 },
                 actions = {
                     OverviewActions(
+                        bar = bar,
                         nav = OverviewNavigation(onHealth, onEvents, onWorkloads, onMetrics, onKubeSpan, onEtcd, onSettings),
                         reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node },
                         health = config?.activeSummary?.allows(Feature.HEALTH) == true,
                         workloads = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
+                        onCustomize = { customizing = true },
                     )
                 },
             )
@@ -370,7 +373,13 @@ fun OverviewScreen(
                 onDismiss = { showDiscovered = false },
             )
         }
-        if (customizing) OverviewEditor(layout, app.uiPreferences::setOverviewLayout, Modifier.padding(padding))
+        if (customizing) OverviewEditor(
+            layout = layout,
+            onChange = app.uiPreferences::setOverviewLayout,
+            bar = bar,
+            onBarChange = app.uiPreferences::setOverviewBar,
+            modifier = Modifier.padding(padding),
+        )
         else when (val s = state) {
             UiState.Loading -> LoadingBox(Modifier.padding(padding))
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.padding(padding))

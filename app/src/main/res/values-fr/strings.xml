@@ -1872,7 +1872,7 @@
         <item quantity="other">%1$d fenêtres de sync</item>
     </plurals>
     <string name="overview_card_summary">Résumé du cluster</string>
-    <string name="overview_edit_title">Organiser les cartes</string>
+    <string name="overview_edit_title">Personnaliser la vue d’ensemble</string>
     <string name="overview_edit_done">OK</string>
     <string name="overview_edit_hint">Faites glisser une carte par sa poignée pour la déplacer. Les cartes masquées peuvent être réaffichées plus bas.</string>
     <string name="overview_edit_drag">Faire glisser pour déplacer</string>
@@ -1881,6 +1881,12 @@
     <string name="overview_edit_hide">Masquer</string>
     <string name="overview_edit_show">Afficher</string>
     <string name="overview_edit_hidden">Cartes masquées</string>
+    <string name="overview_edit_bar">Barre du haut</string>
+    <string name="overview_edit_bar_hint">Faites glisser une action au-dessus de la ligne pour l’afficher en icône, ou en dessous pour la mettre dans le menu ⋮.</string>
+    <string name="overview_edit_menu">Dans le menu ⋮</string>
+    <string name="overview_edit_to_menu">Mettre dans le menu</string>
+    <string name="overview_edit_to_bar">Afficher en icône</string>
+    <string name="overview_edit_cards">Cartes</string>
     <string name="overview_edit_reset">Rétablir par défaut</string>
     <string name="overview_edit_when_detected">Seulement si présent sur le cluster</string>
     <string name="overview_edit_all_hidden">Toutes les cartes sont masquées. Touchez pour choisir celles à afficher.</string>

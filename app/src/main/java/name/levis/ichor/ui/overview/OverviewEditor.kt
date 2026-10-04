@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import name.levis.ichor.R
 import name.levis.ichor.model.OverviewCard
+import name.levis.ichor.model.OverviewBar
 import name.levis.ichor.model.OverviewLayout
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.TooltipIconButton
@@ -106,13 +107,23 @@ fun overviewCardLabel(card: OverviewCard): String = stringResource(
 )
 
 /**
- * The overview's cards as a list to arrange: drag a shown card by its handle to move it, hide
- * it, or add a hidden one back (at the end). Every change is applied at once through [onChange].
+ * The overview's app bar and cards to arrange. Cards: drag a shown card by its handle to move it,
+ * hide it, or add a hidden one back (at the end). Every change is applied at once through
+ * [onChange] and [onBarChange].
  */
 @Composable
-fun OverviewEditor(layout: OverviewLayout, onChange: (OverviewLayout) -> Unit, modifier: Modifier = Modifier) {
+fun OverviewEditor(
+    layout: OverviewLayout,
+    onChange: (OverviewLayout) -> Unit,
+    bar: OverviewBar,
+    onBarChange: (OverviewBar) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val current by rememberUpdatedState(layout)
     val change by rememberUpdatedState(onChange)
+    val currentBar by rememberUpdatedState(bar)
+    val changeBar by rememberUpdatedState(onBarChange)
+    val barDrag = remember { BarDragState() }
     var dragged by remember { mutableStateOf<OverviewCard?>(null) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
     // Row heights, to know when the dragged card passed its neighbour's middle.
@@ -144,7 +155,10 @@ fun OverviewEditor(layout: OverviewLayout, onChange: (OverviewLayout) -> Unit, m
         verticalArrangement = Arrangement.spacedBy(ROW_SPACING),
         modifier = modifier.fillMaxSize(),
     ) {
-        item(key = "hint") { MutedText(stringResource(R.string.overview_edit_hint), modifier = Modifier.padding(bottom = 8.dp)) }
+        overviewBarItems(bar, { currentBar }, { changeBar(it) }, barDrag, spacing)
+        item(key = "hint") {
+            SectionTitle(stringResource(R.string.overview_edit_cards), stringResource(R.string.overview_edit_hint), Modifier.padding(top = 16.dp))
+        }
         itemsIndexed(layout.visible, key = { _, card -> card.name }) { index, card ->
             val isDragged = dragged == card
             val moveUp = stringResource(R.string.overview_edit_move_up)

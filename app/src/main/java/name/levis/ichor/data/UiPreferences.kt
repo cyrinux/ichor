@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import name.levis.ichor.R
+import name.levis.ichor.model.OverviewBar
 import name.levis.ichor.model.OverviewLayout
 
 enum class ThemeMode(@StringRes val label: Int) {
@@ -76,6 +77,10 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _overviewLayout = MutableStateFlow(OverviewLayout.parse(prefs.getString(KEY_OVERVIEW_LAYOUT, null)))
     val overviewLayout: StateFlow<OverviewLayout> = _overviewLayout.asStateFlow()
 
+    /** The overview's app-bar actions: their order and which are icons or in its menu. */
+    private val _overviewBar = MutableStateFlow(OverviewBar.parse(prefs.getString(KEY_OVERVIEW_BAR, null)))
+    val overviewBar: StateFlow<OverviewBar> = _overviewBar.asStateFlow()
+
     private val _privacyMask = MutableStateFlow(
         PrivacyMask(prefs.getBoolean(KEY_PRIVACY_MASK, false), prefs.getString(KEY_PRIVACY_WORDS, "").orEmpty()),
     )
@@ -112,6 +117,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _overviewLayout.value = layout
     }
 
+    fun setOverviewBar(bar: OverviewBar) {
+        prefs.edit().putString(KEY_OVERVIEW_BAR, bar.encode()).apply()
+        _overviewBar.value = bar
+    }
+
     fun setThemeMode(mode: ThemeMode) {
         prefs.edit().putString(KEY_THEME, mode.name).apply()
         _themeMode.value = mode
@@ -134,6 +144,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_REMOTE_APP_ICONS = "remote_app_icons"
         private const val KEY_OFFLINE_CACHE = "offline_cache"
         private const val KEY_OVERVIEW_LAYOUT = "overview_layout"
+        private const val KEY_OVERVIEW_BAR = "overview_bar"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */
         fun storedLanguage(context: Context): String =
