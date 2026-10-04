@@ -2,7 +2,7 @@ import SwiftUI
 import IchorCore
 
 /// One Argo CD app: the hero with its state and actions, its conditions, the running or last
-/// sync, the sync-waves timeline (with resource ticks for a selective sync), the pods that are
+/// sync, how traffic reaches it (the network graph), the sync-waves timeline (with resource ticks for a selective sync), the pods that are
 /// not ready and the deployment history with rollback. Reads again every 2 s while a sync runs.
 struct ArgoAppView: View {
     let namespace: String
@@ -27,6 +27,9 @@ struct ArgoAppView: View {
     @State private var busy = false
     @State private var message: String?
     @State private var succeeded = 0
+    @State private var network = ArgoNetworkModel()
+    /// The node a box of the network graph opens.
+    @State private var openNode: NodeRef?
 
     private struct SyncRequest: Identifiable {
         let id = UUID()
@@ -57,6 +60,7 @@ struct ArgoAppView: View {
         .navigationBarTitleDisplayMode(.inline)
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
+        .navigationDestination(item: $openNode) { NodeDetailView(ref: $0) }
     }
 
     private func content(_ app: ArgoApp) -> some View {
@@ -67,6 +71,8 @@ struct ArgoAppView: View {
                      terminate: { confirmTerminate = true })
             ArgoConditionsSection(app: app, downNodes: downNodes)
             if let op = app.operation { ArgoOperationSection(operation: op, canTerminate: app.canTerminate) { confirmTerminate = true } }
+            ArgoNetworkSection(model: network, downNodes: downNodes, pods: app.unhealthyPods,
+                               openNode: { openNode = $0 }, changed: { Task { await load() } })
             if !app.resources.isEmpty { timeline(app) }
             if !app.unhealthyPods.isEmpty { ArgoPodsSection(pods: app.unhealthyPods, downNodes: downNodes) }
             if !app.history.isEmpty { ArgoHistorySection(app: app) { confirmRollback = $0 } }
@@ -146,9 +152,12 @@ struct ArgoAppView: View {
         guard let client = model.client else { return }
         let key = model.argoKey
         if case .loading = state, let known = store.status(for: key) { state = .loaded(known, at: Date()) }
+        // The network graph is read alongside, so the two refresh together.
+        let graph = self.network, appNamespace = self.namespace, appName = self.name
+        async let traffic: Void = graph.load(with: client, key: key, namespace: appNamespace, name: appName)
         let loaded: LoadState<ArgoStatus> = await .from { try await store.load(with: client, key: key) }
-        guard key == model.argoKey else { return }
-        state = state.refreshed(with: loaded)
+        if key == model.argoKey { state = state.refreshed(with: loaded) }
+        await traffic
     }
 
     private func run(_ action: ArgoAction, on app: ArgoApp, options: ArgoSyncOptions? = nil) async {

@@ -10,6 +10,7 @@ import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
+import name.levis.ichor.model.ArgoNetwork
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ArgoSyncOptions
 import name.levis.ichor.model.CgroupReport
@@ -470,6 +471,14 @@ class TalosRepository(
     suspend fun argoAction(app: ArgoApp, action: ArgoAction, options: ArgoSyncOptions? = null) = kubeCall { cfg, ctx, server ->
         val json = options?.let { TalosJson.encodeToString(ArgoSyncOptions.serializer(), it) }.orEmpty()
         Ichorgo.kubeArgoAction(cfg, ctx, server, app.namespace, app.name, action.wire, json)
+    }
+
+    /**
+     * How traffic reaches [app] (os:admin): hosts, Gateways, routes, Services, pods and nodes.
+     * Never cached: the app detail asks again whenever it reloads the app.
+     */
+    suspend fun argoNetwork(app: ArgoApp): ArgoNetwork = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(ArgoNetwork.serializer(), Ichorgo.kubeArgoNetwork(cfg, ctx, server, app.namespace, app.name))
     }
 
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */

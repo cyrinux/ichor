@@ -462,6 +462,7 @@ fun Navigation(
                 namespace = entry.arguments?.getString("ns").orEmpty(),
                 name = entry.arguments?.getString("name").orEmpty(),
                 onBack = { nav.popBackStack() },
+                onNode = { n, tab -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab)) },
             )
         }
         composable(Routes.ETCD) { EtcdScreen(onBack = { nav.popBackStack() }) }

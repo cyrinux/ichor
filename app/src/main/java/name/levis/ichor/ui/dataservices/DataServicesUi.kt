@@ -146,12 +146,18 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
 @Composable
 fun LikelyCauseBanner(causes: List<LikelyCause>, modifier: Modifier = Modifier) {
     if (causes.isEmpty()) return
+    CauseBanner(causes.map { it.text() }.joinToString("\n"), modifier)
+}
+
+/** A red banner naming the likely root cause of what is broken. */
+@Composable
+fun CauseBanner(text: String, modifier: Modifier = Modifier) {
     val bad = LocalStatusColors.current.bad
     Surface(color = bad.copy(alpha = 0.12f), contentColor = bad, shape = RoundedCornerShape(12.dp), modifier = modifier.fillMaxWidth()) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
             Icon(Icons.Outlined.WarningAmber, contentDescription = null, modifier = Modifier.size(20.dp))
             Spacer(Modifier.size(8.dp))
-            Text(causes.map { it.text() }.joinToString("\n"), style = MaterialTheme.typography.bodyMedium)
+            Text(text, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
