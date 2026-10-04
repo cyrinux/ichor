@@ -31,6 +31,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
@@ -68,10 +69,13 @@ fun TopologyMap(
     speeds: Map<TopologyLink, String> = emptyMap(),
     /** Nodes picked for a network test: the client, then the server. */
     picked: List<String> = emptyList(),
+    /** The link whose details are open: drawn on top in the accent colour, its nodes outlined. */
+    selected: TopologyLink? = null,
 ) {
     val colors = LocalStatusColors.current
     val siteFill = MaterialTheme.colorScheme.surfaceContainerHigh
     val siteBorder = MaterialTheme.colorScheme.outlineVariant
+    val accent = MaterialTheme.colorScheme.primary
     val description = stringResource(R.string.topology_map_description)
     val nodes = topology.nodes.associateBy { it.id }
 
@@ -98,8 +102,8 @@ fun TopologyMap(
                         style = Stroke(1.dp.toPx()),
                     )
                 }
-                // Healthy links first so broken ones are drawn on top.
-                topology.links.sortedBy { it.isBroken }.forEach { link ->
+                // Healthy links first so broken ones are drawn on top, and the selected one above all.
+                topology.links.sortedWith(compareBy({ it == selected }, { it.isBroken })).forEach { link ->
                     val a = layout.nodes[link.a] ?: return@forEach
                     val b = layout.nodes[link.b] ?: return@forEach
                     val c = layout.control(a, b, nodes[link.a]?.site == nodes[link.b]?.site)
@@ -112,6 +116,12 @@ fun TopologyMap(
                         "down" -> colors.bad
                         "degraded" -> colors.warn
                         else -> colors.muted
+                    }
+                    if (link == selected) {
+                        // A halo under the line in the accent colour, so it stands out whatever its state.
+                        drawPath(path, accent.copy(alpha = 0.35f), style = Stroke(width = 10.dp.toPx(), cap = StrokeCap.Round))
+                        drawPath(path, accent, style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round))
+                        return@forEach
                     }
                     drawPath(
                         path, color.copy(alpha = if (link.isBroken) 1f else 0.55f),
@@ -142,7 +152,9 @@ fun TopologyMap(
             topology.nodes.forEach { node ->
                 val at = layout.nodes[node.id] ?: return@forEach
                 NodeChip(
-                    node, topology.brokenLinks(node.id), picked.indexOf(node.id), maxWidth = (layout.cellWidth - 8f).dp,
+                    node, topology.brokenLinks(node.id), picked.indexOf(node.id),
+                    onSelected = selected?.let { node.id == it.a || node.id == it.b } == true,
+                    maxWidth = (layout.cellWidth - 8f).dp,
                     onClick = { onNode(node) },
                     modifier = Modifier.centeredAt(at.x, at.y),
                 )
@@ -206,7 +218,15 @@ private fun SiteHeader(site: TopologySite, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun NodeChip(node: TopologyNode, broken: Int, pick: Int, maxWidth: Dp, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun NodeChip(
+    node: TopologyNode,
+    broken: Int,
+    pick: Int,
+    onSelected: Boolean,
+    maxWidth: Dp,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalStatusColors.current
     val dot = when {
         node.error != null -> colors.bad
@@ -226,7 +246,8 @@ private fun NodeChip(node: TopologyNode, broken: Int, pick: Int, maxWidth: Dp, o
         color = if (pickLabel != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         tonalElevation = 2.dp,
         shadowElevation = 1.dp,
-        border = pickLabel?.let { BorderStroke(2.dp, MaterialTheme.colorScheme.primary) },
+        // Outlined when picked for a test or at an end of the selected link.
+        border = if (pickLabel != null || onSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
         modifier = modifier.minimumInteractiveComponentSize().widthIn(max = maxWidth).clip(RoundedCornerShape(12.dp))
             .clickable(role = Role.Button, onClick = onClick),
     ) {
