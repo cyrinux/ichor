@@ -33,7 +33,7 @@ func ContainerLogs(configYAML, contextName, node, containerID string, tailLines 
 		stream, err := s.client.Logs(ctx, constants.K8sContainerdNamespace,
 			common.ContainerDriver_CRI, containerID, false, int32(n))
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		tail, err := drainStream(stream.Recv, n)

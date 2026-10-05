@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -74,7 +73,7 @@ func NodeDiskHealth(configYAML, contextName, node string) (out string, err error
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		known, err := s.hasResourceType(ctx, node, smartStatusType)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		if !known {
@@ -83,7 +82,7 @@ func NodeDiskHealth(configYAML, contextName, node string) (out string, err error
 
 		list, err := s.client.COSI.List(ctx, resource.NewMetadata(block.NamespaceName, smartStatusType, "", resource.VersionUndefined))
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		statuses := make(map[string]map[string]any, len(list.Items))

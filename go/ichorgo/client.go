@@ -36,7 +36,7 @@ func openSession(configYAML, contextName string) (*session, error) {
 		return nil, err
 	}
 	if slices.Contains(cfgCtx.Endpoints, demoEndpoint) {
-		return nil, demoUnavailable
+		return nil, errDemoUnavailable
 	}
 
 	// client.New only dials lazily, so no context is needed here.

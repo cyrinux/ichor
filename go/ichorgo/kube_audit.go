@@ -90,9 +90,9 @@ func KubeAuditAnalysis(configYAML, contextName string, minutes int) (out string,
 	}
 
 	return withSession(configYAML, contextName, auditTimeout, func(ctx context.Context, s *session) (string, error) {
-		cps := classifyNodes(ctx, s.client, targetNodes(s.context)).GetControlPlaneNodes()
-		if len(cps) == 0 {
-			return "", errors.New("no reachable control-plane node found in this context")
+		cps, err := s.controlPlanes(ctx)
+		if err != nil {
+			return "", err
 		}
 
 		windows := make([]*auditWindow, len(cps))

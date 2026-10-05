@@ -100,7 +100,7 @@ func TestKubeCertManagerRenewDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := KubeCertManagerRenew(cfg, "", "", "web", "site"); !errors.Is(err, demoUnavailable) {
+	if err := KubeCertManagerRenew(cfg, "", "", "web", "site"); !errors.Is(err, errDemoUnavailable) {
 		t.Fatalf("got %v", err)
 	}
 }

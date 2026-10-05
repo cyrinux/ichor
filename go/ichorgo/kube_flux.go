@@ -324,7 +324,7 @@ func mapFlux(ks []fluxKustomizationObject, hrs []fluxHelmReleaseObject, srcs []f
 
 // fluxLevel: idle when suspended, critical when stalled or not ready for a reason other than
 // waiting, warning while it reconciles or waits for a dependency.
-func fluxLevel(suspended bool, conds fluxConditions) string {
+func fluxLevel(suspended bool, conds kubeConditions) string {
 	ready := conds.get("Ready")
 
 	switch {

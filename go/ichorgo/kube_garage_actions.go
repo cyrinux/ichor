@@ -154,7 +154,7 @@ func KubeGarageRepairBlocks(configYAML, contextName, kubeServer, namespace, pod 
 	}
 
 	if isDemoContext(configYAML, contextName) {
-		return "", demoUnavailable
+		return "", errDemoUnavailable
 	}
 
 	res, err := withGarage(kubeTarget{configYAML, contextName, kubeServer}, namespace, pod, repairGarageBlocks)
@@ -187,7 +187,7 @@ func KubeGarageSetTranquility(configYAML, contextName, kubeServer, namespace, po
 	}
 
 	if isDemoContext(configYAML, contextName) {
-		return demoUnavailable
+		return errDemoUnavailable
 	}
 
 	_, err = withGarage(kubeTarget{configYAML, contextName, kubeServer}, namespace, pod,

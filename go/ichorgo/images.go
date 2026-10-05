@@ -37,7 +37,7 @@ func NodeImages(configYAML, contextName, node string) (out string, err error) {
 		}
 
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		return toJSON(mapImages(msgs))

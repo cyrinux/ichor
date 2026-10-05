@@ -159,7 +159,7 @@ func runCapture(
 	})
 
 	if err != nil {
-		return captureResult{}, "", errors.New(s.friendly(node, err))
+		return captureResult{}, "", s.friendlyErr(node, err)
 	}
 
 	opts.match = match
@@ -180,7 +180,7 @@ func captureLinkType(ctx context.Context, st state.State, iface string) (layers.
 			return 0, fmt.Errorf("interface %q not found on the node", iface)
 		}
 
-		return 0, errors.New(friendlyError(err))
+		return 0, friendlyErr(err)
 	}
 
 	switch t := link.TypedSpec().Type; t { //nolint:exhaustive
@@ -355,7 +355,7 @@ func streamEnd(ctx context.Context, err error) error {
 		return nil
 	}
 
-	return errors.New(friendlyError(err))
+	return friendlyErr(err)
 }
 
 func failCapture(f *os.File, part string, res captureResult, err error) (captureResult, string, error) {

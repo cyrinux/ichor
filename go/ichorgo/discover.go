@@ -215,46 +215,27 @@ func AddContextNodes(storedYAML, contextName, nodes string) (out string, err err
 
 	contextName, nodes = unmaskTargets(storedYAML, contextName, nodes)
 
-	stored, err := parseTalosconfig(storedYAML)
-	if err != nil {
-		return "", fmt.Errorf("stored talosconfig: %w", err)
-	}
+	return editContext(storedYAML, contextName, func(c *clientconfig.Context) error {
+		c.Nodes = targetNodes(c)
 
-	target, ok := stored.Contexts[contextName]
-	if !ok || target == nil {
-		return "", fmt.Errorf("context %q not found in the stored talosconfig", contextName)
-	}
+		for _, n := range strings.Split(nodes, ",") {
+			// "[fd00::1]" is the node fd00::1: talosconfig nodes are never bracketed.
+			n = normalizeEndpoint(n)
+			if n == "" {
+				continue
+			}
 
-	updated := *target
-	updated.Nodes = targetNodes(target)
+			if _, err := netip.ParseAddr(n); err != nil && !validHostname(n) {
+				return fmt.Errorf("invalid node address %q", n)
+			}
 
-	for _, n := range strings.Split(nodes, ",") {
-		// "[fd00::1]" is the node fd00::1: talosconfig nodes are never bracketed.
-		n = normalizeEndpoint(n)
-		if n == "" {
-			continue
+			if !slices.ContainsFunc(c.Nodes, func(known string) bool { return strings.EqualFold(endpointHost(known), n) }) {
+				c.Nodes = append(c.Nodes, n)
+			}
 		}
 
-		if _, err := netip.ParseAddr(n); err != nil && !validHostname(n) {
-			return "", fmt.Errorf("invalid node address %q", n)
-		}
-
-		if !slices.ContainsFunc(updated.Nodes, func(known string) bool { return strings.EqualFold(endpointHost(known), n) }) {
-			updated.Nodes = append(updated.Nodes, n)
-		}
-	}
-
-	contexts := make(map[string]*clientconfig.Context, len(stored.Contexts))
-	for name, c := range stored.Contexts {
-		contexts[name] = c
-	}
-
-	contexts[contextName] = &updated
-
-	result := *stored
-	result.Contexts = contexts
-
-	return encodeConfig(&result)
+		return nil
+	})
 }
 
 // validHostname: letters, digits, dots and dashes, as a DNS name.

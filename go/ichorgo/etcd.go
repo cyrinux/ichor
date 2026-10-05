@@ -84,9 +84,9 @@ func EtcdStatus(configYAML, contextName string) (out string, err error) {
 
 // gatherEtcdOverview finds the context's control-plane nodes and reads etcd through them.
 func gatherEtcdOverview(ctx context.Context, s *session) (etcdOverview, error) {
-	cps := classifyNodes(ctx, s.client, targetNodes(s.context)).GetControlPlaneNodes()
-	if len(cps) == 0 {
-		return etcdOverview{}, errors.New("no reachable control-plane node found in this context")
+	cps, err := s.controlPlanes(ctx)
+	if err != nil {
+		return etcdOverview{}, err
 	}
 
 	return fetchEtcd(ctx, s.client, cps), nil

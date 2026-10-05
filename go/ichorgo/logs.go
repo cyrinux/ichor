@@ -49,7 +49,7 @@ func ServiceLogs(configYAML, contextName, node, service string, tailLines int) (
 		stream, err := s.client.Logs(client.WithNode(ctx, node), constants.SystemContainerdNamespace,
 			common.ContainerDriver_CONTAINERD, service, false, int32(n))
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		tail, err := drainStream(stream.Recv, n)
@@ -78,7 +78,7 @@ func KernelLogs(configYAML, contextName, node string, tailLines int) (out string
 
 		stream, err := s.client.Dmesg(client.WithNode(ctx, node), false, false)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		tail, err := drainStream(stream.Recv, clampTail(tailLines))
@@ -114,7 +114,7 @@ func drainStream(recv func() (*common.Data, error), n int) (logTail, error) {
 		case errors.Is(err, io.EOF):
 			return tl.result(), nil
 		case err != nil:
-			return logTail{}, errors.New(friendlyError(err))
+			return logTail{}, friendlyErr(err)
 		}
 
 		if e := msg.GetMetadata().GetError(); e != "" {

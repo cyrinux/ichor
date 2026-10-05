@@ -12,23 +12,23 @@ import name.levis.ichor.model.MaintenancePhase
 import name.levis.ichor.model.MaintenancePlan
 import name.levis.ichor.model.MaintenanceProgress
 import name.levis.ichor.model.cordonedAfter
+import name.levis.ichor.ui.FollowedRun
 
 /** The node maintenance the app follows: at most one at a time, across all nodes. */
 data class MaintenanceRunState(
     val node: String,
-    val hostname: String,
+    override val hostname: String,
     val action: MaintenanceAction,
     /** The node was cordoned before the run: it stays cordoned, even after a reboot. */
     val wasCordoned: Boolean = false,
     val events: List<MaintenanceProgress> = emptyList(),
     /** The pods being evicted, as last reported. */
     val pods: List<DrainPod> = emptyList(),
-    val finished: Boolean = false,
-    val error: String? = null,
+    override val finished: Boolean = false,
+    override val error: String? = null,
     /** Stop was requested: the run ends after its current step. */
     val stopping: Boolean = false,
-) {
-    val running: Boolean get() = !finished
+) : FollowedRun {
     val phase: MaintenancePhase? get() = events.lastOrNull()?.let { MaintenancePhase.of(it.phase) }
 }
 

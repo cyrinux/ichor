@@ -424,7 +424,7 @@ func TestKubeArgoFreezeDemo(t *testing.T) {
 		t.Fatalf("demo: frozen %v expired %v git %v", frozen, expired, git)
 	}
 
-	if err := KubeArgoFreeze(cfg, "", "", "argocd", "apps", argoFreezeActionClearExpired, ""); !errors.Is(err, demoUnavailable) {
+	if err := KubeArgoFreeze(cfg, "", "", "argocd", "apps", argoFreezeActionClearExpired, ""); !errors.Is(err, errDemoUnavailable) {
 		t.Fatalf("got %v", err)
 	}
 }

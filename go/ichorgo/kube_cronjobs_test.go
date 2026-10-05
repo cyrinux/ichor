@@ -230,7 +230,7 @@ func TestKubeCronJobsDemoAndValidation(t *testing.T) {
 		t.Fatalf("demo cronjobs: %v %s", err, out)
 	}
 
-	if _, err := KubeTriggerCronJob(cfg, "", "", "demo", "db-backup"); !errors.Is(err, demoUnavailable) {
+	if _, err := KubeTriggerCronJob(cfg, "", "", "demo", "db-backup"); !errors.Is(err, errDemoUnavailable) {
 		t.Fatalf("got %v", err)
 	}
 

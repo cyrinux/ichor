@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"errors"
 	"sort"
 	"strings"
 	"time"
@@ -43,7 +42,7 @@ func NodeContainers(configYAML, contextName, node string) (out string, err error
 	return withNodeSession(configYAML, contextName, node, statsTimeout, func(ctx context.Context, s *session) (string, error) {
 		list, err := s.client.Containers(ctx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		stats, _ := s.client.Stats(ctx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI) //nolint:errcheck

@@ -312,7 +312,7 @@ func TestDemoMaintenancePlan(t *testing.T) {
 		t.Errorf("plan = %s", out)
 	}
 
-	if err := KubeCordon(demo, "", "", "192.0.2.10", true); err != demoUnavailable {
+	if err := KubeCordon(demo, "", "", "192.0.2.10", true); err != errDemoUnavailable {
 		t.Errorf("demo cordon: %v", err)
 	}
 }

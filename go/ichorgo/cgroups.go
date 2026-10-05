@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"errors"
 	"sort"
 	"strings"
 	"time"
@@ -58,14 +57,14 @@ func NodeCgroups(configYAML, contextName, node string) (out string, err error) {
 	return withNodeSession(configYAML, contextName, node, cgroupsTimeout, func(ctx context.Context, s *session) (string, error) {
 		r, err := s.client.Copy(ctx, constants.CgroupMountPath)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		defer r.Close() //nolint:errcheck
 
 		root, err := cgroupTreeFromTarGz(r)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		// Without CRI the pods keep their pod<uid> and container id names.

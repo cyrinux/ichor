@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -69,6 +70,11 @@ func (s *session) friendly(node string, err error) string {
 	defer cancel()
 
 	return notAvailableOn(s.nodeVersion(ctx, node))
+}
+
+// friendlyErr is friendly as an error, to return as is.
+func (s *session) friendlyErr(node string, err error) error {
+	return errors.New(s.friendly(node, err))
 }
 
 // resourceTypes are node's registered COSI resource definitions, listed once per session

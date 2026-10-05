@@ -45,7 +45,7 @@ func TestDemoImportMergeSwitchAndRemove(t *testing.T) {
 	if !isDemoContext(merged, "") || !isDemoContext(merged, "Demo cluster") || isDemoContext(merged, "lab") || isDemoContext(merged, "missing") {
 		t.Fatal("mock selection must follow the active endpoint, not the whole YAML")
 	}
-	if _, err := openSession(merged, "Demo cluster"); !errors.Is(err, demoUnavailable) {
+	if _, err := openSession(merged, "Demo cluster"); !errors.Is(err, errDemoUnavailable) {
 		t.Fatalf("demo must never open a network session: %v", err)
 	}
 	removed, err := RemoveContext(merged, "Demo cluster")
@@ -112,10 +112,10 @@ func TestDemoPublicReadsAndActions(t *testing.T) {
 		if err != nil || !strings.Contains(mc, n.Hostname) {
 			t.Fatalf("machine config: %s %v", mc, err)
 		}
-		if err := Reboot(yaml, "", n.Node, "default"); !errors.Is(err, demoUnavailable) {
+		if err := Reboot(yaml, "", n.Node, "default"); !errors.Is(err, errDemoUnavailable) {
 			t.Fatalf("reboot must be blocked locally: %v", err)
 		}
-		if err := ServiceAction(yaml, "", n.Node, "kubelet", "restart"); !errors.Is(err, demoUnavailable) {
+		if err := ServiceAction(yaml, "", n.Node, "kubelet", "restart"); !errors.Is(err, errDemoUnavailable) {
 			t.Fatalf("service control must be blocked locally: %v", err)
 		}
 	}

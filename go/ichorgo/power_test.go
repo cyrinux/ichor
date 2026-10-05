@@ -1,8 +1,9 @@
 package ichorgo
 
 import (
-	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
 	"testing"
+
+	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
 
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 )

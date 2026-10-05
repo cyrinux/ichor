@@ -55,7 +55,7 @@ func ResourceTypes(configYAML, contextName, node string) (out string, err error)
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		defs, err := s.resourceDefinitions(ctx, node)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		return toJSON(mapResourceTypes(defs))
@@ -123,7 +123,7 @@ func ResourceList(configYAML, contextName, node, namespace, resourceType string)
 
 		list, err := s.client.COSI.List(ctx, resource.NewMetadata(namespace, rd.Type, "", resource.VersionUndefined))
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		return toJSON(mapResourceItems(rd.Type, namespace, list.Items))
@@ -183,7 +183,7 @@ func ResourceGet(configYAML, contextName, node, namespace, resourceType, id stri
 				return "", fmt.Errorf("%s %q not found in namespace %s", rd.Type, id, namespace)
 			}
 
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		text, err := resourceToYAML(r)
@@ -204,7 +204,7 @@ func (s *session) resolveResourceType(ctx context.Context, node, resourceType st
 
 	defs, err := s.resourceDefinitions(ctx, node)
 	if err != nil {
-		return nil, errors.New(s.friendly(node, err))
+		return nil, s.friendlyErr(node, err)
 	}
 
 	rd, err := matchResourceType(defs, resourceType)

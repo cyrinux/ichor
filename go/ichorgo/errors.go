@@ -9,6 +9,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// friendlyErr is friendlyError as an error, to return as is.
+func friendlyErr(err error) error {
+	return errors.New(friendlyError(err))
+}
+
 // friendlyError turns gRPC/transport errors into a short message for the UI.
 func friendlyError(err error) string {
 	if err == nil {

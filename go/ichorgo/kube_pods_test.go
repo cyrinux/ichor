@@ -103,7 +103,7 @@ func TestKubePodsDemo(t *testing.T) {
 		t.Fatalf("demo pods: %v %s", err, out)
 	}
 
-	if err := KubeDeletePod(cfg, "", "", "demo", "worker-6f4b8-uvwxy"); !errors.Is(err, demoUnavailable) {
+	if err := KubeDeletePod(cfg, "", "", "demo", "worker-6f4b8-uvwxy"); !errors.Is(err, errDemoUnavailable) {
 		t.Fatalf("got %v", err)
 	}
 

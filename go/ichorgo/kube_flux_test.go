@@ -343,7 +343,7 @@ func TestKubeFluxDemo(t *testing.T) {
 		t.Fatalf("demo states: reconciling %v stalled %v suspended %v crashing %v", reconciling, stalled, suspended, crashing)
 	}
 
-	if err := KubeFluxAction(cfg, "", "", "Kustomization", "flux-system", "apps", fluxActionReconcile); !errors.Is(err, demoUnavailable) {
+	if err := KubeFluxAction(cfg, "", "", "Kustomization", "flux-system", "apps", fluxActionReconcile); !errors.Is(err, errDemoUnavailable) {
 		t.Fatalf("got %v", err)
 	}
 }

@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"net/url"
 	"slices"
@@ -28,6 +29,17 @@ func healthRank(h string) int {
 		return 2
 	default:
 		return 3
+	}
+}
+
+// byHealthThenKey orders items worst health first, then by the stable key f returns
+// (namespace/name, usually), for slices.SortFunc.
+func byHealthThenKey[T any](f func(T) (health, key string)) func(a, b T) int {
+	return func(a, b T) int {
+		ah, ak := f(a)
+		bh, bk := f(b)
+
+		return cmp.Or(healthRank(ah)-healthRank(bh), strings.Compare(ak, bk))
 	}
 }
 

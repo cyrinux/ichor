@@ -3,8 +3,6 @@ package ichorgo
 import (
 	"cmp"
 	"context"
-	"errors"
-	"net/http"
 	"slices"
 	"strings"
 	"sync"
@@ -352,12 +350,6 @@ func mapArgoAppSet(s argoAppSetObject, apps []argoApp) argoAppSet {
 	}
 
 	return set
-}
-
-func isNotFound(err error) bool {
-	var apiErr *kubeAPIError
-
-	return errors.As(err, &apiErr) && apiErr.Code == http.StatusNotFound
 }
 
 // argoSourcesOf lists the app's sources (spec.sources, or the single spec.source).

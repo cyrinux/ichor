@@ -110,14 +110,6 @@ func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteLi
 	return kubeRouteList{Routes: uniqueRoutes(routes)}, nil
 }
 
-func ignoreNotFound(err error) error {
-	if isNotFound(err) {
-		return nil
-	}
-
-	return err
-}
-
 type labeledObject struct {
 	Metadata struct {
 		Name   string            `json:"name"`

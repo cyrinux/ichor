@@ -194,13 +194,7 @@ func mapPercona(clusters []perconaClusterObject, backups []perconaBackupObject, 
 		out.Clusters = append(out.Clusters, mapPerconaCluster(c, times[key], byCluster[key], now))
 	}
 
-	slices.SortFunc(out.Clusters, func(a, b perconaCluster) int {
-		if d := healthRank(a.Health) - healthRank(b.Health); d != 0 {
-			return d
-		}
-
-		return strings.Compare(a.Namespace+"/"+a.Name, b.Namespace+"/"+b.Name)
-	})
+	slices.SortFunc(out.Clusters, byHealthThenKey(func(x perconaCluster) (string, string) { return x.Health, x.Namespace + "/" + x.Name }))
 
 	return out
 }

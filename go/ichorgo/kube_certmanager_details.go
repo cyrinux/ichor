@@ -96,18 +96,10 @@ type cmOwnerRef struct {
 	Name string `json:"name"`
 }
 
-type cmCondition struct {
-	Type               string `json:"type"`
-	Status             string `json:"status"`
-	Reason             string `json:"reason"`
-	Message            string `json:"message"`
-	LastTransitionTime string `json:"lastTransitionTime"`
-}
-
 type cmConditioned struct {
 	Metadata cmObjectMeta `json:"metadata"`
 	Status   struct {
-		Conditions []cmCondition `json:"conditions"`
+		Conditions []kubeCondition `json:"conditions"`
 	} `json:"status"`
 }
 
@@ -283,7 +275,7 @@ func ownedBy(meta cmObjectMeta, kind, name string) bool {
 	return slices.Contains(meta.OwnerReferences, cmOwnerRef{Kind: kind, Name: name})
 }
 
-func mapCMConditions(conds []cmCondition) []certCondition {
+func mapCMConditions(conds []kubeCondition) []certCondition {
 	out := make([]certCondition, 0, len(conds))
 	for _, c := range conds {
 		out = append(out, certCondition{Type: c.Type, Status: c.Status, Reason: c.Reason, Message: c.Message, Time: unixMilli(c.LastTransitionTime)})

@@ -34,7 +34,7 @@ func nodeBundleSection(s *session, node string) bundleSection {
 		dir:  bundleFileName(node),
 		reachable: func(ctx context.Context) error {
 			if _, err := s.client.Version(withNode(ctx, node)); err != nil {
-				return errors.New(friendlyError(err))
+				return friendlyErr(err)
 			}
 
 			return nil
@@ -90,7 +90,7 @@ func collectGitOpsFile(ctx context.Context, s *session, kube kubeTarget) ([]bund
 func collectVersion(ctx context.Context, s *session, node string) ([]bundleFile, error) {
 	resp, err := s.client.Version(withNode(ctx, node))
 	if err != nil {
-		return nil, errors.New(friendlyError(err))
+		return nil, friendlyErr(err)
 	}
 
 	v := first(resp.GetMessages())
@@ -105,7 +105,7 @@ func collectVersion(ctx context.Context, s *session, node string) ([]bundleFile,
 func collectDmesg(ctx context.Context, s *session, node string) ([]bundleFile, error) {
 	stream, err := s.client.Dmesg(withNode(ctx, node), false, false)
 	if err != nil {
-		return nil, errors.New(s.friendly(node, err))
+		return nil, s.friendlyErr(node, err)
 	}
 
 	b, err := readLogStream(stream.Recv, supportLogBytes)
@@ -118,7 +118,7 @@ func collectServiceLogs(ctx context.Context, s *session, node string) ([]bundleF
 
 	resp, err := s.client.ServiceList(nodeCtx)
 	if err != nil {
-		return nil, errors.New(s.friendly(node, err))
+		return nil, s.friendlyErr(node, err)
 	}
 
 	services := mapServices(first(resp.GetMessages()).GetServices())
@@ -164,7 +164,7 @@ func collectContainerLogs(ctx context.Context, s *session, node string) ([]bundl
 
 	resp, err := s.client.Containers(nodeCtx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI)
 	if err != nil {
-		return nil, errors.New(s.friendly(node, err))
+		return nil, s.friendlyErr(node, err)
 	}
 
 	containers := mergeContainers(first(resp.GetMessages()).GetContainers(), nil)
@@ -213,7 +213,7 @@ func collectContainerLogs(ctx context.Context, s *session, node string) ([]bundl
 func collectResources(ctx context.Context, s *session, node string) ([]bundleFile, error) {
 	defs, err := s.resourceDefinitions(ctx, node)
 	if err != nil {
-		return nil, errors.New(s.friendly(node, err))
+		return nil, s.friendlyErr(node, err)
 	}
 
 	var (
@@ -264,7 +264,7 @@ func bundleResource(spec *meta.ResourceDefinitionSpec) bool {
 func dumpResources(ctx context.Context, s *session, node string, spec *meta.ResourceDefinitionSpec) ([]byte, error) {
 	list, err := s.client.COSI.List(withNode(ctx, node), resource.NewMetadata(spec.DefaultNamespace, spec.Type, "", resource.VersionUndefined))
 	if err != nil {
-		return nil, errors.New(friendlyError(err))
+		return nil, friendlyErr(err)
 	}
 
 	var out bytes.Buffer
@@ -303,7 +303,7 @@ func collectMachineConfig(ctx context.Context, s *session, node string) ([]bundl
 func collectMounts(ctx context.Context, s *session, node string) ([]bundleFile, error) {
 	resp, err := s.client.Mounts(withNode(ctx, node))
 	if err != nil {
-		return nil, errors.New(s.friendly(node, err))
+		return nil, s.friendlyErr(node, err)
 	}
 
 	var table bytes.Buffer
@@ -323,7 +323,7 @@ func collectMounts(ctx context.Context, s *session, node string) ([]bundleFile, 
 func collectProcesses(ctx context.Context, s *session, node string) ([]bundleFile, error) {
 	resp, err := s.client.Processes(withNode(ctx, node))
 	if err != nil {
-		return nil, errors.New(s.friendly(node, err))
+		return nil, s.friendlyErr(node, err)
 	}
 
 	var table bytes.Buffer
@@ -366,7 +366,7 @@ func readLogStream(recv func() (*common.Data, error), maxBytes int) ([]byte, err
 		case errors.Is(err, io.EOF):
 			return buf, nil
 		case err != nil:
-			return buf, errors.New(friendlyError(err))
+			return buf, friendlyErr(err)
 		}
 
 		if e := msg.GetMetadata().GetError(); e != "" {

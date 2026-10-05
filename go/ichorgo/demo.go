@@ -21,7 +21,7 @@ import (
 // operations the demo does not implement. No credentials for a real cluster exist.
 const demoEndpoint = "demo.ichor.invalid"
 
-var demoUnavailable = errors.New("This action is unavailable in the demo cluster")
+var errDemoUnavailable = errors.New("This action is unavailable in the demo cluster")
 
 // DemoConfig creates an ordinary, mergeable talosconfig for the built-in demo.
 // The public demo identity is deterministic so adding it again updates the same
@@ -136,7 +136,7 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 	case "NodeFeatures":
 		features := computeFeatures(n.Version)
 		for _, id := range []string{"packetCapture", "upgrade", "etcdSnapshot", "etcdMemberActions", "supportBundle", "issueConfig", "debugShell", "serviceControl"} {
-			features.Features[id] = featureState{Reason: demoUnavailable.Error()}
+			features.Features[id] = featureState{Reason: errDemoUnavailable.Error()}
 		}
 		return toJSON(features)
 	case "NodeTime":
@@ -248,7 +248,7 @@ func demoRead(operation, yaml, name, node string, args ...string) (string, error
 	case "ResourceGet":
 		return toJSON(map[string]string{"yaml": fmt.Sprintf("metadata:\n  namespace: network\n  type: HostnameStatuses.net.talos.dev\n  id: hostname\n  version: 1\nspec:\n  hostname: %s\n  domainname: demo.invalid\n", n.Hostname)})
 	}
-	return "", demoUnavailable
+	return "", errDemoUnavailable
 }
 
 func demoLogLine(service string, at time.Time) string {

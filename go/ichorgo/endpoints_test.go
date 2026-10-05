@@ -281,7 +281,7 @@ func TestProbeEndpointDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := ProbeEndpoint(cfg, "", "192.168.1.10"); err == nil || err.Error() != demoUnavailable.Error() {
+	if _, err := ProbeEndpoint(cfg, "", "192.168.1.10"); err == nil || err.Error() != errDemoUnavailable.Error() {
 		t.Errorf("err = %v, want the demo error", err)
 	}
 }

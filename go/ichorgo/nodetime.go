@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"errors"
 
 	"github.com/siderolabs/talos/pkg/machinery/api/time"
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -35,7 +34,7 @@ func NodeTime(configYAML, contextName, node string) (out string, err error) {
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		resp, err := s.client.Time(ctx)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		return toJSON(mapNodeTime(node, first(resp.GetMessages())))

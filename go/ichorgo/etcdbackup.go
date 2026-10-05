@@ -108,14 +108,14 @@ func runSnapshot(ctx context.Context, configYAML, contextName, node, destPath st
 
 	r, err := s.client.EtcdSnapshot(client.WithNode(ctx, node), &machineapi.EtcdSnapshotRequest{})
 	if err != nil {
-		return 0, "", errors.New(s.friendly(node, err))
+		return 0, "", s.friendlyErr(node, err)
 	}
 
 	defer r.Close() //nolint:errcheck
 
 	size, sum, err := writeSnapshot(r, destPath, wrap, listener.OnProgress)
 	if err != nil && ctx.Err() != nil {
-		return 0, "", errors.New(friendlyError(ctx.Err()))
+		return 0, "", friendlyErr(ctx.Err())
 	}
 
 	return size, sum, err

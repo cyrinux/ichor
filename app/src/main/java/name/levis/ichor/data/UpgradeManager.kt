@@ -13,20 +13,19 @@ import name.levis.ichorgo.UpgradeRun
 import name.levis.ichor.model.TalosRelease
 import name.levis.ichor.model.UpgradePlan
 import name.levis.ichor.model.UpgradeProgress
+import name.levis.ichor.ui.FollowedRun
 
 /** The upgrade the app follows: at most one at a time, across all nodes. */
 data class UpgradeRunState(
     val node: String,
-    val hostname: String,
+    override val hostname: String,
     val fromVersion: String,
     val image: String,
     val events: List<UpgradeProgress> = emptyList(),
-    val finished: Boolean = false,
+    override val finished: Boolean = false,
     val newVersion: String = "",
-    val error: String? = null,
-) {
-    val running: Boolean get() = !finished
-}
+    override val error: String? = null,
+) : FollowedRun
 
 /**
  * `talosctl upgrade` through the Go core. The run is app-wide (not tied to a screen), so

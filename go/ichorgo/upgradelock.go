@@ -252,8 +252,7 @@ func (s kubeLeaseStore) get(ctx context.Context) (*kubeLease, error) {
 
 	err := s.k.get(ctx, leasesPath+"/"+url.PathEscape(upgradeLockName), &l)
 
-	var apiErr *kubeAPIError
-	if errors.As(err, &apiErr) && apiErr.Code == http.StatusNotFound {
+	if isNotFound(err) {
 		return nil, nil
 	}
 
@@ -298,8 +297,7 @@ func (s kubeLeaseStore) delete(ctx context.Context, uid, resourceVersion string)
 
 	err = s.k.do(ctx, http.MethodDelete, leasesPath+"/"+url.PathEscape(upgradeLockName), "application/json", data, nil)
 
-	var apiErr *kubeAPIError
-	if errors.As(err, &apiErr) && apiErr.Code == http.StatusNotFound {
+	if isNotFound(err) {
 		return nil
 	}
 

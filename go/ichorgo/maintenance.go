@@ -178,7 +178,7 @@ func KubeCordon(configYAML, contextName, kubeServer, node string, on bool) (err 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
 	if isDemoContext(configYAML, contextName) {
-		return demoUnavailable
+		return errDemoUnavailable
 	}
 
 	kubeNode, err := withNodeSession(configYAML, contextName, node, callTimeout, func(nodeCtx context.Context, s *session) (string, error) {
@@ -266,7 +266,7 @@ func (m maintenance) run(ctx context.Context) error {
 	}
 
 	if isDemoContext(m.kube.config, m.kube.context) {
-		return demoUnavailable
+		return errDemoUnavailable
 	}
 
 	s, release, err := sessions.acquire(m.kube.config, m.kube.context)
@@ -399,7 +399,7 @@ func (m maintenance) steps(ctx context.Context, s *session, k *kubeClient, lock 
 		m.emit(phaseShutdown, "shutting down "+plan.Hostname, nil)
 
 		if err := s.client.Shutdown(withNode(ctx, m.node)); err != nil {
-			return stoppedCordoned(plan.KubeNode, errors.New(s.friendly(m.node, err)))
+			return stoppedCordoned(plan.KubeNode, s.friendlyErr(m.node, err))
 		}
 
 		return nil
@@ -410,7 +410,7 @@ func (m maintenance) steps(ctx context.Context, s *session, k *kubeClient, lock 
 	rebootAt := time.Now()
 
 	if err := s.client.Reboot(withNode(ctx, m.node)); err != nil {
-		return stoppedCordoned(plan.KubeNode, errors.New(s.friendly(m.node, err)))
+		return stoppedCordoned(plan.KubeNode, s.friendlyErr(m.node, err))
 	}
 
 	backCtx, backCancel := context.WithTimeout(ctx, backTimeout)

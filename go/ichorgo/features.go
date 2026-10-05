@@ -150,7 +150,7 @@ func (s *session) requireNodeVersion(ctx context.Context, node string) (string, 
 	defer cancel()
 
 	if _, err := s.client.Version(withNode(ctx, node)); err != nil {
-		return "", errors.New(friendlyError(err))
+		return "", friendlyErr(err)
 	}
 
 	return "", errors.New("the node did not report its Talos version")

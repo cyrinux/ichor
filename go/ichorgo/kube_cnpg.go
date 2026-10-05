@@ -210,13 +210,7 @@ func mapCNPG(clusters []cnpgClusterObject, scheduled []cnpgScheduledBackupObject
 		out.Clusters = append(out.Clusters, mapCNPGCluster(c, intervals[key], storeByKey, podsByCluster[key], now))
 	}
 
-	slices.SortFunc(out.Clusters, func(a, b cnpgCluster) int {
-		if d := healthRank(a.Health) - healthRank(b.Health); d != 0 {
-			return d
-		}
-
-		return strings.Compare(a.Namespace+"/"+a.Name, b.Namespace+"/"+b.Name)
-	})
+	slices.SortFunc(out.Clusters, byHealthThenKey(func(x cnpgCluster) (string, string) { return x.Health, x.Namespace + "/" + x.Name }))
 
 	return out
 }

@@ -231,7 +231,7 @@ func drainStep(ctx context.Context, k *kubeClient, p *drainPod) error {
 		err := k.get(ctx, path, &obj)
 
 		switch {
-		case isKubeNotFound(err):
+		case isNotFound(err):
 			p.State, p.Reason = podGone, ""
 		case err != nil:
 			p.Reason = err.Error() // transient: checked again next round
@@ -255,7 +255,7 @@ func drainStep(ctx context.Context, k *kubeClient, p *drainPod) error {
 	switch {
 	case err == nil:
 		p.State, p.Reason = podEvicting, ""
-	case isKubeNotFound(err):
+	case isNotFound(err):
 		p.State, p.Reason = podGone, ""
 	case errors.As(err, &apiErr) && apiErr.Code == 429:
 		p.State, p.Reason = podBlocked, blockedReason(*p, apiErr.Message)
@@ -281,12 +281,6 @@ func blockedReason(p drainPod, message string) string {
 	}
 
 	return "a PodDisruptionBudget allows no disruption now"
-}
-
-func isKubeNotFound(err error) bool {
-	var apiErr *kubeAPIError
-
-	return errors.As(err, &apiErr) && apiErr.Code == 404
 }
 
 // setUnschedulable cordons (true) or uncordons kubeNode, like `kubectl cordon`/`uncordon`.

@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/cosi-project/runtime/pkg/safe"
@@ -40,7 +39,7 @@ func NodeMachineConfig(configYAML, contextName, node string, revealSecrets bool)
 func machineConfigYAML(ctx context.Context, s *session, node string, revealSecrets bool) (string, error) {
 	mc, err := safe.StateGetByID[*config.MachineConfig](client.WithNode(ctx, node), s.client.COSI, config.ActiveID)
 	if err != nil {
-		return "", errors.New(s.friendly(node, err))
+		return "", s.friendlyErr(node, err)
 	}
 
 	provider := mc.Provider()

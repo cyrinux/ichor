@@ -17,11 +17,6 @@ func ReplaceContextCredentials(storedYAML, generatedYAML, contextName string) (o
 
 	contextName = unmaskContext(storedYAML, contextName)
 
-	stored, err := parseTalosconfig(storedYAML)
-	if err != nil {
-		return "", fmt.Errorf("stored talosconfig: %w", err)
-	}
-
 	generated, err := parseTalosconfig(generatedYAML)
 	if err != nil {
 		return "", fmt.Errorf("new talosconfig: %w", err)
@@ -40,30 +35,9 @@ func ReplaceContextCredentials(storedYAML, generatedYAML, contextName string) (o
 		return "", errors.New("new talosconfig has no client credentials")
 	}
 
-	target, ok := stored.Contexts[contextName]
-	if !ok || target == nil {
-		return "", fmt.Errorf("context %q not found in the stored talosconfig", contextName)
-	}
+	return editContext(storedYAML, contextName, func(c *clientconfig.Context) error {
+		c.CA, c.Crt, c.Key = source.CA, source.Crt, source.Key
 
-	renewed := *target
-	renewed.CA = source.CA
-	renewed.Crt = source.Crt
-	renewed.Key = source.Key
-
-	contexts := make(map[string]*clientconfig.Context, len(stored.Contexts))
-	for name, c := range stored.Contexts {
-		contexts[name] = c
-	}
-
-	contexts[contextName] = &renewed
-
-	merged := *stored
-	merged.Contexts = contexts
-
-	encoded, err := merged.Bytes()
-	if err != nil {
-		return "", fmt.Errorf("encode talosconfig: %w", err)
-	}
-
-	return string(encoded), nil
+		return nil
+	})
 }

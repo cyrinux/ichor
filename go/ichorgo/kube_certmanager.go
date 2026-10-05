@@ -177,13 +177,7 @@ func mapCertManager(certs []certificateObject, issuers, clusterIssuers []issuerO
 		return strings.Compare(a.Namespace+"/"+a.Name, b.Namespace+"/"+b.Name)
 	})
 
-	slices.SortFunc(out.Issuers, func(a, b certIssuer) int {
-		if d := healthRank(a.Health) - healthRank(b.Health); d != 0 {
-			return d
-		}
-
-		return strings.Compare(a.Kind+"/"+a.Namespace+"/"+a.Name, b.Kind+"/"+b.Namespace+"/"+b.Name)
-	})
+	slices.SortFunc(out.Issuers, byHealthThenKey(func(x certIssuer) (string, string) { return x.Health, x.Kind + "/" + x.Namespace + "/" + x.Name }))
 
 	return out
 }
@@ -218,17 +212,6 @@ func mapCertIssuer(kind string, obj issuerObject) certIssuer {
 	}
 
 	return iss
-}
-
-// readyCondition is the Ready condition, empty when absent.
-func readyCondition(conds []kubeCondition) kubeCondition {
-	for _, c := range conds {
-		if c.Type == "Ready" {
-			return c
-		}
-	}
-
-	return kubeCondition{}
 }
 
 func mapCertificate(obj certificateObject, issuers map[string]certIssuer, now time.Time) certManagerCert {

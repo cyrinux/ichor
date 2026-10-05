@@ -460,7 +460,7 @@ func TestKubeArgoDemo(t *testing.T) {
 		t.Fatalf("demo states: running %v failed %v crashing %v", running, failed, crashing)
 	}
 
-	if err := KubeArgoAction(cfg, "", "", "argocd", "cilium", argoActionSync, ""); !errors.Is(err, demoUnavailable) {
+	if err := KubeArgoAction(cfg, "", "", "argocd", "cilium", argoActionSync, ""); !errors.Is(err, errDemoUnavailable) {
 		t.Fatalf("got %v", err)
 	}
 }

@@ -70,9 +70,9 @@ func EtcdMemberPlan(configYAML, contextName, memberID string) (out string, err e
 	contextName = unmaskContext(configYAML, contextName)
 
 	return withSession(configYAML, contextName, planTimeout, func(ctx context.Context, s *session) (string, error) {
-		cps := classifyNodes(ctx, s.client, targetNodes(s.context)).GetControlPlaneNodes()
-		if len(cps) == 0 {
-			return "", errors.New("no reachable control-plane node found in this context")
+		cps, err := s.controlPlanes(ctx)
+		if err != nil {
+			return "", err
 		}
 
 		return toJSON(computeMemberPlan(gatherMemberPlan(ctx, s.client, cps, memberID)))
@@ -258,7 +258,7 @@ func EtcdRemoveMember(configYAML, contextName, node string, memberID string) (er
 	_, err = withNodeSession(configYAML, contextName, node, planTimeout, func(ctx context.Context, s *session) (struct{}, error) {
 		if err := removeEtcdMember(ctx, s.client, node, memberID); err != nil {
 			if isUnavailableAPI(err) {
-				return struct{}{}, errors.New(s.friendly(node, err))
+				return struct{}{}, s.friendlyErr(node, err)
 			}
 
 			return struct{}{}, err
@@ -327,7 +327,7 @@ func EtcdForfeitLeadership(configYAML, contextName, node string) (out string, er
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		member, err := forfeitEtcdLeadership(ctx, s.client, node)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		if member != "" {
