@@ -1126,6 +1126,17 @@
     <string name="support_bundle_title">Paquete de soporte</string>
     <string name="settings_support_bundle_desc">Reúne los registros y los detalles del clúster de los nodos en un zip, como talosctl support.</string>
     <string name="settings_support_bundle_open">Crear un paquete de soporte…</string>
+    <string name="settings_section_support">Soporte</string>
+    <string name="settings_integrations_desc">Pedir que un operador de este clúster se muestre en Ichor.</string>
+    <string name="settings_integrations_open">Solicitar una integración…</string>
+    <string name="settings_report_bug">Informar de un error</string>
+    <string name="integrations_title">Solicitar una integración</string>
+    <string name="integrations_intro">Operadores de este clúster que Ichor aún no muestra. Elige los grupos de API que te gustaría ver: Ichor abre una issue de GitHub rellenada que revisas antes de enviarla. Solo incluye nombres de grupo, versión y tipo, nunca namespaces ni nombres de objetos.</string>
+    <string name="integrations_none">Todo lo que ejecuta este clúster y que Ichor sabe mostrar ya está en la app.</string>
+    <string name="integrations_supported">Ya se muestran en Ichor: %1$s</string>
+    <string name="integrations_other">Sugerir otra cosa</string>
+    <string name="integrations_search">Buscar existentes</string>
+    <string name="integrations_request">Solicitar</string>
     <string name="support_bundle_warning">El paquete contiene registros y detalles del clúster. NO se enmascara con el modo de capturas: revísalo antes de compartirlo.</string>
     <string name="support_bundle_nodes">Nodos</string>
     <string name="support_bundle_create">Crear paquete</string>

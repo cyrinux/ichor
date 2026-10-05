@@ -1,0 +1,35 @@
+name: Integration request
+description: Ask Ichor to show an operator or CRD your cluster runs
+title: "Integration: "
+labels: ["integration", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search the [open requests](https://github.com/cyrinux/ichor/issues?q=is%3Aissue+label%3Aintegration) first: a 👍 on an existing one counts as much as a new issue.
+        From the app, Settings → Support → Request an integration fills in the fields below from your cluster.
+  - type: input
+    id: operator
+    attributes:
+      label: Operator
+      description: The project or its API domain (traefik.io, kyverno.io…).
+    validations:
+      required: true
+  - type: textarea
+    id: groups
+    attributes:
+      label: API groups and kinds
+      description: One `group/version: Kind, Kind` per line. Check that it names nothing private before submitting.
+      render: text
+  - type: textarea
+    id: wanted
+    attributes:
+      label: What would you like to see?
+      description: Status at a glance, alerts, an action (sync, restart, backup…), where in the app.
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: App version
+      placeholder: Ichor 1.4.0 (Android)
