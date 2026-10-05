@@ -96,7 +96,8 @@ struct LikelyCauseBanner: View {
 }
 
 /// The overview's Data services row: Longhorn, Garage and CloudNativePG at a glance, opening the
-/// Data services screen. Only shown when the inventory has one of them; a skeleton while loading.
+/// Data services screen (a system's row opens on its tab). Only shown when the inventory has one of
+/// them; a skeleton while loading.
 struct DataServicesSection: View {
     let state: LoadState<DataServices>
     /// Catalog ids from the inventory, passed on to the screen.
@@ -128,13 +129,19 @@ struct DataServicesSection: View {
         case .loaded(let services, _, _):
             if !services.detected.isEmpty {
                 Section {
-                    NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes)) { content(services) }
+                    NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes)) { header(services) }
+                    // One row per system, opening the screen on its tab.
+                    ForEach(services.detected) { kind in
+                        NavigationLink(value: Route.dataServices(hints: hints, downNodes: downNodes, kind: kind)) {
+                            line(kind, text: dataServiceSummary(kind, services), health: services.summary(kind)?.health)
+                        }
+                    }
                 }
             }
         }
     }
 
-    private func content(_ services: DataServices) -> some View {
+    private func header(_ services: DataServices) -> some View {
         let worst = services.worst
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -143,9 +150,6 @@ struct DataServicesSection: View {
                 if worst.needsAttention { StatusPill(label: worst.label, color: worst.color) }
             }
             LikelyCauseBanner(causes: services.likelyCauses(downNodes: downNodes))
-            ForEach(services.detected) { kind in
-                line(kind, text: dataServiceSummary(kind, services), health: services.summary(kind)?.health)
-            }
         }
         .padding(.vertical, 4)
     }

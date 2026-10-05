@@ -44,6 +44,7 @@ import name.levis.ichor.ui.kubespan.KubeSpanScreen
 import name.levis.ichor.ui.logs.LogsScreen
 import name.levis.ichor.ui.machineconfig.MachineConfigScreen
 import androidx.navigation.NavBackStackEntry
+import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.LogSource
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.NodeOverview
@@ -112,7 +113,10 @@ private object Routes {
 
     /** Empty [namespace] for all of them; [pod] narrows to one of [namespace]. */
     fun flows(namespace: String?, pod: String?) = "flows?ns=${Uri.encode(namespace.orEmpty())}&pod=${Uri.encode(pod.orEmpty())}"
-    const val DATA_SERVICES = "data-services"
+    const val DATA_SERVICES = "data-services?kind={kind}"
+
+    /** [kind] opens on that system's tab; null on the first. */
+    fun dataServices(kind: DataServiceKind? = null) = "data-services?kind=${kind?.name.orEmpty()}"
     const val ARGO_CD = "argocd"
     const val ARGO_APP = "argocd-app?ns={ns}&name={name}"
 
@@ -266,7 +270,7 @@ fun Navigation(
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
                 onWorkloads = { nav.navigate(Routes.WORKLOADS) },
                 onMetrics = { nav.navigate(Routes.METRICS) },
-                onDataServices = { nav.navigate(Routes.DATA_SERVICES) },
+                onDataServices = { nav.navigate(Routes.dataServices(it)) },
                 onArgoCD = { nav.navigate(Routes.ARGO_CD) },
                 onFlux = { nav.navigate(Routes.FLUX) },
                 onHealth = { nav.navigate(Routes.HEALTH) },
@@ -535,7 +539,13 @@ fun Navigation(
                 pod = entry.arguments?.getString("pod")?.ifEmpty { null },
             )
         }
-        composable(Routes.DATA_SERVICES) { name.levis.ichor.ui.dataservices.DataServicesScreen(onBack = { nav.popBackStack() }) }
+        composable(
+            Routes.DATA_SERVICES,
+            arguments = listOf(navArgument("kind") { type = NavType.StringType; defaultValue = "" }),
+        ) { entry ->
+            val kind = entry.arguments?.getString("kind")?.let { k -> DataServiceKind.entries.firstOrNull { it.name == k } }
+            name.levis.ichor.ui.dataservices.DataServicesScreen(initial = kind, onBack = { nav.popBackStack() })
+        }
         composable(Routes.ARGO_CD) {
             ArgoAppsScreen(onBack = { nav.popBackStack() }, onApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) })
         }

@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.overview
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,7 +50,7 @@ private val ICON = 28.dp
  * Longhorn, Garage and CloudNativePG at a glance, opening the Data services screen: one line
  * per system and, when a node that is not ready explains the problems, that node first.
  * Only composed when the inventory shows one of them; a skeleton while loading, one muted
- * line on failure so the overview stays calm.
+ * line on failure so the overview stays calm. Tapping a system's line opens its tab.
  */
 @Composable
 fun DataServicesCard(
@@ -56,13 +58,13 @@ fun DataServicesCard(
     hinted: List<DataServiceKind>,
     apps: Map<String, InventoryApp>,
     downNodes: Set<String>,
-    onOpen: () -> Unit,
+    onOpen: (DataServiceKind?) -> Unit,
 ) {
     when (state) {
-        UiState.Loading -> Frame(null, onOpen) {
+        UiState.Loading -> Frame(null, { onOpen(null) }) {
             hinted.forEach { kind -> Line(kind, apps, text = null, health = null) }
         }
-        is UiState.Failed -> Frame(null, onOpen) {
+        is UiState.Failed -> Frame(null, { onOpen(null) }) {
             MutedText(
                 stringResource(R.string.data_services_unreadable, state.message.asString()),
                 maxLines = 2,
@@ -74,9 +76,11 @@ fun DataServicesCard(
             val kinds = services.detected
             if (kinds.isEmpty()) return
             val causes = remember(services, downNodes) { services.likelyCauses(downNodes) }
-            Frame(services.worst, onOpen) {
+            Frame(services.worst, { onOpen(null) }) {
                 LikelyCauseBanner(causes, Modifier.padding(bottom = 4.dp))
-                kinds.forEach { kind -> Line(kind, apps, summaryText(kind, services), services.summary(kind)?.health) }
+                kinds.forEach { kind ->
+                    Line(kind, apps, summaryText(kind, services), services.summary(kind)?.health, onClick = { onOpen(kind) })
+                }
             }
         }
     }
@@ -101,10 +105,17 @@ private fun Frame(worst: ServiceHealth?, onOpen: () -> Unit, content: @Composabl
     }
 }
 
-/** A system: its icon, name and one line; a placeholder while [text] is null. */
+/** A system: its icon, name and one line; a placeholder while [text] is null. [onClick] opens its tab. */
 @Composable
-private fun Line(kind: DataServiceKind, apps: Map<String, InventoryApp>, text: String?, health: ServiceHealth?) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+private fun Line(
+    kind: DataServiceKind,
+    apps: Map<String, InventoryApp>,
+    text: String?,
+    health: ServiceHealth?,
+    onClick: (() -> Unit)? = null,
+) {
+    val clickable = if (onClick != null) Modifier.clip(MaterialTheme.shapes.small).clickable(onClick = onClick) else Modifier
+    Row(clickable.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         if (text == null) AppIconPlaceholder(size = ICON) else KindIcon(kind, apps[kind.catalogId], ICON)
         Spacer(Modifier.size(12.dp))
         Column(Modifier.weight(1f)) {
