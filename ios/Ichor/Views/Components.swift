@@ -6,9 +6,13 @@ struct LoadStateView<T, Content: View>: View {
     let state: LoadState<T>
     let retry: () async -> Void
     @ViewBuilder let content: (T) -> Content
+    @Environment(AppModel.self) private var model: AppModel?
 
     var body: some View {
         switch state {
+        // A VPN-only cluster without its VPN: nothing was asked (AppModel.client is nil).
+        case .loading where model?.vpnHeldBack == true, .failed where model?.vpnHeldBack == true:
+            VpnRequiredView(retry: retry)
         case .loading:
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
         case .failed(let message):

@@ -1,3 +1,4 @@
 /* Permission prompts (keys of Info.plist, see project.yml). */
 "NSCameraUsageDescription" = "Scannez le QR code d'un talosconfig pour l'importer.";
 "NSFaceIDUsageDescription" = "Déverrouiller Ichor et confirmer un redémarrage ou un arrêt.";
+"NSLocalNetworkUsageDescription" = "Joindre les nœuds de vos clusters sur ce réseau, les y rechercher et les réveiller par Wake-on-LAN.";

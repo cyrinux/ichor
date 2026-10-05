@@ -70,6 +70,12 @@ enum BackgroundMonitor {
               let summary = try? await TalosClient.parse(yaml) else { return }
         let contextName = summary.selectedContext(index: AppModel.savedContextIndex, name: UserDefaults.standard.string(forKey: "activeContext"))
         let context = summary.context(named: contextName)
+        // A VPN-only cluster waits for its VPN: without it the check could only time out.
+        let vpnOnly = Set(UserDefaults.standard.stringArray(forKey: "vpnOnlyClusters") ?? [])
+        if let fingerprint = context?.fingerprint, vpnOnly.contains(fingerprint) {
+            let vpnUp = await VpnMonitor.currentlyUp()
+            if heldBackForVpn(vpnOnly: vpnOnly, fingerprint: fingerprint, vpnUp: vpnUp) { return }
+        }
         // The Kubernetes API address the user set for this cluster, as the app uses it.
         let servers = UserDefaults.standard.dictionary(forKey: "kubeServers") as? [String: String] ?? [:]
         let client = TalosClient(config: yaml, context: contextName, kubeServer: context.flatMap { servers[$0.fingerprint] } ?? "")

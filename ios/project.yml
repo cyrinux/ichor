@@ -69,6 +69,8 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         NSCameraUsageDescription: Scan a talosconfig QR code to import it.
         NSFaceIDUsageDescription: Unlock Ichor and confirm reboot or shutdown.
+        # Reaching nodes on the Wi-Fi network, searching it for them, and Wake-on-LAN.
+        NSLocalNetworkUsageDescription: Reach your clusters' nodes on this network, search it for them, and wake them with Wake-on-LAN.
         UIBackgroundModes: [fetch]
         BGTaskSchedulerPermittedIdentifiers: [name.levis.ichor.refresh]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
