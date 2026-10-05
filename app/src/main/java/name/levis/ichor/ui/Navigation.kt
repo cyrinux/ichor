@@ -39,6 +39,7 @@ import name.levis.ichor.ui.events.EventsScreen
 import name.levis.ichor.ui.hardware.HardwareScreen
 import name.levis.ichor.ui.health.HealthScreen
 import name.levis.ichor.ui.images.ImagesScreen
+import name.levis.ichor.ui.integrations.IntegrationsScreen
 import name.levis.ichor.ui.issueconfig.IssueConfigScreen
 import name.levis.ichor.ui.network.NetworkScreen
 import name.levis.ichor.ui.importconfig.ImportScreen
@@ -81,6 +82,7 @@ private object Routes {
     const val RESOURCE_LIST = "resourcelist?addr={addr}&host={host}&ns={ns}&type={type}&sensitive={sensitive}"
     const val RESOURCE = "resource?addr={addr}&host={host}&ns={ns}&type={type}&id={id}&sensitive={sensitive}"
     const val SUPPORT_BUNDLE = "supportbundle"
+    const val INTEGRATIONS = "integrations"
     const val CHANGELOG = "changelog"
     const val LICENSES = "licenses"
     const val FUNDING = "funding"
@@ -476,6 +478,7 @@ fun Navigation(
         composable(Routes.LICENSES) { LicensesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.FUNDING) { FundingScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.SUPPORT_BUNDLE) { SupportBundleScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.INTEGRATIONS) { IntegrationsScreen(onBack = { nav.popBackStack() }) }
         composable(
             Routes.DEBUG,
             arguments = listOf(
@@ -623,6 +626,7 @@ fun Navigation(
                 onReimport = { nav.navigate(Routes.IMPORT) },
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
                 onSupportBundle = { nav.navigate(Routes.SUPPORT_BUNDLE) },
+                onIntegrations = { nav.navigate(Routes.INTEGRATIONS) },
                 onChangelog = { nav.navigate(Routes.CHANGELOG) },
                 onLicenses = { nav.navigate(Routes.LICENSES) },
                 onFunding = { nav.navigate(Routes.FUNDING) },

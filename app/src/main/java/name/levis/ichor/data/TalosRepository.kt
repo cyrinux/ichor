@@ -37,6 +37,9 @@ import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubeCronJob
 import name.levis.ichor.model.KubeCronJobList
 import name.levis.ichor.model.KubePodPage
+import name.levis.ichor.model.PodPhaseFilter
+import name.levis.ichor.model.PodSelection
+import name.levis.ichor.model.SELECTED_PODS_PAGE
 import name.levis.ichor.model.KubeCronJobPage
 import name.levis.ichor.model.KubeWorkloadPage
 import name.levis.ichor.model.KubeNamespaces
@@ -59,6 +62,7 @@ import name.levis.ichor.model.PromDiscovery
 import name.levis.ichor.model.PromPanel
 import name.levis.ichor.model.PromResult
 import name.levis.ichor.model.PromSource
+import name.levis.ichor.model.toGoJson
 import name.levis.ichor.model.ClusterStatsSample
 import name.levis.ichor.model.NodeResources
 import name.levis.ichor.model.ServiceInfo
@@ -69,6 +73,7 @@ import name.levis.ichor.model.TalosEvent
 import name.levis.ichor.model.ClusterTime
 import name.levis.ichor.model.ConnectionInfo
 import name.levis.ichor.model.ImageInfo
+import name.levis.ichor.model.IntegrationReport
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.NodeHardware
 import name.levis.ichor.model.NodeNetwork
@@ -553,6 +558,26 @@ class TalosRepository(
         TalosJson.decodeFromString(KubePodPage.serializer(), json).toPage(detailed = !table)
     }
 
+    /** The Kubernetes name of the Talos node [node] (its address), as its kubelet registered it. */
+    suspend fun kubeNodeName(node: String): String = call { cfg, ctx -> Ichorgo.kubeNodeName(cfg, ctx, node) }
+
+    /**
+     * One page of the pods scheduled on the Kubernetes node [kubeNode] ([kubeNodeName]), in
+     * every namespace, narrowed to [phase]; as [podsPage] otherwise (os:admin).
+     */
+    suspend fun nodePodsPage(kubeNode: String, phase: PodPhaseFilter, token: String, table: Boolean, limit: Int = SELECTED_PODS_PAGE): KubePage<KubePod> =
+        kubeCall { cfg, ctx, server ->
+            val json = Ichorgo.kubeNodePodsPage(cfg, ctx, server, kubeNode, phase.query, token, limit.toLong(), table)
+            TalosJson.decodeFromString(KubePodPage.serializer(), json).toPage(detailed = !table)
+        }
+
+    /** One page of the pods [workload]'s selector matches, narrowed to [phase]; as [podsPage] otherwise (os:admin). */
+    suspend fun workloadPodsPage(workload: PodSelection.OfWorkload, phase: PodPhaseFilter, token: String, table: Boolean, limit: Int = SELECTED_PODS_PAGE): KubePage<KubePod> =
+        kubeCall { cfg, ctx, server ->
+            val json = Ichorgo.kubeWorkloadPodsPage(cfg, ctx, server, workload.kind, workload.namespace, workload.name, phase.query, token, limit.toLong(), table)
+            TalosJson.decodeFromString(KubePodPage.serializer(), json).toPage(detailed = !table)
+        }
+
     /** One pod in full (images, containers, last termination), for a row read from a Table (os:admin). */
     suspend fun pod(namespace: String, name: String): KubePod = kubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(KubePod.serializer(), Ichorgo.kubePod(cfg, ctx, server, namespace, name))
@@ -645,6 +670,14 @@ class TalosRepository(
      */
     suspend fun longhornAction(namespace: String, name: String, action: LonghornAction, value: Int = 0) = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeLonghornAction(cfg, ctx, server, namespace, name, action.wire, value.toLong())
+    }
+
+    /**
+     * The API groups the cluster serves that Ichor does not read yet, by operator, with their
+     * kinds (os:admin): what an integration request can name. Never cached.
+     */
+    suspend fun integrations(): IntegrationReport = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(IntegrationReport.serializer(), Ichorgo.kubeIntegrations(cfg, ctx, server))
     }
 
     /**
@@ -899,7 +932,7 @@ class TalosRepository(
 
     /** [query] from [start] to [end] (unix seconds) against [source], about 250 points. */
     suspend fun promRange(source: PromSource, query: String, start: Long, end: Long): PromResult = kubeCall { cfg, ctx, server ->
-        val json = Ichorgo.promQueryRange(cfg, ctx, server, TalosJson.encodeToString(PromSource.serializer(), source), query, start, end, 0)
+        val json = Ichorgo.promQueryRange(cfg, ctx, server, source.toGoJson(), query, start, end, 0)
         TalosJson.decodeFromString(PromResult.serializer(), json)
     }
 
@@ -910,7 +943,7 @@ class TalosRepository(
 
     /** [source] checked and cleaned up by Go, its secret kept. */
     suspend fun normalizePromSource(source: PromSource): PromSource = withContext(Dispatchers.IO) {
-        val json = Ichorgo.normalizePromSource(TalosJson.encodeToString(PromSource.serializer(), source))
+        val json = Ichorgo.normalizePromSource(source.toGoJson())
         val checked = TalosJson.decodeFromString(PromSource.serializer(), json)
         // Go never returns the secret; without authentication there is none to keep.
         checked.copy(secret = if (checked.auth == PromSource.AUTH_NONE) "" else source.secret.trim())

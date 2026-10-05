@@ -704,6 +704,9 @@
     <string name="node_menu_events">Événements</string>
     <string name="node_tab_pods">Pods</string>
     <string name="node_tab_cgroups">Cgroups</string>
+    <string name="node_tab_kube_pods">Pods Kubernetes</string>
+    <string name="pods_phase_not_completed">Non terminés</string>
+    <string name="workload_pods_title">Pods de %1$s</string>
     <string name="node_section_pressure">Pression</string>
     <string name="node_pressure_caption">Part des 10 dernières secondes pendant laquelle des tâches ont attendu chaque ressource</string>
     <string name="node_pressure_cpu">CPU</string>
@@ -1112,6 +1115,17 @@
     <string name="support_bundle_title">Bundle de support</string>
     <string name="settings_support_bundle_desc">Rassemble les journaux et les détails du cluster des nœuds dans un zip, comme talosctl support.</string>
     <string name="settings_support_bundle_open">Créer un bundle de support…</string>
+    <string name="settings_section_support">Assistance</string>
+    <string name="settings_integrations_desc">Demander qu\'un opérateur de ce cluster soit affiché dans Ichor.</string>
+    <string name="settings_integrations_open">Demander une intégration…</string>
+    <string name="settings_report_bug">Signaler un bug</string>
+    <string name="integrations_title">Demander une intégration</string>
+    <string name="integrations_intro">Les opérateurs de ce cluster qu\'Ichor n\'affiche pas encore. Choisissez les groupes d\'API que vous aimeriez voir : Ichor ouvre une issue GitHub préremplie que vous relisez avant l\'envoi. Seuls les noms de groupe, de version et de type y figurent, jamais de namespace ni de nom d\'objet.</string>
+    <string name="integrations_none">Tout ce que ce cluster exécute et qu\'Ichor sait afficher est déjà dans l\'app.</string>
+    <string name="integrations_supported">Déjà affichés dans Ichor : %1$s</string>
+    <string name="integrations_other">Suggérer autre chose</string>
+    <string name="integrations_search">Chercher l\'existant</string>
+    <string name="integrations_request">Demander</string>
     <string name="support_bundle_warning">Le bundle contient des journaux et des détails du cluster. Il n\'est PAS masqué par le mode capture d\'écran&#160;: relisez-le avant de le partager.</string>
     <string name="support_bundle_nodes">Nœuds</string>
     <string name="support_bundle_create">Créer le bundle</string>

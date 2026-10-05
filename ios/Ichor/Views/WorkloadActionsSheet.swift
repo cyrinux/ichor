@@ -22,6 +22,9 @@ struct WorkloadActionsSheet: View {
     /// Rolled back: its rollout is shown live.
     @State private var following: KubeWorkload?
     @State private var resultMessage: String?
+    /// Argo CD self-heal would put the count back: asked first, offering to freeze the app.
+    @State private var askArgo = false
+    @State private var freezeFirst = false
 
     init(workload: KubeWorkload, changed: @escaping () async -> Void) {
         self.workload = workload
@@ -38,6 +41,13 @@ struct WorkloadActionsSheet: View {
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                     Text("\(workload.ready)/\(workload.desired) ready").monospacedDigit()
+                    if let selection = workload.podSelection {
+                        NavigationLink {
+                            WorkloadPodsView(workload: workload, selection: selection)
+                        } label: {
+                            Label("Pods", systemImage: "cube")
+                        }
+                    }
                 }
                 if workload.canScale { scaleSection }
                 if workload.hasHistory { historySection }
@@ -49,6 +59,14 @@ struct WorkloadActionsSheet: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
             }
             .task { if workload.hasHistory { await loadRevisions() } }
+            .confirmationDialog(String(localized: "Argo CD will revert this"), isPresented: $askArgo, titleVisibility: .visible,
+                                presenting: argoOwner) { owner in
+                Button(String(localized: "Freeze \(owner.app.name) 1 h, then scale")) { freezeFirst = true; confirmAfterArgo() }
+                Button(String(localized: "Scale anyway")) { freezeFirst = false; confirmAfterArgo() }
+                Button("Cancel", role: .cancel) {}
+            } message: { owner in
+                Text("\(owner.app.name) deploys this workload with self-heal on: within minutes it puts the replicas back as Git has them. Freeze \(owner.app.name) first to keep your change for a while.")
+            }
             .confirmationDialog(String(localized: "Scale \(workload.name) to \(replicas)?"), isPresented: $confirmScale,
                                 titleVisibility: .visible) {
                 Button("Scale") { Task { await scale() } }
@@ -95,7 +113,8 @@ struct WorkloadActionsSheet: View {
             }
             HStack {
                 Button("Apply") {
-                    if scaleNeedsTypedName(replicas) { confirmScaleToZero = true } else { confirmScale = true }
+                    freezeFirst = false
+                    if argoOwner != nil { askArgo = true } else { confirmScaleNow() }
                 }
                 .disabled(replicas == current || scaling)
                 if scaling {
@@ -133,11 +152,41 @@ struct WorkloadActionsSheet: View {
         revisions = revisions.refreshed(with: await .from { try await client.deploymentRevisions(workload) })
     }
 
+    /// The Argo CD app that would revert a scale (self-heal on, not frozen) with its project, from
+    /// the Argo CD status already loaded; nil when none or not loaded.
+    private var argoOwner: ArgoOwnerOfWorkload? {
+        guard let status = ArgoCDStore.shared.status(for: model.argoKey),
+              let app = status.selfHealingOwner(kind: workload.kind, namespace: workload.namespace, name: workload.name),
+              let project = status.project(of: app) else { return nil }
+        return ArgoOwnerOfWorkload(app: app, project: project)
+    }
+
+    private func confirmScaleNow() {
+        if scaleNeedsTypedName(replicas) { confirmScaleToZero = true } else { confirmScale = true }
+    }
+
+    /// The next confirmation, once the Argo CD dialog is gone (two dialogs at once would clash).
+    private func confirmAfterArgo() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))
+            confirmScaleNow()
+        }
+    }
+
     private func scale() async {
         guard let client = model.client, !scaling else { return }
         scaling = true
         defer { scaling = false }
         let target = replicas
+        if freezeFirst, let owner = argoOwner {
+            // Stored on the cluster: no name, which may be masked on screen.
+            let options = freezeOptions(for: owner.app, scope: .app, minutes: freezeExtendMinutes, manualSync: true,
+                                        reason: String(localized: "scale to \(target)"))
+            if let failure = await ArgoCDStore.shared.freeze(.freeze, on: owner.project, options: [options], with: client) {
+                resultMessage = String(localized: "Could not freeze \(owner.app.name), nothing scaled: \(failure)")
+                return
+            }
+        }
         do {
             let warning = try await client.scale(workload, replicas: target)
             current = target
@@ -161,6 +210,12 @@ struct WorkloadActionsSheet: View {
             resultMessage = String(localized: "Could not roll back \(workload.name): \(error.localizedDescription)")
         }
     }
+}
+
+/// The Argo CD app deploying a workload with self-heal, and its project.
+private struct ArgoOwnerOfWorkload {
+    let app: ArgoApp
+    let project: ArgoProject
 }
 
 /// "Revision 3 · current", its age, images and change cause, and Roll back for the others.

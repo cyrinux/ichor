@@ -43,6 +43,8 @@ import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.data.workloadsKey
 import name.levis.ichor.model.KubeRevision
 import name.levis.ichor.model.KubeWorkload
+import name.levis.ichor.model.PodSelection
+import name.levis.ichor.model.podSelection
 import name.levis.ichor.model.WorkloadState
 import name.levis.ichor.model.fetchWorkloadPage
 import name.levis.ichor.model.filtered
@@ -89,6 +91,8 @@ fun WorkloadsTab(
     var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
     var opened by remember { mutableStateOf<String?>(null) }
     var rollback by remember { mutableStateOf<Pair<KubeWorkload, KubeRevision>?>(null) }
+    var podsOf by remember { mutableStateOf<PodSelection.OfWorkload?>(null) }
+    podsOf?.let { WorkloadPodsSheet(it, onDismiss = { podsOf = null }) }
 
     RestartResultToasts(vm.restarts.results)
     ActionMessageToasts(vm.actions.messages)
@@ -102,6 +106,13 @@ fun WorkloadsTab(
             onRestart = { confirm = w },
             onRollback = { rollback = w to it },
             onDismiss = { opened = null },
+            onPods = w.podSelection?.let { selection ->
+                {
+                    // One sheet at a time: the pods replace the workload's.
+                    opened = null
+                    podsOf = selection
+                }
+            },
         )
     }
     rollback?.let { (w, revision) ->

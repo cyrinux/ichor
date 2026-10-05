@@ -206,6 +206,12 @@ fun OverviewScreen(
         if (fluxHinted) fluxVm.load(listOf(config?.activeContext, generation, invalidations)) else fluxVm.forget()
     }
     val flux by fluxVm.state.collectAsStateWithLifecycle()
+    // Cards the cluster has nothing for, left out of the editor too; all offered until the inventory is known.
+    val absentCards = if (apps is UiState.Loaded) setOfNotNull(
+        OverviewCard.DATA_SERVICES.takeIf { dataHints.isEmpty() },
+        OverviewCard.ARGO_CD.takeIf { !argoHinted },
+        OverviewCard.FLUX.takeIf { !fluxHinted },
+    ) else emptySet()
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     // No node answered (VPN off, another network): one notice instead of a list of red nodes.
@@ -379,6 +385,7 @@ fun OverviewScreen(
             bar = bar,
             onBarChange = app.uiPreferences::setOverviewBar,
             modifier = Modifier.padding(padding),
+            absent = absentCards,
         )
         else when (val s = state) {
             UiState.Loading -> LoadingBox(Modifier.padding(padding))

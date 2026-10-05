@@ -11,6 +11,39 @@ import (
 // podPhases are the phases a pod list can be narrowed to (status.phase).
 var podPhases = []string{"Pending", "Running", "Succeeded", "Failed", "Unknown"}
 
+// KubeNodeName is the Kubernetes name of the Talos node node (its address), as its kubelet
+// registered it (Talos' NodeStatus resource): what KubeNodePodsPage takes, the mapping
+// KubeCordon and the maintenance plan use too. Reads Talos only.
+func KubeNodeName(configYAML, contextName, node string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	if isDemoContext(configYAML, contextName) {
+		return demoKubeNodeName(node)
+	}
+
+	return withNodeSession(configYAML, contextName, node, callTimeout, func(nodeCtx context.Context, s *session) (string, error) {
+		state := fetchKubeNodeState(nodeCtx, s.client)
+		if state == nil || state.Name == "" {
+			return "", errors.New("the node's Kubernetes name is unknown: is the kubelet running?")
+		}
+
+		return state.Name, nil
+	})
+}
+
+// demoKubeNodeName is a demo node's hostname, the name its kubelet registered.
+func demoKubeNodeName(node string) (string, error) {
+	for _, n := range demoNodes() {
+		if n.Node == node {
+			return n.Hostname, nil
+		}
+	}
+
+	return "", fmt.Errorf("unknown demo node %q", node)
+}
+
 // KubeNodePodsPage lists one page of the pods scheduled on the Kubernetes node nodeName, in every
 // namespace (os:admin), with fieldSelector=spec.nodeName: the drill-down from a node, read in
 // the API server's order. phase narrows them to a status.phase ("Running"), or to every phase

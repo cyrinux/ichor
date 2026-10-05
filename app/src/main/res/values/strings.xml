@@ -700,6 +700,9 @@
     <string name="node_menu_events">Events</string>
     <string name="node_tab_pods">Pods</string>
     <string name="node_tab_cgroups">Cgroups</string>
+    <string name="node_tab_kube_pods">Kubernetes pods</string>
+    <string name="pods_phase_not_completed">Not completed</string>
+    <string name="workload_pods_title">Pods of %1$s</string>
     <string name="node_section_pressure">Pressure</string>
     <string name="node_pressure_caption">Share of the last 10 s that tasks waited for each resource</string>
     <string name="node_pressure_cpu">CPU</string>
@@ -1109,6 +1112,17 @@
     <string name="support_bundle_title">Support bundle</string>
     <string name="settings_support_bundle_desc">Collect logs and cluster details of the nodes into a zip, like talosctl support.</string>
     <string name="settings_support_bundle_open">Create a support bundle…</string>
+    <string name="settings_section_support">Support</string>
+    <string name="settings_integrations_desc">Ask for an operator this cluster runs to be shown in Ichor.</string>
+    <string name="settings_integrations_open">Request an integration…</string>
+    <string name="settings_report_bug">Report a bug</string>
+    <string name="integrations_title">Request an integration</string>
+    <string name="integrations_intro">Operators running on this cluster that Ichor does not show yet. Pick the API groups you would like to see: Ichor opens a pre-filled GitHub issue you review before sending. Only group, version and kind names go in, never namespaces or object names.</string>
+    <string name="integrations_none">Everything this cluster runs that Ichor knows how to show is already in the app.</string>
+    <string name="integrations_supported">Already shown in Ichor: %1$s</string>
+    <string name="integrations_other">Suggest something else</string>
+    <string name="integrations_search">Search existing</string>
+    <string name="integrations_request">Request</string>
     <string name="support_bundle_warning">The bundle contains logs and cluster details. It is NOT masked by screenshot mode: review it before sharing.</string>
     <string name="support_bundle_nodes">Nodes</string>
     <string name="support_bundle_create">Create bundle</string>

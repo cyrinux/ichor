@@ -30,6 +30,8 @@ struct ArgoAppView: View {
     @State private var network = ArgoNetworkModel()
     /// The node a box of the network graph opens.
     @State private var openNode: NodeRef?
+    @State private var freezeSheet = false
+    @State private var confirmUnfreeze = false
 
     private struct SyncRequest: Identifiable {
         let id = UUID()
@@ -41,7 +43,7 @@ struct ArgoAppView: View {
     var body: some View {
         LoadStateView(state: state, retry: load) { status in
             if let app = status.app(namespace: namespace, name: name) {
-                content(app)
+                content(app, status: status)
             } else {
                 ContentUnavailableView("App not found", systemImage: "questionmark.app",
                                        description: Text("\(name) is no longer an Argo CD Application of this cluster."))
@@ -61,14 +63,26 @@ struct ArgoAppView: View {
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
         .navigationDestination(item: $openNode) { NodeDetailView(ref: $0) }
+        .navigationDestination(for: ArgoWindowsRoute.self) { _ in ArgoWindowsView() }
     }
 
-    private func content(_ app: ArgoApp) -> some View {
-        List {
+    private func content(_ app: ArgoApp, status: ArgoStatus) -> some View {
+        let project = status.project(of: app)
+        let windows = status.freezeWindows(of: app).map(\.window)
+        let ichorWindows = windows.filter { $0.ichor != nil }
+        return List {
             ArgoHero(app: app, busy: busy,
                      sync: { syncSheet = SyncRequest(resources: []) },
                      act: { action in Task { await run(action, on: app) } },
                      terminate: { confirmTerminate = true })
+            ArgoFreezeSection(app: app, windows: windows, busy: busy || project.map { store.busyProjects.contains($0.id) } == true,
+                              freeze: { freezeSheet = true },
+                              extend: {
+                                  // The window ending last is the one "until" shows.
+                                  guard let project, let window = ichorWindows.max(by: { $0.endsAt < $1.endsAt }) else { return }
+                                  Task { await freeze(.extend, on: project, options: [ArgoFreezeOptions(minutes: freezeExtendMinutes, window: window.id)]) }
+                              },
+                              unfreeze: { confirmUnfreeze = true })
             ArgoConditionsSection(app: app, downNodes: downNodes)
             if let op = app.operation { ArgoOperationSection(operation: op, canTerminate: app.canTerminate) { confirmTerminate = true } }
             ArgoNetworkSection(model: network, downNodes: downNodes, pods: app.unhealthyPods,
@@ -81,6 +95,27 @@ struct ArgoAppView: View {
         .themedBackground()
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if selecting { selectionBar(app) }
+        }
+        .sheet(isPresented: $freezeSheet) {
+            ArgoFreezeSheet(app: app, status: status,
+                            freeze: { project, options in await freeze(.freeze, on: project, options: [options]) },
+                            pauseInstead: app.canChangeSpec && app.autoSync.enabled ? { await run(.autoSyncOff, on: app) } : nil)
+        }
+        .confirmationDialog(String(localized: "End the freeze?"), isPresented: $confirmUnfreeze, titleVisibility: .visible) {
+            let unfreeze = ichorWindows.map { ArgoFreezeOptions(window: $0.id) }
+            if let project {
+                Button(String(localized: "End")) { Task { await freeze(.unfreeze, on: project, options: unfreeze) } }
+                if app.sync == .outOfSync && app.canSync {
+                    Button(String(localized: "End and sync now")) {
+                        Task {
+                            if await freeze(.unfreeze, on: project, options: unfreeze) { await run(.sync, on: app, options: ArgoSyncOptions(defaultsFor: app)) }
+                        }
+                    }
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(verbatim: unfreezeMessage(app, covers: ichorWindows.map(\.apps).max() ?? 1))
         }
         .sheet(item: $syncSheet) { request in
             ArgoSyncSheet(app: app, resources: request.resources) { options in
@@ -155,9 +190,38 @@ struct ArgoAppView: View {
         // The network graph is read alongside, so the two refresh together.
         let graph = self.network, appNamespace = self.namespace, appName = self.name
         async let traffic: Void = graph.load(with: client, key: key, namespace: appNamespace, name: appName)
-        let loaded: LoadState<ArgoStatus> = await .from { try await store.load(with: client, key: key) }
+        let cluster = model.activeSummary
+        let loaded: LoadState<ArgoStatus> = await .from { try await store.load(with: client, key: key, cluster: cluster) }
         if key == model.argoKey { state = state.refreshed(with: loaded) }
         await traffic
+    }
+
+    /// What ending the freeze puts back (the hand-made changes), and how many apps resume.
+    private func unfreezeMessage(_ app: ArgoApp, covers: Int) -> String {
+        var lines: [String] = []
+        if app.drifted.isEmpty {
+            lines.append(String(localized: "Argo CD resumes auto-sync and self-heal for the apps of this freeze."))
+        } else {
+            lines.append(String(localized: "Argo CD will put these back as Git has them:"))
+            lines += app.drifted.prefix(6).map { "\($0.kind) \($0.namespace.isEmpty ? "" : $0.namespace + "/")\($0.name)" }
+            lines.append(String(localized: "Is the fix committed?"))
+        }
+        if covers > 1 { lines.append(String(localized: "This freeze covers \(covers) apps: they all resume.")) }
+        return lines.joined(separator: "\n")
+    }
+
+    /// Changes the project's sync windows; true when it went through.
+    @discardableResult
+    private func freeze(_ action: ArgoFreezeAction, on project: ArgoProject, options: [ArgoFreezeOptions]) async -> Bool {
+        guard let client = model.client else { return false }
+        if let failure = await store.freeze(action, on: project, options: options, with: client) {
+            message = failure
+            return false
+        }
+        succeeded += 1
+        announce(String(localized: "Done"))
+        await load()
+        return true
     }
 
     private func run(_ action: ArgoAction, on app: ArgoApp, options: ArgoSyncOptions? = nil) async {

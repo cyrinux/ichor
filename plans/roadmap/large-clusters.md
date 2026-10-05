@@ -85,9 +85,13 @@ Phases 1–5 are done.
   `KubeWorkloadPodsPage` (the workload's `spec.selector`, matchLabels and matchExpressions, as a
   `labelSelector`; an empty or unwritable selector lists nothing), both with an optional phase
   (`Running`, `!Succeeded`), page by page like `KubePodsPage`. `just probe node-pods` /
-  `workload-pods`. No app screen lists the Kubernetes pods of a node or workload yet: the node
-  Pods tab reads the containers through Talos CRI, and the rollout sheet already used the
-  workload's selector (now with matchExpressions too).
+  `workload-pods`; `KubeNodeName` (`just probe kube-node-name`) maps a Talos node to its
+  Kubernetes name (its NodeStatus, as cordon and the maintenance plan do). Both apps use them
+  (`model/SelectedPods.kt`, IchorCore `SelectedPods.swift`): a node's Kubernetes pods (Android:
+  a tab, the Talos CRI one then named Containers; iOS: the node menu, the segmented tabs being
+  full) and a workload's pods (from its sheet in the Workloads tab and from an app's sheet), the
+  Pods tab's rows (logs, delete), first page at once then on scroll in the server's order, with
+  an All / Running / Not completed filter; os:admin only, kept in memory, never on disk.
 - **App workloads** (app detail sheet, both apps): `KubeAppWorkloads` reads only the app's pods
   (one GET each when a namespace holds ≤ 8 of them, else that namespace's Table page by page)
   and each owner, instead of every pod and workload of the cluster; after a restart

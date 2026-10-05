@@ -765,6 +765,9 @@
     <string name="node_menu_events">Події</string>
     <string name="node_tab_pods">Поди</string>
     <string name="node_tab_cgroups">Cgroups</string>
+    <string name="node_tab_kube_pods">Поди Kubernetes</string>
+    <string name="pods_phase_not_completed">Не завершені</string>
+    <string name="workload_pods_title">Поди %1$s</string>
     <string name="node_section_pressure">Тиск</string>
     <string name="node_pressure_caption">Частка останніх 10 с, коли завдання чекали на кожен ресурс</string>
     <string name="node_pressure_cpu">CPU</string>
@@ -1205,6 +1208,17 @@
     <string name="support_bundle_title">Пакет підтримки</string>
     <string name="settings_support_bundle_desc">Збирає журнали та відомості про кластер із вузлів у zip, як talosctl support.</string>
     <string name="settings_support_bundle_open">Створити пакет підтримки…</string>
+    <string name="settings_section_support">Підтримка</string>
+    <string name="settings_integrations_desc">Попросити показувати в Ichor оператор, що працює в цьому кластері.</string>
+    <string name="settings_integrations_open">Запросити інтеграцію…</string>
+    <string name="settings_report_bug">Повідомити про помилку</string>
+    <string name="integrations_title">Запросити інтеграцію</string>
+    <string name="integrations_intro">Оператори в цьому кластері, яких Ichor ще не показує. Виберіть групи API, які хочете бачити: Ichor відкриє заповнений GitHub issue, який ви переглянете перед надсиланням. Туди потрапляють лише назви груп, версій і типів, ніколи не простори імен чи назви об\'єктів.</string>
+    <string name="integrations_none">Усе, що працює в цьому кластері й що Ichor вміє показувати, вже є в застосунку.</string>
+    <string name="integrations_supported">Уже показано в Ichor: %1$s</string>
+    <string name="integrations_other">Запропонувати щось інше</string>
+    <string name="integrations_search">Шукати наявні</string>
+    <string name="integrations_request">Запросити</string>
     <string name="support_bundle_warning">Пакет містить журнали та відомості про кластер. Режим знімків екрана його НЕ маскує: перегляньте його, перш ніж ділитися.</string>
     <string name="support_bundle_nodes">Вузли</string>
     <string name="support_bundle_create">Створити пакет</string>

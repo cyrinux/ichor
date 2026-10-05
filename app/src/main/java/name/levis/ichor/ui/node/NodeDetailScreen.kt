@@ -77,6 +77,8 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ContainerInfo
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.TalosFeature
+import name.levis.ichor.model.PodSelection
+import name.levis.ichor.ui.workloads.SelectedPodsList
 import name.levis.ichor.model.notice
 import name.levis.ichor.model.support
 import name.levis.ichor.ui.components.FeatureGate
@@ -91,6 +93,9 @@ import name.levis.ichor.ui.components.TooltipIconButton
 
 /** Index of the Cgroups tab, after Pods. */
 private const val CGROUPS_TAB = 5
+
+/** Index of the Kubernetes pods tab (the API server's view), last so deep-link indexes stay. */
+private const val KUBE_PODS_TAB = 6
 
 /** How long after a service action the list is fetched again, once the state settled. */
 private const val SERVICE_SETTLE_MILLIS = 2_500L
@@ -143,6 +148,8 @@ fun NodeDetailScreen(
     val canControlServices = config?.activeSummary?.allows(Feature.SERVICE_CONTROL) ?: false
     // Pressure and cgroups come from a copy of /sys/fs/cgroup: os:admin only, hidden otherwise.
     val canCgroups = config?.activeSummary?.allows(Feature.CGROUPS) ?: false
+    // The node's pods as Kubernetes sees them: through the Kubernetes API, os:admin only.
+    val canKubePods = config?.activeSummary?.allows(Feature.WORKLOADS) ?: false
     val features = rememberNodeFeatures(node)
     // One upgrade at a time in the app: the entry stays open for the node being upgraded.
     val upgrading by app.upgradeManager.current.collectAsStateWithLifecycle()
@@ -311,8 +318,10 @@ fun NodeDetailScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             // The Cgroups tab (last, so deep-link indexes stay) only exists for admin configs.
-            val shownTab = if (tab == CGROUPS_TAB && !canCgroups) 0 else tab
-            PrimaryScrollableTabRow(selectedTabIndex = shownTab, edgePadding = 0.dp) {
+            val shownTab = if (tab == CGROUPS_TAB && !canCgroups || tab == KUBE_PODS_TAB && !canKubePods) 0 else tab
+            // Position among the tabs shown: Cgroups may be hidden before Kubernetes pods.
+            val position = if (shownTab == KUBE_PODS_TAB && !canCgroups) CGROUPS_TAB else shownTab
+            PrimaryScrollableTabRow(selectedTabIndex = position, edgePadding = 0.dp) {
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.node_tab_services)) })
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.node_tab_resources)) })
                 Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.node_tab_live)) })
@@ -327,11 +336,15 @@ fun NodeDetailScreen(
                 Tab(
                     selected = tab == 4,
                     onClick = { tab = 4 },
-                    text = { Text(stringResource(R.string.node_tab_pods)) },
+                    // Next to the Kubernetes pods tab, the Talos (CRI) view is named after what it shows.
+                    text = { Text(stringResource(if (canKubePods) R.string.apps_stat_containers else R.string.node_tab_pods)) },
                     unselectedContentColor = if (features.support(TalosFeature.CONTAINERS).supported) MaterialTheme.colorScheme.onSurfaceVariant else dimmed,
                 )
                 if (canCgroups) {
                     Tab(selected = tab == CGROUPS_TAB, onClick = { tab = CGROUPS_TAB }, text = { Text(stringResource(R.string.node_tab_cgroups)) })
+                }
+                if (canKubePods) {
+                    Tab(selected = tab == KUBE_PODS_TAB, onClick = { tab = KUBE_PODS_TAB }, text = { Text(stringResource(R.string.node_tab_kube_pods)) })
                 }
             }
             when (shownTab) {
@@ -347,6 +360,7 @@ fun NodeDetailScreen(
                 2 -> LiveStatsTab(node)
                 3 -> FeatureGate(features.support(TalosFeature.PROCESSES)) { ProcessesTab(node) }
                 CGROUPS_TAB -> CgroupsTab(node)
+                KUBE_PODS_TAB -> SelectedPodsList(PodSelection.OnNode(node))
                 else -> FeatureGate(features.support(TalosFeature.CONTAINERS)) { PodsTab(node, onContainer = onContainerLogs) }
             }
         }

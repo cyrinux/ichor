@@ -47,6 +47,10 @@ import name.levis.ichor.ui.backup.BackupSection
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.SectionTitle
 import kotlinx.coroutines.launch
+import name.levis.ichor.data.REPO_URL_BASE
+
+/** GitHub's issue chooser: bug report or integration request. */
+private val REPORT_BUG_URL = "$REPO_URL_BASE${BuildConfig.UPDATE_REPO}/issues/new/choose"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +63,7 @@ fun SettingsScreen(
     onReimport: () -> Unit,
     onIssueConfig: () -> Unit,
     onSupportBundle: () -> Unit,
+    onIntegrations: () -> Unit,
     onChangelog: () -> Unit,
     onLicenses: () -> Unit,
     onFunding: () -> Unit,
@@ -104,15 +109,26 @@ fun SettingsScreen(
             OutlinedButton(onClick = { confirmDelete = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.settings_delete_config))
             }
+            SectionTitle(stringResource(R.string.settings_section_support))
             // `talosctl support` reads logs and resources of every chosen node (any role).
             if (config?.activeSummary?.allows(Feature.SUPPORT_BUNDLE) == true) {
-                SectionTitle(stringResource(R.string.support_bundle_title))
                 MutedText(stringResource(R.string.settings_support_bundle_desc))
                 val support = rememberClusterSupport(TalosFeature.SUPPORT_BUNDLE)
                 OutlinedButton(onClick = onSupportBundle, enabled = support.supported, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.settings_support_bundle_open))
                 }
                 support.notice?.let { InfoNotice(it.text()) }
+            }
+            // Listing the cluster's API groups needs the admin kubeconfig.
+            if (config?.activeSummary?.allows(Feature.WORKLOADS) == true) {
+                MutedText(stringResource(R.string.settings_integrations_desc))
+                OutlinedButton(onClick = onIntegrations, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.settings_integrations_open))
+                }
+            }
+            val context = LocalContext.current
+            OutlinedButton(onClick = { openUrl(context, REPORT_BUG_URL) }, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.settings_report_bug))
             }
             AboutSection(onChangelog, onLicenses, onFunding)
             if (BuildConfig.SELF_UPDATE) UpdateSection((LocalContext.current.applicationContext as TalosApp).updateManager)

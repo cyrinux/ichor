@@ -51,6 +51,17 @@ final class OverviewLayoutTests: XCTestCase {
         XCTAssertEqual(layout.moving(fromOffsets: [9], toOffset: 0), layout)
     }
 
+    func testAbsentSectionsAreLeftOutAndKeepTheirPlace() {
+        let absent: Set<OverviewCard> = [.dataServices, .flux]
+        let layout = OverviewLayout().hiding(.argoCD).hiding(.flux)
+        XCTAssertEqual(layout.visible(absent: absent), [.summary, .apps, .nodes, .timeDrift])
+        XCTAssertEqual(layout.hiddenCards(absent: absent), [.argoCD])
+        // Apps (offset 1 without data services) dropped after nodes: data services stays third.
+        let moved = layout.moving(fromOffsets: [1], toOffset: 3, absent: absent)
+        XCTAssertEqual(moved.visible, [.summary, .nodes, .dataServices, .apps, .timeDrift])
+        XCTAssertEqual(moved.hidden, [.argoCD, .flux])
+    }
+
     func testShowPutsTheSectionLast() {
         let shown = OverviewLayout().hiding(.summary).hiding(.nodes).showing(.summary)
         XCTAssertEqual(shown.visible, [.apps, .dataServices, .argoCD, .flux, .timeDrift, .summary])

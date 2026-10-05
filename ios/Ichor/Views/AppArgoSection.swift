@@ -119,6 +119,12 @@ struct AppArgoSection: View {
                                 .font(.caption.weight(.medium))
                                 .foregroundStyle(.blue)
                         }
+                        // A hotfix is made here: say Argo CD holds off, and until when (freezing is on the app page).
+                        if let freeze = argo.freeze {
+                            Label(String(localized: "Frozen until \(freezeClock(freeze.until))"), systemImage: "snowflake")
+                                .font(.caption)
+                                .foregroundStyle(.blue)
+                        }
                     }
                     Spacer(minLength: 4)
                     HStack(spacing: 6) {
@@ -145,7 +151,8 @@ struct AppArgoSection: View {
     private func load() async {
         guard let client = model.client else { return }
         let key = model.argoKey
-        let loaded: LoadState<ArgoStatus> = await .from { try await store.load(with: client, key: key) }
+        let cluster = model.activeSummary
+        let loaded: LoadState<ArgoStatus> = await .from { try await store.load(with: client, key: key, cluster: cluster) }
         guard key == model.argoKey else { return }
         state = state.refreshed(with: loaded)
     }
