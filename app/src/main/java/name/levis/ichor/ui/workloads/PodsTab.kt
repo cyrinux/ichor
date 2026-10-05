@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,6 +81,15 @@ class PodsViewModel(talos: TalosRepository, metered: () -> Boolean) : PagedListV
     // Kept rows of Table pages have no images: image search would miss them.
     override fun detailed(items: List<KubePod>) = items.all { it.images.isNotEmpty() }
 
+    /** Deletions of its pods; a success shows the pod terminating, and soon its replacement. */
+    val deletions = PodDeletions(viewModelScope, talos) { refresh() }
+}
+
+/**
+ * Pod deletions in [scope] (a ViewModel's): those in flight ([deleting]) and their outcome,
+ * shown once ([results]). [onDeleted] runs after a success.
+ */
+class PodDeletions(private val scope: CoroutineScope, private val talos: TalosRepository, private val onDeleted: () -> Unit) {
     private val _deleting = MutableStateFlow<Set<String>>(emptySet())
     /** Keys of the pods whose deletion is in flight. */
     val deleting: StateFlow<Set<String>> = _deleting.asStateFlow()
@@ -89,13 +100,45 @@ class PodsViewModel(talos: TalosRepository, metered: () -> Boolean) : PagedListV
     fun delete(pod: KubePod) {
         if (pod.key in _deleting.value) return
         _deleting.update { it + pod.key }
-        viewModelScope.launch {
-            val outcome = runCatching { talos.deletePod(pod) }
+        scope.launch {
+            val outcome = cancellableCatching { talos.deletePod(pod) }
             _deleting.update { it - pod.key }
             _results.send(DeleteResult(pod, outcome.exceptionOrNull()?.uiText()))
-            // Shows it terminating, and soon its replacement.
-            if (outcome.isSuccess) refresh()
+            if (outcome.isSuccess) onDeleted()
         }
+    }
+}
+
+/** The pod a row asked to delete (confirmed first) or to read the logs of. */
+@Stable
+class PodActionState {
+    var confirm by mutableStateOf<KubePod?>(null)
+    var logs by mutableStateOf<KubePod?>(null)
+}
+
+/** The logs sheet, the delete confirmation and a toast per deletion outcome of a pod list. */
+@Composable
+internal fun PodActionDialogs(actions: PodActionState, deletions: PodDeletions) {
+    actions.logs?.let { PodLogSheet(it, onDismiss = { actions.logs = null }) }
+
+    val context = LocalContext.current
+    LaunchedEffect(deletions) {
+        deletions.results.collect { r ->
+            val text = r.error?.resolve(context)?.let { context.getString(R.string.pods_delete_failed, r.pod.name, it) }
+                ?: context.getString(R.string.pods_delete_done, r.pod.name)
+            Toast.makeText(context, text, if (r.error == null) Toast.LENGTH_SHORT else Toast.LENGTH_LONG).show()
+        }
+    }
+
+    actions.confirm?.let { pod ->
+        DeleteConfirmDialog(
+            pod = pod,
+            onConfirm = {
+                actions.confirm = null
+                deletions.delete(pod)
+            },
+            onDismiss = { actions.confirm = null },
+        )
     }
 }
 
@@ -115,31 +158,10 @@ fun PodsTab(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
-    val deleting by vm.deleting.collectAsStateWithLifecycle()
+    val deleting by vm.deletions.deleting.collectAsStateWithLifecycle()
     LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
-    var confirm by remember { mutableStateOf<KubePod?>(null) }
-    var logs by remember { mutableStateOf<KubePod?>(null) }
-    logs?.let { PodLogSheet(it, onDismiss = { logs = null }) }
-
-    val context = LocalContext.current
-    LaunchedEffect(vm) {
-        vm.results.collect { r ->
-            val text = r.error?.resolve(context)?.let { context.getString(R.string.pods_delete_failed, r.pod.name, it) }
-                ?: context.getString(R.string.pods_delete_done, r.pod.name)
-            Toast.makeText(context, text, if (r.error == null) Toast.LENGTH_SHORT else Toast.LENGTH_LONG).show()
-        }
-    }
-
-    confirm?.let { pod ->
-        DeleteConfirmDialog(
-            pod = pod,
-            onConfirm = {
-                confirm = null
-                vm.delete(pod)
-            },
-            onDismiss = { confirm = null },
-        )
-    }
+    val actions = remember { PodActionState() }
+    PodActionDialogs(actions, vm.deletions)
 
     KubeListFrame(control, state, { it.podNamespaces }, query, onQuery, vm::refresh, modifier) { s ->
         val load = s.data
@@ -160,8 +182,8 @@ fun PodsTab(
                             pod,
                             showNamespace = selected == null,
                             deleting = pod.key in deleting,
-                            onDelete = { confirm = pod },
-                            onLogs = { logs = pod },
+                            onDelete = { actions.confirm = pod },
+                            onLogs = { actions.logs = pod },
                             onFlows = onFlows?.let { open -> { open(pod) } },
                         )
                         HorizontalDivider()
@@ -173,14 +195,23 @@ fun PodsTab(
     }
 }
 
+/** A pod: name, namespace and node (when asked), status, readiness, restarts; logs, flows and delete actions. */
 @Composable
-private fun PodRow(pod: KubePod, showNamespace: Boolean, deleting: Boolean, onDelete: () -> Unit, onLogs: () -> Unit, onFlows: (() -> Unit)?) {
+internal fun PodRow(
+    pod: KubePod,
+    showNamespace: Boolean,
+    deleting: Boolean,
+    onDelete: () -> Unit,
+    onLogs: () -> Unit,
+    onFlows: (() -> Unit)? = null,
+    showNode: Boolean = true,
+) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(pod.name, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
-                listOfNotNull(pod.namespace.takeIf { showNamespace }, pod.node.takeIf { it.isNotEmpty() }).joinToString("  ·  "),
+                listOfNotNull(pod.namespace.takeIf { showNamespace }, pod.node.takeIf { showNode && it.isNotEmpty() }).joinToString("  ·  "),
                 style = MaterialTheme.typography.labelSmall,
                 color = muted,
                 maxLines = 1,

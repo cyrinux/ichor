@@ -38,6 +38,13 @@ struct WorkloadActionsSheet: View {
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                     Text("\(workload.ready)/\(workload.desired) ready").monospacedDigit()
+                    if let selection = workload.podSelection {
+                        NavigationLink {
+                            WorkloadPodsView(workload: workload, selection: selection)
+                        } label: {
+                            Label("Pods", systemImage: "cube")
+                        }
+                    }
                 }
                 if workload.canScale { scaleSection }
                 if workload.hasHistory { historySection }

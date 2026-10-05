@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.apps
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.KubeWorkload
+import name.levis.ichor.model.podSelection
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
@@ -34,6 +36,8 @@ data class AppRestartUi(
     /** Keys of the workloads whose restart is in flight. */
     val restarting: Set<String>,
     val onRestart: (KubeWorkload) -> Unit,
+    /** Opens the list of a workload's pods (a tap on its row). */
+    val onPods: (KubeWorkload) -> Unit = {},
 )
 
 /** The app's workloads, each with a restart button; a short note while loading, on failure or with none. */
@@ -45,15 +49,19 @@ fun LazyListScope.appWorkloadsSection(restart: AppRestartUi) {
         is UiState.Loaded -> if (s.data.isEmpty()) {
             item { MutedText(stringResource(R.string.apps_detail_workloads_none)) }
         } else {
-            items(s.data, key = { it.key }) { w -> WorkloadRestartRow(w, w.key in restart.restarting) { restart.onRestart(w) } }
+            items(s.data, key = { it.key }) { w ->
+                val onPods = if (w.podSelection != null) ({ restart.onPods(w) }) else null
+                WorkloadRestartRow(w, w.key in restart.restarting, onPods) { restart.onRestart(w) }
+            }
         }
     }
 }
 
-/** Name, "Deployment · 2/3 ready", and the restart button (a spinner while it runs). */
+/** Name, "Deployment · 2/3 ready", and the restart button (a spinner while it runs); a tap opens its pods ([onPods]). */
 @Composable
-private fun WorkloadRestartRow(workload: KubeWorkload, restarting: Boolean, onRestart: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+private fun WorkloadRestartRow(workload: KubeWorkload, restarting: Boolean, onPods: (() -> Unit)?, onRestart: () -> Unit) {
+    val open = onPods?.let { Modifier.clickable(onClickLabel = stringResource(R.string.pods_title), onClick = it) } ?: Modifier
+    Row(Modifier.fillMaxWidth().then(open).padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(
                 workload.name,

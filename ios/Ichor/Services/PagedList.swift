@@ -33,8 +33,16 @@ final class PagedList<T: Codable & Sendable> {
     private var generation = 0
     private var task: Task<Void, Never>?
 
-    init(base: String, detailed: @escaping @Sendable ([T]) -> Bool = { _ in true }, fetch: @escaping Fetch) {
+    /// Whether a complete list is kept as the last known state (and shown from it).
+    private let persist: Bool
+    /// Rows the first load reads before further pages wait for a scroll; nil for eagerLimit.
+    private let eagerRows: Int?
+
+    init(base: String, persist: Bool = true, eagerRows: Int? = nil,
+         detailed: @escaping @Sendable ([T]) -> Bool = { _ in true }, fetch: @escaping Fetch) {
         self.base = base
+        self.persist = persist
+        self.eagerRows = eagerRows
         self.detailed = detailed
         self.fetch = fetch
     }
@@ -68,7 +76,7 @@ final class PagedList<T: Codable & Sendable> {
         let key = kubeListKey(base, namespace: scope.namespace)
         if reset {
             state = .loading
-            if let known = model.lastKnown(key: key, as: [T].self) {
+            if persist, let known = model.lastKnown(key: key, as: [T].self) {
                 state = .loaded(.complete(known.value, detailed: detailed(known.value)), at: known.at)
             }
         }
@@ -85,7 +93,7 @@ final class PagedList<T: Codable & Sendable> {
         if case .loaded = state { partial = false } else { partial = true }
         do {
             let load = try await loadPages(
-                cap: eagerLimit(scope: scope, metered: MeteredNetwork.shared.isMetered),
+                cap: eagerRows ?? eagerLimit(scope: scope, metered: MeteredNetwork.shared.isMetered),
                 fetch: { token in try await fetch(client, scope.namespace, token) },
                 onProgress: { @MainActor step in
                     guard self.generation == mine else { return }
@@ -145,7 +153,7 @@ final class PagedList<T: Codable & Sendable> {
 
     /// Keeps a complete list as the last known state, encoded off the main actor.
     private func keep(_ items: [T], key: String, target: LastKnownTarget?, model: AppModel) {
-        guard let target else { return }
+        guard persist, let target else { return }
         Task.detached(priority: .utility) {
             guard let data = try? JSONEncoder().encode(items) else { return }
             let json = String(decoding: data, as: UTF8.self)
