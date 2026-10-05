@@ -1,0 +1,7 @@
+• Argo CD freeze in the Go core: sync windows read and one-shot deny windows
+• IOS Wake-on-LAN broadcasts, privacy manifests and App Store guide
+• Group unlabelled public-only nodes by their /24 on the KubeSpan map
+• IOS App Store build, licenses screen and TestFlight upload
+• IOS KubeSpan map tab with link details and network tests
+• IOS overview layout and top-bar editor
+• IOS connectivity parity: endpoints, network scan, VPN only, Wake-on-LAN, licenses
