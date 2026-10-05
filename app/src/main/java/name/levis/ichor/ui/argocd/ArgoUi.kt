@@ -198,13 +198,17 @@ fun waveProgress(app: ArgoApp): String {
  * running or an action was just requested; nothing otherwise.
  */
 @Composable
-fun ArgoPolling(vm: ArgoViewModel) {
+fun ArgoPolling(vm: ArgoViewModel) = GitOpsPolling(vm, { vm.shouldPoll }, vm::poll)
+
+/** While the screen is started, calls [poll] every 2 s when [shouldPoll] says so; [key] restarts it. */
+@Composable
+fun GitOpsPolling(key: Any, shouldPoll: () -> Boolean, poll: () -> Unit) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(vm, lifecycle) {
+    LaunchedEffect(key, lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             while (true) {
                 delay(POLL_MILLIS)
-                if (vm.shouldPoll) vm.poll()
+                if (shouldPoll()) poll()
             }
         }
     }

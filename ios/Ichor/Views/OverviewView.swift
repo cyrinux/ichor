@@ -26,6 +26,8 @@ struct OverviewView: View {
     @State private var dataHints = ""
     /// Argo CD: only asked when the inventory shows it and the role may use the Kubernetes API.
     @State private var argo: LoadState<ArgoStatus>?
+    /// Flux: likewise, only when the inventory shows it.
+    @State private var flux: LoadState<FluxStatus>?
     /// Finding the public IPs Talos does not know (AppModel.detectPublicIPs).
     @State private var confirmDetectIPs = false
     @State private var detectIPsError: String?
@@ -75,6 +77,9 @@ struct OverviewView: View {
                     }
                     if let argo {
                         ArgoSection(state: argo, app: inventoryApps[argoCDCatalogID], downNodes: overview.downHostnames)
+                    }
+                    if let flux {
+                        FluxSection(state: flux, app: inventoryApps[fluxCatalogID], downNodes: overview.downHostnames)
                     }
                     Section {
                         // Collapsed (the default): a chip per calm node, a full row only for those
@@ -220,6 +225,7 @@ struct OverviewView: View {
             inventory = .loading
             dataServices = nil
             argo = nil
+            flux = nil
         }
         // Another cluster: never its name over the previous one's nodes.
         .onChange(of: model.activeContext) {
@@ -228,6 +234,7 @@ struct OverviewView: View {
             inventory = .loading
             dataServices = nil
             argo = nil
+            flux = nil
         }
         .sheet(isPresented: $showDiscovered) {
             let context = model.activeContext
@@ -346,6 +353,7 @@ struct OverviewView: View {
         if case .loaded(let apps, _, _) = loaded {
             // Alongside: each one only calls the Kubernetes API when the inventory shows it.
             Task { await loadArgo(with: client, id: id, inventory: apps) }
+            Task { await loadFlux(with: client, id: id, inventory: apps) }
             await loadDataServices(with: client, id: id, inventory: apps)
         }
     }
@@ -362,6 +370,20 @@ struct OverviewView: View {
         let loaded: LoadState<ArgoStatus> = await .from { try await ArgoCDStore.shared.load(with: client, key: key) }
         guard id == loadID else { return }
         argo = (argo ?? .loading).refreshed(with: loaded)
+    }
+
+    /// Only for clusters whose inventory shows Flux, and roles that may use the Kubernetes API.
+    /// The answer is shared (FluxStore) with the Flux screens and the Flux tile's sheet.
+    private func loadFlux(with client: TalosClient, id: String, inventory apps: ClusterInventory) async {
+        guard model.allows(.workloads), fluxHinted(apps) else {
+            flux = nil
+            return
+        }
+        if flux == nil { flux = .loading }
+        let key = model.fluxKey
+        let loaded: LoadState<FluxStatus> = await .from { try await FluxStore.shared.load(with: client, key: key) }
+        guard id == loadID else { return }
+        flux = (flux ?? .loading).refreshed(with: loaded)
     }
 
     /// Only for clusters whose inventory shows Longhorn, Garage, CloudNativePG or Dragonfly, and roles

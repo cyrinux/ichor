@@ -210,22 +210,33 @@ struct ArgoHealthBar: View {
     var height: CGFloat = 8
 
     var body: some View {
-        let total = max(counts.reduce(0) { $0 + $1.count }, 1)
+        SegmentBar(segments: counts.map { (color: $0.health.color, count: $0.count, label: $0.health.label) }, height: height)
+    }
+}
+
+/// One bar split into colored segments proportional to their counts (Argo CD's and Flux's
+/// health bars).
+struct SegmentBar: View {
+    let segments: [(color: Color, count: Int, label: String)]
+    var height: CGFloat = 8
+
+    var body: some View {
+        let total = max(segments.reduce(0) { $0 + $1.count }, 1)
         GeometryReader { geo in
             let spacing: CGFloat = 2
-            let width = geo.size.width - spacing * CGFloat(max(counts.count - 1, 0))
+            let width = geo.size.width - spacing * CGFloat(max(segments.count - 1, 0))
             HStack(spacing: spacing) {
-                ForEach(counts.indices, id: \.self) { i in
+                ForEach(segments.indices, id: \.self) { i in
                     Rectangle()
-                        .fill(counts[i].health.color)
-                        .frame(width: max(width * CGFloat(counts[i].count) / CGFloat(total), 3))
+                        .fill(segments[i].color)
+                        .frame(width: max(width * CGFloat(segments[i].count) / CGFloat(total), 3))
                 }
             }
         }
         .frame(height: height)
         .clipShape(Capsule())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: counts.map { "\($0.count) \($0.health.label)" }.joined(separator: ", ")))
+        .accessibilityLabel(Text(verbatim: segments.map { "\($0.count) \($0.label)" }.joined(separator: ", ")))
     }
 }
 

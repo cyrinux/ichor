@@ -6,12 +6,13 @@ enum class OverviewCard {
     APPS,
     DATA_SERVICES,
     ARGO_CD,
+    FLUX,
     NODES,
     TIME_DRIFT,
     ;
 
     /** Only shown when the cluster has what they report on. */
-    val whenDetected: Boolean get() = this == DATA_SERVICES || this == ARGO_CD
+    val whenDetected: Boolean get() = this == DATA_SERVICES || this == ARGO_CD || this == FLUX
 }
 
 /**

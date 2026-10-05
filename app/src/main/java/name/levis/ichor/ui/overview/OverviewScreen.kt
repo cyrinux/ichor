@@ -98,6 +98,10 @@ import name.levis.ichor.model.dataServiceHints
 import name.levis.ichor.model.ARGO_CD_CATALOG_ID
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.hasArgoCD
+import name.levis.ichor.model.FLUX_CATALOG_ID
+import name.levis.ichor.model.FluxStatus
+import name.levis.ichor.model.hasFlux
+import name.levis.ichor.ui.flux.FluxViewModel
 import name.levis.ichor.model.inventoryBadges
 import name.levis.ichor.ui.argocd.ArgoViewModel
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
@@ -124,6 +128,7 @@ fun OverviewScreen(
     onMetrics: () -> Unit,
     onDataServices: () -> Unit,
     onArgoCD: () -> Unit,
+    onFlux: () -> Unit,
     onHealth: () -> Unit,
     onEvents: () -> Unit,
     onInsights: () -> Unit,
@@ -143,6 +148,7 @@ fun OverviewScreen(
     appsVm: AppsViewModel = viewModel(key = "overview-apps", factory = factory { AppsViewModel(app.talosRepository) }),
     dataVm: DataServicesViewModel = viewModel(key = "overview-data-services", factory = factory { DataServicesViewModel(app.talosRepository) }),
     argoVm: ArgoViewModel = viewModel(key = "overview-argocd", factory = factory { ArgoViewModel(app.talosRepository) }),
+    fluxVm: FluxViewModel = viewModel(key = "overview-flux", factory = factory { FluxViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -190,6 +196,13 @@ fun OverviewScreen(
         if (argoHinted) argoVm.load(listOf(config?.activeContext, generation, invalidations)) else argoVm.forget()
     }
     val argo by argoVm.state.collectAsStateWithLifecycle()
+    // Flux likewise.
+    val fluxHinted = config?.activeSummary?.allows(Feature.WORKLOADS) == true &&
+        (apps as? UiState.Loaded)?.data?.hasFlux == true
+    LaunchedEffect(config?.activeContext, generation, invalidations, fluxHinted) {
+        if (fluxHinted) fluxVm.load(listOf(config?.activeContext, generation, invalidations)) else fluxVm.forget()
+    }
+    val flux by fluxVm.state.collectAsStateWithLifecycle()
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     // No node answered (VPN off, another network): one notice instead of a list of red nodes.
@@ -407,6 +420,8 @@ fun OverviewScreen(
                     onDataServices = onDataServices,
                     argo = argo.takeIf { argoHinted },
                     onArgoCD = onArgoCD,
+                    flux = flux.takeIf { fluxHinted },
+                    onFlux = onFlux,
                     onNode = onNode,
                     onSettings = onSettings,
                     onFunding = onFunding,
@@ -449,6 +464,8 @@ private fun NodeList(
     onDataServices: () -> Unit,
     argo: UiState<ArgoStatus>?,
     onArgoCD: () -> Unit,
+    flux: UiState<FluxStatus>?,
+    onFlux: () -> Unit,
     onNode: (NodeOverview) -> Unit,
     onSettings: () -> Unit,
     onFunding: () -> Unit,
@@ -527,6 +544,10 @@ private fun NodeList(
                     val argoTile = (apps as? UiState.Loaded)?.data?.apps?.firstOrNull { it.id == ARGO_CD_CATALOG_ID }
                     val downNodes = remember(overview) { overview.downHostnames() }
                     Box(Modifier.longPressToCustomize(onCustomize)) { ArgoCard(argo, argoTile, downNodes, onArgoCD) }
+                }
+                OverviewCard.FLUX -> if (flux != null) item(key = card.name) {
+                    val fluxTile = (apps as? UiState.Loaded)?.data?.apps?.firstOrNull { it.id == FLUX_CATALOG_ID }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { FluxCard(flux, fluxTile, onFlux) }
                 }
                 OverviewCard.NODES -> if (overview.nodes.isNotEmpty()) item(key = card.name) {
                     NodesCard(

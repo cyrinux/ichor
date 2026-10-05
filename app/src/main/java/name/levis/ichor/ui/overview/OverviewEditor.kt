@@ -101,6 +101,7 @@ fun overviewCardLabel(card: OverviewCard): String = stringResource(
         OverviewCard.APPS -> R.string.apps_title
         OverviewCard.DATA_SERVICES -> R.string.data_services_title
         OverviewCard.ARGO_CD -> R.string.argo_card_title
+        OverviewCard.FLUX -> R.string.flux_title
         OverviewCard.NODES -> R.string.overview_stat_nodes
         OverviewCard.TIME_DRIFT -> R.string.time_drift_title
     },
@@ -114,6 +115,7 @@ fun overviewCardDescription(card: OverviewCard): String = stringResource(
         OverviewCard.APPS -> R.string.overview_card_desc_apps
         OverviewCard.DATA_SERVICES -> R.string.overview_card_desc_data_services
         OverviewCard.ARGO_CD -> R.string.overview_card_desc_argo_cd
+        OverviewCard.FLUX -> R.string.overview_card_desc_flux
         OverviewCard.NODES -> R.string.overview_card_desc_nodes
         OverviewCard.TIME_DRIFT -> R.string.overview_card_desc_time_drift
     },
