@@ -15,22 +15,39 @@ APK_DIR := "app/build/outputs/apk"
 version:
     @scripts/version.sh --json | python3 -m json.tool
 
+# The version `just release-tag auto` (and the daily auto-release) would tag, and why.
+next-version:
+    @scripts/next-version.py --json | python3 -m json.tool
+
 # Tag a release. The APK's versionName/versionCode derive from the tag and the
 # commit count, so this is the only step a release needs. The tree must be
 # clean, the tag is annotated with the changelog, and nothing is pushed for you.
+# `auto` picks the version from the commits since the last tag (scripts/next-version.py:
+# breaking -> major, feat -> minor, fix/perf -> patch), as the daily auto-release does.
 # --yes accepts the drafted Google Play notes as is: no editor, terminal or not.
+# --unsigned makes a plain annotated tag, for CI where there is no signing key: the daily
+# auto-release runs `release-tag <next> --yes --unsigned`, then pushes main and the tag.
 release-tag version *flags:
     #!/usr/bin/env bash
     set -euo pipefail
     version="{{ version }}"
     version="${version#v}"
     yes=0
+    sign=-s # signed, like the commits
     for flag in {{ flags }}; do
         case "$flag" in
             -y|--yes) yes=1 ;;
-            *) echo "Unknown flag: $flag (expected --yes)" >&2; exit 2 ;;
+            --unsigned) sign=-a ;;
+            *) echo "Unknown flag: $flag (expected --yes or --unsigned)" >&2; exit 2 ;;
         esac
     done
+    if [[ "$version" == auto ]]; then
+        version="$(scripts/next-version.py)" || {
+            echo "No feat, fix, perf or breaking commit since the last tag: nothing to release." >&2
+            exit 1
+        }
+        echo "Next version: ${version}"
+    fi
     if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         echo "Expected a MAJOR.MINOR.PATCH version, got: {{ version }}" >&2
         exit 2
@@ -68,7 +85,7 @@ release-tag version *flags:
         echo "Ichor v${version}"
         echo
         git log --no-merges --format='- %s' "$range"
-    } | git tag -s "v${version}" -F - # signed, like the commits
+    } | git tag "$sign" "v${version}" -F -
     echo "Tagged v${version}$( [[ -n "$previous" ]] && echo " (changes since ${previous})" )."
     echo "Push it with: git push origin v${version}"
 
@@ -162,6 +179,39 @@ github-secrets repo="":
     printf '%s' "$ICHOR_KEYSTORE_PASSWORD" | gh secret set ICHOR_KEYSTORE_PASSWORD --env release "${repo[@]}"
     printf '%s' "$alias" | gh secret set ICHOR_KEY_ALIAS --env release "${repo[@]}"
     gh secret list --env release "${repo[@]}"
+
+# One-time setup for the daily auto-release (.github/workflows/auto-release.yml), as a repo
+# admin: a write deploy key in the `auto-release` environment (main only), allowed past the
+# `main` and `release tags` rulesets so CI can push the Play notes commit and the tag. A tag
+# pushed with it starts release.yml, as yours do. Rerunning it adds another key.
+auto-release-setup repo="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    repo="{{ repo }}"
+    repo="${repo:-$(gh repo view --json nameWithOwner --jq .nameWithOwner)}"
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' EXIT
+    ssh-keygen -q -t ed25519 -N "" -C "ichor auto-release" -f "$tmp/key"
+    gh repo deploy-key add "$tmp/key.pub" --allow-write --title "ichor auto-release" --repo "$repo"
+    gh api -X PUT "repos/$repo/environments/auto-release" --input - >/dev/null <<'JSON'
+    {"deployment_branch_policy": {"protected_branches": false, "custom_branch_policies": true}}
+    JSON
+    policies="$(gh api "repos/$repo/environments/auto-release/deployment-branch-policies" --jq '.branch_policies[].name')"
+    grep -qx main <<<"$policies" ||
+        gh api -X POST "repos/$repo/environments/auto-release/deployment-branch-policies" \
+            -f name=main -f type=branch >/dev/null
+    gh secret set RELEASE_DEPLOY_KEY --env auto-release --repo "$repo" <"$tmp/key"
+    # Keep each ruleset's actors and add deploy keys, once.
+    for name in main "release tags"; do
+        id="$(gh api "repos/$repo/rulesets" --jq ".[] | select(.name == \"$name\") | .id")"
+        [[ -n "$id" ]] || { echo "No \"$name\" ruleset, skipped." >&2; continue; }
+        gh api "repos/$repo/rulesets/$id" --jq '{bypass_actors: ((.bypass_actors // [])
+                | map(select(.actor_type != "DeployKey"))
+                + [{actor_id: null, actor_type: "DeployKey", bypass_mode: "always"}])}' |
+            gh api -X PUT "repos/$repo/rulesets/$id" --input - >/dev/null
+        echo "Ruleset \"$name\": deploy keys may bypass."
+    done
+    echo "Done. Try it: gh workflow run auto-release.yml -f dry_run=true --repo $repo"
 
 # Build and install the debug APK, e.g. `just install` or `just install 192.168.1.50:37000`.
 install device=DEVICE: build

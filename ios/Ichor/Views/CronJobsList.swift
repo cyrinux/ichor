@@ -9,6 +9,8 @@ struct CronJobsList: View {
     let list: PagedList<KubeCronJob>
     let control: KubeScopeControl
     let query: String
+    /// A share link's CronJob: its runs open once listed.
+    @Binding var focus: String?
 
     @Environment(AppModel.self) private var model
     @State private var confirm: KubeCronJob?
@@ -33,6 +35,7 @@ struct CronJobsList: View {
                                    onToggle: { toggle(cronJob) },
                                    onRun: { confirm = cronJob },
                                    onSuspend: { confirmSuspend = cronJob })
+                            .contextMenu { ShareLinkButton(target: .cronJob(namespace: cronJob.namespace, name: cronJob.name)) }
                     }
                 }
                 if load.hasMore && query.isEmpty {
@@ -65,19 +68,26 @@ struct CronJobsList: View {
                             isPresented: $confirmSuspend.isPresent(),
                             titleVisibility: .visible,
                             presenting: confirmSuspend) { cronJob in
+            // Argo CD self-heal would put spec.suspend back: offer to freeze its app first.
+            if let healer = healer(cronJob) {
+                Button(String(localized: "Freeze \(healer.app.name) 1 h first")) {
+                    Task { await setSuspended(cronJob, !cronJob.suspended, freezeFirst: healer) }
+                }
+            }
             Button(cronJob.suspended ? String(localized: "Resume") : String(localized: "Suspend"),
                    role: cronJob.suspended ? nil : ButtonRole.destructive) {
                 Task { await setSuspended(cronJob, !cronJob.suspended) }
             }
             Button("Cancel", role: .cancel) {}
         } message: { cronJob in
-            if cronJob.suspended {
-                Text("Its schedule starts again in \(cronJob.namespace). Missed runs may start at once, depending on its starting deadline.")
-            } else {
-                Text("No new run starts on schedule until it is resumed; a run in progress goes on. Run now still works.")
-            }
+            suspendMessage(cronJob)
         }
         .messageAlert($resultMessage)
+        .task(id: list.loadedItems.map(\.id)) {
+            guard let focus, list.loadedItems.contains(where: { $0.id == focus }) else { return }
+            expanded.insert(focus)
+            self.focus = nil
+        }
     }
 
     private func confirmMessage(_ cronJob: KubeCronJob) -> Text {
@@ -91,14 +101,34 @@ struct CronJobsList: View {
         return text
     }
 
+    private func suspendMessage(_ cronJob: KubeCronJob) -> Text {
+        var text = cronJob.suspended
+            ? Text("Its schedule starts again in \(cronJob.namespace). Missed runs may start at once, depending on its starting deadline.")
+            : Text("No new run starts on schedule until it is resumed; a run in progress goes on. Run now still works.")
+        if let healer = healer(cronJob) {
+            text = text + Text(verbatim: "\n\n") + Text("\(healer.app.name) deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze \(healer.app.name) first to keep your change for a while.")
+        }
+        return text
+    }
+
+    /// The Argo CD app that would undo a suspend or resume, from the status already loaded.
+    private func healer(_ cronJob: KubeCronJob) -> ArgoSelfHealer? {
+        ArgoCDStore.shared.selfHealer(kind: "CronJob", namespace: cronJob.namespace, name: cronJob.name, key: model.argoKey)
+    }
+
     private func suspendTitle(_ cronJob: KubeCronJob) -> String {
         cronJob.suspended ? String(localized: "Resume \(cronJob.displayName)?") : String(localized: "Suspend \(cronJob.displayName)?")
     }
 
-    private func setSuspended(_ cronJob: KubeCronJob, _ suspend: Bool) async {
+    private func setSuspended(_ cronJob: KubeCronJob, _ suspend: Bool, freezeFirst healer: ArgoSelfHealer? = nil) async {
         guard let client = model.client, !suspending.contains(cronJob.id) else { return }
         suspending.insert(cronJob.id)
         defer { suspending.remove(cronJob.id) }
+        if let healer, let failure = await ArgoCDStore.shared.freezeForHandChange(
+            healer, reason: suspend ? String(localized: "suspend") : String(localized: "resume"), with: client) {
+            resultMessage = failure
+            return
+        }
         do {
             try await client.suspendCronJob(cronJob, suspend: suspend)
             resultMessage = suspend ? String(localized: "\(cronJob.displayName) is suspended")

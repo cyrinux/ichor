@@ -144,6 +144,9 @@
     <string name="overview_node_actions">Knotenaktionen</string>
     <string name="overview_role_control_plane">Control Plane</string>
     <string name="overview_update_banner">Ichor %1$s ist verfügbar – zum Aktualisieren tippen</string>
+    <string name="overview_store_update_available">Ein Update ist verfügbar – zum Aktualisieren tippen</string>
+    <string name="overview_store_update_downloading">Update wird heruntergeladen…</string>
+    <string name="overview_store_update_ready">Update heruntergeladen – zum Neustarten tippen</string>
     <string name="overview_support_title">Gefällt dir Ichor?</string>
     <string name="overview_support_body">Die App ist kostenlos und Open Source. Wenn sie dir Zeit spart, kannst du ihre Entwicklung unterstützen.</string>
     <string name="overview_support_never">Nicht mehr fragen</string>
@@ -483,6 +486,17 @@
     <string name="about_license">Lizenz: Apache 2.0</string>
     <string name="about_licenses">Open-Source-Lizenzen</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
+    <string name="supported_integrations_title">Integrationen</string>
+    <string name="supported_integrations_desc">Die Projekte, die Ichor über die Kubernetes-API liest, im Cluster anhand ihrer API-Gruppen, ihrer laufenden Pods oder ihrer Services erkannt. Tippe auf eines, um seine Website zu öffnen.</string>
+    <string name="supported_integrations_needs_admin">Für die Erkennung im Cluster ist eine os:admin-Konfiguration nötig.</string>
+    <string name="supported_integrations_no_api">keine eigene API</string>
+    <string name="supported_integrations_detected">Erkannt</string>
+    <string name="supported_integrations_not_detected">Nicht erkannt</string>
+    <string name="supported_integrations_website">Website von %1$s</string>
+    <string name="supported_integrations_found_inventory">Im App-Inventar gefunden</string>
+    <string name="supported_integrations_found_services">Über seine Services gefunden</string>
+    <string name="supported_integrations_found_pods">Über seine laufenden Pods gefunden</string>
+    <string name="supported_integrations_found_api">Über seine API gefunden</string>
     <string name="about_sponsor">Auf GitHub sponsern</string>
     <string name="funding_title">Funktionen finanzieren</string>
     <string name="funding_intro">Wähle die Funktionen, die du als Nächstes willst. Was jede einsammelt, zeigt, was dir am wichtigsten ist, und bezahlt die Zeit, sie zu bauen.</string>
@@ -2132,6 +2146,8 @@
     <string name="metrics_skip_verify">Zertifikat nicht prüfen</string>
     <string name="metrics_test">Testen</string>
     <string name="metrics_reachable">Die Abfrage-API antwortet.</string>
+    <string name="metrics_refused">Die Metrikquelle hat die Abfrage abgelehnt (HTTP 401 oder 403): Mandant (X-Scope-OrgID) und Zugangsdaten prüfen.</string>
+    <string name="metrics_change_credentials">Mandant oder Zugangsdaten ändern</string>
     <plurals name="metrics_truncated">
         <item quantity="one">%1$d Serie von %2$d angezeigt</item>
         <item quantity="other">%1$d Serien von %2$d angezeigt</item>
@@ -2446,8 +2462,6 @@
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
     <string name="argo_revert_title">Argo CD macht das rückgängig</string>
-    <string name="argo_revert_text">%1$s stellt diese Workload mit aktiver Selbstheilung bereit: Innerhalb von Minuten setzt es die Replikas auf den Stand in Git zurück. Friere %1$s zuerst ein, um deine Änderung eine Weile zu behalten.</string>
-    <string name="argo_revert_freeze">%1$s 1 Std. einfrieren, dann skalieren</string>
     <string name="argo_revert_anyway">Trotzdem skalieren</string>
     <string name="argo_freeze_reason_scale">auf %1$d skalieren</string>
     <string name="workloads_scale_freeze_failed">%1$s konnte nicht eingefroren werden, nichts skaliert: %2$s</string>
@@ -2503,4 +2517,12 @@
         <item quantity="one">%1$d wartend</item>
         <item quantity="other">%1$d wartend</item>
     </plurals>
+    <string name="share_link">Link teilen</string>
+    <string name="share_link_unknown_cluster">Dieser Link gehört zu einem Cluster, der nicht auf diesem Telefon ist</string>
+    <string name="share_link_invalid">Kein gültiger Ichor-Link</string>
+    <string name="argo_revert_text_change">%1$s stellt dies mit aktiver Selbstheilung bereit: Innerhalb von Minuten setzt es das auf den Stand in Git zurück. Friere %1$s zuerst ein, um deine Änderung eine Weile zu behalten.</string>
+    <string name="argo_revert_freeze_first">%1$s zuerst 1 Std. einfrieren</string>
+    <string name="argo_freeze_reason_suspend">aussetzen</string>
+    <string name="argo_freeze_reason_resume">fortsetzen</string>
+    <string name="argo_freeze_failed_nothing_changed">%1$s konnte nicht eingefroren werden, nichts geändert: %2$s</string>
 </resources>

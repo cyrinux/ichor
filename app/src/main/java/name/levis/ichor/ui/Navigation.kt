@@ -1,10 +1,12 @@
 package name.levis.ichor.ui
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -13,7 +15,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.KubeFocus
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.model.contextFor
+import name.levis.ichor.ui.share.parseShareLink
+import name.levis.ichor.model.kubeFocus
+import name.levis.ichor.model.nodeTab
 import name.levis.ichor.ui.apps.AppsScreen
 import name.levis.ichor.ui.argocd.ArgoAppScreen
 import name.levis.ichor.ui.argocd.ArgoAppsScreen
@@ -22,6 +31,7 @@ import name.levis.ichor.ui.flux.FluxAppScreen
 import name.levis.ichor.ui.flux.FluxScreen
 import name.levis.ichor.ui.capture.CaptureFileScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
+import name.levis.ichor.ui.settings.SupportedIntegrationsScreen
 import name.levis.ichor.ui.settings.LicensesScreen
 import name.levis.ichor.ui.funding.FundingScreen
 import name.levis.ichor.ui.changelog.WhatsNewHost
@@ -85,6 +95,7 @@ private object Routes {
     const val INTEGRATIONS = "integrations"
     const val CHANGELOG = "changelog"
     const val LICENSES = "licenses"
+    const val SUPPORTED_INTEGRATIONS = "supported-integrations"
     const val FUNDING = "funding"
     const val INSIGHTS = "insights"
     const val APPS = "apps"
@@ -111,7 +122,11 @@ private object Routes {
 
     /** The Nodes screen of a large cluster; [filter] preselects one (null: all). */
     fun nodes(filter: NodeFilter?) = "nodes?filter=${filter?.name.orEmpty()}"
-    const val WORKLOADS = "workloads"
+    const val WORKLOADS = "workloads?tab={tab}&key={key}&ns={ns}&name={name}"
+
+    /** The Kubernetes screen; [focus] opens a tab and shows one of its items (a share link). */
+    fun workloads(focus: KubeFocus? = null) = if (focus == null) "workloads" else
+        "workloads?tab=${focus.tab}&key=${Uri.encode(focus.key)}&ns=${Uri.encode(focus.namespace)}&name=${Uri.encode(focus.name)}"
     const val NETWORK_POLICIES = "netpol"
     const val API_HEALTH = "apihealth"
     const val FLOWS = "flows?ns={ns}&pod={pod}"
@@ -194,6 +209,7 @@ enum class DeepLink { ISSUE_CONFIG, DEMO, ARGO_WINDOWS }
  * [openCluster]: the fingerprint of a cluster to show (a launcher shortcut), cleared by [onClusterOpened].
  * [incomingBackup]: a backup file opened from another app, to restore; cleared by [onIncomingBackupRead].
  * [openShell]: a debug shell to go back to (its notification), cleared by [onShellOpened].
+ * [openLink]: a share link, to open on the cluster it names once unlocked; cleared by [onLinkOpened].
  */
 @Composable
 fun Navigation(
@@ -207,8 +223,34 @@ fun Navigation(
     onIncomingBackupRead: () -> Unit = {},
     openShell: LiveShell? = null,
     onShellOpened: () -> Unit = {},
+    openLink: String? = null,
+    onLinkOpened: () -> Unit = {},
 ) {
     val nav = rememberNavController()
+    val context = LocalContext.current
+    val linkLocked by app.appLock.locked.collectAsStateWithLifecycle()
+
+    // Like a launcher shortcut, on the overview of the cluster the link names (the context on
+    // screen when it is one of that cluster), then the screen it names over it. Read once
+    // unlocked, with the config loaded: screenshot mode then masks its names like the screens'.
+    LaunchedEffect(openLink, linkLocked) {
+        val link = openLink ?: return@LaunchedEffect
+        if (linkLocked) return@LaunchedEffect
+        val target = parseShareLink(link)
+        val stored = app.configRepository.config.value
+        val cluster = target?.let { stored?.summary?.contextFor(it.cluster, stored.activeContext) }
+        when {
+            target == null -> Toast.makeText(context, R.string.share_link_invalid, Toast.LENGTH_LONG).show()
+            cluster == null -> Toast.makeText(context, R.string.share_link_unknown_cluster, Toast.LENGTH_LONG).show()
+            else -> {
+                app.selectCluster(cluster.name)
+                nav.resetTo(Routes.OVERVIEW)
+                target.route(app)?.let { nav.navigate(it) }
+            }
+        }
+        // Last: clearing the link restarts this effect, which would cancel a node lookup.
+        onLinkOpened()
+    }
 
     // Over whatever is on screen, unless it already is that shell.
     LaunchedEffect(openShell) {
@@ -277,7 +319,7 @@ fun Navigation(
                 onNodeAction = nav::openNodeAction,
                 onEtcd = { nav.navigate(Routes.ETCD) },
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
-                onWorkloads = { nav.navigate(Routes.WORKLOADS) },
+                onWorkloads = { nav.navigate(Routes.workloads()) },
                 onMetrics = { nav.navigate(Routes.METRICS) },
                 onDataServices = { nav.navigate(Routes.dataServices(it)) },
                 onArgoCD = { nav.navigate(Routes.ARGO_CD) },
@@ -476,6 +518,9 @@ fun Navigation(
         }
         composable(Routes.CHANGELOG) { ChangelogScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.LICENSES) { LicensesScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.SUPPORTED_INTEGRATIONS) {
+            SupportedIntegrationsScreen(configs = app.configRepository, talos = app.talosRepository, onBack = { nav.popBackStack() })
+        }
         composable(Routes.FUNDING) { FundingScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.SUPPORT_BUNDLE) { SupportBundleScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.INTEGRATIONS) { IntegrationsScreen(onBack = { nav.popBackStack() }) }
@@ -528,8 +573,23 @@ fun Navigation(
                 onNode = { n -> if (n.node.isNotBlank()) nav.navigate(Routes.node(n.node, n.hostname, n.role)) },
             )
         }
-        composable(Routes.WORKLOADS) {
+        composable(
+            Routes.WORKLOADS,
+            arguments = listOf(
+                navArgument("tab") { type = NavType.IntType; defaultValue = 0 },
+                navArgument("key") { type = NavType.StringType; defaultValue = "" },
+                navArgument("ns") { type = NavType.StringType; defaultValue = "" },
+                navArgument("name") { type = NavType.StringType; defaultValue = "" },
+            ),
+        ) { entry ->
+            val args = entry.arguments
             name.levis.ichor.ui.workloads.KubernetesScreen(
+                focus = KubeFocus(
+                    args?.getInt("tab") ?: 0,
+                    args?.getString("key").orEmpty(),
+                    args?.getString("ns").orEmpty(),
+                    args?.getString("name").orEmpty(),
+                ),
                 onBack = { nav.popBackStack() },
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
                 onApiHealth = { nav.navigate(Routes.API_HEALTH) },
@@ -629,6 +689,7 @@ fun Navigation(
                 onIntegrations = { nav.navigate(Routes.INTEGRATIONS) },
                 onChangelog = { nav.navigate(Routes.CHANGELOG) },
                 onLicenses = { nav.navigate(Routes.LICENSES) },
+                onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
                 onFunding = { nav.navigate(Routes.FUNDING) },
                 onCleared = {
                     app.launchSync(runNow = true)
@@ -686,7 +747,26 @@ private fun NavHostController.openNodeAction(n: NodeOverview, action: NodeAction
     }
 }
 
+/**
+ * The route a share link opens over the overview; null for the overview itself. A node only
+ * when it is one of the cluster's (with its role, for the control-plane warnings): a link
+ * cannot point the app's Talos calls at another address.
+ */
+private suspend fun ShareTarget.route(app: TalosApp): String? = when (target) {
+    ShareTarget.ETCD -> Routes.ETCD
+    ShareTarget.HEALTH -> Routes.HEALTH
+    ShareTarget.ARGO_CD -> Routes.ARGO_CD
+    ShareTarget.FLUX -> Routes.FLUX
+    ShareTarget.NODE -> runCatching { app.talosRepository.overview() }.getOrNull()?.nodes
+        ?.firstOrNull { n -> addr.isNotEmpty() && n.node == addr || host.isNotEmpty() && n.hostname == host }
+        ?.let { n -> Routes.node(n.node, n.hostname, n.role, nodeTab) }
+    ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name)
+    ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name)
+    else -> kubeFocus?.let { Routes.workloads(it) }
+}
+
 /** Navigates to [route] and drops everything else from the back stack. */
+
 private fun NavHostController.resetTo(route: String) {
     navigate(route) {
         popUpTo(graph.id) { inclusive = true }

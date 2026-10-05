@@ -88,6 +88,7 @@ struct ArgoCDView: View {
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
         .navigationTitle(Text(verbatim: "Argo CD"))
+        .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.argoCD)) } }
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: ArgoAppRoute.self) { ArgoAppView(namespace: $0.namespace, name: $0.name, downNodes: $0.downNodes) }
         .navigationDestination(for: ArgoWindowsRoute.self) { _ in ArgoWindowsView() }

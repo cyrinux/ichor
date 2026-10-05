@@ -1,6 +1,6 @@
 # D9. Argo CD freeze: hotfix live without being reverted
 
-Status: **implemented**: Go core, Android and iOS. Remaining: the CronJob suspend warning (D2), on-device checks. Size M. Read [../README.md](../README.md) for the conventions.
+Status: **implemented**: Go core, Android and iOS, with the D2 warnings (scale, CronJob suspend/resume). Remaining: on-device checks. Size M. Read [../README.md](../README.md) for the conventions.
 
 ## Goal
 
@@ -177,8 +177,8 @@ in `ui/workloads/WorkloadSheet.kt`. Differences from the sketches above:
 - Ending a freeze from an app page says how many apps the freeze holds (a namespace or project
   freeze resumes them all). A namespace group header offers a freeze only when its apps share
   one project (a window belongs to one project).
-- The D2 warning covers scaling (Deployments, StatefulSets), read from the Argo CD status already
-  loaded; suspending a CronJob does not warn yet.
+- The D2 warning covers scaling (Deployments, StatefulSets) and suspending or resuming a CronJob,
+  read from the Argo CD status already loaded (`ui/argocd/ArgoSelfHeal.kt`).
 
 ## iOS (built)
 

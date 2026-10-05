@@ -80,6 +80,7 @@ struct FluxView: View {
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
         .navigationTitle(Text(verbatim: "Flux"))
+        .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.flux)) } }
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: FluxAppRoute.self) {
             FluxAppView(kind: $0.kind, namespace: $0.namespace, name: $0.name, downNodes: $0.downNodes)

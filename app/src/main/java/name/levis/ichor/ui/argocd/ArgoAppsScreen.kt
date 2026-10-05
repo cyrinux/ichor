@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.argocd
 
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -131,6 +133,7 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
                 },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    ShareLinkButton(ShareTarget.screen(ShareTarget.ARGO_CD))
                     TooltipIconButton(Icons.Outlined.AcUnit, stringResource(R.string.argo_windows_title), onClick = onWindows)
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
                 },

@@ -33,10 +33,13 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.isMeteredNetwork
+import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.KubeNamespaces
 import name.levis.ichor.model.KubeScope
 import name.levis.ichor.model.defaultScope
+import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.isDemo
+import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.flows.CiliumViewModel
@@ -53,6 +56,8 @@ import name.levis.ichor.ui.components.TooltipIconButton
  * dialog would show the real address). It also opens the API server health, the network
  * policies and, with Cilium,
  * the live flows ([onFlows] with the namespace and pod to narrow them to, or nulls).
+ * [focus] (a share link) opens a tab, scoped to and searched for one item, whose sheet opens
+ * once its row loads.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,9 +66,14 @@ fun KubernetesScreen(
     onNetworkPolicies: () -> Unit,
     onApiHealth: () -> Unit,
     onFlows: (namespace: String?, pod: String?) -> Unit,
+    focus: KubeFocus = KubeFocus(0),
 ) {
-    var tab by rememberSaveable { mutableIntStateOf(0) }
-    var query by rememberSaveable { mutableStateOf("") }
+    var tab by rememberSaveable { mutableIntStateOf(focus.tab) }
+    var query by rememberSaveable { mutableStateOf(focus.name) }
+    // The item of the link still to show; the keys of another tab are not its.
+    var pending by rememberSaveable { mutableStateOf(focus.key) }
+    val focusKey = pending.takeIf { it.isNotEmpty() && tab == focus.tab }
+    val onFocused = { pending = "" }
 
     val app = LocalContext.current.applicationContext as TalosApp
     val metered = { isMeteredNetwork(app) }
@@ -84,7 +94,7 @@ fun KubernetesScreen(
     var editing by remember { mutableStateOf(false) }
     // Screenshot mode turned on with the dialog open: closed, not just hidden until it is off.
     LaunchedEffect(fingerprint) { if (fingerprint == null) editing = false }
-    val scope = rememberKubeScope(app, namespaces, mask.enabled)
+    val scope = rememberKubeScope(app, namespaces, mask.enabled, focus.namespace)
 
     if (editing && fingerprint != null) {
         KubeServerDialog(
@@ -107,6 +117,7 @@ fun KubernetesScreen(
                 title = { Text("Kubernetes") },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    if (tab < ShareTarget.KUBE_TABS.size) ShareLinkButton(ShareTarget.kubernetes(tab))
                     TooltipIconButton(Icons.Outlined.MonitorHeart, stringResource(R.string.apihealth_title), onClick = onApiHealth)
                     TooltipIconButton(Icons.Outlined.Policy, stringResource(R.string.netpol_title), onClick = onNetworkPolicies)
                     if (hasCilium) {
@@ -127,15 +138,17 @@ fun KubernetesScreen(
                 Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text(stringResource(R.string.netperf_tab)) })
             }
             when (tab) {
-                0 -> WorkloadsTab(scope, query, onQuery = { query = it }, vm = workloads)
+                0 -> WorkloadsTab(scope, query, onQuery = { query = it }, vm = workloads, focusKey = focusKey, onFocused = onFocused)
                 1 -> PodsTab(
                     scope,
                     query,
                     onQuery = { query = it },
                     onFlows = if (hasCilium) ({ pod -> onFlows(pod.namespace, pod.name) }) else null,
                     vm = pods,
+                    focusKey = focusKey,
+                    onFocused = onFocused,
                 )
-                2 -> CronJobsTab(scope, query, onQuery = { query = it }, vm = cronJobs)
+                2 -> CronJobsTab(scope, query, onQuery = { query = it }, vm = cronJobs, focusKey = focusKey, onFocused = onFocused)
                 else -> NetPerfTab(netPerf)
             }
         }
@@ -150,22 +163,26 @@ class NamespacesViewModel(private val talos: TalosRepository) : LoadingViewModel
 /**
  * The scope of the Kubernetes lists (L5, L6): the one picked for the active cluster, kept on
  * the device (not in screenshot mode or the demo: then only while the screen lives), else
- * the default for what [namespaces] says.
+ * the default for what [namespaces] says. A share link's [linked] namespace comes first, not
+ * remembered, until another scope is picked.
  */
 @Composable
-private fun rememberKubeScope(app: TalosApp, namespaces: NamespacesViewModel, masked: Boolean): KubeScopeControl {
+private fun rememberKubeScope(app: TalosApp, namespaces: NamespacesViewModel, masked: Boolean, linked: String = ""): KubeScopeControl {
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val stored by app.kubeScopes.scopes.collectAsStateWithLifecycle()
     val listed by namespaces.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (listed == UiState.Loading) namespaces.refresh() }
     val cluster = config?.activeSummary?.takeIf { !it.isDemo && !masked }?.fingerprint?.takeIf { it.isNotBlank() }
     var local by rememberSaveable { mutableStateOf<String?>(null) }
+    var fromLink by rememberSaveable { mutableStateOf(linked.ifEmpty { null }) }
     val known = (listed as? UiState.Loaded)?.data
-    val remembered = if (cluster != null) stored[cluster]?.let { KubeScope.fromStored(it) } else local?.let { KubeScope.fromStored(it) }
+    val remembered = fromLink?.let { KubeScope(it, chosen = true) }
+        ?: if (cluster != null) stored[cluster]?.let { KubeScope.fromStored(it) } else local?.let { KubeScope.fromStored(it) }
     // Null: namespaces cannot be listed and the context names none, the user types one.
     val scope = defaultScope(remembered, known)
     return remember(scope, known, cluster) {
         KubeScopeControl(scope ?: KubeScope(), known, ready = scope != null) { picked ->
+            fromLink = null
             if (cluster != null) app.kubeScopes.set(cluster, picked) else local = picked.stored
         }
     }

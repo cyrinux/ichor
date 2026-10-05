@@ -85,6 +85,8 @@ actions (`QuickActions.swift`).
 **Plan:**
 - Shortcuts can open a screen: extend `EXTRA_OPEN`/`DeepLink` and the iOS router to `etcd`,
   `argocd`, `node/<name>`, `alerts`; pinned shortcuts from any screen's menu ("Add to home screen").
+  Share links (`ichor://open?…`, `go/ichorgo/sharelink.go`) already route to etcd, Argo CD,
+  Flux, a node, workloads and the Kubernetes tabs on both apps: reuse that routing.
 - iOS **App Intents**: "Cluster status" (returns a sentence + snippet view: healthy / N nodes down),
   "Open node", "Run CronJob" (asks to confirm in the app). Siri and Shortcuts get them for free.
 - Android: `shortcuts.xml` capabilities for App Actions where Google still supports them, and an

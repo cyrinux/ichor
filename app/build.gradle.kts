@@ -68,8 +68,9 @@ android {
         }
     }
 
-    // The store behind feature funding: Play Billing in src/play, none in src/foss (shared by
-    // the open-source builds), so the proprietary billing library never reaches their APKs.
+    // The store behind feature funding and updates: Play Billing and Play in-app updates in
+    // src/play, none in src/foss (shared by the open-source builds), so the proprietary Play
+    // libraries never reach their APKs.
     // src/foss/res tells them apart from the Play build on a home screen (name and icon).
     sourceSets {
         getByName("debug").kotlin.directories.add("src/foss/java")
@@ -160,8 +161,9 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
     implementation(libs.aboutlibraries.compose.m3)
-    // Feature funding, Play build only (see sourceSets above).
+    // Feature funding and in-app updates, Play build only (see sourceSets above).
     "playImplementation"(libs.billing)
+    "playImplementation"(libs.play.app.update)
     debugImplementation(libs.compose.ui.tooling)
 
     testImplementation(libs.junit)

@@ -47,6 +47,7 @@ struct FluxAppView: View {
             }
         }
         .navigationTitle(Text(verbatim: name))
+        .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .fluxApp(kind: kind, namespace: namespace, name: name)) } }
         .navigationBarTitleDisplayMode(.inline)
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)

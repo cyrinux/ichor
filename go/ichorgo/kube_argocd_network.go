@@ -210,9 +210,9 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 
 	wg.Go(func() { fail(getList(ctx, k, "/apis/networking.k8s.io/v1/ingresses", &ingresses)) })
 	wg.Go(func() {
-		fail(ignoreNotFound(getList(ctx, k, "/apis/gateway.networking.k8s.io/v1/httproutes", &httpRoutes)))
+		fail(ignoreNotFound(getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/httproutes", &httpRoutes)))
 	})
-	wg.Go(func() { _ = getList(ctx, k, "/apis/gateway.networking.k8s.io/v1/gateways", &gateways) })
+	wg.Go(func() { _ = getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/gateways", &gateways) })
 	// Node readiness only colours the last column: without it the graph still shows.
 	wg.Go(func() { _ = getList(ctx, k, "/api/v1/nodes", &nodes) })
 	wg.Wait()

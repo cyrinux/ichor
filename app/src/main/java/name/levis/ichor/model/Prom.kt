@@ -45,6 +45,12 @@ private val GoJson = Json(TalosJson) { encodeDefaults = true }
 /** The source for Go, every field included: TalosJson leaves defaults out (mode "proxy" among them). */
 fun PromSource.toGoJson(): String = GoJson.encodeToString(PromSource.serializer(), this)
 
+/** Part of the Go core's message for a query the backend refused, HTTP 401 or 403 (prom_parse.go promRefused). */
+const val PROM_REFUSED = "refused (credentials or tenant)"
+
+/** The backend turned the query down: the tenant (X-Scope-OrgID) or the credentials need changing. */
+fun isPromRefused(error: String?): Boolean = error?.contains(PROM_REFUSED) == true
+
 @Serializable
 data class PromDiscovery(val sources: List<PromSource> = emptyList())
 
