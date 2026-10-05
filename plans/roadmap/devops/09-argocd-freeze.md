@@ -52,7 +52,8 @@ not needed).
 The window object has no free-form field on every version, so the AppProject gets an annotation
 `ichor.levis.name/freezes`: a JSON list of `{window (kind, schedule, duration, applications,
 namespaces), reason, createdAt, expiresAt}`. A window matching an entry is Ichor's: it can be
-extended or ended. Other windows come from Git (or another tool) and are shown read-only.
+extended or ended. Other windows come from Git (or another tool): they cannot be extended, and
+removing one needs a warning (decision 1).
 
 Every change is read-modify-write of `spec.syncWindows` + the annotation with the project's
 `resourceVersion` (merge patch replaces the list whole); a 409 is retried once.
@@ -83,7 +84,7 @@ managed by Argo CD app *y*" on the sheet.
   minutes}`, `unfreeze {window}`, `clearExpired`. Duration 5 min–7 days. `freeze` also drops this
   project's expired Ichor windows. Demo contexts refuse, as usual.
 - `just probe argo-freeze PROJECT …`, table tests (glob matching, one-shot cron, expiry, 409 retry,
-  Git windows untouched), demo data with one active freeze, one Git window, one expired.
+  Git windows untouched unless removed explicitly), demo data with one active freeze, one Git window, one expired.
 
 ## UX
 
@@ -128,7 +129,7 @@ Expired (Ichor)                                     [ Clear ]
   ❄ apps · web-api               ended 3 h ago
 ```
 
-Swipe to end an Ichor freeze. Git windows are read-only ("change it in Git").
+Swipe to end an Ichor freeze. Git windows can be removed too, behind a warning (decision 1).
 
 ### Ending a freeze
 
@@ -146,8 +147,11 @@ Android: a local notification 5 min before the end (scheduled at freeze time, no
 | 2 | Android: freeze sheet, badges/banner/chip, sync windows screen, expiry notification, D2 hook | M |
 | 3 | iOS: the same | M |
 
-## Open questions
+## Decisions
 
-1. Git-defined windows in the menu: read-only (proposed), or removable with a warning?
-2. Durations: default 1 h, max 7 days?
-3. Freezing a whole project from the phone: allowed (proposed, with the app list shown first)?
+1. Git-defined windows are **removable with a warning** in the menu: "This window comes from Git
+   (project managed by app *y*): Argo CD may put it back on its next sync; remove it in Git too."
+   Same typed-confirmation style as other destructive actions; the Go `unfreeze` action accepts
+   them with `{window, fromGit: true}`.
+2. Durations: default 1 h, 5 min–7 days.
+3. Freezing a whole project is allowed, with the list of affected apps shown first.
