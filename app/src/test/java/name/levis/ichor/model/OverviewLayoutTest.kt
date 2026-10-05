@@ -54,6 +54,18 @@ class OverviewLayoutTest {
     }
 
     @Test
+    fun absentCardsAreLeftOutAndKeepTheirPlace() {
+        val absent = setOf(DATA_SERVICES, FLUX)
+        val layout = OverviewLayout().hide(ARGO_CD).hide(FLUX)
+        assertEquals(listOf(SUMMARY, APPS, NODES, TIME_DRIFT), layout.visible(absent))
+        assertEquals(listOf(ARGO_CD), layout.hiddenCards(absent))
+        // APPS (index 1 without DATA_SERVICES) after NODES: DATA_SERVICES stays third.
+        val moved = layout.move(1, 2, absent)
+        assertEquals(listOf(SUMMARY, NODES, DATA_SERVICES, APPS, TIME_DRIFT), moved.visible)
+        assertEquals(setOf(ARGO_CD, FLUX), moved.hidden)
+    }
+
+    @Test
     fun moveOutOfRangeIsIgnored() {
         val layout = OverviewLayout()
         assertEquals(layout, layout.move(-1, 2))

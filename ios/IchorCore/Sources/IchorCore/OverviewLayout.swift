@@ -45,10 +45,21 @@ public struct OverviewLayout: Equatable, Sendable {
         return OverviewLayout(order: moved + hiddenCards, hidden: hidden)
     }
 
-    /// The same as a SwiftUI `onMove` over `visible`; no actual move: unchanged.
-    public func moving(fromOffsets source: IndexSet, toOffset destination: Int) -> OverviewLayout {
-        let moved = movedElements(visible, fromOffsets: source, toOffset: destination)
-        return moved == visible ? self : OverviewLayout(order: moved + hiddenCards, hidden: hidden)
+    /// `visible` without the sections the cluster lacks (`absent`): what the editor offers to arrange.
+    public func visible(absent: Set<OverviewCard>) -> [OverviewCard] { visible.filter { !absent.contains($0) } }
+
+    /// `hiddenCards` without the sections the cluster lacks (`absent`).
+    public func hiddenCards(absent: Set<OverviewCard>) -> [OverviewCard] { hiddenCards.filter { !absent.contains($0) } }
+
+    /// The same as a SwiftUI `onMove` over `visible(absent:)`; absent sections keep their place,
+    /// for clusters that have them. No actual move: unchanged.
+    public func moving(fromOffsets source: IndexSet, toOffset destination: Int, absent: Set<OverviewCard> = []) -> OverviewLayout {
+        let shown = visible(absent: absent)
+        let moved = movedElements(shown, fromOffsets: source, toOffset: destination)
+        guard moved != shown else { return self }
+        var next = moved.makeIterator()
+        let order = visible.map { absent.contains($0) ? $0 : next.next()! }
+        return OverviewLayout(order: order + hiddenCards, hidden: hidden)
     }
 
     public func hiding(_ card: OverviewCard) -> OverviewLayout {
