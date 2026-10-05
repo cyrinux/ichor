@@ -2450,8 +2450,6 @@
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
     <string name="argo_revert_title">Argo CD will revert this</string>
-    <string name="argo_revert_text">%1$s deploys this workload with self-heal on: within minutes it puts the replicas back as Git has them. Freeze %1$s first to keep your change for a while.</string>
-    <string name="argo_revert_freeze">Freeze %1$s 1 h, then scale</string>
     <string name="argo_revert_anyway">Scale anyway</string>
     <string name="argo_freeze_reason_scale">scale to %1$d</string>
     <string name="workloads_scale_freeze_failed">Could not freeze %1$s, nothing scaled: %2$s</string>
@@ -2460,4 +2458,9 @@
         <item quantity="one">This freeze covers %1$d app: it resumes too.</item>
         <item quantity="other">This freeze covers %1$d apps: they all resume.</item>
     </plurals>
+    <string name="argo_revert_text_change">%1$s deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze %1$s first to keep your change for a while.</string>
+    <string name="argo_revert_freeze_first">Freeze %1$s 1 h first</string>
+    <string name="argo_freeze_reason_suspend">suspend</string>
+    <string name="argo_freeze_reason_resume">resume</string>
+    <string name="argo_freeze_failed_nothing_changed">Could not freeze %1$s, nothing changed: %2$s</string>
 </resources>

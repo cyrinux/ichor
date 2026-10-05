@@ -2454,8 +2454,6 @@
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
     <string name="argo_revert_title">Argo CD revertirá esto</string>
-    <string name="argo_revert_text">%1$s despliega esta carga con la autorreparación activada: en minutos devuelve las réplicas a como están en Git. Congela %1$s antes para conservar tu cambio un tiempo.</string>
-    <string name="argo_revert_freeze">Congelar %1$s 1 h y escalar</string>
     <string name="argo_revert_anyway">Escalar de todos modos</string>
     <string name="argo_freeze_reason_scale">escalar a %1$d</string>
     <string name="workloads_scale_freeze_failed">No se pudo congelar %1$s, no se escaló nada: %2$s</string>
@@ -2464,4 +2462,9 @@
         <item quantity="one">Esta congelación cubre %1$d app: también se reanuda.</item>
         <item quantity="other">Esta congelación cubre %1$d apps: todas se reanudan.</item>
     </plurals>
+    <string name="argo_revert_text_change">%1$s despliega esto con la autorreparación activada: en minutos lo devuelve a como está en Git. Congela %1$s antes para conservar tu cambio un tiempo.</string>
+    <string name="argo_revert_freeze_first">Congelar %1$s 1 h antes</string>
+    <string name="argo_freeze_reason_suspend">suspender</string>
+    <string name="argo_freeze_reason_resume">reanudar</string>
+    <string name="argo_freeze_failed_nothing_changed">No se pudo congelar %1$s, no se cambió nada: %2$s</string>
 </resources>

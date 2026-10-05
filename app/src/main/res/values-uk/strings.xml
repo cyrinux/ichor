@@ -2638,8 +2638,6 @@
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
     <string name="argo_revert_title">Argo CD скасує це</string>
-    <string name="argo_revert_text">%1$s розгортає це навантаження з увімкненим самовідновленням: за кілька хвилин воно поверне репліки до стану в Git. Спершу заморозьте %1$s, щоб зберегти зміну на якийсь час.</string>
-    <string name="argo_revert_freeze">Заморозити %1$s на 1 год і масштабувати</string>
     <string name="argo_revert_anyway">Усе одно масштабувати</string>
     <string name="argo_freeze_reason_scale">масштабування до %1$d</string>
     <string name="workloads_scale_freeze_failed">Не вдалося заморозити %1$s, нічого не масштабовано: %2$s</string>
@@ -2650,4 +2648,9 @@
         <item quantity="many">Ця заморозка охоплює %1$d застосунків: усі вони відновляться.</item>
         <item quantity="other">Ця заморозка охоплює %1$d застосунку: усі вони відновляться.</item>
     </plurals>
+    <string name="argo_revert_text_change">%1$s розгортає це з увімкненим самовідновленням: за кілька хвилин воно поверне це до стану в Git. Спершу заморозьте %1$s, щоб зберегти зміну на якийсь час.</string>
+    <string name="argo_revert_freeze_first">Спершу заморозити %1$s на 1 год</string>
+    <string name="argo_freeze_reason_suspend">призупинення</string>
+    <string name="argo_freeze_reason_resume">відновлення</string>
+    <string name="argo_freeze_failed_nothing_changed">Не вдалося заморозити %1$s, нічого не змінено: %2$s</string>
 </resources>

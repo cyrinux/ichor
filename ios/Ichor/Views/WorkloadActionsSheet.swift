@@ -154,11 +154,8 @@ struct WorkloadActionsSheet: View {
 
     /// The Argo CD app that would revert a scale (self-heal on, not frozen) with its project, from
     /// the Argo CD status already loaded; nil when none or not loaded.
-    private var argoOwner: ArgoOwnerOfWorkload? {
-        guard let status = ArgoCDStore.shared.status(for: model.argoKey),
-              let app = status.selfHealingOwner(kind: workload.kind, namespace: workload.namespace, name: workload.name),
-              let project = status.project(of: app) else { return nil }
-        return ArgoOwnerOfWorkload(app: app, project: project)
+    private var argoOwner: ArgoSelfHealer? {
+        ArgoCDStore.shared.selfHealer(kind: workload.kind, namespace: workload.namespace, name: workload.name, key: model.argoKey)
     }
 
     private func confirmScaleNow() {
@@ -178,14 +175,10 @@ struct WorkloadActionsSheet: View {
         scaling = true
         defer { scaling = false }
         let target = replicas
-        if freezeFirst, let owner = argoOwner {
-            // Stored on the cluster: no name, which may be masked on screen.
-            let options = freezeOptions(for: owner.app, scope: .app, minutes: freezeExtendMinutes, manualSync: true,
-                                        reason: String(localized: "scale to \(target)"))
-            if let failure = await ArgoCDStore.shared.freeze(.freeze, on: owner.project, options: [options], with: client) {
-                resultMessage = String(localized: "Could not freeze \(owner.app.name), nothing scaled: \(failure)")
-                return
-            }
+        if freezeFirst, let owner = argoOwner,
+           let failure = await ArgoCDStore.shared.freezeForHandChange(owner, reason: String(localized: "scale to \(target)"), with: client) {
+            resultMessage = failure
+            return
         }
         do {
             let warning = try await client.scale(workload, replicas: target)
@@ -210,12 +203,6 @@ struct WorkloadActionsSheet: View {
             resultMessage = String(localized: "Could not roll back \(workload.name): \(error.localizedDescription)")
         }
     }
-}
-
-/// The Argo CD app deploying a workload with self-heal, and its project.
-private struct ArgoOwnerOfWorkload {
-    let app: ArgoApp
-    let project: ArgoProject
 }
 
 /// "Revision 3 · current", its age, images and change cause, and Roll back for the others.
