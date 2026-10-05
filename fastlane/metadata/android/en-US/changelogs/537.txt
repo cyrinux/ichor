@@ -1,0 +1,8 @@
+• Find who loads the Kubernetes API from the audit log
+• Opt-in background alerts for Argo CD and Flux apps
+• Argo CD and Flux in the AI diagnosis and the support bundle
+• Share links to clusters, nodes, apps and workloads
+• Force the auto-release bump by hand, e.g. from the GitHub mobile app
+• Auto-release commits the Play notes and pushes with a deploy key
+• Warn before suspending a CronJob an Argo CD app self-heals
+• Daily auto-release with the version bumped from conventional commits
