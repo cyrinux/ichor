@@ -96,6 +96,7 @@ extension ArgoFilter {
         case .syncing: String(localized: "Syncing")
         case .autoSyncOff: String(localized: "Auto-sync off")
         case .failed: String(localized: "Failed")
+        case .frozen: String(localized: "Frozen")
         }
     }
 
@@ -104,7 +105,7 @@ extension ArgoFilter {
         case .all, .autoSyncOff: nil
         case .degraded, .failed: .red
         case .outOfSync: attentionColor
-        case .progressing, .syncing: .blue
+        case .progressing, .syncing, .frozen: .blue
         }
     }
 }

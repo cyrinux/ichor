@@ -1,7 +1,8 @@
 import Foundation
 
-// Mirrors go/ichorgo/kube_argocd.go and kube_argocd_actions.go (the wire format and the UX are
-// described in plans/argocd/README.md). The logic on top lives in ArgoCDLogic.swift.
+// Mirrors go/ichorgo/kube_argocd.go, kube_argocd_actions.go and kube_argocd_syncwindows.go (the
+// wire format and the UX are described in plans/argocd/README.md and
+// plans/roadmap/devops/09-argocd-freeze.md). The logic on top lives in ArgoCDLogic.swift.
 
 /// The catalog id of Argo CD in the inventory: only clusters running it are asked (KubeArgoCD).
 public let argoCDCatalogID = "argo-cd"
@@ -120,6 +121,8 @@ public struct ArgoApp: Decodable, Equatable, Identifiable, Sendable {
     public let unhealthyPods: [KubePod]
     /// Unix ms.
     public let reconciledAt: Int64
+    /// Set while an active deny sync window of its project stops its automated syncs.
+    public let freeze: ArgoFreeze?
 
     public var id: String { "\(namespace)/\(name)" }
 
@@ -150,12 +153,13 @@ public struct ArgoApp: Decodable, Equatable, Identifiable, Sendable {
         externalURLs = try c.field(.externalURLs, [])
         unhealthyPods = try c.field(.unhealthyPods, [])
         reconciledAt = try c.field(.reconciledAt, 0)
+        freeze = try c.decodeIfPresent(ArgoFreeze.self, forKey: .freeze)
     }
 
     private enum CodingKeys: String, CodingKey {
         case namespace, name, project, owner, level, icon, remoteIcon, iconURL = "iconUrl", health, healthMessage, sync, revision, refreshing
         case sources, destination, autoSync, syncOptions, operation, conditions, resources, history, images, externalURLs
-        case unhealthyPods, reconciledAt
+        case unhealthyPods, reconciledAt, freeze
     }
 }
 
@@ -438,8 +442,14 @@ public struct ArgoProject: Decodable, Equatable, Identifiable, Sendable {
     public let namespace: String
     public let name: String
     public let description: String
-    /// How many sync windows it declares (not evaluated).
+    /// How many sync windows it declares.
     public let syncWindows: Int
+    /// Its sync windows, evaluated at read time.
+    public let windows: [ArgoWindow]
+    /// The Argo CD app that applies the project from Git, "" when none.
+    public let managedBy: String
+    /// managedBy applies it server-side: a freeze was not checked to survive its syncs.
+    public let managedServerSide: Bool
 
     public var id: String { "\(namespace)/\(name)" }
 
@@ -449,9 +459,153 @@ public struct ArgoProject: Decodable, Equatable, Identifiable, Sendable {
         name = try c.decode(String.self, forKey: .name)
         description = try c.field(.description, "")
         syncWindows = try c.field(.syncWindows, 0)
+        windows = try c.field(.windows, [])
+        managedBy = try c.field(.managedBy, "")
+        managedServerSide = try c.field(.managedServerSide, false)
     }
 
-    private enum CodingKeys: String, CodingKey { case namespace, name, description, syncWindows }
+    private enum CodingKeys: String, CodingKey { case namespace, name, description, syncWindows, windows, managedBy, managedServerSide }
+}
+
+/// One sync window of a project: an allow or deny period from a cron schedule.
+public struct ArgoWindow: Decodable, Equatable, Identifiable, Sendable {
+    /// A hash of its content: windows have no name.
+    public let id: String
+    /// allow or deny.
+    public let kind: String
+    public let schedule: String
+    public let duration: String
+    public let timeZone: String
+    public let applications: [String]
+    public let namespaces: [String]
+    public let clusters: [String]
+    public let manualSync: Bool
+    public let active: Bool
+    /// The current occurrence when active, else the next one (unix ms); 0 when none.
+    public let start: Int64
+    public let end: Int64
+    /// Why the window cannot be read, "" when it can.
+    public let error: String
+    /// Apps of the project it matches.
+    public let apps: Int
+    /// Set on a freeze Ichor created.
+    public let ichor: ArgoFreezeInfo?
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.field(.id, "")
+        kind = try c.field(.kind, "")
+        schedule = try c.field(.schedule, "")
+        duration = try c.field(.duration, "")
+        timeZone = try c.field(.timeZone, "")
+        applications = try c.field(.applications, [])
+        namespaces = try c.field(.namespaces, [])
+        clusters = try c.field(.clusters, [])
+        manualSync = try c.field(.manualSync, false)
+        active = try c.field(.active, false)
+        start = try c.field(.start, 0)
+        end = try c.field(.end, 0)
+        error = try c.field(.error, "")
+        apps = try c.field(.apps, 0)
+        ichor = try c.decodeIfPresent(ArgoFreezeInfo.self, forKey: .ichor)
+    }
+
+    public var isDeny: Bool { kind == "deny" }
+
+    /// When it ends for good: an Ichor freeze's expiry, else the current occurrence's end.
+    public var endsAt: Int64 { ichor?.expiresAt ?? end }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, kind, schedule, duration, timeZone, applications, namespaces, clusters, manualSync, active, start, end, error, apps, ichor
+    }
+}
+
+/// What Ichor recorded about a freeze it created.
+public struct ArgoFreezeInfo: Decodable, Equatable, Sendable {
+    public let reason: String
+    /// Unix ms.
+    public let createdAt: Int64
+    public let expiresAt: Int64
+    /// Over: Argo CD would only fire it again a year later.
+    public let expired: Bool
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        reason = try c.field(.reason, "")
+        createdAt = try c.field(.createdAt, 0)
+        expiresAt = try c.field(.expiresAt, 0)
+        expired = try c.field(.expired, false)
+    }
+
+    private enum CodingKeys: String, CodingKey { case reason, createdAt, expiresAt, expired }
+}
+
+/// An app's active deny windows summed up.
+public struct ArgoFreeze: Decodable, Equatable, Sendable {
+    public let project: String
+    /// The latest end among them, unix ms.
+    public let until: Int64
+    /// Every one of them allows manual syncs.
+    public let manualSync: Bool
+    /// Every one of them is an Ichor freeze.
+    public let byIchor: Bool
+    /// Their window ids.
+    public let windows: [String]
+
+    public init(project: String = "", until: Int64 = 0, manualSync: Bool = false, byIchor: Bool = false, windows: [String] = []) {
+        self.project = project
+        self.until = until
+        self.manualSync = manualSync
+        self.byIchor = byIchor
+        self.windows = windows
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        project = try c.field(.project, "")
+        until = try c.field(.until, 0)
+        manualSync = try c.field(.manualSync, false)
+        byIchor = try c.field(.byIchor, false)
+        windows = try c.field(.windows, [])
+    }
+
+    private enum CodingKeys: String, CodingKey { case project, until, manualSync, byIchor, windows }
+}
+
+/// What KubeArgoFreeze runs on a project's sync windows.
+public enum ArgoFreezeAction: String, Sendable, CaseIterable {
+    case freeze, extend, unfreeze, clearExpired
+}
+
+/// The freeze sheet's choices (KubeArgoFreeze's optionsJSON).
+public struct ArgoFreezeOptions: Encodable, Equatable, Sendable {
+    public var applications: [String] = []
+    public var namespaces: [String] = []
+    public var minutes = 0
+    public var manualSync = false
+    public var reason = ""
+    /// The window id to extend or unfreeze.
+    public var window = ""
+    /// Confirms removing a window Ichor did not create.
+    public var fromGit = false
+
+    public init(applications: [String] = [], namespaces: [String] = [], minutes: Int = 0, manualSync: Bool = false,
+                reason: String = "", window: String = "", fromGit: Bool = false) {
+        self.applications = applications
+        self.namespaces = namespaces
+        self.minutes = minutes
+        self.manualSync = manualSync
+        self.reason = reason
+        self.window = window
+        self.fromGit = fromGit
+    }
+
+    /// The JSON KubeArgoFreeze reads, keys sorted.
+    public var json: String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        return (try? encoder.encode(self)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+    }
 }
 
 /// The actions KubeArgoAction runs.

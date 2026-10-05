@@ -166,6 +166,6 @@ enum BackgroundMonitor {
         let category = UNNotificationCategory(identifier: "private", actions: [], intentIdentifiers: [],
                                               hiddenPreviewsBodyPlaceholder: String(localized: "Talos cluster alert"),
                                               options: [])
-        UNUserNotificationCenter.current().setNotificationCategories([category])
+        UNUserNotificationCenter.current().setNotificationCategories([category, FreezeReminders.notificationCategory])
     }
 }

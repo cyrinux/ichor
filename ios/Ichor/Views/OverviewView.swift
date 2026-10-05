@@ -494,7 +494,8 @@ struct OverviewView: View {
         }
         if argo == nil { argo = .loading }
         let key = model.argoKey
-        let loaded: LoadState<ArgoStatus> = await .from { try await ArgoCDStore.shared.load(with: client, key: key) }
+        let cluster = model.activeSummary
+        let loaded: LoadState<ArgoStatus> = await .from { try await ArgoCDStore.shared.load(with: client, key: key, cluster: cluster) }
         guard id == loadID else { return }
         argo = (argo ?? .loading).refreshed(with: loaded)
     }
