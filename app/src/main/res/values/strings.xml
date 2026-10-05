@@ -1328,6 +1328,10 @@
     <string name="kube_paged_capped">Showing %1$s of ~%2$s — pick a namespace</string>
     <string name="kube_paged_capped_unknown">Showing the first %1$s — pick a namespace</string>
     <string name="kube_paged_partial_note">Sorting and search only cover the loaded rows.</string>
+    <string name="kube_scope_type_prompt">Type the namespace to list above.</string>
+    <string name="kube_scope_no_access">No access to the namespace %1$s: pick or type another one.</string>
+    <string name="kube_paged_load_more">Load next page</string>
+    <string name="kube_paged_load_all">Load all</string>
     <string name="workloads_empty">No workloads.</string>
     <string name="workloads_no_match">No workload matches “%1$s”.</string>
     <string name="workloads_ready_count">%1$d/%2$d ready</string>

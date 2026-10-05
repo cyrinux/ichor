@@ -2,12 +2,14 @@ package name.levis.ichor.ui.workloads
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,10 +61,12 @@ internal fun PagedProgress(progress: PagedLoad<*>?) {
 
 /**
  * What an incomplete list means (L8): past the cap, how much is shown and a hint to pick a
- * namespace; and, while [searching] or capped, that sorting and search only cover the loaded rows.
+ * namespace, and buttons to load the next page or the rest ([onLoadMore], [onLoadAll]: while
+ * searching, scrolling does not load more); and, while [searching] or capped, that sorting and
+ * search only cover the loaded rows.
  */
 @Composable
-internal fun IncompleteNotice(load: PagedLoad<*>, searching: Boolean) {
+internal fun IncompleteNotice(load: PagedLoad<*>, searching: Boolean, onLoadMore: () -> Unit, onLoadAll: () -> Unit) {
     if (load.done) return
     val capped = load.hasMore && load.capped
     if (!capped && !searching) return
@@ -76,6 +80,12 @@ internal fun IncompleteNotice(load: PagedLoad<*>, searching: Boolean) {
             )
         }
         InfoNotice(stringResource(R.string.kube_paged_partial_note))
+        if (capped) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = onLoadMore) { Text(stringResource(R.string.kube_paged_load_more)) }
+                TextButton(onClick = onLoadAll) { Text(stringResource(R.string.kube_paged_load_all)) }
+            }
+        }
     }
 }
 

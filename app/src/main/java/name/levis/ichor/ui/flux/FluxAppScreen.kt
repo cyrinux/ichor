@@ -118,6 +118,11 @@ private fun AppDetail(app: FluxApp, busy: Boolean, vm: FluxViewModel, overview: 
         FluxConfirmDialog(c, onConfirm = { confirm = null; vm.act(c.kind, c.namespace, c.name, c.action) }, onDismiss = { confirm = null })
     }
     restart?.let { w ->
+        // The replicas decide the downtime warning: read them fresh, unless dismissed meanwhile.
+        LaunchedEffect(w.key) {
+            val fresh = vm.restarts.current(w)
+            if (restart?.key == w.key) restart = fresh
+        }
         RestartConfirmDialog(w, onConfirm = { restart = null; vm.restarts.restart(w) }, onDismiss = { restart = null })
     }
 

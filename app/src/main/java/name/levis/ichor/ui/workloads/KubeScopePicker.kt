@@ -49,10 +49,16 @@ import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
  * The namespace the Kubernetes tabs list ([scope]), the cluster's namespaces when they could
- * be listed (null until then, or when that failed), and how to pick another one.
+ * be listed (null until then, or when that failed), and how to pick another one. Not [ready]:
+ * there is no scope to list yet, the user must type a namespace (see defaultScope).
  */
 @Stable
-class KubeScopeControl(val scope: KubeScope, val namespaces: KubeNamespaces?, val onScope: (KubeScope) -> Unit)
+class KubeScopeControl(
+    val scope: KubeScope,
+    val namespaces: KubeNamespaces?,
+    val ready: Boolean = true,
+    val onScope: (KubeScope) -> Unit,
+)
 
 /**
  * Search field and namespace picker, shared by the Workloads, Pods and CronJobs tabs: chips

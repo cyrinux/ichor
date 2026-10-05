@@ -154,9 +154,10 @@ private fun rememberKubeScope(app: TalosApp, namespaces: NamespacesViewModel, ma
     var local by rememberSaveable { mutableStateOf<String?>(null) }
     val known = (listed as? UiState.Loaded)?.data
     val remembered = if (cluster != null) stored[cluster]?.let { KubeScope.fromStored(it) } else local?.let { KubeScope.fromStored(it) }
+    // Null: namespaces cannot be listed and the context names none, the user types one.
     val scope = defaultScope(remembered, known)
     return remember(scope, known, cluster) {
-        KubeScopeControl(scope, known) { picked ->
+        KubeScopeControl(scope ?: KubeScope(), known, ready = scope != null) { picked ->
             if (cluster != null) app.kubeScopes.set(cluster, picked) else local = picked.stored
         }
     }

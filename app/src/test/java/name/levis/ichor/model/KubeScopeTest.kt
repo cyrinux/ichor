@@ -34,7 +34,14 @@ class KubeScopeTest {
         assertEquals(KubeScope("team-a"), defaultScope(null, forbidden))
         // A typed one wins.
         assertEquals(KubeScope("team-b", chosen = true), defaultScope(KubeScope("team-b", chosen = true), forbidden))
-        assertEquals(KubeScope(), defaultScope(null, KubeNamespaces(forbidden = true)))
+        // No namespace to fall back to: every namespace would be refused too, the user types one.
+        assertNull(defaultScope(null, KubeNamespaces(forbidden = true)))
+    }
+
+    @Test
+    fun recognisesARefusedList() {
+        assertTrue(isKubeForbidden("Kubernetes API: permission denied: pods is forbidden"))
+        assertFalse(isKubeForbidden("Kubernetes API: not found: x"))
     }
 
     @Test

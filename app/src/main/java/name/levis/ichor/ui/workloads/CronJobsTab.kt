@@ -44,8 +44,6 @@ import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
@@ -119,7 +117,7 @@ fun CronJobsTab(
     val progress by vm.progress.collectAsStateWithLifecycle()
     val triggering by vm.triggering.collectAsStateWithLifecycle()
     val suspending by vm.suspending.collectAsStateWithLifecycle()
-    LaunchedEffect(control.scope) { vm.setScope(control.scope) }
+    LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
     var confirm by remember { mutableStateOf<KubeCronJob?>(null) }
     var confirmSuspend by remember { mutableStateOf<KubeCronJob?>(null) }
     var expanded by remember { mutableStateOf<Set<String>>(emptySet()) }
@@ -153,47 +151,40 @@ fun CronJobsTab(
         )
     }
 
-    when (val s = state) {
-        UiState.Loading -> LoadingBox(modifier)
-        is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
-        is UiState.Loaded -> Column(modifier.fillMaxSize()) {
-            val load = s.data
-            val loadedNamespaces = remember(load) { load.items.cronNamespaces }
-            val selected = control.scope.namespace
-            val rows = remember(load, selected, query) { load.items.filteredCronJobs(selected, query, sorted = load.done) }
-            KubeFilters(control, loadedNamespaces, query, onQuery, placeholder = R.string.cronjobs_search)
-            HorizontalDivider()
-            PagedProgress(progress)
-            IncompleteNotice(load, searching = query.isNotBlank())
-            PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                if (rows.isEmpty()) {
-                    EmptyText(emptyOrNoMatch(query, R.string.cronjobs_empty, R.string.cronjobs_no_match))
-                } else {
-                    val listState = rememberLazyListState()
-                    LoadMoreOnScroll(listState, enabled = load.hasMore, loaded = load.items.size, onLoadMore = vm::loadMore)
-                    LazyColumn(
-                        Modifier.fillMaxSize(),
-                        state = listState,
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        items(rows, key = { it.key }) { c ->
-                            CronJobCard(
-                                cronJob = c,
-                                showNamespace = selected == null,
-                                expanded = c.key in expanded,
-                                triggering = c.key in triggering,
-                                suspending = c.key in suspending,
-                                onToggle = { expanded = if (c.key in expanded) expanded - c.key else expanded + c.key },
-                                onRun = { confirm = c },
-                                onSuspend = { confirmSuspend = c },
-                            )
-                        }
+    KubeListFrame(control, state, { it.cronNamespaces }, query, onQuery, vm::refresh, modifier, placeholder = R.string.cronjobs_search) { s ->
+        val load = s.data
+        val selected = control.scope.namespace
+        val rows = remember(load, selected, query) { load.items.filteredCronJobs(selected, query, sorted = load.done) }
+        PagedProgress(progress)
+        IncompleteNotice(load, searching = query.isNotBlank(), onLoadMore = vm::loadMore, onLoadAll = vm::loadAll)
+        PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
+            if (rows.isEmpty()) {
+                EmptyText(emptyOrNoMatch(query, R.string.cronjobs_empty, R.string.cronjobs_no_match))
+            } else {
+                val listState = rememberLazyListState()
+                LoadMoreOnScroll(listState, enabled = load.hasMore && query.isBlank(), loaded = load.items.size, onLoadMore = vm::loadMore)
+                LazyColumn(
+                    Modifier.fillMaxSize(),
+                    state = listState,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    items(rows, key = { it.key }) { c ->
+                        CronJobCard(
+                            cronJob = c,
+                            showNamespace = selected == null,
+                            expanded = c.key in expanded,
+                            triggering = c.key in triggering,
+                            suspending = c.key in suspending,
+                            onToggle = { expanded = if (c.key in expanded) expanded - c.key else expanded + c.key },
+                            onRun = { confirm = c },
+                            onSuspend = { confirmSuspend = c },
+                        )
                     }
                 }
             }
-            DataFreshness(s, edgeToEdge = false)
         }
+        DataFreshness(s, edgeToEdge = false)
     }
 }
 

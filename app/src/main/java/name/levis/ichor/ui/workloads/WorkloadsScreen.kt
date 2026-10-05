@@ -52,8 +52,6 @@ import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -87,7 +85,7 @@ fun WorkloadsTab(
     val state by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
     val restarting by vm.restarts.restarting.collectAsStateWithLifecycle()
-    LaunchedEffect(control.scope) { vm.setScope(control.scope) }
+    LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
     var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
     var opened by remember { mutableStateOf<String?>(null) }
     var rollback by remember { mutableStateOf<Pair<KubeWorkload, KubeRevision>?>(null) }
@@ -133,40 +131,33 @@ fun WorkloadsTab(
         )
     }
 
-    when (val s = state) {
-        UiState.Loading -> LoadingBox(modifier)
-        is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
-        is UiState.Loaded -> Column(modifier.fillMaxSize()) {
-            val load = s.data
-            val loadedNamespaces = remember(load) { load.items.namespaces }
-            val selected = control.scope.namespace
-            val rows = remember(load, selected, query) { load.items.filtered(selected, query, sorted = load.done) }
-            KubeFilters(control, loadedNamespaces, query, onQuery)
-            HorizontalDivider()
-            PagedProgress(progress)
-            IncompleteNotice(load, searching = query.isNotBlank())
-            PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                if (rows.isEmpty()) {
-                    EmptyText(emptyOrNoMatch(query, R.string.workloads_empty, R.string.workloads_no_match))
-                } else {
-                    val listState = rememberLazyListState()
-                    LoadMoreOnScroll(listState, enabled = load.hasMore, loaded = load.items.size, onLoadMore = vm::loadMore)
-                    LazyColumn(Modifier.fillMaxSize(), state = listState) {
-                        items(rows, key = { it.key }) { w ->
-                            WorkloadRow(
-                                w,
-                                showNamespace = selected == null,
-                                restarting = w.key in restarting,
-                                onRestart = { confirm = w },
-                                onOpen = { opened = w.key },
-                            )
-                            HorizontalDivider()
-                        }
+    KubeListFrame(control, state, { it.namespaces }, query, onQuery, vm::refresh, modifier) { s ->
+        val load = s.data
+        val selected = control.scope.namespace
+        val rows = remember(load, selected, query) { load.items.filtered(selected, query, sorted = load.done) }
+        PagedProgress(progress)
+        IncompleteNotice(load, searching = query.isNotBlank(), onLoadMore = vm::loadMore, onLoadAll = vm::loadAll)
+        PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
+            if (rows.isEmpty()) {
+                EmptyText(emptyOrNoMatch(query, R.string.workloads_empty, R.string.workloads_no_match))
+            } else {
+                val listState = rememberLazyListState()
+                LoadMoreOnScroll(listState, enabled = load.hasMore && query.isBlank(), loaded = load.items.size, onLoadMore = vm::loadMore)
+                LazyColumn(Modifier.fillMaxSize(), state = listState) {
+                    items(rows, key = { it.key }) { w ->
+                        WorkloadRow(
+                            w,
+                            showNamespace = selected == null,
+                            restarting = w.key in restarting,
+                            onRestart = { confirm = w },
+                            onOpen = { opened = w.key },
+                        )
+                        HorizontalDivider()
                     }
                 }
             }
-            DataFreshness(s, edgeToEdge = false)
         }
+        DataFreshness(s, edgeToEdge = false)
     }
 }
 

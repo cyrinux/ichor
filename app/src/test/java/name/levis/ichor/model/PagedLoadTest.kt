@@ -126,6 +126,8 @@ class PagedLoadTest {
             .append(KubePage(listOf(2), detailed = false))
         assertFalse(load.detailed)
         assertTrue(PagedLoad.complete(listOf(1)).detailed)
+        // A kept list of Table rows says so.
+        assertFalse(PagedLoad.complete(listOf(1), detailed = false).detailed)
     }
 
     @Test

@@ -54,6 +54,10 @@ class WorkloadRestarts(
     /** The workload whose rollout is shown live; null once the user stops following it. */
     val following: StateFlow<KubeWorkload?> = _following.asStateFlow()
 
+    /** [workload] as it is now (replicas, state), for its confirmation; [workload] if it cannot be read. */
+    suspend fun current(workload: KubeWorkload): KubeWorkload =
+        cancellableCatching { talos.workload(workload.kind, workload.namespace, workload.name) }.getOrDefault(workload)
+
     fun restart(workload: KubeWorkload) {
         if (workload.key in _restarting.value) return
         _restarting.update { it + workload.key }

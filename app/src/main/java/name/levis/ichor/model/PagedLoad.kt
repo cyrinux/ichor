@@ -70,8 +70,9 @@ data class PagedLoad<T>(
         if (hasMore) append(fetch(continueToken)) else this
 
     companion object {
-        /** A list read whole (the last known one, kept only when complete). */
-        fun <T> complete(items: List<T>): PagedLoad<T> = PagedLoad(items, remaining = 0, pages = 1, done = true)
+        /** A list read whole (the last known one, kept only when complete); see [detailed]. */
+        fun <T> complete(items: List<T>, detailed: Boolean = true): PagedLoad<T> =
+            PagedLoad(items, remaining = 0, pages = 1, done = true, detailed = detailed)
     }
 }
 

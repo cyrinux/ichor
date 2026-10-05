@@ -32,15 +32,19 @@ data class KubeScope(val namespace: String? = null, val chosen: Boolean = false)
 }
 
 /**
- * The scope to load (L5, L6): the [remembered] one, else every namespace; when namespaces
- * cannot be listed, the kubeconfig context's namespace (listing every namespace would be
- * refused too).
+ * The scope to load (L5, L6): the [remembered] one, else every namespace. When namespaces
+ * cannot be listed, listing every namespace would be refused too: the kubeconfig context's
+ * namespace, else null: the user must type one.
  */
-fun defaultScope(remembered: KubeScope?, namespaces: KubeNamespaces?): KubeScope = when {
+fun defaultScope(remembered: KubeScope?, namespaces: KubeNamespaces?): KubeScope? = when {
     remembered != null -> remembered
-    namespaces?.forbidden == true && namespaces.contextNamespace.isNotBlank() -> KubeScope(namespaces.contextNamespace)
-    else -> KubeScope()
+    namespaces == null || !namespaces.forbidden -> KubeScope()
+    namespaces.contextNamespace.isNotBlank() -> KubeScope(namespaces.contextNamespace)
+    else -> null
 }
+
+/** Whether a Go core error is the API server refusing the credentials (403). */
+fun isKubeForbidden(message: String): Boolean = message.startsWith("Kubernetes API: permission denied")
 
 /**
  * How many rows the eager load of [scope] reads (L5, L8). Every namespace by default stops

@@ -159,6 +159,11 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
         )
     }
     restart?.let { w ->
+        // The replicas decide the downtime warning: read them fresh, unless dismissed meanwhile.
+        LaunchedEffect(w.key) {
+            val fresh = vm.restarts.current(w)
+            if (restart?.key == w.key) restart = fresh
+        }
         RestartConfirmDialog(w, onConfirm = { restart = null; vm.restarts.restart(w) }, onDismiss = { restart = null })
     }
 

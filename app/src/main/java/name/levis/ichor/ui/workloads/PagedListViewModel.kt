@@ -21,9 +21,9 @@ import name.levis.ichor.ui.uiText
 /**
  * A Kubernetes list of the screen's [scope], loaded page by page (plans/roadmap/large-clusters.md):
  * eagerly up to [eagerLimit] rows (fewer when [metered]), rows shown as they arrive until the
- * first load completes, then further pages on scroll ([loadMore]) in the server's order. A
- * refresh keeps the rows on screen until the new load completes; an expired list starts again
- * silently; only a complete list is kept as the last known one.
+ * first load completes, then further pages on demand ([loadMore], [loadAll]) in the server's
+ * order. A refresh keeps the rows on screen until the new load completes; an expired list
+ * starts again silently; only a complete list is kept as the last known one.
  */
 abstract class PagedListViewModel<T>(
     protected val talos: TalosRepository,
@@ -35,10 +35,14 @@ abstract class PagedListViewModel<T>(
     /** The namespace listed; set by the screen ([setScope]). */
     var scope: KubeScope = KubeScope()
         private set
+    private var started = false
 
     private val _progress = MutableStateFlow<PagedLoad<T>?>(null)
     /** The load in flight, for its progress bar; null when none runs. */
     val progress: StateFlow<PagedLoad<T>?> = _progress.asStateFlow()
+
+    /** The load [progress] belongs to: one superseded must not clear the next one's. */
+    private var progressOwner: Any? = null
 
     private var more: Job? = null
 
@@ -48,14 +52,18 @@ abstract class PagedListViewModel<T>(
     /** One page of [namespace] ("" [token] for the first). */
     protected abstract suspend fun page(namespace: String?, token: String): KubePage<T>
 
-    override fun cached(): TalosRepository.Timed<PagedLoad<T>>? =
-        talos.cached<List<T>>(key(scope.namespace))?.let { TalosRepository.Timed(PagedLoad.complete(it.value), it.at) }
+    /** Whether rows kept from an earlier load carry what only full objects do (see [PagedLoad.detailed]). */
+    protected open fun detailed(items: List<T>): Boolean = true
 
-    /** Lists [scope] from now on; loads it unless it is already what is shown. */
+    override fun cached(): TalosRepository.Timed<PagedLoad<T>>? =
+        talos.cached<List<T>>(key(scope.namespace))?.let { TalosRepository.Timed(PagedLoad.complete(it.value, detailed(it.value)), it.at) }
+
+    /** Lists [scope] from now on; loads it the first time and when it changes, else nothing. */
     fun setScope(scope: KubeScope) {
-        if (scope == this.scope && state.value != UiState.Loading) return
+        if (scope == this.scope && started) return
         val changed = scope != this.scope
         this.scope = scope
+        started = true
         more?.cancel()
         refresh(reset = changed)
     }
@@ -63,33 +71,64 @@ abstract class PagedListViewModel<T>(
     override suspend fun fetch(): PagedLoad<T> {
         val scope = scope
         val keep = talos.keeper(key(scope.namespace))
+        val owner = startProgress()
         try {
             val load = loadPages(eagerLimit(scope, metered()), { token -> page(scope.namespace, token) }) { partial ->
-                _progress.value = partial
+                showProgress(owner, partial)
                 showPartial(partial)
             }
             if (load.done) keep(load.items)
             return load
         } finally {
-            _progress.value = null
+            endProgress(owner)
         }
     }
 
-    /** Loads the next page of a list that stopped at its cap, when the user scrolled near its end. */
-    fun loadMore() {
+    /** Loads the next page of a list that stopped at its cap (scrolled near its end, or asked). */
+    fun loadMore() = loadFurther(all = false)
+
+    /** Loads every page left of a list that stopped at its cap: the user asked for all of it. */
+    fun loadAll() = loadFurther(all = true)
+
+    private fun loadFurther(all: Boolean) {
         val loaded = state.value as? UiState.Loaded ?: return
-        val current = loaded.data
-        if (!current.hasMore || loaded.refreshing || more?.isActive == true) return
+        val start = loaded.data
+        if (!start.hasMore || loaded.refreshing || more?.isActive == true) return
         val scope = scope
+        val keep = talos.keeper(key(scope.namespace))
         more = viewModelScope.launch {
+            val owner = if (all) startProgress() else null
+            var shown = start
             try {
-                replaceLoaded(current, current.loadMore { token -> page(scope.namespace, token) })
+                do {
+                    val next = shown.loadMore { token -> page(scope.namespace, token) }
+                    // A refresh replaced the list meanwhile: it is the one to follow.
+                    if (!replaceLoaded(shown, next)) return@launch
+                    shown = next
+                    owner?.let { showProgress(it, next) }
+                } while (all && shown.hasMore)
+                // Complete at last: the last known state from now on (L12).
+                if (shown.done) keep(shown.items)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
                 // An expired list starts again from its first page (L12).
-                if (e.isKubeListExpired()) refresh() else replaceLoaded(current, current, e.uiText())
+                if (e.isKubeListExpired()) refresh() else replaceLoaded(shown, shown, e.uiText())
+            } finally {
+                owner?.let { endProgress(it) }
             }
         }
+    }
+
+    private fun startProgress(): Any = Any().also { progressOwner = it }
+
+    private fun showProgress(owner: Any, load: PagedLoad<T>) {
+        if (progressOwner === owner) _progress.value = load
+    }
+
+    private fun endProgress(owner: Any) {
+        if (progressOwner !== owner) return
+        progressOwner = null
+        _progress.value = null
     }
 }

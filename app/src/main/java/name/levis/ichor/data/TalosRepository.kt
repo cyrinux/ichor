@@ -555,6 +555,20 @@ class TalosRepository(
         TalosJson.decodeFromString(KubeWorkloadPage.serializer(), json).toPage()
     }
 
+    /** One workload as it is now (os:admin): its replicas, for a restart asked outside the Workloads list. */
+    suspend fun workload(kind: String, namespace: String, name: String): KubeWorkload = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeWorkload.serializer(), Ichorgo.kubeWorkload(cfg, ctx, server, kind, namespace, name))
+    }
+
+    /**
+     * The workload from a list already loaded: of its namespace, of every namespace, or the
+     * whole list ([workloads]); null when none holds it.
+     */
+    fun cachedWorkload(kind: String, namespace: String, name: String): KubeWorkload? =
+        listOf(workloadsKey(namespace), workloadsKey(null), WORKLOADS).firstNotNullOfOrNull { key ->
+            cached<List<KubeWorkload>>(key)?.value?.firstOrNull { it.kind == kind && it.namespace == namespace && it.name == name }
+        }
+
     /** One page of the CronJobs of [namespace] (null for every one) with their runs, as [podsPage] (os:admin). */
     suspend fun cronJobsPage(namespace: String?, token: String, limit: Int = KUBE_PAGE_SIZE): KubePage<KubeCronJob> = kubeCall { cfg, ctx, server ->
         val json = Ichorgo.kubeCronJobsPage(cfg, ctx, server, namespace.orEmpty(), token, limit.toLong())

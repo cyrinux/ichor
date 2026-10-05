@@ -91,13 +91,13 @@ abstract class LoadingViewModel<T> : ViewModel() {
 
     /**
      * Replaces the data on screen, [expected], with [value] (a page loaded on scroll), or
-     * marks it with [error]; nothing when a refresh replaced it meanwhile.
+     * marks it with [error]; nothing, and false, when a refresh replaced it meanwhile.
      */
-    protected fun replaceLoaded(expected: T, value: T, error: UiText? = null) {
+    protected fun replaceLoaded(expected: T, value: T, error: UiText? = null): Boolean {
         val current = _state.value
-        if (current is UiState.Loaded && current.data === expected && !current.refreshing) {
-            _state.value = current.copy(data = value, error = error)
-        }
+        if (current !is UiState.Loaded || current.data !== expected || current.refreshing) return false
+        _state.value = current.copy(data = value, error = error)
+        return true
     }
 
     /** Until something is on screen, shows the last known value as soon as it was read from disk. */

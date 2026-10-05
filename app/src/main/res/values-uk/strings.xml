@@ -1438,6 +1438,10 @@
     <string name="kube_paged_capped">Показано %1$s з ~%2$s — виберіть простір імен</string>
     <string name="kube_paged_capped_unknown">Показано перші %1$s — виберіть простір імен</string>
     <string name="kube_paged_partial_note">Сортування та пошук охоплюють лише завантажені рядки.</string>
+    <string name="kube_scope_type_prompt">Введіть вище простір імен для перегляду.</string>
+    <string name="kube_scope_no_access">Немає доступу до простору імен %1$s: виберіть або введіть інший.</string>
+    <string name="kube_paged_load_more">Завантажити наступну сторінку</string>
+    <string name="kube_paged_load_all">Завантажити все</string>
     <string name="workloads_empty">Немає робочих навантажень.</string>
     <string name="workloads_no_match">Немає робочих навантажень, що відповідають «%1$s».</string>
     <string name="workloads_ready_count">%1$d/%2$d готові</string>

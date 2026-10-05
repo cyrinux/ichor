@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.data.FLUX
 import name.levis.ichor.data.TalosRepository
-import name.levis.ichor.data.WORKLOADS
 import name.levis.ichor.model.FluxAction
 import name.levis.ichor.model.FluxResource
 import name.levis.ichor.model.FluxStatus
@@ -123,10 +122,12 @@ class FluxViewModel(private val talos: TalosRepository) : ViewModel() {
         }
     }
 
-    /** The workload behind [resource], from the Kubernetes screen's list when loaded (its replicas matter to the confirmation). */
+    /**
+     * The workload behind [resource] at once, from a Kubernetes list when one holds it (its
+     * replicas matter to the confirmation); [WorkloadRestarts.current] reads it fresh.
+     */
     fun workloadFor(resource: FluxResource): KubeWorkload =
-        talos.cached<List<KubeWorkload>>(WORKLOADS)?.value
-            ?.firstOrNull { it.kind == resource.kind && it.namespace == resource.namespace && it.name == resource.name }
+        talos.cachedWorkload(resource.kind, resource.namespace, resource.name)
             ?: KubeWorkload(kind = resource.kind, namespace = resource.namespace, name = resource.name, desired = UNKNOWN_REPLICAS)
 
     private fun boost() {
