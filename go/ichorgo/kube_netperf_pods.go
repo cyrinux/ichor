@@ -49,7 +49,7 @@ type nodeObject struct {
 func listNetPerfNodes(ctx context.Context, k *kubeClient) (netPerfNodeList, error) {
 	var list kubeList[nodeObject]
 
-	if err := k.get(ctx, "/api/v1/nodes", &list); err != nil {
+	if err := getList(ctx, k, "/api/v1/nodes", &list); err != nil {
 		return netPerfNodeList{}, err
 	}
 

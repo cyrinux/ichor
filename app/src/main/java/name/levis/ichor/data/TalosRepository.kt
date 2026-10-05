@@ -33,7 +33,6 @@ import name.levis.ichor.model.KubeSpanOverview
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubeCronJob
 import name.levis.ichor.model.KubeCronJobList
-import name.levis.ichor.model.KubePodList
 import name.levis.ichor.model.KubePodPage
 import name.levis.ichor.model.KubeCronJobPage
 import name.levis.ichor.model.KubeWorkloadPage
@@ -43,6 +42,7 @@ import name.levis.ichor.model.KUBE_PAGE_SIZE
 import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.KubeRouteList
 import name.levis.ichor.model.RoutePod
+import name.levis.ichor.model.WorkloadRef
 import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeRevision
 import name.levis.ichor.model.KubeRevisionList
@@ -462,9 +462,19 @@ class TalosRepository(
     /** Admin kubeconfig (os:admin role). A credential: only hand it to where the user chose. */
     suspend fun kubeconfig(): String = kubeCall { cfg, ctx, server -> Ichorgo.kubeconfig(cfg, ctx, server) }
 
-    /** Deployments, StatefulSets and DaemonSets through the Kubernetes API (os:admin: Talos issues the kubeconfig). */
-    suspend fun workloads(): List<KubeWorkload> = remember(WORKLOADS) {
-        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubeWorkloadList.serializer(), Ichorgo.kubeWorkloads(cfg, ctx, server)).workloads }
+    /**
+     * The Deployments, StatefulSets and DaemonSets running [pods] (an app's), through their
+     * owners (os:admin): only those pods and owners are read, never a cluster-wide list.
+     */
+    suspend fun appWorkloads(pods: List<RoutePod>): List<KubeWorkload> = kubeCall { cfg, ctx, server ->
+        val json = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
+        TalosJson.decodeFromString(KubeWorkloadList.serializer(), Ichorgo.kubeAppWorkloads(cfg, ctx, server, json)).workloads
+    }
+
+    /** [workloads] as they are now (os:admin); one deleted since is left out. */
+    suspend fun workloadsNamed(workloads: List<WorkloadRef>): List<KubeWorkload> = kubeCall { cfg, ctx, server ->
+        val json = TalosJson.encodeToString(ListSerializer(WorkloadRef.serializer()), workloads)
+        TalosJson.decodeFromString(KubeWorkloadList.serializer(), Ichorgo.kubeWorkloadsNamed(cfg, ctx, server, json)).workloads
     }
 
     /** `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin). */
@@ -525,11 +535,6 @@ class TalosRepository(
         Ichorgo.kubePodLogs(cfg, ctx, server, pod.namespace, pod.name, container, previous, tailLines.toLong())
     }
 
-    /** Every pod with the status `kubectl get pods` shows (os:admin). */
-    suspend fun pods(): List<KubePod> = remember(PODS) {
-        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubePodList.serializer(), Ichorgo.kubePods(cfg, ctx, server)).pods }
-    }
-
     /** The cluster's namespaces, to pick the scope of the Kubernetes lists (os:admin). */
     suspend fun namespaces(): KubeNamespaces = remember(NAMESPACES) {
         kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubeNamespaces.serializer(), Ichorgo.kubeNamespaces(cfg, ctx, server)) }
@@ -562,11 +567,11 @@ class TalosRepository(
     }
 
     /**
-     * The workload from a list already loaded: of its namespace, of every namespace, or the
-     * whole list ([workloads]); null when none holds it.
+     * The workload from a list already loaded: of its namespace or of every namespace; null
+     * when none holds it.
      */
     fun cachedWorkload(kind: String, namespace: String, name: String): KubeWorkload? =
-        listOf(workloadsKey(namespace), workloadsKey(null), WORKLOADS).firstNotNullOfOrNull { key ->
+        listOf(workloadsKey(namespace), workloadsKey(null)).firstNotNullOfOrNull { key ->
             cached<List<KubeWorkload>>(key)?.value?.firstOrNull { it.kind == kind && it.namespace == namespace && it.name == name }
         }
 

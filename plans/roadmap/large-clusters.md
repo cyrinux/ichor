@@ -1,6 +1,6 @@
 # U11. Large clusters: home at scale, namespace-first paged lists
 
-Status: **partial**. Size L. Read [README.md](README.md) for the conventions.
+Status: **implemented** (phases 1–5). Size L. Read [README.md](README.md) for the conventions.
 
 ## What exists today
 
@@ -76,6 +76,39 @@ mobile data, without breaking the small-homelab experience (which must not chang
 3. Android: namespace-first scope, `PagedLoad`, progress, cap fallback; Pods, then Workloads and CronJobs. (M)
 4. iOS parity for 1 and 3. (M)
 5. Drill-down selectors (node → pods, workload → pods) on the paged path; CRD lists (Argo, Longhorn…) on the same loop. (S)
+
+Phases 1–5 are done.
+
+## Phase 5 notes
+
+- **Selectors** (`kube_pods_selected.go`): `KubeNodePodsPage` (`fieldSelector=spec.nodeName=`) and
+  `KubeWorkloadPodsPage` (the workload's `spec.selector`, matchLabels and matchExpressions, as a
+  `labelSelector`; an empty or unwritable selector lists nothing), both with an optional phase
+  (`Running`, `!Succeeded`), page by page like `KubePodsPage`. `just probe node-pods` /
+  `workload-pods`. No app screen lists the Kubernetes pods of a node or workload yet: the node
+  Pods tab reads the containers through Talos CRI, and the rollout sheet already used the
+  workload's selector (now with matchExpressions too).
+- **App workloads** (app detail sheet, both apps): `KubeAppWorkloads` reads only the app's pods
+  (one GET each when a namespace holds ≤ 8 of them, else that namespace's Table page by page)
+  and each owner, instead of every pod and workload of the cluster; after a restart
+  `KubeWorkloadsNamed` reads those found again (one deleted since drops out). With the privacy
+  mask on, the masked namespaces and pod/workload names the app sends back map to the real ones
+  (`learnNames`, learned from the inventory and the lists). The apps' `ownersOf` /
+  `workloadOwners` moved into Go; Android's whole-cluster `pods()`/`workloads()` are gone.
+- **Argo CD / Flux unhealthy pods**: only the namespaces of apps in trouble, one by one (one
+  cluster-wide list past 16), with `fieldSelector=status.phase!=Succeeded`, paged.
+- **Routes**: an app's pods are read one by one (≤ 8 per namespace) instead of listing their
+  namespace; Ingress/HTTPRoute/Gateway lists stay cluster-wide (an HTTPRoute may point across
+  namespaces) but are paged.
+- **Network policies**: still cluster-wide (the view is the whole cluster's), paged, without
+  finished pods (`status.phase!=Succeeded,status.phase!=Failed`).
+- **CRD and other lists** go through `getList` (`kube_list.go`, the paged loop, `limit=500`,
+  `410` restart): Argo CD, Flux, cert-manager, CNPG, Longhorn, MariaDB, Percona, Rook-Ceph,
+  Velero, Dragonfly, Garage services, Prometheus discovery, network policies, routes, drain
+  pods/PDBs, rollout pods/ReplicaSets. Their public functions and outputs are unchanged.
+- **Left**: `KubePods`/`KubeWorkloads`/`KubeCronJobs` (whole cluster, already paged inside) stay
+  for iOS' last-known domains; small namespace-scoped lists (HPAs, netperf's own namespaces)
+  keep a single GET.
 
 ## Out of scope
 

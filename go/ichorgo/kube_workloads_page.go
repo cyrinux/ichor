@@ -13,7 +13,7 @@ func KubeWorkload(configYAML, contextName, kubeServer, kind, namespace, name str
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
-	namespace, name = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
+	namespace, name = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.revealName(strings.TrimSpace(name))
 
 	wk, err := findWorkloadKind(kind)
 	if err != nil {
@@ -90,7 +90,7 @@ func KubeWorkloadsPage(configYAML, contextName, kubeServer, kind, namespace, con
 		},
 		func(ctx context.Context, k *kubeClient) (kubeWorkloadPage, error) {
 			page, err := listWorkloadsPage(ctx, k, wk, args.namespace, pageQuery{limit: args.limit, continueToken: args.continueToken})
-			privacy.learnNamespaces(namespacesOf(page.Workloads, func(w kubeWorkload) string { return w.Namespace }))
+			learnWorkloadNames(page.Workloads)
 
 			return page, err
 		})

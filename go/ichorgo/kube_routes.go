@@ -35,6 +35,22 @@ type routePod struct {
 	Pod       string `json:"pod"`
 }
 
+// decodeRoutePods reads the pods the app sends ([{namespace,pod}]) and maps masked names back
+// to the real ones, learned when they were handed out (the inventory): an extra mask word
+// cannot be revealed from the fake alone.
+func decodeRoutePods(pods string) ([]routePod, error) {
+	var refs []routePod
+	if err := json.Unmarshal([]byte(pods), &refs); err != nil {
+		return nil, fmt.Errorf("invalid pod list: %w", err)
+	}
+
+	for i, r := range refs {
+		refs[i] = routePod{Namespace: privacy.revealNamespace(r.Namespace), Pod: privacy.revealName(r.Pod)}
+	}
+
+	return refs, nil
+}
+
 // serviceRef is a Service by namespace and name.
 type serviceRef struct{ namespace, name string }
 
@@ -48,9 +64,9 @@ func KubeAppRoutes(configYAML, contextName, kubeServer, pods string) (out string
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	var refs []routePod
-	if err := json.Unmarshal([]byte(privacy.reveal(pods)), &refs); err != nil {
-		return "", fmt.Errorf("invalid pod list: %w", err)
+	refs, err := decodeRoutePods(pods)
+	if err != nil {
+		return "", err
 	}
 
 	demo := func() kubeRouteList { return kubeRouteList{Routes: demoRoutes(refs)} }
@@ -76,13 +92,13 @@ func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteLi
 
 	var wg sync.WaitGroup
 
-	wg.Go(func() { errs[0] = k.get(ctx, "/apis/networking.k8s.io/v1/ingresses", &ingresses) })
+	wg.Go(func() { errs[0] = getList(ctx, k, "/apis/networking.k8s.io/v1/ingresses", &ingresses) })
 	// The Gateway API is optional: without its CRDs, no HTTPRoute.
 	wg.Go(func() {
-		errs[1] = ignoreNotFound(k.get(ctx, "/apis/gateway.networking.k8s.io/v1/httproutes", &httpRoutes))
+		errs[1] = ignoreNotFound(getList(ctx, k, "/apis/gateway.networking.k8s.io/v1/httproutes", &httpRoutes))
 	})
 	// Only used to tell http from https: a URL is still worth showing without it.
-	wg.Go(func() { _ = k.get(ctx, "/apis/gateway.networking.k8s.io/v1/gateways", &gateways) })
+	wg.Go(func() { _ = getList(ctx, k, "/apis/gateway.networking.k8s.io/v1/gateways", &gateways) })
 	wg.Wait()
 
 	if err := errors.Join(errs...); err != nil {
@@ -139,13 +155,13 @@ func servicesOfPods(ctx context.Context, k *kubeClient, pods []routePod) (map[se
 	for _, ns := range slices.Sorted(maps.Keys(wanted)) {
 		base := "/api/v1/namespaces/" + url.PathEscape(ns)
 
-		var podList kubeList[labeledObject]
-		if err := k.get(ctx, base+"/pods", &podList); err != nil {
+		podList, err := readLabeledPods(ctx, k, ns, wanted[ns])
+		if err != nil {
 			return nil, err
 		}
 
 		var svcList kubeList[serviceObject]
-		if err := k.get(ctx, base+"/services", &svcList); err != nil {
+		if err := getList(ctx, k, base+"/services", &svcList); err != nil {
 			return nil, err
 		}
 
@@ -163,6 +179,38 @@ func servicesOfPods(ctx context.Context, k *kubeClient, pods []routePod) (map[se
 	}
 
 	return found, nil
+}
+
+// routePodsByName is how many pods of a namespace readLabeledPods reads one by one before
+// it lists the namespace instead.
+const routePodsByName = 8
+
+// readLabeledPods reads the labels of the pods names of namespace: one GET each when they are
+// few (a pod gone since is skipped), else the namespace's list page by page.
+func readLabeledPods(ctx context.Context, k *kubeClient, namespace string, names map[string]bool) (kubeList[labeledObject], error) {
+	var list kubeList[labeledObject]
+
+	base := "/api/v1/namespaces/" + url.PathEscape(namespace) + "/pods"
+	if len(names) > routePodsByName {
+		err := getList(ctx, k, base, &list)
+
+		return list, err
+	}
+
+	for _, name := range slices.Sorted(maps.Keys(names)) {
+		var pod labeledObject
+
+		switch err := k.get(ctx, base+"/"+url.PathEscape(name), &pod); {
+		case isNotFound(err):
+			continue
+		case err != nil:
+			return list, err
+		}
+
+		list.Items = append(list.Items, pod)
+	}
+
+	return list, nil
 }
 
 // selects tells whether a Service selector matches labels; an empty one selects nothing

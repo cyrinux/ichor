@@ -51,7 +51,7 @@ Every idea was checked against the code (Go core, Android, iOS) on 2026-10-04. S
 | U8 | Tablet / foldable layout | **missing** (iPad allowed but single column) | L |
 | U9 | Shareable incident summary | **partial**: support bundle + diagnosis prompt share; recorder has no export | S |
 | U10 | Onboarding (multi-QR import, demo tour) | **partial**: QR import (≈2.9 KB limit) and demo exist | S |
-| U11 | Large clusters: dense home, namespace-first paged lists ([large-clusters.md](large-clusters.md)) | **partial**: lists are virtualised, but home draws every node and Kubernetes lists are one cluster-wide GET capped at 32 MiB | L |
+| U11 | Large clusters: dense home, namespace-first paged lists ([large-clusters.md](large-clusters.md)) | **implemented**: dense home, namespace-first paged lists, drill-down selectors, paged CRD lists | L |
 
 ## Order
 

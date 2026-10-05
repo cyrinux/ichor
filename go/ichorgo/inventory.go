@@ -102,7 +102,10 @@ func ClusterInventory(configYAML, contextName string) (out string, err error) {
 			}
 		}
 
-		return inventoryJSON(buildInventory(time.Now().UnixMilli(), len(nodes), answered))
+		inv := buildInventory(time.Now().UnixMilli(), len(nodes), answered)
+		learnInventoryNames(inv)
+
+		return inventoryJSON(inv)
 	})
 }
 
@@ -150,6 +153,22 @@ type placedContainer struct {
 	ref     imageRef
 	id      identification
 	adopted bool // identified by its pod, not by its own image
+}
+
+// learnInventoryNames lets the privacy mask map the apps' masked namespaces and pod names back
+// to the real ones: the app sends them back to find their routes and workloads.
+func learnInventoryNames(inv inventory) {
+	var namespaces, pods []string
+
+	for _, a := range inv.Apps {
+		for _, p := range a.Pods {
+			namespaces = append(namespaces, p.Namespace)
+			pods = append(pods, p.Pod)
+		}
+	}
+
+	privacy.learnNamespaces(namespaces)
+	privacy.learnNames(pods)
 }
 
 func buildInventory(at int64, total int, nodes []nodeContainers) inventory {

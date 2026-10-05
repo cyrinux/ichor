@@ -76,7 +76,9 @@ type maskState struct {
 	// namespacesBack maps the masked form of the Kubernetes namespaces handed to the app
 	// back to the real ones (see learnNamespaces): extra words cannot be revealed otherwise.
 	namespacesBack map[string]string
-	terms          []maskTerm // built lazily from the maps above, longest first
+	// namesBack does the same for the names of pods and workloads (see learnNames).
+	namesBack map[string]string
+	terms     []maskTerm // built lazily from the maps above, longest first
 
 	// avoid is text no fake may be found in. It makes the fakes unambiguous where they are
 	// turned back into the real values (reveal): a fake never equals something real.
@@ -134,6 +136,7 @@ func (m *privacyMask) resetLocked() {
 		hosts: map[string]string{}, hostsBack: map[string]string{}, targets: map[string]string{}, roleCount: map[string]int{},
 		contexts: map[string]string{}, contextsBack: map[string]string{}, contextParts: map[string]string{},
 		domains: map[string]bool{}, configs: map[string]bool{}, namespacesBack: map[string]string{},
+		namesBack: map[string]string{},
 	}
 }
 

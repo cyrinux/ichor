@@ -201,12 +201,6 @@ struct TalosClient: Sendable {
         try await Self.run { [config, context, kubeServer] in IchorgoKubeconfig(config, context, kubeServer, $0) }
     }
 
-    /// Deployments, StatefulSets and DaemonSets through the Kubernetes API (os:admin: Talos issues the kubeconfig).
-    func workloads() async throws -> [KubeWorkload] {
-        let list: KubeWorkloadList = try await Self.json { [config, context, kubeServer] in IchorgoKubeWorkloads(config, context, kubeServer, $0) }
-        return list.workloads
-    }
-
     /// `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin).
     func rolloutRestart(_ workload: KubeWorkload) async throws {
         try await Self.run { [config, context, kubeServer] error -> Void in
@@ -228,6 +222,25 @@ struct TalosClient: Sendable {
         }
     }
 
+    /// The Deployments, StatefulSets and DaemonSets running pods (an app's), through their
+    /// owners (os:admin): only those pods and workloads are read, never a cluster-wide list.
+    func appWorkloads(pods: [RoutePod]) async throws -> [KubeWorkload] {
+        let encoded = String(decoding: try JSONEncoder().encode(pods), as: UTF8.self)
+        let list: KubeWorkloadList = try await Self.json { [config, context, kubeServer] in
+            IchorgoKubeAppWorkloads(config, context, kubeServer, encoded, $0)
+        }
+        return list.workloads
+    }
+
+    /// workloads as they are now (os:admin); one deleted since is left out.
+    func workloadsNamed(_ workloads: [WorkloadRef]) async throws -> [KubeWorkload] {
+        let encoded = String(decoding: try JSONEncoder().encode(workloads), as: UTF8.self)
+        let list: KubeWorkloadList = try await Self.json { [config, context, kubeServer] in
+            IchorgoKubeWorkloadsNamed(config, context, kubeServer, encoded, $0)
+        }
+        return list.workloads
+    }
+
     /// The Ingress and HTTPRoute URLs serving pods (os:admin).
     func appRoutes(pods: [RoutePod]) async throws -> [KubeRoute] {
         let encoded = String(decoding: try JSONEncoder().encode(pods), as: UTF8.self)
@@ -235,12 +248,6 @@ struct TalosClient: Sendable {
             IchorgoKubeAppRoutes(config, context, kubeServer, encoded, $0)
         }
         return list.routes
-    }
-
-    /// Every pod with the status `kubectl get pods` shows (os:admin).
-    func pods() async throws -> [KubePod] {
-        let list: KubePodList = try await Self.json { [config, context, kubeServer] in IchorgoKubePods(config, context, kubeServer, $0) }
-        return list.pods
     }
 
     /// `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one.

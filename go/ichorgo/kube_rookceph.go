@@ -143,10 +143,10 @@ func readCeph(ctx context.Context, k *kubeClient, version string) *cephStatus {
 		wg          sync.WaitGroup
 	)
 
-	wg.Go(func() { errs[0] = k.get(ctx, base+"cephclusters", &clusters) })
-	wg.Go(func() { errs[1] = k.get(ctx, base+"cephblockpools", &blockPools) })
-	wg.Go(func() { errs[2] = k.get(ctx, base+"cephfilesystems", &filesystems) })
-	wg.Go(func() { errs[3] = k.get(ctx, base+"cephobjectstores", &objStores) })
+	wg.Go(func() { errs[0] = getList(ctx, k, base+"cephclusters", &clusters) })
+	wg.Go(func() { errs[1] = getList(ctx, k, base+"cephblockpools", &blockPools) })
+	wg.Go(func() { errs[2] = getList(ctx, k, base+"cephfilesystems", &filesystems) })
+	wg.Go(func() { errs[3] = getList(ctx, k, base+"cephobjectstores", &objStores) })
 	wg.Go(func() { pods, errs[4] = listDSPods(ctx, k, "app in (rook-ceph-osd,rook-ceph-mon)") })
 	wg.Wait()
 

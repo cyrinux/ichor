@@ -215,13 +215,13 @@ func readLonghorn(ctx context.Context, k *kubeClient, version string) *longhornS
 		wg       sync.WaitGroup
 	)
 
-	wg.Go(func() { errs[0] = k.get(ctx, base+"volumes", &volumes) })
-	wg.Go(func() { errs[1] = k.get(ctx, base+"replicas", &replicas) })
-	wg.Go(func() { errs[2] = k.get(ctx, base+"nodes", &nodes) })
+	wg.Go(func() { errs[0] = getList(ctx, k, base+"volumes", &volumes) })
+	wg.Go(func() { errs[1] = getList(ctx, k, base+"replicas", &replicas) })
+	wg.Go(func() { errs[2] = getList(ctx, k, base+"nodes", &nodes) })
 	// Older releases have no BackupTarget resource: its absence is not an error.
-	wg.Go(func() { _ = k.get(ctx, base+"backuptargets", &targets) })
+	wg.Go(func() { _ = getList(ctx, k, base+"backuptargets", &targets) })
 	// Engines only add progress: without them the volumes still read right.
-	wg.Go(func() { _ = k.get(ctx, base+"engines", &engines) })
+	wg.Go(func() { _ = getList(ctx, k, base+"engines", &engines) })
 	wg.Wait()
 
 	out := mapLonghorn(version, volumes.Items, replicas.Items, nodes.Items, targets.Items, sectionError(errs...))

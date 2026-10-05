@@ -89,8 +89,8 @@ func rolloutStatus(ctx context.Context, k *kubeClient, wk workloadKind, namespac
 		Pods:     []kubeRolloutPod{},
 	}
 
-	selector := matchLabelsSelector(obj.Spec.Selector.MatchLabels)
-	if selector == "" {
+	selector, ok := selectorQuery(obj.Spec.Selector)
+	if !ok {
 		return st, nil
 	}
 
@@ -102,7 +102,7 @@ func rolloutStatus(ctx context.Context, k *kubeClient, wk workloadKind, namespac
 	}
 
 	var pods kubeList[podObject]
-	if err := k.get(ctx, "/api/v1/namespaces/"+url.PathEscape(namespace)+"/pods"+query, &pods); err != nil {
+	if err := getList(ctx, k, "/api/v1/namespaces/"+url.PathEscape(namespace)+"/pods"+query, &pods); err != nil {
 		return kubeRolloutStatus{}, err
 	}
 
@@ -164,7 +164,7 @@ func podRevision(ctx context.Context, k *kubeClient, wk workloadKind, obj appsOb
 	}
 
 	var list kubeList[replicaSetObject]
-	if err := k.get(ctx, replicaSets, &list); err != nil {
+	if err := getList(ctx, k, replicaSets, &list); err != nil {
 		return nil, nil, err
 	}
 
@@ -219,7 +219,6 @@ func (rs replicaSetObject) ownedBy(deployment string) bool {
 }
 
 // matchLabelsSelector is the labelSelector query of matchLabels, "" when there are none.
-// matchExpressions are left out: owner references narrow the pods down anyway.
 func matchLabelsSelector(labels map[string]string) string {
 	parts := make([]string, 0, len(labels))
 	for k, v := range labels {

@@ -2,7 +2,8 @@ import SwiftUI
 import IchorCore
 
 /// The Deployments, StatefulSets and DaemonSets running an app, each with a rollout restart
-/// (os:admin): found through its pods' owners in the Kubernetes API when the sheet opens.
+/// (os:admin): found through its pods' owners in the Kubernetes API when the sheet opens; only
+/// those pods and workloads are read, never a cluster-wide list.
 struct AppWorkloadsSection: View {
     let app: InventoryApp
 
@@ -10,7 +11,7 @@ struct AppWorkloadsSection: View {
     @State private var state: LoadState<[KubeWorkload]> = .loading
     /// Those found for app: a restart replaces its pods, so after one the inventory's pod names
     /// no longer lead to their workloads; only their state is fetched again.
-    @State private var ids: Set<String>?
+    @State private var found: [KubeWorkload]?
     @State private var confirm: KubeWorkload?
     @State private var restarting: Set<String> = []
     @State private var resultMessage: String?
@@ -35,7 +36,7 @@ struct AppWorkloadsSection: View {
             }
         }
         .task(id: app) {
-            ids = nil
+            found = nil
             state = .loading
             await load()
         }
@@ -46,15 +47,16 @@ struct AppWorkloadsSection: View {
 
     private func load() async {
         guard let client = model.client else { return }
-        let found: LoadState<[KubeWorkload]> = await .from {
-            let workloads = try await model.fetch(.workloads, as: KubeWorkloadList.self, with: client).workloads
-            if let ids { return workloads.filter { ids.contains($0.id) } }
-            guard !app.pods.isEmpty else { return [] }
-            let kubePods = try await model.fetch(.pods, as: KubePodList.self, with: client).pods
-            return workloadOwners(workloads, pods: app.pods, kubePods: kubePods)
+        let known = found
+        let pods = app.routePods
+        let result: LoadState<[KubeWorkload]> = await .from {
+            // One deleted since drops out.
+            if let known { return try await client.workloadsNamed(known.map(\.ref)) }
+            guard !pods.isEmpty else { return [] }
+            return try await client.appWorkloads(pods: pods)
         }
-        if ids == nil, case .loaded(let workloads, _, _) = found { ids = Set(workloads.map(\.id)) }
-        state = state.refreshed(with: found)
+        if found == nil, case .loaded(let workloads, _, _) = result { found = workloads }
+        state = state.refreshed(with: result)
     }
 
     private func restart(_ workload: KubeWorkload) async {

@@ -143,11 +143,13 @@ func readCNPG(ctx context.Context, k *kubeClient, src cnpgSources, now time.Time
 		wg        sync.WaitGroup
 	)
 
-	wg.Go(func() { errs[0] = k.get(ctx, base+"clusters", &clusters) })
-	wg.Go(func() { errs[1] = k.get(ctx, base+"scheduledbackups", &scheduled) })
+	wg.Go(func() { errs[0] = getList(ctx, k, base+"clusters", &clusters) })
+	wg.Go(func() { errs[1] = getList(ctx, k, base+"scheduledbackups", &scheduled) })
 
 	if src.pluginVersion != "" {
-		wg.Go(func() { errs[2] = k.get(ctx, "/apis/"+groupBarmanPlug+"/"+src.pluginVersion+"/objectstores", &stores) })
+		wg.Go(func() {
+			errs[2] = getList(ctx, k, "/apis/"+groupBarmanPlug+"/"+src.pluginVersion+"/objectstores", &stores)
+		})
 	}
 
 	wg.Wait()

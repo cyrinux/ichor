@@ -113,33 +113,21 @@ public func filterWorkloads(_ workloads: [KubeWorkload], namespace: String?, que
         }
 }
 
-/// The workloads that run pods (an app's, from the inventory), through each pod's owner in
-/// kubePods: a StatefulSet or DaemonSet directly, a Deployment through its ReplicaSet, named
-/// `<deployment>-<pod-template-hash>`. Pods without such an owner (static, Job, bare) are left
-/// out. In the order of workloads.
-public func workloadOwners(_ workloads: [KubeWorkload], pods: [InventoryPod], kubePods: [KubePod]) -> [KubeWorkload] {
-    let owners = Dictionary(kubePods.map { ($0.id, $0.owner) }, uniquingKeysWith: { first, _ in first })
-    let wanted = Set(pods.compactMap { pod in
-        owners["\(pod.namespace)/\(pod.pod)"].flatMap { workloadKey(namespace: pod.namespace, owner: $0) }
-    })
-    return workloads.filter { wanted.contains($0.id) }
+/// A workload by kind, namespace and name, as KubeWorkloadsNamed takes it.
+public struct WorkloadRef: Encodable, Hashable, Sendable {
+    public let kind: String
+    public let namespace: String
+    public let name: String
+
+    public init(kind: String, namespace: String, name: String) {
+        self.kind = kind
+        self.namespace = namespace
+        self.name = name
+    }
 }
 
-/// The KubeWorkload id an owner reference ("ReplicaSet/web-5d8f") stands for; nil for other kinds.
-private func workloadKey(namespace: String, owner: String) -> String? {
-    guard let slash = owner.firstIndex(of: "/") else { return nil }
-    let kind = owner[..<slash]
-    let name = owner[owner.index(after: slash)...]
-    guard !name.isEmpty else { return nil }
-    switch kind {
-    case "StatefulSet", "DaemonSet":
-        return "\(kind)/\(namespace)/\(name)"
-    case "ReplicaSet":
-        guard let dash = name.lastIndex(of: "-"), dash > name.startIndex else { return nil }
-        return "Deployment/\(namespace)/\(name[..<dash])"
-    default:
-        return nil
-    }
+extension KubeWorkload {
+    public var ref: WorkloadRef { WorkloadRef(kind: kind, namespace: namespace, name: name) }
 }
 
 /// One workload's rollout with its pods, old and new (KubeRolloutStatus), polled while it rolls out.

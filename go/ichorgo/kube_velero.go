@@ -153,9 +153,9 @@ func readVelero(ctx context.Context, k *kubeClient, now time.Time) *veleroStatus
 		wg        sync.WaitGroup
 	)
 
-	wg.Go(func() { errs[0] = k.get(ctx, base+"schedules", &schedules) })
-	wg.Go(func() { errs[1] = k.get(ctx, base+"backups", &backups) })
-	wg.Go(func() { errs[2] = k.get(ctx, base+"backupstoragelocations", &locations) })
+	wg.Go(func() { errs[0] = getList(ctx, k, base+"schedules", &schedules) })
+	wg.Go(func() { errs[1] = getList(ctx, k, base+"backups", &backups) })
+	wg.Go(func() { errs[2] = getList(ctx, k, base+"backupstoragelocations", &locations) })
 	wg.Wait()
 
 	out := mapVelero(schedules.Items, backups.Items, locations.Items, now)

@@ -248,7 +248,7 @@ func listDSPods(ctx context.Context, k *kubeClient, selector string) ([]dsPod, e
 
 	var list kubeList[dsPod]
 
-	if err := k.get(ctx, path, &list); err != nil {
+	if err := getList(ctx, k, path, &list); err != nil {
 		return nil, err
 	}
 

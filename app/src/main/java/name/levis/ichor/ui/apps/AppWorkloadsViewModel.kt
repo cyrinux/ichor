@@ -1,39 +1,34 @@
 package name.levis.ichor.ui.apps
 
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.KubeWorkload
-import name.levis.ichor.model.ownersOf
+import name.levis.ichor.model.ref
+import name.levis.ichor.model.routePods
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.workloads.WorkloadRestarts
 
 /**
  * The Deployments, StatefulSets and DaemonSets running the app of the open detail sheet, to
- * restart them from there. Asks the Kubernetes API (os:admin) for its pods' owners.
+ * restart them from there. Asks the Kubernetes API (os:admin) for its pods' owners: only
+ * those pods and workloads are read, never a cluster-wide list.
  */
 class AppWorkloadsViewModel(private val talos: TalosRepository) : LoadingViewModel<List<KubeWorkload>>() {
     private var app: InventoryApp? = null
 
     /**
-     * The keys found for [app]: a restart replaces its pods, so after one the inventory's pod
-     * names no longer lead to their workloads; only their state is fetched again.
+     * The workloads found for [app]: a restart replaces its pods, so after one the inventory's
+     * pod names no longer lead to their workloads; only their state is fetched again.
      */
-    private var keys: Set<String>? = null
+    private var found: List<KubeWorkload>? = null
 
     override suspend fun fetch(): List<KubeWorkload> {
-        keys?.let { known -> return talos.workloads().filter { it.key in known } }
-        val pods = app?.pods.orEmpty()
+        // One deleted since drops out.
+        found?.let { known -> return talos.workloadsNamed(known.map { it.ref }) }
+        val pods = app?.routePods.orEmpty()
         if (pods.isEmpty()) return emptyList()
-        val owners = coroutineScope {
-            val kubePods = async { talos.pods() }
-            val workloads = async { talos.workloads() }
-            workloads.await().ownersOf(pods, kubePods.await())
-        }
-        keys = owners.map { it.key }.toSet()
-        return owners
+        return talos.appWorkloads(pods).also { found = it }
     }
 
     // Show the rollout starting: the controller already bumped the generation.
@@ -43,7 +38,7 @@ class AppWorkloadsViewModel(private val talos: TalosRepository) : LoadingViewMod
     fun load(app: InventoryApp) {
         if (app == this.app) return
         this.app = app
-        keys = null
+        found = null
         refresh(reset = true)
     }
 }

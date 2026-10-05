@@ -201,15 +201,15 @@ func readCertDetails(ctx context.Context, k *kubeClient, namespace, name string)
 	)
 
 	wg.Go(func() { errs[0] = k.get(ctx, base+"certificates/"+url.PathEscape(name), &cert) })
-	wg.Go(func() { errs[1] = k.get(ctx, base+"certificaterequests", &requests) })
-	wg.Go(func() { errs[4] = k.get(ctx, "/api/v1"+ns+"events", &events) })
+	wg.Go(func() { errs[1] = getList(ctx, k, base+"certificaterequests", &requests) })
+	wg.Go(func() { errs[4] = getList(ctx, k, "/api/v1"+ns+"events", &events) })
 	wg.Go(func() { log, errs[5] = readCertControllerLog(ctx, k) })
 
 	// Orders and challenges exist only with ACME (the group is served with cert-manager).
 	if acme, ok := groups[groupACME]; ok {
 		acmeBase := "/apis/" + groupACME + "/" + acme + ns
-		wg.Go(func() { errs[2] = k.get(ctx, acmeBase+"orders", &orders) })
-		wg.Go(func() { errs[3] = k.get(ctx, acmeBase+"challenges", &challenges) })
+		wg.Go(func() { errs[2] = getList(ctx, k, acmeBase+"orders", &orders) })
+		wg.Go(func() { errs[3] = getList(ctx, k, acmeBase+"challenges", &challenges) })
 	}
 
 	wg.Wait()
@@ -341,7 +341,7 @@ func eventMilli(s string) int64 {
 func readCertControllerLog(ctx context.Context, k *kubeClient) (string, error) {
 	for _, selector := range certControllerSelectors {
 		var pods kubeList[dsPod]
-		if err := k.get(ctx, "/api/v1/pods?labelSelector="+url.QueryEscape(selector), &pods); err != nil {
+		if err := getList(ctx, k, "/api/v1/pods?labelSelector="+url.QueryEscape(selector), &pods); err != nil {
 			return "", err
 		}
 
