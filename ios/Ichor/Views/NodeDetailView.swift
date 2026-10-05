@@ -241,6 +241,7 @@ extension NodeDetailView {
     /// NavigationLink inside a Menu does not navigate.
     @ViewBuilder
     private var menuItems: some View {
+        ShareLinkButton(target: .node(address: ref.address, hostname: ref.hostname, tab: tab.rawValue.lowercased()))
         Button { showingKernelLog = true } label: {
             Label("Kernel log", systemImage: "terminal")
         }

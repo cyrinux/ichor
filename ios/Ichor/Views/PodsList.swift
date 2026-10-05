@@ -11,6 +11,8 @@ struct PodsList: View {
     let query: String
     /// Opens the pod's live flows; nil without Cilium.
     var onFlows: ((KubePod) -> Void)?
+    /// A share link's pod: its logs open once listed.
+    @Binding var focus: String?
 
     @Environment(AppModel.self) private var model
     @State private var actions = PodActions()
@@ -27,6 +29,7 @@ struct PodsList: View {
                                onLogs: { actions.logsPod = pod }) { actions.confirm = pod }
                             .contextMenu {
                                 Button { actions.logsPod = pod } label: { Label("Logs", systemImage: "doc.text") }
+                                ShareLinkButton(target: .pod(namespace: pod.namespace, name: pod.name))
                                 if let onFlows {
                                     Button { onFlows(pod) } label: {
                                         Label("Live flows of this pod", systemImage: "point.3.filled.connected.trianglepath.dotted")
@@ -50,6 +53,11 @@ struct PodsList: View {
             .themedBackground()
         }
         .podActions(actions) { await list.refresh(model: model) }
+        .task(id: list.loadedItems.map(\.id)) {
+            guard let focus, let pod = list.loadedItems.first(where: { $0.id == focus }) else { return }
+            actions.logsPod = pod
+            self.focus = nil
+        }
     }
 }
 

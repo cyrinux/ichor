@@ -9,6 +9,8 @@ struct CronJobsList: View {
     let list: PagedList<KubeCronJob>
     let control: KubeScopeControl
     let query: String
+    /// A share link's CronJob: its runs open once listed.
+    @Binding var focus: String?
 
     @Environment(AppModel.self) private var model
     @State private var confirm: KubeCronJob?
@@ -33,6 +35,7 @@ struct CronJobsList: View {
                                    onToggle: { toggle(cronJob) },
                                    onRun: { confirm = cronJob },
                                    onSuspend: { confirmSuspend = cronJob })
+                            .contextMenu { ShareLinkButton(target: .cronJob(namespace: cronJob.namespace, name: cronJob.name)) }
                     }
                 }
                 if load.hasMore && query.isEmpty {
@@ -78,6 +81,11 @@ struct CronJobsList: View {
             }
         }
         .messageAlert($resultMessage)
+        .task(id: list.loadedItems.map(\.id)) {
+            guard let focus, list.loadedItems.contains(where: { $0.id == focus }) else { return }
+            expanded.insert(focus)
+            self.focus = nil
+        }
     }
 
     private func confirmMessage(_ cronJob: KubeCronJob) -> Text {

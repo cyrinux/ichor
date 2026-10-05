@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.node
 
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.share.ShareLinkMenuItem
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -295,6 +297,7 @@ fun NodeDetailScreen(
                                 },
                                 cordoned = cordoned[node],
                             )
+                            ShareLinkMenuItem(ShareTarget.node(node, hostname, tab), onClick = { menuOpen = false })
                             // Power actions only exist for configs whose role allows them.
                             if (canPower) {
                                 HorizontalDivider()

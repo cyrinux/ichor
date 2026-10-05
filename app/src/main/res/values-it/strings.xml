@@ -2464,4 +2464,7 @@
         <item quantity="one">Questo congelamento copre %1$d app: riprende anche lei.</item>
         <item quantity="other">Questo congelamento copre %1$d app: riprendono tutte.</item>
     </plurals>
+    <string name="share_link">Condividi link</string>
+    <string name="share_link_unknown_cluster">Questo link è per un cluster che non è su questo telefono</string>
+    <string name="share_link_invalid">Link Ichor non valido</string>
 </resources>

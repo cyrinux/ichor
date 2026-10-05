@@ -2650,4 +2650,7 @@
         <item quantity="many">Ця заморозка охоплює %1$d застосунків: усі вони відновляться.</item>
         <item quantity="other">Ця заморозка охоплює %1$d застосунку: усі вони відновляться.</item>
     </plurals>
+    <string name="share_link">Поділитися посиланням</string>
+    <string name="share_link_unknown_cluster">Це посилання на кластер, якого немає на цьому телефоні</string>
+    <string name="share_link_invalid">Недійсне посилання Ichor</string>
 </resources>

@@ -44,6 +44,8 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     public let name: String
     /// Identifies the cluster whatever the screenshot mode does to `name`; keys its color.
     public let fingerprint: String
+    /// The same for every context of the cluster, on any phone: what share links name.
+    public let clusterID: String
     public let endpoints: [String]
     public let nodes: [String]
     public let roles: [String]
@@ -52,9 +54,10 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
 
     public var id: String { name }
 
-    public init(name: String, fingerprint: String = "", endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0, demo: Bool = false) {
+    public init(name: String, fingerprint: String = "", clusterID: String = "", endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0, demo: Bool = false) {
         self.name = name
         self.fingerprint = fingerprint
+        self.clusterID = clusterID
         self.endpoints = endpoints
         self.nodes = nodes
         self.roles = roles
@@ -62,13 +65,17 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         self.demo = demo
     }
 
-    private enum CodingKeys: String, CodingKey { case name, fingerprint, endpoints, nodes, roles, certNotAfter, demo }
+    private enum CodingKeys: String, CodingKey {
+        case name, fingerprint, endpoints, nodes, roles, certNotAfter, demo
+        case clusterID = "clusterId"
+    }
 
     // Go encodes empty (nil) slices as null here.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         name = try c.decode(String.self, forKey: .name)
         fingerprint = try c.decodeIfPresent(String.self, forKey: .fingerprint) ?? ""
+        clusterID = try c.decodeIfPresent(String.self, forKey: .clusterID) ?? ""
         endpoints = try c.decodeIfPresent([String].self, forKey: .endpoints) ?? []
         nodes = try c.decodeIfPresent([String].self, forKey: .nodes) ?? []
         roles = try c.decodeIfPresent([String].self, forKey: .roles) ?? []

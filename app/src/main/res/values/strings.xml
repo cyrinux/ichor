@@ -2460,4 +2460,7 @@
         <item quantity="one">This freeze covers %1$d app: it resumes too.</item>
         <item quantity="other">This freeze covers %1$d apps: they all resume.</item>
     </plurals>
+    <string name="share_link">Share link</string>
+    <string name="share_link_unknown_cluster">This link is for a cluster that isn\'t on this phone</string>
+    <string name="share_link_invalid">Not a valid Ichor link</string>
 </resources>

@@ -45,11 +45,17 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     }
 }
 
-/// A quick action launching the app (cold start) or brought to it while it runs.
+/// A quick action or share link launching the app (cold start) or brought to it while it runs.
 @MainActor
 final class QuickActionSceneDelegate: NSObject, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         if let item = connectionOptions.shortcutItem { open(item) }
+        if let url = connectionOptions.urlContexts.first?.url { open(url) }
+    }
+
+    /// A share link opened while the app runs.
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        if let url = URLContexts.first?.url { open(url) }
     }
 
     func windowScene(
@@ -58,6 +64,12 @@ final class QuickActionSceneDelegate: NSObject, UIWindowSceneDelegate {
         completionHandler: @escaping (Bool) -> Void
     ) {
         completionHandler(open(shortcutItem))
+    }
+
+    /// Checked (ParseShareLink) once the app is unlocked, not here.
+    private func open(_ url: URL) {
+        guard url.scheme == "ichor", url.host == "open" else { return }
+        NotificationRouter.shared.pendingShareLink = url
     }
 
     @discardableResult

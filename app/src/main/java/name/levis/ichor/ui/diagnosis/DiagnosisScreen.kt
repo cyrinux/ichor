@@ -1,10 +1,8 @@
 package name.levis.ichor.ui.diagnosis
 
-import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,6 +49,7 @@ import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.shareText
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
@@ -131,7 +130,7 @@ fun DiagnosisScreen(
                 }
             }
             OutlinedButton(
-                onClick = { vm.prompt(note, language)?.let { shareText(context, it) } },
+                onClick = { vm.prompt(note, language)?.let { shareText(context, it, context.getString(R.string.ai_share)) } },
                 enabled = ready,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.ai_share)) }
@@ -208,18 +207,6 @@ private fun AnswerCard(answer: AnswerState, providerName: String, onStop: () -> 
                 MutedText(stringResource(R.string.ai_disclaimer))
             }
         }
-    }
-}
-
-/** Opens the share sheet with [text], for the assistant app the user picks. */
-private fun shareText(context: Context, text: String) {
-    val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
-    try {
-        context.startActivity(Intent.createChooser(send, context.getString(R.string.ai_share)))
-    } catch (_: ActivityNotFoundException) {
-        // No app takes text: the report can still be selected and copied.
-    } catch (_: RuntimeException) {
-        // A report too large for an intent (TransactionTooLargeException): same fallback.
     }
 }
 

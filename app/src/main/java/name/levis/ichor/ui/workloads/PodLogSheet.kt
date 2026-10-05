@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -59,6 +60,8 @@ import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.components.shareFile
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -176,6 +179,7 @@ fun PodLogSheet(
                     Text(pod.name, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(pod.namespace, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                ShareLinkButton(ShareTarget.pod(pod.namespace, pod.name), icon = Icons.Outlined.Link)
                 TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.pod_logs_copy), enabled = !text.isNullOrEmpty(), onClick = {
                     copyLog(context, pod, text.orEmpty())
                     Toast.makeText(context, R.string.pod_logs_copied, Toast.LENGTH_SHORT).show()

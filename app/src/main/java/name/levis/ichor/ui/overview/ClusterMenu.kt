@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.share.ShareLinkMenuItem
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -90,6 +92,7 @@ fun ClusterMenu(
                     onManage()
                 },
             )
+            ShareLinkMenuItem(ShareTarget.screen(ShareTarget.CLUSTER), onClick = onDismiss)
         }
     }
 }

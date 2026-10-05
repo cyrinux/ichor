@@ -57,6 +57,9 @@ class MainActivity : FragmentActivity() {
     /** A debug shell to go back to, from its notification; consumed once by Navigation. */
     private val openShell = MutableStateFlow<LiveShell?>(null)
 
+    /** A share link (its URL, checked by Navigation once the config is loaded), consumed once. */
+    private val openTarget = MutableStateFlow<String?>(null)
+
     // Below API 33, the in-app language is applied here (API 33+ uses LocaleManager).
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(AppLocale.wrap(newBase))
@@ -95,6 +98,7 @@ class MainActivity : FragmentActivity() {
             openCluster.value = intent.clusterFingerprint()
             backupFile.value = intent.backupFile()
             openShell.value = intent.debugShell()
+            openTarget.value = intent.shareLink()
         }
         if (BuildConfig.SELF_UPDATE) app.updateManager.maybeAutoCheck(lifecycleScope)
         if (BuildConfig.FEATURE_FUNDING) {
@@ -121,7 +125,7 @@ class MainActivity : FragmentActivity() {
             val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
             TalosTheme(themeMode, seed = clusterColors.seedOf(stored?.activeSummary)) {
                 Surface {
-                    LockGate(app, LaunchTargets(deepLink, openCluster, backupFile, openShell), onWiped = ::recreate)
+                    LockGate(app, LaunchTargets(deepLink, openCluster, backupFile, openShell, openTarget), onWiped = ::recreate)
                 }
             }
         }
@@ -134,6 +138,7 @@ class MainActivity : FragmentActivity() {
         intent.clusterFingerprint()?.let { openCluster.value = it }
         intent.backupFile()?.let { backupFile.value = it }
         intent.debugShell()?.let { openShell.value = it }
+        intent.shareLink()?.let { openTarget.value = it }
     }
 
     companion object {
@@ -155,12 +160,21 @@ private class LaunchTargets(
     val cluster: MutableStateFlow<String?>,
     val backupFile: MutableStateFlow<Uri?>,
     val shell: MutableStateFlow<LiveShell?>,
+    val shareLink: MutableStateFlow<String?>,
 )
 
 private fun Intent.debugShell(): LiveShell? {
     if (action != DebugShellService.ACTION_OPEN) return null
     val key = shellKey() ?: return null
     return LiveShell(key, getStringExtra(MainActivity.EXTRA_SHELL_HOST)?.takeIf { it.isNotBlank() } ?: key.node)
+}
+
+/** The URL of a share link (ichor://open, or the website page forwarding to it), not yet checked. */
+private fun Intent.shareLink(): String? {
+    val uri = data ?: return null
+    val ours = uri.scheme == "ichor" && uri.host == "open" ||
+        uri.scheme == "https" && uri.host == "cyrinux.github.io" && uri.path.orEmpty().startsWith("/ichor/open")
+    return uri.toString().takeIf { action == Intent.ACTION_VIEW && ours }
 }
 
 private fun Intent.clusterFingerprint(): String? = getStringExtra(MainActivity.EXTRA_CLUSTER)?.takeIf { it.isNotBlank() }
@@ -217,6 +231,7 @@ private fun Root(app: TalosApp, targets: LaunchTargets) {
     val cluster by targets.cluster.collectAsStateWithLifecycle()
     val backup by targets.backupFile.collectAsStateWithLifecycle()
     val shell by targets.shell.collectAsStateWithLifecycle()
+    val shareLink by targets.shareLink.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val lockEnabled by app.appLock.enabled.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
@@ -255,6 +270,8 @@ private fun Root(app: TalosApp, targets: LaunchTargets) {
                 onIncomingBackupRead = { targets.backupFile.value = null },
                 openShell = shell,
                 onShellOpened = { targets.shell.value = null },
+                openLink = shareLink,
+                onLinkOpened = { targets.shareLink.value = null },
             )
         }
     }

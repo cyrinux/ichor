@@ -2464,4 +2464,7 @@
         <item quantity="one">Ce gel couvre %1$d app : elle reprend aussi.</item>
         <item quantity="other">Ce gel couvre %1$d apps : elles reprennent toutes.</item>
     </plurals>
+    <string name="share_link">Partager le lien</string>
+    <string name="share_link_unknown_cluster">Ce lien concerne un cluster absent de ce téléphone</string>
+    <string name="share_link_invalid">Lien Ichor non valide</string>
 </resources>
