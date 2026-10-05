@@ -11,6 +11,13 @@ an issue first so we can agree on the approach before you spend time on it.
   (GPL, AGPL, LGPL for statically linked code); ask in the issue first if unsure.
 - Never commit keystores, credentials, cluster configs or other secrets.
 
+## Code ownership
+
+[@cyrinux](https://github.com/cyrinux) is the default owner for all repository files;
+review requests are defined in [.github/CODEOWNERS](.github/CODEOWNERS).
+To make code-owner approval mandatory, enable **Require review from Code Owners**
+in the branch protection rule or ruleset for `main`.
+
 ## Licensing of contributions
 
 Ichor is licensed under the [Apache License 2.0](LICENSE). By submitting a contribution,

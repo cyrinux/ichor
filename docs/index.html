@@ -555,6 +555,16 @@
         color: var(--ink-2);
         font-size: 0.92rem;
       }
+      footer .ci-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+      footer .ci-badges img {
+        display: block;
+        height: 20px;
+      }
       footer .links {
         display: flex;
         flex-wrap: wrap;
@@ -2588,6 +2598,24 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
           <a href="https://www.talos.dev" translate="no">Talos Linux</a>
           <a data-i18n href="#support">Support the project</a>
           <a data-i18n href="privacy.html">Privacy policy</a>
+        </div>
+        <div class="ci-badges" translate="no">
+          <a href="https://github.com/cyrinux/ichor/actions/workflows/android.yml">
+            <img
+              src="https://github.com/cyrinux/ichor/actions/workflows/android.yml/badge.svg?branch=main"
+              alt="Android CI"
+              height="20"
+              loading="lazy"
+            />
+          </a>
+          <a href="https://github.com/cyrinux/ichor/actions/workflows/ios.yml">
+            <img
+              src="https://github.com/cyrinux/ichor/actions/workflows/ios.yml/badge.svg?branch=main"
+              alt="iOS CI"
+              height="20"
+              loading="lazy"
+            />
+          </a>
         </div>
         <p>
           Apache-2.0. Not affiliated with Sidero Labs; Talos is a trademark of

@@ -1,5 +1,8 @@
 # Ichor for Talos Linux
 
+[![Android CI](https://github.com/cyrinux/ichor/actions/workflows/android.yml/badge.svg?branch=main)](https://github.com/cyrinux/ichor/actions/workflows/android.yml)
+[![iOS CI](https://github.com/cyrinux/ichor/actions/workflows/ios.yml/badge.svg?branch=main)](https://github.com/cyrinux/ichor/actions/workflows/ios.yml)
+
 **Your Talos cluster, from your phone.** Ichor is a free, open-source Android and iOS app to
 monitor and operate [Talos Linux](https://www.talos.dev) clusters: node health, logs, etcd,
 KubeSpan and live graphs in your pocket, and a notification the moment a node goes down.

@@ -1,4 +1,9 @@
-# Build, signing, release and store files: changes need the maintainer's review.
+# Default owner for all code, documentation, assets and new files.
+# Later matching rules take precedence over this default.
+*                       @cyrinux
+
+# Keep build, signing, release and policy files with the maintainer
+# if ownership of other areas is delegated later.
 /.github/                @cyrinux
 /fastlane/               @cyrinux
 /scripts/                @cyrinux
