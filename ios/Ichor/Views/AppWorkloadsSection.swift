@@ -30,12 +30,13 @@ struct AppWorkloadsSection: View {
                     Text("No Deployment, StatefulSet or DaemonSet runs it.").note()
                 } else {
                     ForEach(workloads) { workload in
-                        let line = AppWorkloadLine(workload: workload, restarting: restarting.contains(workload.id)) { confirm = workload }
-                        // The sheet is a NavigationStack: a tap shows the workload's pods.
+                        AppWorkloadLine(workload: workload, restarting: restarting.contains(workload.id)) { confirm = workload }
+                        // A row of its own, not a link around the line: a List row that is a link
+                        // takes every tap, Restart's included. The sheet is a NavigationStack.
                         if let selection = workload.podSelection {
-                            NavigationLink { WorkloadPodsView(workload: workload, selection: selection) } label: { line }
-                        } else {
-                            line
+                            NavigationLink { WorkloadPodsView(workload: workload, selection: selection) } label: {
+                                Label("Pods", systemImage: "shippingbox")
+                            }
                         }
                     }
                 }
