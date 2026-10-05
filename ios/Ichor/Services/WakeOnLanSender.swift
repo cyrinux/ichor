@@ -6,9 +6,10 @@ import Network
 /// off), over UDP with Network.framework. The phone has to reach the target address: the node's
 /// LAN, or a router or relay that forwards the packet there.
 ///
-/// Broadcast: without Apple's com.apple.developer.networking.multicast entitlement, iOS may
-/// refuse to send to a broadcast address (255.255.255.255 or the subnet's .255). Sending to a
-/// relay or another unicast address needs no entitlement; the error then says to use one.
+/// Broadcast (255.255.255.255 or the subnet's .255) goes through a BSD socket
+/// (`BroadcastSocket`), which iOS only allows with Apple's
+/// com.apple.developer.networking.multicast entitlement (ICHOR_IOS_MULTICAST=1 builds). Sending
+/// to a relay or another unicast address needs no entitlement; a refused broadcast says to use one.
 enum WakeOnLanSender {
     /// UDP gives no delivery report: a few copies, a little apart, make a lost one harmless.
     private static let copies = 3
@@ -24,6 +25,14 @@ enum WakeOnLanSender {
         // No address given means "the network the phone is on": its Wi-Fi or Ethernet one.
         let local = target.broadcast.isEmpty
         let destination = local ? (LocalNetwork.directedBroadcastAddress() ?? wolDefaultBroadcast) : target.broadcast
+        if isBroadcast(destination) {
+            do {
+                try await broadcast(Data(magicPacket(mac)), to: destination, port: port.rawValue)
+            } catch {
+                throw failure(error, broadcast: true)
+            }
+            return destination
+        }
         let parameters = NWParameters.udp
         if local { parameters.prohibitedInterfaceTypes = [.cellular] }
         let connection = NWConnection(host: NWEndpoint.Host(destination), port: port, using: parameters)
@@ -39,6 +48,16 @@ enum WakeOnLanSender {
             throw failure(error, broadcast: local || isBroadcast(destination))
         }
         return destination
+    }
+
+    /// Sends the copies to a broadcast address over the phone's Wi-Fi or Ethernet interface.
+    private static func broadcast(_ payload: Data, to address: String, port: UInt16) async throws {
+        let socket = try BroadcastSocket(interface: LocalNetwork.ipv4Interface())
+        defer { socket.close() }
+        for copy in 0..<copies {
+            if copy > 0 { try await Task.sleep(for: gap) }
+            try socket.send(Array(payload), to: address, port: port)
+        }
     }
 
     /// A broadcast address, as far as the phone can tell: all-ones, or ending in .255.
