@@ -1,8 +1,8 @@
 import SwiftUI
 import IchorCore
 
-/// An app's icon on a rounded tile: the bundled logo (its light variant in dark mode), the
-/// downloaded one when the user allowed it, else a monogram (or fallbackSymbol, an SF Symbol,
+/// An app's icon on a rounded tile: the resource's own icon (inline, or downloaded when allowed),
+/// the bundled logo (its light variant in dark mode), the downloaded one when the user allowed it, else a monogram (or fallbackSymbol, an SF Symbol,
 /// when given). The tile's subtle fill keeps transparent logos readable in both themes.
 struct AppIconView: View {
     let app: InventoryApp
@@ -37,26 +37,27 @@ struct AppIconView: View {
         .frame(width: size, height: size)
         .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: size * 0.3, style: .continuous))
         .accessibilityHidden(true)
-        .task(id: remoteSlug(source)) {
-            guard let slug = remoteSlug(source) else {
-                downloaded = nil
-                return
-            }
-            downloaded = await RemoteAppIcons.shared.image(slug: slug)
+        .task(id: source) {
+            downloaded = await Self.load(source)
         }
     }
 
     private func image(for source: AppIconSource) -> UIImage? {
         switch source {
         case .bundled(let name): BundledAppIcons.image(name, dark: scheme == .dark)
-        case .remote: downloaded
+        case .remote, .url, .inline: downloaded
         case .monogram: nil
         }
     }
 
-    private func remoteSlug(_ source: AppIconSource) -> String? {
-        if case .remote(let slug) = source { return slug }
-        return nil
+    /// Icons that are not bundled: downloaded, or decoded from the resource's inline bytes.
+    private static func load(_ source: AppIconSource) async -> UIImage? {
+        switch source {
+        case .remote(let slug): return await RemoteAppIcons.shared.image(slug: slug)
+        case .url(let url): return await RemoteAppIcons.shared.image(url: url)
+        case .inline(let data): return await RemoteAppIcons.shared.image(inline: data)
+        case .bundled, .monogram: return nil
+        }
     }
 }
 

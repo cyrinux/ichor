@@ -1,5 +1,6 @@
 import UIKit
 import ImageIO
+import CryptoKit
 import IchorCore
 
 /// The "Download missing app icons" preference: off until the user turns it on (a third-party
@@ -41,11 +42,13 @@ enum BundledAppIcons {
     }
 }
 
-/// Icons of recognised apps the app does not bundle, from Dashboard Icons on jsDelivr. Only
-/// asked once the user allowed it, with nothing but the validated icon name in the URL (no
-/// cookies, no cache shared with other requests, no redirects followed). A response over
-/// remoteIconMaxBytes is refused and images are decoded at icon size only. Kept on disk in the
-/// caches directory; a failure (e.g. 404) is not retried before the next launch.
+/// Icons of recognised apps the app does not bundle, from Dashboard Icons on jsDelivr, and the
+/// icons resources name for themselves (an https URL, or inline bytes that are only decoded).
+/// Only asked once the user allowed it, with nothing but the validated icon name or the
+/// annotation's URL in the request (no cookies, no cache shared with other requests, no
+/// redirects followed). A response over remoteIconMaxBytes is refused and images are decoded at
+/// icon size only. Kept on disk in the caches directory; a failure (e.g. 404) is not retried
+/// before the next launch.
 actor RemoteAppIcons {
     static let shared = RemoteAppIcons()
 
@@ -70,19 +73,42 @@ actor RemoteAppIcons {
         .appendingPathComponent("appicons-remote", isDirectory: true)
 
     func image(slug: String) async -> UIImage? {
-        if let image = images[slug] { return image }
-        guard !failed.contains(slug), let url = remoteIconURL(slug: slug) else { return nil }
-        if let running = loading[slug] { return await running.value }
-        let task = Task { await fetch(slug: slug, url: url) }
-        loading[slug] = task
-        let image = await task.value
-        loading[slug] = nil
-        if let image { images[slug] = image } else { failed.insert(slug) }
+        guard let url = remoteIconURL(slug: slug) else { return nil }
+        return await image(key: slug, url: url)
+    }
+
+    /// A resource's own icon at an https URL, cached under a hash of the URL.
+    func image(url: URL) async -> UIImage? {
+        await image(key: "url-" + Self.sha256(Data(url.absoluteString.utf8)), url: url)
+    }
+
+    /// A resource's own inline icon: decoded once, never fetched.
+    func image(inline data: Data) -> UIImage? {
+        let key = "inline-" + Self.sha256(data)
+        if let image = images[key] { return image }
+        let image = Self.decode(data)
+        images[key] = image
         return image
     }
 
-    private func fetch(slug: String, url: URL) async -> UIImage? {
-        let file = Self.directory?.appendingPathComponent("\(slug).webp")
+    private func image(key: String, url: URL) async -> UIImage? {
+        if let image = images[key] { return image }
+        guard !failed.contains(key) else { return nil }
+        if let running = loading[key] { return await running.value }
+        let task = Task { await fetch(key: key, url: url) }
+        loading[key] = task
+        let image = await task.value
+        loading[key] = nil
+        if let image { images[key] = image } else { failed.insert(key) }
+        return image
+    }
+
+    private static func sha256(_ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func fetch(key: String, url: URL) async -> UIImage? {
+        let file = Self.directory?.appendingPathComponent("\(key).webp")
         if let file, let data = try? Data(contentsOf: file) {
             if data.count <= remoteIconMaxBytes, let image = Self.decode(data) { return image }
             try? FileManager.default.removeItem(at: file)
@@ -130,7 +156,7 @@ actor RemoteAppIcons {
     }
 }
 
-/// Refuses every redirect: the icon must come from the validated jsDelivr URL itself.
+/// Refuses every redirect: the icon must come from the validated URL itself.
 private final class NoRedirects: NSObject, URLSessionTaskDelegate {
     func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
                     newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {

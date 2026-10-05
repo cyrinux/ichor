@@ -31,6 +31,8 @@ data class InventoryApp(
     val icon: String = "",
     /** Dashboard Icons slug to download, only when the user allowed it; "" when none. */
     val remoteIcon: String = "",
+    /** A resource's own icon (https URL or data: URI), first choice when valid; see [customIcon]. */
+    val iconUrl: String = "",
     /** Identified by the catalog; false goes to "Not recognised". */
     val known: Boolean = false,
     /** Kubernetes and Talos plumbing. */

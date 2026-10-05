@@ -1292,7 +1292,7 @@
     <string name="apps_detail_routes_failed">Could not find its addresses: %1$s</string>
     <string name="apps_detail_routes_open">Open in browser</string>
     <string name="settings_remote_icons">Download missing app icons</string>
-    <string name="settings_remote_icons_desc">About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details.</string>
+    <string name="settings_remote_icons_desc">About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details. Icons an Argo CD app links in its ichor.levis.name/icon annotation are downloaded too.</string>
     <string name="settings_offline_cache">Keep last known state</string>
     <string name="settings_offline_cache_desc">Save the last data fetched from each cluster on this phone, encrypted, so it still shows when the cluster can\'t be reached. Kept for 24 hours and never backed up.</string>
     <string name="about_icon_credits">App icons: Dashboard Icons (Apache 2.0) and selfh.st/icons (CC BY 4.0). App names and logos are trademarks of their owners.</string>

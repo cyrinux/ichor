@@ -48,6 +48,8 @@ public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
     public let icon: String?
     /// Dashboard Icons slug, fetched only when the user allowed it.
     public let remoteIcon: String?
+    /// A resource's own icon (https URL or data: URI), first choice when valid; see customIconSource.
+    public let iconURL: String?
     /// False: not recognised by the catalog.
     public let known: Bool
     /// Kubernetes and Talos plumbing.
@@ -70,7 +72,7 @@ public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
 
     public init(
         id: String, name: String, category: AppCategory = .other, icon: String? = nil, remoteIcon: String? = nil,
-        known: Bool = true, system: Bool = false, version: String = "", drift: Bool = false, unpinned: Bool = false,
+        iconURL: String? = nil, known: Bool = true, system: Bool = false, version: String = "", drift: Bool = false, unpinned: Bool = false,
         namespaces: [String] = [], nodes: [String] = [], containers: Int = 0, running: Int = 0, memory: UInt64 = 0,
         images: [InventoryImage] = [], pods: [InventoryPod] = []
     ) {
@@ -79,6 +81,7 @@ public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
         self.category = category
         self.icon = icon
         self.remoteIcon = remoteIcon
+        self.iconURL = iconURL
         self.known = known
         self.system = system
         self.version = version
@@ -94,7 +97,7 @@ public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, category, icon, remoteIcon, known, system, version, drift, unpinned
+        case id, name, category, icon, remoteIcon, iconURL = "iconUrl", known, system, version, drift, unpinned
         case namespaces, nodes, containers, running, memory, images, pods
     }
 
@@ -105,6 +108,7 @@ public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
         category = AppCategory(rawValue: try c.decodeIfPresent(String.self, forKey: .category) ?? "") ?? .other
         icon = try c.decodeIfPresent(String.self, forKey: .icon).nonEmpty
         remoteIcon = try c.decodeIfPresent(String.self, forKey: .remoteIcon).nonEmpty
+        iconURL = try c.decodeIfPresent(String.self, forKey: .iconURL).nonEmpty
         known = try c.decodeIfPresent(Bool.self, forKey: .known) ?? false
         system = try c.decodeIfPresent(Bool.self, forKey: .system) ?? false
         version = try c.decodeIfPresent(String.self, forKey: .version) ?? ""

@@ -32,6 +32,8 @@ data class ArgoApp(
     val icon: String = "",
     /** Dashboard Icons slug, "" when none. */
     val remoteIcon: String = "",
+    /** Its own icon from its annotation: an https URL or a data: URI, "" when none. See [customIcon]. */
+    val iconUrl: String = "",
     /** Healthy, Progressing, Degraded, Suspended, Missing or Unknown. */
     val health: String = "",
     val healthMessage: String = "",

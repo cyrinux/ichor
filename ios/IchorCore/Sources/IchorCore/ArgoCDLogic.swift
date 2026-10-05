@@ -35,9 +35,12 @@ public extension ArgoApp {
     /// What a sync with prune deletes.
     var pruneCandidates: [ArgoResource] { resources.filter(\.prune) }
 
-    /// For AppIconView: the catalog icon the Go core matched, a monogram of the name otherwise.
+    /// For AppIconView: its own icon, else the catalog icon the Go core matched, a monogram of the name otherwise.
     var iconApp: InventoryApp {
-        InventoryApp(id: name, name: name, icon: icon.isEmpty ? nil : icon, remoteIcon: remoteIcon.isEmpty ? nil : remoteIcon)
+        InventoryApp(
+            id: name, name: name, icon: icon.isEmpty ? nil : icon, remoteIcon: remoteIcon.isEmpty ? nil : remoteIcon,
+            iconURL: iconURL.isEmpty ? nil : iconURL
+        )
     }
 
     /// The likely cause of a problem app, most telling first: an unhealthy pod on a node that is

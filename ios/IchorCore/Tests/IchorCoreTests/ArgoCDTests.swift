@@ -91,6 +91,13 @@ final class ArgoCDTests: XCTestCase {
         XCTAssertEqual(s.projects[1].syncWindows, 1)
     }
 
+    func testCustomIconReachesTheTile() throws {
+        let app = try TalosJSON.decode(ArgoApp.self, from: #"{"name":"homelab","iconUrl":"https://a.example/h.png"}"#)
+        XCTAssertEqual(app.iconURL, "https://a.example/h.png")
+        XCTAssertEqual(app.iconApp.iconSource(remoteIcons: true), .url(URL(string: "https://a.example/h.png")!))
+        XCTAssertEqual(app.iconApp.iconSource(remoteIcons: false), .monogram)
+    }
+
     func testNotInstalledAnswer() throws {
         let none = try TalosJSON.decode(ArgoStatus.self, from: #"{"installed":false}"#)
         XCTAssertFalse(none.installed)

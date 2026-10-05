@@ -118,6 +118,24 @@ final class InventoryTests: XCTestCase {
         XCTAssertEqual(apps[4].iconSource(remoteIcons: true), .monogram)
     }
 
+    func testCustomIconSource() throws {
+        let png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+        XCTAssertEqual(customIconSource("data:image/png;base64,\(png)", remoteIcons: false), .inline(Data(base64Encoded: png)!))
+        XCTAssertEqual(customIconSource("https://a.example/w.png", remoteIcons: true), .url(URL(string: "https://a.example/w.png")!))
+        // A URL is a download: only when the user allowed them.
+        XCTAssertNil(customIconSource("https://a.example/w.png", remoteIcons: false))
+        let big = Data(count: customIconMaxBytes + 1).base64EncodedString()
+        for bad in ["grafana", "http://a.example/w.png", "https://u:p@a.example/w.png", "https:///w.png",
+                    "file:///etc/passwd", "data:image/svg+xml;base64,PHN2Zy8+", "data:image/png;base64,***",
+                    "data:image/png;base64,\(big)"] {
+            XCTAssertNil(customIconSource(bad, remoteIcons: true), bad)
+        }
+        // The app's own icon wins over its catalog one; an invalid one falls back to it.
+        let app = try TalosJSON.decode(InventoryApp.self, from: #"{"id":"x","name":"X","icon":"cilium","iconUrl":"https://a.example/w.png"}"#)
+        XCTAssertEqual(app.iconSource(remoteIcons: true), .url(URL(string: "https://a.example/w.png")!))
+        XCTAssertEqual(app.iconSource(remoteIcons: false), .bundled("cilium"))
+    }
+
     func testIconSlugValidation() throws {
         XCTAssertTrue(isValidIconSlug("cilium"))
         XCTAssertTrue(isValidIconSlug("0-a"))

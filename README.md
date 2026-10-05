@@ -43,6 +43,12 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   Ingress/HTTPRoute → Service → pods → node, every box coloured by health, traffic flowing along
   the healthy paths, and the likely root cause named (a node not ready, a crash-looping pod, a
   Service without ready pods).
+  An app the icon catalog does not know (a personal project) can name its own icon with the
+  `ichor.levis.name/icon` annotation: a [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons)
+  slug (`grafana`), an `https://` link to a PNG, WebP, JPEG or GIF (downloaded only when
+  *Download missing app icons* is on; change the URL to refresh it), or the image inline as
+  `data:image/png;base64,…` (64 KiB at most, never downloaded). SVG is not supported. A label
+  of the same name works too, for a slug only.
 - **Flux:** when the cluster runs Flux v2, list its Kustomizations and HelmReleases with their
   readiness, applied and attempted revision, source, what a Kustomization applied and a
   release's Helm history, and their Git, OCI and Helm sources; reconcile (with its source

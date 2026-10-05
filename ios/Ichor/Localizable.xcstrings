@@ -3256,43 +3256,43 @@
         }
       }
     },
-    "About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details." : {
+    "About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details. Icons an Argo CD app links in its ichor.levis.name/icon annotation are downloaded too." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rund 250 gängige Apps haben mitgelieferte Symbole. Wenn aktiviert, werden Symbole weiterer erkannter Apps von jsDelivr (Dashboard Icons) geladen. Nur der öffentliche Symbolname wird gesendet, niemals deine Image-Namen oder Cluster-Details."
+            "value" : "Rund 250 gängige Apps haben mitgelieferte Symbole. Wenn aktiviert, werden Symbole weiterer erkannter Apps von jsDelivr (Dashboard Icons) geladen. Nur der öffentliche Symbolname wird gesendet, niemals deine Image-Namen oder Cluster-Details. Auch Symbole, die eine Argo-CD-App in ihrer Annotation ichor.levis.name/icon verlinkt, werden geladen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details."
+            "value" : "About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details. Icons an Argo CD app links in its ichor.levis.name/icon annotation are downloaded too."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Unas 250 apps comunes tienen iconos incluidos. Si se activa, los iconos de otras apps reconocidas se descargan de jsDelivr (Dashboard Icons). Solo se envía el nombre público del icono, nunca los nombres de tus imágenes ni detalles del clúster."
+            "value" : "Unas 250 apps comunes tienen iconos incluidos. Si se activa, los iconos de otras apps reconocidas se descargan de jsDelivr (Dashboard Icons). Solo se envía el nombre público del icono, nunca los nombres de tus imágenes ni detalles del clúster. También se descargan los iconos que una app de Argo CD enlaza en su anotación ichor.levis.name/icon."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Environ 250 apps courantes ont des icônes intégrées. Si activé, les icônes des autres apps reconnues sont téléchargées depuis jsDelivr (Dashboard Icons). Seul le nom public de l'icône est envoyé, jamais vos noms d'images ni les détails du cluster."
+            "value" : "Environ 250 apps courantes ont des icônes intégrées. Si activé, les icônes des autres apps reconnues sont téléchargées depuis jsDelivr (Dashboard Icons). Seul le nom public de l'icône est envoyé, jamais vos noms d'images ni les détails du cluster. Les icônes qu'une app Argo CD lie dans son annotation ichor.levis.name/icon sont aussi téléchargées."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Circa 250 app comuni hanno icone incluse. Se attivo, le icone delle altre app riconosciute vengono scaricate da jsDelivr (Dashboard Icons). Viene inviato solo il nome pubblico dell'icona, mai i nomi delle tue immagini o i dettagli del cluster."
+            "value" : "Circa 250 app comuni hanno icone incluse. Se attivo, le icone delle altre app riconosciute vengono scaricate da jsDelivr (Dashboard Icons). Viene inviato solo il nome pubblico dell'icona, mai i nomi delle tue immagini o i dettagli del cluster. Vengono scaricate anche le icone che un'app Argo CD collega nella sua annotazione ichor.levis.name/icon."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Близько 250 поширених застосунків мають вбудовані значки. Якщо увімкнено, значки інших розпізнаних застосунків завантажуються з jsDelivr (Dashboard Icons). Надсилається лише публічна назва значка, ніколи — назви ваших образів чи дані кластера."
+            "value" : "Близько 250 поширених застосунків мають вбудовані значки. Якщо увімкнено, значки інших розпізнаних застосунків завантажуються з jsDelivr (Dashboard Icons). Надсилається лише публічна назва значка, ніколи — назви ваших образів чи дані кластера. Також завантажуються значки, на які застосунок Argo CD посилається в анотації ichor.levis.name/icon."
           }
         }
       }

@@ -94,6 +94,8 @@ public struct ArgoApp: Decodable, Equatable, Identifiable, Sendable {
     public let icon: String
     /// Dashboard Icons slug, "" when none.
     public let remoteIcon: String
+    /// Its own icon from its ichor.levis.name/icon annotation: an https URL or a data: URI, "" when none.
+    public let iconURL: String
     public let health: ArgoHealth
     public let healthMessage: String
     public let sync: ArgoSyncState
@@ -130,6 +132,7 @@ public struct ArgoApp: Decodable, Equatable, Identifiable, Sendable {
         level = ServiceHealth(wire: try c.field(.level, ""))
         icon = try c.field(.icon, "")
         remoteIcon = try c.field(.remoteIcon, "")
+        iconURL = try c.field(.iconURL, "")
         health = ArgoHealth(wire: try c.field(.health, ""))
         healthMessage = try c.field(.healthMessage, "")
         sync = ArgoSyncState(wire: try c.field(.sync, ""))
@@ -150,7 +153,7 @@ public struct ArgoApp: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, project, owner, level, icon, remoteIcon, health, healthMessage, sync, revision, refreshing
+        case namespace, name, project, owner, level, icon, remoteIcon, iconURL = "iconUrl", health, healthMessage, sync, revision, refreshing
         case sources, destination, autoSync, syncOptions, operation, conditions, resources, history, images, externalURLs
         case unhealthyPods, reconciledAt
     }

@@ -43,9 +43,11 @@ type argoApp struct {
 	Owner     *argoOwner `json:"owner"` // the ApplicationSet or parent app that writes its spec
 	// Level sums health, sync and the last operation up for sorting and colouring:
 	// critical|warning|ok|idle (suspended).
-	Level         string    `json:"level"`
-	Icon          string    `json:"icon,omitempty"`
-	RemoteIcon    string    `json:"remoteIcon,omitempty"`
+	Level      string `json:"level"`
+	Icon       string `json:"icon,omitempty"`
+	RemoteIcon string `json:"remoteIcon,omitempty"`
+	// IconURL is the https URL or data: URI the app names in its ichor.levis.name/icon annotation.
+	IconURL       string    `json:"iconUrl,omitempty"`
 	Health        string    `json:"health"` // Healthy|Progressing|Degraded|Suspended|Missing|Unknown
 	HealthMessage string    `json:"healthMessage"`
 	Sync          string    `json:"sync"` // Synced|OutOfSync|Unknown
