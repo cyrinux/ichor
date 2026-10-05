@@ -3,7 +3,9 @@ import IchorCore
 
 /// The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
 /// issues (os:admin): workloads with rollout restart, pods, CronJobs with a manual run,
-/// and a network test between two nodes. The namespace filter and the search carry over between the lists. The toolbar opens
+/// and a network test between two nodes. The namespace listed (remembered per cluster, see
+/// KubeScopeStore) and the search carry over between the lists, each loaded page by page
+/// (plans/roadmap/large-clusters.md). The toolbar opens
 /// the network policies and, with Cilium, the live flows; it also sets the API address to use
 /// instead of the kubeconfig's, for a cluster the phone reaches another way (not in screenshot
 /// mode: the alert would show the real address).
@@ -18,8 +20,26 @@ struct KubernetesView: View {
 
     @Environment(AppModel.self) private var model
     @State private var tab = Tab.workloads
-    @State private var namespace: String?
     @State private var query = ""
+    /// The cluster's namespaces; nil while unknown (loading, or failed).
+    @State private var namespaces: KubeNamespaces?
+    /// The scope picked in the demo or screenshot mode, not kept on the device.
+    @State private var localScope: KubeScope?
+    /// Bumped when a scope is picked: the stored one is read again.
+    @State private var scopeEdits = 0
+    /// Kept across tabs: switching tabs neither reloads a list nor stops its load.
+    @State private var workloads = PagedList<KubeWorkload>(base: "workloads") { client, namespace, token in
+        try await client.workloadsPage(namespace: namespace, token: token)
+    }
+    // The first page as full objects: a small cluster, loaded in one page, keeps its images
+    // and containers; the next pages as Table rows, 10-20 times smaller (L9, L10). Kept rows
+    // of Table pages have no images: image search would miss them.
+    @State private var pods = PagedList<KubePod>(base: "pods", detailed: { pods in pods.allSatisfy { !$0.images.isEmpty } }) { client, namespace, token in
+        try await client.podsPage(namespace: namespace, token: token, table: !token.isEmpty)
+    }
+    @State private var cronJobs = PagedList<KubeCronJob>(base: "cronjobs") { client, namespace, token in
+        try await client.cronJobsPage(namespace: namespace, token: token)
+    }
     @State private var editingServer = false
     @State private var serverInput = ""
     @State private var serverError: String?
@@ -37,9 +57,9 @@ struct KubernetesView: View {
     var body: some View {
         Group {
             switch tab {
-            case .workloads: WorkloadsList(namespace: $namespace, query: query)
-            case .pods: PodsList(namespace: $namespace, query: query, onFlows: podFlows)
-            case .cronJobs: CronJobsList(namespace: $namespace, query: query)
+            case .workloads: WorkloadsList(list: workloads, control: scopeControl, query: query)
+            case .pods: PodsList(list: pods, control: scopeControl, query: query, onFlows: podFlows)
+            case .cronJobs: CronJobsList(list: cronJobs, control: scopeControl, query: query)
             case .network: NetPerfView(session: netPerf)
             }
         }
@@ -90,6 +110,12 @@ struct KubernetesView: View {
             guard let client = model.client else { return }
             cilium = try? await client.cilium()
         }
+        .task(id: "\(model.activeContext)|\(model.client?.kubeServer ?? "")|\(model.dataGeneration)") {
+            await loadNamespaces()
+        }
+        .task(id: model.summary?.contexts.map(\.fingerprint)) {
+            if let summary = model.summary { KubeScopeStore.keep(fingerprints: summary.contexts.map(\.fingerprint)) }
+        }
         .safeAreaInset(edge: .top) {
             Picker(selection: $tab) {
                 Text("Workloads").tag(Tab.workloads)
@@ -109,6 +135,39 @@ struct KubernetesView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: model.privacyMask) { _, masked in if masked { editingServer = false } }
         .onDisappear { if netPerf.isRunning { netPerf.leave() } }
+    }
+
+    /// The cluster whose scope is kept on the device: not the demo, not in screenshot mode
+    /// (then the scope picked lasts while the screen does).
+    private var scopeCluster: String? {
+        model.activeSummary.flatMap { $0.demo || $0.fingerprint.isEmpty || model.privacyMask ? nil : $0.fingerprint }
+    }
+
+    /// The scope of the lists (L5, L6): the one picked, else the default for what the
+    /// namespaces say. None when namespaces cannot be listed and the context names none: the
+    /// user types one.
+    private var scopeControl: KubeScopeControl {
+        let scope = defaultScope(remembered: rememberedScope, namespaces: namespaces)
+        return KubeScopeControl(scope: scope ?? KubeScope(), namespaces: namespaces, ready: scope != nil) { picked in
+            if let cluster = scopeCluster { KubeScopeStore.set(picked, for: cluster) } else { localScope = picked }
+            scopeEdits += 1
+        }
+    }
+
+    /// The scope picked for the active cluster, nil for the default.
+    private var rememberedScope: KubeScope? {
+        _ = scopeEdits
+        guard let cluster = scopeCluster else { return localScope }
+        return KubeScopeStore.scope(for: cluster)
+    }
+
+    /// The cluster's namespaces; forbidden is an answer, not a failure.
+    private func loadNamespaces() async {
+        guard let client = model.client else { return }
+        namespaces = nil
+        let listed = try? await client.namespaces()
+        guard !Task.isCancelled else { return }
+        namespaces = listed
     }
 
     /// Opens a pod's live flows from the Pods list: with Cilium only.
@@ -143,11 +202,11 @@ struct NamespacePicker: View {
 /// Deployments, StatefulSets and DaemonSets with a rolling restart like `kubectl rollout restart`;
 /// tap one for scale and, for a Deployment, its revisions to roll back to.
 private struct WorkloadsList: View {
-    @Binding var namespace: String?
+    let list: PagedList<KubeWorkload>
+    let control: KubeScopeControl
     let query: String
 
     @Environment(AppModel.self) private var model
-    @State private var state: LoadState<[KubeWorkload]> = .loading
     @State private var confirm: KubeWorkload?
     @State private var restarting: Set<String> = []
     @State private var resultMessage: String?
@@ -157,18 +216,18 @@ private struct WorkloadsList: View {
     @State private var actions: KubeWorkload?
 
     var body: some View {
-        LoadStateView(state: state, retry: load) { workloads in
-            let namespaces = workloadNamespaces(workloads)
-            let selected = namespace.flatMap { namespaces.contains($0) ? $0 : nil }
-            let shown = filterWorkloads(workloads, namespace: selected, query: query)
+        KubeListFrame(control: control, list: list, query: query, namespaces: workloadNamespaces) { load in
+            let selected = control.scope.namespace
+            // Sorted once complete: rows do not jump as pages arrive.
+            let shown = filterWorkloads(load.items, namespace: selected, query: query, sorted: load.done)
             List {
-                Section { NamespacePicker(namespaces: namespaces, namespace: $namespace) }
                 Section {
                     ForEach(shown) { workload in
                         WorkloadRow(workload: workload, showNamespace: selected == nil,
                                     restarting: restarting.contains(workload.id),
                                     onOpen: { actions = workload }) { confirm = workload }
                     }
+                    if load.hasMore && query.isEmpty { LoadMoreRow { list.loadMore(model: model) } }
                 }
             }
             .overlay {
@@ -183,7 +242,6 @@ private struct WorkloadsList: View {
             .refreshable { await load() }
             .themedBackground()
         }
-        .task { await load() }
         .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
         .sheet(item: $following) { workload in RolloutStatusSheet(workload: workload) { await load() } }
         .sheet(item: $actions) { workload in WorkloadActionsSheet(workload: workload) { await load() } }
@@ -191,9 +249,7 @@ private struct WorkloadsList: View {
     }
 
     private func load() async {
-        guard let client = model.client else { return }
-        state = model.seeded(state, from: .workloads, as: KubeWorkloadList.self) { $0.workloads }
-        state = state.refreshed(with: await .from { try await model.fetch(.workloads, as: KubeWorkloadList.self, with: client).workloads })
+        await list.refresh(model: model)
     }
 
     private func restart(_ workload: KubeWorkload) async {

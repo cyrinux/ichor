@@ -1,16 +1,16 @@
 import SwiftUI
 import IchorCore
 
-/// The cluster's CronJobs, each with its icon (the ichor.levis.name/icon label, else guessed
+/// The CronJobs of the scope's namespace, each with its icon (the ichor.levis.name/icon label, else guessed
 /// from its image, else a clock), schedule, next run and recent runs, and Run now: a Job from
 /// its template, like `kubectl create job --from`, and Suspend / Resume of its schedule. Tap a
 /// row for its runs.
 struct CronJobsList: View {
-    @Binding var namespace: String?
+    let list: PagedList<KubeCronJob>
+    let control: KubeScopeControl
     let query: String
 
     @Environment(AppModel.self) private var model
-    @State private var state: LoadState<[KubeCronJob]> = .loading
     @State private var confirm: KubeCronJob?
     @State private var triggering: Set<String> = []
     /// Suspend or resume waiting for confirmation.
@@ -20,12 +20,10 @@ struct CronJobsList: View {
     @State private var resultMessage: String?
 
     var body: some View {
-        LoadStateView(state: state, retry: load) { cronJobs in
-            let namespaces = cronJobNamespaces(cronJobs)
-            let selected = namespace.flatMap { namespaces.contains($0) ? $0 : nil }
-            let shown = filterCronJobs(cronJobs, namespace: selected, query: query)
+        KubeListFrame(control: control, list: list, query: query, namespaces: cronJobNamespaces) { load in
+            let selected = control.scope.namespace
+            let shown = filterCronJobs(load.items, namespace: selected, query: query, sorted: load.done)
             List {
-                Section { NamespacePicker(namespaces: namespaces, namespace: $namespace) }
                 ForEach(shown) { cronJob in
                     Section {
                         CronJobRow(cronJob: cronJob, showNamespace: selected == nil,
@@ -36,6 +34,9 @@ struct CronJobsList: View {
                                    onRun: { confirm = cronJob },
                                    onSuspend: { confirmSuspend = cronJob })
                     }
+                }
+                if load.hasMore && query.isEmpty {
+                    Section { LoadMoreRow { list.loadMore(model: model) } }
                 }
             }
             .listSectionSpacing(.compact)
@@ -51,7 +52,6 @@ struct CronJobsList: View {
             .refreshable { await load() }
             .themedBackground()
         }
-        .task { await load() }
         .confirmationDialog(confirm.map { String(localized: "Run \($0.displayName) now?") } ?? "",
                             isPresented: $confirm.isPresent(),
                             titleVisibility: .visible,
@@ -120,9 +120,7 @@ struct CronJobsList: View {
     }
 
     private func load() async {
-        guard let client = model.client else { return }
-        state = model.seeded(state, from: .cronJobs, as: KubeCronJobList.self) { $0.cronJobs }
-        state = state.refreshed(with: await .from { try await model.fetch(.cronJobs, as: KubeCronJobList.self, with: client).cronJobs })
+        await list.refresh(model: model)
     }
 
     private func trigger(_ cronJob: KubeCronJob) async {

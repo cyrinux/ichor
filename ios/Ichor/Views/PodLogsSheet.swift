@@ -4,7 +4,9 @@ import IchorCore
 
 /// The last lines of a pod's log through the Kubernetes API, like `kubectl logs --tail`
 /// (os:admin), with the previous run's (`--previous`) when its containers restarted: Talos
-/// only keeps the running container's. A pod with several containers asks which one.
+/// only keeps the running container's. A pod with several containers asks which one. A row
+/// read from a Table (a large cluster's) has no containers nor last termination: the pod is
+/// read in full first.
 struct PodLogsSheet: View {
     let pod: KubePod
 
@@ -27,11 +29,18 @@ struct PodLogsSheet: View {
     @State private var refreshes = 0
     /// The latest load: an older one (the Go call ignores cancellation) never lands after it.
     @State private var generation = 0
+    /// The pod read in full when the row lacked its containers; nil until then, or if that failed.
+    @State private var detail: KubePod?
+    /// Whether the full pod was asked for already.
+    @State private var detailAsked = false
+
+    /// The pod with its containers and last termination when known.
+    private var shown: KubePod { detail ?? pod }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if containers.count > 1 || pod.restarts > 0 {
+                if containers.count > 1 || shown.restarts > 0 {
                     options.padding(.horizontal).padding(.vertical, 8)
                 }
                 LoadStateView(state: state, retry: { refreshes += 1 }) { text in LogText(lines: podLogLines(text), previous: previous) }
@@ -66,13 +75,13 @@ struct PodLogsSheet: View {
                     ForEach(containers, id: \.self) { Text(verbatim: $0).tag($0) }
                 }
             }
-            if pod.restarts > 0 {
+            if shown.restarts > 0 {
                 Toggle(isOn: $previous) {
                     VStack(alignment: .leading) {
                         Text("Previous run")
                         Text("The log of the container's last run before it restarted.").font(.caption).foregroundStyle(.secondary)
-                        if !pod.lastTermination.isEmpty {
-                            Text("Last stop: \(pod.lastTermination)").font(.caption).foregroundStyle(.statusWarn)
+                        if !shown.lastTermination.isEmpty {
+                            Text("Last stop: \(shown.lastTermination)").font(.caption).foregroundStyle(.statusWarn)
                         }
                     }
                 }
@@ -84,6 +93,7 @@ struct PodLogsSheet: View {
     /// before, and its late answer is dropped.
     private func load() async {
         guard let client = model.client else { return }
+        if await readDetail(client) { return }
         generation += 1
         let (asked, askedPrevious, mine) = (container, previous, generation)
         // Still the selection on screen, and no newer load started.
@@ -104,6 +114,20 @@ struct PodLogsSheet: View {
                 state = .failed(error.localizedDescription)
             }
         }
+    }
+
+    /// Reads the pod in full once when its row had no containers; true when that picked a
+    /// container, whose own load the task then runs.
+    private func readDetail(_ client: TalosClient) async -> Bool {
+        guard !detailAsked, pod.containerNames.isEmpty else { return false }
+        detailAsked = true
+        state = .loading
+        guard let full = try? await client.pod(namespace: pod.namespace, name: pod.name), !Task.isCancelled else { return false }
+        detail = full
+        guard full.containerNames.count > 1, container.isEmpty else { return false }
+        containers = full.containerNames
+        container = full.containerNames[0]
+        return true
     }
 
     /// Device-only pasteboard: a log can hold secrets.

@@ -48,7 +48,20 @@ extension AppModel {
     /// Stores `json` unless the setting was turned off or the screenshot mode changed meanwhile.
     /// Best effort: a write that fails (device locked) leaves the previous entry.
     func remember(_ domain: LastKnownDomain, json: String, at: Date, for target: LastKnownTarget) {
+        remember(key: domain.key, json: json, at: at, for: target)
+    }
+
+    /// Same, under a key of its own (a Kubernetes list of one scope, see kubeListKey).
+    func remember(key: String, json: String, at: Date, for target: LastKnownTarget) {
         guard keepLastKnown, target.generation == dataGeneration else { return }
-        try? LastKnownStore.save(fingerprint: target.fingerprint, entry: LastKnownEntry(key: domain.key, at: at, json: json))
+        try? LastKnownStore.save(fingerprint: target.fingerprint, entry: LastKnownEntry(key: key, at: at, json: json))
+    }
+
+    /// The stored value of `key` (see remember(key:)) for the active cluster, if any.
+    func lastKnown<T: Decodable>(key: String, as type: T.Type = T.self) -> (value: T, at: Date)? {
+        guard let target = lastKnownTarget,
+              let entry = LastKnownStore.read(fingerprint: target.fingerprint, key: key),
+              let value = try? TalosJSON.decode(T.self, from: entry.json) else { return nil }
+        return (value, entry.date)
     }
 }
