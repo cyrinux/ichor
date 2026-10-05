@@ -1,0 +1,6 @@
+{"items":[
+ {"metadata":{"name":"flux-system","namespace":"flux-system","resourceVersion":"300"},
+  "spec":{"url":"ssh://git@git.example.com/fleet.git","interval":"1m","ref":{"branch":"main"}},
+  "status":{"artifact":{"revision":"main@sha1:aaaa","lastUpdateTime":"2026-10-01T10:00:00Z"},
+   "conditions":[{"type":"Ready","status":"True","reason":"Succeeded","message":"stored artifact"}]}}
+]}

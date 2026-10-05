@@ -1,0 +1,7 @@
+{"items":[
+ {"metadata":{"name":"cilium","namespace":"flux-system","resourceVersion":"301"},
+  "spec":{"url":"https://helm.cilium.io","interval":"1h"},
+  "status":{"conditions":[{"type":"Ready","status":"False","reason":"IndexationFailed","message":"i/o timeout"}]}},
+ {"metadata":{"name":"bitnami","namespace":"flux-system","resourceVersion":"302"},
+  "spec":{"url":"oci://registry-1.docker.io/bitnamicharts","type":"oci","interval":"1h"},"status":{}}
+]}

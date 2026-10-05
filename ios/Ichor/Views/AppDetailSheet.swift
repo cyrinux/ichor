@@ -1,8 +1,8 @@
 import SwiftUI
 import IchorCore
 
-/// One app of the inventory: what needs a look, where it runs, its Argo CD Applications and
-/// workloads to restart (os:admin), its images and pods.
+/// One app of the inventory: what needs a look, where it runs, its Argo CD Applications (or the
+/// Flux summary on the Flux tile) and workloads to restart (os:admin), its images and pods.
 struct AppDetailSheet: View {
     let app: InventoryApp
     /// Address → hostname of the overview's nodes.
@@ -31,6 +31,8 @@ struct AppDetailSheet: View {
                 // Routes and rollout restarts go through the Kubernetes API: only for a role that can reach it.
                 if model.allows(.workloads) {
                     if argoCD { AppArgoSection(app: app) }
+                    // The Flux tile: its summary (only on the inventory's Flux, which detects it).
+                    if app.id == fluxCatalogID { AppFluxSection() }
                     AppRoutesSection(app: app)
                     AppWorkloadsSection(app: app)
                 }

@@ -39,6 +39,9 @@ import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.argoAppsFor
 import name.levis.ichor.model.hasArgoCD
+import name.levis.ichor.model.FLUX_CATALOG_ID
+import name.levis.ichor.model.hasFlux
+import name.levis.ichor.ui.flux.FluxViewModel
 import name.levis.ichor.model.inventoryBadges
 import name.levis.ichor.data.ARGO_CD
 import name.levis.ichor.ui.argocd.ArgoActionToasts
@@ -61,7 +64,7 @@ import name.levis.ichor.ui.components.TooltipIconButton
 /**
  * Every app running in the cluster as a grid of icons, with search and filters; tapping one
  * opens its details. [onNode] opens a node's pods (address, hostname, role); [onArgoCD] the Argo
- * CD screen and [onArgoApp] one of its apps (namespace, name).
+ * CD screen and [onArgoApp] one of its apps (namespace, name); [onFlux] the Flux screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,10 +73,12 @@ fun AppsScreen(
     onNode: (addr: String, host: String, role: String) -> Unit,
     onArgoCD: () -> Unit,
     onArgoApp: (namespace: String, name: String) -> Unit,
+    onFlux: () -> Unit,
     vm: AppsViewModel = viewModel(factory = factory { AppsViewModel(app.talosRepository) }),
     workloadsVm: AppWorkloadsViewModel = viewModel(factory = factory { AppWorkloadsViewModel(app.talosRepository) }),
     routesVm: AppRoutesViewModel = viewModel(factory = factory { AppRoutesViewModel(app.talosRepository) }),
     argoVm: ArgoViewModel = viewModel(key = "apps-argocd", factory = factory { ArgoViewModel(app.talosRepository) }),
+    fluxVm: FluxViewModel = viewModel(key = "apps-flux", factory = factory { FluxViewModel(app.talosRepository) }),
 ) {
     val application = LocalContext.current.applicationContext as TalosApp
     val state by vm.state.collectAsStateWithLifecycle()
@@ -120,6 +125,10 @@ fun AppsScreen(
         if (argoOffered && status != null && inventory != null) status.inventoryBadges(inventory.apps) else emptyMap()
     }
 
+    // Flux: its own tile's sheet only, when the inventory shows it.
+    val fluxOffered = canRestart && inventory?.hasFlux == true
+    val fluxState by fluxVm.state.collectAsStateWithLifecycle()
+
     Scaffold(
         bottomBar = { DataFreshness(state) },
         topBar = {
@@ -165,12 +174,17 @@ fun AppsScreen(
                     if (argoOffered) {
                         LaunchedEffect(Unit) { argoVm.loadOrReuse(Triple(config?.activeContext, generation, invalidations)) }
                     }
+                    val isFlux = fluxOffered && detail.id == FLUX_CATALOG_ID
+                    if (isFlux) {
+                        LaunchedEffect(Unit) { fluxVm.loadOrReuse(Triple(config?.activeContext, generation, invalidations)) }
+                    }
                     AppDetailSheet(
                         app = detail,
                         nodes = nodes,
                         routes = if (canRestart) routes else null,
                         restart = if (canRestart) AppRestartUi(workloads, restarting) { confirm = it } else null,
                         argo = if (argoOffered) argoUi(detail, argoState, argoBusy, argoVm, onArgoCD, onArgoApp) else null,
+                        flux = if (isFlux) AppFluxUi(fluxState, onFlux) else null,
                         onPodNode = { addr -> nodes.openNode(addr, onNode) },
                         onDismiss = { selected = null },
                     )

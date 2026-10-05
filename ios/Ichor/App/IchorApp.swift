@@ -127,6 +127,8 @@ enum Route: Hashable {
     case dataServices(hints: String, downNodes: Set<String>)
     /// Argo CD Applications (os:admin); downNodes as for dataServices.
     case argoCD(downNodes: Set<String>)
+    /// Flux Kustomizations, HelmReleases and sources (os:admin); downNodes as for dataServices.
+    case flux(downNodes: Set<String>)
     case health
     case settings
     case importConfig
@@ -174,6 +176,7 @@ struct MainNavigation: View {
                     case .workloads: KubernetesView()
                     case .dataServices(let hints, let downNodes): DataServicesView(hints: hints, downNodes: downNodes)
                     case .argoCD(let downNodes): ArgoCDView(downNodes: downNodes)
+                    case .flux(let downNodes): FluxView(downNodes: downNodes)
                     case .health: HealthView()
                     case .settings: SettingsView()
                     case .diagnosis(let note): DiagnosisView(initialNote: note)
