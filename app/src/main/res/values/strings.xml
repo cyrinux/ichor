@@ -146,6 +146,9 @@
     <string name="overview_node_actions">Node actions</string>
     <string name="overview_role_control_plane">control plane</string>
     <string name="overview_update_banner">Ichor %1$s is available — tap to update</string>
+    <string name="overview_store_update_available">An update is available — tap to update</string>
+    <string name="overview_store_update_downloading">Downloading the update…</string>
+    <string name="overview_store_update_ready">Update downloaded — tap to restart</string>
     <string name="overview_support_title">Enjoying Ichor?</string>
     <string name="overview_support_body">It is free and open source. If it saves you time, you can support its development.</string>
     <string name="overview_support_never">Don\'t ask again</string>

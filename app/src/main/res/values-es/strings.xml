@@ -149,6 +149,9 @@
     <string name="overview_node_actions">Acciones del nodo</string>
     <string name="overview_role_control_plane">plano de control</string>
     <string name="overview_update_banner">Ichor %1$s está disponible: toca para actualizar</string>
+    <string name="overview_store_update_available">Hay una actualización disponible: toca para actualizar</string>
+    <string name="overview_store_update_downloading">Descargando la actualización…</string>
+    <string name="overview_store_update_ready">Actualización descargada: toca para reiniciar</string>
     <string name="overview_support_title">¿Te gusta Ichor?</string>
     <string name="overview_support_body">Es gratuita y de código abierto. Si te ahorra tiempo, puedes apoyar su desarrollo.</string>
     <string name="overview_support_never">No volver a preguntar</string>
