@@ -31,6 +31,17 @@ data class ClusterSnapshot(
     val dataIssues: Map<String, String> = emptyMap(),
     /** Warnings seen once and not notified yet: a short rebuild after a reboot should not alert. */
     val dataPending: List<String> = emptyList(),
+    /** Watching Argo CD and Flux apps was on for this check (opt-in). */
+    val gitopsWatched: Boolean = false,
+    /** Their apps could be read this time. */
+    val gitopsChecked: Boolean = false,
+    /**
+     * GitOps app issues ("argocd|namespace/name" or "flux|Kind namespace/name" → "severity|reason",
+     * see [gitopsIssuesOf]), kept like [dataIssues].
+     */
+    val gitopsIssues: Map<String, String> = emptyMap(),
+    /** GitOps warnings seen once and not notified yet. */
+    val gitopsPending: List<String> = emptyList(),
 ) {
     val readyCount: Int get() = nodes.values.count { it.health == NodeHealth.READY }
     val notReadyCount: Int get() = nodes.values.count { it.health == NodeHealth.NOT_READY }
@@ -56,7 +67,13 @@ fun snapshotOf(
     /** Data services watched ([dataServices] null when watched but unreadable). */
     dataWatched: Boolean = false,
     dataServices: DataServices? = null,
+    /** GitOps apps watched ([gitopsIssues] null when watched but unreadable, see [gitopsIssuesOf]). */
+    gitopsWatched: Boolean = false,
+    gitopsIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
+    gitopsWatched = gitopsWatched,
+    gitopsChecked = gitopsWatched && gitopsIssues != null,
+    gitopsIssues = gitopsIssues?.takeIf { gitopsWatched }.orEmpty(),
     dataWatched = dataWatched,
     dataChecked = dataWatched && dataServices != null,
     dataIssues = dataServices?.takeIf { dataWatched }?.let(::dataIssuesOf).orEmpty(),

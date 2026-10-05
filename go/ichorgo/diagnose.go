@@ -51,7 +51,10 @@ type Diagnosis struct {
 // Nothing leaves the phone here. With anonymize, the nodes' names, addresses and domain
 // are replaced with placeholders, and answers get the real ones back before they are
 // shown; in screenshot mode the report is masked like everything else on screen.
-func CollectDiagnosis(configYAML, contextName string, anonymize bool) (d *Diagnosis, err error) {
+//
+// kubeServer is the cluster's Kubernetes API address the user set ("" for the kubeconfig's):
+// with os:admin, the Argo CD and Flux apps that are not fine are added (see collectGitOps).
+func CollectDiagnosis(configYAML, contextName, kubeServer string, anonymize bool) (d *Diagnosis, err error) {
 	defer maskErr(&err)
 
 	contextName = unmaskContext(configYAML, contextName)
@@ -60,7 +63,7 @@ func CollectDiagnosis(configYAML, contextName string, anonymize bool) (d *Diagno
 	d.screenshotMode, d.screenshotResets = privacy.state()
 
 	data, err := withSession(configYAML, contextName, diagnosisCollectTimeout, func(ctx context.Context, s *session) (diagnosisData, error) {
-		return collectDiagnosis(ctx, s), nil
+		return collectDiagnosis(ctx, s, kubeTarget{configYAML, contextName, kubeServer}), nil
 	})
 	if err != nil {
 		return nil, err

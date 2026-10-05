@@ -374,7 +374,7 @@ func main() {
 	case "diagnose-report":
 		// What the AI diagnosis would send, anonymized; nothing is sent.
 		var d *ichorgo.Diagnosis
-		if d, err = ichorgo.CollectDiagnosis(cfg, *contextName, true); err == nil {
+		if d, err = ichorgo.CollectDiagnosis(cfg, *contextName, *kubeServer, true); err == nil {
 			out = d.Report()
 		}
 	case "diagnose":
@@ -431,7 +431,7 @@ func aiKey(provider string) string {
 // cluster) and prints the model's answer. Unlike the rest of the probe, it sends cluster
 // data to the provider.
 func diagnose(cfg, contextName, provider, model string) error {
-	d, err := ichorgo.CollectDiagnosis(cfg, contextName, false)
+	d, err := ichorgo.CollectDiagnosis(cfg, contextName, "", false)
 	if err != nil {
 		return err
 	}

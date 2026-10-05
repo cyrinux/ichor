@@ -63,10 +63,11 @@ extension TalosClient {
         try await json { IchorgoAIModels(provider, settings.apiKey, settings.baseURL, $0) }
     }
 
-    /// Reads the cluster state into a report (os:reader calls only). Nothing leaves the phone here.
+    /// Reads the cluster state into a report (os:reader calls, plus Argo CD and Flux through the
+    /// Kubernetes API with os:admin). Nothing leaves the phone here.
     func collectDiagnosis(anonymize: Bool) async throws -> DiagnosisReport {
-        let report: DiagnosisReport? = try await Self.run { [config, context] error in
-            IchorgoCollectDiagnosis(config, context, anonymize, error).map(DiagnosisReport.init)
+        let report: DiagnosisReport? = try await Self.run { [config, context, kubeServer] error in
+            IchorgoCollectDiagnosis(config, context, kubeServer, anonymize, error).map(DiagnosisReport.init)
         }
         guard let report else { throw TalosError(message: "CollectDiagnosis returned no report") }
         return report

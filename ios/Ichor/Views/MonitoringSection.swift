@@ -4,6 +4,7 @@ import IchorCore
 struct MonitoringSection: View {
     @State private var enabled = BackgroundMonitor.alertsEnabled
     @State private var dataWatched = BackgroundMonitor.dataServicesWatched
+    @State private var gitopsWatched = BackgroundMonitor.gitopsWatched
     @State private var message: String?
 
     var body: some View {
@@ -17,6 +18,19 @@ struct MonitoringSection: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Watch data services")
                     Text("Also alerts on Longhorn volumes that fault or degrade, a degraded Garage cluster and Postgres clusters that go down or whose backups fail. Each check uses the Kubernetes API (os:admin) and runs the Garage CLI in one of its pods.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
+            // Opt-in too: lists the Argo CD Applications and Flux objects at every check.
+            Toggle(isOn: Binding(get: { gitopsWatched }, set: { on in
+                BackgroundMonitor.gitopsWatched = on
+                gitopsWatched = on
+            })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Watch GitOps apps")
+                    Text("Argo CD and Flux apps that break or fail to sync; each check reads them through the Kubernetes API.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

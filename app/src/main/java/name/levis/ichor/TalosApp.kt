@@ -101,7 +101,7 @@ class TalosApp : Application() {
             masked = { uiPreferences.privacyMask.value.enabled },
         )
     }
-    val supportBundleRepository by lazy { SupportBundleRepository(configRepository, filesDir) }
+    val supportBundleRepository by lazy { SupportBundleRepository(configRepository, kubeServers, filesDir) }
     /** The followed upgrade; UpgradeService keeps the app alive while it runs. */
     val upgradeManager by lazy {
         UpgradeManager(configRepository, kubeServers, onStarted = { UpgradeService.start(this) }, onFinished = talosRepository::forgetFeatures)
@@ -157,7 +157,7 @@ class TalosApp : Application() {
     }
 
     /** The optional AI diagnosis: off until enabled in Settings. API keys get their own Keystore keys. */
-    val diagnosisRepository by lazy { DiagnosisRepository(configRepository) }
+    val diagnosisRepository by lazy { DiagnosisRepository(configRepository, kubeServers) }
     val aiPreferences by lazy {
         AiPreferences(
             getSharedPreferences(AiPreferences.FILE, Context.MODE_PRIVATE),

@@ -36,6 +36,9 @@ from the CLI's `===== kind ns/name ======` sections. Timeout 60 s.
 UI: on the app detail, **"Show diff"** for an OutOfSync app; the sync sheet shows the diff of
 the selected resources before **Sync**. Monospace, collapsible per resource, red/green lines.
 
+The normalisation, redaction and diff screen are shared with the Flux diff
+([06-flux.md](06-flux.md) phase 5): build them once, for both.
+
 ## Open questions
 
 1. Is exec into Argo CD pods acceptable to users? (It is what the Garage health already does.)

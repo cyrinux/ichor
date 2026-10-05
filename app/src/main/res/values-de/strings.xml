@@ -432,6 +432,16 @@
     <string name="monitor_data_problem">%1$s braucht Aufmerksamkeit</string>
     <string name="monitor_data_ok">%1$s ist wieder fehlerfrei</string>
     <string name="monitor_data_text">%1$s · %2$s</string>
+    <string name="monitor_gitops">GitOps-Apps überwachen</string>
+    <string name="monitor_gitops_desc">Argo-CD- und Flux-Apps, die ausfallen oder nicht synchronisieren; jede Prüfung liest sie über die Kubernetes-API.</string>
+    <string name="monitor_gitops_argo_failed">Argo CD: Sync von %1$s fehlgeschlagen</string>
+    <string name="monitor_gitops_argo_degraded">Argo CD: %1$s ist Degraded</string>
+    <string name="monitor_gitops_argo_missing">Argo CD: %1$s ist Missing</string>
+    <string name="monitor_gitops_argo_out_of_sync">Argo CD: %1$s ist OutOfSync</string>
+    <string name="monitor_gitops_argo_error">Argo CD: %1$s hat einen Fehler</string>
+    <string name="monitor_gitops_argo_ok">Argo CD: %1$s ist wieder Synced und Healthy</string>
+    <string name="monitor_gitops_flux_not_ready">Flux: %1$s %2$s ist nicht Ready</string>
+    <string name="monitor_gitops_flux_ok">Flux: %1$s %2$s ist wieder Ready</string>
     <string name="monitor_check_every">Prüfen alle</string>
     <string name="monitor_interval_minutes">%1$d Min.</string>
     <string name="monitor_interval_hours">%1$d Std.</string>

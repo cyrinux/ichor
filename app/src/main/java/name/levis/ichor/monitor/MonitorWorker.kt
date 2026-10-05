@@ -37,8 +37,24 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val watchData = store.dataServicesWatched.value && active?.allows(Feature.WORKLOADS) == true
         val dataServices = if (watchData) runCatching { app.talosRepository.dataServices(hints = "") }.getOrNull() else null
 
+        // Same for Argo CD and Flux apps: each call answers installed=false quickly when absent. A
+        // part that could not be read keeps its known issues, so they neither clear falsely nor
+        // hold the other part's alerts back.
+        val watchGitops = store.gitopsWatched.value && active?.allows(Feature.WORKLOADS) == true
+        val gitopsIssues = if (watchGitops) {
+            val argo = runCatching { app.talosRepository.argoCD() }.getOrNull()
+            val flux = runCatching { app.talosRepository.flux() }.getOrNull()
+            gitopsIssuesWithGaps(argo, flux, known = knownGitOpsIssues(store.snapshot(), overview.context))
+        } else {
+            null
+        }
+
         val now = System.currentTimeMillis()
-        val current = snapshotOf(overview, etcd, certNotAfter, now, active?.fingerprint.orEmpty(), watchData, dataServices)
+        val current = snapshotOf(
+            overview, etcd, certNotAfter, now, active?.fingerprint.orEmpty(), watchData, dataServices,
+            gitopsWatched = watchGitops,
+            gitopsIssues = gitopsIssues,
+        )
         val evaluation = evaluate(store.snapshot(), current, now)
         store.saveSnapshot(evaluation.next)
         scheduleWidgetStaleRefresh(applicationContext, evaluation.next, now)

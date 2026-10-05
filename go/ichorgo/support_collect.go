@@ -52,13 +52,39 @@ func nodeBundleSection(s *session, node string) bundleSection {
 	}
 }
 
-func clusterBundleSection(s *session) bundleSection {
+func clusterBundleSection(s *session, kube kubeTarget) bundleSection {
 	return bundleSection{
 		dir: "cluster",
 		steps: []bundleStep{
 			{"etcd", func(ctx context.Context) ([]bundleFile, error) { return collectEtcd(ctx, s) }},
+			{"gitops", func(ctx context.Context) ([]bundleFile, error) { return collectGitOpsFile(ctx, s, kube) }},
 		},
 	}
+}
+
+// collectGitOpsFile writes the Argo CD and Flux state, without repository credentials. Nothing
+// when the role has no os:admin or neither runs.
+func collectGitOpsFile(ctx context.Context, s *session, kube kubeTarget) ([]bundleFile, error) {
+	summary, err := summarizeContext("", s.context)
+	if err != nil {
+		return nil, err
+	}
+
+	g := collectGitOps(ctx, kube, summary.Roles)
+	if g == nil {
+		return nil, nil
+	}
+
+	if g.Note != "" {
+		return nil, errors.New(g.Note)
+	}
+
+	data, err := json.MarshalIndent(scrubGitOps(*g), "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	return []bundleFile{{name: "gitops.json", content: data}}, nil
 }
 
 func collectVersion(ctx context.Context, s *session, node string) ([]bundleFile, error) {
