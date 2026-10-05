@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.health
 
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import androidx.compose.foundation.layout.Arrangement
@@ -106,6 +108,7 @@ fun HealthScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.health_title)) },
                 navigationIcon = { BackButton(onBack) },
+                actions = { ShareLinkButton(ShareTarget.screen(ShareTarget.HEALTH)) },
             )
         },
     ) { padding ->

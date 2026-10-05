@@ -2467,6 +2467,9 @@
         <item quantity="one">Questo congelamento copre %1$d app: riprende anche lei.</item>
         <item quantity="other">Questo congelamento copre %1$d app: riprendono tutte.</item>
     </plurals>
+    <string name="share_link">Condividi link</string>
+    <string name="share_link_unknown_cluster">Questo link è per un cluster che non è su questo telefono</string>
+    <string name="share_link_invalid">Link Ichor non valido</string>
     <string name="argo_revert_text_change">%1$s distribuisce questo con l\'auto-riparazione attiva: in pochi minuti lo riporta come è in Git. Congela prima %1$s per mantenere la modifica per un po\'.</string>
     <string name="argo_revert_freeze_first">Congela prima %1$s per 1 h</string>
     <string name="argo_freeze_reason_suspend">sospensione</string>

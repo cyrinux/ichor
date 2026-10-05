@@ -8,7 +8,8 @@ import IchorCore
 /// (plans/roadmap/large-clusters.md). The toolbar opens
 /// the network policies and, with Cilium, the live flows; it also sets the API address to use
 /// instead of the kubeconfig's, for a cluster the phone reaches another way (not in screenshot
-/// mode: the alert would show the real address).
+/// mode: the alert would show the real address). A share link's focus opens a tab, scoped to
+/// and searched for one item, whose sheet opens once its row loads.
 struct KubernetesView: View {
     enum Tab: Hashable { case workloads, pods, cronJobs, network }
 
@@ -48,6 +49,39 @@ struct KubernetesView: View {
     /// Read once on open: Live flows needs Cilium.
     @State private var cilium: CiliumStatus?
     @State private var netScreen: NetScreen?
+    /// The namespace a share link scoped the lists to, not kept, until another is picked.
+    @State private var linkedNamespace: String?
+    /// The row id of the share link's item, until its sheet opens.
+    @State private var focusID: String?
+    private let focusTab: Tab
+
+    init(focus: KubeFocus? = nil) {
+        let tab: Tab = switch focus?.tab {
+        case .pods?: .pods
+        case .cronJobs?: .cronJobs
+        default: .workloads
+        }
+        focusTab = tab
+        _tab = State(initialValue: tab)
+        _query = State(initialValue: focus?.name ?? "")
+        _linkedNamespace = State(initialValue: focus.flatMap { $0.namespace.isEmpty ? nil : $0.namespace })
+        _focusID = State(initialValue: focus.flatMap { $0.id.isEmpty ? nil : $0.id })
+    }
+
+    /// The share link's item, on its own tab only (rows of another tab share its ids).
+    private var focus: Binding<String?> {
+        Binding(get: { tab == focusTab ? focusID : nil }, set: { focusID = $0 })
+    }
+
+    /// The tab as a share link names it; nil for the network test.
+    private var sharedTab: KubeFocus.Tab? {
+        switch tab {
+        case .workloads: .workloads
+        case .pods: .pods
+        case .cronJobs: .cronJobs
+        case .network: nil
+        }
+    }
 
     /// The cluster whose API address can be set: not the demo, not in screenshot mode.
     private var editable: ContextSummary? {
@@ -57,15 +91,18 @@ struct KubernetesView: View {
     var body: some View {
         Group {
             switch tab {
-            case .workloads: WorkloadsList(list: workloads, control: scopeControl, query: query)
-            case .pods: PodsList(list: pods, control: scopeControl, query: query, onFlows: podFlows)
-            case .cronJobs: CronJobsList(list: cronJobs, control: scopeControl, query: query)
+            case .workloads: WorkloadsList(list: workloads, control: scopeControl, query: query, focus: focus)
+            case .pods: PodsList(list: pods, control: scopeControl, query: query, onFlows: podFlows, focus: focus)
+            case .cronJobs: CronJobsList(list: cronJobs, control: scopeControl, query: query, focus: focus)
             case .network: NetPerfView(session: netPerf)
             }
         }
         // A new address: the lists load again through it.
         .id(model.client?.kubeServer)
         .toolbar {
+            if let sharedTab {
+                ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .kubernetes(tab: sharedTab)) }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button { netScreen = .policies } label: { Label("Network policies", systemImage: "shield.lefthalf.filled") }
@@ -149,6 +186,7 @@ struct KubernetesView: View {
     private var scopeControl: KubeScopeControl {
         let scope = defaultScope(remembered: rememberedScope, namespaces: namespaces)
         return KubeScopeControl(scope: scope ?? KubeScope(), namespaces: namespaces, ready: scope != nil) { picked in
+            linkedNamespace = nil
             if let cluster = scopeCluster { KubeScopeStore.set(picked, for: cluster) } else { localScope = picked }
             scopeEdits += 1
         }
@@ -157,6 +195,7 @@ struct KubernetesView: View {
     /// The scope picked for the active cluster, nil for the default.
     private var rememberedScope: KubeScope? {
         _ = scopeEdits
+        if let linkedNamespace { return KubeScope(namespace: linkedNamespace, chosen: true) }
         guard let cluster = scopeCluster else { return localScope }
         return KubeScopeStore.scope(for: cluster)
     }
@@ -205,6 +244,8 @@ private struct WorkloadsList: View {
     let list: PagedList<KubeWorkload>
     let control: KubeScopeControl
     let query: String
+    /// A share link's workload: its sheet opens once listed.
+    @Binding var focus: String?
 
     @Environment(AppModel.self) private var model
     @State private var confirm: KubeWorkload?
@@ -245,6 +286,11 @@ private struct WorkloadsList: View {
         .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
         .sheet(item: $following) { workload in RolloutStatusSheet(workload: workload) { await load() } }
         .sheet(item: $actions) { workload in WorkloadActionsSheet(workload: workload) { await load() } }
+        .task(id: list.loadedItems.map(\.id)) {
+            guard let focus, let workload = list.loadedItems.first(where: { $0.id == focus }) else { return }
+            actions = workload
+            self.focus = nil
+        }
         .messageAlert($resultMessage)
     }
 

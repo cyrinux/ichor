@@ -57,6 +57,9 @@ struct WorkloadActionsSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                ToolbarItem(placement: .topBarLeading) {
+                    ShareLinkButton(target: .workload(kind: workload.kind, namespace: workload.namespace, name: workload.name))
+                }
             }
             .task { if workload.hasHistory { await loadRevisions() } }
             .confirmationDialog(String(localized: "Argo CD will revert this"), isPresented: $askArgo, titleVisibility: .visible,

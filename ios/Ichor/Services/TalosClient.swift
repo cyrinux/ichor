@@ -63,6 +63,19 @@ struct TalosClient: Sendable {
         try await run { IchorgoDemoConfig($0) }
     }
 
+    /// The screen a share link names; throws for any other URL or an invalid value.
+    static func parseShareLink(_ url: URL) async throws -> ShareTarget {
+        try await json { IchorgoParseShareLink(url.absoluteString, $0) }
+    }
+
+    /// The https link to `target` (its cluster set). No cluster call: built on the spot.
+    static func shareLink(for target: ShareTarget) -> URL? {
+        guard let data = try? JSONEncoder().encode(target) else { return nil }
+        var error: NSError?
+        let link = IchorgoBuildShareLink(String(decoding: data, as: UTF8.self), &error)
+        return error == nil ? URL(string: link) : nil
+    }
+
     /// `stored` with context's ca/crt/key replaced by those of `generated` (a single-context
     /// talosconfig from generateTalosconfig); other contexts and fields are kept.
     static func replaceContextCredentials(stored: String, generated: String, context: String) async throws -> String {

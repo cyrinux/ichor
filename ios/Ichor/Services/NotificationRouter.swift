@@ -20,6 +20,9 @@ final class NotificationRouter {
 
     /// "+1 h" on a freeze reminder: extend that freeze once the app is open.
     var pendingFreezeExtend: FreezeExtendRequest?
+
+    /// A share link (ichor://open?…) was opened: the screen it names, once unlocked.
+    var pendingShareLink: URL?
 }
 
 /// Notification taps (the center keeps its delegate weakly, hence the shared instance).

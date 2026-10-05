@@ -59,6 +59,7 @@ struct ArgoAppView: View {
             }
         }
         .navigationTitle(Text(verbatim: name))
+        .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .argoApp(namespace: namespace, name: name)) } }
         .navigationBarTitleDisplayMode(.inline)
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)

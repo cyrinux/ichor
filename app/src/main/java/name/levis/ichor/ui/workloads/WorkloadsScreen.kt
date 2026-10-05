@@ -74,7 +74,8 @@ class WorkloadsViewModel(talos: TalosRepository, metered: () -> Boolean) : Paged
 /**
  * Deployments, StatefulSets and DaemonSets of the scope's namespace with a rolling restart like
  * `kubectl rollout restart`; a tap opens the workload's sheet (scale, history and rollback).
- * The scope ([control]) and [query] are shared with the Pods tab.
+ * The scope ([control]) and [query] are shared with the Pods tab. [focusKey]: the workload
+ * whose sheet to open once listed (a share link), then [onFocused].
  */
 @Composable
 fun WorkloadsTab(
@@ -83,6 +84,8 @@ fun WorkloadsTab(
     onQuery: (String) -> Unit,
     modifier: Modifier = Modifier,
     vm: WorkloadsViewModel = viewModel(factory = factory { WorkloadsViewModel(app.talosRepository) { isMeteredNetwork(app) } }),
+    focusKey: String? = null,
+    onFocused: () -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
@@ -92,6 +95,13 @@ fun WorkloadsTab(
     var opened by remember { mutableStateOf<String?>(null) }
     var rollback by remember { mutableStateOf<Pair<KubeWorkload, KubeRevision>?>(null) }
     var podsOf by remember { mutableStateOf<PodSelection.OfWorkload?>(null) }
+    val listed = (state as? UiState.Loaded)?.data?.items
+    LaunchedEffect(focusKey, listed) {
+        if (focusKey != null && listed.orEmpty().any { it.key == focusKey }) {
+            opened = focusKey
+            onFocused()
+        }
+    }
     podsOf?.let { WorkloadPodsSheet(it, onDismiss = { podsOf = null }) }
 
     RestartResultToasts(vm.restarts.results)

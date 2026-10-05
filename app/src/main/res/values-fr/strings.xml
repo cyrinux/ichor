@@ -2467,6 +2467,9 @@
         <item quantity="one">Ce gel couvre %1$d app : elle reprend aussi.</item>
         <item quantity="other">Ce gel couvre %1$d apps : elles reprennent toutes.</item>
     </plurals>
+    <string name="share_link">Partager le lien</string>
+    <string name="share_link_unknown_cluster">Ce lien concerne un cluster absent de ce téléphone</string>
+    <string name="share_link_invalid">Lien Ichor non valide</string>
     <string name="argo_revert_text_change">%1$s déploie ceci avec l\'auto-réparation active : en quelques minutes, il le remet comme dans Git. Gelez %1$s d\'abord pour garder votre changement un moment.</string>
     <string name="argo_revert_freeze_first">Geler %1$s 1 h d\'abord</string>
     <string name="argo_freeze_reason_suspend">suspension</string>

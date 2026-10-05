@@ -2459,6 +2459,9 @@
         <item quantity="one">Dieses Einfrieren umfasst %1$d App: Sie läuft auch wieder.</item>
         <item quantity="other">Dieses Einfrieren umfasst %1$d Apps: Sie laufen alle wieder.</item>
     </plurals>
+    <string name="share_link">Link teilen</string>
+    <string name="share_link_unknown_cluster">Dieser Link gehört zu einem Cluster, der nicht auf diesem Telefon ist</string>
+    <string name="share_link_invalid">Kein gültiger Ichor-Link</string>
     <string name="argo_revert_text_change">%1$s stellt dies mit aktiver Selbstheilung bereit: Innerhalb von Minuten setzt es das auf den Stand in Git zurück. Friere %1$s zuerst ein, um deine Änderung eine Weile zu behalten.</string>
     <string name="argo_revert_freeze_first">%1$s zuerst 1 Std. einfrieren</string>
     <string name="argo_freeze_reason_suspend">aussetzen</string>

@@ -62,6 +62,10 @@ targets:
         CFBundleDevelopmentRegion: en
         CFBundleLocalizations: [en, fr, es, uk, de, it]
         UILaunchScreen: {}
+        # Share links (ichor://open?…, see ShareLinks.swift); the scene delegate receives them.
+        CFBundleURLTypes:
+          - CFBundleURLName: name.levis.ichor
+            CFBundleURLSchemes: [ichor]
         # One scene; its delegate (QuickActions.swift) receives the Home Screen quick actions.
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false

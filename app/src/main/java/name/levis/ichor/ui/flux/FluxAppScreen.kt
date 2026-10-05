@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.flux
 
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -84,7 +86,10 @@ fun FluxAppScreen(kind: String, namespace: String, name: String, onBack: () -> U
             TopAppBar(
                 title = { Text(name) },
                 navigationIcon = { BackButton(onBack) },
-                actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
+                actions = {
+                    ShareLinkButton(ShareTarget.fluxApp(kind, namespace, name))
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
+                },
             )
         },
     ) { padding ->

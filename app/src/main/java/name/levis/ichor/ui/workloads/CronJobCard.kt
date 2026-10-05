@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.PauseCircle
 import androidx.compose.material.icons.outlined.PlayArrow
@@ -53,6 +54,8 @@ import name.levis.ichor.model.KubeJobRun
 import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -86,6 +89,7 @@ internal fun CronJobCard(
                     RunHistoryStrip(cronJob.runs)
                     LastRunText(cronJob.runs.firstOrNull())
                 }
+                ShareLinkButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), icon = Icons.Outlined.Link)
                 SuspendButton(cronJob, suspending, onSuspend)
                 RunNowButton(cronJob, triggering, onRun)
             }

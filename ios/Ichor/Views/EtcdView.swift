@@ -86,6 +86,7 @@ struct EtcdView: View {
             .themedBackground()
         }
         .navigationTitle(Text(verbatim: "etcd"))
+        .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.etcd)) } }
         .task { await load() }
         .confirmationDialog(Text("Disarm etcd alarms?"), isPresented: $confirmDisarm, titleVisibility: .visible) {
             Button("Disarm alarms", role: .destructive) { Task { await disarm() } }

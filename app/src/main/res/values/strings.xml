@@ -2463,6 +2463,9 @@
         <item quantity="one">This freeze covers %1$d app: it resumes too.</item>
         <item quantity="other">This freeze covers %1$d apps: they all resume.</item>
     </plurals>
+    <string name="share_link">Share link</string>
+    <string name="share_link_unknown_cluster">This link is for a cluster that isn\'t on this phone</string>
+    <string name="share_link_invalid">Not a valid Ichor link</string>
     <string name="argo_revert_text_change">%1$s deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze %1$s first to keep your change for a while.</string>
     <string name="argo_revert_freeze_first">Freeze %1$s 1 h first</string>
     <string name="argo_freeze_reason_suspend">suspend</string>

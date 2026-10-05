@@ -17,6 +17,8 @@ data class ContextSummary(
     val name: String,
     /** Identifies the cluster whatever screenshot mode does to [name]; keys its color. */
     val fingerprint: String = "",
+    /** The same for every context of the cluster, on any phone: what share links name. */
+    val clusterId: String = "",
     val endpoints: List<String> = emptyList(),
     val nodes: List<String> = emptyList(),
     val roles: List<String> = emptyList(),
