@@ -9,6 +9,10 @@ struct ClusterUnreachableView: View {
     let retry: () async -> Void
     let showNodes: () -> Void
 
+    @Environment(AppModel.self) private var model
+    @State private var editing: ContextSummary?
+    @State private var scanning = false
+
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
@@ -30,6 +34,17 @@ struct ClusterUnreachableView: View {
                 Button("Retry") { Task { await retry() } }
                     .buttonStyle(.borderedProminent)
                     .padding(.top, 8)
+                // Local network access denied is often the cause on Wi-Fi.
+                if outage.cause == .network {
+                    LocalNetworkNotice(centered: true)
+                }
+                // A talosconfig shared from elsewhere may list no endpoint reachable from here.
+                HStack {
+                    if outage.cause == .network {
+                        Button("Search the local network") { scanning = true }.buttonStyle(.bordered)
+                    }
+                    if let editable { Button("Edit endpoints") { editing = editable } }
+                }
                 // The nodes stay one tap away (Copy IP and the like).
                 Button("Show \(outage.nodes) nodes", action: showNodes)
                 Text("Tries again every \(unreachableRetrySeconds) s, and as soon as the network changes.")
@@ -41,6 +56,14 @@ struct ClusterUnreachableView: View {
             .frame(maxWidth: .infinity)
         }
         .refreshable { await retry() }
+        .endpointTools(editing: $editing, scanning: $scanning)
+    }
+
+    /// The cluster on screen, unless its endpoints cannot be edited: in screenshot mode the
+    /// editor would show fake endpoints; the demo has none.
+    private var editable: ContextSummary? {
+        guard !model.labels.masked, let context = model.activeSummary, !context.demo else { return nil }
+        return context
     }
 }
 

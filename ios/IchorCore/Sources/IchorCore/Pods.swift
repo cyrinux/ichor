@@ -16,7 +16,7 @@ public struct KubePodList: Decodable, Equatable, Sendable {
 }
 
 /// A Kubernetes pod with the status `kubectl get pods` shows (KubePods).
-public struct KubePod: Decodable, Equatable, Identifiable, Sendable {
+public struct KubePod: Codable, Equatable, Identifiable, Sendable {
     public let namespace: String
     public let name: String
     /// Running, Pending, CrashLoopBackOff, Init:Error, Terminating...
@@ -89,16 +89,20 @@ public func podNamespaces(_ pods: [KubePod]) -> [String] {
     Array(Set(pods.map(\.namespace))).sorted()
 }
 
-/// Pods of namespace (all when nil) whose name, status, node, owner or image contains query
-/// (case-insensitive), unhealthy ones first, then by namespace and name.
-public func filterPods(_ pods: [KubePod], namespace: String?, query: String) -> [KubePod] {
+/// Pods of namespace (all when nil) whose name, status, node, owner or, when searchImages,
+/// image contains query (case-insensitive). sorted: unhealthy ones first, then by namespace
+/// and name; else in the order loaded (a list still incomplete).
+public func filterPods(_ pods: [KubePod], namespace: String?, query: String, sorted: Bool = true,
+                       searchImages: Bool = true) -> [KubePod] {
     let needle = query.trimmingCharacters(in: .whitespaces)
     let contains = { (text: String) in text.range(of: needle, options: .caseInsensitive) != nil }
-    return pods
-        .filter { p in
-            (namespace == nil || p.namespace == namespace) &&
-                (needle.isEmpty || [p.name, p.status, p.node, p.owner].contains(where: contains) || p.images.contains(where: contains))
-        }
+    let matching = pods.filter { p in
+        (namespace == nil || p.namespace == namespace) &&
+            (needle.isEmpty || [p.name, p.status, p.node, p.owner].contains(where: contains) ||
+                searchImages && p.images.contains(where: contains))
+    }
+    guard sorted else { return matching }
+    return matching
         .sorted { a, b in
             if a.healthy != b.healthy { return !a.healthy }
             if a.namespace != b.namespace { return a.namespace < b.namespace }

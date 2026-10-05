@@ -301,7 +301,7 @@ func (b *topologyBuilder) sortedLinks() []topologyLink {
 }
 
 // sites groups the nodes: by zone label first, then nodes without one join the nodes they
-// reach over a private address or share a private subnet with. Two zones never merge.
+// reach over a private address or share a private or public /24 with. Two zones never merge.
 func (b *topologyBuilder) sites() []topologySite {
 	index := make(map[string]int, len(b.nodes))
 	for i, n := range b.nodes {
@@ -331,9 +331,13 @@ func (b *topologyBuilder) sites() []topologySite {
 		}
 	}
 
+	// Public addresses in one /24 are one datacenter: unlabelled servers with public IPs only
+	// reach each other over public endpoints, so this is the one clue they are together.
 	for i, n := range b.nodes {
 		for j := range i {
-			if sharedSubnet(n.Addresses, b.nodes[j].Addresses) != "" && !public[pairKey(n.ID, b.nodes[j].ID)] {
+			m := b.nodes[j]
+			if sharedSubnet(n.Addresses, m.Addresses, lanSubnet) != "" && !public[pairKey(n.ID, m.ID)] ||
+				sharedSubnet(n.Addresses, m.Addresses, publicSubnet) != "" {
 				g.union(i, j)
 			}
 		}
@@ -398,21 +402,24 @@ func (b *topologyBuilder) describeSite(s topologySite) topologySite {
 		return s
 	}
 
-	s.Kind, s.Label = "lan", commonSubnet(members)
+	s.Kind, s.Label = "lan", cmp.Or(commonSubnet(members, lanSubnet), commonSubnet(members, publicSubnet))
 
 	return s
 }
 
-// commonSubnet is the private IPv4 /24 every node has an address in ("" for none).
-func commonSubnet(nodes []*topologyNode) string {
+// subnetOf maps an address to the /24 it groups by, false when it does not group.
+type subnetOf func(string) (netip.Prefix, bool)
+
+// commonSubnet is the IPv4 /24 every node has an address in ("" for none).
+func commonSubnet(nodes []*topologyNode, subnet subnetOf) string {
 	for _, a := range nodes[0].Addresses {
-		p, ok := lanSubnet(a)
+		p, ok := subnet(a)
 		if !ok {
 			continue
 		}
 
 		if !slices.ContainsFunc(nodes[1:], func(n *topologyNode) bool {
-			return !slices.ContainsFunc(n.Addresses, func(x string) bool { q, ok := lanSubnet(x); return ok && q == p })
+			return !slices.ContainsFunc(n.Addresses, func(x string) bool { q, ok := subnet(x); return ok && q == p })
 		}) {
 			return p.String()
 		}
@@ -428,16 +435,16 @@ func lanAddress(a netip.Addr) bool {
 	return a.IsPrivate() || a.IsLinkLocalUnicast() || a.IsLoopback()
 }
 
-// sharedSubnet is the private IPv4 /24 two address lists have in common ("" for none).
-func sharedSubnet(a, b []string) string {
+// sharedSubnet is the IPv4 /24 two address lists have in common ("" for none).
+func sharedSubnet(a, b []string, subnet subnetOf) string {
 	for _, x := range a {
-		px, ok := lanSubnet(x)
+		px, ok := subnet(x)
 		if !ok {
 			continue
 		}
 
 		for _, y := range b {
-			if py, ok := lanSubnet(y); ok && px == py {
+			if py, ok := subnet(y); ok && px == py {
 				return px.String()
 			}
 		}
@@ -453,6 +460,27 @@ func lanSubnet(s string) (netip.Prefix, bool) {
 	}
 
 	p, _ := a.Unmap().Prefix(24)
+
+	return p, true
+}
+
+// carrierNAT is the shared address space (RFC 6598): CGNAT and Tailscale hand it out
+// across unrelated places, so a shared /24 there says nothing about where nodes are.
+var carrierNAT = netip.MustParsePrefix("100.64.0.0/10")
+
+// publicSubnet is the /24 of a global unicast IPv4 address outside private and shared space.
+func publicSubnet(s string) (netip.Prefix, bool) {
+	a, err := netip.ParseAddr(s)
+	if err != nil {
+		return netip.Prefix{}, false
+	}
+
+	a = a.Unmap()
+	if !a.Is4() || !a.IsGlobalUnicast() || a.IsPrivate() || carrierNAT.Contains(a) {
+		return netip.Prefix{}, false
+	}
+
+	p, _ := a.Prefix(24)
 
 	return p, true
 }

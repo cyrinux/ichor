@@ -535,7 +535,8 @@ Both run on pushes to `main` and on pull requests. Release APKs are named
 the updater ignores unsigned ones. On a `v*` tag (`just release-tag 0.1.0`,
 then `git push origin v0.1.0`), they attach the release APK and the IPA to the GitHub release.
 
-To sign the release APK in CI, generate a key once and upload it as repository secrets:
+To sign the release APK in CI, generate a key once and upload it as secrets of the `release`
+environment (Settings → Environments; restricted to `v*` tags, so pull requests never see them):
 
 ```sh
 just android-keystore-gen       # then export ICHOR_KEYSTORE, ICHOR_KEYSTORE_PASSWORD, ICHOR_KEY_ALIAS
@@ -550,7 +551,7 @@ The secrets it sets:
 | `ICHOR_KEYSTORE_PASSWORD` | the keystore password |
 | `ICHOR_KEY_ALIAS` | the key alias, e.g. `ichor` |
 
-Without them, the release APK is unsigned.
+Without them, and on every build that isn't a `v*` tag, the release APK is unsigned.
 
 ## Languages
 
@@ -594,6 +595,8 @@ in [fastlane/PLAY_CONSOLE.md](fastlane/PLAY_CONSOLE.md#feature-funding-in-app-pr
 ## License
 
 Apache License 2.0; see [LICENSE](LICENSE) and [NOTICE](NOTICE) for third-party components.
+The Ichor name, logo and icon are not covered by the license; see [TRADEMARKS.md](TRADEMARKS.md).
+To contribute, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Android demo deep link
 

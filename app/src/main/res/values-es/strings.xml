@@ -342,6 +342,7 @@
     <string name="topology_pick_server">Servidor</string>
     <string name="topology_link_seen_from">Visto desde %1$s</string>
     <string name="topology_not_queried">Los nodos en gris no están en este talosconfig: se dibujan a partir de lo que informan sus pares.</string>
+    <string name="topology_no_zone">Ningún nodo tiene zona: los sitios se deducen de las redes compartidas. Etiqueta los nodos con topology.kubernetes.io/zone para agruparlos.</string>
     <string name="topology_empty">Nada que mostrar: no se encontró ningún miembro del clúster ni par de KubeSpan.</string>
     <string name="topology_map_description">Mapa del clúster con sitios, nodos y enlaces KubeSpan</string>
 

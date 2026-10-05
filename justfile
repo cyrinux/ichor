@@ -143,7 +143,8 @@ android-keystore-info:
     nix develop --command keytool -list -v -keystore "$ICHOR_KEYSTORE" -storepass "$ICHOR_KEYSTORE_PASSWORD" \
         -alias "${ICHOR_KEY_ALIAS:-ichor}" | grep -E "Alias name|Owner|SHA256"
 
-# Upload the release signing key to GitHub Actions secrets (what android.yml signs with),
+# Upload the release signing key to the `release` environment's GitHub Actions secrets
+# (what android.yml signs with on v* tags),
 # from the same env as android-keystore-info. Values go through stdin, never argv.
 # Defaults to the current repository; e.g. `just github-secrets cyrinux/ichor`.
 github-secrets repo="":
@@ -157,10 +158,10 @@ github-secrets repo="":
     # Fail early on a wrong password/alias rather than in CI.
     nix develop --command keytool -list -keystore "$ICHOR_KEYSTORE" -alias "$alias" \
         -storepass:env ICHOR_KEYSTORE_PASSWORD >/dev/null
-    base64 -w0 "$ICHOR_KEYSTORE" | gh secret set ICHOR_KEYSTORE_BASE64 "${repo[@]}"
-    printf '%s' "$ICHOR_KEYSTORE_PASSWORD" | gh secret set ICHOR_KEYSTORE_PASSWORD "${repo[@]}"
-    printf '%s' "$alias" | gh secret set ICHOR_KEY_ALIAS "${repo[@]}"
-    gh secret list "${repo[@]}"
+    base64 -w0 "$ICHOR_KEYSTORE" | gh secret set ICHOR_KEYSTORE_BASE64 --env release "${repo[@]}"
+    printf '%s' "$ICHOR_KEYSTORE_PASSWORD" | gh secret set ICHOR_KEYSTORE_PASSWORD --env release "${repo[@]}"
+    printf '%s' "$alias" | gh secret set ICHOR_KEY_ALIAS --env release "${repo[@]}"
+    gh secret list --env release "${repo[@]}"
 
 # Build and install the debug APK, e.g. `just install` or `just install 192.168.1.50:37000`.
 install device=DEVICE: build
