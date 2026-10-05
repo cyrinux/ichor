@@ -69,6 +69,8 @@ jobs:
           # Set the repository variable IOS_MULTICAST=1 once Apple granted the multicast
           # entitlement (Wake-on-LAN broadcasts); see fastlane/APP_STORE_CONNECT.md.
           ICHOR_IOS_MULTICAST: ${{ vars.IOS_MULTICAST }}
+          # The code App Store Connect gives once the encryption documentation is approved.
+          ICHOR_IOS_EXPORT_CODE: ${{ vars.IOS_EXPORT_COMPLIANCE_CODE }}
         run: |
           export ASC_KEY_PATH="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
           printf '%s\n' "$ASC_KEY_P8" > "$ASC_KEY_PATH"
