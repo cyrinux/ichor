@@ -36,6 +36,11 @@ struct OverviewView: View {
     /// Live CPU and memory on the summary (Settings), sampled only while this screen is on
     /// screen and the app active.
     @AppStorage(LiveStatsSettings.key) private var liveStats = true
+    /// The sections' order and those hidden, the toolbar's icons and menu: one arrangement for
+    /// every cluster, changed in OverviewEditorSheet (same saved form as Android).
+    @AppStorage(OverviewLayout.storageKey) private var layoutText = ""
+    @AppStorage(OverviewBar.storageKey) private var barText = ""
+    @State private var customizing = false
     @Environment(\.scenePhase) private var scenePhase
     @State private var visible = false
 
@@ -70,64 +75,15 @@ struct OverviewView: View {
                     }
                     if let update { TalosUpdateSection(info: update, nodes: overview.nodes) }
                     if support.visible { Section { SupportCard(prompt: support) } }
-                    Section {
-                        ClusterSummaryCard(
-                            name: model.activeLabel,
-                            summary: ClusterSummary(nodes: overview.nodes),
-                            live: liveStats ? ClusterLiveStore.shared.live(for: loadID) : nil
-                        )
-                        NavigationLink(value: Route.insights) { Label("Cluster insights", systemImage: "magnifyingglass") }
-                    } header: {
-                        if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
-                    }
-                    AppsCard(state: inventory, hostnames: hostnames, argo: argoStatus)
-                    if let dataServices {
-                        DataServicesSection(state: dataServices, hints: dataHints, apps: inventoryApps, downNodes: overview.downHostnames)
-                    }
-                    if let argo {
-                        ArgoSection(state: argo, app: inventoryApps[argoCDCatalogID], downNodes: overview.downHostnames)
-                    }
-                    if let flux {
-                        FluxSection(state: flux, app: inventoryApps[fluxCatalogID], downNodes: overview.downHostnames)
-                    }
-                    Section {
-                        // In the map's order, site by site, once the cluster map is loaded.
-                        let groups = groupNodes(overview.nodes, by: TopologyStore.shared.topology(for: model.topologyKey))
-                        let version = overview.nodes.sharedVersion
-                        if isDenseCluster(overview.nodes.count) {
-                            // Too many for a chip each: counts, dots, and the problems capped.
-                            DenseNodes(groups: groups, path: $path)
-                        } else {
-                            ForEach(groups) { group in
-                                // Site headers only when there is more than one: a single site says nothing.
-                                if groups.count > 1 { SiteHeader(title: group.title) }
-                                NodeGroupRows(nodes: group.nodes, expanded: nodesExpanded, sharedVersion: version, path: $path)
-                            }
-                        }
-                    } header: {
-                        HStack {
-                            Text("Nodes")
-                            Spacer()
-                            if model.isDetectingPublicIPs || canDetectIPs(overview) {
-                                DetectPublicIPsButton(running: model.isDetectingPublicIPs) { confirmDetectIPs = true }
-                            }
-                            Text(verbatim: "\(overview.nodes.count)")
-                            if isDenseCluster(overview.nodes.count) {
-                                // A section holding hundreds of rows defeats the overview: a screen instead.
-                                Button { path.append(.nodes(filter: nil, nodes: overview.nodes.overviewOrder)) } label: {
-                                    Image(systemName: "chevron.right")
-                                }
-                                .accessibilityLabel(Text("Show all nodes"))
-                            } else {
-                                Button { withAnimation { nodesExpanded.toggle() } } label: {
-                                    Image(systemName: nodesExpanded ? "chevron.up" : "chevron.down")
-                                }
-                                .accessibilityLabel(nodesExpanded ? Text("Show less") : Text("Show all"))
+                    // The sections as arranged (Customize overview, in the ⋯ menu).
+                    ForEach(layout.visible) { card in section(card, overview: overview) }
+                    if layout.visible.isEmpty {
+                        Section {
+                            Button { customizing = true } label: {
+                                Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
                             }
                         }
                     }
-                    // Re-checked with every overview refresh (the load time is the task id).
-                    TimeDriftSection(hostnames: hostnames, refreshID: loadedAt)
                 }
                 .refreshable {
                     await load()
@@ -181,33 +137,29 @@ struct OverviewView: View {
                     NavigationLink(value: Route.diagnosis(note: "")) { Image(systemName: "sparkles") }
                         .accessibilityLabel(Text("AI diagnosis"))
                 }
-                if model.allows(.health) {
-                    NavigationLink(value: Route.health) { Image(systemName: "heart.text.square") }
-                        .accessibilityLabel(Text("Cluster health"))
+                // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
+                ForEach(bar.icons.filter(offered)) { action in
+                    NavigationLink(value: route(action)) { Image(systemName: action.systemImage) }
+                        .accessibilityLabel(action.title)
+                        .disabled(!enabled(action))
                 }
-                NavigationLink(value: Route.events(node: nil, hostnames: hostnames)) {
-                    Image(systemName: "list.bullet.rectangle")
+                Menu {
+                    let menu = bar.menu.filter(offered)
+                    ForEach(menu) { action in
+                        Button { path.append(route(action)) } label: {
+                            Label { action.title } icon: { Image(systemName: action.systemImage) }
+                        }
+                        .disabled(!enabled(action))
+                    }
+                    if !menu.isEmpty { Divider() }
+                    Button { customizing = true } label: { Label("Customize overview", systemImage: "pencil") }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
                 }
-                .accessibilityLabel(Text("Events"))
-                .disabled(!clusterWide(.events))
-                // The Kubernetes API is reached with the admin kubeconfig Talos issues.
-                if model.allows(.workloads) {
-                    NavigationLink(value: Route.workloads) { Image(systemName: "square.stack.3d.up") }
-                        .accessibilityLabel(Text("Kubernetes workloads"))
-                    // PromQL panels, through the same kubeconfig (or a URL set on the screen).
-                    NavigationLink(value: Route.metrics) { Image(systemName: "chart.xyaxis.line") }
-                        .accessibilityLabel(Text("Metrics"))
-                }
-                NavigationLink(value: Route.kubespan) { Image(systemName: "point.3.connected.trianglepath.dotted") }
-                    .accessibilityLabel(Text("KubeSpan"))
-                    .disabled(!clusterWide(.kubespan))
-                NavigationLink(value: Route.etcd) { Image(systemName: "cylinder.split.1x2") }
-                    .accessibilityLabel(Text(verbatim: "etcd"))
-                    .disabled(!clusterWide(.etcd))
-                NavigationLink(value: Route.settings) { Image(systemName: "gearshape") }
-                    .accessibilityLabel(Text("Settings"))
+                .accessibilityLabel(Text("More"))
             }
         }
+        .sheet(isPresented: $customizing) { OverviewEditorSheet() }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
         // Live CPU and memory while the overview is on screen, the app active, the setting on
@@ -299,6 +251,83 @@ struct OverviewView: View {
         }
     }
 
+    /// One of the overview's arranged sections; those that report on something the cluster does
+    /// not have stay out (Android's OverviewCard.whenDetected).
+    @ViewBuilder
+    private func section(_ card: OverviewCard, overview: ClusterOverview) -> some View {
+        switch card {
+        case .summary:
+            Section {
+                ClusterSummaryCard(
+                    name: model.activeLabel,
+                    summary: ClusterSummary(nodes: overview.nodes),
+                    live: liveStats ? ClusterLiveStore.shared.live(for: loadID) : nil
+                )
+                NavigationLink(value: Route.insights) { Label("Cluster insights", systemImage: "magnifyingglass") }
+            } header: {
+                if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
+            }
+        case .apps:
+            AppsCard(state: inventory, hostnames: hostnames, argo: argoStatus)
+        case .dataServices:
+            if let dataServices {
+                DataServicesSection(state: dataServices, hints: dataHints, apps: inventoryApps, downNodes: overview.downHostnames)
+            }
+        case .argoCD:
+            if let argo {
+                ArgoSection(state: argo, app: inventoryApps[argoCDCatalogID], downNodes: overview.downHostnames)
+            }
+        case .flux:
+            if let flux {
+                FluxSection(state: flux, app: inventoryApps[fluxCatalogID], downNodes: overview.downHostnames)
+            }
+        case .nodes:
+            nodesSection(overview)
+        case .timeDrift:
+            // Re-checked with every overview refresh (the load time is the task id).
+            TimeDriftSection(hostnames: hostnames, refreshID: loadedAt)
+        }
+    }
+
+    private func nodesSection(_ overview: ClusterOverview) -> some View {
+        Section {
+            // In the map's order, site by site, once the cluster map is loaded.
+            let groups = groupNodes(overview.nodes, by: TopologyStore.shared.topology(for: model.topologyKey))
+            let version = overview.nodes.sharedVersion
+            if isDenseCluster(overview.nodes.count) {
+                // Too many for a chip each: counts, dots, and the problems capped.
+                DenseNodes(groups: groups, path: $path)
+            } else {
+                ForEach(groups) { group in
+                    // Site headers only when there is more than one: a single site says nothing.
+                    if groups.count > 1 { SiteHeader(title: group.title) }
+                    NodeGroupRows(nodes: group.nodes, expanded: nodesExpanded, sharedVersion: version, path: $path)
+                }
+            }
+        } header: {
+            HStack {
+                Text("Nodes")
+                Spacer()
+                if model.isDetectingPublicIPs || canDetectIPs(overview) {
+                    DetectPublicIPsButton(running: model.isDetectingPublicIPs) { confirmDetectIPs = true }
+                }
+                Text(verbatim: "\(overview.nodes.count)")
+                if isDenseCluster(overview.nodes.count) {
+                    // A section holding hundreds of rows defeats the overview: a screen instead.
+                    Button { path.append(.nodes(filter: nil, nodes: overview.nodes.overviewOrder)) } label: {
+                        Image(systemName: "chevron.right")
+                    }
+                    .accessibilityLabel(Text("Show all nodes"))
+                } else {
+                    Button { withAnimation { nodesExpanded.toggle() } } label: {
+                        Image(systemName: nodesExpanded ? "chevron.up" : "chevron.down")
+                    }
+                    .accessibilityLabel(nodesExpanded ? Text("Show less") : Text("Show all"))
+                }
+            }
+        }
+    }
+
     /// Address → hostname of the loaded nodes, for the events timeline.
     private var hostnames: [String: String] {
         guard case .loaded(let overview, _, _) = state else { return [:] }
@@ -347,6 +376,41 @@ struct OverviewView: View {
         guard case .loaded(let overview, _, _) = state else { return true }
         let known = overview.nodes.filter(\.reachable).compactMap { model.nodeFeatures[$0.node] }
         return clusterSupport(known, feature).supported
+    }
+
+    private var layout: OverviewLayout { .parse(layoutText) }
+    private var bar: OverviewBar { .parse(barText) }
+
+    /// Only offered when the config's role can run it. Workloads and the PromQL panels reach the
+    /// Kubernetes API with the admin kubeconfig Talos issues.
+    private func offered(_ action: OverviewAction) -> Bool {
+        switch action {
+        case .health: model.allows(.health)
+        case .workloads, .metrics: model.allows(.workloads)
+        default: true
+        }
+    }
+
+    /// Cluster-wide screens: only disabled when no reachable node's Talos has them.
+    private func enabled(_ action: OverviewAction) -> Bool {
+        switch action {
+        case .events: clusterWide(.events)
+        case .kubespan: clusterWide(.kubespan)
+        case .etcd: clusterWide(.etcd)
+        default: true
+        }
+    }
+
+    private func route(_ action: OverviewAction) -> Route {
+        switch action {
+        case .health: .health
+        case .events: .events(node: nil, hostnames: hostnames)
+        case .workloads: .workloads
+        case .metrics: .metrics
+        case .kubespan: .kubespan
+        case .etcd: .etcd
+        case .settings: .settings
+        }
     }
 
     /// The Argo CD status the Argo CD section loaded, for the Apps card's badges.
