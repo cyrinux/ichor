@@ -117,6 +117,8 @@ public struct ArgoWaveStep: Equatable, Identifiable, Sendable {
 /// The apps screen's filter chips.
 public enum ArgoFilter: String, Sendable, CaseIterable, Hashable, Identifiable {
     case all, degraded, outOfSync, progressing, syncing, autoSyncOff, failed
+    /// An active deny sync window stops its automated syncs.
+    case frozen
 
     public var id: String { rawValue }
 
@@ -129,6 +131,7 @@ public enum ArgoFilter: String, Sendable, CaseIterable, Hashable, Identifiable {
         case .syncing: app.isRunning
         case .autoSyncOff: !app.autoSync.enabled
         case .failed: app.lastSyncFailed
+        case .frozen: app.freeze != nil
         }
     }
 }

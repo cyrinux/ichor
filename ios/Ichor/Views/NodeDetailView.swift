@@ -40,6 +40,8 @@ struct NodeDetailView: View {
     @State private var showingStorage = false
     @State private var showingResources = false
     @State private var showingMaintenance = false
+    /// The node's pods as the Kubernetes API sees them (os:admin).
+    @State private var showingKubePods = false
     /// The cordon / uncordon choice is shown (the node's current state is not known here).
     @State private var showingCordon = false
     /// Service start/stop/restart waiting for confirmation.
@@ -148,6 +150,9 @@ struct NodeDetailView: View {
         }
         .navigationDestination(isPresented: $showingMaintenance) {
             MaintenanceView(node: ref.address, hostname: ref.hostname)
+        }
+        .navigationDestination(isPresented: $showingKubePods) {
+            NodeKubePodsView(node: ref.address, hostname: ref.hostname)
         }
         .confirmationDialog(String(localized: "Kubernetes scheduling on \(ref.hostname)"), isPresented: $showingCordon,
                             titleVisibility: .visible) {
@@ -284,6 +289,10 @@ extension NodeDetailView {
             }
             // Cordon and drain go through the Kubernetes API (os:admin, like the workloads).
             if model.allows(.workloads) {
+                // The Pods tab reads the containers through Talos (CRI); this asks the API server.
+                Button { showingKubePods = true } label: {
+                    Label("Kubernetes pods", systemImage: "cube")
+                }
                 Button { showingMaintenance = true } label: {
                     Label("Maintenance…", systemImage: "wrench.and.screwdriver")
                 }

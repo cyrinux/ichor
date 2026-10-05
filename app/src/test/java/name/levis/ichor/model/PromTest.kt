@@ -31,6 +31,12 @@ class PromTest {
         assertFalse(url.toString().contains("s3cret"))
     }
 
+    @Test fun goGetsEveryFieldEvenDefaults() {
+        val json = PromSource(namespace = "monitoring", service = "mimir", port = 8080).toGoJson()
+        assertTrue(json, json.contains("\"mode\":\"proxy\""))
+        assertTrue(json, json.contains("\"auth\":\"\""))
+    }
+
     @Test fun valuesFormatByUnit() {
         assertEquals("42.1%", formatMetric(42.123, "percent"))
         assertEquals("1.5 GiB", formatMetric(1.5 * (1 shl 30), "bytes"))

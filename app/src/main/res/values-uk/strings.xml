@@ -776,6 +776,9 @@
     <string name="node_menu_events">Події</string>
     <string name="node_tab_pods">Поди</string>
     <string name="node_tab_cgroups">Cgroups</string>
+    <string name="node_tab_kube_pods">Поди Kubernetes</string>
+    <string name="pods_phase_not_completed">Не завершені</string>
+    <string name="workload_pods_title">Поди %1$s</string>
     <string name="node_section_pressure">Тиск</string>
     <string name="node_pressure_caption">Частка останніх 10 с, коли завдання чекали на кожен ресурс</string>
     <string name="node_pressure_cpu">CPU</string>

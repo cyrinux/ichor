@@ -59,6 +59,14 @@ struct ArgoSection: View {
         VStack(alignment: .leading, spacing: 10) {
             header(count: status.apps.count)
             ArgoHealthBar(counts: status.healthCounts)
+            if let next = status.activeFreezes.first {
+                Label(status.activeFreezes.count == 1
+                      ? String(localized: "1 freeze · ends \(freezeClock(next.window.endsAt))")
+                      : String(localized: "\(status.activeFreezes.count) freezes · next ends \(freezeClock(next.window.endsAt))"),
+                      systemImage: "snowflake")
+                    .font(.caption)
+                    .foregroundStyle(.blue)
+            }
             if status.allCalm && status.running.isEmpty {
                 Text("All apps synced and healthy").font(.caption).foregroundStyle(.secondary)
             } else {

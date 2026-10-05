@@ -715,6 +715,9 @@
     <string name="node_menu_events">Eventi</string>
     <string name="node_tab_pods">Pod</string>
     <string name="node_tab_cgroups">Cgroup</string>
+    <string name="node_tab_kube_pods">Pod Kubernetes</string>
+    <string name="pods_phase_not_completed">Non completati</string>
+    <string name="workload_pods_title">Pod di %1$s</string>
     <string name="node_section_pressure">Pressione</string>
     <string name="node_pressure_caption">Parte degli ultimi 10 s in cui i processi hanno atteso ciascuna risorsa</string>
     <string name="node_pressure_cpu">CPU</string>

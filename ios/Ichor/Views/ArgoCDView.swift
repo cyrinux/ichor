@@ -7,6 +7,13 @@ struct ArgoAppRoute: Hashable {
     let name: String
     let downNodes: Set<String>
 }
+/// A freeze asked from a group header of the apps list.
+struct FreezeTarget: Identifiable {
+    let app: ArgoApp
+    let scope: FreezeScope
+
+    var id: String { "\(app.id)/\(scope.rawValue)" }
+}
 
 /// The Argo CD Applications of the cluster, driven through their custom resources with the admin
 /// kubeconfig Talos issues (os:admin): filter chips with counts, search, grouping, swipe to sync
@@ -36,6 +43,8 @@ struct ArgoCDView: View {
     /// Apps a batch sync waits on the user's word for.
     @State private var confirmSync: [ArgoApp]?
     @State private var syncTarget: ArgoApp?
+    /// A group header's freeze: the app it is anchored on and the scope.
+    @State private var freezeTarget: FreezeTarget?
     @State private var busy: Set<String> = []
     @State private var message: String?
     @State private var succeeded = 0
@@ -55,7 +64,8 @@ struct ArgoCDView: View {
                         ArgoAppsList(status: status, filter: $filter, grouping: grouping, query: query, downNodes: downNodes,
                                      selection: $selection, busy: busy, refresh: load,
                                      onSync: { syncTarget = $0 }, onRefresh: { app in Task { await run(.refresh, on: [app]) } },
-                                     onSyncAll: { confirmSync = $0 })
+                                     onSyncAll: { confirmSync = $0 },
+                                     onFreeze: { app, scope in freezeTarget = FreezeTarget(app: app, scope: scope) })
                             .environment(\.editMode, $editMode)
                     case .sets:
                         ArgoAppSetsList(status: status, query: query, downNodes: downNodes, refresh: load)
@@ -80,10 +90,17 @@ struct ArgoCDView: View {
         .navigationTitle(Text(verbatim: "Argo CD"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: ArgoAppRoute.self) { ArgoAppView(namespace: $0.namespace, name: $0.name, downNodes: $0.downNodes) }
+        .navigationDestination(for: ArgoWindowsRoute.self) { _ in ArgoWindowsView() }
         .onAppear { covered = false }
         .onDisappear { covered = true }
         .onChange(of: tab) { editMode = .inactive }
         .onChange(of: editMode) { _, mode in if !mode.isEditing { selection = [] } }
+        .sheet(item: $freezeTarget) { target in
+            if let status = store.status(for: model.argoKey) {
+                ArgoFreezeSheet(app: target.app, status: status, scope: target.scope,
+                                freeze: { project, options in await freeze(project, options) }, pauseInstead: nil)
+            }
+        }
         .sheet(item: $syncTarget) { app in
             ArgoSyncSheet(app: app, resources: []) { options in
                 await run(.sync, on: [app], options: options)
@@ -134,6 +151,11 @@ struct ArgoCDView: View {
 
     @ToolbarContentBuilder
     private func toolbar(_ status: ArgoStatus) -> some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            NavigationLink(value: ArgoWindowsRoute()) {
+                Label("Sync windows", systemImage: "snowflake")
+            }
+        }
         if tab == .apps {
             ToolbarItemGroup(placement: .primaryAction) {
                 Menu {
@@ -175,9 +197,22 @@ struct ArgoCDView: View {
         guard let client = model.client else { return }
         let key = model.argoKey
         if case .loading = state, let known = store.status(for: key) { state = .loaded(known, at: Date()) }
-        let loaded: LoadState<ArgoStatus> = await .from { try await store.load(with: client, key: key) }
+        let cluster = model.activeSummary
+        let loaded: LoadState<ArgoStatus> = await .from { try await store.load(with: client, key: key, cluster: cluster) }
         guard key == model.argoKey else { return }
         state = state.refreshed(with: loaded)
+    }
+
+    /// Freezes from a group header, then reads again.
+    private func freeze(_ project: ArgoProject, _ options: ArgoFreezeOptions) async {
+        guard let client = model.client else { return }
+        if let failure = await store.freeze(.freeze, on: project, options: [options], with: client) {
+            message = failure
+        } else {
+            succeeded += 1
+            announce(String(localized: "Done"))
+        }
+        await load()
     }
 
     /// Runs action on apps (one sheet's options for a single sync), then reads again.

@@ -27,12 +27,21 @@ data class OverviewLayout(
     val hiddenCards: List<OverviewCard> get() = order.filter { it in hidden }
     val isDefault: Boolean get() = this == OverviewLayout()
 
-    /** Moves the shown card at [from] to [to], both indices in [visible]. Out of range: unchanged. */
-    fun move(from: Int, to: Int): OverviewLayout {
-        val shown = visible
+    /** [visible] without the cards the cluster lacks ([absent]): what the editor offers to arrange. */
+    fun visible(absent: Set<OverviewCard>): List<OverviewCard> = visible.filter { it !in absent }
+
+    /** [hiddenCards] without the cards the cluster lacks ([absent]). */
+    fun hiddenCards(absent: Set<OverviewCard>): List<OverviewCard> = hiddenCards.filter { it !in absent }
+
+    /**
+     * Moves the shown card at [from] to [to], both indices in [visible] without [absent]; absent
+     * cards keep their place, for clusters that have them. Out of range: unchanged.
+     */
+    fun move(from: Int, to: Int, absent: Set<OverviewCard> = emptySet()): OverviewLayout {
+        val shown = visible(absent)
         if (from !in shown.indices || to !in shown.indices || from == to) return this
-        val moved = shown.toMutableList().apply { add(to, removeAt(from)) }
-        return copy(order = moved + hiddenCards)
+        val moved = shown.toMutableList().apply { add(to, removeAt(from)) }.iterator()
+        return copy(order = visible.map { if (it in absent) it else moved.next() } + hiddenCards)
     }
 
     fun hide(card: OverviewCard): OverviewLayout = copy(hidden = hidden + card)
