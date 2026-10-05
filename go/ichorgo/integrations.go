@@ -2,25 +2,30 @@ package ichorgo
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
-// integrationSpec is a project the app reads through the Kubernetes API: the custom resources
-// (API groups) of its operator, or its pods when it has none.
+// integrationSpec is a project the app reads through the Kubernetes API, and how to tell the
+// cluster runs it: the custom resources (API groups) of its operator, else its pods (their
+// images, matched with the app catalog) or its Services.
 type integrationSpec struct {
-	ID      string // catalog app id: the icon and the inventory hint
+	ID      string // catalog app id: the icon, the image match and the inventory hint
 	Name    string // a proper noun: never translated
 	Website string
-	// Groups the readers ask; the first one tells whether the project is installed.
+	// Groups the readers ask; the first one tells whether the project is installed. Without
+	// any, the project is found by its running pods (catalog id ID).
 	Groups []string
 	// Resource of Groups[0] that must be served too, when the group is shared with other
 	// projects ("" when the group is enough).
 	Resource string
+	// ServiceKind also finds a project without API by its Services: a promMatch kind.
+	ServiceKind string
 }
 
 // integrationSpecs lists every project the app integrates with, in the order Settings shows
 // them. A reader that asks a new API group adds it here: TestIntegrationsCoverEveryGroup fails
-// otherwise. Garage has no API of its own: it is detected from the inventory (hints).
+// otherwise.
 var integrationSpecs = []integrationSpec{
 	{ID: "argo-cd", Name: "Argo CD", Website: "https://argo-cd.readthedocs.io", Groups: []string{groupArgo}, Resource: "applications"},
 	{ID: "flux", Name: "Flux", Website: "https://fluxcd.io", Groups: []string{groupFluxKustomize, groupFluxHelm, groupFluxSource}},
@@ -35,10 +40,22 @@ var integrationSpecs = []integrationSpec{
 	{ID: "cert-manager", Name: "cert-manager", Website: "https://cert-manager.io", Groups: []string{groupCertManager, groupACME}},
 	{ID: "cilium", Name: "Cilium", Website: "https://cilium.io", Groups: []string{groupCilium}},
 	{ID: "gateway-api", Name: "Gateway API", Website: "https://gateway-api.sigs.k8s.io", Groups: []string{groupGatewayAPI}},
+	{ID: "prometheus", Name: "Prometheus", Website: "https://prometheus.io", ServiceKind: "prometheus"},
+	{ID: "thanos", Name: "Thanos", Website: "https://thanos.io", ServiceKind: "thanos"},
+	{ID: "mimir", Name: "Mimir", Website: "https://grafana.com/oss/mimir/", ServiceKind: "mimir"},
+	{ID: "victoriametrics", Name: "VictoriaMetrics", Website: "https://victoriametrics.com", ServiceKind: "victoriametrics"},
 }
 
 // groupGatewayAPI is the Gateway API's group: HTTPRoutes and Gateways.
 const groupGatewayAPI = "gateway.networking.k8s.io"
+
+// How an integration was found.
+const (
+	detectedByAPI       = "api"
+	detectedByPods      = "pods"
+	detectedByServices  = "services"
+	detectedByInventory = "inventory" // the pods could not be listed: the inventory's hint
+)
 
 // integration is one project in Settings: what it is, and whether the cluster runs it.
 type integration struct {
@@ -49,8 +66,12 @@ type integration struct {
 	Groups  []string `json:"groups"`
 	// Detected on the cluster; always false when Checked is.
 	Detected bool `json:"detected"`
-	// API version the cluster serves for Groups[0], "" when not detected or without a group.
+	// Via is how it was found (detectedByXxx), "" when not detected.
+	Via string `json:"via,omitempty"`
+	// Version: the API version served for Groups[0], or the image tag of its pods; "" when unknown.
 	Version string `json:"version,omitempty"`
+	// Namespace it runs in, when found by its pods or Services.
+	Namespace string `json:"namespace,omitempty"`
 }
 
 type integrations struct {
@@ -59,18 +80,25 @@ type integrations struct {
 	Items   []integration `json:"items"`
 }
 
+// found is how one integration was detected; the zero value is "not detected".
+type found struct {
+	via, version, namespace string
+}
+
 // Integrations lists the projects the app integrates with, without asking any cluster:
 // {"checked":false,"items":[{id,name,icon,website,groups,detected:false}]}.
 func Integrations() (out string, err error) {
 	defer maskResult(&out, &err)
 
-	return toJSON(integrations{Items: integrationList(func(integrationSpec) (bool, string) { return false, "" })})
+	return toJSON(integrations{Items: integrationList(func(integrationSpec) found { return found{} })})
 }
 
 // KubeIntegrations lists the projects the app integrates with and whether the cluster runs
-// each one, from a single API discovery (os:admin); Integrations' JSON with "checked":true.
-// hints: see KubeDataServices; a project without an API (Garage) is detected when hinted.
-// kubeServer: see KubePods.
+// each one (os:admin); Integrations' JSON with "checked":true and, per detected project, "via"
+// (api, pods, services, inventory), "version" and "namespace". Operators are found by their API
+// groups; projects without one by the images of the running pods (the app catalog) or, for
+// metrics backends, their Services. hints (see KubeDataServices) stand in for the pods when
+// they cannot be listed. kubeServer: see KubePods.
 func KubeIntegrations(configYAML, contextName, kubeServer, hints string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -82,29 +110,124 @@ func KubeIntegrations(configYAML, contextName, kubeServer, hints string) (out st
 }
 
 func readIntegrations(ctx context.Context, k *kubeClient, hints hintSet) (integrations, error) {
-	groups, err := readAPIGroups(ctx, k)
-	if err != nil {
-		return integrations{}, err
+	var (
+		groups      map[string]string
+		groupsErr   error
+		pods        map[string]found
+		podsErr     error
+		services    map[string]found
+		resourceFor = map[string]bool{}
+		wg          sync.WaitGroup
+	)
+
+	wg.Go(func() { groups, groupsErr = readAPIGroups(ctx, k) })
+	wg.Go(func() { pods, podsErr = runningApps(ctx, k) })
+	wg.Go(func() { services = queryServices(ctx, k) })
+	wg.Wait()
+
+	if groupsErr != nil {
+		return integrations{}, groupsErr
 	}
 
-	items := integrationList(func(s integrationSpec) (bool, string) {
-		if len(s.Groups) == 0 {
-			return hints[s.ID], ""
+	// Shared groups: ask whether the project's own resource is served, in parallel.
+	var mu sync.Mutex
+
+	for _, s := range integrationSpecs {
+		if version, ok := groups[firstGroup(s)]; ok && s.Resource != "" {
+			wg.Go(func() {
+				served := servesResource(ctx, k, s.Groups[0], version, s.Resource)
+
+				mu.Lock()
+				resourceFor[s.ID] = served
+				mu.Unlock()
+			})
+		}
+	}
+
+	wg.Wait()
+
+	items := integrationList(func(s integrationSpec) found {
+		if len(s.Groups) > 0 {
+			version, ok := groups[s.Groups[0]]
+			if !ok || s.Resource != "" && !resourceFor[s.ID] {
+				return found{}
+			}
+
+			return found{via: detectedByAPI, version: version}
 		}
 
-		version, ok := groups[s.Groups[0]]
-		if ok && s.Resource != "" {
-			ok = servesResource(ctx, k, s.Groups[0], version, s.Resource)
+		if f, ok := pods[s.ID]; ok {
+			return f
 		}
 
-		if !ok {
-			return false, ""
+		if f, ok := services[s.ServiceKind]; ok && s.ServiceKind != "" {
+			return f
 		}
 
-		return true, version
+		if podsErr != nil && hints[s.ID] {
+			return found{via: detectedByInventory}
+		}
+
+		return found{}
 	})
 
 	return integrations{Checked: true, Items: items}, nil
+}
+
+func firstGroup(s integrationSpec) string {
+	if len(s.Groups) == 0 {
+		return ""
+	}
+
+	return s.Groups[0]
+}
+
+// runningApps maps the catalog ids of the running pods' images to the first pod found
+// (namespace, image tag), from one listing of every running pod.
+func runningApps(ctx context.Context, k *kubeClient) (map[string]found, error) {
+	pods, err := listDSPods(ctx, k, "")
+	if err != nil {
+		return nil, err
+	}
+
+	catalog := loadAppCatalog()
+	out := map[string]found{}
+
+	for _, p := range pods {
+		if p.Status.Phase != "Running" {
+			continue
+		}
+
+		for _, c := range p.Spec.Containers {
+			ref := parseImageRef(c.Image)
+			if id := catalog.identify(ref); id.app != nil {
+				if _, seen := out[id.app.ID]; !seen {
+					out[id.app.ID] = found{via: detectedByPods, version: ref.Tag, namespace: p.Metadata.Namespace}
+				}
+			}
+		}
+	}
+
+	return out, nil
+}
+
+// queryServices maps the kinds of metrics query APIs (promMatch) to the likeliest Service;
+// empty when the Services cannot be listed.
+func queryServices(ctx context.Context, k *kubeClient) map[string]found {
+	out := map[string]found{}
+
+	d, err := discoverProm(ctx, k)
+	if err != nil {
+		return out
+	}
+
+	for _, src := range d.Sources {
+		if _, seen := out[src.Kind]; !seen {
+			out[src.Kind] = found{via: detectedByServices, namespace: src.Namespace}
+		}
+	}
+
+	return out
 }
 
 // servesResource reports whether group/version serves resource, false when it cannot tell.
@@ -128,24 +251,22 @@ func servesResource(ctx context.Context, k *kubeClient, group, version, resource
 	return false
 }
 
-// integrationList builds the items, detect telling each one's status and API version.
-func integrationList(detect func(integrationSpec) (bool, string)) []integration {
+// integrationList builds the items, detect telling how each one was found.
+func integrationList(detect func(integrationSpec) found) []integration {
 	catalog := loadAppCatalog()
 	out := make([]integration, 0, len(integrationSpecs))
 
 	for _, s := range integrationSpecs {
+		// Bundled icons are named after the catalog id, as in the inventory.
 		icon := ""
 		if app := catalog.byName[s.ID]; app != nil && app.ID == s.ID && app.hasIcon() {
 			icon = app.ID
-			if app.Icon != nil {
-				icon = *app.Icon
-			}
 		}
 
-		detected, version := detect(s)
+		f := detect(s)
 		out = append(out, integration{
-			ID: s.ID, Name: s.Name, Icon: icon, Website: s.Website,
-			Groups: append([]string{}, s.Groups...), Detected: detected, Version: version,
+			ID: s.ID, Name: s.Name, Icon: icon, Website: s.Website, Groups: append([]string{}, s.Groups...),
+			Detected: f.via != "", Via: f.via, Version: f.version, Namespace: f.namespace,
 		})
 	}
 
@@ -156,7 +277,7 @@ func integrationList(detect func(integrationSpec) (bool, string)) []integration 
 func demoIntegrations() integrations {
 	now := time.Now()
 	ds := demoDataServices(now)
-	running := map[string]bool{
+	api := map[string]bool{
 		"argo-cd":        demoArgoCD(now).Installed,
 		"flux":           demoFlux(now).Installed,
 		"cloudnative-pg": ds.CNPG != nil,
@@ -165,12 +286,29 @@ func demoIntegrations() integrations {
 		"dragonfly":      ds.Dragonfly != nil,
 		"longhorn":       ds.Longhorn != nil,
 		"rook":           ds.Ceph != nil,
-		"garage":         ds.Garage != nil,
 		"velero":         ds.Velero != nil,
 		"cert-manager":   ds.CertManager != nil,
 		"cilium":         demoCiliumStatus().Installed,
 		"gateway-api":    true,
 	}
 
-	return integrations{Checked: true, Items: integrationList(func(s integrationSpec) (bool, string) { return running[s.ID], "" })}
+	services := map[string]found{}
+	for _, src := range demoPromDiscovery().Sources {
+		if _, seen := services[src.Kind]; !seen {
+			services[src.Kind] = found{via: detectedByServices, namespace: src.Namespace}
+		}
+	}
+
+	return integrations{Checked: true, Items: integrationList(func(s integrationSpec) found {
+		switch {
+		case api[s.ID]:
+			return found{via: detectedByAPI}
+		case s.ID == "garage" && ds.Garage != nil:
+			return found{via: detectedByPods}
+		case s.ServiceKind != "":
+			return services[s.ServiceKind]
+		}
+
+		return found{}
+	})}
 }

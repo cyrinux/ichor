@@ -32,8 +32,12 @@ public struct Integration: Decodable, Equatable, Sendable, Identifiable {
     /// The API groups the app reads; empty when found by its pods (Garage).
     public let groups: [String]
     public let detected: Bool
-    /// API version the cluster serves for the first group; "" when unknown.
+    /// How it was found, nil when not detected (or by a way this version does not know).
+    public let via: IntegrationVia?
+    /// The API version served for the first group, or the image tag of its pods; "" when unknown.
     public let version: String
+    /// Where it runs, when found by its pods or Services.
+    public let namespace: String
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -43,13 +47,22 @@ public struct Integration: Decodable, Equatable, Sendable, Identifiable {
         website = URL(string: try c.field(.website, ""))
         groups = try c.field(.groups, [])
         detected = try c.field(.detected, false)
+        via = IntegrationVia(rawValue: try c.field(.via, ""))
         version = try c.field(.version, "")
+        namespace = try c.field(.namespace, "")
     }
 
     /// The catalog app the integration is, for its icon.
     public var app: InventoryApp { InventoryApp(id: id, name: name, icon: icon.isEmpty ? nil : icon) }
 
-    private enum CodingKeys: String, CodingKey { case id, name, icon, website, groups, detected, version }
+    private enum CodingKeys: String, CodingKey { case id, name, icon, website, groups, detected, via, version, namespace }
+}
+
+/// How an integration was found on the cluster.
+public enum IntegrationVia: String, Sendable {
+    case api, pods, services
+    /// The pods could not be listed: the inventory's hint.
+    case inventory
 }
 
 /// The inventory's catalog ids, for KubeIntegrations: what has no API of its own is found by them.

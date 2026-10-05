@@ -23,9 +23,18 @@ data class Integration(
     /** The API groups the app reads; empty when found by its pods (Garage). */
     val groups: List<String> = emptyList(),
     val detected: Boolean = false,
-    /** API version the cluster serves for the first group; "" when unknown. */
+    /** How it was found: one of the INTEGRATION_VIA_* values, "" when not detected. */
+    val via: String = "",
+    /** The API version served for the first group, or the image tag of its pods; "" when unknown. */
     val version: String = "",
+    /** Where it runs, when found by its pods or Services. */
+    val namespace: String = "",
 )
+
+const val INTEGRATION_VIA_API = "api"
+const val INTEGRATION_VIA_PODS = "pods"
+const val INTEGRATION_VIA_SERVICES = "services"
+const val INTEGRATION_VIA_INVENTORY = "inventory"
 
 /** For [name.levis.ichor.ui.apps.AppIconTile]: the catalog app the integration is. */
 val Integration.asApp: InventoryApp get() = InventoryApp(id = id, name = name, icon = icon, known = true)

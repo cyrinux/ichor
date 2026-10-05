@@ -122,13 +122,16 @@ func TestIntegrationsStatic(t *testing.T) {
 		icons[it.ID] = it.Icon
 	}
 
-	// The catalog's own icon names: the id, another slug, or none.
-	if icons["longhorn"] != "longhorn" || icons["cloudnative-pg"] != "postgresql" || icons["dragonfly"] != "" || icons["gateway-api"] != "" {
+	// Bundled icons are named after the catalog id (as in the inventory); none for Dragonfly.
+	if icons["longhorn"] != "longhorn" || icons["cloudnative-pg"] != "cloudnative-pg" || icons["dragonfly"] != "" || icons["gateway-api"] != "" {
 		t.Errorf("icons: %v", icons)
 	}
 }
 
 func TestReadIntegrations(t *testing.T) {
+	stopped := fakePod("old", "garage-old", "node-1", false, nil, "garage", "dxflrs/garage:v1.0.0")
+	stopped.Status.Phase = "Succeeded"
+
 	f := newFakeKubeAPI(t, map[string]string{
 		"GET /apis": `{"groups":[
 			{"name":"apps","preferredVersion":{"version":"v1"}},
@@ -138,6 +141,11 @@ func TestReadIntegrations(t *testing.T) {
 			{"name":"helm.toolkit.fluxcd.io","preferredVersion":{"version":"v2"}}]}`,
 		// Argo Rollouts alone: argoproj.io without Applications.
 		"GET /apis/argoproj.io/v1alpha1": `{"resources":[{"name":"rollouts"},{"name":"analysisruns"}]}`,
+		"GET /api/v1/pods": podListJSON(t, stopped,
+			fakePod("storage", "garage-0", "node-1", true, nil, "garage", "dxflrs/garage:v2.3.0"),
+			// Cilium's image alone never detects it: it has an API group.
+			fakePod("kube-system", "cilium-x", "node-1", true, nil, "cilium-agent", "quay.io/cilium/cilium:v1.18.2")),
+		"GET /api/v1/services": `{"items":[{"metadata":{"name":"thanos-query","namespace":"metrics"},"spec":{"ports":[{"name":"http","port":9090}]}}]}`,
 	})
 
 	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
@@ -145,28 +153,61 @@ func TestReadIntegrations(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// The hints are only a fallback: velero is hinted but neither served nor running.
 	res, err := readIntegrations(context.Background(), k, parseHints("garage,velero"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	got := map[string]integration{}
 	var detected []string
-	versions := map[string]string{}
 	for _, it := range res.Items {
 		if it.Detected {
 			detected = append(detected, it.ID)
-			versions[it.ID] = it.Version
+			got[it.ID] = it
 		}
 	}
 
-	// Flux is found by its first group (kustomize) only; a hint alone never detects an operator.
-	want := []string{"cloudnative-pg", "longhorn", "garage"}
+	// Flux is found by its first group (kustomize) only.
+	want := []string{"cloudnative-pg", "longhorn", "garage", "thanos"}
 	if !res.Checked || !slices.Equal(detected, want) {
 		t.Fatalf("detected %v, want %v", detected, want)
 	}
 
-	if versions["longhorn"] != "v1beta2" || versions["garage"] != "" {
-		t.Errorf("versions: %v", versions)
+	if g := got["garage"]; g.Via != detectedByPods || g.Version != "v2.3.0" || g.Namespace != "storage" {
+		t.Errorf("garage: %+v", g)
+	}
+
+	if l := got["longhorn"]; l.Via != detectedByAPI || l.Version != "v1beta2" || l.Namespace != "" {
+		t.Errorf("longhorn: %+v", l)
+	}
+
+	if th := got["thanos"]; th.Via != detectedByServices || th.Namespace != "metrics" {
+		t.Errorf("thanos: %+v", th)
+	}
+}
+
+func TestReadIntegrationsPodsForbidden(t *testing.T) {
+	// Only /apis answers: the pods cannot be listed, the inventory's hint stands in.
+	f := newFakeKubeAPI(t, map[string]string{"GET /apis": `{"groups":[]}`})
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := readIntegrations(context.Background(), k, parseHints("garage,longhorn"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, it := range res.Items {
+		switch {
+		case it.ID == "garage" && (!it.Detected || it.Via != detectedByInventory):
+			t.Errorf("garage: %+v", it)
+		case it.ID != "garage" && it.Detected:
+			t.Errorf("%s detected: %+v", it.ID, it)
+		}
 	}
 }
 
@@ -197,14 +238,12 @@ func TestDemoIntegrations(t *testing.T) {
 		t.Fatal("demo not checked")
 	}
 
-	n := 0
+	detected := map[string]bool{}
 	for _, it := range res.Items {
-		if it.Detected {
-			n++
-		}
+		detected[it.ID] = it.Detected
 	}
 
-	if n == 0 {
-		t.Error("the demo cluster runs nothing")
+	if !detected["argo-cd"] || !detected["garage"] || !detected["prometheus"] {
+		t.Errorf("demo: %v", detected)
 	}
 }

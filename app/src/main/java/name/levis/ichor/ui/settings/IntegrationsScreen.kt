@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.settings
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -37,6 +38,10 @@ import name.levis.ichor.data.INVENTORY
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.Feature
+import name.levis.ichor.model.INTEGRATION_VIA_API
+import name.levis.ichor.model.INTEGRATION_VIA_INVENTORY
+import name.levis.ichor.model.INTEGRATION_VIA_PODS
+import name.levis.ichor.model.INTEGRATION_VIA_SERVICES
 import name.levis.ichor.model.Integration
 import name.levis.ichor.model.Integrations
 import name.levis.ichor.model.Inventory
@@ -126,6 +131,9 @@ private fun IntegrationRow(item: Integration, checked: Boolean) {
                             listOf(stringResource(R.string.integrations_detected), item.version).filter { it.isNotEmpty() }.joinToString(" · "),
                             colors.ok,
                         )
+                        foundBy(item.via)?.let { how ->
+                            MutedText(listOf(stringResource(how), item.namespace).filter { it.isNotEmpty() }.joinToString(" · "))
+                        }
                     } else {
                         StatusPill(stringResource(R.string.integrations_not_detected), colors.muted)
                     }
@@ -138,6 +146,16 @@ private fun IntegrationRow(item: Integration, checked: Boolean) {
             )
         }
     }
+}
+
+/** How the integration was found, null for a value this version does not know. */
+@StringRes
+private fun foundBy(via: String): Int? = when (via) {
+    INTEGRATION_VIA_API -> R.string.integrations_found_api
+    INTEGRATION_VIA_PODS -> R.string.integrations_found_pods
+    INTEGRATION_VIA_SERVICES -> R.string.integrations_found_services
+    INTEGRATION_VIA_INVENTORY -> R.string.integrations_found_inventory
+    else -> null
 }
 
 /** The list alone, from the Go core: shown before (or without) a cluster's answer. */
