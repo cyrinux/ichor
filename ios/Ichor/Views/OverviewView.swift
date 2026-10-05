@@ -132,16 +132,19 @@ struct OverviewView: View {
                 }
             }
             ToolbarItemGroup(placement: .primaryAction) {
+                // Buttons with labels, not NavigationLinks with images: on a phone the ones that
+                // don't fit fold into the system's "…" menu, where a link does nothing and an image
+                // shows no title.
                 // Optional: only once turned on in the settings.
                 if ai.enabled {
-                    NavigationLink(value: Route.diagnosis(note: "")) { Image(systemName: "sparkles") }
-                        .accessibilityLabel(Text("AI diagnosis"))
+                    Button { path.append(Route.diagnosis(note: "")) } label: { Label("AI diagnosis", systemImage: "sparkles") }
                 }
                 // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
                 ForEach(bar.icons.filter(offered)) { action in
-                    NavigationLink(value: route(action)) { Image(systemName: action.systemImage) }
-                        .accessibilityLabel(action.title)
-                        .disabled(!enabled(action))
+                    Button { path.append(route(action)) } label: {
+                        Label { action.title } icon: { Image(systemName: action.systemImage) }
+                    }
+                    .disabled(!enabled(action))
                 }
                 Menu {
                     let menu = bar.menu.filter(offered)
