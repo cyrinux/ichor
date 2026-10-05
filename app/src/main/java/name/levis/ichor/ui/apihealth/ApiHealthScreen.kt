@@ -9,9 +9,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.PersonSearch
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -59,6 +62,7 @@ class ApiHealthViewModel(private val talos: TalosRepository) : LoadingViewModel<
 @Composable
 fun ApiHealthScreen(
     onBack: () -> Unit,
+    onAudit: () -> Unit,
     vm: ApiHealthViewModel = viewModel(factory = factory { ApiHealthViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -78,16 +82,23 @@ fun ApiHealthScreen(
             UiState.Loading -> LoadingBox(modifier)
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
             is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = modifier.fillMaxSize()) {
-                ApiHealthList(s.data)
+                ApiHealthList(s.data, onAudit)
             }
         }
     }
 }
 
 @Composable
-private fun ApiHealthList(report: ApiHealthReport) {
+private fun ApiHealthList(report: ApiHealthReport, onAudit: () -> Unit) {
     LazyColumn(Modifier.fillMaxSize()) {
         item(key = "verdict") { VerdictHeader(report) }
+        // The metrics group clients; the audit log names them, and what they do wrong.
+        item(key = "audit") {
+            OutlinedButton(onClick = onAudit, modifier = Modifier.padding(horizontal = 16.dp)) {
+                Icon(Icons.Outlined.PersonSearch, contentDescription = null)
+                Text(stringResource(R.string.audit_open), Modifier.padding(start = 8.dp))
+            }
+        }
         if (report.metricsError.isNotEmpty()) {
             item(key = "metrics-error") {
                 InlineError(stringResource(R.string.apihealth_metrics_error, report.metricsError), Modifier.padding(horizontal = 16.dp))

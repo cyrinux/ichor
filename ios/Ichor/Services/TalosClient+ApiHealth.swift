@@ -9,4 +9,10 @@ extension TalosClient {
     func apiHealth() async throws -> ApiHealthReport {
         try await Self.json { [config, context, kubeServer] in IchorgoKubeAPIHealth(config, context, kubeServer, $0) }
     }
+
+    /// Who loads the API server over the last `minutes`, from the control planes' audit logs
+    /// read through the Talos API (os:admin, tens of MB).
+    func auditAnalysis(minutes: Int) async throws -> AuditReport {
+        try await Self.json { [config, context] in IchorgoKubeAuditAnalysis(config, context, minutes, $0) }
+    }
 }

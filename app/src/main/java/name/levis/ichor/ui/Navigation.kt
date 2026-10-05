@@ -35,6 +35,7 @@ import name.levis.ichor.ui.etcd.EtcdScreen
 import name.levis.ichor.ui.flows.FlowsScreen
 import name.levis.ichor.ui.netpol.NetworkPoliciesScreen
 import name.levis.ichor.ui.apihealth.ApiHealthScreen
+import name.levis.ichor.ui.apihealth.AuditScreen
 import name.levis.ichor.ui.events.EventsScreen
 import name.levis.ichor.ui.hardware.HardwareScreen
 import name.levis.ichor.ui.health.HealthScreen
@@ -114,6 +115,7 @@ private object Routes {
     const val WORKLOADS = "workloads"
     const val NETWORK_POLICIES = "netpol"
     const val API_HEALTH = "apihealth"
+    const val AUDIT = "audit"
     const val FLOWS = "flows?ns={ns}&pod={pod}"
 
     /** Empty [namespace] for all of them; [pod] narrows to one of [namespace]. */
@@ -537,7 +539,8 @@ fun Navigation(
             )
         }
         composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
-        composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }
+        composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }
         composable(
             Routes.FLOWS,
             arguments = listOf(

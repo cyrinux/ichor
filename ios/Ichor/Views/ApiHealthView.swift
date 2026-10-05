@@ -14,6 +14,12 @@ struct ApiHealthView: View {
         LoadStateView(state: state, retry: load) { report in
             List {
                 ApiVerdictSection(report: report)
+                // The metrics group clients; the audit log names them, and what they do wrong.
+                Section {
+                    NavigationLink { AuditView() } label: {
+                        Label("Find who loads it (audit log)", systemImage: "person.fill.questionmark")
+                    }
+                }
                 if !report.metricsError.isEmpty {
                     Section { ErrorOrNoticeText(message: String(localized: "The metrics could not be read: \(report.metricsError)")) }
                 } else {

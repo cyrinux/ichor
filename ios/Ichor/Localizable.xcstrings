@@ -72201,6 +72201,1934 @@
           }
         }
       }
+    },
+    "Who loads the API" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qui charge l'API"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quién carga la API"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wer die API belastet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chi carica l'API"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хто навантажує API"
+          }
+        }
+      }
+    },
+    "Find who loads it (audit log)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouver qui la charge (journal d'audit)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar quién la carga (registro de auditoría)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finden, wer sie belastet (Audit-Log)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trova chi la carica (log di audit)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайти, хто навантажує (журнал аудиту)"
+          }
+        }
+      }
+    },
+    "Ichor reads the Kubernetes audit log of each control plane through the Talos API and looks for the clients that load the API server or keep failing. Talos logs every request by default; reading takes a few tens of MB per node, compressed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor lit le journal d'audit Kubernetes de chaque control plane via l'API Talos et cherche les clients qui chargent le serveur d'API ou échouent en boucle. Talos journalise chaque requête par défaut ; la lecture prend quelques dizaines de Mo par nœud, compressés."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor lee el registro de auditoría de Kubernetes de cada control plane a través de la API de Talos y busca los clientes que cargan el servidor de la API o fallan una y otra vez. Talos registra cada petición por defecto; la lectura ocupa unas decenas de MB por nodo, comprimidos."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor liest das Kubernetes-Audit-Log jeder Control Plane über die Talos-API und sucht die Clients, die den API-Server belasten oder immer wieder scheitern. Talos protokolliert standardmäßig jede Anfrage; das Lesen überträgt einige zehn MB pro Knoten, komprimiert."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor legge il log di audit Kubernetes di ogni control plane tramite l'API Talos e cerca i client che caricano il server API o falliscono di continuo. Talos registra ogni richiesta per impostazione predefinita; la lettura richiede qualche decina di MB per nodo, compressi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ichor читає журнал аудиту Kubernetes кожного control plane через API Talos і шукає клієнтів, які навантажують API-сервер або постійно отримують помилки. Talos типово журналює кожен запит; читання займає кілька десятків МБ на вузол у стиснутому вигляді."
+          }
+        }
+      }
+    },
+    "Last %lld min" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dernières %lld min"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Últimos %lld min"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte %lld Min."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ultimi %lld min"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Останні %lld хв"
+          }
+        }
+      }
+    },
+    "Analyze" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyser"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analizar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analysieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analizza"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аналізувати"
+          }
+        }
+      }
+    },
+    "Reading the audit logs of the control planes…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture des journaux d'audit des control planes…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leyendo los registros de auditoría de los control planes…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audit-Logs der Control Planes werden gelesen…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lettura dei log di audit dei control plane…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читання журналів аудиту control plane…"
+          }
+        }
+      }
+    },
+    "%lld requests over %@ from %lld control planes, %@ read" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld requests over %2$@ from %3$lld control planes, %4$@ read"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld requêtes sur %2$@ depuis %3$lld control planes, %4$@ lus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld peticiones en %2$@ desde %3$lld control planes, %4$@ leídos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld Anfragen über %2$@ von %3$lld Control Planes, %4$@ gelesen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld richieste in %2$@ da %3$lld control plane, %4$@ letti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld запитів за %2$@ з %3$lld control plane, прочитано %4$@"
+          }
+        }
+      }
+    },
+    "Nothing wrong found: every client behaves." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien d’anormal : tous les clients se comportent bien."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada anormal: todos los clientes se comportan bien."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts Auffälliges: alle Clients verhalten sich gut."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niente di anomalo: tutti i client si comportano bene."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого підозрілого: усі клієнти поводяться добре."
+          }
+        }
+      }
+    },
+    "No request in the audit logs: auditing may be turned off (audit policy level None)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune requête dans les journaux d'audit : l'audit est peut-être désactivé (niveau None dans la politique d'audit)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ninguna petición en los registros de auditoría: la auditoría puede estar desactivada (nivel None en la política)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Anfrage in den Audit-Logs: das Audit ist vielleicht abgeschaltet (Stufe None in der Audit-Policy)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna richiesta nei log di audit: forse l’audit è disattivato (livello None nella policy)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У журналах аудиту немає запитів: можливо, аудит вимкнено (рівень None у політиці аудиту)."
+          }
+        }
+      }
+    },
+    "What is wrong" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce qui ne va pas"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qué va mal"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was nicht stimmt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cosa non va"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Що не так"
+          }
+        }
+      }
+    },
+    "Busiest clients" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clients les plus actifs"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clientes más activos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktivste Clients"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Client più attivi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найактивніші клієнти"
+          }
+        }
+      }
+    },
+    "Control planes read" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control planes lus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control planes leídos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelesene Control Planes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control plane letti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитані control plane"
+          }
+        }
+      }
+    },
+    "%lld%% of requests, mostly %@ %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld%% of requests, mostly %2$@ %3$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld %% des requêtes, surtout %2$@ %3$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld %% de las peticiones, sobre todo %2$@ %3$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld %% der Anfragen, meist %2$@ %3$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld%% delle richieste, soprattutto %2$@ %3$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld%% запитів, переважно %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "%lld throttled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld limitées"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld limitadas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld gedrosselt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld limitate"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld обмежено"
+          }
+        }
+      }
+    },
+    "%lld in all, e.g. %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld in all, e.g. %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld en tout, par ex. %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld en total, p. ej. %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld insgesamt, z. B. %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld in tutto, ad es. %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "усього %1$lld, напр. %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %lld events" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld events"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld événements"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld eventos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld Ereignisse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld eventi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld подій"
+          }
+        }
+      }
+    },
+    "Throttled %lld times (429): it sends more than its share" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limité %lld fois (429) : il envoie plus que sa part"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limitado %lld veces (429): envía más de lo que le corresponde"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld-mal gedrosselt (429): sendet mehr als seinen Anteil"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limitato %lld volte (429): invia più della sua quota"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обмежено %lld разів (429): надсилає більше за свою частку"
+          }
+        }
+      }
+    },
+    "%lld%% of all requests, mostly %@ %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld%% of all requests, mostly %2$@ %3$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld %% de toutes les requêtes, surtout %2$@ %3$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld %% de todas las peticiones, sobre todo %2$@ %3$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld %% aller Anfragen, meist %2$@ %3$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld%% di tutte le richieste, soprattutto %2$@ %3$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld%% усіх запитів, переважно %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "Lists %@ every %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lists %1$@ every %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liste %1$@ toutes les %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista %1$@ cada %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listet %1$@ alle %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elenca %1$@ ogni %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримує список %1$@ кожні %2$@"
+          }
+        }
+      }
+    },
+    "Its watches end after %@ and start over" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses watches s’arrêtent après %@ et recommencent"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sus watches terminan tras %@ y vuelven a empezar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seine Watches enden nach %@ und beginnen neu"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I suoi watch finiscono dopo %@ e ricominciano"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його watch завершуються через %@ і починаються знову"
+          }
+        }
+      }
+    },
+    "Refused %lld times (403): %@ %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refused %1$lld times (403): %2$@ %3$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refusé %1$lld fois (403) : %2$@ %3$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechazado %1$lld veces (403): %2$@ %3$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld-mal abgelehnt (403): %2$@ %3$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rifiutato %1$lld volte (403): %2$@ %3$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відмовлено %1$lld разів (403): %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "Asks %lld times for %@, which the cluster does not serve (404)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asks %1$lld times for %2$@, which the cluster does not serve (404)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demande %1$lld fois %2$@, que le cluster ne sert pas (404)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pide %1$lld veces %2$@, que el clúster no sirve (404)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fragt %1$lld-mal nach %2$@, das der Cluster nicht bereitstellt (404)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiede %1$lld volte %2$@, che il cluster non serve (404)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запитує %1$lld разів %2$@, якого кластер не обслуговує (404)"
+          }
+        }
+      }
+    },
+    "Reads %@ %lld times, but it does not exist (404)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reads %1$@ %2$lld times, but it does not exist (404)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lit %1$@ %2$lld fois, mais il n’existe pas (404)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lee %1$@ %2$lld veces, pero no existe (404)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liest %1$@ %2$lld-mal, aber es existiert nicht (404)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Legge %1$@ %2$lld volte, ma non esiste (404)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читає %1$@ %2$lld разів, але його не існує (404)"
+          }
+        }
+      }
+    },
+    "Its %@ of %@ conflict %lld times (409)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its %1$@ of %2$@ conflict %3$lld times (409)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses %1$@ de %2$@ sont en conflit %3$lld fois (409)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sus %1$@ de %2$@ entran en conflicto %3$lld veces (409)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seine %1$@ von %2$@ kollidieren %3$lld-mal (409)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I suoi %1$@ di %2$@ vanno in conflitto %3$lld volte (409)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його %1$@ для %2$@ конфліктують %3$lld разів (409)"
+          }
+        }
+      }
+    },
+    "Creates %@ that already exist, %lld times (409)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creates %1$@ that already exist, %2$lld times (409)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crée des %1$@ qui existent déjà, %2$lld fois (409)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea %1$@ que ya existen, %2$lld veces (409)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstellt %1$@, die schon existieren, %2$lld-mal (409)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea %1$@ che esistono già, %2$lld volte (409)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створює %1$@, які вже існують, %2$lld разів (409)"
+          }
+        }
+      }
+    },
+    "Rewrites %@ every %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rewrites %1$@ every %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réécrit %1$@ toutes les %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reescribe %1$@ cada %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schreibt %1$@ alle %2$@ neu"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riscrive %1$@ ogni %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезаписує %1$@ кожні %2$@"
+          }
+        }
+      }
+    },
+    "Creates %@ events" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crée %@ événements"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea %@ eventos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstellt %@ Ereignisse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea %@ eventi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створює %@ подій"
+          }
+        }
+      }
+    },
+    "%@ %@ takes %@ on average" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ takes %3$@ on average"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ prend %3$@ en moyenne"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ tarda %3$@ de media"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ dauert im Schnitt %3$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ richiede in media %3$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ триває в середньому %3$@"
+          }
+        }
+      }
+    },
+    "%@ %@ fails %lld times (%lld)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ fails %3$lld times (%4$lld)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ échoue %3$lld fois (%4$lld)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ falla %3$lld veces (%4$lld)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ schlägt %3$lld-mal fehl (%4$lld)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ fallisce %3$lld volte (%4$lld)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ завершується помилкою %3$lld разів (%4$lld)"
+          }
+        }
+      }
+    },
+    "%lld clients get server errors (%lld), mostly on %@ %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld clients get server errors (%2$lld), mostly on %3$@ %4$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld clients reçoivent des erreurs serveur (%2$lld), surtout sur %3$@ %4$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld clientes reciben errores del servidor (%2$lld), sobre todo en %3$@ %4$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld Clients erhalten Serverfehler (%2$lld), meist bei %3$@ %4$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld client ricevono errori del server (%2$lld), soprattutto su %3$@ %4$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld клієнтів отримують помилки сервера (%2$lld), переважно на %3$@ %4$@"
+          }
+        }
+      }
+    },
+    "%lld clients wait %@ on average" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld clients wait %2$@ on average"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld clients attendent %2$@ en moyenne"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld clientes esperan %2$@ de media"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld Clients warten im Schnitt %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld client attendono in media %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld клієнтів чекають у середньому %2$@"
+          }
+        }
+      }
+    },
+    "%lld clients' watches end every %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld clients' watches end every %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les watches de %1$lld clients s’arrêtent toutes les %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los watches de %1$lld clientes terminan cada %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Watches von %1$lld Clients enden alle %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I watch di %1$lld client finiscono ogni %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch %1$lld клієнтів завершуються кожні %2$@"
+          }
+        }
+      }
+    },
+    "The API server on %@ logged nothing for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The API server on %1$@ logged nothing for %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur d'API de %1$@ n'a rien journalisé depuis %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor de la API de %1$@ no registró nada desde hace %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der API-Server auf %1$@ hat seit %2$@ nichts protokolliert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il server API su %1$@ non registra nulla da %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API-сервер на %1$@ нічого не журналював %2$@"
+          }
+        }
+      }
+    },
+    "Lower its request rate (client QPS and burst), or give its flow schema a priority level of its own." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baissez son débit (QPS et burst du client), ou donnez à son flow schema son propre niveau de priorité."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baje su ritmo de peticiones (QPS y burst del cliente) o dé a su flow schema un nivel de prioridad propio."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senken Sie seine Anfragerate (QPS und Burst des Clients) oder geben Sie seinem Flow Schema eine eigene Prioritätsstufe."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riduci il suo ritmo di richieste (QPS e burst del client) o dai al suo flow schema un livello di priorità proprio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зменште частоту його запитів (QPS і burst клієнта) або дайте його flow schema власний рівень пріоритету."
+          }
+        }
+      }
+    },
+    "Check its sync or poll interval, and whether it watches (informers) instead of polling." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifiez son intervalle de synchronisation ou de sondage, et s’il surveille (informers) au lieu de sonder."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revise su intervalo de sincronización o sondeo, y si observa (informers) en lugar de sondear."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfen Sie sein Sync- oder Abfrageintervall und ob es beobachtet (Informer), statt abzufragen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlla il suo intervallo di sincronizzazione o di polling, e se osserva (informer) invece di interrogare."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірте його інтервал синхронізації чи опитування і чи він спостерігає (informers) замість опитування."
+          }
+        }
+      }
+    },
+    "Polling with lists is expensive: a watch (informer) gets the same changes for a fraction of the load. Otherwise raise its poll interval." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonder par des listes coûte cher : un watch (informer) obtient les mêmes changements pour une fraction de la charge. Sinon, allongez son intervalle."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sondear con listas es caro: un watch (informer) obtiene los mismos cambios con una fracción de la carga. Si no, alargue su intervalo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abfragen per Liste ist teuer: ein Watch (Informer) bekommt dieselben Änderungen für einen Bruchteil der Last. Sonst das Intervall erhöhen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interrogare con liste è costoso: un watch (informer) ottiene le stesse modifiche con una frazione del carico. Altrimenti allunga l’intervallo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Опитування списками дороге: watch (informer) отримує ті самі зміни з частиною навантаження. Інакше збільште інтервал."
+          }
+        }
+      }
+    },
+    "Watches normally last several minutes. Look for a proxy or load balancer idle timeout between it and the API server, or the client restarting." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un watch dure normalement plusieurs minutes. Cherchez un délai d’inactivité de proxy ou de load balancer entre lui et le serveur d’API, ou un client qui redémarre."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un watch suele durar varios minutos. Busque un tiempo de inactividad de proxy o balanceador entre él y el servidor de la API, o un cliente que se reinicia."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watches laufen normalerweise mehrere Minuten. Suchen Sie ein Idle-Timeout eines Proxys oder Load Balancers zwischen ihm und dem API-Server, oder einen Client, der neu startet."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un watch dura di solito diversi minuti. Cerca un timeout di inattività di proxy o load balancer tra lui e il server API, o un client che si riavvia."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch зазвичай триває кілька хвилин. Шукайте тайм-аут простою проксі чи балансувальника між ним і API-сервером або перезапуск клієнта."
+          }
+        }
+      }
+    },
+    "Its RBAC lacks this permission: add it to its Role or ClusterRole, or stop the call." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son RBAC n’a pas cette permission : ajoutez-la à son Role ou ClusterRole, ou supprimez l’appel."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A su RBAC le falta este permiso: añádalo a su Role o ClusterRole, o elimine la llamada."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seinem RBAC fehlt diese Berechtigung: fügen Sie sie seiner Role oder ClusterRole hinzu oder entfernen Sie den Aufruf."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al suo RBAC manca questo permesso: aggiungilo al suo Role o ClusterRole, o elimina la chiamata."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його RBAC бракує цього дозволу: додайте його до Role чи ClusterRole або приберіть виклик."
+          }
+        }
+      }
+    },
+    "The API was removed or its CRD is not installed: upgrade the client, or install the CRD." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’API a été retirée ou sa CRD n’est pas installée : mettez à jour le client, ou installez la CRD."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La API se retiró o su CRD no está instalada: actualice el cliente o instale la CRD."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die API wurde entfernt oder ihre CRD ist nicht installiert: Client aktualisieren oder CRD installieren."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’API è stata rimossa o la sua CRD non è installata: aggiorna il client o installa la CRD."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API видалено або її CRD не встановлено: оновіть клієнт або встановіть CRD."
+          }
+        }
+      }
+    },
+    "Something still points at a deleted object: check its configuration." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelque chose pointe encore vers un objet supprimé : vérifiez sa configuration."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algo sigue apuntando a un objeto borrado: revise su configuración."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etwas verweist noch auf ein gelöschtes Objekt: prüfen Sie seine Konfiguration."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualcosa punta ancora a un oggetto eliminato: controlla la sua configurazione."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щось досі посилається на видалений об’єкт: перевірте його конфігурацію."
+          }
+        }
+      }
+    },
+    "Two writers update the same objects: look for a second controller, or an old replica still running." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deux écrivains modifient les mêmes objets : cherchez un second contrôleur, ou une ancienne réplique encore active."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dos escritores actualizan los mismos objetos: busque un segundo controlador o una réplica antigua aún activa."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwei Schreiber ändern dieselben Objekte: suchen Sie einen zweiten Controller oder eine alte, noch laufende Replik."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due scrittori aggiornano gli stessi oggetti: cerca un secondo controller o una vecchia replica ancora attiva."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Два записувачі оновлюють ті самі об’єкти: шукайте другий контролер або стару репліку, що досі працює."
+          }
+        }
+      }
+    },
+    "It should update the existing object instead: usually a controller bug or a version mismatch, which an upgrade fixes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il devrait plutôt mettre à jour l’objet existant : souvent un bug du contrôleur ou un écart de versions, qu’une mise à jour corrige."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debería actualizar el objeto existente: suele ser un fallo del controlador o un desajuste de versiones que una actualización corrige."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es sollte das vorhandene Objekt aktualisieren: meist ein Controller-Fehler oder Versionskonflikt, den ein Update behebt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dovrebbe aggiornare l’oggetto esistente: di solito un bug del controller o una differenza di versione che un aggiornamento risolve."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Він мав би оновлювати наявний об’єкт: зазвичай це помилка контролера або розбіжність версій, яку виправляє оновлення."
+          }
+        }
+      }
+    },
+    "A controller this busy on one object is usually fighting another writer, or flapping a status: compare its writes with the object owner’s." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un contrôleur aussi actif sur un objet se bat souvent avec un autre écrivain, ou fait osciller un statut : comparez ses écritures à celles du propriétaire."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un controlador tan activo en un objeto suele pelear con otro escritor o hacer oscilar un estado: compare sus escrituras con las del propietario."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein so aktiver Controller auf einem Objekt kämpft meist mit einem anderen Schreiber oder lässt einen Status flattern: vergleichen Sie seine Schreibvorgänge mit denen des Besitzers."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un controller così attivo su un oggetto di solito litiga con un altro scrittore o fa oscillare uno stato: confronta le sue scritture con quelle del proprietario."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контролер, такий активний на одному об’єкті, зазвичай змагається з іншим записувачем або змушує статус коливатися: порівняйте його записи з записами власника."
+          }
+        }
+      }
+    },
+    "Event floods load etcd: find the warning it repeats and fix its cause." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un flot d’événements charge etcd : trouvez l’avertissement répété et corrigez sa cause."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una avalancha de eventos carga etcd: busque el aviso que se repite y corrija su causa."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Ereignisflut belastet etcd: finden Sie die wiederholte Warnung und beheben Sie ihre Ursache."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una valanga di eventi carica etcd: trova l’avviso ripetuto e correggi la causa."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Потік подій навантажує etcd: знайдіть попередження, що повторюється, і усуньте його причину."
+          }
+        }
+      }
+    },
+    "Narrow the request (namespace, label selector), page large lists, or look at admission webhooks." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restreignez la requête (namespace, sélecteur de labels), paginez les grandes listes, ou regardez les webhooks d’admission."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acote la petición (namespace, selector de etiquetas), pagine las listas grandes o revise los webhooks de admisión."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grenzen Sie die Anfrage ein (Namespace, Label-Selektor), blättern Sie große Listen oder prüfen Sie Admission-Webhooks."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restringi la richiesta (namespace, selettore di etichette), pagina le liste grandi o controlla i webhook di ammissione."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звузьте запит (простір імен, селектор міток), розбивайте великі списки на сторінки або перевірте admission webhooks."
+          }
+        }
+      }
+    },
+    "The API server could not answer: a failing admission webhook or aggregated API (metrics-server…) is the usual cause." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur d’API n’a pas pu répondre : un webhook d’admission ou une API agrégée (metrics-server…) en échec en est la cause habituelle."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor de la API no pudo responder: suele deberse a un webhook de admisión o una API agregada (metrics-server…) que falla."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der API-Server konnte nicht antworten: meist ist ein fehlschlagender Admission-Webhook oder eine aggregierte API (metrics-server…) schuld."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il server API non ha potuto rispondere: di solito la causa è un webhook di ammissione o un’API aggregata (metrics-server…) che fallisce."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API-сервер не зміг відповісти: зазвичай причина в несправному admission webhook або агрегованому API (metrics-server…)."
+          }
+        }
+      }
+    },
+    "Not their fault: the API server or etcd is struggling. Check etcd health and latency, the API server logs and its nodes’ resources." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce n’est pas leur faute : le serveur d’API ou etcd peine. Vérifiez la santé et la latence d’etcd, les logs du serveur d’API et les ressources de ses nœuds."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No es culpa suya: el servidor de la API o etcd tienen problemas. Revise la salud y latencia de etcd, los logs del servidor de la API y los recursos de sus nodos."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht ihre Schuld: API-Server oder etcd kämpfen. Prüfen Sie Zustand und Latenz von etcd, die Logs des API-Servers und die Ressourcen seiner Knoten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è colpa loro: il server API o etcd sono in difficoltà. Controlla salute e latenza di etcd, i log del server API e le risorse dei suoi nodi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це не їхня провина: API-сервер або etcd не справляються. Перевірте стан і затримку etcd, журнали API-сервера та ресурси його вузлів."
+          }
+        }
+      }
+    },
+    "Not their fault: check etcd latency (its disk), the API server’s CPU and memory, and admission webhooks." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce n’est pas leur faute : vérifiez la latence d’etcd (son disque), le CPU et la mémoire du serveur d’API, et les webhooks d’admission."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No es culpa suya: revise la latencia de etcd (su disco), la CPU y memoria del servidor de la API y los webhooks de admisión."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht ihre Schuld: prüfen Sie die etcd-Latenz (seine Platte), CPU und Speicher des API-Servers und Admission-Webhooks."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è colpa loro: controlla la latenza di etcd (il suo disco), CPU e memoria del server API e i webhook di ammissione."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це не їхня провина: перевірте затримку etcd (його диск), CPU і пам’ять API-сервера та admission webhooks."
+          }
+        }
+      }
+    },
+    "Something between them and the API server cuts long connections: a load balancer or proxy idle timeout, or API servers restarting." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelque chose entre eux et le serveur d’API coupe les connexions longues : un délai d’inactivité de load balancer ou de proxy, ou des serveurs d’API qui redémarrent."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algo entre ellos y el servidor de la API corta las conexiones largas: un tiempo de inactividad de balanceador o proxy, o servidores de la API que se reinician."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etwas zwischen ihnen und dem API-Server trennt lange Verbindungen: ein Idle-Timeout von Load Balancer oder Proxy, oder neu startende API-Server."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualcosa tra loro e il server API interrompe le connessioni lunghe: un timeout di inattività di load balancer o proxy, o server API che si riavviano."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щось між ними та API-сервером обриває довгі з’єднання: тайм-аут простою балансувальника чи проксі або перезапуск API-серверів."
+          }
+        }
+      }
+    },
+    "It may be down, unreachable for clients, or unable to write its log: check its health and the node’s disk." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il est peut-être arrêté, injoignable par les clients, ou incapable d’écrire son journal : vérifiez sa santé et le disque du nœud."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puede estar caído, inalcanzable para los clientes o sin poder escribir su registro: revise su salud y el disco del nodo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Er ist vielleicht ausgefallen, für Clients unerreichbar oder kann sein Log nicht schreiben: prüfen Sie seinen Zustand und die Platte des Knotens."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potrebbe essere fermo, irraggiungibile per i client o non riuscire a scrivere il log: controlla la sua salute e il disco del nodo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Можливо, він не працює, недосяжний для клієнтів або не може писати журнал: перевірте його стан і диск вузла."
+          }
+        }
+      }
+    },
+    "Refused %lld times (401): its credentials are not valid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refusé %lld fois (401) : ses identifiants ne sont pas valides"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechazado %lld veces (401): sus credenciales no son válidas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld-mal abgelehnt (401): seine Anmeldedaten sind ungültig"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rifiutato %lld volte (401): le sue credenziali non sono valide"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відмовлено %lld разів (401): його облікові дані недійсні"
+          }
+        }
+      }
+    },
+    "Its token or certificate expired or was deleted (a removed service account, an old kubeconfig): give it new credentials, or stop it. The log only knows its address." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son jeton ou certificat a expiré ou a été supprimé (compte de service retiré, ancien kubeconfig) : donnez-lui de nouveaux identifiants, ou arrêtez-le. Le journal ne connaît que son adresse."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su token o certificado caducó o se borró (una cuenta de servicio eliminada, un kubeconfig antiguo): dele credenciales nuevas o deténgalo. El registro solo conoce su dirección."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sein Token oder Zertifikat ist abgelaufen oder gelöscht (ein entfernter Service-Account, eine alte Kubeconfig): geben Sie ihm neue Anmeldedaten oder stoppen Sie ihn. Das Log kennt nur seine Adresse."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il suo token o certificato è scaduto o è stato eliminato (un service account rimosso, un vecchio kubeconfig): dagli nuove credenziali o fermalo. Il log conosce solo il suo indirizzo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його токен чи сертифікат прострочений або видалений (видалений обліковий запис служби, старий kubeconfig): дайте йому нові облікові дані або зупиніть його. Журнал знає лише його адресу."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
