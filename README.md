@@ -43,12 +43,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   Ingress/HTTPRoute → Service → pods → node, every box coloured by health, traffic flowing along
   the healthy paths, and the likely root cause named (a node not ready, a crash-looping pod, a
   Service without ready pods).
-  An app the icon catalog does not know (a personal project) can name its own icon with the
-  `ichor.levis.name/icon` annotation: a [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons)
-  slug (`grafana`), an `https://` link to a PNG, WebP, JPEG or GIF (downloaded only when
-  *Download missing app icons* is on; change the URL to refresh it), or the image inline as
-  `data:image/png;base64,…` (64 KiB at most, never downloaded). SVG is not supported. A label
-  of the same name works too, for a slug only.
+  An app the icon catalog does not know (a personal project) can bring its own logo, see
+  [Argo CD app icons](#argo-cd-app-icons).
 - **Flux:** when the cluster runs Flux v2, list its Kustomizations and HelmReleases with their
   readiness, applied and attempted revision, source, what a Kustomization applied and a
   release's Helm history, and their Git, OCI and Helm sources; reconcile (with its source
@@ -213,6 +209,46 @@ kubectl -n shop label cronjob wipe-staging ichor.levis.name/trigger=false
 An icon name that is not a lowercase slug (letters, digits, dashes) is ignored. The next run is
 computed on the phone from the schedule and `timeZone` (UTC without one, like the controller on
 Talos); the app shows none for a schedule it cannot read.
+
+### Argo CD app icons
+
+Ichor names an Argo CD app's logo from its Helm chart, its name or the images it runs. An app it
+cannot recognise, such as a personal project or an internal service, gets a monogram; give it a
+logo with the `ichor.levis.name/icon` annotation on the Application:
+
+| Value | Example | Shown |
+|---|---|---|
+| An icon name: a bundled logo or any [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons) slug | `grafana` | The bundled logo, else downloaded from jsDelivr when *Download missing app icons* is on |
+| An `https://` link to a PNG, WebP, JPEG or GIF | `https://git.example.org/logo.png` | Downloaded when *Download missing app icons* is on, then kept in the app's cache |
+| The image inline, base64, 64 KiB at most | `data:image/png;base64,iVBORw0…` | Always: nothing is downloaded |
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-site
+  namespace: argocd
+  annotations:
+    ichor.levis.name/icon: https://git.example.org/my-site/logo.png
+spec:
+  # …
+```
+
+Or on an existing app:
+
+```sh
+kubectl -n argocd annotate application my-site ichor.levis.name/icon=https://git.example.org/my-site/logo.png
+# inline: no request at all, the logo travels with the Application
+kubectl -n argocd annotate application my-site \
+  ichor.levis.name/icon="data:image/png;base64,$(base64 -w0 logo.png)"
+```
+
+The annotation wins over Ichor's own guess. A label of the same name works too, but label values
+are short, so a label can only hold an icon name. An invalid value (plain `http://`, a link with a
+password, SVG, which neither app can draw, or an image over 64 KiB) is ignored and the app keeps its
+usual icon. A downloaded logo is cached under its URL: change the URL (e.g. `?v=2`) to refresh it.
+Only the link itself is requested, without cookies and without following redirects; the server it
+points to sees the phone's IP address.
 
 ### Creating a talosconfig for the phone
 
