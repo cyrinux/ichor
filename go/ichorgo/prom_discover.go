@@ -96,7 +96,9 @@ func promMatch(s promService) (promCandidate, bool) {
 
 	switch {
 	case has("alertmanager", "operator", "exporter", "pushgateway", "adapter", "kube-state", "grafana", "-agent", "ruler", "ingester", "distributor", "compactor", "store-gateway",
-		"thanos-discovery", "sidecar", "thanos-receive", "storegateway", "thanos-bucket", "thanos-rule", "thanos-compact"):
+		"thanos-discovery", "sidecar", "thanos-receive", "storegateway", "thanos-bucket", "thanos-rule", "thanos-compact",
+		// Mimir parts without the query API (the gossip ring reaches every component).
+		"query-scheduler", "gossip-ring", "memcached", "minio", "-cache"):
 		return promCandidate{}, false
 	case name == "prometheus-operated":
 		src.Kind, score, ports, names = "prometheus", 100, []int{9090}, []string{"web"}
@@ -104,6 +106,9 @@ func promMatch(s promService) (promCandidate, bool) {
 		src.Kind, src.PathPrefix, score, ports, names = "mimir", "/prometheus", 90, []int{80, 8080}, []string{"http-metrics", "http"}
 	case strings.Contains(name, "mimir") && has("query-frontend"):
 		src.Kind, src.PathPrefix, score, ports, names = "mimir", "/prometheus", 85, []int{8080}, []string{"http-metrics", "http"}
+	case strings.Contains(name, "mimir") || app == "mimir":
+		// Monolithic (-target=all) or the querier: the query API on the HTTP port too.
+		src.Kind, src.PathPrefix, score, ports, names = "mimir", "/prometheus", 80, []int{8080, 80}, []string{"http-metrics", "http"}
 	case has("thanos-query", "thanos-querier"):
 		src.Kind, score, ports, names = "thanos", 80, []int{9090, 10902}, []string{"http"}
 	case has("vmsingle", "victoria-metrics-single"):
