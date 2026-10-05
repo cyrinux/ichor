@@ -16,7 +16,7 @@ public struct KubeCronJobList: Decodable, Equatable, Sendable {
 }
 
 /// A CronJob with its schedule, recent runs and the ichor.levis.name/* settings (KubeCronJobs).
-public struct KubeCronJob: Decodable, Equatable, Identifiable, Sendable {
+public struct KubeCronJob: Codable, Equatable, Identifiable, Sendable {
     public let namespace: String
     public let name: String
     /// ichor.levis.name/title; "" when not set.
@@ -105,7 +105,7 @@ public struct KubeCronJob: Decodable, Equatable, Identifiable, Sendable {
 }
 
 /// One Job a CronJob started.
-public struct KubeJobRun: Decodable, Equatable, Identifiable, Sendable {
+public struct KubeJobRun: Codable, Equatable, Identifiable, Sendable {
     public let name: String
     public let state: String
     /// Started by hand (Ichor, kubectl create job --from).
@@ -164,16 +164,18 @@ public func cronJobNamespaces(_ cronJobs: [KubeCronJob]) -> [String] {
 }
 
 /// CronJobs of namespace (all when nil) whose name, title, description, schedule or image
-/// contains query (case-insensitive): running ones first, then failed, then by namespace and name.
-public func filterCronJobs(_ cronJobs: [KubeCronJob], namespace: String?, query: String) -> [KubeCronJob] {
+/// contains query (case-insensitive). sorted: running ones first, then failed, then by
+/// namespace and name; else in the order loaded (a list still incomplete).
+public func filterCronJobs(_ cronJobs: [KubeCronJob], namespace: String?, query: String, sorted: Bool = true) -> [KubeCronJob] {
     let needle = query.trimmingCharacters(in: .whitespaces)
     let contains = { (text: String) in text.range(of: needle, options: .caseInsensitive) != nil }
-    return cronJobs
-        .filter { c in
-            (namespace == nil || c.namespace == namespace) &&
-                (needle.isEmpty || [c.name, c.title, c.description, c.schedule].contains(where: contains) ||
-                    c.images.contains(where: contains))
-        }
+    let matching = cronJobs.filter { c in
+        (namespace == nil || c.namespace == namespace) &&
+            (needle.isEmpty || [c.name, c.title, c.description, c.schedule].contains(where: contains) ||
+                c.images.contains(where: contains))
+    }
+    guard sorted else { return matching }
+    return matching
         .sorted { a, b in
             let ra = a.runState.attentionRank, rb = b.runState.attentionRank
             if ra != rb { return ra < rb }
