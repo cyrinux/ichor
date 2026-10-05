@@ -1112,6 +1112,17 @@
     <string name="support_bundle_title">Bundle di supporto</string>
     <string name="settings_support_bundle_desc">Raccoglie log e dettagli del cluster dei nodi in uno zip, come talosctl support.</string>
     <string name="settings_support_bundle_open">Crea un bundle di supporto…</string>
+    <string name="settings_section_support">Supporto</string>
+    <string name="settings_integrations_desc">Chiedi che un operatore di questo cluster venga mostrato in Ichor.</string>
+    <string name="settings_integrations_open">Richiedi un\'integrazione…</string>
+    <string name="settings_report_bug">Segnala un bug</string>
+    <string name="integrations_title">Richiedi un\'integrazione</string>
+    <string name="integrations_intro">Operatori di questo cluster che Ichor non mostra ancora. Scegli i gruppi API che vorresti vedere: Ichor apre una issue GitHub precompilata che rivedi prima dell\'invio. Contiene solo nomi di gruppo, versione e tipo, mai namespace o nomi di oggetti.</string>
+    <string name="integrations_none">Tutto ciò che questo cluster esegue e che Ichor sa mostrare è già nell\'app.</string>
+    <string name="integrations_supported">Già mostrati in Ichor: %1$s</string>
+    <string name="integrations_other">Suggerisci altro</string>
+    <string name="integrations_search">Cerca esistenti</string>
+    <string name="integrations_request">Richiedi</string>
     <string name="support_bundle_warning">Il bundle contiene log e dettagli del cluster. NON è mascherato dalla modalità screenshot: controllalo prima di condividerlo.</string>
     <string name="support_bundle_nodes">Nodi</string>
     <string name="support_bundle_create">Crea bundle</string>
