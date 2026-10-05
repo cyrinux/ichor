@@ -15,6 +15,10 @@
 # sign it (automatic signing, cloud-managed distribution certificate) with an App Store
 # Connect API key, then uploads it (TestFlight). It needs ICHOR_IOS_TEAM_ID, ASC_KEY_PATH (the
 # AuthKey_<id>.p8 file), ASC_KEY_ID and ASC_ISSUER_ID.
+#
+# ICHOR_IOS_MULTICAST=1 adds com.apple.developer.networking.multicast to the app's entitlements,
+# for Wake-on-LAN broadcasts. Apple grants it on request only (fastlane/APP_STORE_CONNECT.md):
+# signing with it before the team is approved fails, so it is off by default.
 set -euo pipefail
 
 MODE="${1:-ipa}"
@@ -74,6 +78,11 @@ python3 "$ROOT/scripts/go-licenses.py" --ios Ichor/licenses.json \
   --swift-checkouts build/SourcePackages/checkouts \
   --swift-resolved Ichor.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 xcodegen generate
+# XcodeGen rewrites the entitlements file on each generate, so this comes after the last one.
+if [[ "${ICHOR_IOS_MULTICAST:-}" == 1 ]]; then
+  /usr/libexec/PlistBuddy -c "Add :com.apple.developer.networking.multicast bool true" Ichor/Ichor.entitlements
+  echo "entitlement com.apple.developer.networking.multicast added"
+fi
 
 case "$MODE" in
   test)
@@ -83,6 +92,10 @@ case "$MODE" in
     xcodebuild "${common[@]}" "${unsigned[@]}" -configuration Release -destination 'generic/platform=iOS' build
     rm -rf build/ipa && mkdir -p build/ipa/Payload
     cp -R build/Build/Products/Release-iphoneos/Ichor.app build/ipa/Payload/
+    # App Store Connect rejects uploads without them (ITMS-91053/91061); fail here first.
+    for manifest in Ichor.app/PrivacyInfo.xcprivacy Ichor.app/PlugIns/TalosWidget.appex/PrivacyInfo.xcprivacy; do
+      [[ -f "build/ipa/Payload/$manifest" ]] || { echo "missing privacy manifest: $manifest" >&2; exit 1; }
+    done
     ipa="ichor-v${ICHOR_VERSION//+/-}-unsigned.ipa"
     (cd build/ipa && zip -qry "../$ipa" Payload)
     echo "$ROOT/ios/build/$ipa"

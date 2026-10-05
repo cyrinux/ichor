@@ -30,6 +30,11 @@ enum LocalNetwork {
         return nil
     }
 
+    /// The Wi-Fi or Ethernet interface holding the phone's IPv4 address (e.g. en0).
+    static func ipv4Interface() -> String? {
+        interfaceAddresses().first { isLocal($0.name) && $0.ipv4 != nil }?.name
+    }
+
     /// Opens this app's page in the Settings app, where local network access can be allowed.
     @MainActor
     static func openSettings() {

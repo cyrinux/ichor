@@ -1,6 +1,6 @@
 # D9. Argo CD freeze: hotfix live without being reverted
 
-Status: **missing** (Phase 0 spike done). Size M. Read [../README.md](../README.md) for the conventions.
+Status: **partial**: Phase 0 spike and Phase 1 (Go) done; Android and iOS to do. Size M. Read [../README.md](../README.md) for the conventions.
 
 ## Goal
 
@@ -50,13 +50,16 @@ not needed).
 ## Marking Ichor's windows
 
 The window object has no free-form field on every version, so the AppProject gets an annotation
-`ichor.levis.name/freezes`: a JSON list of `{window (kind, schedule, duration, applications,
-namespaces), reason, createdAt, expiresAt}`. A window matching an entry is Ichor's: it can be
+`ichor.levis.name/freezes`: a JSON list of `{window, reason, createdAt, expiresAt}`, `window`
+being the window's id (a hash of its whole JSON, keys sorted; windows have no name). An
+unreadable annotation blocks writes rather than losing the records. A window matching an entry is Ichor's: it can be
 extended or ended. Other windows come from Git (or another tool): they cannot be extended, and
 removing one needs a warning (decision 1).
 
 Every change is read-modify-write of `spec.syncWindows` + the annotation with the project's
-`resourceVersion` (merge patch replaces the list whole); a 409 is retried once.
+`resourceVersion` (merge patch replaces the list whole); a concurrent change makes it fail with a
+409 instead of being lost, and the app reloads before asking again. Other windows are written
+back verbatim, fields Ichor does not know (`description`) included.
 
 ## The GitOps trap, again: projects in Git
 
@@ -78,18 +81,33 @@ managed by Argo CD app *y*" on the sheet.
 
 ## Go
 
-- **Read** (`KubeArgoCD`): `argoProject.Windows []argoSyncWindow` replacing the count:
-  kind, schedule, duration, scope (applications, namespaces, clusters), manualSync, `active`,
-  `start`/`end` of the current or next occurrence, `ichor *{reason, createdAt, expiresAt}`,
-  `matches` (app count). Per app: `freeze *{project, until, scope, manualSync, byIchor}` from the
-  active deny windows that match it (Argo's glob rules on name, destination namespace, cluster).
-  Cron evaluation with `robfig/cron/v3` (what Argo uses).
+Built: `kube_argocd_syncwindows.go` (read), `kube_argocd_freeze.go` (write), tests in
+`kube_argocd_freeze_test.go`, demo in `kube_argocd_demo.go`.
+
+- **Read** (`KubeArgoCD`): `argoProject.windows`: id, kind, schedule, duration, timeZone, scope
+  (applications, namespaces, clusters), manualSync, `active`, `start`/`end` of the current or next
+  occurrence (for an ended Ichor freeze that is next year's: use `ichor.expiresAt`), `error` when
+  unreadable, `apps` matched, `ichor {reason, createdAt, expiresAt, expired}`. `syncWindows` (the
+  count) stays for the current apps. `managedBy` / `managedServerSide`: the app applying the
+  project from Git. Per app: `freeze {project, until, manualSync, byIchor, windows}` from the
+  active deny windows matching it (Argo's rules: globs on name, destination namespace, cluster
+  server or name; any selector, or all with `andOperator`). Cron evaluation reuses
+  `cronschedule.go` (the CronJob one), in the window's time zone.
 - **Write**: `KubeArgoFreeze(cfg, ctx, server, projectNamespace, project, action, optionsJSON)`,
-  actions `freeze {applications | namespaces, minutes, manualSync, reason}`, `extend {window,
-  minutes}`, `unfreeze {window}`, `clearExpired`. Duration 5 min–7 days. `freeze` also drops this
-  project's expired Ichor windows. Demo contexts refuse, as usual.
-- `just probe argo-freeze PROJECT …`, table tests (glob matching, one-shot cron, expiry, 409 retry,
-  Git windows untouched unless removed explicitly), demo data with one active freeze, one Git window, one expired.
+  actions `freeze {applications | namespaces, minutes, manualSync, reason}` (`applications: ["*"]`
+  for the whole project), `extend {window, minutes}`, `unfreeze {window, fromGit}`,
+  `clearExpired`. 5 min–7 days, at most 20 names, reason ≤ 200 characters. Every change drops the
+  project's expired Ichor windows; the same freeze asked twice within a minute is a no-op. Demo
+  contexts refuse, as usual.
+- **Safety nets**: the start minute and expiry come from the API server's clock (its `Date`
+  header), not the phone's, so a phone off by minutes doesn't create a window already over. A
+  freeze naming an app or a namespace no app of the project has is refused (Argo CD would accept
+  a window freezing nothing: a typo, or a name the privacy mask did not map back; the listing
+  teaches the masked namespaces). Extending a freeze into an identical one is refused.
+- **A forgotten freeze comes back a year later** (the schedule repeats yearly): the read shows it
+  `active` with `ichor.expired`; the apps run `clearExpired` when they see an expired Ichor freeze
+  (Phase 2).
+- `just probe argocd-freeze NAMESPACE PROJECT ACTION [OPTIONS_JSON]`.
 
 ## UX
 
@@ -148,7 +166,7 @@ Android: a local notification 5 min before the end (scheduled at freeze time, no
 | Phase | Content | Size |
 |-------|---------|------|
 | 0 | Spike: window on a Git-managed project survives a sync. **Done** (client-side apply) | S |
-| 1 | Go read (window evaluation, per-app freeze) + write (`KubeArgoFreeze`), demo, tests, probe | M |
+| 1 | Go read (window evaluation, per-app freeze) + write (`KubeArgoFreeze`), demo, tests, probe. **Done** | M |
 | 2 | Android: freeze sheet, badges/banner/chip, sync windows screen, expiry notification, D2 hook | M |
 | 3 | iOS: the same | M |
 

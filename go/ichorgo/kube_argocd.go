@@ -64,6 +64,8 @@ type argoApp struct {
 	ExternalURLs  []string        `json:"externalURLs"`
 	UnhealthyPods []kubePod       `json:"unhealthyPods"` // pods of its namespace not ready
 	ReconciledAt  int64           `json:"reconciledAt"`
+	// Freeze is set while an active deny sync window of its project stops its automated syncs.
+	Freeze *argoFreeze `json:"freeze"`
 }
 
 type argoOwner struct {
@@ -160,10 +162,16 @@ type argoAppSetCondition struct {
 }
 
 type argoProject struct {
-	Namespace   string `json:"namespace"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	SyncWindows int    `json:"syncWindows"`
+	Namespace   string       `json:"namespace"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	SyncWindows int          `json:"syncWindows"`
+	Windows     []argoWindow `json:"windows"`
+	// ManagedBy is the Argo CD app that applies the project from Git, "" when none;
+	// ManagedServerSide when it does with server-side apply, where a freeze added live was not
+	// checked to survive its syncs.
+	ManagedBy         string `json:"managedBy"`
+	ManagedServerSide bool   `json:"managedServerSide"`
 }
 
 // KubeArgoCD lists the Argo CD Applications of every namespace (os:admin), with their sync and
@@ -217,8 +225,13 @@ func readArgoCD(ctx context.Context, k *kubeClient) (argoStatus, error) {
 		return argoStatus{}, errs[0]
 	}
 
-	out := mapArgoCD(apps.Items, sets.Items, projects.Items)
+	out := mapArgoCD(apps.Items, sets.Items, projects.Items, time.Now())
 	out.Version = argoVersion(ctrl)
+
+	// So a namespace picked from the masked listing (a freeze) maps back to the real one.
+	namespaces := namespacesOf(out.Apps, func(a argoApp) string { return a.Destination.Namespace })
+	namespaces = append(namespaces, namespacesOf(out.Apps, func(a argoApp) string { return a.Namespace })...)
+	privacy.learnNamespaces(namespaces)
 
 	if errs[1] != nil && !isNotFound(errs[1]) {
 		out.AppSetsError = sectionError(errs[1])
@@ -281,7 +294,7 @@ func attachUnhealthyPods(apps []argoApp, pods []kubePod) {
 	}
 }
 
-func mapArgoCD(objects []argoObject, sets []argoAppSetObject, projects []argoProjectObject) argoStatus {
+func mapArgoCD(objects []argoObject, sets []argoAppSetObject, projects []argoProjectObject, now time.Time) argoStatus {
 	out := argoStatus{Installed: true, Apps: make([]argoApp, 0, len(objects)), AppSets: []argoAppSet{}, Projects: []argoProject{}}
 
 	names := map[string]bool{}
@@ -305,14 +318,7 @@ func mapArgoCD(objects []argoObject, sets []argoAppSetObject, projects []argoPro
 		return cmp.Or(healthRank(a.Level)-healthRank(b.Level), strings.Compare(a.Name, b.Name))
 	})
 
-	for _, p := range projects {
-		out.Projects = append(out.Projects, argoProject{
-			Namespace: p.Metadata.Namespace, Name: p.Metadata.Name,
-			Description: p.Spec.Description, SyncWindows: len(p.Spec.SyncWindows),
-		})
-	}
-
-	slices.SortFunc(out.Projects, func(a, b argoProject) int { return strings.Compare(a.Name, b.Name) })
+	out.Projects = mapArgoProjects(projects, out.Apps, now)
 
 	return out
 }
