@@ -1,6 +1,6 @@
 # D9. Argo CD freeze: hotfix live without being reverted
 
-Status: **missing**. Size M. Read [../README.md](../README.md) for the conventions.
+Status: **missing** (Phase 0 spike done). Size M. Read [../README.md](../README.md) for the conventions.
 
 ## Goal
 
@@ -61,12 +61,17 @@ Every change is read-modify-write of `spec.syncWindows` + the annotation with th
 ## The GitOps trap, again: projects in Git
 
 Projects are usually Git-managed too (the reference cluster: an ApplicationSet with auto-sync,
-prune, no self-heal). Adding a window live should survive: Argo's three-way diff ignores a field
-absent from both Git and the last applied config. It is lost when Git starts defining
-`syncWindows` for that project (the list is replaced whole). **Spike first**: add a window to a
-Git-managed project, push an unrelated commit, check it survives with client-side and
-server-side apply. If it doesn't, the project's managing app gets frozen first by the same
-mechanism (its own project), or the action explains why it can't freeze.
+prune, no self-heal). A window added live survives: Argo's three-way diff ignores a field absent
+from both Git and the last applied config. It is lost when Git starts defining `syncWindows` for
+that project (the list is replaced whole).
+
+**Spike (2026-10-05, Argo CD v3.4.5, client-side apply)**: a deny window added live to a
+Git-managed project (in neither Git nor `last-applied-configuration`) left the projects app
+Synced after a hard refresh, and a manual sync of that app reported every AppProject
+"unchanged" and kept the window. A live allow window on another project, there for months,
+survived the same sync. Server-side apply was not tested (switching the field ownership of real
+projects was out of scope for a spike): if the projects app uses `ServerSideApply=true`, the
+sheet warns that the freeze may not survive a sync of that app.
 
 The Go side detects the project's tracking annotation/label and the UI says "Project *x* is
 managed by Argo CD app *y*" on the sheet.
@@ -142,7 +147,7 @@ Android: a local notification 5 min before the end (scheduled at freeze time, no
 
 | Phase | Content | Size |
 |-------|---------|------|
-| 0 | Spike: window on a Git-managed project survives a sync (both apply modes) | S |
+| 0 | Spike: window on a Git-managed project survives a sync. **Done** (client-side apply) | S |
 | 1 | Go read (window evaluation, per-app freeze) + write (`KubeArgoFreeze`), demo, tests, probe | M |
 | 2 | Android: freeze sheet, badges/banner/chip, sync windows screen, expiry notification, D2 hook | M |
 | 3 | iOS: the same | M |
