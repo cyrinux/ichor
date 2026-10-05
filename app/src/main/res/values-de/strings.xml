@@ -2121,6 +2121,8 @@
     <string name="metrics_skip_verify">Zertifikat nicht prüfen</string>
     <string name="metrics_test">Testen</string>
     <string name="metrics_reachable">Die Abfrage-API antwortet.</string>
+    <string name="metrics_refused">Die Metrikquelle hat die Abfrage abgelehnt (HTTP 401 oder 403): Mandant (X-Scope-OrgID) und Zugangsdaten prüfen.</string>
+    <string name="metrics_change_credentials">Mandant oder Zugangsdaten ändern</string>
     <plurals name="metrics_truncated">
         <item quantity="one">%1$d Serie von %2$d angezeigt</item>
         <item quantity="other">%1$d Serien von %2$d angezeigt</item>

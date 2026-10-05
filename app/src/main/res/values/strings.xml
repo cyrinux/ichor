@@ -2125,6 +2125,8 @@
     <string name="metrics_skip_verify">Skip certificate verification</string>
     <string name="metrics_test">Test</string>
     <string name="metrics_reachable">The query API answers.</string>
+    <string name="metrics_refused">The metrics source refused the query (HTTP 401 or 403): check the tenant (X-Scope-OrgID) and the credentials.</string>
+    <string name="metrics_change_credentials">Change tenant or credentials</string>
     <plurals name="metrics_truncated">
         <item quantity="one">Showing %1$d of %2$d series</item>
         <item quantity="other">Showing %1$d of %2$d series</item>

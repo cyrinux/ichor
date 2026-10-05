@@ -458,6 +458,41 @@
         }
       }
     },
+    "Change tenant or credentials" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mandant oder Zugangsdaten ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar el tenant o las credenciales"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier le tenant ou les identifiants"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica tenant o credenziali"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити тенант або облікові дані"
+          }
+        }
+      }
+    },
     "Cluster CPU usage over the last minutes" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1085,6 +1120,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не закривайте Ichor, доки вузол не перезавантажиться"
+          }
+        }
+      }
+    },
+    "The metrics source refused the query (HTTP 401 or 403): check the tenant (X-Scope-OrgID) and the credentials." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Metrikquelle hat die Abfrage abgelehnt (HTTP 401 oder 403): Mandant (X-Scope-OrgID) und Zugangsdaten prüfen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La fuente de métricas rechazó la consulta (HTTP 401 o 403): comprueba el tenant (X-Scope-OrgID) y las credenciales."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La source de métriques a refusé la requête (HTTP 401 ou 403) : vérifiez le tenant (X-Scope-OrgID) et les identifiants."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sorgente delle metriche ha rifiutato la query (HTTP 401 o 403): controlla il tenant (X-Scope-OrgID) e le credenziali."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Джерело метрик відхилило запит (HTTP 401 або 403): перевірте тенант (X-Scope-OrgID) і облікові дані."
           }
         }
       }

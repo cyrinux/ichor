@@ -2299,6 +2299,8 @@
     <string name="metrics_skip_verify">Не перевіряти сертифікат</string>
     <string name="metrics_test">Перевірити</string>
     <string name="metrics_reachable">API запитів відповідає.</string>
+    <string name="metrics_refused">Джерело метрик відхилило запит (HTTP 401 або 403): перевірте тенант (X-Scope-OrgID) і облікові дані.</string>
+    <string name="metrics_change_credentials">Змінити тенант або облікові дані</string>
     <plurals name="metrics_truncated">
         <item quantity="one">Показано %1$d серію з %2$d</item>
         <item quantity="few">Показано %1$d серії з %2$d</item>

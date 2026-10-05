@@ -2129,6 +2129,8 @@
     <string name="metrics_skip_verify">Ne pas vérifier le certificat</string>
     <string name="metrics_test">Tester</string>
     <string name="metrics_reachable">L\'API de requête répond.</string>
+    <string name="metrics_refused">La source de métriques a refusé la requête (HTTP 401 ou 403) : vérifiez le tenant (X-Scope-OrgID) et les identifiants.</string>
+    <string name="metrics_change_credentials">Modifier le tenant ou les identifiants</string>
     <plurals name="metrics_truncated">
         <item quantity="one">%1$d série affichée sur %2$d</item>
         <item quantity="other">%1$d séries affichées sur %2$d</item>
