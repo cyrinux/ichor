@@ -10,6 +10,8 @@ struct NodesView: View {
     @Environment(AppModel.self) private var model
     @State private var nodes: [NodeOverview]
     @State private var filter: NodeFilter?
+    /// A site's NodeGroup key ("" for the nodes the map misses), nil for all.
+    @State private var site: String?
     @State private var query = ""
 
     init(nodes: [NodeOverview], filter: NodeFilter?, path: Binding<[Route]>) {
@@ -19,11 +21,19 @@ struct NodesView: View {
     }
 
     var body: some View {
-        let shown = nodes.filtered(query: query, filter: filter)
+        // In the map's order, site by site, as on the overview.
+        let groups = groupNodes(nodes, by: TopologyStore.shared.topology(for: model.topologyKey))
+        let shown = groups.filtered(query: query, filter: filter, site: site)
         let version = nodes.sharedVersion
         List {
-            ForEach(shown) { node in
-                NodeListRow(node: node, sharedVersion: version, path: $path)
+            ForEach(shown) { group in
+                Section {
+                    ForEach(group.nodes) { node in
+                        NodeListRow(node: node, sharedVersion: version, path: $path)
+                    }
+                } header: {
+                    if groups.count > 1 { Text(verbatim: group.title) }
+                }
             }
         }
         .overlay {
@@ -31,7 +41,7 @@ struct NodesView: View {
                 ContentUnavailableView("No node matches", systemImage: "magnifyingglass")
             }
         }
-        .safeAreaInset(edge: .top) { filterBar }
+        .safeAreaInset(edge: .top) { filterBar(groups: groups) }
         .searchable(text: $query, prompt: Text("Hostname or address"))
         .refreshable { await reload() }
         .navigationTitle("Nodes")
@@ -39,20 +49,38 @@ struct NodesView: View {
         .themedBackground()
     }
 
-    /// All, needing attention, or one health, each with its count.
-    private var filterBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                FilterChip(label: String(localized: "All"), count: nodes.count, selected: filter == nil) {
-                    withAnimation(.snappy) { filter = nil }
-                }
-                ForEach(NodeFilter.allCases, id: \.self) { chip in
-                    FilterChip(label: chip.label, count: nodes.filter(chip.matches).count, selected: filter == chip, dot: chip.dot) {
-                        withAnimation(.snappy) { filter = chip }
+    /// All, needing attention, or one health, each with its count; then, with more than one
+    /// site, all sites or one (a site filter only says something with several).
+    private func filterBar(groups: [NodeGroup]) -> some View {
+        VStack(spacing: 6) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    FilterChip(label: String(localized: "All"), count: nodes.count, selected: filter == nil) {
+                        withAnimation(.snappy) { filter = nil }
+                    }
+                    ForEach(NodeFilter.allCases, id: \.self) { chip in
+                        FilterChip(label: chip.label, count: nodes.filter(chip.matches).count, selected: filter == chip, dot: chip.dot) {
+                            withAnimation(.snappy) { filter = chip }
+                        }
                     }
                 }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
+            if groups.count > 1 {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        FilterChip(label: String(localized: "All sites"), count: nodes.count, selected: site == nil) {
+                            withAnimation(.snappy) { site = nil }
+                        }
+                        ForEach(groups) { group in
+                            FilterChip(label: group.title, count: group.nodes.count, selected: site == group.key) {
+                                withAnimation(.snappy) { site = group.key }
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
         }
         .padding(.bottom, 6)
         .background(.bar)

@@ -27,6 +27,7 @@ struct SettingsView: View {
             } footer: {
                 Text("Ichor follows the iPhone language. To use another one for this app only, open its page in the Settings app and choose Language.")
             }
+            LiveStatsSection()
             Section {
                 Toggle("App lock", isOn: Binding(get: { model.lock.enabled }, set: { setLock($0) }))
                     .disabled(lockRequired && model.lock.enabled)
