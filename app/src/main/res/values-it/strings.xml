@@ -1576,6 +1576,11 @@
     <string name="cnpg_last_failure">Ultimo errore</string>
     <string name="cnpg_never">mai</string>
     <string name="cnpg_recoverable">Punto di ripristino più vecchio</string>
+    <string name="cnpg_backup_now">Esegui backup ora</string>
+    <string name="cnpg_backup_title">Eseguire ora il backup di %1$s?</string>
+    <string name="cnpg_backup_text">CloudNativePG esegue un backup di base completo con il metodo configurato per il cluster (plugin barman-cloud, object store o snapshot del volume). Carica l’istanza su cui gira e occupa spazio nello storage dei backup.</string>
+    <string name="cnpg_backup_started">Backup %1$s richiesto</string>
+    <string name="cnpg_backup_failed">%1$s: %2$s</string>
     <string name="dragonfly_empty">Nessuna istanza Dragonfly.</string>
     <string name="dragonfly_role_master">master</string>
     <string name="dragonfly_reason_no_ready">nessun pod pronto</string>

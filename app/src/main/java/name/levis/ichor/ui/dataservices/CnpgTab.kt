@@ -18,8 +18,10 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,7 +54,19 @@ import name.levis.ichor.ui.components.expandable
  * default, one compact line each that opens to the details.
  */
 @Composable
-fun CnpgTab(status: CnpgStatus) {
+fun CnpgTab(status: CnpgStatus, actions: CnpgActions) {
+    val busy by actions.busy.collectAsStateWithLifecycle()
+    var confirming by remember { mutableStateOf<CnpgCluster?>(null) }
+    confirming?.let { c ->
+        CnpgBackupConfirmDialog(
+            c,
+            onConfirm = {
+                actions.backup(c)
+                confirming = null
+            },
+            onDismiss = { confirming = null },
+        )
+    }
     val attention = remember(status) { status.clusters.count { it.serviceHealth.needsAttention } }
     var problemsOnly by rememberSaveable { mutableStateOf(attention > 0) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -97,14 +111,20 @@ fun CnpgTab(status: CnpgStatus) {
             )
         }
         items(rows, key = { it.label }) { c ->
-            ClusterRow(c, open = c.label in expanded, onToggle = { expanded = if (c.label in expanded) expanded - c.label else expanded + c.label })
+            ClusterRow(
+                c,
+                open = c.label in expanded,
+                onToggle = { expanded = if (c.label in expanded) expanded - c.label else expanded + c.label },
+                backingUp = c.label in busy,
+                onBackup = { confirming = c },
+            )
             HorizontalDivider()
         }
     }
 }
 
 @Composable
-private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit) {
+private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit, backingUp: Boolean, onBackup: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column(Modifier.fillMaxWidth().expandable(open, onToggle = onToggle).animateContentSize().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -126,12 +146,12 @@ private fun ClusterRow(c: CnpgCluster, open: Boolean, onToggle: () -> Unit) {
             }
             Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, contentDescription = null, tint = muted)
         }
-        if (open) Details(c)
+        if (open) Details(c, backingUp, onBackup)
     }
 }
 
 @Composable
-private fun Details(c: CnpgCluster) {
+private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit) {
     Column(Modifier.padding(start = 22.dp, top = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         if (c.phase.isNotEmpty()) InfoRow(stringResource(R.string.cnpg_phase), listOf(c.phase, c.phaseReason).filter { it.isNotEmpty() }.joinToString(": "))
         if (c.currentPrimary.isNotEmpty()) {
@@ -154,6 +174,12 @@ private fun Details(c: CnpgCluster) {
         InfoRow(stringResource(R.string.cnpg_last_backup), ago(c.lastSuccessAt))
         if (c.lastFailureAt > 0) InfoRow(stringResource(R.string.cnpg_last_failure), ago(c.lastFailureAt))
         if (c.recoverableAt > 0) InfoRow(stringResource(R.string.cnpg_recoverable), ago(c.recoverableAt))
+        // The Go core picks the method; a cluster set up for none of them is refused with a reason.
+        if (!c.hibernated) {
+            OutlinedButton(onClick = onBackup, enabled = !backingUp, modifier = Modifier.padding(top = 8.dp)) {
+                Text(stringResource(R.string.cnpg_backup_now))
+            }
+        }
     }
 }
 

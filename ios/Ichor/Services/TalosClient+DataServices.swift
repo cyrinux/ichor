@@ -56,4 +56,12 @@ extension TalosClient {
             _ = IchorgoKubeCertManagerRenew(config, context, kubeServer, namespace, name, error)
         }
     }
+
+    /// Starts a backup of the CloudNativePG cluster namespace/name now, like `kubectl cnpg backup`
+    /// (os:admin): the new Backup's name. Refused when hibernated, without a backup method, or while one runs.
+    func cnpgBackup(namespace: String, name: String) async throws -> String {
+        try await Self.run { [config, context, kubeServer] error -> String in
+            IchorgoKubeCNPGBackup(config, context, kubeServer, namespace, name, error)
+        }
+    }
 }

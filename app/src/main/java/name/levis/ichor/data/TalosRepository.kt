@@ -621,6 +621,14 @@ class TalosRepository(
     }
 
     /**
+     * Starts a backup of the CloudNativePG cluster [namespace]/[name] now, like `kubectl cnpg backup`
+     * (os:admin): the new Backup's name. Throws when refused (hibernated, no backup method, one running).
+     */
+    suspend fun cnpgBackup(namespace: String, name: String): String = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeCNPGBackup(cfg, ctx, server, namespace, name)
+    }
+
+    /**
      * Runs [action] on the Longhorn volume or node [namespace]/[name] (os:admin); [value] is the
      * replica count of [LonghornAction.REPLICAS]. Throws when refused.
      */

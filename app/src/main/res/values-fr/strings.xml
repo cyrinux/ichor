@@ -1576,6 +1576,11 @@
     <string name="cnpg_last_failure">Dernier échec</string>
     <string name="cnpg_never">jamais</string>
     <string name="cnpg_recoverable">Plus ancien point de restauration</string>
+    <string name="cnpg_backup_now">Sauvegarder maintenant</string>
+    <string name="cnpg_backup_title">Sauvegarder %1$s maintenant ?</string>
+    <string name="cnpg_backup_text">CloudNativePG fait une sauvegarde de base complète avec la méthode configurée pour le cluster (plugin barman-cloud, stockage objet ou snapshot de volume). Elle charge l’instance qui la fait et occupe de la place dans le stockage des sauvegardes.</string>
+    <string name="cnpg_backup_started">Sauvegarde %1$s demandée</string>
+    <string name="cnpg_backup_failed">%1$s : %2$s</string>
     <string name="dragonfly_empty">Aucune instance Dragonfly.</string>
     <string name="dragonfly_role_master">maître</string>
     <string name="dragonfly_reason_no_ready">aucun pod prêt</string>
