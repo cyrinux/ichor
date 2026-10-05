@@ -45,7 +45,7 @@ Every idea was checked against the code (Go core, Android, iOS) on 2026-10-04. S
 | U2 | Live progress outside the app | **partial**: Android upgrade foreground service only | M |
 | U3 | Global search | **missing** (per-screen filters only) | M |
 | U4 | History and uptime | **partial**: only the last snapshot is kept | M |
-| U5 | Favorites and runbooks | **partial**: Overview card layout (Android only) | M |
+| U5 | Favorites and runbooks | **partial**: Overview card layout and top-bar arrangement (Android, iOS) | M |
 | U6 | Wear OS / Apple Watch | **missing** | L |
 | U7 | Shortcuts and assistants | **partial**: one launcher shortcut per cluster | M |
 | U8 | Tablet / foldable layout | **missing** (iPad allowed but single column) | L |
