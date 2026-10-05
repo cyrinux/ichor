@@ -54,7 +54,7 @@ does, in Go.
 
 | # | Decision | Why |
 |---|----------|-----|
-| F6 | **Kustomization**: fetch the source's `status.artifact.url` (the tarball source-controller already built) through the API server service proxy (`…/services/source-controller:80/proxy/…`, as `kube_garage.go` does); untar in memory (size cap); `kustomize build` of `spec.path` with `sigs.k8s.io/kustomize/api/krusty` on an in-memory filesystem; apply `spec.postBuild` (`substitute`, `substituteFrom` ConfigMaps/Secrets) with Flux's own `envsubst` rules; set `spec.targetNamespace`, `commonMetadata`, `patches`, `images`, `components`; then a **server-side apply dry run** per object (`PATCH …?dryRun=All&fieldManager=kustomize-controller`, `application/apply-patch+yaml`) and a diff of the result against the live object. | Same steps as `flux diff ks`; the dry run applies defaults, webhooks and field ownership, so only real changes show. |
+| F6 | **Kustomization**: read the source's artifact (the tarball source-controller already built) by **exec `cat <storage-path>/<status.artifact.path>`** in the source-controller pod (`manager` container, `--storage-path` arg, `/data` by default; the image is Alpine), the service proxy (`…/services/source-controller:80/proxy/<artifact.path>`) only when exec is refused; untar in memory (size cap); `kustomize build` of `spec.path` with `sigs.k8s.io/kustomize/api/krusty` on an in-memory filesystem, wrapped in a generated kustomization.yaml for `targetNamespace`, `commonMetadata`, `patches`, `images`, `components` (and generated when the path has none), as kustomize-controller does; add the `kustomize.toolkit.fluxcd.io/name` and `/namespace` labels the controller stamps; apply `spec.postBuild` (`substitute`, `substituteFrom` ConfigMaps/Secrets) with `github.com/fluxcd/pkg/envsubst`; then a **server-side apply dry run** per object (`PATCH …?dryRun=All&force=true&fieldManager=kustomize-controller`, `application/apply-patch+yaml`) and a diff of the result against the live object. | Same steps as `flux diff ks`. The dry run applies defaults, webhooks and field ownership, so only what a reconcile would really change shows (a field someone added by hand and Flux does not own stays, as it would). Exec first: see the spike. |
 | F7 | **Prune**: objects in `status.inventory.entries` no longer rendered are listed as "would be deleted" when `spec.prune` is true. | `flux diff` reports them too. |
 | F8 | **SOPS**: objects that are encrypted (`sops:` key) are not decrypted (the key is in the cluster, never on the phone): listed as "encrypted, not compared". | No secrets leave the cluster. |
 | F9 | **HelmRelease, step 1 (S)**: when `spec.driftDetection.mode` is `enabled` or `warn`, show the drift helm-controller already found (status condition, `DriftDetected` events with the changed fields). Step 2 (L, after a spike): render the chart from the HelmChart artifact with `values` + `valuesFrom` via the Helm SDK, dry run and diff like F6. | Step 1 costs nothing to the binary; step 2 pulls in the Helm SDK. |
@@ -70,9 +70,32 @@ UI: **Show diff** on the Flux app detail (Kustomization; HelmRelease when drift 
 also offered in the reconcile confirmation. The diff screen is Argo's: one collapsible block per
 resource, badge per change kind, monospace red/green lines; "no changes" when everything matches.
 
-Spike first: binary size of krusty (and later the Helm SDK) in the gomobile library, and whether
-the source-controller service is reachable through the proxy on a default install (it serves
-artifacts on port 80, `http` named port).
+### Spike results (2026-10-06)
+
+Throwaway kind cluster (control plane + worker), Flux 2.9 `flux install` defaults, podinfo
+GitRepository and Kustomization; drift made by hand on a suspended Kustomization.
+
+- **Binary size**, linux/arm64, stripped, Ichor's Go core with and without: krusty adds
+  **+3.8 MB raw / +1.36 MB gzipped** per ABI; Flux's `envsubst` adds nothing measurable.
+  `github.com/fluxcd/pkg/kustomize` (the controller's own generator) adds +24 MB raw: it pulls
+  controller-runtime and client-go. Rejected; its generator logic (a few hundred lines) is
+  reimplemented on krusty instead.
+- **Service proxy is blocked across nodes**: Flux installs `allow-egress` in `flux-system`,
+  which only lets in pods of that namespace. With source-controller on a worker, the API server
+  (host network on the control plane) gets `dial tcp …:9090: i/o timeout`. It only worked on a
+  single node. Most real clusters will hit this.
+- **Exec works whatever the NetworkPolicy**: `cat /data/gitrepository/<ns>/<name>/<rev>.tar.gz`
+  through Ichor's WebSocket exec (`kube_exec.go`, binary-safe): 402 KB in 44 ms. Needs a raised
+  output cap for this call (64 MiB), the default is 1 MiB. Port-forward also works but needs a
+  protocol Ichor does not speak yet.
+- **End to end** through Ichor's Go client: krusty build 3 ms; the dry-run diff showed exactly
+  the drift a reconcile would revert (`minReadySeconds` changed, a deleted HPA as created) and
+  left a hand-added annotation alone, as server-side apply does. Missing the controller's
+  labels made every object show a spurious label removal: hence adding them (F6).
+- A diff library is needed (`github.com/pmezard/go-difflib`, tiny) or a small LCS of our own.
+
+Not covered: SOPS (F8 stays "not compared"), remote bases, OCIRepository and Bucket sources
+(same artifact storage, so the same exec path), the HelmRelease steps.
 
 Open questions:
 
@@ -83,5 +106,5 @@ Open questions:
 
 ## Phases
 
-1. Go. (M) 2. Android. (M) 3. iOS. (M) 4. Alerts. (S) 5. Diff: spike (S), Kustomization diff
+1. Go. (M) 2. Android. (M) 3. iOS. (M) 4. Alerts. (S) 5. Diff: spike (done), Kustomization diff
 (M), HelmRelease drift (S), HelmRelease render (L).
