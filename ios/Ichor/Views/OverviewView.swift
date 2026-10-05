@@ -176,36 +176,31 @@ struct OverviewView: View {
                 }
             }
             ToolbarItemGroup(placement: .primaryAction) {
+                // Buttons with labels, not NavigationLinks with images: on a phone the ones that
+                // don't fit fold into the system's "…" menu, where a link does nothing and an image
+                // shows no title.
                 // Optional: only once turned on in the settings.
                 if ai.enabled {
-                    NavigationLink(value: Route.diagnosis(note: "")) { Image(systemName: "sparkles") }
-                        .accessibilityLabel(Text("AI diagnosis"))
+                    Button { path.append(Route.diagnosis(note: "")) } label: { Label("AI diagnosis", systemImage: "sparkles") }
                 }
                 if model.allows(.health) {
-                    NavigationLink(value: Route.health) { Image(systemName: "heart.text.square") }
-                        .accessibilityLabel(Text("Cluster health"))
+                    Button { path.append(Route.health) } label: { Label("Cluster health", systemImage: "heart.text.square") }
                 }
-                NavigationLink(value: Route.events(node: nil, hostnames: hostnames)) {
-                    Image(systemName: "list.bullet.rectangle")
+                Button { path.append(Route.events(node: nil, hostnames: hostnames)) } label: {
+                    Label("Events", systemImage: "list.bullet.rectangle")
                 }
-                .accessibilityLabel(Text("Events"))
                 .disabled(!clusterWide(.events))
                 // The Kubernetes API is reached with the admin kubeconfig Talos issues.
                 if model.allows(.workloads) {
-                    NavigationLink(value: Route.workloads) { Image(systemName: "square.stack.3d.up") }
-                        .accessibilityLabel(Text("Kubernetes workloads"))
+                    Button { path.append(Route.workloads) } label: { Label("Kubernetes workloads", systemImage: "square.stack.3d.up") }
                     // PromQL panels, through the same kubeconfig (or a URL set on the screen).
-                    NavigationLink(value: Route.metrics) { Image(systemName: "chart.xyaxis.line") }
-                        .accessibilityLabel(Text("Metrics"))
+                    Button { path.append(Route.metrics) } label: { Label("Metrics", systemImage: "chart.xyaxis.line") }
                 }
-                NavigationLink(value: Route.kubespan) { Image(systemName: "point.3.connected.trianglepath.dotted") }
-                    .accessibilityLabel(Text("KubeSpan"))
+                Button { path.append(Route.kubespan) } label: { Label("KubeSpan", systemImage: "point.3.connected.trianglepath.dotted") }
                     .disabled(!clusterWide(.kubespan))
-                NavigationLink(value: Route.etcd) { Image(systemName: "cylinder.split.1x2") }
-                    .accessibilityLabel(Text(verbatim: "etcd"))
+                Button { path.append(Route.etcd) } label: { Label { Text(verbatim: "etcd") } icon: { Image(systemName: "cylinder.split.1x2") } }
                     .disabled(!clusterWide(.etcd))
-                NavigationLink(value: Route.settings) { Image(systemName: "gearshape") }
-                    .accessibilityLabel(Text("Settings"))
+                Button { path.append(Route.settings) } label: { Label("Settings", systemImage: "gearshape") }
             }
         }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
