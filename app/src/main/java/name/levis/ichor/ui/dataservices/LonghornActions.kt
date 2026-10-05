@@ -111,16 +111,19 @@ internal fun LonghornActionMenu(actions: List<LonghornAction>, busy: Boolean, on
         return
     }
     var open by remember { mutableStateOf(false) }
-    TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { open = true })
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-        actions.forEach { action ->
-            DropdownMenuItem(
-                text = { Text(stringResource(action.menuLabel)) },
-                onClick = {
-                    open = false
-                    onAction(action)
-                },
-            )
+    // The Box anchors the menu to the button, not to the row's start edge.
+    Box {
+        TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { open = true })
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            actions.forEach { action ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(action.menuLabel)) },
+                    onClick = {
+                        open = false
+                        onAction(action)
+                    },
+                )
+            }
         }
     }
 }
