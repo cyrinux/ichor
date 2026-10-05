@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sync
@@ -145,6 +146,14 @@ fun ArgoAppRow(
                     modifier = Modifier.weight(1f, fill = false),
                 )
                 app.owner?.let { OwnerChip(it, Modifier.padding(start = 6.dp)) }
+                if (app.freeze != null) {
+                    Icon(
+                        Icons.Outlined.AcUnit,
+                        contentDescription = stringResource(R.string.argo_badge_frozen),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 6.dp).size(16.dp),
+                    )
+                }
             }
             Text(
                 listOf(app.versionLabel, timeAgo(app.deployedAt)).filter { it.isNotEmpty() }.joinToString(" · "),

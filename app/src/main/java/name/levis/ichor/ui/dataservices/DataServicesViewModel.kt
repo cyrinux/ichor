@@ -28,6 +28,9 @@ class DataServicesViewModel(private val talos: TalosRepository) : LoadingViewMod
     /** Certificate details and forced renewals; an issuance shows in a fresh reading. */
     val certificates = CertificateActions(viewModelScope, talos, onChanged = { refresh() })
 
+    /** On-demand CloudNativePG backups; the new backup shows in a fresh reading once done. */
+    val cnpg = CnpgActions(viewModelScope, talos, onChanged = { refresh() })
+
     /** Catalog ids from the inventory; "" checks everything (Garage needs a listing of every pod then). */
     private var hints = ""
     private var source: Any? = null

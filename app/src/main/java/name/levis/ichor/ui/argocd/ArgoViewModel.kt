@@ -16,10 +16,14 @@ import name.levis.ichor.data.ARGO_CD
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
+import name.levis.ichor.model.ArgoFreezeAction
+import name.levis.ichor.model.ArgoFreezeOptions
+import name.levis.ichor.model.ArgoProject
 import name.levis.ichor.model.ArgoResource
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ArgoSyncOptions
 import name.levis.ichor.model.KubeWorkload
+import name.levis.ichor.model.projectsToClear
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.refreshFailed
@@ -29,12 +33,19 @@ import name.levis.ichor.ui.workloads.WorkloadRestarts
 /** How an action on [count] apps ended: [failed] of them with [error] (the first one's), [app] when only one. */
 data class ArgoActionResult(val action: ArgoAction, val count: Int, val app: String?, val failed: Int, val error: UiText?)
 
+/** How a change to a project's sync windows ended: [error] when refused. */
+data class ArgoFreezeResult(val action: ArgoFreezeAction, val error: UiText?)
+
 /**
  * Argo CD for the overview card, the apps screen, the app detail and the app sheet: loads on
  * demand from the cached result first, polls quietly (no refresh indicator) while a sync runs
  * or right after an action, and runs actions with their outcome as one-shot [results].
  */
-class ArgoViewModel(private val talos: TalosRepository) : ViewModel() {
+class ArgoViewModel(
+    private val talos: TalosRepository,
+    /** Called as a load starts; what it returns gets the status loaded (the freeze reminders). */
+    private val onLoad: () -> (ArgoStatus) -> Unit = { {} },
+) : ViewModel() {
     private val _state = MutableStateFlow<UiState<ArgoStatus>>(UiState.Loading)
     val state: StateFlow<UiState<ArgoStatus>> = _state.asStateFlow()
     private var job: Job? = null
@@ -51,6 +62,12 @@ class ArgoViewModel(private val talos: TalosRepository) : ViewModel() {
     private val _results = Channel<ArgoActionResult>(Channel.BUFFERED)
     val results: Flow<ArgoActionResult> = _results.receiveAsFlow()
 
+    private val _freezeResults = Channel<ArgoFreezeResult>(Channel.BUFFERED)
+    val freezeResults: Flow<ArgoFreezeResult> = _freezeResults.receiveAsFlow()
+
+    /** Projects whose ended freezes were already cleared (or tried) this time round. */
+    private val cleared = mutableSetOf<String>()
+
     /** Rollout restarts of the app's workloads, followed like an action. */
     val restarts = WorkloadRestarts(viewModelScope, talos) { boost() }
 
@@ -58,6 +75,7 @@ class ArgoViewModel(private val talos: TalosRepository) : ViewModel() {
     fun load(key: Any) {
         if (key == source) return
         source = key
+        cleared.clear() // another cluster, or a new configuration
         fetch(quiet = false, reset = true)
     }
 
@@ -100,9 +118,13 @@ class ArgoViewModel(private val talos: TalosRepository) : ViewModel() {
                 else -> talos.cached<ArgoStatus>(ARGO_CD)?.let { UiState.Loaded(it.value, refreshing = true, fetchedAt = it.at) } ?: UiState.Loading
             }
         }
+        val onStatus = onLoad()
         job = viewModelScope.launch {
             _state.value = try {
-                UiState.Loaded(talos.argoCD())
+                talos.argoCD().also { status ->
+                    onStatus(status)
+                    clearExpired(status)
+                }.let { UiState.Loaded(it) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
@@ -128,6 +150,41 @@ class ArgoViewModel(private val talos: TalosRepository) : ViewModel() {
     }
 
     /**
+     * Changes the sync windows of [project] (freeze, extend, unfreeze, clear ended freezes) once
+     * per [options], one after the other, then follows the outcome; [syncAfter] is synced once
+     * the change is in (ending a freeze with the fix committed).
+     */
+    fun freeze(project: ArgoProject, action: ArgoFreezeAction, options: List<ArgoFreezeOptions>, syncAfter: ArgoApp? = null) {
+        val key = FREEZE_BUSY + project.key
+        if (key in _busy.value || options.isEmpty()) return
+        _busy.update { it + key }
+        viewModelScope.launch {
+            val error = options.firstNotNullOfOrNull { o ->
+                runCatching { talos.argoFreeze(project.namespace, project.name, action, o) }.exceptionOrNull()
+                    ?.takeUnless { it is CancellationException }?.uiText()
+            }
+            _busy.update { it - key }
+            _freezeResults.send(ArgoFreezeResult(action, error))
+            if (error == null && syncAfter != null) act(listOf(syncAfter), ArgoAction.SYNC) else if (error == null) boost()
+        }
+    }
+
+    /** Whether a change to [project]'s windows is in flight. */
+    fun freezeBusy(busy: Set<String>, project: ArgoProject?): Boolean = project != null && FREEZE_BUSY + project.key in busy
+
+    /**
+     * Ichor's ended freezes would fire again a year later (Argo CD has no one-shot window):
+     * removed quietly, once per project; a refusal (a read-only role, the demo) is left alone.
+     */
+    private fun clearExpired(status: ArgoStatus) {
+        status.projectsToClear.filter { FREEZE_BUSY + it.key !in _busy.value && cleared.add(it.key) }.forEach { project ->
+            viewModelScope.launch {
+                runCatching { talos.argoFreeze(project.namespace, project.name, ArgoFreezeAction.CLEAR_EXPIRED) }
+            }
+        }
+    }
+
+    /**
      * The workload behind [resource] at once, from a Kubernetes list when one holds it (its
      * replicas matter to the confirmation); [WorkloadRestarts.current] reads it fresh.
      */
@@ -142,6 +199,9 @@ class ArgoViewModel(private val talos: TalosRepository) : ViewModel() {
 
     private companion object {
         const val BOOST_MILLIS = 12_000L
+
+        /** Prefix of a project's key in [busy]. */
+        const val FREEZE_BUSY = "freeze:"
 
         /** Not known here: more than one, so the restart dialog does not warn about downtime. */
         const val UNKNOWN_REPLICAS = 2

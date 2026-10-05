@@ -12,6 +12,8 @@ import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
+import name.levis.ichor.model.ArgoFreezeAction
+import name.levis.ichor.model.ArgoFreezeOptions
 import name.levis.ichor.model.ArgoNetwork
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ArgoSyncOptions
@@ -644,6 +646,14 @@ class TalosRepository(
     }
 
     /**
+     * Starts a backup of the CloudNativePG cluster [namespace]/[name] now, like `kubectl cnpg backup`
+     * (os:admin): the new Backup's name. Throws when refused (hibernated, no backup method, one running).
+     */
+    suspend fun cnpgBackup(namespace: String, name: String): String = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeCNPGBackup(cfg, ctx, server, namespace, name)
+    }
+
+    /**
      * Runs [action] on the Longhorn volume or node [namespace]/[name] (os:admin); [value] is the
      * replica count of [LonghornAction.REPLICAS]. Throws when refused.
      */
@@ -664,6 +674,16 @@ class TalosRepository(
         val json = options?.let { TalosJson.encodeToString(ArgoSyncOptions.serializer(), it) }.orEmpty()
         Ichorgo.kubeArgoAction(cfg, ctx, server, app.namespace, app.name, action.wire, json)
     }
+
+    /**
+     * Changes the sync windows of the AppProject [namespace]/[project] (os:admin): freezes apps
+     * for a while, extends or ends a freeze, removes a window, clears ended freezes. Throws when
+     * refused.
+     */
+    suspend fun argoFreeze(namespace: String, project: String, action: ArgoFreezeAction, options: ArgoFreezeOptions = ArgoFreezeOptions()) =
+        kubeCall { cfg, ctx, server ->
+            Ichorgo.kubeArgoFreeze(cfg, ctx, server, namespace, project, action.wire, TalosJson.encodeToString(ArgoFreezeOptions.serializer(), options))
+        }
 
     /**
      * How traffic reaches [app] (os:admin): hosts, Gateways, routes, Services, pods and nodes.

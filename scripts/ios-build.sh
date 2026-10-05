@@ -19,6 +19,9 @@
 # ICHOR_IOS_MULTICAST=1 adds com.apple.developer.networking.multicast to the app's entitlements,
 # for Wake-on-LAN broadcasts. Apple grants it on request only (fastlane/APP_STORE_CONNECT.md):
 # signing with it before the team is approved fails, so it is off by default.
+#
+# ICHOR_IOS_EXPORT_CODE, once App Store Connect approved the encryption documentation, sets
+# ITSEncryptionExportComplianceCode so uploads skip the export compliance questions.
 set -euo pipefail
 
 MODE="${1:-ipa}"
@@ -82,6 +85,9 @@ xcodegen generate
 if [[ "${ICHOR_IOS_MULTICAST:-}" == 1 ]]; then
   /usr/libexec/PlistBuddy -c "Add :com.apple.developer.networking.multicast bool true" Ichor/Ichor.entitlements
   echo "entitlement com.apple.developer.networking.multicast added"
+fi
+if [[ -n "${ICHOR_IOS_EXPORT_CODE:-}" ]]; then
+  /usr/libexec/PlistBuddy -c "Add :ITSEncryptionExportComplianceCode string $ICHOR_IOS_EXPORT_CODE" Ichor/Info.plist
 fi
 
 case "$MODE" in

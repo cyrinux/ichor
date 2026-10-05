@@ -142,11 +142,11 @@ SwiftTerm package ships its own manifest if it needs one.
 
 ## Export compliance (read before the first submission)
 
-`Info.plist` currently sets `ITSAppUsesNonExemptEncryption` to **false**, so App Store Connect
-asks nothing. **Check that this is right for you before submitting:** the app does not only use
+`Info.plist` sets `ITSAppUsesNonExemptEncryption` to **true**: the app does not only use
 Apple's encryption. The Go core implements TLS (mTLS to Talos, HTTPS to Kubernetes and the AI
 providers) and age (X25519 / ChaCha20-Poly1305) for encrypted etcd snapshots, with standard
-algorithms of its own (Go's crypto library), not the operating system's.
+algorithms of its own (Go's crypto library), not the operating system's. App Store Connect
+therefore asks about encryption for each build until a compliance code is set (step 3).
 
 Apple's current rules ([overview](https://developer.apple.com/help/app-store-connect/manage-app-information/overview-of-export-compliance),
 [documentation](https://developer.apple.com/help/app-store-connect/reference/export-compliance-documentation-for-encryption)):
@@ -157,7 +157,7 @@ Apple's current rules ([overview](https://developer.apple.com/help/app-store-con
 | **standard algorithms not provided by the OS** ← Ichor | exempt (mass market), self-classification | **French encryption declaration to upload** |
 | proprietary / non-standard | CCATS | French declaration |
 
-So, for an App Store release:
+For an App Store release:
 
 1. **Distributed in France** (the default when "all countries" is selected): file a
    *déclaration de fourniture d'un moyen de cryptologie* with ANSSI
@@ -166,16 +166,16 @@ So, for an App Store release:
    AES-GCM, ChaCha20-Poly1305; age with X25519 and ChaCha20-Poly1305; keys stored in the Secure
    Enclave/Keychain), by e-mail to the address on that page. ANSSI acknowledges it; that
    acknowledgment is the document App Store Connect asks for.
-2. Then set `ITSAppUsesNonExemptEncryption` to **true** in `ios/project.yml`, upload a build,
-   and answer the questionnaire in App Store Connect (**App Information → App Encryption
-   Documentation**): *standard encryption algorithms instead of, or in addition to, Apple's*,
-   *available in France: Yes*, upload the ANSSI acknowledgment. Apple then gives an
-   `ITSEncryptionExportComplianceCode`; add it to `Info.plist` next to the `true` key so later
-   builds skip the questionnaire.
-3. **Alternative while the declaration is pending**: exclude France in **Pricing and
-   Availability**, and answer the questionnaire without France. Some developers keep `false`
-   arguing the encryption only secures communications with the user's own servers; that is
-   your call, Apple does not check it at upload.
+   **Until then**, exclude France in **Pricing and Availability**.
+2. Answer the questions in App Store Connect (**App Information → App Encryption
+   Documentation**, or on the first build in TestFlight): *standard encryption algorithms
+   instead of, or in addition to, Apple's*; *available in France*: Yes with the ANSSI
+   acknowledgment uploaded, or No while France is excluded.
+3. Once approved, App Store Connect shows an export compliance code. Store it so later builds
+   skip the questions: `gh variable set IOS_EXPORT_COMPLIANCE_CODE --body <code>` (tag builds),
+   or `ICHOR_IOS_EXPORT_CODE=<code> scripts/ios-build.sh appstore` locally; the build adds it to
+   `Info.plist` as `ITSEncryptionExportComplianceCode`. Make the documentation cover France
+   again (step 1) before adding France back to the countries.
 
 ## App Review information
 

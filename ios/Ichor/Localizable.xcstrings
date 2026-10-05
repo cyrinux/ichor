@@ -66745,6 +66745,146 @@
           }
         }
       }
+    },
+    "Back up %@ now?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarder %@ maintenant ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Hacer copia de %@ ahora?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створити резервну копію %@ зараз?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ jetzt sichern?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eseguire ora il backup di %@?"
+          }
+        }
+      }
+    },
+    "CloudNativePG takes a full base backup with the method the cluster is set up for (barman-cloud plugin, object store or volume snapshot). It loads the instance it runs on and adds to the backup storage." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG fait une sauvegarde de base complète avec la méthode configurée pour le cluster (plugin barman-cloud, stockage objet ou snapshot de volume). Elle charge l’instance qui la fait et occupe de la place dans le stockage des sauvegardes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG hace una copia base completa con el método configurado en el clúster (plugin barman-cloud, almacén de objetos o snapshot de volumen). Carga la instancia donde se ejecuta y ocupa espacio en el almacenamiento de copias."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG створює повну базову копію методом, налаштованим для кластера (плагін barman-cloud, об’єктне сховище або знімок тому). Це навантажує екземпляр, на якому вона виконується, і займає місце у сховищі копій."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG erstellt eine vollständige Basissicherung mit der Methode, für die der Cluster eingerichtet ist (barman-cloud-Plugin, Object Store oder Volume-Snapshot). Sie belastet die Instanz, auf der sie läuft, und belegt Speicher im Backup-Ziel."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CloudNativePG esegue un backup di base completo con il metodo configurato per il cluster (plugin barman-cloud, object store o snapshot del volume). Carica l’istanza su cui gira e occupa spazio nello storage dei backup."
+          }
+        }
+      }
+    },
+    "Backup %@ requested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarde %@ demandée"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia %@ solicitada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Резервну копію %@ запитано"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherung %@ angefordert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup %@ richiesto"
+          }
+        }
+      }
+    },
+    "Could not back up %@: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de sauvegarder %@ : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo hacer copia de %@: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося створити резервну копію %@: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherung von %@ fehlgeschlagen: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile eseguire il backup di %@: %@"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

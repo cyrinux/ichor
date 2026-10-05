@@ -51,6 +51,21 @@ fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean) {
         intent,
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
+    val builder = alertNotification(context, title, text, open, hideOnLockScreen)
+
+    try {
+        NotificationManagerCompat.from(context).notify(alert.key.hashCode(), builder.build())
+    } catch (_: SecurityException) {
+        // Permission revoked between the check and the post; nothing to do.
+    }
+}
+
+/**
+ * A notification on the alerts channel opening [open]; with [hideOnLockScreen] (app lock on),
+ * the lock screen only shows a generic text.
+ */
+fun alertNotification(context: Context, title: String, text: String, open: PendingIntent, hideOnLockScreen: Boolean): NotificationCompat.Builder {
+    val res = AppLocale.wrap(context)
     val builder = NotificationCompat.Builder(context, CHANNEL_ID)
         .setSmallIcon(R.drawable.ic_stat_ichor)
         .setContentTitle(title)
@@ -68,12 +83,7 @@ fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean) {
                 .build(),
         )
     }
-
-    try {
-        NotificationManagerCompat.from(context).notify(alert.key.hashCode(), builder.build())
-    } catch (_: SecurityException) {
-        // Permission revoked between the check and the post; nothing to do.
-    }
+    return builder
 }
 
 private fun alertTitle(context: Context, alert: Alert): String = when (alert.kind) {

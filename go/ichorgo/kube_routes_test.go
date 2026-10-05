@@ -132,6 +132,40 @@ func TestAppRoutesHTTPRoute(t *testing.T) {
 	}
 }
 
+func TestAppRoutesTailscaleIngress(t *testing.T) {
+	for _, tc := range []struct {
+		name, spec, status, want string
+	}{
+		{"standalone", `"ingressClassName":"tailscale","tls":[{"hosts":["web"]}],"rules":[{"http":{"paths":[{"path":"/app","pathType":"Prefix","backend":{"service":{"name":"web"}}}]}}]`,
+			`{"loadBalancer":{"ingress":[{"hostname":"web.tail123.ts.net"}]}}`, "Ingress https://web.tail123.ts.net/app web"},
+		{"shared-proxies", `"ingressClassName":"tailscale","tls":[{"hosts":["web"]}],"defaultBackend":{"service":{"name":"web"}}`,
+			`{"loadBalancer":{"ingress":[{"hostname":"web.tail123.ts.net"}]}}`, "Ingress https://web.tail123.ts.net web"},
+		{"automatic-tls", `"ingressClassName":"tailscale","defaultBackend":{"service":{"name":"web"}}`,
+			`{"loadBalancer":{"ingress":[{"hostname":"web.tail123.ts.net"}]}}`, "Ingress https://web.tail123.ts.net web"},
+		{"pending-address", `"ingressClassName":"tailscale","tls":[{"hosts":["web"]}],"defaultBackend":{"service":{"name":"web"}}`,
+			`{}`, ""},
+		{"other-controller", `"ingressClassName":"nginx","tls":[{"hosts":["web"]}],"defaultBackend":{"service":{"name":"web"}}`,
+			`{"loadBalancer":{"ingress":[{"hostname":"web.tail123.ts.net"}]}}`, "Ingress http://web.tail123.ts.net web"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			annotations := ""
+			if tc.name == "shared-proxies" {
+				annotations = `,"annotations":{"tailscale.com/proxy-group":"ingress-proxies"}`
+			}
+			k := openRoutesKube(t, map[string]string{
+				"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[{"metadata":{"name":"web","namespace":"shop"` + annotations + `},"spec":{` + tc.spec + `},"status":` + tc.status + `}]}`,
+			})
+			list, err := appRoutes(context.Background(), k, []routePod{{"shop", "web-1"}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := routeURLs(list.Routes); got != tc.want {
+				t.Fatalf("got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestAppRoutesWithoutGatewayAPI(t *testing.T) {
 	k := openRoutesKube(t, map[string]string{
 		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[{"metadata":{"name":"db","namespace":"shop"},"spec":{"rules":[

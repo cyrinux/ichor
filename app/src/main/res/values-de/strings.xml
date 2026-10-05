@@ -1571,6 +1571,11 @@
     <string name="cnpg_last_failure">Letzter Fehler</string>
     <string name="cnpg_never">nie</string>
     <string name="cnpg_recoverable">Ältester Wiederherstellungspunkt</string>
+    <string name="cnpg_backup_now">Jetzt sichern</string>
+    <string name="cnpg_backup_title">%1$s jetzt sichern?</string>
+    <string name="cnpg_backup_text">CloudNativePG erstellt eine vollständige Basissicherung mit der Methode, für die der Cluster eingerichtet ist (barman-cloud-Plugin, Object Store oder Volume-Snapshot). Sie belastet die Instanz, auf der sie läuft, und belegt Speicher im Backup-Ziel.</string>
+    <string name="cnpg_backup_started">Sicherung %1$s angefordert</string>
+    <string name="cnpg_backup_failed">%1$s: %2$s</string>
     <string name="dragonfly_empty">Keine Dragonfly-Instanzen.</string>
     <string name="dragonfly_role_master">Master</string>
     <string name="dragonfly_reason_no_ready">kein Pod bereit</string>
@@ -2345,4 +2350,99 @@
     <string name="flux_done_force">%1$s: Upgrade angefordert</string>
     <string name="flux_done_reset">%1$s: Fehlschläge zurückgesetzt</string>
     <string name="overview_card_desc_flux">Bereite, abgleichende und fehlerhafte Kustomizations und HelmReleases</string>
+
+    <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
+    <string name="argo_freeze_title">Argo CD einfrieren</string>
+    <string name="argo_freeze_button">Auto-Sync einfrieren…</string>
+    <string name="argo_freeze_confirm">Einfrieren</string>
+    <string name="argo_freeze_scope">Umfang</string>
+    <string name="argo_freeze_scope_app">Diese App</string>
+    <string name="argo_freeze_scope_namespace">Namespace %1$s</string>
+    <string name="argo_freeze_scope_project">Projekt %1$s</string>
+    <string name="argo_freeze_for">Dauer</string>
+    <string name="argo_freeze_minutes">%1$d Min.</string>
+    <string name="argo_freeze_hours">%1$d Std.</string>
+    <string name="argo_freeze_until">Bis %1$s</string>
+    <string name="argo_freeze_reason">Grund (optional)</string>
+    <string name="argo_freeze_manual_sync">Manuelle Syncs erlauben</string>
+    <string name="argo_freeze_manual_sync_desc">Ein absichtlich gestarteter Sync läuft auch während des Einfrierens.</string>
+    <string name="argo_freeze_no_project">Projekt %1$s ist nicht lesbar: nichts einzufrieren.</string>
+    <string name="argo_freeze_server_side">Projekt %1$s wird von %2$s per Server-Side-Apply aus Git angewendet: Das Einfrieren übersteht einen Sync von %2$s möglicherweise nicht.</string>
+    <string name="argo_freeze_managed">Projekt %1$s wird von %2$s aus Git angewendet. Das Einfrieren steht nicht in Git: Es gilt bis zu seinem Ende.</string>
+    <string name="argo_freeze_pause_instead">Stattdessen Auto-Sync pausieren (bis zur Fortsetzung)</string>
+    <string name="argo_freeze_group">%1$s einfrieren</string>
+    <string name="argo_frozen_until">Eingefroren bis %1$s</string>
+    <string name="argo_frozen_by_ichor">Aus Ichor eingefroren</string>
+    <string name="argo_frozen_by_window">Ein Sync-Fenster von Projekt %1$s</string>
+    <string name="argo_frozen_manual_allowed">manuelle Syncs erlaubt</string>
+    <string name="argo_frozen_manual_blocked">manuelle Syncs blockiert</string>
+    <string name="argo_freeze_extend_hour">+1 Std.</string>
+    <string name="argo_unfreeze">Auftauen</string>
+    <string name="argo_unfreeze_title">Einfrieren beenden?</string>
+    <string name="argo_unfreeze_clean">Argo CD nimmt Auto-Sync und Selbstheilung für die Apps dieses Einfrierens wieder auf.</string>
+    <string name="argo_unfreeze_drift">Argo CD setzt dies auf den Stand in Git zurück:</string>
+    <string name="argo_unfreeze_committed">Ist der Fix committet?</string>
+    <string name="argo_unfreeze_only">Beenden</string>
+    <string name="argo_unfreeze_and_sync">Beenden und jetzt syncen</string>
+    <string name="argo_window_remove_title">Dieses Sync-Fenster entfernen?</string>
+    <string name="argo_window_remove_text">Ichor hat dieses Fenster nicht erstellt: Es stammt wahrscheinlich aus Git. Argo CD kann es beim nächsten Sync von %1$s zurückbringen, entferne es also auch in Git.</string>
+    <string name="argo_window_remove_text_unmanaged">Ichor hat dieses Fenster nicht erstellt. Aus Projekt %1$s entfernen?</string>
+    <string name="argo_window_remove">Entfernen</string>
+    <string name="argo_windows_title">Sync-Fenster</string>
+    <string name="argo_windows_active">Aktiv</string>
+    <string name="argo_windows_upcoming">Anstehend</string>
+    <string name="argo_windows_expired">Beendetes Einfrieren</string>
+    <string name="argo_windows_clear">Leeren</string>
+    <string name="argo_windows_none">Keine Sync-Fenster: Argo CD darf jederzeit syncen.</string>
+    <string name="argo_window_all_apps">alle Apps</string>
+    <string name="argo_window_namespaces">Namespace %1$s</string>
+    <string name="argo_window_clusters">Cluster %1$s</string>
+    <string name="argo_window_ichor">Ichor-Einfrieren</string>
+    <string name="argo_window_not_ichor">Nicht von Ichor</string>
+    <string name="argo_window_deny">Sperrfenster</string>
+    <string name="argo_window_allow">Freigabefenster</string>
+    <string name="argo_window_left">Noch %1$s</string>
+    <string name="argo_window_starts">Beginnt %1$s</string>
+    <string name="argo_window_ended">Beendet %1$s</string>
+    <string name="argo_window_unreadable">Nicht lesbar: %1$s</string>
+    <string name="argo_filter_frozen">Eingefroren</string>
+    <string name="argo_badge_frozen">Eingefroren</string>
+    <string name="argo_done_freeze">Eingefroren</string>
+    <string name="argo_done_extend">Einfrieren verlängert</string>
+    <string name="argo_done_unfreeze">Einfrieren beendet</string>
+    <string name="argo_done_clear_expired">Beendetes Einfrieren entfernt</string>
+    <string name="argo_freeze_reminder_title">Argo-CD-Einfrieren endet</string>
+    <string name="argo_freeze_reminder_text">Das Einfrieren von %1$s endet um %2$s: Argo CD setzt dann zurück, was von Hand geändert wurde.</string>
+    <string name="argo_freeze_extended_until">Einfrieren verlängert bis %1$s.</string>
+    <string name="argo_freeze_extend_failed">Einfrieren konnte nicht verlängert werden: %1$s</string>
+    <string name="argo_freeze_extend_other_cluster">Wechsle in Ichor zum Cluster dieses Einfrierens, um es zu verlängern.</string>
+    <plurals name="argo_freeze_preview">
+        <item quantity="one">Argo CD synchronisiert und heilt %1$d App (%2$s) bis %3$s nicht automatisch. Von Hand gemachte Änderungen bleiben bis dahin.</item>
+        <item quantity="other">Argo CD synchronisiert und heilt %1$d Apps (%2$s) bis %3$s nicht automatisch. Von Hand gemachte Änderungen bleiben bis dahin.</item>
+    </plurals>
+    <plurals name="argo_frozen_drifted">
+        <item quantity="one">%1$d Ressource von Hand geändert</item>
+        <item quantity="other">%1$d Ressourcen von Hand geändert</item>
+    </plurals>
+    <plurals name="argo_window_apps_count">
+        <item quantity="one">%1$d App</item>
+        <item quantity="other">%1$d Apps</item>
+    </plurals>
+    <plurals name="argo_card_freezes">
+        <item quantity="one">%1$d Einfrieren · endet %2$s</item>
+        <item quantity="other">%1$d Einfrierungen · nächstes Ende %2$s</item>
+    </plurals>
+
+    <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
+    <string name="argo_revert_title">Argo CD macht das rückgängig</string>
+    <string name="argo_revert_text">%1$s stellt diese Workload mit aktiver Selbstheilung bereit: Innerhalb von Minuten setzt es die Replikas auf den Stand in Git zurück. Friere %1$s zuerst ein, um deine Änderung eine Weile zu behalten.</string>
+    <string name="argo_revert_freeze">%1$s 1 Std. einfrieren, dann skalieren</string>
+    <string name="argo_revert_anyway">Trotzdem skalieren</string>
+    <string name="argo_freeze_reason_scale">auf %1$d skalieren</string>
+    <string name="workloads_scale_freeze_failed">%1$s konnte nicht eingefroren werden, nichts skaliert: %2$s</string>
+    <string name="workloads_scale_done_frozen">%1$s auf %2$d skaliert; %3$s für 1 Std. eingefroren</string>
+    <plurals name="argo_unfreeze_covers">
+        <item quantity="one">Dieses Einfrieren umfasst %1$d App: Sie läuft auch wieder.</item>
+        <item quantity="other">Dieses Einfrieren umfasst %1$d Apps: Sie laufen alle wieder.</item>
+    </plurals>
 </resources>
