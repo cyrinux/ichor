@@ -13,14 +13,18 @@ import (
 // the API groups the server serves. Nothing leaves the phone from here: the app turns the
 // groups the user picks into a GitHub issue they review and submit themselves.
 
-// integrationSupported are the API groups Ichor reads (Argo CD, Flux, data services,
-// certificates, network policies, backups).
-var integrationSupported = map[string]bool{
-	groupArgo: true, groupFluxKustomize: true, groupFluxHelm: true, groupFluxSource: true,
-	groupLonghorn: true, groupCNPG: true, groupBarmanPlug: true, groupCeph: true,
-	groupMariaDB: true, groupPercona: true, groupDragonfly: true, groupVelero: true,
-	groupCertManager: true, groupACME: true, groupCilium: true,
-}
+// integrationSupported are the API groups Ichor reads: every group of integrationSpecs, the
+// list Settings shows.
+var integrationSupported = func() map[string]bool {
+	out := map[string]bool{}
+	for _, s := range integrationSpecs {
+		for _, g := range s.Groups {
+			out[g] = true
+		}
+	}
+
+	return out
+}()
 
 // integrationSharedDomains host groups of unrelated projects: a family keeps one more label.
 var integrationSharedDomains = map[string]bool{"x-k8s.io": true, "github.io": true, "github.com": true, "gitlab.io": true}

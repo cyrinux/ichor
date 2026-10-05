@@ -31,6 +31,7 @@ import name.levis.ichor.ui.flux.FluxAppScreen
 import name.levis.ichor.ui.flux.FluxScreen
 import name.levis.ichor.ui.capture.CaptureFileScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
+import name.levis.ichor.ui.settings.SupportedIntegrationsScreen
 import name.levis.ichor.ui.settings.LicensesScreen
 import name.levis.ichor.ui.funding.FundingScreen
 import name.levis.ichor.ui.changelog.WhatsNewHost
@@ -93,6 +94,7 @@ private object Routes {
     const val INTEGRATIONS = "integrations"
     const val CHANGELOG = "changelog"
     const val LICENSES = "licenses"
+    const val SUPPORTED_INTEGRATIONS = "supported-integrations"
     const val FUNDING = "funding"
     const val INSIGHTS = "insights"
     const val APPS = "apps"
@@ -514,6 +516,9 @@ fun Navigation(
         }
         composable(Routes.CHANGELOG) { ChangelogScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.LICENSES) { LicensesScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.SUPPORTED_INTEGRATIONS) {
+            SupportedIntegrationsScreen(configs = app.configRepository, talos = app.talosRepository, onBack = { nav.popBackStack() })
+        }
         composable(Routes.FUNDING) { FundingScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.SUPPORT_BUNDLE) { SupportBundleScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.INTEGRATIONS) { IntegrationsScreen(onBack = { nav.popBackStack() }) }
@@ -680,6 +685,7 @@ fun Navigation(
                 onIntegrations = { nav.navigate(Routes.INTEGRATIONS) },
                 onChangelog = { nav.navigate(Routes.CHANGELOG) },
                 onLicenses = { nav.navigate(Routes.LICENSES) },
+                onSupportedIntegrations = { nav.navigate(Routes.SUPPORTED_INTEGRATIONS) },
                 onFunding = { nav.navigate(Routes.FUNDING) },
                 onCleared = {
                     app.launchSync(runNow = true)
