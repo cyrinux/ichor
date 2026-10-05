@@ -2457,8 +2457,6 @@
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
     <string name="argo_revert_title">Argo CD va annuler ceci</string>
-    <string name="argo_revert_text">%1$s déploie cette charge avec l\'auto-réparation active : en quelques minutes, il remet les réplicas comme dans Git. Gelez %1$s d\'abord pour garder votre changement un moment.</string>
-    <string name="argo_revert_freeze">Geler %1$s 1 h, puis scaler</string>
     <string name="argo_revert_anyway">Scaler quand même</string>
     <string name="argo_freeze_reason_scale">scale à %1$d</string>
     <string name="workloads_scale_freeze_failed">Impossible de geler %1$s, rien n\'a été scalé : %2$s</string>
@@ -2467,4 +2465,9 @@
         <item quantity="one">Ce gel couvre %1$d app : elle reprend aussi.</item>
         <item quantity="other">Ce gel couvre %1$d apps : elles reprennent toutes.</item>
     </plurals>
+    <string name="argo_revert_text_change">%1$s déploie ceci avec l\'auto-réparation active : en quelques minutes, il le remet comme dans Git. Gelez %1$s d\'abord pour garder votre changement un moment.</string>
+    <string name="argo_revert_freeze_first">Geler %1$s 1 h d\'abord</string>
+    <string name="argo_freeze_reason_suspend">suspension</string>
+    <string name="argo_freeze_reason_resume">reprise</string>
+    <string name="argo_freeze_failed_nothing_changed">Impossible de geler %1$s, rien n\'a changé : %2$s</string>
 </resources>
