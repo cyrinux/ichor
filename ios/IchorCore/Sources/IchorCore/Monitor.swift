@@ -19,10 +19,18 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     public var dataIssues: [String: String]
     /// Warnings seen once and not notified yet: a short rebuild after a reboot should not alert.
     public var dataPending: [String]
+    /// Watching Argo CD and Flux apps was on for this check (opt-in), and they could be read.
+    public var gitopsWatched: Bool
+    public var gitopsChecked: Bool
+    /// GitOps app issues ("tool|subject" → "severity:reason", see gitopsIssuesOf), kept like dataIssues.
+    public var gitopsIssues: [String: String]
+    public var gitopsPending: [String]
 
     public init(context: String, takenAt: Date, nodes: [String: NodeState], etcdAlarms: [String] = [],
                 etcdChecked: Bool = false, certNotAfter: Int64 = 0, lastCertWarnDay: Int64 = -1,
-                dataWatched: Bool = false, dataChecked: Bool = false, dataIssues: [String: String] = [:], dataPending: [String] = []) {
+                dataWatched: Bool = false, dataChecked: Bool = false, dataIssues: [String: String] = [:], dataPending: [String] = [],
+                gitopsWatched: Bool = false, gitopsChecked: Bool = false, gitopsIssues: [String: String] = [:],
+                gitopsPending: [String] = []) {
         self.context = context
         self.takenAt = takenAt
         self.nodes = nodes
@@ -34,9 +42,13 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.dataChecked = dataChecked
         self.dataIssues = dataIssues
         self.dataPending = dataPending
+        self.gitopsWatched = gitopsWatched
+        self.gitopsChecked = gitopsChecked
+        self.gitopsIssues = gitopsIssues
+        self.gitopsPending = gitopsPending
     }
 
-    /// Snapshots saved by older versions lack the data-service fields.
+    /// Snapshots saved by older versions lack the data-service and GitOps fields.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         context = try c.decode(String.self, forKey: .context)
@@ -50,6 +62,20 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         dataChecked = try c.decodeIfPresent(Bool.self, forKey: .dataChecked) ?? false
         dataIssues = try c.decodeIfPresent([String: String].self, forKey: .dataIssues) ?? [:]
         dataPending = try c.decodeIfPresent([String].self, forKey: .dataPending) ?? []
+        gitopsWatched = try c.decodeIfPresent(Bool.self, forKey: .gitopsWatched) ?? false
+        gitopsChecked = try c.decodeIfPresent(Bool.self, forKey: .gitopsChecked) ?? false
+        gitopsIssues = try c.decodeIfPresent([String: String].self, forKey: .gitopsIssues) ?? [:]
+        gitopsPending = try c.decodeIfPresent([String].self, forKey: .gitopsPending) ?? []
+    }
+
+    var dataTrack: IssueTrack {
+        get { IssueTrack(watched: dataWatched, checked: dataChecked, issues: dataIssues, pending: dataPending) }
+        set { (dataWatched, dataChecked, dataIssues, dataPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
+    }
+
+    var gitopsTrack: IssueTrack {
+        get { IssueTrack(watched: gitopsWatched, checked: gitopsChecked, issues: gitopsIssues, pending: gitopsPending) }
+        set { (gitopsWatched, gitopsChecked, gitopsIssues, gitopsPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
     }
 
     public var readyCount: Int { nodes.values.filter { $0.health == .ready }.count }
@@ -75,8 +101,10 @@ public struct NodeState: Codable, Equatable, Sendable {
 }
 
 /// dataWatched: watching data services was on; dataServices: nil when watched but unreadable.
+/// gitopsWatched: watching GitOps apps was on; gitopsIssues (see gitopsIssuesOf): nil when unreadable.
 public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNotAfter: Int64, takenAt: Date,
-                       dataWatched: Bool = false, dataServices: DataServices? = nil) -> ClusterSnapshot {
+                       dataWatched: Bool = false, dataServices: DataServices? = nil,
+                       gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
     for n in overview.nodes {
         let reason = n.error ?? n.unmetConditions.map { "\($0.name): \($0.reason)" }.joined(separator: "; ")
@@ -92,7 +120,10 @@ public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNot
         certNotAfter: certNotAfter,
         dataWatched: dataWatched,
         dataChecked: dataWatched && dataServices != nil,
-        dataIssues: dataWatched ? dataServices.map(dataIssuesOf) ?? [:] : [:]
+        dataIssues: dataWatched ? dataServices.map(dataIssuesOf) ?? [:] : [:],
+        gitopsWatched: gitopsWatched,
+        gitopsChecked: gitopsWatched && gitopsIssues != nil,
+        gitopsIssues: gitopsWatched ? gitopsIssues ?? [:] : [:]
     )
 }
 
@@ -208,43 +239,63 @@ private func dataSystemTitle(_ key: String) -> String {
     }
 }
 
-/// Longhorn, Garage and CloudNativePG issues, diffed like etcd alarms: a critical issue alerts at
-/// once, a warning only when seen on two checks in a row; an issue that clears says so once. The
-/// first check (or a context switch, or turning watching on) is a silent baseline; a check that
-/// could not read them keeps what was known; turning watching off forgets it.
-private func evaluateData(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert])
-    -> (watched: Bool, checked: Bool, issues: [String: String], pending: [String]) {
-    guard current.dataWatched else { return (false, false, [:], []) }
-    let known = previous.flatMap { comparable && $0.dataWatched && $0.dataChecked ? $0 : nil }
-    guard current.dataChecked else {
-        if let known { return (true, true, known.dataIssues, known.dataPending) }
-        return (true, false, [:], [])
+/// One opt-in track of issues as a snapshot carries it (data services, GitOps apps).
+struct IssueTrack: Equatable {
+    var watched: Bool
+    var checked: Bool
+    /// Key → value; the value's severity is read with the track's `severity`.
+    var issues: [String: String]
+    var pending: [String]
+}
+
+/// A track's issues, diffed like etcd alarms: a critical issue alerts at once, a warning only when
+/// seen on two checks in a row; an issue that clears says so once. The first check (or a context
+/// switch, or turning watching on) is a silent baseline; a check that could not read them keeps
+/// what was known; turning watching off forgets it.
+func evaluateTrack(previous: IssueTrack?, current: IssueTrack, comparable: Bool, severity: (String) -> String,
+                   problem: (_ key: String, _ value: String) -> Alert, cleared: (_ key: String) -> Alert,
+                   alerts: inout [Alert]) -> IssueTrack {
+    guard current.watched else { return IssueTrack(watched: false, checked: false, issues: [:], pending: []) }
+    let known = previous.flatMap { comparable && $0.watched && $0.checked ? $0 : nil }
+    guard current.checked else {
+        if let known { return IssueTrack(watched: true, checked: true, issues: known.issues, pending: known.pending) }
+        return IssueTrack(watched: true, checked: false, issues: [:], pending: [])
     }
-    guard let known else { return (true, true, current.dataIssues, []) }
+    guard let known else { return IssueTrack(watched: true, checked: true, issues: current.issues, pending: []) }
 
     var notified: [String: String] = [:]
     var pending: [String] = []
-    for key in current.dataIssues.keys.sorted() {
-        let severity = current.dataIssues[key] ?? dataWarning
-        let before = known.dataIssues[key]
-        if before == severity || (before == dataCritical && severity == dataWarning) {
+    for key in current.issues.keys.sorted() {
+        let value = current.issues[key] ?? dataWarning
+        let level = severity(value)
+        let before = known.issues[key].map(severity)
+        if before == level || (before == dataCritical && level == dataWarning) {
             // Already notified at this severity or a worse one: quiet.
-            notified[key] = severity
-        } else if severity == dataCritical || known.dataPending.contains(key) {
+            notified[key] = value
+        } else if level == dataCritical || known.pending.contains(key) {
             // New or worse critical, or a warning seen for the second time in a row.
-            let subject = String(key.split(separator: "|", maxSplits: 1).last ?? Substring(key))
-            alerts.append(Alert(key: "data:\(key)", title: "\(subject) needs attention",
-                                text: "\(dataSystemTitle(key)) · \(severity)", problem: true))
-            notified[key] = severity
+            alerts.append(problem(key, value))
+            notified[key] = value
         } else {
             pending.append(key)
         }
     }
-    for key in known.dataIssues.keys.sorted() where current.dataIssues[key] == nil {
-        let subject = String(key.split(separator: "|", maxSplits: 1).last ?? Substring(key))
-        alerts.append(Alert(key: "data:\(key)", title: "\(subject) is healthy again", text: dataSystemTitle(key), problem: false))
+    for key in known.issues.keys.sorted() where current.issues[key] == nil {
+        alerts.append(cleared(key))
     }
-    return (true, true, notified, pending)
+    return IssueTrack(watched: true, checked: true, issues: notified, pending: pending)
+}
+
+/// Longhorn, Garage, CloudNativePG… issues (see evaluateTrack), keyed "data:system|label".
+private func evaluateData(previous: ClusterSnapshot?, current: ClusterSnapshot, comparable: Bool, alerts: inout [Alert]) -> IssueTrack {
+    func subject(_ key: String) -> String { String(key.split(separator: "|", maxSplits: 1).last ?? Substring(key)) }
+    return evaluateTrack(
+        previous: previous?.dataTrack, current: current.dataTrack, comparable: comparable, severity: { $0 },
+        problem: { key, severity in
+            Alert(key: "data:\(key)", title: "\(subject(key)) needs attention", text: "\(dataSystemTitle(key)) · \(severity)", problem: true)
+        },
+        cleared: { key in Alert(key: "data:\(key)", title: "\(subject(key)) is healthy again", text: dataSystemTitle(key), problem: false) },
+        alerts: &alerts)
 }
 
 /// `key` identifies the subject, so a newer alert replaces the older notification.
@@ -271,11 +322,8 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
         next = previous
         next.certNotAfter = current.certNotAfter
     } else {
-        let data = evaluateData(previous: previous, current: current, comparable: comparable, alerts: &alerts)
-        next.dataWatched = data.watched
-        next.dataChecked = data.checked
-        next.dataIssues = data.issues
-        next.dataPending = data.pending
+        next.dataTrack = evaluateData(previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.gitopsTrack = evaluateGitOps(previous: previous, current: current, comparable: comparable, alerts: &alerts)
     }
     if let previous, comparable, !current.unreachableAsAWhole {
         for addr in current.nodes.keys.sorted() {

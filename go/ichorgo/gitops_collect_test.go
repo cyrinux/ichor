@@ -121,3 +121,28 @@ func TestScrubGitOps(t *testing.T) {
 		t.Error("scrub mutated its input")
 	}
 }
+
+func TestCollectGitOpsOneToolUnreadable(t *testing.T) {
+	// Flux is not installed; listing the Argo CD Applications is refused.
+	f := newFakeKubeAPI(t, map[string]string{
+		"GET /apis": `{"groups":[{"name":"argoproj.io","preferredVersion":{"version":"v1alpha1"}}]}`,
+	})
+	f.answers["GET /apis/argoproj.io/v1alpha1/applications"] = "{" // undecodable
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	g, err := readGitOps(context.Background(), k)
+	if err != nil || g.ArgoError == "" || g.Argo != nil || g.Flux != nil || g.FluxError != "" {
+		t.Fatalf("got %+v %v", g, err)
+	}
+
+	var b strings.Builder
+	renderGitOps(&b, &g)
+
+	if !strings.Contains(b.String(), "  Argo CD could not be read: ") {
+		t.Fatalf("report %q", b.String())
+	}
+}

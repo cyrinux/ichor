@@ -32,6 +32,16 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _dataServicesWatched.value = watched
     }
 
+    private val _gitopsWatched = MutableStateFlow(prefs.getBoolean(KEY_GITOPS, false))
+
+    /** Opt-in: also check Argo CD and Flux apps through the Kubernetes API. */
+    val gitopsWatched: StateFlow<Boolean> = _gitopsWatched.asStateFlow()
+
+    fun setGitopsWatched(watched: Boolean) {
+        prefs.edit().putBoolean(KEY_GITOPS, watched).apply()
+        _gitopsWatched.value = watched
+    }
+
     fun setAlertsEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_ENABLED, enabled).apply()
         _alertsEnabled.value = enabled
@@ -79,5 +89,6 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_INTERVAL = "interval_minutes"
         private const val KEY_SNAPSHOT = "snapshot"
         private const val KEY_DATA_SERVICES = "data_services_watched"
+        private const val KEY_GITOPS = "gitops_watched"
     }
 }

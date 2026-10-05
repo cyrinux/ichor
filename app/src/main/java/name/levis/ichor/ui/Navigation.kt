@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,68 +18,70 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.DataServiceKind
+import name.levis.ichor.model.Feature
 import name.levis.ichor.model.KubeFocus
+import name.levis.ichor.model.LogSource
+import name.levis.ichor.model.NodeFilter
+import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.model.allows
+import name.levis.ichor.model.containerLogSubtitle
+import name.levis.ichor.model.containerLogTitle
 import name.levis.ichor.model.contextFor
-import name.levis.ichor.ui.share.parseShareLink
 import name.levis.ichor.model.kubeFocus
 import name.levis.ichor.model.nodeTab
+import name.levis.ichor.model.sensitive
 import name.levis.ichor.ui.apps.AppsScreen
 import name.levis.ichor.ui.argocd.ArgoAppScreen
 import name.levis.ichor.ui.argocd.ArgoAppsScreen
 import name.levis.ichor.ui.argocd.ArgoWindowsScreen
-import name.levis.ichor.ui.flux.FluxAppScreen
-import name.levis.ichor.ui.flux.FluxScreen
-import name.levis.ichor.ui.capture.CaptureFileScreen
-import name.levis.ichor.ui.changelog.ChangelogScreen
-import name.levis.ichor.ui.settings.SupportedIntegrationsScreen
-import name.levis.ichor.ui.settings.LicensesScreen
-import name.levis.ichor.ui.funding.FundingScreen
-import name.levis.ichor.ui.changelog.WhatsNewHost
 import name.levis.ichor.ui.backup.IncomingBackup
+import name.levis.ichor.ui.capture.CaptureFileScreen
 import name.levis.ichor.ui.capture.CaptureScreen
 import name.levis.ichor.ui.capture.CapturesScreen
+import name.levis.ichor.ui.changelog.ChangelogScreen
+import name.levis.ichor.ui.changelog.WhatsNewHost
 import name.levis.ichor.ui.debug.DebugShellScreen
 import name.levis.ichor.ui.debug.LiveShell
 import name.levis.ichor.ui.diagnosis.DiagnosisScreen
 import name.levis.ichor.ui.etcd.EtcdScreen
-import name.levis.ichor.ui.flows.FlowsScreen
-import name.levis.ichor.ui.netpol.NetworkPoliciesScreen
 import name.levis.ichor.ui.events.EventsScreen
+import name.levis.ichor.ui.flows.FlowsScreen
+import name.levis.ichor.ui.flux.FluxAppScreen
+import name.levis.ichor.ui.flux.FluxScreen
+import name.levis.ichor.ui.funding.FundingScreen
 import name.levis.ichor.ui.hardware.HardwareScreen
 import name.levis.ichor.ui.health.HealthScreen
 import name.levis.ichor.ui.images.ImagesScreen
+import name.levis.ichor.ui.importconfig.ImportScreen
 import name.levis.ichor.ui.integrations.IntegrationsScreen
 import name.levis.ichor.ui.issueconfig.IssueConfigScreen
-import name.levis.ichor.ui.network.NetworkScreen
-import name.levis.ichor.ui.importconfig.ImportScreen
 import name.levis.ichor.ui.kubespan.KubeSpanScreen
 import name.levis.ichor.ui.logs.LogsScreen
 import name.levis.ichor.ui.machineconfig.MachineConfigScreen
-import androidx.navigation.NavBackStackEntry
-import name.levis.ichor.model.DataServiceKind
-import name.levis.ichor.model.LogSource
-import name.levis.ichor.model.NodeFilter
-import name.levis.ichor.model.NodeOverview
-import name.levis.ichor.model.containerLogSubtitle
-import name.levis.ichor.model.containerLogTitle
-import name.levis.ichor.model.sensitive
+import name.levis.ichor.ui.maintenance.MaintenanceScreen
+import name.levis.ichor.ui.netpol.NetworkPoliciesScreen
+import name.levis.ichor.ui.network.NetworkScreen
 import name.levis.ichor.ui.node.NodeDetailScreen
 import name.levis.ichor.ui.node.NodeMenuEntry
+import name.levis.ichor.ui.node.PowerAction
+import name.levis.ichor.ui.nodes.NodesScreen
+import name.levis.ichor.ui.overview.NodeAction
+import name.levis.ichor.ui.overview.OverviewScreen
+import name.levis.ichor.ui.overview.OverviewViewModel
 import name.levis.ichor.ui.resources.ResourceDetailScreen
 import name.levis.ichor.ui.resources.ResourceListScreen
 import name.levis.ichor.ui.resources.ResourceRef
 import name.levis.ichor.ui.resources.ResourceTypesScreen
+import name.levis.ichor.ui.settings.LicensesScreen
+import name.levis.ichor.ui.settings.SettingsScreen
+import name.levis.ichor.ui.settings.SupportedIntegrationsScreen
+import name.levis.ichor.ui.share.parseShareLink
 import name.levis.ichor.ui.storage.StorageScreen
 import name.levis.ichor.ui.support.SupportBundleScreen
-import name.levis.ichor.ui.node.PowerAction
-import name.levis.ichor.ui.overview.NodeAction
-import name.levis.ichor.ui.overview.OverviewScreen
-import name.levis.ichor.ui.overview.OverviewViewModel
-import name.levis.ichor.ui.nodes.NodesScreen
-import name.levis.ichor.ui.settings.SettingsScreen
 import name.levis.ichor.ui.upgrade.UpgradeScreen
-import name.levis.ichor.ui.maintenance.MaintenanceScreen
 
 private object Routes {
     const val IMPORT = "import"
@@ -200,7 +203,7 @@ private object Routes {
 }
 
 /** Screens a notification can open directly (see MainActivity.EXTRA_OPEN). */
-enum class DeepLink { ISSUE_CONFIG, DEMO, ARGO_WINDOWS }
+enum class DeepLink { ISSUE_CONFIG, DEMO, ARGO_WINDOWS, ARGO_CD, FLUX }
 
 /**
  * [deepLink]: a screen to open once over the overview; [onDeepLinkHandled] then clears it.
@@ -274,6 +277,9 @@ fun Navigation(
         onClusterOpened()
     }
 
+    // The Argo CD and Flux screens need a role allowed the Kubernetes API.
+    fun canUseKube() = app.configRepository.config.value?.activeSummary?.allows(Feature.WORKLOADS) == true
+
     LaunchedEffect(deepLink) {
         if (deepLink == null) return@LaunchedEffect
         when (deepLink) {
@@ -283,6 +289,14 @@ fun Navigation(
             }
             DeepLink.ARGO_WINDOWS -> if (!startWithImport) {
                 nav.navigate(Routes.ARGO_WINDOWS) { launchSingleTop = true }
+            }
+            // GitOps alerts: only for a role that may use the Kubernetes API (the active cluster may
+            // have changed since the alert was posted).
+            DeepLink.ARGO_CD -> if (!startWithImport && canUseKube()) {
+                nav.navigate(Routes.ARGO_CD) { launchSingleTop = true }
+            }
+            DeepLink.FLUX -> if (!startWithImport && canUseKube()) {
+                nav.navigate(Routes.FLUX) { launchSingleTop = true }
             }
         }
         onDeepLinkHandled()

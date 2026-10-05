@@ -1,8 +1,9 @@
 # Argo CD: see and pilot GitOps apps from the phone
 
 Status: **implemented**: Go core (`kube_argocd*.go`, `just probe argocd`), Android and iOS
-screens. Remaining: on-device checks against a real Argo CD, opt-in background alerts (phase 4),
-diagnosis/support-bundle context.
+screens, the network view, opt-in background alerts for Argo CD and Flux apps, and both tools in
+the AI diagnosis and the support bundle (`gitops_collect.go`). Remaining: on-device checks
+against a real Argo CD.
 
 Defaults chosen: a sync never prunes unless the user ticks it; Flux has its own screens, see
 `plans/roadmap/devops/06-flux.md`.

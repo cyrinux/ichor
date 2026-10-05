@@ -29,6 +29,9 @@ type gitopsState struct {
 	Flux *fluxStatus `json:"flux,omitempty"`
 	// Note says why nothing could be read ("" when it was).
 	Note string `json:"note,omitempty"`
+	// ArgoError / FluxError: that tool could not be read while the other was.
+	ArgoError string `json:"argocdError,omitempty"`
+	FluxError string `json:"fluxError,omitempty"`
 }
 
 // collectGitOps reads Argo CD and Flux, when the roles allow the Kubernetes API.
@@ -46,42 +49,51 @@ func collectGitOps(ctx context.Context, target kubeTarget, roles []string) *gito
 	ctx, cancel := context.WithTimeout(ctx, gitopsCollectTimeout)
 	defer cancel()
 
-	state, err := withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (gitopsState, error) {
-		var (
-			out          gitopsState
-			argo         argoStatus
-			flux         fluxStatus
-			argoE, fluxE error
-			wg           sync.WaitGroup
-		)
-
-		wg.Go(func() { argo, argoE = readArgoCD(ctx, k) })
-		wg.Go(func() { flux, fluxE = readFlux(ctx, k) })
-		wg.Wait()
-
-		if argoE == nil && argo.Installed {
-			out.Argo = &argo
-		}
-
-		if fluxE == nil && flux.Installed {
-			out.Flux = &flux
-		}
-
-		if argoE != nil && fluxE != nil {
-			return out, argoE
-		}
-
-		return out, nil
-	})
+	state, err := withKubeContext(ctx, target, readGitOps)
 	if err != nil {
 		return &gitopsState{Note: kubeError(err).Error()}
 	}
 
-	if state.Argo == nil && state.Flux == nil {
+	if state.Argo == nil && state.Flux == nil && state.ArgoError == "" && state.FluxError == "" {
 		return nil
 	}
 
 	return &state
+}
+
+// readGitOps reads Argo CD and Flux side by side; one that fails while the other answers is
+// noted, both failing is an error.
+func readGitOps(ctx context.Context, k *kubeClient) (gitopsState, error) {
+	var (
+		out          gitopsState
+		argo         argoStatus
+		flux         fluxStatus
+		argoE, fluxE error
+		wg           sync.WaitGroup
+	)
+
+	wg.Go(func() { argo, argoE = readArgoCD(ctx, k) })
+	wg.Go(func() { flux, fluxE = readFlux(ctx, k) })
+	wg.Wait()
+
+	if argoE == nil && argo.Installed {
+		out.Argo = &argo
+	}
+
+	if fluxE == nil && flux.Installed {
+		out.Flux = &flux
+	}
+
+	switch {
+	case argoE != nil && fluxE != nil:
+		return out, argoE
+	case argoE != nil:
+		out.ArgoError = kubeError(argoE).Error()
+	case fluxE != nil:
+		out.FluxError = kubeError(fluxE).Error()
+	}
+
+	return out, nil
 }
 
 // renderGitOps writes the GitOps section of the diagnosis: a count per tool, then the apps
@@ -103,8 +115,16 @@ func renderGitOps(b *strings.Builder, g *gitopsState) {
 		renderArgoIssues(b, a)
 	}
 
+	if g.ArgoError != "" {
+		fmt.Fprintf(b, "  Argo CD could not be read: %s\n", g.ArgoError)
+	}
+
 	if f := g.Flux; f != nil {
 		renderFluxIssues(b, f)
+	}
+
+	if g.FluxError != "" {
+		fmt.Fprintf(b, "  Flux could not be read: %s\n", g.FluxError)
 	}
 
 	b.WriteString("\n")
