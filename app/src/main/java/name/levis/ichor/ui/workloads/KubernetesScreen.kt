@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.Stream
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,12 +50,18 @@ import name.levis.ichor.ui.components.TooltipIconButton
  * network test between two nodes. The namespace listed (remembered per cluster) and the
  * search carry over between the tabs. The top bar sets the API address to use instead of the
  * kubeconfig's, for a cluster the phone reaches another way (not in screenshot mode: the
- * dialog would show the real address). It also opens the network policies and, with Cilium,
+ * dialog would show the real address). It also opens the API server health, the network
+ * policies and, with Cilium,
  * the live flows ([onFlows] with the namespace and pod to narrow them to, or nulls).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun KubernetesScreen(onBack: () -> Unit, onNetworkPolicies: () -> Unit, onFlows: (namespace: String?, pod: String?) -> Unit) {
+fun KubernetesScreen(
+    onBack: () -> Unit,
+    onNetworkPolicies: () -> Unit,
+    onApiHealth: () -> Unit,
+    onFlows: (namespace: String?, pod: String?) -> Unit,
+) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var query by rememberSaveable { mutableStateOf("") }
 
@@ -100,6 +107,7 @@ fun KubernetesScreen(onBack: () -> Unit, onNetworkPolicies: () -> Unit, onFlows:
                 title = { Text("Kubernetes") },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    TooltipIconButton(Icons.Outlined.MonitorHeart, stringResource(R.string.apihealth_title), onClick = onApiHealth)
                     TooltipIconButton(Icons.Outlined.Policy, stringResource(R.string.netpol_title), onClick = onNetworkPolicies)
                     if (hasCilium) {
                         TooltipIconButton(Icons.Outlined.Stream, stringResource(R.string.flows_title), onClick = { onFlows(scope.scope.namespace, null) })

@@ -2450,4 +2450,51 @@
         <item quantity="one">Esta congelación cubre %1$d app: también se reanuda.</item>
         <item quantity="other">Esta congelación cubre %1$d apps: todas se reanudan.</item>
     </plurals>
+
+    <!-- API server: health and pressure (KubeAPIHealth) -->
+    <string name="apihealth_title">Servidor de la API</string>
+    <string name="apihealth_status_ok">Saludable</string>
+    <string name="apihealth_status_busy">Ocupado</string>
+    <string name="apihealth_status_throttling">Limitando</string>
+    <string name="apihealth_status_unhealthy">Con fallos</string>
+    <string name="apihealth_status_ok_hint">Todas las comprobaciones pasan y las peticiones se ejecutan sin esperar.</string>
+    <string name="apihealth_status_busy_hint">Hay peticiones en cola, o parte de las respuestas son errores del servidor.</string>
+    <string name="apihealth_status_throttling_hint">El servidor rechaza peticiones (429): un cliente envía más de lo que le corresponde.</string>
+    <string name="apihealth_status_unhealthy_hint">Falla una comprobación de disponibilidad o de actividad.</string>
+    <string name="apihealth_window">Tasas de los últimos %1$d s</string>
+    <string name="apihealth_since_start">Promedios desde que arrancó el servidor de la API: respondieron dos servidores.</string>
+    <string name="apihealth_version_uptime">%1$s · activo desde hace %2$s</string>
+    <string name="apihealth_probe_error">%1$s no respondió: %2$s</string>
+    <string name="apihealth_checks_passed">Pasan %1$d de %2$d comprobaciones de disponibilidad</string>
+    <string name="apihealth_metrics_error">No se pudieron leer las métricas: %1$s</string>
+    <string name="apihealth_load">Carga</string>
+    <string name="apihealth_requests">Peticiones</string>
+    <string name="apihealth_errors">Errores del servidor (5xx)</string>
+    <string name="apihealth_throttled">Limitadas (429)</string>
+    <string name="apihealth_rejected">Rechazadas por prioridad y equidad</string>
+    <string name="apihealth_inflight">En curso</string>
+    <string name="apihealth_inflight_value">%1$d lectura · %2$d escritura</string>
+    <string name="apihealth_queued">En cola</string>
+    <string name="apihealth_watches">Watches abiertos</string>
+    <string name="apihealth_watch_events">Eventos de watch</string>
+    <string name="apihealth_etcd">Latencia de etcd</string>
+    <string name="apihealth_clients">Quién envía peticiones</string>
+    <string name="apihealth_clients_hint">Clientes agrupados por flow schema, los más activos primero. El detalle por usuario requiere el registro de auditoría.</string>
+    <string name="apihealth_priorities">Niveles de prioridad</string>
+    <string name="apihealth_seats">%1$d de %2$d plazas</string>
+    <string name="apihealth_seats_unlimited">%1$d plazas, sin límite</string>
+    <string name="apihealth_requests_top">Peticiones más frecuentes</string>
+    <string name="apihealth_non_resource">Rutas sin recurso</string>
+    <string name="apihealth_latency">media %1$s</string>
+    <string name="apihealth_error_rate">%1$s errores</string>
+    <string name="apihealth_rejected_rate">%1$s rechazadas</string>
+    <string name="apihealth_wait">espera %1$s</string>
+    <string name="apihealth_waiting">En cola ahora</string>
+    <string name="apihealth_watched">Watches por recurso</string>
+    <string name="apihealth_objects">Objetos más numerosos</string>
+    <string name="apihealth_no_traffic">Ninguna petición en la ventana.</string>
+    <plurals name="apihealth_queued_count">
+        <item quantity="one">%1$d en cola</item>
+        <item quantity="other">%1$d en cola</item>
+    </plurals>
 </resources>

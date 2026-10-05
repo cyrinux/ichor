@@ -10,6 +10,7 @@ import name.levis.ichorgo.MaintenanceListener
 import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
+import name.levis.ichor.model.ApiHealthReport
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoFreezeAction
@@ -628,6 +629,14 @@ class TalosRepository(
      */
     suspend fun cnpgBackup(namespace: String, name: String): String = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeCNPGBackup(cfg, ctx, server, namespace, name)
+    }
+
+    /**
+     * The Kubernetes API server's health and what loads it (os:admin): readyz and livez, then
+     * two /metrics scrapes a few seconds apart for the live rates. Live figures: never cached.
+     */
+    suspend fun apiHealth(): ApiHealthReport = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(ApiHealthReport.serializer(), Ichorgo.kubeAPIHealth(cfg, ctx, server))
     }
 
     /**

@@ -2442,4 +2442,51 @@
         <item quantity="one">Dieses Einfrieren umfasst %1$d App: Sie läuft auch wieder.</item>
         <item quantity="other">Dieses Einfrieren umfasst %1$d Apps: Sie laufen alle wieder.</item>
     </plurals>
+
+    <!-- API server: health and pressure (KubeAPIHealth) -->
+    <string name="apihealth_title">API-Server</string>
+    <string name="apihealth_status_ok">Gesund</string>
+    <string name="apihealth_status_busy">Ausgelastet</string>
+    <string name="apihealth_status_throttling">Drosselt</string>
+    <string name="apihealth_status_unhealthy">Gestört</string>
+    <string name="apihealth_status_ok_hint">Alle Prüfungen bestehen, Anfragen laufen ohne Wartezeit.</string>
+    <string name="apihealth_status_busy_hint">Anfragen warten in Warteschlangen, oder ein Teil der Antworten sind Serverfehler.</string>
+    <string name="apihealth_status_throttling_hint">Der Server weist Anfragen ab (429): ein Client sendet mehr als seinen Anteil.</string>
+    <string name="apihealth_status_unhealthy_hint">Eine Bereitschafts- oder Lebendigkeitsprüfung schlägt fehl.</string>
+    <string name="apihealth_window">Raten der letzten %1$d s</string>
+    <string name="apihealth_since_start">Durchschnitt seit dem Start des API-Servers: zwei Server haben geantwortet.</string>
+    <string name="apihealth_version_uptime">%1$s · läuft seit %2$s</string>
+    <string name="apihealth_probe_error">%1$s hat nicht geantwortet: %2$s</string>
+    <string name="apihealth_checks_passed">%1$d von %2$d Bereitschaftsprüfungen bestanden</string>
+    <string name="apihealth_metrics_error">Die Metriken konnten nicht gelesen werden: %1$s</string>
+    <string name="apihealth_load">Last</string>
+    <string name="apihealth_requests">Anfragen</string>
+    <string name="apihealth_errors">Serverfehler (5xx)</string>
+    <string name="apihealth_throttled">Gedrosselt (429)</string>
+    <string name="apihealth_rejected">Von Priorität und Fairness abgewiesen</string>
+    <string name="apihealth_inflight">In Bearbeitung</string>
+    <string name="apihealth_inflight_value">%1$d lesend · %2$d schreibend</string>
+    <string name="apihealth_queued">In Warteschlange</string>
+    <string name="apihealth_watches">Offene Watches</string>
+    <string name="apihealth_watch_events">Watch-Ereignisse</string>
+    <string name="apihealth_etcd">etcd-Latenz</string>
+    <string name="apihealth_clients">Wer Anfragen sendet</string>
+    <string name="apihealth_clients_hint">Clients nach Flow Schema gruppiert, die aktivsten zuerst. Details pro Benutzer erfordern das Audit-Log.</string>
+    <string name="apihealth_priorities">Prioritätsstufen</string>
+    <string name="apihealth_seats">%1$d von %2$d Plätzen</string>
+    <string name="apihealth_seats_unlimited">%1$d Plätze, kein Limit</string>
+    <string name="apihealth_requests_top">Häufigste Anfragen</string>
+    <string name="apihealth_non_resource">Pfade ohne Ressource</string>
+    <string name="apihealth_latency">Mittel %1$s</string>
+    <string name="apihealth_error_rate">%1$s Fehler</string>
+    <string name="apihealth_rejected_rate">%1$s abgewiesen</string>
+    <string name="apihealth_wait">wartet %1$s</string>
+    <string name="apihealth_waiting">Gerade in Warteschlangen</string>
+    <string name="apihealth_watched">Watches nach Ressource</string>
+    <string name="apihealth_objects">Meiste gespeicherte Objekte</string>
+    <string name="apihealth_no_traffic">Keine Anfrage im Zeitfenster.</string>
+    <plurals name="apihealth_queued_count">
+        <item quantity="one">%1$d wartend</item>
+        <item quantity="other">%1$d wartend</item>
+    </plurals>
 </resources>

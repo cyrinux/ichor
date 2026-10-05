@@ -55,6 +55,13 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   CiliumClusterwideNetworkPolicy, in plain words: the pods each one selects, whether they are
   isolated in each direction, and what each rule lets in or out (pods, namespaces, CIDRs, entities,
   FQDNs, ports, HTTP/DNS rules), with each namespace's share of isolated pods.
+- **API server health and pressure:** the Kubernetes API server's readyz and livez checks, and
+  what loads it right now: Ichor reads its `/metrics` twice a few seconds apart and shows the
+  request rate, 5xx and 429 answers, which clients send the requests (API Priority and Fairness
+  flow schemas: nodes, controllers, service accounts…) and how full each priority level is, the
+  busiest verbs and resources with their mean latency, the requests waiting in a queue with the
+  user that sent them, open watches and the resources with the most objects in etcd. A verdict
+  sums it up: healthy, busy, throttling or unhealthy.
 - **Live flows (Cilium + Hubble):** follow the cluster's traffic like Hubble UI, or only what is
   dropped, for a namespace or a pod. Ichor runs `hubble observe --follow` in each cilium-agent pod
   (the CLI ships in the agent image, so nothing is installed and Hubble Relay is not needed), groups

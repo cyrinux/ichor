@@ -2636,4 +2636,53 @@
         <item quantity="many">Ця заморозка охоплює %1$d застосунків: усі вони відновляться.</item>
         <item quantity="other">Ця заморозка охоплює %1$d застосунку: усі вони відновляться.</item>
     </plurals>
+
+    <!-- API server: health and pressure (KubeAPIHealth) -->
+    <string name="apihealth_title">API-сервер</string>
+    <string name="apihealth_status_ok">Справний</string>
+    <string name="apihealth_status_busy">Завантажений</string>
+    <string name="apihealth_status_throttling">Обмежує</string>
+    <string name="apihealth_status_unhealthy">Несправний</string>
+    <string name="apihealth_status_ok_hint">Усі перевірки проходять, запити виконуються без очікування.</string>
+    <string name="apihealth_status_busy_hint">Запити чекають у чергах, або частина відповідей — помилки сервера.</string>
+    <string name="apihealth_status_throttling_hint">Сервер відхиляє запити (429): клієнт надсилає більше за свою частку.</string>
+    <string name="apihealth_status_unhealthy_hint">Не проходить перевірка готовності або життєздатності.</string>
+    <string name="apihealth_window">Частота за останні %1$d с</string>
+    <string name="apihealth_since_start">Середні значення від запуску API-сервера: відповіли два сервери.</string>
+    <string name="apihealth_version_uptime">%1$s · працює %2$s</string>
+    <string name="apihealth_probe_error">%1$s не відповів: %2$s</string>
+    <string name="apihealth_checks_passed">Пройдено %1$d з %2$d перевірок готовності</string>
+    <string name="apihealth_metrics_error">Не вдалося прочитати метрики: %1$s</string>
+    <string name="apihealth_load">Навантаження</string>
+    <string name="apihealth_requests">Запити</string>
+    <string name="apihealth_errors">Помилки сервера (5xx)</string>
+    <string name="apihealth_throttled">Обмежені (429)</string>
+    <string name="apihealth_rejected">Відхилені пріоритетом і справедливістю</string>
+    <string name="apihealth_inflight">Виконуються</string>
+    <string name="apihealth_inflight_value">%1$d читання · %2$d запис</string>
+    <string name="apihealth_queued">У черзі</string>
+    <string name="apihealth_watches">Відкриті watch</string>
+    <string name="apihealth_watch_events">Події watch</string>
+    <string name="apihealth_etcd">Затримка etcd</string>
+    <string name="apihealth_clients">Хто надсилає запити</string>
+    <string name="apihealth_clients_hint">Клієнти, згруповані за flow schema, найактивніші першими. Деталі за користувачем потребують журналу аудиту.</string>
+    <string name="apihealth_priorities">Рівні пріоритету</string>
+    <string name="apihealth_seats">%1$d з %2$d місць</string>
+    <string name="apihealth_seats_unlimited">Місць: %1$d, без обмеження</string>
+    <string name="apihealth_requests_top">Найчастіші запити</string>
+    <string name="apihealth_non_resource">Шляхи без ресурсів</string>
+    <string name="apihealth_latency">середнє %1$s</string>
+    <string name="apihealth_error_rate">%1$s помилок</string>
+    <string name="apihealth_rejected_rate">%1$s відхилено</string>
+    <string name="apihealth_wait">очікування %1$s</string>
+    <string name="apihealth_waiting">Зараз у чергах</string>
+    <string name="apihealth_watched">Watch за ресурсами</string>
+    <string name="apihealth_objects">Найбільше збережених об\'єктів</string>
+    <string name="apihealth_no_traffic">Жодного запиту за цей проміжок.</string>
+    <plurals name="apihealth_queued_count">
+        <item quantity="one">%1$d у черзі</item>
+        <item quantity="few">%1$d у черзі</item>
+        <item quantity="many">%1$d у черзі</item>
+        <item quantity="other">%1$d у черзі</item>
+    </plurals>
 </resources>

@@ -34,6 +34,7 @@ import name.levis.ichor.ui.diagnosis.DiagnosisScreen
 import name.levis.ichor.ui.etcd.EtcdScreen
 import name.levis.ichor.ui.flows.FlowsScreen
 import name.levis.ichor.ui.netpol.NetworkPoliciesScreen
+import name.levis.ichor.ui.apihealth.ApiHealthScreen
 import name.levis.ichor.ui.events.EventsScreen
 import name.levis.ichor.ui.hardware.HardwareScreen
 import name.levis.ichor.ui.health.HealthScreen
@@ -110,6 +111,7 @@ private object Routes {
     fun nodes(filter: NodeFilter?) = "nodes?filter=${filter?.name.orEmpty()}"
     const val WORKLOADS = "workloads"
     const val NETWORK_POLICIES = "netpol"
+    const val API_HEALTH = "apihealth"
     const val FLOWS = "flows?ns={ns}&pod={pod}"
 
     /** Empty [namespace] for all of them; [pod] narrows to one of [namespace]. */
@@ -527,10 +529,12 @@ fun Navigation(
             name.levis.ichor.ui.workloads.KubernetesScreen(
                 onBack = { nav.popBackStack() },
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
+                onApiHealth = { nav.navigate(Routes.API_HEALTH) },
                 onFlows = { ns, pod -> nav.navigate(Routes.flows(ns, pod)) },
             )
         }
         composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }) }
         composable(
             Routes.FLOWS,
             arguments = listOf(
