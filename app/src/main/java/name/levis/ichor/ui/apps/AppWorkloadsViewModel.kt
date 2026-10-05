@@ -1,12 +1,10 @@
 package name.levis.ichor.ui.apps
 
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.KubeWorkload
+import name.levis.ichor.model.ref
 import name.levis.ichor.model.routePods
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.workloads.WorkloadRestarts
@@ -26,9 +24,8 @@ class AppWorkloadsViewModel(private val talos: TalosRepository) : LoadingViewMod
     private var found: List<KubeWorkload>? = null
 
     override suspend fun fetch(): List<KubeWorkload> {
-        found?.let { known ->
-            return coroutineScope { known.map { w -> async { talos.workload(w.kind, w.namespace, w.name) } }.awaitAll() }
-        }
+        // One deleted since drops out.
+        found?.let { known -> return talos.workloadsNamed(known.map { it.ref }) }
         val pods = app?.routePods.orEmpty()
         if (pods.isEmpty()) return emptyList()
         return talos.appWorkloads(pods).also { found = it }

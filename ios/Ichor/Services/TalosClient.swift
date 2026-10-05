@@ -232,6 +232,15 @@ struct TalosClient: Sendable {
         return list.workloads
     }
 
+    /// workloads as they are now (os:admin); one deleted since is left out.
+    func workloadsNamed(_ workloads: [WorkloadRef]) async throws -> [KubeWorkload] {
+        let encoded = String(decoding: try JSONEncoder().encode(workloads), as: UTF8.self)
+        let list: KubeWorkloadList = try await Self.json { [config, context, kubeServer] in
+            IchorgoKubeWorkloadsNamed(config, context, kubeServer, encoded, $0)
+        }
+        return list.workloads
+    }
+
     /// The Ingress and HTTPRoute URLs serving pods (os:admin).
     func appRoutes(pods: [RoutePod]) async throws -> [KubeRoute] {
         let encoded = String(decoding: try JSONEncoder().encode(pods), as: UTF8.self)

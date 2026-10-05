@@ -128,7 +128,7 @@ func argoFreezeAction(ctx context.Context, k *kubeClient, namespace, project, ac
 
 	if action == argoFreezeActionFreeze {
 		var apps kubeList[argoObject]
-		if err := k.get(ctx, base+"/applications", &apps); err != nil {
+		if err := getList(ctx, k, base+"/applications", &apps); err != nil {
 			return err
 		}
 

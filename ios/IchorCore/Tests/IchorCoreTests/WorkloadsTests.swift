@@ -9,6 +9,13 @@ final class WorkloadsTests: XCTestCase {
         KubeWorkload(kind: "Deployment", namespace: "a", name: "frozen", desired: 1, ready: 1, state: "paused"),
     ]
 
+    func testRefEncodesAsKubeWorkloadsNamedTakesIt() throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        let json = String(decoding: try encoder.encode(workloads[0].ref), as: UTF8.self)
+        XCTAssertEqual(json, #"{"kind":"Deployment","name":"web","namespace":"shop"}"#)
+    }
+
     func testDecodesTheGoJSON() throws {
         let json = #"{"workloads":[{"kind":"Deployment","namespace":"shop","name":"web","desired":3,"ready":2,"updated":3,"available":2,"state":"degraded","restartedAt":1700000000000,"created":1,"images":["nginx:1.27"]}]}"#
         let w = try XCTUnwrap(TalosJSON.decode(KubeWorkloadList.self, from: json).workloads.first)

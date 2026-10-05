@@ -90,7 +90,10 @@ Phases 1–5 are done.
   workload's selector (now with matchExpressions too).
 - **App workloads** (app detail sheet, both apps): `KubeAppWorkloads` reads only the app's pods
   (one GET each when a namespace holds ≤ 8 of them, else that namespace's Table page by page)
-  and each owner, instead of every pod and workload of the cluster. The apps' `ownersOf` /
+  and each owner, instead of every pod and workload of the cluster; after a restart
+  `KubeWorkloadsNamed` reads those found again (one deleted since drops out). With the privacy
+  mask on, the masked namespaces and pod/workload names the app sends back map to the real ones
+  (`learnNames`, learned from the inventory and the lists). The apps' `ownersOf` /
   `workloadOwners` moved into Go; Android's whole-cluster `pods()`/`workloads()` are gone.
 - **Argo CD / Flux unhealthy pods**: only the namespaces of apps in trouble, one by one (one
   cluster-wide list past 16), with `fieldSelector=status.phase!=Succeeded`, paged.

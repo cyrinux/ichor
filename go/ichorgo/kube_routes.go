@@ -35,6 +35,22 @@ type routePod struct {
 	Pod       string `json:"pod"`
 }
 
+// decodeRoutePods reads the pods the app sends ([{namespace,pod}]) and maps masked names back
+// to the real ones, learned when they were handed out (the inventory): an extra mask word
+// cannot be revealed from the fake alone.
+func decodeRoutePods(pods string) ([]routePod, error) {
+	var refs []routePod
+	if err := json.Unmarshal([]byte(pods), &refs); err != nil {
+		return nil, fmt.Errorf("invalid pod list: %w", err)
+	}
+
+	for i, r := range refs {
+		refs[i] = routePod{Namespace: privacy.revealNamespace(r.Namespace), Pod: privacy.revealName(r.Pod)}
+	}
+
+	return refs, nil
+}
+
 // serviceRef is a Service by namespace and name.
 type serviceRef struct{ namespace, name string }
 
@@ -48,9 +64,9 @@ func KubeAppRoutes(configYAML, contextName, kubeServer, pods string) (out string
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	var refs []routePod
-	if err := json.Unmarshal([]byte(privacy.reveal(pods)), &refs); err != nil {
-		return "", fmt.Errorf("invalid pod list: %w", err)
+	refs, err := decodeRoutePods(pods)
+	if err != nil {
+		return "", err
 	}
 
 	demo := func() kubeRouteList { return kubeRouteList{Routes: demoRoutes(refs)} }

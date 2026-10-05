@@ -58,4 +58,10 @@ class WorkloadsTest {
         assertTrue(workloads.first { it.name == "web" }.canRestart)
         assertEquals(WorkloadState.UNKNOWN, WorkloadState.from("weird"))
     }
+
+    @Test
+    fun refEncodesAsKubeWorkloadsNamedTakesIt() {
+        val ref = workloads.first { it.name == "web" }.ref
+        assertEquals("""{"kind":"Deployment","namespace":"shop","name":"web"}""", TalosJson.encodeToString(WorkloadRef.serializer(), ref))
+    }
 }

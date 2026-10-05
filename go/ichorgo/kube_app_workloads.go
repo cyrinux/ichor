@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"maps"
 	"slices"
@@ -35,15 +34,64 @@ func KubeAppWorkloads(configYAML, contextName, kubeServer, pods string) (out str
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	var refs []routePod
-	if err := json.Unmarshal([]byte(privacy.reveal(pods)), &refs); err != nil {
-		return "", fmt.Errorf("invalid pod list: %w", err)
+	refs, err := decodeRoutePods(pods)
+	if err != nil {
+		return "", err
 	}
 
 	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer},
 		func() kubeWorkloadList { return demoAppWorkloads(refs) },
 		func(ctx context.Context, k *kubeClient) (kubeWorkloadList, error) {
-			return appWorkloads(ctx, k, refs)
+			list, err := appWorkloads(ctx, k, refs)
+			learnWorkloadNames(list.Workloads)
+
+			return list, err
+		})
+}
+
+// KubeWorkloadsNamed reads the given Deployments, StatefulSets and DaemonSets as they are now
+// (os:admin): those KubeAppWorkloads found, again after a restart (their pods replaced, the
+// inventory's names no longer lead to them). One deleted since is left out. workloads:
+// [{kind,namespace,name}]. {"workloads":[...as KubeWorkloads]}, in namespace, name, kind order.
+// kubeServer: see KubePods.
+func KubeWorkloadsNamed(configYAML, contextName, kubeServer, workloads string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+
+	var named []struct {
+		Kind      string `json:"kind"`
+		Namespace string `json:"namespace"`
+		Name      string `json:"name"`
+	}
+
+	if err := json.Unmarshal([]byte(workloads), &named); err != nil {
+		return "", fmt.Errorf("invalid workload list: %w", err)
+	}
+
+	refs := make([]workloadRef, 0, len(named))
+
+	for _, n := range named {
+		wk, err := findWorkloadKind(n.Kind)
+		if err != nil {
+			return "", err
+		}
+
+		ref := workloadRef{wk, privacy.revealNamespace(strings.TrimSpace(n.Namespace)), privacy.revealName(strings.TrimSpace(n.Name))}
+		if err := validateKubeName("workload", ref.namespace, ref.name); err != nil {
+			return "", err
+		}
+
+		refs = append(refs, ref)
+	}
+
+	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer},
+		func() kubeWorkloadList { return demoNamedWorkloads(refs) },
+		func(ctx context.Context, k *kubeClient) (kubeWorkloadList, error) {
+			list, err := readWorkloads(ctx, k, refs)
+			learnWorkloadNames(list)
+
+			return kubeWorkloadList{Workloads: list}, err
 		})
 }
 
@@ -101,7 +149,7 @@ func readOwnedPods(ctx context.Context, k *kubeClient, namespace string, names m
 		return pods, err
 	}
 
-	return readEach(ctx, slices.Sorted(maps.Keys(names)), func(name string) (kubePod, error) {
+	return readEach(ctx, slices.Sorted(maps.Keys(names)), func(ctx context.Context, name string) (kubePod, error) {
 		var obj podObject
 		err := k.get(ctx, podPath(namespace, name), &obj)
 
@@ -111,7 +159,7 @@ func readOwnedPods(ctx context.Context, k *kubeClient, namespace string, names m
 
 // readWorkloads reads each workload of refs; one gone since is left out.
 func readWorkloads(ctx context.Context, k *kubeClient, refs []workloadRef) ([]kubeWorkload, error) {
-	workloads, err := readEach(ctx, refs, func(r workloadRef) (kubeWorkload, error) {
+	workloads, err := readEach(ctx, refs, func(ctx context.Context, r workloadRef) (kubeWorkload, error) {
 		var obj appsObject
 		err := k.get(ctx, appsPath(r.kind, r.namespace, r.name), &obj)
 
@@ -126,11 +174,14 @@ func readWorkloads(ctx context.Context, k *kubeClient, refs []workloadRef) ([]ku
 }
 
 // readEach calls read for every key, appWorkloadsParallel at a time, and keeps what it found
-// in the keys' order: a 404 is skipped, any other error fails.
-func readEach[K, V any](ctx context.Context, keys []K, read func(K) (V, error)) ([]V, error) {
+// in the keys' order: a 404 is skipped; any other error cancels the reads left and is
+// returned (the first one only).
+func readEach[K, V any](ctx context.Context, keys []K, read func(context.Context, K) (V, error)) ([]V, error) {
+	ctx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
+
 	values := make([]V, len(keys))
 	found := make([]bool, len(keys))
-	errs := make([]error, len(keys))
 	slots := make(chan struct{}, appWorkloadsParallel)
 
 	var wg sync.WaitGroup
@@ -140,25 +191,29 @@ func readEach[K, V any](ctx context.Context, keys []K, read func(K) (V, error)) 
 			select {
 			case slots <- struct{}{}:
 			case <-ctx.Done():
-				errs[i] = ctx.Err()
-
 				return
 			}
 
 			defer func() { <-slots }()
 
-			v, err := read(key)
-			if isNotFound(err) {
+			if ctx.Err() != nil {
 				return
 			}
 
-			values[i], found[i], errs[i] = v, err == nil, err
+			v, err := read(ctx, key)
+
+			switch {
+			case err == nil:
+				values[i], found[i] = v, true
+			case !isNotFound(err):
+				cancel(err) // only the first cause is kept
+			}
 		})
 	}
 
 	wg.Wait()
 
-	if err := errors.Join(errs...); err != nil {
+	if err := context.Cause(ctx); err != nil {
 		return nil, err
 	}
 
@@ -229,15 +284,20 @@ func demoAppWorkloads(pods []routePod) kubeWorkloadList {
 		}
 	}
 
-	refs := map[string]bool{}
-	for _, r := range workloadRefsOf(owners) {
-		refs[r.kind.kind+"/"+r.namespace+"/"+r.name] = true
+	return demoNamedWorkloads(workloadRefsOf(owners))
+}
+
+// demoNamedWorkloads are the demo workloads of refs.
+func demoNamedWorkloads(refs []workloadRef) kubeWorkloadList {
+	wanted := map[string]bool{}
+	for _, r := range refs {
+		wanted[r.kind.kind+"/"+r.namespace+"/"+r.name] = true
 	}
 
 	out := []kubeWorkload{}
 
 	for _, w := range demoKubeWorkloads() {
-		if refs[w.Kind+"/"+w.Namespace+"/"+w.Name] {
+		if wanted[w.Kind+"/"+w.Namespace+"/"+w.Name] {
 			out = append(out, w)
 		}
 	}

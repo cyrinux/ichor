@@ -102,3 +102,31 @@ func TestCronJobsPageReadsJobsOfItsNamespaces(t *testing.T) {
 		t.Fatalf("requests %v", paths)
 	}
 }
+
+func TestMaskedInventoryPodsMapBack(t *testing.T) {
+	SetPrivacyMask(true, "alice")
+	defer SetPrivacyMask(false, "")
+
+	learnInventoryNames(inventory{Apps: []inventoryApp{{Pods: []inventoryPod{{Namespace: "alice-apps", Pod: "alice-web-1"}}}}})
+
+	masked := privacy.mask(`[{"namespace":"alice-apps","pod":"alice-web-1"},{"namespace":"kube-system","pod":"proxy"}]`)
+	if strings.Contains(masked, "alice") {
+		t.Fatalf("not masked: %s", masked)
+	}
+
+	refs, err := decodeRoutePods(masked)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(refs) != 2 || refs[0] != (routePod{"alice-apps", "alice-web-1"}) || refs[1] != (routePod{"kube-system", "proxy"}) {
+		t.Fatalf("got %+v", refs)
+	}
+
+	// Names read from a list map back the same way.
+	learnWorkloadNames([]kubeWorkload{{Namespace: "shop", Name: "alice-api"}})
+
+	if fake := strings.Trim(privacy.mask(`"alice-api"`), `"`); privacy.revealName(fake) != "alice-api" {
+		t.Fatalf("workload %q not mapped back", fake)
+	}
+}

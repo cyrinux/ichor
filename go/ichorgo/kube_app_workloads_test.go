@@ -3,8 +3,11 @@ package ichorgo
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"strings"
+	"sync/atomic"
 	"testing"
 )
 
@@ -139,5 +142,79 @@ func TestKubeAppWorkloadsDemo(t *testing.T) {
 
 	if _, err := KubeAppWorkloads(cfg, "", "", "not json"); err == nil {
 		t.Fatal("invalid pod list accepted")
+	}
+}
+
+func TestReadEachStopsAtTheFirstError(t *testing.T) {
+	keys := make([]int, 40)
+	for i := range keys {
+		keys[i] = i
+	}
+
+	var calls atomic.Int32
+
+	_, err := readEach(context.Background(), keys, func(_ context.Context, _ int) (int, error) {
+		calls.Add(1)
+
+		return 0, errors.New("forbidden")
+	})
+
+	// Once, not once per key; and the reads not started yet are dropped.
+	if err == nil || err.Error() != "forbidden" {
+		t.Fatalf("got %v", err)
+	}
+
+	if n := calls.Load(); n > appWorkloadsParallel {
+		t.Fatalf("%d reads", n)
+	}
+}
+
+func TestReadWorkloadsDropsDeletedOnes(t *testing.T) {
+	f := newFakeKubeAPI(t, map[string]string{
+		"GET /apis/apps/v1/namespaces/shop/deployments/web": fmt.Sprintf(appWorkloadAnswers, "web"),
+	})
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	refs := []workloadRef{{workloadKinds[0], "shop", "web"}, {workloadKinds[1], "shop", "deleted"}}
+
+	list, err := readWorkloads(context.Background(), k, refs)
+	if err != nil || len(list) != 1 || list[0].Name != "web" {
+		t.Fatalf("got %+v %v", list, err)
+	}
+}
+
+func TestKubeWorkloadsNamedDemoAndArgs(t *testing.T) {
+	cfg, err := DemoConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := KubeWorkloadsNamed(cfg, "", "", `[{"kind":"StatefulSet","namespace":"demo","name":"postgres"},{"kind":"Deployment","namespace":"demo","name":"gone"}]`)
+	if err != nil || !strings.Contains(out, `"name":"postgres"`) || strings.Contains(out, "gone") {
+		t.Fatalf("got %v %s", err, out)
+	}
+
+	for _, bad := range []string{"not json", `[{"kind":"Job","namespace":"demo","name":"x"}]`, `[{"kind":"Deployment","namespace":"../x","name":"y"}]`} {
+		if _, err := KubeWorkloadsNamed(cfg, "", "", bad); err == nil {
+			t.Errorf("%s accepted", bad)
+		}
+	}
+}
+
+func TestReadEachSkipsNotFound(t *testing.T) {
+	got, err := readEach(context.Background(), []int{1, 2, 3}, func(_ context.Context, i int) (int, error) {
+		if i == 2 {
+			return 0, &kubeAPIError{Code: http.StatusNotFound, Reason: "NotFound"}
+		}
+
+		return i * 10, nil
+	})
+
+	if err != nil || len(got) != 2 || got[0] != 10 || got[1] != 30 {
+		t.Fatalf("got %v %v", got, err)
 	}
 }

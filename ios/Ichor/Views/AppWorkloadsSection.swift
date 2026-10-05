@@ -50,13 +50,8 @@ struct AppWorkloadsSection: View {
         let known = found
         let pods = app.routePods
         let result: LoadState<[KubeWorkload]> = await .from {
-            if let known {
-                var workloads: [KubeWorkload] = []
-                for w in known {
-                    workloads.append(try await client.workload(kind: w.kind, namespace: w.namespace, name: w.name))
-                }
-                return workloads
-            }
+            // One deleted since drops out.
+            if let known { return try await client.workloadsNamed(known.map(\.ref)) }
             guard !pods.isEmpty else { return [] }
             return try await client.appWorkloads(pods: pods)
         }

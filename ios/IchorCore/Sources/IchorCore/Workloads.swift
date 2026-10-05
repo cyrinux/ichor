@@ -113,6 +113,23 @@ public func filterWorkloads(_ workloads: [KubeWorkload], namespace: String?, que
         }
 }
 
+/// A workload by kind, namespace and name, as KubeWorkloadsNamed takes it.
+public struct WorkloadRef: Encodable, Hashable, Sendable {
+    public let kind: String
+    public let namespace: String
+    public let name: String
+
+    public init(kind: String, namespace: String, name: String) {
+        self.kind = kind
+        self.namespace = namespace
+        self.name = name
+    }
+}
+
+extension KubeWorkload {
+    public var ref: WorkloadRef { WorkloadRef(kind: kind, namespace: namespace, name: name) }
+}
+
 /// One workload's rollout with its pods, old and new (KubeRolloutStatus), polled while it rolls out.
 public struct KubeRolloutStatus: Decodable, Equatable, Sendable {
     public let workload: KubeWorkload

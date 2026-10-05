@@ -8,6 +8,12 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class KubeWorkloadList(val workloads: List<KubeWorkload> = emptyList())
 
+/** A workload by kind, namespace and name, as KubeWorkloadsNamed takes it. */
+@Serializable
+data class WorkloadRef(val kind: String, val namespace: String, val name: String)
+
+val KubeWorkload.ref: WorkloadRef get() = WorkloadRef(kind, namespace, name)
+
 /** One page of one workload kind (KubeWorkloadsPage), in the API server's order. */
 @Serializable
 data class KubeWorkloadPage(

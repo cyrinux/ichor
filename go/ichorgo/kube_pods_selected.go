@@ -42,7 +42,7 @@ func KubeNodePodsPage(configYAML, contextName, kubeServer, nodeName, phase, cont
 		},
 		func(ctx context.Context, k *kubeClient) (kubePodPage, error) {
 			page, err := listPodsPage(ctx, k, "", pageQuery{limit: args.limit, continueToken: args.continueToken, fieldSelector: fields, table: table})
-			privacy.learnNamespaces(namespacesOf(page.Pods, func(p kubePod) string { return p.Namespace }))
+			learnPodNames(page.Pods)
 
 			return page, err
 		})
@@ -57,7 +57,7 @@ func KubeWorkloadPodsPage(configYAML, contextName, kubeServer, kind, namespace, 
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
-	namespace, name = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
+	namespace, name = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.revealName(strings.TrimSpace(name))
 
 	wk, err := findWorkloadKind(kind)
 	if err != nil {
@@ -85,7 +85,10 @@ func KubeWorkloadPodsPage(configYAML, contextName, kubeServer, kind, namespace, 
 		func(ctx context.Context, k *kubeClient) (kubePodPage, error) {
 			q := pageQuery{limit: args.limit, continueToken: args.continueToken, fieldSelector: fields, table: table}
 
-			return listWorkloadPodsPage(ctx, k, wk, namespace, name, q)
+			page, err := listWorkloadPodsPage(ctx, k, wk, namespace, name, q)
+			learnPodNames(page.Pods)
+
+			return page, err
 		})
 }
 

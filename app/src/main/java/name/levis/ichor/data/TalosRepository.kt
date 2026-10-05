@@ -42,6 +42,7 @@ import name.levis.ichor.model.KUBE_PAGE_SIZE
 import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.KubeRouteList
 import name.levis.ichor.model.RoutePod
+import name.levis.ichor.model.WorkloadRef
 import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeRevision
 import name.levis.ichor.model.KubeRevisionList
@@ -468,6 +469,12 @@ class TalosRepository(
     suspend fun appWorkloads(pods: List<RoutePod>): List<KubeWorkload> = kubeCall { cfg, ctx, server ->
         val json = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
         TalosJson.decodeFromString(KubeWorkloadList.serializer(), Ichorgo.kubeAppWorkloads(cfg, ctx, server, json)).workloads
+    }
+
+    /** [workloads] as they are now (os:admin); one deleted since is left out. */
+    suspend fun workloadsNamed(workloads: List<WorkloadRef>): List<KubeWorkload> = kubeCall { cfg, ctx, server ->
+        val json = TalosJson.encodeToString(ListSerializer(WorkloadRef.serializer()), workloads)
+        TalosJson.decodeFromString(KubeWorkloadList.serializer(), Ichorgo.kubeWorkloadsNamed(cfg, ctx, server, json)).workloads
     }
 
     /** `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin). */
