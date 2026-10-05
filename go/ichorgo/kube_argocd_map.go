@@ -129,8 +129,11 @@ type argoAppSetObject struct {
 
 type argoProjectObject struct {
 	Metadata struct {
-		Name      string `json:"name"`
-		Namespace string `json:"namespace"`
+		Name            string            `json:"name"`
+		Namespace       string            `json:"namespace"`
+		ResourceVersion string            `json:"resourceVersion"`
+		Labels          map[string]string `json:"labels"`
+		Annotations     map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
 		Description string            `json:"description"`

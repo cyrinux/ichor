@@ -1,2 +1,2 @@
-{"items":[{"metadata":{"name":"infra","namespace":"argocd"},"spec":{"description":"Cluster infrastructure","syncWindows":[{"kind":"deny","schedule":"0 22 * * *","duration":"8h"}]}},
+{"items":[{"metadata":{"name":"infra","namespace":"argocd","resourceVersion":"700","annotations":{"argocd.argoproj.io/tracking-id":"apps:argoproj.io/AppProject:argocd/infra"}},"spec":{"description":"Cluster infrastructure","syncWindows":[{"kind":"deny","schedule":"0 22 * * *","duration":"8h","applications":["*"],"description":"nightly backups"}]}},
  {"metadata":{"name":"default","namespace":"argocd"},"spec":{}}]}
