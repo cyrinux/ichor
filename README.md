@@ -151,7 +151,7 @@ and, optionally, host to host.
 - **Charts:** with two saved tests or more between the chosen client and server, an *Over time*
   card charts their pod-to-pod throughput and p50 latency (tap a point to see that test). Each
   latency result also draws where the round trips fell, from the fastest to the slowest, with
-  p50 to p99 as a bar. On Android, the KubeSpan map shows the last pod-to-pod throughput measured
+  p50 to p99 as a bar. The KubeSpan map shows the last pod-to-pod throughput measured
   between two nodes on their link, and the link's sheet the rest of that test.
 
 ### CronJobs

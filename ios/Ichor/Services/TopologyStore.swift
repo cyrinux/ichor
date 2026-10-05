@@ -29,6 +29,12 @@ final class TopologyStore {
         guard let loaded = try? await client.topology() else { return }
         maps[key] = loaded
     }
+
+    /// A map read elsewhere (the KubeSpan screen's map tab), kept so the overview groups its
+    /// nodes by the latest sites without asking again.
+    func remember(_ topology: ClusterTopology, for key: String) {
+        maps[key] = topology
+    }
 }
 
 extension AppModel {
