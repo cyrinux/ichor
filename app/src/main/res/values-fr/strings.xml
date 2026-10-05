@@ -342,6 +342,7 @@
     <string name="topology_pick_server">Serveur</string>
     <string name="topology_link_seen_from">Vu depuis %1$s</string>
     <string name="topology_not_queried">Les nœuds en gris ne sont pas dans ce talosconfig : ils sont dessinés d\'après leurs pairs.</string>
+    <string name="topology_no_zone">Aucun nœud n\'a de zone : les sites sont devinés d\'après les réseaux partagés. Ajoutez le label topology.kubernetes.io/zone aux nœuds pour les regrouper.</string>
     <string name="topology_empty">Rien à cartographier : aucun membre du cluster ni pair KubeSpan trouvé.</string>
     <string name="topology_map_description">Carte du cluster : sites, nœuds et liens KubeSpan</string>
 

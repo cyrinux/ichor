@@ -389,6 +389,7 @@
     <string name="topology_pick_server">Сервер</string>
     <string name="topology_link_seen_from">З боку %1$s</string>
     <string name="topology_not_queried">Сірі вузли відсутні у цьому talosconfig: їх показано за даними їхніх пірів.</string>
+    <string name="topology_no_zone">Жоден вузол не має зони: сайти визначено за спільними мережами. Додайте вузлам мітку topology.kubernetes.io/zone, щоб згрупувати їх.</string>
     <string name="topology_empty">Немає чого показати: не знайдено жодного учасника кластера чи піра KubeSpan.</string>
     <string name="topology_map_description">Карта кластера: майданчики, вузли та з\'єднання KubeSpan</string>
 
