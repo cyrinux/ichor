@@ -3,6 +3,7 @@ package name.levis.ichor.ui.overview
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Lan
@@ -33,20 +35,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import name.levis.ichor.R
+import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.NodeGroup
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.health
+import name.levis.ichor.model.isDenseCluster
 import name.levis.ichor.model.needsAttention
 import name.levis.ichor.model.sharedVersion
 import name.levis.ichor.model.shownPublicIps
@@ -61,6 +67,9 @@ import name.levis.ichor.ui.theme.LocalStatusColors
  * The nodes as one card, like Apps and Data services. Collapsed (the default), a chip per calm
  * node and a full row only for those needing attention, so a problem never hides behind the
  * fold; expanded, a swipeable row per node. The title toggles between the two.
+ *
+ * Past NODE_DENSE_THRESHOLD nodes it turns dense (see DenseNodes) and the title opens the
+ * Nodes screen ([onAllNodes]) instead: a card holding hundreds of rows defeats the home screen.
  */
 @Composable
 fun NodesCard(
@@ -71,28 +80,37 @@ fun NodesCard(
     onNode: (NodeOverview) -> Unit,
     onLive: (NodeOverview) -> Unit,
     onMore: (NodeOverview) -> Unit,
+    onAllNodes: (NodeFilter?) -> Unit,
     titleModifier: Modifier = Modifier,
 ) {
     // The cluster summary shows the version all nodes share; the rows only say it when it differs.
     val sharedVersion = remember(groups) { groups.flatMap { it.nodes }.sharedVersion() }
+    val total = groups.sumOf { it.nodes.size }
+    val dense = isDenseCluster(total)
     Card(Modifier.fillMaxWidth().animateContentSize()) {
         Row(
-            titleModifier.expandable(expanded, onToggle = onToggle)
+            (if (dense) titleModifier.clickable(role = Role.Button, onClickLabel = stringResource(R.string.overview_nodes_open_all)) { onAllNodes(null) }
+            else titleModifier.expandable(expanded, onToggle = onToggle))
                 .padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(stringResource(R.string.overview_stat_nodes), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
             DetectPublicIpsButton(publicIps)
             Spacer(Modifier.width(8.dp))
-            Text(groups.sumOf { it.nodes.size }.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(total.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Icon(
-                if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                when {
+                    dense -> Icons.AutoMirrored.Outlined.KeyboardArrowRight
+                    expanded -> Icons.Outlined.ExpandLess
+                    else -> Icons.Outlined.ExpandMore
+                },
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 4.dp),
             )
         }
-        groups.forEachIndexed { g, group ->
+        if (dense) DenseNodes(groups, publicIps, sharedVersion, onNode, onLive, onMore, onAllNodes)
+        else groups.forEachIndexed { g, group ->
             // Site headers only when there is more than one: a single site says nothing.
             if (groups.size > 1) Text(
                 group.site?.let { siteTitle(it) } ?: stringResource(R.string.overview_nodes_unplaced),
@@ -106,19 +124,37 @@ fun NodesCard(
             if (calm.isNotEmpty()) NodeChips(calm, onNode, onLive, onMore)
             rows.forEachIndexed { i, node ->
                 if (i > 0 || calm.isNotEmpty()) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                SwipeableNode(node, onLive = { onLive(node) }, onMore = { onMore(node) }) {
-                    NodeRow(
-                        node,
-                        node.shownPublicIps(publicIps.probed),
-                        sharedVersion,
-                        onClick = { onNode(node) },
-                        onLongClick = { onMore(node) },
-                        onLive = { onLive(node) }.takeIf { node.reachable },
-                    )
-                }
+                SwipeableNodeRow(node, publicIps, sharedVersion, onNode, onLive, onMore)
             }
         }
         Spacer(Modifier.height(4.dp))
+    }
+}
+
+/**
+ * A node's full row: swipe right for its live graphs, left (or a long press) for its actions.
+ * [background]: what the row sits on, opaque so the swipe background only shows beside it.
+ */
+@Composable
+internal fun SwipeableNodeRow(
+    node: NodeOverview,
+    publicIps: PublicIpDetection,
+    sharedVersion: String?,
+    onNode: (NodeOverview) -> Unit,
+    onLive: (NodeOverview) -> Unit,
+    onMore: (NodeOverview) -> Unit,
+    background: Color = CardDefaults.cardColors().containerColor,
+) {
+    SwipeableNode(node, onLive = { onLive(node) }, onMore = { onMore(node) }) {
+        NodeRow(
+            node,
+            node.shownPublicIps(publicIps.probed),
+            sharedVersion,
+            onClick = { onNode(node) },
+            onLongClick = { onMore(node) },
+            onLive = { onLive(node) }.takeIf { node.reachable },
+            background = background,
+        )
     }
 }
 
@@ -173,12 +209,13 @@ private fun NodeRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     onLive: (() -> Unit)?,
+    background: Color,
 ) {
     val liveLabel = stringResource(R.string.overview_action_live_graphs)
     val version = node.version.takeIf { it != sharedVersion }.orEmpty()
     // Opaque, so the swipe background only shows beside the row as it slides.
     Box(
-        Modifier.fillMaxWidth().background(CardDefaults.cardColors().containerColor).combinedClickable(
+        Modifier.fillMaxWidth().background(background).combinedClickable(
             onClick = { if (node.reachable) onClick() },
             onLongClick = onLongClick,
             onLongClickLabel = stringResource(R.string.overview_node_actions),

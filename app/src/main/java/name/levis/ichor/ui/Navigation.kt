@@ -4,7 +4,9 @@ import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -41,6 +43,8 @@ import name.levis.ichor.ui.logs.LogsScreen
 import name.levis.ichor.ui.machineconfig.MachineConfigScreen
 import androidx.navigation.NavBackStackEntry
 import name.levis.ichor.model.LogSource
+import name.levis.ichor.model.NodeFilter
+import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.containerLogSubtitle
 import name.levis.ichor.model.containerLogTitle
 import name.levis.ichor.model.sensitive
@@ -55,6 +59,8 @@ import name.levis.ichor.ui.support.SupportBundleScreen
 import name.levis.ichor.ui.node.PowerAction
 import name.levis.ichor.ui.overview.NodeAction
 import name.levis.ichor.ui.overview.OverviewScreen
+import name.levis.ichor.ui.overview.OverviewViewModel
+import name.levis.ichor.ui.nodes.NodesScreen
 import name.levis.ichor.ui.settings.SettingsScreen
 import name.levis.ichor.ui.upgrade.UpgradeScreen
 import name.levis.ichor.ui.maintenance.MaintenanceScreen
@@ -94,6 +100,10 @@ private object Routes {
             "&title=${Uri.encode(title)}&subtitle=${Uri.encode(subtitle)}"
     const val ETCD = "etcd"
     const val KUBESPAN = "kubespan"
+    const val NODES = "nodes?filter={filter}"
+
+    /** The Nodes screen of a large cluster; [filter] preselects one (null: all). */
+    fun nodes(filter: NodeFilter?) = "nodes?filter=${filter?.name.orEmpty()}"
     const val WORKLOADS = "workloads"
     const val NETWORK_POLICIES = "netpol"
     const val FLOWS = "flows?ns={ns}&pod={pod}"
@@ -244,16 +254,7 @@ fun Navigation(
         composable(Routes.OVERVIEW) {
             OverviewScreen(
                 onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
-                onNodeAction = { n, action ->
-                    when (action) {
-                        NodeAction.LIVE -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab = 2))
-                        NodeAction.SERVICES -> nav.navigate(Routes.node(n.node, n.hostname, n.role))
-                        NodeAction.KERNEL_LOG -> nav.navigate(Routes.logs(n.node, n.hostname, null))
-                        NodeAction.SHELL -> nav.navigate(Routes.debug(n.node, n.hostname))
-                        NodeAction.REBOOT -> nav.navigate(Routes.node(n.node, n.hostname, n.role, action = "reboot"))
-                        NodeAction.SHUTDOWN -> nav.navigate(Routes.node(n.node, n.hostname, n.role, action = "shutdown"))
-                    }
-                },
+                onNodeAction = nav::openNodeAction,
                 onEtcd = { nav.navigate(Routes.ETCD) },
                 onKubeSpan = { nav.navigate(Routes.KUBESPAN) },
                 onWorkloads = { nav.navigate(Routes.WORKLOADS) },
@@ -272,9 +273,21 @@ fun Navigation(
                 onAddCluster = { nav.navigate(Routes.IMPORT) },
                 onClustersCleared = { nav.resetTo(Routes.IMPORT) },
                 onChangelog = { nav.navigate(Routes.CHANGELOG) },
+                onAllNodes = { nav.navigate(Routes.nodes(it)) },
             )
             // After an update: what changed since the build that ran before.
             WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
+        }
+        composable(Routes.NODES, arguments = listOf(navArgument("filter") { type = NavType.StringType; defaultValue = "" })) { entry ->
+            // The overview's data and refresh: only ever opened from it, so it is below on the stack.
+            val home = remember(entry) { nav.getBackStackEntry(Routes.OVERVIEW) }
+            NodesScreen(
+                initialFilter = NodeFilter.entries.firstOrNull { it.name == entry.arguments?.getString("filter") },
+                vm = viewModel(viewModelStoreOwner = home, factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
+                onBack = { nav.popBackStack() },
+                onNode = { nav.navigate(Routes.node(it.node, it.hostname, it.role)) },
+                onNodeAction = nav::openNodeAction,
+            )
         }
         composable(
             Routes.NODE,
@@ -601,6 +614,18 @@ private fun NavBackStackEntry.resourceRef(addr: String) = ResourceRef(
     type = arguments?.getString("type").orEmpty(),
     sensitive = arguments?.getBoolean("sensitive") ?: false,
 )
+
+/** What a node row's swipe or action sheet leads to, from home or the Nodes screen. */
+private fun NavHostController.openNodeAction(n: NodeOverview, action: NodeAction) {
+    when (action) {
+        NodeAction.LIVE -> navigate(Routes.node(n.node, n.hostname, n.role, tab = 2))
+        NodeAction.SERVICES -> navigate(Routes.node(n.node, n.hostname, n.role))
+        NodeAction.KERNEL_LOG -> navigate(Routes.logs(n.node, n.hostname, null))
+        NodeAction.SHELL -> navigate(Routes.debug(n.node, n.hostname))
+        NodeAction.REBOOT -> navigate(Routes.node(n.node, n.hostname, n.role, action = "reboot"))
+        NodeAction.SHUTDOWN -> navigate(Routes.node(n.node, n.hostname, n.role, action = "shutdown"))
+    }
+}
 
 /** Navigates to [route] and drops everything else from the back stack. */
 private fun NavHostController.resetTo(route: String) {

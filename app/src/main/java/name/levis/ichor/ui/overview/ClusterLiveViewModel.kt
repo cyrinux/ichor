@@ -10,15 +10,13 @@ import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ClusterStatsSample
 import name.levis.ichor.model.ClusterUsage
 import name.levis.ichor.model.appendHistory
+import name.levis.ichor.model.clusterPollSeconds
 import name.levis.ichor.model.clusterUsage
-
-/** Seconds between samples: live enough to read, light on the nodes and the phone's data. */
-const val CLUSTER_POLL_SECONDS = 5L
 
 /** The second sample comes sooner, so the CPU shows up (or catches up) about a second after opening. */
 private const val FIRST_DELTA_MILLIS = 1_000L
 
-/** Three minutes of CPU history for the sparkline. */
+/** CPU history for the sparkline: three minutes, nine on a dense cluster (see clusterPollSeconds). */
 const val CLUSTER_HISTORY_POINTS = 36
 
 /** After this many failed samples in a row, the card falls back to the overview's snapshot. */
@@ -37,9 +35,10 @@ class ClusterLiveViewModel(private val talos: TalosRepository) : ViewModel() {
 
     /**
      * Samples until cancelled. History survives leaving the screen and coming back, but not a
-     * change of [key] (the cluster, or cached data dropped e.g. when masking changed).
+     * change of [key] (the cluster, or cached data dropped e.g. when masking changed). Each
+     * sample asks every node, so a cluster of many [nodes] is sampled less often.
      */
-    suspend fun poll(key: Any) {
+    suspend fun poll(key: Any, nodes: Int) {
         if (key != source) {
             source = key
             clear()
@@ -73,7 +72,7 @@ class ClusterLiveViewModel(private val talos: TalosRepository) : ViewModel() {
                 },
             )
             // Right after (re)starting, a fresh delta needs a second sample: take it soon.
-            delay(if (samples == 1) FIRST_DELTA_MILLIS else CLUSTER_POLL_SECONDS * 1000)
+            delay(if (samples == 1) FIRST_DELTA_MILLIS else clusterPollSeconds(nodes) * 1000)
         }
     }
 

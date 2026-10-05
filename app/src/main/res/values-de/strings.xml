@@ -104,6 +104,29 @@
     </plurals>
     <string name="overview_stat_nodes">Knoten</string>
     <string name="overview_nodes_unplaced">Nicht auf der Karte</string>
+    <string name="overview_nodes_open_all">Alle Knoten anzeigen</string>
+    <string name="nodes_search">Nach Hostname oder Adresse suchen</string>
+    <string name="nodes_filter_all">Alle</string>
+    <string name="nodes_filter_attention">Prüfen</string>
+    <string name="nodes_site_all">Alle Standorte</string>
+    <string name="nodes_none">Kein Knoten passt zu diesen Filtern.</string>
+    <string name="nodes_no_match">Kein Knoten passt zu „%1$s“.</string>
+    <plurals name="overview_nodes_count_ready">
+        <item quantity="one">%1$d bereit</item>
+        <item quantity="other">%1$d bereit</item>
+    </plurals>
+    <plurals name="overview_nodes_count_not_ready">
+        <item quantity="one">%1$d nicht bereit</item>
+        <item quantity="other">%1$d nicht bereit</item>
+    </plurals>
+    <plurals name="overview_nodes_count_unreachable">
+        <item quantity="one">%1$d nicht erreichbar</item>
+        <item quantity="other">%1$d nicht erreichbar</item>
+    </plurals>
+    <plurals name="overview_nodes_more_problems">
+        <item quantity="one">%1$d weiterer zu prüfen</item>
+        <item quantity="other">%1$d weitere zu prüfen</item>
+    </plurals>
     <string name="overview_stat_cpu">CPU-Kerne</string>
     <string name="overview_stat_memory">Arbeitsspeicher</string>
     <string name="overview_stat_memory_used">%d %% belegt</string>

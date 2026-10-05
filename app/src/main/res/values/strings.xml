@@ -106,6 +106,29 @@
     </plurals>
     <string name="overview_stat_nodes">Nodes</string>
     <string name="overview_nodes_unplaced">Not on the map</string>
+    <string name="overview_nodes_open_all">Show all nodes</string>
+    <string name="nodes_search">Search by hostname or address</string>
+    <string name="nodes_filter_all">All</string>
+    <string name="nodes_filter_attention">Attention</string>
+    <string name="nodes_site_all">All sites</string>
+    <string name="nodes_none">No node matches these filters.</string>
+    <string name="nodes_no_match">No node matches “%1$s”.</string>
+    <plurals name="overview_nodes_count_ready">
+        <item quantity="one">%1$d ready</item>
+        <item quantity="other">%1$d ready</item>
+    </plurals>
+    <plurals name="overview_nodes_count_not_ready">
+        <item quantity="one">%1$d not ready</item>
+        <item quantity="other">%1$d not ready</item>
+    </plurals>
+    <plurals name="overview_nodes_count_unreachable">
+        <item quantity="one">%1$d unreachable</item>
+        <item quantity="other">%1$d unreachable</item>
+    </plurals>
+    <plurals name="overview_nodes_more_problems">
+        <item quantity="one">%1$d more needs a look</item>
+        <item quantity="other">%1$d more need a look</item>
+    </plurals>
     <string name="overview_stat_cpu">CPU cores</string>
     <string name="overview_stat_memory">Memory</string>
     <string name="overview_stat_memory_used">%d%% used</string>

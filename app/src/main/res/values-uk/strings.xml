@@ -122,6 +122,37 @@
     </plurals>
     <string name="overview_stat_nodes">Вузли</string>
     <string name="overview_nodes_unplaced">Поза картою</string>
+    <string name="overview_nodes_open_all">Показати всі вузли</string>
+    <string name="nodes_search">Пошук за іменем хоста або адресою</string>
+    <string name="nodes_filter_all">Усі</string>
+    <string name="nodes_filter_attention">Увага</string>
+    <string name="nodes_site_all">Усі місця</string>
+    <string name="nodes_none">Жоден вузол не відповідає цим фільтрам.</string>
+    <string name="nodes_no_match">Жоден вузол не відповідає «%1$s».</string>
+    <plurals name="overview_nodes_count_ready">
+        <item quantity="one">%1$d готовий</item>
+        <item quantity="few">%1$d готові</item>
+        <item quantity="many">%1$d готових</item>
+        <item quantity="other">%1$d готового</item>
+    </plurals>
+    <plurals name="overview_nodes_count_not_ready">
+        <item quantity="one">%1$d не готовий</item>
+        <item quantity="few">%1$d не готові</item>
+        <item quantity="many">%1$d не готових</item>
+        <item quantity="other">%1$d не готового</item>
+    </plurals>
+    <plurals name="overview_nodes_count_unreachable">
+        <item quantity="one">%1$d недоступний</item>
+        <item quantity="few">%1$d недоступні</item>
+        <item quantity="many">%1$d недоступних</item>
+        <item quantity="other">%1$d недоступного</item>
+    </plurals>
+    <plurals name="overview_nodes_more_problems">
+        <item quantity="one">Ще %1$d потребує уваги</item>
+        <item quantity="few">Ще %1$d потребують уваги</item>
+        <item quantity="many">Ще %1$d потребують уваги</item>
+        <item quantity="other">Ще %1$d потребує уваги</item>
+    </plurals>
     <string name="overview_stat_cpu">Ядра CPU</string>
     <string name="overview_stat_memory">Пам\'ять</string>
     <string name="overview_stat_memory_used">%d%% використано</string>
