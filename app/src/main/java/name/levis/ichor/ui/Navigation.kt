@@ -33,6 +33,8 @@ import name.levis.ichor.model.contextFor
 import name.levis.ichor.model.kubeFocus
 import name.levis.ichor.model.nodeTab
 import name.levis.ichor.model.sensitive
+import name.levis.ichor.ui.apihealth.ApiHealthScreen
+import name.levis.ichor.ui.apihealth.AuditScreen
 import name.levis.ichor.ui.apps.AppsScreen
 import name.levis.ichor.ui.argocd.ArgoAppScreen
 import name.levis.ichor.ui.argocd.ArgoAppsScreen
@@ -130,6 +132,8 @@ private object Routes {
     fun workloads(focus: KubeFocus? = null) = if (focus == null) "workloads" else
         "workloads?tab=${focus.tab}&key=${Uri.encode(focus.key)}&ns=${Uri.encode(focus.namespace)}&name=${Uri.encode(focus.name)}"
     const val NETWORK_POLICIES = "netpol"
+    const val API_HEALTH = "apihealth"
+    const val AUDIT = "audit"
     const val FLOWS = "flows?ns={ns}&pod={pod}"
 
     /** Empty [namespace] for all of them; [pod] narrows to one of [namespace]. */
@@ -604,10 +608,13 @@ fun Navigation(
                 ),
                 onBack = { nav.popBackStack() },
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
+                onApiHealth = { nav.navigate(Routes.API_HEALTH) },
                 onFlows = { ns, pod -> nav.navigate(Routes.flows(ns, pod)) },
             )
         }
         composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }
+        composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }
         composable(
             Routes.FLOWS,
             arguments = listOf(

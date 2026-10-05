@@ -5,7 +5,7 @@ import IchorCore
 /// issues (os:admin): workloads with rollout restart, pods, CronJobs with a manual run,
 /// and a network test between two nodes. The namespace listed (remembered per cluster, see
 /// KubeScopeStore) and the search carry over between the lists, each loaded page by page
-/// (plans/roadmap/large-clusters.md). The toolbar opens
+/// (plans/roadmap/large-clusters.md). The toolbar opens the API server's health,
 /// the network policies and, with Cilium, the live flows; it also sets the API address to use
 /// instead of the kubeconfig's, for a cluster the phone reaches another way (not in screenshot
 /// mode: the alert would show the real address). A share link's focus opens a tab, scoped to
@@ -13,8 +13,9 @@ import IchorCore
 struct KubernetesView: View {
     enum Tab: Hashable { case workloads, pods, cronJobs, network }
 
-    /// A network screen pushed from the toolbar or a pod.
+    /// A screen pushed from the toolbar or a pod.
     enum NetScreen: Hashable {
+        case apiHealth
         case policies
         case flows(HubbleFilter)
     }
@@ -104,6 +105,9 @@ struct KubernetesView: View {
                 ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .kubernetes(tab: sharedTab)) }
             }
             ToolbarItem(placement: .primaryAction) {
+                Button { netScreen = .apiHealth } label: { Label("API server", systemImage: "heart.text.square") }
+            }
+            ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button { netScreen = .policies } label: { Label("Network policies", systemImage: "shield.lefthalf.filled") }
                     if let cilium, cilium.installed {
@@ -139,6 +143,7 @@ struct KubernetesView: View {
         .messageAlert($serverError)
         .navigationDestination(item: $netScreen) { screen in
             switch screen {
+            case .apiHealth: ApiHealthView()
             case .policies: NetPoliciesView()
             case .flows(let filter): LiveFlowsView(cilium: cilium ?? CiliumStatus(), filter: filter)
             }

@@ -290,14 +290,52 @@ func (k *kubeClient) do(ctx context.Context, method, path, contentType string, b
 // send makes one request and reads its answer, capped at kubeMaxBody. header adds request
 // headers, nil for none; it cannot replace the client's own.
 func (k *kubeClient) send(ctx context.Context, method, path, accept, contentType string, body []byte, header map[string]string) (*http.Response, []byte, error) {
-	u, err := k.endpoint(path)
+	resp, err := k.request(ctx, method, path, accept, contentType, body, header)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer resp.Body.Close() //nolint:errcheck
+
+	data, err := io.ReadAll(io.LimitReader(resp.Body, kubeMaxBody+1))
 	if err != nil {
 		return nil, nil, err
 	}
 
+	if len(data) > kubeMaxBody {
+		return nil, nil, &kubeAPIError{Code: http.StatusRequestEntityTooLarge, Reason: "TooLarge", Message: "the answer is larger than the app reads (32 MiB)"}
+	}
+
+	return resp, data, nil
+}
+
+// stream GETs path and hands a successful answer's body to read as it arrives, uncapped:
+// for an answer read line by line and mostly skipped (the API server's /metrics).
+func (k *kubeClient) stream(ctx context.Context, path, accept string, read func(io.Reader) error) error {
+	resp, err := k.request(ctx, http.MethodGet, path, accept, "", nil, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close() //nolint:errcheck
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		data, _ := io.ReadAll(io.LimitReader(resp.Body, 64<<10)) //nolint:errcheck
+
+		return kubeStatusError(resp.StatusCode, data)
+	}
+
+	return read(resp.Body)
+}
+
+// request makes one request and returns the answer with its body unread.
+func (k *kubeClient) request(ctx context.Context, method, path, accept, contentType string, body []byte, header map[string]string) (*http.Response, error) {
+	u, err := k.endpoint(path)
+	if err != nil {
+		return nil, err
+	}
+
 	req, err := http.NewRequestWithContext(ctx, method, u.String(), bytes.NewReader(body))
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	for name, value := range header {
@@ -315,22 +353,7 @@ func (k *kubeClient) send(ctx context.Context, method, path, accept, contentType
 		req.Header.Set("Authorization", "Bearer "+k.token)
 	}
 
-	resp, err := k.http.Do(req)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer resp.Body.Close() //nolint:errcheck
-
-	data, err := io.ReadAll(io.LimitReader(resp.Body, kubeMaxBody+1))
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if len(data) > kubeMaxBody {
-		return nil, nil, &kubeAPIError{Code: http.StatusRequestEntityTooLarge, Reason: "TooLarge", Message: "the answer is larger than the app reads (32 MiB)"}
-	}
-
-	return resp, data, nil
+	return k.http.Do(req)
 }
 
 func kubeStatusError(code int, data []byte) error {
