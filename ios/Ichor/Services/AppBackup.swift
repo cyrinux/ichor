@@ -17,13 +17,7 @@ enum AppBackup {
             createdAt: Int64(Date().timeIntervalSince1970),
             talosconfig: yaml,
             activeContextIndex: summary.contexts.firstIndex { $0.name == model.activeContext },
-            settings: BackupSettings(
-                themeMode: model.theme.rawValue,
-                privacyMask: model.privacyMask,
-                privacyMaskWords: model.privacyWords,
-                monitorAlerts: BackgroundMonitor.alertsEnabled,
-                remoteAppIcons: AppIconSettings.remoteEnabled
-            ),
+            settings: backupSettings(model: model),
             clusters: backupClusters(
                 fingerprints: summary.contexts.map(\.fingerprint),
                 names: model.clusterNames,
@@ -63,12 +57,25 @@ enum AppBackup {
         }
         if let theme = settings?.themeMode.flatMap(ThemeMode.init(rawValue:)) { model.theme = theme }
         if let icons = settings?.remoteAppIcons { AppIconSettings.remoteEnabled = icons }
+        if let live = settings?.liveClusterStats { LiveStatsSettings.enabled = live }
         if let alerts = settings?.monitorAlerts {
             // Notifications need this device's permission; without it alerts stay off.
             let on = alerts ? await BackgroundMonitor.requestPermission() : false
             BackgroundMonitor.alertsEnabled = on
             if on { BackgroundMonitor.schedule() }
         }
+    }
+
+    private static func backupSettings(model: AppModel) -> BackupSettings {
+        var settings = BackupSettings(
+            themeMode: model.theme.rawValue,
+            privacyMask: model.privacyMask,
+            privacyMaskWords: model.privacyWords,
+            monitorAlerts: BackgroundMonitor.alertsEnabled,
+            remoteAppIcons: AppIconSettings.remoteEnabled
+        )
+        settings.liveClusterStats = LiveStatsSettings.enabled
+        return settings
     }
 
     private static func localized<T>(_ call: () async throws -> T) async throws -> T {

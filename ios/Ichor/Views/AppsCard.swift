@@ -3,10 +3,12 @@ import IchorCore
 
 /// The overview's Apps row: how many run, what needs a look and a few icons; opens the Apps
 /// screen. A skeleton while loading; nothing when the inventory failed or is empty, so it
-/// never gets in the way of the overview.
+/// never gets in the way of the overview. With `argo` loaded, an app whose Argo CD
+/// Application is critical or drifting gets the Apps grid's badge.
 struct AppsCard: View {
     let state: LoadState<ClusterInventory>
     let hostnames: [String: String]
+    var argo: ArgoStatus? = nil
 
     @AppStorage(AppIconSettings.remoteKey) private var remoteIcons = false
 
@@ -47,7 +49,12 @@ struct AppsCard: View {
                 }
             }
             HStack(spacing: 8) {
-                ForEach(tiles.shown) { AppIconView(app: $0, size: 36) }
+                ForEach(tiles.shown) { app in
+                    AppIconView(app: app, size: 36)
+                        .overlay(alignment: .bottomTrailing) {
+                            if let argo, argoNeedsBadge(argoApps(for: app, in: argo)) { ArgoTileBadge().offset(x: 4, y: 4) }
+                        }
+                }
                 if tiles.rest > 0 {
                     Text(verbatim: "+\(tiles.rest)")
                         .font(.subheadline.weight(.semibold))

@@ -7,8 +7,19 @@ public let nodeDenseThreshold = 24
 /// Problem nodes the dense section lists in full; the others are behind "N more".
 public let denseMaxProblems = 5
 
+/// Seconds between live cluster samples: live enough to read, light on the nodes and the phone's data.
+public let liveStatsPollSeconds = 5
+
+/// The same on a dense cluster: every sample asks every node, so fewer of them.
+public let denseLiveStatsPollSeconds = 15
+
 /// Whether a cluster of `nodeCount` nodes gets the dense overview.
 public func isDenseCluster(_ nodeCount: Int) -> Bool { nodeCount > nodeDenseThreshold }
+
+/// Seconds between live cluster samples for a cluster of `nodeCount` nodes (Android's clusterPollSeconds).
+public func clusterPollSeconds(_ nodeCount: Int) -> Int {
+    isDenseCluster(nodeCount) ? denseLiveStatsPollSeconds : liveStatsPollSeconds
+}
 
 /// A node's dot in the dense section: its `NodeHealth`, except that a ready node reporting a
 /// problem (`needsAttention`) is `attention`, so a node listed as a problem never shows as calm.
@@ -105,6 +116,17 @@ public extension Array where Element == NodeOverview {
         return self.filter { node in
             (filter?.matches(node) ?? true) && (q.isEmpty || node.matches(query: q))
         }
+    }
+}
+
+public extension Array where Element == NodeGroup {
+    /// The groups narrowed to the nodes whose hostname or address (talosconfig or public)
+    /// contains `query`, matching `filter` (nil: any), on the site keyed `site` (nil: any);
+    /// groups left empty are dropped. Same as Android's filterNodes.
+    func filtered(query: String, filter: NodeFilter?, site: String?) -> [NodeGroup] {
+        self.filter { site == nil || $0.key == site }
+            .map { NodeGroup(site: $0.site, nodes: $0.nodes.filtered(query: query, filter: filter)) }
+            .filter { !$0.nodes.isEmpty }
     }
 }
 
