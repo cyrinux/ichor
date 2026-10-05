@@ -47,6 +47,8 @@ type containerState struct {
 }
 
 type containerStatus struct {
+	Name         string         `json:"name"`
+	Started      *bool          `json:"started"`
 	Ready        bool           `json:"ready"`
 	RestartCount int            `json:"restartCount"`
 	State        containerState `json:"state"`
@@ -68,7 +70,10 @@ type podObject struct {
 	Spec struct {
 		NodeName       string `json:"nodeName"`
 		InitContainers []struct {
+			Name  string `json:"name"`
 			Image string `json:"image"`
+			// RestartPolicy Always makes it a sidecar: it keeps running beside the containers.
+			RestartPolicy string `json:"restartPolicy"`
 		} `json:"initContainers"`
 		Containers []struct {
 			Name  string `json:"name"`
@@ -146,6 +151,18 @@ func mapPod(obj podObject) kubePod {
 
 	mostRestarts := 0
 
+	// Like the READY and RESTARTS columns of `kubectl get pods` (and the server's Table):
+	// sidecars count as containers, and every init container's restarts count.
+	sidecars := obj.sidecars()
+	p.Containers += len(sidecars)
+
+	for _, cs := range obj.Status.InitContainerStatuses {
+		p.Restarts += cs.RestartCount
+		if sidecars[cs.Name] && cs.Ready && cs.Started != nil && *cs.Started {
+			p.Ready++
+		}
+	}
+
 	for _, cs := range obj.Status.ContainerStatuses {
 		p.Restarts += cs.RestartCount
 		if cs.Ready {
@@ -164,6 +181,19 @@ func mapPod(obj podObject) kubePod {
 	return p
 }
 
+// sidecars are the names of the init containers that keep running (restartPolicy Always).
+func (obj podObject) sidecars() map[string]bool {
+	out := map[string]bool{}
+
+	for _, c := range obj.Spec.InitContainers {
+		if c.RestartPolicy == "Always" {
+			out[c.Name] = true
+		}
+	}
+
+	return out
+}
+
 // podStatus follows the STATUS column of `kubectl get pods` (printPod in kubectl).
 func podStatus(obj podObject) string {
 	st := obj.Status
@@ -174,10 +204,14 @@ func podStatus(obj podObject) string {
 	}
 
 	initializing := false
+	sidecars := obj.sidecars()
 
 	for i, cs := range st.InitContainerStatuses {
 		switch {
 		case cs.State.Terminated != nil && cs.State.Terminated.ExitCode == 0:
+			continue
+		case sidecars[cs.Name] && cs.Started != nil && *cs.Started:
+			// A sidecar that started is done initialising: it runs beside the containers.
 			continue
 		case cs.State.Terminated != nil:
 			reason = "Init:" + terminatedReason(cs.State.Terminated.Reason, cs.State.Terminated.Signal, cs.State.Terminated.ExitCode)

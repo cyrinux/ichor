@@ -48,6 +48,8 @@ func listNamespaces(ctx context.Context, k *kubeClient) (kubeNamespaceList, erro
 	}
 
 	sort.Strings(names)
+	// The picker shows them masked in screenshot mode: the one picked must map back.
+	privacy.learnNamespaces(names)
 
 	return kubeNamespaceList{Namespaces: names, ContextNamespace: k.namespace}, nil
 }

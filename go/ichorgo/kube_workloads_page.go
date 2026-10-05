@@ -2,7 +2,49 @@ package ichorgo
 
 import (
 	"context"
+	"net/url"
+	"strings"
 )
+
+// KubeWorkload reads one Deployment, StatefulSet or DaemonSet (kind) as KubeWorkloads maps it
+// (os:admin): its replicas and state when the app shows it outside the Workloads list (a
+// restart confirmation from Argo CD or Flux). kubeServer: see KubePods.
+func KubeWorkload(configYAML, contextName, kubeServer, kind, namespace, name string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+	namespace, name = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
+
+	wk, err := findWorkloadKind(kind)
+	if err != nil {
+		return "", err
+	}
+
+	if err := validateKubeName("workload", namespace, name); err != nil {
+		return "", err
+	}
+
+	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer},
+		func() kubeWorkload {
+			for _, w := range demoKubeWorkloads() {
+				if w.Kind == wk.kind && w.Namespace == namespace && w.Name == name {
+					return w
+				}
+			}
+
+			return kubeWorkload{Kind: wk.kind, Namespace: namespace, Name: name, Images: []string{}}
+		},
+		func(ctx context.Context, k *kubeClient) (kubeWorkload, error) {
+			var obj appsObject
+
+			path := "/apis/apps/v1/namespaces/" + url.PathEscape(namespace) + "/" + wk.resource + "/" + url.PathEscape(name)
+			if err := k.get(ctx, path, &obj); err != nil {
+				return kubeWorkload{}, err
+			}
+
+			return mapWorkload(wk.kind, obj), nil
+		})
+}
 
 // kubeWorkloadPage is one page of one workload kind, in the API server's order.
 type kubeWorkloadPage struct {
@@ -47,7 +89,10 @@ func KubeWorkloadsPage(configYAML, contextName, kubeServer, kind, namespace, con
 			return kubeWorkloadPage{Workloads: rows, pageCursor: completeCursor}
 		},
 		func(ctx context.Context, k *kubeClient) (kubeWorkloadPage, error) {
-			return listWorkloadsPage(ctx, k, wk, args.namespace, pageQuery{limit: args.limit, continueToken: args.continueToken})
+			page, err := listWorkloadsPage(ctx, k, wk, args.namespace, pageQuery{limit: args.limit, continueToken: args.continueToken})
+			privacy.learnNamespaces(namespacesOf(page.Workloads, func(w kubeWorkload) string { return w.Namespace }))
+
+			return page, err
 		})
 }
 

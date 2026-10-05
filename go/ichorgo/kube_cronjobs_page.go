@@ -17,9 +17,13 @@ type kubeCronJobPage struct {
 // previous page's "continue", "" for the first page; limit 0 is 500. kubeServer: see KubePods.
 //
 // Full objects, never a Table: the time zone, the icon labels, the template's images and the
-// last success are not among the Table's columns, nor are a Job's conditions. The Jobs of the
-// same scope are read page by page for each page of CronJobs, keeping only the runs of that
-// page: a scope rarely holds more than one page of CronJobs.
+// last success are not among the Table's columns, nor are a Job's conditions.
+//
+// Each call is on its own (the app holds the state between pages), so the Jobs are read for
+// each page of CronJobs, page by page, keeping only the runs of that page's CronJobs. They are
+// read in the namespaces of that page only (cronJobsNamespacesMax at most, else the whole
+// scope): the API cannot filter Jobs by owner, and the CronJob controller sets no label on
+// them. A scope rarely holds more than one page of CronJobs, so this is usually one read.
 func KubeCronJobsPage(configYAML, contextName, kubeServer, namespace, continueToken string, limit int) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -37,7 +41,10 @@ func KubeCronJobsPage(configYAML, contextName, kubeServer, namespace, continueTo
 			return kubeCronJobPage{CronJobs: rows, pageCursor: completeCursor}
 		},
 		func(ctx context.Context, k *kubeClient) (kubeCronJobPage, error) {
-			return listCronJobsPage(ctx, k, args.namespace, pageQuery{limit: args.limit, continueToken: args.continueToken}, time.Now())
+			page, err := listCronJobsPage(ctx, k, args.namespace, pageQuery{limit: args.limit, continueToken: args.continueToken}, time.Now())
+			privacy.learnNamespaces(namespacesOf(page.CronJobs, func(c kubeCronJob) string { return c.Namespace }))
+
+			return page, err
 		})
 }
 
@@ -60,7 +67,7 @@ func listCronJobsPage(ctx context.Context, k *kubeClient, namespace string, q pa
 			wanted[c.Metadata.Namespace+"/"+c.Metadata.Name] = true
 		}
 
-		if runs, err = listCronRuns(ctx, k, namespace, func(key string) bool { return wanted[key] }); err != nil {
+		if runs, err = listPageCronRuns(ctx, k, namespace, crons, func(key string) bool { return wanted[key] }); err != nil {
 			return kubeCronJobPage{}, err
 		}
 	}
@@ -71,6 +78,34 @@ func listCronJobsPage(ctx context.Context, k *kubeClient, namespace string, q pa
 	}
 
 	return kubeCronJobPage{CronJobs: out, pageCursor: cursorOf(page)}, nil
+}
+
+// cronJobsNamespacesMax is how many namespaces of a page of every namespace's CronJobs have
+// their Jobs read one by one; more, and the Jobs of every namespace are read at once.
+const cronJobsNamespacesMax = 8
+
+// listPageCronRuns reads the runs of crons: the Jobs of namespace when the scope is one, else
+// those of the namespaces crons are in when they are few, else every namespace's.
+func listPageCronRuns(ctx context.Context, k *kubeClient, namespace string, crons []cronJobObject, keep func(string) bool) (map[string][]kubeJobRun, error) {
+	namespaces := namespacesOf(crons, func(c cronJobObject) string { return c.Metadata.Namespace })
+	if namespace != "" || len(namespaces) > cronJobsNamespacesMax {
+		return listCronRuns(ctx, k, namespace, keep)
+	}
+
+	runs := map[string][]kubeJobRun{}
+
+	for _, ns := range namespaces {
+		got, err := listCronRuns(ctx, k, ns, keep)
+		if err != nil {
+			return nil, err
+		}
+
+		for key, r := range got {
+			runs[key] = r
+		}
+	}
+
+	return runs, nil
 }
 
 // listCronRuns reads the Jobs of namespace ("" for every namespace) page by page and keeps

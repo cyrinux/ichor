@@ -328,7 +328,7 @@ type pageArgs struct {
 }
 
 func newPageArgs(namespace, continueToken string, limit int) (pageArgs, error) {
-	namespace = privacy.reveal(strings.TrimSpace(namespace))
+	namespace = privacy.revealNamespace(strings.TrimSpace(namespace))
 	if err := validateNamespace(namespace); err != nil {
 		return pageArgs{}, err
 	}

@@ -34,7 +34,10 @@ func KubePodsPage(configYAML, contextName, kubeServer, namespace, continueToken 
 			return kubePodPage{Pods: inNamespace(demoPods(), args.namespace, func(p kubePod) string { return p.Namespace }), pageCursor: completeCursor}
 		},
 		func(ctx context.Context, k *kubeClient) (kubePodPage, error) {
-			return listPodsPage(ctx, k, args.namespace, pageQuery{limit: args.limit, continueToken: args.continueToken, table: table})
+			page, err := listPodsPage(ctx, k, args.namespace, pageQuery{limit: args.limit, continueToken: args.continueToken, table: table})
+			privacy.learnNamespaces(namespacesOf(page.Pods, func(p kubePod) string { return p.Namespace }))
+
+			return page, err
 		})
 }
 
@@ -120,7 +123,7 @@ func KubePod(configYAML, contextName, kubeServer, namespace, name string) (out s
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
-	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
+	namespace, name = privacy.revealNamespace(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
 	if err := validateKubeName("pod", namespace, name); err != nil {
 		return "", err
