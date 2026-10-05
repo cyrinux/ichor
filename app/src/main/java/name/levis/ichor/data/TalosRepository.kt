@@ -31,6 +31,12 @@ import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubeCronJob
 import name.levis.ichor.model.KubeCronJobList
 import name.levis.ichor.model.KubePodList
+import name.levis.ichor.model.KubePodPage
+import name.levis.ichor.model.KubeCronJobPage
+import name.levis.ichor.model.KubeWorkloadPage
+import name.levis.ichor.model.KubeNamespaces
+import name.levis.ichor.model.KubePage
+import name.levis.ichor.model.KUBE_PAGE_SIZE
 import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.KubeRouteList
 import name.levis.ichor.model.RoutePod
@@ -206,6 +212,22 @@ class TalosRepository(
         cache[scope] = Timed(value, at)
         if (cluster != null && persistable(value)) persist(cluster, key, value, at, epoch)
         return value
+    }
+
+    /**
+     * Keeps a result of [key] obtained later (a list loaded page by page) as [remember] does,
+     * for the cluster active now: call it before the load starts, then call what it returns
+     * only with a complete list (L12: the last known state is never a partial one).
+     */
+    fun keeper(key: String): suspend (Any) -> Unit {
+        val scope = scoped(key)
+        val cluster = offlineCluster()
+        val epoch = offline?.epoch ?: 0
+        return { value ->
+            val at = System.currentTimeMillis()
+            cache[scope] = Timed(value, at)
+            if (cluster != null) persist(cluster, key, value, at, epoch)
+        }
     }
 
     private suspend fun persist(cluster: String, key: String, value: Any, at: Long, epoch: Int) {
@@ -503,6 +525,38 @@ class TalosRepository(
     /** Every pod with the status `kubectl get pods` shows (os:admin). */
     suspend fun pods(): List<KubePod> = remember(PODS) {
         kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubePodList.serializer(), Ichorgo.kubePods(cfg, ctx, server)).pods }
+    }
+
+    /** The cluster's namespaces, to pick the scope of the Kubernetes lists (os:admin). */
+    suspend fun namespaces(): KubeNamespaces = remember(NAMESPACES) {
+        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubeNamespaces.serializer(), Ichorgo.kubeNamespaces(cfg, ctx, server)) }
+    }
+
+    /**
+     * One page of the pods of [namespace] (null for every one), in the API server's order
+     * (os:admin). [table]: the server's Table rows, without images nor containers ([pod]
+     * reads those). [token]: the previous page's, "" for the first.
+     */
+    suspend fun podsPage(namespace: String?, token: String, table: Boolean, limit: Int = KUBE_PAGE_SIZE): KubePage<KubePod> = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubePodsPage(cfg, ctx, server, namespace.orEmpty(), token, limit.toLong(), table)
+        TalosJson.decodeFromString(KubePodPage.serializer(), json).toPage(detailed = !table)
+    }
+
+    /** One pod in full (images, containers, last termination), for a row read from a Table (os:admin). */
+    suspend fun pod(namespace: String, name: String): KubePod = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubePod.serializer(), Ichorgo.kubePod(cfg, ctx, server, namespace, name))
+    }
+
+    /** One page of the workloads of [kind] in [namespace] (null for every one), as [podsPage] (os:admin). */
+    suspend fun workloadsPage(kind: String, namespace: String?, token: String, limit: Int = KUBE_PAGE_SIZE): KubePage<KubeWorkload> = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeWorkloadsPage(cfg, ctx, server, kind, namespace.orEmpty(), token, limit.toLong())
+        TalosJson.decodeFromString(KubeWorkloadPage.serializer(), json).toPage()
+    }
+
+    /** One page of the CronJobs of [namespace] (null for every one) with their runs, as [podsPage] (os:admin). */
+    suspend fun cronJobsPage(namespace: String?, token: String, limit: Int = KUBE_PAGE_SIZE): KubePage<KubeCronJob> = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeCronJobsPage(cfg, ctx, server, namespace.orEmpty(), token, limit.toLong())
+        TalosJson.decodeFromString(KubeCronJobPage.serializer(), json).toPage()
     }
 
     /**
@@ -811,6 +865,15 @@ const val INVENTORY = "inventory"
 const val WORKLOADS = "workloads"
 const val PODS = "pods"
 const val CRON_JOBS = "cronjobs"
+const val NAMESPACES = "namespaces"
+
+/**
+ * Keys of a Kubernetes list loaded page by page for [namespace] (null: every one), kept like
+ * [PODS], [WORKLOADS] and [CRON_JOBS] (same prefix, same model).
+ */
+fun podsKey(namespace: String?) = "$PODS|${namespace ?: "*"}"
+fun workloadsKey(namespace: String?) = "$WORKLOADS|${namespace ?: "*"}"
+fun cronJobsKey(namespace: String?) = "$CRON_JOBS|${namespace ?: "*"}"
 const val DATA_SERVICES = "dataservices"
 const val ARGO_CD = "argocd"
 fun servicesKey(node: String) = "services|$node"

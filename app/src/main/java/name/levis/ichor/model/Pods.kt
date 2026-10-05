@@ -1,11 +1,24 @@
 package name.levis.ichor.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/kube_pods.go.
 
 @Serializable
 data class KubePodList(val pods: List<KubePod> = emptyList())
+
+/** One page of pods (KubePodsPage), in the API server's order. */
+@Serializable
+data class KubePodPage(
+    val pods: List<KubePod> = emptyList(),
+    @SerialName("continue") val continueToken: String = "",
+    val remaining: Long = -1,
+    val complete: Boolean = true,
+) {
+    /** [detailed]: asked as full objects rather than a Table. */
+    fun toPage(detailed: Boolean) = KubePage(pods, continueToken, remaining, complete, detailed)
+}
 
 @Serializable
 data class KubePod(
@@ -40,14 +53,16 @@ val List<KubePod>.podNamespaces: List<String>
     @JvmName("podNamespaces") get() = map { it.namespace }.distinct().sorted()
 
 /**
- * Pods of [namespace] (all when null) whose name, status, node, owner or image contains
- * [query] (case-insensitive), unhealthy ones first, then by namespace and name.
+ * Pods of [namespace] (all when null) whose name, status, node, owner or, when
+ * [searchImages], image contains [query] (case-insensitive). [sorted]: unhealthy ones
+ * first, then by namespace and name; else in the order loaded (a list still incomplete).
  */
-fun List<KubePod>.filteredPods(namespace: String?, query: String): List<KubePod> {
+fun List<KubePod>.filteredPods(namespace: String?, query: String, sorted: Boolean = true, searchImages: Boolean = true): List<KubePod> {
     val q = query.trim()
-    return filter { p ->
+    val matching = filter { p ->
         (namespace == null || p.namespace == namespace) &&
             (q.isEmpty() || listOf(p.name, p.status, p.node, p.owner).any { it.contains(q, ignoreCase = true) } ||
-                p.images.any { it.contains(q, ignoreCase = true) })
-    }.sortedWith(compareBy<KubePod> { if (it.healthy) 1 else 0 }.thenBy { it.namespace }.thenBy { it.name })
+                searchImages && p.images.any { it.contains(q, ignoreCase = true) })
+    }
+    return if (sorted) matching.sortedWith(compareBy<KubePod> { if (it.healthy) 1 else 0 }.thenBy { it.namespace }.thenBy { it.name }) else matching
 }

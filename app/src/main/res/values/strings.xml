@@ -1319,6 +1319,15 @@
     <string name="workloads_title">Workloads</string>
     <string name="workloads_search">Filter by name, kind or image</string>
     <string name="workloads_all_namespaces">All namespaces</string>
+    <string name="kube_scope_search">Search namespaces</string>
+    <string name="kube_scope_typed_label">Namespace</string>
+    <string name="kube_scope_forbidden_hint">These credentials cannot list namespaces: type the one to show.</string>
+    <string name="kube_scope_apply">Show this namespace</string>
+    <string name="kube_paged_progress">%1$s / ~%2$s</string>
+    <string name="kube_paged_progress_unknown">%1$s loaded</string>
+    <string name="kube_paged_capped">Showing %1$s of ~%2$s — pick a namespace</string>
+    <string name="kube_paged_capped_unknown">Showing the first %1$s — pick a namespace</string>
+    <string name="kube_paged_partial_note">Sorting and search only cover the loaded rows.</string>
     <string name="workloads_empty">No workloads.</string>
     <string name="workloads_no_match">No workload matches “%1$s”.</string>
     <string name="workloads_ready_count">%1$d/%2$d ready</string>

@@ -41,6 +41,14 @@ class PodsTest {
     }
 
     @Test
+    fun incompleteListsKeepTheirOrderAndTableRowsSkipImages() {
+        // Still loading: server order, so rows do not jump as pages arrive.
+        assertEquals(listOf("web-1", "worker-1", "coredns-1", "job-1"), pods.filteredPods(null, "", sorted = false).map { it.name })
+        // Some rows came from a Table (no images): an image match would be partial.
+        assertEquals(emptyList<String>(), pods.filteredPods(null, "nginx", searchImages = false).map { it.name })
+    }
+
+    @Test
     fun transitionalStates() {
         assertTrue(KubePod("a", "b", "Terminating").transitional)
         assertFalse(KubePod("a", "b", "Init:Error").transitional)

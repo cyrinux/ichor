@@ -46,10 +46,14 @@ abstract class LoadingViewModel<T> : ViewModel() {
     protected open val restores: Flow<*>? = null
     private var watch: Job? = null
 
+    /** Whether the data on screen is a part [showPartial] put there, not a finished [fetch]. */
+    private var partial = false
+
     /** [reset] drops the current data first, e.g. when the data source (context) changed. */
     fun refresh(reset: Boolean = false) {
         job?.cancel()
         watch?.cancel()
+        partial = false
         val previous = _state.value
         _state.value = when {
             !reset && previous is UiState.Loaded -> previous.copy(refreshing = true)
@@ -58,7 +62,7 @@ abstract class LoadingViewModel<T> : ViewModel() {
         if (_state.value !is UiState.Loaded) watch = watchRestores()
         job = viewModelScope.launch {
             _state.value = try {
-                UiState.Loaded(fetch())
+                UiState.Loaded(fetch()).also { partial = false }
             } catch (e: CancellationException) {
                 throw e // superseded by a newer refresh: don't report it as a failure
             } catch (e: Throwable) {
@@ -69,6 +73,30 @@ abstract class LoadingViewModel<T> : ViewModel() {
                     UiState.Failed(e.uiText())
                 }
             }
+        }
+    }
+
+    /**
+     * For a [fetch] that arrives in parts (a list loaded page by page): shows [value] while
+     * nothing else is on screen. Data already there (the previous load, the last known one)
+     * stays until [fetch] returns (L12: a refresh keeps the old rows).
+     */
+    protected fun showPartial(value: T) {
+        val current = _state.value
+        if (current is UiState.Loading || partial && current is UiState.Loaded) {
+            _state.value = UiState.Loaded(value, refreshing = true)
+            partial = true
+        }
+    }
+
+    /**
+     * Replaces the data on screen, [expected], with [value] (a page loaded on scroll), or
+     * marks it with [error]; nothing when a refresh replaced it meanwhile.
+     */
+    protected fun replaceLoaded(expected: T, value: T, error: UiText? = null) {
+        val current = _state.value
+        if (current is UiState.Loaded && current.data === expected && !current.refreshing) {
+            _state.value = current.copy(data = value, error = error)
         }
     }
 

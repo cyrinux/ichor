@@ -41,3 +41,7 @@ fun localAddresses(context: Context): List<LocalAddress> {
             .mapNotNull { link -> link.address.hostAddress?.let { LocalAddress(it.substringBefore('%'), link.prefixLength) } }
     }
 }
+
+/** Whether the active network is metered (mobile data, a hotspot): large lists load less eagerly. */
+fun isMeteredNetwork(context: Context): Boolean =
+    context.getSystemService(ConnectivityManager::class.java)?.isActiveNetworkMetered ?: false

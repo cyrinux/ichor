@@ -52,6 +52,7 @@ import name.levis.ichor.data.WakeOnLanStore
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.VpnMonitor
 import name.levis.ichor.data.VpnOnlyClusters
+import name.levis.ichor.data.KubeScopes
 import name.levis.ichor.data.KubeServers
 import name.levis.ichor.data.SnapshotKeys
 import name.levis.ichor.data.MetricsStore
@@ -121,6 +122,8 @@ class TalosApp : Application() {
     }
     val vpnOnly by lazy { VpnOnlyClusters(getSharedPreferences(VpnOnlyClusters.FILE, Context.MODE_PRIVATE)) }
     val kubeServers by lazy { KubeServers(getSharedPreferences(KubeServers.FILE, Context.MODE_PRIVATE)) }
+    /** The namespace each cluster's Kubernetes screen lists. */
+    val kubeScopes by lazy { KubeScopes(getSharedPreferences(KubeScopes.FILE, Context.MODE_PRIVATE)) }
     /** Public keys each cluster's etcd snapshots are encrypted for. */
     val snapshotKeys by lazy { SnapshotKeys(getSharedPreferences(SnapshotKeys.FILE, Context.MODE_PRIVATE)) }
     /** Each cluster's Prometheus/Mimir source and saved PromQL panels (Metrics screen). */
@@ -359,6 +362,7 @@ class TalosApp : Application() {
                     publicIps.sync(it.summary)
                     vpnOnly.sync(it.summary)
                     kubeServers.sync(it.summary)
+                    kubeScopes.sync(it.summary)
                     snapshotKeys.sync(it.summary)
                     val fingerprints = it.summary.contexts.map { c -> c.fingerprint }
                     launch(Dispatchers.IO) { metricsStore.sync(fingerprints) }

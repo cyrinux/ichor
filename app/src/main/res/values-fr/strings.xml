@@ -1319,6 +1319,15 @@
     <string name="workloads_title">Charges de travail</string>
     <string name="workloads_search">Filtrer par nom, type ou image</string>
     <string name="workloads_all_namespaces">Tous les namespaces</string>
+    <string name="kube_scope_search">Rechercher un namespace</string>
+    <string name="kube_scope_typed_label">Namespace</string>
+    <string name="kube_scope_forbidden_hint">Ces identifiants ne peuvent pas lister les namespaces : saisissez celui à afficher.</string>
+    <string name="kube_scope_apply">Afficher ce namespace</string>
+    <string name="kube_paged_progress">%1$s / ~%2$s</string>
+    <string name="kube_paged_progress_unknown">%1$s chargés</string>
+    <string name="kube_paged_capped">%1$s affichés sur ~%2$s — choisissez un namespace</string>
+    <string name="kube_paged_capped_unknown">Les %1$s premiers affichés — choisissez un namespace</string>
+    <string name="kube_paged_partial_note">Le tri et la recherche ne portent que sur les lignes chargées.</string>
     <string name="workloads_empty">Aucune charge de travail.</string>
     <string name="workloads_no_match">Aucune charge de travail ne correspond à « %1$s ».</string>
     <string name="workloads_ready_count">%1$d/%2$d prêts</string>

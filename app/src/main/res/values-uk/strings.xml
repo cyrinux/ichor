@@ -1429,6 +1429,15 @@
     <string name="workloads_title">Робочі навантаження</string>
     <string name="workloads_search">Фільтр за назвою, типом або образом</string>
     <string name="workloads_all_namespaces">Усі простори імен</string>
+    <string name="kube_scope_search">Пошук простору імен</string>
+    <string name="kube_scope_typed_label">Простір імен</string>
+    <string name="kube_scope_forbidden_hint">Ці облікові дані не можуть переглядати простори імен: введіть потрібний.</string>
+    <string name="kube_scope_apply">Показати цей простір імен</string>
+    <string name="kube_paged_progress">%1$s / ~%2$s</string>
+    <string name="kube_paged_progress_unknown">Завантажено %1$s</string>
+    <string name="kube_paged_capped">Показано %1$s з ~%2$s — виберіть простір імен</string>
+    <string name="kube_paged_capped_unknown">Показано перші %1$s — виберіть простір імен</string>
+    <string name="kube_paged_partial_note">Сортування та пошук охоплюють лише завантажені рядки.</string>
     <string name="workloads_empty">Немає робочих навантажень.</string>
     <string name="workloads_no_match">Немає робочих навантажень, що відповідають «%1$s».</string>
     <string name="workloads_ready_count">%1$d/%2$d готові</string>

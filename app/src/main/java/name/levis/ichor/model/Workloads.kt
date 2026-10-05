@@ -1,11 +1,23 @@
 package name.levis.ichor.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/kube_workloads.go.
 
 @Serializable
 data class KubeWorkloadList(val workloads: List<KubeWorkload> = emptyList())
+
+/** One page of one workload kind (KubeWorkloadsPage), in the API server's order. */
+@Serializable
+data class KubeWorkloadPage(
+    val workloads: List<KubeWorkload> = emptyList(),
+    @SerialName("continue") val continueToken: String = "",
+    val remaining: Long = -1,
+    val complete: Boolean = true,
+) {
+    fun toPage() = KubePage(workloads, continueToken, remaining, complete)
+}
 
 @Serializable
 data class KubeWorkload(
@@ -83,15 +95,17 @@ val List<KubeWorkload>.namespaces: List<String>
 
 /**
  * Workloads of [namespace] (all when null) whose name, kind or image contains [query]
- * (case-insensitive), the ones that need attention (degraded, progressing) first.
+ * (case-insensitive). [sorted]: the ones that need attention (degraded, progressing) first;
+ * else in the order loaded (a list still incomplete).
  */
-fun List<KubeWorkload>.filtered(namespace: String?, query: String): List<KubeWorkload> {
+fun List<KubeWorkload>.filtered(namespace: String?, query: String, sorted: Boolean = true): List<KubeWorkload> {
     val q = query.trim()
-    return filter { w ->
+    val matching = filter { w ->
         (namespace == null || w.namespace == namespace) &&
             (q.isEmpty() || w.name.contains(q, ignoreCase = true) || w.kind.contains(q, ignoreCase = true) ||
                 w.images.any { it.contains(q, ignoreCase = true) })
-    }.sortedWith(compareBy<KubeWorkload> { it.attentionRank }.thenBy { it.namespace }.thenBy { it.name }.thenBy { it.kind })
+    }
+    return if (sorted) matching.sortedWith(compareBy<KubeWorkload> { it.attentionRank }.thenBy { it.namespace }.thenBy { it.name }.thenBy { it.kind }) else matching
 }
 
 private val KubeWorkload.attentionRank: Int
