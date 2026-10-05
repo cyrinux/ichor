@@ -33,7 +33,7 @@ func demoFlux(now time.Time) fluxStatus {
 		return fluxApp{
 			Kind: "HelmRelease", Namespace: ns, Name: name, Level: level, Icon: chart, Ready: "True", Reason: "UpgradeSucceeded",
 			Message: "Helm upgrade succeeded for release " + ns + "/" + name + " with chart " + chart + "@" + version,
-			Owner: infra, Source: src, SourceURL: url, Chart: chart, ChartVersion: version, Interval: "30m",
+			Owner:   infra, Source: src, SourceURL: url, Chart: chart, ChartVersion: version, Interval: "30m",
 			Revision: version, AttemptedRevision: version, DependsOn: []string{}, Resources: []fluxResource{}, History: hist,
 			Conditions: ready("UpgradeSucceeded", "Helm upgrade succeeded", 5*24*time.Hour), UnhealthyPods: []kubePod{}, ReconciledAt: ms(5 * 24 * time.Hour),
 		}

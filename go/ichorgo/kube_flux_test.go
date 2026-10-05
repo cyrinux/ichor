@@ -212,7 +212,7 @@ func TestFluxActionWithSourcePatchesBoth(t *testing.T) {
 	)
 
 	f := newFakeKubeAPI(t, map[string]string{
-		"GET /apis": `{"groups":[{"name":"kustomize.toolkit.fluxcd.io","preferredVersion":{"version":"v1"}},{"name":"source.toolkit.fluxcd.io","preferredVersion":{"version":"v1"}}]}`,
+		"GET /apis":    `{"groups":[{"name":"kustomize.toolkit.fluxcd.io","preferredVersion":{"version":"v1"}},{"name":"source.toolkit.fluxcd.io","preferredVersion":{"version":"v1"}}]}`,
 		"GET " + ks:    `{"metadata":{"name":"apps","namespace":"flux-system","resourceVersion":"101"},"spec":{"sourceRef":{"kind":"GitRepository","name":"flux-system"}}}`,
 		"GET " + git:   `{"metadata":{"name":"flux-system","namespace":"flux-system","resourceVersion":"300"},"spec":{}}`,
 		"PATCH " + ks:  `{}`,
