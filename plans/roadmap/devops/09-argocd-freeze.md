@@ -1,6 +1,6 @@
 # D9. Argo CD freeze: hotfix live without being reverted
 
-Status: **partial**: Phase 0 spike, Phase 1 (Go) and Phase 2 (Android) done; iOS to do. Size M. Read [../README.md](../README.md) for the conventions.
+Status: **implemented**: Go core, Android and iOS. Remaining: the CronJob suspend warning (D2), on-device checks. Size M. Read [../README.md](../README.md) for the conventions.
 
 ## Goal
 
@@ -180,6 +180,16 @@ in `ui/workloads/WorkloadSheet.kt`. Differences from the sketches above:
 - The D2 warning covers scaling (Deployments, StatefulSets), read from the Argo CD status already
   loaded; suspending a CronJob does not warn yet.
 
+## iOS (built)
+
+`IchorCore/ArgoFreezeLogic.swift` (tested in `ArgoFreezeTests`), `Views/ArgoFreezeViews.swift`
+(sheet, section), `Views/ArgoWindowsView.swift`, `Services/FreezeReminders.swift`, the scale
+warning in `Views/WorkloadActionsSheet.swift`. Same behaviour as Android, except:
+
+- The reminder is a local notification scheduled from the freezes last read; its "+1 h" opens the
+  app (a foreground action), which extends the freeze when its cluster is the one on screen.
+- Group headers freeze from a snowflake button; the windows screen reads again every 30 s.
+
 ## Phases
 
 | Phase | Content | Size |
@@ -187,7 +197,7 @@ in `ui/workloads/WorkloadSheet.kt`. Differences from the sketches above:
 | 0 | Spike: window on a Git-managed project survives a sync. **Done** (client-side apply) | S |
 | 1 | Go read (window evaluation, per-app freeze) + write (`KubeArgoFreeze`), demo, tests, probe. **Done** | M |
 | 2 | Android: freeze sheet, badges/banner/chip, sync windows screen, expiry notification, D2 hook. **Done** (see below) | M |
-| 3 | iOS: the same | M |
+| 3 | iOS: the same. **Done** (see below) | M |
 
 ## Decisions
 

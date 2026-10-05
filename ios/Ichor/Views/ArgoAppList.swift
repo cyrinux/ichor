@@ -17,6 +17,8 @@ struct ArgoAppsList: View {
     let onRefresh: (ArgoApp) -> Void
     /// "Sync all out of sync": the apps to confirm.
     let onSyncAll: ([ArgoApp]) -> Void
+    /// Freeze a whole project or namespace group, around one of its apps.
+    let onFreeze: (ArgoApp, FreezeScope) -> Void
 
     var body: some View {
         let shown = filterArgoApps(status.apps, filter: filter, query: query)
@@ -76,6 +78,22 @@ struct ArgoAppsList: View {
             Text(verbatim: group.title.isEmpty ? noGroupTitle : group.title)
             Spacer()
             Text(verbatim: "\(group.apps.count)").monospacedDigit()
+            if let scope = freezeScope(group), let anchor = group.apps.first {
+                Button { onFreeze(anchor, scope) } label: {
+                    Image(systemName: "snowflake").accessibilityLabel(Text("Freeze \(group.title)"))
+                }
+                .textCase(nil)
+            }
+        }
+    }
+
+    /// A project, or a namespace whose apps share one project (a window belongs to one project).
+    private func freezeScope(_ group: ArgoGroup) -> FreezeScope? {
+        guard !group.title.isEmpty else { return nil }
+        switch grouping {
+        case .project: return .project
+        case .namespace: return Set(group.apps.map(\.project)).count == 1 ? .namespace : nil
+        default: return nil
         }
     }
 
@@ -102,6 +120,9 @@ struct ArgoAppRow: View {
                 HStack(spacing: 6) {
                     Text(verbatim: app.name).font(.body.weight(.medium)).lineLimit(1)
                     if let owner = app.owner { ArgoOwnerBadge(owner: owner) }
+                    if app.freeze != nil {
+                        Image(systemName: "snowflake").font(.caption).foregroundStyle(.blue).accessibilityLabel(Text("Frozen"))
+                    }
                 }
                 Text(verbatim: detail)
                     .font(.caption.monospacedDigit())
@@ -181,26 +202,34 @@ struct ArgoAppSetsList: View {
             Section("Projects") {
                 if projects.isEmpty { Text("No projects.").foregroundStyle(.secondary) }
                 ForEach(projects) { project in
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack {
-                            Text(verbatim: project.name).font(.callout.weight(.medium))
-                            Spacer()
-                            Text("\(status.apps(of: project).count) apps").font(.caption).foregroundStyle(.secondary).monospacedDigit()
-                        }
-                        if !project.description.isEmpty {
-                            Text(verbatim: project.description).font(.caption).foregroundStyle(.secondary)
-                        }
-                        if project.syncWindows > 0 {
-                            Label(String(localized: "\(project.syncWindows) sync windows"), systemImage: "calendar.badge.clock")
-                                .font(.caption)
-                                .foregroundStyle(attentionColor)
-                        }
+                    if project.windows.isEmpty {
+                        projectRow(project)
+                    } else {
+                        NavigationLink(value: ArgoWindowsRoute()) { projectRow(project) }
                     }
                 }
             }
         }
         .refreshable { await refresh() }
         .themedBackground()
+    }
+
+    private func projectRow(_ project: ArgoProject) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(verbatim: project.name).font(.callout.weight(.medium))
+                Spacer()
+                Text("\(status.apps(of: project).count) apps").font(.caption).foregroundStyle(.secondary).monospacedDigit()
+            }
+            if !project.description.isEmpty {
+                Text(verbatim: project.description).font(.caption).foregroundStyle(.secondary)
+            }
+            if project.syncWindows > 0 {
+                Label(String(localized: "\(project.syncWindows) sync windows"), systemImage: "calendar.badge.clock")
+                    .font(.caption)
+                    .foregroundStyle(attentionColor)
+            }
+        }
     }
 
     private func appSetLabel(_ set: ArgoAppSet) -> some View {

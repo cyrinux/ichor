@@ -132,6 +132,8 @@ enum Route: Hashable {
     case dataServices(hints: String, downNodes: Set<String>, kind: DataServiceKind? = nil)
     /// Argo CD Applications (os:admin); downNodes as for dataServices.
     case argoCD(downNodes: Set<String>)
+    /// Every Argo CD sync window, freezes first (from a freeze reminder).
+    case argoWindows
     /// Flux Kustomizations, HelmReleases and sources (os:admin); downNodes as for dataServices.
     case flux(downNodes: Set<String>)
     case health
@@ -159,6 +161,8 @@ struct NodeRef: Hashable {
 struct MainNavigation: View {
     @Environment(AppModel.self) private var model
     @State private var path: [Route] = []
+    /// The outcome of "+1 h" from a freeze reminder.
+    @State private var freezeMessage: String?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -183,6 +187,7 @@ struct MainNavigation: View {
                     case .workloads: KubernetesView()
                     case .dataServices(let hints, let downNodes, let kind): DataServicesView(hints: hints, downNodes: downNodes, selected: kind)
                     case .argoCD(let downNodes): ArgoCDView(downNodes: downNodes)
+                    case .argoWindows: ArgoWindowsView()
                     case .flux(let downNodes): FluxView(downNodes: downNodes)
                     case .health: HealthView()
                     case .settings: SettingsView()
@@ -204,9 +209,46 @@ struct MainNavigation: View {
         .onChange(of: NotificationRouter.shared.pendingCluster) { _, pending in
             if pending != nil { openCluster() }
         }
+        .onChange(of: NotificationRouter.shared.pendingArgoWindows) { _, pending in
+            if pending { openArgoWindows() }
+        }
         .onAppear {
             if NotificationRouter.shared.pendingRenewal { openRenewal() }
             if NotificationRouter.shared.pendingCluster != nil { openCluster() }
+            if NotificationRouter.shared.pendingArgoWindows { openArgoWindows() }
+        }
+        .messageAlert($freezeMessage)
+    }
+
+    /// From a freeze reminder: the sync windows, after "+1 h" on the freeze when it was chosen.
+    private func openArgoWindows() {
+        NotificationRouter.shared.pendingArgoWindows = false
+        let extend = NotificationRouter.shared.pendingFreezeExtend
+        NotificationRouter.shared.pendingFreezeExtend = nil
+        if path.last != .argoWindows { path.append(.argoWindows) }
+        guard let extend else { return }
+        // Only on the freeze's own cluster: another one is on screen, say so.
+        guard model.activeSummary?.fingerprint == extend.cluster else {
+            freezeMessage = String(localized: "Switch Ichor to the cluster of this freeze to extend it.")
+            return
+        }
+        guard let client = model.client else {
+            freezeMessage = String(localized: "Could not extend the freeze: \(String(localized: "the cluster cannot be reached now."))")
+            return
+        }
+        Task {
+            let project = extend.project, namespace = extend.namespace
+            let options = ArgoFreezeOptions(minutes: freezeExtendMinutes, window: extend.window)
+            do {
+                try await client.argoFreeze(namespace: namespace, project: project, action: .extend, options: options)
+                let until = Date(timeIntervalSince1970: TimeInterval(extend.end) / 1000 + TimeInterval(freezeExtendMinutes * 60))
+                freezeMessage = String(localized: "Freeze extended until \(until.formatted(date: .omitted, time: .shortened)).")
+                // The windows screen and the next reminder (the extended window has a new id).
+                let key = model.argoKey, cluster = model.activeSummary
+                _ = try? await ArgoCDStore.shared.load(with: client, key: key, cluster: cluster)
+            } catch {
+                freezeMessage = String(localized: "Could not extend the freeze: \(error.localizedDescription)")
+            }
         }
     }
 
