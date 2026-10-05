@@ -21,6 +21,32 @@ extension TalosClient {
         return page.page(detailed: !table)
     }
 
+    /// The Kubernetes name of the Talos node at `node`, as its kubelet registered it (Talos only).
+    func kubeNodeName(node: String) async throws -> String {
+        try await Self.run { [config, context] in IchorgoKubeNodeName(config, context, node, $0) }
+    }
+
+    /// One page of the pods scheduled on the Kubernetes node `kubeNode` (`kubeNodeName`), in
+    /// every namespace, narrowed to `phase`; as `podsPage` otherwise.
+    func nodePodsPage(kubeNode: String, phase: PodPhaseFilter, token: String, table: Bool,
+                      limit: Int = selectedPodsPageSize) async throws -> KubePage<KubePod> {
+        let query = phase.query
+        let page: KubePodPage = try await Self.json { [config, context, kubeServer] in
+            IchorgoKubeNodePodsPage(config, context, kubeServer, kubeNode, query, token, limit, table, $0)
+        }
+        return page.page(detailed: !table)
+    }
+
+    /// One page of the pods a workload's selector matches, narrowed to `phase`; as `podsPage` otherwise.
+    func workloadPodsPage(kind: String, namespace: String, name: String, phase: PodPhaseFilter, token: String, table: Bool,
+                          limit: Int = selectedPodsPageSize) async throws -> KubePage<KubePod> {
+        let query = phase.query
+        let page: KubePodPage = try await Self.json { [config, context, kubeServer] in
+            IchorgoKubeWorkloadPodsPage(config, context, kubeServer, kind, namespace, name, query, token, limit, table, $0)
+        }
+        return page.page(detailed: !table)
+    }
+
     /// One pod in full (images, containers, last termination), for a row read from a Table.
     func pod(namespace: String, name: String) async throws -> KubePod {
         try await Self.json { [config, context, kubeServer] in IchorgoKubePod(config, context, kubeServer, namespace, name, $0) }

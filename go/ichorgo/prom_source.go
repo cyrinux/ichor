@@ -87,7 +87,10 @@ func (src promSource) normalize() (promSource, error) {
 	}
 
 	switch src.Mode {
-	case promModeProxy:
+	case promModeProxy, "":
+		// An encoder leaving out default values sends no mode: the proxy is the default.
+		src.Mode = promModeProxy
+
 		return src.normalizeProxy()
 	case promModeURL:
 		return src.normalizeURL()

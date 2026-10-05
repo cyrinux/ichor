@@ -13,10 +13,7 @@ struct PodsList: View {
     var onFlows: ((KubePod) -> Void)?
 
     @Environment(AppModel.self) private var model
-    @State private var confirm: KubePod?
-    @State private var deleting: Set<String> = []
-    @State private var resultMessage: String?
-    @State private var logsPod: KubePod?
+    @State private var actions = PodActions()
 
     var body: some View {
         KubeListFrame(control: control, list: list, query: query, namespaces: podNamespaces) { load in
@@ -26,10 +23,10 @@ struct PodsList: View {
             List {
                 Section {
                     ForEach(shown) { pod in
-                        PodRow(pod: pod, showNamespace: selected == nil, deleting: deleting.contains(pod.id),
-                               onLogs: { logsPod = pod }) { confirm = pod }
+                        PodRow(pod: pod, showNamespace: selected == nil, deleting: actions.deleting.contains(pod.id),
+                               onLogs: { actions.logsPod = pod }) { actions.confirm = pod }
                             .contextMenu {
-                                Button { logsPod = pod } label: { Label("Logs", systemImage: "doc.text") }
+                                Button { actions.logsPod = pod } label: { Label("Logs", systemImage: "doc.text") }
                                 if let onFlows {
                                     Button { onFlows(pod) } label: {
                                         Label("Live flows of this pod", systemImage: "point.3.filled.connected.trianglepath.dotted")
@@ -52,30 +49,22 @@ struct PodsList: View {
             .refreshable { await list.refresh(model: model) }
             .themedBackground()
         }
-        .confirmationDialog(confirm.map { String(localized: "Delete pod \($0.name)?") } ?? "",
-                            isPresented: $confirm.isPresent(),
-                            titleVisibility: .visible,
-                            presenting: confirm) { pod in
-            Button("Delete", role: .destructive) {
-                Task { await delete(pod) }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: { pod in
-            if pod.owner.isEmpty {
-                Text("It is removed from \(pod.namespace) after its grace period. No controller owns it: it will not come back.")
-            } else {
-                Text("It is removed from \(pod.namespace) after its grace period; \(pod.owner) starts a new one.")
-            }
-        }
-        .messageAlert($resultMessage)
-        .sheet(item: $logsPod) { PodLogsSheet(pod: $0) }
+        .podActions(actions) { await list.refresh(model: model) }
     }
+}
 
-    private func load() async {
-        await list.refresh(model: model)
-    }
+/// What a pod list's rows asked for (os:admin): the logs to show, and a deletion, confirmed
+/// first, so a controller starts a fresh pod.
+@Observable
+@MainActor
+final class PodActions {
+    var confirm: KubePod?
+    var logsPod: KubePod?
+    /// Ids of the pods whose deletion is in flight.
+    var deleting: Set<String> = []
+    var resultMessage: String?
 
-    private func delete(_ pod: KubePod) async {
+    func delete(_ pod: KubePod, model: AppModel, reload: () async -> Void) async {
         guard let client = model.client, !deleting.contains(pod.id) else { return }
         deleting.insert(pod.id)
         defer { deleting.remove(pod.id) }
@@ -83,16 +72,54 @@ struct PodsList: View {
             try await client.deletePod(pod)
             resultMessage = String(localized: "\(pod.name) is being deleted")
             // Shows it terminating, and soon its replacement.
-            await load()
+            await reload()
         } catch {
             resultMessage = String(localized: "Could not delete \(pod.name): \(error.localizedDescription)")
         }
     }
 }
 
-private struct PodRow: View {
+extension View {
+    /// The delete confirmation, its outcome and the logs sheet of `actions`; `reload` loads the
+    /// list again after a deletion.
+    func podActions(_ actions: PodActions, reload: @escaping () async -> Void) -> some View {
+        modifier(PodActionsModifier(actions: actions, reload: reload))
+    }
+}
+
+private struct PodActionsModifier: ViewModifier {
+    @Bindable var actions: PodActions
+    let reload: () async -> Void
+
+    @Environment(AppModel.self) private var model
+
+    func body(content: Content) -> some View {
+        content
+            .confirmationDialog(actions.confirm.map { String(localized: "Delete pod \($0.name)?") } ?? "",
+                                isPresented: $actions.confirm.isPresent(),
+                                titleVisibility: .visible,
+                                presenting: actions.confirm) { pod in
+                Button("Delete", role: .destructive) {
+                    Task { await actions.delete(pod, model: model, reload: reload) }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: { pod in
+                if pod.owner.isEmpty {
+                    Text("It is removed from \(pod.namespace) after its grace period. No controller owns it: it will not come back.")
+                } else {
+                    Text("It is removed from \(pod.namespace) after its grace period; \(pod.owner) starts a new one.")
+                }
+            }
+            .messageAlert($actions.resultMessage)
+            .sheet(item: $actions.logsPod) { PodLogsSheet(pod: $0) }
+    }
+}
+
+/// A pod: name, namespace and node (when asked), status, readiness, restarts; logs and delete.
+struct PodRow: View {
     let pod: KubePod
     let showNamespace: Bool
+    var showNode = true
     let deleting: Bool
     let onLogs: () -> Void
     let onDelete: () -> Void
@@ -104,7 +131,8 @@ private struct PodRow: View {
                     .font(.callout.monospaced())
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Text(verbatim: [showNamespace ? pod.namespace : nil, pod.node.isEmpty ? nil : pod.node].compactMap { $0 }.joined(separator: " · "))
+                Text(verbatim: [showNamespace ? pod.namespace : nil, showNode && !pod.node.isEmpty ? pod.node : nil]
+                    .compactMap { $0 }.joined(separator: " · "))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 HStack(spacing: 8) {

@@ -23,4 +23,13 @@ extension TalosClient {
             _ = IchorgoKubeArgoAction(config, context, kubeServer, namespace, name, action.rawValue, json, error)
         }
     }
+
+    /// Changes the sync windows of the AppProject namespace/project (os:admin): freezes apps for a
+    /// while, extends or ends a freeze, removes a window, clears ended freezes.
+    func argoFreeze(namespace: String, project: String, action: ArgoFreezeAction, options: ArgoFreezeOptions = ArgoFreezeOptions()) async throws {
+        let json = options.json
+        try await Self.run { [config, context, kubeServer] error -> Void in
+            _ = IchorgoKubeArgoFreeze(config, context, kubeServer, namespace, project, action.rawValue, json, error)
+        }
+    }
 }

@@ -31,6 +31,13 @@ struct AppWorkloadsSection: View {
                 } else {
                     ForEach(workloads) { workload in
                         AppWorkloadLine(workload: workload, restarting: restarting.contains(workload.id)) { confirm = workload }
+                        // A row of its own, not a link around the line: a List row that is a link
+                        // takes every tap, Restart's included. The sheet is a NavigationStack.
+                        if let selection = workload.podSelection {
+                            NavigationLink { WorkloadPodsView(workload: workload, selection: selection) } label: {
+                                Label("Pods", systemImage: "shippingbox")
+                            }
+                        }
                     }
                 }
             }

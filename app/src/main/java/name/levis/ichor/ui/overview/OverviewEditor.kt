@@ -123,8 +123,8 @@ fun overviewCardDescription(card: OverviewCard): String = stringResource(
 
 /**
  * The overview's app bar and cards to arrange. Cards: drag a shown card by its handle to move it,
- * hide it, or add a hidden one back (at the end). Every change is applied at once through
- * [onChange] and [onBarChange].
+ * hide it, or add a hidden one back (at the end). Cards the cluster lacks ([absent]: no Argo CD,
+ * no Flux...) are not offered. Every change is applied at once through [onChange] and [onBarChange].
  */
 @Composable
 fun OverviewEditor(
@@ -133,8 +133,12 @@ fun OverviewEditor(
     bar: OverviewBar,
     onBarChange: (OverviewBar) -> Unit,
     modifier: Modifier = Modifier,
+    absent: Set<OverviewCard> = emptySet(),
 ) {
     val current by rememberUpdatedState(layout)
+    val currentAbsent by rememberUpdatedState(absent)
+    val shownCards = layout.visible(absent)
+    val hiddenCards = layout.hiddenCards(absent)
     val change by rememberUpdatedState(onChange)
     val currentBar by rememberUpdatedState(bar)
     val changeBar by rememberUpdatedState(onBarChange)
@@ -147,7 +151,7 @@ fun OverviewEditor(
 
     fun dragBy(card: OverviewCard, delta: Float) {
         dragOffset += delta
-        val shown = current.visible
+        val shown = current.visible(currentAbsent)
         val index = shown.indexOf(card)
         val next = shown.getOrNull(index + 1)
         val previous = shown.getOrNull(index - 1)
@@ -155,11 +159,11 @@ fun OverviewEditor(
         val up = previous?.let { (heights[it] ?: 0) + spacing }
         when {
             down != null && dragOffset > down / 2 -> {
-                change(current.move(index, index + 1))
+                change(current.move(index, index + 1, currentAbsent))
                 dragOffset -= down
             }
             up != null && dragOffset < -up / 2 -> {
-                change(current.move(index, index - 1))
+                change(current.move(index, index - 1, currentAbsent))
                 dragOffset += up
             }
         }
@@ -174,7 +178,7 @@ fun OverviewEditor(
         item(key = "hint") {
             SectionTitle(stringResource(R.string.overview_edit_cards), stringResource(R.string.overview_edit_hint), Modifier.padding(top = 16.dp))
         }
-        itemsIndexed(layout.visible, key = { _, card -> card.name }) { index, card ->
+        itemsIndexed(shownCards, key = { _, card -> card.name }) { index, card ->
             val isDragged = dragged == card
             val moveUp = stringResource(R.string.overview_edit_move_up)
             val moveDown = stringResource(R.string.overview_edit_move_down)
@@ -202,22 +206,22 @@ fun OverviewEditor(
                     )
                     .semantics {
                         customActions = listOfNotNull(
-                            CustomAccessibilityAction(moveUp) { change(current.move(index, index - 1)); true }.takeIf { index > 0 },
-                            CustomAccessibilityAction(moveDown) { change(current.move(index, index + 1)); true }
-                                .takeIf { index < layout.visible.lastIndex },
+                            CustomAccessibilityAction(moveUp) { change(current.move(index, index - 1, currentAbsent)); true }.takeIf { index > 0 },
+                            CustomAccessibilityAction(moveDown) { change(current.move(index, index + 1, currentAbsent)); true }
+                                .takeIf { index < shownCards.lastIndex },
                         )
                     },
                 lifted = isDragged,
             )
         }
-        if (layout.hiddenCards.isNotEmpty()) item(key = "hidden-title") {
+        if (hiddenCards.isNotEmpty()) item(key = "hidden-title") {
             Text(
                 stringResource(R.string.overview_edit_hidden),
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(top = 16.dp).animateItem(),
             )
         }
-        items(layout.hiddenCards, key = { it.name }) { card ->
+        items(hiddenCards, key = { it.name }) { card ->
             HiddenCardRow(card, onShow = { change(current.show(card)) }, modifier = Modifier.animateItem())
         }
         if (!layout.isDefault) item(key = "reset") {
