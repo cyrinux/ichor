@@ -23,10 +23,12 @@ jobs:
   # testers; promote it by hand in the Play Console. The PLAY_RELEASE_STATUS repository
   # variable overrides the status (`draft` to review it first). Authenticates with Workload
   # Identity Federation, so no service account key is stored. Skipped until the WIF_PROVIDER
-  # and SERVICE_ACCOUNT secrets are set (see fastlane/PLAY_CONSOLE.md).
+  # and SERVICE_ACCOUNT secrets of the `release` environment are set (see
+  # fastlane/PLAY_CONSOLE.md).
   play:
     needs: [android]
     runs-on: ubuntu-latest
+    environment: release # WIF_PROVIDER and SERVICE_ACCOUNT are environment secrets
     permissions:
       contents: read
       id-token: write # OIDC token exchanged for Google credentials

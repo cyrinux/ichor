@@ -1,0 +1,19 @@
+# Build, signing, release and store files: changes need the maintainer's review.
+/.github/                @cyrinux
+/fastlane/               @cyrinux
+/scripts/                @cyrinux
+/build.sh                @cyrinux
+/justfile                @cyrinux
+/flake.nix               @cyrinux
+/flake.lock              @cyrinux
+/build.gradle.kts        @cyrinux
+/settings.gradle.kts     @cyrinux
+/gradle.properties       @cyrinux
+/gradle/                 @cyrinux
+/app/build.gradle.kts    @cyrinux
+/app/proguard-rules.pro  @cyrinux
+/ios/project.yml         @cyrinux
+/LICENSE                 @cyrinux
+/NOTICE                  @cyrinux
+/TRADEMARKS.md           @cyrinux
+/CONTRIBUTING.md         @cyrinux
