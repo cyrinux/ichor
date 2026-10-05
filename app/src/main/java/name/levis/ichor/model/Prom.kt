@@ -1,6 +1,8 @@
 package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import name.levis.ichor.data.TalosJson
 
 /**
  * Where PromQL queries go (Ichorgo.normalizePromSource): mode "proxy" reaches a Service
@@ -37,6 +39,11 @@ data class PromSource(
         const val AUTH_BASIC = "basic"
     }
 }
+
+private val GoJson = Json(TalosJson) { encodeDefaults = true }
+
+/** The source for Go, every field included: TalosJson leaves defaults out (mode "proxy" among them). */
+fun PromSource.toGoJson(): String = GoJson.encodeToString(PromSource.serializer(), this)
 
 @Serializable
 data class PromDiscovery(val sources: List<PromSource> = emptyList())

@@ -37,6 +37,7 @@ func TestPromSourceNormalize(t *testing.T) {
 		{"bad CA", `{"mode":"url","url":"https://p.example","ca":"nope"}`, "", "PEM"},
 		{"tenant header injection", `{"mode":"url","url":"https://p.example","tenant":"a\r\nX: y"}`, "", "tenant"},
 		{"mode", `{"mode":"ssh"}`, "", "mode"},
+		{"no mode is the proxy", `{"namespace":"m","service":"p","port":1}`, `{"mode":"proxy","namespace":"m","service":"p","port":1}`, ""},
 		{"json", `nope`, "", "bad metrics source"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -196,6 +197,9 @@ func TestPromCandidates(t *testing.T) {
 	add("mimir", "mimir-nginx", nil, `{"name":"http-metric","port":80}`)
 	add("mimir", "mimir-query-frontend", nil, `{"name":"http-metrics","port":8080},{"name":"grpc","port":9095}`)
 	add("mimir", "mimir-ingester", nil, `{"name":"http-metrics","port":8080}`)
+	add("observability", "mimir", map[string]string{"app.kubernetes.io/name": "mimir"}, `{"name":"http-metrics","port":8080},{"name":"grpc","port":9095},{"name":"memberlist","port":7946}`)
+	add("mimir", "mimir-query-scheduler", nil, `{"name":"http-metrics","port":8080}`)
+	add("mimir", "mimir-gossip-ring", nil, `{"name":"gossip-ring","port":7946},{"name":"http-metrics","port":8080}`)
 	add("vm", "vmselect-main", nil, `{"name":"http","port":8481}`)
 	add("vm", "vmsingle-main", nil, `{"name":"http","port":8428}`)
 	add("default", "prometheus-udp", nil, `{"name":"x","port":9090,"protocol":"UDP"}`)
@@ -212,6 +216,7 @@ func TestPromCandidates(t *testing.T) {
 		"mimir mimir/mimir-nginx:80/prometheus",
 		"mimir mimir/mimir-query-frontend:8080/prometheus",
 		"victoriametrics vm/vmsingle-main:8428",
+		"mimir observability/mimir:8080/prometheus",
 		"victoriametrics vm/vmselect-main:8481/select/0/prometheus",
 		"prometheus monitoring/kps-kube-prometheus-stack-prometheus:9090",
 	}

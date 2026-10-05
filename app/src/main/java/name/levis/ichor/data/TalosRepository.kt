@@ -58,6 +58,7 @@ import name.levis.ichor.model.PromDiscovery
 import name.levis.ichor.model.PromPanel
 import name.levis.ichor.model.PromResult
 import name.levis.ichor.model.PromSource
+import name.levis.ichor.model.toGoJson
 import name.levis.ichor.model.ClusterStatsSample
 import name.levis.ichor.model.NodeResources
 import name.levis.ichor.model.ServiceInfo
@@ -890,7 +891,7 @@ class TalosRepository(
 
     /** [query] from [start] to [end] (unix seconds) against [source], about 250 points. */
     suspend fun promRange(source: PromSource, query: String, start: Long, end: Long): PromResult = kubeCall { cfg, ctx, server ->
-        val json = Ichorgo.promQueryRange(cfg, ctx, server, TalosJson.encodeToString(PromSource.serializer(), source), query, start, end, 0)
+        val json = Ichorgo.promQueryRange(cfg, ctx, server, source.toGoJson(), query, start, end, 0)
         TalosJson.decodeFromString(PromResult.serializer(), json)
     }
 
@@ -901,7 +902,7 @@ class TalosRepository(
 
     /** [source] checked and cleaned up by Go, its secret kept. */
     suspend fun normalizePromSource(source: PromSource): PromSource = withContext(Dispatchers.IO) {
-        val json = Ichorgo.normalizePromSource(TalosJson.encodeToString(PromSource.serializer(), source))
+        val json = Ichorgo.normalizePromSource(source.toGoJson())
         val checked = TalosJson.decodeFromString(PromSource.serializer(), json)
         // Go never returns the secret; without authentication there is none to keep.
         checked.copy(secret = if (checked.auth == PromSource.AUTH_NONE) "" else source.secret.trim())
