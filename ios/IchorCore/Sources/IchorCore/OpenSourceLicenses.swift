@@ -1,45 +1,39 @@
 import Foundation
 
-/// A third-party component the iOS app ships, for the "Open-source licenses" screen. Android
-/// generates its list at build time (AboutLibraries); iOS has no such plugin, so this one is
-/// kept by hand: the Swift packages (project.yml), the Go modules the core imports directly
-/// (go/go.mod) and the bundled icons. Keep it in step with NOTICE.
-public struct OpenSourceLibrary: Equatable, Identifiable, Sendable {
-    public let name: String
-    public let author: String
-    /// SPDX identifiers.
-    public let licenses: [String]
-    public let website: String
+/// The third-party code compiled into the app, bundled as licenses.json (written at build time
+/// by scripts/go-licenses.py --ios), for About › Open-source licenses.
+public struct OpenSourceLicenses: Codable, Equatable, Sendable {
+    /// The project's NOTICE and LICENSE.
+    public var notice: String
+    public var libraries: [OpenSourceLibrary]
 
-    public var id: String { name }
+    public init(notice: String = "", libraries: [OpenSourceLibrary] = []) {
+        self.notice = notice
+        self.libraries = libraries
+    }
 }
 
-/// The SPDX page of a license, where its full text is.
-public func licenseURL(_ spdx: String) -> String { "https://spdx.org/licenses/\(spdx).html" }
+public struct OpenSourceLibrary: Codable, Equatable, Hashable, Identifiable, Sendable {
+    /// Go module path, "Go standard library" or Swift package name.
+    public var name: String
+    public var version: String
+    public var website: String
+    /// SPDX ids, e.g. ["MPL-2.0"].
+    public var licenses: [String]
+    /// The license files, verbatim.
+    public var text: String
 
-public let openSourceLibraries: [OpenSourceLibrary] = [
-    OpenSourceLibrary(name: "SwiftTerm", author: "Miguel de Icaza", licenses: ["MIT"],
-                      website: "https://github.com/migueldeicaza/SwiftTerm"),
-    OpenSourceLibrary(name: "Talos machinery client library", author: "Sidero Labs, Inc.", licenses: ["MPL-2.0"],
-                      website: "https://github.com/siderolabs/talos"),
-    OpenSourceLibrary(name: "COSI runtime", author: "Sidero Labs, Inc.", licenses: ["MPL-2.0"],
-                      website: "https://github.com/cosi-project/runtime"),
-    OpenSourceLibrary(name: "Go mobile bindings", author: "The Go Authors", licenses: ["BSD-3-Clause"],
-                      website: "https://pkg.go.dev/golang.org/x/mobile"),
-    OpenSourceLibrary(name: "Go standard library, x/crypto, x/net", author: "The Go Authors", licenses: ["BSD-3-Clause"],
-                      website: "https://go.dev"),
-    OpenSourceLibrary(name: "gRPC-Go", author: "The gRPC Authors", licenses: ["Apache-2.0"],
-                      website: "https://github.com/grpc/grpc-go"),
-    OpenSourceLibrary(name: "Go Protocol Buffers", author: "The Go Authors", licenses: ["BSD-3-Clause"],
-                      website: "https://github.com/protocolbuffers/protobuf-go"),
-    OpenSourceLibrary(name: "age", author: "The age Authors", licenses: ["BSD-3-Clause"],
-                      website: "https://github.com/FiloSottile/age"),
-    OpenSourceLibrary(name: "gopacket", author: "The GoPacket Authors", licenses: ["BSD-3-Clause"],
-                      website: "https://github.com/gopacket/gopacket"),
-    OpenSourceLibrary(name: "YAML for Go", author: "The go-yaml Authors", licenses: ["MIT", "Apache-2.0"],
-                      website: "https://github.com/yaml/go-yaml"),
-    OpenSourceLibrary(name: "Dashboard Icons", author: "Homarr Labs", licenses: ["Apache-2.0"],
-                      website: "https://github.com/homarr-labs/dashboard-icons"),
-    OpenSourceLibrary(name: "selfh.st/icons", author: "selfh.st", licenses: ["CC-BY-4.0"],
-                      website: "https://selfh.st/icons/"),
-]
+    public var id: String { name }
+
+    /// "v1.14.2 · MPL-2.0"; just the licenses when the version is unknown.
+    public var summary: String {
+        let spdx = licenses.joined(separator: ", ")
+        return version.isEmpty ? spdx : "\(version) · \(spdx)"
+    }
+}
+
+/// The licenses in `data`; empty when the file is missing (nil) or corrupt.
+public func decodeOpenSourceLicenses(_ data: Data?) -> OpenSourceLicenses {
+    guard let data, let decoded = try? JSONDecoder().decode(OpenSourceLicenses.self, from: data) else { return OpenSourceLicenses() }
+    return decoded
+}

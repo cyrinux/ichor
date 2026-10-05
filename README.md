@@ -524,11 +524,27 @@ just ios-build        # macOS: unsigned IPA in ios/build/
 ID: a free account means reinstalling every 7 days, a paid one lasts a year. To sign in Xcode
 instead, set `ICHOR_IOS_TEAM_ID` before `xcodegen generate`.
 
+**App Store:** `scripts/ios-build.sh appstore` builds the App Store variant, compiled with
+`APP_STORE`, which hides the donation links (App Review Guideline 3.2.2), signs it through Xcode
+automatic signing with an App Store Connect API key, and uploads it to TestFlight. On a `v*` tag,
+`ios.yml` runs it once these secrets of the `release` environment are set:
+
+| Secret | Value |
+|---|---|
+| `IOS_TEAM_ID` | the Apple Developer team ID |
+| `ASC_KEY_ID` | the App Store Connect API key ID (Users and Access → Integrations, Admin role) |
+| `ASC_ISSUER_ID` | the issuer ID shown above the keys |
+| `ASC_KEY_P8` | the contents of `AuthKey_<id>.p8` |
+
+Register `name.levis.ichor`, `name.levis.ichor.widget` and the `group.name.levis.ichor` App
+Group in the developer portal, and create the app in App Store Connect, before the first upload.
+
 ## CI (GitHub Actions)
 
 - **`.github/workflows/android.yml`** (Ubuntu, Nix flake): `./build.sh check`, then the debug
   and release APKs.
-- **`.github/workflows/ios.yml`** (macOS 15): core tests, simulator build, unsigned IPA.
+- **`.github/workflows/ios.yml`** (macOS 26): core tests, simulator build, unsigned IPA; on
+  `v*` tags, the App Store upload (see [iOS](#ios)).
 
 Both run on pushes to `main` and on pull requests. Release APKs are named
 `ichor-v<version>-<abi>.apk`, or `…-unsigned.apk` when no keystore secrets are set;

@@ -42,3 +42,31 @@ jobs:
         with:
           name: ios-release
           path: ios/build/*.ipa
+
+      # The App Store build (no donation links), signed by Xcode with the App Store Connect API
+      # key and uploaded to TestFlight; submit it for review by hand in App Store Connect. Tags
+      # only, and skipped until the IOS_TEAM_ID, ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_P8 (the
+      # AuthKey_<id>.p8 contents) secrets of the `release` environment are set.
+      - name: Check App Store secrets
+        id: asc
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          if [ -n "$ASC_KEY_P8" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ASC_KEY_P8 is not set, skipping the App Store upload."
+          fi
+
+      - name: Upload to App Store Connect (TestFlight)
+        if: steps.asc.outputs.enabled == 'true'
+        env:
+          ICHOR_IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          export ASC_KEY_PATH="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
+          printf '%s\n' "$ASC_KEY_P8" > "$ASC_KEY_PATH"
+          scripts/ios-build.sh appstore

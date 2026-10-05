@@ -18,10 +18,12 @@ struct AboutSection: View {
             NavigationLink(value: Route.changelog) { Label("What's new", systemImage: "sparkles") }
             Link(destination: ProjectLinks.repo) { Label("Source code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right") }
             Link(destination: ProjectLinks.talos) { Label("Talos Linux (talos.dev)", systemImage: "arrow.up.right.square") }
-            NavigationLink { LicensesView() } label: { Label("Open-source licenses", systemImage: "doc.text") }
-            Link(destination: ProjectLinks.sponsor) { Label("Sponsor on GitHub", systemImage: "heart") }
-            ForEach(Donation.allCases) { coin in
-                Button { donation = coin } label: { DonationRow(coin: coin) }
+            NavigationLink(value: Route.licenses) { Label("Open-source licenses", systemImage: "doc.text") }
+            if Distribution.donations {
+                Link(destination: ProjectLinks.sponsor) { Label("Sponsor on GitHub", systemImage: "heart") }
+                ForEach(Donation.allCases) { coin in
+                    Button { donation = coin } label: { DonationRow(coin: coin) }
+                }
             }
         } header: {
             Text("About")
