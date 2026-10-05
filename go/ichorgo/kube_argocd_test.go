@@ -360,7 +360,9 @@ func TestReadArgoCD(t *testing.T) {
 		"GET /apis/argoproj.io/v1alpha1/applicationsets": string(sets),
 		"GET /api/v1/pods": `{"items":[
 		  {"metadata":{"name":"argocd-application-controller-0","namespace":"argocd","labels":{"app.kubernetes.io/name":"argocd-application-controller"}},
-		   "spec":{"nodeName":"node-1","containers":[{"name":"c","image":"quay.io/argoproj/argocd:v3.4.5"}]},"status":{"phase":"Running"}},
+		   "spec":{"nodeName":"node-1","containers":[{"name":"c","image":"quay.io/argoproj/argocd:v3.4.5"}]},"status":{"phase":"Running"}}]}`,
+		// Only the namespaces of apps in trouble are read, one by one.
+		"GET /api/v1/namespaces/web/pods": `{"items":[
 		  {"metadata":{"name":"web-1","namespace":"web"},"spec":{"nodeName":"node-3","containers":[{"name":"web","image":"web:1"}]},
 		   "status":{"phase":"Running","containerStatuses":[{"name":"web","ready":false,"state":{"waiting":{"reason":"CrashLoopBackOff"}}}]}}]}`,
 	})

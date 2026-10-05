@@ -544,7 +544,7 @@ func garageProxyHealth(ctx context.Context, k *kubeClient, g garageGroup) (strin
 		} `json:"spec"`
 	}]
 
-	if err := k.get(ctx, "/api/v1/namespaces/"+url.PathEscape(g.namespace)+"/services", &services); err != nil {
+	if err := getList(ctx, k, "/api/v1/namespaces/"+url.PathEscape(g.namespace)+"/services", &services); err != nil {
 		return garageUnknown, kubeError(err).Error()
 	}
 

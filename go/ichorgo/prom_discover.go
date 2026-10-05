@@ -44,7 +44,7 @@ type promService struct {
 func discoverProm(ctx context.Context, k *kubeClient) (promDiscovery, error) {
 	var list kubeList[promService]
 
-	if err := k.get(ctx, "/api/v1/services", &list); err != nil {
+	if err := getList(ctx, k, "/api/v1/services", &list); err != nil {
 		return promDiscovery{}, err
 	}
 

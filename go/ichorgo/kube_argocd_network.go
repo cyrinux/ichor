@@ -182,7 +182,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 
 		wg.Go(func() {
 			var list kubeList[netService]
-			if err := k.get(ctx, base+"/services", &list); err != nil {
+			if err := getList(ctx, k, base+"/services", &list); err != nil {
 				fail(err)
 
 				return
@@ -208,11 +208,13 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 		nodes      kubeList[netNodeObject]
 	)
 
-	wg.Go(func() { fail(k.get(ctx, "/apis/networking.k8s.io/v1/ingresses", &ingresses)) })
-	wg.Go(func() { fail(ignoreNotFound(k.get(ctx, "/apis/gateway.networking.k8s.io/v1/httproutes", &httpRoutes))) })
-	wg.Go(func() { _ = k.get(ctx, "/apis/gateway.networking.k8s.io/v1/gateways", &gateways) })
+	wg.Go(func() { fail(getList(ctx, k, "/apis/networking.k8s.io/v1/ingresses", &ingresses)) })
+	wg.Go(func() {
+		fail(ignoreNotFound(getList(ctx, k, "/apis/gateway.networking.k8s.io/v1/httproutes", &httpRoutes)))
+	})
+	wg.Go(func() { _ = getList(ctx, k, "/apis/gateway.networking.k8s.io/v1/gateways", &gateways) })
 	// Node readiness only colours the last column: without it the graph still shows.
-	wg.Go(func() { _ = k.get(ctx, "/api/v1/nodes", &nodes) })
+	wg.Go(func() { _ = getList(ctx, k, "/api/v1/nodes", &nodes) })
 	wg.Wait()
 
 	if len(errs) > 0 {
@@ -227,7 +229,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 // readNetPods lists pods with their labels (podObject leaves them out).
 func readNetPods(ctx context.Context, k *kubeClient, path string) ([]netPod, error) {
 	var list kubeList[json.RawMessage]
-	if err := k.get(ctx, path, &list); err != nil {
+	if err := getList(ctx, k, path, &list); err != nil {
 		return nil, err
 	}
 

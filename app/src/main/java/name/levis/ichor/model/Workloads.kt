@@ -114,27 +114,3 @@ private val KubeWorkload.attentionRank: Int
         WorkloadState.PROGRESSING -> 1
         else -> 2
     }
-
-/**
- * The workloads that run [pods] (an app's, from the inventory), through each pod's owner in
- * [kubePods]: a StatefulSet or DaemonSet directly, a Deployment through its ReplicaSet, named
- * `<deployment>-<pod-template-hash>`. Pods without such an owner (static, Job, bare) are left
- * out. In this list's order.
- */
-fun List<KubeWorkload>.ownersOf(pods: List<InventoryPod>, kubePods: List<KubePod>): List<KubeWorkload> {
-    val owners = kubePods.associate { it.key to it.owner }
-    val wanted = pods.mapNotNull { pod -> owners["${pod.namespace}/${pod.pod}"]?.let { ownerKey(pod.namespace, it) } }.toSet()
-    return filter { it.key in wanted }
-}
-
-/** The [KubeWorkload.key] an owner reference ("ReplicaSet/web-5d8f") stands for; null for other kinds. */
-private fun ownerKey(namespace: String, owner: String): String? {
-    val kind = owner.substringBefore('/')
-    val name = owner.substringAfter('/', "")
-    if (name.isEmpty()) return null
-    return when (kind) {
-        "StatefulSet", "DaemonSet" -> "$kind/$namespace/$name"
-        "ReplicaSet" -> name.substringBeforeLast('-', "").takeIf { it.isNotEmpty() }?.let { "Deployment/$namespace/$it" }
-        else -> null
-    }
-}

@@ -255,7 +255,9 @@ func TestReadFlux(t *testing.T) {
 		"GET " + base + "helmrepositories":                        readFluxFixture(t, "helmrepositories.json"),
 		"GET /api/v1/pods": `{"items":[
 		  {"metadata":{"name":"kustomize-controller-1","namespace":"flux-system","labels":{"app":"kustomize-controller","app.kubernetes.io/version":"v2.7.0"}},
-		   "spec":{"nodeName":"node-1","containers":[{"name":"manager","image":"ghcr.io/fluxcd/kustomize-controller:v1.7.0"}]},"status":{"phase":"Running"}},
+		   "spec":{"nodeName":"node-1","containers":[{"name":"manager","image":"ghcr.io/fluxcd/kustomize-controller:v1.7.0"}]},"status":{"phase":"Running"}}]}`,
+		// Only the namespaces of apps in trouble are read, one by one.
+		"GET /api/v1/namespaces/web/pods": `{"items":[
 		  {"metadata":{"name":"web-1","namespace":"web"},"spec":{"nodeName":"node-3","containers":[{"name":"web","image":"web:1"}]},
 		   "status":{"phase":"Running","containerStatuses":[{"name":"web","ready":false,"state":{"waiting":{"reason":"CrashLoopBackOff"}}}]}}]}`,
 	})

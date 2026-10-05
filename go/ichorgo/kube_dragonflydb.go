@@ -71,7 +71,7 @@ func readDragonfly(ctx context.Context, k *kubeClient, version string) *dragonfl
 		wg   sync.WaitGroup
 	)
 
-	wg.Go(func() { errs[0] = k.get(ctx, "/apis/"+groupDragonfly+"/"+version+"/dragonflies", &list) })
+	wg.Go(func() { errs[0] = getList(ctx, k, "/apis/"+groupDragonfly+"/"+version+"/dragonflies", &list) })
 	wg.Go(func() { pods, errs[1] = listDSPods(ctx, k, "app.kubernetes.io/name=dragonfly") })
 	wg.Wait()
 

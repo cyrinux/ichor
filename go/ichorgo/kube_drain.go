@@ -92,20 +92,16 @@ type pdbObject struct {
 // drainPods lists the pods of kubeNode with what a drain does with each, the ones to evict
 // first, sorted by namespace and name.
 func drainPods(ctx context.Context, k *kubeClient, kubeNode string) ([]drainPod, error) {
-	var pods struct {
-		Items []drainPodObject `json:"items"`
-	}
+	var pods kubeList[drainPodObject]
 
-	if err := k.get(ctx, "/api/v1/pods?fieldSelector="+url.QueryEscape("spec.nodeName="+kubeNode), &pods); err != nil {
+	if err := getList(ctx, k, "/api/v1/pods?fieldSelector="+url.QueryEscape("spec.nodeName="+kubeNode), &pods); err != nil {
 		return nil, fmt.Errorf("pods of %s: %w", kubeNode, err)
 	}
 
-	var pdbs struct {
-		Items []pdbObject `json:"items"`
-	}
+	var pdbs kubeList[pdbObject]
 
 	// Without the budgets (RBAC, old API) the drain still works: the evictions honour them.
-	_ = k.get(ctx, "/apis/policy/v1/poddisruptionbudgets", &pdbs) //nolint:errcheck
+	_ = getList(ctx, k, "/apis/policy/v1/poddisruptionbudgets", &pdbs) //nolint:errcheck
 
 	out := make([]drainPod, 0, len(pods.Items))
 	for _, obj := range pods.Items {

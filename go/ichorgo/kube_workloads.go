@@ -75,11 +75,9 @@ type appsObject struct {
 		Annotations       map[string]string `json:"annotations"`
 	} `json:"metadata"`
 	Spec struct {
-		Replicas *int32 `json:"replicas"`
-		Selector struct {
-			MatchLabels map[string]string `json:"matchLabels"`
-		} `json:"selector"`
-		Paused         bool `json:"paused"`
+		Replicas       *int32        `json:"replicas"`
+		Selector       labelSelector `json:"selector"`
+		Paused         bool          `json:"paused"`
 		UpdateStrategy struct {
 			Type          string `json:"type"` // OnDelete: pods are only replaced when deleted
 			RollingUpdate *struct {

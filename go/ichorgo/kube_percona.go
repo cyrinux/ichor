@@ -132,8 +132,8 @@ func readPercona(ctx context.Context, k *kubeClient, version string, now time.Ti
 		wg       sync.WaitGroup
 	)
 
-	wg.Go(func() { errs[0] = k.get(ctx, base+"perconaxtradbclusters", &clusters) })
-	wg.Go(func() { errs[1] = k.get(ctx, base+"perconaxtradbclusterbackups", &backups) })
+	wg.Go(func() { errs[0] = getList(ctx, k, base+"perconaxtradbclusters", &clusters) })
+	wg.Go(func() { errs[1] = getList(ctx, k, base+"perconaxtradbclusterbackups", &backups) })
 	wg.Go(func() { pods, errs[2] = listDSPods(ctx, k, "app.kubernetes.io/name=percona-xtradb-cluster") })
 	wg.Wait()
 

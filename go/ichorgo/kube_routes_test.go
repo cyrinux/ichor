@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -10,6 +11,12 @@ import (
 const routesPods = `{"items":[
 	{"metadata":{"name":"web-1","labels":{"app":"web","tier":"front"}}},
 	{"metadata":{"name":"db-0","labels":{"app":"db"}}}]}`
+
+// The same pods read one by one: an app's few pods are never found by listing their namespace.
+const (
+	routesWebPod = `{"metadata":{"name":"web-1","labels":{"app":"web","tier":"front"}}}`
+	routesDBPod  = `{"metadata":{"name":"db-0","labels":{"app":"db"}}}`
+)
 
 const routesServices = `{"items":[
 	{"metadata":{"name":"web"},"spec":{"selector":{"app":"web"}}},
@@ -29,7 +36,8 @@ func routeURLs(routes []kubeRoute) string {
 func openRoutesKube(t *testing.T, answers map[string]string) *kubeClient {
 	t.Helper()
 
-	answers["GET /api/v1/namespaces/shop/pods"] = routesPods
+	answers["GET /api/v1/namespaces/shop/pods/web-1"] = routesWebPod
+	answers["GET /api/v1/namespaces/shop/pods/db-0"] = routesDBPod
 	answers["GET /api/v1/namespaces/shop/services"] = routesServices
 	f := newFakeKubeAPI(t, answers)
 
@@ -142,8 +150,8 @@ func TestAppRoutesWithoutGatewayAPI(t *testing.T) {
 
 func TestAppRoutesNoServiceSkipsRouteLists(t *testing.T) {
 	f := newFakeKubeAPI(t, map[string]string{
-		"GET /api/v1/namespaces/shop/pods":     routesPods,
-		"GET /api/v1/namespaces/shop/services": `{"items":[]}`,
+		"GET /api/v1/namespaces/shop/pods/web-1": routesWebPod,
+		"GET /api/v1/namespaces/shop/services":   `{"items":[]}`,
 	})
 
 	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
@@ -196,5 +204,34 @@ func TestKubeAppRoutesDemo(t *testing.T) {
 
 	if _, err := KubeAppRoutes(cfg, "", "", "not json"); err == nil {
 		t.Fatal("invalid pod list accepted")
+	}
+}
+
+func TestAppRoutesManyPodsListTheirNamespace(t *testing.T) {
+	f := newFakeKubeAPI(t, map[string]string{
+		"GET /api/v1/namespaces/shop/pods":         routesPods,
+		"GET /api/v1/namespaces/shop/services":     routesServices,
+		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[{"metadata":{"name":"db","namespace":"shop"},"spec":{"defaultBackend":{"service":{"name":"db"}}},"status":{"loadBalancer":{"ingress":[{"hostname":"lb.example"}]}}}]}`,
+	})
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pods := []routePod{{"shop", "db-0"}}
+	for i := range routePodsByName {
+		pods = append(pods, routePod{"shop", fmt.Sprintf("gone-%d", i)})
+	}
+
+	list, err := appRoutes(context.Background(), k, pods)
+	if err != nil || routeURLs(list.Routes) != "Ingress http://lb.example db" {
+		t.Fatalf("got %v %+v", err, list)
+	}
+
+	for _, r := range f.recorded() {
+		if strings.Contains(r.path, "/pods/") {
+			t.Fatalf("read one by one: %s", r.path)
+		}
 	}
 }

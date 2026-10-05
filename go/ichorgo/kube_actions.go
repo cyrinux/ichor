@@ -204,12 +204,10 @@ func deploymentRevisions(ctx context.Context, k *kubeClient, namespace, name str
 		return nil, nil, err
 	}
 
-	var list struct {
-		Items []revisionReplicaSet `json:"items"`
-	}
+	var list kubeList[revisionReplicaSet]
 
 	path := "/apis/apps/v1/namespaces/" + url.PathEscape(namespace) + "/replicasets?labelSelector=" + url.QueryEscape(matchLabelsSelector(dep.Spec.Selector.MatchLabels))
-	if err := k.get(ctx, path, &list); err != nil {
+	if err := getList(ctx, k, path, &list); err != nil {
 		return nil, nil, err
 	}
 

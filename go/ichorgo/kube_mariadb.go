@@ -149,16 +149,16 @@ func readMariaDB(ctx context.Context, k *kubeClient, version string, now time.Ti
 		wg       sync.WaitGroup
 	)
 
-	wg.Go(func() { errs[0] = k.get(ctx, base+"mariadbs", &mariadbs) })
-	wg.Go(func() { errs[1] = k.get(ctx, base+"backups", &logical) })
+	wg.Go(func() { errs[0] = getList(ctx, k, base+"mariadbs", &mariadbs) })
+	wg.Go(func() { errs[1] = getList(ctx, k, base+"backups", &logical) })
 	// Physical backups came later: an operator without them answers 404.
-	wg.Go(func() { errs[2] = ignoreNotFound(k.get(ctx, base+"physicalbackups", &physical)) })
+	wg.Go(func() { errs[2] = ignoreNotFound(getList(ctx, k, base+"physicalbackups", &physical)) })
 	wg.Go(func() { pods, errs[3] = listDSPods(ctx, k, "app.kubernetes.io/name=mariadb") })
 	wg.Wait()
 
 	var cronJobs kubeList[mariadbCronJob]
 	if slices.ContainsFunc(logical.Items, func(b mariadbBackupObject) bool { return b.Spec.Schedule != nil }) {
-		errs[4] = k.get(ctx, "/apis/batch/v1/cronjobs", &cronJobs)
+		errs[4] = getList(ctx, k, "/apis/batch/v1/cronjobs", &cronJobs)
 	}
 
 	out := mapMariaDB(mariadbSources{

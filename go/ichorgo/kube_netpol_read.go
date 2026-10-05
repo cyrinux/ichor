@@ -3,12 +3,17 @@ package ichorgo
 import (
 	"cmp"
 	"context"
+	"net/url"
 	"slices"
 	"sync"
 	"time"
 )
 
-const groupCilium = "cilium.io"
+const (
+	groupCilium = "cilium.io"
+	// runningPods are the pods policies apply to: neither Succeeded nor Failed.
+	runningPods = "status.phase!=Succeeded,status.phase!=Failed"
+)
 
 // netPolicyReport is every network policy of the cluster, and how isolated each namespace is.
 type netPolicyReport struct {
@@ -75,8 +80,9 @@ func readNetPolicyReport(ctx context.Context, k *kubeClient) (netPolicyReport, e
 	)
 
 	wg.Go(func() { policies, cilium, policyErr = readNetPolicies(ctx, k) })
-	wg.Go(func() { errs[0] = k.get(ctx, "/api/v1/pods", &pods) })
-	wg.Go(func() { errs[1] = k.get(ctx, "/api/v1/namespaces", &namespaces) })
+	// Finished pods are left out below anyway: the server drops them before sending.
+	wg.Go(func() { errs[0] = getList(ctx, k, "/api/v1/pods?fieldSelector="+url.QueryEscape(runningPods), &pods) })
+	wg.Go(func() { errs[1] = getList(ctx, k, "/api/v1/namespaces", &namespaces) })
 	wg.Wait()
 
 	if policies == nil && policyErr != nil {
@@ -118,11 +124,11 @@ func readNetPolicies(ctx context.Context, k *kubeClient) ([]netPolicy, bool, err
 		ciliumAPI = "/apis/" + groupCilium + "/" + version
 	)
 
-	wg.Go(func() { errs[0] = k.get(ctx, "/apis/networking.k8s.io/v1/networkpolicies", &nps) })
+	wg.Go(func() { errs[0] = getList(ctx, k, "/apis/networking.k8s.io/v1/networkpolicies", &nps) })
 
 	if cilium {
-		wg.Go(func() { errs[1] = k.get(ctx, ciliumAPI+"/ciliumnetworkpolicies", &cnps) })
-		wg.Go(func() { errs[2] = k.get(ctx, ciliumAPI+"/ciliumclusterwidenetworkpolicies", &ccnps) })
+		wg.Go(func() { errs[1] = getList(ctx, k, ciliumAPI+"/ciliumnetworkpolicies", &cnps) })
+		wg.Go(func() { errs[2] = getList(ctx, k, ciliumAPI+"/ciliumclusterwidenetworkpolicies", &ccnps) })
 	}
 
 	wg.Wait()

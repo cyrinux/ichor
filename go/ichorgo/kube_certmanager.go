@@ -123,9 +123,9 @@ func readCertManager(ctx context.Context, k *kubeClient, version string, now tim
 
 	base := "/apis/" + groupCertManager + "/" + version + "/"
 
-	wg.Go(func() { errs[0] = k.get(ctx, base+"certificates", &certs) })
-	wg.Go(func() { errs[1] = k.get(ctx, base+"issuers", &issuers) })
-	wg.Go(func() { errs[2] = k.get(ctx, base+"clusterissuers", &clusterIssuers) })
+	wg.Go(func() { errs[0] = getList(ctx, k, base+"certificates", &certs) })
+	wg.Go(func() { errs[1] = getList(ctx, k, base+"issuers", &issuers) })
+	wg.Go(func() { errs[2] = getList(ctx, k, base+"clusterissuers", &clusterIssuers) })
 	wg.Wait()
 
 	out := mapCertManager(certs.Items, issuers.Items, clusterIssuers.Items, now)

@@ -185,16 +185,16 @@ func readFlux(ctx context.Context, k *kubeClient) (fluxStatus, error) {
 	)
 
 	if hasKustomize {
-		wg.Go(func() { ksErr = k.get(ctx, listPath(groupFluxKustomize, kustomizeVersion, "kustomizations"), &ks) })
+		wg.Go(func() { ksErr = getList(ctx, k, listPath(groupFluxKustomize, kustomizeVersion, "kustomizations"), &ks) })
 	}
 
 	if hasHelm {
-		wg.Go(func() { helmErr = k.get(ctx, listPath(groupFluxHelm, helmVersion, "helmreleases"), &hrs) })
+		wg.Go(func() { helmErr = getList(ctx, k, listPath(groupFluxHelm, helmVersion, "helmreleases"), &hrs) })
 	}
 
 	if hasSource {
 		for i, s := range fluxSourceKinds {
-			wg.Go(func() { srcErrs[i] = k.get(ctx, listPath(groupFluxSource, sourceVersion, s.plural), &sources[i]) })
+			wg.Go(func() { srcErrs[i] = getList(ctx, k, listPath(groupFluxSource, sourceVersion, s.plural), &sources[i]) })
 		}
 	}
 
@@ -232,9 +232,17 @@ func readFlux(ctx context.Context, k *kubeClient) (fluxStatus, error) {
 
 	out.SourcesError = sectionError(others...)
 
-	if slices.ContainsFunc(out.Apps, func(a fluxApp) bool { return a.Level == healthCritical || a.Level == healthWarning }) {
-		if pods, err := listPods(ctx, k); err == nil {
-			attachFluxUnhealthyPods(out.Apps, pods.Pods)
+	var troubled []string
+
+	for _, a := range out.Apps {
+		if a.Level == healthCritical || a.Level == healthWarning {
+			troubled = append(troubled, a.namespaces...)
+		}
+	}
+
+	if len(troubled) > 0 {
+		if pods, err := unhealthyPods(ctx, k, troubled); err == nil {
+			attachFluxUnhealthyPods(out.Apps, pods)
 		}
 	}
 

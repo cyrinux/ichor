@@ -203,9 +203,9 @@ func readArgoCD(ctx context.Context, k *kubeClient) (argoStatus, error) {
 		wg       sync.WaitGroup
 	)
 
-	wg.Go(func() { errs[0] = k.get(ctx, base+"/applications", &apps) })
-	wg.Go(func() { errs[1] = k.get(ctx, base+"/applicationsets", &sets) })
-	wg.Go(func() { errs[2] = k.get(ctx, base+"/appprojects", &projects) })
+	wg.Go(func() { errs[0] = getList(ctx, k, base+"/applications", &apps) })
+	wg.Go(func() { errs[1] = getList(ctx, k, base+"/applicationsets", &sets) })
+	wg.Go(func() { errs[2] = getList(ctx, k, base+"/appprojects", &projects) })
 	wg.Go(func() { ctrl, _ = listDSPods(ctx, k, "app.kubernetes.io/name=argocd-application-controller") })
 	wg.Wait()
 
@@ -224,9 +224,17 @@ func readArgoCD(ctx context.Context, k *kubeClient) (argoStatus, error) {
 		out.AppSetsError = sectionError(errs[1])
 	}
 
-	if slices.ContainsFunc(out.Apps, func(a argoApp) bool { return a.Level == healthCritical || a.Health == "Progressing" }) {
-		if pods, err := listPods(ctx, k); err == nil {
-			attachUnhealthyPods(out.Apps, pods.Pods)
+	var troubled []string
+
+	for _, a := range out.Apps {
+		if argoNeedsPods(a) {
+			troubled = append(troubled, a.Destination.Namespace)
+		}
+	}
+
+	if len(troubled) > 0 {
+		if pods, err := unhealthyPods(ctx, k, troubled); err == nil {
+			attachUnhealthyPods(out.Apps, pods)
 		}
 	}
 
@@ -246,6 +254,9 @@ func argoVersion(pods []dsPod) string {
 	return ""
 }
 
+// argoNeedsPods tells an app whose unhealthy pods are shown: critical or progressing.
+func argoNeedsPods(a argoApp) bool { return a.Level == healthCritical || a.Health == "Progressing" }
+
 // attachUnhealthyPods gives each critical or progressing app the pods of its destination
 // namespace that are not healthy: an app's own pods carry no Argo CD marker by default, so
 // the namespace is the link (and usually one app owns one namespace).
@@ -260,7 +271,7 @@ func attachUnhealthyPods(apps []argoApp, pods []kubePod) {
 
 	for i := range apps {
 		a := &apps[i]
-		if a.Level != healthCritical && a.Health != "Progressing" {
+		if !argoNeedsPods(*a) {
 			continue
 		}
 

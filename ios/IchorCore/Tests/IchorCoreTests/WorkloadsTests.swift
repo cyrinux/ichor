@@ -9,37 +9,6 @@ final class WorkloadsTests: XCTestCase {
         KubeWorkload(kind: "Deployment", namespace: "a", name: "frozen", desired: 1, ready: 1, state: "paused"),
     ]
 
-    func testOwnersOfAnAppsPodsThroughReplicaSetsAndDirectOwners() {
-        let kubePods = [
-            KubePod(namespace: "shop", name: "web-5d8f-abcde", owner: "ReplicaSet/web-5d8f"),
-            KubePod(namespace: "shop", name: "web-5d8f-fghij", owner: "ReplicaSet/web-5d8f"),
-            KubePod(namespace: "shop", name: "db-0", owner: "StatefulSet/db"),
-            KubePod(namespace: "kube-system", name: "proxy-xyz", owner: "DaemonSet/proxy"),
-            KubePod(namespace: "shop", name: "migrate-1-q", owner: "Job/migrate-1"),
-            KubePod(namespace: "kube-system", name: "apiserver-cp1", owner: "Node/cp1"),
-        ]
-        let app = [
-            InventoryPod(namespace: "shop", pod: "web-5d8f-abcde", node: "n1"),
-            InventoryPod(namespace: "shop", pod: "web-5d8f-fghij", node: "n2"),
-            InventoryPod(namespace: "shop", pod: "db-0", node: "n1"),
-            InventoryPod(namespace: "shop", pod: "migrate-1-q", node: "n1"),
-        ]
-        XCTAssertEqual(workloadOwners(workloads, pods: app, kubePods: kubePods).map(\.name), ["web", "db"])
-        let proxy = [InventoryPod(namespace: "kube-system", pod: "proxy-xyz", node: "n1")]
-        XCTAssertEqual(workloadOwners(workloads, pods: proxy, kubePods: kubePods).map(\.name), ["proxy"])
-    }
-
-    func testOwnersIgnoreUnknownPodsOtherNamespacesAndOddOwners() {
-        let kubePods = [
-            KubePod(namespace: "other", name: "web-5d8f-abcde", owner: "ReplicaSet/web-5d8f"),
-            KubePod(namespace: "shop", name: "bare"),
-            KubePod(namespace: "shop", name: "odd", owner: "ReplicaSet/nohash"),
-        ]
-        let app = ["bare", "odd", "gone"].map { InventoryPod(namespace: "shop", pod: $0, node: "n1") } +
-            [InventoryPod(namespace: "other", pod: "web-5d8f-abcde", node: "n1")]
-        XCTAssertTrue(workloadOwners(workloads, pods: app, kubePods: kubePods).isEmpty)
-    }
-
     func testDecodesTheGoJSON() throws {
         let json = #"{"workloads":[{"kind":"Deployment","namespace":"shop","name":"web","desired":3,"ready":2,"updated":3,"available":2,"state":"degraded","restartedAt":1700000000000,"created":1,"images":["nginx:1.27"]}]}"#
         let w = try XCTUnwrap(TalosJSON.decode(KubeWorkloadList.self, from: json).workloads.first)
