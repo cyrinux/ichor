@@ -82,6 +82,8 @@ struct ClustersView: View {
     @State private var renaming: ContextSummary?
     @State private var newName = ""
     @State private var error: String?
+    @State private var editingEndpoints: ContextSummary?
+    @State private var scanning = false
 
     var body: some View {
         List {
@@ -90,15 +92,26 @@ struct ClustersView: View {
                     row(context)
                 }
             } footer: {
-                Text("The app takes the colors of the cluster on screen.")
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("The app takes the colors of the cluster on screen.")
+                    // What the lock on a row means, once there is one.
+                    if model.summary?.contexts.contains(where: { model.vpnOnly.contains($0.fingerprint) }) == true {
+                        Text("VPN only: without a VPN connected the app does not try the cluster, and background checks wait for it.")
+                    }
+                    Text("Touch and hold a cluster for its endpoints and the VPN only setting.")
+                }
             }
             if let error {
                 Section { Text(error).font(.footnote).foregroundStyle(.statusBad) }
             }
             Section {
                 NavigationLink(value: Route.importConfig) { Label("Add a cluster", systemImage: "plus") }
+                Button { scanning = true } label: {
+                    Label("Search the local network", systemImage: "antenna.radiowaves.left.and.right")
+                }
             }
         }
+        .endpointTools(editing: $editingEndpoints, scanning: $scanning)
         .themedBackground()
         .navigationTitle("Clusters")
         .confirmationDialog(
@@ -138,7 +151,15 @@ struct ClustersView: View {
                         .foregroundStyle(active ? Color.accentColor : Color.secondary)
                         .accessibilityHidden(true)
                     VStack(alignment: .leading) {
-                        Text(model.labels.of(context)).foregroundStyle(Color.primary)
+                        HStack(spacing: 4) {
+                            Text(model.labels.of(context)).foregroundStyle(Color.primary)
+                            if model.vpnOnly.contains(context.fingerprint) {
+                                Image(systemName: "lock.shield")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.secondary)
+                                    .accessibilityLabel(Text("VPN only"))
+                            }
+                        }
                         // Renamed: which talosconfig context that is.
                         if model.labels.given(context) != nil {
                             Text(context.name).font(.caption).foregroundStyle(Color.secondary)
@@ -156,6 +177,7 @@ struct ClustersView: View {
             ColorPicker(String(localized: "Color of \(model.labels.of(context))"), selection: color(of: context), supportsOpacity: false)
                 .labelsHidden()
         }
+        .contextMenu { menu(context) }
         .swipeActions(edge: .trailing) {
             // Not a destructive-role button: the row must stay until the removal is confirmed.
             Button { removing = context } label: { Label("Delete", systemImage: "trash") }
@@ -165,6 +187,24 @@ struct ClustersView: View {
                 Button { startRenaming(context) } label: { Label("Rename", systemImage: "pencil") }
             }
         }
+    }
+
+    @ViewBuilder
+    private func menu(_ context: ContextSummary) -> some View {
+        if !context.fingerprint.isEmpty {
+            Toggle(isOn: Binding(get: { model.vpnOnly.contains(context.fingerprint) },
+                                 set: { model.setVpnOnly($0, for: context) })) {
+                Label("VPN only", systemImage: "lock.shield")
+            }
+        }
+        // Not in screenshot mode (the endpoints shown are fake), nor for the demo.
+        if !model.labels.masked && !context.demo {
+            Button { editingEndpoints = context } label: { Label("Edit endpoints", systemImage: "point.3.connected.trianglepath.dotted") }
+        }
+        if !model.labels.masked && !context.fingerprint.isEmpty {
+            Button { startRenaming(context) } label: { Label("Rename", systemImage: "pencil") }
+        }
+        Button(role: .destructive) { removing = context } label: { Label("Delete", systemImage: "trash") }
     }
 
     private func color(of context: ContextSummary) -> Binding<Color> {

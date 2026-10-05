@@ -19317,6 +19317,1374 @@
         }
       }
     },
+    "Endpoints of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoints de %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoints de %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoints %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoints von %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoint di %@"
+          }
+        }
+      }
+    },
+    "The addresses the app reaches the Talos API through (port 50000 unless given, e.g. 192.168.1.10:50001). Test one with the cluster's credentials; one that does not answer now can still be saved, it may answer over a VPN." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les adresses par lesquelles l'app joint l'API Talos (port 50000 sauf indication, p. ex. 192.168.1.10:50001). Testez-en un avec les identifiants du cluster ; un endpoint qui ne répond pas maintenant peut quand même être enregistré, il répondra peut-être via un VPN."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las direcciones por las que la app llega a la API de Talos (puerto 50000 salvo que se indique, p. ej. 192.168.1.10:50001). Prueba uno con las credenciales del clúster; uno que no responde ahora se puede guardar igualmente, puede responder a través de una VPN."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Адреси, через які застосунок звертається до API Talos (порт 50000, якщо не вказано інший, напр. 192.168.1.10:50001). Перевірте адресу з обліковими даними кластера; ту, що зараз не відповідає, усе одно можна зберегти: вона може відповісти через VPN."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Adressen, über die die App die Talos-API erreicht (Port 50000, sofern nicht angegeben, z. B. 192.168.1.10:50001). Teste einen mit den Zugangsdaten des Clusters; einer, der jetzt nicht antwortet, kann trotzdem gespeichert werden, er antwortet vielleicht über ein VPN."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli indirizzi tramite cui l'app raggiunge l'API Talos (porta 50000 se non indicata, ad es. 192.168.1.10:50001). Provane uno con le credenziali del cluster; uno che ora non risponde può comunque essere salvato, potrebbe rispondere tramite una VPN."
+          }
+        }
+      }
+    },
+    "Add an endpoint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un endpoint"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir un endpoint"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати endpoint"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoint hinzufügen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi un endpoint"
+          }
+        }
+      }
+    },
+    "Answered: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A répondu : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respondió: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відповів: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geantwortet: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ha risposto: %@"
+          }
+        }
+      }
+    },
+    "Test %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tester %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probar %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ testen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prova %@"
+          }
+        }
+      }
+    },
+    "Remove %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прибрати %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ entfernen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuovi %@"
+          }
+        }
+      }
+    },
+    "Search the local network" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chercher sur le réseau local"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar en la red local"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукати в локальній мережі"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokales Netzwerk durchsuchen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca nella rete locale"
+          }
+        }
+      }
+    },
+    "Looks for the nodes of your clusters on the networks around the phone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cherche les nœuds de vos clusters sur les réseaux autour du téléphone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Busca los nodos de tus clústeres en las redes alrededor del teléfono."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукає вузли ваших кластерів у мережах навколо телефона."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sucht die Nodes deiner Cluster in den Netzwerken rund um das Telefon."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca i nodi dei tuoi cluster nelle reti intorno al telefono."
+          }
+        }
+      }
+    },
+    "Looking for Talos nodes…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche de nœuds Talos…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando nodos Talos…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пошук вузлів Talos…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suche nach Talos-Nodes…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricerca di nodi Talos…"
+          }
+        }
+      }
+    },
+    "Networks searched: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réseaux parcourus : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redes analizadas: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переглянуті мережі: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durchsuchte Netzwerke: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reti esaminate: %@"
+          }
+        }
+      }
+    },
+    "No node of your clusters answered on these networks. If you know a node's address, add it as an endpoint." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun nœud de vos clusters n'a répondu sur ces réseaux. Si vous connaissez l'adresse d'un nœud, ajoutez-la comme endpoint."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún nodo de tus clústeres respondió en estas redes. Si conoces la dirección de un nodo, añádela como endpoint."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жоден вузол ваших кластерів не відповів у цих мережах. Якщо ви знаєте адресу вузла, додайте її як endpoint."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Node deiner Cluster hat in diesen Netzwerken geantwortet. Wenn du die Adresse eines Nodes kennst, füge sie als Endpoint hinzu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun nodo dei tuoi cluster ha risposto su queste reti. Se conosci l'indirizzo di un nodo, aggiungilo come endpoint."
+          }
+        }
+      }
+    },
+    "Added to %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouté à %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadido a %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додано до %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinzugefügt zu %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunto a %@"
+          }
+        }
+      }
+    },
+    "Only nodes that accept the cluster's credentials are added. Once the cluster answers, the overview offers to add its other nodes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seuls les nœuds qui acceptent les identifiants du cluster sont ajoutés. Dès que le cluster répond, la vue d'ensemble propose d'ajouter ses autres nœuds."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo se añaden los nodos que aceptan las credenciales del clúster. Cuando el clúster responda, la vista general ofrecerá añadir sus otros nodos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додаються лише вузли, що приймають облікові дані кластера. Щойно кластер відповість, огляд запропонує додати інші його вузли."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur Nodes, die die Zugangsdaten des Clusters akzeptieren, werden hinzugefügt. Sobald der Cluster antwortet, bietet die Übersicht an, seine anderen Nodes hinzuzufügen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vengono aggiunti solo i nodi che accettano le credenziali del cluster. Quando il cluster risponde, la panoramica propone di aggiungere gli altri nodi."
+          }
+        }
+      }
+    },
+    "Edit endpoints" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier les endpoints"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar endpoints"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити endpoints"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoints bearbeiten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica endpoint"
+          }
+        }
+      }
+    },
+    "VPN only" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VPN uniquement"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo VPN"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лише VPN"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur VPN"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo VPN"
+          }
+        }
+      }
+    },
+    "VPN only: without a VPN connected the app does not try the cluster, and background checks wait for it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VPN uniquement : sans VPN connecté, l'app n'essaie pas de joindre le cluster et les vérifications en arrière-plan l'attendent."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo VPN: sin una VPN conectada la app no intenta alcanzar el clúster y las comprobaciones en segundo plano la esperan."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лише VPN: без підключеного VPN застосунок не звертається до кластера, а фонові перевірки чекають на нього."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur VPN: ohne verbundenes VPN versucht die App den Cluster nicht zu erreichen, und Hintergrundprüfungen warten darauf."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo VPN: senza una VPN connessa l'app non prova a raggiungere il cluster e i controlli in background la attendono."
+          }
+        }
+      }
+    },
+    "This cluster is set to be reached over a VPN only, and no VPN is connected. Connect it: this screen reloads by itself." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce cluster est configuré pour n'être joint que via un VPN, et aucun VPN n'est connecté. Connectez-le : cet écran se recharge tout seul."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este clúster está configurado para alcanzarse solo por VPN y no hay ninguna VPN conectada. Conéctala: esta pantalla se recarga sola."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей кластер налаштовано лише для доступу через VPN, а VPN не підключено. Підключіть його: цей екран оновиться сам."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Cluster ist nur über ein VPN erreichbar eingestellt, und kein VPN ist verbunden. Verbinde es: dieser Bildschirm lädt dann von selbst neu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo cluster è impostato per essere raggiunto solo tramite VPN e nessuna VPN è connessa. Connettila: questa schermata si ricarica da sola."
+          }
+        }
+      }
+    },
+    "Wake (Wake-on-LAN)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réveiller (Wake-on-LAN)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Despertar (Wake-on-LAN)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розбудити (Wake-on-LAN)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufwecken (Wake-on-LAN)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Risveglia (Wake-on-LAN)"
+          }
+        }
+      }
+    },
+    "Wake-on-LAN…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake-on-LAN…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake-on-LAN…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake-on-LAN…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake-on-LAN…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake-on-LAN…"
+          }
+        }
+      }
+    },
+    "Wake-on-LAN: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake-on-LAN : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake-on-LAN: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake-on-LAN: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake-on-LAN: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wake-on-LAN: %@"
+          }
+        }
+      }
+    },
+    "Powers the node on by sending a magic packet from this phone. The phone must reach the node's network, directly or through a router that forwards the packet. Kept on this device only." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allume le nœud en envoyant un paquet magique depuis ce téléphone. Le téléphone doit atteindre le réseau du nœud, directement ou via un routeur qui relaie le paquet. Conservé sur cet appareil uniquement."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enciende el nodo enviando un paquete mágico desde este teléfono. El teléfono debe alcanzar la red del nodo, directamente o mediante un router que reenvíe el paquete. Solo se guarda en este dispositivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вмикає вузол, надсилаючи magic packet з цього телефона. Телефон має бачити мережу вузла напряму або через маршрутизатор, що пересилає пакет. Зберігається лише на цьому пристрої."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schaltet den Node ein, indem dieses Telefon ein Magic Packet sendet. Das Telefon muss das Netz des Nodes erreichen, direkt oder über einen Router, der das Paket weiterleitet. Nur auf diesem Gerät gespeichert."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accende il nodo inviando un magic packet da questo telefono. Il telefono deve raggiungere la rete del nodo, direttamente o tramite un router che inoltra il pacchetto. Salvato solo su questo dispositivo."
+          }
+        }
+      }
+    },
+    "MAC address" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse MAC"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dirección MAC"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAC-адреса"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAC-Adresse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indirizzo MAC"
+          }
+        }
+      }
+    },
+    "Not a MAC address (e.g. aa:bb:cc:dd:ee:ff)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse MAC invalide (ex. aa:bb:cc:dd:ee:ff)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No es una dirección MAC (p. ej. aa:bb:cc:dd:ee:ff)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це не MAC-адреса (напр. aa:bb:cc:dd:ee:ff)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine MAC-Adresse (z. B. aa:bb:cc:dd:ee:ff)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è un indirizzo MAC (es. aa:bb:cc:dd:ee:ff)"
+          }
+        }
+      }
+    },
+    "Broadcast address (optional)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse de broadcast (facultatif)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dirección de broadcast (opcional)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Широкомовна адреса (необов'язково)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Broadcast-Adresse (optional)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indirizzo di broadcast (facoltativo)"
+          }
+        }
+      }
+    },
+    "Empty: the broadcast address of the phone's Wi-Fi or Ethernet network" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vide : l'adresse de broadcast du réseau Wi-Fi ou Ethernet du téléphone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vacío: la dirección de broadcast de la red Wi-Fi o Ethernet del teléfono"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порожньо: широкомовна адреса Wi-Fi або Ethernet мережі телефона"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leer: die Broadcast-Adresse des WLAN- oder Ethernet-Netzes des Telefons"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoto: l'indirizzo di broadcast della rete Wi-Fi o Ethernet del telefono"
+          }
+        }
+      }
+    },
+    "Not an IPv4 address or a host name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ni une adresse IPv4, ni un nom d'hôte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No es una dirección IPv4 ni un nombre de host"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це не IPv4-адреса і не ім'я хоста"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weder IPv4-Adresse noch Hostname"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è un indirizzo IPv4 né un nome host"
+          }
+        }
+      }
+    },
+    "UDP port (optional, 9 by default)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port UDP (facultatif, 9 par défaut)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puerto UDP (opcional, 9 por defecto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UDP-порт (необов'язково, типово 9)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UDP-Port (optional, standardmäßig 9)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Porta UDP (facoltativa, 9 di default)"
+          }
+        }
+      }
+    },
+    "Port must be between 1 and 65535" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le port doit être compris entre 1 et 65535"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El puerto debe estar entre 1 y 65535"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порт має бути від 1 до 65535"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port muss zwischen 1 und 65535 liegen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La porta deve essere tra 1 e 65535"
+          }
+        }
+      }
+    },
+    "Forget" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oublier"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Olvidar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Забути"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergessen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dimentica"
+          }
+        }
+      }
+    },
+    "Magic packet sent to %@ (via %@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paquet magique envoyé à %@ (via %@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paquete mágico enviado a %@ (vía %@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magic packet надіслано до %@ (через %@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magic Packet an %@ gesendet (über %@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magic packet inviato a %@ (via %@)"
+          }
+        }
+      }
+    },
+    "Could not send the magic packet: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de l'envoi du paquet magique : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo enviar el paquete mágico: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося надіслати magic packet: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magic Packet konnte nicht gesendet werden: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile inviare il magic packet: %@"
+          }
+        }
+      }
+    },
+    "Open-source licenses" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licences open source"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licencias de código abierto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ліцензії відкритого коду"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open-Source-Lizenzen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licenze open source"
+          }
+        }
+      }
+    },
+    "If Ichor was not allowed to reach devices on your local network, nodes on your Wi-Fi cannot answer. Allow it in the Settings app (Ichor › Local Network)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si Ichor n'a pas été autorisé à joindre les appareils de votre réseau local, les nœuds de votre Wi-Fi ne peuvent pas répondre. Autorisez-le dans l'app Réglages (Ichor › Réseau local)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si no se permitió a Ichor llegar a los dispositivos de tu red local, los nodos de tu Wi-Fi no pueden responder. Permítelo en la app Ajustes (Ichor › Red local)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Якщо Ichor не дозволено звертатися до пристроїв у вашій локальній мережі, вузли у вашій Wi-Fi не можуть відповісти. Дозвольте це в застосунку Параметри (Ichor › Локальна мережа)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn Ichor keine Geräte in deinem lokalen Netzwerk erreichen darf, können die Nodes in deinem WLAN nicht antworten. Erlaube es in der Einstellungen-App (Ichor › Lokales Netzwerk)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se a Ichor non è stato consentito di raggiungere i dispositivi della rete locale, i nodi sulla tua Wi-Fi non possono rispondere. Consentilo nell'app Impostazioni (Ichor › Rete locale)."
+          }
+        }
+      }
+    },
+    "iOS may block broadcast packets from apps. Set the address to a host that relays magic packets to the node's network (a router, for example), or to the node's own address." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS peut bloquer les paquets de broadcast des apps. Indiquez comme adresse un hôte qui relaie les paquets magiques vers le réseau du nœud (un routeur, par exemple), ou l'adresse du nœud lui-même."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS puede bloquear los paquetes de broadcast de las apps. Indica como dirección un host que reenvíe los paquetes mágicos a la red del nodo (un router, por ejemplo), o la dirección del propio nodo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS може блокувати широкомовні пакети застосунків. Вкажіть адресою хост, що пересилає magic packets у мережу вузла (наприклад, маршрутизатор), або власну адресу вузла."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS kann Broadcast-Pakete von Apps blockieren. Gib als Adresse einen Host an, der Magic Packets ins Netz des Nodes weiterleitet (zum Beispiel einen Router), oder die Adresse des Nodes selbst."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS può bloccare i pacchetti di broadcast delle app. Imposta come indirizzo un host che inoltra i magic packet alla rete del nodo (un router, ad esempio), oppure l'indirizzo del nodo stesso."
+          }
+        }
+      }
+    },
+    "Touch and hold a cluster for its endpoints and the VPN only setting." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez longuement un cluster pour ses endpoints et le réglage VPN uniquement."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén pulsado un clúster para ver sus endpoints y el ajuste Solo VPN."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Утримуйте кластер, щоб змінити його endpoints і параметр «Лише VPN»."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halte einen Cluster gedrückt für seine Endpoints und die Einstellung „Nur VPN“."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni premuto un cluster per i suoi endpoint e l'impostazione Solo VPN."
+          }
+        }
+      }
+    },
+    "Found %lld nodes, added as endpoints:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Found %lld node, added as an endpoint:"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Found %lld nodes, added as endpoints:"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld nœud trouvé, ajouté comme endpoint :"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld nœuds trouvés, ajoutés comme endpoints :"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld nœuds trouvés, ajoutés comme endpoints :"
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Se encontró %lld nodo, añadido como endpoint:"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Se encontraron %lld nodos, añadidos como endpoints:"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Se encontraron %lld nodos, añadidos como endpoints:"
+                }
+              }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Знайдено %lld вузол, додано як endpoint:"
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Знайдено %lld вузли, додано як endpoints:"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Знайдено %lld вузлів, додано як endpoints:"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Знайдено %lld вузла, додано як endpoints:"
+                }
+              }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Node gefunden, als Endpoint hinzugefügt:"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Nodes gefunden, als Endpoints hinzugefügt:"
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Trovato %lld nodo, aggiunto come endpoint:"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Trovati %lld nodi, aggiunti come endpoint:"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Trovati %lld nodi, aggiunti come endpoint:"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Reveal secrets" : {
       "extractionState" : "manual",
       "localizations" : {
