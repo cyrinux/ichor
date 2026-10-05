@@ -122,6 +122,8 @@ enum Route: Hashable {
     case changelog
     /// The bundled third-party licenses.
     case licenses
+    /// The projects the app integrates with, and which ones the cluster runs.
+    case integrations
     case etcd
     case kubespan
     /// Kubernetes Deployments, StatefulSets and DaemonSets (os:admin).
@@ -178,6 +180,7 @@ struct MainNavigation: View {
                     case .supportBundle: SupportBundleView()
                     case .changelog: ChangelogView()
                     case .licenses: LicensesView()
+                    case .integrations: IntegrationsView()
                     case .etcd: EtcdView()
                     case .kubespan: KubeSpanView()
                     case .workloads: KubernetesView()

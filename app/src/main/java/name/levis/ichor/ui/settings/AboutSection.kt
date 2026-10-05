@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.NewReleases
@@ -40,7 +41,7 @@ import name.levis.ichor.ui.components.SectionTitle
 private const val LICENSE_PATH = "/blob/main/LICENSE"
 
 @Composable
-fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit, onFunding: () -> Unit) {
+fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit, onIntegrations: () -> Unit, onFunding: () -> Unit) {
     val context = LocalContext.current
     var donating by rememberSaveable { mutableStateOf<Donation?>(null) }
     donating?.let { DonateDialog(it) { donating = null } }
@@ -56,6 +57,7 @@ fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit, onFunding: () 
             Link(Icons.Outlined.Code, stringResource(R.string.about_source)) { openUrl(context, REPO_URL_BASE + BuildConfig.UPDATE_REPO) }
             Link(Icons.Outlined.Gavel, stringResource(R.string.about_license)) { openUrl(context, REPO_URL_BASE + BuildConfig.UPDATE_REPO + LICENSE_PATH) }
             Link(Icons.Outlined.Description, stringResource(R.string.about_licenses), onLicenses)
+            Link(Icons.Outlined.Extension, stringResource(R.string.integrations_title), onIntegrations)
             Link(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.about_talos)) { openUrl(context, TALOS_URL) }
             if (BuildConfig.FEATURE_FUNDING) Link(Icons.Outlined.FavoriteBorder, stringResource(R.string.funding_title), onFunding)
             if (BuildConfig.DONATIONS) {

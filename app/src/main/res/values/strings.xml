@@ -485,6 +485,13 @@
     <string name="about_license">License: Apache 2.0</string>
     <string name="about_licenses">Open-source licenses</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
+    <string name="integrations_title">Integrations</string>
+    <string name="integrations_desc">The projects Ichor reads through the Kubernetes API, found on the cluster from the API groups it serves. Tap one to open its website.</string>
+    <string name="integrations_needs_admin">Detecting them on the cluster needs an os:admin config.</string>
+    <string name="integrations_no_api">no API, found by its pods</string>
+    <string name="integrations_detected">Detected</string>
+    <string name="integrations_not_detected">Not detected</string>
+    <string name="integrations_website">%1$s website</string>
     <string name="about_sponsor">Sponsor on GitHub</string>
     <string name="funding_title">Fund features</string>
     <string name="funding_intro">Pick the features you want next. What each one raises shows what matters most to you, and pays for the time to build it.</string>

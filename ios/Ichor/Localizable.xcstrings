@@ -1,6 +1,41 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ website" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Site de %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitio web de %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сайт %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Website von %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sito di %@"
+          }
+        }
+      }
+    },
     "%lld ready" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -499,6 +534,111 @@
         }
       }
     },
+    "Detected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détecté"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detectado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виявлено"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erkannt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rilevato"
+          }
+        }
+      }
+    },
+    "Detecting them on the cluster needs an os:admin config." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les détecter sur le cluster demande une configuration os:admin."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detectarlos en el clúster requiere una configuración os:admin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для виявлення в кластері потрібна конфігурація os:admin."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für die Erkennung im Cluster ist eine os:admin-Konfiguration nötig."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rilevarli sul cluster richiede una configurazione os:admin."
+          }
+        }
+      }
+    },
+    "Integrations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intégrations"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integraciones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інтеграції"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integrationen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integrazioni"
+          }
+        }
+      }
+    },
     "Live cluster usage" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -577,6 +717,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rete locale"
+          }
+        }
+      }
+    },
+    "Not detected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non détecté"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No detectado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не виявлено"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht erkannt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non rilevato"
           }
         }
       }
@@ -984,6 +1159,41 @@
         }
       }
     },
+    "The projects Ichor reads through the Kubernetes API, found on the cluster from the API groups it serves. Tap one to open its website." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les projets qu’Ichor lit via l’API Kubernetes, détectés sur le cluster d’après les groupes d’API qu’il sert. Touchez-en un pour ouvrir son site."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los proyectos que Ichor lee a través de la API de Kubernetes, detectados en el clúster según los grupos de API que sirve. Toca uno para abrir su sitio web."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проєкти, які Ichor читає через Kubernetes API, виявлені в кластері за групами API, які він обслуговує. Торкніться проєкту, щоб відкрити його сайт."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Projekte, die Ichor über die Kubernetes-API liest, im Cluster anhand der bereitgestellten API-Gruppen erkannt. Tippe auf eines, um seine Website zu öffnen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I progetti che Ichor legge tramite l’API di Kubernetes, rilevati sul cluster in base ai gruppi di API che serve. Tocca un progetto per aprirne il sito."
+          }
+        }
+      }
+    },
     "Until the reboot Ichor may drive the download and install: in the background iOS pauses it, and the upgrade can stall." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1295,6 +1505,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "новий"
+          }
+        }
+      }
+    },
+    "no API, found by its pods" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pas d’API, trouvé par ses pods"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sin API, encontrado por sus pods"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "без API, знайдено за його подами"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keine API, über seine Pods gefunden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nessuna API, trovato dai suoi pod"
           }
         }
       }

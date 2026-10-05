@@ -61,6 +61,7 @@ fun SettingsScreen(
     onSupportBundle: () -> Unit,
     onChangelog: () -> Unit,
     onLicenses: () -> Unit,
+    onIntegrations: () -> Unit,
     onFunding: () -> Unit,
     onCleared: () -> Unit,
 ) {
@@ -114,7 +115,7 @@ fun SettingsScreen(
                 }
                 support.notice?.let { InfoNotice(it.text()) }
             }
-            AboutSection(onChangelog, onLicenses, onFunding)
+            AboutSection(onChangelog, onLicenses, onIntegrations, onFunding)
             if (BuildConfig.SELF_UPDATE) UpdateSection((LocalContext.current.applicationContext as TalosApp).updateManager)
         }
     }

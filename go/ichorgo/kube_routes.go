@@ -95,10 +95,10 @@ func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteLi
 	wg.Go(func() { errs[0] = getList(ctx, k, "/apis/networking.k8s.io/v1/ingresses", &ingresses) })
 	// The Gateway API is optional: without its CRDs, no HTTPRoute.
 	wg.Go(func() {
-		errs[1] = ignoreNotFound(getList(ctx, k, "/apis/gateway.networking.k8s.io/v1/httproutes", &httpRoutes))
+		errs[1] = ignoreNotFound(getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/httproutes", &httpRoutes))
 	})
 	// Only used to tell http from https: a URL is still worth showing without it.
-	wg.Go(func() { _ = getList(ctx, k, "/apis/gateway.networking.k8s.io/v1/gateways", &gateways) })
+	wg.Go(func() { _ = getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/gateways", &gateways) })
 	wg.Wait()
 
 	if err := errors.Join(errs...); err != nil {

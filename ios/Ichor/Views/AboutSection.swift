@@ -19,6 +19,7 @@ struct AboutSection: View {
             Link(destination: ProjectLinks.repo) { Label("Source code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right") }
             Link(destination: ProjectLinks.talos) { Label("Talos Linux (talos.dev)", systemImage: "arrow.up.right.square") }
             NavigationLink(value: Route.licenses) { Label("Open-source licenses", systemImage: "doc.text") }
+            NavigationLink(value: Route.integrations) { Label("Integrations", systemImage: "puzzlepiece.extension") }
             if Distribution.donations {
                 Link(destination: ProjectLinks.sponsor) { Label("Sponsor on GitHub", systemImage: "heart") }
                 ForEach(Donation.allCases) { coin in
