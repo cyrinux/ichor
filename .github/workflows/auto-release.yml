@@ -13,8 +13,15 @@ name: Auto-release
 on:
   schedule:
     - cron: "17 5 * * *" # daily, 05:17 UTC
+  # Run by hand, e.g. from the GitHub mobile app (repo > Actions > Auto-release > Run workflow):
+  # `bump` forces a release of that size even with only chore/docs/... commits since the tag.
   workflow_dispatch:
     inputs:
+      bump:
+        description: Version bump
+        type: choice
+        options: [auto, patch, minor, major]
+        default: auto
       dry_run:
         description: Only print the version that would be tagged
         type: boolean
@@ -51,12 +58,16 @@ jobs:
 
       - name: Next version
         id: next
+        env:
+          BUMP: ${{ inputs.bump || 'auto' }}
         run: |
-          result="$(scripts/next-version.py --json)"
+          args=(--json)
+          [[ "$BUMP" == auto ]] || args+=(--bump "$BUMP")
+          result="$(scripts/next-version.py "${args[@]}")"
           echo "$result"
           next="$(jq -r '.next // empty' <<<"$result")"
           if [[ -z "$next" ]]; then
-            echo "::notice::No feat, fix, perf or breaking commit since v$(jq -r .current <<<"$result"): nothing to release."
+            echo "::notice::Nothing to release since v$(jq -r .current <<<"$result") (bump: $BUMP)."
           fi
           echo "version=$next" >>"$GITHUB_OUTPUT"
 

@@ -3,6 +3,7 @@
 import importlib.util
 import os
 import unittest
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location("next_version", os.path.join(HERE, "next-version.py"))
@@ -34,6 +35,31 @@ class BumpedTest(unittest.TestCase):
 
     def test_major_resets_minor_and_patch(self):
         self.assertEqual(next_version.bumped("1.8.4", "major"), "2.0.0")
+
+
+class ForcedBumpTest(unittest.TestCase):
+    """--bump, as the phone's "Run workflow" passes it."""
+
+    def setUp(self):
+        for name, fake in [("release_tags", lambda: ["v1.8.4"]),
+                           ("sections", lambda _range: [])]:  # only chore/docs commits
+            patcher = mock.patch.object(next_version.changelog, name, fake)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def commits_since_tag(self, count):
+        patcher = mock.patch.object(next_version.changelog, "git", lambda *args: str(count))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_forced_bump_releases_without_user_facing_commits(self):
+        self.commits_since_tag(3)
+        self.assertIsNone(next_version.next_version()["next"])
+        self.assertEqual(next_version.next_version("patch")["next"], "1.8.5")
+
+    def test_tagged_head_releases_nothing_even_forced(self):
+        self.commits_since_tag(0)
+        self.assertIsNone(next_version.next_version("minor")["next"])
 
 
 class ClassifyTest(unittest.TestCase):

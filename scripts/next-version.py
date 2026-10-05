@@ -6,8 +6,12 @@ a "!" or BREAKING CHANGE -> major, feat -> minor, fix or perf -> patch. Other ty
 (chore, ci, docs, test, refactor) are not user-facing and release nothing, so when the
 commits since the tag hold none of the above this prints nothing and exits 1.
 
+--bump forces the bump (a release by hand, from the phone): any commit since the tag is
+then enough, but a tagged HEAD still releases nothing.
+
 Usage:
   scripts/next-version.py           # e.g. 1.9.0, or nothing (exit 1) when there is no release
+  scripts/next-version.py --bump patch
   scripts/next-version.py --json    # {"current": "1.8.4", "next": "1.9.0", "bump": "minor"}
 """
 
@@ -42,20 +46,24 @@ def bumped(version, bump):
     return f"{major}.{minor}.{patch + 1}"
 
 
-def next_version():
+def next_version(forced=None):
     tags = changelog.release_tags()
     current = tags[0].lstrip("v") if tags else "0.0.0"
-    kinds = [s["kind"] for s in changelog.sections(f"{tags[0]}..HEAD" if tags else "HEAD")]
-    bump = bump_for(kinds)
+    since = f"{tags[0]}..HEAD" if tags else "HEAD"
+    if forced:
+        bump = forced if changelog.git("rev-list", "--count", since) not in ("", "0") else None
+    else:
+        bump = bump_for(s["kind"] for s in changelog.sections(since))
     return {"current": current, "next": bumped(current, bump) if bump else None, "bump": bump}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--bump", choices=RANK, help="force this bump instead of the commits'")
     args = parser.parse_args()
 
-    result = next_version()
+    result = next_version(args.bump)
     if args.json:
         print(json.dumps(result))
     elif result["next"]:
