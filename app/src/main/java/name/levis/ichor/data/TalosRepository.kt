@@ -12,6 +12,8 @@ import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
+import name.levis.ichor.model.ArgoFreezeAction
+import name.levis.ichor.model.ArgoFreezeOptions
 import name.levis.ichor.model.ArgoNetwork
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ArgoSyncOptions
@@ -649,6 +651,16 @@ class TalosRepository(
         val json = options?.let { TalosJson.encodeToString(ArgoSyncOptions.serializer(), it) }.orEmpty()
         Ichorgo.kubeArgoAction(cfg, ctx, server, app.namespace, app.name, action.wire, json)
     }
+
+    /**
+     * Changes the sync windows of the AppProject [namespace]/[project] (os:admin): freezes apps
+     * for a while, extends or ends a freeze, removes a window, clears ended freezes. Throws when
+     * refused.
+     */
+    suspend fun argoFreeze(namespace: String, project: String, action: ArgoFreezeAction, options: ArgoFreezeOptions = ArgoFreezeOptions()) =
+        kubeCall { cfg, ctx, server ->
+            Ichorgo.kubeArgoFreeze(cfg, ctx, server, namespace, project, action.wire, TalosJson.encodeToString(ArgoFreezeOptions.serializer(), options))
+        }
 
     /**
      * How traffic reaches [app] (os:admin): hosts, Gateways, routes, Services, pods and nodes.

@@ -2531,4 +2531,109 @@
     <string name="flux_done_force">%1$s: оновлення запитано</string>
     <string name="flux_done_reset">%1$s: збої скинуто</string>
     <string name="overview_card_desc_flux">Готові, ті, що узгоджуються, та збійні Kustomization і HelmRelease</string>
+
+    <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
+    <string name="argo_freeze_title">Заморозити Argo CD</string>
+    <string name="argo_freeze_button">Заморозити автосинхронізацію…</string>
+    <string name="argo_freeze_confirm">Заморозити</string>
+    <string name="argo_freeze_scope">Обсяг</string>
+    <string name="argo_freeze_scope_app">Цей застосунок</string>
+    <string name="argo_freeze_scope_namespace">Простір імен %1$s</string>
+    <string name="argo_freeze_scope_project">Проєкт %1$s</string>
+    <string name="argo_freeze_for">Тривалість</string>
+    <string name="argo_freeze_minutes">%1$d хв</string>
+    <string name="argo_freeze_hours">%1$d год</string>
+    <string name="argo_freeze_until">До %1$s</string>
+    <string name="argo_freeze_reason">Причина (необов\'язково)</string>
+    <string name="argo_freeze_manual_sync">Дозволити ручні синхронізації</string>
+    <string name="argo_freeze_manual_sync_desc">Синхронізація, запущена навмисно, все одно виконується під час заморозки.</string>
+    <string name="argo_freeze_no_project">Проєкт %1$s не читається: нічого заморожувати.</string>
+    <string name="argo_freeze_server_side">Проєкт %1$s застосовується з Git через %2$s із server-side apply: заморозка може не пережити синхронізацію %2$s.</string>
+    <string name="argo_freeze_managed">Проєкт %1$s застосовується з Git через %2$s. Заморозки немає в Git: вона діє до свого завершення.</string>
+    <string name="argo_freeze_pause_instead">Натомість призупинити автосинхронізацію (до відновлення)</string>
+    <string name="argo_freeze_group">Заморозити %1$s</string>
+    <string name="argo_frozen_until">Заморожено до %1$s</string>
+    <string name="argo_frozen_by_ichor">Заморожено з Ichor</string>
+    <string name="argo_frozen_by_window">Вікно синхронізації проєкту %1$s</string>
+    <string name="argo_frozen_manual_allowed">ручні синхронізації дозволені</string>
+    <string name="argo_frozen_manual_blocked">ручні синхронізації заблоковані</string>
+    <string name="argo_freeze_extend_hour">+1 год</string>
+    <string name="argo_unfreeze">Розморозити</string>
+    <string name="argo_unfreeze_title">Завершити заморозку?</string>
+    <string name="argo_unfreeze_clean">Argo CD відновлює автосинхронізацію та самовідновлення застосунків цієї заморозки.</string>
+    <string name="argo_unfreeze_drift">Argo CD поверне це до стану в Git:</string>
+    <string name="argo_unfreeze_committed">Виправлення закомічено?</string>
+    <string name="argo_unfreeze_only">Завершити</string>
+    <string name="argo_unfreeze_and_sync">Завершити й синхронізувати</string>
+    <string name="argo_window_remove_title">Видалити це вікно синхронізації?</string>
+    <string name="argo_window_remove_text">Ichor не створював це вікно: імовірно, воно з Git. Argo CD може повернути його під час наступної синхронізації %1$s, тож видаліть його і в Git.</string>
+    <string name="argo_window_remove_text_unmanaged">Ichor не створював це вікно. Видалити його з проєкту %1$s?</string>
+    <string name="argo_window_remove">Видалити</string>
+    <string name="argo_windows_title">Вікна синхронізації</string>
+    <string name="argo_windows_active">Активні</string>
+    <string name="argo_windows_upcoming">Майбутні</string>
+    <string name="argo_windows_expired">Завершені заморозки</string>
+    <string name="argo_windows_clear">Очистити</string>
+    <string name="argo_windows_none">Немає вікон синхронізації: Argo CD може синхронізувати будь-коли.</string>
+    <string name="argo_window_all_apps">усі застосунки</string>
+    <string name="argo_window_namespaces">простір імен %1$s</string>
+    <string name="argo_window_clusters">кластер %1$s</string>
+    <string name="argo_window_ichor">Заморозка Ichor</string>
+    <string name="argo_window_not_ichor">Не з Ichor</string>
+    <string name="argo_window_deny">Вікно заборони</string>
+    <string name="argo_window_allow">Вікно дозволу</string>
+    <string name="argo_window_left">Залишилося %1$s</string>
+    <string name="argo_window_starts">Починається %1$s</string>
+    <string name="argo_window_ended">Завершено %1$s</string>
+    <string name="argo_window_unreadable">Не читається: %1$s</string>
+    <string name="argo_filter_frozen">Заморожені</string>
+    <string name="argo_badge_frozen">Заморожено</string>
+    <string name="argo_done_freeze">Заморожено</string>
+    <string name="argo_done_extend">Заморозку подовжено</string>
+    <string name="argo_done_unfreeze">Заморозку завершено</string>
+    <string name="argo_done_clear_expired">Завершені заморозки очищено</string>
+    <string name="argo_freeze_reminder_title">Заморозка Argo CD закінчується</string>
+    <string name="argo_freeze_reminder_text">Заморозка %1$s закінчується о %2$s: тоді Argo CD поверне те, що змінено вручну.</string>
+    <string name="argo_freeze_extended_until">Заморозку подовжено до %1$s.</string>
+    <string name="argo_freeze_extend_failed">Не вдалося подовжити заморозку: %1$s</string>
+    <string name="argo_freeze_extend_other_cluster">Перемкніть Ichor на кластер цієї заморозки, щоб подовжити її.</string>
+    <plurals name="argo_freeze_preview">
+        <item quantity="one">Argo CD не синхронізуватиме й не відновлюватиме %1$d застосунок (%2$s) до %3$s. Зміни, зроблені вручну, залишаться до того часу.</item>
+        <item quantity="few">Argo CD не синхронізуватиме й не відновлюватиме %1$d застосунки (%2$s) до %3$s. Зміни, зроблені вручну, залишаться до того часу.</item>
+        <item quantity="many">Argo CD не синхронізуватиме й не відновлюватиме %1$d застосунків (%2$s) до %3$s. Зміни, зроблені вручну, залишаться до того часу.</item>
+        <item quantity="other">Argo CD не синхронізуватиме й не відновлюватиме %1$d застосунку (%2$s) до %3$s. Зміни, зроблені вручну, залишаться до того часу.</item>
+    </plurals>
+    <plurals name="argo_frozen_drifted">
+        <item quantity="one">%1$d ресурс змінено вручну</item>
+        <item quantity="few">%1$d ресурси змінено вручну</item>
+        <item quantity="many">%1$d ресурсів змінено вручну</item>
+        <item quantity="other">%1$d ресурсу змінено вручну</item>
+    </plurals>
+    <plurals name="argo_window_apps_count">
+        <item quantity="one">%1$d застосунок</item>
+        <item quantity="few">%1$d застосунки</item>
+        <item quantity="many">%1$d застосунків</item>
+        <item quantity="other">%1$d застосунку</item>
+    </plurals>
+    <plurals name="argo_card_freezes">
+        <item quantity="one">%1$d заморозка · до %2$s</item>
+        <item quantity="few">%1$d заморозки · найближча до %2$s</item>
+        <item quantity="many">%1$d заморозок · найближча до %2$s</item>
+        <item quantity="other">%1$d заморозки · найближча до %2$s</item>
+    </plurals>
+
+    <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
+    <string name="argo_revert_title">Argo CD скасує це</string>
+    <string name="argo_revert_text">%1$s розгортає це навантаження з увімкненим самовідновленням: за кілька хвилин воно поверне репліки до стану в Git. Спершу заморозьте %1$s, щоб зберегти зміну на якийсь час.</string>
+    <string name="argo_revert_freeze">Заморозити %1$s на 1 год і масштабувати</string>
+    <string name="argo_revert_anyway">Усе одно масштабувати</string>
+    <string name="argo_freeze_reason_scale">масштабування до %1$d</string>
+    <string name="workloads_scale_freeze_failed">Не вдалося заморозити %1$s, нічого не масштабовано: %2$s</string>
+    <string name="workloads_scale_done_frozen">%1$s масштабовано до %2$d; %3$s заморожено на 1 год</string>
+    <plurals name="argo_unfreeze_covers">
+        <item quantity="one">Ця заморозка охоплює %1$d застосунок: він теж відновиться.</item>
+        <item quantity="few">Ця заморозка охоплює %1$d застосунки: усі вони відновляться.</item>
+        <item quantity="many">Ця заморозка охоплює %1$d застосунків: усі вони відновляться.</item>
+        <item quantity="other">Ця заморозка охоплює %1$d застосунку: усі вони відновляться.</item>
+    </plurals>
 </resources>

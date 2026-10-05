@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.argocd
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,9 +37,12 @@ import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.dataservices.HealthDot
 import name.levis.ichor.ui.theme.LocalStatusColors
 
-/** ApplicationSets (worst of their apps, conditions) and AppProjects (description, sync windows). */
+/**
+ * ApplicationSets (worst of their apps, conditions) and AppProjects (description, sync windows);
+ * a project with windows opens them ([onWindows]).
+ */
 @Composable
-fun ArgoSetsTab(status: ArgoStatus) {
+fun ArgoSetsTab(status: ArgoStatus, onWindows: () -> Unit) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
         item(key = "sets-title") { SectionTitle(stringResource(R.string.argo_app_sets), Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) }
         if (status.appSetsError.isNotEmpty()) item(key = "sets-error") {
@@ -52,7 +56,7 @@ fun ArgoSetsTab(status: ArgoStatus) {
         item(key = "projects-title") { SectionTitle(stringResource(R.string.argo_projects), Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp)) }
         if (status.projects.isEmpty()) item(key = "projects-empty") { EmptyText(stringResource(R.string.argo_no_projects)) }
         items(status.projects, key = { "project/${it.namespace}/${it.name}" }) { project ->
-            ProjectRow(project)
+            ProjectRow(project, onWindows.takeIf { project.windows.isNotEmpty() })
             HorizontalDivider()
         }
     }
@@ -86,9 +90,10 @@ private fun AppSetRow(set: ArgoAppSet) {
 }
 
 @Composable
-private fun ProjectRow(project: ArgoProject) {
+private fun ProjectRow(project: ArgoProject, onWindows: (() -> Unit)?) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    val clickable = onWindows?.let { Modifier.clickable(onClickLabel = stringResource(R.string.argo_windows_title), onClick = it) } ?: Modifier
+    Row(Modifier.fillMaxWidth().then(clickable).padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(Icons.Outlined.Folder, contentDescription = null, tint = muted, modifier = Modifier.size(20.dp))
         Spacer(Modifier.size(12.dp))
         Column(Modifier.weight(1f)) {

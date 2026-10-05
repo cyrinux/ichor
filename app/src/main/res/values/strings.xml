@@ -2351,4 +2351,99 @@
     <string name="flux_done_force">%1$s: upgrade requested</string>
     <string name="flux_done_reset">%1$s: failures reset</string>
     <string name="overview_card_desc_flux">Ready, reconciling and failing Kustomizations and HelmReleases</string>
+
+    <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
+    <string name="argo_freeze_title">Freeze Argo CD</string>
+    <string name="argo_freeze_button">Freeze auto-sync…</string>
+    <string name="argo_freeze_confirm">Freeze</string>
+    <string name="argo_freeze_scope">Scope</string>
+    <string name="argo_freeze_scope_app">This app</string>
+    <string name="argo_freeze_scope_namespace">Namespace %1$s</string>
+    <string name="argo_freeze_scope_project">Project %1$s</string>
+    <string name="argo_freeze_for">For</string>
+    <string name="argo_freeze_minutes">%1$d min</string>
+    <string name="argo_freeze_hours">%1$d h</string>
+    <string name="argo_freeze_until">Until %1$s</string>
+    <string name="argo_freeze_reason">Reason (optional)</string>
+    <string name="argo_freeze_manual_sync">Allow manual syncs</string>
+    <string name="argo_freeze_manual_sync_desc">A sync started on purpose still runs during the freeze.</string>
+    <string name="argo_freeze_no_project">Project %1$s cannot be read: there is nothing to freeze.</string>
+    <string name="argo_freeze_server_side">Project %1$s is applied from Git by %2$s with server-side apply: the freeze may not survive a sync of %2$s.</string>
+    <string name="argo_freeze_managed">Project %1$s is applied from Git by %2$s. The freeze is not in Git: it lasts until it ends.</string>
+    <string name="argo_freeze_pause_instead">Pause auto-sync instead (until resumed)</string>
+    <string name="argo_freeze_group">Freeze %1$s</string>
+    <string name="argo_frozen_until">Frozen until %1$s</string>
+    <string name="argo_frozen_by_ichor">Frozen from Ichor</string>
+    <string name="argo_frozen_by_window">A sync window of project %1$s</string>
+    <string name="argo_frozen_manual_allowed">manual syncs allowed</string>
+    <string name="argo_frozen_manual_blocked">manual syncs blocked</string>
+    <string name="argo_freeze_extend_hour">+1 h</string>
+    <string name="argo_unfreeze">Unfreeze</string>
+    <string name="argo_unfreeze_title">End the freeze?</string>
+    <string name="argo_unfreeze_clean">Argo CD resumes auto-sync and self-heal for the apps of this freeze.</string>
+    <string name="argo_unfreeze_drift">Argo CD will put these back as Git has them:</string>
+    <string name="argo_unfreeze_committed">Is the fix committed?</string>
+    <string name="argo_unfreeze_only">End</string>
+    <string name="argo_unfreeze_and_sync">End and sync now</string>
+    <string name="argo_window_remove_title">Remove this sync window?</string>
+    <string name="argo_window_remove_text">Ichor did not create this window: it likely comes from Git. Argo CD may put it back on the next sync of %1$s, so remove it in Git too.</string>
+    <string name="argo_window_remove_text_unmanaged">Ichor did not create this window. Remove it from project %1$s?</string>
+    <string name="argo_window_remove">Remove</string>
+    <string name="argo_windows_title">Sync windows</string>
+    <string name="argo_windows_active">Active</string>
+    <string name="argo_windows_upcoming">Upcoming</string>
+    <string name="argo_windows_expired">Ended freezes</string>
+    <string name="argo_windows_clear">Clear</string>
+    <string name="argo_windows_none">No sync windows: Argo CD may sync at any time.</string>
+    <string name="argo_window_all_apps">all apps</string>
+    <string name="argo_window_namespaces">namespace %1$s</string>
+    <string name="argo_window_clusters">cluster %1$s</string>
+    <string name="argo_window_ichor">Ichor freeze</string>
+    <string name="argo_window_not_ichor">Not from Ichor</string>
+    <string name="argo_window_deny">Deny window</string>
+    <string name="argo_window_allow">Allow window</string>
+    <string name="argo_window_left">%1$s left</string>
+    <string name="argo_window_starts">Starts %1$s</string>
+    <string name="argo_window_ended">Ended %1$s</string>
+    <string name="argo_window_unreadable">Unreadable: %1$s</string>
+    <string name="argo_filter_frozen">Frozen</string>
+    <string name="argo_badge_frozen">Frozen</string>
+    <string name="argo_done_freeze">Frozen</string>
+    <string name="argo_done_extend">Freeze extended</string>
+    <string name="argo_done_unfreeze">Freeze ended</string>
+    <string name="argo_done_clear_expired">Ended freezes cleared</string>
+    <string name="argo_freeze_reminder_title">Argo CD freeze ending</string>
+    <string name="argo_freeze_reminder_text">The freeze on %1$s ends at %2$s: Argo CD then puts back what was changed by hand.</string>
+    <string name="argo_freeze_extended_until">Freeze extended until %1$s.</string>
+    <string name="argo_freeze_extend_failed">Could not extend the freeze: %1$s</string>
+    <string name="argo_freeze_extend_other_cluster">Switch Ichor to the cluster of this freeze to extend it.</string>
+    <plurals name="argo_freeze_preview">
+        <item quantity="one">Argo CD will not auto-sync or self-heal %1$d app (%2$s) until %3$s. Changes made by hand stay until then.</item>
+        <item quantity="other">Argo CD will not auto-sync or self-heal %1$d apps (%2$s) until %3$s. Changes made by hand stay until then.</item>
+    </plurals>
+    <plurals name="argo_frozen_drifted">
+        <item quantity="one">%1$d resource changed by hand</item>
+        <item quantity="other">%1$d resources changed by hand</item>
+    </plurals>
+    <plurals name="argo_window_apps_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
+    <plurals name="argo_card_freezes">
+        <item quantity="one">%1$d freeze · ends %2$s</item>
+        <item quantity="other">%1$d freezes · next ends %2$s</item>
+    </plurals>
+
+    <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
+    <string name="argo_revert_title">Argo CD will revert this</string>
+    <string name="argo_revert_text">%1$s deploys this workload with self-heal on: within minutes it puts the replicas back as Git has them. Freeze %1$s first to keep your change for a while.</string>
+    <string name="argo_revert_freeze">Freeze %1$s 1 h, then scale</string>
+    <string name="argo_revert_anyway">Scale anyway</string>
+    <string name="argo_freeze_reason_scale">scale to %1$d</string>
+    <string name="workloads_scale_freeze_failed">Could not freeze %1$s, nothing scaled: %2$s</string>
+    <string name="workloads_scale_done_frozen">%1$s scaled to %2$d; %3$s frozen for 1 h</string>
+    <plurals name="argo_unfreeze_covers">
+        <item quantity="one">This freeze covers %1$d app: it resumes too.</item>
+        <item quantity="other">This freeze covers %1$d apps: they all resume.</item>
+    </plurals>
 </resources>

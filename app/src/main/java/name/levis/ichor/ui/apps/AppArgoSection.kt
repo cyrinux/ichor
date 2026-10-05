@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sync
@@ -40,6 +41,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.argocd.HealthGlyph
 import name.levis.ichor.ui.argocd.OwnerChip
 import name.levis.ichor.ui.argocd.SyncGlyph
+import name.levis.ichor.ui.argocd.freezeClock
 import name.levis.ichor.ui.argocd.waveProgress
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.ConfirmDialog
@@ -148,6 +150,18 @@ private fun ArgoAppCard(app: ArgoApp, busy: Boolean, onSync: () -> Unit, onRefre
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
+            }
+            // A hotfix is made here: say Argo CD holds off, and until when (freezing is on the app page).
+            app.freeze?.let { freeze ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.AcUnit, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                    Text(
+                        stringResource(R.string.argo_frozen_until, freezeClock(freeze.until)),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 6.dp),
+                    )
+                }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 FilledTonalButton(onClick = { confirm = true }, enabled = !busy && !app.isRunning) {

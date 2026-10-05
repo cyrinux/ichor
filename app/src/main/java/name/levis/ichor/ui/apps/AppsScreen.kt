@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
+import name.levis.ichor.monitor.freezeReminderHook
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.data.activeSummary
@@ -77,7 +78,7 @@ fun AppsScreen(
     vm: AppsViewModel = viewModel(factory = factory { AppsViewModel(app.talosRepository) }),
     workloadsVm: AppWorkloadsViewModel = viewModel(factory = factory { AppWorkloadsViewModel(app.talosRepository) }),
     routesVm: AppRoutesViewModel = viewModel(factory = factory { AppRoutesViewModel(app.talosRepository) }),
-    argoVm: ArgoViewModel = viewModel(key = "apps-argocd", factory = factory { ArgoViewModel(app.talosRepository) }),
+    argoVm: ArgoViewModel = viewModel(key = "apps-argocd", factory = factory { ArgoViewModel(app.talosRepository, freezeReminderHook(app)) }),
     fluxVm: FluxViewModel = viewModel(key = "apps-flux", factory = factory { FluxViewModel(app.talosRepository) }),
 ) {
     val application = LocalContext.current.applicationContext as TalosApp

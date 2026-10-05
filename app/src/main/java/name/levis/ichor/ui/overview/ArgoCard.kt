@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -35,6 +36,7 @@ import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.model.activeFreezes
 import name.levis.ichor.model.allFine
 import name.levis.ichor.model.levelCounts
 import name.levis.ichor.model.likelyCause
@@ -46,6 +48,7 @@ import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.argocd.ArgoAppIcon
 import name.levis.ichor.ui.argocd.HealthGlyph
 import name.levis.ichor.ui.argocd.causeText
+import name.levis.ichor.ui.argocd.freezeClock
 import name.levis.ichor.ui.argocd.waveProgress
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
@@ -105,12 +108,31 @@ private fun Body(status: ArgoStatus, downNodes: Set<String>) {
         return
     }
     ArgoSummary(status)
+    FreezesLine(status)
     if (status.allFine) {
         MutedText(stringResource(R.string.argo_card_all_fine), maxLines = 2, overflow = TextOverflow.Ellipsis)
         return
     }
     status.runningSyncs.forEach { SyncingLine(it) }
     status.problemApps.take(MAX_PROBLEMS).forEach { ProblemLine(it, downNodes) }
+}
+
+/** "❄ 2 freezes · next ends 15:42" while deny sync windows stop automated syncs. */
+@Composable
+private fun FreezesLine(status: ArgoStatus) {
+    val freezes = status.activeFreezes
+    if (freezes.isEmpty()) return
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Outlined.AcUnit, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+        Text(
+            pluralStringResource(R.plurals.argo_card_freezes, freezes.size, freezes.size, freezeClock(freezes.first().window.endsAt)),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(start = 6.dp),
+        )
+    }
 }
 
 /** The segmented health bar and "● 21 healthy ● 2 needs attention…": the overview card and the Argo CD app sheet. */

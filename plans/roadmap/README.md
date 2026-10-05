@@ -13,14 +13,14 @@ Every idea was checked against the code (Go core, Android, iOS) on 2026-10-04. S
 | # | Feature | Status today | Plan | Size |
 |---|---------|--------------|------|------|
 | D1 | Node maintenance (cordon → drain → reboot → wait Ready → uncordon) | **implemented** (M8 "drain first" for upgrades remains) | [01-node-maintenance.md](devops/01-node-maintenance.md) | L |
-| D2 | Small kubectl actions (scale, suspend CronJob, Deployment rollback, previous logs, pod logs from Workloads) | **implemented** (Argo self-heal warning remains) | [02-kubectl-actions.md](devops/02-kubectl-actions.md) | M |
+| D2 | Small kubectl actions (scale, suspend CronJob, Deployment rollback, previous logs, pod logs from Workloads) | **implemented** (Argo self-heal warning: Android scale only) | [02-kubectl-actions.md](devops/02-kubectl-actions.md) | M |
 | D3 | Machineconfig patches in try mode | **partial**: machine config is read-only (`machineconfig.go`); no `ApplyConfiguration` anywhere | [03-machineconfig-try-patches.md](devops/03-machineconfig-try-patches.md) | L |
 | D4 | Rolling Talos upgrade (whole cluster), extension check, later `upgrade-k8s` | **partial**: one node at a time with a pre-flight plan, lock, progress (`upgrade*.go`, `ui/upgrade`) | [04-rolling-upgrade.md](devops/04-rolling-upgrade.md) | L |
 | D5 | Argo CD diff and commit links | **missing** (deliberately left out of v1, `plans/argocd` D7) | [05-argocd-diff.md](devops/05-argocd-diff.md) | M |
 | D6 | Flux | **implemented** (Go, Android, iOS); alerts remain | [06-flux.md](devops/06-flux.md) | L |
 | D7 | cert-manager renew, Ingress/Gateway TLS expiry | **partial**: certificates and alerts exist read-only (`kube_certmanager.go`) | [07-certificates.md](devops/07-certificates.md) | S |
 | D8 | Image hygiene (unpinned list, ImagePullBackOff explained) | **partial**: per-app `unpinned`/`drift` flags on Android only | [08-image-hygiene.md](devops/08-image-hygiene.md) | S |
-| D9 | Argo CD freeze (deny sync window per app / namespace / project, windows screen) | **partial**: Go core done; Android and iOS to do | [09-argocd-freeze.md](devops/09-argocd-freeze.md) | M |
+| D9 | Argo CD freeze (deny sync window per app / namespace / project, windows screen) | **partial**: Go core and Android done; iOS to do | [09-argocd-freeze.md](devops/09-argocd-freeze.md) | M |
 
 ## Sysadmin: keep the platform alive
 

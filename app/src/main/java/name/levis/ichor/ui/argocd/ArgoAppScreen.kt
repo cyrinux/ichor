@@ -35,13 +35,23 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
+import name.levis.ichor.monitor.freezeReminderHook
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
+import name.levis.ichor.model.ArgoFreezeAction
+import name.levis.ichor.model.ArgoFreezeOptions
 import name.levis.ichor.model.ArgoHistory
+import name.levis.ichor.model.ArgoProject
+import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ArgoSyncOptions
+import name.levis.ichor.model.ArgoWindow
 import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.FREEZE_EXTEND_MINUTES
+import name.levis.ichor.model.drifted
+import name.levis.ichor.model.freezeWindowsOf
+import name.levis.ichor.model.projectOf
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.model.shortRevision
@@ -69,9 +79,15 @@ import name.levis.ichor.ui.workloads.RolloutStatusSheet
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ArgoAppScreen(namespace: String, name: String, onBack: () -> Unit, onNode: ((NodeOverview, Int) -> Unit)? = null) {
+fun ArgoAppScreen(
+    namespace: String,
+    name: String,
+    onBack: () -> Unit,
+    onNode: ((NodeOverview, Int) -> Unit)? = null,
+    onWindows: (() -> Unit)? = null,
+) {
     val talos = LocalContext.current.applicationContext as TalosApp
-    val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(talos.talosRepository) })
+    val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(talos.talosRepository, freezeReminderHook(talos)) })
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val config by talos.configRepository.config.collectAsStateWithLifecycle()
@@ -81,6 +97,7 @@ fun ArgoAppScreen(namespace: String, name: String, onBack: () -> Unit, onNode: (
     ArgoPolling(vm)
     val snackbar = remember { SnackbarHostState() }
     ArgoActionMessages(vm.results) { snackbar.showSnackbar(it) }
+    ArgoFreezeMessages(vm.freezeResults) { snackbar.showSnackbar(it) }
     RestartResultToasts(vm.restarts.results)
     RolloutStatusSheet(vm.restarts)
     val app = (state as? UiState.Loaded)?.data?.apps?.firstOrNull { it.namespace == namespace && it.name == name }
@@ -107,7 +124,9 @@ fun ArgoAppScreen(namespace: String, name: String, onBack: () -> Unit, onNode: (
                         val overview = remember(s.data) { talos.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value }
                         val downNodes = remember(overview) { overview?.downHostnames().orEmpty() }
                         val network = NetworkContext(s.fetchedAt, downNodes, overview?.nodes.orEmpty(), onNode)
-                        AppDetail(app, downNodes, app.key in busy, vm, network)
+                        val project = s.data.projectOf(app)
+                        val freeze = FreezeContext(s.data, project, vm.freezeBusy(busy, project), onWindows)
+                        AppDetail(app, downNodes, app.key in busy, vm, network, freeze)
                     }
                 }
                 DataFreshness(s, edgeToEdge = false)
@@ -117,8 +136,10 @@ fun ArgoAppScreen(namespace: String, name: String, onBack: () -> Unit, onNode: (
 }
 
 @Composable
-private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: ArgoViewModel, network: NetworkContext) {
+private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: ArgoViewModel, network: NetworkContext, freeze: FreezeContext) {
     var selecting by rememberSaveable { mutableStateOf(false) }
+    var freezeSheet by remember { mutableStateOf(false) }
+    var endFreeze by remember { mutableStateOf(false) }
     var selected by rememberSaveable { mutableStateOf(setOf<String>()) }
     var sheet by remember { mutableStateOf(false) }
     var terminate by remember { mutableStateOf(false) }
@@ -138,6 +159,30 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
                 act(ArgoAction.SYNC, options)
             },
             onDismiss = { sheet = false },
+        )
+    }
+    if (freezeSheet) {
+        ArgoFreezeSheet(
+            app,
+            freeze.status,
+            onFreeze = { project, options ->
+                freezeSheet = false
+                vm.freeze(project, ArgoFreezeAction.FREEZE, listOf(options))
+            },
+            onPauseAutoSync = if (app.canChangeSpec && app.autoSync.enabled) ({ freezeSheet = false; act(ArgoAction.AUTO_SYNC_OFF, null) }) else null,
+            onDismiss = { freezeSheet = false },
+        )
+    }
+    val ichorWindows = freeze.windows(app).filter { it.ichor != null }
+    if (endFreeze && freeze.project != null) {
+        val project = freeze.project
+        val unfreeze = ichorWindows.map { ArgoFreezeOptions(window = it.id) }
+        EndFreezeDialog(
+            drifted = app.drifted,
+            covers = ichorWindows.maxOfOrNull { it.apps } ?: 1,
+            onEnd = { endFreeze = false; vm.freeze(project, ArgoFreezeAction.UNFREEZE, unfreeze) },
+            onEndAndSync = if (app.outOfSync && !app.isRunning) ({ endFreeze = false; vm.freeze(project, ArgoFreezeAction.UNFREEZE, unfreeze, syncAfter = app) }) else null,
+            onDismiss = { endFreeze = false },
         )
     }
     if (terminate) {
@@ -180,6 +225,22 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
                 onHardRefresh = { act(ArgoAction.HARD_REFRESH, null) },
             )
         }
+        item(key = "freeze") {
+            ArgoFreezeCard(
+                app,
+                windows = freeze.windows(app),
+                busy = freeze.busy,
+                onFreeze = { freezeSheet = true },
+                onExtend = {
+                    // The window ending last is the one "until" shows.
+                    ichorWindows.maxByOrNull { it.endsAt }?.let { w ->
+                        freeze.project?.let { vm.freeze(it, ArgoFreezeAction.EXTEND, listOf(ArgoFreezeOptions(window = w.id, minutes = FREEZE_EXTEND_MINUTES))) }
+                    }
+                },
+                onUnfreeze = { endFreeze = true },
+                onWindows = freeze.onWindows,
+            )
+        }
         if (app.conditions.isNotEmpty()) item(key = "conditions") { ConditionBanners(app.conditions) }
         app.operation?.let { op -> item(key = "operation") { ArgoOperationCard(app, op, busy) { terminate = true } } }
         item(key = "network") {
@@ -211,6 +272,11 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
         }
         history(app) { rollback = it }
     }
+}
+
+/** What the freeze card needs: the status (projects, other apps), the app's project, whether it is changing. */
+private data class FreezeContext(val status: ArgoStatus, val project: ArgoProject?, val busy: Boolean, val onWindows: (() -> Unit)?) {
+    fun windows(app: ArgoApp): List<ArgoWindow> = status.freezeWindowsOf(app).map { it.window }
 }
 
 /** What the network section needs from the screen: when the app was fetched, and the Talos nodes. */
