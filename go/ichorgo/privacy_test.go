@@ -285,7 +285,7 @@ func TestMaskJSONKeepsStructure(t *testing.T) {
 func TestMaskDisabledIsIdentity(t *testing.T) {
 	SetPrivacyMask(false, "")
 
-	if PrivacyMaskEnabled() {
+	if privacy.isEnabled() {
 		t.Fatal("mask should be off")
 	}
 

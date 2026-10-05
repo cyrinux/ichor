@@ -94,11 +94,6 @@ func SetPrivacyMask(enabled bool, extraWords string) {
 	privacy.set(enabled, parseMaskWords(extraWords))
 }
 
-// PrivacyMaskEnabled reports whether screenshot mode is on.
-func PrivacyMaskEnabled() bool {
-	return privacy.isEnabled()
-}
-
 func parseMaskWords(csv string) []string {
 	var words []string
 

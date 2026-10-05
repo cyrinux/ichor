@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosi-project/runtime/pkg/resource/meta"
 	"github.com/cosi-project/runtime/pkg/safe"
+	"github.com/siderolabs/talos/pkg/machinery/client"
 )
 
 // versionLookupTimeout bounds the extra Version call made only to name the node's version in
@@ -28,7 +29,7 @@ func (s *session) nodeVersion(ctx context.Context, node string) string {
 	ctx, cancel := context.WithTimeout(ctx, nodeTimeout)
 	defer cancel()
 
-	resp, err := s.client.Version(withNode(ctx, node))
+	resp, err := s.client.Version(client.WithNode(ctx, node))
 	if err != nil {
 		return ""
 	}
@@ -90,7 +91,7 @@ func (s *session) resourceDefinitions(ctx context.Context, node string) ([]*meta
 	rt := v.(*resourceTypes) //nolint:forcetypeassert
 
 	rt.once.Do(func() {
-		list, err := safe.StateListAll[*meta.ResourceDefinition](withNode(ctx, node), s.client.COSI)
+		list, err := safe.StateListAll[*meta.ResourceDefinition](client.WithNode(ctx, node), s.client.COSI)
 		if err != nil {
 			rt.err = err
 

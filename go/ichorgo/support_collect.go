@@ -15,6 +15,7 @@ import (
 	"github.com/cosi-project/runtime/pkg/resource"
 	"github.com/cosi-project/runtime/pkg/resource/meta"
 	"github.com/siderolabs/talos/pkg/machinery/api/common"
+	"github.com/siderolabs/talos/pkg/machinery/client"
 	"github.com/siderolabs/talos/pkg/machinery/constants"
 )
 
@@ -33,7 +34,7 @@ func nodeBundleSection(s *session, node string) bundleSection {
 		node: node,
 		dir:  bundleFileName(node),
 		reachable: func(ctx context.Context) error {
-			if _, err := s.client.Version(withNode(ctx, node)); err != nil {
+			if _, err := s.client.Version(client.WithNode(ctx, node)); err != nil {
 				return friendlyErr(err)
 			}
 
@@ -88,7 +89,7 @@ func collectGitOpsFile(ctx context.Context, s *session, kube kubeTarget) ([]bund
 }
 
 func collectVersion(ctx context.Context, s *session, node string) ([]bundleFile, error) {
-	resp, err := s.client.Version(withNode(ctx, node))
+	resp, err := s.client.Version(client.WithNode(ctx, node))
 	if err != nil {
 		return nil, friendlyErr(err)
 	}
@@ -103,7 +104,7 @@ func collectVersion(ctx context.Context, s *session, node string) ([]bundleFile,
 }
 
 func collectDmesg(ctx context.Context, s *session, node string) ([]bundleFile, error) {
-	stream, err := s.client.Dmesg(withNode(ctx, node), false, false)
+	stream, err := s.client.Dmesg(client.WithNode(ctx, node), false, false)
 	if err != nil {
 		return nil, s.friendlyErr(node, err)
 	}
@@ -114,7 +115,7 @@ func collectDmesg(ctx context.Context, s *session, node string) ([]bundleFile, e
 }
 
 func collectServiceLogs(ctx context.Context, s *session, node string) ([]bundleFile, error) {
-	nodeCtx := withNode(ctx, node)
+	nodeCtx := client.WithNode(ctx, node)
 
 	resp, err := s.client.ServiceList(nodeCtx)
 	if err != nil {
@@ -160,7 +161,7 @@ func collectServiceLogs(ctx context.Context, s *session, node string) ([]bundleF
 // collectContainerLogs lists every Kubernetes container and copies the logs of the
 // kube-system ones (control plane, CNI, DNS: what a cluster problem usually needs).
 func collectContainerLogs(ctx context.Context, s *session, node string) ([]bundleFile, error) {
-	nodeCtx := withNode(ctx, node)
+	nodeCtx := client.WithNode(ctx, node)
 
 	resp, err := s.client.Containers(nodeCtx, constants.K8sContainerdNamespace, common.ContainerDriver_CRI)
 	if err != nil {
@@ -262,7 +263,7 @@ func bundleResource(spec *meta.ResourceDefinitionSpec) bool {
 }
 
 func dumpResources(ctx context.Context, s *session, node string, spec *meta.ResourceDefinitionSpec) ([]byte, error) {
-	list, err := s.client.COSI.List(withNode(ctx, node), resource.NewMetadata(spec.DefaultNamespace, spec.Type, "", resource.VersionUndefined))
+	list, err := s.client.COSI.List(client.WithNode(ctx, node), resource.NewMetadata(spec.DefaultNamespace, spec.Type, "", resource.VersionUndefined))
 	if err != nil {
 		return nil, friendlyErr(err)
 	}
@@ -301,7 +302,7 @@ func collectMachineConfig(ctx context.Context, s *session, node string) ([]bundl
 }
 
 func collectMounts(ctx context.Context, s *session, node string) ([]bundleFile, error) {
-	resp, err := s.client.Mounts(withNode(ctx, node))
+	resp, err := s.client.Mounts(client.WithNode(ctx, node))
 	if err != nil {
 		return nil, s.friendlyErr(node, err)
 	}
@@ -321,7 +322,7 @@ func collectMounts(ctx context.Context, s *session, node string) ([]bundleFile, 
 }
 
 func collectProcesses(ctx context.Context, s *session, node string) ([]bundleFile, error) {
-	resp, err := s.client.Processes(withNode(ctx, node))
+	resp, err := s.client.Processes(client.WithNode(ctx, node))
 	if err != nil {
 		return nil, s.friendlyErr(node, err)
 	}

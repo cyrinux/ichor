@@ -269,7 +269,7 @@ func fetchLogTail(nodeCtx context.Context, c *client.Client, service string) ser
 	}
 
 	for _, line := range tail.Lines {
-		out.Lines = append(out.Lines, clipText(line, diagnosisMaxLineLen))
+		out.Lines = append(out.Lines, clipUTF8(line, diagnosisMaxLineLen))
 	}
 
 	return out

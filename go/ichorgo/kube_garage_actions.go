@@ -292,7 +292,7 @@ func garageCall[T any](ctx context.Context, run execFunc, t garageTarget, endpoi
 			continue
 		}
 
-		return out, fmt.Errorf("unexpected %s answer (%v, %d bytes): %q", endpoint, err, len(stdout), truncate(string(stdout), 200))
+		return out, fmt.Errorf("unexpected %s answer (%v, %d bytes): %q", endpoint, err, len(stdout), clipUTF8(string(stdout), 200))
 	}
 }
 

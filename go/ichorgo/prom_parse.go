@@ -102,7 +102,7 @@ func parsePromAnswer(status int, body []byte, grid promGrid) (promResult, error)
 			msg = env.ErrorType + ": " + msg
 		}
 
-		return promResult{}, errors.New(truncate(msg, 500))
+		return promResult{}, errors.New(clipUTF8(msg, 500))
 	}
 
 	var data promData
@@ -182,7 +182,7 @@ func promSeriesOf(r promRawSeries, grid promGrid) promSeries {
 const promRefused = "refused (credentials or tenant)"
 
 func promHTTPError(status int, body []byte) error {
-	text := truncate(strings.TrimSpace(string(body)), 300)
+	text := clipUTF8(strings.TrimSpace(string(body)), 300)
 
 	switch {
 	case status == http.StatusOK:
@@ -222,7 +222,7 @@ func promLabels(metric map[string]string) map[string]string {
 
 	labels := make(map[string]string, min(len(keys), promMaxLabels))
 	for _, k := range keys[:min(len(keys), promMaxLabels)] {
-		labels[truncate(k, promMaxLabelValue)] = truncate(metric[k], promMaxLabelValue)
+		labels[clipUTF8(k, promMaxLabelValue)] = clipUTF8(metric[k], promMaxLabelValue)
 	}
 
 	return labels
@@ -269,7 +269,7 @@ func promSeriesName(labels map[string]string) string {
 func promWarnings(warnings []string) []string {
 	out := []string{}
 	for _, w := range warnings[:min(len(warnings), promMaxWarnings)] {
-		out = append(out, truncate(w, 300))
+		out = append(out, clipUTF8(w, 300))
 	}
 
 	return out

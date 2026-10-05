@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+
+	"github.com/siderolabs/talos/pkg/machinery/client"
 )
 
 // podPhases are the phases a pod list can be narrowed to (status.phase).
@@ -24,14 +26,22 @@ func KubeNodeName(configYAML, contextName, node string) (out string, err error) 
 	}
 
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(nodeCtx context.Context, s *session) (string, error) {
-		state := fetchKubeNodeState(nodeCtx, s.client)
-		if state == nil || state.Name == "" {
-			return "", errors.New("the node's Kubernetes name is unknown: is the kubelet running?")
-		}
-
-		return state.Name, nil
+		return kubeNodeNameOf(nodeCtx, s.client)
 	})
 }
+
+// kubeNodeNameOf is the name the node's kubelet registered with, from the Talos node ctx
+// targets.
+func kubeNodeNameOf(ctx context.Context, c *client.Client) (string, error) {
+	state := fetchKubeNodeState(ctx, c)
+	if state == nil || state.Name == "" {
+		return "", errKubeNodeUnknown
+	}
+
+	return state.Name, nil
+}
+
+var errKubeNodeUnknown = errors.New("the node's Kubernetes name is unknown: is the kubelet running?")
 
 // demoKubeNodeName is a demo node's hostname, the name its kubelet registered.
 func demoKubeNodeName(node string) (string, error) {

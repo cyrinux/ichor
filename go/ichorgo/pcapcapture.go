@@ -15,6 +15,7 @@ import (
 	"github.com/gopacket/gopacket/layers"
 	"github.com/gopacket/gopacket/pcapgo"
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
+	"github.com/siderolabs/talos/pkg/machinery/client"
 	"github.com/siderolabs/talos/pkg/machinery/nethelpers"
 	"github.com/siderolabs/talos/pkg/machinery/resources/network"
 )
@@ -102,10 +103,7 @@ func StartPacketCapture(
 
 		res, path, err := runCapture(ctx, configYAML, contextName, node, destPath, opts, listener)
 
-		errMessage := ""
-		if err != nil {
-			errMessage = err.Error()
-		}
+		errMessage := errText(err)
 
 		listener.OnDone(path, res.packets, res.bytes, errMessage)
 	}()
@@ -128,18 +126,14 @@ func runCapture(
 		return captureResult{}, "", errors.New("pick an interface to capture on")
 	}
 
-	s, release, err := sessions.acquire(configYAML, contextName)
+	s, release, err := acquireNode(configYAML, contextName, node)
 	if err != nil {
 		return captureResult{}, "", err
 	}
 
 	defer release()
 
-	if err := validatePowerTarget(s.context, node); err != nil {
-		return captureResult{}, "", err
-	}
-
-	nodeCtx := withNode(ctx, node)
+	nodeCtx := client.WithNode(ctx, node)
 
 	lt, err := captureLinkType(nodeCtx, s.client.COSI, opts.iface)
 	if err != nil {

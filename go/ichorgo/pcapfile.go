@@ -236,7 +236,7 @@ func layerFields(l gopacket.Layer) []detailField {
 			continue
 		}
 
-		fields = append(fields, detailField{K: f.Name, V: truncate(formatValue(v.Field(i), 0), maxFieldLen)})
+		fields = append(fields, detailField{K: f.Name, V: clipUTF8(formatValue(v.Field(i), 0), maxFieldLen)})
 	}
 
 	return fields
@@ -339,14 +339,6 @@ func formatBytes(b []byte) string {
 	}
 
 	return fmt.Sprintf("%x", b)
-}
-
-func truncate(s string, n int) string {
-	if len(s) <= n {
-		return s
-	}
-
-	return s[:n-1] + "…"
 }
 
 // hexDump renders data like `hexdump -C`, 16 bytes per line:

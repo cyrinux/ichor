@@ -37,7 +37,7 @@ func summarize(n int, ci gopacket.CaptureInfo, data []byte, lt layers.LinkType) 
 
 	describe(decodePacket(data, lt), &s)
 
-	s.Info = truncate(s.Info, maxInfoLen)
+	s.Info = clipUTF8(s.Info, maxInfoLen)
 
 	return s
 }

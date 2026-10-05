@@ -73,7 +73,7 @@ func probeTime(ctx context.Context, c *client.Client, node string) nodeTime {
 	ctx, cancel := context.WithTimeout(ctx, nodeTimeout)
 	defer cancel()
 
-	resp, err := c.Time(withNode(ctx, node))
+	resp, err := c.Time(client.WithNode(ctx, node))
 	if err != nil {
 		return nodeTime{Node: node, Error: friendlyError(err)}
 	}

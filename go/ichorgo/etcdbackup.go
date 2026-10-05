@@ -95,16 +95,12 @@ func startSnapshot(configYAML, contextName, node, destPath string, wrap snapshot
 type snapshotWrap func(io.Writer) (io.WriteCloser, error)
 
 func runSnapshot(ctx context.Context, configYAML, contextName, node, destPath string, wrap snapshotWrap, listener SnapshotListener) (int64, string, error) {
-	s, release, err := sessions.acquire(configYAML, contextName)
+	s, release, err := acquireNode(configYAML, contextName, node)
 	if err != nil {
 		return 0, "", err
 	}
 
 	defer release()
-
-	if err := validatePowerTarget(s.context, node); err != nil {
-		return 0, "", err
-	}
 
 	r, err := s.client.EtcdSnapshot(client.WithNode(ctx, node), &machineapi.EtcdSnapshotRequest{})
 	if err != nil {

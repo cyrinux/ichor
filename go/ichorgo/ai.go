@@ -204,7 +204,7 @@ func aiError(ctx context.Context, provider aiProvider, status int, message strin
 	}
 
 	if message = strings.TrimSpace(message); message != "" {
-		reason += ": " + clipText(message, maxProviderMessage)
+		reason += ": " + clipUTF8(message, maxProviderMessage)
 	}
 
 	return fmt.Errorf("%s: %s", provider.Name, reason)

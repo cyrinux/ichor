@@ -43,7 +43,7 @@ func TestExportedFuncsUsePrivacyHooks(t *testing.T) {
 					continue
 				}
 
-				if fn.Name.Name == "SetPrivacyMask" || fn.Name.Name == "PrivacyMaskEnabled" {
+				if fn.Name.Name == "SetPrivacyMask" {
 					continue
 				}
 

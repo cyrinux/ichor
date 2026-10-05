@@ -46,22 +46,6 @@ func PromQueryRange(configYAML, contextName, kubeServer, sourceJSON, query strin
 	return promRun(kubeTarget{configYAML, contextName, kubeServer}, sourceJSON, "/api/v1/query_range", query, params, grid)
 }
 
-// PromQuery runs a PromQL instant query at time at (unix seconds, 0: now), same answer as
-// PromQueryRange with a single time.
-func PromQuery(configYAML, contextName, kubeServer, sourceJSON, query string, at int64) (out string, err error) {
-	defer maskResult(&out, &err)
-
-	contextName = unmaskContext(configYAML, contextName)
-
-	if at <= 0 {
-		at = time.Now().Unix()
-	}
-
-	grid := promGrid{start: at, step: 1, n: 1}
-
-	return promRun(kubeTarget{configYAML, contextName, kubeServer}, sourceJSON, "/api/v1/query", query, url.Values{"time": {strconv.FormatInt(at, 10)}}, grid)
-}
-
 // NormalizePromSource checks a metrics source the user set and returns it cleaned up,
 // without its secret (the app keeps that apart): {mode:"proxy",namespace,service,port,
 // pathPrefix,tenant} or {mode:"url",url,auth:""|"bearer"|"basic",username,ca,
@@ -227,7 +211,7 @@ func promProxyError(src promSource, status int, body []byte) error {
 
 		_ = json.Unmarshal(body, &st)
 
-		return fmt.Errorf("%s: no answer from the Service on port %d (no ready pod, or not its HTTP port): %s", src.label(), src.Port, truncate(st.Message, 200))
+		return fmt.Errorf("%s: no answer from the Service on port %d (no ready pod, or not its HTTP port): %s", src.label(), src.Port, clipUTF8(st.Message, 200))
 	case http.StatusNotFound:
 		return fmt.Errorf("%s: no such Service", src.label())
 	default:
@@ -269,7 +253,7 @@ func promHTTPGet(ctx context.Context, src promSource, target string, header map[
 
 	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
 		// Not followed: it would carry the credentials wherever it points.
-		return 0, nil, fmt.Errorf("%s redirects to %q: set that address instead", src.URL, truncate(resp.Header.Get("Location"), 200))
+		return 0, nil, fmt.Errorf("%s redirects to %q: set that address instead", src.URL, clipUTF8(resp.Header.Get("Location"), 200))
 	}
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, promMaxBody+1))

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+
+	"github.com/siderolabs/talos/pkg/machinery/client"
 )
 
 // featureRule is the Talos version range a feature of the app needs on the node.
@@ -149,7 +151,7 @@ func (s *session) requireNodeVersion(ctx context.Context, node string) (string, 
 	ctx, cancel := context.WithTimeout(ctx, nodeTimeout)
 	defer cancel()
 
-	if _, err := s.client.Version(withNode(ctx, node)); err != nil {
+	if _, err := s.client.Version(client.WithNode(ctx, node)); err != nil {
 		return "", friendlyErr(err)
 	}
 
