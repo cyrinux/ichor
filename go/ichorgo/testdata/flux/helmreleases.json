@@ -1,0 +1,15 @@
+{"items":[
+ {"metadata":{"name":"cilium","namespace":"kube-system","resourceVersion":"200"},
+  "spec":{"interval":"30m","chart":{"spec":{"chart":"cilium","version":"1.18.x","sourceRef":{"kind":"HelmRepository","name":"cilium","namespace":"flux-system"}}}},
+  "status":{"lastAttemptedRevision":"1.18.2","conditions":[
+    {"type":"Reconciling","status":"True","reason":"Progressing","message":"Running 'upgrade' action"},
+    {"type":"Ready","status":"Unknown","reason":"Progressing","message":"Running 'upgrade' action"}],
+   "history":[{"version":3,"chartName":"cilium","chartVersion":"1.18.1","appVersion":"1.18.1","status":"deployed","lastDeployed":"2026-09-01T00:00:00Z"},
+              {"version":2,"chartName":"cilium","chartVersion":"1.18.0","appVersion":"1.18.0","status":"superseded","lastDeployed":"2026-08-01T00:00:00Z"}]}},
+ {"metadata":{"name":"podinfo","namespace":"apps","resourceVersion":"201"},
+  "spec":{"interval":"10m","targetNamespace":"web","chartRef":{"kind":"OCIRepository","name":"podinfo","namespace":"flux-system"}},
+  "status":{"installFailures":0,"upgradeFailures":3,"conditions":[
+    {"type":"Stalled","status":"True","reason":"RetriesExceeded","message":"Failed to upgrade after 3 attempt(s)"},
+    {"type":"Ready","status":"False","reason":"RetriesExceeded","message":"Failed to upgrade"}],
+   "history":[{"version":1,"chartName":"podinfo","chartVersion":"6.9.2","status":"failed","firstDeployed":"2026-09-30T00:00:00Z"}]}}
+]}
