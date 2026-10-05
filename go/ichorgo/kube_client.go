@@ -34,7 +34,14 @@ type kubeClient struct {
 	http  *http.Client
 	token string
 	tls   *tls.Config // the kubeconfig's TLS settings, for connections outside http (exec)
+	// namespace is the kubeconfig context's namespace, "" when it sets none.
+	namespace string
 }
+
+// kubeListExpired starts the message of a 410 Gone: the continue token of a paged list
+// expired (about 5 minutes) or the list changed too much. The apps recognise it by this
+// prefix and load the list again from its first page, so it must not change.
+const kubeListExpired = "Kubernetes API: list expired"
 
 // kubeAPIError is a non-2xx answer of the API server, with its Status message.
 type kubeAPIError struct {
@@ -51,6 +58,9 @@ func (e *kubeAPIError) Error() string {
 		return "Kubernetes API: permission denied: " + e.Message
 	case http.StatusNotFound:
 		return "Kubernetes API: not found: " + e.Message
+	case http.StatusGone:
+		// The apps match this prefix to restart a paged list from its first page.
+		return kubeListExpired + ": " + e.Message
 	default:
 		return fmt.Sprintf("Kubernetes API (%d %s): %s", e.Code, e.Reason, e.Message)
 	}
@@ -174,7 +184,7 @@ func newKubeClient(base *url.URL, creds *kubeCredentials) *kubeClient {
 		Transport: transport,
 		// The API server does not redirect; never send the credentials anywhere else.
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
-	}, token: creds.token, tls: creds.tls.Clone()}
+	}, token: creds.token, tls: creds.tls.Clone(), namespace: creds.namespace}
 }
 
 // close drops the client's idle connections (its TLS sessions hold the client key).

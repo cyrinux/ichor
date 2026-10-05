@@ -96,16 +96,18 @@ func KubePods(configYAML, contextName, kubeServer string) (out string, err error
 	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, func() kubePodList { return kubePodList{Pods: demoPods()} }, listPods)
 }
 
+// listPods reads every page of the cluster's pods (JSON, so with images) and sorts them.
 func listPods(ctx context.Context, k *kubeClient) (kubePodList, error) {
-	var list kubeList[podObject]
+	pods := []kubePod{}
 
-	if err := k.get(ctx, "/api/v1/pods", &list); err != nil {
+	err := k.listAll(ctx, "/api/v1/pods", pageQuery{}, func() { pods = pods[:0] }, func(page kubePage) error {
+		mapped, err := mapPodPage(page)
+		pods = append(pods, mapped...)
+
+		return err
+	})
+	if err != nil {
 		return kubePodList{}, err
-	}
-
-	pods := make([]kubePod, 0, len(list.Items))
-	for _, obj := range list.Items {
-		pods = append(pods, mapPod(obj))
 	}
 
 	sort.Slice(pods, func(i, j int) bool {
