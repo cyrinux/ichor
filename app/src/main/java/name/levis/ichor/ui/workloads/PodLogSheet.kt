@@ -81,13 +81,33 @@ class PodLogViewModel(private val talos: TalosRepository) : ViewModel() {
     /** The containers to pick from; empty for a pod with one container. */
     val containers: StateFlow<List<String>> = _containers.asStateFlow()
 
+    private val _detail = MutableStateFlow<KubePod?>(null)
+    /**
+     * The pod with its containers and last termination: read in full when the list's row
+     * lacks them (a Table row of a large cluster); the row itself if that fails.
+     */
+    val detail: StateFlow<KubePod?> = _detail.asStateFlow()
+
     private val _state = MutableStateFlow<UiState<String>>(UiState.Loading)
     val state: StateFlow<UiState<String>> = _state.asStateFlow()
     private var job: Job? = null
 
     /** Shows [pod]'s current log; with several containers, the first one until another is picked. */
     fun open(pod: KubePod) {
+        job?.cancel()
         this.pod = pod
+        _detail.value = pod
+        if (pod.containerNames.isNotEmpty()) return start(pod)
+        _state.value = UiState.Loading
+        job = viewModelScope.launch {
+            val full = cancellableCatching { talos.pod(pod.namespace, pod.name) }.getOrNull() ?: pod
+            this@PodLogViewModel.pod = full
+            _detail.value = full
+            start(full)
+        }
+    }
+
+    private fun start(pod: KubePod) {
         val names = pod.containerNames.takeIf { it.size > 1 }.orEmpty()
         _containers.value = names
         load(PodLogQuery(container = names.firstOrNull().orEmpty()))
@@ -97,6 +117,7 @@ class PodLogViewModel(private val talos: TalosRepository) : ViewModel() {
     fun close() {
         job?.cancel()
         pod = null
+        _detail.value = null
         _state.value = UiState.Loading
         _containers.value = emptyList()
         _query.value = PodLogQuery()
@@ -137,6 +158,8 @@ fun PodLogSheet(
     val state by vm.state.collectAsStateWithLifecycle()
     val query by vm.query.collectAsStateWithLifecycle()
     val containers by vm.containers.collectAsStateWithLifecycle()
+    val detail by vm.detail.collectAsStateWithLifecycle()
+    val lastTermination = detail?.lastTermination.orEmpty()
     val text = (state as? UiState.Loaded)?.data
     LaunchedEffect(pod.key) { vm.open(pod) }
     DisposableEffect(vm) {
@@ -181,9 +204,9 @@ fun PodLogSheet(
                     }
                 }
             }
-            if (pod.lastTermination.isNotEmpty()) {
+            if (lastTermination.isNotEmpty()) {
                 Text(
-                    stringResource(R.string.pod_logs_last_termination, pod.lastTermination),
+                    stringResource(R.string.pod_logs_last_termination, lastTermination),
                     style = MaterialTheme.typography.bodySmall,
                     color = LocalStatusColors.current.warn,
                     modifier = Modifier.padding(horizontal = 16.dp),

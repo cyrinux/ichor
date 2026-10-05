@@ -140,12 +140,14 @@ func listWorkloads(ctx context.Context, k *kubeClient) (kubeWorkloadList, error)
 
 	for i, kind := range workloadKinds {
 		wg.Go(func() {
-			var list kubeList[appsObject]
+			errs[i] = k.listAll(ctx, "/apis/apps/v1/"+kind.resource, pageQuery{}, func() { results[i] = nil }, func(page kubePage) error {
+				objs, err := decodeItems[appsObject](page)
+				for _, obj := range objs {
+					results[i] = append(results[i], mapWorkload(kind.kind, obj))
+				}
 
-			errs[i] = k.get(ctx, "/apis/apps/v1/"+kind.resource, &list)
-			for _, obj := range list.Items {
-				results[i] = append(results[i], mapWorkload(kind.kind, obj))
-			}
+				return err
+			})
 		})
 	}
 

@@ -1,6 +1,6 @@
 // Command probe exercises the ichorgo API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|workloads|rollout-restart KIND NAMESPACE NAME|rollout-status KIND NAMESPACE NAME|cronjobs|cronjob-run NAMESPACE NAME|pods|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|dataservices [HINTS]|argocd|argocd-network NAMESPACE NAME|argocd-action NAMESPACE NAME ACTION [OPTIONS]|flux|flux-action KIND NAMESPACE NAME ACTION|cilium|netpol|hubble [SECONDS] [all|drops] [NAMESPACE [POD]]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|workloads|rollout-restart KIND NAMESPACE NAME|rollout-status KIND NAMESPACE NAME|cronjobs|cronjob-run NAMESPACE NAME|pods|pods-page NAMESPACE|all LIMIT [TOKEN]|namespaces|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|dataservices [HINTS]|argocd|argocd-network NAMESPACE NAME|argocd-action NAMESPACE NAME ACTION [OPTIONS]|flux|flux-action KIND NAMESPACE NAME ACTION|cilium|netpol|hubble [SECONDS] [all|drops] [NAMESPACE [POD]]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai
 package main
 
 import (
@@ -81,7 +81,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|clusterstats|inventory|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|topology|kubeconfig|pods|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|workloads|rollout-restart KIND NAMESPACE NAME|rollout-status KIND NAMESPACE NAME|cronjobs|cronjob-run NAMESPACE NAME|dataservices [HINTS]|argocd|argocd-network NAMESPACE NAME|argocd-action NAMESPACE NAME ACTION [OPTIONS]|flux|flux-action KIND NAMESPACE NAME ACTION|cilium|netpol|hubble [SECONDS] [all|drops] [NAMESPACE [POD]]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai"))
+		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|clusterstats|inventory|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|topology|kubeconfig|pods|pods-page NAMESPACE|all LIMIT [TOKEN]|namespaces|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|workloads|rollout-restart KIND NAMESPACE NAME|rollout-status KIND NAMESPACE NAME|cronjobs|cronjob-run NAMESPACE NAME|dataservices [HINTS]|argocd|argocd-network NAMESPACE NAME|argocd-action NAMESPACE NAME ACTION [OPTIONS]|flux|flux-action KIND NAMESPACE NAME ACTION|cilium|netpol|hubble [SECONDS] [all|drops] [NAMESPACE [POD]]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai"))
 	}
 
 	raw, err := os.ReadFile(*configPath)
@@ -141,6 +141,11 @@ func main() {
 		out, err = ichorgo.KubeTriggerCronJob(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2))
 	case "pods":
 		out, err = ichorgo.KubePods(cfg, *contextName, *kubeServer)
+	case "pods-page":
+		// pods-page NAMESPACE|all LIMIT [TOKEN]: one page as a Table, as the apps load it.
+		out, err = podsPage(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+	case "namespaces":
+		out, err = ichorgo.KubeNamespaces(cfg, *contextName, *kubeServer)
 	case "dataservices":
 		// dataservices [HINTS], e.g. "garage" or "longhorn,cloudnative-pg"; none checks all.
 		out, err = ichorgo.KubeDataServices(cfg, *contextName, *kubeServer, flag.Arg(1))
@@ -429,4 +434,21 @@ func firstLine(s string) string {
 	line, _, _ := strings.Cut(s, "\n")
 
 	return line
+}
+
+// podsPage reads one page of pods; "all" (or "") is every namespace.
+func podsPage(cfg, contextName, kubeServer, namespace, limit, token string) (string, error) {
+	if namespace == "all" {
+		namespace = ""
+	}
+
+	n := 0
+	if limit != "" {
+		var err error
+		if n, err = strconv.Atoi(limit); err != nil {
+			return "", fmt.Errorf("pods-page: limit %q is not a number", limit)
+		}
+	}
+
+	return ichorgo.KubePodsPage(cfg, contextName, kubeServer, namespace, token, n, true)
 }

@@ -1,11 +1,23 @@
 package name.levis.ichor.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/kube_cronjobs.go.
 
 @Serializable
 data class KubeCronJobList(val cronJobs: List<KubeCronJob> = emptyList())
+
+/** One page of CronJobs with their runs (KubeCronJobsPage), in the API server's order. */
+@Serializable
+data class KubeCronJobPage(
+    val cronJobs: List<KubeCronJob> = emptyList(),
+    @SerialName("continue") val continueToken: String = "",
+    val remaining: Long = -1,
+    val complete: Boolean = true,
+) {
+    fun toPage() = KubePage(cronJobs, continueToken, remaining, complete)
+}
 
 @Serializable
 data class KubeCronJob(
@@ -85,16 +97,17 @@ val List<KubeCronJob>.cronNamespaces: List<String>
 
 /**
  * CronJobs of [namespace] (all when null) whose name, title, description, schedule or image
- * contains [query] (case-insensitive): running ones first, then failed, then by namespace
- * and name.
+ * contains [query] (case-insensitive). [sorted]: running ones first, then failed, then by
+ * namespace and name; else in the order loaded (a list still incomplete).
  */
-fun List<KubeCronJob>.filteredCronJobs(namespace: String?, query: String): List<KubeCronJob> {
+fun List<KubeCronJob>.filteredCronJobs(namespace: String?, query: String, sorted: Boolean = true): List<KubeCronJob> {
     val q = query.trim()
-    return filter { c ->
+    val matching = filter { c ->
         (namespace == null || c.namespace == namespace) &&
             (q.isEmpty() || listOf(c.name, c.title, c.description, c.schedule).any { it.contains(q, ignoreCase = true) } ||
                 c.images.any { it.contains(q, ignoreCase = true) })
-    }.sortedWith(compareBy<KubeCronJob> { it.attentionRank }.thenBy { it.namespace }.thenBy { it.name })
+    }
+    return if (sorted) matching.sortedWith(compareBy<KubeCronJob> { it.attentionRank }.thenBy { it.namespace }.thenBy { it.name }) else matching
 }
 
 private val KubeCronJob.attentionRank: Int

@@ -227,31 +227,29 @@ func KubeCronJobs(configYAML, contextName, kubeServer string) (out string, err e
 
 func listCronJobs(ctx context.Context, k *kubeClient, now time.Time) (kubeCronJobList, error) {
 	var (
-		crons            kubeList[cronJobObject]
-		jobs             kubeList[jobObject]
+		crons            []cronJobObject
+		runs             map[string][]kubeJobRun
 		cronErr, jobsErr error
 		wg               sync.WaitGroup
 	)
 
-	wg.Go(func() { cronErr = k.get(ctx, "/apis/batch/v1/cronjobs", &crons) })
-	wg.Go(func() { jobsErr = k.get(ctx, "/apis/batch/v1/jobs", &jobs) })
+	wg.Go(func() {
+		cronErr = k.listAll(ctx, "/apis/batch/v1/cronjobs", pageQuery{}, func() { crons = nil }, func(page kubePage) error {
+			objs, err := decodeItems[cronJobObject](page)
+			crons = append(crons, objs...)
+
+			return err
+		})
+	})
+	wg.Go(func() { runs, jobsErr = listCronRuns(ctx, k, "", func(string) bool { return true }) })
 	wg.Wait()
 
 	if err := errors.Join(cronErr, jobsErr); err != nil {
 		return kubeCronJobList{}, err
 	}
 
-	runs := map[string][]kubeJobRun{}
-
-	for _, j := range jobs.Items {
-		if owner := j.cronOwner(); owner != "" {
-			key := j.Metadata.Namespace + "/" + owner
-			runs[key] = append(runs[key], mapJobRun(j))
-		}
-	}
-
-	out := make([]kubeCronJob, 0, len(crons.Items))
-	for _, c := range crons.Items {
+	out := make([]kubeCronJob, 0, len(crons))
+	for _, c := range crons {
 		out = append(out, mapCronJob(c, runs[c.Metadata.Namespace+"/"+c.Metadata.Name], now))
 	}
 

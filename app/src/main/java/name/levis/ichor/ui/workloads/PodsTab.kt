@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.Delete
@@ -48,20 +49,18 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.data.PODS
+import name.levis.ichor.data.isMeteredNetwork
+import name.levis.ichor.data.podsKey
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.filteredPods
 import name.levis.ichor.model.podNamespaces
-import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -70,11 +69,15 @@ import name.levis.ichor.ui.uiText
 /** Outcome of a pod deletion, shown once. */
 data class DeleteResult(val pod: KubePod, val error: UiText?)
 
-class PodsViewModel(private val talos: TalosRepository) : LoadingViewModel<List<KubePod>>() {
-    override val keepsDataOnFailure = true
-    override fun cached(): TalosRepository.Timed<List<KubePod>>? = talos.cached(PODS)
-    override val restores get() = talos.restores
-    override suspend fun fetch() = talos.pods()
+class PodsViewModel(talos: TalosRepository, metered: () -> Boolean) : PagedListViewModel<KubePod>(talos, metered) {
+    override fun key(namespace: String?) = podsKey(namespace)
+
+    // The first page as full objects: a small cluster, loaded in one page, keeps its images
+    // and containers; the next pages as Table rows, 10-20 times smaller (L9, L10).
+    override suspend fun page(namespace: String?, token: String) = talos.podsPage(namespace, token, table = token.isNotEmpty())
+
+    // Kept rows of Table pages have no images: image search would miss them.
+    override fun detailed(items: List<KubePod>) = items.all { it.images.isNotEmpty() }
 
     private val _deleting = MutableStateFlow<Set<String>>(emptySet())
     /** Keys of the pods whose deletion is in flight. */
@@ -97,22 +100,23 @@ class PodsViewModel(private val talos: TalosRepository) : LoadingViewModel<List<
 }
 
 /**
- * Every pod of the cluster with the status `kubectl get pods` shows, unhealthy ones first,
- * its logs, and a delete action so a controller starts a fresh one.
+ * The pods of the scope's namespace (every namespace by default) with the status `kubectl get
+ * pods` shows, unhealthy ones first once every page is loaded, their logs, and a delete action
+ * so a controller starts a fresh one.
  */
 @Composable
 fun PodsTab(
-    namespace: String?,
+    control: KubeScopeControl,
     query: String,
-    onNamespace: (String?) -> Unit,
     onQuery: (String) -> Unit,
     modifier: Modifier = Modifier,
     onFlows: ((KubePod) -> Unit)? = null,
-    vm: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.talosRepository) }),
+    vm: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.talosRepository) { isMeteredNetwork(app) } }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val progress by vm.progress.collectAsStateWithLifecycle()
     val deleting by vm.deleting.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
+    LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
     var confirm by remember { mutableStateOf<KubePod?>(null) }
     var logs by remember { mutableStateOf<KubePod?>(null) }
     logs?.let { PodLogSheet(it, onDismiss = { logs = null }) }
@@ -137,36 +141,35 @@ fun PodsTab(
         )
     }
 
-    when (val s = state) {
-        UiState.Loading -> LoadingBox(modifier)
-        is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
-        is UiState.Loaded -> Column(modifier.fillMaxSize()) {
-            val namespaces = remember(s.data) { s.data.podNamespaces }
-            val selected = namespace?.takeIf { it in namespaces }
-            val rows = remember(s.data, selected, query) { s.data.filteredPods(selected, query) }
-            KubeFilters(namespaces, selected, query, onNamespace, onQuery)
-            HorizontalDivider()
-            PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                if (rows.isEmpty()) {
-                    EmptyText(emptyOrNoMatch(query, R.string.pods_empty, R.string.pods_no_match))
-                } else {
-                    LazyColumn(Modifier.fillMaxSize()) {
-                        items(rows, key = { it.key }) { pod ->
-                            PodRow(
-                                pod,
-                                showNamespace = selected == null,
-                                deleting = pod.key in deleting,
-                                onDelete = { confirm = pod },
-                                onLogs = { logs = pod },
-                                onFlows = onFlows?.let { open -> { open(pod) } },
-                            )
-                            HorizontalDivider()
-                        }
+    KubeListFrame(control, state, { it.podNamespaces }, query, onQuery, vm::refresh, modifier) { s ->
+        val load = s.data
+        val selected = control.scope.namespace
+        // Sorted once complete; image search only when every row carries its images.
+        val rows = remember(load, selected, query) { load.items.filteredPods(selected, query, sorted = load.done, searchImages = load.detailed) }
+        PagedProgress(progress)
+        IncompleteNotice(load, searching = query.isNotBlank(), onLoadMore = vm::loadMore, onLoadAll = vm::loadAll)
+        PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
+            if (rows.isEmpty()) {
+                EmptyText(emptyOrNoMatch(query, R.string.pods_empty, R.string.pods_no_match))
+            } else {
+                val listState = rememberLazyListState()
+                LoadMoreOnScroll(listState, enabled = load.hasMore && query.isBlank(), loaded = load.items.size, onLoadMore = vm::loadMore)
+                LazyColumn(Modifier.fillMaxSize(), state = listState) {
+                    items(rows, key = { it.key }) { pod ->
+                        PodRow(
+                            pod,
+                            showNamespace = selected == null,
+                            deleting = pod.key in deleting,
+                            onDelete = { confirm = pod },
+                            onLogs = { logs = pod },
+                            onFlows = onFlows?.let { open -> { open(pod) } },
+                        )
+                        HorizontalDivider()
                     }
                 }
             }
-            DataFreshness(s, edgeToEdge = false)
         }
+        DataFreshness(s, edgeToEdge = false)
     }
 }
 

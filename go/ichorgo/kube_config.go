@@ -18,6 +18,8 @@ type kubeCredentials struct {
 	server *url.URL
 	tls    *tls.Config
 	token  string
+	// namespace is the current context's namespace, "" when it sets none.
+	namespace string
 }
 
 type kubeconfigFile struct {
@@ -44,8 +46,9 @@ type kubeconfigFile struct {
 	Contexts []struct {
 		Name    string `yaml:"name"`
 		Context struct {
-			Cluster string `yaml:"cluster"`
-			User    string `yaml:"user"`
+			Cluster   string `yaml:"cluster"`
+			User      string `yaml:"user"`
+			Namespace string `yaml:"namespace"`
 		} `yaml:"context"`
 	} `yaml:"contexts"`
 }
@@ -68,7 +71,7 @@ func parseKubeconfig(data string) (*kubeCredentials, error) {
 		}
 	}
 
-	creds := &kubeCredentials{tls: &tls.Config{MinVersion: tls.VersionTLS12}}
+	creds := &kubeCredentials{tls: &tls.Config{MinVersion: tls.VersionTLS12}, namespace: ctx.Namespace}
 
 	found := false
 
