@@ -54,7 +54,7 @@ import name.levis.ichor.ui.components.TooltipIconButton
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DataServicesScreen(onBack: () -> Unit) {
+fun DataServicesScreen(initial: DataServiceKind? = null, onBack: () -> Unit) {
     val app = LocalContext.current.applicationContext as TalosApp
     val vm: DataServicesViewModel = viewModel(factory = factory { DataServicesViewModel(app.talosRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
@@ -112,7 +112,7 @@ fun DataServicesScreen(onBack: () -> Unit) {
                 }
                 Column(modifier.fillMaxSize()) {
                     PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                        Systems(s.data, downNodes, vm.garage, vm.longhorn, vm.certificates)
+                        Systems(s.data, downNodes, initial, vm.garage, vm.longhorn, vm.certificates)
                     }
                     DataFreshness(s, edgeToEdge = false)
                 }
@@ -122,14 +122,14 @@ fun DataServicesScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun Systems(services: DataServices, downNodes: Set<String>, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions) {
+private fun Systems(services: DataServices, downNodes: Set<String>, initial: DataServiceKind?, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions) {
     val kinds = services.detected
     if (kinds.isEmpty()) {
         EmptyText(stringResource(R.string.data_services_none))
         return
     }
-    var selected by rememberSaveable { mutableStateOf(kinds.first()) }
-    val tab = selected.takeIf { it in kinds } ?: kinds.first()
+    var selected by rememberSaveable { mutableStateOf(initial) }
+    val tab = selected?.takeIf { it in kinds } ?: kinds.first()
     val causes = remember(services, downNodes) { services.likelyCauses(downNodes) }
 
     Column(Modifier.fillMaxSize()) {

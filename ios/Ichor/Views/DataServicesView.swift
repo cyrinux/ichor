@@ -13,6 +13,13 @@ struct DataServicesView: View {
     @State private var state: LoadState<DataServices> = .loading
     @State private var selected: DataServiceKind?
 
+    /// [selected]: the system to open on; nil (or not found) for the first.
+    init(hints: String, downNodes: Set<String>, selected: DataServiceKind? = nil) {
+        self.hints = hints
+        self.downNodes = downNodes
+        _selected = State(initialValue: selected)
+    }
+
     var body: some View {
         LoadStateView(state: state, retry: load) { services in
             let kinds = services.detected

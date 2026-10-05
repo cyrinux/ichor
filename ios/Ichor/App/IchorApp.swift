@@ -127,8 +127,9 @@ enum Route: Hashable {
     /// Kubernetes Deployments, StatefulSets and DaemonSets (os:admin).
     case workloads
     /// Longhorn, Garage and CloudNativePG health (os:admin); hints: catalog ids from the
-    /// inventory, downNodes: hostnames Talos reports not ready, for the likely cause.
-    case dataServices(hints: String, downNodes: Set<String>)
+    /// inventory, downNodes: hostnames Talos reports not ready, for the likely cause; kind: the
+    /// system to open on (nil: the first).
+    case dataServices(hints: String, downNodes: Set<String>, kind: DataServiceKind? = nil)
     /// Argo CD Applications (os:admin); downNodes as for dataServices.
     case argoCD(downNodes: Set<String>)
     /// Flux Kustomizations, HelmReleases and sources (os:admin); downNodes as for dataServices.
@@ -180,7 +181,7 @@ struct MainNavigation: View {
                     case .etcd: EtcdView()
                     case .kubespan: KubeSpanView()
                     case .workloads: KubernetesView()
-                    case .dataServices(let hints, let downNodes): DataServicesView(hints: hints, downNodes: downNodes)
+                    case .dataServices(let hints, let downNodes, let kind): DataServicesView(hints: hints, downNodes: downNodes, selected: kind)
                     case .argoCD(let downNodes): ArgoCDView(downNodes: downNodes)
                     case .flux(let downNodes): FluxView(downNodes: downNodes)
                     case .health: HealthView()
