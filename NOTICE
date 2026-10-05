@@ -5,11 +5,17 @@ Licensed under the Apache License, Version 2.0 (see LICENSE).
 
 This product includes third-party software:
 
-- Talos machinery client library (github.com/siderolabs/talos/pkg/machinery),
-  Mozilla Public License 2.0, Copyright Sidero Labs, Inc.
+- Talos machinery client library (github.com/siderolabs/talos/pkg/machinery) and its
+  Sidero Labs dependencies (github.com/siderolabs/crypto, gen, go-api-signature,
+  go-pointer, net, protoenc; github.com/cosi-project/runtime), Mozilla Public License 2.0,
+  Copyright Sidero Labs, Inc. Unmodified; source at the URLs above.
+- github.com/hashicorp/errwrap and github.com/hashicorp/go-multierror, Mozilla Public
+  License 2.0, Copyright HashiCorp, Inc. Unmodified; source at the URLs above.
 - Go mobile bindings (golang.org/x/mobile), BSD-3-Clause, Copyright The Go Authors.
 - ConnectBot termlib (github.com/connectbot/termlib), Apache License 2.0;
   it bundles libvterm, MIT License, Copyright Paul Evans.
+- SwiftTerm (github.com/migueldeicaza/SwiftTerm), MIT License, Copyright Miguel de Icaza,
+  the xterm.js authors and SourceLair Private Company.
 - Application icons from Dashboard Icons (github.com/homarr-labs/dashboard-icons),
   Apache License 2.0, Copyright the Homarr Labs contributors.
 - Application icons from selfh.st/icons (github.com/selfhst/icons), Creative Commons

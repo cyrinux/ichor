@@ -27,8 +27,8 @@ This policy says what you can and can't do with them.
 ## Forks
 
 Forks are welcome under the Apache License 2.0. Before you distribute one, rename it,
-replace the logo and icon, and change the application ID (`name.levis.ichor`), so users
-can tell it apart from the official app.
+replace the logo and icon, and change the Android application ID and iOS bundle ID
+(`name.levis.ichor`), so users can tell it apart from the official app.
 
 ## Questions
 
