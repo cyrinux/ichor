@@ -40,4 +40,20 @@ extension TalosClient {
             _ = IchorgoKubeLonghornAction(config, context, kubeServer, namespace, name, action.rawValue, value, error)
         }
     }
+
+    /// What explains the state of the cert-manager certificate namespace/name (os:admin): its
+    /// requests, ACME orders and challenges, their events and controller log lines.
+    func certificateDetails(namespace: String, name: String) async throws -> CertDetails {
+        try await Self.json { [config, context, kubeServer] in
+            IchorgoKubeCertManagerDetails(config, context, kubeServer, namespace, name, $0)
+        }
+    }
+
+    /// Issues the cert-manager certificate namespace/name again now, like `cmctl renew` (os:admin).
+    /// Refused while it is already being issued.
+    func renewCertificate(namespace: String, name: String) async throws {
+        try await Self.run { [config, context, kubeServer] error -> Void in
+            _ = IchorgoKubeCertManagerRenew(config, context, kubeServer, namespace, name, error)
+        }
+    }
 }

@@ -165,6 +165,14 @@ func main() {
 		if err = ichorgo.KubeLonghornAction(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), value); err == nil {
 			out = "requested"
 		}
+	case "cert-details":
+		// cert-details NAMESPACE NAME: conditions, requests, ACME orders and challenges, events, controller log.
+		out, err = ichorgo.KubeCertManagerDetails(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2))
+	case "cert-renew":
+		// cert-renew NAMESPACE NAME: issue the cert-manager certificate again now.
+		if err = ichorgo.KubeCertManagerRenew(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2)); err == nil {
+			out = "requested"
+		}
 	case "argocd":
 		out, err = ichorgo.KubeArgoCD(cfg, *contextName, *kubeServer)
 	case "argocd-network":

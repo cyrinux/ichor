@@ -282,6 +282,8 @@ data class Certificate(
     /** Wire values of [CertReason]. */
     val reasons: List<String> = emptyList(),
     val ready: Boolean = false,
+    /** cert-manager is issuing it now (a renewal, or one forced from the app). */
+    val issuing: Boolean = false,
     /** The Ready condition's message when not ready. */
     val message: String = "",
     /** Unix ms, 0 before the first issuance. */

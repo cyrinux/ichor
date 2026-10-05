@@ -25,6 +25,9 @@ class DataServicesViewModel(private val talos: TalosRepository) : LoadingViewMod
     /** Longhorn volume and node actions; their progress shows in a fresh reading. */
     val longhorn = LonghornActions(viewModelScope, talos, onChanged = { refresh() })
 
+    /** Certificate details and forced renewals; an issuance shows in a fresh reading. */
+    val certificates = CertificateActions(viewModelScope, talos, onChanged = { refresh() })
+
     /** Catalog ids from the inventory; "" checks everything (Garage needs a listing of every pod then). */
     private var hints = ""
     private var source: Any? = null

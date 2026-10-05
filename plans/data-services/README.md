@@ -217,7 +217,7 @@ Alerts (phase 4 rules): `error`/`noMember` → critical; `members`/`backupFailed
 warning; `initializing` and `proxy` alone don't alert.
 
 cert-manager (phase 5, `cert-manager.io/v1`, detected by its API group; certificates, issuers
-and clusterissuers, read-only). Expiry math uses the read time; certificates aren't on nodes, so
+and clusterissuers; one action, a forced renewal). Expiry math uses the read time; certificates aren't on nodes, so
 they take no part in the likely-cause correlation:
 
 ```jsonc
@@ -231,6 +231,7 @@ they take no part in the likely-cause correlation:
       "health": "ok",               // critical: expired, or not Ready within 7 days of notAfter
       "reasons": [],                // expired|expiring|renewalOverdue|notReady|issuer
       "ready": true,
+      "issuing": false,             // the Issuing condition is True (a renewal is running)
       "message": "",                // the Ready condition's message when not ready
       "notAfter": 1764547200000,    // unix ms, 0 before the first issuance
       "renewalTime": 1761955200000, // unix ms, 0 when none
@@ -254,6 +255,40 @@ issuer is not ready; external issuer groups are not checked). Alerts: a critical
 critical; `expiring`/`renewalOverdue`/`notReady` → warning; an issuer not ready → warning on its
 own key. Keys: `certmanager|<ns>/<name>` for a certificate, `certmanager|Issuer/<ns>/<name>` and
 `certmanager|ClusterIssuer/<name>` for an issuer.
+
+`KubeCertManagerRenew(ns, name)` forces a renewal like `cmctl renew`: it adds (or flips) the
+`Issuing` condition to True with reason `ManuallyTriggered` on the certificate's status, a merge
+patch of `/status` carrying the resourceVersion just read. Refused while it is already issuing
+and in the demo. An ACME issuer counts each renewal against its rate limits, so the apps confirm.
+
+`KubeCertManagerDetails(ns, name)` explains a certificate, read on demand (never cached): its
+conditions; its latest 3 CertificateRequests (by the `cert-manager.io/certificate-name`
+annotation or an owner reference, newest first) with their conditions, their ACME Orders and
+those orders' Challenges (`acme.cert-manager.io`, when served; the challenge's `reason` says
+why a domain fails validation); the newest 40 core events of every object of that chain; and
+the newest 60 lines of the cert-manager controller log (pods labelled
+`app.kubernetes.io/name=cert-manager,app.kubernetes.io/component=controller`, else
+`app=cert-manager`, last 4000 lines each) naming one of those objects and its namespace. A
+missing certificate is an error; any other part that cannot be read is named in `error`.
+
+```jsonc
+  {
+    "conditions": [{"type": "Ready", "status": "False", "reason": "Failed", "message": "...", "time": 1764547200000}],
+    "requests": [{
+      "name": "web-2", "created": 1764547200000, "conditions": [...],
+      "orders": [{
+        "name": "web-2-1234", "state": "pending", "reason": "",
+        "challenges": [{"name": "web-2-1234-5678", "type": "HTTP-01", "dnsName": "web.example.com",
+                        "wildcard": false, "state": "pending", "presented": true,
+                        "reason": "Waiting for HTTP-01 challenge propagation: wrong status code '404', expected '200'"}]
+      }]
+    }],
+    "events": [{"time": 1764547200000, "type": "Warning", "reason": "PresentError", "message": "...",
+                "object": "Challenge/web-2-1234-5678", "count": 3}],
+    "log": ["E1005 10:00:00.000000 1 sync.go:190] \"propagation check failed\" ..."],
+    "error": ""
+  }
+```
 
 Velero (phase 5, API group `velero.io`, detected by its group but always read at `v1`: the group
 also serves `v2alpha1` (DataUpload/DataDownload), which has no schedules, backups or locations).

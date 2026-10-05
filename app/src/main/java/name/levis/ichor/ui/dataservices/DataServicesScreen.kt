@@ -69,6 +69,7 @@ fun DataServicesScreen(onBack: () -> Unit) {
     }
     GarageResultToasts(vm.garage.results)
     LonghornResultToasts(vm.longhorn.results)
+    CertificateRenewToasts(vm.certificates.results)
 
     val fingerprint = config?.activeSummary?.takeIf { !it.isDemo && !mask.enabled }?.fingerprint?.takeIf { it.isNotBlank() }
     var editing by remember { mutableStateOf(false) }
@@ -111,7 +112,7 @@ fun DataServicesScreen(onBack: () -> Unit) {
                 }
                 Column(modifier.fillMaxSize()) {
                     PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                        Systems(s.data, downNodes, vm.garage, vm.longhorn)
+                        Systems(s.data, downNodes, vm.garage, vm.longhorn, vm.certificates)
                     }
                     DataFreshness(s, edgeToEdge = false)
                 }
@@ -121,7 +122,7 @@ fun DataServicesScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun Systems(services: DataServices, downNodes: Set<String>, garage: GarageActions, longhorn: LonghornActions) {
+private fun Systems(services: DataServices, downNodes: Set<String>, garage: GarageActions, longhorn: LonghornActions, certificates: CertificateActions) {
     val kinds = services.detected
     if (kinds.isEmpty()) {
         EmptyText(stringResource(R.string.data_services_none))
@@ -148,7 +149,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>, garage: Gara
             DataServiceKind.DRAGONFLY -> DragonflyTab(services.dragonfly!!)
             DataServiceKind.MARIADB -> MariaDbTab(services.mariadb!!)
             DataServiceKind.PERCONA -> PerconaTab(services.percona!!)
-            DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!)
+            DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!, certificates)
             DataServiceKind.VELERO -> VeleroTab(services.velero!!)
             DataServiceKind.CEPH -> CephTab(services.ceph!!)
         }
