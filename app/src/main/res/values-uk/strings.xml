@@ -135,6 +135,12 @@
         <item quantity="many">%1$d готових</item>
         <item quantity="other">%1$d готового</item>
     </plurals>
+    <plurals name="overview_nodes_count_attention">
+        <item quantity="one">%1$d потребує уваги</item>
+        <item quantity="few">%1$d потребують уваги</item>
+        <item quantity="many">%1$d потребують уваги</item>
+        <item quantity="other">%1$d потребує уваги</item>
+    </plurals>
     <plurals name="overview_nodes_count_not_ready">
         <item quantity="one">%1$d не готовий</item>
         <item quantity="few">%1$d не готові</item>

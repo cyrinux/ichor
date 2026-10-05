@@ -30,28 +30,50 @@ struct DenseNodes: View {
     }
 }
 
-/// "187 ready · 3 not ready · 1 unreachable", each count in its status colour; zeros left out.
+/// "187 ready · 2 need a look · 3 not ready · 1 unreachable", each count in its status colour;
+/// zeros left out.
 struct HealthSummary: View {
     let counts: HealthCounts
 
     var body: some View {
-        let parts = NodeHealth.allCases.filter { counts[$0] > 0 }
+        let parts = NodeStatus.allCases.filter { counts[$0] > 0 }
         parts.indices.reduce(Text(verbatim: "")) { text, i in
             text + Text(verbatim: i > 0 ? "  ·  " : "") + Self.count(counts[parts[i]], of: parts[i]).foregroundStyle(parts[i].color)
         }
         .font(.subheadline)
     }
 
-    private static func count(_ n: Int, of health: NodeHealth) -> Text {
-        switch health {
+    private static func count(_ n: Int, of status: NodeStatus) -> Text {
+        switch status {
         case .ready: Text("\(n) ready")
+        case .attention: Text("\(n) need a look")
         case .notReady: Text("\(n) not ready")
         case .unreachable: Text("\(n) unreachable")
         }
     }
 }
 
-/// A dot per node, coloured by its health: tap opens it, a long press offers its actions.
+extension NodeStatus {
+    /// Warn for a ready node reporting a problem too: it is listed as one, it must not look calm.
+    var color: Color {
+        switch self {
+        case .ready: NodeHealth.ready.color
+        case .attention, .notReady: NodeHealth.notReady.color
+        case .unreachable: NodeHealth.unreachable.color
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .ready: NodeHealth.ready.label
+        case .attention: String(localized: "Needs a look")
+        case .notReady: NodeHealth.notReady.label
+        case .unreachable: NodeHealth.unreachable.label
+        }
+    }
+}
+
+/// A dot per node, coloured by its status: tap opens it, a long press offers its actions.
 private struct NodeDots: View {
     let nodes: [NodeOverview]
     @Binding var path: [Route]
@@ -85,12 +107,12 @@ private struct NodeDot: View {
                 Menu { NodeMenu(node: node, path: $path) } label: { dot }
             }
         }
-        .accessibilityLabel(Text(verbatim: "\(node.hostname), \(node.health.label)"))
+        .accessibilityLabel(Text(verbatim: "\(node.hostname), \(node.status.label)"))
     }
 
     private var dot: some View {
         Circle()
-            .fill(node.health.color)
+            .fill(node.status.color)
             .frame(width: 12, height: 12)
             .frame(width: dotTarget, height: dotTarget)
             .contentShape(Rectangle())

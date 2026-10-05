@@ -117,6 +117,10 @@
         <item quantity="one">%1$d ready</item>
         <item quantity="other">%1$d ready</item>
     </plurals>
+    <plurals name="overview_nodes_count_attention">
+        <item quantity="one">%1$d needs a look</item>
+        <item quantity="other">%1$d need a look</item>
+    </plurals>
     <plurals name="overview_nodes_count_not_ready">
         <item quantity="one">%1$d not ready</item>
         <item quantity="other">%1$d not ready</item>

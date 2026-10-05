@@ -115,6 +115,10 @@
         <item quantity="one">%1$d bereit</item>
         <item quantity="other">%1$d bereit</item>
     </plurals>
+    <plurals name="overview_nodes_count_attention">
+        <item quantity="one">%1$d zu prüfen</item>
+        <item quantity="other">%1$d zu prüfen</item>
+    </plurals>
     <plurals name="overview_nodes_count_not_ready">
         <item quantity="one">%1$d nicht bereit</item>
         <item quantity="other">%1$d nicht bereit</item>

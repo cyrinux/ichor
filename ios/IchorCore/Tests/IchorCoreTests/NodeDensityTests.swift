@@ -28,6 +28,19 @@ final class NodeDensityTests: XCTestCase {
         XCTAssertEqual([NodeOverview]().healthCounts, HealthCounts())
     }
 
+    func testReadyNodeReportingAProblemIsNotCountedCalm() {
+        let condition = NodeOverview(
+            node: "10.0.0.2", hostname: "node-2", reachable: true, ready: true,
+            unmetConditions: [UnmetCondition(name: "services", reason: "etcd not healthy")]
+        )
+        let nodes = [node(1), condition, node(3, error: "disk pressure"), node(4, reachable: false)]
+        XCTAssertEqual(nodes.map(\.status), [.ready, .attention, .attention, .unreachable])
+        XCTAssertEqual(nodes.healthCounts, HealthCounts(ready: 1, attention: 2, unreachable: 1))
+        XCTAssertEqual(nodes.healthCounts.total, 4)
+        // Listed as problems, like the dots say.
+        XCTAssertEqual(nodes.problemNodes().shown.map(\.hostname), ["node-4", "node-2", "node-3"])
+    }
+
     func testProblemsWorstFirstCappedAtFive() {
         let nodes = cluster(200).enumerated().map { i, n -> NodeOverview in
             switch i {

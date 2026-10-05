@@ -41,11 +41,11 @@ import name.levis.ichor.R
 import name.levis.ichor.model.HealthCounts
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.NodeGroup
-import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.model.NodeOverview
-import name.levis.ichor.model.health
+import name.levis.ichor.model.NodeStatus
 import name.levis.ichor.model.healthCounts
 import name.levis.ichor.model.problemNodes
+import name.levis.ichor.model.status
 import name.levis.ichor.ui.kubespan.siteTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -98,12 +98,15 @@ internal fun DenseNodes(
 internal fun siteLabel(group: NodeGroup): String =
     group.site?.let { siteTitle(it) } ?: stringResource(R.string.overview_nodes_unplaced)
 
-/** "187 ready · 3 not ready · 1 unreachable", each count in its status colour; zeros left out. */
+/**
+ * "187 ready · 2 need a look · 3 not ready · 1 unreachable", each count in its status colour;
+ * zeros left out.
+ */
 @Composable
 internal fun healthSummary(counts: HealthCounts): AnnotatedString {
-    val parts = NodeHealth.entries.filter { counts[it] > 0 }.map { health ->
-        val n = counts[health]
-        pluralStringResource(countLabel(health), n, n) to healthColor(health)
+    val parts = NodeStatus.entries.filter { counts[it] > 0 }.map { status ->
+        val n = counts[status]
+        pluralStringResource(countLabel(status), n, n) to statusColor(status)
     }
     return buildAnnotatedString {
         parts.forEachIndexed { i, (text, color) ->
@@ -123,32 +126,35 @@ private fun siteLine(site: String, summary: AnnotatedString): AnnotatedString {
     }
 }
 
-private fun countLabel(health: NodeHealth) = when (health) {
-    NodeHealth.READY -> R.plurals.overview_nodes_count_ready
-    NodeHealth.NOT_READY -> R.plurals.overview_nodes_count_not_ready
-    NodeHealth.UNREACHABLE -> R.plurals.overview_nodes_count_unreachable
+private fun countLabel(status: NodeStatus) = when (status) {
+    NodeStatus.READY -> R.plurals.overview_nodes_count_ready
+    NodeStatus.ATTENTION -> R.plurals.overview_nodes_count_attention
+    NodeStatus.NOT_READY -> R.plurals.overview_nodes_count_not_ready
+    NodeStatus.UNREACHABLE -> R.plurals.overview_nodes_count_unreachable
 }
 
+/** Warn for a ready node reporting a problem too: it is listed as one, it must not look calm. */
 @Composable
-private fun healthColor(health: NodeHealth): Color {
+private fun statusColor(status: NodeStatus): Color {
     val colors = LocalStatusColors.current
-    return when (health) {
-        NodeHealth.READY -> colors.ok
-        NodeHealth.NOT_READY -> colors.warn
-        NodeHealth.UNREACHABLE -> colors.bad
+    return when (status) {
+        NodeStatus.READY -> colors.ok
+        NodeStatus.ATTENTION, NodeStatus.NOT_READY -> colors.warn
+        NodeStatus.UNREACHABLE -> colors.bad
     }
 }
 
 @Composable
-private fun healthLabel(health: NodeHealth): String = stringResource(
-    when (health) {
-        NodeHealth.READY -> R.string.common_status_ready
-        NodeHealth.NOT_READY -> R.string.common_status_not_ready
-        NodeHealth.UNREACHABLE -> R.string.common_status_unreachable
+private fun statusLabel(status: NodeStatus): String = stringResource(
+    when (status) {
+        NodeStatus.READY -> R.string.common_status_ready
+        NodeStatus.ATTENTION -> R.string.nodes_filter_attention
+        NodeStatus.NOT_READY -> R.string.common_status_not_ready
+        NodeStatus.UNREACHABLE -> R.string.common_status_unreachable
     },
 )
 
-/** A dot per node, coloured by its health; one traversal group, so TalkBack reads them in order. */
+/** A dot per node, coloured by its status; one traversal group, so TalkBack reads them in order. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun NodeDots(
@@ -175,9 +181,9 @@ private fun NodeDots(
 /** Tap opens the node, a long press its actions; read as "hostname, status". */
 @Composable
 private fun NodeDot(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> Unit, onLive: (() -> Unit)?) {
-    val description = "${node.hostname}, ${healthLabel(node.health)}"
+    val description = "${node.hostname}, ${statusLabel(node.status)}"
     val liveLabel = stringResource(R.string.overview_action_live_graphs)
-    val color = healthColor(node.health)
+    val color = statusColor(node.status)
     Box(
         Modifier.size(DOT_TARGET).combinedClickable(
             role = Role.Button,

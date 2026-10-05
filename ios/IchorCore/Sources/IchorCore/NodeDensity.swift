@@ -10,23 +10,42 @@ public let denseMaxProblems = 5
 /// Whether a cluster of `nodeCount` nodes gets the dense overview.
 public func isDenseCluster(_ nodeCount: Int) -> Bool { nodeCount > nodeDenseThreshold }
 
-/// How many nodes are in each `NodeHealth`.
+/// A node's dot in the dense section: its `NodeHealth`, except that a ready node reporting a
+/// problem (`needsAttention`) is `attention`, so a node listed as a problem never shows as calm.
+public enum NodeStatus: String, CaseIterable, Sendable {
+    case ready, attention, notReady, unreachable
+}
+
+public extension NodeOverview {
+    var status: NodeStatus {
+        switch health {
+        case .unreachable: .unreachable
+        case .notReady: .notReady
+        case .ready: needsAttention ? .attention : .ready
+        }
+    }
+}
+
+/// How many nodes are in each `NodeStatus`.
 public struct HealthCounts: Equatable, Sendable {
     public var ready = 0
+    public var attention = 0
     public var notReady = 0
     public var unreachable = 0
 
-    public init(ready: Int = 0, notReady: Int = 0, unreachable: Int = 0) {
+    public init(ready: Int = 0, attention: Int = 0, notReady: Int = 0, unreachable: Int = 0) {
         self.ready = ready
+        self.attention = attention
         self.notReady = notReady
         self.unreachable = unreachable
     }
 
-    public var total: Int { ready + notReady + unreachable }
+    public var total: Int { ready + attention + notReady + unreachable }
 
-    public subscript(health: NodeHealth) -> Int {
-        switch health {
+    public subscript(status: NodeStatus) -> Int {
+        switch status {
         case .ready: ready
+        case .attention: attention
         case .notReady: notReady
         case .unreachable: unreachable
         }
@@ -62,9 +81,10 @@ public extension Array where Element == NodeOverview {
 
     var healthCounts: HealthCounts {
         HealthCounts(
-            ready: filter { $0.health == .ready }.count,
-            notReady: filter { $0.health == .notReady }.count,
-            unreachable: filter { $0.health == .unreachable }.count
+            ready: filter { $0.status == .ready }.count,
+            attention: filter { $0.status == .attention }.count,
+            notReady: filter { $0.status == .notReady }.count,
+            unreachable: filter { $0.status == .unreachable }.count
         )
     }
 

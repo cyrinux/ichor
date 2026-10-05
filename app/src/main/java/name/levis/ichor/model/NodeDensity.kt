@@ -21,23 +21,38 @@ fun isDenseCluster(nodeCount: Int): Boolean = nodeCount > NODE_DENSE_THRESHOLD
 /** Seconds between live cluster samples for a cluster of [nodeCount] nodes. */
 fun clusterPollSeconds(nodeCount: Int): Long = if (isDenseCluster(nodeCount)) DENSE_CLUSTER_POLL_SECONDS else CLUSTER_POLL_SECONDS
 
-/** How many nodes are in each [NodeHealth]. */
-data class HealthCounts(val ready: Int = 0, val notReady: Int = 0, val unreachable: Int = 0) {
-    val total: Int get() = ready + notReady + unreachable
+/**
+ * A node's dot on the dense card: its [NodeHealth], except that a ready node reporting a problem
+ * ([needsAttention]) is [ATTENTION], so a node listed as a problem never shows as calm.
+ */
+enum class NodeStatus { READY, ATTENTION, NOT_READY, UNREACHABLE }
 
-    operator fun get(health: NodeHealth): Int = when (health) {
-        NodeHealth.READY -> ready
-        NodeHealth.NOT_READY -> notReady
-        NodeHealth.UNREACHABLE -> unreachable
+val NodeOverview.status: NodeStatus
+    get() = when (health) {
+        NodeHealth.UNREACHABLE -> NodeStatus.UNREACHABLE
+        NodeHealth.NOT_READY -> NodeStatus.NOT_READY
+        NodeHealth.READY -> if (needsAttention) NodeStatus.ATTENTION else NodeStatus.READY
+    }
+
+/** How many nodes are in each [NodeStatus]. */
+data class HealthCounts(val ready: Int = 0, val attention: Int = 0, val notReady: Int = 0, val unreachable: Int = 0) {
+    val total: Int get() = ready + attention + notReady + unreachable
+
+    operator fun get(status: NodeStatus): Int = when (status) {
+        NodeStatus.READY -> ready
+        NodeStatus.ATTENTION -> attention
+        NodeStatus.NOT_READY -> notReady
+        NodeStatus.UNREACHABLE -> unreachable
     }
 }
 
 fun List<NodeOverview>.healthCounts(): HealthCounts {
-    val byHealth = groupingBy { it.health }.eachCount()
+    val byStatus = groupingBy { it.status }.eachCount()
     return HealthCounts(
-        ready = byHealth[NodeHealth.READY] ?: 0,
-        notReady = byHealth[NodeHealth.NOT_READY] ?: 0,
-        unreachable = byHealth[NodeHealth.UNREACHABLE] ?: 0,
+        ready = byStatus[NodeStatus.READY] ?: 0,
+        attention = byStatus[NodeStatus.ATTENTION] ?: 0,
+        notReady = byStatus[NodeStatus.NOT_READY] ?: 0,
+        unreachable = byStatus[NodeStatus.UNREACHABLE] ?: 0,
     )
 }
 

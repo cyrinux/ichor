@@ -117,6 +117,10 @@
         <item quantity="many">%1$d prêts</item>
         <item quantity="other">%1$d prêts</item>
     </plurals>
+    <plurals name="overview_nodes_count_attention">
+        <item quantity="one">%1$d à vérifier</item>
+        <item quantity="other">%1$d à vérifier</item>
+    </plurals>
     <plurals name="overview_nodes_count_not_ready">
         <item quantity="one">%1$d non prêt</item>
         <item quantity="many">%1$d non prêts</item>

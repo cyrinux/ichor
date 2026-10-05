@@ -117,6 +117,10 @@
         <item quantity="many">%1$d listos</item>
         <item quantity="other">%1$d listos</item>
     </plurals>
+    <plurals name="overview_nodes_count_attention">
+        <item quantity="one">%1$d requiere atención</item>
+        <item quantity="other">%1$d requieren atención</item>
+    </plurals>
     <plurals name="overview_nodes_count_not_ready">
         <item quantity="one">%1$d no listo</item>
         <item quantity="many">%1$d no listos</item>

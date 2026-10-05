@@ -41,8 +41,21 @@ class NodeDensityTest {
 
         assertEquals(HealthCounts(ready = 196, notReady = 3, unreachable = 1), counts)
         assertEquals(200, counts.total)
-        assertEquals(3, counts[NodeHealth.NOT_READY])
+        assertEquals(3, counts[NodeStatus.NOT_READY])
         assertEquals(HealthCounts(), emptyList<NodeOverview>().healthCounts())
+    }
+
+    @Test
+    fun aReadyNodeReportingAProblemIsNotCountedCalm() {
+        val condition = ready(2).copy(unmetConditions = listOf(UnmetCondition("services", "etcd not healthy")))
+        val failing = ready(3).copy(error = "disk pressure")
+        val nodes = listOf(ready(1), condition, failing, ready(4).copy(reachable = false))
+
+        assertEquals(listOf(NodeStatus.READY, NodeStatus.ATTENTION, NodeStatus.ATTENTION, NodeStatus.UNREACHABLE), nodes.map { it.status })
+        assertEquals(HealthCounts(ready = 1, attention = 2, unreachable = 1), nodes.healthCounts())
+        assertEquals(4, nodes.healthCounts().total)
+        // Listed as problems, like the dots say.
+        assertEquals(listOf("node-4", "node-2", "node-3"), nodes.problemNodes().shown.map { it.hostname })
     }
 
     @Test
