@@ -486,6 +486,17 @@
     <string name="about_license">Lizenz: Apache 2.0</string>
     <string name="about_licenses">Open-Source-Lizenzen</string>
     <string name="about_talos">Talos Linux (talos.dev)</string>
+    <string name="supported_integrations_title">Integrationen</string>
+    <string name="supported_integrations_desc">Die Projekte, die Ichor über die Kubernetes-API liest, im Cluster anhand ihrer API-Gruppen, ihrer laufenden Pods oder ihrer Services erkannt. Tippe auf eines, um seine Website zu öffnen.</string>
+    <string name="supported_integrations_needs_admin">Für die Erkennung im Cluster ist eine os:admin-Konfiguration nötig.</string>
+    <string name="supported_integrations_no_api">keine eigene API</string>
+    <string name="supported_integrations_detected">Erkannt</string>
+    <string name="supported_integrations_not_detected">Nicht erkannt</string>
+    <string name="supported_integrations_website">Website von %1$s</string>
+    <string name="supported_integrations_found_inventory">Im App-Inventar gefunden</string>
+    <string name="supported_integrations_found_services">Über seine Services gefunden</string>
+    <string name="supported_integrations_found_pods">Über seine laufenden Pods gefunden</string>
+    <string name="supported_integrations_found_api">Über seine API gefunden</string>
     <string name="about_sponsor">Auf GitHub sponsern</string>
     <string name="funding_title">Funktionen finanzieren</string>
     <string name="funding_intro">Wähle die Funktionen, die du als Nächstes willst. Was jede einsammelt, zeigt, was dir am wichtigsten ist, und bezahlt die Zeit, sie zu bauen.</string>
@@ -2506,6 +2517,9 @@
         <item quantity="one">%1$d wartend</item>
         <item quantity="other">%1$d wartend</item>
     </plurals>
+    <string name="share_link">Link teilen</string>
+    <string name="share_link_unknown_cluster">Dieser Link gehört zu einem Cluster, der nicht auf diesem Telefon ist</string>
+    <string name="share_link_invalid">Kein gültiger Ichor-Link</string>
     <string name="argo_revert_text_change">%1$s stellt dies mit aktiver Selbstheilung bereit: Innerhalb von Minuten setzt es das auf den Stand in Git zurück. Friere %1$s zuerst ein, um deine Änderung eine Weile zu behalten.</string>
     <string name="argo_revert_freeze_first">%1$s zuerst 1 Std. einfrieren</string>
     <string name="argo_freeze_reason_suspend">aussetzen</string>

@@ -66,6 +66,7 @@ fun SettingsScreen(
     onIntegrations: () -> Unit,
     onChangelog: () -> Unit,
     onLicenses: () -> Unit,
+    onSupportedIntegrations: () -> Unit,
     onFunding: () -> Unit,
     onCleared: () -> Unit,
 ) {
@@ -130,7 +131,7 @@ fun SettingsScreen(
             OutlinedButton(onClick = { openUrl(context, REPORT_BUG_URL) }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.settings_report_bug))
             }
-            AboutSection(onChangelog, onLicenses, onFunding)
+            AboutSection(onChangelog, onLicenses, onSupportedIntegrations, onFunding)
             if (BuildConfig.SELF_UPDATE) UpdateSection((LocalContext.current.applicationContext as TalosApp).updateManager)
         }
     }

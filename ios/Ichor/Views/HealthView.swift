@@ -49,6 +49,7 @@ struct HealthView: View {
         }
         .themedBackground()
         .navigationTitle("Cluster health")
+        .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.health)) } }
         .task(id: runID) { await run() }
     }
 

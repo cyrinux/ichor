@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.argocd
 
+import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -108,7 +110,10 @@ fun ArgoAppScreen(
             TopAppBar(
                 title = { Text(name) },
                 navigationIcon = { BackButton(onBack) },
-                actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
+                actions = {
+                    ShareLinkButton(ShareTarget.argoApp(namespace, name))
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
+                },
             )
         },
     ) { padding ->

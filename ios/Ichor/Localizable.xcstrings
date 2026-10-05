@@ -1,6 +1,41 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ website" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Site de %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitio web de %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сайт %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Website von %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sito di %@"
+          }
+        }
+      }
+    },
     "%lld ready" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -534,6 +569,251 @@
         }
       }
     },
+    "Detected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détecté"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detectado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виявлено"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erkannt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rilevato"
+          }
+        }
+      }
+    },
+    "Detecting them on the cluster needs an os:admin config." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les détecter sur le cluster demande une configuration os:admin."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detectarlos en el clúster requiere una configuración os:admin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для виявлення в кластері потрібна конфігурація os:admin."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für die Erkennung im Cluster ist eine os:admin-Konfiguration nötig."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rilevarli sul cluster richiede una configurazione os:admin."
+          }
+        }
+      }
+    },
+    "Found by its API" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouvé par son API"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encontrado por su API"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайдено за його API"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über seine API gefunden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trovato tramite la sua API"
+          }
+        }
+      }
+    },
+    "Found by its Services" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouvé par ses Services"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encontrado por sus Services"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайдено за його Services"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über seine Services gefunden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trovato dai suoi Service"
+          }
+        }
+      }
+    },
+    "Found by its running pods" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouvé par ses pods en cours d’exécution"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encontrado por sus pods en ejecución"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайдено за його запущеними подами"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über seine laufenden Pods gefunden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trovato dai suoi pod in esecuzione"
+          }
+        }
+      }
+    },
+    "Found in the app inventory" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouvé dans l’inventaire des apps"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encontrado en el inventario de apps"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайдено в інвентарі застосунків"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im App-Inventar gefunden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trovato nell’inventario delle app"
+          }
+        }
+      }
+    },
+    "Integrations" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intégrations"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integraciones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інтеграції"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integrationen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integrazioni"
+          }
+        }
+      }
+    },
     "Kubernetes pods" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -682,6 +962,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не завершені"
+          }
+        }
+      }
+    },
+    "Not detected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non détecté"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No detectado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не виявлено"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht erkannt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non rilevato"
           }
         }
       }
@@ -1159,6 +1474,41 @@
         }
       }
     },
+    "The projects Ichor reads through the Kubernetes API, found on the cluster by their API groups, their running pods or their Services. Tap one to open its website." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les projets qu’Ichor lit via l’API Kubernetes, détectés sur le cluster par leurs groupes d’API, leurs pods en cours d’exécution ou leurs Services. Touchez-en un pour ouvrir son site."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los proyectos que Ichor lee a través de la API de Kubernetes, detectados en el clúster por sus grupos de API, sus pods en ejecución o sus Services. Toca uno para abrir su sitio web."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проєкти, які Ichor читає через Kubernetes API, виявлені в кластері за їхніми групами API, запущеними подами або Services. Торкніться проєкту, щоб відкрити його сайт."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Projekte, die Ichor über die Kubernetes-API liest, im Cluster anhand ihrer API-Gruppen, ihrer laufenden Pods oder ihrer Services erkannt. Tippe auf eines, um seine Website zu öffnen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I progetti che Ichor legge tramite l’API di Kubernetes, rilevati sul cluster dai loro gruppi di API, dai pod in esecuzione o dai loro Service. Tocca un progetto per aprirne il sito."
+          }
+        }
+      }
+    },
     "Until the reboot Ichor may drive the download and install: in the background iOS pauses it, and the upgrade can stall." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1470,6 +1820,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "новий"
+          }
+        }
+      }
+    },
+    "no API of its own" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pas d’API propre"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sin API propia"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "без власного API"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keine eigene API"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nessuna API propria"
           }
         }
       }
@@ -3718,42 +4103,42 @@
         }
       }
     },
-    "Back up clusters and settings…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Back up clusters and settings…"
+    "Back up clusters and settings…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back up clusters and settings…"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sauvegarder clusters et réglages…"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarder clusters et réglages…"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copia de seguridad de clústeres y ajustes…"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia de seguridad de clústeres y ajustes…"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Створити резервну копію кластерів і налаштувань…"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створити резервну копію кластерів і налаштувань…"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cluster und Einstellungen sichern…"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster und Einstellungen sichern…"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Backup di cluster e impostazioni…"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup di cluster e impostazioni…"
           }
         }
       }
@@ -4987,82 +5372,82 @@
         }
       }
     },
-    "Restore a backup…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restore a backup…"
+    "Restore a backup…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore a backup…"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restaurer une sauvegarde…"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurer une sauvegarde…"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restaurar una copia de seguridad…"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar una copia de seguridad…"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Відновити резервну копію…"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити резервну копію…"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sicherung wiederherstellen…"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherung wiederherstellen…"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ripristina un backup…"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina un backup…"
           }
         }
       }
     },
-    "Restore a backup": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restore a backup"
+    "Restore a backup" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore a backup"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restaurer une sauvegarde"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurer une sauvegarde"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restaurar una copia de seguridad"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar una copia de seguridad"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Відновити резервну копію"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити резервну копію"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sicherung wiederherstellen"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherung wiederherstellen"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ripristina un backup"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina un backup"
           }
         }
       }
@@ -5149,442 +5534,442 @@
         }
       }
     },
-    "Save your clusters and settings to a file encrypted with a passphrase, to restore them on a new phone (iOS or Android). Without the passphrase the file cannot be opened.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save your clusters and settings to a file encrypted with a passphrase, to restore them on a new phone (iOS or Android). Without the passphrase the file cannot be opened."
+    "Save your clusters and settings to a file encrypted with a passphrase, to restore them on a new phone (iOS or Android). Without the passphrase the file cannot be opened." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save your clusters and settings to a file encrypted with a passphrase, to restore them on a new phone (iOS or Android). Without the passphrase the file cannot be opened."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enregistrez vos clusters et réglages dans un fichier chiffré par une phrase secrète, pour les restaurer sur un nouveau téléphone (iOS ou Android). Sans la phrase secrète, le fichier ne peut pas être ouvert."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrez vos clusters et réglages dans un fichier chiffré par une phrase secrète, pour les restaurer sur un nouveau téléphone (iOS ou Android). Sans la phrase secrète, le fichier ne peut pas être ouvert."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guarda tus clústeres y ajustes en un archivo cifrado con una frase de contraseña para restaurarlos en un teléfono nuevo (iOS o Android). Sin la frase de contraseña no se puede abrir el archivo."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda tus clústeres y ajustes en un archivo cifrado con una frase de contraseña para restaurarlos en un teléfono nuevo (iOS o Android). Sin la frase de contraseña no se puede abrir el archivo."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Збережіть кластери та налаштування у файл, зашифрований парольною фразою, щоб відновити їх на новому телефоні (iOS або Android). Без парольної фрази файл не відкрити."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережіть кластери та налаштування у файл, зашифрований парольною фразою, щоб відновити їх на новому телефоні (iOS або Android). Без парольної фрази файл не відкрити."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Speichere deine Cluster und Einstellungen in einer mit einer Passphrase verschlüsselten Datei, um sie auf einem neuen Telefon (iOS oder Android) wiederherzustellen. Ohne die Passphrase lässt sich die Datei nicht öffnen."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichere deine Cluster und Einstellungen in einer mit einer Passphrase verschlüsselten Datei, um sie auf einem neuen Telefon (iOS oder Android) wiederherzustellen. Ohne die Passphrase lässt sich die Datei nicht öffnen."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Salva i tuoi cluster e le impostazioni in un file cifrato con una passphrase, per ripristinarli su un nuovo telefono (iOS o Android). Senza la passphrase il file non può essere aperto."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva i tuoi cluster e le impostazioni in un file cifrato con una passphrase, per ripristinarli su un nuovo telefono (iOS o Android). Senza la passphrase il file non può essere aperto."
           }
         }
       }
     },
-    "Backup saved. Keep the passphrase somewhere safe.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Backup saved. Keep the passphrase somewhere safe."
+    "Backup saved. Keep the passphrase somewhere safe." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup saved. Keep the passphrase somewhere safe."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sauvegarde enregistrée. Conservez la phrase secrète en lieu sûr."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarde enregistrée. Conservez la phrase secrète en lieu sûr."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copia guardada. Guarda la frase de contraseña en un lugar seguro."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia guardada. Guarda la frase de contraseña en un lugar seguro."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Резервну копію збережено. Зберігайте парольну фразу в надійному місці."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Резервну копію збережено. Зберігайте парольну фразу в надійному місці."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sicherung gespeichert. Bewahre die Passphrase sicher auf."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherung gespeichert. Bewahre die Passphrase sicher auf."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Backup salvato. Conserva la passphrase in un posto sicuro."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup salvato. Conserva la passphrase in un posto sicuro."
           }
         }
       }
     },
-    "Backup restored.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Backup restored."
+    "Backup restored." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup restored."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sauvegarde restaurée."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarde restaurée."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copia restaurada."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia restaurada."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Резервну копію відновлено."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Резервну копію відновлено."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sicherung wiederhergestellt."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherung wiederhergestellt."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Backup ripristinato."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup ripristinato."
           }
         }
       }
     },
-    "Restoring replaces every cluster and setting on this device with those of the backup.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restoring replaces every cluster and setting on this device with those of the backup."
+    "Restoring replaces every cluster and setting on this device with those of the backup." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restoring replaces every cluster and setting on this device with those of the backup."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La restauration remplace tous les clusters et réglages de cet appareil par ceux de la sauvegarde."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La restauration remplace tous les clusters et réglages de cet appareil par ceux de la sauvegarde."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restaurar sustituye todos los clústeres y ajustes de este dispositivo por los de la copia de seguridad."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar sustituye todos los clústeres y ajustes de este dispositivo por los de la copia de seguridad."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Відновлення замінить усі кластери й налаштування на цьому пристрої даними з резервної копії."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновлення замінить усі кластери й налаштування на цьому пристрої даними з резервної копії."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Wiederherstellung ersetzt alle Cluster und Einstellungen auf diesem Gerät durch die der Sicherung."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Wiederherstellung ersetzt alle Cluster und Einstellungen auf diesem Gerät durch die der Sicherung."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Il ripristino sostituisce tutti i cluster e le impostazioni di questo dispositivo con quelli del backup."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il ripristino sostituisce tutti i cluster e le impostazioni di questo dispositivo con quelli del backup."
           }
         }
       }
     },
-    "Back up clusters and their credentials": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Back up clusters and their credentials"
+    "Back up clusters and their credentials" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back up clusters and their credentials"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sauvegarder les clusters et leurs identifiants"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarder les clusters et leurs identifiants"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Copia de seguridad de los clústeres y sus credenciales"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia de seguridad de los clústeres y sus credenciales"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Резервна копія кластерів та їхніх облікових даних"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Резервна копія кластерів та їхніх облікових даних"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cluster und ihre Zugangsdaten sichern"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster und ihre Zugangsdaten sichern"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Backup dei cluster e delle loro credenziali"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup dei cluster e delle loro credenziali"
           }
         }
       }
     },
-    "Passphrase": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Passphrase"
+    "Passphrase" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passphrase"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Phrase secrète"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phrase secrète"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Frase de contraseña"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frase de contraseña"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Парольна фраза"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Парольна фраза"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Passphrase"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passphrase"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Passphrase"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passphrase"
           }
         }
       }
     },
-    "Passphrase again": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Passphrase again"
+    "Passphrase again" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passphrase again"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Confirmer la phrase secrète"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmer la phrase secrète"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Repite la frase de contraseña"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repite la frase de contraseña"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Повторіть парольну фразу"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторіть парольну фразу"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Passphrase wiederholen"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passphrase wiederholen"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ripeti la passphrase"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripeti la passphrase"
           }
         }
       }
     },
-    "The backup holds your clusters’ credentials. Choose a passphrase of at least %lld characters; it is needed to restore and cannot be recovered.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The backup holds your clusters’ credentials. Choose a passphrase of at least %lld characters; it is needed to restore and cannot be recovered."
+    "The backup holds your clusters’ credentials. Choose a passphrase of at least %lld characters; it is needed to restore and cannot be recovered." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The backup holds your clusters’ credentials. Choose a passphrase of at least %lld characters; it is needed to restore and cannot be recovered."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La sauvegarde contient les identifiants de vos clusters. Choisissez une phrase secrète d’au moins %lld caractères ; elle sera nécessaire pour restaurer et ne peut pas être récupérée."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sauvegarde contient les identifiants de vos clusters. Choisissez une phrase secrète d’au moins %lld caractères ; elle sera nécessaire pour restaurer et ne peut pas être récupérée."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La copia contiene las credenciales de tus clústeres. Elige una frase de contraseña de al menos %lld caracteres; se necesita para restaurar y no se puede recuperar."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La copia contiene las credenciales de tus clústeres. Elige una frase de contraseña de al menos %lld caracteres; se necesita para restaurar y no se puede recuperar."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Резервна копія містить облікові дані ваших кластерів. Виберіть парольну фразу щонайменше з %lld символів; вона потрібна для відновлення, і її не можна відновити."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Резервна копія містить облікові дані ваших кластерів. Виберіть парольну фразу щонайменше з %lld символів; вона потрібна для відновлення, і її не можна відновити."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Sicherung enthält die Zugangsdaten deiner Cluster. Wähle eine Passphrase mit mindestens %lld Zeichen; ohne sie ist keine Wiederherstellung möglich, und sie lässt sich nicht zurückgewinnen."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Sicherung enthält die Zugangsdaten deiner Cluster. Wähle eine Passphrase mit mindestens %lld Zeichen; ohne sie ist keine Wiederherstellung möglich, und sie lässt sich nicht zurückgewinnen."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Il backup contiene le credenziali dei tuoi cluster. Scegli una passphrase di almeno %lld caratteri; serve per il ripristino e non può essere recuperata."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il backup contiene le credenziali dei tuoi cluster. Scegli una passphrase di almeno %lld caratteri; serve per il ripristino e non può essere recuperata."
           }
         }
       }
     },
-    "Encrypting…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Encrypting…"
+    "Encrypting…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encrypting…"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chiffrement…"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiffrement…"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cifrando…"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifrando…"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Шифрування…"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шифрування…"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wird verschlüsselt…"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird verschlüsselt…"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cifratura…"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifratura…"
           }
         }
       }
     },
-    "Encrypt the backup": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Encrypt the backup"
+    "Encrypt the backup" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encrypt the backup"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chiffrer la sauvegarde"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiffrer la sauvegarde"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cifrar la copia de seguridad"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifrar la copia de seguridad"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Зашифрувати резервну копію"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зашифрувати резервну копію"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sicherung verschlüsseln"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherung verschlüsseln"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cifra il backup"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifra il backup"
           }
         }
       }
     },
-    "Encrypt and save": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Encrypt and save"
+    "Encrypt and save" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encrypt and save"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chiffrer et enregistrer"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiffrer et enregistrer"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cifrar y guardar"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifrar y guardar"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Зашифрувати й зберегти"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зашифрувати й зберегти"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verschlüsseln und speichern"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschlüsseln und speichern"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cifra e salva"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifra e salva"
           }
         }
       }
@@ -5712,202 +6097,202 @@
         }
       }
     },
-    "Use at least %lld characters.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use at least %lld characters."
+    "Use at least %lld characters." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use at least %lld characters."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utilisez au moins %lld caractères."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilisez au moins %lld caractères."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usa al menos %lld caracteres."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa al menos %lld caracteres."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Використайте щонайменше %lld символів."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використайте щонайменше %lld символів."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verwende mindestens %lld Zeichen."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwende mindestens %lld Zeichen."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usa almeno %lld caratteri."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa almeno %lld caratteri."
           }
         }
       }
     },
-    "The passphrases differ.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The passphrases differ."
+    "The passphrases differ." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The passphrases differ."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les phrases secrètes diffèrent."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les phrases secrètes diffèrent."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las frases de contraseña no coinciden."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las frases de contraseña no coinciden."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Парольні фрази не збігаються."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Парольні фрази не збігаються."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Passphrasen stimmen nicht überein."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Passphrasen stimmen nicht überein."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le passphrase non coincidono."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le passphrase non coincidono."
           }
         }
       }
     },
-    "Enter the passphrase the backup was encrypted with.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enter the passphrase the backup was encrypted with."
+    "Enter the passphrase the backup was encrypted with." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the passphrase the backup was encrypted with."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saisissez la phrase secrète utilisée pour chiffrer la sauvegarde."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez la phrase secrète utilisée pour chiffrer la sauvegarde."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Introduce la frase de contraseña con la que se cifró la copia."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce la frase de contraseña con la que se cifró la copia."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Введіть парольну фразу, якою зашифровано резервну копію."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть парольну фразу, якою зашифровано резервну копію."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gib die Passphrase ein, mit der die Sicherung verschlüsselt wurde."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib die Passphrase ein, mit der die Sicherung verschlüsselt wurde."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inserisci la passphrase con cui è stato cifrato il backup."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserisci la passphrase con cui è stato cifrato il backup."
           }
         }
       }
     },
-    "Open the backup": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open the backup"
+    "Open the backup" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the backup"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ouvrir la sauvegarde"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir la sauvegarde"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abrir la copia de seguridad"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir la copia de seguridad"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Відкрити резервну копію"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити резервну копію"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sicherung öffnen"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherung öffnen"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apri il backup"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri il backup"
           }
         }
       }
     },
-    "Restore": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restore"
+    "Restore" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restaurer"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurer"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restaurar"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Відновити"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wiederherstellen"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiederherstellen"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ripristina"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina"
           }
         }
       }
@@ -5953,1246 +6338,1245 @@
         }
       }
     },
-    "Wrong passphrase, or the file is damaged.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wrong passphrase, or the file is damaged."
+    "Wrong passphrase, or the file is damaged." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrong passphrase, or the file is damaged."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Phrase secrète incorrecte, ou fichier endommagé."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phrase secrète incorrecte, ou fichier endommagé."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Frase de contraseña incorrecta o archivo dañado."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frase de contraseña incorrecta o archivo dañado."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Неправильна парольна фраза або файл пошкоджено."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неправильна парольна фраза або файл пошкоджено."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Falsche Passphrase oder beschädigte Datei."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falsche Passphrase oder beschädigte Datei."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Passphrase errata o file danneggiato."
-          }
-        }
-      }
-    },
-    "This file is not an Ichor backup.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This file is not an Ichor backup."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ce fichier n’est pas une sauvegarde Ichor."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este archivo no es una copia de seguridad de Ichor."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Цей файл не є резервною копією Ichor."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diese Datei ist keine Ichor-Sicherung."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Questo file non è un backup di Ichor."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passphrase errata o file danneggiato."
           }
         }
       }
     },
-    "This backup was made by a newer version of Ichor. Update the app to restore it.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This backup was made by a newer version of Ichor. Update the app to restore it."
+    "This file is not an Ichor backup." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This file is not an Ichor backup."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cette sauvegarde vient d’une version plus récente d’Ichor. Mettez l’app à jour pour la restaurer."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce fichier n’est pas une sauvegarde Ichor."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esta copia la creó una versión más reciente de Ichor. Actualiza la app para restaurarla."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este archivo no es una copia de seguridad de Ichor."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Цю резервну копію створено новішою версією Ichor. Оновіть застосунок, щоб відновити її."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей файл не є резервною копією Ichor."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diese Sicherung stammt aus einer neueren Ichor-Version. Aktualisiere die App, um sie wiederherzustellen."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Datei ist keine Ichor-Sicherung."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Questo backup è stato creato da una versione più recente di Ichor. Aggiorna l’app per ripristinarlo."
-          }
-        }
-      }
-    },
-    "The backup opened but its content is not valid.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The backup opened but its content is not valid."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La sauvegarde s’est ouverte mais son contenu n’est pas valide."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La copia se abrió, pero su contenido no es válido."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Резервну копію відкрито, але її вміст недійсний."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Sicherung wurde geöffnet, aber ihr Inhalt ist ungültig."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Il backup si è aperto ma il contenuto non è valido."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo file non è un backup di Ichor."
           }
         }
       }
     },
-    "Moving from another phone? Restore the backup you made there.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Moving from another phone? Restore the backup you made there."
+    "This backup was made by a newer version of Ichor. Update the app to restore it." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This backup was made by a newer version of Ichor. Update the app to restore it."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vous changez de téléphone ? Restaurez la sauvegarde faite sur l’ancien."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette sauvegarde vient d’une version plus récente d’Ichor. Mettez l’app à jour pour la restaurer."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "¿Vienes de otro teléfono? Restaura la copia de seguridad que hiciste allí."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta copia la creó una versión más reciente de Ichor. Actualiza la app para restaurarla."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Переходите з іншого телефона? Відновіть резервну копію, створену на ньому."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цю резервну копію створено новішою версією Ichor. Оновіть застосунок, щоб відновити її."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wechselst du das Telefon? Stelle die dort erstellte Sicherung wieder her."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Sicherung stammt aus einer neueren Ichor-Version. Aktualisiere die App, um sie wiederherzustellen."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arrivi da un altro telefono? Ripristina il backup creato lì."
-          }
-        }
-      }
-    },
-    "Cluster insights": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cluster insights"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Analyse du cluster"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Análisis del clúster"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Аналіз кластера"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clusteranalyse"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Analisi del cluster"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo backup è stato creato da una versione più recente di Ichor. Aggiorna l’app per ripristinarlo."
           }
         }
       }
     },
-    "Configuration drift": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Configuration drift"
+    "The backup opened but its content is not valid." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The backup opened but its content is not valid."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Écarts de configuration"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sauvegarde s’est ouverte mais son contenu n’est pas valide."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diferencias de configuración"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La copia se abrió, pero su contenido no es válido."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Відхилення конфігурації"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Резервну копію відкрито, але її вміст недійсний."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Konfigurationsabweichungen"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Sicherung wurde geöffnet, aber ihr Inhalt ist ungültig."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Differenze di configurazione"
-          }
-        }
-      }
-    },
-    "Incident recorder": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Incident recorder"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enregistrement d’incident"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Registro de incidentes"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Запис інцидентів"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vorfallsaufzeichnung"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Registrazione incidenti"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il backup si è aperto ma il contenuto non è valido."
           }
         }
       }
     },
-    "Bottleneck metrics": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bottleneck metrics"
+    "Moving from another phone? Restore the backup you made there." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moving from another phone? Restore the backup you made there."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Indicateurs de saturation"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous changez de téléphone ? Restaurez la sauvegarde faite sur l’ancien."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Métricas de cuellos de botella"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Vienes de otro teléfono? Restaura la copia de seguridad que hiciste allí."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Показники вузьких місць"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переходите з іншого телефона? Відновіть резервну копію, створену на ньому."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engpassmetriken"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wechselst du das Telefon? Stelle die dort erstellte Sicherung wieder her."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metriche dei colli di bottiglia"
-          }
-        }
-      }
-    },
-    "I/O wait: %@%% · VM steal: %@%%": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I/O wait: %@%% · VM steal: %@%%"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Attente E/S : %@%% · Temps volé VM : %@%%"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Espera E/S: %@%% · Tiempo robado VM: %@%%"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Очікування вводу/виводу: %@%% · Викрадений час ВМ: %@%%"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "E/A-Wartezeit: %@%% · VM-Steal: %@%%"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Attesa I/O: %@%% · Tempo sottratto VM: %@%%"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrivi da un altro telefono? Ripristina il backup creato lì."
           }
         }
       }
     },
-    "Read: %@ · Write: %@ · Active: %@%% · Average I/O: %@ ms": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Read: %@ · Write: %@ · Active: %@%% · Average I/O: %@ ms"
+    "Cluster insights" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster insights"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lecture : %@ · Écriture : %@ · Activité : %@%% · E/S moyennes : %@ ms"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyse du cluster"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lectura: %@ · Escritura: %@ · Actividad: %@%% · E/S media: %@ ms"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Análisis del clúster"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Читання: %@ · Запис: %@ · Активність: %@%% · Середній ввід/вивід: %@ мс"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аналіз кластера"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lesen: %@ · Schreiben: %@ · Aktiv: %@%% · Mittlere E/A: %@ ms"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clusteranalyse"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lettura: %@ · Scrittura: %@ · Attività: %@%% · I/O medio: %@ ms"
-          }
-        }
-      }
-    },
-    "In: %@ · Out: %@ · Errors: %@/s · Drops: %@/s": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "In: %@ · Out: %@ · Errors: %@/s · Drops: %@/s"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entrée : %@ · Sortie : %@ · Erreurs : %@/s · Paquets perdus : %@/s"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entrada: %@ · Salida: %@ · Errores: %@/s · Descartes: %@/s"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вхід: %@ · Вихід: %@ · Помилки: %@/с · Відкинуті пакети: %@/с"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eingang: %@ · Ausgang: %@ · Fehler: %@/s · Verworfene Pakete: %@/s"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ingresso: %@ · Uscita: %@ · Errori: %@/s · Pacchetti scartati: %@/s"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analisi del cluster"
           }
         }
       }
     },
-    "Rates use consecutive samples. Disk activity and average I/O time are evidence, not proof of saturation.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rates use consecutive samples. Disk activity and average I/O time are evidence, not proof of saturation."
+    "Configuration drift" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration drift"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les débits utilisent des mesures consécutives. L’activité disque et le temps moyen des E/S sont des indices, pas une preuve de saturation."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Écarts de configuration"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las tasas usan muestras consecutivas. La actividad del disco y el tiempo medio de E/S son indicios, no pruebas de saturación."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diferencias de configuración"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Швидкості обчислюються за послідовними вимірами. Активність диска та середній час вводу/виводу є ознаками, а не доказом насичення."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відхилення конфігурації"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Raten verwenden aufeinanderfolgende Messungen. Datenträgeraktivität und mittlere E/A-Zeit sind Hinweise, kein Beweis für Sättigung."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurationsabweichungen"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le velocità usano campioni consecutivi. Attività del disco e tempo medio di I/O sono indizi, non prove di saturazione."
-          }
-        }
-      }
-    },
-    "Compare selected effective settings: DNS, NTP, MTU, extensions, Secure Boot, UKI and Talos version. Differences may be intentional; unavailable fields are unknown.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compare selected effective settings: DNS, NTP, MTU, extensions, Secure Boot, UKI and Talos version. Differences may be intentional; unavailable fields are unknown."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compare les paramètres effectifs sélectionnés : DNS, NTP, MTU, extensions, Secure Boot, UKI et version Talos. Les différences peuvent être voulues ; les champs indisponibles sont inconnus."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compara ajustes efectivos seleccionados: DNS, NTP, MTU, extensiones, Secure Boot, UKI y versión de Talos. Las diferencias pueden ser intencionales; los campos no disponibles son desconocidos."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Порівнює вибрані чинні параметри: DNS, NTP, MTU, розширення, Secure Boot, UKI та версію Talos. Відмінності можуть бути навмисними; недоступні поля є невідомими."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vergleicht ausgewählte wirksame Einstellungen: DNS, NTP, MTU, Erweiterungen, Secure Boot, UKI und Talos-Version. Unterschiede können beabsichtigt sein; nicht verfügbare Felder sind unbekannt."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Confronta impostazioni effettive selezionate: DNS, NTP, MTU, estensioni, Secure Boot, UKI e versione Talos. Le differenze possono essere intenzionali; i campi non disponibili sono sconosciuti."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Differenze di configurazione"
           }
         }
       }
     },
-    "Save current baseline": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save current baseline"
+    "Incident recorder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incident recorder"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enregistrer la référence actuelle"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrement d’incident"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guardar referencia actual"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registro de incidentes"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Зберегти поточний еталон"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запис інцидентів"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aktuellen Referenzstand speichern"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorfallsaufzeichnung"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Salva riferimento attuale"
-          }
-        }
-      }
-    },
-    "Could not check alarms: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Could not check alarms: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossible de vérifier les alarmes : %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudieron comprobar las alarmas: %@"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Не вдалося перевірити тривоги: %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alarme konnten nicht geprüft werden: %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossibile verificare gli allarmi: %@"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrazione incidenti"
           }
         }
       }
     },
-    "Baseline: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Baseline: %@"
+    "Bottleneck metrics" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bottleneck metrics"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Référence : %@"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indicateurs de saturation"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Referencia: %@"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Métricas de cuellos de botella"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Еталон: %@"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показники вузьких місць"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Referenzstand: %@"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Engpassmetriken"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Riferimento: %@"
-          }
-        }
-      }
-    },
-    "Delete baseline": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete baseline"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Supprimer la référence"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eliminar referencia"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Видалити еталон"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Referenzstand löschen"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elimina riferimento"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metriche dei colli di bottiglia"
           }
         }
       }
     },
-    "Reference: first reachable node of each role. Save a baseline to track changes on the same nodes.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reference: first reachable node of each role. Save a baseline to track changes on the same nodes."
+    "I/O wait: %@%% · VM steal: %@%%" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I/O wait: %@%% · VM steal: %@%%"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Référence : premier nœud joignable de chaque rôle. Enregistrez une référence pour suivre les changements sur les mêmes nœuds."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attente E/S : %@%% · Temps volé VM : %@%%"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Referencia: primer nodo accesible de cada rol. Guarda una referencia para seguir los cambios en los mismos nodos."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espera E/S: %@%% · Tiempo robado VM: %@%%"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Еталон: перший доступний вузол кожної ролі. Збережіть еталон, щоб відстежувати зміни на тих самих вузлах."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очікування вводу/виводу: %@%% · Викрадений час ВМ: %@%%"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Referenz: erster erreichbarer Knoten jeder Rolle. Speichern Sie einen Referenzstand, um Änderungen derselben Knoten zu verfolgen."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E/A-Wartezeit: %@%% · VM-Steal: %@%%"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Riferimento: primo nodo raggiungibile di ogni ruolo. Salva un riferimento per seguire le modifiche sugli stessi nodi."
-          }
-        }
-      }
-    },
-    "Sample: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sample: %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mesure : %@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Muestra: %@"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вимір: %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Messung: %@"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Campione: %@"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attesa I/O: %@%% · Tempo sottratto VM: %@%%"
           }
         }
       }
     },
-    "Reference: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reference: %@"
+    "Read: %@ · Write: %@ · Active: %@%% · Average I/O: %@ ms" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read: %@ · Write: %@ · Active: %@%% · Average I/O: %@ ms"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Référence : %@"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture : %@ · Écriture : %@ · Activité : %@%% · E/S moyennes : %@ ms"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Referencia: %@"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lectura: %@ · Escritura: %@ · Actividad: %@%% · E/S media: %@ ms"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Еталон: %@"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читання: %@ · Запис: %@ · Активність: %@%% · Середній ввід/вивід: %@ мс"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Referenz: %@"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lesen: %@ · Schreiben: %@ · Aktiv: %@%% · Mittlere E/A: %@ ms"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Riferimento: %@"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lettura: %@ · Scrittura: %@ · Attività: %@%% · I/O medio: %@ ms"
           }
         }
       }
     },
-    "No differences in comparable fields.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No differences in comparable fields."
+    "In: %@ · Out: %@ · Errors: %@/s · Drops: %@/s" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In: %@ · Out: %@ · Errors: %@/s · Drops: %@/s"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucune différence dans les champs comparables."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrée : %@ · Sortie : %@ · Erreurs : %@/s · Paquets perdus : %@/s"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sin diferencias en los campos comparables."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrada: %@ · Salida: %@ · Errores: %@/s · Descartes: %@/s"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Відмінностей у порівнюваних полях немає."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вхід: %@ · Вихід: %@ · Помилки: %@/с · Відкинуті пакети: %@/с"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine Unterschiede in vergleichbaren Feldern."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eingang: %@ · Ausgang: %@ · Fehler: %@/s · Verworfene Pakete: %@/s"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nessuna differenza nei campi confrontabili."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ingresso: %@ · Uscita: %@ · Errori: %@/s · Pacchetti scartati: %@/s"
           }
         }
       }
     },
-    "Start recording": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start recording"
+    "Rates use consecutive samples. Disk activity and average I/O time are evidence, not proof of saturation." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rates use consecutive samples. Disk activity and average I/O time are evidence, not proof of saturation."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Démarrer l’enregistrement"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les débits utilisent des mesures consécutives. L’activité disque et le temps moyen des E/S sont des indices, pas une preuve de saturation."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Iniciar registro"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las tasas usan muestras consecutivas. La actividad del disco y el tiempo medio de E/S son indicios, no pruebas de saturación."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Почати запис"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Швидкості обчислюються за послідовними вимірами. Активність диска та середній час вводу/виводу є ознаками, а не доказом насичення."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aufzeichnung starten"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raten verwenden aufeinanderfolgende Messungen. Datenträgeraktivität und mittlere E/A-Zeit sind Hinweise, kein Beweis für Sättigung."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avvia registrazione"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le velocità usano campioni consecutivi. Attività del disco e tempo medio di I/O sono indizi, non prove di saturazione."
           }
         }
       }
     },
-    "Stop recording": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stop recording"
+    "Compare selected effective settings: DNS, NTP, MTU, extensions, Secure Boot, UKI and Talos version. Differences may be intentional; unavailable fields are unknown." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare selected effective settings: DNS, NTP, MTU, extensions, Secure Boot, UKI and Talos version. Differences may be intentional; unavailable fields are unknown."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arrêter l’enregistrement"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare les paramètres effectifs sélectionnés : DNS, NTP, MTU, extensions, Secure Boot, UKI et version Talos. Les différences peuvent être voulues ; les champs indisponibles sont inconnus."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Detener registro"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compara ajustes efectivos seleccionados: DNS, NTP, MTU, extensiones, Secure Boot, UKI y versión de Talos. Las diferencias pueden ser intencionales; los campos no disponibles son desconocidos."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Зупинити запис"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівнює вибрані чинні параметри: DNS, NTP, MTU, розширення, Secure Boot, UKI та версію Talos. Відмінності можуть бути навмисними; недоступні поля є невідомими."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aufzeichnung stoppen"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergleicht ausgewählte wirksame Einstellungen: DNS, NTP, MTU, Erweiterungen, Secure Boot, UKI und Talos-Version. Unterschiede können beabsichtigt sein; nicht verfügbare Felder sind unbekannt."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ferma registrazione"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confronta impostazioni effettive selezionate: DNS, NTP, MTU, estensioni, Secure Boot, UKI e versione Talos. Le differenze possono essere intenzionali; i campi non disponibili sono sconosciuti."
           }
         }
       }
     },
-    "Older entries discarded: %lld": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Older entries discarded: %lld"
+    "Save current baseline" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save current baseline"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anciennes entrées supprimées : %lld"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer la référence actuelle"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entradas antiguas descartadas: %lld"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar referencia actual"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Відкинуто старих записів: %lld"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти поточний еталон"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verworfene ältere Einträge: %lld"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuellen Referenzstand speichern"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Voci precedenti scartate: %lld"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva riferimento attuale"
           }
         }
       }
     },
-    "Show metric samples": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show metric samples"
+    "Could not check alarms: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not check alarms: %@"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Afficher les mesures"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de vérifier les alarmes : %@"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostrar muestras de métricas"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudieron comprobar las alarmas: %@"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Показати виміри метрик"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося перевірити тривоги: %@"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Messwerte anzeigen"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alarme konnten nicht geprüft werden: %@"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostra campioni delle metriche"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile verificare gli allarmi: %@"
           }
         }
       }
     },
-    "No saved recording.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No saved recording."
+    "Baseline: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baseline: %@"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun enregistrement sauvegardé."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Référence : %@"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No hay registros guardados."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referencia: %@"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Збережених записів немає."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Еталон: %@"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine gespeicherte Aufzeichnung."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referenzstand: %@"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nessuna registrazione salvata."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riferimento: %@"
           }
         }
       }
     },
-    "Record up to 10 minutes while this screen is in the foreground. Health, services, links and metrics are sampled, with live Talos events. No raw logs or credentials. The latest session is encrypted locally; starting replaces it. Keep up to 600 entries. Event timestamps use node clocks; ordering does not prove causation.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Record up to 10 minutes while this screen is in the foreground. Health, services, links and metrics are sampled, with live Talos events. No raw logs or credentials. The latest session is encrypted locally; starting replaces it. Keep up to 600 entries. Event timestamps use node clocks; ordering does not prove causation."
+    "Delete baseline" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete baseline"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enregistrez jusqu’à 10 minutes avec cet écran au premier plan. Santé, services, interfaces et métriques sont mesurés, avec les événements Talos en direct. Aucun journal brut ni identifiant. La dernière session est chiffrée localement ; démarrer la remplace. Jusqu’à 600 entrées. Les événements utilisent les horloges des nœuds ; leur ordre ne prouve pas la causalité."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer la référence"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Registra hasta 10 minutos con esta pantalla en primer plano. Se muestrean salud, servicios, interfaces y métricas, junto con eventos Talos en directo. Sin registros sin procesar ni credenciales. La última sesión se cifra localmente; iniciar la reemplaza. Hasta 600 entradas. Los eventos usan los relojes de los nodos; el orden no prueba causalidad."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar referencia"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Записуйте до 10 хвилин, поки цей екран на передньому плані. Вимірюються стан, служби, інтерфейси та метрики з подіями Talos наживо. Без сирих журналів або облікових даних. Останній сеанс зашифровано локально; новий запис його замінює. До 600 записів. Події використовують годинники вузлів; порядок не доводить причинності."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити еталон"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bis zu 10 Minuten aufzeichnen, während dieser Bildschirm im Vordergrund ist. Zustand, Dienste, Schnittstellen und Metriken werden zusammen mit Talos-Ereignissen erfasst. Keine Rohprotokolle oder Zugangsdaten. Die letzte Sitzung wird lokal verschlüsselt; ein neuer Start ersetzt sie. Bis zu 600 Einträge. Ereignisse verwenden Knoten-Uhren; die Reihenfolge beweist keine Ursache."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referenzstand löschen"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Registra fino a 10 minuti con questa schermata in primo piano. Stato, servizi, interfacce e metriche vengono campionati con gli eventi Talos in tempo reale. Senza log grezzi o credenziali. Ultima sessione cifrata localmente; una nuova la sostituisce. Fino a 600 voci. Gli eventi usano gli orologi dei nodi; l’ordine non prova causalità."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina riferimento"
           }
         }
       }
     },
-
-    "Try demo": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Try demo"
+    "Reference: first reachable node of each role. Save a baseline to track changes on the same nodes." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reference: first reachable node of each role. Save a baseline to track changes on the same nodes."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Essayer la démo"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Référence : premier nœud joignable de chaque rôle. Enregistrez une référence pour suivre les changements sur les mêmes nœuds."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Probar demo"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referencia: primer nodo accesible de cada rol. Guarda una referencia para seguir los cambios en los mismos nodos."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Demo ausprobieren"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Еталон: перший доступний вузол кожної ролі. Збережіть еталон, щоб відстежувати зміни на тих самих вузлах."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prova la demo"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referenz: erster erreichbarer Knoten jeder Rolle. Speichern Sie einen Referenzstand, um Änderungen derselben Knoten zu verfolgen."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Спробувати демо"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riferimento: primo nodo raggiungibile di ogni ruolo. Salva un riferimento per seguire le modifiche sugli stessi nodi."
           }
         }
       }
     },
-    "No cluster yet? Explore Ichor with a sample Talos cluster.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No cluster yet? Explore Ichor with a sample Talos cluster."
+    "Sample: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sample: %@"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pas encore de cluster ? Explorez Ichor avec un exemple de cluster Talos."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mesure : %@"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "¿Aún no tienes un clúster? Explora Ichor con un clúster Talos de ejemplo."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra: %@"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Noch kein Cluster? Erkunde Ichor mit einem Talos-Beispielcluster."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вимір: %@"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Non hai ancora un cluster? Esplora Ichor con un cluster Talos di esempio."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messung: %@"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ще немає кластера? Ознайомтеся з Ichor на прикладі кластера Talos."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Campione: %@"
           }
         }
       }
     },
-    "Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished."
+    "Reference: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reference: %@"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cluster de démonstration · Données fictives. Les modifications du cluster sont indisponibles. Supprimez la démo dans Gérer les clusters une fois terminé."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Référence : %@"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Clúster de demostración · Datos de ejemplo. No se puede modificar el clúster. Elimina la demo en Gestionar clústeres cuando termines."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referencia: %@"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Demo-Cluster · Beispieldaten. Clusteränderungen sind nicht verfügbar. Entferne die Demo anschließend unter Cluster verwalten."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Еталон: %@"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cluster dimostrativo · Dati di esempio. Le modifiche al cluster non sono disponibili. Rimuovi la demo da Gestisci cluster al termine."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Referenz: %@"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Демонстраційний кластер · Приклад даних. Зміни кластера недоступні. Видаліть демо в розділі Керування кластерами після завершення."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riferimento: %@"
+          }
+        }
+      }
+    },
+    "No differences in comparable fields." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No differences in comparable fields."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune différence dans les champs comparables."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin diferencias en los campos comparables."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відмінностей у порівнюваних полях немає."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Unterschiede in vergleichbaren Feldern."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna differenza nei campi confrontabili."
+          }
+        }
+      }
+    },
+    "Start recording" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start recording"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer l’enregistrement"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar registro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Почати запис"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufzeichnung starten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvia registrazione"
+          }
+        }
+      }
+    },
+    "Stop recording" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop recording"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter l’enregistrement"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener registro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинити запис"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufzeichnung stoppen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ferma registrazione"
+          }
+        }
+      }
+    },
+    "Older entries discarded: %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Older entries discarded: %lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anciennes entrées supprimées : %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entradas antiguas descartadas: %lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкинуто старих записів: %lld"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verworfene ältere Einträge: %lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voci precedenti scartate: %lld"
+          }
+        }
+      }
+    },
+    "Show metric samples" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show metric samples"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les mesures"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar muestras de métricas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати виміри метрик"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messwerte anzeigen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra campioni delle metriche"
+          }
+        }
+      }
+    },
+    "No saved recording." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No saved recording."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun enregistrement sauvegardé."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay registros guardados."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережених записів немає."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine gespeicherte Aufzeichnung."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna registrazione salvata."
+          }
+        }
+      }
+    },
+    "Record up to 10 minutes while this screen is in the foreground. Health, services, links and metrics are sampled, with live Talos events. No raw logs or credentials. The latest session is encrypted locally; starting replaces it. Keep up to 600 entries. Event timestamps use node clocks; ordering does not prove causation." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record up to 10 minutes while this screen is in the foreground. Health, services, links and metrics are sampled, with live Talos events. No raw logs or credentials. The latest session is encrypted locally; starting replaces it. Keep up to 600 entries. Event timestamps use node clocks; ordering does not prove causation."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrez jusqu’à 10 minutes avec cet écran au premier plan. Santé, services, interfaces et métriques sont mesurés, avec les événements Talos en direct. Aucun journal brut ni identifiant. La dernière session est chiffrée localement ; démarrer la remplace. Jusqu’à 600 entrées. Les événements utilisent les horloges des nœuds ; leur ordre ne prouve pas la causalité."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registra hasta 10 minutos con esta pantalla en primer plano. Se muestrean salud, servicios, interfaces y métricas, junto con eventos Talos en directo. Sin registros sin procesar ni credenciales. La última sesión se cifra localmente; iniciar la reemplaza. Hasta 600 entradas. Los eventos usan los relojes de los nodos; el orden no prueba causalidad."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записуйте до 10 хвилин, поки цей екран на передньому плані. Вимірюються стан, служби, інтерфейси та метрики з подіями Talos наживо. Без сирих журналів або облікових даних. Останній сеанс зашифровано локально; новий запис його замінює. До 600 записів. Події використовують годинники вузлів; порядок не доводить причинності."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bis zu 10 Minuten aufzeichnen, während dieser Bildschirm im Vordergrund ist. Zustand, Dienste, Schnittstellen und Metriken werden zusammen mit Talos-Ereignissen erfasst. Keine Rohprotokolle oder Zugangsdaten. Die letzte Sitzung wird lokal verschlüsselt; ein neuer Start ersetzt sie. Bis zu 600 Einträge. Ereignisse verwenden Knoten-Uhren; die Reihenfolge beweist keine Ursache."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registra fino a 10 minuti con questa schermata in primo piano. Stato, servizi, interfacce e metriche vengono campionati con gli eventi Talos in tempo reale. Senza log grezzi o credenziali. Ultima sessione cifrata localmente; una nuova la sostituisce. Fino a 600 voci. Gli eventi usano gli orologi dei nodi; l’ordine non prova causalità."
+          }
+        }
+      }
+    },
+    "Try demo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try demo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Essayer la démo"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probar demo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demo ausprobieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prova la demo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спробувати демо"
+          }
+        }
+      }
+    },
+    "No cluster yet? Explore Ichor with a sample Talos cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No cluster yet? Explore Ichor with a sample Talos cluster."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas encore de cluster ? Explorez Ichor avec un exemple de cluster Talos."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Aún no tienes un clúster? Explora Ichor con un clúster Talos de ejemplo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch kein Cluster? Erkunde Ichor mit einem Talos-Beispielcluster."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non hai ancora un cluster? Esplora Ichor con un cluster Talos di esempio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ще немає кластера? Ознайомтеся з Ichor на прикладі кластера Talos."
+          }
+        }
+      }
+    },
+    "Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster de démonstration · Données fictives. Les modifications du cluster sont indisponibles. Supprimez la démo dans Gérer les clusters une fois terminé."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clúster de demostración · Datos de ejemplo. No se puede modificar el clúster. Elimina la demo en Gestionar clústeres cuando termines."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demo-Cluster · Beispieldaten. Clusteränderungen sind nicht verfügbar. Entferne die Demo anschließend unter Cluster verwalten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster dimostrativo · Dati di esempio. Le modifiche al cluster non sono disponibili. Rimuovi la demo da Gestisci cluster al termine."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Демонстраційний кластер · Приклад даних. Зміни кластера недоступні. Видаліть демо в розділі Керування кластерами після завершення."
           }
         }
       }
@@ -35745,442 +36129,442 @@
         }
       }
     },
-    "Service status": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Service status"
+    "Service status" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Service status"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "État du service"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "État du service"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estado del servicio"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado del servicio"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Стан служби"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стан служби"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dienststatus"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dienststatus"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stato del servizio"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stato del servizio"
           }
         }
       }
     },
-    "Network link changed": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Network link changed"
+    "Network link changed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network link changed"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liaison réseau modifiée"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liaison réseau modifiée"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enlace de red cambiado"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enlace de red cambiado"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Мережеве з’єднання змінилося"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мережеве з’єднання змінилося"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Netzwerkverbindung geändert"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerkverbindung geändert"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Collegamento di rete cambiato"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collegamento di rete cambiato"
           }
         }
       }
     },
-    "Evidence unavailable": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Evidence unavailable"
+    "Evidence unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evidence unavailable"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Données indisponibles"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Données indisponibles"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Datos no disponibles"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datos no disponibles"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Дані недоступні"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дані недоступні"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Daten nicht verfügbar"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daten nicht verfügbar"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dati non disponibili"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dati non disponibili"
           }
         }
       }
     },
-    "Evidence collection recovered": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Evidence collection recovered"
+    "Evidence collection recovered" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Evidence collection recovered"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Collecte des données rétablie"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collecte des données rétablie"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recopilación de datos restablecida"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recopilación de datos restablecida"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Збір даних відновлено"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збір даних відновлено"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Datenerfassung wiederhergestellt"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenerfassung wiederhergestellt"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Raccolta dei dati ripristinata"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccolta dei dati ripristinata"
           }
         }
       }
     },
-    "This section can be sampled again.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This section can be sampled again."
+    "This section can be sampled again." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This section can be sampled again."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cette section peut à nouveau être échantillonnée."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette section peut à nouveau être échantillonnée."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esta sección puede volver a muestrearse."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta sección puede volver a muestrearse."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Цей розділ знову доступний для збору даних."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей розділ знову доступний для збору даних."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dieser Bereich kann wieder erfasst werden."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Bereich kann wieder erfasst werden."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Questa sezione può essere nuovamente campionata."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa sezione può essere nuovamente campionata."
           }
         }
       }
     },
-    "Technical details": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Technical details"
+    "Technical details" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Technical details"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Détails techniques"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détails techniques"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Detalles técnicos"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles técnicos"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Технічні подробиці"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Технічні подробиці"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Technische Details"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Technische Details"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dettagli tecnici"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dettagli tecnici"
           }
         }
       }
     },
-    "Hide technical details": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide technical details"
+    "Hide technical details" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide technical details"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Masquer les détails techniques"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masquer les détails techniques"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ocultar detalles técnicos"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar detalles técnicos"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Приховати технічні подробиці"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приховати технічні подробиці"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Technische Details ausblenden"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Technische Details ausblenden"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nascondi dettagli tecnici"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nascondi dettagli tecnici"
           }
         }
       }
     },
-    "This older sample has incomplete details. Record a new session to see formatted metrics.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This older sample has incomplete details. Record a new session to see formatted metrics."
+    "This older sample has incomplete details. Record a new session to see formatted metrics." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This older sample has incomplete details. Record a new session to see formatted metrics."
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cet ancien échantillon est incomplet. Enregistrez une nouvelle session pour voir les métriques mises en forme."
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cet ancien échantillon est incomplet. Enregistrez une nouvelle session pour voir les métriques mises en forme."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esta muestra anterior está incompleta. Graba una nueva sesión para ver las métricas con formato."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta muestra anterior está incompleta. Graba una nueva sesión para ver las métricas con formato."
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Цей старий зразок неповний. Запишіть новий сеанс, щоб переглянути відформатовані метрики."
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей старий зразок неповний. Запишіть новий сеанс, щоб переглянути відформатовані метрики."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dieses ältere Sample ist unvollständig. Zeichnen Sie eine neue Sitzung auf, um formatierte Metriken zu sehen."
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses ältere Sample ist unvollständig. Zeichnen Sie eine neue Sitzung auf, um formatierte Metriken zu sehen."
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Questo campione precedente è incompleto. Registra una nuova sessione per vedere le metriche formattate."
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo campione precedente è incompleto. Registra una nuova sessione per vedere le metriche formattate."
           }
         }
       }
     },
-    "Stage: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stage: %@"
+    "Stage: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stage: %@"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Phase : %@"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phase : %@"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etapa: %@"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etapa: %@"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Етап: %@"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Етап: %@"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Phase: %@"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phase: %@"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fase: %@"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fase: %@"
           }
         }
       }
     },
-    "Link: %@ → %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Link: %@ → %@"
+    "Link: %@ → %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link: %@ → %@"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liaison : %@ → %@"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liaison : %@ → %@"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enlace: %@ → %@"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enlace: %@ → %@"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "З’єднання: %@ → %@"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З’єднання: %@ → %@"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verbindung: %@ → %@"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung: %@ → %@"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Collegamento: %@ → %@"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collegamento: %@ → %@"
           }
         }
       }
     },
-    "Additional device or error entries omitted: %lld": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Additional device or error entries omitted: %lld"
+    "Additional device or error entries omitted: %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Additional device or error entries omitted: %lld"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Autres entrées de périphériques ou erreurs omises : %lld"
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autres entrées de périphériques ou erreurs omises : %lld"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entradas adicionales de dispositivos o errores omitidas: %lld"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entradas adicionales de dispositivos o errores omitidas: %lld"
           }
         },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Пропущено додаткових записів пристроїв або помилок: %lld"
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропущено додаткових записів пристроїв або помилок: %lld"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weitere Geräte- oder Fehlereinträge ausgelassen: %lld"
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitere Geräte- oder Fehlereinträge ausgelassen: %lld"
           }
         },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ulteriori voci di dispositivi o errori omesse: %lld"
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ulteriori voci di dispositivi o errori omesse: %lld"
           }
         }
       }
@@ -55316,10 +55700,10 @@
     "Conditions" : {
       "extractionState" : "manual",
       "localizations" : {
-        "fr" : {
+        "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Conditions"
+            "value" : "Bedingungen"
           }
         },
         "es" : {
@@ -55328,22 +55712,22 @@
             "value" : "Condiciones"
           }
         },
-        "uk" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Умови"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bedingungen"
+            "value" : "Conditions"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Condizioni"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Умови"
           }
         }
       }
@@ -64924,41 +65308,6 @@
         }
       }
     },
-    "Conditions" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bedingungen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Condiciones"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Conditions"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Condizioni"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Умови"
-          }
-        }
-      }
-    },
     "Applies" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -70588,211 +70937,6 @@
         }
       }
     },
-    "Could not freeze %@, nothing changed: %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ konnte nicht eingefroren werden, nichts geändert: %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not freeze %@, nothing changed: %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No se pudo congelar %@, no se cambió nada: %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de geler %@, rien n'a changé : %@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossibile congelare %@, nulla è cambiato: %@"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не вдалося заморозити %@, нічого не змінено: %@"
-          }
-        }
-      }
-    },
-    "Freeze %@ 1 h first" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ zuerst 1 Std. einfrieren"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Freeze %@ 1 h first"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Congelar %@ 1 h antes"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geler %@ 1 h d'abord"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Congela prima %@ per 1 h"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Спершу заморозити %@ на 1 год"
-          }
-        }
-      }
-    },
-    "%@ deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze %@ first to keep your change for a while." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ stellt dies mit aktiver Selbstheilung bereit: Innerhalb von Minuten setzt es das auf den Stand in Git zurück. Friere %@ zuerst ein, um deine Änderung eine Weile zu behalten."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze %@ first to keep your change for a while."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ despliega esto con la autorreparación activada: en minutos lo devuelve a como está en Git. Congela %@ antes para conservar tu cambio un tiempo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ déploie ceci avec l'auto-réparation active : en quelques minutes, il le remet comme dans Git. Gelez %@ d'abord pour garder votre changement un moment."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ distribuisce questo con l'auto-riparazione attiva: in pochi minuti lo riporta come è in Git. Congela prima %@ per mantenere la modifica per un po'."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ розгортає це з увімкненим самовідновленням: за кілька хвилин воно поверне це до стану в Git. Спершу заморозьте %@, щоб зберегти зміну на якийсь час."
-          }
-        }
-      }
-    },
-    "suspend" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "aussetzen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "suspend"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "suspender"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "suspension"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "sospensione"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "призупинення"
-          }
-        }
-      }
-    },
-    "resume" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "fortsetzen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "resume"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "reanudar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "reprise"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ripresa"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "відновлення"
-          }
-        }
-      }
-    },
     "Busy" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -72198,6 +72342,334 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Could not freeze %@, nothing changed: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ konnte nicht eingefroren werden, nichts geändert: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not freeze %@, nothing changed: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo congelar %@, no se cambió nada: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de geler %@, rien n'a changé : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile congelare %@, nulla è cambiato: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося заморозити %@, нічого не змінено: %@"
+          }
+        }
+      }
+    },
+    "Freeze %@ 1 h first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ zuerst 1 Std. einfrieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Freeze %@ 1 h first"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Congelar %@ 1 h antes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geler %@ 1 h d'abord"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Congela prima %@ per 1 h"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спершу заморозити %@ на 1 год"
+          }
+        }
+      }
+    },
+    "%@ deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze %@ first to keep your change for a while." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ stellt dies mit aktiver Selbstheilung bereit: Innerhalb von Minuten setzt es das auf den Stand in Git zurück. Friere %@ zuerst ein, um deine Änderung eine Weile zu behalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze %@ first to keep your change for a while."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ despliega esto con la autorreparación activada: en minutos lo devuelve a como está en Git. Congela %@ antes para conservar tu cambio un tiempo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ déploie ceci avec l'auto-réparation active : en quelques minutes, il le remet comme dans Git. Gelez %@ d'abord pour garder votre changement un moment."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ distribuisce questo con l'auto-riparazione attiva: in pochi minuti lo riporta come è in Git. Congela prima %@ per mantenere la modifica per un po'."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ розгортає це з увімкненим самовідновленням: за кілька хвилин воно поверне це до стану в Git. Спершу заморозьте %@, щоб зберегти зміну на якийсь час."
+          }
+        }
+      }
+    },
+    "suspend" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aussetzen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "suspend"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "suspender"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "suspension"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sospensione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "призупинення"
+          }
+        }
+      }
+    },
+    "resume" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fortsetzen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "resume"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reanudar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reprise"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ripresa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "відновлення"
+          }
+        }
+      }
+    },
+    "Share link" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share link"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partager le lien"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir enlace"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поділитися посиланням"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link teilen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Condividi link"
+          }
+        }
+      }
+    },
+    "Not a valid Ichor link" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not a valid Ichor link"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lien Ichor non valide"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enlace de Ichor no válido"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недійсне посилання Ichor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein gültiger Ichor-Link"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link Ichor non valido"
+          }
+        }
+      }
+    },
+    "This link is for a cluster that isn’t on this phone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This link is for a cluster that isn’t on this phone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce lien concerne un cluster absent de ce téléphone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este enlace es de un clúster que no está en este teléfono"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це посилання на кластер, якого немає на цьому телефоні"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Link gehört zu einem Cluster, der nicht auf diesem Telefon ist"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo link è per un cluster che non è su questo telefono"
           }
         }
       }

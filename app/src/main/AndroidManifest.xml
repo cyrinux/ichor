@@ -47,6 +47,22 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="ichor" android:host="demo" />
             </intent-filter>
+            <!-- A share link (see ui/share): the app's own scheme, and the website page that
+                 forwards to it. The page is not a verified App Link (a project page cannot
+                 serve /.well-known): Android 12+ opens it in the browser, whose page then
+                 forwards to ichor://; older versions may offer the app directly. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="ichor" android:host="open" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="cyrinux.github.io" android:pathPrefix="/ichor/open" />
+            </intent-filter>
             <!-- A backup (.ichorbackup) opened from a file manager. Android knows no type for the
                  extension: providers give it as a generic binary, or name it in the path. The
                  file's header tells a backup from any other file. -->

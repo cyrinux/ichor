@@ -329,6 +329,25 @@ dark and true black alike) is generated from the color of the cluster on screen,
 always clear which cluster a reboot is about to hit. Background alerts and the widget follow
 the cluster on screen.
 
+### Share links
+
+**Share link** sends a link to the screen on show, for a teammate whose Ichor holds a
+talosconfig for the same cluster: an Argo CD or Flux app, a node (on its tab), a workload, pod
+or CronJob, etcd, the health check, the Argo CD and Flux lists, the Kubernetes tabs or the
+cluster overview. It is in the top bar, the node and cluster menus, the workload sheet, the
+pod's log sheet (link icon), a CronJob's card (Android) or a pod or CronJob's context menu (iOS).
+
+- The link is `https://cyrinux.github.io/ichor/open/#…`. That page hands it to the app as
+  `ichor://open?…` (Android also offers to open the https link in Ichor directly). What follows
+  `#` stays in the browser: the website never sees it.
+- The cluster is named by a hash of its CA certificate, the same on every phone whatever the
+  context is called there. The link carries the names the screen shows (namespace, name,
+  hostname and address), nothing secret. In screenshot mode it carries the masked names.
+- Opening it unlocks the app first, switches to that cluster (keeping the context on screen
+  when it is one of it, so its role) and opens the screen. A link only ever navigates: no
+  action, not even one waiting for confirmation. A node opens only when it is one of that
+  cluster's (else the link stops at the overview). Without that cluster, the app says so.
+
 ### Backup and restore
 
 The stored config's key never leaves the phone, so moving to a new phone takes a backup:

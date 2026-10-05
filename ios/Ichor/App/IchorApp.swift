@@ -27,6 +27,10 @@ struct IchorApp: App {
                 .environment(support)
                 .environment(ai)
                 .task { support.onLaunch() }
+                // A share link while the app runs (the scene delegate takes it at launch).
+                .onOpenURL { url in
+                    if url.scheme == "ichor", url.host == "open" { NotificationRouter.shared.pendingShareLink = url }
+                }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .background, BackgroundMonitor.alertsEnabled { BackgroundMonitor.schedule() }
                     if phase == .background { UpgradeJob.shared.didEnterBackground() }
@@ -109,6 +113,8 @@ enum Route: Hashable {
     /// Node screen opened on a tab, or with a reboot/shutdown confirmation (from row swipes).
     case nodeLive(NodeRef)
     case nodePower(NodeRef, PowerAction)
+    /// Node screen opened on a tab (a share link).
+    case nodeTab(NodeRef, tab: NodeDetailView.Tab)
     /// Every node of a large cluster (see isDenseCluster), as the overview loaded them; filter preselects one.
     case nodes(filter: NodeFilter?, nodes: [NodeOverview])
     case logs(node: String, hostname: String, service: String?)
@@ -124,10 +130,14 @@ enum Route: Hashable {
     case changelog
     /// The bundled third-party licenses.
     case licenses
+    /// The projects the app integrates with, and which ones the cluster runs.
+    case supportedIntegrations
     case etcd
     case kubespan
     /// Kubernetes Deployments, StatefulSets and DaemonSets (os:admin).
     case workloads
+    /// The Kubernetes screen on a tab, showing one workload, pod or CronJob (a share link).
+    case kubernetes(KubeFocus)
     /// Longhorn, Garage and CloudNativePG health (os:admin); hints: catalog ids from the
     /// inventory, downNodes: hostnames Talos reports not ready, for the likely cause; kind: the
     /// system to open on (nil: the first).
@@ -136,6 +146,10 @@ enum Route: Hashable {
     case argoCD(downNodes: Set<String>)
     /// Every Argo CD sync window, freezes first (from a freeze reminder).
     case argoWindows
+    /// One Argo CD Application (a share link; the list pushes its own ArgoAppRoute).
+    case argoApp(namespace: String, name: String)
+    /// One Flux object (a share link; the list pushes its own FluxAppRoute).
+    case fluxApp(kind: String, namespace: String, name: String)
     /// Flux Kustomizations, HelmReleases and sources (os:admin); downNodes as for dataServices.
     case flux(downNodes: Set<String>)
     case health
@@ -165,6 +179,8 @@ struct MainNavigation: View {
     @State private var path: [Route] = []
     /// The outcome of "+1 h" from a freeze reminder.
     @State private var freezeMessage: String?
+    /// Why a share link opened nothing.
+    @State private var linkMessage: String?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -174,6 +190,7 @@ struct MainNavigation: View {
                     case .node(let ref): NodeDetailView(ref: ref)
                     case .nodeLive(let ref): NodeDetailView(ref: ref, initialTab: .live)
                     case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
+                    case .nodeTab(let ref, let tab): NodeDetailView(ref: ref, initialTab: tab)
                     case .nodes(let filter, let nodes): NodesView(nodes: nodes, filter: filter, path: $path)
                     case .logs(let node, let hostname, let service):
                         LogsView(node: node, hostname: hostname, service: service)
@@ -185,12 +202,16 @@ struct MainNavigation: View {
                     case .integrations: IntegrationRequestView()
                     case .changelog: ChangelogView()
                     case .licenses: LicensesView()
+                    case .supportedIntegrations: SupportedIntegrationsView()
                     case .etcd: EtcdView()
                     case .kubespan: KubeSpanView()
                     case .workloads: KubernetesView()
+                    case .kubernetes(let focus): KubernetesView(focus: focus)
                     case .dataServices(let hints, let downNodes, let kind): DataServicesView(hints: hints, downNodes: downNodes, selected: kind)
                     case .argoCD(let downNodes): ArgoCDView(downNodes: downNodes)
                     case .argoWindows: ArgoWindowsView()
+                    case .argoApp(let namespace, let name): ArgoAppView(namespace: namespace, name: name, downNodes: [])
+                    case .fluxApp(let kind, let namespace, let name): FluxAppView(kind: kind, namespace: namespace, name: name, downNodes: [])
                     case .flux(let downNodes): FluxView(downNodes: downNodes)
                     case .health: HealthView()
                     case .settings: SettingsView()
@@ -215,12 +236,21 @@ struct MainNavigation: View {
         .onChange(of: NotificationRouter.shared.pendingArgoWindows) { _, pending in
             if pending { openArgoWindows() }
         }
+        .onChange(of: NotificationRouter.shared.pendingShareLink) { _, pending in
+            if pending != nil { openShareLink() }
+        }
+        // Mounted under the lock screen once unlocked: a link waits for the next unlock.
+        .onChange(of: model.lock.locked) { _, locked in
+            if !locked, NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
+        }
         .onAppear {
             if NotificationRouter.shared.pendingRenewal { openRenewal() }
             if NotificationRouter.shared.pendingCluster != nil { openCluster() }
             if NotificationRouter.shared.pendingArgoWindows { openArgoWindows() }
+            if NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
         }
         .messageAlert($freezeMessage)
+        .messageAlert($linkMessage)
     }
 
     /// From a freeze reminder: the sync windows, after "+1 h" on the freeze when it was chosen.
@@ -260,6 +290,26 @@ struct MainNavigation: View {
         guard let fingerprint = NotificationRouter.shared.pendingCluster else { return }
         NotificationRouter.shared.pendingCluster = nil
         if model.selectCluster(fingerprint: fingerprint) { path = [] }
+    }
+
+    /// From a share link: like a quick action, the overview of the cluster it names (the
+    /// context on screen when it is one of that cluster), then the screen it names over it.
+    private func openShareLink() {
+        guard !model.lock.locked, let url = NotificationRouter.shared.pendingShareLink else { return }
+        NotificationRouter.shared.pendingShareLink = nil
+        Task {
+            guard let target = try? await TalosClient.parseShareLink(url) else {
+                linkMessage = String(localized: "Not a valid Ichor link")
+                return
+            }
+            guard let context = model.summary?.contexts.context(forCluster: target.cluster, active: model.activeContext),
+                  model.selectCluster(fingerprint: context.fingerprint) else {
+                linkMessage = String(localized: "This link is for a cluster that isn’t on this phone")
+                return
+            }
+            path = []
+            if let route = await target.route(client: model.client) { path = [route] }
+        }
     }
 
     /// From the certificate-expiry alert: the renewal screen, or the settings (which show the

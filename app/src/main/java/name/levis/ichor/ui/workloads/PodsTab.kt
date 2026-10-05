@@ -145,7 +145,8 @@ internal fun PodActionDialogs(actions: PodActionState, deletions: PodDeletions) 
 /**
  * The pods of the scope's namespace (every namespace by default) with the status `kubectl get
  * pods` shows, unhealthy ones first once every page is loaded, their logs, and a delete action
- * so a controller starts a fresh one.
+ * so a controller starts a fresh one. [focusKey]: the pod whose logs to open once listed (a
+ * share link), then [onFocused].
  */
 @Composable
 fun PodsTab(
@@ -155,6 +156,8 @@ fun PodsTab(
     modifier: Modifier = Modifier,
     onFlows: ((KubePod) -> Unit)? = null,
     vm: PodsViewModel = viewModel(factory = factory { PodsViewModel(app.talosRepository) { isMeteredNetwork(app) } }),
+    focusKey: String? = null,
+    onFocused: () -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
@@ -162,6 +165,13 @@ fun PodsTab(
     LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
     val actions = remember { PodActionState() }
     PodActionDialogs(actions, vm.deletions)
+    val listed = (state as? UiState.Loaded)?.data?.items
+    LaunchedEffect(focusKey, listed) {
+        listed.orEmpty().firstOrNull { it.key == focusKey }?.let {
+            actions.logs = it
+            onFocused()
+        }
+    }
 
     KubeListFrame(control, state, { it.podNamespaces }, query, onQuery, vm::refresh, modifier) { s ->
         val load = s.data

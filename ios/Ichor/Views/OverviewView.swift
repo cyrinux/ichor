@@ -115,6 +115,7 @@ struct OverviewView: View {
                 }
             }
             Button { path.append(.clusters) } label: { Label("Manage clusters…", systemImage: "square.stack.3d.up") }
+            ShareLinkButton(target: .screen(.cluster))
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             if (model.summary?.contexts.count ?? 0) > 1 {

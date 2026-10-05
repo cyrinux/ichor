@@ -13,6 +13,7 @@ import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ApiHealthReport
 import name.levis.ichor.model.AuditReport
 import name.levis.ichor.model.ArgoAction
+import name.levis.ichor.model.SupportedIntegrations
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoFreezeAction
 import name.levis.ichor.model.ArgoFreezeOptions
@@ -616,6 +617,14 @@ class TalosRepository(
      */
     suspend fun dataServices(hints: String): DataServices = remember(DATA_SERVICES) {
         kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(DataServices.serializer(), Ichorgo.kubeDataServices(cfg, ctx, server, hints)) }
+    }
+
+    /**
+     * The projects the app integrates with and whether the cluster runs each one, from one API
+     * discovery (os:admin). [hints]: see [Inventory.supportedIntegrationHints]. Never cached.
+     */
+    suspend fun supportedIntegrations(hints: String): SupportedIntegrations = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(SupportedIntegrations.serializer(), Ichorgo.kubeSupportedIntegrations(cfg, ctx, server, hints))
     }
 
     /** What the blocks failing to resync in a Garage cluster are, run in its ready pod (os:admin). Never cached. */

@@ -120,7 +120,8 @@ class CronJobsViewModel(talos: TalosRepository, metered: () -> Boolean) : PagedL
  * The CronJobs of the scope's namespace, each on a card with its icon (the
  * ichor.levis.name/icon label, else guessed from its image, else a clock), schedule, next run
  * and recent runs, and a button to run it now like `kubectl create job --from`. The scope
- * ([control]) and [query] are shared with the other tabs.
+ * ([control]) and [query] are shared with the other tabs. [focusKey]: the CronJob whose runs
+ * to expand once listed (a share link), then [onFocused].
  */
 @Composable
 fun CronJobsTab(
@@ -129,6 +130,8 @@ fun CronJobsTab(
     onQuery: (String) -> Unit,
     vm: CronJobsViewModel,
     modifier: Modifier = Modifier,
+    focusKey: String? = null,
+    onFocused: () -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
@@ -138,6 +141,13 @@ fun CronJobsTab(
     var confirm by remember { mutableStateOf<KubeCronJob?>(null) }
     var confirmSuspend by remember { mutableStateOf<KubeCronJob?>(null) }
     var expanded by remember { mutableStateOf<Set<String>>(emptySet()) }
+    val listed = (state as? UiState.Loaded)?.data?.items
+    LaunchedEffect(focusKey, listed) {
+        listed.orEmpty().firstOrNull { it.key == focusKey }?.let {
+            expanded = expanded + it.key
+            onFocused()
+        }
+    }
 
     CronRunToasts(vm.results)
     val context = LocalContext.current
