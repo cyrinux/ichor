@@ -5,21 +5,16 @@ name: Release
 on:
   push:
     tags: ["v*"]
-  # auto-release.yml starts this on the tag it pushed (`gh workflow run --ref vX.Y.Z`): a tag
-  # pushed with GITHUB_TOKEN triggers no workflow, a dispatch does.
-  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   android:
-    if: startsWith(github.ref, 'refs/tags/v') # a dispatch on a branch releases nothing
     uses: ./.github/workflows/android.yml
     secrets: inherit
 
   ios:
-    if: startsWith(github.ref, 'refs/tags/v') # a dispatch on a branch releases nothing
     uses: ./.github/workflows/ios.yml
 
   # Uploads the App Bundle (the `play` build from android.yml, not bundleRelease), its R8
