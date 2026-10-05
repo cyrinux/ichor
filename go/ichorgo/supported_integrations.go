@@ -76,7 +76,7 @@ type supportedIntegration struct {
 
 type supportedIntegrations struct {
 	// Checked is false for the list alone (SupportedIntegrations), true once a cluster was asked.
-	Checked bool          `json:"checked"`
+	Checked bool                   `json:"checked"`
 	Items   []supportedIntegration `json:"items"`
 }
 
