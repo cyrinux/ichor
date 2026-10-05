@@ -9,7 +9,7 @@ public struct KubeWorkloadList: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        workloads = try c.decodeIfPresent([KubeWorkload].self, forKey: .workloads) ?? []
+        workloads = try c.field(.workloads, [])
     }
 
     private enum CodingKeys: String, CodingKey { case workloads }
@@ -59,14 +59,14 @@ public struct KubeWorkload: Codable, Equatable, Identifiable, Sendable {
         kind = try c.decode(String.self, forKey: .kind)
         namespace = try c.decode(String.self, forKey: .namespace)
         name = try c.decode(String.self, forKey: .name)
-        desired = try c.decodeIfPresent(Int.self, forKey: .desired) ?? 0
-        ready = try c.decodeIfPresent(Int.self, forKey: .ready) ?? 0
-        updated = try c.decodeIfPresent(Int.self, forKey: .updated) ?? 0
-        available = try c.decodeIfPresent(Int.self, forKey: .available) ?? 0
-        state = try c.decodeIfPresent(String.self, forKey: .state) ?? ""
-        restartedAt = try c.decodeIfPresent(Int64.self, forKey: .restartedAt) ?? 0
-        created = try c.decodeIfPresent(Int64.self, forKey: .created) ?? 0
-        images = try c.decodeIfPresent([String].self, forKey: .images) ?? []
+        desired = try c.field(.desired, 0)
+        ready = try c.field(.ready, 0)
+        updated = try c.field(.updated, 0)
+        available = try c.field(.available, 0)
+        state = try c.field(.state, "")
+        restartedAt = try c.field(.restartedAt, 0)
+        created = try c.field(.created, 0)
+        images = try c.field(.images, [])
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -153,10 +153,10 @@ public struct KubeRolloutStatus: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         workload = try c.decode(KubeWorkload.self, forKey: .workload)
-        done = try c.decodeIfPresent(Bool.self, forKey: .done) ?? false
-        failed = try c.decodeIfPresent(Bool.self, forKey: .failed) ?? false
-        manual = try c.decodeIfPresent(Bool.self, forKey: .manual) ?? false
-        pods = try c.decodeIfPresent([KubeRolloutPod].self, forKey: .pods) ?? []
+        done = try c.field(.done, false)
+        failed = try c.field(.failed, false)
+        manual = try c.field(.manual, false)
+        pods = try c.field(.pods, [])
     }
 
     /// New pods running and ready.
@@ -198,14 +198,14 @@ public struct KubeRolloutPod: Decodable, Equatable, Identifiable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         name = try c.decode(String.self, forKey: .name)
-        status = try c.decodeIfPresent(String.self, forKey: .status) ?? ""
-        healthy = try c.decodeIfPresent(Bool.self, forKey: .healthy) ?? false
-        ready = try c.decodeIfPresent(Int.self, forKey: .ready) ?? 0
-        containers = try c.decodeIfPresent(Int.self, forKey: .containers) ?? 0
-        restarts = try c.decodeIfPresent(Int.self, forKey: .restarts) ?? 0
-        node = try c.decodeIfPresent(String.self, forKey: .node) ?? ""
-        created = try c.decodeIfPresent(Int64.self, forKey: .created) ?? 0
-        updated = try c.decodeIfPresent(Bool.self, forKey: .updated) ?? false
+        status = try c.field(.status, "")
+        healthy = try c.field(.healthy, false)
+        ready = try c.field(.ready, 0)
+        containers = try c.field(.containers, 0)
+        restarts = try c.field(.restarts, 0)
+        node = try c.field(.node, "")
+        created = try c.field(.created, 0)
+        updated = try c.field(.updated, false)
     }
 
     private enum CodingKeys: String, CodingKey {

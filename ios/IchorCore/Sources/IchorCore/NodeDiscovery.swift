@@ -13,7 +13,7 @@ public struct NodeDiscovery: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         context = try c.decode(String.self, forKey: .context)
-        nodes = try c.decodeIfPresent([DiscoveredNode].self, forKey: .nodes) ?? []
+        nodes = try c.field(.nodes, [])
     }
 
     private enum CodingKeys: String, CodingKey { case context, nodes }
@@ -47,11 +47,11 @@ public struct DiscoveredNode: Decodable, Equatable, Hashable, Identifiable, Send
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        address = try c.decodeIfPresent(String.self, forKey: .address) ?? ""
-        addresses = try c.decodeIfPresent([String].self, forKey: .addresses) ?? []
-        hostname = try c.decodeIfPresent(String.self, forKey: .hostname) ?? ""
-        role = try c.decodeIfPresent(String.self, forKey: .role) ?? ""
-        known = try c.decodeIfPresent(Bool.self, forKey: .known) ?? false
+        address = try c.field(.address, "")
+        addresses = try c.field(.addresses, [])
+        hostname = try c.field(.hostname, "")
+        role = try c.field(.role, "")
+        known = try c.field(.known, false)
     }
 
     private enum CodingKeys: String, CodingKey { case address, addresses, hostname, role, known }

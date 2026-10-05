@@ -26,9 +26,9 @@ public struct FeatureSupport: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        supported = try c.decodeIfPresent(Bool.self, forKey: .supported) ?? true
-        minVersion = try c.decodeIfPresent(String.self, forKey: .minVersion) ?? ""
-        reason = try c.decodeIfPresent(String.self, forKey: .reason) ?? ""
+        supported = try c.field(.supported, true)
+        minVersion = try c.field(.minVersion, "")
+        reason = try c.field(.reason, "")
     }
 }
 
@@ -46,8 +46,8 @@ public struct NodeFeatures: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        version = try c.decodeIfPresent(String.self, forKey: .version) ?? ""
-        features = try c.decodeIfPresent([String: FeatureSupport].self, forKey: .features) ?? [:]
+        version = try c.field(.version, "")
+        features = try c.field(.features, [:])
     }
 }
 

@@ -49,13 +49,13 @@ public struct DeploymentRevision: Decodable, Equatable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        revision = try c.decodeIfPresent(Int.self, forKey: .revision) ?? 0
-        replicaSet = try c.decodeIfPresent(String.self, forKey: .replicaSet) ?? ""
-        created = try c.decodeIfPresent(Int64.self, forKey: .created) ?? 0
-        images = try c.decodeIfPresent([String].self, forKey: .images) ?? []
-        changeCause = try c.decodeIfPresent(String.self, forKey: .changeCause) ?? ""
-        replicas = try c.decodeIfPresent(Int.self, forKey: .replicas) ?? 0
-        current = try c.decodeIfPresent(Bool.self, forKey: .current) ?? false
+        revision = try c.field(.revision, 0)
+        replicaSet = try c.field(.replicaSet, "")
+        created = try c.field(.created, 0)
+        images = try c.field(.images, [])
+        changeCause = try c.field(.changeCause, "")
+        replicas = try c.field(.replicas, 0)
+        current = try c.field(.current, false)
     }
 }
 
@@ -67,7 +67,7 @@ public struct DeploymentRevisionList: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        revisions = try c.decodeIfPresent([DeploymentRevision].self, forKey: .revisions) ?? []
+        revisions = try c.field(.revisions, [])
     }
 
     private enum CodingKeys: String, CodingKey { case revisions }

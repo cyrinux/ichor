@@ -29,12 +29,12 @@ public struct NodeHardware: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         system = try c.decodeIfPresent(SystemInfo.self, forKey: .system)
-        processors = try c.decodeIfPresent([ProcessorInfo].self, forKey: .processors) ?? []
-        memory = try c.decodeIfPresent([MemoryModule].self, forKey: .memory) ?? []
-        disks = try c.decodeIfPresent([DiskInfo].self, forKey: .disks) ?? []
-        extensions = try c.decodeIfPresent([ExtensionInfo].self, forKey: .extensions) ?? []
+        processors = try c.field(.processors, [])
+        memory = try c.field(.memory, [])
+        disks = try c.field(.disks, [])
+        extensions = try c.field(.extensions, [])
         security = try c.decodeIfPresent(SecurityInfo.self, forKey: .security)
-        errors = try c.decodeIfPresent([String: String].self, forKey: .errors) ?? [:]
+        errors = try c.field(.errors, [:])
     }
 
     /// Installed memory in bytes (sum of the populated modules).

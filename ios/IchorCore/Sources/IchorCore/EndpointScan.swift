@@ -24,10 +24,10 @@ public struct EndpointMatch: Decodable, Equatable, Hashable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         endpoint = try c.decode(String.self, forKey: .endpoint)
-        hostname = try c.decodeIfPresent(String.self, forKey: .hostname) ?? ""
-        version = try c.decodeIfPresent(String.self, forKey: .version) ?? ""
-        role = try c.decodeIfPresent(String.self, forKey: .role) ?? ""
-        contexts = try c.decodeIfPresent([String].self, forKey: .contexts) ?? []
+        hostname = try c.field(.hostname, "")
+        version = try c.field(.version, "")
+        role = try c.field(.role, "")
+        contexts = try c.field(.contexts, [])
     }
 }
 
@@ -49,10 +49,10 @@ public struct EndpointProbe: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        endpoint = try c.decodeIfPresent(String.self, forKey: .endpoint) ?? ""
-        hostname = try c.decodeIfPresent(String.self, forKey: .hostname) ?? ""
-        version = try c.decodeIfPresent(String.self, forKey: .version) ?? ""
-        role = try c.decodeIfPresent(String.self, forKey: .role) ?? ""
+        endpoint = try c.field(.endpoint, "")
+        hostname = try c.field(.hostname, "")
+        version = try c.field(.version, "")
+        role = try c.field(.role, "")
     }
 
     /// "hostname · version", what is known of them.

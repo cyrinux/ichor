@@ -21,10 +21,10 @@ public struct SupportProgress: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        node = try c.decodeIfPresent(String.self, forKey: .node) ?? ""
-        step = try c.decodeIfPresent(String.self, forKey: .step) ?? ""
-        done = try c.decodeIfPresent(Int.self, forKey: .done) ?? 0
-        total = try c.decodeIfPresent(Int.self, forKey: .total) ?? 0
+        node = try c.field(.node, "")
+        step = try c.field(.step, "")
+        done = try c.field(.done, 0)
+        total = try c.field(.total, 0)
     }
 
     /// In [0, 1]; nil while the total is unknown.

@@ -34,12 +34,12 @@ public struct PacketSummary: Decodable, Equatable, Identifiable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         n = try c.decode(Int.self, forKey: .n)
-        ts = try c.decodeIfPresent(Int64.self, forKey: .ts) ?? 0
-        len = try c.decodeIfPresent(Int.self, forKey: .len) ?? 0
-        src = try c.decodeIfPresent(String.self, forKey: .src) ?? ""
-        dst = try c.decodeIfPresent(String.self, forKey: .dst) ?? ""
-        proto = try c.decodeIfPresent(String.self, forKey: .proto) ?? ""
-        info = try c.decodeIfPresent(String.self, forKey: .info) ?? ""
+        ts = try c.field(.ts, 0)
+        len = try c.field(.len, 0)
+        src = try c.field(.src, "")
+        dst = try c.field(.dst, "")
+        proto = try c.field(.proto, "")
+        info = try c.field(.info, "")
     }
 
     /// Color family of the protocol tag.
@@ -76,8 +76,8 @@ public struct PcapPage: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        packets = try c.decodeIfPresent([PacketSummary].self, forKey: .packets) ?? []
-        total = try c.decodeIfPresent(Int.self, forKey: .total) ?? packets.count
+        packets = try c.field(.packets, [])
+        total = try c.field(.total, packets.count)
     }
 }
 
@@ -108,8 +108,8 @@ public struct PacketDetail: Decodable, Equatable, Sendable {
 
         public init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
-            name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
-            fields = try c.decodeIfPresent([Field].self, forKey: .fields) ?? []
+            name = try c.field(.name, "")
+            fields = try c.field(.fields, [])
         }
     }
 
@@ -125,8 +125,8 @@ public struct PacketDetail: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        layers = try c.decodeIfPresent([Layer].self, forKey: .layers) ?? []
-        hex = try c.decodeIfPresent(String.self, forKey: .hex) ?? ""
+        layers = try c.field(.layers, [])
+        hex = try c.field(.hex, "")
     }
 }
 

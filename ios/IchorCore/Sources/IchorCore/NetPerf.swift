@@ -32,7 +32,7 @@ public struct NetPerfNodeList: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        nodes = try c.decodeIfPresent([NetPerfNode].self, forKey: .nodes) ?? []
+        nodes = try c.field(.nodes, [])
     }
 
     private enum CodingKeys: String, CodingKey { case nodes }
@@ -57,9 +57,9 @@ public struct NetPerfNode: Decodable, Equatable, Identifiable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         name = try c.decode(String.self, forKey: .name)
-        address = try c.decodeIfPresent(String.self, forKey: .address) ?? ""
-        controlPlane = try c.decodeIfPresent(Bool.self, forKey: .controlPlane) ?? false
-        ready = try c.decodeIfPresent(Bool.self, forKey: .ready) ?? false
+        address = try c.field(.address, "")
+        controlPlane = try c.field(.controlPlane, false)
+        ready = try c.field(.ready, false)
     }
 
     private enum CodingKeys: String, CodingKey { case name, address, controlPlane, ready }
@@ -85,12 +85,12 @@ public struct NetPerfLatency: Codable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        min = try c.decodeIfPresent(Double.self, forKey: .min) ?? 0
-        mean = try c.decodeIfPresent(Double.self, forKey: .mean) ?? 0
-        max = try c.decodeIfPresent(Double.self, forKey: .max) ?? 0
-        p50 = try c.decodeIfPresent(Double.self, forKey: .p50) ?? 0
-        p90 = try c.decodeIfPresent(Double.self, forKey: .p90) ?? 0
-        p99 = try c.decodeIfPresent(Double.self, forKey: .p99) ?? 0
+        min = try c.field(.min, 0)
+        mean = try c.field(.mean, 0)
+        max = try c.field(.max, 0)
+        p50 = try c.field(.p50, 0)
+        p90 = try c.field(.p90, 0)
+        p99 = try c.field(.p99, 0)
     }
 
     private enum CodingKeys: String, CodingKey { case min, mean, max, p50, p90, p99 }
@@ -121,10 +121,10 @@ public struct NetPerfResult: Codable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         path = try c.decode(String.self, forKey: .path)
         test = try c.decode(String.self, forKey: .test)
-        throughputMbps = try c.decodeIfPresent(Double.self, forKey: .throughputMbps) ?? 0
-        transactionRate = try c.decodeIfPresent(Double.self, forKey: .transactionRate) ?? 0
+        throughputMbps = try c.field(.throughputMbps, 0)
+        transactionRate = try c.field(.transactionRate, 0)
         latency = try c.decodeIfPresent(NetPerfLatency.self, forKey: .latency)
-        error = try c.decodeIfPresent(String.self, forKey: .error) ?? ""
+        error = try c.field(.error, "")
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -158,14 +158,14 @@ public struct NetPerfReport: Codable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        server = try c.decodeIfPresent(String.self, forKey: .server) ?? ""
-        client = try c.decodeIfPresent(String.self, forKey: .client) ?? ""
-        hostNetwork = try c.decodeIfPresent(Bool.self, forKey: .hostNetwork) ?? false
-        seconds = try c.decodeIfPresent(Int.self, forKey: .seconds) ?? 0
-        image = try c.decodeIfPresent(String.self, forKey: .image) ?? ""
-        started = try c.decodeIfPresent(Int64.self, forKey: .started) ?? 0
-        finished = try c.decodeIfPresent(Int64.self, forKey: .finished) ?? 0
-        results = try c.decodeIfPresent([NetPerfResult].self, forKey: .results) ?? []
+        server = try c.field(.server, "")
+        client = try c.field(.client, "")
+        hostNetwork = try c.field(.hostNetwork, false)
+        seconds = try c.field(.seconds, 0)
+        image = try c.field(.image, "")
+        started = try c.field(.started, 0)
+        finished = try c.field(.finished, 0)
+        results = try c.field(.results, [])
     }
 
     private enum CodingKeys: String, CodingKey { case server, client, hostNetwork, seconds, image, started, finished, results }
@@ -198,13 +198,13 @@ public struct NetPerfProgress: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         phase = try c.decode(String.self, forKey: .phase)
-        path = try c.decodeIfPresent(String.self, forKey: .path) ?? ""
-        test = try c.decodeIfPresent(String.self, forKey: .test) ?? ""
-        step = try c.decodeIfPresent(Int.self, forKey: .step) ?? 0
-        steps = try c.decodeIfPresent(Int.self, forKey: .steps) ?? 0
-        message = try c.decodeIfPresent(String.self, forKey: .message) ?? ""
-        at = try c.decodeIfPresent(Int64.self, forKey: .at) ?? 0
-        results = try c.decodeIfPresent([NetPerfResult].self, forKey: .results) ?? []
+        path = try c.field(.path, "")
+        test = try c.field(.test, "")
+        step = try c.field(.step, 0)
+        steps = try c.field(.steps, 0)
+        message = try c.field(.message, "")
+        at = try c.field(.at, 0)
+        results = try c.field(.results, [])
     }
 
     private enum CodingKeys: String, CodingKey { case phase, path, test, step, steps, message, at, results }

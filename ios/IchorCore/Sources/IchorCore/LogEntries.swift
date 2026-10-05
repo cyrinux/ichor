@@ -18,8 +18,8 @@ public struct LogField: Decodable, Equatable, Hashable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        k = try c.decodeIfPresent(String.self, forKey: .k) ?? ""
-        v = try c.decodeIfPresent(String.self, forKey: .v) ?? ""
+        k = try c.field(.k, "")
+        v = try c.field(.v, "")
     }
 
     /// error / err / reason values are shown in red.
@@ -58,12 +58,12 @@ public struct LogEntry: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        ts = try c.decodeIfPresent(Int64.self, forKey: .ts) ?? 0
-        level = try c.decodeIfPresent(String.self, forKey: .level) ?? ""
-        source = try c.decodeIfPresent(String.self, forKey: .source) ?? ""
-        raw = try c.decodeIfPresent(String.self, forKey: .raw) ?? ""
-        msg = try c.decodeIfPresent(String.self, forKey: .msg) ?? raw
-        fields = try c.decodeIfPresent([LogField].self, forKey: .fields) ?? []
+        ts = try c.field(.ts, 0)
+        level = try c.field(.level, "")
+        source = try c.field(.source, "")
+        raw = try c.field(.raw, "")
+        msg = try c.field(.msg, raw)
+        fields = try c.field(.fields, [])
     }
 
     /// Same level, source, message and fields (time aside).

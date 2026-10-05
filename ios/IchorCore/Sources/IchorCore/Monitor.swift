@@ -54,18 +54,18 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         context = try c.decode(String.self, forKey: .context)
         takenAt = try c.decode(Date.self, forKey: .takenAt)
         nodes = try c.decode([String: NodeState].self, forKey: .nodes)
-        etcdAlarms = try c.decodeIfPresent([String].self, forKey: .etcdAlarms) ?? []
-        etcdChecked = try c.decodeIfPresent(Bool.self, forKey: .etcdChecked) ?? false
-        certNotAfter = try c.decodeIfPresent(Int64.self, forKey: .certNotAfter) ?? 0
-        lastCertWarnDay = try c.decodeIfPresent(Int64.self, forKey: .lastCertWarnDay) ?? -1
-        dataWatched = try c.decodeIfPresent(Bool.self, forKey: .dataWatched) ?? false
-        dataChecked = try c.decodeIfPresent(Bool.self, forKey: .dataChecked) ?? false
-        dataIssues = try c.decodeIfPresent([String: String].self, forKey: .dataIssues) ?? [:]
-        dataPending = try c.decodeIfPresent([String].self, forKey: .dataPending) ?? []
-        gitopsWatched = try c.decodeIfPresent(Bool.self, forKey: .gitopsWatched) ?? false
-        gitopsChecked = try c.decodeIfPresent(Bool.self, forKey: .gitopsChecked) ?? false
-        gitopsIssues = try c.decodeIfPresent([String: String].self, forKey: .gitopsIssues) ?? [:]
-        gitopsPending = try c.decodeIfPresent([String].self, forKey: .gitopsPending) ?? []
+        etcdAlarms = try c.field(.etcdAlarms, [])
+        etcdChecked = try c.field(.etcdChecked, false)
+        certNotAfter = try c.field(.certNotAfter, 0)
+        lastCertWarnDay = try c.field(.lastCertWarnDay, -1)
+        dataWatched = try c.field(.dataWatched, false)
+        dataChecked = try c.field(.dataChecked, false)
+        dataIssues = try c.field(.dataIssues, [:])
+        dataPending = try c.field(.dataPending, [])
+        gitopsWatched = try c.field(.gitopsWatched, false)
+        gitopsChecked = try c.field(.gitopsChecked, false)
+        gitopsIssues = try c.field(.gitopsIssues, [:])
+        gitopsPending = try c.field(.gitopsPending, [])
     }
 
     var dataTrack: IssueTrack {

@@ -15,8 +15,8 @@ public struct EtcdMemberPlan: Decodable, Equatable, Sendable {
 
         public init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
-            id = try c.decodeIfPresent(String.self, forKey: .id) ?? ""
-            hostname = try c.decodeIfPresent(String.self, forKey: .hostname) ?? ""
+            id = try c.field(.id, "")
+            hostname = try c.field(.hostname, "")
         }
     }
 
@@ -44,9 +44,9 @@ public struct EtcdMemberPlan: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        member = try c.decodeIfPresent(Member.self, forKey: .member) ?? Member(id: "")
-        healthyAfter = try c.decodeIfPresent(Int.self, forKey: .healthyAfter) ?? 0
-        membersAfter = try c.decodeIfPresent(Int.self, forKey: .membersAfter) ?? 0
+        member = try c.field(.member, Member(id: ""))
+        healthyAfter = try c.field(.healthyAfter, 0)
+        membersAfter = try c.field(.membersAfter, 0)
         // Go's verdict (a bool); a count of members needed is compared with the healthy ones.
         if let kept = try? c.decodeIfPresent(Bool.self, forKey: .quorumAfter) {
             keepsQuorum = kept
@@ -55,8 +55,8 @@ public struct EtcdMemberPlan: Decodable, Equatable, Sendable {
         } else {
             keepsQuorum = false
         }
-        blockers = try c.decodeIfPresent([String].self, forKey: .blockers) ?? []
-        warnings = try c.decodeIfPresent([String].self, forKey: .warnings) ?? []
+        blockers = try c.field(.blockers, [])
+        warnings = try c.field(.warnings, [])
     }
 }
 
@@ -70,7 +70,7 @@ public struct EtcdForfeitResult: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        member = try c.decodeIfPresent(String.self, forKey: .member) ?? ""
+        member = try c.field(.member, "")
     }
 }
 

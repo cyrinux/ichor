@@ -35,14 +35,14 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
     // Go leaves out the fields a target does not take.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        cluster = try c.decodeIfPresent(String.self, forKey: .cluster) ?? ""
+        cluster = try c.field(.cluster, "")
         target = try c.decode(Target.self, forKey: .target)
-        host = try c.decodeIfPresent(String.self, forKey: .host) ?? ""
-        addr = try c.decodeIfPresent(String.self, forKey: .addr) ?? ""
-        tab = try c.decodeIfPresent(String.self, forKey: .tab) ?? ""
-        kind = try c.decodeIfPresent(String.self, forKey: .kind) ?? ""
-        namespace = try c.decodeIfPresent(String.self, forKey: .namespace) ?? ""
-        name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+        host = try c.field(.host, "")
+        addr = try c.field(.addr, "")
+        tab = try c.field(.tab, "")
+        kind = try c.field(.kind, "")
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
     }
 
     /// The JSON for BuildShareLink, without empty fields.
