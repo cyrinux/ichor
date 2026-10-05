@@ -3,6 +3,7 @@ package name.levis.ichor.model
 import name.levis.ichor.model.OverviewCard.APPS
 import name.levis.ichor.model.OverviewCard.ARGO_CD
 import name.levis.ichor.model.OverviewCard.DATA_SERVICES
+import name.levis.ichor.model.OverviewCard.FLUX
 import name.levis.ichor.model.OverviewCard.NODES
 import name.levis.ichor.model.OverviewCard.SUMMARY
 import name.levis.ichor.model.OverviewCard.TIME_DRIFT
@@ -23,8 +24,8 @@ class OverviewLayoutTest {
 
     @Test
     fun encodeRoundTrips() {
-        val layout = OverviewLayout().move(4, 0).hide(APPS)
-        assertEquals("NODES,SUMMARY,-APPS,DATA_SERVICES,ARGO_CD,TIME_DRIFT", layout.encode())
+        val layout = OverviewLayout().move(5, 0).hide(APPS)
+        assertEquals("NODES,SUMMARY,-APPS,DATA_SERVICES,ARGO_CD,FLUX,TIME_DRIFT", layout.encode())
         assertEquals(layout, OverviewLayout.parse(layout.encode()))
     }
 
@@ -38,17 +39,17 @@ class OverviewLayoutTest {
     @Test
     fun parseSkipsUnknownAndRepeatedAndAppendsMissing() {
         val layout = OverviewLayout.parse("TIME_DRIFT, -NODES,GONE,TIME_DRIFT,-NODES")
-        assertEquals(listOf(TIME_DRIFT, NODES, SUMMARY, APPS, DATA_SERVICES, ARGO_CD), layout.order)
+        assertEquals(listOf(TIME_DRIFT, NODES, SUMMARY, APPS, DATA_SERVICES, ARGO_CD, FLUX), layout.order)
         assertEquals(setOf(NODES), layout.hidden)
-        assertEquals(listOf(TIME_DRIFT, SUMMARY, APPS, DATA_SERVICES, ARGO_CD), layout.visible)
+        assertEquals(listOf(TIME_DRIFT, SUMMARY, APPS, DATA_SERVICES, ARGO_CD, FLUX), layout.visible)
     }
 
     @Test
     fun moveWorksOnShownCards() {
         val layout = OverviewLayout().hide(APPS)
-        // Shown: SUMMARY, DATA_SERVICES, ARGO_CD, NODES, TIME_DRIFT
-        val moved = layout.move(from = 3, to = 1)
-        assertEquals(listOf(SUMMARY, NODES, DATA_SERVICES, ARGO_CD, TIME_DRIFT), moved.visible)
+        // Shown: SUMMARY, DATA_SERVICES, ARGO_CD, FLUX, NODES, TIME_DRIFT
+        val moved = layout.move(from = 4, to = 1)
+        assertEquals(listOf(SUMMARY, NODES, DATA_SERVICES, ARGO_CD, FLUX, TIME_DRIFT), moved.visible)
         assertEquals(listOf(APPS), moved.hiddenCards)
     }
 
@@ -56,7 +57,7 @@ class OverviewLayoutTest {
     fun moveOutOfRangeIsIgnored() {
         val layout = OverviewLayout()
         assertEquals(layout, layout.move(-1, 2))
-        assertEquals(layout, layout.move(0, 6))
+        assertEquals(layout, layout.move(0, 7))
         assertEquals(layout, layout.move(2, 2))
     }
 
@@ -64,7 +65,7 @@ class OverviewLayoutTest {
     fun showPutsTheCardLast() {
         val layout = OverviewLayout().hide(SUMMARY).hide(NODES)
         val shown = layout.show(SUMMARY)
-        assertEquals(listOf(APPS, DATA_SERVICES, ARGO_CD, TIME_DRIFT, SUMMARY), shown.visible)
+        assertEquals(listOf(APPS, DATA_SERVICES, ARGO_CD, FLUX, TIME_DRIFT, SUMMARY), shown.visible)
         assertEquals(listOf(NODES), shown.hiddenCards)
         assertEquals(shown, shown.show(APPS))
     }
@@ -77,6 +78,6 @@ class OverviewLayoutTest {
 
     @Test
     fun detectedCards() {
-        assertEquals(setOf(DATA_SERVICES, ARGO_CD), OverviewCard.entries.filter { it.whenDetected }.toSet())
+        assertEquals(setOf(DATA_SERVICES, ARGO_CD, FLUX), OverviewCard.entries.filter { it.whenDetected }.toSet())
     }
 }

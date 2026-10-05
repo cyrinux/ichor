@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -113,26 +114,30 @@ private fun Body(status: ArgoStatus, downNodes: Set<String>) {
 }
 
 /** The segmented health bar and "● 21 healthy ● 2 needs attention…": the overview card and the Argo CD app sheet. */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ArgoSummary(status: ArgoStatus) {
     val counts = status.apps.levelCounts()
-    val total = status.apps.size.coerceAtLeast(1)
+    SegmentedSummary(LEVELS.map { SummarySegment(counts[it] ?: 0, it.color(), it.label()) })
+}
+
+/** One part of a [SegmentedSummary]: how many, in which colour, called what. */
+data class SummarySegment(val count: Int, val color: Color, val label: String)
+
+/** A segmented bar sized by count over "● 21 healthy ● 2 needs attention…"; empty segments are left out. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun SegmentedSummary(segments: List<SummarySegment>) {
+    val shown = segments.filter { it.count > 0 }
+    val total = shown.sumOf { it.count }.coerceAtLeast(1)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            LEVELS.forEach { level ->
-                val n = counts[level] ?: 0
-                if (n > 0) Box(Modifier.weight(n.toFloat() / total).height(8.dp).background(level.color()))
-            }
+            shown.forEach { Box(Modifier.weight(it.count.toFloat() / total).height(8.dp).background(it.color)) }
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            LEVELS.forEach { level ->
-                val n = counts[level] ?: 0
-                if (n > 0) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(8.dp).clip(RoundedCornerShape(4.dp)).background(level.color()))
-                        Text("$n ${level.label()}", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(start = 4.dp))
-                    }
+            shown.forEach {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(8.dp).clip(RoundedCornerShape(4.dp)).background(it.color))
+                    Text("${it.count} ${it.label}", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(start = 4.dp))
                 }
             }
         }

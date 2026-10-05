@@ -15,6 +15,8 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.ui.apps.AppsScreen
 import name.levis.ichor.ui.argocd.ArgoAppScreen
 import name.levis.ichor.ui.argocd.ArgoAppsScreen
+import name.levis.ichor.ui.flux.FluxAppScreen
+import name.levis.ichor.ui.flux.FluxScreen
 import name.levis.ichor.ui.capture.CaptureFileScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
 import name.levis.ichor.ui.settings.LicensesScreen
@@ -105,6 +107,11 @@ private object Routes {
     const val ARGO_APP = "argocd-app?ns={ns}&name={name}"
 
     fun argoApp(namespace: String, name: String) = "argocd-app?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
+    const val FLUX = "flux"
+    const val FLUX_APP = "flux-app?kind={kind}&ns={ns}&name={name}"
+
+    fun fluxApp(kind: String, namespace: String, name: String) =
+        "flux-app?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
     const val DEBUG = "debug?addr={addr}&host={host}&ctx={ctx}"
     const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}"
     const val NETWORK = "network?addr={addr}&host={host}"
@@ -260,6 +267,7 @@ fun Navigation(
                 onMetrics = { nav.navigate(Routes.METRICS) },
                 onDataServices = { nav.navigate(Routes.DATA_SERVICES) },
                 onArgoCD = { nav.navigate(Routes.ARGO_CD) },
+                onFlux = { nav.navigate(Routes.FLUX) },
                 onHealth = { nav.navigate(Routes.HEALTH) },
                 onEvents = { nav.navigate(Routes.events()) },
                 onInsights = { nav.navigate(Routes.INSIGHTS) },
@@ -483,6 +491,7 @@ fun Navigation(
                 onNode = { addr, host, role -> nav.navigate(Routes.node(addr, host, role, tab = 4)) },
                 onArgoCD = { nav.navigate(Routes.ARGO_CD) },
                 onArgoApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
+                onFlux = { nav.navigate(Routes.FLUX) },
             )
         }
         composable(Routes.KUBESPAN) {
@@ -525,6 +534,25 @@ fun Navigation(
             ),
         ) { entry ->
             ArgoAppScreen(
+                namespace = entry.arguments?.getString("ns").orEmpty(),
+                name = entry.arguments?.getString("name").orEmpty(),
+                onBack = { nav.popBackStack() },
+                onNode = { n, tab -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab)) },
+            )
+        }
+        composable(Routes.FLUX) {
+            FluxScreen(onBack = { nav.popBackStack() }, onApp = { kind, ns, name -> nav.navigate(Routes.fluxApp(kind, ns, name)) })
+        }
+        composable(
+            Routes.FLUX_APP,
+            arguments = listOf(
+                navArgument("kind") { type = NavType.StringType; defaultValue = "" },
+                navArgument("ns") { type = NavType.StringType; defaultValue = "" },
+                navArgument("name") { type = NavType.StringType; defaultValue = "" },
+            ),
+        ) { entry ->
+            FluxAppScreen(
+                kind = entry.arguments?.getString("kind").orEmpty(),
                 namespace = entry.arguments?.getString("ns").orEmpty(),
                 name = entry.arguments?.getString("name").orEmpty(),
                 onBack = { nav.popBackStack() },
