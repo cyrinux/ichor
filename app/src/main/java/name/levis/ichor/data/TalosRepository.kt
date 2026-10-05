@@ -15,6 +15,8 @@ import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoNetwork
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ArgoSyncOptions
+import name.levis.ichor.model.FluxAction
+import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.DataServices
@@ -558,6 +560,19 @@ class TalosRepository(
         TalosJson.decodeFromString(ArgoNetwork.serializer(), Ichorgo.kubeArgoNetwork(cfg, ctx, server, app.namespace, app.name))
     }
 
+    /**
+     * Flux Kustomizations, HelmReleases and sources through their custom resources (os:admin);
+     * `installed` is false without Flux.
+     */
+    suspend fun flux(): FluxStatus = remember(FLUX) {
+        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(FluxStatus.serializer(), Ichorgo.kubeFlux(cfg, ctx, server)) }
+    }
+
+    /** Runs [action] on the Flux object [kind] [namespace]/[name] (os:admin). Throws when refused. */
+    suspend fun fluxAction(kind: String, namespace: String, name: String, action: FluxAction) = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeFluxAction(cfg, ctx, server, kind, namespace, name, action.wire)
+    }
+
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
     suspend fun deletePod(pod: KubePod) = kubeCall { cfg, ctx, server -> Ichorgo.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
 
@@ -813,6 +828,7 @@ const val PODS = "pods"
 const val CRON_JOBS = "cronjobs"
 const val DATA_SERVICES = "dataservices"
 const val ARGO_CD = "argocd"
+const val FLUX = "flux"
 fun servicesKey(node: String) = "services|$node"
 fun resourcesKey(node: String) = "resources|$node"
 const val CLUSTER_TIME = "clustertime"

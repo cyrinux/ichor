@@ -1,0 +1,18 @@
+{"items":[
+ {"metadata":{"name":"flux-system","namespace":"flux-system","resourceVersion":"100",
+   "annotations":{"reconcile.fluxcd.io/requestedAt":"2026-10-01T10:00:00Z"}},
+  "spec":{"interval":"10m","path":"./clusters/home","prune":true,"sourceRef":{"kind":"GitRepository","name":"flux-system"}},
+  "status":{"lastHandledReconcileAt":"2026-10-01T10:00:00Z","lastAppliedRevision":"main@sha1:aaaa","lastAttemptedRevision":"main@sha1:aaaa",
+   "conditions":[{"type":"Ready","status":"True","reason":"ReconciliationSucceeded","message":"Applied revision: main@sha1:aaaa","lastTransitionTime":"2026-10-01T10:00:05Z"}],
+   "inventory":{"entries":[{"id":"_flux-system__Namespace","v":"v1"},{"id":"flux-system_source-controller_apps_Deployment","v":"v1"},{"id":"bad-id","v":"v1"}]}}},
+ {"metadata":{"name":"apps","namespace":"flux-system","resourceVersion":"101",
+   "labels":{"kustomize.toolkit.fluxcd.io/name":"flux-system","kustomize.toolkit.fluxcd.io/namespace":"flux-system"},
+   "annotations":{"reconcile.fluxcd.io/requestedAt":"2026-10-02T08:00:00Z"}},
+  "spec":{"interval":"10m","path":"./apps","sourceRef":{"kind":"GitRepository","name":"flux-system","namespace":"flux-system"},"dependsOn":[{"name":"infra"}]},
+  "status":{"lastHandledReconcileAt":"2026-10-01T10:00:00Z","lastAppliedRevision":"main@sha1:9999","lastAttemptedRevision":"main@sha1:aaaa",
+   "conditions":[{"type":"Ready","status":"False","reason":"HealthCheckFailed","message":"health check failed","lastTransitionTime":"2026-10-01T10:05:00Z"}],
+   "inventory":{"entries":[{"id":"web_web_apps_Deployment","v":"v1"},{"id":"web_web__Service","v":"v1"}]}}},
+ {"metadata":{"name":"infra","namespace":"flux-system","resourceVersion":"102"},
+  "spec":{"interval":"1h","path":"./infra","suspend":true,"sourceRef":{"kind":"GitRepository","name":"flux-system"}},
+  "status":{"conditions":[{"type":"Ready","status":"True","reason":"ReconciliationSucceeded","message":"ok"}]}}
+]}

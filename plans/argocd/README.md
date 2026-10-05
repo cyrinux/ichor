@@ -4,7 +4,8 @@ Status: **implemented**: Go core (`kube_argocd*.go`, `just probe argocd`), Andro
 screens. Remaining: on-device checks against a real Argo CD, opt-in background alerts (phase 4),
 diagnosis/support-bundle context.
 
-Defaults chosen: a sync never prunes unless the user ticks it; Flux is deferred (phase 5).
+Defaults chosen: a sync never prunes unless the user ticks it; Flux has its own screens, see
+`plans/roadmap/devops/06-flux.md`.
 
 ## What exists today
 

@@ -40,6 +40,12 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   Ingress/HTTPRoute → Service → pods → node, every box coloured by health, traffic flowing along
   the healthy paths, and the likely root cause named (a node not ready, a crash-looping pod, a
   Service without ready pods).
+- **Flux:** when the cluster runs Flux v2, list its Kustomizations and HelmReleases with their
+  readiness, applied and attempted revision, source, what a Kustomization applied and a
+  release's Helm history, and their Git, OCI and Helm sources; reconcile (with its source
+  first if wanted), suspend or resume any of them, and force or reset a HelmRelease that gave up.
+  Like Argo CD, Ichor writes the annotations and `spec.suspend` the `flux` CLI does, with the
+  admin kubeconfig: nothing to install in the cluster.
 - **Network policies:** every NetworkPolicy and, with Cilium, CiliumNetworkPolicy and
   CiliumClusterwideNetworkPolicy, in plain words: the pods each one selects, whether they are
   isolated in each direction, and what each rule lets in or out (pods, namespaces, CIDRs, entities,
