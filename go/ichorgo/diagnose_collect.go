@@ -45,6 +45,8 @@ type diagnosisData struct {
 	Events   []nodeEvent
 	// EventsNote says why Events may not be the whole story (the stream failed or was slow).
 	EventsNote string
+	// GitOps: Argo CD and Flux, nil without os:admin or when neither runs.
+	GitOps *gitopsState
 
 	// What a mask has to learn to hide the cluster's names in the report.
 	hosts   []hostEntry
@@ -88,7 +90,7 @@ type serviceLogTail struct {
 
 // collectDiagnosis gathers the report data. A node or a section that fails is reported in
 // its place; only an unusable context is an error.
-func collectDiagnosis(ctx context.Context, s *session) diagnosisData {
+func collectDiagnosis(ctx context.Context, s *session, kube kubeTarget) diagnosisData {
 	nodes := targetNodes(s.context)
 	data := diagnosisData{At: time.Now(), Nodes: make([]nodeDiagnosis, len(nodes))}
 
@@ -136,6 +138,7 @@ func collectDiagnosis(ctx context.Context, s *session) diagnosisData {
 	})
 
 	wg.Go(func() { data.Events, data.EventsNote = recentProblemEvents(ctx, s.client, reachable) })
+	wg.Go(func() { data.GitOps = collectGitOps(ctx, kube, data.Roles) })
 
 	wg.Wait()
 

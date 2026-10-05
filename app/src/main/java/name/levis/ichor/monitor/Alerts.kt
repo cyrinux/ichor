@@ -4,12 +4,14 @@ import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.util.daysUntil
 
 /** What an alert is about; Notifications.kt turns it into translated text. */
-enum class AlertKind { NODE_READY, NODE_NOT_READY, NODE_UNREACHABLE, ETCD_ALARM, CERT_EXPIRING, CERT_EXPIRED, DATA_PROBLEM, DATA_OK }
+enum class AlertKind { NODE_READY, NODE_NOT_READY, NODE_UNREACHABLE, ETCD_ALARM, CERT_EXPIRING, CERT_EXPIRED, DATA_PROBLEM, DATA_OK, GITOPS_PROBLEM, GITOPS_OK }
 
 /**
  * [key] identifies the subject, so a newer alert replaces the older notification.
- * [subject]: hostname (node), alarm name (etcd) or volume/cluster (data services);
- * [detail]: node address/reason, etcd member, or "system|severity" (data services);
+ * [subject]: hostname (node), alarm name (etcd), volume/cluster (data services) or
+ * "namespace/name" (Argo CD) / "Kind namespace/name" (Flux);
+ * [detail]: node address/reason, etcd member, "system|severity" (data services) or
+ * "tool|severity|reason" (GitOps apps);
  * [days]: days until (or since) the certificate expiry.
  */
 data class Alert(
@@ -69,7 +71,8 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
         }
     }
 
-    val data = if (blind) DataState(prev.dataWatched, prev.dataChecked, prev.dataIssues, prev.dataPending) else evaluateData(prev, cur, comparable, alerts)
+    val data = if (blind) prev.dataTrack else evaluateTrack(prev?.dataTrack, cur.dataTrack, comparable, { it }, ::dataAlert, alerts)
+    val gitops = if (blind) prev.gitopsTrack else evaluateTrack(prev?.gitopsTrack, cur.gitopsTrack, comparable, ::gitopsSeverity, ::gitopsAlert, alerts)
 
     val next = if (blind) prev.copy(certNotAfter = cur.certNotAfter) else cur
     return Evaluation(
@@ -80,46 +83,72 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             dataChecked = data.checked,
             dataIssues = data.issues,
             dataPending = data.pending,
+            gitopsWatched = gitops.watched,
+            gitopsChecked = gitops.checked,
+            gitopsIssues = gitops.issues,
+            gitopsPending = gitops.pending,
         ),
     )
 }
 
-private data class DataState(val watched: Boolean, val checked: Boolean, val issues: Map<String, String>, val pending: List<String>)
+/** One opt-in track of issues (data services, GitOps apps), as a snapshot keeps it. */
+private data class Track(val watched: Boolean, val checked: Boolean, val issues: Map<String, String>, val pending: List<String>)
+
+private val ClusterSnapshot.dataTrack: Track get() = Track(dataWatched, dataChecked, dataIssues, dataPending)
+private val ClusterSnapshot.gitopsTrack: Track get() = Track(gitopsWatched, gitopsChecked, gitopsIssues, gitopsPending)
 
 /**
- * Longhorn, Garage and CloudNativePG issues, diffed like etcd alarms: a critical issue alerts at
- * once, a warning only when seen on two checks in a row; an issue that clears says so once. The
- * first check (or a context switch, or turning watching on) is a silent baseline; a check that
- * could not read them keeps what was known; turning watching off forgets it.
+ * Issues of one track (key → value, [severityOf] reading [DATA_CRITICAL] or [DATA_WARNING] from the
+ * value), diffed like etcd alarms: a critical issue alerts at once, a warning only when seen on two
+ * checks in a row; an issue that clears says so once. The first check (or a context switch, or
+ * turning watching on) is a silent baseline; a check that could not read them keeps what was known;
+ * turning watching off forgets it.
  */
-private fun evaluateData(prev: ClusterSnapshot?, cur: ClusterSnapshot, comparable: Boolean, alerts: MutableList<Alert>): DataState {
-    if (!cur.dataWatched) return DataState(watched = false, checked = false, issues = emptyMap(), pending = emptyList())
-    val known = prev?.takeIf { comparable && it.dataWatched && it.dataChecked }
-    if (!cur.dataChecked) {
-        return known?.let { DataState(true, true, it.dataIssues, it.dataPending) } ?: DataState(true, false, emptyMap(), emptyList())
+private fun evaluateTrack(
+    prev: Track?,
+    cur: Track,
+    comparable: Boolean,
+    severityOf: (String) -> String,
+    alertOf: (key: String, value: String, problem: Boolean) -> Alert,
+    alerts: MutableList<Alert>,
+): Track {
+    if (!cur.watched) return Track(watched = false, checked = false, issues = emptyMap(), pending = emptyList())
+    val known = prev?.takeIf { comparable && it.watched && it.checked }
+    if (!cur.checked) {
+        return known?.let { Track(true, true, it.issues, it.pending) } ?: Track(true, false, emptyMap(), emptyList())
     }
-    if (known == null) return DataState(true, true, cur.dataIssues, emptyList())
+    if (known == null) return Track(true, true, cur.issues, emptyList())
 
     val notified = mutableMapOf<String, String>()
     val pending = mutableListOf<String>()
-    cur.dataIssues.forEach { (key, severity) ->
-        val before = known.dataIssues[key]
+    cur.issues.forEach { (key, value) ->
+        val severity = severityOf(value)
+        val before = known.issues[key]?.let(severityOf)
         when {
             // Already notified at this severity or a worse one: quiet.
-            before == severity || (before == DATA_CRITICAL && severity == DATA_WARNING) -> notified[key] = severity
+            before == severity || (before == DATA_CRITICAL && severity == DATA_WARNING) -> notified[key] = value
             // New or worse critical, or a warning seen for the second time in a row.
-            severity == DATA_CRITICAL || key in known.dataPending -> {
-                alerts += dataAlert(key, severity, problem = true)
-                notified[key] = severity
+            severity == DATA_CRITICAL || key in known.pending -> {
+                alerts += alertOf(key, value, true)
+                notified[key] = value
             }
             else -> pending += key
         }
     }
-    (known.dataIssues.keys - cur.dataIssues.keys).sorted().forEach { key ->
-        alerts += dataAlert(key, known.dataIssues.getValue(key), problem = false)
+    (known.issues.keys - cur.issues.keys).sorted().forEach { key ->
+        alerts += alertOf(key, known.issues.getValue(key), false)
     }
-    return DataState(true, true, notified, pending)
+    return Track(true, true, notified, pending)
 }
+
+/** [key] "tool|subject", [value] "severity|reason": detail "tool|severity|reason". */
+private fun gitopsAlert(key: String, value: String, problem: Boolean): Alert = Alert(
+    key = "gitops:$key",
+    kind = if (problem) AlertKind.GITOPS_PROBLEM else AlertKind.GITOPS_OK,
+    problem = problem,
+    subject = key.substringAfter('|'),
+    detail = key.substringBefore('|') + "|" + value,
+)
 
 private fun dataAlert(key: String, severity: String, problem: Boolean): Alert = Alert(
     key = "data:$key",

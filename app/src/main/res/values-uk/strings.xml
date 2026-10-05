@@ -486,6 +486,16 @@
     <string name="monitor_data_problem">%1$s потребує уваги</string>
     <string name="monitor_data_ok">%1$s знову справний</string>
     <string name="monitor_data_text">%1$s · %2$s</string>
+    <string name="monitor_gitops">Стежити за GitOps-застосунками</string>
+    <string name="monitor_gitops_desc">Застосунки Argo CD і Flux, що ламаються або не синхронізуються; кожна перевірка читає їх через Kubernetes API.</string>
+    <string name="monitor_gitops_argo_failed">Argo CD: sync %1$s не вдалася</string>
+    <string name="monitor_gitops_argo_degraded">Argo CD: %1$s у стані Degraded</string>
+    <string name="monitor_gitops_argo_missing">Argo CD: %1$s у стані Missing</string>
+    <string name="monitor_gitops_argo_out_of_sync">Argo CD: %1$s у стані OutOfSync</string>
+    <string name="monitor_gitops_argo_error">Argo CD: %1$s має помилку</string>
+    <string name="monitor_gitops_argo_ok">Argo CD: %1$s знову Synced і Healthy</string>
+    <string name="monitor_gitops_flux_not_ready">Flux: %1$s %2$s не Ready</string>
+    <string name="monitor_gitops_flux_ok">Flux: %1$s %2$s знову Ready</string>
     <string name="monitor_check_every">Перевіряти кожні</string>
     <string name="monitor_interval_minutes">%1$d хв</string>
     <string name="monitor_interval_hours">%1$d год</string>

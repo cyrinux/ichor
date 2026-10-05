@@ -243,11 +243,15 @@ struct MainNavigation: View {
         .onChange(of: model.lock.locked) { _, locked in
             if !locked, NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
         }
+        .onChange(of: NotificationRouter.shared.pendingGitOps) { _, pending in
+            if pending != nil { openGitOps() }
+        }
         .onAppear {
             if NotificationRouter.shared.pendingRenewal { openRenewal() }
             if NotificationRouter.shared.pendingCluster != nil { openCluster() }
             if NotificationRouter.shared.pendingArgoWindows { openArgoWindows() }
             if NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
+            if NotificationRouter.shared.pendingGitOps != nil { openGitOps() }
         }
         .messageAlert($freezeMessage)
         .messageAlert($linkMessage)
@@ -310,6 +314,19 @@ struct MainNavigation: View {
             path = []
             if let route = await target.route(client: model.client) { path = [route] }
         }
+    }
+
+    /// From a GitOps app alert: the Argo CD or Flux screen of the cluster on screen, when this
+    /// config may use the Kubernetes API.
+    private func openGitOps() {
+        guard let destination = NotificationRouter.shared.pendingGitOps else { return }
+        NotificationRouter.shared.pendingGitOps = nil
+        guard model.allows(.workloads) else { return }
+        let route: Route = switch destination {
+        case .argoCD: .argoCD(downNodes: [])
+        case .flux: .flux(downNodes: [])
+        }
+        if path.last != route { path.append(route) }
     }
 
     /// From the certificate-expiry alert: the renewal screen, or the settings (which show the

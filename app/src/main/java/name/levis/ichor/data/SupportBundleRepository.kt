@@ -30,7 +30,7 @@ data class SupportBundleFile(val file: File, val size: Long, val modified: Long)
  * `support/` directory. They hold logs and cluster details, unmasked, so they never leave
  * that directory unless the user saves or shares one.
  */
-class SupportBundleRepository(private val configs: ConfigRepository, filesDir: File) {
+class SupportBundleRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers, filesDir: File) {
     val dir = File(filesDir, SUPPORT_DIR)
 
     /** Collects a bundle of [nodes] into [dest]. Cancelling the collector cancels it. */
@@ -40,6 +40,7 @@ class SupportBundleRepository(private val configs: ConfigRepository, filesDir: F
         val run = Ichorgo.startSupportBundle(
             stored.yaml,
             stored.activeContext,
+            stored.activeSummary?.fingerprint?.let { kubeServers.servers.value[it] }.orEmpty(),
             nodes.joinToString(","),
             dest.path,
             object : SupportListener {

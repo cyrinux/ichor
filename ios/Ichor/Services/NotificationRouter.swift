@@ -18,11 +18,30 @@ final class NotificationRouter {
     /// A freeze reminder was tapped: open the Argo CD sync windows.
     var pendingArgoWindows = false
 
+    /// A GitOps app alert was tapped: open the Argo CD or Flux screen.
+    var pendingGitOps: GitOpsDestination?
+
     /// "+1 h" on a freeze reminder: extend that freeze once the app is open.
     var pendingFreezeExtend: FreezeExtendRequest?
 
     /// A share link (ichor://open?…) was opened: the screen it names, once unlocked.
     var pendingShareLink: URL?
+}
+
+/// The screen a GitOps alert leads to.
+enum GitOpsDestination: Equatable {
+    case argoCD, flux
+
+    /// From an alert key ("gitops:argocd|…", "gitops:flux|…"), nil for other alerts.
+    init?(alertKey: String) {
+        if alertKey.hasPrefix("gitops:argocd|") {
+            self = .argoCD
+        } else if alertKey.hasPrefix("gitops:flux|") {
+            self = .flux
+        } else {
+            return nil
+        }
+    }
 }
 
 /// Notification taps (the center keeps its delegate weakly, hence the shared instance).
@@ -46,6 +65,10 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             return
         }
         // Alert keys are the request identifiers (BackgroundMonitor.post); "cert" is the expiry alert.
+        if let destination = GitOpsDestination(alertKey: response.notification.request.identifier) {
+            await MainActor.run { NotificationRouter.shared.pendingGitOps = destination }
+            return
+        }
         guard response.notification.request.identifier == "cert" else { return }
         await MainActor.run { NotificationRouter.shared.pendingRenewal = true }
     }

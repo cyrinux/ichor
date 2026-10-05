@@ -42,12 +42,13 @@ fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean) {
     val text = alertText(res, alert)
 
     val intent = Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-    // A certificate alert opens the renewal screen (which explains when the role cannot renew).
-    val certificate = alert.kind == AlertKind.CERT_EXPIRING || alert.kind == AlertKind.CERT_EXPIRED
-    if (certificate) intent.putExtra(MainActivity.EXTRA_OPEN, DeepLink.ISSUE_CONFIG.name)
+    // A certificate alert opens the renewal screen (which explains when the role cannot renew), a
+    // GitOps one the Argo CD or Flux screen (of the active cluster, like the freeze notices).
+    val destination = alertDestination(alert)
+    destination?.let { intent.putExtra(MainActivity.EXTRA_OPEN, it.name) }
     val open = PendingIntent.getActivity(
         context,
-        if (certificate) 1 else 0, // distinct request codes: the extras differ
+        destination?.let { it.ordinal + 1 } ?: 0, // distinct request codes: the extras differ
         intent,
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
@@ -58,6 +59,13 @@ fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean) {
     } catch (_: SecurityException) {
         // Permission revoked between the check and the post; nothing to do.
     }
+}
+
+private fun alertDestination(alert: Alert): DeepLink? = when (alert.kind) {
+    AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED -> DeepLink.ISSUE_CONFIG
+    AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK ->
+        if (alert.detail.substringBefore('|') == GITOPS_FLUX) DeepLink.FLUX else DeepLink.ARGO_CD
+    else -> null
 }
 
 /**
@@ -94,6 +102,44 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED -> context.getString(R.string.monitor_cert_title)
     AlertKind.DATA_PROBLEM -> context.getString(R.string.monitor_data_problem, alert.subject)
     AlertKind.DATA_OK -> context.getString(R.string.monitor_data_ok, alert.subject)
+    AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> gitopsAlertTitle(context, alert)
+}
+
+/**
+ * "Argo CD: grafana sync failed", "Flux: HelmRelease ingress-nginx is not ready", or the cleared
+ * form, from a GitOps alert's "tool|severity|reason" detail and its subject.
+ */
+private fun gitopsAlertTitle(context: Context, alert: Alert): String {
+    val tool = alert.detail.substringBefore('|')
+    val reason = alert.detail.substringAfterLast('|')
+    if (tool == GITOPS_FLUX) {
+        // "Kind namespace/name".
+        val kind = alert.subject.substringBefore(' ')
+        val name = alert.subject.substringAfter(' ').substringAfter('/')
+        val res = if (alert.problem) R.string.monitor_gitops_flux_not_ready else R.string.monitor_gitops_flux_ok
+        return context.getString(res, kind, name)
+    }
+    val name = alert.subject.substringAfter('/')
+    val res = when {
+        !alert.problem -> R.string.monitor_gitops_argo_ok
+        reason == GITOPS_ARGO_FAILED -> R.string.monitor_gitops_argo_failed
+        reason == GITOPS_ARGO_DEGRADED -> R.string.monitor_gitops_argo_degraded
+        reason == GITOPS_ARGO_MISSING -> R.string.monitor_gitops_argo_missing
+        reason == GITOPS_ARGO_ERROR -> R.string.monitor_gitops_argo_error
+        else -> R.string.monitor_gitops_argo_out_of_sync
+    }
+    return context.getString(res, name)
+}
+
+/** "monitoring/grafana · critical": where the app lives (Flux: its namespace) and how bad. */
+private fun gitopsAlertText(context: Context, alert: Alert): String {
+    val where = alert.subject.substringAfter(' ')
+    if (!alert.problem) return where
+    val severity = when (alert.detail.split('|').getOrNull(1)) {
+        DATA_CRITICAL -> context.getString(R.string.data_services_health_critical)
+        else -> context.getString(R.string.data_services_health_warning)
+    }
+    return context.getString(R.string.monitor_data_text, where, severity)
 }
 
 /** "Longhorn · critical" from a data alert's "system|severity" detail. */
@@ -123,4 +169,5 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.CERT_EXPIRING -> context.resources.getQuantityString(R.plurals.monitor_cert_expires, alert.days, alert.days)
     AlertKind.CERT_EXPIRED -> context.resources.getQuantityString(R.plurals.monitor_cert_expired, alert.days, alert.days)
     AlertKind.DATA_PROBLEM, AlertKind.DATA_OK -> dataAlertText(context, alert)
+    AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> gitopsAlertText(context, alert)
 }

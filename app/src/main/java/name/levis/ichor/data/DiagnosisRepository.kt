@@ -24,7 +24,7 @@ sealed interface AnswerEvent {
  * The optional AI diagnosis, through the Go core: a report about the cluster, shown to the
  * user, then sent to the model they chose only when they ask.
  */
-class DiagnosisRepository(private val configs: ConfigRepository) {
+class DiagnosisRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers) {
 
     /** Providers and their default models, the same on Android and iOS. */
     val providers: List<AiProvider> by lazy {
@@ -36,10 +36,14 @@ class DiagnosisRepository(private val configs: ConfigRepository) {
         TalosJson.decodeFromString(ListSerializer(AiModel.serializer()), Ichorgo.aiModels(provider, apiKey, baseUrl))
     }
 
-    /** Reads the cluster state into a report (os:reader calls only). Nothing leaves the phone here. */
+    /**
+     * Reads the cluster state into a report (os:reader calls, plus Argo CD and Flux through the
+     * Kubernetes API with os:admin). Nothing leaves the phone here.
+     */
     suspend fun collect(anonymize: Boolean): Diagnosis {
         val stored = configs.forCall()
-        return withContext(Dispatchers.IO) { Ichorgo.collectDiagnosis(stored.yaml, stored.activeContext, anonymize) }
+        val server = stored.activeSummary?.fingerprint?.let { kubeServers.servers.value[it] }.orEmpty()
+        return withContext(Dispatchers.IO) { Ichorgo.collectDiagnosis(stored.yaml, stored.activeContext, server, anonymize) }
     }
 
     /**

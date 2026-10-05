@@ -54,7 +54,10 @@ type supportProgress struct {
 // The bundle is for debugging and is NOT masked by the screenshot mode: it holds real
 // addresses and host names. It never contains the talosconfig, and the machine config in it
 // has no secrets; logs are copied as they are.
-func StartSupportBundle(configYAML, contextName, nodes, destPath string, listener SupportListener) *SupportRun {
+//
+// kubeServer: see CollectDiagnosis; with os:admin the bundle holds the Argo CD and Flux state
+// (cluster/gitops.json, repository credentials removed).
+func StartSupportBundle(configYAML, contextName, kubeServer, nodes, destPath string, listener SupportListener) *SupportRun {
 	contextName, nodes = unmaskTargets(configYAML, contextName, nodes)
 
 	listener = maskedSupportListener{listener}
@@ -65,7 +68,7 @@ func StartSupportBundle(configYAML, contextName, nodes, destPath string, listene
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", 0, msg) })
 
-		size, err := runSupportBundle(ctx, configYAML, contextName, nodes, destPath, listener)
+		size, err := runSupportBundle(ctx, configYAML, contextName, kubeServer, nodes, destPath, listener)
 		if err != nil {
 			listener.OnDone("", 0, err.Error())
 
@@ -78,7 +81,7 @@ func StartSupportBundle(configYAML, contextName, nodes, destPath string, listene
 	return &SupportRun{cancel: cancel}
 }
 
-func runSupportBundle(ctx context.Context, configYAML, contextName, nodes, destPath string, listener SupportListener) (int64, error) {
+func runSupportBundle(ctx context.Context, configYAML, contextName, kubeServer, nodes, destPath string, listener SupportListener) (int64, error) {
 	s, release, err := sessions.acquire(configYAML, contextName)
 	if err != nil {
 		return 0, err
@@ -96,7 +99,7 @@ func runSupportBundle(ctx context.Context, configYAML, contextName, nodes, destP
 		sections = append(sections, nodeBundleSection(s, node))
 	}
 
-	sections = append(sections, clusterBundleSection(s))
+	sections = append(sections, clusterBundleSection(s, kubeTarget{configYAML, contextName, kubeServer}))
 
 	progress := func(p supportProgress) {
 		if b, err := json.Marshal(p); err == nil {

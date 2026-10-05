@@ -45,6 +45,7 @@ fun MonitoringSection(app: TalosApp) {
     val store = app.monitorStore
     val enabled by store.alertsEnabled.collectAsStateWithLifecycle()
     val dataWatched by store.dataServicesWatched.collectAsStateWithLifecycle()
+    val gitopsWatched by store.gitopsWatched.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -89,6 +90,19 @@ fun MonitoringSection(app: TalosApp) {
                 Switch(
                     checked = dataWatched,
                     onCheckedChange = { store.setDataServicesWatched(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            // Same for Argo CD and Flux apps: their custom resources are listed at every check.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_gitops), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_gitops_desc))
+                }
+                Switch(
+                    checked = gitopsWatched,
+                    onCheckedChange = { store.setGitopsWatched(it) },
                     enabled = enabled,
                     modifier = Modifier.padding(start = 12.dp),
                 )

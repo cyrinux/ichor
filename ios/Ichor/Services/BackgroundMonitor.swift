@@ -43,6 +43,13 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: dataServicesKey) }
     }
 
+    static let gitopsKey = "monitor.gitops"
+    /// Opt-in: also check Argo CD and Flux apps through the Kubernetes API.
+    static var gitopsWatched: Bool {
+        get { UserDefaults.standard.bool(forKey: gitopsKey) }
+        set { UserDefaults.standard.set(newValue, forKey: gitopsKey) }
+    }
+
     /// Call once, before the app finishes launching.
     static func register() {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: taskID, using: nil) { task in
@@ -85,16 +92,30 @@ enum BackgroundMonitor {
         // resources and runs the Garage CLI in a pod.
         let watchData = dataServicesWatched && context?.allows(.workloads) == true
         let dataServices = watchData ? try? await client.dataServices(hints: "") : nil
+        // Same gate for Argo CD and Flux apps, read through their custom resources.
+        let watchGitOps = gitopsWatched && context?.allows(.workloads) == true
+        let previous = SharedStore.snapshot()
+        let known = knownGitOpsIssues(previous, context: overview.context)
+        let gitopsIssues = watchGitOps ? await readGitOps(client, known: known) : nil
         let now = Date()
         let current = snapshotOf(overview, etcd: etcd, certNotAfter: context?.certNotAfter ?? 0, takenAt: now,
-                                 dataWatched: watchData, dataServices: dataServices)
-        let result = evaluate(previous: SharedStore.snapshot(), current: current, now: now)
+                                 dataWatched: watchData, dataServices: dataServices,
+                                 gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues)
+        let result = evaluate(previous: previous, current: current, now: now)
         SharedStore.save(result.next)
         guard alertsEnabled else { return }
         let hide = UserDefaults.standard.bool(forKey: "appLockEnabled")
         for alert in result.alerts {
             await post(alert, localized: localized(alert, snapshot: result.next, now: now), hideDetails: hide)
         }
+    }
+
+    /// Argo CD and Flux issues (a tool not installed reads fine and adds nothing); nil when neither
+    /// could be read. A part that could not be read keeps what the last snapshot knew of it.
+    private static func readGitOps(_ client: TalosClient, known: [String: String]) async -> [String: String]? {
+        async let argo = try? client.argoCD()
+        async let flux = try? client.flux()
+        return gitopsIssuesWithGaps(argo: await argo, flux: await flux, known: known)
     }
 
     /// IchorCore builds English alerts; this rebuilds their text in the user's
@@ -140,9 +161,35 @@ enum BackgroundMonitor {
             guard alert.problem else { return (String(localized: "\(label) is healthy again"), system) }
             let severity = snapshot.dataIssues[subject] == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
             return (String(localized: "\(label) needs attention"), "\(system) · \(severity)")
+        case "gitops":
+            return localizedGitOps(alert, subject: subject, value: snapshot.gitopsIssues[subject])
         default:
             return (alert.title, alert.text)
         }
+    }
+
+    /// "tool|subject": worded per tool and reason, the namespace/name and severity in the text.
+    private static func localizedGitOps(_ alert: Alert, subject key: String, value: String?) -> (title: String, text: String) {
+        let subject = GitOpsSubject(key: key)
+        let name = subject.title
+        guard alert.problem else {
+            let title = subject.isFlux
+                ? String(localized: "Flux: \(name) is ready again")
+                : String(localized: "Argo CD: \(name) is synced and healthy again")
+            return (title, subject.label)
+        }
+        guard let value else { return (alert.title, alert.text) }
+        let title = switch gitopsReason(value) {
+        case .syncFailed: String(localized: "Argo CD: \(name) sync failed")
+        case .degraded: String(localized: "Argo CD: \(name) is degraded")
+        case .missing: String(localized: "Argo CD: \(name) has missing resources")
+        case .error: String(localized: "Argo CD: \(name) has an error")
+        case .outOfSync: String(localized: "Argo CD: \(name) is out of sync")
+        case .notReady: String(localized: "Flux: \(name) is not ready")
+        case nil: alert.title
+        }
+        let severity = gitopsSeverity(value) == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
+        return (title, "\(subject.label) · \(severity)")
     }
 
     static func requestPermission() async -> Bool {
