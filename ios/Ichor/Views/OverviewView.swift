@@ -33,6 +33,11 @@ struct OverviewView: View {
     @State private var detectIPsError: String?
     /// The nodes section with a full row per node; collapsed (a chip each) by default.
     @AppStorage("overview.nodesExpanded") private var nodesExpanded = false
+    /// Live CPU and memory on the summary (Settings), sampled only while this screen is on
+    /// screen and the app active.
+    @AppStorage(LiveStatsSettings.key) private var liveStats = true
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var visible = false
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -66,12 +71,16 @@ struct OverviewView: View {
                     if let update { TalosUpdateSection(info: update, nodes: overview.nodes) }
                     if support.visible { Section { SupportCard(prompt: support) } }
                     Section {
-                        Summary(nodes: overview.nodes)
+                        ClusterSummaryCard(
+                            name: model.activeLabel,
+                            summary: ClusterSummary(nodes: overview.nodes),
+                            live: liveStats ? ClusterLiveStore.shared.live(for: loadID) : nil
+                        )
                         NavigationLink(value: Route.insights) { Label("Cluster insights", systemImage: "magnifyingglass") }
                     } header: {
                         if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
                     }
-                    AppsCard(state: inventory, hostnames: hostnames)
+                    AppsCard(state: inventory, hostnames: hostnames, argo: argoStatus)
                     if let dataServices {
                         DataServicesSection(state: dataServices, hints: dataHints, apps: inventoryApps, downNodes: overview.downHostnames)
                     }
@@ -82,27 +91,17 @@ struct OverviewView: View {
                         FluxSection(state: flux, app: inventoryApps[fluxCatalogID], downNodes: overview.downHostnames)
                     }
                     Section {
-                        let nodes = overview.nodes.overviewOrder
+                        // In the map's order, site by site, once the cluster map is loaded.
+                        let groups = groupNodes(overview.nodes, by: TopologyStore.shared.topology(for: model.topologyKey))
                         let version = overview.nodes.sharedVersion
-                        if isDenseCluster(nodes.count) {
+                        if isDenseCluster(overview.nodes.count) {
                             // Too many for a chip each: counts, dots, and the problems capped.
-                            DenseNodes(nodes: nodes, path: $path)
+                            DenseNodes(groups: groups, path: $path)
                         } else {
-                            // Collapsed (the default): a chip per calm node, a full row only for those
-                            // needing attention, so a problem never hides behind the fold.
-                            let calm = nodesExpanded ? [] : nodes.filter { !$0.needsAttention }
-                            if !calm.isEmpty {
-                                ChipFlow(spacing: 8) {
-                                    ForEach(calm) { node in
-                                        NodeChip(node: node) { path.append(.node(node.ref)) }
-                                            .contextMenu { NodeMenu(node: node, path: $path) }
-                                    }
-                                }
-                                .buttonStyle(.borderless)
-                                .padding(.vertical, 4)
-                            }
-                            ForEach(nodesExpanded ? nodes : nodes.filter(\.needsAttention)) { node in
-                                NodeListRow(node: node, sharedVersion: version, path: $path)
+                            ForEach(groups) { group in
+                                // Site headers only when there is more than one: a single site says nothing.
+                                if groups.count > 1 { SiteHeader(title: group.title) }
+                                NodeGroupRows(nodes: group.nodes, expanded: nodesExpanded, sharedVersion: version, path: $path)
                             }
                         }
                     } header: {
@@ -130,7 +129,13 @@ struct OverviewView: View {
                     // Re-checked with every overview refresh (the load time is the task id).
                     TimeDriftSection(hostnames: hostnames, refreshID: loadedAt)
                 }
-                .refreshable { await load() }
+                .refreshable {
+                    await load()
+                    // Sites rarely change: the map is only asked again on a pull.
+                    if let client = model.client, outage == nil {
+                        await TopologyStore.shared.load(with: client, key: model.topologyKey, force: true)
+                    }
+                }
                 .themedBackground()
             }
         }
@@ -184,6 +189,7 @@ struct OverviewView: View {
                     Image(systemName: "list.bullet.rectangle")
                 }
                 .accessibilityLabel(Text("Events"))
+                .disabled(!clusterWide(.events))
                 // The Kubernetes API is reached with the admin kubeconfig Talos issues.
                 if model.allows(.workloads) {
                     NavigationLink(value: Route.workloads) { Image(systemName: "square.stack.3d.up") }
@@ -194,14 +200,29 @@ struct OverviewView: View {
                 }
                 NavigationLink(value: Route.kubespan) { Image(systemName: "point.3.connected.trianglepath.dotted") }
                     .accessibilityLabel(Text("KubeSpan"))
+                    .disabled(!clusterWide(.kubespan))
                 NavigationLink(value: Route.etcd) { Image(systemName: "cylinder.split.1x2") }
                     .accessibilityLabel(Text(verbatim: "etcd"))
+                    .disabled(!clusterWide(.etcd))
                 NavigationLink(value: Route.settings) { Image(systemName: "gearshape") }
                     .accessibilityLabel(Text("Settings"))
             }
         }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
+        // Live CPU and memory while the overview is on screen, the app active, the setting on
+        // and a node answers; fewer samples on a large cluster (each one asks every node).
+        .task(id: liveID) {
+            guard liveStats else {
+                ClusterLiveStore.shared.clear()
+                return
+            }
+            guard visible, scenePhase == .active, case .loaded(let overview, _, _) = state, overview.outage == nil,
+                  let client = model.client else { return }
+            await ClusterLiveStore.shared.poll(with: client, key: loadID, nodes: overview.nodes.count)
+        }
+        .onAppear { visible = true }
+        .onDisappear { visible = false }
         .alert("Find the public IPs?", isPresented: $confirmDetectIPs) {
             Button("Find") { detectPublicIPs() }
             Button("Cancel", role: .cancel) {}
@@ -313,6 +334,27 @@ struct OverviewView: View {
     /// What the loaded overview belongs to: the context and the screenshot mode generation.
     private var loadID: String { "\(model.activeContext)#\(model.dataGeneration)" }
 
+    /// Restarts (or stops) the live sampling when one of its conditions changes.
+    private var liveID: String {
+        var nodes = -1
+        if case .loaded(let overview, _, _) = state, overview.outage == nil { nodes = overview.nodes.count }
+        return "\(loadID)|\(liveStats)|\(visible)|\(scenePhase == .active)|\(nodes)"
+    }
+
+    /// A cluster-wide screen is only disabled when no reachable node's Talos has it (unknown
+    /// features count as supported). Same as Android's OverviewActions.
+    private func clusterWide(_ feature: NodeFeature) -> Bool {
+        guard case .loaded(let overview, _, _) = state else { return true }
+        let known = overview.nodes.filter(\.reachable).compactMap { model.nodeFeatures[$0.node] }
+        return clusterSupport(known, feature).supported
+    }
+
+    /// The Argo CD status the Argo CD section loaded, for the Apps card's badges.
+    private var argoStatus: ArgoStatus? {
+        if case .loaded(let status, _, _)? = argo { return status }
+        return nil
+    }
+
     private func load() async {
         guard let client = model.client else { return }
         // Nothing on screen: the last known overview (when kept) while this one loads.
@@ -328,6 +370,11 @@ struct OverviewView: View {
         if case .loaded(let overview, _, _) = loaded {
             // Alongside the rest: listing every node's containers takes a while.
             Task { await loadInventory(with: client, id: id) }
+            // The map that groups the nodes by site: once per cluster (see TopologyStore).
+            if overview.outage == nil {
+                let key = model.topologyKey
+                Task { await TopologyStore.shared.load(with: client, key: key) }
+            }
             let info = model.activeSummary?.demo == true
                 ? nil : await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
             guard id == loadID else { return }
@@ -449,19 +496,28 @@ private struct CertExpiryBanner: View {
     }
 }
 
-private struct Summary: View {
+/// One site's nodes in the overview's nodes section. Collapsed (the default): a chip per calm
+/// node, a full row only for those needing attention, so a problem never hides behind the fold.
+private struct NodeGroupRows: View {
     let nodes: [NodeOverview]
+    let expanded: Bool
+    let sharedVersion: String?
+    @Binding var path: [Route]
 
     var body: some View {
-        HStack(spacing: 24) {
-            ForEach(NodeHealth.allCases, id: \.self) { health in
-                let count = nodes.filter { $0.health == health }.count
-                VStack(alignment: .leading) {
-                    Text(verbatim: "\(count)").font(.title.bold()).foregroundStyle(count > 0 ? health.color : .secondary)
-                    Text(health.label.lowercased()).font(.caption).foregroundStyle(.secondary)
+        let calm = expanded ? [] : nodes.filter { !$0.needsAttention }
+        if !calm.isEmpty {
+            ChipFlow(spacing: 8) {
+                ForEach(calm) { node in
+                    NodeChip(node: node) { path.append(.node(node.ref)) }
+                        .contextMenu { NodeMenu(node: node, path: $path) }
                 }
-                .accessibilityElement(children: .combine)
             }
+            .buttonStyle(.borderless)
+            .padding(.vertical, 4)
+        }
+        ForEach(expanded ? nodes : nodes.filter(\.needsAttention)) { node in
+            NodeListRow(node: node, sharedVersion: sharedVersion, path: $path)
         }
     }
 }

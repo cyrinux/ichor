@@ -2,18 +2,22 @@ import SwiftUI
 import IchorCore
 
 /// The overview's nodes on a cluster too large for a chip per node (see isDenseCluster): the
-/// health counts, a dot per node, then the problem nodes as full rows, capped, with "N more"
-/// opening the Nodes screen on them.
+/// health counts and a dot per node (site by site when there are several), then the problem
+/// nodes as full rows, capped, with "N more" opening the Nodes screen on them.
 struct DenseNodes: View {
-    /// In the overview's order.
-    let nodes: [NodeOverview]
+    /// In the map's order (groupNodes): a single group without sites.
+    let groups: [NodeGroup]
     @Binding var path: [Route]
 
     var body: some View {
+        let nodes = groups.flatMap(\.nodes)
         let problems = nodes.problemNodes()
         let version = nodes.sharedVersion
-        HealthSummary(counts: nodes.healthCounts)
-        NodeDots(nodes: nodes, path: $path)
+        ForEach(groups) { group in
+            // One line per site with its counts; a single site says nothing, only the counts.
+            HealthSummary(counts: group.nodes.healthCounts, site: groups.count > 1 ? group.title : nil)
+            NodeDots(nodes: group.nodes, path: $path)
+        }
         ForEach(problems.shown) { node in
             NodeListRow(node: node, sharedVersion: version, path: $path)
         }
@@ -34,13 +38,17 @@ struct DenseNodes: View {
 /// zeros left out.
 struct HealthSummary: View {
     let counts: HealthCounts
+    /// The site the counts are of, muted before them; nil for the whole cluster.
+    var site: String? = nil
 
     var body: some View {
         let parts = NodeStatus.allCases.filter { counts[$0] > 0 }
-        parts.indices.reduce(Text(verbatim: "")) { text, i in
+        let start = site.map { Text(verbatim: "\($0)  ·  ").foregroundStyle(.secondary) } ?? Text(verbatim: "")
+        parts.indices.reduce(start) { text, i in
             text + Text(verbatim: i > 0 ? "  ·  " : "") + Self.count(counts[parts[i]], of: parts[i]).foregroundStyle(parts[i].color)
         }
         .font(.subheadline)
+        .lineLimit(2)
     }
 
     private static func count(_ n: Int, of status: NodeStatus) -> Text {

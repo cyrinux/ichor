@@ -83,4 +83,27 @@ final class NodeDensityTests: XCTestCase {
         XCTAssertEqual(nodes.filtered(query: "NODE-5", filter: .notReady).map(\.hostname), ["node-5"])
         XCTAssertEqual(nodes.filtered(query: "nothing", filter: nil), [])
     }
+
+    func testFiltersGroupsBySearchHealthAndSite() {
+        let a = TopologySite(id: "site-a")
+        let groups = [
+            NodeGroup(site: a, nodes: [node(1), node(2, reachable: false), node(3, publicIPs: ["203.0.113.9"])]),
+            NodeGroup(site: nil, nodes: [node(4), node(5, ready: false)]),
+        ]
+        func hostnames(_ groups: [NodeGroup]) -> [String] { groups.flatMap { $0.nodes.map(\.hostname) } }
+        XCTAssertEqual(groups.filtered(query: "", filter: nil, site: nil), groups)
+        XCTAssertEqual(hostnames(groups.filtered(query: "", filter: .attention, site: nil)), ["node-2", "node-5"])
+        XCTAssertEqual(groups.filtered(query: "", filter: .notReady, site: nil).map(\.site), [nil])
+        XCTAssertEqual(hostnames(groups.filtered(query: "", filter: .ready, site: "site-a")), ["node-1", "node-3"])
+        XCTAssertEqual(hostnames(groups.filtered(query: " 10.0.0.4 ", filter: nil, site: nil)), ["node-4"])
+        XCTAssertEqual(hostnames(groups.filtered(query: "203.0", filter: nil, site: nil)), ["node-3"])
+        XCTAssertEqual(hostnames(groups.filtered(query: "NODE-5", filter: nil, site: "")), ["node-5"])
+        XCTAssertEqual(groups.filtered(query: "nothing", filter: nil, site: nil), [])
+    }
+
+    func testLiveStatsAreSampledLessOftenOnADenseCluster() {
+        XCTAssertEqual(clusterPollSeconds(3), 5)
+        XCTAssertEqual(clusterPollSeconds(24), 5)
+        XCTAssertEqual(clusterPollSeconds(25), 15)
+    }
 }

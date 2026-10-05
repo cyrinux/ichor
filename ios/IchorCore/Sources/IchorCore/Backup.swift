@@ -39,7 +39,7 @@ public struct BackupSettings: Codable, Equatable, Sendable {
     public var themeMode: String?
     /// Android only (iOS takes the language from the Settings app).
     public var language: String?
-    /// Android only.
+    /// Live CPU and memory on the overview.
     public var liveClusterStats: Bool?
     public var privacyMask: Bool?
     public var privacyMaskWords: String?
