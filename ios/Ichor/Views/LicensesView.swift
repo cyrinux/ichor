@@ -11,7 +11,7 @@ struct LicensesView: View {
             if !licenses.notice.isEmpty {
                 Section {
                     NavigationLink {
-                        LicenseText(title: "Ichor", text: licenses.notice)
+                        LicenseText(title: "Ichor", website: ProjectLinks.repo.absoluteString, text: licenses.notice)
                     } label: {
                         LibraryRow(name: "Ichor", summary: "Apache-2.0")
                     }
@@ -20,13 +20,14 @@ struct LicensesView: View {
             Section {
                 ForEach(licenses.libraries) { library in
                     NavigationLink {
-                        LicenseText(title: library.name, text: library.text)
+                        LicenseText(title: library.name, website: library.website, text: library.text)
                     } label: {
                         LibraryRow(name: library.name, summary: library.summary)
                     }
                 }
             }
         }
+        .themedBackground()
         .navigationTitle("Open-source licenses")
         .task {
             licenses = decodeOpenSourceLicenses(
@@ -48,8 +49,10 @@ private struct LibraryRow: View {
     }
 }
 
+/// The license files verbatim; the toolbar links to the project's website.
 private struct LicenseText: View {
     let title: String
+    let website: String
     let text: String
 
     var body: some View {
@@ -62,5 +65,10 @@ private struct LicenseText: View {
         }
         .navigationTitle(Text(verbatim: title))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if let url = URL(string: website), !website.isEmpty {
+                Link(destination: url) { Image(systemName: "safari") }
+            }
+        }
     }
 }

@@ -195,6 +195,8 @@ struct MainNavigation: View {
                     }
                 }
         }
+        // Wake-on-LAN settings and results, for the node menus of every screen.
+        .wakeOnLanPresenter()
         .onChange(of: NotificationRouter.shared.pendingRenewal) { _, pending in
             if pending { openRenewal() }
         }

@@ -117,7 +117,7 @@ struct FluxAppRow: View {
 }
 
 /// The Git, OCI and Helm repositories and buckets: URL, what they follow, the revision fetched
-/// and when, how many apps use them; swipe to reconcile, suspend or resume.
+/// and when, how many apps use them; tap or swipe to reconcile, suspend or resume.
 struct FluxSourcesList: View {
     let status: FluxStatus
     let query: String
@@ -130,20 +130,25 @@ struct FluxSourcesList: View {
         List {
             if !status.sourcesError.isEmpty { Section { ErrorLine(error: status.sourcesError) } }
             ForEach(shown) { source in
-                FluxSourceRow(source: source, busy: busy.contains(source.target))
-                    .swipeActions(edge: .leading) {
-                        Button { act(.reconcile, source.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
-                            .tint(.blue)
-                            .disabled(!source.canReconcile)
-                    }
-                    .swipeActions(edge: .trailing) {
-                        fluxSuspendButton(suspended: source.suspended) { act($0, source.target) }
-                    }
-                    .contextMenu {
-                        Button { act(.reconcile, source.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
-                            .disabled(!source.canReconcile)
-                        fluxSuspendButton(suspended: source.suspended) { act($0, source.target) }
-                    }
+                // A tap opens the actions too: sources have no screen, and the row looked
+                // tappable while only a long press did anything.
+                Menu {
+                    Button { act(.reconcile, source.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
+                        .disabled(!source.canReconcile)
+                    fluxSuspendButton(suspended: source.suspended) { act($0, source.target) }
+                } label: {
+                    FluxSourceRow(source: source, busy: busy.contains(source.target))
+                        .foregroundStyle(.primary)
+                        .contentShape(Rectangle())
+                }
+                .swipeActions(edge: .leading) {
+                    Button { act(.reconcile, source.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
+                        .tint(.blue)
+                        .disabled(!source.canReconcile)
+                }
+                .swipeActions(edge: .trailing) {
+                    fluxSuspendButton(suspended: source.suspended) { act($0, source.target) }
+                }
             }
         }
         .overlay {

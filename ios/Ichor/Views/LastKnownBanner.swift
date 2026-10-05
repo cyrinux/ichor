@@ -29,6 +29,7 @@ struct LastKnownBanner: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.trailing)
             }
+            if outage.cause == .network { LocalNetworkNotice() }
         }
         .padding(.vertical, 4)
     }

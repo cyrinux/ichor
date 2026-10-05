@@ -19,7 +19,11 @@ final class BackupTests: XCTestCase {
         XCTAssertEqual(payload.settings?.themeMode, "black")
         XCTAssertEqual(payload.settings?.monitorAlerts, true)
         XCTAssertEqual(payload.settings?.remoteAppIcons, true)
-        XCTAssertEqual(payload.clusters?["aaaa"], BackupCluster(name: "Home", color: 0xAA0000, vpnOnly: true, kubeServer: "https://k8s.lan:6443"))
+        XCTAssertEqual(payload.clusters?["aaaa"], BackupCluster(
+            name: "Home", color: 0xAA0000, vpnOnly: true,
+            wakeOnLan: ["10.0.0.2": BackupWolTarget(mac: "aa:bb:cc:dd:ee:ff", broadcast: "", port: 9)],
+            kubeServer: "https://k8s.lan:6443"
+        ))
     }
 
     func testMinimalPayloadDecodes() throws {
@@ -68,6 +72,39 @@ final class BackupTests: XCTestCase {
         )
         XCTAssertEqual(restored, RestoredClusters(names: ["aaaa": "Home"], colors: ["aaaa": 0xAA0000],
                                                    kubeServers: ["bbbb": "https://k8s.lan"]))
+    }
+
+    func testBackupClustersCarryVpnOnlyAndWakeOnLan() {
+        let clusters = backupClusters(
+            fingerprints: ["aaaa", "bbbb"], names: [:], colors: [:], kubeServers: [:],
+            vpnOnly: ["bbbb", "gone"],
+            wakeOnLan: [
+                wolKey(fingerprint: "aaaa", node: "10.0.0.5"): WolTarget(mac: "aa:bb:cc:dd:ee:ff", broadcast: "10.0.0.255", port: 7),
+                wolKey(fingerprint: "gone", node: "10.0.0.6"): WolTarget(mac: "aa:bb:cc:dd:ee:00"),
+            ]
+        )
+        XCTAssertEqual(clusters, [
+            "aaaa": BackupCluster(wakeOnLan: ["10.0.0.5": BackupWolTarget(mac: "aa:bb:cc:dd:ee:ff", broadcast: "10.0.0.255", port: 7)]),
+            "bbbb": BackupCluster(vpnOnly: true),
+        ])
+    }
+
+    func testRestoredClustersCheckVpnOnlyAndWakeOnLan() {
+        let restored = restoredClusters(
+            [
+                "aaaa": BackupCluster(vpnOnly: false, wakeOnLan: [
+                    " 10.0.0.5 ": BackupWolTarget(mac: "AA-BB-CC-DD-EE-FF"),
+                    "10.0.0.6": BackupWolTarget(mac: "nope"),
+                    "10.0.0.7": BackupWolTarget(mac: "aabbccddeeff", broadcast: "a|b"),
+                    "10.0.0.8": BackupWolTarget(mac: "aabbccddeeff", port: 0),
+                ]),
+                "bbbb": BackupCluster(vpnOnly: true),
+                "gone": BackupCluster(vpnOnly: true),
+            ],
+            fingerprints: ["aaaa", "bbbb"]
+        )
+        XCTAssertEqual(restored.vpnOnly, ["bbbb"])
+        XCTAssertEqual(restored.wakeOnLan, [wolKey(fingerprint: "aaaa", node: "10.0.0.5"): WolTarget(mac: "aa:bb:cc:dd:ee:ff")])
     }
 
     func testPassphraseRules() {
