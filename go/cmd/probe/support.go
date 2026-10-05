@@ -45,7 +45,7 @@ func supportProbe(cfg, contextName, nodes string) string {
 	dest := filepath.Join(dir, "support.zip")
 	p := &supportPrinter{done: make(chan supportDone, 1)}
 
-	ichorgo.StartSupportBundle(cfg, contextName, nodes, dest, p)
+	ichorgo.StartSupportBundle(cfg, contextName, "", nodes, dest, p)
 
 	res := <-p.done
 	if res.err != "" {

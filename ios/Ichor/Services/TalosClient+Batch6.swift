@@ -98,7 +98,7 @@ extension TalosClient {
                     continuation.finish()
                 }
             )
-            let run = IchorgoStartSupportBundle(config, context, nodesCSV, destPath, bridge)
+            let run = IchorgoStartSupportBundle(config, context, kubeServer, nodesCSV, destPath, bridge)
             continuation.onTermination = { _ in
                 run?.cancel()
                 _ = bridge // keep the listener alive for the whole collection
