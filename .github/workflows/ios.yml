@@ -66,6 +66,9 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          # Set the repository variable IOS_MULTICAST=1 once Apple granted the multicast
+          # entitlement (Wake-on-LAN broadcasts); see fastlane/APP_STORE_CONNECT.md.
+          ICHOR_IOS_MULTICAST: ${{ vars.IOS_MULTICAST }}
         run: |
           export ASC_KEY_PATH="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
           printf '%s\n' "$ASC_KEY_P8" > "$ASC_KEY_PATH"

@@ -538,6 +538,9 @@ automatic signing with an App Store Connect API key, and uploads it to TestFligh
 
 Register `name.levis.ichor`, `name.levis.ichor.widget` and the `group.name.levis.ichor` App
 Group in the developer portal, and create the app in App Store Connect, before the first upload.
+What to request from Apple and declare in App Store Connect (multicast entitlement for
+Wake-on-LAN, privacy label and manifest, export compliance, review notes) is in
+[fastlane/APP_STORE_CONNECT.md](fastlane/APP_STORE_CONNECT.md).
 
 ## CI (GitHub Actions)
 
