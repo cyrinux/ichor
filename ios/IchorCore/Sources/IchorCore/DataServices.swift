@@ -61,6 +61,8 @@ public struct Certificate: Decodable, Equatable, Identifiable, Sendable {
     /// Known reasons only; values from newer cores are dropped.
     public let reasons: [CertReason]
     public let ready: Bool
+    /// cert-manager is issuing it now (a renewal, or one forced from the app).
+    public let issuing: Bool
     /// The Ready condition's message when not ready.
     public let message: String
     /// Unix ms, 0 before the first issuance.
@@ -83,6 +85,7 @@ public struct Certificate: Decodable, Equatable, Identifiable, Sendable {
         health = ServiceHealth(wire: try c.field(.health, ""))
         reasons = (try c.field(.reasons, [String]())).compactMap(CertReason.init(rawValue:))
         ready = try c.field(.ready, false)
+        issuing = try c.field(.issuing, false)
         message = try c.field(.message, "")
         notAfter = try c.field(.notAfter, 0)
         renewalTime = try c.field(.renewalTime, 0)
@@ -90,7 +93,7 @@ public struct Certificate: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, secretName, dnsNames, dnsNameCount, issuer, health, reasons, ready, message, notAfter, renewalTime, failedAttempts
+        case namespace, name, secretName, dnsNames, dnsNameCount, issuer, health, reasons, ready, issuing, message, notAfter, renewalTime, failedAttempts
     }
 }
 

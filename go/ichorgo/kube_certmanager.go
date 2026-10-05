@@ -41,6 +41,8 @@ type certManagerCert struct {
 	Health       string   `json:"health"`  // critical|warning|ok
 	Reasons      []string `json:"reasons"` // see certReason*
 	Ready        bool     `json:"ready"`
+	// Issuing: cert-manager is issuing it now (a renewal, or one forced from the app).
+	Issuing bool `json:"issuing"`
 	// Message is the Ready condition's message when the certificate is not ready.
 	Message        string `json:"message"`
 	NotAfter       int64  `json:"notAfter"`    // unix ms, 0 before the first issuance
@@ -259,6 +261,12 @@ func mapCertificate(obj certificateObject, issuers map[string]certIssuer, now ti
 
 	if !cert.Ready {
 		cert.Message = ready.Message
+	}
+
+	for _, c := range st.Conditions {
+		if c.Type == certConditionIssuing && c.Status == "True" {
+			cert.Issuing = true
+		}
 	}
 
 	// An external issuer (another API group) has no Ready condition of cert-manager's to read.

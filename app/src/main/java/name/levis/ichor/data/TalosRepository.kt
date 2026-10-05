@@ -15,6 +15,7 @@ import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoNetwork
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ArgoSyncOptions
+import name.levis.ichor.model.CertDetails
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.DataServices
@@ -526,6 +527,22 @@ class TalosRepository(
     /** Sets a node's resync tranquility (os:admin); [nodeId] is a Garage node ID, or "*" for every node. */
     suspend fun garageSetTranquility(instance: GarageInstance, nodeId: String, value: Long) = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeGarageSetTranquility(cfg, ctx, server, instance.namespace, instance.pod, nodeId, value)
+    }
+
+    /**
+     * What explains the state of the cert-manager certificate [namespace]/[name] (os:admin): its
+     * requests, ACME orders and challenges, their events and controller log lines. Never cached.
+     */
+    suspend fun certificateDetails(namespace: String, name: String): CertDetails = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(CertDetails.serializer(), Ichorgo.kubeCertManagerDetails(cfg, ctx, server, namespace, name))
+    }
+
+    /**
+     * Issues the cert-manager certificate [namespace]/[name] again now, like `cmctl renew`
+     * (os:admin). Throws when refused, also while it is already being issued.
+     */
+    suspend fun renewCertificate(namespace: String, name: String) = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeCertManagerRenew(cfg, ctx, server, namespace, name)
     }
 
     /**

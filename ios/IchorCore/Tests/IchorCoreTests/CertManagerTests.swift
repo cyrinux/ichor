@@ -7,7 +7,7 @@ final class CertManagerTests: XCTestCase {
       {"namespace":"app","name":"old","secretName":"old-tls","dnsNames":["old.example.com"],"dnsNameCount":1,"issuer":"ClusterIssuer/letsencrypt",
        "health":"critical","reasons":["expired"],"ready":false,"message":"Certificate expired","notAfter":1759276800000,"renewalTime":1756684800000,"failedAttempts":5},
       {"namespace":"app","name":"stuck","secretName":"stuck-tls","dnsNames":["stuck.example.com"],"dnsNameCount":1,"issuer":"ClusterIssuer/letsencrypt",
-       "health":"warning","reasons":["expiring","renewalOverdue"],"ready":true,"notAfter":1760227200000,"renewalTime":1757635200000},
+       "health":"warning","reasons":["expiring","renewalOverdue"],"ready":true,"issuing":true,"notAfter":1760227200000,"renewalTime":1757635200000},
       {"namespace":"app","name":"internal","secretName":"internal-tls","dnsNames":["a.example.com","b.example.com"],"dnsNameCount":6,"issuer":"Issuer/internal-ca",
        "health":"warning","reasons":["issuer"],"ready":true,"notAfter":1798761600000,"renewalTime":1796083200000},
       {"namespace":"app","name":"web","secretName":"web-tls","dnsNames":["web.example.com"],"dnsNameCount":1,"issuer":"ClusterIssuer/letsencrypt",
@@ -25,6 +25,7 @@ final class CertManagerTests: XCTestCase {
         XCTAssertEqual(cm.certificates.count, 4)
         XCTAssertEqual(cm.certificates[1].reasons, [.expiring, .renewalOverdue])
         XCTAssertEqual(cm.certificates[2].dnsNameCount, 6)
+        XCTAssertEqual(cm.certificates.map(\.issuing), [false, true, false, false])
         XCTAssertEqual(cm.certificates[0].notAfter, 1_759_276_800_000)
         XCTAssertEqual(cm.issuers.map(\.label), ["Issuer/app/internal-ca", "ClusterIssuer/letsencrypt"])
         XCTAssertEqual(cm.issuers[1].server, "acme-v02.api.letsencrypt.org")

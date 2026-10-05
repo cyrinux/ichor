@@ -2,9 +2,16 @@ import SwiftUI
 import IchorCore
 
 /// Every certificate (problems first, then the soonest expiry) with its issuer, then the issuers.
+/// A certificate opens what explains its state; one not being issued can be renewed now from its
+/// context menu or swipe actions, after a confirmation.
 struct CertificatesList: View {
     let status: CertManagerStatus
     let refresh: () async -> Void
+
+    @Environment(AppModel.self) private var model
+    @State private var confirmRenew: Certificate?
+    @State private var running: Set<String> = []
+    @State private var resultMessage: String?
 
     var body: some View {
         List {
@@ -13,7 +20,7 @@ struct CertificatesList: View {
                 if status.certificates.isEmpty {
                     Text("No certificates.").foregroundStyle(.secondary)
                 }
-                ForEach(status.certificates) { CertificateRow(cert: $0) }
+                ForEach(status.certificates) { certificateRow($0) }
             }
             if !status.issuers.isEmpty {
                 Section("Issuers") {
@@ -23,17 +30,64 @@ struct CertificatesList: View {
         }
         .refreshable { await refresh() }
         .themedBackground()
+        .confirmationDialog(confirmRenew.map { String(localized: "Renew \($0.label)?") } ?? "",
+                            isPresented: Binding(get: { confirmRenew != nil }, set: { if !$0 { confirmRenew = nil } }),
+                            titleVisibility: .visible,
+                            presenting: confirmRenew) { cert in
+            Button("Renew now") { Task { await renew(cert) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("cert-manager issues the certificate again now, whatever its renewal time. An ACME issuer such as Let’s Encrypt counts it against its rate limits.")
+        }
+        .alert(resultMessage ?? "", isPresented: Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })) {
+            Button("OK") {}
+        }
+    }
+
+    private func certificateRow(_ cert: Certificate) -> some View {
+        let busy = running.contains(cert.id)
+        return NavigationLink {
+            CertificateDetailsView(cert: cert, refreshList: refresh)
+        } label: {
+            CertificateRow(cert: cert, busy: busy)
+        }
+        .swipeActions(edge: .trailing) {
+            if !busy && !cert.issuing {
+                Button { confirmRenew = cert } label: { Label("Renew now", systemImage: "arrow.clockwise") }.tint(.blue)
+            }
+        }
+        .contextMenu {
+            if !busy && !cert.issuing {
+                Button { confirmRenew = cert } label: { Label("Renew now", systemImage: "arrow.clockwise") }
+            }
+        }
+    }
+
+    private func renew(_ cert: Certificate) async {
+        guard let client = model.client, !running.contains(cert.id) else { return }
+        running.insert(cert.id)
+        defer { running.remove(cert.id) }
+        do {
+            try await client.renewCertificate(namespace: cert.namespace, name: cert.name)
+            resultMessage = String(localized: "Renewal of \(cert.label) requested")
+            await refresh()
+        } catch {
+            resultMessage = String(localized: "Could not renew \(cert.label): \(error.localizedDescription)")
+        }
     }
 }
 
 private struct CertificateRow: View {
     let cert: Certificate
+    let busy: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 12) {
                 HealthDot(health: cert.health)
                 Text(verbatim: cert.label).font(.subheadline.monospaced()).lineLimit(1)
+                Spacer()
+                if busy { ProgressView() }
             }
             Text(verbatim: summary)
                 .font(.caption)
@@ -50,7 +104,8 @@ private struct CertificateRow: View {
 
     private var summary: String {
         let failed = cert.failedAttempts > 0 ? String(localized: "\(cert.failedAttempts) failed attempts") : nil
-        return ([expiry] + cert.reasons.compactMap(reasonText) + [failed].compactMap { $0 }).joined(separator: " · ")
+        let issuing = cert.issuing ? String(localized: "issuing") : nil
+        return ([expiry, issuing].compactMap { $0 } + cert.reasons.compactMap(reasonText) + [failed].compactMap { $0 }).joined(separator: " · ")
     }
 
     /// "expires in 23 days", "expired 2 days ago", or not issued yet.
