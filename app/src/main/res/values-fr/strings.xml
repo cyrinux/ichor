@@ -149,6 +149,9 @@
     <string name="overview_node_actions">Actions sur le nœud</string>
     <string name="overview_role_control_plane">control plane</string>
     <string name="overview_update_banner">Ichor %1$s est disponible — appuyez pour mettre à jour</string>
+    <string name="overview_store_update_available">Une mise à jour est disponible — appuyez pour mettre à jour</string>
+    <string name="overview_store_update_downloading">Téléchargement de la mise à jour…</string>
+    <string name="overview_store_update_ready">Mise à jour téléchargée — appuyez pour redémarrer</string>
     <string name="overview_support_title">Vous aimez Ichor&#160;?</string>
     <string name="overview_support_body">L\'app est gratuite et open source. Si elle vous fait gagner du temps, vous pouvez soutenir son développement.</string>
     <string name="overview_support_never">Ne plus demander</string>
