@@ -58,6 +58,24 @@ func TestArgoNetworkIngressHealthy(t *testing.T) {
 	}
 }
 
+func TestArgoNetworkTailscaleIngressURL(t *testing.T) {
+	in := argoNetInput{
+		services: []netService{demoNetObject[netService](`{"metadata":{"name":"web","namespace":"shop"},"spec":{"type":"ClusterIP"}}`)},
+		ingresses: []ingressObject{demoNetObject[ingressObject](`{"metadata":{"name":"web","namespace":"shop"},
+			"spec":{"ingressClassName":"tailscale","tls":[{"hosts":["web"]}],"defaultBackend":{"service":{"name":"web"}}},
+			"status":{"loadBalancer":{"ingress":[{"hostname":"web.tail123.ts.net"}]}}}`)},
+	}
+	in.app.Status.Resources = []argoResourceStatus{{Kind: "Service", Namespace: "shop", Name: "web"}, {Kind: "Ingress", Namespace: "shop", Name: "web"}}
+	n := buildArgoNetwork(in)
+	host := netNode(t, n, "host/https://web.tail123.ts.net")
+	if host.URL != "https://web.tail123.ts.net" || host.Name != "web.tail123.ts.net" {
+		t.Fatalf("host %+v", host)
+	}
+	if got := netEdges(n); !strings.Contains(got, "host/https://web.tail123.ts.net>ing/shop/web") || !strings.Contains(got, "ing/shop/web>svc/shop/web") {
+		t.Fatalf("edges %s", got)
+	}
+}
+
 func TestArgoNetworkRootCauseIsTheNode(t *testing.T) {
 	n := demoArgoNetwork("demo-worker")
 

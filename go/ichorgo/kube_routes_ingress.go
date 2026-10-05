@@ -14,8 +14,9 @@ type ingressObject struct {
 		Namespace string `json:"namespace"`
 	} `json:"metadata"`
 	Spec struct {
-		DefaultBackend *ingressBackend `json:"defaultBackend"`
-		TLS            []struct {
+		IngressClassName string          `json:"ingressClassName"`
+		DefaultBackend   *ingressBackend `json:"defaultBackend"`
+		TLS              []struct {
 			Hosts []string `json:"hosts"`
 		} `json:"tls"`
 		Rules []struct {
@@ -95,8 +96,14 @@ func ingressHost(ing ingressObject, host string) string {
 	return ""
 }
 
-// ingressScheme is https for a host the Ingress has a TLS certificate for.
+// ingressScheme is https for a host the Ingress has a TLS certificate for. Tailscale
+// provisions HTTPS itself: tls.hosts contains a short device/service name, while status
+// reports the full MagicDNS hostname, so those names need not match.
 func ingressScheme(ing ingressObject, host string) string {
+	if ing.Spec.IngressClassName == "tailscale" {
+		return "https"
+	}
+
 	for _, tls := range ing.Spec.TLS {
 		for _, h := range tls.Hosts {
 			if hostMatches(h, host) {
