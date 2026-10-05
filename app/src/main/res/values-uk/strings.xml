@@ -1694,6 +1694,11 @@
     <string name="cnpg_last_failure">Остання невдача</string>
     <string name="cnpg_never">ніколи</string>
     <string name="cnpg_recoverable">Найдавніша точка відновлення</string>
+    <string name="cnpg_backup_now">Створити резервну копію</string>
+    <string name="cnpg_backup_title">Створити резервну копію %1$s зараз?</string>
+    <string name="cnpg_backup_text">CloudNativePG створює повну базову копію методом, налаштованим для кластера (плагін barman-cloud, об’єктне сховище або знімок тому). Це навантажує екземпляр, на якому вона виконується, і займає місце у сховищі копій.</string>
+    <string name="cnpg_backup_started">Резервну копію %1$s запитано</string>
+    <string name="cnpg_backup_failed">%1$s: %2$s</string>
     <string name="dragonfly_empty">Немає екземплярів Dragonfly.</string>
     <string name="dragonfly_role_master">головний</string>
     <string name="dragonfly_reason_no_ready">жоден под не готовий</string>

@@ -2,13 +2,17 @@ import SwiftUI
 import IchorCore
 
 /// Every CloudNativePG cluster, built for dozens: a summary, the ones that need a look by default,
-/// one compact row each that opens to the details.
+/// one compact row each that opens to the details, where a backup can be started now (os:admin).
 struct CnpgList: View {
     let status: CnpgStatus
     let refresh: () async -> Void
 
+    @Environment(AppModel.self) private var model
     @State private var problemsOnly: Bool?
     @State private var query = ""
+    @State private var confirmBackup: CnpgCluster?
+    @State private var running: Set<String> = []
+    @State private var resultMessage: String?
 
     var body: some View {
         let attention = status.clusters.filter(\.health.needsAttention).count
@@ -47,17 +51,46 @@ struct CnpgList: View {
                     }
                     .foregroundStyle(.secondary)
                 }
-                ForEach(rows) { ClusterRow(cluster: $0) }
+                ForEach(rows) { cluster in
+                    ClusterRow(cluster: cluster, busy: running.contains(cluster.id)) { confirmBackup = cluster }
+                }
             }
         }
         .searchable(text: $query, prompt: Text("Filter by namespace or name"))
         .refreshable { await refresh() }
         .themedBackground()
+        .confirmationDialog(confirmBackup.map { String(localized: "Back up \($0.label) now?") } ?? "",
+                            isPresented: Binding(get: { confirmBackup != nil }, set: { if !$0 { confirmBackup = nil } }),
+                            titleVisibility: .visible,
+                            presenting: confirmBackup) { cluster in
+            Button("Back up now") { Task { await backup(cluster) } }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("CloudNativePG takes a full base backup with the method the cluster is set up for (barman-cloud plugin, object store or volume snapshot). It loads the instance it runs on and adds to the backup storage.")
+        }
+        .alert(resultMessage ?? "", isPresented: Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })) {
+            Button("OK") {}
+        }
+    }
+
+    private func backup(_ cluster: CnpgCluster) async {
+        guard let client = model.client, !running.contains(cluster.id) else { return }
+        running.insert(cluster.id)
+        defer { running.remove(cluster.id) }
+        do {
+            let name = try await client.cnpgBackup(namespace: cluster.namespace, name: cluster.name)
+            resultMessage = String(localized: "Backup \(name) requested")
+            await refresh()
+        } catch {
+            resultMessage = String(localized: "Could not back up \(cluster.label): \(error.localizedDescription)")
+        }
     }
 }
 
 private struct ClusterRow: View {
     let cluster: CnpgCluster
+    let busy: Bool
+    let onBackup: () -> Void
 
     var body: some View {
         DisclosureGroup {
@@ -121,6 +154,16 @@ private struct ClusterRow: View {
         LabeledContent("Last backup", value: relativeTime(cluster.lastSuccessAt))
         if cluster.lastFailureAt > 0 { LabeledContent("Last failure", value: relativeTime(cluster.lastFailureAt)) }
         if cluster.recoverableAt > 0 { LabeledContent("Oldest recovery point", value: relativeTime(cluster.recoverableAt)) }
+        // The Go core picks the method; a cluster set up for none of them is refused with a reason.
+        if !cluster.hibernated {
+            Button(action: onBackup) {
+                HStack {
+                    Label("Back up now", systemImage: "icloud.and.arrow.up")
+                    if busy { Spacer(); ProgressView() }
+                }
+            }
+            .disabled(busy)
+        }
     }
 
     private func podLine(_ pod: CnpgPod) -> String {
