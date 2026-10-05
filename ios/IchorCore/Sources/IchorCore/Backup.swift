@@ -65,16 +65,33 @@ public struct BackupCluster: Codable, Equatable, Sendable {
     public var name: String?
     /// 0xRRGGBB.
     public var color: Int?
-    /// Android only, like its Wake-on-LAN targets (not decoded here).
+    /// Reached over a VPN only (nil: no).
     public var vpnOnly: Bool?
+    /// How to wake each node, by node address as the talosconfig names it.
+    public var wakeOnLan: [String: BackupWolTarget]?
     /// The Kubernetes API address to use instead of the kubeconfig's.
     public var kubeServer: String?
 
-    public init(name: String? = nil, color: Int? = nil, vpnOnly: Bool? = nil, kubeServer: String? = nil) {
+    public init(name: String? = nil, color: Int? = nil, vpnOnly: Bool? = nil,
+                wakeOnLan: [String: BackupWolTarget]? = nil, kubeServer: String? = nil) {
         self.name = name
         self.color = color
         self.vpnOnly = vpnOnly
+        self.wakeOnLan = wakeOnLan
         self.kubeServer = kubeServer
+    }
+}
+
+/// A node's Wake-on-LAN setting in a backup (Android's BackupWolTarget).
+public struct BackupWolTarget: Codable, Equatable, Sendable {
+    public var mac: String
+    public var broadcast: String?
+    public var port: Int?
+
+    public init(mac: String, broadcast: String? = nil, port: Int? = nil) {
+        self.mac = mac
+        self.broadcast = broadcast
+        self.port = port
     }
 }
 
@@ -104,11 +121,19 @@ public func backupPassphraseProblem(_ passphrase: String, again: String) -> Back
 }
 
 /// The per-cluster settings of this device, as a backup stores them (only clusters still in `fingerprints`).
+/// `wakeOnLan` is keyed by `wolKey`.
 public func backupClusters(fingerprints: [String], names: [String: String], colors: [String: Int],
-                           kubeServers: [String: String]) -> [String: BackupCluster] {
+                           kubeServers: [String: String], vpnOnly: Set<String> = [],
+                           wakeOnLan: [String: WolTarget] = [:]) -> [String: BackupCluster] {
     var out: [String: BackupCluster] = [:]
     for fp in fingerprints where !fp.isEmpty {
-        out[fp] = BackupCluster(name: names[fp], color: colors[fp].map { $0 & 0xFFFFFF }, kubeServer: kubeServers[fp])
+        var wol: [String: BackupWolTarget] = [:]
+        for (key, target) in wakeOnLan where key.hasPrefix(fp + "|") {
+            wol[String(key.dropFirst(fp.count + 1))] = BackupWolTarget(mac: target.mac, broadcast: target.broadcast, port: target.port)
+        }
+        out[fp] = BackupCluster(name: names[fp], color: colors[fp].map { $0 & 0xFFFFFF },
+                                vpnOnly: vpnOnly.contains(fp) ? true : nil, wakeOnLan: wol.isEmpty ? nil : wol,
+                                kubeServer: kubeServers[fp])
     }
     return out
 }
@@ -119,6 +144,9 @@ public struct RestoredClusters: Equatable, Sendable {
     public let colors: [String: Int]
     /// Trimmed; the Go core checks them before they are stored.
     public let kubeServers: [String: String]
+    public var vpnOnly: Set<String> = []
+    /// By `wolKey`, checked like typed ones.
+    public var wakeOnLan: [String: WolTarget] = [:]
 }
 
 public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints: [String]) -> RestoredClusters {
@@ -126,7 +154,18 @@ public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints:
     var names: [String: String] = [:]
     var colors: [String: Int] = [:]
     var kubeServers: [String: String] = [:]
+    var vpnOnly: Set<String> = []
+    var wakeOnLan: [String: WolTarget] = [:]
     for (fp, cluster) in clusters ?? [:] where known.contains(fp) {
+        if cluster.vpnOnly == true { vpnOnly.insert(fp) }
+        for (node, wol) in cluster.wakeOnLan ?? [:] {
+            let node = node.trimmingCharacters(in: .whitespaces)
+            let broadcast = (wol.broadcast ?? "").trimmingCharacters(in: .whitespaces)
+            guard !node.isEmpty, !broadcast.contains("|"), isWolAddress(broadcast),
+                  let target = decodeWolTarget(encodeWolTarget(WolTarget(mac: wol.mac, broadcast: broadcast, port: wol.port ?? wolDefaultPort)))
+            else { continue }
+            wakeOnLan[wolKey(fingerprint: fp, node: node)] = target
+        }
         if let name = cluster.name.flatMap(normalizeClusterName) { names[fp] = name }
         // Android writes RGB too, but drop any alpha a future writer might add.
         if let color = cluster.color { colors[fp] = color & 0xFFFFFF }
@@ -134,7 +173,7 @@ public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints:
             kubeServers[fp] = server
         }
     }
-    return RestoredClusters(names: names, colors: colors, kubeServers: kubeServers)
+    return RestoredClusters(names: names, colors: colors, kubeServers: kubeServers, vpnOnly: vpnOnly, wakeOnLan: wakeOnLan)
 }
 
 /// A backup error of the Go core, whose messages start with a code (backup.go).

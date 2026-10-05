@@ -28,7 +28,9 @@ enum AppBackup {
                 fingerprints: summary.contexts.map(\.fingerprint),
                 names: model.clusterNames,
                 colors: model.clusterColors,
-                kubeServers: model.kubeServers
+                kubeServers: model.kubeServers,
+                vpnOnly: model.vpnOnly,
+                wakeOnLan: WakeOnLanStore.shared.allTargets
             )
         )
         let json = String(decoding: try JSONEncoder().encode(payload), as: UTF8.self)
@@ -53,7 +55,9 @@ enum AppBackup {
                 kubeServers[fp] = normalized
             }
         }
-        model.restoreClusterSettings(names: restored.names, colors: restored.colors, kubeServers: kubeServers)
+        model.restoreClusterSettings(names: restored.names, colors: restored.colors, kubeServers: kubeServers,
+                                     vpnOnly: restored.vpnOnly)
+        WakeOnLanStore.shared.restore(restored.wakeOnLan)
         if let mask = settings?.privacyMask {
             await model.setPrivacyMask(mask, words: settings?.privacyMaskWords ?? "")
         }

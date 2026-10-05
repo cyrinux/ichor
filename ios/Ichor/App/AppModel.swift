@@ -32,6 +32,7 @@ final class AppModel {
         static let kubeServers = "kubeServers"
         static let snapshotKeys = "snapshotKeys"
         static let keepLastKnown = "keepLastKnownState"
+        static let vpnOnly = "vpnOnlyClusters"
     }
 
     private(set) var yaml: String?
@@ -65,6 +66,10 @@ final class AppModel {
     /// The public keys (age, SSH or YubiKey, one per line) each cluster's etcd snapshots were
     /// last encrypted for, by context fingerprint. Not secret; only on this device.
     private(set) var snapshotKeys: [String: String]
+
+    /// The clusters reached over a VPN only, by context fingerprint: without a VPN up the app
+    /// does not try them (screens say to connect it, background checks wait). Only on this device.
+    private(set) var vpnOnly: Set<String>
 
     var theme: ThemeMode {
         didSet { UserDefaults.standard.set(theme.rawValue, forKey: Keys.theme) }
@@ -101,9 +106,13 @@ final class AppModel {
         clusterNames = UserDefaults.standard.dictionary(forKey: Keys.clusterNames) as? [String: String] ?? [:]
         kubeServers = UserDefaults.standard.dictionary(forKey: Keys.kubeServers) as? [String: String] ?? [:]
         snapshotKeys = UserDefaults.standard.dictionary(forKey: Keys.snapshotKeys) as? [String: String] ?? [:]
+        vpnOnly = Set(UserDefaults.standard.stringArray(forKey: Keys.vpnOnly) ?? [])
+        VpnMonitor.shared.onConnect = { [weak self] in self?.reloadIfHeldBack() }
     }
 
+    /// Nil while the cluster on screen waits for its VPN (see vpnHeldBack): its calls could only time out.
     var client: TalosClient? {
+        guard !vpnHeldBack else { return nil }
         let kubeServer = activeSummary.flatMap { kubeServers[$0.fingerprint] } ?? ""
         return yaml.map { TalosClient(config: $0, context: activeContext, kubeServer: kubeServer) }
     }
@@ -244,7 +253,9 @@ final class AppModel {
     }
 
     /// The features of every reachable node of an overview, in parallel.
+    /// Also records their MACs for Wake-on-LAN (recordNodeMacs), alongside.
     func loadFeatures(of nodes: [NodeOverview]) async {
+        Task { await recordNodeMacs(of: nodes) }
         await withTaskGroup(of: Void.self) { group in
             for node in nodes where node.reachable {
                 group.addTask { await self.loadFeatures(node: node.node, version: node.version) }
@@ -261,6 +272,7 @@ final class AppModel {
     /// Loads the stored config (Keychain); nothing is read before the first unlock.
     func load() async {
         defer { loaded = true }
+        WakeOnLanStore.shared.loadIfNeeded()
         guard let data = SecureConfigStore.load(), let stored = String(data: data, encoding: .utf8),
               let parsed = try? await TalosClient.parse(stored) else { return }
         apply(yaml: stored, summary: parsed, preferred: parsed.selectedContext(index: Self.savedContextIndex, name: UserDefaults.standard.string(forKey: Keys.context)))
@@ -301,10 +313,12 @@ final class AppModel {
     }
 
     /// Restored names (all of them) and colors (the others keep the one just assigned) of the stored clusters.
-    func restoreClusterSettings(names: [String: String], colors: [String: Int], kubeServers servers: [String: String]) {
+    func restoreClusterSettings(names: [String: String], colors: [String: Int], kubeServers servers: [String: String],
+                                vpnOnly restoredVpnOnly: Set<String> = []) {
         storeColors(clusterColors.merging(colors) { _, new in new })
         storeNames(names)
         storeKubeServers(servers)
+        storeVpnOnly(restoredVpnOnly)
     }
 
     /// Removes the cluster `name` (a context and its credentials) from the stored config,
@@ -357,6 +371,60 @@ final class AppModel {
         dataGeneration += 1
     }
 
+    /// Replaces the endpoints of the context `name` (the addresses the app connects through),
+    /// keeping the other contexts; screens reload with them.
+    func setEndpoints(_ endpoints: [String], of name: String) async throws {
+        guard let current = yaml else { throw TalosError(message: String(localized: "No talosconfig is stored.")) }
+        let updated = try await TalosClient.setContextEndpoints(stored: current, context: name, endpoints: endpoints)
+        try await store(updated)
+    }
+
+    /// Puts each endpoint a network search found first among the endpoints of the contexts it
+    /// answered for, all in one write: nothing is stored if one fails. Once a cluster answers
+    /// again, node discovery offers the members it still misses.
+    func addFoundEndpoints(_ matches: [EndpointMatch]) async throws {
+        guard var updated = yaml else { throw TalosError(message: String(localized: "No talosconfig is stored.")) }
+        for match in matches {
+            for context in match.contexts {
+                updated = try await TalosClient.addContextEndpoint(stored: updated, context: context, endpoint: match.endpoint)
+            }
+        }
+        try await store(updated)
+    }
+
+    /// Stores an edited config, keeping the context on screen, and reloads the screens.
+    private func store(_ updated: String) async throws {
+        let parsed = try await TalosClient.parse(updated)
+        try SecureConfigStore.save(Data(updated.utf8))
+        let index = summary?.contexts.firstIndex { $0.name == activeContext }
+        apply(yaml: updated, summary: parsed, preferred: parsed.selectedContext(index: index, name: activeContext))
+        dataGeneration += 1
+    }
+
+    /// Whether the cluster on screen is set to be reached over a VPN only and none is up.
+    var vpnHeldBack: Bool {
+        heldBackForVpn(vpnOnly: vpnOnly, fingerprint: activeSummary?.fingerprint, vpnUp: VpnMonitor.shared.up)
+    }
+
+    /// Sets whether `context` is reached over a VPN only; the cluster on screen reloads (with
+    /// the VPN off, the screens then say to connect it).
+    func setVpnOnly(_ on: Bool, for context: ContextSummary) {
+        guard !context.fingerprint.isEmpty else { return }
+        storeVpnOnly(on ? vpnOnly.union([context.fingerprint]) : vpnOnly.subtracting([context.fingerprint]))
+        if context.fingerprint == activeSummary?.fingerprint { dataGeneration += 1 }
+    }
+
+    private func storeVpnOnly(_ fingerprints: Set<String>) {
+        guard fingerprints != vpnOnly else { return }
+        vpnOnly = fingerprints
+        UserDefaults.standard.set(fingerprints.sorted(), forKey: Keys.vpnOnly)
+    }
+
+    /// The VPN came up: a VPN-only cluster on screen reloads.
+    private func reloadIfHeldBack() {
+        if let shown = activeSummary?.fingerprint, vpnOnly.contains(shown) { dataGeneration += 1 }
+    }
+
     /// Discovered members set aside with "Not now", per context, until the app restarts.
     @ObservationIgnored private var dismissedByContext: [String: Set<String>] = [:]
 
@@ -371,6 +439,8 @@ final class AppModel {
         LastKnownStore.wipe()
         PublicIPStore.wipe()
         MetricsStore.keep(fingerprints: []) // their credentials go with the config
+        WakeOnLanStore.shared.wipe()
+        storeVpnOnly([])
         publicIPReports = [:]
         SharedStore.save(nil) // the widget stops showing the old cluster
         forgetFeatures()
@@ -446,6 +516,8 @@ final class AppModel {
         storeNames(keepClusterNames(saved: clusterNames, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeKubeServers(keepClusterNames(saved: kubeServers, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeSnapshotKeys(keepClusterNames(saved: snapshotKeys, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        storeVpnOnly(keepVpnOnly(saved: vpnOnly, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        WakeOnLanStore.shared.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         LastKnownStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         MetricsStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         let kept = publicIPReports.filter { report in newSummary.contexts.contains { $0.fingerprint == report.key } }

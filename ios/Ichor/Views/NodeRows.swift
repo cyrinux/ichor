@@ -42,6 +42,10 @@ struct NodeListRow: View {
                 Button { path.append(.logs(node: node.node, hostname: node.hostname, service: nil)) } label: {
                     Label("Logs", systemImage: "text.alignleft")
                 }
+            } else if let targets = wakeTargets, !targets.isEmpty {
+                // Down: the phone can still power it on over the LAN.
+                Button { WakeOnLanCenter.shared.wake(node, targets: targets) } label: { Label("Wake (Wake-on-LAN)", systemImage: "power.circle") }
+                    .tint(.green)
             }
         }
         .contextMenu { NodeMenu(node: node, path: $path) }
@@ -52,6 +56,11 @@ struct NodeListRow: View {
             }
             Button("Copy IP") { UIPasteboard.general.string = node.node }
         }
+    }
+
+    /// Where a wake sends magic packets; nil in screenshot mode.
+    private var wakeTargets: [WolTarget]? {
+        model.wakeOnLanFingerprint.map { WakeOnLanStore.shared.wakeTargets(fingerprint: $0, node: node.node) }
     }
 }
 
@@ -80,6 +89,8 @@ struct NodeMenu: View {
                 Button(role: .destructive) { path.append(.nodePower(ref, .shutdown)) } label: { Label("Shut down…", systemImage: "power") }
             }
         }
+        // Needs no role: the phone sends the packet itself, the Talos API is not involved.
+        WakeOnLanMenuItems(node: node)
         Button { UIPasteboard.general.string = node.node } label: { Label("Copy IP", systemImage: "doc.on.doc") }
     }
 }
