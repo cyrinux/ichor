@@ -33,6 +33,7 @@ func argoFixture(t *testing.T) argoStatus {
 		readArgoFixture[argoObject](t, "applications.json"),
 		readArgoFixture[argoAppSetObject](t, "applicationsets.json"),
 		readArgoFixture[argoProjectObject](t, "appprojects.json"),
+		argoTestNow,
 	)
 }
 
