@@ -57,8 +57,8 @@ const (
 	detectedByInventory = "inventory" // the pods could not be listed: the inventory's hint
 )
 
-// integration is one project in Settings: what it is, and whether the cluster runs it.
-type integration struct {
+// supportedIntegration is one project in Settings: what it is, and whether the cluster runs it.
+type supportedIntegration struct {
 	ID      string   `json:"id"`
 	Name    string   `json:"name"`
 	Icon    string   `json:"icon"` // bundled icon (assets/appicons/<icon>.webp), "" when none
@@ -74,48 +74,48 @@ type integration struct {
 	Namespace string `json:"namespace,omitempty"`
 }
 
-type integrations struct {
-	// Checked is false for the list alone (Integrations), true once a cluster was asked.
+type supportedIntegrations struct {
+	// Checked is false for the list alone (SupportedIntegrations), true once a cluster was asked.
 	Checked bool          `json:"checked"`
-	Items   []integration `json:"items"`
+	Items   []supportedIntegration `json:"items"`
 }
 
-// found is how one integration was detected; the zero value is "not detected".
-type found struct {
+// detection is how one integration was detected; the zero value is "not detected".
+type detection struct {
 	via, version, namespace string
 }
 
-// Integrations lists the projects the app integrates with, without asking any cluster:
+// SupportedIntegrations lists the projects the app integrates with, without asking any cluster:
 // {"checked":false,"items":[{id,name,icon,website,groups,detected:false}]}.
-func Integrations() (out string, err error) {
+func SupportedIntegrations() (out string, err error) {
 	defer maskResult(&out, &err)
 
-	return toJSON(integrations{Items: integrationList(func(integrationSpec) found { return found{} })})
+	return toJSON(supportedIntegrations{Items: integrationList(func(integrationSpec) detection { return detection{} })})
 }
 
-// KubeIntegrations lists the projects the app integrates with and whether the cluster runs
-// each one (os:admin); Integrations' JSON with "checked":true and, per detected project, "via"
+// KubeSupportedIntegrations lists the projects the app integrates with and whether the cluster runs
+// each one (os:admin); SupportedIntegrations' JSON with "checked":true and, per detected project, "via"
 // (api, pods, services, inventory), "version" and "namespace". Operators are found by their API
 // groups; projects without one by the images of the running pods (the app catalog) or, for
 // metrics backends, their Services. hints (see KubeDataServices) stand in for the pods when
 // they cannot be listed. kubeServer: see KubePods.
-func KubeIntegrations(configYAML, contextName, kubeServer, hints string) (out string, err error) {
+func KubeSupportedIntegrations(configYAML, contextName, kubeServer, hints string) (out string, err error) {
 	defer maskResult(&out, &err)
 
 	contextName = unmaskContext(configYAML, contextName)
 
-	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demoIntegrations, func(ctx context.Context, k *kubeClient) (integrations, error) {
-		return readIntegrations(ctx, k, parseHints(hints))
+	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer}, demoSupportedIntegrations, func(ctx context.Context, k *kubeClient) (supportedIntegrations, error) {
+		return readSupportedIntegrations(ctx, k, parseHints(hints))
 	})
 }
 
-func readIntegrations(ctx context.Context, k *kubeClient, hints hintSet) (integrations, error) {
+func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet) (supportedIntegrations, error) {
 	var (
 		groups      map[string]string
 		groupsErr   error
-		pods        map[string]found
+		pods        map[string]detection
 		podsErr     error
-		services    map[string]found
+		services    map[string]detection
 		resourceFor = map[string]bool{}
 		wg          sync.WaitGroup
 	)
@@ -126,7 +126,7 @@ func readIntegrations(ctx context.Context, k *kubeClient, hints hintSet) (integr
 	wg.Wait()
 
 	if groupsErr != nil {
-		return integrations{}, groupsErr
+		return supportedIntegrations{}, groupsErr
 	}
 
 	// Shared groups: ask whether the project's own resource is served, in parallel.
@@ -146,14 +146,14 @@ func readIntegrations(ctx context.Context, k *kubeClient, hints hintSet) (integr
 
 	wg.Wait()
 
-	items := integrationList(func(s integrationSpec) found {
+	items := integrationList(func(s integrationSpec) detection {
 		if len(s.Groups) > 0 {
 			version, ok := groups[s.Groups[0]]
 			if !ok || s.Resource != "" && !resourceFor[s.ID] {
-				return found{}
+				return detection{}
 			}
 
-			return found{via: detectedByAPI, version: version}
+			return detection{via: detectedByAPI, version: version}
 		}
 
 		if f, ok := pods[s.ID]; ok {
@@ -165,13 +165,13 @@ func readIntegrations(ctx context.Context, k *kubeClient, hints hintSet) (integr
 		}
 
 		if podsErr != nil && hints[s.ID] {
-			return found{via: detectedByInventory}
+			return detection{via: detectedByInventory}
 		}
 
-		return found{}
+		return detection{}
 	})
 
-	return integrations{Checked: true, Items: items}, nil
+	return supportedIntegrations{Checked: true, Items: items}, nil
 }
 
 func firstGroup(s integrationSpec) string {
@@ -184,14 +184,14 @@ func firstGroup(s integrationSpec) string {
 
 // runningApps maps the catalog ids of the running pods' images to the first pod found
 // (namespace, image tag), from one listing of every running pod.
-func runningApps(ctx context.Context, k *kubeClient) (map[string]found, error) {
+func runningApps(ctx context.Context, k *kubeClient) (map[string]detection, error) {
 	pods, err := listDSPods(ctx, k, "")
 	if err != nil {
 		return nil, err
 	}
 
 	catalog := loadAppCatalog()
-	out := map[string]found{}
+	out := map[string]detection{}
 
 	for _, p := range pods {
 		if p.Status.Phase != "Running" {
@@ -202,7 +202,7 @@ func runningApps(ctx context.Context, k *kubeClient) (map[string]found, error) {
 			ref := parseImageRef(c.Image)
 			if id := catalog.identify(ref); id.app != nil {
 				if _, seen := out[id.app.ID]; !seen {
-					out[id.app.ID] = found{via: detectedByPods, version: ref.Tag, namespace: p.Metadata.Namespace}
+					out[id.app.ID] = detection{via: detectedByPods, version: ref.Tag, namespace: p.Metadata.Namespace}
 				}
 			}
 		}
@@ -213,8 +213,8 @@ func runningApps(ctx context.Context, k *kubeClient) (map[string]found, error) {
 
 // queryServices maps the kinds of metrics query APIs (promMatch) to the likeliest Service;
 // empty when the Services cannot be listed.
-func queryServices(ctx context.Context, k *kubeClient) map[string]found {
-	out := map[string]found{}
+func queryServices(ctx context.Context, k *kubeClient) map[string]detection {
+	out := map[string]detection{}
 
 	d, err := discoverProm(ctx, k)
 	if err != nil {
@@ -223,7 +223,7 @@ func queryServices(ctx context.Context, k *kubeClient) map[string]found {
 
 	for _, src := range d.Sources {
 		if _, seen := out[src.Kind]; !seen {
-			out[src.Kind] = found{via: detectedByServices, namespace: src.Namespace}
+			out[src.Kind] = detection{via: detectedByServices, namespace: src.Namespace}
 		}
 	}
 
@@ -252,9 +252,9 @@ func servesResource(ctx context.Context, k *kubeClient, group, version, resource
 }
 
 // integrationList builds the items, detect telling how each one was found.
-func integrationList(detect func(integrationSpec) found) []integration {
+func integrationList(detect func(integrationSpec) detection) []supportedIntegration {
 	catalog := loadAppCatalog()
-	out := make([]integration, 0, len(integrationSpecs))
+	out := make([]supportedIntegration, 0, len(integrationSpecs))
 
 	for _, s := range integrationSpecs {
 		// Bundled icons are named after the catalog id, as in the inventory.
@@ -264,7 +264,7 @@ func integrationList(detect func(integrationSpec) found) []integration {
 		}
 
 		f := detect(s)
-		out = append(out, integration{
+		out = append(out, supportedIntegration{
 			ID: s.ID, Name: s.Name, Icon: icon, Website: s.Website, Groups: append([]string{}, s.Groups...),
 			Detected: f.via != "", Via: f.via, Version: f.version, Namespace: f.namespace,
 		})
@@ -273,8 +273,8 @@ func integrationList(detect func(integrationSpec) found) []integration {
 	return out
 }
 
-// demoIntegrations reports what the demo cluster's other screens show.
-func demoIntegrations() integrations {
+// demoSupportedIntegrations reports what the demo cluster's other screens show.
+func demoSupportedIntegrations() supportedIntegrations {
 	now := time.Now()
 	ds := demoDataServices(now)
 	api := map[string]bool{
@@ -292,23 +292,23 @@ func demoIntegrations() integrations {
 		"gateway-api":    true,
 	}
 
-	services := map[string]found{}
+	services := map[string]detection{}
 	for _, src := range demoPromDiscovery().Sources {
 		if _, seen := services[src.Kind]; !seen {
-			services[src.Kind] = found{via: detectedByServices, namespace: src.Namespace}
+			services[src.Kind] = detection{via: detectedByServices, namespace: src.Namespace}
 		}
 	}
 
-	return integrations{Checked: true, Items: integrationList(func(s integrationSpec) found {
+	return supportedIntegrations{Checked: true, Items: integrationList(func(s integrationSpec) detection {
 		switch {
 		case api[s.ID]:
-			return found{via: detectedByAPI}
+			return detection{via: detectedByAPI}
 		case s.ID == "garage" && ds.Garage != nil:
-			return found{via: detectedByPods}
+			return detection{via: detectedByPods}
 		case s.ServiceKind != "":
 			return services[s.ServiceKind]
 		}
 
-		return found{}
+		return detection{}
 	})}
 }

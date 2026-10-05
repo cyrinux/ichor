@@ -1,13 +1,13 @@
 import Foundation
 
-// Mirrors go/ichorgo/integrations.go.
+// Mirrors go/ichorgo/supported_integrations.go.
 
 /// The projects the app integrates with; `checked` once a cluster was asked which it runs.
-public struct Integrations: Decodable, Equatable, Sendable {
+public struct SupportedIntegrations: Decodable, Equatable, Sendable {
     public let checked: Bool
-    public let items: [Integration]
+    public let items: [SupportedIntegration]
 
-    public init(checked: Bool = false, items: [Integration] = []) {
+    public init(checked: Bool = false, items: [SupportedIntegration] = []) {
         self.checked = checked
         self.items = items
     }
@@ -21,7 +21,7 @@ public struct Integrations: Decodable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey { case checked, items }
 }
 
-public struct Integration: Decodable, Equatable, Sendable, Identifiable {
+public struct SupportedIntegration: Decodable, Equatable, Sendable, Identifiable {
     /// Catalog app id.
     public let id: String
     /// A proper noun: never translated.
@@ -33,7 +33,7 @@ public struct Integration: Decodable, Equatable, Sendable, Identifiable {
     public let groups: [String]
     public let detected: Bool
     /// How it was found, nil when not detected (or by a way this version does not know).
-    public let via: IntegrationVia?
+    public let via: SupportedIntegrationVia?
     /// The API version served for the first group, or the image tag of its pods; "" when unknown.
     public let version: String
     /// Where it runs, when found by its pods or Services.
@@ -47,7 +47,7 @@ public struct Integration: Decodable, Equatable, Sendable, Identifiable {
         website = URL(string: try c.field(.website, ""))
         groups = try c.field(.groups, [])
         detected = try c.field(.detected, false)
-        via = IntegrationVia(rawValue: try c.field(.via, ""))
+        via = SupportedIntegrationVia(rawValue: try c.field(.via, ""))
         version = try c.field(.version, "")
         namespace = try c.field(.namespace, "")
     }
@@ -59,13 +59,13 @@ public struct Integration: Decodable, Equatable, Sendable, Identifiable {
 }
 
 /// How an integration was found on the cluster.
-public enum IntegrationVia: String, Sendable {
+public enum SupportedIntegrationVia: String, Sendable {
     case api, pods, services
     /// The pods could not be listed: the inventory's hint.
     case inventory
 }
 
 /// The inventory's catalog ids, for KubeIntegrations: what has no API of its own is found by them.
-public func integrationHints(_ inventory: ClusterInventory) -> String {
+public func supportedIntegrationHints(_ inventory: ClusterInventory) -> String {
     inventory.apps.filter(\.known).map(\.id).joined(separator: ",")
 }

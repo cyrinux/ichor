@@ -99,13 +99,13 @@ func TestIntegrationSpecs(t *testing.T) {
 	}
 }
 
-func TestIntegrationsStatic(t *testing.T) {
-	out, err := Integrations()
+func TestSupportedIntegrationsStatic(t *testing.T) {
+	out, err := SupportedIntegrations()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var res integrations
+	var res supportedIntegrations
 	if err := json.Unmarshal([]byte(out), &res); err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +128,7 @@ func TestIntegrationsStatic(t *testing.T) {
 	}
 }
 
-func TestReadIntegrations(t *testing.T) {
+func TestReadSupportedIntegrations(t *testing.T) {
 	stopped := fakePod("old", "garage-old", "node-1", false, nil, "garage", "dxflrs/garage:v1.0.0")
 	stopped.Status.Phase = "Succeeded"
 
@@ -154,12 +154,12 @@ func TestReadIntegrations(t *testing.T) {
 	}
 
 	// The hints are only a fallback: velero is hinted but neither served nor running.
-	res, err := readIntegrations(context.Background(), k, parseHints("garage,velero"))
+	res, err := readSupportedIntegrations(context.Background(), k, parseHints("garage,velero"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	got := map[string]integration{}
+	got := map[string]supportedIntegration{}
 	var detected []string
 	for _, it := range res.Items {
 		if it.Detected {
@@ -187,7 +187,7 @@ func TestReadIntegrations(t *testing.T) {
 	}
 }
 
-func TestReadIntegrationsPodsForbidden(t *testing.T) {
+func TestReadSupportedIntegrationsPodsForbidden(t *testing.T) {
 	// Only /apis answers: the pods cannot be listed, the inventory's hint stands in.
 	f := newFakeKubeAPI(t, map[string]string{"GET /apis": `{"groups":[]}`})
 
@@ -196,7 +196,7 @@ func TestReadIntegrationsPodsForbidden(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, err := readIntegrations(context.Background(), k, parseHints("garage,longhorn"))
+	res, err := readSupportedIntegrations(context.Background(), k, parseHints("garage,longhorn"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,7 +211,7 @@ func TestReadIntegrationsPodsForbidden(t *testing.T) {
 	}
 }
 
-func TestReadIntegrationsArgoCD(t *testing.T) {
+func TestReadSupportedIntegrationsArgoCD(t *testing.T) {
 	f := newFakeKubeAPI(t, map[string]string{
 		"GET /apis":                      `{"groups":[{"name":"argoproj.io","preferredVersion":{"version":"v1alpha1"}}]}`,
 		"GET /apis/argoproj.io/v1alpha1": `{"resources":[{"name":"applications"},{"name":"appprojects"}]}`,
@@ -222,7 +222,7 @@ func TestReadIntegrationsArgoCD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, err := readIntegrations(context.Background(), k, parseHints(""))
+	res, err := readSupportedIntegrations(context.Background(), k, parseHints(""))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,8 +232,8 @@ func TestReadIntegrationsArgoCD(t *testing.T) {
 	}
 }
 
-func TestDemoIntegrations(t *testing.T) {
-	res := demoIntegrations()
+func TestDemoSupportedIntegrations(t *testing.T) {
+	res := demoSupportedIntegrations()
 	if !res.Checked {
 		t.Fatal("demo not checked")
 	}

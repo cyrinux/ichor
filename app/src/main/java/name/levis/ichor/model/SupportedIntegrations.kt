@@ -2,17 +2,17 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/ichorgo/integrations.go.
+// Mirrors go/ichorgo/supported_integrations.go.
 
 /** The projects the app integrates with; [checked] once a cluster was asked which it runs. */
 @Serializable
-data class Integrations(
+data class SupportedIntegrations(
     val checked: Boolean = false,
-    val items: List<Integration> = emptyList(),
+    val items: List<SupportedIntegration> = emptyList(),
 )
 
 @Serializable
-data class Integration(
+data class SupportedIntegration(
     /** Catalog app id. */
     val id: String,
     /** A proper noun: never translated. */
@@ -23,7 +23,7 @@ data class Integration(
     /** The API groups the app reads; empty when found by its pods (Garage). */
     val groups: List<String> = emptyList(),
     val detected: Boolean = false,
-    /** How it was found: one of the INTEGRATION_VIA_* values, "" when not detected. */
+    /** How it was found: one of the SUPPORTED_INTEGRATION_VIA_* values, "" when not detected. */
     val via: String = "",
     /** The API version served for the first group, or the image tag of its pods; "" when unknown. */
     val version: String = "",
@@ -31,13 +31,13 @@ data class Integration(
     val namespace: String = "",
 )
 
-const val INTEGRATION_VIA_API = "api"
-const val INTEGRATION_VIA_PODS = "pods"
-const val INTEGRATION_VIA_SERVICES = "services"
-const val INTEGRATION_VIA_INVENTORY = "inventory"
+const val SUPPORTED_INTEGRATION_VIA_API = "api"
+const val SUPPORTED_INTEGRATION_VIA_PODS = "pods"
+const val SUPPORTED_INTEGRATION_VIA_SERVICES = "services"
+const val SUPPORTED_INTEGRATION_VIA_INVENTORY = "inventory"
 
 /** For [name.levis.ichor.ui.apps.AppIconTile]: the catalog app the integration is. */
-val Integration.asApp: InventoryApp get() = InventoryApp(id = id, name = name, icon = icon, known = true)
+val SupportedIntegration.asApp: InventoryApp get() = InventoryApp(id = id, name = name, icon = icon, known = true)
 
 /** The inventory's catalog ids, for KubeIntegrations: what has no API of its own is found by them. */
-fun Inventory.integrationHints(): String = apps.filter { it.known }.joinToString(",") { it.id }
+fun Inventory.supportedIntegrationHints(): String = apps.filter { it.known }.joinToString(",") { it.id }

@@ -3,16 +3,16 @@ import IchorCore
 
 /// The projects the app reads through the Kubernetes API, with their websites, and which ones the
 /// active cluster runs: the list comes from the Go core, the status from one API discovery.
-struct IntegrationsView: View {
+struct SupportedIntegrationsView: View {
     @Environment(AppModel.self) private var model
-    @State private var list = TalosClient.integrations()
+    @State private var list = TalosClient.supportedIntegrations()
     @State private var problem: String?
 
     var body: some View {
         List {
             Section {
                 ForEach(list.items) { item in
-                    IntegrationRow(item: item, checked: list.checked)
+                    SupportedIntegrationRow(item: item, checked: list.checked)
                 }
             } footer: {
                 VStack(alignment: .leading, spacing: 4) {
@@ -32,9 +32,9 @@ struct IntegrationsView: View {
             return
         }
         guard let client = model.client else { return }
-        let hints = model.lastKnown(.inventory, as: ClusterInventory.self).map { integrationHints($0.value) } ?? ""
+        let hints = model.lastKnown(.inventory, as: ClusterInventory.self).map { supportedIntegrationHints($0.value) } ?? ""
         do {
-            list = try await client.integrations(hints: hints)
+            list = try await client.supportedIntegrations(hints: hints)
             problem = nil
         } catch is CancellationError {
         } catch {
@@ -43,8 +43,8 @@ struct IntegrationsView: View {
     }
 }
 
-private struct IntegrationRow: View {
-    let item: Integration
+private struct SupportedIntegrationRow: View {
+    let item: SupportedIntegration
     let checked: Bool
 
     var body: some View {
@@ -87,7 +87,7 @@ private struct IntegrationRow: View {
     }
 }
 
-private extension IntegrationVia {
+private extension SupportedIntegrationVia {
     var label: String {
         switch self {
         case .api: String(localized: "Found by its API")

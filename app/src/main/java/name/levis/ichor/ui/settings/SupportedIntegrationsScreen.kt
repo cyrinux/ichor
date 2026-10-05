@@ -38,16 +38,16 @@ import name.levis.ichor.data.INVENTORY
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.Feature
-import name.levis.ichor.model.INTEGRATION_VIA_API
-import name.levis.ichor.model.INTEGRATION_VIA_INVENTORY
-import name.levis.ichor.model.INTEGRATION_VIA_PODS
-import name.levis.ichor.model.INTEGRATION_VIA_SERVICES
-import name.levis.ichor.model.Integration
-import name.levis.ichor.model.Integrations
+import name.levis.ichor.model.SUPPORTED_INTEGRATION_VIA_API
+import name.levis.ichor.model.SUPPORTED_INTEGRATION_VIA_INVENTORY
+import name.levis.ichor.model.SUPPORTED_INTEGRATION_VIA_PODS
+import name.levis.ichor.model.SUPPORTED_INTEGRATION_VIA_SERVICES
+import name.levis.ichor.model.SupportedIntegration
+import name.levis.ichor.model.SupportedIntegrations
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.asApp
-import name.levis.ichor.model.integrationHints
+import name.levis.ichor.model.supportedIntegrationHints
 import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
@@ -60,7 +60,7 @@ import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.data.TalosJson
 
 /** What the screen shows: the list, and why the cluster could not be asked when it could not. */
-private data class IntegrationsView(val list: Integrations, val problem: UiText? = null)
+private data class SupportedIntegrationsView(val list: SupportedIntegrations, val problem: UiText? = null)
 
 /**
  * The projects the app reads through the Kubernetes API, with their websites, and which ones
@@ -68,30 +68,30 @@ private data class IntegrationsView(val list: Integrations, val problem: UiText?
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun IntegrationsScreen(configs: ConfigRepository, talos: TalosRepository, onBack: () -> Unit) {
+fun SupportedIntegrationsScreen(configs: ConfigRepository, talos: TalosRepository, onBack: () -> Unit) {
     val config by configs.config.collectAsStateWithLifecycle()
     val canAsk = config?.activeSummary?.allows(Feature.WORKLOADS) == true
-    val static = remember { staticIntegrations() }
-    val view by produceState(IntegrationsView(static), config?.activeContext, canAsk) {
-        value = IntegrationsView(static)
+    val static = remember { staticSupportedIntegrations() }
+    val view by produceState(SupportedIntegrationsView(static), config?.activeContext, canAsk) {
+        value = SupportedIntegrationsView(static)
         if (!canAsk) {
-            value = IntegrationsView(static, UiText.Res(R.string.integrations_needs_admin))
+            value = SupportedIntegrationsView(static, UiText.Res(R.string.supported_integrations_needs_admin))
             return@produceState
         }
-        val hints = talos.cached<Inventory>(INVENTORY)?.value?.integrationHints().orEmpty()
+        val hints = talos.cached<Inventory>(INVENTORY)?.value?.supportedIntegrationHints().orEmpty()
         value = try {
-            IntegrationsView(talos.integrations(hints))
+            SupportedIntegrationsView(talos.supportedIntegrations(hints))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            IntegrationsView(static, e.uiText())
+            SupportedIntegrationsView(static, e.uiText())
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.integrations_title)) },
+                title = { Text(stringResource(R.string.supported_integrations_title)) },
                 navigationIcon = { BackButton(onBack) },
             )
         },
@@ -102,16 +102,16 @@ fun IntegrationsScreen(configs: ConfigRepository, talos: TalosRepository, onBack
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
-                MutedText(stringResource(R.string.integrations_desc))
+                MutedText(stringResource(R.string.supported_integrations_desc))
                 view.problem?.let { MutedText(it.asString(), Modifier.padding(top = 4.dp)) }
             }
-            items(view.list.items, key = { it.id }) { IntegrationRow(it, checked = view.list.checked) }
+            items(view.list.items, key = { it.id }) { SupportedIntegrationRow(it, checked = view.list.checked) }
         }
     }
 }
 
 @Composable
-private fun IntegrationRow(item: Integration, checked: Boolean) {
+private fun SupportedIntegrationRow(item: SupportedIntegration, checked: Boolean) {
     val context = LocalContext.current
     val colors = LocalStatusColors.current
     Card(Modifier.fillMaxWidth().clickable(enabled = item.website.isNotEmpty()) { openUrl(context, item.website) }) {
@@ -120,7 +120,7 @@ private fun IntegrationRow(item: Integration, checked: Boolean) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(item.name, style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    item.groups.joinToString(", ").ifEmpty { stringResource(R.string.integrations_no_api) },
+                    item.groups.joinToString(", ").ifEmpty { stringResource(R.string.supported_integrations_no_api) },
                     style = MaterialTheme.typography.labelSmall,
                     fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -128,20 +128,20 @@ private fun IntegrationRow(item: Integration, checked: Boolean) {
                 if (checked) {
                     if (item.detected) {
                         StatusPill(
-                            listOf(stringResource(R.string.integrations_detected), item.version).filter { it.isNotEmpty() }.joinToString(" · "),
+                            listOf(stringResource(R.string.supported_integrations_detected), item.version).filter { it.isNotEmpty() }.joinToString(" · "),
                             colors.ok,
                         )
                         foundBy(item.via)?.let { how ->
                             MutedText(listOf(stringResource(how), item.namespace).filter { it.isNotEmpty() }.joinToString(" · "))
                         }
                     } else {
-                        StatusPill(stringResource(R.string.integrations_not_detected), colors.muted)
+                        StatusPill(stringResource(R.string.supported_integrations_not_detected), colors.muted)
                     }
                 }
             }
             Icon(
                 Icons.AutoMirrored.Outlined.OpenInNew,
-                contentDescription = stringResource(R.string.integrations_website, item.name),
+                contentDescription = stringResource(R.string.supported_integrations_website, item.name),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -151,13 +151,13 @@ private fun IntegrationRow(item: Integration, checked: Boolean) {
 /** How the integration was found, null for a value this version does not know. */
 @StringRes
 private fun foundBy(via: String): Int? = when (via) {
-    INTEGRATION_VIA_API -> R.string.integrations_found_api
-    INTEGRATION_VIA_PODS -> R.string.integrations_found_pods
-    INTEGRATION_VIA_SERVICES -> R.string.integrations_found_services
-    INTEGRATION_VIA_INVENTORY -> R.string.integrations_found_inventory
+    SUPPORTED_INTEGRATION_VIA_API -> R.string.supported_integrations_found_api
+    SUPPORTED_INTEGRATION_VIA_PODS -> R.string.supported_integrations_found_pods
+    SUPPORTED_INTEGRATION_VIA_SERVICES -> R.string.supported_integrations_found_services
+    SUPPORTED_INTEGRATION_VIA_INVENTORY -> R.string.supported_integrations_found_inventory
     else -> null
 }
 
 /** The list alone, from the Go core: shown before (or without) a cluster's answer. */
-private fun staticIntegrations(): Integrations =
-    runCatching { TalosJson.decodeFromString(Integrations.serializer(), Ichorgo.integrations()) }.getOrDefault(Integrations())
+private fun staticSupportedIntegrations(): SupportedIntegrations =
+    runCatching { TalosJson.decodeFromString(SupportedIntegrations.serializer(), Ichorgo.supportedIntegrations()) }.getOrDefault(SupportedIntegrations())

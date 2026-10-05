@@ -41,7 +41,7 @@ import name.levis.ichor.ui.components.SectionTitle
 private const val LICENSE_PATH = "/blob/main/LICENSE"
 
 @Composable
-fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit, onIntegrations: () -> Unit, onFunding: () -> Unit) {
+fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit, onSupportedIntegrations: () -> Unit, onFunding: () -> Unit) {
     val context = LocalContext.current
     var donating by rememberSaveable { mutableStateOf<Donation?>(null) }
     donating?.let { DonateDialog(it) { donating = null } }
@@ -57,7 +57,7 @@ fun AboutSection(onChangelog: () -> Unit, onLicenses: () -> Unit, onIntegrations
             Link(Icons.Outlined.Code, stringResource(R.string.about_source)) { openUrl(context, REPO_URL_BASE + BuildConfig.UPDATE_REPO) }
             Link(Icons.Outlined.Gavel, stringResource(R.string.about_license)) { openUrl(context, REPO_URL_BASE + BuildConfig.UPDATE_REPO + LICENSE_PATH) }
             Link(Icons.Outlined.Description, stringResource(R.string.about_licenses), onLicenses)
-            Link(Icons.Outlined.Extension, stringResource(R.string.integrations_title), onIntegrations)
+            Link(Icons.Outlined.Extension, stringResource(R.string.supported_integrations_title), onSupportedIntegrations)
             Link(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.about_talos)) { openUrl(context, TALOS_URL) }
             if (BuildConfig.FEATURE_FUNDING) Link(Icons.Outlined.FavoriteBorder, stringResource(R.string.funding_title), onFunding)
             if (BuildConfig.DONATIONS) {
