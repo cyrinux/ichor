@@ -1,29 +1,29 @@
 import SwiftUI
 import IchorCore
 
-/// Every pod of the cluster with the status `kubectl get pods` shows, unhealthy ones first,
-/// its logs through the Kubernetes API (the previous run's too), and a delete action so a
-/// controller starts a fresh one (os:admin).
+/// The pods of the scope's namespace (every namespace by default) with the status `kubectl get
+/// pods` shows, unhealthy ones first once every page is loaded, their logs through the
+/// Kubernetes API (the previous run's too), and a delete action so a controller starts a fresh
+/// one (os:admin).
 struct PodsList: View {
-    @Binding var namespace: String?
+    let list: PagedList<KubePod>
+    let control: KubeScopeControl
     let query: String
     /// Opens the pod's live flows; nil without Cilium.
     var onFlows: ((KubePod) -> Void)?
 
     @Environment(AppModel.self) private var model
-    @State private var state: LoadState<[KubePod]> = .loading
     @State private var confirm: KubePod?
     @State private var deleting: Set<String> = []
     @State private var resultMessage: String?
     @State private var logsPod: KubePod?
 
     var body: some View {
-        LoadStateView(state: state, retry: load) { pods in
-            let namespaces = podNamespaces(pods)
-            let selected = namespace.flatMap { namespaces.contains($0) ? $0 : nil }
-            let shown = filterPods(pods, namespace: selected, query: query)
+        KubeListFrame(control: control, list: list, query: query, namespaces: podNamespaces) { load in
+            let selected = control.scope.namespace
+            // Sorted once complete; image search only when every row carries its images.
+            let shown = filterPods(load.items, namespace: selected, query: query, sorted: load.done, searchImages: load.detailed)
             List {
-                Section { NamespacePicker(namespaces: namespaces, namespace: $namespace) }
                 Section {
                     ForEach(shown) { pod in
                         PodRow(pod: pod, showNamespace: selected == nil, deleting: deleting.contains(pod.id),
@@ -37,6 +37,7 @@ struct PodsList: View {
                                 }
                             }
                     }
+                    if load.hasMore && query.isEmpty { LoadMoreRow { list.loadMore(model: model) } }
                 }
             }
             .overlay {
@@ -48,10 +49,9 @@ struct PodsList: View {
                     }
                 }
             }
-            .refreshable { await load() }
+            .refreshable { await list.refresh(model: model) }
             .themedBackground()
         }
-        .task { await load() }
         .confirmationDialog(confirm.map { String(localized: "Delete pod \($0.name)?") } ?? "",
                             isPresented: $confirm.isPresent(),
                             titleVisibility: .visible,
@@ -72,9 +72,7 @@ struct PodsList: View {
     }
 
     private func load() async {
-        guard let client = model.client else { return }
-        state = model.seeded(state, from: .pods, as: KubePodList.self) { $0.pods }
-        state = state.refreshed(with: await .from { try await model.fetch(.pods, as: KubePodList.self, with: client).pods })
+        await list.refresh(model: model)
     }
 
     private func delete(_ pod: KubePod) async {

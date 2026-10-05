@@ -16,7 +16,7 @@ public struct KubeWorkloadList: Decodable, Equatable, Sendable {
 }
 
 /// A Deployment, StatefulSet or DaemonSet with its rollout state (KubeWorkloads).
-public struct KubeWorkload: Decodable, Equatable, Identifiable, Sendable {
+public struct KubeWorkload: Codable, Equatable, Identifiable, Sendable {
     public let kind: String
     public let namespace: String
     public let name: String
@@ -93,15 +93,17 @@ public func workloadNamespaces(_ workloads: [KubeWorkload]) -> [String] {
 }
 
 /// Workloads of namespace (all when nil) whose name, kind or image contains query
-/// (case-insensitive), the ones that need attention (degraded, progressing) first.
-public func filterWorkloads(_ workloads: [KubeWorkload], namespace: String?, query: String) -> [KubeWorkload] {
+/// (case-insensitive). sorted: the ones that need attention (degraded, progressing) first;
+/// else in the order loaded (a list still incomplete).
+public func filterWorkloads(_ workloads: [KubeWorkload], namespace: String?, query: String, sorted: Bool = true) -> [KubeWorkload] {
     let needle = query.trimmingCharacters(in: .whitespaces)
     let contains = { (text: String) in text.range(of: needle, options: .caseInsensitive) != nil }
-    return workloads
-        .filter { w in
-            (namespace == nil || w.namespace == namespace) &&
-                (needle.isEmpty || contains(w.name) || contains(w.kind) || w.images.contains(where: contains))
-        }
+    let matching = workloads.filter { w in
+        (namespace == nil || w.namespace == namespace) &&
+            (needle.isEmpty || contains(w.name) || contains(w.kind) || w.images.contains(where: contains))
+    }
+    guard sorted else { return matching }
+    return matching
         .sorted { a, b in
             let ra = a.workloadState.attentionRank, rb = b.workloadState.attentionRank
             if ra != rb { return ra < rb }
