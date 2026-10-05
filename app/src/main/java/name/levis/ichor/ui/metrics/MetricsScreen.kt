@@ -52,6 +52,7 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.PromPanel
+import name.levis.ichor.model.isPromRefused
 import name.levis.ichor.model.legend
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.LoadingBox
@@ -123,6 +124,7 @@ fun MetricsScreen(onBack: () -> Unit) {
                 item { MutedText(stringResource(R.string.metrics_source_line, state.config.source!!.label)) }
                 item { RangeRow(state.range, vm::setRange) }
                 state.error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
+                if (state.results.values.any { isPromRefused(it.error) }) item { RefusedCard(onEdit = { sourceOpen = true }) }
                 if (state.config.panels.isEmpty()) item { MutedText(stringResource(R.string.metrics_no_panels)) }
                 val panels = state.config.panels
                 items(panels, key = { it.id }) { panel ->
@@ -177,6 +179,17 @@ private fun NoSource(state: MetricsState, modifier: Modifier, onSetUp: () -> Uni
                 Button(onClick = onSetUp) { Text(stringResource(R.string.metrics_set_up)) }
                 androidx.compose.material3.TextButton(onClick = onSearch) { Text(stringResource(R.string.metrics_search_again)) }
             }
+        }
+    }
+}
+
+/** The backend answered 401 or 403: offers to change the tenant (X-Scope-OrgID) or the credentials. */
+@Composable
+private fun RefusedCard(onEdit: () -> Unit) {
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.metrics_refused), color = MaterialTheme.colorScheme.error)
+            Button(onClick = onEdit) { Text(stringResource(R.string.metrics_change_credentials)) }
         }
     }
 }

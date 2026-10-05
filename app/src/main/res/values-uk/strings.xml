@@ -174,6 +174,9 @@
     <string name="overview_node_actions">Дії з вузлом</string>
     <string name="overview_role_control_plane">панель керування</string>
     <string name="overview_update_banner">Доступна версія Ichor %1$s — торкніться, щоб оновити</string>
+    <string name="overview_store_update_available">Доступне оновлення — торкніться, щоб оновити</string>
+    <string name="overview_store_update_downloading">Завантаження оновлення…</string>
+    <string name="overview_store_update_ready">Оновлення завантажено — торкніться, щоб перезапустити</string>
     <string name="overview_support_title">Подобається Ichor?</string>
     <string name="overview_support_body">Це безкоштовний застосунок з відкритим кодом. Якщо він заощаджує вам час, ви можете підтримати його розробку.</string>
     <string name="overview_support_never">Більше не питати</string>
@@ -2321,6 +2324,8 @@
     <string name="metrics_skip_verify">Не перевіряти сертифікат</string>
     <string name="metrics_test">Перевірити</string>
     <string name="metrics_reachable">API запитів відповідає.</string>
+    <string name="metrics_refused">Джерело метрик відхилило запит (HTTP 401 або 403): перевірте тенант (X-Scope-OrgID) і облікові дані.</string>
+    <string name="metrics_change_credentials">Змінити тенант або облікові дані</string>
     <plurals name="metrics_truncated">
         <item quantity="one">Показано %1$d серію з %2$d</item>
         <item quantity="few">Показано %1$d серії з %2$d</item>
@@ -2649,8 +2654,6 @@
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
     <string name="argo_revert_title">Argo CD скасує це</string>
-    <string name="argo_revert_text">%1$s розгортає це навантаження з увімкненим самовідновленням: за кілька хвилин воно поверне репліки до стану в Git. Спершу заморозьте %1$s, щоб зберегти зміну на якийсь час.</string>
-    <string name="argo_revert_freeze">Заморозити %1$s на 1 год і масштабувати</string>
     <string name="argo_revert_anyway">Усе одно масштабувати</string>
     <string name="argo_freeze_reason_scale">масштабування до %1$d</string>
     <string name="workloads_scale_freeze_failed">Не вдалося заморозити %1$s, нічого не масштабовано: %2$s</string>
@@ -2661,4 +2664,9 @@
         <item quantity="many">Ця заморозка охоплює %1$d застосунків: усі вони відновляться.</item>
         <item quantity="other">Ця заморозка охоплює %1$d застосунку: усі вони відновляться.</item>
     </plurals>
+    <string name="argo_revert_text_change">%1$s розгортає це з увімкненим самовідновленням: за кілька хвилин воно поверне це до стану в Git. Спершу заморозьте %1$s, щоб зберегти зміну на якийсь час.</string>
+    <string name="argo_revert_freeze_first">Спершу заморозити %1$s на 1 год</string>
+    <string name="argo_freeze_reason_suspend">призупинення</string>
+    <string name="argo_freeze_reason_resume">відновлення</string>
+    <string name="argo_freeze_failed_nothing_changed">Не вдалося заморозити %1$s, нічого не змінено: %2$s</string>
 </resources>

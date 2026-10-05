@@ -23,6 +23,12 @@ class PromTest {
         assertEquals("x{a=\"1\"}", s.legend("{{missing}}"))
     }
 
+    @Test fun refusedQueryIsRecognised() {
+        assertTrue(isPromRefused("https://m.example/prometheus: HTTP 401, refused (credentials or tenant): no org id"))
+        assertFalse(isPromRefused("https://m.example/prometheus: HTTP 404 page not found: check the path prefix"))
+        assertFalse(isPromRefused(null))
+    }
+
     @Test fun sourceKeepsSecretOutOfLabel() {
         val proxy = PromSource(namespace = "monitoring", service = "prometheus-operated", port = 9090)
         assertEquals("monitoring/prometheus-operated:9090", proxy.label)

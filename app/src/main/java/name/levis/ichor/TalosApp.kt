@@ -44,6 +44,7 @@ import name.levis.ichor.monitor.syncMonitoring
 import name.levis.ichor.security.AppLock
 import name.levis.ichor.security.PrefsLockSettings
 import name.levis.ichor.update.UpdateManager
+import name.levis.ichor.update.createStoreUpdater
 import name.levis.ichor.ui.debug.DebugShells
 import name.levis.ichor.ui.upgrade.UpgradeService
 import name.levis.ichor.ui.maintenance.MaintenanceService
@@ -144,6 +145,8 @@ class TalosApp : Application() {
     val updateManager by lazy {
         UpdateManager(this, getSharedPreferences("ichor-update", Context.MODE_PRIVATE), changelogRepository)
     }
+    /** Google Play in-app updates in the Play build (the others use [updateManager]). */
+    val storeUpdater by lazy { createStoreUpdater(this) }
     /** Bundled app icons, and downloaded ones when the user allowed it (Settings → Privacy). */
     val appIcons by lazy { AppIconLoader(this) }
     val monitorStore by lazy {

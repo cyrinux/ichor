@@ -15,20 +15,13 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.data.ARGO_CD
 import name.levis.ichor.data.TalosRepository
-import name.levis.ichor.model.ArgoApp
-import name.levis.ichor.model.ArgoFreezeAction
-import name.levis.ichor.model.ArgoProject
-import name.levis.ichor.model.ArgoStatus
-import name.levis.ichor.model.FREEZE_EXTEND_MINUTES
-import name.levis.ichor.model.FreezeScope
 import name.levis.ichor.model.KubeRevision
 import name.levis.ichor.model.KubeWorkload
-import name.levis.ichor.model.freezeOptions
-import name.levis.ichor.model.projectOf
-import name.levis.ichor.model.selfHealingOwner
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.argocd.ArgoSelfHealer
+import name.levis.ichor.ui.argocd.argoSelfHealer
+import name.levis.ichor.ui.argocd.freezeForHandChange
 import name.levis.ichor.ui.uiText
 
 /** [runCatching] that lets a cancellation through instead of reporting it as a failure. */
@@ -80,21 +73,13 @@ class WorkloadActions(
         if (error == null) onChanged()
     }
 
-    /**
-     * The Argo CD app that would revert a scale of [workload] (self-heal on, not frozen) with
-     * its project, from the Argo CD status already loaded; null when none or not loaded.
-     */
-    fun argoOwner(workload: KubeWorkload): Pair<ArgoApp, ArgoProject>? {
-        val status = talos.cached<ArgoStatus>(ARGO_CD)?.value ?: return null
-        val app = status.selfHealingOwner(workload.kind, workload.namespace, workload.name) ?: return null
-        return status.projectOf(app)?.let { app to it }
-    }
+    /** The Argo CD app that would revert a scale of [workload], from the status already loaded. */
+    fun argoOwner(workload: KubeWorkload): ArgoSelfHealer? = talos.argoSelfHealer(workload.kind, workload.namespace, workload.name)
 
-    /** Freezes [app] for an hour ([reason] recorded with it), then scales [workload] if that worked. */
-    fun freezeThenScale(workload: KubeWorkload, replicas: Int, app: ArgoApp, project: ArgoProject, reason: String) = run(workload) {
-        val options = freezeOptions(app, FreezeScope.APP, FREEZE_EXTEND_MINUTES, manualSync = true, reason = reason)
-        cancellableCatching { talos.argoFreeze(project.namespace, project.name, ArgoFreezeAction.FREEZE, options) }.exceptionOrNull()?.let {
-            _messages.send(ActionMessage(UiText.Res(R.string.workloads_scale_freeze_failed, app.name, it.uiText()), error = true))
+    /** Freezes the [healer]'s app for an hour ([reason] recorded with it), then scales [workload] if that worked. */
+    fun freezeThenScale(workload: KubeWorkload, replicas: Int, healer: ArgoSelfHealer, reason: String) = run(workload) {
+        cancellableCatching { talos.freezeForHandChange(healer, reason) }.exceptionOrNull()?.let {
+            _messages.send(ActionMessage(UiText.Res(R.string.workloads_scale_freeze_failed, healer.app.name, it.uiText()), error = true))
             return@run
         }
         val outcome = cancellableCatching { talos.scale(workload, replicas) }
@@ -102,7 +87,7 @@ class WorkloadActions(
         _lastScale.value = ScaleOutcome(workload.key, replicas, outcome.getOrDefault(""), error)
         _messages.send(
             if (error == null) {
-                ActionMessage(UiText.Res(R.string.workloads_scale_done_frozen, workload.name, replicas, app.name), error = false)
+                ActionMessage(UiText.Res(R.string.workloads_scale_done_frozen, workload.name, replicas, healer.app.name), error = false)
             } else {
                 ActionMessage(UiText.Res(R.string.workloads_scale_failed, workload.name, error), error = true)
             },

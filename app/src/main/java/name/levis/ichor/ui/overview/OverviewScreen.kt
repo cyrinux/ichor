@@ -56,6 +56,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
+import name.levis.ichor.update.StoreUpdateState
 import name.levis.ichor.update.UpdateState
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.TOPOLOGY
@@ -524,7 +525,7 @@ private fun NodeList(
                 Text(stringResource(R.string.demo_notice), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
             }
         }
-        if (BuildConfig.SELF_UPDATE) item { UpdateBanner(onClick = onSettings) }
+        if (BuildConfig.SELF_UPDATE) item { UpdateBanner(onClick = onSettings) } else item { StoreUpdateBanner() }
         if (BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) item { SupportCard(onFunding) }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
@@ -651,6 +652,29 @@ private fun UpdateBanner(onClick: () -> Unit) {
             modifier = Modifier.padding(16.dp),
         )
     }
+}
+
+/** Play build: an update Play has (declined at launch), being downloaded, or ready to install. */
+@Composable
+private fun StoreUpdateBanner() {
+    val updates = (LocalContext.current.applicationContext as TalosApp).storeUpdater
+    val state by updates.state.collectAsStateWithLifecycle()
+    val (text, onClick) = when (state) {
+        StoreUpdateState.None -> return
+        StoreUpdateState.Available -> R.string.overview_store_update_available to updates::start
+        StoreUpdateState.Downloading -> R.string.overview_store_update_downloading to null
+        StoreUpdateState.Downloaded -> R.string.overview_store_update_ready to updates::install
+    }
+    val content: @Composable () -> Unit = {
+        Text(
+            stringResource(text),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+    if (onClick != null) Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) { content() }
+    else Card(Modifier.fillMaxWidth()) { content() }
 }
 
 /**

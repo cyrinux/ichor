@@ -149,6 +149,9 @@
     <string name="overview_node_actions">Azioni sul nodo</string>
     <string name="overview_role_control_plane">control plane</string>
     <string name="overview_update_banner">È disponibile Ichor %1$s: tocca per aggiornare</string>
+    <string name="overview_store_update_available">È disponibile un aggiornamento: tocca per aggiornare</string>
+    <string name="overview_store_update_downloading">Download dell\'aggiornamento…</string>
+    <string name="overview_store_update_ready">Aggiornamento scaricato: tocca per riavviare</string>
     <string name="overview_support_title">Ti piace Ichor?</string>
     <string name="overview_support_body">È gratuita e open source. Se ti fa risparmiare tempo, puoi sostenerne lo sviluppo.</string>
     <string name="overview_support_never">Non chiedere più</string>
@@ -2151,6 +2154,8 @@
     <string name="metrics_skip_verify">Non verificare il certificato</string>
     <string name="metrics_test">Prova</string>
     <string name="metrics_reachable">L\'API delle query risponde.</string>
+    <string name="metrics_refused">La sorgente delle metriche ha rifiutato la query (HTTP 401 o 403): controlla il tenant (X-Scope-OrgID) e le credenziali.</string>
+    <string name="metrics_change_credentials">Modifica tenant o credenziali</string>
     <plurals name="metrics_truncated">
         <item quantity="one">%1$d di %2$d serie mostrate</item>
         <item quantity="other">%1$d di %2$d serie mostrate</item>
@@ -2465,8 +2470,6 @@
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
     <string name="argo_revert_title">Argo CD annullerà questa modifica</string>
-    <string name="argo_revert_text">%1$s distribuisce questo carico con l\'auto-riparazione attiva: in pochi minuti riporta le repliche come sono in Git. Congela prima %1$s per mantenere la modifica per un po\'.</string>
-    <string name="argo_revert_freeze">Congela %1$s 1 h, poi scala</string>
     <string name="argo_revert_anyway">Scala comunque</string>
     <string name="argo_freeze_reason_scale">scala a %1$d</string>
     <string name="workloads_scale_freeze_failed">Impossibile congelare %1$s, nulla è stato scalato: %2$s</string>
@@ -2475,4 +2478,9 @@
         <item quantity="one">Questo congelamento copre %1$d app: riprende anche lei.</item>
         <item quantity="other">Questo congelamento copre %1$d app: riprendono tutte.</item>
     </plurals>
+    <string name="argo_revert_text_change">%1$s distribuisce questo con l\'auto-riparazione attiva: in pochi minuti lo riporta come è in Git. Congela prima %1$s per mantenere la modifica per un po\'.</string>
+    <string name="argo_revert_freeze_first">Congela prima %1$s per 1 h</string>
+    <string name="argo_freeze_reason_suspend">sospensione</string>
+    <string name="argo_freeze_reason_resume">ripresa</string>
+    <string name="argo_freeze_failed_nothing_changed">Impossibile congelare %1$s, nulla è cambiato: %2$s</string>
 </resources>

@@ -34,6 +34,10 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.ui.argocd.ArgoRevertDialog
+import name.levis.ichor.ui.argocd.ArgoSelfHealer
+import name.levis.ichor.ui.argocd.argoSelfHealer
+import name.levis.ichor.ui.argocd.freezeForHandChange
 import name.levis.ichor.data.cronJobsKey
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.KubeCronJob
@@ -83,11 +87,24 @@ class CronJobsViewModel(talos: TalosRepository, metered: () -> Boolean) : PagedL
     /** Why a suspend or resume failed, shown once. */
     val suspendFailures: Flow<UiText> = _suspendFailures.receiveAsFlow()
 
-    /** Suspends (no new runs) or resumes [cronJob], like `kubectl patch` of spec.suspend. */
-    fun setSuspended(cronJob: KubeCronJob, suspend: Boolean) {
+    /** The Argo CD app that would undo a suspend or resume of [cronJob], from the status already loaded. */
+    fun argoHealer(cronJob: KubeCronJob): ArgoSelfHealer? = talos.argoSelfHealer("CronJob", cronJob.namespace, cronJob.name)
+
+    /**
+     * Suspends (no new runs) or resumes [cronJob], like `kubectl patch` of spec.suspend; with
+     * [freezeFirst], its Argo CD app is frozen for an hour first ([reason] recorded with it).
+     */
+    fun setSuspended(cronJob: KubeCronJob, suspend: Boolean, freezeFirst: ArgoSelfHealer? = null, reason: String = "") {
         if (cronJob.key in _suspending.value) return
         _suspending.update { it + cronJob.key }
         viewModelScope.launch {
+            freezeFirst?.let { healer ->
+                cancellableCatching { talos.freezeForHandChange(healer, reason) }.exceptionOrNull()?.let {
+                    _suspending.update { it - cronJob.key }
+                    _suspendFailures.send(UiText.Res(R.string.argo_freeze_failed_nothing_changed, healer.app.name, it.uiText()))
+                    return@launch
+                }
+            }
             val outcome = cancellableCatching { talos.suspendCronJob(cronJob, suspend) }
             _suspending.update { it - cronJob.key }
             outcome.exceptionOrNull()?.let {
@@ -128,16 +145,40 @@ fun CronJobsTab(
 
     confirmSuspend?.let { c ->
         val suspend = !c.suspended
-        ConfirmDialog(
-            title = stringResource(if (suspend) R.string.cronjobs_suspend_title else R.string.cronjobs_resume_title, c.displayName),
-            text = stringResource(if (suspend) R.string.cronjobs_suspend_text else R.string.cronjobs_resume_text, c.namespace),
-            confirm = stringResource(if (suspend) R.string.cronjobs_suspend else R.string.cronjobs_resume),
-            onConfirm = {
-                confirmSuspend = null
-                vm.setSuspended(c, suspend)
-            },
-            onDismiss = { confirmSuspend = null },
-        )
+        val title = stringResource(if (suspend) R.string.cronjobs_suspend_title else R.string.cronjobs_resume_title, c.displayName)
+        val text = stringResource(if (suspend) R.string.cronjobs_suspend_text else R.string.cronjobs_resume_text, c.namespace)
+        val confirmLabel = stringResource(if (suspend) R.string.cronjobs_suspend else R.string.cronjobs_resume)
+        // Argo CD self-heal would put spec.suspend back: offer to freeze its app first.
+        val healer = remember(c.key) { vm.argoHealer(c) }
+        if (healer != null) {
+            val reason = stringResource(if (suspend) R.string.argo_freeze_reason_suspend else R.string.argo_freeze_reason_resume)
+            ArgoRevertDialog(
+                healer,
+                title = title,
+                text = text,
+                confirm = confirmLabel,
+                onFreezeFirst = {
+                    confirmSuspend = null
+                    vm.setSuspended(c, suspend, freezeFirst = healer, reason = reason)
+                },
+                onAnyway = {
+                    confirmSuspend = null
+                    vm.setSuspended(c, suspend)
+                },
+                onDismiss = { confirmSuspend = null },
+            )
+        } else {
+            ConfirmDialog(
+                title = title,
+                text = text,
+                confirm = confirmLabel,
+                onConfirm = {
+                    confirmSuspend = null
+                    vm.setSuspended(c, suspend)
+                },
+                onDismiss = { confirmSuspend = null },
+            )
+        }
     }
 
     confirm?.let { c ->

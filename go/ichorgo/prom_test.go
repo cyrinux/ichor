@@ -129,7 +129,7 @@ func TestParsePromAnswer(t *testing.T) {
 		`{"status":"success","data":{"resultType":"string","result":[1,"x"]}}`:      "cannot be charted",
 		`404 page not found`: "path prefix",
 		`<html>`:             "not from a Prometheus",
-		`no org id`:          "credentials or tenant",
+		`no org id`:          promRefused,
 	} {
 		status := 200
 
