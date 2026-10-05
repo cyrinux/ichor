@@ -101,6 +101,7 @@ class MainActivity : FragmentActivity() {
             openTarget.value = intent.shareLink()
         }
         if (BuildConfig.SELF_UPDATE) app.updateManager.maybeAutoCheck(lifecycleScope)
+        else app.storeUpdater.attach(this)
         if (BuildConfig.FEATURE_FUNDING) {
             lifecycleScope.launch { lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { app.featureStore.finishPurchases() } }
         }

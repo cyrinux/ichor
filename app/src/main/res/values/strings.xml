@@ -146,6 +146,9 @@
     <string name="overview_node_actions">Node actions</string>
     <string name="overview_role_control_plane">control plane</string>
     <string name="overview_update_banner">Ichor %1$s is available — tap to update</string>
+    <string name="overview_store_update_available">An update is available — tap to update</string>
+    <string name="overview_store_update_downloading">Downloading the update…</string>
+    <string name="overview_store_update_ready">Update downloaded — tap to restart</string>
     <string name="overview_support_title">Enjoying Ichor?</string>
     <string name="overview_support_body">It is free and open source. If it saves you time, you can support its development.</string>
     <string name="overview_support_never">Don\'t ask again</string>
@@ -2136,6 +2139,8 @@
     <string name="metrics_skip_verify">Skip certificate verification</string>
     <string name="metrics_test">Test</string>
     <string name="metrics_reachable">The query API answers.</string>
+    <string name="metrics_refused">The metrics source refused the query (HTTP 401 or 403): check the tenant (X-Scope-OrgID) and the credentials.</string>
+    <string name="metrics_change_credentials">Change tenant or credentials</string>
     <plurals name="metrics_truncated">
         <item quantity="one">Showing %1$d of %2$d series</item>
         <item quantity="other">Showing %1$d of %2$d series</item>
@@ -2450,8 +2455,6 @@
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
     <string name="argo_revert_title">Argo CD will revert this</string>
-    <string name="argo_revert_text">%1$s deploys this workload with self-heal on: within minutes it puts the replicas back as Git has them. Freeze %1$s first to keep your change for a while.</string>
-    <string name="argo_revert_freeze">Freeze %1$s 1 h, then scale</string>
     <string name="argo_revert_anyway">Scale anyway</string>
     <string name="argo_freeze_reason_scale">scale to %1$d</string>
     <string name="workloads_scale_freeze_failed">Could not freeze %1$s, nothing scaled: %2$s</string>
@@ -2463,4 +2466,9 @@
     <string name="share_link">Share link</string>
     <string name="share_link_unknown_cluster">This link is for a cluster that isn\'t on this phone</string>
     <string name="share_link_invalid">Not a valid Ichor link</string>
+    <string name="argo_revert_text_change">%1$s deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze %1$s first to keep your change for a while.</string>
+    <string name="argo_revert_freeze_first">Freeze %1$s 1 h first</string>
+    <string name="argo_freeze_reason_suspend">suspend</string>
+    <string name="argo_freeze_reason_resume">resume</string>
+    <string name="argo_freeze_failed_nothing_changed">Could not freeze %1$s, nothing changed: %2$s</string>
 </resources>

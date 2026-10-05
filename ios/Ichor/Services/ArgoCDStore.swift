@@ -102,6 +102,31 @@ final class ArgoCDStore {
     }
 }
 
+/// An Argo CD app that self-heals a resource, with its project.
+struct ArgoSelfHealer {
+    let app: ArgoApp
+    let project: ArgoProject
+}
+
+extension ArgoCDStore {
+    /// The Argo CD app that would undo a hand-made change to kind namespace/name (self-heal on,
+    /// not frozen), from the status already loaded for key; nil when none or not loaded.
+    func selfHealer(kind: String, namespace: String, name: String, key: String) -> ArgoSelfHealer? {
+        guard let status = status(for: key),
+              let app = status.selfHealingOwner(kind: kind, namespace: namespace, name: name),
+              let project = status.project(of: app) else { return nil }
+        return ArgoSelfHealer(app: app, project: project)
+    }
+
+    /// Freezes the healer's app for an hour with reason (stored on the cluster: no masked name);
+    /// nil on success, else the message to show.
+    func freezeForHandChange(_ healer: ArgoSelfHealer, reason: String, with client: TalosClient) async -> String? {
+        let options = freezeOptions(for: healer.app, scope: .app, minutes: freezeExtendMinutes, manualSync: true, reason: reason)
+        guard let failure = await freeze(.freeze, on: healer.project, options: [options], with: client) else { return nil }
+        return String(localized: "Could not freeze \(healer.app.name), nothing changed: \(failure)")
+    }
+}
+
 extension AppModel {
     /// What Argo CD data belongs to: the context and the screenshot mode generation.
     var argoKey: String { "\(activeContext)#\(dataGeneration)" }

@@ -149,6 +149,9 @@
     <string name="overview_node_actions">Actions sur le nœud</string>
     <string name="overview_role_control_plane">control plane</string>
     <string name="overview_update_banner">Ichor %1$s est disponible — appuyez pour mettre à jour</string>
+    <string name="overview_store_update_available">Une mise à jour est disponible — appuyez pour mettre à jour</string>
+    <string name="overview_store_update_downloading">Téléchargement de la mise à jour…</string>
+    <string name="overview_store_update_ready">Mise à jour téléchargée — appuyez pour redémarrer</string>
     <string name="overview_support_title">Vous aimez Ichor&#160;?</string>
     <string name="overview_support_body">L\'app est gratuite et open source. Si elle vous fait gagner du temps, vous pouvez soutenir son développement.</string>
     <string name="overview_support_never">Ne plus demander</string>
@@ -2140,6 +2143,8 @@
     <string name="metrics_skip_verify">Ne pas vérifier le certificat</string>
     <string name="metrics_test">Tester</string>
     <string name="metrics_reachable">L\'API de requête répond.</string>
+    <string name="metrics_refused">La source de métriques a refusé la requête (HTTP 401 ou 403) : vérifiez le tenant (X-Scope-OrgID) et les identifiants.</string>
+    <string name="metrics_change_credentials">Modifier le tenant ou les identifiants</string>
     <plurals name="metrics_truncated">
         <item quantity="one">%1$d série affichée sur %2$d</item>
         <item quantity="other">%1$d séries affichées sur %2$d</item>
@@ -2454,8 +2459,6 @@
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
     <string name="argo_revert_title">Argo CD va annuler ceci</string>
-    <string name="argo_revert_text">%1$s déploie cette charge avec l\'auto-réparation active : en quelques minutes, il remet les réplicas comme dans Git. Gelez %1$s d\'abord pour garder votre changement un moment.</string>
-    <string name="argo_revert_freeze">Geler %1$s 1 h, puis scaler</string>
     <string name="argo_revert_anyway">Scaler quand même</string>
     <string name="argo_freeze_reason_scale">scale à %1$d</string>
     <string name="workloads_scale_freeze_failed">Impossible de geler %1$s, rien n\'a été scalé : %2$s</string>
@@ -2467,4 +2470,9 @@
     <string name="share_link">Partager le lien</string>
     <string name="share_link_unknown_cluster">Ce lien concerne un cluster absent de ce téléphone</string>
     <string name="share_link_invalid">Lien Ichor non valide</string>
+    <string name="argo_revert_text_change">%1$s déploie ceci avec l\'auto-réparation active : en quelques minutes, il le remet comme dans Git. Gelez %1$s d\'abord pour garder votre changement un moment.</string>
+    <string name="argo_revert_freeze_first">Geler %1$s 1 h d\'abord</string>
+    <string name="argo_freeze_reason_suspend">suspension</string>
+    <string name="argo_freeze_reason_resume">reprise</string>
+    <string name="argo_freeze_failed_nothing_changed">Impossible de geler %1$s, rien n\'a changé : %2$s</string>
 </resources>

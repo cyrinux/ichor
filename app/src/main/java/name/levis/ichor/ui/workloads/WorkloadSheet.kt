@@ -11,12 +11,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.ViewInAr
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -48,8 +46,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
-import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.KubeRevision
+import name.levis.ichor.ui.argocd.ArgoRevertDialog
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.MAX_SCALE_REPLICAS
 import name.levis.ichor.model.canScale
@@ -139,7 +137,7 @@ private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy:
     val freezeReason = stringResource(R.string.argo_freeze_reason_scale, target)
     val apply = { replicas: Int ->
         val owner = argoOwner
-        if (freezeFirst && owner != null) actions.freezeThenScale(workload, replicas, owner.first, owner.second, freezeReason)
+        if (freezeFirst && owner != null) actions.freezeThenScale(workload, replicas, owner, freezeReason)
         else actions.scale(workload, replicas)
     }
     val proceed = {
@@ -180,7 +178,10 @@ private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy:
 
     if (askArgo && argoOwner != null) {
         ArgoRevertDialog(
-            argoOwner.first,
+            argoOwner,
+            title = stringResource(R.string.argo_revert_title),
+            text = "",
+            confirm = stringResource(R.string.argo_revert_anyway),
             onFreezeFirst = { askArgo = false; freezeFirst = true; proceed() },
             onAnyway = { askArgo = false; freezeFirst = false; proceed() },
             onDismiss = { askArgo = false },
@@ -213,24 +214,6 @@ private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy:
             Text(stringResource(R.string.workloads_scale_zero_text, workload.namespace), style = MaterialTheme.typography.bodyMedium)
         }
     }
-}
-
-/** Argo CD [app] self-heals the workload: scaling by hand is undone within minutes unless it is frozen. */
-@Composable
-private fun ArgoRevertDialog(app: ArgoApp, onFreezeFirst: () -> Unit, onAnyway: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Outlined.AcUnit, contentDescription = null) },
-        title = { Text(stringResource(R.string.argo_revert_title)) },
-        text = { Text(stringResource(R.string.argo_revert_text, app.name)) },
-        confirmButton = {
-            Column(horizontalAlignment = Alignment.End) {
-                TextButton(onClick = onFreezeFirst) { Text(stringResource(R.string.argo_revert_freeze, app.name)) }
-                TextButton(onClick = onAnyway) { Text(stringResource(R.string.argo_revert_anyway)) }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
-            }
-        },
-    )
 }
 
 @Composable

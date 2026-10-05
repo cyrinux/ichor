@@ -95,6 +95,14 @@ struct MetricsView: View {
                 }
                 .pickerStyle(.segmented)
                 if let saveError { Text(saveError).foregroundStyle(.red).font(.footnote) }
+                if results.values.contains(where: { isPromRefused($0.error) }) {
+                    // The backend answered 401 or 403: the tenant or the credentials need changing.
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("The metrics source refused the query (HTTP 401 or 403): check the tenant (X-Scope-OrgID) and the credentials.")
+                            .foregroundStyle(.red).font(.footnote)
+                        Button("Change tenant or credentials") { sourceOpen = true }
+                    }
+                }
                 if config.panels.isEmpty { Text("No panels yet: add one from a preset or write PromQL.").foregroundStyle(.secondary) }
             }
             ForEach(Array(config.panels.enumerated()), id: \.element.id) { index, panel in

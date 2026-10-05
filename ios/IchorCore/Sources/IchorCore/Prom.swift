@@ -82,6 +82,13 @@ public struct PromSource: Codable, Equatable, Hashable, Sendable, CustomStringCo
     }
 }
 
+/// Part of the Go core's message for a query the backend refused, HTTP 401 or 403
+/// (prom_parse.go promRefused).
+public let promRefused = "refused (credentials or tenant)"
+
+/// The backend turned the query down: the tenant (X-Scope-OrgID) or the credentials need changing.
+public func isPromRefused(_ error: String?) -> Bool { error?.contains(promRefused) == true }
+
 public struct PromDiscovery: Decodable, Equatable, Sendable {
     public let sources: [PromSource]
 
