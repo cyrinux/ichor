@@ -17,7 +17,7 @@ Every idea was checked against the code (Go core, Android, iOS) on 2026-10-04. S
 | D3 | Machineconfig patches in try mode | **partial**: machine config is read-only (`machineconfig.go`); no `ApplyConfiguration` anywhere | [03-machineconfig-try-patches.md](devops/03-machineconfig-try-patches.md) | L |
 | D4 | Rolling Talos upgrade (whole cluster), extension check, later `upgrade-k8s` | **partial**: one node at a time with a pre-flight plan, lock, progress (`upgrade*.go`, `ui/upgrade`) | [04-rolling-upgrade.md](devops/04-rolling-upgrade.md) | L |
 | D5 | Argo CD diff and commit links | **missing** (deliberately left out of v1, `plans/argocd` D7) | [05-argocd-diff.md](devops/05-argocd-diff.md) | M |
-| D6 | Flux | **missing** (`plans/argocd` phase 5); Flux is only recognised as an app icon | [06-flux.md](devops/06-flux.md) | L |
+| D6 | Flux | **implemented** (Go, Android, iOS); alerts remain | [06-flux.md](devops/06-flux.md) | L |
 | D7 | cert-manager renew, Ingress/Gateway TLS expiry | **partial**: certificates and alerts exist read-only (`kube_certmanager.go`) | [07-certificates.md](devops/07-certificates.md) | S |
 | D8 | Image hygiene (unpinned list, ImagePullBackOff explained) | **partial**: per-app `unpinned`/`drift` flags on Android only | [08-image-hygiene.md](devops/08-image-hygiene.md) | S |
 
