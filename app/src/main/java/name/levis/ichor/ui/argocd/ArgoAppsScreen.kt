@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Sync
@@ -41,12 +42,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
+import name.levis.ichor.monitor.freezeReminderHook
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
+import name.levis.ichor.model.ArgoFreezeAction
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.FreezeScope
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
@@ -65,9 +69,9 @@ import name.levis.ichor.ui.factory
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) -> Unit) {
+fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) -> Unit, onWindows: () -> Unit) {
     val app = LocalContext.current.applicationContext as TalosApp
-    val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(app.talosRepository) })
+    val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(app.talosRepository, freezeReminderHook(app)) })
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val config by app.configRepository.config.collectAsStateWithLifecycle()
@@ -78,6 +82,8 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
 
     val snackbar = remember { SnackbarHostState() }
     ArgoActionMessages(vm.results) { snackbar.showSnackbar(it) }
+    ArgoFreezeMessages(vm.freezeResults) { snackbar.showSnackbar(it) }
+    var freezing by remember { mutableStateOf<Pair<ArgoApp, FreezeScope>?>(null) }
     var selection by rememberSaveable { mutableStateOf(setOf<String>()) }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var confirmSync by remember { mutableStateOf<List<ArgoApp>?>(null) }
@@ -96,6 +102,23 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
         )
     }
 
+    val loadedForFreeze = loaded
+    freezing?.let { (anchor, scope) ->
+        if (loadedForFreeze != null) {
+            ArgoFreezeSheet(
+                anchor,
+                loadedForFreeze,
+                initialScope = scope,
+                onFreeze = { project, options ->
+                    freezing = null
+                    vm.freeze(project, ArgoFreezeAction.FREEZE, listOf(options))
+                },
+                onPauseAutoSync = null,
+                onDismiss = { freezing = null },
+            )
+        }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
@@ -107,7 +130,10 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
                     }
                 },
                 navigationIcon = { BackButton(onBack) },
-                actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
+                actions = {
+                    TooltipIconButton(Icons.Outlined.AcUnit, stringResource(R.string.argo_windows_title), onClick = onWindows)
+                    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
+                },
             )
         },
         bottomBar = {
@@ -152,9 +178,10 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
                                 onOpen = { onApp(it.namespace, it.name) },
                                 onAct = { a, action -> vm.act(listOf(a), action) },
                                 onSyncAll = { confirmSync = it },
+                                onFreeze = { a, scope -> freezing = a to scope },
                             )
                         } else {
-                            ArgoSetsTab(s.data)
+                            ArgoSetsTab(s.data, onWindows)
                         }
                     }
                     DataFreshness(s, edgeToEdge = false)

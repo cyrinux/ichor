@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.ViewAgenda
@@ -43,6 +44,7 @@ import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoFilter
 import name.levis.ichor.model.ArgoGroupBy
 import name.levis.ichor.model.ArgoStatus
+import name.levis.ichor.model.FreezeScope
 import name.levis.ichor.model.filterCounts
 import name.levis.ichor.model.filtered
 import name.levis.ichor.model.grouped
@@ -50,6 +52,7 @@ import name.levis.ichor.model.sortedApps
 import name.levis.ichor.model.syncAllCandidates
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.SearchField
+import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
  * Every Application, worst first: filter chips with counts, a search field and a group-by
@@ -66,6 +69,7 @@ fun ArgoAppsTab(
     onOpen: (ArgoApp) -> Unit,
     onAct: (ArgoApp, ArgoAction) -> Unit,
     onSyncAll: (List<ArgoApp>) -> Unit,
+    onFreeze: (ArgoApp, FreezeScope) -> Unit,
 ) {
     var filter by rememberSaveable { mutableStateOf(ArgoFilter.ALL) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -99,7 +103,17 @@ fun ArgoAppsTab(
             )
         }
         groups.forEach { (name, list) ->
-            if (groupBy != ArgoGroupBy.NONE && list.isNotEmpty()) item(key = "group-$name") { GroupHeader(groupTitle(groupBy, name), list.size) }
+            if (groupBy != ArgoGroupBy.NONE && list.isNotEmpty()) item(key = "group-$name") {
+                // A project or a destination namespace can be frozen as a whole from its header.
+                val scope = when {
+                    name.isEmpty() -> null
+                    groupBy == ArgoGroupBy.PROJECT -> FreezeScope.PROJECT
+                    // A freeze holds one project: only a namespace whose apps all share one.
+                    groupBy == ArgoGroupBy.NAMESPACE && list.map { it.project }.distinct().size == 1 -> FreezeScope.NAMESPACE
+                    else -> null
+                }
+                GroupHeader(groupTitle(groupBy, name), list.size, onFreeze = scope?.let { sc -> { onFreeze(list.first(), sc) } })
+            }
             items(list, key = { it.key }) { app ->
                 val toggle = { onSelection(if (app.key in selection) selection - app.key else selection + app.key) }
                 val swipeEnabled = !selecting && app.key !in busy && !app.isRunning
@@ -179,13 +193,14 @@ private fun GroupByMenu(groupBy: ArgoGroupBy, onGroupBy: (ArgoGroupBy) -> Unit, 
 }
 
 @Composable
-private fun GroupHeader(title: String, count: Int) {
+private fun GroupHeader(title: String, count: Int, onFreeze: (() -> Unit)?) {
     Row(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 6.dp),
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = if (onFreeze != null) 4.dp else 16.dp, top = 16.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(title, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f).semantics { heading() })
         Text(count.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        onFreeze?.let { TooltipIconButton(Icons.Outlined.AcUnit, stringResource(R.string.argo_freeze_group, title), onClick = it) }
     }
 }
 
@@ -204,6 +219,7 @@ private val ArgoFilter.label: Int
         ArgoFilter.PROGRESSING -> R.string.argo_filter_progressing
         ArgoFilter.SYNCING -> R.string.argo_filter_syncing
         ArgoFilter.AUTO_SYNC_OFF -> R.string.argo_filter_auto_sync_off
+        ArgoFilter.FROZEN -> R.string.argo_filter_frozen
     }
 
 private val ArgoGroupBy.label: Int

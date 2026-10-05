@@ -17,6 +17,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.ui.apps.AppsScreen
 import name.levis.ichor.ui.argocd.ArgoAppScreen
 import name.levis.ichor.ui.argocd.ArgoAppsScreen
+import name.levis.ichor.ui.argocd.ArgoWindowsScreen
 import name.levis.ichor.ui.flux.FluxAppScreen
 import name.levis.ichor.ui.flux.FluxScreen
 import name.levis.ichor.ui.capture.CaptureFileScreen
@@ -119,6 +120,7 @@ private object Routes {
     fun dataServices(kind: DataServiceKind? = null) = "data-services?kind=${kind?.name.orEmpty()}"
     const val ARGO_CD = "argocd"
     const val ARGO_APP = "argocd-app?ns={ns}&name={name}"
+    const val ARGO_WINDOWS = "argocd-windows"
 
     fun argoApp(namespace: String, name: String) = "argocd-app?ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
     const val FLUX = "flux"
@@ -181,7 +183,7 @@ private object Routes {
 }
 
 /** Screens a notification can open directly (see MainActivity.EXTRA_OPEN). */
-enum class DeepLink { ISSUE_CONFIG, DEMO }
+enum class DeepLink { ISSUE_CONFIG, DEMO, ARGO_WINDOWS }
 
 /**
  * [deepLink]: a screen to open once over the overview; [onDeepLinkHandled] then clears it.
@@ -234,6 +236,9 @@ fun Navigation(
             DeepLink.DEMO -> nav.navigate(Routes.DEMO) { launchSingleTop = true }
             DeepLink.ISSUE_CONFIG -> if (!startWithImport) {
                 nav.navigate(Routes.ISSUE_CONFIG) { launchSingleTop = true }
+            }
+            DeepLink.ARGO_WINDOWS -> if (!startWithImport) {
+                nav.navigate(Routes.ARGO_WINDOWS) { launchSingleTop = true }
             }
         }
         onDeepLinkHandled()
@@ -547,7 +552,14 @@ fun Navigation(
             name.levis.ichor.ui.dataservices.DataServicesScreen(initial = kind, onBack = { nav.popBackStack() })
         }
         composable(Routes.ARGO_CD) {
-            ArgoAppsScreen(onBack = { nav.popBackStack() }, onApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) })
+            ArgoAppsScreen(
+                onBack = { nav.popBackStack() },
+                onApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
+                onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
+            )
+        }
+        composable(Routes.ARGO_WINDOWS) {
+            ArgoWindowsScreen(onBack = { nav.popBackStack() })
         }
         composable(
             Routes.ARGO_APP,
@@ -561,6 +573,7 @@ fun Navigation(
                 name = entry.arguments?.getString("name").orEmpty(),
                 onBack = { nav.popBackStack() },
                 onNode = { n, tab -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab)) },
+                onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
             )
         }
         composable(Routes.FLUX) {

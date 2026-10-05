@@ -2350,4 +2350,99 @@
     <string name="flux_done_force">%1$s: aggiornamento richiesto</string>
     <string name="flux_done_reset">%1$s: errori azzerati</string>
     <string name="overview_card_desc_flux">Kustomization e HelmRelease pronte, in riconciliazione o in errore</string>
+
+    <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
+    <string name="argo_freeze_title">Congela Argo CD</string>
+    <string name="argo_freeze_button">Congela l\'auto-sync…</string>
+    <string name="argo_freeze_confirm">Congela</string>
+    <string name="argo_freeze_scope">Ambito</string>
+    <string name="argo_freeze_scope_app">Questa app</string>
+    <string name="argo_freeze_scope_namespace">Namespace %1$s</string>
+    <string name="argo_freeze_scope_project">Progetto %1$s</string>
+    <string name="argo_freeze_for">Durata</string>
+    <string name="argo_freeze_minutes">%1$d min</string>
+    <string name="argo_freeze_hours">%1$d h</string>
+    <string name="argo_freeze_until">Fino alle %1$s</string>
+    <string name="argo_freeze_reason">Motivo (facoltativo)</string>
+    <string name="argo_freeze_manual_sync">Consenti sync manuali</string>
+    <string name="argo_freeze_manual_sync_desc">Una sync avviata di proposito viene comunque eseguita durante il congelamento.</string>
+    <string name="argo_freeze_no_project">Il progetto %1$s non è leggibile: niente da congelare.</string>
+    <string name="argo_freeze_server_side">Il progetto %1$s è applicato da Git tramite %2$s con server-side apply: il congelamento potrebbe non sopravvivere a una sync di %2$s.</string>
+    <string name="argo_freeze_managed">Il progetto %1$s è applicato da Git tramite %2$s. Il congelamento non è in Git: dura fino alla sua fine.</string>
+    <string name="argo_freeze_pause_instead">Metti invece in pausa l\'auto-sync (fino alla ripresa)</string>
+    <string name="argo_freeze_group">Congela %1$s</string>
+    <string name="argo_frozen_until">Congelato fino alle %1$s</string>
+    <string name="argo_frozen_by_ichor">Congelato da Ichor</string>
+    <string name="argo_frozen_by_window">Una finestra di sync del progetto %1$s</string>
+    <string name="argo_frozen_manual_allowed">sync manuali consentite</string>
+    <string name="argo_frozen_manual_blocked">sync manuali bloccate</string>
+    <string name="argo_freeze_extend_hour">+1 h</string>
+    <string name="argo_unfreeze">Scongela</string>
+    <string name="argo_unfreeze_title">Terminare il congelamento?</string>
+    <string name="argo_unfreeze_clean">Argo CD riprende l\'auto-sync e l\'auto-riparazione delle app di questo congelamento.</string>
+    <string name="argo_unfreeze_drift">Argo CD riporterà questi elementi come sono in Git:</string>
+    <string name="argo_unfreeze_committed">La correzione è stata committata?</string>
+    <string name="argo_unfreeze_only">Termina</string>
+    <string name="argo_unfreeze_and_sync">Termina e sincronizza</string>
+    <string name="argo_window_remove_title">Rimuovere questa finestra di sync?</string>
+    <string name="argo_window_remove_text">Ichor non ha creato questa finestra: probabilmente viene da Git. Argo CD potrebbe ripristinarla alla prossima sync di %1$s, quindi rimuovila anche in Git.</string>
+    <string name="argo_window_remove_text_unmanaged">Ichor non ha creato questa finestra. Rimuoverla dal progetto %1$s?</string>
+    <string name="argo_window_remove">Rimuovi</string>
+    <string name="argo_windows_title">Finestre di sync</string>
+    <string name="argo_windows_active">Attive</string>
+    <string name="argo_windows_upcoming">In arrivo</string>
+    <string name="argo_windows_expired">Congelamenti terminati</string>
+    <string name="argo_windows_clear">Cancella</string>
+    <string name="argo_windows_none">Nessuna finestra di sync: Argo CD può sincronizzare in qualsiasi momento.</string>
+    <string name="argo_window_all_apps">tutte le app</string>
+    <string name="argo_window_namespaces">namespace %1$s</string>
+    <string name="argo_window_clusters">cluster %1$s</string>
+    <string name="argo_window_ichor">Congelamento Ichor</string>
+    <string name="argo_window_not_ichor">Non da Ichor</string>
+    <string name="argo_window_deny">Finestra di divieto</string>
+    <string name="argo_window_allow">Finestra di autorizzazione</string>
+    <string name="argo_window_left">Restano %1$s</string>
+    <string name="argo_window_starts">Inizia %1$s</string>
+    <string name="argo_window_ended">Terminato %1$s</string>
+    <string name="argo_window_unreadable">Illeggibile: %1$s</string>
+    <string name="argo_filter_frozen">Congelate</string>
+    <string name="argo_badge_frozen">Congelata</string>
+    <string name="argo_done_freeze">Congelato</string>
+    <string name="argo_done_extend">Congelamento prolungato</string>
+    <string name="argo_done_unfreeze">Congelamento terminato</string>
+    <string name="argo_done_clear_expired">Congelamenti terminati cancellati</string>
+    <string name="argo_freeze_reminder_title">Il congelamento di Argo CD sta per finire</string>
+    <string name="argo_freeze_reminder_text">Il congelamento di %1$s termina alle %2$s: Argo CD ripristinerà quanto modificato a mano.</string>
+    <string name="argo_freeze_extended_until">Congelamento prolungato fino alle %1$s.</string>
+    <string name="argo_freeze_extend_failed">Impossibile prolungare il congelamento: %1$s</string>
+    <string name="argo_freeze_extend_other_cluster">Passa Ichor al cluster di questo congelamento per prolungarlo.</string>
+    <plurals name="argo_freeze_preview">
+        <item quantity="one">Argo CD non sincronizzerà né riparerà automaticamente %1$d app (%2$s) fino alle %3$s. Le modifiche fatte a mano restano fino ad allora.</item>
+        <item quantity="other">Argo CD non sincronizzerà né riparerà automaticamente %1$d app (%2$s) fino alle %3$s. Le modifiche fatte a mano restano fino ad allora.</item>
+    </plurals>
+    <plurals name="argo_frozen_drifted">
+        <item quantity="one">%1$d risorsa modificata a mano</item>
+        <item quantity="other">%1$d risorse modificate a mano</item>
+    </plurals>
+    <plurals name="argo_window_apps_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d app</item>
+    </plurals>
+    <plurals name="argo_card_freezes">
+        <item quantity="one">%1$d congelamento · finisce alle %2$s</item>
+        <item quantity="other">%1$d congelamenti · il prossimo finisce alle %2$s</item>
+    </plurals>
+
+    <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
+    <string name="argo_revert_title">Argo CD annullerà questa modifica</string>
+    <string name="argo_revert_text">%1$s distribuisce questo carico con l\'auto-riparazione attiva: in pochi minuti riporta le repliche come sono in Git. Congela prima %1$s per mantenere la modifica per un po\'.</string>
+    <string name="argo_revert_freeze">Congela %1$s 1 h, poi scala</string>
+    <string name="argo_revert_anyway">Scala comunque</string>
+    <string name="argo_freeze_reason_scale">scala a %1$d</string>
+    <string name="workloads_scale_freeze_failed">Impossibile congelare %1$s, nulla è stato scalato: %2$s</string>
+    <string name="workloads_scale_done_frozen">%1$s scalato a %2$d; %3$s congelato per 1 h</string>
+    <plurals name="argo_unfreeze_covers">
+        <item quantity="one">Questo congelamento copre %1$d app: riprende anche lei.</item>
+        <item quantity="other">Questo congelamento copre %1$d app: riprendono tutte.</item>
+    </plurals>
 </resources>

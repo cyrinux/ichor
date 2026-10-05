@@ -1,6 +1,6 @@
 # D9. Argo CD freeze: hotfix live without being reverted
 
-Status: **partial**: Phase 0 spike and Phase 1 (Go) done; Android and iOS to do. Size M. Read [../README.md](../README.md) for the conventions.
+Status: **partial**: Phase 0 spike, Phase 1 (Go) and Phase 2 (Android) done; iOS to do. Size M. Read [../README.md](../README.md) for the conventions.
 
 ## Goal
 
@@ -161,13 +161,32 @@ Swipe to end an Ichor freeze. Git windows can be removed too, behind a warning (
 Android: a local notification 5 min before the end (scheduled at freeze time, no polling) with
 **+1 h**; iOS: the same with a notification action.
 
+## Android (built)
+
+`model/ArgoFreezeViews.kt` (pure, tested in `ArgoFreezeTest`), `ui/argocd/ArgoFreezeUi.kt` (sheet,
+card, dialogs), `ui/argocd/ArgoWindowsScreen.kt`, `monitor/FreezeReminders.kt`, the scale warning
+in `ui/workloads/WorkloadSheet.kt`. Differences from the sketches above:
+
+- The inventory app sheet shows "Frozen until …" on its Argo CD card; freezing itself is on the
+  app page the card opens (the sheet lacks the project and the other apps a scope needs).
+- The windows screen has "+1 h" / "End" / "Remove" buttons instead of swipes.
+- No dialog at expiry: Ichor's ended freezes are cleared quietly on the next load.
+- The reminder's tap opens the sync windows of the active cluster; its "+1 h" only acts when the
+  freeze's cluster is still the active one (it says so otherwise). It is WorkManager work, not an
+  exact alarm: under Doze it may come a few minutes late (Argo CD ends the freeze on time anyway).
+- Ending a freeze from an app page says how many apps the freeze holds (a namespace or project
+  freeze resumes them all). A namespace group header offers a freeze only when its apps share
+  one project (a window belongs to one project).
+- The D2 warning covers scaling (Deployments, StatefulSets), read from the Argo CD status already
+  loaded; suspending a CronJob does not warn yet.
+
 ## Phases
 
 | Phase | Content | Size |
 |-------|---------|------|
 | 0 | Spike: window on a Git-managed project survives a sync. **Done** (client-side apply) | S |
 | 1 | Go read (window evaluation, per-app freeze) + write (`KubeArgoFreeze`), demo, tests, probe. **Done** | M |
-| 2 | Android: freeze sheet, badges/banner/chip, sync windows screen, expiry notification, D2 hook | M |
+| 2 | Android: freeze sheet, badges/banner/chip, sync windows screen, expiry notification, D2 hook. **Done** (see below) | M |
 | 3 | iOS: the same | M |
 
 ## Decisions

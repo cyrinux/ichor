@@ -2,8 +2,8 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/ichorgo/kube_argocd.go and kube_argocd_actions.go (the design is in
-// plans/argocd/README.md). Argo CD terms (Synced, OutOfSync, Healthy...) are its own names.
+// Mirrors go/ichorgo/kube_argocd.go, kube_argocd_actions.go and kube_argocd_syncwindows.go
+// (the design is in plans/argocd/README.md and plans/roadmap/devops/09-argocd-freeze.md). Argo CD terms (Synced, OutOfSync, Healthy...) are its own names.
 
 /** The Argo CD Applications of every namespace, with their ApplicationSets and projects. */
 @Serializable
@@ -57,6 +57,8 @@ data class ArgoApp(
     val unhealthyPods: List<KubePod> = emptyList(),
     /** Unix millis. */
     val reconciledAt: Long = 0,
+    /** Set while an active deny sync window of its project stops its automated syncs. */
+    val freeze: ArgoFreeze? = null,
 ) {
     val key: String get() = "$namespace/$name"
     val serviceHealth: ServiceHealth get() = ServiceHealth.from(level)
@@ -223,7 +225,91 @@ data class ArgoProject(
     val name: String,
     val description: String = "",
     val syncWindows: Int = 0,
+    val windows: List<ArgoWindow> = emptyList(),
+    /** The Argo CD app that applies the project from Git, "" when none. */
+    val managedBy: String = "",
+    /** [managedBy] applies it server-side: a freeze was not checked to survive its syncs. */
+    val managedServerSide: Boolean = false,
+) {
+    val key: String get() = "$namespace/$name"
+}
+
+/** One sync window of a project, evaluated at read time. */
+@Serializable
+data class ArgoWindow(
+    /** A hash of its content: windows have no name. */
+    val id: String = "",
+    /** allow or deny. */
+    val kind: String = "",
+    val schedule: String = "",
+    val duration: String = "",
+    val timeZone: String = "",
+    val applications: List<String> = emptyList(),
+    val namespaces: List<String> = emptyList(),
+    val clusters: List<String> = emptyList(),
+    val manualSync: Boolean = false,
+    val active: Boolean = false,
+    /** The current occurrence when active, else the next one (unix millis); 0 when none. */
+    val start: Long = 0,
+    val end: Long = 0,
+    /** Why the window cannot be read, "" when it can. */
+    val error: String = "",
+    /** Apps of the project it matches. */
+    val apps: Int = 0,
+    /** Set on a freeze Ichor created. */
+    val ichor: ArgoFreezeInfo? = null,
+) {
+    val isDeny: Boolean get() = kind == "deny"
+
+    /** When it ends for good: an Ichor freeze's expiry, else the current occurrence's end. */
+    val endsAt: Long get() = ichor?.expiresAt ?: end
+}
+
+@Serializable
+data class ArgoFreezeInfo(
+    val reason: String = "",
+    /** Unix millis. */
+    val createdAt: Long = 0,
+    val expiresAt: Long = 0,
+    /** Over: Argo CD would only fire it again a year later. */
+    val expired: Boolean = false,
 )
+
+/** An app's active deny windows summed up. */
+@Serializable
+data class ArgoFreeze(
+    val project: String = "",
+    /** The latest end among them, unix millis. */
+    val until: Long = 0,
+    /** Every one of them allows manual syncs. */
+    val manualSync: Boolean = false,
+    /** Every one of them is an Ichor freeze. */
+    val byIchor: Boolean = false,
+    /** Their [ArgoWindow.id]s. */
+    val windows: List<String> = emptyList(),
+)
+
+/** The freeze sheet's choices, as KubeArgoFreeze reads them. */
+@Serializable
+data class ArgoFreezeOptions(
+    val applications: List<String> = emptyList(),
+    val namespaces: List<String> = emptyList(),
+    val minutes: Int = 0,
+    val manualSync: Boolean = false,
+    val reason: String = "",
+    /** The [ArgoWindow.id] to extend or unfreeze. */
+    val window: String = "",
+    /** Confirms removing a window Ichor did not create. */
+    val fromGit: Boolean = false,
+)
+
+/** What KubeArgoFreeze runs, by its wire name. */
+enum class ArgoFreezeAction(val wire: String) {
+    FREEZE("freeze"),
+    EXTEND("extend"),
+    UNFREEZE("unfreeze"),
+    CLEAR_EXPIRED("clearExpired"),
+}
 
 /** The sync sheet's choices (and a rollback's target), as KubeArgoAction reads them. */
 @Serializable

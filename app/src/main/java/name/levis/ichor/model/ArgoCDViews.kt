@@ -12,6 +12,8 @@ enum class ArgoFilter {
     PROGRESSING,
     SYNCING,
     AUTO_SYNC_OFF,
+    /** An active deny sync window stops its automated syncs. */
+    FROZEN,
     ;
 
     fun matches(app: ArgoApp): Boolean = when (this) {
@@ -21,6 +23,7 @@ enum class ArgoFilter {
         PROGRESSING -> app.healthState == ArgoHealth.PROGRESSING
         SYNCING -> app.isRunning
         AUTO_SYNC_OFF -> !app.autoSync.enabled
+        FROZEN -> app.freeze != null
     }
 }
 

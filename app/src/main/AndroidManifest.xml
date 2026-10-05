@@ -119,6 +119,11 @@
             android:name=".update.InstallResultReceiver"
             android:exported="false" />
 
+        <!-- "+1 h" on the reminder before an Argo CD freeze ends. -->
+        <receiver
+            android:name=".monitor.FreezeExtendReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".widget.ClusterWidgetReceiver"
             android:exported="true">
