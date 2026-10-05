@@ -49,7 +49,7 @@ struct CronJobsList: View {
                     }
                 }
             }
-            .refreshable { await load() }
+            .refreshable { await list.refresh(model: model) }
             .themedBackground()
         }
         .confirmationDialog(confirm.map { String(localized: "Run \($0.displayName) now?") } ?? "",

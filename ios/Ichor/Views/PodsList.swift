@@ -49,7 +49,7 @@ struct PodsList: View {
                     }
                 }
             }
-            .refreshable { await load() }
+            .refreshable { await list.refresh(model: model) }
             .themedBackground()
         }
         .confirmationDialog(confirm.map { String(localized: "Delete pod \($0.name)?") } ?? "",

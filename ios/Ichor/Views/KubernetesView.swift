@@ -239,7 +239,7 @@ private struct WorkloadsList: View {
                     }
                 }
             }
-            .refreshable { await load() }
+            .refreshable { await list.refresh(model: model) }
             .themedBackground()
         }
         .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
