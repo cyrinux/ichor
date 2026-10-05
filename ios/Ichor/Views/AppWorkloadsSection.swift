@@ -30,7 +30,13 @@ struct AppWorkloadsSection: View {
                     Text("No Deployment, StatefulSet or DaemonSet runs it.").note()
                 } else {
                     ForEach(workloads) { workload in
-                        AppWorkloadLine(workload: workload, restarting: restarting.contains(workload.id)) { confirm = workload }
+                        let line = AppWorkloadLine(workload: workload, restarting: restarting.contains(workload.id)) { confirm = workload }
+                        // The sheet is a NavigationStack: a tap shows the workload's pods.
+                        if let selection = workload.podSelection {
+                            NavigationLink { WorkloadPodsView(workload: workload, selection: selection) } label: { line }
+                        } else {
+                            line
+                        }
                     }
                 }
             }

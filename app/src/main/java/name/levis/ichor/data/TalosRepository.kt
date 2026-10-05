@@ -34,6 +34,9 @@ import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubeCronJob
 import name.levis.ichor.model.KubeCronJobList
 import name.levis.ichor.model.KubePodPage
+import name.levis.ichor.model.PodPhaseFilter
+import name.levis.ichor.model.PodSelection
+import name.levis.ichor.model.SELECTED_PODS_PAGE
 import name.levis.ichor.model.KubeCronJobPage
 import name.levis.ichor.model.KubeWorkloadPage
 import name.levis.ichor.model.KubeNamespaces
@@ -549,6 +552,26 @@ class TalosRepository(
         val json = Ichorgo.kubePodsPage(cfg, ctx, server, namespace.orEmpty(), token, limit.toLong(), table)
         TalosJson.decodeFromString(KubePodPage.serializer(), json).toPage(detailed = !table)
     }
+
+    /** The Kubernetes name of the Talos node [node] (its address), as its kubelet registered it. */
+    suspend fun kubeNodeName(node: String): String = call { cfg, ctx -> Ichorgo.kubeNodeName(cfg, ctx, node) }
+
+    /**
+     * One page of the pods scheduled on the Kubernetes node [kubeNode] ([kubeNodeName]), in
+     * every namespace, narrowed to [phase]; as [podsPage] otherwise (os:admin).
+     */
+    suspend fun nodePodsPage(kubeNode: String, phase: PodPhaseFilter, token: String, table: Boolean, limit: Int = SELECTED_PODS_PAGE): KubePage<KubePod> =
+        kubeCall { cfg, ctx, server ->
+            val json = Ichorgo.kubeNodePodsPage(cfg, ctx, server, kubeNode, phase.query, token, limit.toLong(), table)
+            TalosJson.decodeFromString(KubePodPage.serializer(), json).toPage(detailed = !table)
+        }
+
+    /** One page of the pods [workload]'s selector matches, narrowed to [phase]; as [podsPage] otherwise (os:admin). */
+    suspend fun workloadPodsPage(workload: PodSelection.OfWorkload, phase: PodPhaseFilter, token: String, table: Boolean, limit: Int = SELECTED_PODS_PAGE): KubePage<KubePod> =
+        kubeCall { cfg, ctx, server ->
+            val json = Ichorgo.kubeWorkloadPodsPage(cfg, ctx, server, workload.kind, workload.namespace, workload.name, phase.query, token, limit.toLong(), table)
+            TalosJson.decodeFromString(KubePodPage.serializer(), json).toPage(detailed = !table)
+        }
 
     /** One pod in full (images, containers, last termination), for a row read from a Table (os:admin). */
     suspend fun pod(namespace: String, name: String): KubePod = kubeCall { cfg, ctx, server ->

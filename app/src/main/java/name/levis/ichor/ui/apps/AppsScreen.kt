@@ -48,6 +48,8 @@ import name.levis.ichor.ui.argocd.ArgoActionToasts
 import name.levis.ichor.ui.argocd.ArgoPolling
 import name.levis.ichor.ui.argocd.ArgoViewModel
 import name.levis.ichor.model.KubeWorkload
+import name.levis.ichor.model.PodSelection
+import name.levis.ichor.model.podSelection
 import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
@@ -59,6 +61,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
+import name.levis.ichor.ui.workloads.WorkloadPodsSheet
 import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
@@ -99,6 +102,8 @@ fun AppsScreen(
     val routes by routesVm.state.collectAsStateWithLifecycle()
     val restarting by workloadsVm.restarts.restarting.collectAsStateWithLifecycle()
     var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
+    // A workload's pods, over the app's sheet.
+    var podsOf by remember { mutableStateOf<PodSelection.OfWorkload?>(null) }
     RestartResultToasts(workloadsVm.restarts.results)
     RolloutStatusSheet(workloadsVm.restarts)
     confirm?.let { w ->
@@ -182,12 +187,17 @@ fun AppsScreen(
                         app = detail,
                         nodes = nodes,
                         routes = if (canRestart) routes else null,
-                        restart = if (canRestart) AppRestartUi(workloads, restarting) { confirm = it } else null,
+                        restart = if (canRestart) {
+                            AppRestartUi(workloads, restarting, onRestart = { confirm = it }, onPods = { podsOf = it.podSelection })
+                        } else {
+                            null
+                        },
                         argo = if (argoOffered) argoUi(detail, argoState, argoBusy, argoVm, onArgoCD, onArgoApp) else null,
                         flux = if (isFlux) AppFluxUi(fluxState, onFlux) else null,
                         onPodNode = { addr -> nodes.openNode(addr, onNode) },
                         onDismiss = { selected = null },
                     )
+                    podsOf?.let { WorkloadPodsSheet(it, onDismiss = { podsOf = null }) }
                 }
             }
         }

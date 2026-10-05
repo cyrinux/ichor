@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Remove
 import androidx.compose.material.icons.outlined.RestartAlt
+import androidx.compose.material.icons.outlined.ViewInAr
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -74,6 +75,8 @@ fun WorkloadSheet(
     onRestart: () -> Unit,
     onRollback: (KubeRevision) -> Unit,
     onDismiss: () -> Unit,
+    /** Opens the list of its pods; null for a kind whose pods cannot be listed. */
+    onPods: (() -> Unit)? = null,
 ) {
     val busy by actions.busy.collectAsStateWithLifecycle()
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
@@ -86,10 +89,19 @@ fun WorkloadSheet(
                 Text("${workload.kind}  ·  ${workload.namespace}", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 MutedText(stringResource(R.string.workloads_ready_count, workload.ready, workload.desired))
             }
-            OutlinedButton(onClick = onRestart, enabled = workload.canRestart) {
-                Icon(Icons.Outlined.RestartAlt, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(stringResource(R.string.workloads_restart_confirm))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = onRestart, enabled = workload.canRestart) {
+                    Icon(Icons.Outlined.RestartAlt, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.workloads_restart_confirm))
+                }
+                if (onPods != null) {
+                    OutlinedButton(onClick = onPods) {
+                        Icon(Icons.Outlined.ViewInAr, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(stringResource(R.string.pods_title))
+                    }
+                }
             }
             if (workload.canScale) {
                 HorizontalDivider()

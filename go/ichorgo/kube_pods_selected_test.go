@@ -145,6 +145,28 @@ func TestKubeNodePodsPageArgs(t *testing.T) {
 	}
 }
 
+func TestKubeNodeNameDemo(t *testing.T) {
+	cfg, err := DemoConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	name, err := KubeNodeName(cfg, "", "192.0.2.20")
+	if err != nil || name != "demo-worker-1" {
+		t.Fatalf("KubeNodeName = %q, %v", name, err)
+	}
+
+	// The name it gives lists that node's pods.
+	out, err := KubeNodePodsPage(cfg, "", "", name, "", "", 0, true)
+	if err != nil || !strings.Contains(out, "worker-6f4b8-uvwxy") {
+		t.Fatalf("pods of %s: %s, %v", name, out, err)
+	}
+
+	if _, err := KubeNodeName(cfg, "", "192.0.2.99"); err == nil {
+		t.Fatal("unknown node accepted")
+	}
+}
+
 func TestKubeWorkloadPodsPageDemo(t *testing.T) {
 	cfg, err := DemoConfig()
 	if err != nil {

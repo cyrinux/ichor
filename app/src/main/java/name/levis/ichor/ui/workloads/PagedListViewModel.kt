@@ -52,6 +52,9 @@ abstract class PagedListViewModel<T>(
     /** One page of [namespace] ("" [token] for the first). */
     protected abstract suspend fun page(namespace: String?, token: String): KubePage<T>
 
+    /** Rows the first load reads before further pages wait for a scroll. */
+    protected open fun eagerRows(scope: KubeScope): Int = eagerLimit(scope, metered())
+
     /** Whether rows kept from an earlier load carry what only full objects do (see [PagedLoad.detailed]). */
     protected open fun detailed(items: List<T>): Boolean = true
 
@@ -73,7 +76,7 @@ abstract class PagedListViewModel<T>(
         val keep = talos.keeper(key(scope.namespace))
         val owner = startProgress()
         try {
-            val load = loadPages(eagerLimit(scope, metered()), { token -> page(scope.namespace, token) }) { partial ->
+            val load = loadPages(eagerRows(scope), { token -> page(scope.namespace, token) }) { partial ->
                 showProgress(owner, partial)
                 showPartial(partial)
             }
