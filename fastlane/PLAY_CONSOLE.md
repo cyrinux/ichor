@@ -21,7 +21,7 @@ the `play` build type, i.e. the release build with
   features*, also offered by the occasional support card. See **Feature funding** below.
 
 CI builds it on every push (artifact `android-play`, with its R8 mapping). On a `v*` tag,
-`release.yml` runs `fastlane supply`, once the `WIF_PROVIDER` and `SERVICE_ACCOUNT` secrets
+`release.yml` runs `fastlane supply`, once the `WIF_PROVIDER` and `SERVICE_ACCOUNT` secrets of the `release` environment
 are set: the bundle, its mapping and release notes go to the **internal** track, rolled out
 to testers, and the store listing (texts, icon, feature graphic, screenshots) is updated
 from this directory. Images are only re-uploaded when they changed. Set the repository
@@ -52,8 +52,8 @@ characters per language.
    *Workload Identity User* on the service account. Play Console → Users and permissions →
    invite the service account's email with *Release to testing tracks* and *Manage store
    presence* (listing and screenshots) for this app. Then:
-   `gh secret set WIF_PROVIDER --body projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>`
-   and `gh secret set SERVICE_ACCOUNT --body <name>@<project>.iam.gserviceaccount.com`.
+   `gh secret set WIF_PROVIDER --env release --body projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>`
+   and `gh secret set SERVICE_ACCOUNT --env release --body <name>@<project>.iam.gserviceaccount.com`.
 5. **Closed test** (new personal developer accounts): at least 12 testers opted in for 14
    days in a row before production access can be requested.
 6. **Reviewer access:** the app does nothing without a talosconfig, and reviewers reject apps
