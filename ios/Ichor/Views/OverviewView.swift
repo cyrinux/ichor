@@ -162,7 +162,7 @@ struct OverviewView: View {
                 .accessibilityLabel(Text("More"))
             }
         }
-        .sheet(isPresented: $customizing) { OverviewEditorSheet() }
+        .sheet(isPresented: $customizing) { OverviewEditorSheet(absent: absentCards) }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
         // Live CPU and memory while the overview is on screen, the app active, the setting on
@@ -528,6 +528,18 @@ struct OverviewView: View {
         let loaded: LoadState<DataServices> = await .from { try await client.dataServices(hints: hints) }
         guard id == loadID else { return }
         dataServices = (dataServices ?? .loading).refreshed(with: loaded)
+    }
+
+    /// Sections the cluster has nothing for (the same checks as their loading), left out of the
+    /// editor too; all offered until the inventory is known.
+    private var absentCards: Set<OverviewCard> {
+        guard case .loaded(let apps, _, _) = inventory else { return [] }
+        let kubernetes = model.allows(.workloads)
+        var absent: Set<OverviewCard> = []
+        if !kubernetes || dataServiceHints(apps).isEmpty { absent.insert(.dataServices) }
+        if !kubernetes || !argoCDHinted(apps) { absent.insert(.argoCD) }
+        if !kubernetes || !fluxHinted(apps) { absent.insert(.flux) }
+        return absent
     }
 
     /// The inventory's apps by catalog id, for the data services' icons.

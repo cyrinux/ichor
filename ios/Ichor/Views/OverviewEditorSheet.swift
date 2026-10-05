@@ -56,8 +56,10 @@ extension OverviewCard {
 
 /// Arranges the overview (Android's OverviewEditor): which toolbar actions are icons and which
 /// are in the ⋯ menu, and the sections' order, hidden ones shown again at the end. Every change
-/// is saved at once, for every cluster.
+/// is saved at once, for every cluster. Sections the cluster lacks (`absent`: no Argo CD, no
+/// Flux...) are not offered.
 struct OverviewEditorSheet: View {
+    var absent: Set<OverviewCard> = []
     @AppStorage(OverviewLayout.storageKey) private var layoutText = ""
     @AppStorage(OverviewBar.storageKey) private var barText = ""
     @Environment(\.dismiss) private var dismiss
@@ -70,9 +72,9 @@ struct OverviewEditorSheet: View {
             List {
                 barSection
                 cardsSection
-                if !layout.hiddenCards.isEmpty {
+                if !layout.hiddenCards(absent: absent).isEmpty {
                     Section("Hidden cards") {
-                        ForEach(layout.hiddenCards) { card in
+                        ForEach(layout.hiddenCards(absent: absent)) { card in
                             HStack {
                                 CardName(card: card).opacity(0.6)
                                 Spacer()
@@ -125,7 +127,7 @@ struct OverviewEditorSheet: View {
 
     private var cardsSection: some View {
         Section {
-            ForEach(layout.visible) { card in
+            ForEach(layout.visible(absent: absent)) { card in
                 HStack {
                     CardName(card: card)
                     Spacer()
@@ -136,7 +138,7 @@ struct OverviewEditorSheet: View {
                     .accessibilityLabel(Text("Hide"))
                 }
             }
-            .onMove { source, destination in save(layout.moving(fromOffsets: source, toOffset: destination)) }
+            .onMove { source, destination in save(layout.moving(fromOffsets: source, toOffset: destination, absent: absent)) }
         } header: {
             Text("Cards")
         } footer: {
