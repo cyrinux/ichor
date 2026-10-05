@@ -1108,6 +1108,17 @@
     <string name="support_bundle_title">Support-Bundle</string>
     <string name="settings_support_bundle_desc">Sammelt Logs und Cluster-Details der Knoten in einer ZIP-Datei, wie talosctl support.</string>
     <string name="settings_support_bundle_open">Support-Bundle erstellen…</string>
+    <string name="settings_section_support">Support</string>
+    <string name="settings_integrations_desc">Darum bitten, dass ein Operator dieses Clusters in Ichor angezeigt wird.</string>
+    <string name="settings_integrations_open">Integration anfragen…</string>
+    <string name="settings_report_bug">Fehler melden</string>
+    <string name="integrations_title">Integration anfragen</string>
+    <string name="integrations_intro">Operatoren in diesem Cluster, die Ichor noch nicht anzeigt. Wähle die API-Gruppen, die du sehen möchtest: Ichor öffnet ein vorausgefülltes GitHub-Issue, das du vor dem Absenden prüfst. Es enthält nur Gruppen-, Versions- und Kind-Namen, niemals Namespaces oder Objektnamen.</string>
+    <string name="integrations_none">Alles, was dieser Cluster ausführt und Ichor anzeigen kann, ist bereits in der App.</string>
+    <string name="integrations_supported">Bereits in Ichor angezeigt: %1$s</string>
+    <string name="integrations_other">Etwas anderes vorschlagen</string>
+    <string name="integrations_search">Bestehende suchen</string>
+    <string name="integrations_request">Anfragen</string>
     <string name="support_bundle_warning">Das Bundle enthält Logs und Cluster-Details. Es wird vom Screenshot-Modus NICHT maskiert: Prüfe es vor dem Teilen.</string>
     <string name="support_bundle_nodes">Knoten</string>
     <string name="support_bundle_create">Bundle erstellen</string>

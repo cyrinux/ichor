@@ -118,6 +118,8 @@ enum Route: Hashable {
     /// PromQL panels from the cluster's Prometheus, Mimir, Thanos or VictoriaMetrics.
     case metrics
     case supportBundle
+    /// The operators the cluster runs that Ichor does not show yet, to request (os:admin).
+    case integrations
     /// The bundled release history.
     case changelog
     /// The bundled third-party licenses.
@@ -180,6 +182,7 @@ struct MainNavigation: View {
                     case .insights: InsightsView()
                     case .metrics: MetricsView()
                     case .supportBundle: SupportBundleView()
+                    case .integrations: IntegrationRequestView()
                     case .changelog: ChangelogView()
                     case .licenses: LicensesView()
                     case .etcd: EtcdView()

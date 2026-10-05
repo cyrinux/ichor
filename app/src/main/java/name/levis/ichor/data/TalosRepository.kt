@@ -72,6 +72,7 @@ import name.levis.ichor.model.TalosEvent
 import name.levis.ichor.model.ClusterTime
 import name.levis.ichor.model.ConnectionInfo
 import name.levis.ichor.model.ImageInfo
+import name.levis.ichor.model.IntegrationReport
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.NodeHardware
 import name.levis.ichor.model.NodeNetwork
@@ -660,6 +661,14 @@ class TalosRepository(
      */
     suspend fun longhornAction(namespace: String, name: String, action: LonghornAction, value: Int = 0) = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeLonghornAction(cfg, ctx, server, namespace, name, action.wire, value.toLong())
+    }
+
+    /**
+     * The API groups the cluster serves that Ichor does not read yet, by operator, with their
+     * kinds (os:admin): what an integration request can name. Never cached.
+     */
+    suspend fun integrations(): IntegrationReport = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(IntegrationReport.serializer(), Ichorgo.kubeIntegrations(cfg, ctx, server))
     }
 
     /**

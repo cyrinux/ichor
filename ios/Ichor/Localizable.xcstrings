@@ -70173,6 +70173,391 @@
           }
         }
       }
+    },
+    "Support" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assistance"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Soporte"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підтримка"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supporto"
+          }
+        }
+      }
+    },
+    "Request an integration…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demander une intégration…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitar una integración…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запросити інтеграцію…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integration anfragen…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richiedi un'integrazione…"
+          }
+        }
+      }
+    },
+    "Ask for an operator this cluster runs that Ichor does not show yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demander un opérateur que ce cluster exécute et qu'Ichor n'affiche pas encore."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pedir un operador que este clúster ejecuta y que Ichor aún no muestra."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попросити оператор, який працює в цьому кластері, але ще не показується в Ichor."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einen Operator anfragen, den dieser Cluster ausführt und den Ichor noch nicht anzeigt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiedi un operatore che questo cluster esegue e che Ichor non mostra ancora."
+          }
+        }
+      }
+    },
+    "Report a bug" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signaler un bug"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informar de un error"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомити про помилку"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler melden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segnala un bug"
+          }
+        }
+      }
+    },
+    "Request an integration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demander une intégration"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitar una integración"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запросити інтеграцію"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integration anfragen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richiedi un'integrazione"
+          }
+        }
+      }
+    },
+    "Operators running on this cluster that Ichor does not show yet. Pick the API groups you would like to see: Ichor opens a pre-filled GitHub issue you review before sending. Only group, version and kind names go in, never namespaces or object names." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opérateurs exécutés sur ce cluster qu'Ichor n'affiche pas encore. Choisissez les groupes d'API que vous aimeriez voir : Ichor ouvre une issue GitHub préremplie que vous relisez avant l'envoi. Seuls les noms de groupe, de version et de kind y figurent, jamais les namespaces ni les noms d'objets."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operadores que se ejecutan en este clúster y que Ichor aún no muestra. Elija los grupos de API que le gustaría ver: Ichor abre una issue de GitHub rellenada que revisa antes de enviarla. Solo se incluyen nombres de grupo, versión y kind, nunca namespaces ni nombres de objetos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оператори, що працюють у цьому кластері, яких Ichor ще не показує. Виберіть групи API, які ви хотіли б бачити: Ichor відкриє заповнений issue на GitHub, який ви переглянете перед надсиланням. Туди потрапляють лише назви груп, версій і kind, ніколи не простори імен чи назви об'єктів."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operatoren auf diesem Cluster, die Ichor noch nicht anzeigt. Wählen Sie die API-Gruppen, die Sie sehen möchten: Ichor öffnet ein vorausgefülltes GitHub-Issue, das Sie vor dem Absenden prüfen. Nur Gruppen-, Versions- und Kind-Namen werden übernommen, nie Namespaces oder Objektnamen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operatori in esecuzione su questo cluster che Ichor non mostra ancora. Scegli i gruppi API che vorresti vedere: Ichor apre una issue GitHub precompilata che controlli prima dell'invio. Contiene solo nomi di gruppo, versione e kind, mai namespace o nomi di oggetti."
+          }
+        }
+      }
+    },
+    "Everything this cluster runs that Ichor knows how to show is already in the app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout ce que ce cluster exécute et qu'Ichor sait afficher est déjà dans l'app."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todo lo que este clúster ejecuta y que Ichor sabe mostrar ya está en la app."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усе, що працює в цьому кластері й що Ichor уміє показувати, вже є в застосунку."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles, was dieser Cluster ausführt und Ichor anzeigen kann, ist bereits in der App."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutto ciò che questo cluster esegue e che Ichor sa mostrare è già nell'app."
+          }
+        }
+      }
+    },
+    "Suggest something else" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggérer autre chose"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sugerir otra cosa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запропонувати інше"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etwas anderes vorschlagen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggerisci altro"
+          }
+        }
+      }
+    },
+    "Already shown in Ichor: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déjà affiché dans Ichor : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya se muestra en Ichor: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Уже показується в Ichor: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereits in Ichor angezeigt: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Già mostrato in Ichor: %@"
+          }
+        }
+      }
+    },
+    "Search existing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chercher l'existant"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar existentes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукати наявні"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorhandene suchen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca esistenti"
+          }
+        }
+      }
+    },
+    "Request" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demander"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запросити"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anfragen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richiedi"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
