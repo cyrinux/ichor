@@ -335,6 +335,7 @@
     <string name="topology_pick_server">Server</string>
     <string name="topology_link_seen_from">Gesehen von %1$s</string>
     <string name="topology_not_queried">Graue Nodes sind nicht in dieser talosconfig: sie werden aus den Angaben ihrer Peers gezeichnet.</string>
+    <string name="topology_no_zone">Kein Node hat eine Zone: Standorte werden aus gemeinsamen Netzen geschätzt. Versieh die Nodes mit dem Label topology.kubernetes.io/zone, um sie zu gruppieren.</string>
     <string name="topology_empty">Nichts darzustellen: kein Cluster-Mitglied und kein KubeSpan-Peer gefunden.</string>
     <string name="topology_map_description">Clusterkarte mit Standorten, Nodes und KubeSpan-Verbindungen</string>
 

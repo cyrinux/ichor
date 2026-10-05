@@ -293,3 +293,33 @@ func TestDemoTopology(t *testing.T) {
 		t.Errorf("demo KubeSpan = %+v", ks.Nodes)
 	}
 }
+
+func TestBuildTopologyPublicOnlyServersShareTheirSlash24(t *testing.T) {
+	// Unlabelled servers with public addresses only: one datacenter when in the same /24,
+	// even reached over public endpoints; another provider stays apart, CGNAT never groups.
+	members := []clusterMember{
+		topoMember("dc-1", "controlplane", "198.51.100.10"),
+		topoMember("dc-2", "worker", "198.51.100.20"),
+		topoMember("other", "worker", "203.0.113.5"),
+		topoMember("ts-1", "worker", "100.64.0.1"),
+		topoMember("ts-2", "worker", "100.64.0.2"),
+	}
+	obs := []topologyObservation{{node: "198.51.100.10", hostname: "dc-1", peers: []kubespanPeerInput{
+		peerIn("dc-2", "up", "198.51.100.20:51820"),
+		peerIn("other", "up", "203.0.113.5:51820"),
+	}}}
+
+	topo := buildTopology(members, obs)
+
+	if len(topo.Sites) != 4 {
+		t.Fatalf("sites = %+v", topo.Sites)
+	}
+
+	if s := topo.Sites[0]; s.Kind != "lan" || s.Label != "198.51.100.0/24" || len(s.Nodes) != 2 {
+		t.Errorf("datacenter = %+v", s)
+	}
+
+	if nodeByID(t, topo, "ts-1").Site == nodeByID(t, topo, "ts-2").Site {
+		t.Errorf("CGNAT addresses must not group: %+v", topo.Sites)
+	}
+}

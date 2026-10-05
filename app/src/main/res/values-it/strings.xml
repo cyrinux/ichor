@@ -342,6 +342,7 @@
     <string name="topology_pick_server">Server</string>
     <string name="topology_link_seen_from">Visto da %1$s</string>
     <string name="topology_not_queried">I nodi in grigio non sono in questo talosconfig: sono disegnati in base a ciò che riportano i loro peer.</string>
+    <string name="topology_no_zone">Nessun nodo ha una zona: i siti sono dedotti dalle reti condivise. Etichetta i nodi con topology.kubernetes.io/zone per raggrupparli.</string>
     <string name="topology_empty">Niente da mostrare: nessun membro del cluster né peer KubeSpan trovato.</string>
     <string name="topology_map_description">Mappa del cluster con siti, nodi e collegamenti KubeSpan</string>
 

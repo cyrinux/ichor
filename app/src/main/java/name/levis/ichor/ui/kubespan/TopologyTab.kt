@@ -122,6 +122,11 @@ fun TopologyContent(topology: ClusterTopology, onNode: (TopologyNode) -> Unit) {
                 )
             }
             item { TopologyLegend() }
+            if (topology.nodes.size > 1 && topology.nodes.none { it.zone.isNotBlank() }) {
+                item {
+                    MutedText(stringResource(R.string.topology_no_zone))
+                }
+            }
             if (topology.nodes.any { !it.queried }) {
                 item {
                     MutedText(stringResource(R.string.topology_not_queried))
