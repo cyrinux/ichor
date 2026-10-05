@@ -184,7 +184,11 @@ func mapArgoApp(o argoObject, apps map[string]bool) argoApp {
 	a.Resources = argoResources(st.Resources, results)
 	a.Operation = argoOp(st.OperationState, a.Resources, results)
 	a.History = argoHistoryOf(st.History)
-	a.Icon, a.RemoteIcon = argoIcon(a)
+	if custom, ok := customIcon(o.Metadata.Annotations, o.Metadata.Labels); ok {
+		a.Icon, a.RemoteIcon, a.IconURL = custom.icon, custom.remote, custom.url
+	} else {
+		a.Icon, a.RemoteIcon = argoIcon(a)
+	}
 	a.Level = argoLevel(a)
 
 	return a

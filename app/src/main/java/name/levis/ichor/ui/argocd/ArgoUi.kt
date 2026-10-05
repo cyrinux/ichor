@@ -112,10 +112,10 @@ val ArgoSync.icon: ImageVector
         ArgoSync.UNKNOWN -> Icons.AutoMirrored.Outlined.HelpOutline
     }
 
-/** The app's catalog icon, or a monogram in its own colour. */
+/** The app's own icon from its annotation, else its catalog icon, else a monogram in its own colour. */
 @Composable
 fun ArgoAppIcon(app: ArgoApp, size: Dp, modifier: Modifier = Modifier) {
-    val tile = InventoryApp(id = app.icon.ifEmpty { app.name }, name = app.name, icon = app.icon, remoteIcon = app.remoteIcon)
+    val tile = InventoryApp(id = app.icon.ifEmpty { app.name }, name = app.name, icon = app.icon, remoteIcon = app.remoteIcon, iconUrl = app.iconUrl)
     AppIconTile(tile, modifier, size = size)
 }
 

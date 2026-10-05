@@ -142,7 +142,8 @@
         (<code>cdn.jsdelivr.net</code>, the Dashboard Icons set) and kept in the app's cache. Each
         request carries only the icon's public name, never your image names, namespaces or other
         cluster details. jsDelivr sees your IP address, as for any web request, and its
-        <a href="https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net">privacy policy</a> applies.</li>
+        <a href="https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net">privacy policy</a> applies.
+        An Argo CD app may also link its own icon in its <code>ichor.levis.name/icon</code> annotation: with the setting on, it is downloaded from that address, whose server sees your IP address. An icon written inline in the annotation is never downloaded.</li>
       <li><strong>AI diagnosis, only if you turn it on.</strong> It is off by default. When you
         tap <em>Ask</em>, a report of the cluster state (node readiness, services, resource
         usage, etcd status, recent events and the last lines of unhealthy services' logs) is

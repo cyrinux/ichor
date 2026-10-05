@@ -123,7 +123,7 @@ private struct AppIconsSection: View {
         } header: {
             Text("Apps")
         } footer: {
-            Text("About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details.")
+            Text("About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details. Icons an Argo CD app links in its ichor.levis.name/icon annotation are downloaded too.")
         }
     }
 }

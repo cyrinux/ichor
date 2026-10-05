@@ -1288,7 +1288,7 @@
     <string name="apps_detail_routes_failed">Adressen konnten nicht ermittelt werden: %1$s</string>
     <string name="apps_detail_routes_open">Im Browser öffnen</string>
     <string name="settings_remote_icons">Fehlende App-Symbole herunterladen</string>
-    <string name="settings_remote_icons_desc">Etwa 250 gängige Apps haben ein mitgeliefertes Symbol. Wenn aktiviert, werden die Symbole weiterer erkannter Apps von jsDelivr (Dashboard Icons) geladen. Gesendet wird nur der öffentliche Symbolname, nie deine Image-Namen oder Cluster-Details.</string>
+    <string name="settings_remote_icons_desc">Etwa 250 gängige Apps haben ein mitgeliefertes Symbol. Wenn aktiviert, werden die Symbole weiterer erkannter Apps von jsDelivr (Dashboard Icons) geladen. Gesendet wird nur der öffentliche Symbolname, nie deine Image-Namen oder Cluster-Details. Auch Symbole, die eine Argo-CD-App in ihrer Annotation ichor.levis.name/icon verlinkt, werden geladen.</string>
     <string name="settings_offline_cache">Letzten bekannten Zustand behalten</string>
     <string name="settings_offline_cache_desc">Speichert die zuletzt abgerufenen Daten jedes Clusters verschlüsselt auf diesem Telefon, damit sie auch angezeigt werden, wenn der Cluster nicht erreichbar ist. 24 Stunden aufbewahrt, nie gesichert.</string>
     <string name="about_icon_credits">App-Symbole: Dashboard Icons (Apache 2.0) und selfh.st/icons (CC BY 4.0). App-Namen und Logos sind Marken ihrer Inhaber.</string>

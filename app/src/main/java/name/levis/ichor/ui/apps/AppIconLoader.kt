@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import name.levis.ichor.model.CustomIcon
 import name.levis.ichor.model.MAX_ICON_SIDE
 import name.levis.ichor.model.bundledIconAsset
 import name.levis.ichor.model.iconSampleSize
@@ -21,7 +22,8 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * App icons: the ones bundled in assets/appicons, and, only when the user allowed it, icons
- * downloaded from jsDelivr (Dashboard Icons) by their public slug, kept in the cache dir.
+ * downloaded from jsDelivr (Dashboard Icons) by their public slug or from the URL a resource
+ * names in its annotation, kept in the cache dir; inline (data: URI) icons are only decoded.
  * Decoded icons stay in memory so the grid does not decode them again while scrolling.
  */
 class AppIconLoader(private val context: Context) {
@@ -42,6 +44,7 @@ class AppIconLoader(private val context: Context) {
     fun peekBundled(icon: String, dark: Boolean): ImageBitmap? =
         bundledIconAsset(icon, dark, bundled)?.let(memory::get)
     fun peekRemote(slug: String): ImageBitmap? = memory.get(remoteKey(slug))
+    fun peekCustom(icon: CustomIcon): ImageBitmap? = memory.get(icon.key)
 
     /** The bundled icon, its `-night` variant in a dark theme when there is one; null when missing. */
     suspend fun bundled(icon: String, dark: Boolean): ImageBitmap? {
@@ -67,6 +70,26 @@ class AppIconLoader(private val context: Context) {
         return locks.getOrPut(slug) { Mutex() }.withLock {
             memory.get(key) ?: withContext(DOWNLOADS) { cachedOrDownload(slug, url) }
                 ?.also { memory.put(key, it) }
+        }
+    }
+
+    /**
+     * A resource's own icon: decoded from its bytes, or (callers check the user allowed
+     * downloads) from the disk cache or its URL, cached under a hash of the URL. Null when unavailable.
+     */
+    suspend fun custom(icon: CustomIcon): ImageBitmap? {
+        memory.get(icon.key)?.let { return it }
+        return when (icon) {
+            is CustomIcon.Inline -> withContext(Dispatchers.Default) { decodeBounded(icon.bytes) }
+                ?.also { memory.put(icon.key, it) }
+            is CustomIcon.Url -> {
+                val name = icon.key.replace('/', '-')
+                if (name in failed) return null
+                locks.getOrPut(name) { Mutex() }.withLock {
+                    memory.get(icon.key) ?: withContext(DOWNLOADS) { cachedOrDownload(name, icon.url) }
+                        ?.also { memory.put(icon.key, it) }
+                }
+            }
         }
     }
 

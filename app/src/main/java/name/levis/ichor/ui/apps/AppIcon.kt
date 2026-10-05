@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,7 +27,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.CustomIcon
 import name.levis.ichor.model.InventoryApp
+import name.levis.ichor.model.customIcon
 import name.levis.ichor.model.monogram
 import name.levis.ichor.model.monogramHue
 import name.levis.ichor.model.remoteIconSlug
@@ -75,16 +78,20 @@ private fun rememberIcon(app: InventoryApp): IconImage {
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val remoteAllowed by talos.uiPreferences.remoteAppIcons.collectAsStateWithLifecycle()
     val slug = app.remoteIconSlug?.takeIf { remoteAllowed }
+    // Its own icon: an inline one always, one at a URL only when downloads are allowed.
+    val custom = remember(app.iconUrl) { customIcon(app.iconUrl) }?.takeIf { it is CustomIcon.Inline || remoteAllowed }
     val initial = when {
+        custom != null -> loader.peekCustom(custom)?.let(IconImage::Ready) ?: IconImage.Pending
         app.icon.isNotEmpty() -> loader.peekBundled(app.icon, dark)?.let(IconImage::Ready) ?: IconImage.Pending
         slug != null -> loader.peekRemote(slug)?.let(IconImage::Ready) ?: IconImage.Pending
         else -> IconImage.None
     }
-    val image by produceState(initial, app.icon, slug, dark) {
+    val image by produceState(initial, custom?.key, app.icon, slug, dark) {
         // The state outlives a key change (e.g. the theme): start again from this key's icon.
         value = initial
         if (initial !is IconImage.Pending) return@produceState
         val bitmap = when {
+            custom != null -> loader.custom(custom)
             app.icon.isNotEmpty() -> loader.bundled(app.icon, dark)
             slug != null -> loader.remote(slug)
             else -> null
