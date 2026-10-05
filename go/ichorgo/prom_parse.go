@@ -177,6 +177,10 @@ func promSeriesOf(r promRawSeries, grid promGrid) promSeries {
 	return promSeries{Name: promSeriesName(labels), Labels: labels, Values: values}
 }
 
+// promRefused marks a query the backend turned down (HTTP 401 or 403): the apps match it
+// to offer editing the tenant and credentials (Kotlin and Swift PROM_REFUSED).
+const promRefused = "refused (credentials or tenant)"
+
 func promHTTPError(status int, body []byte) error {
 	text := truncate(strings.TrimSpace(string(body)), 300)
 
@@ -186,7 +190,7 @@ func promHTTPError(status int, body []byte) error {
 	case status == http.StatusNotFound:
 		return fmt.Errorf("HTTP 404 %s: check the path prefix (Mimir: /prometheus)", text)
 	case status == http.StatusUnauthorized || status == http.StatusForbidden:
-		return fmt.Errorf("HTTP %d, refused (credentials or tenant): %s", status, text)
+		return fmt.Errorf("HTTP %d, %s: %s", status, promRefused, text)
 	case text == "":
 		return fmt.Errorf("HTTP %d", status)
 	default:

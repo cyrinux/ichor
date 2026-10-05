@@ -1,6 +1,6 @@
 # D2. Small kubectl actions
 
-Status: **implemented** (Go, Android, iOS). Remaining: Argo CD self-heal warning on CronJob suspend (scaling warns since D9, with "Freeze 1 h, then scale"). Size M. Read [../README.md](../README.md) for the conventions.
+Status: **implemented** (Go, Android, iOS), with the Argo CD self-heal warning on scale and CronJob suspend/resume (D9: "Freeze 1 h first"). Size M. Read [../README.md](../README.md) for the conventions.
 
 ## What exists today
 

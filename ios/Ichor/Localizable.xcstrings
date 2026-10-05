@@ -458,6 +458,41 @@
         }
       }
     },
+    "Change tenant or credentials" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mandant oder Zugangsdaten ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar el tenant o las credenciales"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier le tenant ou les identifiants"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica tenant o credenziali"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити тенант або облікові дані"
+          }
+        }
+      }
+    },
     "Cluster CPU usage over the last minutes" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1085,6 +1120,41 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не закривайте Ichor, доки вузол не перезавантажиться"
+          }
+        }
+      }
+    },
+    "The metrics source refused the query (HTTP 401 or 403): check the tenant (X-Scope-OrgID) and the credentials." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Metrikquelle hat die Abfrage abgelehnt (HTTP 401 oder 403): Mandant (X-Scope-OrgID) und Zugangsdaten prüfen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La fuente de métricas rechazó la consulta (HTTP 401 o 403): comprueba el tenant (X-Scope-OrgID) y las credenciales."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La source de métriques a refusé la requête (HTTP 401 ou 403) : vérifiez le tenant (X-Scope-OrgID) et les identifiants."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sorgente delle metriche ha rifiutato la query (HTTP 401 o 403): controlla il tenant (X-Scope-OrgID) e le credenziali."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Джерело метрик відхилило запит (HTTP 401 або 403): перевірте тенант (X-Scope-OrgID) і облікові дані."
           }
         }
       }
@@ -69551,47 +69621,6 @@
         }
       }
     },
-    "Could not freeze %@, nothing scaled: %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ konnte nicht eingefroren werden, nichts skaliert: %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not freeze %@, nothing scaled: %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No se pudo congelar %@, no se escaló nada: %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de geler %@, rien n'a été scalé : %@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossibile congelare %@, nulla è stato scalato: %@"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не вдалося заморозити %@, нічого не масштабовано: %@"
-          }
-        }
-      }
-    },
     "Argo CD will not auto-sync or self-heal %lld apps (%@) until %@. Changes made by hand stay until then." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -70555,6 +70584,211 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Richiedi"
+          }
+        }
+      }
+    },
+    "Could not freeze %@, nothing changed: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ konnte nicht eingefroren werden, nichts geändert: %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not freeze %@, nothing changed: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo congelar %@, no se cambió nada: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de geler %@, rien n'a changé : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile congelare %@, nulla è cambiato: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося заморозити %@, нічого не змінено: %@"
+          }
+        }
+      }
+    },
+    "Freeze %@ 1 h first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ zuerst 1 Std. einfrieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Freeze %@ 1 h first"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Congelar %@ 1 h antes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geler %@ 1 h d'abord"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Congela prima %@ per 1 h"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спершу заморозити %@ на 1 год"
+          }
+        }
+      }
+    },
+    "%@ deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze %@ first to keep your change for a while." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ stellt dies mit aktiver Selbstheilung bereit: Innerhalb von Minuten setzt es das auf den Stand in Git zurück. Friere %@ zuerst ein, um deine Änderung eine Weile zu behalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ deploys this with self-heal on: within minutes it puts it back as Git has it. Freeze %@ first to keep your change for a while."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ despliega esto con la autorreparación activada: en minutos lo devuelve a como está en Git. Congela %@ antes para conservar tu cambio un tiempo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ déploie ceci avec l'auto-réparation active : en quelques minutes, il le remet comme dans Git. Gelez %@ d'abord pour garder votre changement un moment."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ distribuisce questo con l'auto-riparazione attiva: in pochi minuti lo riporta come è in Git. Congela prima %@ per mantenere la modifica per un po'."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ розгортає це з увімкненим самовідновленням: за кілька хвилин воно поверне це до стану в Git. Спершу заморозьте %@, щоб зберегти зміну на якийсь час."
+          }
+        }
+      }
+    },
+    "suspend" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aussetzen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "suspend"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "suspender"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "suspension"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sospensione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "призупинення"
+          }
+        }
+      }
+    },
+    "resume" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fortsetzen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "resume"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reanudar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reprise"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ripresa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "відновлення"
           }
         }
       }

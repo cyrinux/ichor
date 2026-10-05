@@ -149,6 +149,9 @@
     <string name="overview_node_actions">Acciones del nodo</string>
     <string name="overview_role_control_plane">plano de control</string>
     <string name="overview_update_banner">Ichor %1$s está disponible: toca para actualizar</string>
+    <string name="overview_store_update_available">Hay una actualización disponible: toca para actualizar</string>
+    <string name="overview_store_update_downloading">Descargando la actualización…</string>
+    <string name="overview_store_update_ready">Actualización descargada: toca para reiniciar</string>
     <string name="overview_support_title">¿Te gusta Ichor?</string>
     <string name="overview_support_body">Es gratuita y de código abierto. Si te ahorra tiempo, puedes apoyar su desarrollo.</string>
     <string name="overview_support_never">No volver a preguntar</string>
@@ -2140,6 +2143,8 @@
     <string name="metrics_skip_verify">No verificar el certificado</string>
     <string name="metrics_test">Probar</string>
     <string name="metrics_reachable">La API de consultas responde.</string>
+    <string name="metrics_refused">La fuente de métricas rechazó la consulta (HTTP 401 o 403): comprueba el tenant (X-Scope-OrgID) y las credenciales.</string>
+    <string name="metrics_change_credentials">Cambiar el tenant o las credenciales</string>
     <plurals name="metrics_truncated">
         <item quantity="one">Se muestra %1$d serie de %2$d</item>
         <item quantity="other">Se muestran %1$d series de %2$d</item>
@@ -2454,8 +2459,6 @@
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
     <string name="argo_revert_title">Argo CD revertirá esto</string>
-    <string name="argo_revert_text">%1$s despliega esta carga con la autorreparación activada: en minutos devuelve las réplicas a como están en Git. Congela %1$s antes para conservar tu cambio un tiempo.</string>
-    <string name="argo_revert_freeze">Congelar %1$s 1 h y escalar</string>
     <string name="argo_revert_anyway">Escalar de todos modos</string>
     <string name="argo_freeze_reason_scale">escalar a %1$d</string>
     <string name="workloads_scale_freeze_failed">No se pudo congelar %1$s, no se escaló nada: %2$s</string>
@@ -2511,4 +2514,9 @@
         <item quantity="one">%1$d en cola</item>
         <item quantity="other">%1$d en cola</item>
     </plurals>
+    <string name="argo_revert_text_change">%1$s despliega esto con la autorreparación activada: en minutos lo devuelve a como está en Git. Congela %1$s antes para conservar tu cambio un tiempo.</string>
+    <string name="argo_revert_freeze_first">Congelar %1$s 1 h antes</string>
+    <string name="argo_freeze_reason_suspend">suspender</string>
+    <string name="argo_freeze_reason_resume">reanudar</string>
+    <string name="argo_freeze_failed_nothing_changed">No se pudo congelar %1$s, no se cambió nada: %2$s</string>
 </resources>

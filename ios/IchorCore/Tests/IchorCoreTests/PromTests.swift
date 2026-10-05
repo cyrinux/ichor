@@ -14,6 +14,12 @@ final class PromTests: XCTestCase {
         XCTAssertEqual(found.sources.first?.label, "monitoring/prometheus-operated:9090")
     }
 
+    func testRefusedQueryIsRecognised() {
+        XCTAssertTrue(isPromRefused("https://m.example/prometheus: HTTP 401, refused (credentials or tenant): no org id"))
+        XCTAssertFalse(isPromRefused("https://m.example/prometheus: HTTP 404 page not found: check the path prefix"))
+        XCTAssertFalse(isPromRefused(nil))
+    }
+
     func testLegendFillsLabels() {
         let s = PromSeries(name: "x{a=\"1\"}", labels: ["namespace": "kube-system", "pod": "coredns"])
         XCTAssertEqual(s.legend("{{namespace}}/{{ pod }}"), "kube-system/coredns")
