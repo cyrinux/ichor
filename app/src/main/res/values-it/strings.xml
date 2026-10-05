@@ -105,6 +105,37 @@
     </plurals>
     <string name="overview_stat_nodes">Nodi</string>
     <string name="overview_nodes_unplaced">Non sulla mappa</string>
+    <string name="overview_nodes_open_all">Mostra tutti i nodi</string>
+    <string name="nodes_search">Cerca per hostname o indirizzo</string>
+    <string name="nodes_filter_all">Tutti</string>
+    <string name="nodes_filter_attention">Da controllare</string>
+    <string name="nodes_site_all">Tutti i siti</string>
+    <string name="nodes_none">Nessun nodo corrisponde a questi filtri.</string>
+    <string name="nodes_no_match">Nessun nodo corrisponde a «%1$s».</string>
+    <plurals name="overview_nodes_count_ready">
+        <item quantity="one">%1$d pronto</item>
+        <item quantity="many">%1$d pronti</item>
+        <item quantity="other">%1$d pronti</item>
+    </plurals>
+    <plurals name="overview_nodes_count_attention">
+        <item quantity="one">%1$d da controllare</item>
+        <item quantity="other">%1$d da controllare</item>
+    </plurals>
+    <plurals name="overview_nodes_count_not_ready">
+        <item quantity="one">%1$d non pronto</item>
+        <item quantity="many">%1$d non pronti</item>
+        <item quantity="other">%1$d non pronti</item>
+    </plurals>
+    <plurals name="overview_nodes_count_unreachable">
+        <item quantity="one">%1$d irraggiungibile</item>
+        <item quantity="many">%1$d irraggiungibili</item>
+        <item quantity="other">%1$d irraggiungibili</item>
+    </plurals>
+    <plurals name="overview_nodes_more_problems">
+        <item quantity="one">Altro %1$d da controllare</item>
+        <item quantity="many">Altri %1$d da controllare</item>
+        <item quantity="other">Altri %1$d da controllare</item>
+    </plurals>
     <string name="overview_stat_cpu">Core CPU</string>
     <string name="overview_stat_memory">Memoria</string>
     <string name="overview_stat_memory_used">%d%% in uso</string>

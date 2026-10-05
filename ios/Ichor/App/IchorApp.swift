@@ -109,6 +109,8 @@ enum Route: Hashable {
     /// Node screen opened on a tab, or with a reboot/shutdown confirmation (from row swipes).
     case nodeLive(NodeRef)
     case nodePower(NodeRef, PowerAction)
+    /// Every node of a large cluster (see isDenseCluster), as the overview loaded them; filter preselects one.
+    case nodes(filter: NodeFilter?, nodes: [NodeOverview])
     case logs(node: String, hostname: String, service: String?)
     /// Log of one Kubernetes container (from the Pods tab).
     case containerLogs(node: String, hostname: String, container: LogContainer)
@@ -163,6 +165,7 @@ struct MainNavigation: View {
                     case .node(let ref): NodeDetailView(ref: ref)
                     case .nodeLive(let ref): NodeDetailView(ref: ref, initialTab: .live)
                     case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
+                    case .nodes(let filter, let nodes): NodesView(nodes: nodes, filter: filter, path: $path)
                     case .logs(let node, let hostname, let service):
                         LogsView(node: node, hostname: hostname, service: service)
                     case .containerLogs(let node, let hostname, let container):

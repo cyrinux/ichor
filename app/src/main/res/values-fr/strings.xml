@@ -105,6 +105,37 @@
     </plurals>
     <string name="overview_stat_nodes">Nœuds</string>
     <string name="overview_nodes_unplaced">Hors de la carte</string>
+    <string name="overview_nodes_open_all">Voir tous les nœuds</string>
+    <string name="nodes_search">Rechercher par nom d\'hôte ou adresse</string>
+    <string name="nodes_filter_all">Tous</string>
+    <string name="nodes_filter_attention">À vérifier</string>
+    <string name="nodes_site_all">Tous les sites</string>
+    <string name="nodes_none">Aucun nœud ne correspond à ces filtres.</string>
+    <string name="nodes_no_match">Aucun nœud ne correspond à « %1$s ».</string>
+    <plurals name="overview_nodes_count_ready">
+        <item quantity="one">%1$d prêt</item>
+        <item quantity="many">%1$d prêts</item>
+        <item quantity="other">%1$d prêts</item>
+    </plurals>
+    <plurals name="overview_nodes_count_attention">
+        <item quantity="one">%1$d à vérifier</item>
+        <item quantity="other">%1$d à vérifier</item>
+    </plurals>
+    <plurals name="overview_nodes_count_not_ready">
+        <item quantity="one">%1$d non prêt</item>
+        <item quantity="many">%1$d non prêts</item>
+        <item quantity="other">%1$d non prêts</item>
+    </plurals>
+    <plurals name="overview_nodes_count_unreachable">
+        <item quantity="one">%1$d injoignable</item>
+        <item quantity="many">%1$d injoignables</item>
+        <item quantity="other">%1$d injoignables</item>
+    </plurals>
+    <plurals name="overview_nodes_more_problems">
+        <item quantity="one">%1$d autre à vérifier</item>
+        <item quantity="many">%1$d autres à vérifier</item>
+        <item quantity="other">%1$d autres à vérifier</item>
+    </plurals>
     <string name="overview_stat_cpu">Cœurs CPU</string>
     <string name="overview_stat_memory">Mémoire</string>
     <string name="overview_stat_memory_used">%d %% utilisés</string>

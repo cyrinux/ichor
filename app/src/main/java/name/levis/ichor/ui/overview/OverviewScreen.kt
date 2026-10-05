@@ -59,6 +59,7 @@ import name.levis.ichor.update.UpdateState
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.data.TOPOLOGY
 import name.levis.ichor.model.ClusterTopology
+import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.groupNodes
 import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.model.ClusterOverview
@@ -141,6 +142,7 @@ fun OverviewScreen(
     onAddCluster: () -> Unit,
     onClustersCleared: () -> Unit,
     onChangelog: () -> Unit,
+    onAllNodes: (NodeFilter?) -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
@@ -238,10 +240,12 @@ fun OverviewScreen(
     // Live stats and discovery only make sense once a node answers.
     val loaded = state is UiState.Loaded && outage == null
     // Live CPU and memory only while the overview is on screen, once it loaded, and if not turned off.
-    LaunchedEffect(liveEnabled, loaded, config?.activeContext, invalidations) {
+    // Fewer samples on a large cluster: each one asks every node.
+    val nodeCount = (state as? UiState.Loaded)?.data?.nodes?.size ?: 0
+    LaunchedEffect(liveEnabled, loaded, config?.activeContext, invalidations, nodeCount) {
         if (!liveEnabled) liveVm.clear()
         if (!liveEnabled || !loaded) return@LaunchedEffect
-        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { liveVm.poll(config?.activeContext to invalidations) }
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { liveVm.poll(config?.activeContext to invalidations, nodeCount) }
     }
 
     // Members the talosconfig misses, once the overview loaded (its nodes answer, so will discovery).
@@ -439,6 +443,7 @@ fun OverviewScreen(
                     nodesExpanded = nodesExpanded,
                     onToggleNodes = { app.uiPreferences.setNodesExpanded(!nodesExpanded) },
                     onChangelog = onChangelog,
+                    onAllNodes = onAllNodes,
                 )
             }
         }
@@ -483,6 +488,7 @@ private fun NodeList(
     nodesExpanded: Boolean,
     onToggleNodes: () -> Unit,
     onChangelog: () -> Unit,
+    onAllNodes: (NodeFilter?) -> Unit,
 ) {
     var sheetFor by remember { mutableStateOf<NodeOverview?>(null) }
     val wakeOnLan = rememberWakeOnLan(fingerprint)
@@ -558,6 +564,7 @@ private fun NodeList(
                         onNode = onNode,
                         onLive = { onNodeAction(it, NodeAction.LIVE) },
                         onMore = { sheetFor = it },
+                        onAllNodes = onAllNodes,
                         // Only on the title: a long press on a node row opens its actions.
                         titleModifier = Modifier.longPressToCustomize(onCustomize),
                     )

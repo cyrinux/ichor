@@ -105,6 +105,37 @@
     </plurals>
     <string name="overview_stat_nodes">Nodos</string>
     <string name="overview_nodes_unplaced">Fuera del mapa</string>
+    <string name="overview_nodes_open_all">Ver todos los nodos</string>
+    <string name="nodes_search">Buscar por nombre de host o dirección</string>
+    <string name="nodes_filter_all">Todos</string>
+    <string name="nodes_filter_attention">Atención</string>
+    <string name="nodes_site_all">Todos los sitios</string>
+    <string name="nodes_none">Ningún nodo coincide con estos filtros.</string>
+    <string name="nodes_no_match">Ningún nodo coincide con «%1$s».</string>
+    <plurals name="overview_nodes_count_ready">
+        <item quantity="one">%1$d listo</item>
+        <item quantity="many">%1$d listos</item>
+        <item quantity="other">%1$d listos</item>
+    </plurals>
+    <plurals name="overview_nodes_count_attention">
+        <item quantity="one">%1$d requiere atención</item>
+        <item quantity="other">%1$d requieren atención</item>
+    </plurals>
+    <plurals name="overview_nodes_count_not_ready">
+        <item quantity="one">%1$d no listo</item>
+        <item quantity="many">%1$d no listos</item>
+        <item quantity="other">%1$d no listos</item>
+    </plurals>
+    <plurals name="overview_nodes_count_unreachable">
+        <item quantity="one">%1$d inaccesible</item>
+        <item quantity="many">%1$d inaccesibles</item>
+        <item quantity="other">%1$d inaccesibles</item>
+    </plurals>
+    <plurals name="overview_nodes_more_problems">
+        <item quantity="one">%1$d más requiere atención</item>
+        <item quantity="many">%1$d más requieren atención</item>
+        <item quantity="other">%1$d más requieren atención</item>
+    </plurals>
     <string name="overview_stat_cpu">Núcleos de CPU</string>
     <string name="overview_stat_memory">Memoria</string>
     <string name="overview_stat_memory_used">%d %% en uso</string>
