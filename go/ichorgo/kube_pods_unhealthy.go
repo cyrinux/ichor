@@ -7,7 +7,6 @@ import (
 	"maps"
 	"slices"
 	"strings"
-	"sync"
 )
 
 const (
@@ -46,20 +45,9 @@ func unhealthyPods(ctx context.Context, k *kubeClient, namespaces []string) ([]k
 	sorted := slices.Sorted(maps.Keys(wanted))
 	results := make([][]kubePod, len(sorted))
 	errs := make([]error, len(sorted))
-	slots := make(chan struct{}, unhealthyPodsParallel)
-
-	var wg sync.WaitGroup
-
-	for i, ns := range sorted {
-		wg.Go(func() {
-			slots <- struct{}{}
-			defer func() { <-slots }()
-
-			results[i], errs[i] = readUnhealthyPods(ctx, k, ns)
-		})
-	}
-
-	wg.Wait()
+	forEachLimit(sorted, unhealthyPodsParallel, func(i int, ns string) {
+		results[i], errs[i] = readUnhealthyPods(ctx, k, ns)
+	})
 
 	// A namespace the user may not read leaves the others shown.
 	if !slices.Contains(errs, nil) {

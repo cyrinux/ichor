@@ -84,18 +84,7 @@ func EtcdMemberPlan(configYAML, contextName, memberID string) (out string, err e
 func gatherMemberPlan(ctx context.Context, c etcdReader, via []string, memberID string) memberPlanInput {
 	in := memberPlanInput{memberID: normalizeMemberID(memberID)}
 
-	var (
-		members []*machineapi.EtcdMember
-		listErr error
-	)
-
-	for _, n := range via {
-		members, listErr = etcdMembers(ctx, c, n)
-		if listErr == nil {
-			break
-		}
-	}
-
+	members, listErr := firstAnswer(via, func(n string) ([]*machineapi.EtcdMember, error) { return etcdMembers(ctx, c, n) })
 	if listErr != nil {
 		in.listErr = friendlyError(listErr)
 
@@ -107,42 +96,33 @@ func gatherMemberPlan(ctx context.Context, c etcdReader, via []string, memberID 
 
 	in.members = make([]memberState, len(members))
 
-	var (
-		mu sync.Mutex
-		wg sync.WaitGroup
-	)
+	var ask []int // the members with an address to ask
 
 	for i, m := range members {
 		in.members[i] = memberState{id: m.GetId(), hostname: m.GetHostname(), address: memberAddress(m), learner: m.GetIsLearner()}
 
-		addr := in.members[i].address
-		if addr == "" {
-			continue
+		if in.members[i].address != "" {
+			ask = append(ask, i)
 		}
-
-		wg.Go(func() {
-			resp, err := c.EtcdStatus(client.WithNode(ctx, addr))
-			if err != nil {
-				return
-			}
-
-			st := first(resp.GetMessages()).GetMemberStatus()
-			if st == nil || len(st.GetErrors()) > 0 {
-				return
-			}
-
-			mu.Lock()
-			defer mu.Unlock()
-
-			in.members[i].healthy = true
-
-			if in.leader == 0 {
-				in.leader = st.GetLeader()
-			}
-		})
 	}
 
-	wg.Wait()
+	var mu sync.Mutex
+
+	forEachNode(ask, func(_, i int) {
+		st, healthy := memberHealthy(ctx, c, in.members[i].address)
+		if !healthy {
+			return
+		}
+
+		mu.Lock()
+		defer mu.Unlock()
+
+		in.members[i].healthy = true
+
+		if in.leader == 0 {
+			in.leader = st.GetLeader()
+		}
+	})
 
 	return in
 }

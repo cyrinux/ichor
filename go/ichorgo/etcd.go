@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
-	"sync"
 
 	machineapi "github.com/siderolabs/talos/pkg/machinery/api/machine"
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -97,26 +96,20 @@ func gatherEtcdOverview(ctx context.Context, s *session) (etcdOverview, error) {
 func fetchEtcd(ctx context.Context, c *client.Client, cps []string) etcdOverview {
 	probes := make([]etcdProbe, len(cps))
 
-	var wg sync.WaitGroup
+	forEachNode(cps, func(i int, node string) {
+		probes[i] = etcdProbe{node: node}
 
-	for i, node := range cps {
-		wg.Go(func() {
-			probes[i] = etcdProbe{node: node}
+		resp, err := c.EtcdStatus(client.WithNode(ctx, node))
+		if err != nil {
+			probes[i].err = err
 
-			resp, err := c.EtcdStatus(client.WithNode(ctx, node))
-			if err != nil {
-				probes[i].err = err
+			return
+		}
 
-				return
-			}
-
-			if m := first(resp.GetMessages()); m != nil {
-				probes[i].status = m.GetMemberStatus()
-			}
-		})
-	}
-
-	wg.Wait()
+		if m := first(resp.GetMessages()); m != nil {
+			probes[i].status = m.GetMemberStatus()
+		}
+	})
 
 	order := queryOrder(probes)
 

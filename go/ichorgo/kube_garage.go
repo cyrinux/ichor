@@ -163,17 +163,11 @@ func readGarage(ctx context.Context, k *kubeClient, run execFunc, pods []dsPod, 
 
 	out := &garageStatus{Instances: make([]garageInstance, len(groups))}
 
-	var wg sync.WaitGroup
-
-	for i, g := range groups {
-		wg.Go(func() {
-			out.Instances[i] = readGarageInstance(ctx, run, g, func(ctx context.Context) (string, string) {
-				return garageProxyHealth(ctx, k, g)
-			})
+	forEachNode(groups, func(i int, g garageGroup) {
+		out.Instances[i] = readGarageInstance(ctx, run, g, func(ctx context.Context) (string, string) {
+			return garageProxyHealth(ctx, k, g)
 		})
-	}
-
-	wg.Wait()
+	})
 
 	return out
 }

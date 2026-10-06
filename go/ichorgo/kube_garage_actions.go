@@ -423,21 +423,11 @@ func readGarageBlockReport(ctx context.Context, run execFunc, t garageTarget) (g
 		}
 	}
 
-	sem := make(chan struct{}, garageLookups)
-
-	for _, l := range lookups {
+	forEachLimit(lookups, garageLookups, func(_ int, l lookup) {
 		node := &report.Nodes[l.node]
-		block := &node.Blocks[l.block]
 
-		wg.Go(func() {
-			sem <- struct{}{}
-			defer func() { <-sem }()
-
-			lookupGarageBlock(ctx, run, t, node.ID, block)
-		})
-	}
-
-	wg.Wait()
+		lookupGarageBlock(ctx, run, t, node.ID, &node.Blocks[l.block])
+	})
 
 	for _, node := range report.Nodes {
 		for _, b := range node.Blocks {
