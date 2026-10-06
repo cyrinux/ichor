@@ -312,7 +312,7 @@ struct TalosClient: Sendable {
     /// unless `encryption` is .none; cancelling the consuming task cancels the transfer (Go
     /// then removes the partial file).
     func etcdSnapshot(node: String, destPath: String, encryption: SnapshotEncryption) -> AsyncStream<SnapshotEvent> {
-        Self.bridged { continuation in
+        TalosClient.bridged { continuation in
             let bridge = SnapshotBridge(
                 progress: { continuation.yield(.progress(bytes: $0)) },
                 done: {
@@ -336,7 +336,7 @@ struct TalosClient: Sendable {
     /// `talosctl events` from nodes (nil = the context's nodes), replaying the last `tail` per
     /// node first (os:reader); cancelling the consuming task cancels the stream.
     func events(node: String?, tail: Int = 50) -> AsyncStream<EventStreamItem> {
-        Self.bridged { continuation in
+        TalosClient.bridged { continuation in
             let bridge = EventsBridge(
                 event: { continuation.yield(.event($0)) },
                 done: {
@@ -351,7 +351,7 @@ struct TalosClient: Sendable {
 
     /// `talosctl logs -f` (kernel log when `service` is nil), starting with the last `tailLines`.
     func followLogs(node: String, service: String?, tailLines: Int = 200) -> AsyncStream<LogFollowItem> {
-        Self.bridged { continuation in
+        TalosClient.bridged { continuation in
             let bridge = LogBridge(
                 line: { continuation.yield(.line($0)) },
                 done: {
@@ -439,7 +439,7 @@ struct TalosClient: Sendable {
 
     /// Streams the server-side health check; cancelling the consuming task cancels the check.
     func health() -> AsyncStream<HealthEvent> {
-        Self.bridged { continuation in
+        TalosClient.bridged { continuation in
             let bridge = HealthBridge(
                 progress: { continuation.yield(.progress(node: $0, message: $1)) },
                 done: {

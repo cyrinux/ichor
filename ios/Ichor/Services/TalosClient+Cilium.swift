@@ -24,7 +24,7 @@ extension TalosClient {
     /// Follows the cluster's flows live (`hubble observe --follow` in every cilium-agent);
     /// cancelling the consuming task stops it.
     func hubbleFlows(_ filter: HubbleFilter) -> AsyncStream<HubbleEvent> {
-        Self.bridged(buffering: .bufferingNewest(4)) { continuation in
+        TalosClient.bridged(buffering: .bufferingNewest(4)) { continuation in
             let bridge = HubbleBridge(
                 update: { continuation.yield(.update($0)) },
                 done: {

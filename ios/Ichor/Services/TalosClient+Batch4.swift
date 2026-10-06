@@ -93,7 +93,7 @@ extension TalosClient {
     /// consuming task only stops following: the node keeps upgrading. `acknowledged`: the user
     /// confirmed the plan's and the version's risks (Go refuses them otherwise, even forced).
     func upgrade(node: String, image: String, stage: Bool, force: Bool, acknowledged: Bool) -> AsyncStream<UpgradeEvent> {
-        Self.bridged { continuation in
+        TalosClient.bridged { continuation in
             let bridge = UpgradeBridge(
                 progress: { continuation.yield(.progress($0)) },
                 done: {

@@ -33,7 +33,7 @@ final class DiagnosisReport: @unchecked Sendable {
     /// consuming task stops waiting for it. An empty model means the provider's default, an
     /// empty baseURL its own API.
     func ask(provider: String, settings: AIProviderSettings, language: String, note: String) -> AsyncStream<DiagnosisEvent> {
-        Self.bridged { continuation in
+        TalosClient.bridged { continuation in
             let bridge = DiagnosisBridge(
                 answer: { continuation.yield(.answer($0)) },
                 done: {

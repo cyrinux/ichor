@@ -18,7 +18,7 @@ extension TalosClient {
 
     /// `talosctl logs -k -f` of one container, starting with the last `tailLines`.
     func followContainerLogs(node: String, containerID: String, tailLines: Int = 200) -> AsyncStream<LogFollowItem> {
-        Self.bridged { continuation in
+        TalosClient.bridged { continuation in
             let bridge = LogBridge(
                 line: { continuation.yield(.line($0)) },
                 done: {
@@ -87,7 +87,7 @@ extension TalosClient {
     /// `talosctl support` for nodesCSV into destPath (os:admin). Cancelling the consuming
     /// task cancels the collection (Go then removes the partial file).
     func supportBundle(nodesCSV: String, destPath: String) -> AsyncStream<SupportBundleEvent> {
-        Self.bridged { continuation in
+        TalosClient.bridged { continuation in
             let bridge = SupportBridge(
                 progress: { continuation.yield(.progress($0)) },
                 done: {
