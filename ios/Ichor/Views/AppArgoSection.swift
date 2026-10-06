@@ -161,12 +161,8 @@ struct AppArgoSection: View {
         guard let client = model.client, !busy.contains(argo.id) else { return }
         busy.insert(argo.id)
         defer { busy.remove(argo.id) }
-        if let failure = await store.run(action, on: argo, options: options, with: client) {
-            message = failure
-        } else {
-            succeeded += 1
-            announce(String(localized: "Done"))
-        }
+        let failure = await store.run(action, on: argo, options: options, with: client)
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
         await load()
     }
 }

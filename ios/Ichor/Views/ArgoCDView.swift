@@ -207,12 +207,8 @@ struct ArgoCDView: View {
     /// Freezes from a group header, then reads again.
     private func freeze(_ project: ArgoProject, _ options: ArgoFreezeOptions) async {
         guard let client = model.client else { return }
-        if let failure = await store.freeze(.freeze, on: project, options: [options], with: client) {
-            message = failure
-        } else {
-            succeeded += 1
-            announce(String(localized: "Done"))
-        }
+        let failure = await store.freeze(.freeze, on: project, options: [options], with: client)
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
         await load()
     }
 
@@ -227,7 +223,7 @@ struct ArgoCDView: View {
         } else {
             failure = await store.run(action, on: apps, with: client)
         }
-        if let failure { message = failure } else { succeeded += 1; announce(String(localized: "Done")) }
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
         if action == .sync { editMode = .inactive }
         await load()
     }

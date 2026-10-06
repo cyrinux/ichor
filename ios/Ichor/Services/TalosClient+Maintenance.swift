@@ -46,20 +46,13 @@ extension TalosClient {
 }
 
 private final class MaintenanceBridge: NSObject, IchorgoMaintenanceListenerProtocol, @unchecked Sendable {
-    private let progress: @Sendable (MaintenanceProgress) -> Void
-    private let done: @Sendable (String?) -> Void
+    private let sink: JSONSink<MaintenanceProgress>
 
     init(progress: @escaping @Sendable (MaintenanceProgress) -> Void, done: @escaping @Sendable (String?) -> Void) {
-        self.progress = progress
-        self.done = done
+        sink = JSONSink(item: progress, done: done)
     }
 
-    func onProgress(_ json: String?) {
-        guard let json, let decoded = try? TalosJSON.decode(MaintenanceProgress.self, from: json) else { return }
-        progress(decoded)
-    }
+    func onProgress(_ json: String?) { sink.emit(json) }
 
-    func onDone(_ errMessage: String?) {
-        done(errMessage.nonEmpty)
-    }
+    func onDone(_ errMessage: String?) { sink.finish(errMessage) }
 }

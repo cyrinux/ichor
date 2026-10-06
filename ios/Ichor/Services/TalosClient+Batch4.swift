@@ -93,7 +93,7 @@ extension TalosClient {
     /// consuming task only stops following: the node keeps upgrading. `acknowledged`: the user
     /// confirmed the plan's and the version's risks (Go refuses them otherwise, even forced).
     func upgrade(node: String, image: String, stage: Bool, force: Bool, acknowledged: Bool) -> AsyncStream<UpgradeEvent> {
-        AsyncStream { continuation in
+        TalosClient.bridged { continuation in
             let bridge = UpgradeBridge(
                 progress: { continuation.yield(.progress($0)) },
                 done: {
@@ -102,10 +102,7 @@ extension TalosClient {
                 }
             )
             let run = IchorgoStartUpgrade(config, context, kubeServer, node, image, stage, force, acknowledged, bridge)
-            continuation.onTermination = { _ in
-                run?.cancel()
-                _ = bridge // keep the listener alive while following
-            }
+            return BridgedRun(bridge) { run?.cancel() }
         }
     }
 }

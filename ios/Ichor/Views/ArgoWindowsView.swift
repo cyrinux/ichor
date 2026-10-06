@@ -169,12 +169,8 @@ struct ArgoWindowsView: View {
 
     private func change(_ action: ArgoFreezeAction, _ pw: ProjectWindow, _ options: ArgoFreezeOptions) async {
         guard let client = model.client else { return }
-        if let failure = await store.freeze(action, on: pw.project, options: [options], with: client) {
-            message = failure
-        } else {
-            succeeded += 1
-            announce(String(localized: "Done"))
-        }
+        let failure = await store.freeze(action, on: pw.project, options: [options], with: client)
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
         await load()
     }
 
