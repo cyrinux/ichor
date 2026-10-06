@@ -112,8 +112,7 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
  * form, from a GitOps alert's "tool|severity|reason" detail and its subject.
  */
 private fun gitopsAlertTitle(context: Context, alert: Alert): String {
-    val tool = alert.detail.substringBefore('|')
-    val reason = alert.detail.substringAfterLast('|')
+    val (tool, _, reason) = GitOpsDetail.parse(alert.detail)
     if (tool == GITOPS_FLUX) {
         // "Kind namespace/name".
         val kind = alert.subject.substringBefore(' ')
@@ -137,7 +136,7 @@ private fun gitopsAlertTitle(context: Context, alert: Alert): String {
 private fun gitopsAlertText(context: Context, alert: Alert): String {
     val where = alert.subject.substringAfter(' ')
     if (!alert.problem) return where
-    val severity = when (alert.detail.split('|').getOrNull(1)) {
+    val severity = when (GitOpsDetail.parse(alert.detail).severity) {
         DATA_CRITICAL -> context.getString(R.string.data_services_health_critical)
         else -> context.getString(R.string.data_services_health_warning)
     }

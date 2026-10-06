@@ -90,11 +90,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
         val merged = _config.value?.let {
             Ichorgo.mergeConfig(it.yaml, yaml, TalosJson.encodeToString(ListSerializer(ImportChoice.serializer()), choices))
         } ?: yaml
-        val summary = parse(merged)
-        store.write(merged.encodeToByteArray())
-        saveActive(summary, summary.current)
-        _config.value = StoredConfig(merged, summary, summary.current)
-        _generation.value++
+        commit(merged, parse(merged), active = null)
     }
 
     /**
@@ -103,11 +99,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      */
     suspend fun replace(yaml: String, activeIndex: Int) = writing {
         val summary = parse(yaml)
-        val active = contextAt(summary, activeIndex)
-        store.write(yaml.encodeToByteArray())
-        saveActive(summary, active)
-        _config.value = StoredConfig(yaml, summary, active)
-        _generation.value++
+        commit(yaml, summary, contextAt(summary, activeIndex))
     }
 
     /** The position of the context on screen (contexts keep their order whether masked or not). */
@@ -133,10 +125,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
             summary,
             activeIndexAfterRemoval(current.summary.indexOf(current.activeContext), removed, summary.contexts.size),
         )
-        store.write(remaining.encodeToByteArray())
-        saveActive(summary, active)
-        _config.value = StoredConfig(remaining, summary, active)
-        _generation.value++
+        commit(remaining, summary, active)
         true
     }
 
@@ -150,9 +139,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
         val merged = Ichorgo.replaceContextCredentials(current.yaml, generatedYaml, contextName)
         val summary = parse(merged)
         check(summary.contexts.any { it.name == current.activeContext }) { "context ${current.activeContext} disappeared" }
-        store.write(merged.encodeToByteArray())
-        _config.value = StoredConfig(merged, summary, current.activeContext)
-        _generation.value++
+        commit(merged, summary, current.activeContext, remember = false)
     }
 
     /**
@@ -187,9 +174,18 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
     private suspend fun edit(change: (String) -> String) = writing {
         val current = _config.value ?: throw NoConfigException()
         val updated = change(current.yaml)
-        val summary = parse(updated)
-        store.write(updated.encodeToByteArray())
-        _config.value = StoredConfig(updated, summary, current.activeContext)
+        commit(updated, parse(updated), current.activeContext, remember = false)
+    }
+
+    /**
+     * Writes [yaml] as the stored config and shows [active] (null: the config's own current
+     * context), which [remember] also saves as the context to come back to.
+     */
+    private suspend fun commit(yaml: String, summary: ConfigSummary, active: String?, remember: Boolean = true) {
+        val shown = active ?: summary.current
+        store.write(yaml.encodeToByteArray())
+        if (remember) saveActive(summary, shown)
+        _config.value = StoredConfig(yaml, summary, shown)
         _generation.value++
     }
 

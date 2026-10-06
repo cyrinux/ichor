@@ -41,68 +41,30 @@ private val VELERO_ALERT_REASONS = setOf(VeleroReason.STALE, VeleroReason.PARTIA
  */
 fun dataIssuesOf(services: DataServices): Map<String, String> {
     val out = sortedMapOf<String, String>()
-    services.longhorn?.volumes.orEmpty().forEach { v ->
-        when (v.serviceHealth) {
-            ServiceHealth.CRITICAL -> out["longhorn|${v.label}"] = DATA_CRITICAL
-            ServiceHealth.WARNING -> out["longhorn|${v.label}"] = DATA_WARNING
-            else -> Unit
-        }
-    }
-    services.garage?.instances.orEmpty().forEach { g ->
-        when {
-            g.state == GarageState.UNAVAILABLE -> out["garage|${g.label}"] = DATA_CRITICAL
-            g.state == GarageState.DEGRADED || g.resyncErrors > 0 -> out["garage|${g.label}"] = DATA_WARNING
-        }
-    }
-    services.cnpg?.clusters.orEmpty().forEach { c ->
-        when {
-            c.serviceHealth == ServiceHealth.CRITICAL -> out["cnpg|${c.label}"] = DATA_CRITICAL
-            c.reasonList.any { it in CNPG_ALERT_REASONS } -> out["cnpg|${c.label}"] = DATA_WARNING
-        }
-    }
-    services.dragonfly?.instances.orEmpty().forEach { d ->
-        when {
-            d.serviceHealth == ServiceHealth.CRITICAL -> out["dragonfly|${d.label}"] = DATA_CRITICAL
-            // A rolling update is planned; a replica down or two masters are not.
-            d.reasonList.any { it == DragonflyReason.PODS || it == DragonflyReason.MASTERS } -> out["dragonfly|${d.label}"] = DATA_WARNING
-        }
-    }
-    services.mariadb?.clusters.orEmpty().forEach { m ->
-        when {
-            m.serviceHealth == ServiceHealth.CRITICAL -> out["mariadb|${m.label}"] = DATA_CRITICAL
-            m.reasonList.any { it in MARIADB_ALERT_REASONS } -> out["mariadb|${m.label}"] = DATA_WARNING
-        }
-    }
-    services.percona?.clusters.orEmpty().forEach { c ->
-        when {
-            c.serviceHealth == ServiceHealth.CRITICAL -> out["percona|${c.label}"] = DATA_CRITICAL
-            c.reasonList.any { it in PERCONA_ALERT_REASONS } -> out["percona|${c.label}"] = DATA_WARNING
-        }
-    }
-    services.certManager?.certificates.orEmpty().forEach { c ->
-        when {
-            c.serviceHealth == ServiceHealth.CRITICAL -> out["certmanager|${c.label}"] = DATA_CRITICAL
-            c.reasonList.any { it in CERT_ALERT_REASONS } -> out["certmanager|${c.label}"] = DATA_WARNING
-        }
-    }
-    services.certManager?.issuers.orEmpty().filter { !it.ready }.forEach { out["certmanager|${it.label}"] = DATA_WARNING }
-    services.velero?.schedules.orEmpty().forEach { s ->
-        when {
-            s.serviceHealth == ServiceHealth.CRITICAL -> out["velero|${s.label}"] = DATA_CRITICAL
-            s.reasonList.any { it in VELERO_ALERT_REASONS } -> out["velero|${s.label}"] = DATA_WARNING
-        }
-    }
+    out.flag("longhorn", services.longhorn?.volumes, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { it.serviceHealth == ServiceHealth.WARNING })
+    out.flag("garage", services.garage?.instances, { it.label }, { it.state == GarageState.UNAVAILABLE }, { it.state == GarageState.DEGRADED || it.resyncErrors > 0 })
+    out.flag("cnpg", services.cnpg?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CNPG_ALERT_REASONS } })
+    // A rolling update is planned; a replica down or two masters are not.
+    out.flag("dragonfly", services.dragonfly?.instances, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { d -> d.reasonList.any { it == DragonflyReason.PODS || it == DragonflyReason.MASTERS } })
+    out.flag("mariadb", services.mariadb?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { m -> m.reasonList.any { it in MARIADB_ALERT_REASONS } })
+    out.flag("percona", services.percona?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in PERCONA_ALERT_REASONS } })
+    out.flag("certmanager", services.certManager?.certificates, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CERT_ALERT_REASONS } })
+    out.flag("certmanager", services.certManager?.issuers, { it.label }, { false }, { !it.ready })
+    out.flag("velero", services.velero?.schedules, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { s -> s.reasonList.any { it in VELERO_ALERT_REASONS } })
     // A failed backup taken by hand was seen by whoever took it: shown, not alerted.
-    services.velero?.locations.orEmpty().filter { it.serviceHealth == ServiceHealth.CRITICAL }.forEach { l ->
-        out["velero|BackupStorageLocation/${l.label}"] = DATA_CRITICAL
-    }
-    services.ceph?.clusters.orEmpty().forEach { c ->
+    out.flag("velero", services.velero?.locations, { "BackupStorageLocation/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
+    out.flag("ceph", services.ceph?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CEPH_ALERT_REASONS } })
+    // A pool alerts only when Rook reports it failed.
+    out.flag("ceph", services.ceph?.pools, { "${it.kind}/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
+    return out
+}
+
+/** Records each of [items] under "[system]|label": [critical] ones as critical, else [warning] ones as warnings. */
+private inline fun <T> MutableMap<String, String>.flag(system: String, items: List<T>?, label: (T) -> String, critical: (T) -> Boolean, warning: (T) -> Boolean) {
+    items.orEmpty().forEach { item ->
         when {
-            c.serviceHealth == ServiceHealth.CRITICAL -> out["ceph|${c.label}"] = DATA_CRITICAL
-            c.reasonList.any { it in CEPH_ALERT_REASONS } -> out["ceph|${c.label}"] = DATA_WARNING
+            critical(item) -> this["$system|${label(item)}"] = DATA_CRITICAL
+            warning(item) -> this["$system|${label(item)}"] = DATA_WARNING
         }
     }
-    // A pool alerts only when Rook reports it failed.
-    services.ceph?.pools.orEmpty().filter { it.serviceHealth == ServiceHealth.CRITICAL }.forEach { out["ceph|${it.kind}/${it.label}"] = DATA_CRITICAL }
-    return out
 }

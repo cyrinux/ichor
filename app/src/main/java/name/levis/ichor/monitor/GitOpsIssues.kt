@@ -25,6 +25,16 @@ fun gitopsValue(severity: String, reason: String): String = "$severity|$reason"
 
 fun gitopsSeverity(value: String): String = value.substringBefore('|')
 
+/** A GitOps alert's "tool|severity|reason" detail, split; a missing part is "". */
+data class GitOpsDetail(val tool: String, val severity: String, val reason: String) {
+    companion object {
+        fun parse(detail: String): GitOpsDetail {
+            val parts = detail.split('|')
+            return GitOpsDetail(parts.getOrElse(0) { "" }, parts.getOrElse(1) { "" }, parts.getOrElse(2) { "" })
+        }
+    }
+}
+
 /**
  * The Argo CD and Flux apps worth a notification, keyed "argocd|namespace/name" or
  * "flux|Kind namespace/name", valued "severity|reason" (see [gitopsValue]).
