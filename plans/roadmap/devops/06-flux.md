@@ -4,7 +4,8 @@ Status: **implemented**: Go core (`kube_flux*.go`, `just probe flux`, `just prob
 KIND NAMESPACE NAME ACTION`), Android and iOS screens. Remaining: on-device checks against a real
 Flux, alerts (phase 4), the dependsOn tree and events. Diff (phase 5): Kustomization diff done in Go
 (`kube_diff*.go` shared with the future Argo CD diff, `kube_flux_{artifact,build,diff}.go`, `just probe
-flux-diff KIND NAMESPACE NAME`); Android and iOS screens and the HelmRelease steps remain.
+flux-diff KIND NAMESPACE NAME`), Android (`ui/flux/FluxDiffScreen.kt`, `ui/diff`) and iOS
+(`FluxDiffView.swift`, `DiffViews.swift`) screens; the HelmRelease steps remain.
 
 ## Goal
 
