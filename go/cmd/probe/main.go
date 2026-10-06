@@ -1,9 +1,12 @@
 // Command probe exercises the ichorgo API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubeconfig|workloads|rollout-restart KIND NAMESPACE NAME|rollout-status KIND NAMESPACE NAME|cronjobs|cronjob-run NAMESPACE NAME|pods|pods-page NAMESPACE|all LIMIT [TOKEN]|node-pods KUBENODE [PHASE]|kube-node-name NODE|workload-pods KIND NAMESPACE NAME [PHASE]|namespaces|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|dataservices [HINTS]|argocd|argocd-network NAMESPACE NAME|argocd-action NAMESPACE NAME ACTION [OPTIONS]|argocd-freeze NAMESPACE PROJECT ACTION [OPTIONS]|flux|flux-action KIND NAMESPACE NAME ACTION|flux-diff KIND NAMESPACE NAME|cilium|netpol|apihealth|audit [MINUTES]|hubble [SECONDS] [all|drops] [NAMESPACE [POD]]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] COMMAND [ARGS]
+//
+// Without a command it lists them all (see commands.go and the cmd_*.go files).
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -11,7 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
-	"time"
 
 	"github.com/cyrinux/ichor/go/ichorgo"
 )
@@ -81,7 +83,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|clusterstats|inventory|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|topology|kubeconfig|pods|pods-page NAMESPACE|all LIMIT [TOKEN]|node-pods KUBENODE [PHASE]|kube-node-name NODE|workload-pods KIND NAMESPACE NAME [PHASE]|namespaces|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|workloads|rollout-restart KIND NAMESPACE NAME|rollout-status KIND NAMESPACE NAME|cronjobs|cronjob-run NAMESPACE NAME|dataservices [HINTS]|argocd|argocd-network NAMESPACE NAME|argocd-action NAMESPACE NAME ACTION [OPTIONS]|argocd-freeze NAMESPACE PROJECT ACTION [OPTIONS]|flux|flux-action KIND NAMESPACE NAME ACTION|flux-diff KIND NAMESPACE NAME|cilium|netpol|apihealth|audit [MINUTES]|hubble [SECONDS] [all|drops] [NAMESPACE [POD]]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai"))
+		fail(errors.New(usage()))
 	}
 
 	raw, err := os.ReadFile(*configPath)
@@ -97,313 +99,22 @@ func main() {
 		_, _ = ichorgo.ClusterOverview(cfg, *contextName) //nolint:errcheck
 	}
 
-	var out string
-
-	switch cmd := flag.Arg(0); cmd {
-	case "parse":
-		out, err = ichorgo.ParseConfig(cfg)
-	case "overview":
-		out, err = ichorgo.ClusterOverview(cfg, *contextName)
-	case "services":
-		out, err = ichorgo.NodeServices(cfg, *contextName, flag.Arg(1))
-	case "resources":
-		out, err = ichorgo.NodeResources(cfg, *contextName, flag.Arg(1))
-	case "logs":
-		out, err = ichorgo.ServiceLogs(cfg, *contextName, flag.Arg(1), flag.Arg(2), 20)
-	case "dmesg":
-		out, err = ichorgo.KernelLogs(cfg, *contextName, flag.Arg(1), 20)
-	case "logstats":
-		if flag.NArg() < 2 {
-			fail(fmt.Errorf("usage: probe logstats NODE [SERVICE...]"))
-		}
-
-		out = logStats(cfg, *contextName, flag.Arg(1), flag.Args()[2:])
-	case "kubeconfig":
-		// Never print the credential itself.
-		var kc string
-		if kc, err = ichorgo.Kubeconfig(cfg, *contextName, *kubeServer); err == nil {
-			out = fmt.Sprintf("kubeconfig: %d bytes, starts with %q", len(kc), firstLine(kc))
-		}
-	case "workloads":
-		out, err = ichorgo.KubeWorkloads(cfg, *contextName, *kubeServer)
-	case "rollout-restart":
-		// rollout-restart KIND NAMESPACE NAME
-		if err = ichorgo.KubeRolloutRestart(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3)); err == nil {
-			out = "restarted"
-		}
-	case "rollout-status":
-		// rollout-status KIND NAMESPACE NAME
-		out, err = ichorgo.KubeRolloutStatus(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
-	case "cronjobs":
-		out, err = ichorgo.KubeCronJobs(cfg, *contextName, *kubeServer)
-	case "cronjob-run":
-		// cronjob-run NAMESPACE NAME: creates a Job from the CronJob's template.
-		out, err = ichorgo.KubeTriggerCronJob(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2))
-	case "pods":
-		out, err = ichorgo.KubePods(cfg, *contextName, *kubeServer)
-	case "pods-page":
-		// pods-page NAMESPACE|all LIMIT [TOKEN]: one page as a Table, as the apps load it.
-		out, err = podsPage(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
-	case "node-pods":
-		// node-pods KUBENODE [PHASE|!PHASE]: the first page of the pods on a node, as a Table.
-		out, err = ichorgo.KubeNodePodsPage(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), "", 0, true)
-	case "kube-node-name":
-		// kube-node-name NODE: the Kubernetes name of a Talos node, what node-pods takes.
-		out, err = ichorgo.KubeNodeName(cfg, *contextName, flag.Arg(1))
-	case "workload-pods":
-		// workload-pods KIND NAMESPACE NAME [PHASE|!PHASE]: the first page of its pods, by its selector.
-		out, err = ichorgo.KubeWorkloadPodsPage(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), "", 0, true)
-	case "namespaces":
-		out, err = ichorgo.KubeNamespaces(cfg, *contextName, *kubeServer)
-	case "dataservices":
-		// dataservices [HINTS], e.g. "garage" or "longhorn,cloudnative-pg"; none checks all.
-		out, err = ichorgo.KubeDataServices(cfg, *contextName, *kubeServer, flag.Arg(1))
-	case "garage-blocks":
-		// garage-blocks NAMESPACE POD: what the blocks failing to resync are (read-only).
-		out, err = ichorgo.KubeGarageBlockErrors(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2))
-	case "garage-repair":
-		// garage-repair NAMESPACE POD: metadata repairs if needed, retry of unreferenced blocks.
-		out, err = ichorgo.KubeGarageRepairBlocks(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2))
-	case "garage-tranquility":
-		// garage-tranquility NAMESPACE POD NODE_ID|* VALUE (0 full speed, 2 Garage's default)
-		var value int
-		if value, err = strconv.Atoi(flag.Arg(4)); err == nil {
-			if err = ichorgo.KubeGarageSetTranquility(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), value); err == nil {
-				out = "set"
-			}
-		}
-	case "longhorn-action":
-		// longhorn-action NAMESPACE NAME ACTION [VALUE], e.g. "longhorn-system pvc-1 backup"
-		// or "longhorn-system worker-1 evict"; VALUE is the replica count of "replicas".
-		value, _ := strconv.Atoi(flag.Arg(4))
-		if err = ichorgo.KubeLonghornAction(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), value); err == nil {
-			out = "requested"
-		}
-	case "cert-details":
-		// cert-details NAMESPACE NAME: conditions, requests, ACME orders and challenges, events, controller log.
-		out, err = ichorgo.KubeCertManagerDetails(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2))
-	case "cert-renew":
-		// cert-renew NAMESPACE NAME: issue the cert-manager certificate again now.
-		if err = ichorgo.KubeCertManagerRenew(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2)); err == nil {
-			out = "requested"
-		}
-	case "argocd":
-		out, err = ichorgo.KubeArgoCD(cfg, *contextName, *kubeServer)
-	case "argocd-network":
-		// argocd-network NAMESPACE NAME
-		out, err = ichorgo.KubeArgoNetwork(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2))
-	case "argocd-action":
-		// argocd-action NAMESPACE NAME ACTION [OPTIONS_JSON], e.g. "argocd web refresh"
-		if err = ichorgo.KubeArgoAction(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4)); err == nil {
-			out = "requested"
-		}
-	case "argocd-freeze":
-		// argocd-freeze NAMESPACE PROJECT ACTION [OPTIONS_JSON], e.g.
-		// `argocd infra freeze '{"namespaces":["web"],"minutes":60,"manualSync":true}'`
-		if err = ichorgo.KubeArgoFreeze(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4)); err == nil {
-			out = "requested"
-		}
-	case "flux":
-		out, err = ichorgo.KubeFlux(cfg, *contextName, *kubeServer)
-	case "flux-action":
-		// flux-action KIND NAMESPACE NAME ACTION, e.g. "Kustomization flux-system apps reconcile"
-		if err = ichorgo.KubeFluxAction(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4)); err == nil {
-			out = "requested"
-		}
-	case "flux-diff":
-		// flux-diff KIND NAMESPACE NAME, e.g. "Kustomization flux-system apps"
-		out, err = ichorgo.KubeFluxDiff(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
-	case "cilium":
-		out, err = ichorgo.KubeCilium(cfg, *contextName, *kubeServer)
-	case "netpol":
-		out, err = ichorgo.KubeNetworkPolicies(cfg, *contextName, *kubeServer)
-	case "apihealth":
-		out, err = ichorgo.KubeAPIHealth(cfg, *contextName, *kubeServer)
-	case "audit":
-		// audit [MINUTES]: reads the control planes' audit logs (os:admin), 15 minutes by default.
-		minutes, _ := strconv.Atoi(flag.Arg(1)) //nolint:errcheck
-		out, err = ichorgo.KubeAuditAnalysis(cfg, *contextName, minutes)
-	case "hubble":
-		// hubble [SECONDS] [all|drops] [NAMESPACE [POD]]: read-only exec in the cilium agents.
-		out = hubbleRun(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
-	case "netperf-nodes":
-		out, err = ichorgo.NetPerfNodes(cfg, *contextName, *kubeServer)
-	case "netperf":
-		// netperf SERVER CLIENT [pod|host] [SECONDS]: creates pods in a temporary namespace.
-		out = netPerfRun(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
-	case "delete-pod":
-		// delete-pod NAMESPACE NAME
-		if err = ichorgo.KubeDeletePod(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2)); err == nil {
-			out = "deleted"
-		}
-	case "scale":
-		// scale KIND NAMESPACE NAME REPLICAS
-		replicas, convErr := strconv.Atoi(flag.Arg(4))
-		if convErr != nil {
-			fmt.Fprintf(os.Stderr, "scale: replicas %q is not a number\n", flag.Arg(4)) // never scale to 0 by mistake
-			os.Exit(2)
-		}
-
-		out, err = ichorgo.KubeScale(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), replicas)
-	case "suspend-cronjob", "resume-cronjob":
-		if err = ichorgo.KubeSuspendCronJob(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), cmd == "suspend-cronjob"); err == nil {
-			out = "done"
-		}
-	case "revisions":
-		out, err = ichorgo.KubeDeploymentRevisions(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2))
-	case "rollback":
-		// rollback NAMESPACE DEPLOYMENT REVISION
-		revision, convErr := strconv.Atoi(flag.Arg(3))
-		if convErr != nil {
-			fmt.Fprintf(os.Stderr, "rollback: revision %q is not a number\n", flag.Arg(3))
-			os.Exit(2)
-		}
-
-		if err = ichorgo.KubeRollbackDeployment(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), revision); err == nil {
-			out = "rolled back"
-		}
-	case "pod-logs":
-		// pod-logs NAMESPACE POD [CONTAINER] (previous run with -previous via the 4th arg "previous")
-		out, err = ichorgo.KubePodLogs(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4) == "previous", 50)
-	case "maintenance-plan":
-		out, err = ichorgo.NodeMaintenancePlan(cfg, *contextName, *kubeServer, flag.Arg(1))
-	case "cordon", "uncordon":
-		if err = ichorgo.KubeCordon(cfg, *contextName, *kubeServer, flag.Arg(1), cmd == "cordon"); err == nil {
-			out = cmd + "ed"
-		}
-	case "maintenance":
-		// maintenance NODE reboot|shutdown|none: cordons and drains the node for real.
-		m := maintenanceProbe{done: make(chan string, 1)}
-		ichorgo.StartNodeMaintenance(cfg, *contextName, *kubeServer, flag.Arg(1), flag.Arg(2), false, true, m)
-		out = "done: " + <-m.done
-	case "machineconfig":
-		// Redacted: never print secrets from the probe.
-		out, err = ichorgo.NodeMachineConfig(cfg, *contextName, flag.Arg(1), false)
-	case "snapshot-probe":
-		dest := filepath.Join(os.TempDir(), "etcd-probe.snapshot")
-		p := &snapshotProbe{done: make(chan string, 1)}
-		if *ageRecipient != "" {
-			dest += ".age"
-			p.run = ichorgo.StartEtcdSnapshotEncrypted(cfg, *contextName, flag.Arg(1), dest, *ageRecipient, "", p)
-		} else {
-			p.run = ichorgo.StartEtcdSnapshot(cfg, *contextName, flag.Arg(1), dest, p)
-		}
-		out = <-p.done
-		if _, statErr := os.Stat(dest + ".part"); statErr == nil {
-			out += " (partial file left!)"
-		}
-	case "inventory":
-		out, err = ichorgo.ClusterInventory(cfg, *contextName)
-	case "containers":
-		out, err = ichorgo.NodeContainers(cfg, *contextName, flag.Arg(1))
-	case "events":
-		l := &eventPrinter{done: make(chan string, 1), max: 15}
-		l.run = ichorgo.StartEvents(cfg, *contextName, flag.Arg(1), 10, l)
-		out = "done: " + <-l.done
-	case "processes":
-		out, err = ichorgo.NodeProcesses(cfg, *contextName, flag.Arg(1))
-	case "talosconfig-probe":
-		// Issue a short-lived read-only config, print only its summary (no key material) and
-		// discard it.
-		var tc string
-		if tc, err = ichorgo.GenerateTalosconfig(cfg, *contextName, "os:reader", 1); err == nil {
-			out, err = ichorgo.ParseConfig(tc)
-		}
-	case "network":
-		out, err = ichorgo.NodeNetwork(cfg, *contextName, flag.Arg(1))
-	case "connections":
-		out, err = ichorgo.NodeConnections(cfg, *contextName, flag.Arg(1))
-	case "time":
-		out, err = ichorgo.NodeTime(cfg, *contextName, flag.Arg(1))
-	case "cluster-time":
-		out, err = ichorgo.ClusterTime(cfg, *contextName)
-	case "hardware":
-		out, err = ichorgo.NodeHardware(cfg, *contextName, flag.Arg(1))
-	case "images":
-		out, err = ichorgo.NodeImages(cfg, *contextName, flag.Arg(1))
-	case "kubespan":
-		out, err = ichorgo.KubeSpanStatus(cfg, *contextName)
-	case "topology":
-		out, err = ichorgo.ClusterTopology(cfg, *contextName)
-	case "stats":
-		out, err = ichorgo.NodeStats(cfg, *contextName, flag.Arg(1))
-	case "clusterstats":
-		out, err = ichorgo.ClusterStats(cfg, *contextName)
-	case "etcd":
-		out, err = ichorgo.EtcdStatus(cfg, *contextName)
-	case "pcap":
-		out = pcapProbe(cfg, *contextName, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4), *mask)
-	case "upgrade-plan":
-		// Read-only: never calls the upgrade itself.
-		out, err = ichorgo.UpgradePlan(cfg, *contextName, *kubeServer, flag.Arg(1))
-	case "talos-releases":
-		out, err = ichorgo.TalosReleases()
-	case "container-logs":
-		out, err = ichorgo.ContainerLogs(cfg, *contextName, flag.Arg(1), flag.Arg(2), 20)
-	case "container-follow":
-		// Follows for a few seconds and prints only how many lines came.
-		l := &lineCounter{done: make(chan string, 1)}
-		run := ichorgo.StartContainerLogFollow(cfg, *contextName, flag.Arg(1), flag.Arg(2), 10, l)
-
-		select {
-		case msg := <-l.done:
-			out = fmt.Sprintf("ended by itself after %d lines: %q", l.lines.Load(), msg)
-		case <-time.After(5 * time.Second):
-			run.Cancel()
-			out = fmt.Sprintf("%d lines in 5 s, then cancelled: %q", l.lines.Load(), <-l.done)
-		}
-	case "mounts":
-		out, err = ichorgo.NodeMounts(cfg, *contextName, flag.Arg(1))
-	case "volumes":
-		out, err = ichorgo.NodeVolumes(cfg, *contextName, flag.Arg(1))
-	case "usage":
-		depth, _ := strconv.Atoi(flag.Arg(3)) //nolint:errcheck
-		out, err = ichorgo.NodeDiskUsage(cfg, *contextName, flag.Arg(1), flag.Arg(2), depth)
-	case "resource-types":
-		out, err = ichorgo.ResourceTypes(cfg, *contextName, flag.Arg(1))
-	case "resource-list":
-		out, err = ichorgo.ResourceList(cfg, *contextName, flag.Arg(1), flag.Arg(3), flag.Arg(2))
-	case "resource-get":
-		out, err = ichorgo.ResourceGet(cfg, *contextName, flag.Arg(1), flag.Arg(4), flag.Arg(2), flag.Arg(3))
-	case "disk-health":
-		out, err = ichorgo.NodeDiskHealth(cfg, *contextName, flag.Arg(1))
-	case "features":
-		out, err = ichorgo.NodeFeatures(cfg, *contextName, flag.Arg(1))
-	case "etcd-member-plan":
-		// Read-only: never removes a member.
-		out, err = ichorgo.EtcdMemberPlan(cfg, *contextName, flag.Arg(1))
-	case "support-probe":
-		out = supportProbe(cfg, *contextName, flag.Arg(1))
-	case "diagnose-report":
-		// What the AI diagnosis would send, anonymized; nothing is sent.
-		var d *ichorgo.Diagnosis
-		if d, err = ichorgo.CollectDiagnosis(cfg, *contextName, *kubeServer, true); err == nil {
-			out = d.Report()
-		}
-	case "diagnose":
-		err = diagnose(cfg, *contextName, flag.Arg(1), flag.Arg(2))
-	case "ai-models":
-		out, err = ichorgo.AIModels(flag.Arg(1), aiKey(flag.Arg(1)), os.Getenv("ICHOR_AI_BASE_URL"))
-	case "health":
-		p := printer{done: make(chan string, 1)}
-		ichorgo.StartClusterHealth(cfg, *contextName, p)
-
-		if msg := <-p.done; msg != "" {
-			fail(fmt.Errorf("health check failed: %s", msg))
-		}
-
-		fmt.Println("cluster healthy")
-
-		return
-	default:
-		err = fmt.Errorf("unknown command %q", cmd)
+	c, ok := lookup(flag.Arg(0))
+	if !ok {
+		fail(fmt.Errorf("unknown command %q", flag.Arg(0)))
 	}
 
+	out, err := c.run(env{
+		cmd: c.name, cfg: cfg, context: *contextName, kubeServer: *kubeServer, ageRecipient: *ageRecipient,
+		configPath: *configPath, home: home, mask: *mask, maskWords: *maskWords,
+	})
 	if err != nil {
 		fail(err)
 	}
 
-	fmt.Println(out)
+	if out != noOutput {
+		fmt.Println(out)
+	}
 }
 
 // answerPrinter prints the answer as it grows.
