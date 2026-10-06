@@ -19,7 +19,9 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
     override suspend fun doWork(): Result {
         val app = applicationContext as TalosApp
         val store = app.monitorStore
-        val stored = app.configRepository.config.value ?: app.configRepository.load()
+        // Unreadable for now is not deleted: keep the snapshot and check again later.
+        val stored = app.configRepository.config.value
+            ?: runCatching { app.configRepository.load() }.getOrElse { return Result.retry() }
         if (stored == null) {
             // Config deleted: forget what we saw so the widget stops showing it.
             store.clearSnapshot()

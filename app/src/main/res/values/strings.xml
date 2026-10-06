@@ -630,6 +630,9 @@
     <string name="lock_onboarding_private_desc">Screenshots and the recent apps preview stay blank, and alerts hide cluster details on the lock screen.</string>
     <string name="lock_onboarding_no_lock">No screen lock on this device</string>
     <string name="lock_onboarding_open_settings">Open security settings</string>
+    <string name="config_unreadable_title">The stored config could not be read</string>
+    <string name="config_unreadable_body">Your talosconfig is still on this device, but it could not be decrypted just now. This can happen right after an update. Try again; if it keeps failing, import your talosconfig again.</string>
+    <string name="config_unreadable_import">Import it again</string>
     <string name="lock_onboarding_delete">Delete the imported config instead</string>
     <string name="lock_onboarding_delete_title">Delete talosconfig?</string>
     <string name="lock_onboarding_delete_body">The config of every cluster, with their client keys, will be removed from this device.</string>
@@ -2466,6 +2469,29 @@
     <string name="flux_done_resume">%1$s resumed</string>
     <string name="flux_done_force">%1$s: upgrade requested</string>
     <string name="flux_done_reset">%1$s: failures reset</string>
+    <string name="flux_show_diff">Show diff</string>
+    <string name="flux_diff_title">Diff</string>
+    <string name="flux_diff_built">Built from</string>
+    <string name="flux_diff_applied">Last applied</string>
+    <string name="flux_diff_in_sync">Nothing would change: the cluster matches the source.</string>
+    <string name="flux_diff_dry_run">Built in the cluster as Flux builds it, then sent to the API server as a server-side apply dry run: nothing was changed. Secret values are hidden.</string>
+    <plurals name="flux_diff_unchanged">
+        <item quantity="one">%1$d unchanged object</item>
+        <item quantity="other">%1$d unchanged objects</item>
+    </plurals>
+    <string name="diff_change_created">Created</string>
+    <string name="diff_change_changed">Changed</string>
+    <string name="diff_change_deleted">Deleted</string>
+    <string name="diff_change_encrypted">Encrypted</string>
+    <string name="diff_change_ignored">Ignored</string>
+    <string name="diff_change_error">Error</string>
+    <string name="diff_change_unchanged">Unchanged</string>
+    <string name="diff_change_encrypted_hint">Encrypted with SOPS: not compared, the key stays in the cluster.</string>
+    <string name="diff_change_ignored_hint">Flux leaves it alone (reconcile disabled, ignored, or created only once).</string>
+    <string name="diff_refused">The API server refused it: %1$s</string>
+    <string name="diff_truncated">Diff cut at 64 KB.</string>
+    <string name="diff_show">Show changes</string>
+    <string name="diff_hide">Hide changes</string>
     <string name="overview_card_desc_flux">Ready, reconciling and failing Kustomizations and HelmReleases</string>
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->

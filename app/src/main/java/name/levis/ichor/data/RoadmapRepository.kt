@@ -10,8 +10,7 @@ import name.levis.ichor.model.decodeRoadmap
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.uiText
-import java.net.HttpURLConnection
-import java.net.URL
+import name.levis.ichor.util.httpGetBounded
 
 /**
  * The features open for funding, from the website (docs/roadmap.json), so the list changes
@@ -43,23 +42,9 @@ class RoadmapRepository(
         private const val TIMEOUT_MS = 10_000
         private const val MAX_BYTES = 256 * 1024
 
-        private fun fetch(): String? {
-            val connection = (URL(URL_ROADMAP).openConnection() as HttpURLConnection).apply {
-                connectTimeout = TIMEOUT_MS
-                readTimeout = TIMEOUT_MS
-                setRequestProperty("User-Agent", "ichor/${BuildConfig.VERSION_NAME}")
-            }
-            try {
-                if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                    throw LocalizedException(UiText.Res(R.string.update_err_http, connection.responseCode))
-                }
-                return connection.inputStream.use { input ->
-                    val bytes = input.readNBytesCompat(MAX_BYTES + 1)
-                    if (bytes.size > MAX_BYTES) null else bytes.decodeToString()
-                }
-            } finally {
-                connection.disconnect()
-            }
-        }
+        private fun fetch(): String? =
+            httpGetBounded(URL_ROADMAP, MAX_BYTES, TIMEOUT_MS, "ichor/${BuildConfig.VERSION_NAME}") { status ->
+                throw LocalizedException(UiText.Res(R.string.update_err_http, status))
+            }?.decodeToString()
     }
 }

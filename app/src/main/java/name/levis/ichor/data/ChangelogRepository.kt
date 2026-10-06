@@ -14,8 +14,7 @@ import name.levis.ichor.model.ChangelogRelease
 import name.levis.ichor.model.decodeChangelog
 import name.levis.ichor.model.releasesSince
 import name.levis.ichor.model.whatsNew
-import java.net.HttpURLConnection
-import java.net.URL
+import name.levis.ichor.util.httpGetBounded
 
 /**
  * Release notes: the history bundled in the APK (assets/changelog.json, written by build.sh),
@@ -61,23 +60,9 @@ class ChangelogRepository(private val context: Context, private val prefs: Share
 
     private val background = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private fun fetch(): String? {
-        val connection = (URL(PUBLISHED_URL).openConnection() as HttpURLConnection).apply {
-            connectTimeout = FETCH_TIMEOUT_MS
-            readTimeout = FETCH_TIMEOUT_MS
-            instanceFollowRedirects = true // release assets redirect to GitHub's object storage
-            setRequestProperty("User-Agent", "ichor/${BuildConfig.VERSION_NAME}")
-        }
-        try {
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) return null
-            return connection.inputStream.use { input ->
-                val bytes = input.readNBytesCompat(MAX_BYTES + 1)
-                if (bytes.size > MAX_BYTES) null else bytes.decodeToString()
-            }
-        } finally {
-            connection.disconnect()
-        }
-    }
+    // Follows redirects: release assets redirect to GitHub's object storage.
+    private fun fetch(): String? =
+        httpGetBounded(PUBLISHED_URL, MAX_BYTES, FETCH_TIMEOUT_MS, "ichor/${BuildConfig.VERSION_NAME}")?.decodeToString()
 
     companion object {
         const val PREFS = "ichor-changelog"
@@ -87,16 +72,4 @@ class ChangelogRepository(private val context: Context, private val prefs: Share
         private const val MAX_BYTES = 1024 * 1024
         private val PUBLISHED_URL = "$REPO_URL_BASE${BuildConfig.UPDATE_REPO}/releases/latest/download/changelog.json"
     }
-}
-
-/** Reads at most [limit] bytes (InputStream.readNBytes needs API 33). */
-internal fun java.io.InputStream.readNBytesCompat(limit: Int): ByteArray {
-    val out = java.io.ByteArrayOutputStream()
-    val buffer = ByteArray(16 * 1024)
-    while (out.size() < limit) {
-        val n = read(buffer, 0, minOf(buffer.size, limit - out.size()))
-        if (n < 0) break
-        out.write(buffer, 0, n)
-    }
-    return out.toByteArray()
 }

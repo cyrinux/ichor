@@ -1,9 +1,9 @@
 import SwiftUI
 import IchorCore
 
-/// One Flux Kustomization or HelmRelease: the hero with its state and actions, where it comes
-/// from, its conditions, the pods that are not ready, what a Kustomization applies (grouped by
-/// kind) and a HelmRelease's history. Every action but Reconcile asks first, saying what it
+/// One Flux Kustomization or HelmRelease: the hero with its state and actions, a
+/// Kustomization's diff, where it comes from, its conditions, the pods that are not ready, what
+/// a Kustomization applies (grouped by kind) and a HelmRelease's history. Every action but Reconcile asks first, saying what it
 /// does. Reads again every 2 s while it reconciles (and just after an action).
 struct FluxAppView: View {
     let kind: String
@@ -56,6 +56,15 @@ struct FluxAppView: View {
     private func content(_ app: FluxApp, status: FluxStatus) -> some View {
         List {
             FluxHero(app: app, source: status.source(of: app), busy: busy) { act($0, on: app) }
+            if app.isKustomization {
+                Section {
+                    NavigationLink { FluxDiffView(target: app.target) } label: {
+                        Label("Show diff", systemImage: "plus.forwardslash.minus")
+                    }
+                } footer: {
+                    Text("What a reconcile would change now, compared in the cluster without changing anything.")
+                }
+            }
             FluxConditionsSection(app: app)
             if !app.unhealthyPods.isEmpty { ArgoPodsSection(pods: app.unhealthyPods, downNodes: downNodes) }
             let children = status.children(of: app)
@@ -102,12 +111,8 @@ struct FluxAppView: View {
         while busy { try? await Task.sleep(for: .milliseconds(100)) }
         busy = true
         defer { busy = false }
-        if let failure = await store.run(action, on: app.target, with: client) {
-            message = failure
-        } else {
-            succeeded += 1
-            announce(String(localized: "Done"))
-        }
+        let failure = await store.run(action, on: app.target, with: client)
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
         await load()
     }
 }

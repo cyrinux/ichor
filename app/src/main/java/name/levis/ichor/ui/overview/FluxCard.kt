@@ -54,40 +54,8 @@ private const val MAX_FAILING = 2
  * shows Flux; a skeleton while loading, one muted line on failure.
  */
 @Composable
-fun FluxCard(state: UiState<FluxStatus>, fluxTile: InventoryApp?, onOpen: () -> Unit) {
-    Card(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Header(fluxTile, (state as? UiState.Loaded)?.data)
-            when (state) {
-                UiState.Loading -> Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh))
-                is UiState.Failed -> MutedText(stringResource(R.string.data_services_unreadable, state.message.asString()), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                is UiState.Loaded -> Body(state.data)
-            }
-        }
-    }
-}
-
-@Composable
-private fun Header(fluxTile: InventoryApp?, status: FluxStatus?) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        if (fluxTile != null) AppIconTile(fluxTile, size = 28.dp) else AppIconPlaceholder(size = 28.dp)
-        Spacer(Modifier.size(12.dp))
-        Text(stringResource(R.string.flux_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-        if (status != null) {
-            Text(
-                pluralStringResource(R.plurals.argo_apps, status.apps.size, status.apps.size),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Icon(
-            Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp),
-        )
-    }
-}
+fun FluxCard(state: UiState<FluxStatus>, fluxTile: InventoryApp?, onOpen: () -> Unit) =
+    GitOpsCardFrame(fluxTile, R.string.flux_title, state, { it.apps.size }, onOpen) { Body(it) }
 
 @Composable
 private fun Body(status: FluxStatus) {

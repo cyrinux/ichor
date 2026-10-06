@@ -635,6 +635,9 @@
     <string name="lock_onboarding_private_desc">Las capturas y la vista previa de apps recientes quedan en blanco, y las alertas ocultan los detalles del clúster en la pantalla de bloqueo.</string>
     <string name="lock_onboarding_no_lock">Este dispositivo no tiene bloqueo de pantalla</string>
     <string name="lock_onboarding_open_settings">Abrir los ajustes de seguridad</string>
+    <string name="config_unreadable_title">No se pudo leer la configuración guardada</string>
+    <string name="config_unreadable_body">Tu talosconfig sigue en este dispositivo, pero no se pudo descifrar en este momento. Puede ocurrir justo después de una actualización. Reinténtalo; si sigue fallando, importa de nuevo tu talosconfig.</string>
+    <string name="config_unreadable_import">Importarla de nuevo</string>
     <string name="lock_onboarding_delete">Eliminar la configuración importada en su lugar</string>
     <string name="lock_onboarding_delete_title">¿Eliminar el talosconfig?</string>
     <string name="lock_onboarding_delete_body">La configuración de cada clúster, con sus claves de cliente, se eliminará de este dispositivo.</string>
@@ -2470,6 +2473,29 @@
     <string name="flux_done_resume">%1$s reanudada</string>
     <string name="flux_done_force">%1$s: actualización solicitada</string>
     <string name="flux_done_reset">%1$s: fallos restablecidos</string>
+    <string name="flux_show_diff">Ver diff</string>
+    <string name="flux_diff_title">Diff</string>
+    <string name="flux_diff_built">Construido desde</string>
+    <string name="flux_diff_applied">Último aplicado</string>
+    <string name="flux_diff_in_sync">Nada cambiaría: el clúster coincide con la fuente.</string>
+    <string name="flux_diff_dry_run">Construido en el clúster como lo hace Flux y enviado al API server como dry run de server-side apply: no se cambió nada. Los valores de los Secrets están ocultos.</string>
+    <plurals name="flux_diff_unchanged">
+        <item quantity="one">%1$d objeto sin cambios</item>
+        <item quantity="other">%1$d objetos sin cambios</item>
+    </plurals>
+    <string name="diff_change_created">Creado</string>
+    <string name="diff_change_changed">Modificado</string>
+    <string name="diff_change_deleted">Eliminado</string>
+    <string name="diff_change_encrypted">Cifrado</string>
+    <string name="diff_change_ignored">Ignorado</string>
+    <string name="diff_change_error">Error</string>
+    <string name="diff_change_unchanged">Sin cambios</string>
+    <string name="diff_change_encrypted_hint">Cifrado con SOPS: no se compara, la clave se queda en el clúster.</string>
+    <string name="diff_change_ignored_hint">Flux no lo toca (reconciliación desactivada, ignorado o creado solo una vez).</string>
+    <string name="diff_refused">El API server lo rechazó: %1$s</string>
+    <string name="diff_truncated">Diff cortado a 64 KB.</string>
+    <string name="diff_show">Mostrar cambios</string>
+    <string name="diff_hide">Ocultar cambios</string>
     <string name="overview_card_desc_flux">Kustomizations y HelmReleases listas, reconciliando o con fallos</string>
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->

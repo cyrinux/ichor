@@ -14,9 +14,9 @@ import name.levis.ichor.model.MAX_ICON_SIDE
 import name.levis.ichor.model.bundledIconAsset
 import name.levis.ichor.model.iconSampleSize
 import name.levis.ichor.model.remoteIconUrl
+import name.levis.ichor.util.httpGetBounded
 import name.levis.ichor.util.readBounded
 import java.io.File
-import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.ConcurrentHashMap
 
@@ -132,22 +132,9 @@ class AppIconLoader(private val context: Context) {
     }
 
     /** Only the URL: no cookies, no referrer, a fixed user agent instead of the device's. */
-    private fun download(url: String): ByteArray? {
-        val connection = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = TIMEOUT_MS
-            readTimeout = TIMEOUT_MS
-            instanceFollowRedirects = false
-            useCaches = false
-            setRequestProperty("User-Agent", "ichor")
-        }
-        try {
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) return null
-            // Throws past MAX_BYTES: an icon is a few KB, anything bigger is not one.
-            return connection.inputStream.use { readBounded(it, MAX_BYTES) }
-        } finally {
-            connection.disconnect()
-        }
-    }
+    // An icon is a few KB: anything past MAX_BYTES is not one.
+    private fun download(url: String): ByteArray? =
+        httpGetBounded(url, MAX_BYTES, TIMEOUT_MS, userAgent = "ichor", followRedirects = false, useCaches = false)
 
     private fun remoteKey(slug: String) = "remote/$slug"
 

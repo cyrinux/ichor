@@ -184,7 +184,8 @@ func TestSortDiffResources(t *testing.T) {
 func TestDiffNormalizeSecretDigestIsKeyed(t *testing.T) {
 	secret := map[string]any{"apiVersion": "v1", "kind": "Secret", "metadata": map[string]any{"name": "s"}, "data": map[string]any{"pin": "MTIzNA=="}}
 
-	if diffNormalize(secret, newKubeDiffMasker()) == diffNormalize(secret, newKubeDiffMasker()) {
+	first, second := diffNormalize(secret, newKubeDiffMasker()), diffNormalize(secret, newKubeDiffMasker())
+	if first == second {
 		t.Fatal("the same digest in two diffs: a short value could be looked up")
 	}
 }

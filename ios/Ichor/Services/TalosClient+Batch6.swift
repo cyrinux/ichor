@@ -18,7 +18,7 @@ extension TalosClient {
 
     /// `talosctl logs -k -f` of one container, starting with the last `tailLines`.
     func followContainerLogs(node: String, containerID: String, tailLines: Int = 200) -> AsyncStream<LogFollowItem> {
-        AsyncStream { continuation in
+        TalosClient.bridged { continuation in
             let bridge = LogBridge(
                 line: { continuation.yield(.line($0)) },
                 done: {
@@ -27,10 +27,7 @@ extension TalosClient {
                 }
             )
             let run = IchorgoStartContainerLogFollow(config, context, node, containerID, tailLines, bridge)
-            continuation.onTermination = { _ in
-                run?.cancel()
-                _ = bridge // keep the listener alive for the whole stream
-            }
+            return BridgedRun(bridge) { run?.cancel() }
         }
     }
 
@@ -90,7 +87,7 @@ extension TalosClient {
     /// `talosctl support` for nodesCSV into destPath (os:admin). Cancelling the consuming
     /// task cancels the collection (Go then removes the partial file).
     func supportBundle(nodesCSV: String, destPath: String) -> AsyncStream<SupportBundleEvent> {
-        AsyncStream { continuation in
+        TalosClient.bridged { continuation in
             let bridge = SupportBridge(
                 progress: { continuation.yield(.progress($0)) },
                 done: {
@@ -99,10 +96,7 @@ extension TalosClient {
                 }
             )
             let run = IchorgoStartSupportBundle(config, context, kubeServer, nodesCSV, destPath, bridge)
-            continuation.onTermination = { _ in
-                run?.cancel()
-                _ = bridge // keep the listener alive for the whole collection
-            }
+            return BridgedRun(bridge) { run?.cancel() }
         }
     }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
@@ -193,35 +192,20 @@ func runUpgrade(ctx context.Context, kube kubeTarget, node string, o upgradeOpti
 // acknowledgmentRefusal refuses the plan's acknowledgments, and the risk of going to
 // toVersion, unless the user acknowledged them.
 func acknowledgmentRefusal(plan upgradePlan, toVersion string, acknowledged bool) error {
-	risks := slices.Clone(plan.Acknowledge)
 	if risk := versionRisk(plan.CurrentVersion, toVersion); risk != "" {
-		risks = append(risks, risk)
+		return plan.checks().unconfirmed("upgrade", acknowledged, risk)
 	}
 
-	if len(risks) == 0 || acknowledged {
-		return nil
-	}
-
-	return errors.New("upgrade refused until confirmed: " + strings.Join(risks, "; "))
+	return plan.checks().unconfirmed("upgrade", acknowledged)
 }
 
 // upgradeRefusal returns the plan's blockers as an error, minus the etcd ones when forced.
 func upgradeRefusal(plan upgradePlan, force bool) error {
-	var blockers []string
-
-	for _, b := range plan.Blockers {
-		if force && slices.Contains(plan.etcdBlockers, b) {
-			continue
-		}
-
-		blockers = append(blockers, b)
+	if force {
+		return plan.checks().blocked("upgrade", plan.etcdBlockers)
 	}
 
-	if len(blockers) == 0 {
-		return nil
-	}
-
-	return errors.New("upgrade refused: " + strings.Join(blockers, "; "))
+	return plan.checks().blocked("upgrade", nil)
 }
 
 // upgradeObservation is one poll of the node during the upgrade.

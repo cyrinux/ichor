@@ -50,10 +50,12 @@ class SecureStore(
         if (!file.exists()) return null
         val payload = file.readBytes()
         require(payload.size > IV_SIZE) { "Stored config is corrupted" }
+        // Never a new key here: it could not decrypt the file, and would replace the one that can.
+        val key = checkNotNull(existingKey()) { "The key of the stored config is missing" }
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(
             Cipher.DECRYPT_MODE,
-            key(),
+            key,
             GCMParameterSpec(TAG_BITS, payload, 0, IV_SIZE),
         )
         return cipher.doFinal(payload, IV_SIZE, payload.size - IV_SIZE)

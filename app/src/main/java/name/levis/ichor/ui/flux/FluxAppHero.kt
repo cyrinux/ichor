@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.PauseCircle
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Pause
+import androidx.compose.material.icons.outlined.Difference
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.RestartAlt
@@ -94,10 +95,11 @@ fun FluxAppHero(app: FluxApp) {
 /**
  * Reconcile and Reconcile with source; Suspend or Resume; for a HelmRelease, Force upgrade
  * and Reset failures. Each asks [onAction] (which confirms first); a suspended app only resumes.
+ * For a Kustomization, [onDiff] (when given) shows what a reconcile would change.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun FluxActionButtons(app: FluxApp, busy: Boolean, onAction: (FluxAction) -> Unit) {
+fun FluxActionButtons(app: FluxApp, busy: Boolean, onDiff: (() -> Unit)? = null, onAction: (FluxAction) -> Unit) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Button(onClick = { onAction(FluxAction.RECONCILE) }, enabled = !busy && app.canReconcile) {
             ButtonContent(Icons.Outlined.Refresh, FluxAction.RECONCILE)
@@ -108,6 +110,12 @@ fun FluxActionButtons(app: FluxApp, busy: Boolean, onAction: (FluxAction) -> Uni
         val toggle = if (app.suspended) FluxAction.RESUME else FluxAction.SUSPEND
         OutlinedButton(onClick = { onAction(toggle) }, enabled = !busy) {
             ButtonContent(if (app.suspended) Icons.Outlined.PlayArrow else Icons.Outlined.Pause, toggle)
+        }
+        if (app.isKustomization && onDiff != null) {
+            OutlinedButton(onClick = onDiff) {
+                Icon(Icons.Outlined.Difference, contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(stringResource(R.string.flux_show_diff), modifier = Modifier.padding(start = 6.dp), maxLines = 1)
+            }
         }
         if (app.isHelmRelease) {
             OutlinedButton(onClick = { onAction(FluxAction.FORCE) }, enabled = !busy && app.canForce) {

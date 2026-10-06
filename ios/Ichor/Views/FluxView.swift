@@ -159,12 +159,8 @@ struct FluxView: View {
         guard let client = model.client, !busy.contains(target) else { return }
         busy.insert(target)
         defer { busy.remove(target) }
-        if let failure = await store.run(action, on: target, with: client) {
-            message = failure
-        } else {
-            succeeded += 1
-            announce(String(localized: "Done"))
-        }
+        let failure = await store.run(action, on: target, with: client)
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
         await load()
     }
 }

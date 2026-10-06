@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -30,12 +31,15 @@ import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.security.LockOnboarding
 import name.levis.ichor.security.LockScreen
 import name.levis.ichor.security.lockRequired
+import name.levis.ichor.data.ConfigUnreadableException
+import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.seedOf
 import name.levis.ichor.ui.DeepLink
 import name.levis.ichor.ui.Navigation
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.debug.DebugShellService
+import name.levis.ichor.ui.importconfig.ConfigUnreadableScreen
 import name.levis.ichor.ui.debug.LiveShell
 import name.levis.ichor.ui.debug.shellKey
 import name.levis.ichor.ui.theme.TalosTheme
@@ -228,22 +232,49 @@ private fun LockGate(app: TalosApp, targets: LaunchTargets, onWiped: () -> Unit)
  */
 @Composable
 private fun Root(app: TalosApp, targets: LaunchTargets) {
+    val config by app.configRepository.config.collectAsStateWithLifecycle()
+    val lockEnabled by app.appLock.enabled.collectAsStateWithLifecycle()
+    var load by remember { mutableStateOf<ConfigLoad>(ConfigLoad.Loading) }
+    var attempt by remember { mutableIntStateOf(0) }
+    LaunchedEffect(attempt) {
+        load = ConfigLoad.Loading
+        load = try {
+            app.configRepository.load()
+            ConfigLoad.Done
+        } catch (e: ConfigUnreadableException) {
+            ConfigLoad.Unreadable(e.cause?.let { "${it.javaClass.simpleName}: ${it.message}" }.orEmpty())
+        }
+    }
+
+    when (val state = load) {
+        ConfigLoad.Loading -> LoadingBox()
+        // Not the import screen: the config is still stored, reading it failed.
+        is ConfigLoad.Unreadable -> ConfigUnreadableScreen(
+            reason = state.reason,
+            onRetry = { attempt++ },
+            onImport = { load = ConfigLoad.Done },
+        )
+        ConfigLoad.Done -> Loaded(app, targets, config, lockEnabled)
+    }
+}
+
+/** Where reading the stored config is at. Done covers "none stored", which starts on the import screen. */
+private sealed interface ConfigLoad {
+    data object Loading : ConfigLoad
+    data object Done : ConfigLoad
+    class Unreadable(val reason: String) : ConfigLoad
+}
+
+@Composable
+private fun Loaded(app: TalosApp, targets: LaunchTargets, config: StoredConfig?, lockEnabled: Boolean) {
     val link by targets.deepLink.collectAsStateWithLifecycle()
     val cluster by targets.cluster.collectAsStateWithLifecycle()
     val backup by targets.backupFile.collectAsStateWithLifecycle()
     val shell by targets.shell.collectAsStateWithLifecycle()
     val shareLink by targets.shareLink.collectAsStateWithLifecycle()
-    val config by app.configRepository.config.collectAsStateWithLifecycle()
-    val lockEnabled by app.appLock.enabled.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    var loaded by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        app.configRepository.load()
-        loaded = true
-    }
 
     when {
-        !loaded -> LoadingBox()
         !lockEnabled && lockRequired(config?.summary?.contexts.orEmpty()) -> LockOnboarding(
             // The import screen may have left before starting the monitoring sync.
             onEnabled = {
