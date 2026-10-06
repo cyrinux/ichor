@@ -61,6 +61,9 @@ func isDemoContext(yaml, name string) bool {
 	return err == nil && slices.Contains(c.Endpoints, demoEndpoint)
 }
 
+// demoTalosVersion is the Talos version the demo nodes say they run.
+const demoTalosVersion = "v1.14.0"
+
 func demoNodes() []nodeOverview {
 	nodes := make([]nodeOverview, 5)
 	for i := range nodes {
@@ -68,7 +71,7 @@ func demoNodes() []nodeOverview {
 		if i >= 3 {
 			role, host, address, cores, memory = "worker", fmt.Sprintf("demo-worker-%d", i-2), fmt.Sprintf("192.0.2.%d", 17+i), 8, 16<<30
 		}
-		nodes[i] = nodeOverview{Node: address, Hostname: host, Reachable: true, Version: "v1.14.0", Arch: "amd64", Platform: "metal", Role: role, Stage: "running", Ready: true, CPUCount: cores, MemTotal: memory, MemAvailable: memory * 3 / 5, UnmetConditions: []unmetCondition{}}
+		nodes[i] = nodeOverview{Node: address, Hostname: host, Reachable: true, Version: demoTalosVersion, Arch: "amd64", Platform: "metal", Role: role, Stage: "running", Ready: true, CPUCount: cores, MemTotal: memory, MemAvailable: memory * 3 / 5, UnmetConditions: []unmetCondition{}}
 		if i >= 3 { // the workers sit behind a NAT the discovery service sees
 			nodes[i].PublicIPs = []string{fmt.Sprintf("203.0.113.%d", 40+i)}
 		}

@@ -239,6 +239,16 @@ func (l maskedSupportListener) OnDone(path string, size int64, errMessage string
 	l.SupportListener.OnDone(path, size, privacy.maskPlain(errMessage))
 }
 
+type maskedConfigTryListener struct{ ConfigTryListener }
+
+func (l maskedConfigTryListener) OnProgress(json string) {
+	l.ConfigTryListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedConfigTryListener) OnDone(outcome string, errMessage string) {
+	l.ConfigTryListener.OnDone(outcome, privacy.maskPlain(errMessage))
+}
+
 type maskedUpgradeListener struct{ UpgradeListener }
 
 func (l maskedUpgradeListener) OnProgress(json string) {

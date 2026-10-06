@@ -4,6 +4,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -58,6 +59,14 @@ type maintenanceProbe struct{ done chan string }
 func (m maintenanceProbe) OnProgress(json string)   { fmt.Println(json) }
 func (m maintenanceProbe) OnDone(errMessage string) { m.done <- errMessage }
 
+// configTryProbe prints a config try's progress. It never keeps: the node reverts by itself.
+type configTryProbe struct{ done chan string }
+
+func (c configTryProbe) OnProgress(json string) { fmt.Println(json) }
+func (c configTryProbe) OnDone(outcome, errMessage string) {
+	c.done <- strings.TrimSpace(outcome + " " + errMessage)
+}
+
 // lineCounter counts followed log lines.
 type lineCounter struct {
 	lines atomic.Int64
@@ -81,7 +90,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|clusterstats|inventory|processes NODE|machineconfig NODE|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|topology|kubeconfig|pods|pods-page NAMESPACE|all LIMIT [TOKEN]|node-pods KUBENODE [PHASE]|kube-node-name NODE|workload-pods KIND NAMESPACE NAME [PHASE]|namespaces|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|workloads|rollout-restart KIND NAMESPACE NAME|rollout-status KIND NAMESPACE NAME|cronjobs|cronjob-run NAMESPACE NAME|dataservices [HINTS]|argocd|argocd-network NAMESPACE NAME|argocd-action NAMESPACE NAME ACTION [OPTIONS]|argocd-freeze NAMESPACE PROJECT ACTION [OPTIONS]|flux|flux-action KIND NAMESPACE NAME ACTION|flux-diff KIND NAMESPACE NAME|cilium|netpol|apihealth|audit [MINUTES]|hubble [SECONDS] [all|drops] [NAMESPACE [POD]]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai"))
+		fail(fmt.Errorf("usage: probe [flags] overview|services NODE|resources NODE|logs NODE SERVICE|dmesg NODE|logstats NODE SERVICE...|stats NODE|clusterstats|inventory|processes NODE|machineconfig NODE|config-schema NODE|config-describe NODE|config-preview NODE FILE|config-try NODE FILE SECONDS|network NODE|connections NODE|time NODE|cluster-time|hardware NODE|images NODE|talosconfig-probe|kubespan|topology|kubeconfig|pods|pods-page NAMESPACE|all LIMIT [TOKEN]|node-pods KUBENODE [PHASE]|kube-node-name NODE|workload-pods KIND NAMESPACE NAME [PHASE]|namespaces|delete-pod NAMESPACE NAME|netperf-nodes|netperf SERVER CLIENT [pod|host] [SECONDS]|workloads|rollout-restart KIND NAMESPACE NAME|rollout-status KIND NAMESPACE NAME|cronjobs|cronjob-run NAMESPACE NAME|dataservices [HINTS]|argocd|argocd-network NAMESPACE NAME|argocd-action NAMESPACE NAME ACTION [OPTIONS]|argocd-freeze NAMESPACE PROJECT ACTION [OPTIONS]|flux|flux-action KIND NAMESPACE NAME ACTION|flux-diff KIND NAMESPACE NAME|cilium|netpol|apihealth|audit [MINUTES]|hubble [SECONDS] [all|drops] [NAMESPACE [POD]]|etcd|health|parse|pcap NODE IFACE FILTER SECONDS|upgrade-plan NODE|talos-releases|container-logs NODE ID|container-follow NODE ID|mounts NODE|volumes NODE|usage NODE PATH DEPTH|resource-types NODE|resource-list NODE TYPE [NAMESPACE]|resource-get NODE TYPE ID [NAMESPACE]|disk-health NODE|features NODE|etcd-member-plan MEMBERID|support-probe [NODES]|diagnose-report|diagnose anthropic|openai [MODEL]|ai-models anthropic|openai"))
 	}
 
 	raw, err := os.ReadFile(*configPath)
@@ -279,6 +288,47 @@ func main() {
 	case "machineconfig":
 		// Redacted: never print secrets from the probe.
 		out, err = ichorgo.NodeMachineConfig(cfg, *contextName, flag.Arg(1), false)
+	case "config-schema":
+		out, err = ichorgo.MachineConfigSchemaPrepare(cfg, *contextName, flag.Arg(1))
+	case "config-describe":
+		// The tree of the redacted config, with the schema when it can be had.
+		var status string
+		if status, err = ichorgo.MachineConfigSchemaPrepare(cfg, *contextName, flag.Arg(1)); err != nil {
+			break
+		}
+
+		var schema struct{ Version string }
+		if err = json.Unmarshal([]byte(status), &schema); err != nil {
+			break
+		}
+
+		if out, err = ichorgo.NodeMachineConfig(cfg, *contextName, flag.Arg(1), false); err == nil {
+			out, err = ichorgo.MachineConfigDescribe(out, schema.Version)
+		}
+	case "config-preview", "config-try":
+		// FILE is the redacted config of `probe machineconfig NODE`, edited. config-preview
+		// only asks the node for a dry run; config-try applies it for SECONDS (60, 300, 600)
+		// and lets the node revert: it changes the node for real.
+		var base string
+		if base, err = ichorgo.NodeMachineConfig(cfg, *contextName, flag.Arg(1), false); err != nil {
+			break
+		}
+
+		var draft []byte
+		if draft, err = os.ReadFile(flag.Arg(2)); err != nil {
+			break
+		}
+
+		if cmd == "config-preview" {
+			out, err = ichorgo.MachineConfigPreview(cfg, *contextName, flag.Arg(1), base, string(draft))
+
+			break
+		}
+
+		seconds, _ := strconv.Atoi(flag.Arg(3)) //nolint:errcheck // 0 is refused
+		c := configTryProbe{done: make(chan string, 1)}
+		ichorgo.StartConfigTry(cfg, *contextName, flag.Arg(1), base, string(draft), seconds, c)
+		out = "done: " + <-c.done
 	case "snapshot-probe":
 		dest := filepath.Join(os.TempDir(), "etcd-probe.snapshot")
 		p := &snapshotProbe{done: make(chan string, 1)}
