@@ -2285,6 +2285,10 @@
     <string name="node_menu_maintenance">Wartung…</string>
     <string name="node_menu_cordon">Absperren (cordon)</string>
     <string name="node_menu_uncordon">Freigeben (uncordon)</string>
+    <string name="node_menu_group_inspect">Untersuchen</string>
+    <string name="node_menu_group_troubleshoot">Fehlersuche</string>
+    <string name="node_menu_group_operate">Verwalten</string>
+    <string name="node_menu_group_power">Energie</string>
     <string name="cordon_confirm_title">%1$s absperren?</string>
     <string name="cordon_confirm_body">Auf %1$s werden keine neuen Pods mehr eingeplant. Die dort laufenden Pods bleiben.</string>
     <string name="uncordon_confirm_title">%1$s freigeben?</string>

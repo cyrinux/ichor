@@ -2469,6 +2469,10 @@
     <string name="node_menu_maintenance">Обслуговування…</string>
     <string name="node_menu_cordon">Ізолювати (cordon)</string>
     <string name="node_menu_uncordon">Зняти ізоляцію</string>
+    <string name="node_menu_group_inspect">Огляд</string>
+    <string name="node_menu_group_troubleshoot">Діагностика</string>
+    <string name="node_menu_group_operate">Керування</string>
+    <string name="node_menu_group_power">Живлення</string>
     <string name="cordon_confirm_title">Ізолювати %1$s?</string>
     <string name="cordon_confirm_body">На %1$s не плануватимуться нові поди. Поди, що вже там працюють, залишаться.</string>
     <string name="uncordon_confirm_title">Зняти ізоляцію з %1$s?</string>

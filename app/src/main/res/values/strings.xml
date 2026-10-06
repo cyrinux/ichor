@@ -2289,6 +2289,10 @@
     <string name="node_menu_maintenance">Maintenance…</string>
     <string name="node_menu_cordon">Cordon</string>
     <string name="node_menu_uncordon">Uncordon</string>
+    <string name="node_menu_group_inspect">Inspect</string>
+    <string name="node_menu_group_troubleshoot">Troubleshoot</string>
+    <string name="node_menu_group_operate">Operate</string>
+    <string name="node_menu_group_power">Power</string>
     <string name="cordon_confirm_title">Cordon %1$s?</string>
     <string name="cordon_confirm_body">No new pods are scheduled on %1$s. The pods already running there stay.</string>
     <string name="uncordon_confirm_title">Uncordon %1$s?</string>

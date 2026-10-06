@@ -2293,6 +2293,10 @@
     <string name="node_menu_maintenance">Manutenzione…</string>
     <string name="node_menu_cordon">Isola (cordon)</string>
     <string name="node_menu_uncordon">Rimuovi isolamento</string>
+    <string name="node_menu_group_inspect">Ispeziona</string>
+    <string name="node_menu_group_troubleshoot">Diagnostica</string>
+    <string name="node_menu_group_operate">Gestisci</string>
+    <string name="node_menu_group_power">Alimentazione</string>
     <string name="cordon_confirm_title">Isolare %1$s?</string>
     <string name="cordon_confirm_body">Nessun nuovo pod viene pianificato su %1$s. I pod già in esecuzione restano.</string>
     <string name="uncordon_confirm_title">Rimuovere l\'isolamento di %1$s?</string>
