@@ -1,9 +1,5 @@
 package name.levis.ichor.ui.resources
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.os.PersistableBundle
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +33,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.style.TextAlign
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.theme.LocalStatusColors
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -124,7 +121,7 @@ fun ResourceDetailScreen(
                         enabled = yaml != null,
                         onClick = {
                             yaml?.let {
-                                copy(context, id, it, ref.sensitive)
+                                copyToClipboard(context, id, it, ref.sensitive)
                                 scope.launch { snackbar.showSnackbar(context.getString(R.string.machine_config_copied)) }
                             }
                         },
@@ -174,11 +171,3 @@ private fun SensitiveWarning(onShow: () -> Unit) {
     }
 }
 
-private fun copy(context: Context, label: String, text: String, sensitive: Boolean) {
-    val clip = ClipData.newPlainText(label, text)
-    if (sensitive) {
-        // Keeps secrets out of the clipboard preview (honoured from Android 13).
-        clip.description.extras = PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE", true) }
-    }
-    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(clip)
-}

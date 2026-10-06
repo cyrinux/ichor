@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FolderOpen
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +47,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.KeepScreenOn
 import name.levis.ichor.ui.factory
@@ -156,18 +156,16 @@ fun CaptureScreen(
         session?.let { s -> PacketDetailSheet(captures, s.file, p, onDismiss = { detail = null }) }
     }
     if (confirmLeave) {
-        AlertDialog(
-            onDismissRequest = { confirmLeave = false },
-            title = { Text(stringResource(R.string.capture_leave_title)) },
-            text = { Text(stringResource(R.string.capture_leave_body)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmLeave = false
-                    vm.stop()
-                    onBack()
-                }) { Text(stringResource(R.string.capture_leave_confirm)) }
+        ConfirmDialog(
+            title = stringResource(R.string.capture_leave_title),
+            text = stringResource(R.string.capture_leave_body),
+            confirm = stringResource(R.string.capture_leave_confirm),
+            onConfirm = {
+                confirmLeave = false
+                vm.stop()
+                onBack()
             },
-            dismissButton = { TextButton(onClick = { confirmLeave = false }) { Text(stringResource(R.string.common_cancel)) } },
+            onDismiss = { confirmLeave = false },
         )
     }
     if (confirmDelete) {

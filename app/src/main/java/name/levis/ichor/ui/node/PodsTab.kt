@@ -18,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,14 +32,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -56,6 +50,7 @@ import name.levis.ichor.model.containerRows
 import name.levis.ichor.model.podGroups
 import name.levis.ichor.model.running
 import name.levis.ichor.model.statusLabel
+import name.levis.ichor.ui.PollWhileStarted
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.LoadingBox
@@ -63,6 +58,7 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.pollEvery
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
 import name.levis.ichor.util.formatBytes
@@ -78,22 +74,10 @@ class PodsViewModel(private val talos: TalosRepository, private val node: String
     val state: StateFlow<PodsState> = _state.asStateFlow()
     private var last: ContainerSample? = null
 
-    suspend fun poll() {
-        while (true) {
-            runCatching { talos.containers(node) }.fold(
-                onSuccess = { sample ->
-                    val rows = containerRows(last, sample)
-                    last = sample
-                    _state.value = PodsState(rows = rows)
-                },
-                onFailure = {
-                    // Leaving the tab cancels the call: that is not an error to show on return.
-                    if (it is CancellationException) throw it
-                    _state.value = _state.value.copy(error = it.userMessage())
-                },
-            )
-            delay(PODS_POLL_SECONDS * 1000)
-        }
+    suspend fun poll(): Nothing = pollEvery({ PODS_POLL_SECONDS * 1000 }, { talos.containers(node) }, { _state.value = _state.value.copy(error = it.userMessage()) }) { sample ->
+        val rows = containerRows(last, sample)
+        last = sample
+        _state.value = PodsState(rows = rows)
     }
 }
 
@@ -104,9 +88,7 @@ fun PodsTab(
     vm: PodsViewModel = viewModel(key = "pods-$node", factory = factory { PodsViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    // Poll only while visible: leaving the tab or backgrounding the app stops it.
-    LaunchedEffect(lifecycle) { lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { vm.poll() } }
+    PollWhileStarted { vm.poll() }
 
     var filter by rememberSaveable { mutableStateOf("") }
     var sort by rememberSaveable { mutableStateOf(ContainerSort.CPU) }

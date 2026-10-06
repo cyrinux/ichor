@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,7 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,6 +43,7 @@ import name.levis.ichor.model.GarageBlockNode
 import name.levis.ichor.model.GarageBlockReport
 import name.levis.ichor.model.GarageBlockVerdict
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
@@ -206,13 +205,12 @@ private fun ImpactPill(impact: GarageBlockImpact) {
 
 @Composable
 private fun RepairConfirmDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.garage_blocks_repair_title)) },
-        text = { Text(stringResource(R.string.garage_blocks_repair_text)) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) { Text(stringResource(R.string.garage_blocks_repair), color = LocalStatusColors.current.bad) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    ConfirmDialog(
+        title = stringResource(R.string.garage_blocks_repair_title),
+        text = stringResource(R.string.garage_blocks_repair_text),
+        confirm = stringResource(R.string.garage_blocks_repair),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        destructive = true,
     )
 }

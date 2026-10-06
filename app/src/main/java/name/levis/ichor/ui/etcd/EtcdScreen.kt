@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.etcd
 
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -324,17 +325,15 @@ fun EtcdScreen(
         DefragConfirmDialog(request, onConfirm = { confirmed(request) }, onDismiss = { confirm = null })
     }
     confirmDisarm?.let { node ->
-        AlertDialog(
-            onDismissRequest = { confirmDisarm = null },
-            title = { Text(stringResource(R.string.etcd_disarm_confirm_title)) },
-            text = { Text(stringResource(R.string.etcd_disarm_confirm_body)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmDisarm = null
-                    vm.disarmAlarms(node)
-                }) { Text(stringResource(R.string.etcd_disarm)) }
+        ConfirmDialog(
+            title = stringResource(R.string.etcd_disarm_confirm_title),
+            text = stringResource(R.string.etcd_disarm_confirm_body),
+            confirm = stringResource(R.string.etcd_disarm),
+            onConfirm = {
+                confirmDisarm = null
+                vm.disarmAlarms(node)
             },
-            dismissButton = { TextButton(onClick = { confirmDisarm = null }) { Text(stringResource(R.string.common_cancel)) } },
+            onDismiss = { confirmDisarm = null },
         )
     }
 }

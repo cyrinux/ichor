@@ -1,8 +1,6 @@
 package name.levis.ichor.ui.overview
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,6 +10,7 @@ import name.levis.ichor.model.ClusterUsage
 import name.levis.ichor.model.appendHistory
 import name.levis.ichor.model.clusterPollSeconds
 import name.levis.ichor.model.clusterUsage
+import name.levis.ichor.ui.pollEvery
 
 /** The second sample comes sooner, so the CPU shows up (or catches up) about a second after opening. */
 private const val FIRST_DELTA_MILLIS = 1_000L
@@ -45,34 +44,30 @@ class ClusterLiveViewModel(private val talos: TalosRepository) : ViewModel() {
         }
         var failures = 0
         var samples = 0
-        while (true) {
-            // No node answering in time is a failed sample, not an empty cluster.
-            runCatching { talos.clusterStats().takeIf { it.nodes.isNotEmpty() } ?: error("no node answered") }.fold(
-                onSuccess = { sample ->
-                    val usage = clusterUsage(last, sample)
-                    val shown = _state.value
-                    last = sample
-                    failures = 0
-                    samples++
-                    _state.value = ClusterLiveState(
-                        // One sample without CPU (nodes rebooted or replaced) keeps the last reading.
-                        usage = usage.copy(cpuFraction = usage.cpuFraction ?: shown.usage?.cpuFraction),
-                        cpuHistory = appendHistory(shown.cpuHistory, usage.cpuFraction, CLUSTER_HISTORY_POINTS),
-                    )
-                },
-                onFailure = {
-                    // Leaving the screen cancels the call: that is not a failure.
-                    if (it is CancellationException) throw it
-                    // A blip keeps the last values; a cluster that stopped answering must not look live.
-                    failures++
-                    if (failures >= MAX_FAILURES) {
-                        samples = 0
-                        clear()
-                    }
-                },
-            )
+        pollEvery(
             // Right after (re)starting, a fresh delta needs a second sample: take it soon.
-            delay(if (samples == 1) FIRST_DELTA_MILLIS else clusterPollSeconds(nodes) * 1000)
+            { if (samples == 1) FIRST_DELTA_MILLIS else clusterPollSeconds(nodes) * 1000 },
+            // No node answering in time is a failed sample, not an empty cluster.
+            { talos.clusterStats().takeIf { it.nodes.isNotEmpty() } ?: error("no node answered") },
+            {
+                // A blip keeps the last values; a cluster that stopped answering must not look live.
+                failures++
+                if (failures >= MAX_FAILURES) {
+                    samples = 0
+                    clear()
+                }
+            },
+        ) { sample ->
+            val usage = clusterUsage(last, sample)
+            val shown = _state.value
+            last = sample
+            failures = 0
+            samples++
+            _state.value = ClusterLiveState(
+                // One sample without CPU (nodes rebooted or replaced) keeps the last reading.
+                usage = usage.copy(cpuFraction = usage.cpuFraction ?: shown.usage?.cpuFraction),
+                cpuHistory = appendHistory(shown.cpuHistory, usage.cpuFraction, CLUSTER_HISTORY_POINTS),
+            )
         }
     }
 

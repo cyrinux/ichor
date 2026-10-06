@@ -1,14 +1,11 @@
 package name.levis.ichor.ui.workloads
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +23,7 @@ import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.cancellableCatching
+import name.levis.ichor.ui.components.ResultToasts
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 
@@ -91,14 +89,8 @@ class WorkloadRestarts(
 
 /** A toast for each failed restart of [results]; a successful one opens [RolloutStatusSheet]. */
 @Composable
-fun RestartResultToasts(results: Flow<RestartResult>) {
-    val context = LocalContext.current
-    LaunchedEffect(results) {
-        results.collect { r ->
-            val error = r.error?.resolve(context) ?: return@collect
-            Toast.makeText(context, context.getString(R.string.workloads_restart_failed, r.workload.name, error), Toast.LENGTH_LONG).show()
-        }
-    }
+fun RestartResultToasts(results: Flow<RestartResult>) = ResultToasts(results) { context, r ->
+    r.error?.resolve(context)?.let { context.getString(R.string.workloads_restart_failed, r.workload.name, it) to true }
 }
 
 @Composable

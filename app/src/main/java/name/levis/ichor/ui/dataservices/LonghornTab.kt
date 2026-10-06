@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.dataservices
 
-import android.text.format.DateUtils
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -56,6 +55,7 @@ import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
+import name.levis.ichor.util.timeAgo
 
 /** Longhorn volumes (problems first), the backup targets and each node's disks. */
 @Composable
@@ -166,7 +166,7 @@ private fun VolumeRow(v: LonghornVolume, busy: Boolean, onAction: (LonghornActio
                         ?: v.replicaNodes.takeIf { it.isNotEmpty() }?.joinToString(", "),
                     formatBytes(v.actualSize) + " / " + formatBytes(v.size),
                     if (v.lastBackupAt > 0) {
-                        stringResource(R.string.longhorn_backup_ago, DateUtils.getRelativeTimeSpanString(v.lastBackupAt, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS))
+                        stringResource(R.string.longhorn_backup_ago, timeAgo(v.lastBackupAt))
                     } else {
                         stringResource(R.string.longhorn_no_backup)
                     },

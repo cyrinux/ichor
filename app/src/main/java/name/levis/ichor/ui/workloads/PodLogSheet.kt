@@ -1,9 +1,6 @@
 package name.levis.ichor.ui.workloads
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
-import android.os.PersistableBundle
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -62,6 +59,7 @@ import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.components.shareFile
 import name.levis.ichor.ui.factory
@@ -247,11 +245,7 @@ private fun LogText(text: String) {
 }
 
 // Logs may hold secrets: kept out of the clipboard preview (honoured from Android 13).
-private fun copyLog(context: Context, pod: KubePod, text: String) {
-    val clip = ClipData.newPlainText(pod.name, text)
-    clip.description.extras = PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE", true) }
-    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(clip)
-}
+private fun copyLog(context: Context, pod: KubePod, text: String) = copyToClipboard(context, pod.name, text, sensitive = true)
 
 private fun sharedLogs(context: Context) = File(context.cacheDir, "logs")
 

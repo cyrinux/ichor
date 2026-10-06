@@ -1,8 +1,5 @@
 package name.levis.ichor.ui.diagnosis
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -49,6 +46,7 @@ import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.components.shareText
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -188,7 +186,7 @@ private fun AnswerCard(answer: AnswerState, providerName: String, onStop: () -> 
                 Text(stringResource(R.string.ai_answer_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 when {
                     answer.asking -> TextButton(onClick = onStop) { Text(stringResource(R.string.ai_stop)) }
-                    answer.text.isNotEmpty() -> TextButton(onClick = { copyText(context, answer.text) }) { Text(stringResource(R.string.ai_copy)) }
+                    answer.text.isNotEmpty() -> TextButton(onClick = { copyToClipboard(context, "answer", answer.text) }) { Text(stringResource(R.string.ai_copy)) }
                 }
             }
             if (answer.asking) {
@@ -210,6 +208,3 @@ private fun AnswerCard(answer: AnswerState, providerName: String, onStop: () -> 
     }
 }
 
-private fun copyText(context: Context, text: String) {
-    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("answer", text))
-}

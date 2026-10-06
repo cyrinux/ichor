@@ -1,8 +1,6 @@
 package name.levis.ichor.ui.settings
 
 import android.content.ActivityNotFoundException
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -33,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.data.BTC_ADDRESS
 import name.levis.ichor.data.ETH_ADDRESS
+import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.issueconfig.QrCode
 
 /** A crypto donation target: [scheme] makes the BIP21 / EIP-681 style URI wallets understand. */
@@ -96,7 +95,7 @@ fun DonateDialog(donation: Donation, onDismiss: () -> Unit) {
 }
 
 private fun copyAddress(context: Context, address: String) {
-    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText(address, address))
+    copyToClipboard(context, address, address)
     Toast.makeText(context, R.string.about_donate_copied, Toast.LENGTH_SHORT).show()
 }
 

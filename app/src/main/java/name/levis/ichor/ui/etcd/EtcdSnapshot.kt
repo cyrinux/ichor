@@ -1,8 +1,5 @@
 package name.levis.ichor.ui.etcd
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
@@ -60,6 +57,7 @@ import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.VersionNotice
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.components.openTruncating
 import name.levis.ichor.ui.components.text
 import name.levis.ichor.model.nodeHostnames
@@ -351,7 +349,7 @@ fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit
                     }
                     FlowRow {
                         TextButton(onClick = { restore = true }) { Text(stringResource(R.string.etcd_snapshot_restore)) }
-                        TextButton(onClick = { copySha(context, state.sha256) }) { Text(stringResource(R.string.etcd_snapshot_copy_sha)) }
+                        TextButton(onClick = { copyToClipboard(context, "SHA-256", state.sha256) }) { Text(stringResource(R.string.etcd_snapshot_copy_sha)) }
                         TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) }
                     }
                     if (restore) {
@@ -367,6 +365,3 @@ fun SnapshotPanel(state: SnapshotState, onSave: () -> Unit, onCancel: () -> Unit
     }
 }
 
-private fun copySha(context: Context, sha: String) {
-    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("SHA-256", sha))
-}

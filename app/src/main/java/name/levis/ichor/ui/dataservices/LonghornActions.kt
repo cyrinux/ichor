@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.dataservices
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,6 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -27,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,6 +37,8 @@ import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.LonghornAction
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.ResultToasts
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
@@ -71,23 +70,18 @@ class LonghornActions(
 
 /** A toast for each outcome of [results]. */
 @Composable
-fun LonghornResultToasts(results: Flow<LonghornActionResult>) {
-    val context = LocalContext.current
-    LaunchedEffect(results) {
-        results.collect { r ->
-            val text = r.error?.resolve(context)?.let { context.getString(R.string.longhorn_action_failed, r.label, it) }
-                ?: when (r.action) {
-                    LonghornAction.BACKUP -> context.getString(R.string.longhorn_backup_started, r.label)
-                    LonghornAction.TRIM -> context.getString(R.string.longhorn_trim_started, r.label)
-                    LonghornAction.REPLICAS -> context.getString(R.string.longhorn_replicas_set, r.label, r.value)
-                    LonghornAction.SCHEDULING_ON -> context.getString(R.string.longhorn_scheduling_on_done, r.label)
-                    LonghornAction.SCHEDULING_OFF -> context.getString(R.string.longhorn_scheduling_off_done, r.label)
-                    LonghornAction.EVICT -> context.getString(R.string.longhorn_evict_started, r.label)
-                    LonghornAction.CANCEL_EVICTION -> context.getString(R.string.longhorn_evict_cancelled, r.label)
-                }
-            Toast.makeText(context, text, if (r.error != null) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
+fun LonghornResultToasts(results: Flow<LonghornActionResult>) = ResultToasts(results) { context, r ->
+    val text = r.error?.resolve(context)?.let { context.getString(R.string.longhorn_action_failed, r.label, it) }
+        ?: when (r.action) {
+            LonghornAction.BACKUP -> context.getString(R.string.longhorn_backup_started, r.label)
+            LonghornAction.TRIM -> context.getString(R.string.longhorn_trim_started, r.label)
+            LonghornAction.REPLICAS -> context.getString(R.string.longhorn_replicas_set, r.label, r.value)
+            LonghornAction.SCHEDULING_ON -> context.getString(R.string.longhorn_scheduling_on_done, r.label)
+            LonghornAction.SCHEDULING_OFF -> context.getString(R.string.longhorn_scheduling_off_done, r.label)
+            LonghornAction.EVICT -> context.getString(R.string.longhorn_evict_started, r.label)
+            LonghornAction.CANCEL_EVICTION -> context.getString(R.string.longhorn_evict_cancelled, r.label)
         }
-    }
+    text to (r.error != null)
 }
 
 /** The ⋮ menu of a volume or node row, a spinner while one of its actions runs. */
@@ -156,13 +150,12 @@ fun ReplicaCountDialog(label: String, current: Int, choices: IntRange, onConfirm
 /** Confirms an eviction: every replica on [node] is copied elsewhere, then removed. */
 @Composable
 fun EvictConfirmDialog(node: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.longhorn_evict_title, node)) },
-        text = { Text(stringResource(R.string.longhorn_evict_text, node)) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) { Text(stringResource(R.string.longhorn_action_evict), color = LocalStatusColors.current.warn) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    ConfirmDialog(
+        title = stringResource(R.string.longhorn_evict_title, node),
+        text = stringResource(R.string.longhorn_evict_text, node),
+        confirm = stringResource(R.string.longhorn_action_evict),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        confirmColor = LocalStatusColors.current.warn,
     )
 }

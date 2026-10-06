@@ -2,7 +2,6 @@ package name.levis.ichor.ui.overview
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,6 +26,7 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.PublicIpReport
 import name.levis.ichor.model.firstError
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.userMessage
 
 /**
@@ -77,12 +77,12 @@ fun rememberPublicIpDetection(fingerprint: String?, canDetect: Boolean): PublicI
 /** Says what finding the public IPs does before it runs anything on the cluster. */
 @Composable
 private fun DetectPublicIpsDialog(onRun: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.overview_public_ip_detect_title)) },
-        text = { Text(stringResource(R.string.overview_public_ip_detect_body)) },
-        confirmButton = { TextButton(onClick = onRun) { Text(stringResource(R.string.overview_public_ip_detect_run)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    ConfirmDialog(
+        title = stringResource(R.string.overview_public_ip_detect_title),
+        text = stringResource(R.string.overview_public_ip_detect_body),
+        confirm = stringResource(R.string.overview_public_ip_detect_run),
+        onConfirm = onRun,
+        onDismiss = onDismiss,
     )
 }
 

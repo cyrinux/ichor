@@ -1,14 +1,9 @@
 package name.levis.ichor.ui.dataservices
 
 import android.content.Context
-import android.widget.Toast
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +24,8 @@ import name.levis.ichor.model.GarageRepairOutcome
 import name.levis.ichor.model.GarageRepairResult
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.ResultToasts
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 
@@ -128,20 +125,14 @@ class GarageActions(
 
 /** A toast for each outcome of [results]. */
 @Composable
-fun GarageResultToasts(results: Flow<GarageActionResult>) {
-    val context = LocalContext.current
-    LaunchedEffect(results) {
-        results.collect { r ->
-            val (text, failed) = when (r) {
-                is GarageActionResult.Tranquility -> r.error?.resolve(context)
-                    ?.let { context.getString(R.string.garage_tranquility_failed, r.node, it) to true }
-                    ?: (context.getString(R.string.garage_tranquility_done, r.node, r.value) to false)
-                is GarageActionResult.Repair -> r.error?.resolve(context)
-                    ?.let { context.getString(R.string.garage_repair_failed, it) to true }
-                    ?: (r.result!!.summary(context) to r.result.errors.isNotEmpty())
-            }
-            Toast.makeText(context, text, if (failed) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
-        }
+fun GarageResultToasts(results: Flow<GarageActionResult>) = ResultToasts(results) { context, r ->
+    when (r) {
+        is GarageActionResult.Tranquility -> r.error?.resolve(context)
+            ?.let { context.getString(R.string.garage_tranquility_failed, r.node, it) to true }
+            ?: (context.getString(R.string.garage_tranquility_done, r.node, r.value) to false)
+        is GarageActionResult.Repair -> r.error?.resolve(context)
+            ?.let { context.getString(R.string.garage_repair_failed, it) to true }
+            ?: (r.result!!.summary(context) to r.result.errors.isNotEmpty())
     }
 }
 
@@ -165,18 +156,12 @@ fun GarageRepairResult.summary(context: Context): String {
 @Composable
 fun TranquilityConfirmDialog(node: GarageNode, value: Long, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     val full = value == GARAGE_TRANQUILITY_FULL
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(if (full) R.string.garage_tranquility_full_title else R.string.garage_tranquility_default_title, node.label)) },
-        text = { Text(stringResource(if (full) R.string.garage_tranquility_full_text else R.string.garage_tranquility_default_text)) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    stringResource(R.string.garage_tranquility_confirm),
-                    color = if (full) LocalStatusColors.current.warn else Color.Unspecified,
-                )
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    ConfirmDialog(
+        title = stringResource(if (full) R.string.garage_tranquility_full_title else R.string.garage_tranquility_default_title, node.label),
+        text = stringResource(if (full) R.string.garage_tranquility_full_text else R.string.garage_tranquility_default_text),
+        confirm = stringResource(R.string.garage_tranquility_confirm),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        confirmColor = if (full) LocalStatusColors.current.warn else Color.Unspecified,
     )
 }

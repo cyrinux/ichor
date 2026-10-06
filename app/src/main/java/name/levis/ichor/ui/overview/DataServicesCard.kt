@@ -30,6 +30,7 @@ import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.detected
 import name.levis.ichor.model.likelyCauses
 import name.levis.ichor.model.summary
+import name.levis.ichor.model.title
 import name.levis.ichor.model.worst
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
@@ -42,7 +43,6 @@ import name.levis.ichor.ui.dataservices.LikelyCauseBanner
 import name.levis.ichor.ui.dataservices.color
 import name.levis.ichor.ui.dataservices.label
 import name.levis.ichor.ui.dataservices.summaryText
-import name.levis.ichor.ui.dataservices.title
 
 private val ICON = 28.dp
 

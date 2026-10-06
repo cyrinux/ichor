@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.workloads
 
-import android.text.format.DateUtils
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -57,6 +56,7 @@ import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.util.timeAgo
 
 class WorkloadsViewModel(talos: TalosRepository, metered: () -> Boolean) : PagedListViewModel<KubeWorkload>(talos, metered) {
     override fun key(namespace: String?) = workloadsKey(namespace)
@@ -206,7 +206,7 @@ private fun WorkloadRow(workload: KubeWorkload, showNamespace: Boolean, restarti
                     color = workload.workloadState.color(),
                 )
                 if (workload.restartedAt > 0) {
-                    val ago = DateUtils.getRelativeTimeSpanString(workload.restartedAt, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)
+                    val ago = timeAgo(workload.restartedAt)
                     Text(stringResource(R.string.workloads_restarted_ago, ago), style = MaterialTheme.typography.labelSmall, color = muted)
                 }
             }

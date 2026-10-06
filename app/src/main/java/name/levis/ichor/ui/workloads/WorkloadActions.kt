@@ -1,9 +1,6 @@
 package name.levis.ichor.ui.workloads
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +19,7 @@ import name.levis.ichor.ui.argocd.ArgoSelfHealer
 import name.levis.ichor.ui.argocd.argoSelfHealer
 import name.levis.ichor.ui.argocd.freezeForHandChange
 import name.levis.ichor.ui.cancellableCatching
+import name.levis.ichor.ui.components.ResultToasts
 import name.levis.ichor.ui.uiText
 
 /** The last scale of a workload: its [warning] (a HorizontalPodAutoscaler manages it), or why it failed. */
@@ -113,9 +111,4 @@ class WorkloadActions(
 
 /** A toast for each message of [messages]. */
 @Composable
-fun ActionMessageToasts(messages: Flow<ActionMessage>) {
-    val context = LocalContext.current
-    LaunchedEffect(messages) {
-        messages.collect { m -> Toast.makeText(context, m.text.resolve(context), if (m.error) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show() }
-    }
-}
+fun ActionMessageToasts(messages: Flow<ActionMessage>) = ResultToasts(messages) { context, m -> m.text.resolve(context) to m.error }

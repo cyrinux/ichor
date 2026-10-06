@@ -84,6 +84,7 @@ import name.levis.ichor.model.hueOf
 import name.levis.ichor.model.seedFromHue
 import name.levis.ichor.model.seedOf
 import name.levis.ichor.monitor.CERT_WARN_DAYS
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.importconfig.certExpiry
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -288,17 +289,16 @@ fun ClusterSheet(
     }
 
     removing?.let { context ->
-        AlertDialog(
-            onDismissRequest = { removing = null },
-            title = { Text(stringResource(R.string.clusters_remove_title, labels.of(context))) },
-            text = { Text(stringResource(R.string.clusters_remove_body)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    removing = null
-                    onRemove(context.name)
-                }) { Text(stringResource(R.string.common_delete)) }
+        ConfirmDialog(
+            title = stringResource(R.string.clusters_remove_title, labels.of(context)),
+            text = stringResource(R.string.clusters_remove_body),
+            confirm = stringResource(R.string.common_delete),
+            onConfirm = {
+                removing = null
+                onRemove(context.name)
             },
-            dismissButton = { TextButton(onClick = { removing = null }) { Text(stringResource(R.string.common_cancel)) } },
+            onDismiss = { removing = null },
+            destructive = true,
         )
     }
 

@@ -1,7 +1,5 @@
 package name.levis.ichor.ui.flows
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -56,10 +54,11 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.netpol.PolicyDetailSheet
 import name.levis.ichor.ui.netpol.TagBadge
 import java.text.DateFormat
-import java.util.Date
+import name.levis.ichor.util.formatDateTime
 
 /**
  * One drop group: both endpoints, the policies that denied it or isolate its pod (each opens
@@ -171,11 +170,10 @@ private fun Hint(group: DropGroup) {
     hints.forEach { MutedText(it, Modifier.padding(top = 8.dp)) }
 }
 
-private fun formatTime(millis: Long): String =
-    if (millis > 0) DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM).format(Date(millis)) else "–"
+private fun formatTime(millis: Long): String = if (millis > 0) formatDateTime(millis, DateFormat.SHORT, DateFormat.MEDIUM) else "–"
 
 private fun copyFlow(context: Context, flow: HubbleFlow) {
     val json = TalosJson.encodeToString(HubbleFlow.serializer(), flow)
-    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("flow", json))
+    copyToClipboard(context, "flow", json)
     Toast.makeText(context, R.string.flows_copied, Toast.LENGTH_SHORT).show()
 }

@@ -39,14 +39,12 @@ import name.levis.ichor.model.CnpgCluster
 import name.levis.ichor.model.CnpgPod
 import name.levis.ichor.model.CnpgReason
 import name.levis.ichor.model.CnpgStatus
-import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.filtered
 import name.levis.ichor.model.pendingInstances
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.theme.LocalStatusColors
-import name.levis.ichor.util.timeAgo
 import name.levis.ichor.ui.components.expandable
 
 /**
@@ -160,7 +158,7 @@ private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit) {
         }
         if (c.instancePods.isNotEmpty()) {
             Text(stringResource(R.string.cnpg_instances), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-            c.instancePods.forEach { PodLine(it) }
+            c.instancePods.forEach { DataPodLine(it.name, it.ready, it.node, it.phase, it.role, indent = 8.dp) }
         }
         InfoRow(stringResource(R.string.cnpg_archiving), archivingText(c.archiving))
         InfoRow(
@@ -171,40 +169,15 @@ private fun Details(c: CnpgCluster, backingUp: Boolean, onBackup: () -> Unit) {
                 else -> stringResource(R.string.cnpg_backup_none)
             },
         )
-        InfoRow(stringResource(R.string.cnpg_last_backup), ago(c.lastSuccessAt))
-        if (c.lastFailureAt > 0) InfoRow(stringResource(R.string.cnpg_last_failure), ago(c.lastFailureAt))
-        if (c.recoverableAt > 0) InfoRow(stringResource(R.string.cnpg_recoverable), ago(c.recoverableAt))
+        InfoRow(stringResource(R.string.cnpg_last_backup), agoOrNever(c.lastSuccessAt))
+        if (c.lastFailureAt > 0) InfoRow(stringResource(R.string.cnpg_last_failure), agoOrNever(c.lastFailureAt))
+        if (c.recoverableAt > 0) InfoRow(stringResource(R.string.cnpg_recoverable), agoOrNever(c.recoverableAt))
         // The Go core picks the method; a cluster set up for none of them is refused with a reason.
         if (!c.hibernated) {
             OutlinedButton(onClick = onBackup, enabled = !backingUp, modifier = Modifier.padding(top = 8.dp)) {
                 Text(stringResource(R.string.cnpg_backup_now))
             }
         }
-    }
-}
-
-@Composable
-private fun PodLine(p: CnpgPod) {
-    val colors = LocalStatusColors.current
-    Row(Modifier.padding(start = 8.dp, top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-        HealthDot(if (p.ready) ServiceHealth.OK else ServiceHealth.CRITICAL, Modifier.size(8.dp))
-        Spacer(Modifier.size(8.dp))
-        val role = when (p.role) {
-            "primary" -> stringResource(R.string.cnpg_role_primary)
-            "replica" -> stringResource(R.string.cnpg_role_replica)
-            else -> null
-        }
-        val where = when {
-            p.node.isEmpty() && p.phase == "Pending" -> stringResource(R.string.cnpg_pod_pending)
-            p.node.isNotEmpty() -> stringResource(R.string.data_services_on_node, p.node)
-            else -> p.phase
-        }
-        Text(
-            listOfNotNull(p.name, role, where).joinToString(" · "),
-            style = MaterialTheme.typography.labelSmall,
-            fontFamily = FontFamily.Monospace,
-            color = if (p.ready) MaterialTheme.colorScheme.onSurface else colors.bad,
-        )
     }
 }
 
@@ -227,6 +200,3 @@ private fun archivingText(archiving: String): String = when (archiving) {
     "off" -> stringResource(R.string.cnpg_archiving_off)
     else -> stringResource(R.string.cnpg_archiving_unknown)
 }
-
-@Composable
-private fun ago(millis: Long): String = timeAgo(millis).ifEmpty { stringResource(R.string.cnpg_never) }

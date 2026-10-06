@@ -19,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,14 +32,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,12 +47,14 @@ import name.levis.ichor.model.PressureLevel
 import name.levis.ichor.model.cgroupRows
 import name.levis.ichor.model.defaultExpandedCgroups
 import name.levis.ichor.model.pressureLevel
+import name.levis.ichor.ui.PollWhileStarted
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.live.LiveChart
 import name.levis.ichor.ui.live.Series
+import name.levis.ichor.ui.pollEvery
 import name.levis.ichor.ui.theme.LocalChartColors
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
@@ -85,25 +81,13 @@ class CgroupsViewModel(private val talos: TalosRepository, private val node: Str
     private val _state = MutableStateFlow(CgroupsState())
     val state: StateFlow<CgroupsState> = _state.asStateFlow()
 
-    suspend fun poll() {
-        while (true) {
-            runCatching { talos.cgroups(node) }.fold(
-                onSuccess = { report ->
-                    val last = _state.value
-                    _state.value = CgroupsState(
-                        previous = last.current,
-                        current = report,
-                        history = (last.history + report.copy(root = null)).takeLast(CGROUPS_HISTORY_POINTS),
-                    )
-                },
-                onFailure = {
-                    // Leaving the tab cancels the call: that is not an error to show on return.
-                    if (it is CancellationException) throw it
-                    _state.value = _state.value.copy(error = it.userMessage())
-                },
-            )
-            delay(CGROUPS_POLL_SECONDS * 1000)
-        }
+    suspend fun poll(): Nothing = pollEvery({ CGROUPS_POLL_SECONDS * 1000 }, { talos.cgroups(node) }, { _state.value = _state.value.copy(error = it.userMessage()) }) { report ->
+        val last = _state.value
+        _state.value = CgroupsState(
+            previous = last.current,
+            current = report,
+            history = (last.history + report.copy(root = null)).takeLast(CGROUPS_HISTORY_POINTS),
+        )
     }
 }
 
@@ -113,9 +97,7 @@ fun CgroupsTab(
     vm: CgroupsViewModel = viewModel(key = "cgroups-$node", factory = factory { CgroupsViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    // Poll only while visible: leaving the tab or backgrounding the app stops it.
-    LaunchedEffect(lifecycle) { lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { vm.poll() } }
+    PollWhileStarted { vm.poll() }
 
     var sort by rememberSaveable { mutableStateOf(CgroupSort.MEMORY) }
     var expanded by remember { mutableStateOf<Set<String>?>(null) }

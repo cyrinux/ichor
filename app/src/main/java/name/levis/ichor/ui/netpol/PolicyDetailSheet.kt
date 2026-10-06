@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.netpol
 
-import android.text.format.DateUtils
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +24,7 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.util.timeAgo
 
 /** One policy: who it applies to, the pods it selects now, then what each direction lets through. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,7 +50,7 @@ fun PolicyDetailSheet(policy: NetPolicy, onDismiss: () -> Unit) {
             if (policy.created > 0) {
                 InfoRow(
                     stringResource(R.string.netpol_created),
-                    DateUtils.getRelativeTimeSpanString(policy.created, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS).toString(),
+                    timeAgo(policy.created),
                 )
             }
 
