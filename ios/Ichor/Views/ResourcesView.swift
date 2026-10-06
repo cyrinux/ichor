@@ -36,15 +36,7 @@ struct ResourceTypesView: View {
                     }
                 }
             }
-            .overlay {
-                if groups.isEmpty {
-                    if query.isEmpty {
-                        ContentUnavailableView("No resource type", systemImage: "square.stack.3d.up")
-                    } else {
-                        ContentUnavailableView.search(text: query)
-                    }
-                }
-            }
+            .emptyOverlay(groups.isEmpty, query: query) { ContentUnavailableView("No resource type", systemImage: "square.stack.3d.up") }
             .refreshable { await load() }
             .themedBackground()
         }
@@ -114,15 +106,7 @@ struct ResourceItemsView: View {
                     if list.truncated { Text("Only the first \(list.items.count) are shown") }
                 }
             }
-            .overlay {
-                if shown.isEmpty {
-                    if query.isEmpty {
-                        ContentUnavailableView("No resource of this type", systemImage: "square.stack.3d.up")
-                    } else {
-                        ContentUnavailableView.search(text: query)
-                    }
-                }
-            }
+            .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No resource of this type", systemImage: "square.stack.3d.up") }
             .refreshable { await load() }
             .themedBackground()
         }

@@ -185,6 +185,22 @@ extension View {
     }
 }
 
+extension View {
+    /// The empty state of a searchable list: `empty` when there is nothing at all, the "no results"
+    /// view when `query` hides everything.
+    func emptyOverlay<Empty: View>(_ isEmpty: Bool, query: String, @ViewBuilder empty: @escaping () -> Empty) -> some View {
+        overlay {
+            if isEmpty {
+                if query.isEmpty {
+                    empty()
+                } else {
+                    ContentUnavailableView.search(text: query)
+                }
+            }
+        }
+    }
+}
+
 /// "2 minutes ago", "in 3 hours"; "never" for a Unix-ms time of 0.
 func relativeTime(_ millis: Int64) -> String {
     guard millis > 0 else { return String(localized: "never") }

@@ -12,52 +12,16 @@ struct ArgoSection: View {
     let downNodes: Set<String>
 
     var body: some View {
-        switch state {
-        case .loading:
-            Section {
-                VStack(alignment: .leading, spacing: 10) {
-                    header(count: 0)
-                    ArgoHealthBar(counts: [(health: .healthy, count: 1)])
-                    Text(verbatim: "GitOps apps healthy").font(.caption)
-                }
-                .redacted(reason: .placeholder)
-            }
-        case .failed(let message):
-            Section {
-                NavigationLink(value: Route.argoCD(downNodes: downNodes)) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: "GitOps").font(.headline)
-                        Text("Could not read: \(message)").font(.caption).foregroundStyle(.secondary).lineLimit(2)
-                    }
-                }
-            }
-        case .loaded(let status, _, _):
-            if status.installed && !status.apps.isEmpty {
-                Section {
-                    NavigationLink(value: Route.argoCD(downNodes: downNodes)) { content(status) }
-                }
-            }
-        }
-    }
-
-    private func header(count: Int) -> some View {
-        HStack(spacing: 10) {
-            if let app {
-                AppIconView(app: app, size: 28)
-            } else {
-                Image(systemName: "arrow.triangle.branch")
-                    .frame(width: 28, height: 28)
-                    .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
-            }
-            Text(verbatim: "GitOps").font(.headline)
-            Spacer()
-            Text("\(count) apps").font(.subheadline).foregroundStyle(.secondary).monospacedDigit()
-        }
+        GitOpsOverviewSection(title: "GitOps", route: .argoCD(downNodes: downNodes), app: app, state: state,
+                              installed: { $0.installed && !$0.apps.isEmpty }) {
+            ArgoHealthBar(counts: [(health: .healthy, count: 1)])
+            Text(verbatim: "GitOps apps healthy").font(.caption)
+        } content: { content($0) }
     }
 
     private func content(_ status: ArgoStatus) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            header(count: status.apps.count)
+            GitOpsSectionHeader(app: app, title: "GitOps", count: status.apps.count)
             ArgoHealthBar(counts: status.healthCounts)
             if let next = status.activeFreezes.first {
                 Label(status.activeFreezes.count == 1

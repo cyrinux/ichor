@@ -276,15 +276,7 @@ private struct WorkloadsList: View {
                     if load.hasMore && query.isEmpty { LoadMoreRow { list.loadMore(model: model) } }
                 }
             }
-            .overlay {
-                if shown.isEmpty {
-                    if query.isEmpty {
-                        ContentUnavailableView("No workloads", systemImage: "square.stack.3d.up")
-                    } else {
-                        ContentUnavailableView.search(text: query)
-                    }
-                }
-            }
+            .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No workloads", systemImage: "square.stack.3d.up") }
             .refreshable { await list.refresh(model: model) }
             .themedBackground()
         }

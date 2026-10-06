@@ -5,16 +5,7 @@ import UIKit
 /// Capture files in Application Support/captures, excluded from backups (they can hold
 /// sensitive traffic and are easy to recreate).
 enum CaptureStore {
-    static func directory() throws -> URL {
-        var url = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
-                                              appropriateFor: nil, create: true)
-            .appendingPathComponent("captures", isDirectory: true)
-        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        var values = URLResourceValues()
-        values.isExcludedFromBackup = true
-        try url.setResourceValues(values)
-        return url
-    }
+    static func directory() throws -> URL { try AppSupport.excludedFolder("captures") }
 
     static func url(of file: CaptureFile) throws -> URL {
         try directory().appendingPathComponent(file.name)

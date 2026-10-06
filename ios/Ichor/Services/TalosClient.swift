@@ -125,14 +125,7 @@ struct TalosClient: Sendable {
     /// Where Go remembers node names, so a node that is down still shows its hostname.
     /// Device-only: excluded from backup, encrypted with `dataKey()`. Call before any other Go call.
     static func setDataDirectory() {
-        guard var url = try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
-                                                     appropriateFor: nil, create: true)
-            .appendingPathComponent("core", isDirectory: true),
-            (try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)) != nil
-        else { return }
-        var values = URLResourceValues()
-        values.isExcludedFromBackup = true
-        try? url.setResourceValues(values)
+        guard let url = try? AppSupport.excludedFolder("core") else { return }
         IchorgoSetDataDir(url.path, dataKey())
     }
 

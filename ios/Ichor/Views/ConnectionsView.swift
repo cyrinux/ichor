@@ -32,15 +32,7 @@ struct ConnectionsView: View {
                 }
                 ForEach(shown) { ConnectionRow(connection: $0) }
             }
-            .overlay {
-                if shown.isEmpty {
-                    if query.isEmpty {
-                        ContentUnavailableView("No sockets", systemImage: "network.slash")
-                    } else {
-                        ContentUnavailableView.search(text: query)
-                    }
-                }
-            }
+            .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No sockets", systemImage: "network.slash") }
             .refreshable { await load() }
             .themedBackground()
         }

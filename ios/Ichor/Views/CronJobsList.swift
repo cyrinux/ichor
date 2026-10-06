@@ -43,15 +43,7 @@ struct CronJobsList: View {
                 }
             }
             .listSectionSpacing(.compact)
-            .overlay {
-                if shown.isEmpty {
-                    if query.isEmpty {
-                        ContentUnavailableView("No CronJobs", systemImage: "clock.arrow.circlepath")
-                    } else {
-                        ContentUnavailableView.search(text: query)
-                    }
-                }
-            }
+            .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No CronJobs", systemImage: "clock.arrow.circlepath") }
             .refreshable { await list.refresh(model: model) }
             .themedBackground()
         }
