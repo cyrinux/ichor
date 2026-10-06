@@ -343,18 +343,39 @@ func parseConfigSchema(body []byte) (*configSchema, error) {
 	return &schema, nil
 }
 
-// resolve follows n's $ref to its definition (nil when it leads nowhere).
+// resolve follows n's $ref to its definition (nil when it leads nowhere). What the
+// referring node says of the field itself (its title and documentation) wins over what the
+// definition says of the type.
 func (s *configSchema) resolve(n *schemaNode) *schemaNode {
+	title, description := "", ""
+
 	for depth := 0; n != nil && n.Ref != ""; depth++ {
 		name, ok := strings.CutPrefix(n.Ref, "#/$defs/")
 		if !ok || depth > 16 {
 			return nil
 		}
 
+		if title == "" && description == "" {
+			title, description = n.Title, n.Description
+		}
+
 		n = s.Defs[name]
 	}
 
-	return n
+	if n == nil || title == "" && description == "" {
+		return n
+	}
+
+	described := *n
+	if title != "" {
+		described.Title = title
+	}
+
+	if description != "" {
+		described.Description = description
+	}
+
+	return &described
 }
 
 // property is the schema of key in the object obj describes: a declared property, else what

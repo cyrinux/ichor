@@ -25,7 +25,7 @@ const testSchema = `{
       "token": {"type": "string", "title": "token"},
       "certSANs": {"type": "array", "items": {"type": "string"}, "title": "certSANs"},
       "sysctls": {"type": "object", "patternProperties": {".*": {"type": "string"}}, "title": "sysctls"},
-      "install": {"$ref": "#/$defs/v1alpha1.InstallConfig"}
+      "install": {"$ref": "#/$defs/v1alpha1.InstallConfig", "title": "install", "description": "How Talos is installed.\n"}
     }},
     "v1alpha1.InstallConfig": {"type": "object", "additionalProperties": false, "properties": {
       "disk": {"type": "string", "title": "disk"},

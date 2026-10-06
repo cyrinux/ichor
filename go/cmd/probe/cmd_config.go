@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cyrinux/ichor/go/ichorgo"
 )
@@ -53,9 +54,18 @@ var configCommands = []command{
 
 		return ichorgo.MachineConfigPreview(e.cfg, e.context, flag.Arg(1), base, draft)
 	}},
-	{name: "config-try", args: "NODE FILE SECONDS", run: func(e env) (string, error) {
-		// Applies FILE for SECONDS (60, 300 or 600), then lets the node revert: it changes
-		// the node for real.
+	{name: "config-edit", args: "FILE EDITJSON", run: func(env) (string, error) {
+		// FILE with one field edit applied (see MachineConfigEdit), printed. Local.
+		file, err := os.ReadFile(flag.Arg(1))
+		if err != nil {
+			return "", err
+		}
+
+		return ichorgo.MachineConfigEdit(string(file), flag.Arg(2))
+	}},
+	{name: "config-try", args: "NODE FILE SECONDS [revert]", run: func(e env) (string, error) {
+		// Applies FILE for SECONDS (60, 300 or 600): it changes the node for real. The node
+		// reverts by itself at the end, or at once with "revert" (after 10 s). Never keeps.
 		base, draft, err := configDraft(e)
 		if err != nil {
 			return "", err
@@ -63,7 +73,11 @@ var configCommands = []command{
 
 		seconds, _ := strconv.Atoi(flag.Arg(3)) //nolint:errcheck // 0 is refused
 		c := configTryProbe{done: make(chan string, 1)}
-		ichorgo.StartConfigTry(e.cfg, e.context, flag.Arg(1), base, draft, seconds, c)
+		run := ichorgo.StartConfigTry(e.cfg, e.context, flag.Arg(1), base, draft, seconds, c)
+
+		if flag.Arg(4) == "revert" {
+			time.AfterFunc(10*time.Second, run.Revert)
+		}
 
 		return "done: " + <-c.done, nil
 	}},

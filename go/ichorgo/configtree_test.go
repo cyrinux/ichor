@@ -75,6 +75,10 @@ func TestDescribeWithSchema(t *testing.T) {
 	}
 
 	install := child(main.Node, "machine", "install")
+	if install.Description != "How Talos is installed." {
+		t.Fatalf("the field's own documentation, next to its $ref, is shown: %+v", install)
+	}
+
 	if install.FreeKeyType != "" || len(install.Addable) != 1 || install.Addable[0].Key != "wipe" || install.Addable[0].Type != configTypeBoolean {
 		t.Fatalf("install: %+v", install)
 	}
