@@ -161,10 +161,10 @@ struct ArgoWindowsView: View {
     private func load() async {
         guard let client = model.client else { return }
         let key = model.argoKey
-        if case .loading = state, let known = store.status(for: key) { state = .loaded(known, at: Date()) }
-        let cluster = model.activeSummary
-        let loaded: LoadState<ArgoStatus> = await .from { try await store.load(with: client, key: key, cluster: cluster) }
-        if key == model.argoKey { state = state.refreshed(with: loaded) }
+        let cluster = model.activeSummary, store = self.store
+        await store.refresh($state, key: key, currentKey: { model.argoKey }) {
+            try await store.load(with: client, key: key, cluster: cluster)
+        }
     }
 
     private func change(_ action: ArgoFreezeAction, _ pw: ProjectWindow, _ options: ArgoFreezeOptions) async {

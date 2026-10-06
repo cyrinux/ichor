@@ -76,15 +76,8 @@ struct ArgoCDView: View {
             }
         }
         .searchable(text: $query, prompt: Text("Name, project, namespace or repo"))
-        .task(id: model.argoKey) {
-            await load()
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(2))
-                if Task.isCancelled { return }
-                // An app pushed on top polls for itself.
-                if !covered && store.shouldPoll(for: model.argoKey) { await load() }
-            }
-        }
+        // An app pushed on top polls for itself.
+        .gitOpsPolling(key: model.argoKey, paused: { covered }, shouldPoll: { store.shouldPoll(for: model.argoKey) }, load: { await load() })
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
         .navigationTitle(Text(verbatim: "Argo CD"))
@@ -197,11 +190,10 @@ struct ArgoCDView: View {
     private func load() async {
         guard let client = model.client else { return }
         let key = model.argoKey
-        if case .loading = state, let known = store.status(for: key) { state = .loaded(known, at: Date()) }
-        let cluster = model.activeSummary
-        let loaded: LoadState<ArgoStatus> = await .from { try await store.load(with: client, key: key, cluster: cluster) }
-        guard key == model.argoKey else { return }
-        state = state.refreshed(with: loaded)
+        let cluster = model.activeSummary, store = self.store
+        await store.refresh($state, key: key, currentKey: { model.argoKey }) {
+            try await store.load(with: client, key: key, cluster: cluster)
+        }
     }
 
     /// Freezes from a group header, then reads again.

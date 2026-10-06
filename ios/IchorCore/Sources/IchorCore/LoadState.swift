@@ -22,4 +22,17 @@ extension LoadState {
         }
         return new
     }
+
+    /// What a screen still loading shows at once when a store kept `known` from an earlier
+    /// read; nil when there is nothing to change (already showing data, or nothing known).
+    public func seeded(with known: T?, at date: Date = Date()) -> LoadState<T>? {
+        guard case .loading = self, let known else { return nil }
+        return .loaded(known, at: date)
+    }
+
+    /// The state once a read started for `key` came back, nil when the screen moved to
+    /// another cluster (`current`) meanwhile: its answer is not for what is on screen.
+    public func refreshed(with new: LoadState<T>, readFor key: String, current: String) -> LoadState<T>? {
+        key == current ? refreshed(with: new) : nil
+    }
 }
