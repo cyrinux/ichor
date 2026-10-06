@@ -15,7 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,8 +45,7 @@ import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.emptyOrNoMatch
@@ -90,13 +88,13 @@ fun ImagesScreen(
             )
         },
     ) { padding ->
-        when (val s = state) {
-            UiState.Loading -> LoadingBox(Modifier.padding(padding))
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.padding(padding))
-            is UiState.Loaded -> Column(Modifier.padding(padding).fillMaxSize()) {
-                val rows = remember(s.data, query, sort) { s.data.filteredSorted(query, sort) }
+        Loaded(
+            state,
+            vm::refresh,
+            Modifier.padding(padding),
+            header = { images ->
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    MutedText(pluralStringResource(R.plurals.images_summary, s.data.size, s.data.size, formatBytes(s.data.totalSize)))
+                    MutedText(pluralStringResource(R.plurals.images_summary, images.size, images.size, formatBytes(images.totalSize)))
                     SearchField(query, { query = it }, stringResource(R.string.images_search), Modifier.fillMaxWidth())
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(stringResource(R.string.node_processes_sort), style = MaterialTheme.typography.labelMedium)
@@ -106,16 +104,16 @@ fun ImagesScreen(
                     }
                 }
                 HorizontalDivider()
-                PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                    if (rows.isEmpty()) {
-                        EmptyText(emptyOrNoMatch(query, R.string.images_empty, R.string.images_no_match))
-                    } else {
-                        LazyColumn(Modifier.fillMaxSize()) {
-                            items(rows, key = { "${it.name}|${it.digest}" }) { image ->
-                                ImageRow(image)
-                                HorizontalDivider()
-                            }
-                        }
+            },
+        ) { images ->
+            val rows = remember(images, query, sort) { images.filteredSorted(query, sort) }
+            if (rows.isEmpty()) {
+                EmptyText(emptyOrNoMatch(query, R.string.images_empty, R.string.images_no_match))
+            } else {
+                LazyColumn(Modifier.fillMaxSize()) {
+                    items(rows, key = { "${it.name}|${it.digest}" }) { image ->
+                        ImageRow(image)
+                        HorizontalDivider()
                     }
                 }
             }

@@ -14,7 +14,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,10 +35,8 @@ import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.shortFluxRevision
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.BackButton
-import name.levis.ichor.ui.components.DataFreshness
-import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoRow
-import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.diff.DiffCounts
 import name.levis.ichor.ui.diff.DiffResourceCard
@@ -80,15 +77,8 @@ fun FluxDiffScreen(kind: String, namespace: String, name: String, onBack: () -> 
         },
     ) { padding ->
         val modifier = Modifier.padding(padding)
-        when (val s = state) {
-            UiState.Loading -> LoadingBox(modifier)
-            is UiState.Failed -> ErrorBox(s.message, refresh, modifier)
-            is UiState.Loaded -> Column(modifier.fillMaxSize()) {
-                PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = refresh, modifier = Modifier.weight(1f)) {
-                    DiffBody(s.data)
-                }
-                DataFreshness(s, edgeToEdge = false)
-            }
+        Loaded(state, refresh, modifier, freshness = true) { data ->
+            DiffBody(data)
         }
     }
 }
