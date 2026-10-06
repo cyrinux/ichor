@@ -8,6 +8,7 @@
     <string name="common_close">Закрити</string>
     <string name="common_ok">OK</string>
     <string name="common_retry">Повторити</string>
+    <string name="common_loading">Завантаження</string>
     <string name="common_refresh">Оновити</string>
     <string name="common_delete">Видалити</string>
     <string name="common_more">Більше</string>

@@ -8,6 +8,7 @@
     <string name="common_close">Chiudi</string>
     <string name="common_ok">OK</string>
     <string name="common_retry">Riprova</string>
+    <string name="common_loading">Caricamento</string>
     <string name="common_refresh">Aggiorna</string>
     <string name="common_delete">Elimina</string>
     <string name="common_more">Altro</string>
