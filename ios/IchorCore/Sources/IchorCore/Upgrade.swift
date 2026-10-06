@@ -20,10 +20,10 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
 
         public init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
-            members = try c.decodeIfPresent(Int.self, forKey: .members) ?? 0
-            healthy = try c.decodeIfPresent(Int.self, forKey: .healthy) ?? 0
-            thisNodeMember = try c.decodeIfPresent(Bool.self, forKey: .thisNodeMember) ?? false
-            quorumAfterLoss = try c.decodeIfPresent(Bool.self, forKey: .quorumAfterLoss) ?? true
+            members = try c.field(.members, 0)
+            healthy = try c.field(.healthy, 0)
+            thisNodeMember = try c.field(.thisNodeMember, false)
+            quorumAfterLoss = try c.field(.quorumAfterLoss, true)
         }
     }
 
@@ -68,16 +68,16 @@ public struct UpgradePlan: Decodable, Equatable, Sendable {
     // Go encodes empty slices as null and may omit empty strings.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        node = try c.decodeIfPresent(String.self, forKey: .node) ?? ""
-        hostname = try c.decodeIfPresent(String.self, forKey: .hostname) ?? ""
-        controlPlane = try c.decodeIfPresent(Bool.self, forKey: .controlPlane) ?? false
-        currentVersion = try c.decodeIfPresent(String.self, forKey: .currentVersion) ?? ""
-        currentImage = try c.decodeIfPresent(String.self, forKey: .currentImage) ?? ""
-        schematic = try c.decodeIfPresent(String.self, forKey: .schematic) ?? ""
+        node = try c.field(.node, "")
+        hostname = try c.field(.hostname, "")
+        controlPlane = try c.field(.controlPlane, false)
+        currentVersion = try c.field(.currentVersion, "")
+        currentImage = try c.field(.currentImage, "")
+        schematic = try c.field(.schematic, "")
         etcd = try c.decodeIfPresent(Etcd.self, forKey: .etcd)
-        blockers = try c.decodeIfPresent([String].self, forKey: .blockers) ?? []
-        warnings = try c.decodeIfPresent([String].self, forKey: .warnings) ?? []
-        acknowledge = try c.decodeIfPresent([String].self, forKey: .acknowledge) ?? []
+        blockers = try c.field(.blockers, [])
+        warnings = try c.field(.warnings, [])
+        acknowledge = try c.field(.acknowledge, [])
         forceable = try c.decodeIfPresent(Bool.self, forKey: .forceable)
     }
 }
@@ -102,8 +102,8 @@ public struct TalosRelease: Decodable, Equatable, Identifiable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         version = try c.decode(String.self, forKey: .version)
-        date = try c.decodeIfPresent(String.self, forKey: .date) ?? ""
-        prerelease = try c.decodeIfPresent(Bool.self, forKey: .prerelease) ?? false
+        date = try c.field(.date, "")
+        prerelease = try c.field(.prerelease, false)
     }
 }
 
@@ -230,12 +230,12 @@ public struct UpgradeProgress: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        phase = try c.decodeIfPresent(String.self, forKey: .phase) ?? ""
-        message = try c.decodeIfPresent(String.self, forKey: .message) ?? ""
+        phase = try c.field(.phase, "")
+        message = try c.field(.message, "")
         if let ms = try? c.decodeIfPresent(Int64.self, forKey: .at) {
             at = ms
         } else if let text = try? c.decodeIfPresent(String.self, forKey: .at), let date = ISO8601DateFormatter().date(from: text) {
-            at = Int64(date.timeIntervalSince1970 * 1000)
+            at = date.epochMillis
         } else {
             at = 0
         }
@@ -330,9 +330,9 @@ public struct TalosUpdateInfo: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        latest = try c.decodeIfPresent(String.self, forKey: .latest) ?? ""
-        latestDate = try c.decodeIfPresent(String.self, forKey: .latestDate) ?? ""
-        newer = try c.decodeIfPresent(Bool.self, forKey: .newer) ?? false
+        latest = try c.field(.latest, "")
+        latestDate = try c.field(.latestDate, "")
+        newer = try c.field(.newer, false)
         // A count, or the list of outdated entries.
         if let count = try? c.decodeIfPresent(Int.self, forKey: .outdated) {
             outdated = count
@@ -341,8 +341,8 @@ public struct TalosUpdateInfo: Decodable, Equatable, Sendable {
         } else {
             outdated = 0
         }
-        oldest = try c.decodeIfPresent(String.self, forKey: .oldest) ?? ""
-        notes = try c.decodeIfPresent(String.self, forKey: .notes) ?? ""
+        oldest = try c.field(.oldest, "")
+        notes = try c.field(.notes, "")
     }
 }
 

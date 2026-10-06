@@ -88,7 +88,6 @@ class ArgoCDTest {
         val running = app("cert-manager").copy(operation = ArgoOperation(phase = "Running"))
         assertFalse(running.canRollback)
         assertTrue(app("grafana").serverSideApply)
-        assertEquals(listOf("legacy"), app("cert-manager").pruneCandidates.map { it.name })
     }
 
     @Test

@@ -38,10 +38,4 @@ final class StatsTests: XCTestCase {
         XCTAssertTrue(asked.shouldAsk(now: start.addingTimeInterval(110 * day)))
         XCTAssertFalse(SupportState(firstSeen: start, launches: 99, never: true).shouldAsk(now: start.addingTimeInterval(999 * day)))
     }
-
-    func testAccessLabel() {
-        XCTAssertEqual(ContextSummary(name: "a", roles: ["os:admin"]).accessLabel, "admin")
-        XCTAssertEqual(ContextSummary(name: "o", roles: ["os:operator"]).accessLabel, "operator")
-        XCTAssertEqual(ContextSummary(name: "r", roles: ["os:reader"]).accessLabel, "read-only")
-    }
 }

@@ -20,10 +20,10 @@ public struct PublicIPProbe: Codable, Equatable, Sendable {
     // Go leaves empty fields out.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
-        address = try c.decodeIfPresent(String.self, forKey: .address) ?? ""
-        publicIP = try c.decodeIfPresent(String.self, forKey: .publicIP) ?? ""
-        error = try c.decodeIfPresent(String.self, forKey: .error) ?? ""
+        name = try c.field(.name, "")
+        address = try c.field(.address, "")
+        publicIP = try c.field(.publicIP, "")
+        error = try c.field(.error, "")
     }
 }
 
@@ -41,8 +41,8 @@ public struct PublicIPReport: Codable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        nodes = try c.decodeIfPresent([PublicIPProbe].self, forKey: .nodes) ?? []
-        at = try c.decodeIfPresent(Int64.self, forKey: .at) ?? 0
+        nodes = try c.field(.nodes, [])
+        at = try c.field(.at, 0)
     }
 
     /// The address found for `node`: by its talosconfig address, else its hostname.

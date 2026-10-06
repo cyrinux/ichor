@@ -102,7 +102,3 @@ val NodeHardware.totalMemoryBytes: Long get() = memory.sumOf { it.sizeMib } * 10
 /** Disks with the system disk first, then by name. */
 val NodeHardware.sortedDisks: List<DiskInfo>
     get() = disks.sortedWith(compareByDescending<DiskInfo> { it.systemDisk }.thenBy { it.name })
-
-/** Total cores and threads over all sockets. */
-val NodeHardware.totalCores: Int get() = processors.sumOf { it.cores }
-val NodeHardware.totalThreads: Int get() = processors.sumOf { it.threads }

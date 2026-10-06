@@ -2,19 +2,6 @@ import Foundation
 
 // Mirrors go/ichorgo/kube_cronjobs.go.
 
-public struct KubeCronJobList: Decodable, Equatable, Sendable {
-    public let cronJobs: [KubeCronJob]
-
-    public init(cronJobs: [KubeCronJob] = []) { self.cronJobs = cronJobs }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        cronJobs = try c.decodeIfPresent([KubeCronJob].self, forKey: .cronJobs) ?? []
-    }
-
-    private enum CodingKeys: String, CodingKey { case cronJobs }
-}
-
 /// A CronJob with its schedule, recent runs and the ichor.levis.name/* settings (KubeCronJobs).
 public struct KubeCronJob: Codable, Equatable, Identifiable, Sendable {
     public let namespace: String
@@ -81,21 +68,21 @@ public struct KubeCronJob: Codable, Equatable, Identifiable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         namespace = try c.decode(String.self, forKey: .namespace)
         name = try c.decode(String.self, forKey: .name)
-        title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
-        description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
-        icon = try c.decodeIfPresent(String.self, forKey: .icon).flatMap { $0.isEmpty ? nil : $0 }
-        remoteIcon = try c.decodeIfPresent(String.self, forKey: .remoteIcon).flatMap { $0.isEmpty ? nil : $0 }
-        schedule = try c.decodeIfPresent(String.self, forKey: .schedule) ?? ""
-        timeZone = try c.decodeIfPresent(String.self, forKey: .timeZone) ?? ""
-        suspended = try c.decodeIfPresent(Bool.self, forKey: .suspended) ?? false
-        triggerable = try c.decodeIfPresent(Bool.self, forKey: .triggerable) ?? true
-        active = try c.decodeIfPresent(Int.self, forKey: .active) ?? 0
-        state = try c.decodeIfPresent(String.self, forKey: .state) ?? ""
-        lastSchedule = try c.decodeIfPresent(Int64.self, forKey: .lastSchedule) ?? 0
-        lastSuccess = try c.decodeIfPresent(Int64.self, forKey: .lastSuccess) ?? 0
-        nextRun = try c.decodeIfPresent(Int64.self, forKey: .nextRun) ?? 0
-        images = try c.decodeIfPresent([String].self, forKey: .images) ?? []
-        runs = try c.decodeIfPresent([KubeJobRun].self, forKey: .runs) ?? []
+        title = try c.field(.title, "")
+        description = try c.field(.description, "")
+        icon = try c.decodeIfPresent(String.self, forKey: .icon).nonEmpty
+        remoteIcon = try c.decodeIfPresent(String.self, forKey: .remoteIcon).nonEmpty
+        schedule = try c.field(.schedule, "")
+        timeZone = try c.field(.timeZone, "")
+        suspended = try c.field(.suspended, false)
+        triggerable = try c.field(.triggerable, true)
+        active = try c.field(.active, 0)
+        state = try c.field(.state, "")
+        lastSchedule = try c.field(.lastSchedule, 0)
+        lastSuccess = try c.field(.lastSuccess, 0)
+        nextRun = try c.field(.nextRun, 0)
+        images = try c.field(.images, [])
+        runs = try c.field(.runs, [])
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -136,10 +123,10 @@ public struct KubeJobRun: Codable, Equatable, Identifiable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         name = try c.decode(String.self, forKey: .name)
-        state = try c.decodeIfPresent(String.self, forKey: .state) ?? ""
-        manual = try c.decodeIfPresent(Bool.self, forKey: .manual) ?? false
-        started = try c.decodeIfPresent(Int64.self, forKey: .started) ?? 0
-        finished = try c.decodeIfPresent(Int64.self, forKey: .finished) ?? 0
+        state = try c.field(.state, "")
+        manual = try c.field(.manual, false)
+        started = try c.field(.started, 0)
+        finished = try c.field(.finished, 0)
     }
 
     private enum CodingKeys: String, CodingKey { case name, state, manual, started, finished }

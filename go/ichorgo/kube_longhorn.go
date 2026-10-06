@@ -70,24 +70,6 @@ type longhornBackupTarget struct {
 	Message   string `json:"message"`
 }
 
-type kubeCondition struct {
-	Type    string `json:"type"`
-	Status  string `json:"status"`
-	Reason  string `json:"reason"`
-	Message string `json:"message"`
-}
-
-// conditionStatus is the status ("True", "False") of a condition type, "" when absent.
-func conditionStatus(conds []kubeCondition, typ string) string {
-	for _, c := range conds {
-		if c.Type == typ {
-			return c.Status
-		}
-	}
-
-	return ""
-}
-
 type lhVolumeObject struct {
 	Metadata struct {
 		Name      string `json:"name"`
@@ -242,13 +224,9 @@ func mapLonghorn(version string, volumes []lhVolumeObject, replicas []lhReplicaO
 		out.Volumes = append(out.Volumes, mapLonghornVolume(v, byVolume[v.Metadata.Name]))
 	}
 
-	slices.SortFunc(out.Volumes, func(a, b longhornVolume) int {
-		if c := healthRank(a.Health) - healthRank(b.Health); c != 0 {
-			return c
-		}
-
-		return strings.Compare(a.PVCNamespace+"/"+a.PVCName+"/"+a.Name, b.PVCNamespace+"/"+b.PVCName+"/"+b.Name)
-	})
+	slices.SortFunc(out.Volumes, byHealthThenKey(func(x longhornVolume) (string, string) {
+		return x.Health, x.PVCNamespace + "/" + x.PVCName + "/" + x.Name
+	}))
 
 	perNode := map[string]int{}
 	for _, r := range replicas {

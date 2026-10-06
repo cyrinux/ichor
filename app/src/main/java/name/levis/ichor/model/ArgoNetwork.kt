@@ -147,9 +147,6 @@ data class ArgoNetNode(
     /** A Gateway or route the app does not own: drawn outlined, as someone else's. */
     val shared: Boolean get() = !managed && kind in SHARED_KINDS
 
-    /** "namespace/name", or the bare name of a cluster-wide box. */
-    val qualifiedName: String get() = if (namespace.isEmpty()) name else "$namespace/$name"
-
     companion object {
         const val HOST = "Host"
         const val LOAD_BALANCER = "LoadBalancer"

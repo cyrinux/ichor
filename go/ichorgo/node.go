@@ -53,7 +53,7 @@ func NodeServices(configYAML, contextName, node string) (out string, err error) 
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		resp, err := s.client.ServiceList(ctx)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		msgs := resp.GetMessages()
@@ -61,7 +61,7 @@ func NodeServices(configYAML, contextName, node string) (out string, err error) 
 			return "", errors.New("node returned no service data")
 		}
 		if problem := msgs[0].GetMetadata().GetError(); problem != "" {
-			return "", errors.New(s.friendly(node, errors.New(problem)))
+			return "", s.friendlyErr(node, errors.New(problem))
 		}
 
 		return toJSON(mapServices(msgs[0].GetServices()))

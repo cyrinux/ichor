@@ -23,10 +23,10 @@ public struct ClusterInventory: Decodable, Equatable, Sendable {
     // Go encodes an empty (nil) slice as null.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        at = try c.decodeIfPresent(Int64.self, forKey: .at) ?? 0
-        nodes = try c.decodeIfPresent(Int.self, forKey: .nodes) ?? 0
-        answered = try c.decodeIfPresent(Int.self, forKey: .answered) ?? 0
-        apps = try c.decodeIfPresent([InventoryApp].self, forKey: .apps) ?? []
+        at = try c.field(.at, 0)
+        nodes = try c.field(.nodes, 0)
+        answered = try c.field(.answered, 0)
+        apps = try c.field(.apps, [])
     }
 
     /// Containers of every app.
@@ -104,23 +104,23 @@ public struct InventoryApp: Decodable, Equatable, Identifiable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
-        name = try c.decodeIfPresent(String.self, forKey: .name) ?? id
+        name = try c.field(.name, id)
         category = AppCategory(rawValue: try c.decodeIfPresent(String.self, forKey: .category) ?? "") ?? .other
         icon = try c.decodeIfPresent(String.self, forKey: .icon).nonEmpty
         remoteIcon = try c.decodeIfPresent(String.self, forKey: .remoteIcon).nonEmpty
         iconURL = try c.decodeIfPresent(String.self, forKey: .iconURL).nonEmpty
-        known = try c.decodeIfPresent(Bool.self, forKey: .known) ?? false
-        system = try c.decodeIfPresent(Bool.self, forKey: .system) ?? false
-        version = try c.decodeIfPresent(String.self, forKey: .version) ?? ""
-        drift = try c.decodeIfPresent(Bool.self, forKey: .drift) ?? false
-        unpinned = try c.decodeIfPresent(Bool.self, forKey: .unpinned) ?? false
-        namespaces = try c.decodeIfPresent([String].self, forKey: .namespaces) ?? []
-        nodes = try c.decodeIfPresent([String].self, forKey: .nodes) ?? []
-        containers = try c.decodeIfPresent(Int.self, forKey: .containers) ?? 0
-        running = try c.decodeIfPresent(Int.self, forKey: .running) ?? 0
-        memory = try c.decodeIfPresent(UInt64.self, forKey: .memory) ?? 0
-        images = try c.decodeIfPresent([InventoryImage].self, forKey: .images) ?? []
-        pods = try c.decodeIfPresent([InventoryPod].self, forKey: .pods) ?? []
+        known = try c.field(.known, false)
+        system = try c.field(.system, false)
+        version = try c.field(.version, "")
+        drift = try c.field(.drift, false)
+        unpinned = try c.field(.unpinned, false)
+        namespaces = try c.field(.namespaces, [])
+        nodes = try c.field(.nodes, [])
+        containers = try c.field(.containers, 0)
+        running = try c.field(.running, 0)
+        memory = try c.field(.memory, 0)
+        images = try c.field(.images, [])
+        pods = try c.field(.pods, [])
     }
 
     /// Worth a look: versions drift, or the image is not pinned.
@@ -159,10 +159,10 @@ public struct InventoryImage: Decodable, Equatable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        repo = try c.decodeIfPresent(String.self, forKey: .repo) ?? ""
-        tag = try c.decodeIfPresent(String.self, forKey: .tag) ?? ""
-        digest = try c.decodeIfPresent(String.self, forKey: .digest) ?? ""
-        containers = try c.decodeIfPresent(Int.self, forKey: .containers) ?? 0
+        repo = try c.field(.repo, "")
+        tag = try c.field(.tag, "")
+        digest = try c.field(.digest, "")
+        containers = try c.field(.containers, 0)
     }
 }
 
@@ -186,10 +186,10 @@ public struct InventoryPod: Decodable, Equatable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        namespace = try c.decodeIfPresent(String.self, forKey: .namespace) ?? ""
-        pod = try c.decodeIfPresent(String.self, forKey: .pod) ?? ""
-        node = try c.decodeIfPresent(String.self, forKey: .node) ?? ""
-        containers = try c.decodeIfPresent([InventoryContainer].self, forKey: .containers) ?? []
+        namespace = try c.field(.namespace, "")
+        pod = try c.field(.pod, "")
+        node = try c.field(.node, "")
+        containers = try c.field(.containers, [])
     }
 
     public var allRunning: Bool { containers.allSatisfy(\.isRunning) }

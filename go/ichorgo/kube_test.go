@@ -404,7 +404,7 @@ func TestKubeDemo(t *testing.T) {
 		t.Fatalf("demo workloads: %v %s", err, out)
 	}
 
-	if err := KubeRolloutRestart(cfg, "", "", "Deployment", "demo", "hello-ichor"); !errors.Is(err, demoUnavailable) {
+	if err := KubeRolloutRestart(cfg, "", "", "Deployment", "demo", "hello-ichor"); !errors.Is(err, errDemoUnavailable) {
 		t.Fatalf("got %v", err)
 	}
 }

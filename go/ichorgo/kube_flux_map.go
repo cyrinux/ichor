@@ -16,28 +16,6 @@ type fluxMeta struct {
 	Annotations     map[string]string `json:"annotations"`
 }
 
-type fluxConditionObject struct {
-	Type               string `json:"type"`
-	Status             string `json:"status"`
-	Reason             string `json:"reason"`
-	Message            string `json:"message"`
-	LastTransitionTime string `json:"lastTransitionTime"`
-}
-
-type fluxConditions []fluxConditionObject
-
-func (c fluxConditions) get(t string) fluxConditionObject {
-	for _, x := range c {
-		if x.Type == t {
-			return x
-		}
-	}
-
-	return fluxConditionObject{Status: "Unknown"}
-}
-
-func (c fluxConditions) is(t string) bool { return c.get(t).Status == "True" }
-
 type fluxCrossRef struct {
 	Kind      string `json:"kind"`
 	Name      string `json:"name"`
@@ -45,7 +23,7 @@ type fluxCrossRef struct {
 }
 
 type fluxCommonStatus struct {
-	Conditions             fluxConditions `json:"conditions"`
+	Conditions             kubeConditions `json:"conditions"`
 	LastHandledReconcileAt string         `json:"lastHandledReconcileAt"`
 	LastAppliedRevision    string         `json:"lastAppliedRevision"`
 	LastAttemptedRevision  string         `json:"lastAttemptedRevision"`
@@ -138,7 +116,7 @@ func fluxApplyCommon(a *fluxApp, m fluxMeta, st fluxCommonStatus, suspended bool
 	ready := st.Conditions.get("Ready")
 
 	a.Namespace, a.Name = m.Namespace, m.Name
-	a.Ready, a.Reason, a.Message = ready.Status, ready.Reason, ready.Message
+	a.Ready, a.Reason, a.Message = cmp.Or(ready.Status, "Unknown"), ready.Reason, ready.Message
 	a.Reconciling, a.Stalled, a.Suspended = st.Conditions.is("Reconciling"), st.Conditions.is("Stalled"), suspended
 	a.Pending = fluxPending(m, st)
 	a.Revision, a.AttemptedRevision = st.LastAppliedRevision, st.LastAttemptedRevision
@@ -166,7 +144,7 @@ func fluxPending(m fluxMeta, st fluxCommonStatus) bool {
 	return req != "" && req != st.LastHandledReconcileAt
 }
 
-func fluxConditionsOf(list fluxConditions) []fluxCondition {
+func fluxConditionsOf(list kubeConditions) []fluxCondition {
 	out := make([]fluxCondition, 0, len(list))
 	for _, c := range list {
 		out = append(out, fluxCondition{Type: c.Type, Status: c.Status, Reason: c.Reason, Message: c.Message, At: unixMilli(c.LastTransitionTime)})
@@ -271,7 +249,7 @@ func mapFluxSource(o fluxSourceObject) fluxSource {
 	s := fluxSource{
 		Kind: o.Kind, Namespace: o.Metadata.Namespace, Name: o.Metadata.Name,
 		URL: o.Spec.URL, Interval: o.Spec.Interval, Suspended: o.Spec.Suspend,
-		Ready: ready.Status, Reason: ready.Reason, Message: ready.Message,
+		Ready: cmp.Or(ready.Status, "Unknown"), Reason: ready.Reason, Message: ready.Message,
 		Reconciling: st.Conditions.is("Reconciling"), Pending: fluxPending(o.Metadata, st.fluxCommonStatus),
 		Level: fluxLevel(o.Spec.Suspend, st.Conditions),
 	}

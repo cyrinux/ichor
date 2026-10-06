@@ -46,19 +46,18 @@ func GenerateTalosconfig(configYAML, contextName, roles string, ttlHours int) (o
 			return "", err
 		}
 
-		info := classifyNodes(ctx, s.client, targetNodes(s.context))
-
-		if len(info.GetControlPlaneNodes()) == 0 {
-			return "", errors.New("no reachable control-plane node found in this context")
+		cps, err := s.controlPlanes(ctx)
+		if err != nil {
+			return "", err
 		}
 
-		resp, err := s.client.GenerateClientConfiguration(client.WithNode(ctx, info.GetControlPlaneNodes()[0]),
+		resp, err := s.client.GenerateClientConfiguration(client.WithNode(ctx, cps[0]),
 			&machineapi.GenerateClientConfigurationRequest{
 				Roles:  roleList,
 				CrtTtl: durationpb.New(time.Duration(ttlHours) * time.Hour),
 			})
 		if err != nil {
-			return "", errors.New(friendlyError(err))
+			return "", friendlyErr(err)
 		}
 
 		gen := first(resp.GetMessages())

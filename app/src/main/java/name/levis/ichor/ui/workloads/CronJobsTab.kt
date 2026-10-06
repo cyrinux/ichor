@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -45,6 +44,7 @@ import name.levis.ichor.model.cronNamespaces
 import name.levis.ichor.model.filteredCronJobs
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText

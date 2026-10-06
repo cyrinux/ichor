@@ -66,6 +66,27 @@ func (e *kubeAPIError) Error() string {
 	}
 }
 
+// kubeCode is the HTTP status of a kubeAPIError, 0 for any other error.
+func kubeCode(err error) int {
+	var apiErr *kubeAPIError
+	if errors.As(err, &apiErr) {
+		return apiErr.Code
+	}
+
+	return 0
+}
+
+func isNotFound(err error) bool { return kubeCode(err) == http.StatusNotFound }
+
+// ignoreNotFound drops a 404: the object is simply absent.
+func ignoreNotFound(err error) error {
+	if isNotFound(err) {
+		return nil
+	}
+
+	return err
+}
+
 // openKubeClient builds a client for kubeconfig and picks the first API server address that
 // answers: the kubeconfig's own server, then each Talos endpoint host on the same port. The
 // server is often a VIP or an internal name the phone cannot reach while the Talos endpoints
@@ -609,7 +630,7 @@ func kubeReadJSON[T any](target kubeTarget, demo func() T, fn func(context.Conte
 // unmasked context name.
 func kubeMutate(target kubeTarget, fn func(context.Context, *kubeClient) error) error {
 	if isDemoContext(target.config, target.context) {
-		return demoUnavailable
+		return errDemoUnavailable
 	}
 
 	_, err := withKube(target, func(ctx context.Context, k *kubeClient) (struct{}, error) {

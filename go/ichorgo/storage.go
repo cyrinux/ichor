@@ -56,7 +56,7 @@ func NodeMounts(configYAML, contextName, node string) (out string, err error) {
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		resp, err := s.client.Mounts(ctx)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		return toJSON(mountList{Mounts: mapMounts(first(resp.GetMessages()).GetStats())})
@@ -120,7 +120,7 @@ func NodeVolumes(configYAML, contextName, node string) (out string, err error) {
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		known, err := s.hasResourceType(ctx, node, block.VolumeStatusType)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		if !known {
@@ -132,7 +132,7 @@ func NodeVolumes(configYAML, contextName, node string) (out string, err error) {
 
 		volumes, err := safe.StateListAll[*block.VolumeStatus](ctx, s.client.COSI)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		// Mount statuses came later than volume statuses: without them, only mountedOn is empty.
@@ -253,7 +253,7 @@ func NodeDiskUsage(configYAML, contextName, node, path string, depth int) (out s
 				return "", fmt.Errorf("%s is too large to measure within %s: open one of its sub-directories instead", root, diskUsageTimeout)
 			}
 
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		if dirsErr != nil {

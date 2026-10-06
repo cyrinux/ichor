@@ -26,12 +26,12 @@ public struct MountInfo: Decodable, Equatable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        filesystem = try c.decodeIfPresent(String.self, forKey: .filesystem) ?? ""
-        mountedOn = try c.decodeIfPresent(String.self, forKey: .mountedOn) ?? ""
-        size = try c.decodeIfPresent(UInt64.self, forKey: .size) ?? 0
-        available = try c.decodeIfPresent(UInt64.self, forKey: .available) ?? 0
-        used = try c.decodeIfPresent(UInt64.self, forKey: .used) ?? (size > available ? size - available : 0)
-        usedPercent = try c.decodeIfPresent(Double.self, forKey: .usedPercent) ?? (size > 0 ? Double(used) / Double(size) * 100 : 0)
+        filesystem = try c.field(.filesystem, "")
+        mountedOn = try c.field(.mountedOn, "")
+        size = try c.field(.size, 0)
+        available = try c.field(.available, 0)
+        used = try c.field(.used, (size > available ? size - available : 0))
+        usedPercent = try c.field(.usedPercent, (size > 0 ? Double(used) / Double(size) * 100 : 0))
     }
 }
 
@@ -45,7 +45,7 @@ public struct NodeMounts: Decodable, Equatable, Sendable {
     // Go encodes an empty (nil) slice as null.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        mounts = try c.decodeIfPresent([MountInfo].self, forKey: .mounts) ?? []
+        mounts = try c.field(.mounts, [])
     }
 }
 
@@ -120,15 +120,15 @@ public struct VolumeInfo: Decodable, Equatable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decodeIfPresent(String.self, forKey: .id) ?? ""
-        phase = try c.decodeIfPresent(String.self, forKey: .phase) ?? ""
-        type = try c.decodeIfPresent(String.self, forKey: .type) ?? ""
-        location = try c.decodeIfPresent(String.self, forKey: .location) ?? ""
-        size = try c.decodeIfPresent(UInt64.self, forKey: .size) ?? 0
-        filesystem = try c.decodeIfPresent(String.self, forKey: .filesystem) ?? ""
-        encryption = try c.decodeIfPresent(String.self, forKey: .encryption) ?? ""
-        mountedOn = try c.decodeIfPresent(String.self, forKey: .mountedOn) ?? ""
-        error = try c.decodeIfPresent(String.self, forKey: .error) ?? ""
+        id = try c.field(.id, "")
+        phase = try c.field(.phase, "")
+        type = try c.field(.type, "")
+        location = try c.field(.location, "")
+        size = try c.field(.size, 0)
+        filesystem = try c.field(.filesystem, "")
+        encryption = try c.field(.encryption, "")
+        mountedOn = try c.field(.mountedOn, "")
+        error = try c.field(.error, "")
     }
 
     /// "ready" is the only phase of a usable volume.
@@ -151,9 +151,9 @@ public struct NodeVolumes: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        supported = try c.decodeIfPresent(Bool.self, forKey: .supported) ?? true
-        reason = try c.decodeIfPresent(String.self, forKey: .reason) ?? ""
-        volumes = try c.decodeIfPresent([VolumeInfo].self, forKey: .volumes) ?? []
+        supported = try c.field(.supported, true)
+        reason = try c.field(.reason, "")
+        volumes = try c.field(.volumes, [])
     }
 }
 
@@ -179,10 +179,10 @@ public struct DiskUsageEntry: Decodable, Equatable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        path = try c.decodeIfPresent(String.self, forKey: .path) ?? ""
-        size = try c.decodeIfPresent(Int64.self, forKey: .size) ?? 0
-        isDir = try c.decodeIfPresent(Bool.self, forKey: .isDir) ?? false
-        error = try c.decodeIfPresent(String.self, forKey: .error) ?? ""
+        path = try c.field(.path, "")
+        size = try c.field(.size, 0)
+        isDir = try c.field(.isDir, false)
+        error = try c.field(.error, "")
     }
 }
 
@@ -200,8 +200,8 @@ public struct DiskUsage: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        entries = try c.decodeIfPresent([DiskUsageEntry].self, forKey: .entries) ?? []
-        truncated = try c.decodeIfPresent(Bool.self, forKey: .truncated) ?? false
+        entries = try c.field(.entries, [])
+        truncated = try c.field(.truncated, false)
     }
 }
 
@@ -214,12 +214,6 @@ public let diskUsageShortcuts = ["/var/log", "/var/lib/etcd", "/etc", "/opt", "/
 public func normalizedPath(_ path: String) -> String {
     let parts = path.split(separator: "/", omittingEmptySubsequences: true)
     return "/" + parts.joined(separator: "/")
-}
-
-/// "/var/lib" → "/var"; the root is its own parent.
-public func parentPath(_ path: String) -> String {
-    let parts = normalizedPath(path).split(separator: "/")
-    return "/" + parts.dropLast().joined(separator: "/")
 }
 
 /// One step of the path bar: what to show and where it leads.

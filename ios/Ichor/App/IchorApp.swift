@@ -278,7 +278,7 @@ struct MainNavigation: View {
             let options = ArgoFreezeOptions(minutes: freezeExtendMinutes, window: extend.window)
             do {
                 try await client.argoFreeze(namespace: namespace, project: project, action: .extend, options: options)
-                let until = Date(timeIntervalSince1970: TimeInterval(extend.end) / 1000 + TimeInterval(freezeExtendMinutes * 60))
+                let until = Date(epochMillis: extend.end).addingTimeInterval(TimeInterval(freezeExtendMinutes * 60))
                 freezeMessage = String(localized: "Freeze extended until \(until.formatted(date: .omitted, time: .shortened)).")
                 // The windows screen and the next reminder (the extended window has a new id).
                 let key = model.argoKey, cluster = model.activeSummary

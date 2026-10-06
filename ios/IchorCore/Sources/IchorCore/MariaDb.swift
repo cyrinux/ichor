@@ -73,27 +73,7 @@ public struct MariaDbCluster: Decodable, Equatable, Identifiable, Sendable {
     }
 }
 
-public struct MariaDbPod: Decodable, Equatable, Identifiable, Sendable {
-    public let name: String
-    public let node: String
-    public let phase: String
-    /// primary, replica or member (Galera), "" when unknown.
-    public let role: String
-    public let ready: Bool
-
-    public var id: String { name }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        name = try c.decode(String.self, forKey: .name)
-        node = try c.field(.node, "")
-        phase = try c.field(.phase, "")
-        role = try c.field(.role, "")
-        ready = try c.field(.ready, false)
-    }
-
-    private enum CodingKeys: String, CodingKey { case name, node, phase, role, ready }
-}
+public typealias MariaDbPod = ServicePod
 
 /// Why a MariaDB cluster is not ok, as the Go core names it.
 public enum MariaDbReason: String, Sendable {

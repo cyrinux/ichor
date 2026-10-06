@@ -91,10 +91,7 @@ func StartUpgrade(configYAML, contextName, kubeServer, node, image string, stage
 		opts := upgradeOptions{image: strings.TrimSpace(image), stage: stage, force: force, acknowledged: acknowledged}
 		version, err := runUpgrade(ctx, kubeTarget{configYAML, contextName, kubeServer}, node, opts, listener)
 
-		errMessage := ""
-		if err != nil {
-			errMessage = err.Error()
-		}
+		errMessage := errText(err)
 
 		listener.OnDone(version, errMessage)
 	}()
@@ -123,16 +120,12 @@ func runUpgrade(ctx context.Context, kube kubeTarget, node string, o upgradeOpti
 		return "", fmt.Errorf("invalid installer image %q", image)
 	}
 
-	s, release, err := sessions.acquire(kube.config, kube.context)
+	s, release, err := acquireNode(kube.config, kube.context, node)
 	if err != nil {
 		return "", err
 	}
 
 	defer release()
-
-	if err := validatePowerTarget(s.context, node); err != nil {
-		return "", err
-	}
 
 	// The lock is not read here: taking it below is what keeps two runs apart.
 	planCtx, planCancel := context.WithTimeout(ctx, planTimeout)
@@ -183,7 +176,7 @@ func runUpgrade(ctx context.Context, kube kubeTarget, node string, o upgradeOpti
 		s.definitions.Delete(node)
 	}()
 
-	if err := requestUpgrade(withNode(reqCtx, node), talosUpgrader{s.client}, image, o.stage, o.force, func() error { return upgradeRefusal(plan, false) }, emit); err != nil {
+	if err := requestUpgrade(client.WithNode(reqCtx, node), talosUpgrader{s.client}, image, o.stage, o.force, func() error { return upgradeRefusal(plan, false) }, emit); err != nil {
 		if isUnavailableAPI(err) {
 			return "", errors.New("upgrade: " + s.friendly(node, err))
 		}
@@ -247,7 +240,7 @@ func observeNode(ctx context.Context, c *client.Client, node string) upgradeObse
 	ctx, cancel := context.WithTimeout(ctx, nodeTimeout)
 	defer cancel()
 
-	nodeCtx := withNode(ctx, node)
+	nodeCtx := client.WithNode(ctx, node)
 
 	resp, err := c.Version(nodeCtx)
 	if err != nil {

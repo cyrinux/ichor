@@ -72,18 +72,10 @@ type mariadbObject struct {
 		} `json:"replication"`
 	} `json:"spec"`
 	Status struct {
-		Conditions     []mariadbCondition `json:"conditions"`
-		CurrentPrimary string             `json:"currentPrimary"`
-		GaleraRecovery json.RawMessage    `json:"galeraRecovery"`
+		Conditions     []kubeCondition `json:"conditions"`
+		CurrentPrimary string          `json:"currentPrimary"`
+		GaleraRecovery json.RawMessage `json:"galeraRecovery"`
 	} `json:"status"`
-}
-
-type mariadbCondition struct {
-	Type               string `json:"type"`
-	Status             string `json:"status"`
-	Reason             string `json:"reason"`
-	Message            string `json:"message"`
-	LastTransitionTime string `json:"lastTransitionTime"`
 }
 
 // mariadbBackupObject is a Backup (logical) or a PhysicalBackup: both have the same reference,
@@ -104,7 +96,7 @@ type mariadbBackupObject struct {
 		} `json:"schedule"`
 	} `json:"spec"`
 	Status struct {
-		Conditions []mariadbCondition `json:"conditions"`
+		Conditions []kubeCondition `json:"conditions"`
 	} `json:"status"`
 }
 
@@ -228,13 +220,7 @@ func mapMariaDB(src mariadbSources, now time.Time) *mariadbStatus {
 		out.Clusters = append(out.Clusters, mapMariaDBCluster(obj, byCluster[key], backups[key], now))
 	}
 
-	slices.SortFunc(out.Clusters, func(a, b mariadbCluster) int {
-		if d := healthRank(a.Health) - healthRank(b.Health); d != 0 {
-			return d
-		}
-
-		return strings.Compare(a.Namespace+"/"+a.Name, b.Namespace+"/"+b.Name)
-	})
+	slices.SortFunc(out.Clusters, byHealthThenKey(func(x mariadbCluster) (string, string) { return x.Health, x.Namespace + "/" + x.Name }))
 
 	return out
 }
@@ -326,13 +312,7 @@ func mapMariaDBCluster(obj mariadbObject, pods []mariadbPod, backups mariadbBack
 		return strings.Compare(a.Name, b.Name)
 	})
 
-	ready := mariadbCondition{}
-
-	for _, cond := range st.Conditions {
-		if cond.Type == "Ready" {
-			ready = cond
-		}
-	}
+	ready := readyCondition(st.Conditions)
 
 	if ready.Status != "" && ready.Status != "True" {
 		c.Message = ready.Message

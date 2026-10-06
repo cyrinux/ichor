@@ -9,7 +9,7 @@ private let morningHour = 9
 
 /// "15:42" today, else with the date.
 func freezeClock(_ millis: Int64) -> String {
-    let date = Date(timeIntervalSince1970: TimeInterval(millis) / 1000)
+    let date = Date(epochMillis: millis)
     return Calendar.current.isDateInToday(date)
         ? date.formatted(date: .omitted, time: .shortened)
         : date.formatted(date: .abbreviated, time: .shortened)
@@ -44,7 +44,7 @@ struct ArgoFreezeSheet: View {
 
     private var chosen: Int { untilMorning ? minutesUntil(hour: morningHour, from: now) : minutes }
     private var targets: [ArgoApp] { status.freezeTargets(around: app, scope: scope) }
-    private var endMillis: Int64 { Int64(now.timeIntervalSince1970 * 1000) + Int64(chosen) * 60_000 }
+    private var endMillis: Int64 { now.epochMillis + Int64(chosen) * 60_000 }
 
     var body: some View {
         NavigationStack {
@@ -104,7 +104,7 @@ struct ArgoFreezeSheet: View {
                             untilMorning = false
                         }
                     }
-                    let morning = Int64(now.timeIntervalSince1970 * 1000) + Int64(minutesUntil(hour: morningHour, from: now)) * 60_000
+                    let morning = now.epochMillis + Int64(minutesUntil(hour: morningHour, from: now)) * 60_000
                     DurationChip(label: String(localized: "Until \(freezeClock(morning))"), selected: untilMorning) { untilMorning = true }
                 }
             }

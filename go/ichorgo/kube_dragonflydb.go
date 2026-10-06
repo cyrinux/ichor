@@ -104,13 +104,7 @@ func mapDragonfly(objects []dragonflyObject, pods []dsPod) *dragonflyStatus {
 		out.Instances = append(out.Instances, mapDragonflyInstance(obj, byInstance[obj.Metadata.Namespace+"/"+obj.Metadata.Name]))
 	}
 
-	slices.SortFunc(out.Instances, func(a, b dragonflyInstance) int {
-		if d := healthRank(a.Health) - healthRank(b.Health); d != 0 {
-			return d
-		}
-
-		return strings.Compare(a.Namespace+"/"+a.Name, b.Namespace+"/"+b.Name)
-	})
+	slices.SortFunc(out.Instances, byHealthThenKey(func(x dragonflyInstance) (string, string) { return x.Health, x.Namespace + "/" + x.Name }))
 
 	return out
 }

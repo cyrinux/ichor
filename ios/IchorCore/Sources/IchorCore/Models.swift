@@ -74,13 +74,13 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         name = try c.decode(String.self, forKey: .name)
-        fingerprint = try c.decodeIfPresent(String.self, forKey: .fingerprint) ?? ""
-        clusterID = try c.decodeIfPresent(String.self, forKey: .clusterID) ?? ""
-        endpoints = try c.decodeIfPresent([String].self, forKey: .endpoints) ?? []
-        nodes = try c.decodeIfPresent([String].self, forKey: .nodes) ?? []
-        roles = try c.decodeIfPresent([String].self, forKey: .roles) ?? []
-        certNotAfter = try c.decodeIfPresent(Int64.self, forKey: .certNotAfter) ?? 0
-        demo = try c.decodeIfPresent(Bool.self, forKey: .demo) ?? false
+        fingerprint = try c.field(.fingerprint, "")
+        clusterID = try c.field(.clusterID, "")
+        endpoints = try c.field(.endpoints, [])
+        nodes = try c.field(.nodes, [])
+        roles = try c.field(.roles, [])
+        certNotAfter = try c.field(.certNotAfter, 0)
+        demo = try c.field(.demo, false)
     }
 }
 
@@ -179,11 +179,11 @@ public struct NodeOverview: Codable, Equatable, Identifiable, Hashable, Sendable
         role = try c.decode(String.self, forKey: .role)
         stage = try c.decode(String.self, forKey: .stage)
         ready = try c.decode(Bool.self, forKey: .ready)
-        unmetConditions = try c.decodeIfPresent([UnmetCondition].self, forKey: .unmetConditions) ?? []
-        cpuCount = try c.decodeIfPresent(Int.self, forKey: .cpuCount) ?? 0
-        memTotal = try c.decodeIfPresent(UInt64.self, forKey: .memTotal) ?? 0
-        memAvailable = try c.decodeIfPresent(UInt64.self, forKey: .memAvailable) ?? 0
-        publicIPs = try c.decodeIfPresent([String].self, forKey: .publicIPs) ?? []
+        unmetConditions = try c.field(.unmetConditions, [])
+        cpuCount = try c.field(.cpuCount, 0)
+        memTotal = try c.field(.memTotal, 0)
+        memAvailable = try c.field(.memAvailable, 0)
+        publicIPs = try c.field(.publicIPs, [])
         lastSeen = try c.decodeIfPresent(Int64.self, forKey: .lastSeen)
     }
 }
@@ -280,8 +280,8 @@ public struct LogTail: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        lines = try c.decodeIfPresent([String].self, forKey: .lines) ?? []
-        truncated = try c.decodeIfPresent(Bool.self, forKey: .truncated) ?? false
+        lines = try c.field(.lines, [])
+        truncated = try c.field(.truncated, false)
         entries = try? c.decodeIfPresent([LogEntry].self, forKey: .entries)
     }
 }
@@ -347,6 +347,11 @@ public extension ContextSummary {
 public enum TalosJSON {
     public static func decode<T: Decodable>(_ type: T.Type, from json: String) throws -> T {
         try JSONDecoder().decode(type, from: Data(json.utf8))
+    }
+
+    /// `value` as the JSON string the Go core takes.
+    public static func encode<T: Encodable>(_ value: T) throws -> String {
+        String(decoding: try JSONEncoder().encode(value), as: UTF8.self)
     }
 }
 

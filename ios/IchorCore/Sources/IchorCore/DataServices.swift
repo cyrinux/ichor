@@ -184,11 +184,14 @@ public struct DragonflyInstance: Decodable, Equatable, Identifiable, Sendable {
     private enum CodingKeys: String, CodingKey { case namespace, name, phase, health, reasons, replicas, readyPods, master, pods }
 }
 
-public struct DragonflyPod: Decodable, Equatable, Identifiable, Sendable {
+/// One pod of a database or cache instance, as every data-service operator reports it.
+public struct ServicePod: Decodable, Equatable, Identifiable, Sendable {
     public let name: String
+    /// "" while Pending: not scheduled anywhere.
     public let node: String
     public let phase: String
-    /// The operator's role label: master or replica.
+    /// The operator's role label (master/replica, primary/replica, member for Galera), "" when
+    /// unknown or the operator has none (Percona).
     public let role: String
     public let ready: Bool
 
@@ -205,6 +208,8 @@ public struct DragonflyPod: Decodable, Equatable, Identifiable, Sendable {
 
     private enum CodingKeys: String, CodingKey { case name, node, phase, role, ready }
 }
+
+public typealias DragonflyPod = ServicePod
 
 /// Why a Dragonfly instance is not ok, as the Go core names it.
 public enum DragonflyReason: String, Sendable {
@@ -434,25 +439,7 @@ public struct PerconaCluster: Decodable, Equatable, Identifiable, Sendable {
     }
 }
 
-public struct PerconaPod: Decodable, Equatable, Identifiable, Sendable {
-    public let name: String
-    /// "" while Pending: not scheduled anywhere.
-    public let node: String
-    public let phase: String
-    public let ready: Bool
-
-    public var id: String { name }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        name = try c.decode(String.self, forKey: .name)
-        node = try c.field(.node, "")
-        phase = try c.field(.phase, "")
-        ready = try c.field(.ready, false)
-    }
-
-    private enum CodingKeys: String, CodingKey { case name, node, phase, ready }
-}
+public typealias PerconaPod = ServicePod
 
 public struct PerconaSchedule: Decodable, Equatable, Sendable {
     public let name: String
@@ -1005,28 +992,7 @@ public struct CnpgCluster: Decodable, Equatable, Identifiable, Sendable {
     }
 }
 
-public struct CnpgPod: Decodable, Equatable, Identifiable, Sendable {
-    public let name: String
-    /// "" while Pending: not scheduled anywhere.
-    public let node: String
-    public let phase: String
-    /// primary or replica, "" when not running.
-    public let role: String
-    public let ready: Bool
-
-    public var id: String { name }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        name = try c.decode(String.self, forKey: .name)
-        node = try c.field(.node, "")
-        phase = try c.field(.phase, "")
-        role = try c.field(.role, "")
-        ready = try c.field(.ready, false)
-    }
-
-    private enum CodingKeys: String, CodingKey { case name, node, phase, role, ready }
-}
+public typealias CnpgPod = ServicePod
 
 /// Health of one item (a volume, a Postgres cluster), worst first.
 public enum ServiceHealth: Int, Sendable, Comparable, CaseIterable {

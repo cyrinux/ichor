@@ -171,7 +171,7 @@ func TestKubeCertManagerDetailsValidates(t *testing.T) {
 		t.Fatal("accepted")
 	}
 
-	if _, err := KubeCertManagerDetails("", "", "", "web", ""); err == nil || errors.Is(err, demoUnavailable) {
+	if _, err := KubeCertManagerDetails("", "", "", "web", ""); err == nil || errors.Is(err, errDemoUnavailable) {
 		t.Fatalf("got %v", err)
 	}
 }

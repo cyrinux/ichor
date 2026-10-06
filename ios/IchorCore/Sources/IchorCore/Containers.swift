@@ -17,7 +17,7 @@ public struct ContainerSample: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         at = try c.decode(Int64.self, forKey: .at)
-        containers = try c.decodeIfPresent([NodeContainer].self, forKey: .containers) ?? []
+        containers = try c.field(.containers, [])
     }
 }
 

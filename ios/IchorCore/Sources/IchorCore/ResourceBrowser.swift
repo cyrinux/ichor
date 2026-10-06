@@ -22,10 +22,10 @@ public struct ResourceType: Decodable, Equatable, Identifiable, Hashable, Sendab
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        type = try c.decodeIfPresent(String.self, forKey: .type) ?? ""
-        aliases = try c.decodeIfPresent([String].self, forKey: .aliases) ?? []
-        namespace = try c.decodeIfPresent(String.self, forKey: .namespace) ?? ""
-        sensitivity = try c.decodeIfPresent(String.self, forKey: .sensitivity) ?? ""
+        type = try c.field(.type, "")
+        aliases = try c.field(.aliases, [])
+        namespace = try c.field(.namespace, "")
+        sensitivity = try c.field(.sensitivity, "")
     }
 
     /// Sensitive resources (secrets, keys): shown with a lock, their YAML hidden until asked for.
@@ -63,8 +63,8 @@ public struct ResourceItem: Decodable, Equatable, Identifiable, Hashable, Sendab
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        id = try c.decodeIfPresent(String.self, forKey: .id) ?? ""
-        namespace = try c.decodeIfPresent(String.self, forKey: .namespace) ?? ""
+        id = try c.field(.id, "")
+        namespace = try c.field(.namespace, "")
         // Go sends the version as a string; tolerate a number.
         if let text = try? c.decodeIfPresent(String.self, forKey: .version) {
             version = text
@@ -73,8 +73,8 @@ public struct ResourceItem: Decodable, Equatable, Identifiable, Hashable, Sendab
         } else {
             version = ""
         }
-        phase = try c.decodeIfPresent(String.self, forKey: .phase) ?? ""
-        updated = try c.decodeIfPresent(Int64.self, forKey: .updated) ?? 0
+        phase = try c.field(.phase, "")
+        updated = try c.field(.updated, 0)
     }
 }
 
@@ -92,8 +92,8 @@ public struct ResourceItems: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        items = try c.decodeIfPresent([ResourceItem].self, forKey: .items) ?? []
-        truncated = try c.decodeIfPresent(Bool.self, forKey: .truncated) ?? false
+        items = try c.field(.items, [])
+        truncated = try c.field(.truncated, false)
     }
 }
 
@@ -106,7 +106,7 @@ public struct ResourceDocument: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        yaml = try c.decodeIfPresent(String.self, forKey: .yaml) ?? ""
+        yaml = try c.field(.yaml, "")
     }
 }
 

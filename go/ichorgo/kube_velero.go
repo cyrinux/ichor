@@ -271,26 +271,14 @@ func mapVelero(schedules []veleroScheduleObject, backups []veleroBackupObject, l
 		out.Schedules = append(out.Schedules, mapVeleroSchedule(obj, bySchedule[obj.Metadata.Namespace+"/"+obj.Metadata.Name], locByKey, defaults, now))
 	}
 
-	slices.SortFunc(out.Schedules, func(a, b veleroSchedule) int {
-		if d := healthRank(a.Health) - healthRank(b.Health); d != 0 {
-			return d
-		}
-
-		return strings.Compare(a.Namespace+"/"+a.Name, b.Namespace+"/"+b.Name)
-	})
+	slices.SortFunc(out.Schedules, byHealthThenKey(func(x veleroSchedule) (string, string) { return x.Health, x.Namespace + "/" + x.Name }))
 
 	// Newest first.
 	slices.SortFunc(out.Adhoc, func(a, b veleroAdhoc) int {
 		return cmp.Compare(adhocAt[b.Namespace+"/"+b.Name], adhocAt[a.Namespace+"/"+a.Name])
 	})
 
-	slices.SortFunc(out.Locations, func(a, b veleroLocation) int {
-		if d := healthRank(a.Health) - healthRank(b.Health); d != 0 {
-			return d
-		}
-
-		return strings.Compare(a.Namespace+"/"+a.Name, b.Namespace+"/"+b.Name)
-	})
+	slices.SortFunc(out.Locations, byHealthThenKey(func(x veleroLocation) (string, string) { return x.Health, x.Namespace + "/" + x.Name }))
 
 	return out
 }

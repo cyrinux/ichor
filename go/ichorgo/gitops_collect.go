@@ -151,21 +151,21 @@ func renderArgoIssues(b *strings.Builder, a *argoStatus) {
 		fmt.Fprintf(b, "    %s/%s [%s]: health %s, sync %s", app.Namespace, app.Name, app.Level, app.Health, app.Sync)
 
 		if app.HealthMessage != "" {
-			fmt.Fprintf(b, " (%s)", clipText(app.HealthMessage, diagnosisMaxLineLen))
+			fmt.Fprintf(b, " (%s)", clipUTF8(app.HealthMessage, diagnosisMaxLineLen))
 		}
 
 		b.WriteString("\n")
 
 		if op := app.Operation; op != nil && (op.Phase == "Failed" || op.Phase == "Error" || op.Phase == "Running") {
-			fmt.Fprintf(b, "      last sync %s: %s\n", op.Phase, clipText(op.Message, diagnosisMaxLineLen))
+			fmt.Fprintf(b, "      last sync %s: %s\n", op.Phase, clipUTF8(op.Message, diagnosisMaxLineLen))
 
 			for _, f := range op.Failed {
-				fmt.Fprintf(b, "      failed %s %s/%s: %s\n", f.Kind, f.Namespace, f.Name, clipText(f.Message, diagnosisMaxLineLen))
+				fmt.Fprintf(b, "      failed %s %s/%s: %s\n", f.Kind, f.Namespace, f.Name, clipUTF8(f.Message, diagnosisMaxLineLen))
 			}
 		}
 
 		for _, c := range app.Conditions {
-			fmt.Fprintf(b, "      condition %s: %s\n", c.Type, clipText(c.Message, diagnosisMaxLineLen))
+			fmt.Fprintf(b, "      condition %s: %s\n", c.Type, clipUTF8(c.Message, diagnosisMaxLineLen))
 		}
 
 		renderGitOpsPods(b, app.UnhealthyPods)
@@ -203,7 +203,7 @@ func renderFluxIssues(b *strings.Builder, f *fluxStatus) {
 		b.WriteString("\n")
 
 		if app.Message != "" {
-			fmt.Fprintf(b, "      %s\n", clipText(app.Message, diagnosisMaxLineLen))
+			fmt.Fprintf(b, "      %s\n", clipUTF8(app.Message, diagnosisMaxLineLen))
 		}
 
 		renderGitOpsPods(b, app.UnhealthyPods)

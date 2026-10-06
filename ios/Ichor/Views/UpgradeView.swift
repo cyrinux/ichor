@@ -341,7 +341,9 @@ private struct UpgradeProgressView: View {
                 }
             }
             Section("Progress") {
-                ForEach(job.timeline) { step in StepRow(step: step) }
+                ForEach(job.timeline) { step in
+                    RunStepRow(label: step.phase.localizedLabel, state: step.state, at: step.at, message: step.message)
+                }
             }
             resultSection
         }
@@ -378,41 +380,6 @@ private struct UpgradeProgressView: View {
             if job.isActive {
                 Text("The upgrade cannot be cancelled. Stopping only stops watching; the screen stays on meanwhile.")
             }
-        }
-    }
-}
-
-private struct StepRow: View {
-    let step: UpgradeStep
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            icon.frame(width: 20)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    Text(step.phase.localizedLabel)
-                        .fontWeight(step.state == .current ? .semibold : .regular)
-                        .foregroundStyle(step.state == .pending ? Color.secondary : Color.primary)
-                    Spacer()
-                    if step.at > 0 {
-                        Text(Date(epochMillis: step.at), format: .dateTime.hour().minute().second())
-                            .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                    }
-                }
-                if !step.message.isEmpty {
-                    Text(verbatim: step.message).font(.caption)
-                        .foregroundStyle(step.state == .failed ? Color.red : Color.secondary)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder private var icon: some View {
-        switch step.state {
-        case .done: Image(systemName: "checkmark.circle.fill").foregroundStyle(.statusOK)
-        case .current: ProgressView()
-        case .failed: Image(systemName: "xmark.circle.fill").foregroundStyle(.statusBad)
-        case .pending: Image(systemName: "circle").foregroundStyle(.secondary)
         }
     }
 }

@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"errors"
 	"sort"
 	"time"
 
@@ -39,7 +38,7 @@ func NodeProcesses(configYAML, contextName, node string) (out string, err error)
 	return withNodeSession(configYAML, contextName, node, statsTimeout, func(ctx context.Context, s *session) (string, error) {
 		resp, err := s.client.Processes(ctx)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		return toJSON(processList{

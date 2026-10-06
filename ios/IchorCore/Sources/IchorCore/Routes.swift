@@ -9,7 +9,7 @@ public struct KubeRouteList: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        routes = try c.decodeIfPresent([KubeRoute].self, forKey: .routes) ?? []
+        routes = try c.field(.routes, [])
     }
 
     private enum CodingKeys: String, CodingKey { case routes }
@@ -47,7 +47,7 @@ public struct KubeRoute: Decodable, Equatable, Identifiable, Sendable {
         namespace = try c.decode(String.self, forKey: .namespace)
         name = try c.decode(String.self, forKey: .name)
         url = try c.decode(String.self, forKey: .url)
-        service = try c.decodeIfPresent(String.self, forKey: .service) ?? ""
+        service = try c.field(.service, "")
     }
 
     private enum CodingKeys: String, CodingKey { case kind, namespace, name, url, service }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/api/common"
+	"github.com/siderolabs/talos/pkg/machinery/client"
 	"github.com/siderolabs/talos/pkg/machinery/constants"
 )
 
@@ -101,18 +102,14 @@ func followLog(ctx context.Context, configYAML, contextName, node string, open l
 			}
 		}
 	}
-	s, release, err := sessions.acquire(configYAML, contextName)
+	s, release, err := acquireNode(configYAML, contextName, node)
 	if err != nil {
 		return err.Error()
 	}
 
 	defer release()
 
-	if err := validatePowerTarget(s.context, node); err != nil {
-		return err.Error()
-	}
-
-	recv, err := open(withNode(ctx, node), s)
+	recv, err := open(client.WithNode(ctx, node), s)
 	if err != nil {
 		return s.friendly(node, err)
 	}

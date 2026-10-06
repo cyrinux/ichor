@@ -6,7 +6,6 @@ import (
 	"maps"
 	"slices"
 	"sort"
-	"strings"
 )
 
 const incidentLimit = 600
@@ -224,9 +223,3 @@ func incidentMetrics(rates bottlenecks) (bottlenecks, int) {
 }
 
 // clipUTF8 cuts s to n bytes plus an ellipsis, dropping a rune split by the cut.
-func clipUTF8(s string, n int) string {
-	if len(s) <= n {
-		return s
-	}
-	return strings.ToValidUTF8(s[:n], "") + "…"
-}

@@ -69,15 +69,15 @@ public struct DrainPod: Decodable, Equatable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        namespace = try c.decodeIfPresent(String.self, forKey: .namespace) ?? ""
-        name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
-        owner = try c.decodeIfPresent(String.self, forKey: .owner) ?? ""
-        kind = try c.decodeIfPresent(String.self, forKey: .kind) ?? ""
-        emptyDir = try c.decodeIfPresent(Bool.self, forKey: .emptyDir) ?? false
-        pdb = try c.decodeIfPresent(String.self, forKey: .pdb) ?? ""
-        pdbAllowed = try c.decodeIfPresent(Int.self, forKey: .pdbAllowed) ?? -1
-        state = try c.decodeIfPresent(String.self, forKey: .state) ?? ""
-        reason = try c.decodeIfPresent(String.self, forKey: .reason) ?? ""
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+        owner = try c.field(.owner, "")
+        kind = try c.field(.kind, "")
+        emptyDir = try c.field(.emptyDir, false)
+        pdb = try c.field(.pdb, "")
+        pdbAllowed = try c.field(.pdbAllowed, -1)
+        state = try c.field(.state, "")
+        reason = try c.field(.reason, "")
     }
 }
 
@@ -132,15 +132,15 @@ public struct MaintenancePlan: Decodable, Equatable, Sendable {
     // Go encodes empty slices as null.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        node = try c.decodeIfPresent(String.self, forKey: .node) ?? ""
-        hostname = try c.decodeIfPresent(String.self, forKey: .hostname) ?? ""
-        kubeNode = try c.decodeIfPresent(String.self, forKey: .kubeNode) ?? ""
-        controlPlane = try c.decodeIfPresent(Bool.self, forKey: .controlPlane) ?? false
-        cordoned = try c.decodeIfPresent(Bool.self, forKey: .cordoned) ?? false
-        pods = try c.decodeIfPresent([DrainPod].self, forKey: .pods) ?? []
-        blockers = try c.decodeIfPresent([String].self, forKey: .blockers) ?? []
-        warnings = try c.decodeIfPresent([String].self, forKey: .warnings) ?? []
-        acknowledge = try c.decodeIfPresent([String].self, forKey: .acknowledge) ?? []
+        node = try c.field(.node, "")
+        hostname = try c.field(.hostname, "")
+        kubeNode = try c.field(.kubeNode, "")
+        controlPlane = try c.field(.controlPlane, false)
+        cordoned = try c.field(.cordoned, false)
+        pods = try c.field(.pods, [])
+        blockers = try c.field(.blockers, [])
+        warnings = try c.field(.warnings, [])
+        acknowledge = try c.field(.acknowledge, [])
     }
 
     /// The acknowledgments the user must tick for `action` (none for a drain alone).
@@ -193,10 +193,10 @@ public struct MaintenanceProgress: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        phase = try c.decodeIfPresent(String.self, forKey: .phase) ?? ""
-        message = try c.decodeIfPresent(String.self, forKey: .message) ?? ""
-        at = try c.decodeIfPresent(Int64.self, forKey: .at) ?? 0
-        pods = try c.decodeIfPresent([DrainPod].self, forKey: .pods) ?? []
+        phase = try c.field(.phase, "")
+        message = try c.field(.message, "")
+        at = try c.field(.at, 0)
+        pods = try c.field(.pods, [])
     }
 }
 

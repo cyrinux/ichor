@@ -32,17 +32,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.LonghornAction
+import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -60,23 +56,16 @@ class LonghornActions(
     private val talos: TalosRepository,
     private val onChanged: () -> Unit,
 ) {
-    private val _busy = MutableStateFlow<Set<String>>(emptySet())
+    private val actions = KeyedActions<LonghornActionResult>(scope)
     /** Keys (longhornActionKey) of the volumes and nodes with an action in flight. */
-    val busy: StateFlow<Set<String>> = _busy.asStateFlow()
+    val busy: StateFlow<Set<String>> get() = actions.busy
 
-    // A queue, not a state: two actions finishing together each get their message.
-    private val _results = Channel<LonghornActionResult>(Channel.BUFFERED)
-    val results: Flow<LonghornActionResult> = _results.receiveAsFlow()
+    val results: Flow<LonghornActionResult> get() = actions.results
 
     fun run(key: String, namespace: String, name: String, label: String, action: LonghornAction, value: Int = 0) {
-        if (key in _busy.value) return
-        _busy.update { it + key }
-        scope.launch {
-            val outcome = runCatching { talos.longhornAction(namespace, name, action, value) }
-            _busy.update { it - key }
-            _results.send(LonghornActionResult(action, label, value, outcome.exceptionOrNull()?.uiText()))
-            if (outcome.isSuccess) onChanged()
-        }
+        actions.launch(key, { talos.longhornAction(namespace, name, action, value) }, {
+            LonghornActionResult(action, label, value, it.exceptionOrNull()?.uiText())
+        }, onChanged)
     }
 }
 

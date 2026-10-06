@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"errors"
 
 	"github.com/siderolabs/talos/pkg/machinery/client"
 )
@@ -30,14 +29,14 @@ func Kubeconfig(configYAML, contextName, kubeServer string) (out string, err err
 // fetchKubeconfig asks a control-plane node for an admin kubeconfig. Talos signs a new
 // client certificate on every call.
 func fetchKubeconfig(ctx context.Context, s *session) (string, error) {
-	cps := classifyNodes(ctx, s.client, targetNodes(s.context)).GetControlPlaneNodes()
-	if len(cps) == 0 {
-		return "", errors.New("no reachable control-plane node found in this context")
+	cps, err := s.controlPlanes(ctx)
+	if err != nil {
+		return "", err
 	}
 
 	data, err := s.client.Kubeconfig(client.WithNode(ctx, cps[0]))
 	if err != nil {
-		return "", errors.New(friendlyError(err))
+		return "", friendlyErr(err)
 	}
 
 	return string(data), nil

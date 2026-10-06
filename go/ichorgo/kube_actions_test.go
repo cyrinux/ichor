@@ -276,7 +276,7 @@ func TestPodLogsValidationAndDemo(t *testing.T) {
 		t.Errorf("demo revisions = %q, %v", revs, err)
 	}
 
-	if err := KubeSuspendCronJob(demo, "", "", "shop", "backup", true); err != demoUnavailable {
+	if err := KubeSuspendCronJob(demo, "", "", "shop", "backup", true); err != errDemoUnavailable {
 		t.Errorf("demo suspend: %v", err)
 	}
 }

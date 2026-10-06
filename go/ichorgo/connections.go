@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"errors"
 	"sort"
 	"strings"
 
@@ -40,7 +39,7 @@ func NodeConnections(configYAML, contextName, node string) (out string, err erro
 			Netns:   &machineapi.NetstatRequest_NetNS{Hostnetwork: true},
 		})
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		return toJSON(mapConnections(first(resp.GetMessages()).GetConnectrecord()))

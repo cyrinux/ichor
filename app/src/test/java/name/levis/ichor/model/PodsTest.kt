@@ -19,7 +19,7 @@ class PodsTest {
     fun decodesTheGoJson() {
         val json = """{"pods":[{"namespace":"shop","name":"web-1","status":"Init:1/2","healthy":false,"ready":0,""" +
             """"containers":2,"restarts":3,"node":"w1","owner":"ReplicaSet/web","created":1,"images":["nginx"]}]}"""
-        val p = TalosJson.decodeFromString(KubePodList.serializer(), json).pods.single()
+        val p = TalosJson.decodeFromString(KubePodPage.serializer(), json).pods.single()
         assertEquals(3, p.restarts)
         assertEquals("shop/web-1", p.key)
         assertTrue(p.transitional)

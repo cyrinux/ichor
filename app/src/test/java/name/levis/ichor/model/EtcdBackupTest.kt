@@ -15,16 +15,16 @@ class EtcdBackupTest {
 
     @Test
     fun prefersHealthyFollower() {
-        val chosen = chooseSnapshotMember(
+        val chosen = snapshotCandidates(
             listOf(member("leader", leader = true), member("broken", errors = listOf("corrupt")), member("down", error = "timeout"), member("follower")),
-        )
+        ).firstOrNull()
         assertEquals("follower", chosen?.node)
     }
 
     @Test
     fun fallsBackToLeaderThenNothing() {
-        assertEquals("leader", chooseSnapshotMember(listOf(member("leader", leader = true), member("down", error = "x")))?.node)
-        assertNull(chooseSnapshotMember(listOf(member("down", error = "x"))))
+        assertEquals("leader", snapshotCandidates(listOf(member("leader", leader = true), member("down", error = "x"))).firstOrNull()?.node)
+        assertNull(snapshotCandidates(listOf(member("down", error = "x"))).firstOrNull())
     }
 
     @Test

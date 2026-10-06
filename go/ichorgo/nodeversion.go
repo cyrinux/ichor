@@ -2,11 +2,13 @@ package ichorgo
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
 	"github.com/cosi-project/runtime/pkg/resource/meta"
 	"github.com/cosi-project/runtime/pkg/safe"
+	"github.com/siderolabs/talos/pkg/machinery/client"
 )
 
 // versionLookupTimeout bounds the extra Version call made only to name the node's version in
@@ -27,7 +29,7 @@ func (s *session) nodeVersion(ctx context.Context, node string) string {
 	ctx, cancel := context.WithTimeout(ctx, nodeTimeout)
 	defer cancel()
 
-	resp, err := s.client.Version(withNode(ctx, node))
+	resp, err := s.client.Version(client.WithNode(ctx, node))
 	if err != nil {
 		return ""
 	}
@@ -71,6 +73,11 @@ func (s *session) friendly(node string, err error) string {
 	return notAvailableOn(s.nodeVersion(ctx, node))
 }
 
+// friendlyErr is friendly as an error, to return as is.
+func (s *session) friendlyErr(node string, err error) error {
+	return errors.New(s.friendly(node, err))
+}
+
 // resourceTypes are node's registered COSI resource definitions, listed once per session
 // and node: the reliable way to know whether a resource type exists on its Talos version.
 type resourceTypes struct {
@@ -84,7 +91,7 @@ func (s *session) resourceDefinitions(ctx context.Context, node string) ([]*meta
 	rt := v.(*resourceTypes) //nolint:forcetypeassert
 
 	rt.once.Do(func() {
-		list, err := safe.StateListAll[*meta.ResourceDefinition](withNode(ctx, node), s.client.COSI)
+		list, err := safe.StateListAll[*meta.ResourceDefinition](client.WithNode(ctx, node), s.client.COSI)
 		if err != nil {
 			rt.err = err
 

@@ -25,12 +25,12 @@ public struct NodeNetwork: Decodable, Equatable, Sendable {
     // Go encodes empty (nil) slices and maps as null.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        links = try c.decodeIfPresent([NetLink].self, forKey: .links) ?? []
-        addresses = try c.decodeIfPresent([NetAddress].self, forKey: .addresses) ?? []
-        routes = try c.decodeIfPresent([NetRoute].self, forKey: .routes) ?? []
-        resolvers = try c.decodeIfPresent([String].self, forKey: .resolvers) ?? []
-        timeServers = try c.decodeIfPresent([String].self, forKey: .timeServers) ?? []
-        errors = try c.decodeIfPresent([String: String].self, forKey: .errors) ?? [:]
+        links = try c.field(.links, [])
+        addresses = try c.field(.addresses, [])
+        routes = try c.field(.routes, [])
+        resolvers = try c.field(.resolvers, [])
+        timeServers = try c.field(.timeServers, [])
+        errors = try c.field(.errors, [:])
     }
 }
 
@@ -166,15 +166,15 @@ public struct NodeConnection: Decodable, Equatable, Identifiable, Sendable {
     // pid and processName are omitted when the node did not resolve the owning process.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        self.protocol = try c.decodeIfPresent(String.self, forKey: .protocol) ?? ""
-        localIp = try c.decodeIfPresent(String.self, forKey: .localIp) ?? ""
-        localPort = try c.decodeIfPresent(UInt32.self, forKey: .localPort) ?? 0
-        remoteIp = try c.decodeIfPresent(String.self, forKey: .remoteIp) ?? ""
-        remotePort = try c.decodeIfPresent(UInt32.self, forKey: .remotePort) ?? 0
-        state = try c.decodeIfPresent(String.self, forKey: .state) ?? ""
-        listening = try c.decodeIfPresent(Bool.self, forKey: .listening) ?? false
-        pid = try c.decodeIfPresent(UInt32.self, forKey: .pid) ?? 0
-        processName = try c.decodeIfPresent(String.self, forKey: .processName) ?? ""
+        self.protocol = try c.field(.protocol, "")
+        localIp = try c.field(.localIp, "")
+        localPort = try c.field(.localPort, 0)
+        remoteIp = try c.field(.remoteIp, "")
+        remotePort = try c.field(.remotePort, 0)
+        state = try c.field(.state, "")
+        listening = try c.field(.listening, false)
+        pid = try c.field(.pid, 0)
+        processName = try c.field(.processName, "")
     }
 
     /// "10.0.0.2:6443", "[fe80::1]:22".

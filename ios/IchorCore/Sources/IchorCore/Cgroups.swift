@@ -20,10 +20,10 @@ public struct CgroupPSI: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        some10 = try c.decodeIfPresent(Double.self, forKey: .some10) ?? 0
-        some60 = try c.decodeIfPresent(Double.self, forKey: .some60) ?? 0
-        full10 = try c.decodeIfPresent(Double.self, forKey: .full10) ?? 0
-        full60 = try c.decodeIfPresent(Double.self, forKey: .full60) ?? 0
+        some10 = try c.field(.some10, 0)
+        some60 = try c.field(.some60, 0)
+        full10 = try c.field(.full10, 0)
+        full60 = try c.field(.full60, 0)
     }
 }
 
@@ -77,15 +77,15 @@ public struct CgroupNode: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         name = try c.decode(String.self, forKey: .name)
-        kind = try c.decodeIfPresent(String.self, forKey: .kind) ?? "group"
-        memCurrent = try c.decodeIfPresent(UInt64.self, forKey: .memCurrent) ?? 0
-        memMax = try c.decodeIfPresent(UInt64.self, forKey: .memMax) ?? 0
-        oomKills = try c.decodeIfPresent(UInt64.self, forKey: .oomKills) ?? 0
-        cpuUsec = try c.decodeIfPresent(UInt64.self, forKey: .cpuUsec) ?? 0
-        ioRead = try c.decodeIfPresent(UInt64.self, forKey: .ioRead) ?? 0
-        ioWrite = try c.decodeIfPresent(UInt64.self, forKey: .ioWrite) ?? 0
+        kind = try c.field(.kind, "group")
+        memCurrent = try c.field(.memCurrent, 0)
+        memMax = try c.field(.memMax, 0)
+        oomKills = try c.field(.oomKills, 0)
+        cpuUsec = try c.field(.cpuUsec, 0)
+        ioRead = try c.field(.ioRead, 0)
+        ioWrite = try c.field(.ioWrite, 0)
         pressure = try c.decodeIfPresent(CgroupPressure.self, forKey: .pressure)
-        children = try c.decodeIfPresent([CgroupNode].self, forKey: .children) ?? []
+        children = try c.field(.children, [])
     }
 }
 
@@ -100,7 +100,7 @@ public struct CgroupHotspot: Decodable, Equatable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         resource = try c.decode(String.self, forKey: .resource)
         name = try c.decode(String.self, forKey: .name)
-        parent = try c.decodeIfPresent(String.self, forKey: .parent) ?? ""
+        parent = try c.field(.parent, "")
     }
 
     /// "name (parent)": Talos has both system/runtime and podruntime/runtime.
@@ -120,9 +120,9 @@ public struct CgroupAlert: Decodable, Equatable, Hashable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         kind = try c.decode(String.self, forKey: .kind)
         name = try c.decode(String.self, forKey: .name)
-        parent = try c.decodeIfPresent(String.self, forKey: .parent) ?? ""
-        count = try c.decodeIfPresent(Int.self, forKey: .count) ?? 0
-        percent = try c.decodeIfPresent(Double.self, forKey: .percent) ?? 0
+        parent = try c.field(.parent, "")
+        count = try c.field(.count, 0)
+        percent = try c.field(.percent, 0)
     }
 
     /// The workload, with its pod or group when it has one: "web (default/web-0)".
@@ -150,9 +150,9 @@ public struct CgroupReport: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         at = try c.decode(Int64.self, forKey: .at)
-        pressure = try c.decodeIfPresent(CgroupPressure.self, forKey: .pressure) ?? CgroupPressure()
-        hotspots = try c.decodeIfPresent([CgroupHotspot].self, forKey: .hotspots) ?? []
-        alerts = try c.decodeIfPresent([CgroupAlert].self, forKey: .alerts) ?? []
+        pressure = try c.field(.pressure, CgroupPressure())
+        hotspots = try c.field(.hotspots, [])
+        alerts = try c.field(.alerts, [])
         root = try c.decodeIfPresent(CgroupNode.self, forKey: .root)
     }
 

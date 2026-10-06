@@ -15,8 +15,6 @@ class HardwareTest {
             disks = listOf(DiskInfo("sda"), DiskInfo("nvme0n1", systemDisk = true), DiskInfo("sdb")),
         )
         assertEquals(32L * 1024 * 1024 * 1024, hw.totalMemoryBytes)
-        assertEquals(16, hw.totalCores)
-        assertEquals(32, hw.totalThreads)
         assertEquals(listOf("nvme0n1", "sda", "sdb"), hw.sortedDisks.map { it.name })
     }
 

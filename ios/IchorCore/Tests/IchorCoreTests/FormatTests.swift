@@ -27,6 +27,5 @@ final class FormatTests: XCTestCase {
         let now = Date(timeIntervalSince1970: 1_000_000_000)
         XCTAssertEqual(daysUntil(1_000_000_000 + 10 * 86_400, now: now), 10)
         XCTAssertEqual(daysUntil(1_000_000_000 - 60, now: now), -1)
-        XCTAssertEqual(certExpiryText(1_000_000_000 - 2 * 86_400, now: now), "expired 2 days ago")
     }
 }

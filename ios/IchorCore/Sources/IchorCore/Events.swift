@@ -37,14 +37,14 @@ public struct NodeEvent: Codable, Equatable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        node = try c.decodeIfPresent(String.self, forKey: .node) ?? ""
-        eventId = try c.decodeIfPresent(String.self, forKey: .eventId) ?? ""
-        at = try c.decodeIfPresent(Int64.self, forKey: .at) ?? 0
-        kind = try c.decodeIfPresent(String.self, forKey: .kind) ?? "other"
-        subject = try c.decodeIfPresent(String.self, forKey: .subject) ?? ""
-        action = try c.decodeIfPresent(String.self, forKey: .action) ?? ""
-        message = try c.decodeIfPresent(String.self, forKey: .message) ?? ""
-        severity = try c.decodeIfPresent(String.self, forKey: .severity) ?? "info"
+        node = try c.field(.node, "")
+        eventId = try c.field(.eventId, "")
+        at = try c.field(.at, 0)
+        kind = try c.field(.kind, "other")
+        subject = try c.field(.subject, "")
+        action = try c.field(.action, "")
+        message = try c.field(.message, "")
+        severity = try c.field(.severity, "info")
     }
 
     /// Same node, kind, subject, action and message (time and id aside).

@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.flux
 
-import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -87,13 +86,6 @@ fun FluxActionMessages(results: Flow<FluxActionResult>, show: suspend (String) -
             show(r.error?.let { context.getString(R.string.argo_action_failed, it.resolve(context)) } ?: context.getString(r.action.doneLabel, r.name))
         }
     }
-}
-
-/** The outcome of each action as a toast, where there is no snackbar (the app sheet). */
-@Composable
-fun FluxActionToasts(results: Flow<FluxActionResult>) {
-    val context = LocalContext.current
-    FluxActionMessages(results) { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
 }
 
 /** "Reconcile requested for apps"... */

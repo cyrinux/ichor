@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	"unicode/utf8"
 )
 
 // The report is plain text: the user reads it before it is sent, and the model reads the
@@ -45,24 +44,10 @@ func renderDiagnosis(d diagnosisData) string {
 	// The tags are neutralized here rather than when sending: what is shown is what is sent.
 	report := neutralizeTags(strings.ToValidUTF8(strings.TrimRight(b.String(), "\n"), "\uFFFD"))
 	if len(report) > maxReportBytes {
-		report = clipText(report, maxReportBytes) + "\n[The report was cut here: it is too large to send whole.]"
+		report = clipUTF8(report, maxReportBytes) + "\n[The report was cut here: it is too large to send whole.]"
 	}
 
 	return report + "\n"
-}
-
-// clipText cuts s to at most limit bytes, on a character boundary, marking the cut.
-func clipText(s string, limit int) string {
-	s = strings.ToValidUTF8(s, "\uFFFD")
-	if len(s) <= limit {
-		return s
-	}
-
-	for limit > 0 && !utf8.RuneStart(s[limit]) {
-		limit--
-	}
-
-	return s[:limit] + "…"
 }
 
 func renderNodeList(b *strings.Builder, nodes []nodeDiagnosis) {
@@ -149,7 +134,7 @@ func renderNode(b *strings.Builder, n nodeDiagnosis, at time.Time) {
 
 		line := fmt.Sprintf("  static pod %s: %s, %s, %d restarts", p.Name, p.Phase, state, p.Restarts)
 		if p.Waiting != "" {
-			line += ", waiting: " + clipText(p.Waiting, diagnosisMaxLineLen)
+			line += ", waiting: " + clipUTF8(p.Waiting, diagnosisMaxLineLen)
 		}
 
 		b.WriteString(line + "\n")
@@ -250,11 +235,11 @@ func renderServices(b *strings.Builder, n nodeDiagnosis, at time.Time) {
 		}
 
 		if s.Message != "" {
-			line += ", health check says: " + clipText(s.Message, diagnosisMaxLineLen)
+			line += ", health check says: " + clipUTF8(s.Message, diagnosisMaxLineLen)
 		}
 
 		if s.LastEvent != "" {
-			line += ", last event: " + clipText(s.LastEvent, diagnosisMaxLineLen)
+			line += ", last event: " + clipUTF8(s.LastEvent, diagnosisMaxLineLen)
 		}
 
 		b.WriteString(line + "\n")
@@ -349,7 +334,7 @@ func renderEvents(b *strings.Builder, d diagnosisData) {
 
 		line = strings.TrimRight(line, " ")
 		if ev.Message != "" {
-			line += ": " + clipText(ev.Message, diagnosisMaxLineLen)
+			line += ": " + clipUTF8(ev.Message, diagnosisMaxLineLen)
 		}
 
 		b.WriteString(line + "\n")

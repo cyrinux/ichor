@@ -65,9 +65,6 @@ final class StorageTests: XCTestCase {
         XCTAssertEqual(normalizedPath("var/lib//"), "/var/lib")
         XCTAssertEqual(normalizedPath(""), "/")
         XCTAssertEqual(normalizedPath("/"), "/")
-        XCTAssertEqual(parentPath("/var/lib"), "/var")
-        XCTAssertEqual(parentPath("/var"), "/")
-        XCTAssertEqual(parentPath("/"), "/")
         // Quick folders first; the ones that can take minutes last.
         XCTAssertEqual(diskUsageShortcuts.first, "/var/log")
         XCTAssertEqual(diskUsageShortcuts.suffix(2), ["/var", "/"])

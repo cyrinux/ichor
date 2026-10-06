@@ -285,7 +285,7 @@ func applyGarageHealth(inst *garageInstance, data []byte) error {
 	}
 
 	if err := json.Unmarshal(data, &h); err != nil || h.Status == "" {
-		return fmt.Errorf("unexpected GetClusterHealth answer: %q", truncate(string(data), 200))
+		return fmt.Errorf("unexpected GetClusterHealth answer: %q", clipUTF8(string(data), 200))
 	}
 
 	inst.Status = h.Status
@@ -577,7 +577,7 @@ func garageProxyHealth(ctx context.Context, k *kubeClient, g garageGroup) (strin
 // garageHealthFromProxy reads /health: 200 when the node can serve requests, 503 without
 // quorum. A JSON Status is the API server's own answer (no ready pod behind the Service).
 func garageHealthFromProxy(status int, ctype string, body []byte) (string, string) {
-	text := truncate(strings.TrimSpace(string(body)), 300)
+	text := clipUTF8(strings.TrimSpace(string(body)), 300)
 
 	if strings.HasPrefix(ctype, "application/json") && bytes.Contains(body, []byte(`"kind":"Status"`)) {
 		return garageUnavailable, "no ready Garage pod behind the admin Service"

@@ -69,12 +69,12 @@ func runHealth(ctx context.Context, configYAML, contextName string, listener Hea
 
 	defer release()
 
-	info := classifyNodes(ctx, s.client, targetNodes(s.context))
-	if len(info.GetControlPlaneNodes()) == 0 {
-		return "no reachable control-plane node found in this context"
+	cps, err := s.controlPlanes(ctx)
+	if err != nil {
+		return err.Error()
 	}
 
-	runner := info.GetControlPlaneNodes()[0]
+	runner := cps[0]
 
 	// An empty ClusterInfo makes Talos check the discovered cluster members, like
 	// `talosctl health` without flags. Passing the talosconfig's node list instead would make
@@ -122,6 +122,18 @@ func healthFailure(lastProgress string, err error) string {
 
 // classifyNodes splits context nodes into control plane and workers (unreadable roles count
 // as workers). Used to pick a control-plane node to run checks on and to find etcd members.
+var errNoControlPlane = errors.New("no reachable control-plane node found in this context")
+
+// controlPlanes are the context's reachable control-plane nodes, errNoControlPlane when none.
+func (s *session) controlPlanes(ctx context.Context) ([]string, error) {
+	cps := classifyNodes(ctx, s.client, targetNodes(s.context)).GetControlPlaneNodes()
+	if len(cps) == 0 {
+		return nil, errNoControlPlane
+	}
+
+	return cps, nil
+}
+
 func classifyNodes(ctx context.Context, c *client.Client, nodes []string) *clusterapi.ClusterInfo {
 	isCP := make([]bool, len(nodes))
 

@@ -58,8 +58,6 @@ data class KubeCronJob(
 
     /** The icon tile's app: the resolved icon, a default CronJob glyph when there is none. */
     val iconApp: InventoryApp get() = InventoryApp(id = "cronjob:$key", name = displayName, icon = icon, remoteIcon = remoteIcon)
-
-    val hasIcon: Boolean get() = icon.isNotEmpty() || iconApp.remoteIconSlug != null
 }
 
 @Serializable

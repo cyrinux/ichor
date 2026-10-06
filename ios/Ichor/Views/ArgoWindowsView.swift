@@ -132,7 +132,7 @@ struct ArgoWindowsView: View {
     /// "38 min left" over a bar while active, "Starts 22:00" before, "Ended 3 h ago" after.
     @ViewBuilder
     private func when(_ w: ArgoWindow, section: WindowSection) -> some View {
-        let now = Int64(Date().timeIntervalSince1970 * 1000)
+        let now = Date().epochMillis
         if !w.error.isEmpty {
             Text("Unreadable: \(w.error)").font(.caption).foregroundStyle(.statusBad)
         } else if section == .expired {

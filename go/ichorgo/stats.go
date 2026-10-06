@@ -58,7 +58,7 @@ func NodeStats(configYAML, contextName, node string) (out string, err error) {
 		stat, err := mc.SystemStat(nodeCtx, empty)
 		err = statsResponseError(len(stat.GetMessages()), first(stat.GetMessages()).GetMetadata().GetError(), err)
 		if err != nil {
-			return "", errors.New(s.friendly(node, err))
+			return "", s.friendlyErr(node, err)
 		}
 
 		// The rest is best effort; errors identify unavailable sections.

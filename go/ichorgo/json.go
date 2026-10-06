@@ -13,3 +13,12 @@ func toJSON(v any) (string, error) {
 
 	return string(b), nil
 }
+
+// errText is err's message, "" for nil: the error field of a progress event.
+func errText(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	return err.Error()
+}

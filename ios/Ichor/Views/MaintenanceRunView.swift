@@ -31,7 +31,9 @@ struct MaintenanceRunView: View {
                 }
             }
             Section("Progress") {
-                ForEach(job.timeline) { step in MaintenanceStepRow(step: step) }
+                ForEach(job.timeline) { step in
+                    RunStepRow(label: step.phase.localizedLabel, state: step.state, at: step.at, message: step.message)
+                }
             }
             if !job.pods.isEmpty {
                 Section("Pods") {
@@ -88,41 +90,6 @@ struct MaintenanceRunView: View {
         case .reboot: String(localized: "\(hostname) is back and uncordoned")
         case .shutdown: String(localized: "\(hostname) is shutting down and stays cordoned")
         case .none: String(localized: "\(hostname) is drained and stays cordoned")
-        }
-    }
-}
-
-private struct MaintenanceStepRow: View {
-    let step: MaintenanceStep
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            icon.frame(width: 20)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    Text(step.phase.localizedLabel)
-                        .fontWeight(step.state == .current ? .semibold : .regular)
-                        .foregroundStyle(step.state == .pending ? Color.secondary : Color.primary)
-                    Spacer()
-                    if step.at > 0 {
-                        Text(Date(epochMillis: step.at), format: .dateTime.hour().minute().second())
-                            .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                    }
-                }
-                if !step.message.isEmpty {
-                    Text(verbatim: step.message).font(.caption)
-                        .foregroundStyle(step.state == .failed ? Color.statusBad : Color.secondary)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder private var icon: some View {
-        switch step.state {
-        case .done: Image(systemName: "checkmark.circle.fill").foregroundStyle(.statusOK)
-        case .current: ProgressView()
-        case .failed: Image(systemName: "xmark.circle.fill").foregroundStyle(.statusBad)
-        case .pending: Image(systemName: "circle").foregroundStyle(.secondary)
         }
     }
 }

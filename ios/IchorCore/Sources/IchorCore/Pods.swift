@@ -2,19 +2,6 @@ import Foundation
 
 // Mirrors go/ichorgo/kube_pods.go.
 
-public struct KubePodList: Decodable, Equatable, Sendable {
-    public let pods: [KubePod]
-
-    public init(pods: [KubePod] = []) { self.pods = pods }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        pods = try c.decodeIfPresent([KubePod].self, forKey: .pods) ?? []
-    }
-
-    private enum CodingKeys: String, CodingKey { case pods }
-}
-
 /// A Kubernetes pod with the status `kubectl get pods` shows (KubePods).
 public struct KubePod: Codable, Equatable, Identifiable, Sendable {
     public let namespace: String
@@ -66,17 +53,17 @@ public struct KubePod: Codable, Equatable, Identifiable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         namespace = try c.decode(String.self, forKey: .namespace)
         name = try c.decode(String.self, forKey: .name)
-        status = try c.decodeIfPresent(String.self, forKey: .status) ?? ""
-        healthy = try c.decodeIfPresent(Bool.self, forKey: .healthy) ?? false
-        ready = try c.decodeIfPresent(Int.self, forKey: .ready) ?? 0
-        containers = try c.decodeIfPresent(Int.self, forKey: .containers) ?? 0
-        restarts = try c.decodeIfPresent(Int.self, forKey: .restarts) ?? 0
-        node = try c.decodeIfPresent(String.self, forKey: .node) ?? ""
-        owner = try c.decodeIfPresent(String.self, forKey: .owner) ?? ""
-        created = try c.decodeIfPresent(Int64.self, forKey: .created) ?? 0
-        images = try c.decodeIfPresent([String].self, forKey: .images) ?? []
-        containerNames = try c.decodeIfPresent([String].self, forKey: .containerNames) ?? []
-        lastTermination = try c.decodeIfPresent(String.self, forKey: .lastTermination) ?? ""
+        status = try c.field(.status, "")
+        healthy = try c.field(.healthy, false)
+        ready = try c.field(.ready, 0)
+        containers = try c.field(.containers, 0)
+        restarts = try c.field(.restarts, 0)
+        node = try c.field(.node, "")
+        owner = try c.field(.owner, "")
+        created = try c.field(.created, 0)
+        images = try c.field(.images, [])
+        containerNames = try c.field(.containerNames, [])
+        lastTermination = try c.field(.lastTermination, "")
     }
 
     private enum CodingKeys: String, CodingKey {

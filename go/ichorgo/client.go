@@ -36,7 +36,7 @@ func openSession(configYAML, contextName string) (*session, error) {
 		return nil, err
 	}
 	if slices.Contains(cfgCtx.Endpoints, demoEndpoint) {
-		return nil, demoUnavailable
+		return nil, errDemoUnavailable
 	}
 
 	// client.New only dials lazily, so no context is needed here.
@@ -89,4 +89,21 @@ func withNodeSession[T any](configYAML, contextName, node string, timeout time.D
 
 		return fn(client.WithNode(ctx, node), s)
 	})
+}
+
+// acquireNode is sessions.acquire for a call to node, which must be one of the context's
+// targets: a privileged action never falls through to the endpoint.
+func acquireNode(configYAML, contextName, node string) (*session, func(), error) {
+	s, release, err := sessions.acquire(configYAML, contextName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err := validatePowerTarget(s.context, node); err != nil {
+		release()
+
+		return nil, nil, err
+	}
+
+	return s, release, nil
 }

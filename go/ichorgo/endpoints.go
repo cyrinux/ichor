@@ -118,12 +118,12 @@ func ProbeEndpoint(configYAML, contextName, node string) (out string, err error)
 	}
 
 	if slices.Contains(cfgCtx.Endpoints, demoEndpoint) {
-		return "", demoUnavailable
+		return "", errDemoUnavailable
 	}
 
 	probe, err := probeEndpoint(context.Background(), cfgCtx, endpoint)
 	if err != nil {
-		return "", errors.New(friendlyError(err))
+		return "", friendlyErr(err)
 	}
 
 	privacy.learnHost(probe.Hostname, probe.Role)
@@ -149,8 +149,10 @@ func SetContextEndpoints(storedYAML, contextName, nodes string) (out string, err
 		return "", errors.New("a cluster needs at least one endpoint")
 	}
 
-	return editContext(storedYAML, contextName, func(c *clientconfig.Context) {
+	return editContext(storedYAML, contextName, func(c *clientconfig.Context) error {
 		c.Endpoints = endpoints
+
+		return nil
 	})
 }
 
@@ -169,7 +171,7 @@ func AddContextEndpoint(storedYAML, contextName, node string) (out string, err e
 		return "", fmt.Errorf("invalid endpoint %q", endpoint)
 	}
 
-	return editContext(storedYAML, contextName, func(c *clientconfig.Context) {
+	return editContext(storedYAML, contextName, func(c *clientconfig.Context) error {
 		if len(c.Nodes) == 0 {
 			c.Nodes = []string{endpointHost(endpoint)}
 		}
@@ -178,12 +180,14 @@ func AddContextEndpoint(storedYAML, contextName, node string) (out string, err e
 		c.Endpoints = append([]string{endpoint}, slices.DeleteFunc(slices.Clone(c.Endpoints), func(e string) bool {
 			return sameEndpoint(e, endpoint)
 		})...)
+
+		return nil
 	})
 }
 
 // editContext returns storedYAML with a copy of contextName changed by edit, the other
 // contexts untouched.
-func editContext(storedYAML, contextName string, edit func(*clientconfig.Context)) (string, error) {
+func editContext(storedYAML, contextName string, edit func(*clientconfig.Context) error) (string, error) {
 	stored, err := parseTalosconfig(storedYAML)
 	if err != nil {
 		return "", fmt.Errorf("stored talosconfig: %w", err)
@@ -195,7 +199,9 @@ func editContext(storedYAML, contextName string, edit func(*clientconfig.Context
 	}
 
 	updated := *target
-	edit(&updated)
+	if err := edit(&updated); err != nil {
+		return "", err
+	}
 
 	contexts := make(map[string]*clientconfig.Context, len(stored.Contexts))
 	for name, c := range stored.Contexts {

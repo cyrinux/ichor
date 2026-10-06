@@ -55,6 +55,7 @@ import name.levis.ichor.model.containersToChoose
 import name.levis.ichor.model.logLines
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoNotice

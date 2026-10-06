@@ -264,7 +264,7 @@ func TestKubeLonghornActionDemo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := KubeLonghornAction(cfg, "", "", "longhorn-system", "pvc-8a42", lhActionBackup, 0); !errors.Is(err, demoUnavailable) {
+	if err := KubeLonghornAction(cfg, "", "", "longhorn-system", "pvc-8a42", lhActionBackup, 0); !errors.Is(err, errDemoUnavailable) {
 		t.Fatalf("got %v", err)
 	}
 }

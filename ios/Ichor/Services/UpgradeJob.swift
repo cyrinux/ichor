@@ -52,7 +52,7 @@ final class UpgradeJob {
     func start(client: TalosClient, target: Target, force: Bool, acknowledged: Bool) {
         guard !isActive else { return }
         self.target = target
-        events = [UpgradeProgress(phase: UpgradePhase.requested.rawValue, at: Int64(Date().timeIntervalSince1970 * 1000))]
+        events = [UpgradeProgress(phase: UpgradePhase.requested.rawValue, at: Date().epochMillis)]
         outcome = nil
         UIApplication.shared.isIdleTimerDisabled = true
         needsForeground = true

@@ -263,7 +263,7 @@ func TestPromQueryRangeThroughServiceProxy(t *testing.T) {
 
 	// The fake answers unknown paths with the API server's own Status.
 	missing := `{"mode":"proxy","namespace":"monitoring","service":"nope","port":9090}`
-	if _, err := PromQuery("cfg", "ctx", "", missing, "up", 100); err == nil || !strings.Contains(err.Error(), "monitoring/nope: no such Service") {
+	if _, err := PromQueryRange("cfg", "ctx", "", missing, "up", 100, 101, 1); err == nil || !strings.Contains(err.Error(), "monitoring/nope: no such Service") {
 		t.Fatalf("missing service: %v", err)
 	}
 }
@@ -286,7 +286,7 @@ func TestPromProxyPassesTenant(t *testing.T) {
 	useFakeKube(t, &fakeKubeAPI{Server: srv})
 
 	src := `{"mode":"proxy","namespace":"m","service":"s","port":1,"tenant":"t1"}`
-	if _, err := PromQuery("cfg", "ctx", "", src, `rate(x{a="b c"}[5m])`, 100); err != nil {
+	if _, err := PromQueryRange("cfg", "ctx", "", src, `rate(x{a="b c"}[5m])`, 100, 101, 1); err != nil {
 		t.Fatal(err)
 	}
 
@@ -300,9 +300,9 @@ func TestPromQueryURLMode(t *testing.T) {
 
 	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case "/prometheus/api/v1/query":
+		case "/prometheus/api/v1/query_range":
 			seen = r.Header.Clone()
-			_, _ = io.WriteString(w, `{"status":"success","data":{"resultType":"vector","result":[{"metric":{},"value":[100,"42"]}]}}`)
+			_, _ = io.WriteString(w, `{"status":"success","data":{"resultType":"matrix","result":[{"metric":{},"values":[[100,"42"]]}]}}`)
 		default:
 			http.Redirect(w, r, "https://elsewhere.example/", http.StatusFound)
 		}
@@ -316,22 +316,22 @@ func TestPromQueryURLMode(t *testing.T) {
 		return string(b)
 	}
 
-	out, err := PromQuery("cfg", "ctx", "", source("/prometheus"), "up", 100)
+	out, err := PromQueryRange("cfg", "ctx", "", source("/prometheus"), "up", 100, 101, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !strings.Contains(out, `"values":[42]`) || seen.Get("Authorization") != "Bearer tok" || seen.Get("X-Scope-OrgID") != "t1" {
+	if !strings.Contains(out, `"values":[42,null]`) || seen.Get("Authorization") != "Bearer tok" || seen.Get("X-Scope-OrgID") != "t1" {
 		t.Fatalf("got %s, headers %v", out, seen)
 	}
 
-	if _, err := PromQuery("cfg", "ctx", "", source("/moved"), "up", 100); err == nil || !strings.Contains(err.Error(), "redirects") {
+	if _, err := PromQueryRange("cfg", "ctx", "", source("/moved"), "up", 100, 101, 1); err == nil || !strings.Contains(err.Error(), "redirects") {
 		t.Fatalf("redirect: %v", err)
 	}
 
 	// Without the CA, the test server's certificate is not trusted.
 	untrusted, _ := json.Marshal(promSource{Mode: promModeURL, URL: srv.URL + "/prometheus"})
-	if _, err := PromQuery("cfg", "ctx", "", string(untrusted), "up", 100); err == nil {
+	if _, err := PromQueryRange("cfg", "ctx", "", string(untrusted), "up", 100, 101, 1); err == nil {
 		t.Fatal("untrusted certificate accepted")
 	}
 }
@@ -340,7 +340,7 @@ func TestPromQueryRejectsBadQueries(t *testing.T) {
 	src := `{"mode":"url","url":"https://p.invalid"}`
 
 	for _, q := range []string{"  ", strings.Repeat("x", promMaxQuery+1), "up\x00"} {
-		if _, err := PromQuery("cfg", "ctx", "", src, q, 1); err == nil {
+		if _, err := PromQueryRange("cfg", "ctx", "", src, q, 1, 2, 1); err == nil {
 			t.Errorf("query %.20q accepted", q)
 		}
 	}

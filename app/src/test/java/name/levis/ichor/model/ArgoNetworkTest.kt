@@ -208,7 +208,5 @@ class ArgoNetworkTest {
         assertTrue(ArgoNetNode(id = "gw/traefik/homelab", kind = ArgoNetNode.GATEWAY, managed = false).shared)
         assertFalse(network.node("ing/demo/worker")!!.shared)
         assertFalse(network.node("pod/demo/worker-6f4b8-pqrst")!!.shared)
-        assertEquals("demo/worker", network.node("svc/demo/worker")!!.qualifiedName)
-        assertEquals("demo-worker-3", network.node("node/demo-worker-3")!!.qualifiedName)
     }
 }

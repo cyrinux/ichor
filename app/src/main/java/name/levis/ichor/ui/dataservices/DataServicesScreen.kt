@@ -29,12 +29,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.OVERVIEW
-import name.levis.ichor.data.activeSummary
+import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.detected
-import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.likelyCauses
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.BackButton
@@ -72,7 +71,7 @@ fun DataServicesScreen(initial: DataServiceKind? = null, onBack: () -> Unit) {
     CertificateRenewToasts(vm.certificates.results)
     CnpgBackupToasts(vm.cnpg.results)
 
-    val fingerprint = config?.activeSummary?.takeIf { !it.isDemo && !mask.enabled }?.fingerprint?.takeIf { it.isNotBlank() }
+    val fingerprint = config?.realFingerprint?.takeUnless { mask.enabled }
     var editing by remember { mutableStateOf(false) }
     LaunchedEffect(fingerprint) { if (fingerprint == null) editing = false }
     if (editing && fingerprint != null) {

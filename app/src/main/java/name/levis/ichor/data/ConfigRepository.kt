@@ -1,6 +1,7 @@
 package name.levis.ichor.data
 
 import android.content.Context
+import name.levis.ichor.model.isDemo
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ConfigSummary
 import name.levis.ichor.model.ContextSummary
@@ -27,6 +28,10 @@ data class StoredConfig(
 
 val StoredConfig.activeSummary: ContextSummary?
     get() = summary.contexts.firstOrNull { it.name == activeContext }
+
+/** The active cluster's fingerprint, to key its state: null for the demo or when unknown. */
+val StoredConfig.realFingerprint: String?
+    get() = activeSummary?.takeUnless { it.isDemo }?.fingerprint?.takeIf { it.isNotBlank() }
 
 /** [guard] may hold back a call to the cluster on screen by throwing, e.g. off its VPN. */
 class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Unit = {}) {

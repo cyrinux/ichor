@@ -61,7 +61,7 @@ func parseRebootMode(mode string) (machineapi.RebootRequest_Mode, error) {
 func nodeAction(configYAML, contextName, node string, timeout time.Duration, action func(context.Context, *client.Client) error) error {
 	_, err := withNodeSession(configYAML, contextName, node, timeout, func(ctx context.Context, s *session) (struct{}, error) {
 		if err := action(ctx, s.client); err != nil {
-			return struct{}{}, errors.New(s.friendly(node, err))
+			return struct{}{}, s.friendlyErr(node, err)
 		}
 
 		return struct{}{}, nil

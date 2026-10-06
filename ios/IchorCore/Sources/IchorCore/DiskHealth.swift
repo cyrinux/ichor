@@ -38,11 +38,11 @@ public struct DiskHealthInfo: Decodable, Equatable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        device = try c.decodeIfPresent(String.self, forKey: .device) ?? ""
-        model = try c.decodeIfPresent(String.self, forKey: .model) ?? ""
-        serial = try c.decodeIfPresent(String.self, forKey: .serial) ?? ""
+        device = try c.field(.device, "")
+        model = try c.field(.model, "")
+        serial = try c.field(.serial, "")
         healthy = try c.decodeIfPresent(Bool.self, forKey: .healthy)
-        message = try c.decodeIfPresent(String.self, forKey: .message) ?? ""
+        message = try c.field(.message, "")
         temperatureC = try c.decodeIfPresent(Double.self, forKey: .temperatureC)
         // A float from some drives' JSON: keep the whole hours.
         powerOnHours = try c.decodeIfPresent(Double.self, forKey: .powerOnHours).map { Int64($0) }
@@ -55,7 +55,7 @@ public struct DiskHealthInfo: Decodable, Equatable, Identifiable, Sendable {
         } else {
             criticalWarnings = []
         }
-        attributes = try c.decodeIfPresent([LogField].self, forKey: .attributes) ?? []
+        attributes = try c.field(.attributes, [])
     }
 
     /// A disk with critical warnings is failing even if it still claims to be healthy.
@@ -87,9 +87,9 @@ public struct NodeDiskHealth: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        supported = try c.decodeIfPresent(Bool.self, forKey: .supported) ?? true
-        reason = try c.decodeIfPresent(String.self, forKey: .reason) ?? ""
-        disks = try c.decodeIfPresent([DiskHealthInfo].self, forKey: .disks) ?? []
+        supported = try c.field(.supported, true)
+        reason = try c.field(.reason, "")
+        disks = try c.field(.disks, [])
     }
 }
 

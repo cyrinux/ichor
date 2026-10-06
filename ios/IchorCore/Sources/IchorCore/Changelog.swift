@@ -18,9 +18,9 @@ public struct ChangelogSection: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        kind = try c.decodeIfPresent(String.self, forKey: .kind) ?? ""
-        title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
-        items = try c.decodeIfPresent([String].self, forKey: .items) ?? []
+        kind = try c.field(.kind, "")
+        title = try c.field(.title, "")
+        items = try c.field(.items, [])
     }
 }
 
@@ -50,9 +50,9 @@ public struct ChangelogRelease: Decodable, Equatable, Identifiable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        version = try c.decodeIfPresent(String.self, forKey: .version) ?? ""
-        buildNumber = try c.decodeIfPresent(Int.self, forKey: .buildNumber) ?? 0
-        publishedAt = try c.decodeIfPresent(String.self, forKey: .publishedAt) ?? ""
+        version = try c.field(.version, "")
+        buildNumber = try c.field(.buildNumber, 0)
+        publishedAt = try c.field(.publishedAt, "")
         // Sections without items say nothing.
         sections = (try c.decodeIfPresent([ChangelogSection].self, forKey: .sections) ?? []).filter { !$0.items.isEmpty }
     }
@@ -71,7 +71,7 @@ public struct Changelog: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        releases = try c.decodeIfPresent([ChangelogRelease].self, forKey: .releases) ?? []
+        releases = try c.field(.releases, [])
     }
 }
 

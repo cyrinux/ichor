@@ -28,10 +28,10 @@ public struct NodeTimeInfo: Decodable, Equatable, Identifiable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         node = try c.decode(String.self, forKey: .node)
-        server = try c.decodeIfPresent(String.self, forKey: .server) ?? ""
-        localTime = try c.decodeIfPresent(Int64.self, forKey: .localTime) ?? 0
-        remoteTime = try c.decodeIfPresent(Int64.self, forKey: .remoteTime) ?? 0
-        offsetMs = try c.decodeIfPresent(Int64.self, forKey: .offsetMs) ?? 0
+        server = try c.field(.server, "")
+        localTime = try c.field(.localTime, 0)
+        remoteTime = try c.field(.remoteTime, 0)
+        offsetMs = try c.field(.offsetMs, 0)
         let message = try c.decodeIfPresent(String.self, forKey: .error)
         error = message?.isEmpty == true ? nil : message
     }
@@ -52,8 +52,8 @@ public struct ClusterTimeInfo: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        context = try c.decodeIfPresent(String.self, forKey: .context) ?? ""
-        nodes = try c.decodeIfPresent([NodeTimeInfo].self, forKey: .nodes) ?? []
+        context = try c.field(.context, "")
+        nodes = try c.field(.nodes, [])
     }
 
     /// The worst drift in the cluster, unreachable nodes counting as bad (ok for no nodes).

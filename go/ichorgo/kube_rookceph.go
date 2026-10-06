@@ -196,13 +196,7 @@ func mapCeph(clusters []cephClusterObject, pools map[string][]cephPoolObject, po
 		out.Clusters = append(out.Clusters, mapCephCluster(obj, out.OSDs, mons[obj.Metadata.Namespace]))
 	}
 
-	slices.SortFunc(out.Clusters, func(a, b cephCluster) int {
-		if d := healthRank(a.Health) - healthRank(b.Health); d != 0 {
-			return d
-		}
-
-		return strings.Compare(a.Namespace+"/"+a.Name, b.Namespace+"/"+b.Name)
-	})
+	slices.SortFunc(out.Clusters, byHealthThenKey(func(x cephCluster) (string, string) { return x.Health, x.Namespace + "/" + x.Name }))
 
 	for kind, objs := range pools {
 		for _, obj := range objs {
@@ -213,13 +207,7 @@ func mapCeph(clusters []cephClusterObject, pools map[string][]cephPoolObject, po
 		}
 	}
 
-	slices.SortFunc(out.Pools, func(a, b cephPool) int {
-		if d := healthRank(a.Health) - healthRank(b.Health); d != 0 {
-			return d
-		}
-
-		return strings.Compare(a.Namespace+"/"+a.Name+"/"+a.Kind, b.Namespace+"/"+b.Name+"/"+b.Kind)
-	})
+	slices.SortFunc(out.Pools, byHealthThenKey(func(x cephPool) (string, string) { return x.Health, x.Namespace + "/" + x.Name + "/" + x.Kind }))
 
 	return out
 }

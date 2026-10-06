@@ -127,9 +127,9 @@ func gatherMaintenancePlan(ctx context.Context, s *session, kube kubeTarget, nod
 		Acknowledge:  reboot.Acknowledge,
 	}
 
-	state := fetchKubeNodeState(withNode(ctx, node), s.client)
+	state := fetchKubeNodeState(client.WithNode(ctx, node), s.client)
 	if state == nil || state.Name == "" {
-		return plan, errors.New("the node's Kubernetes name is unknown: is the kubelet running?")
+		return plan, errKubeNodeUnknown
 	}
 
 	plan.KubeNode, plan.Cordoned = state.Name, state.Unschedulable
@@ -178,20 +178,11 @@ func KubeCordon(configYAML, contextName, kubeServer, node string, on bool) (err 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
 	if isDemoContext(configYAML, contextName) {
-		return demoUnavailable
+		return errDemoUnavailable
 	}
 
 	kubeNode, err := withNodeSession(configYAML, contextName, node, callTimeout, func(nodeCtx context.Context, s *session) (string, error) {
-		if err := validatePowerTarget(s.context, node); err != nil {
-			return "", err
-		}
-
-		state := fetchKubeNodeState(nodeCtx, s.client)
-		if state == nil || state.Name == "" {
-			return "", errors.New("the node's Kubernetes name is unknown: is the kubelet running?")
-		}
-
-		return state.Name, nil
+		return kubeNodeNameOf(nodeCtx, s.client)
 	})
 	if err != nil {
 		return err
@@ -229,10 +220,7 @@ func StartNodeMaintenance(configYAML, contextName, kubeServer, node, action stri
 			listener:     listener,
 		}
 
-		errMessage := ""
-		if err := m.run(ctx); err != nil {
-			errMessage = err.Error()
-		}
+		errMessage := errText(m.run(ctx))
 
 		listener.OnDone(errMessage)
 	}()
@@ -266,19 +254,15 @@ func (m maintenance) run(ctx context.Context) error {
 	}
 
 	if isDemoContext(m.kube.config, m.kube.context) {
-		return demoUnavailable
+		return errDemoUnavailable
 	}
 
-	s, release, err := sessions.acquire(m.kube.config, m.kube.context)
+	s, release, err := acquireNode(m.kube.config, m.kube.context, m.node)
 	if err != nil {
 		return err
 	}
 
 	defer release()
-
-	if err := validatePowerTarget(s.context, m.node); err != nil {
-		return err
-	}
 
 	planCtx, planCancel := context.WithTimeout(ctx, planTimeout)
 	plan, err := gatherMaintenancePlan(planCtx, s, m.kube, m.node)
@@ -398,8 +382,8 @@ func (m maintenance) steps(ctx context.Context, s *session, k *kubeClient, lock 
 	if m.action == maintenanceShutdown {
 		m.emit(phaseShutdown, "shutting down "+plan.Hostname, nil)
 
-		if err := s.client.Shutdown(withNode(ctx, m.node)); err != nil {
-			return stoppedCordoned(plan.KubeNode, errors.New(s.friendly(m.node, err)))
+		if err := s.client.Shutdown(client.WithNode(ctx, m.node)); err != nil {
+			return stoppedCordoned(plan.KubeNode, s.friendlyErr(m.node, err))
 		}
 
 		return nil
@@ -409,8 +393,8 @@ func (m maintenance) steps(ctx context.Context, s *session, k *kubeClient, lock 
 
 	rebootAt := time.Now()
 
-	if err := s.client.Reboot(withNode(ctx, m.node)); err != nil {
-		return stoppedCordoned(plan.KubeNode, errors.New(s.friendly(m.node, err)))
+	if err := s.client.Reboot(client.WithNode(ctx, m.node)); err != nil {
+		return stoppedCordoned(plan.KubeNode, s.friendlyErr(m.node, err))
 	}
 
 	backCtx, backCancel := context.WithTimeout(ctx, backTimeout)
