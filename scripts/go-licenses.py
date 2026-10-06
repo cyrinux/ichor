@@ -39,7 +39,7 @@ PREFIX = "go-"
 PACKAGES = ["./ichorgo", "golang.org/x/mobile/bind/seq"]
 ANDROID_ENV = {"GOOS": "android", "GOARCH": "arm64", "CGO_ENABLED": "1"}
 IOS_ENV = {"GOOS": "ios", "GOARCH": "arm64", "CGO_ENABLED": "1"}
-LICENSE_FILES = re.compile(r"^(LICEN[CS]E|COPYING)(\.md|\.txt)?$", re.IGNORECASE)
+LICENSE_FILES = re.compile(r"^(LICEN[CS]E|COPYING)(\.md|\.txt|\.mit)?$", re.IGNORECASE)  # LICENSE.MIT: go-errors/errors
 
 # SPDX id -> phrases that must all appear in the license text (whitespace-normalised, lowercase).
 # Order matters: the first match wins, so the more specific BSD-3 precedes BSD-2.
