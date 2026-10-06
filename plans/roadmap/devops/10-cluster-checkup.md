@@ -1,6 +1,6 @@
 # D10. Cluster checkup: the blind spots, on one screen
 
-Status: **in progress**. Size L (many small checks, one screen).
+Status: **implemented** (Go, Android, iOS). Size L (many small checks, one screen).
 
 ## Goal
 
@@ -85,10 +85,10 @@ Not in the checkup, but part of the same work:
 
 ## Phases
 
-1. Go core, demo, tests, probe. (this plan)
-2. Android: screen, events, alerts.
-3. iOS: the same.
-4. README, changelog.
+1. Go core, demo, tests, probe. (done)
+2. Android: screen, events, alerts, rollback. (done)
+3. iOS: the same; a tapped checkup notification opens the app, not the screen yet. (done)
+4. README. (done; the changelog comes from the commits)
 
 ## Out of scope, kept for later
 
