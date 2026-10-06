@@ -6,6 +6,7 @@
     <!-- Common -->
     <string name="common_back">Back</string>
     <string name="common_cancel">Cancel</string>
+    <string name="common_close">Close</string>
     <string name="common_ok">OK</string>
     <string name="common_retry">Retry</string>
     <string name="common_refresh">Refresh</string>
@@ -1064,7 +1065,22 @@
     <string name="overview_talos_release_notes">Release notes</string>
     <string name="overview_talos_tap_upgrade">Tap to upgrade a node.</string>
     <string name="overview_talos_pick_node">Upgrade to %1$s</string>
-    <string name="overview_talos_pick_hint">Upgrade one node at a time, control-plane nodes first, and wait for each to be healthy again.</string>
+    <string name="overview_talos_rollout_control_plane">Control plane · %1$d/%2$d done</string>
+    <string name="overview_talos_rollout_workers">Workers · %1$d/%2$d done</string>
+    <string name="overview_talos_rollout_workers_wait">Available after the control plane.</string>
+    <string name="overview_talos_rollout_next">Upgrade next: %1$s</string>
+    <string name="overview_talos_rollout_upgrading">Upgrading %1$s…</string>
+    <string name="overview_talos_rollout_waiting">%1$s is upgraded. Waiting for it to be healthy…</string>
+    <string name="overview_talos_rollout_etcd_short">etcd %1$d/%2$d</string>
+    <string name="overview_talos_rollout_unreachable">%1$s is unreachable. Wait for it before upgrading another node.</string>
+    <string name="overview_talos_rollout_not_ready">%1$s is not ready. Wait for it before upgrading another node.</string>
+    <string name="overview_talos_rollout_etcd">etcd has %1$d of %2$d members healthy. Fix it before upgrading a node.</string>
+    <string name="overview_talos_rollout_state_upgrading">Upgrading</string>
+    <string name="overview_talos_rollout_state_waiting">Waiting for healthy</string>
+    <string name="overview_talos_rollout_state_retry">Failed · Retry</string>
+    <string name="overview_talos_rollout_anyway_title">Upgrade %1$s before the control plane?</string>
+    <string name="overview_talos_rollout_anyway_body">Control-plane nodes normally go first, and only %1$d of %2$d are done. For a patch release the order is harmless.</string>
+    <string name="overview_talos_rollout_anyway">Upgrade anyway</string>
     <plurals name="overview_talos_outdated">
         <item quantity="one">%1$d node on an older version</item>
         <item quantity="other">%1$d nodes on older versions</item>

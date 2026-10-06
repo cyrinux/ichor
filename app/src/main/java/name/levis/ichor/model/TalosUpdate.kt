@@ -26,7 +26,7 @@ fun nodeVersionsCsv(nodes: List<NodeOverview>): String =
     nodes.filter { it.reachable && it.version.isNotBlank() }.map { it.version }.distinct().sorted().joinToString(",")
 
 /** Numeric parts of "v1.14.2-beta.1" -> [1, 14, 2]; empty when not a version. */
-private fun versionParts(version: String): List<Int> =
+internal fun versionParts(version: String): List<Int> =
     Regex("""^v?(\d+)\.(\d+)\.(\d+)""").find(version.trim())?.groupValues?.drop(1)?.map { it.toInt() } ?: emptyList()
 
 /**
