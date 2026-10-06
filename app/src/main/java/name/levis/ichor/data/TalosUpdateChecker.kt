@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,9 +31,15 @@ class TalosUpdateChecker {
             lastAt = now
             lastKey = versionsCsv
         }
-        val check = runCatching {
+        val check = try {
             withContext(Dispatchers.IO) { TalosJson.decodeFromString(TalosUpdateCheck.serializer(), Ichorgo.talosUpdateCheck(versionsCsv)) }
-        }.getOrNull() ?: return
+        } catch (e: CancellationException) {
+            // The screen was left before the answer: not a check made, the next one asks again.
+            synchronized(this) { lastAt = 0 }
+            throw e
+        } catch (_: Exception) {
+            return
+        }
         _result.value = versionsCsv to check
     }
 }

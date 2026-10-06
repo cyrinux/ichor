@@ -52,6 +52,20 @@ fun outdatedNodes(nodes: List<NodeOverview>, latest: String): List<NodeOverview>
             }
         }
 
+/** A newer release for the overview to offer, and how many reachable nodes are behind it. */
+data class TalosUpdateOffer(val latest: String, val notes: String, val outdated: Int)
+
+/**
+ * What the overview offers from [check]: nothing when no reachable node is behind its release
+ * (counted here: the check may have been asked for other versions), or when that very release
+ * was [skipped] ("v1.14.2") for the cluster. The next release is offered again.
+ */
+fun talosUpdateOffer(check: TalosUpdateCheck, nodes: List<NodeOverview>, skipped: String?): TalosUpdateOffer? {
+    if (check.latest.isEmpty() || check.latest == skipped) return null
+    val outdated = outdatedNodes(nodes, check.latest).size
+    return if (outdated == 0) null else TalosUpdateOffer(check.latest, check.notes, outdated)
+}
+
 /** Whether a check made at [lastAt] for [lastKey] can be reused for [key] at [now]. */
 fun talosUpdateFresh(lastAt: Long, lastKey: String?, key: String, now: Long): Boolean =
     lastKey == key && lastAt > 0 && now - lastAt < TALOS_UPDATE_INTERVAL_MILLIS

@@ -2,6 +2,7 @@ package name.levis.ichor.model
 
 /** The overview's cards that can be moved and hidden; banners and notices stay on top. */
 enum class OverviewCard {
+    TALOS_UPDATE,
     SUMMARY,
     APPS,
     DATA_SERVICES,
@@ -13,11 +14,15 @@ enum class OverviewCard {
 
     /** Only shown when the cluster has what they report on. */
     val whenDetected: Boolean get() = this == DATA_SERVICES || this == ARGO_CD || this == FLUX
+
+    /** Was pinned above the cards before it could be arranged: a layout saved then keeps it first. */
+    val leadsWhenNew: Boolean get() = this == TALOS_UPDATE
 }
 
 /**
  * The overview's cards in the order chosen, and those hidden. Every card is in [order] exactly
- * once, so a card added by a later release shows up (last) without touching the saved layout.
+ * once, so a card added by a later release shows up (last, or first when it [OverviewCard.leadsWhenNew])
+ * without touching the saved layout.
  */
 data class OverviewLayout(
     val order: List<OverviewCard> = OverviewCard.entries,
@@ -57,7 +62,7 @@ data class OverviewLayout(
     fun encode(): String = order.joinToString(",") { if (it in hidden) "-${it.name}" else it.name }
 
     companion object {
-        /** Reads [encode]'s form; unknown or repeated names are skipped, missing cards appended. */
+        /** Reads [encode]'s form; unknown or repeated names are skipped, missing cards added. */
         fun parse(text: String?): OverviewLayout {
             if (text.isNullOrBlank()) return OverviewLayout()
             val entries = text.split(',').mapNotNull { raw ->
@@ -66,8 +71,9 @@ data class OverviewLayout(
                 OverviewCard.entries.firstOrNull { it.name == name.removePrefix("-") }?.let { it to hidden }
             }.distinctBy { it.first }
             val known = entries.map { it.first }
+            val (leading, trailing) = OverviewCard.entries.filter { it !in known }.partition { it.leadsWhenNew }
             return OverviewLayout(
-                order = known + OverviewCard.entries.filter { it !in known },
+                order = leading + known + trailing,
                 hidden = entries.filter { it.second }.map { it.first }.toSet(),
             )
         }
