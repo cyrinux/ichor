@@ -1,7 +1,6 @@
 package name.levis.ichor.ui.apps
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Refresh
@@ -10,7 +9,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,6 +40,7 @@ import name.levis.ichor.model.argoAppsFor
 import name.levis.ichor.model.hasArgoCD
 import name.levis.ichor.model.FLUX_CATALOG_ID
 import name.levis.ichor.model.hasFlux
+import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.flux.FluxViewModel
 import name.levis.ichor.model.inventoryBadges
 import name.levis.ichor.data.ARGO_CD
@@ -56,8 +55,6 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.DataFreshness
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
@@ -161,46 +158,39 @@ fun AppsScreen(
             )
         },
     ) { padding ->
-        when (val s = state) {
-            UiState.Loading -> LoadingBox(Modifier.padding(padding))
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.padding(padding))
-            is UiState.Loaded -> PullToRefreshBox(
-                isRefreshing = s.refreshing,
-                onRefresh = vm::refresh,
-                modifier = Modifier.padding(padding).fillMaxSize(),
-            ) {
-                AppsGrid(s.data, onOpen = { selected = it.id }, argoBadges = argoBadges)
-                s.data.apps.firstOrNull { it.id == selected }?.let { detail ->
-                    if (canRestart) {
-                        LaunchedEffect(detail) {
-                            workloadsVm.load(detail)
-                            routesVm.load(detail)
-                        }
+        Loaded(state, vm::refresh, Modifier.padding(padding)) { data ->
+            AppsGrid(data, onOpen = { selected = it.id }, argoBadges = argoBadges)
+            data.apps.firstOrNull { it.id == selected }?.let { detail ->
+                if (canRestart) {
+                    LaunchedEffect(detail) {
+                        workloadsVm.load(detail)
+                        routesVm.load(detail)
                     }
-                    if (argoOffered) {
-                        LaunchedEffect(Unit) { argoVm.loadOrReuse(Triple(config?.activeContext, generation, invalidations)) }
-                    }
-                    val isFlux = fluxOffered && detail.id == FLUX_CATALOG_ID
-                    if (isFlux) {
-                        LaunchedEffect(Unit) { fluxVm.loadOrReuse(Triple(config?.activeContext, generation, invalidations)) }
-                    }
-                    AppDetailSheet(
-                        app = detail,
-                        nodes = nodes,
-                        routes = if (canRestart) routes else null,
-                        restart = if (canRestart) {
-                            AppRestartUi(workloads, restarting, onRestart = { confirm = it }, onPods = { podsOf = it.podSelection })
-                        } else {
-                            null
-                        },
-                        argo = if (argoOffered) argoUi(detail, argoState, argoBusy, argoVm, onArgoCD, onArgoApp) else null,
-                        flux = if (isFlux) AppFluxUi(fluxState, onFlux) else null,
-                        onPodNode = { addr -> nodes.openNode(addr, onNode) },
-                        onDismiss = { selected = null },
-                    )
-                    podsOf?.let { WorkloadPodsSheet(it, onDismiss = { podsOf = null }) }
                 }
+                if (argoOffered) {
+                    LaunchedEffect(Unit) { argoVm.loadOrReuse(Triple(config?.activeContext, generation, invalidations)) }
+                }
+                val isFlux = fluxOffered && detail.id == FLUX_CATALOG_ID
+                if (isFlux) {
+                    LaunchedEffect(Unit) { fluxVm.loadOrReuse(Triple(config?.activeContext, generation, invalidations)) }
+                }
+                AppDetailSheet(
+                    app = detail,
+                    nodes = nodes,
+                    routes = if (canRestart) routes else null,
+                    restart = if (canRestart) {
+                        AppRestartUi(workloads, restarting, onRestart = { confirm = it }, onPods = { podsOf = it.podSelection })
+                    } else {
+                        null
+                    },
+                    argo = if (argoOffered) argoUi(detail, argoState, argoBusy, argoVm, onArgoCD, onArgoApp) else null,
+                    flux = if (isFlux) AppFluxUi(fluxState, onFlux) else null,
+                    onPodNode = { addr -> nodes.openNode(addr, onNode) },
+                    onDismiss = { selected = null },
+                )
+                podsOf?.let { WorkloadPodsSheet(it, onDismiss = { podsOf = null }) }
             }
+            
         }
     }
 }

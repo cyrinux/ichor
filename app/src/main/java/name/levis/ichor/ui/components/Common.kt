@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -91,15 +92,33 @@ fun ErrorBox(message: UiText, onRetry: () -> Unit, modifier: Modifier = Modifier
     }
 }
 
-/** Loading, error or the data with pull-to-refresh. */
+/**
+ * Loading, error or the data with pull-to-refresh. A [header] (filters, a summary) sits
+ * above the refreshable [content], outside the pull gesture.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun <T> Loaded(state: UiState<T>, refresh: () -> Unit, content: @Composable (T) -> Unit) {
+fun <T> Loaded(
+    state: UiState<T>,
+    refresh: () -> Unit,
+    modifier: Modifier = Modifier,
+    header: (@Composable ColumnScope.(T) -> Unit)? = null,
+    content: @Composable (T) -> Unit,
+) {
     when (state) {
-        UiState.Loading -> LoadingBox()
-        is UiState.Failed -> ErrorBox(state.message, refresh)
-        is UiState.Loaded -> PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = refresh, modifier = Modifier.fillMaxSize()) {
-            content(state.data)
+        UiState.Loading -> LoadingBox(modifier)
+        is UiState.Failed -> ErrorBox(state.message, refresh, modifier)
+        is UiState.Loaded -> if (header == null) {
+            PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = refresh, modifier = modifier.fillMaxSize()) {
+                content(state.data)
+            }
+        } else {
+            Column(modifier.fillMaxSize()) {
+                header(state.data)
+                PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = refresh, modifier = Modifier.weight(1f)) {
+                    content(state.data)
+                }
+            }
         }
     }
 }
