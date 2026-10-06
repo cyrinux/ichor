@@ -60,11 +60,18 @@ import name.levis.ichor.ui.workloads.RolloutStatusSheet
  * One Kustomization or HelmRelease: the hero, its actions (each confirmed), its conditions, the
  * pods that are not ready (opening their node's pods through [onNode], with the tab), a
  * Kustomization's inventory by kind (rollout restarts) and a release's history. Polls while
- * something reconciles.
+ * something reconciles. [onDiff] opens a Kustomization's diff.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FluxAppScreen(kind: String, namespace: String, name: String, onBack: () -> Unit, onNode: ((NodeOverview, Int) -> Unit)? = null) {
+fun FluxAppScreen(
+    kind: String,
+    namespace: String,
+    name: String,
+    onBack: () -> Unit,
+    onNode: ((NodeOverview, Int) -> Unit)? = null,
+    onDiff: (() -> Unit)? = null,
+) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: FluxViewModel = viewModel(factory = factory { FluxViewModel(talos.talosRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
@@ -103,7 +110,7 @@ fun FluxAppScreen(kind: String, namespace: String, name: String, onBack: () -> U
                         EmptyText(stringResource(R.string.flux_app_gone, name))
                     } else {
                         val overview = remember(s.data) { talos.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value }
-                        AppDetail(app, app.key in busy, vm, overview, onNode)
+                        AppDetail(app, app.key in busy, vm, overview, onNode, onDiff)
                     }
                 }
                 DataFreshness(s, edgeToEdge = false)
@@ -113,7 +120,7 @@ fun FluxAppScreen(kind: String, namespace: String, name: String, onBack: () -> U
 }
 
 @Composable
-private fun AppDetail(app: FluxApp, busy: Boolean, vm: FluxViewModel, overview: ClusterOverview?, onNode: ((NodeOverview, Int) -> Unit)?) {
+private fun AppDetail(app: FluxApp, busy: Boolean, vm: FluxViewModel, overview: ClusterOverview?, onNode: ((NodeOverview, Int) -> Unit)?, onDiff: (() -> Unit)?) {
     var confirm by remember { mutableStateOf<FluxConfirm?>(null) }
     var restart by remember { mutableStateOf<KubeWorkload?>(null) }
     val downNodes = remember(overview) { overview?.downHostnames().orEmpty() }
@@ -134,7 +141,7 @@ private fun AppDetail(app: FluxApp, busy: Boolean, vm: FluxViewModel, overview: 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item(key = "hero") { FluxAppHero(app) }
         item(key = "actions") {
-            FluxActionButtons(app, busy) { action ->
+            FluxActionButtons(app, busy, onDiff) { action ->
                 confirm = FluxConfirm(action, app.kind, app.namespace, app.name, owner = app.owner?.let { "${it.namespace}/${it.name}" }.orEmpty())
             }
         }

@@ -23,6 +23,7 @@ import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ArgoSyncOptions
 import name.levis.ichor.model.CertDetails
 import name.levis.ichor.model.FluxAction
+import name.levis.ichor.model.FluxDiff
 import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
@@ -741,6 +742,14 @@ class TalosRepository(
     /** Runs [action] on the Flux object [kind] [namespace]/[name] (os:admin). Throws when refused. */
     suspend fun fluxAction(kind: String, namespace: String, name: String, action: FluxAction) = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeFluxAction(cfg, ctx, server, kind, namespace, name, action.wire)
+    }
+
+    /**
+     * What reconciling the Flux object [kind] [namespace]/[name] now would change, object by
+     * object (os:admin, read only: server-side apply dry runs). Not cached: always fresh.
+     */
+    suspend fun fluxDiff(kind: String, namespace: String, name: String): FluxDiff = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(FluxDiff.serializer(), Ichorgo.kubeFluxDiff(cfg, ctx, server, kind, namespace, name))
     }
 
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
