@@ -4,12 +4,8 @@ import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.R
-import name.levis.ichorgo.EventListener
-import name.levis.ichorgo.HealthListener
-import name.levis.ichorgo.LogListener
 import name.levis.ichorgo.MaintenanceListener
 import name.levis.ichorgo.MaintenanceRun
-import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ApiHealthReport
 import name.levis.ichor.model.CheckupReport
@@ -104,14 +100,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CancellationException
@@ -119,25 +111,6 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.withLastKnown
 import name.levis.ichor.model.outage
-
-/** Events streamed by the cluster health check. */
-sealed interface HealthEvent {
-    data class Progress(val node: String, val message: String) : HealthEvent
-    data class Done(val error: String?) : HealthEvent
-}
-
-/** Events streamed by an etcd snapshot download. */
-sealed interface SnapshotEvent {
-    data class Progress(val bytes: Long) : SnapshotEvent
-    data class Done(val path: String, val size: Long, val sha256: String) : SnapshotEvent
-    data class Failed(val message: String) : SnapshotEvent
-}
-
-/** Items of a live stream (events, followed log). [Done] ends it; [error] null when cancelled. */
-sealed interface StreamItem<out T> {
-    data class Item<T>(val value: T) : StreamItem<T>
-    data class Done(val error: String?) : StreamItem<Nothing>
-}
 
 class NoConfigException : LocalizedException(UiText.Res(R.string.common_no_config))
 
@@ -151,6 +124,7 @@ class TalosRepository(
     private val offline: OfflineCache? = null,
 ) {
 
+    private val streams = TalosStreams(configs)
     private val results = ResultCache(
         offline,
         scope = { "${configs.generation.value}|${configs.config.value?.activeContext}|" },
@@ -228,76 +202,16 @@ class TalosRepository(
      * Streams machine events (`talosctl events --tail`) from [nodes] (empty: all context
      * nodes), replaying the last [tail] per node. Cancelling the collector stops the stream.
      */
-    fun events(nodes: List<String>, tail: Int): Flow<StreamItem<TalosEvent>> = callbackFlow {
-        val stored = configs.forCall()
-        val run = Ichorgo.startEvents(
-            stored.yaml,
-            stored.activeContext,
-            nodes.joinToString(","),
-            tail.toLong(),
-            object : EventListener {
-                override fun onEvent(json: String) {
-                    runCatching { TalosJson.decodeFromString(TalosEvent.serializer(), json) }
-                        .onSuccess { trySend(StreamItem.Item(it)) }
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
-                    close()
-                }
-            },
-        )
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED)
+    fun events(nodes: List<String>, tail: Int): Flow<StreamItem<TalosEvent>> = streams.events(nodes, tail)
 
     /**
      * Follows a service log (kernel log when [service] is null) like `talosctl logs -f
      * --tail`, starting with the last [tailLines]. Cancelling the collector stops it.
      */
-    fun followLogs(node: String, service: String?, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
-        val stored = configs.forCall()
-        val run = Ichorgo.startLogFollow(
-            stored.yaml,
-            stored.activeContext,
-            node,
-            service.orEmpty(),
-            tailLines.toLong(),
-            object : LogListener {
-                override fun onLine(line: String) {
-                    trySend(StreamItem.Item(line))
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
-                    close()
-                }
-            },
-        )
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED)
+    fun followLogs(node: String, service: String?, tailLines: Int): Flow<StreamItem<String>> = streams.followLogs(node, service, tailLines)
 
     /** Like [followLogs] for one CRI container (`talosctl logs -k -f`). */
-    fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
-        val stored = configs.forCall()
-        val run = Ichorgo.startContainerLogFollow(
-            stored.yaml,
-            stored.activeContext,
-            node,
-            containerId,
-            tailLines.toLong(),
-            object : LogListener {
-                override fun onLine(line: String) {
-                    trySend(StreamItem.Item(line))
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
-                    close()
-                }
-            },
-        )
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED)
+    fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = streams.followContainerLogs(node, containerId, tailLines)
 
     /**
      * The node's active machine config as YAML (os:admin). Secrets are masked unless
@@ -320,26 +234,7 @@ class TalosRepository(
      * age-encrypted while it streams unless [encryption] is [SnapshotEncryption.None].
      * Cancelling the collector cancels the download.
      */
-    fun etcdSnapshot(node: String, destPath: String, encryption: SnapshotEncryption): Flow<SnapshotEvent> = callbackFlow {
-        val stored = configs.forCall()
-        val listener = object : SnapshotListener {
-            override fun onProgress(bytes: Long) {
-                trySend(SnapshotEvent.Progress(bytes))
-            }
-
-            override fun onDone(path: String, size: Long, sha256: String, errMessage: String) {
-                trySend(if (errMessage.isEmpty()) SnapshotEvent.Done(path, size, sha256) else SnapshotEvent.Failed(errMessage))
-                close()
-            }
-        }
-        val (yaml, context) = stored.yaml to stored.activeContext
-        val run = when (encryption) {
-            SnapshotEncryption.None -> Ichorgo.startEtcdSnapshot(yaml, context, node, destPath, listener)
-            is SnapshotEncryption.Keys -> Ichorgo.startEtcdSnapshotEncrypted(yaml, context, node, destPath, encryption.recipients, "", listener)
-            is SnapshotEncryption.Passphrase -> Ichorgo.startEtcdSnapshotEncrypted(yaml, context, node, destPath, "", encryption.passphrase, listener)
-        }
-        awaitClose { run.cancel() }
-    }.buffer(Channel.CONFLATED) // progress may be dropped, the final event is always kept
+    fun etcdSnapshot(node: String, destPath: String, encryption: SnapshotEncryption): Flow<SnapshotEvent> = streams.etcdSnapshot(node, destPath, encryption)
 
     /**
      * The cluster's nodes. Those that no longer answer keep what the last overview knew of
@@ -731,24 +626,7 @@ class TalosRepository(
     suspend fun shutdown(node: String, force: Boolean) = call { cfg, ctx -> Ichorgo.shutdown(cfg, ctx, node, force) }
 
     /** Streams the server-side health check; cancelling the collector cancels the check. */
-    fun health(): Flow<HealthEvent> = callbackFlow {
-        val stored = configs.forCall()
-        val run = Ichorgo.startClusterHealth(
-            stored.yaml,
-            stored.activeContext,
-            object : HealthListener {
-                override fun onProgress(node: String, message: String) {
-                    trySend(HealthEvent.Progress(node, message))
-                }
-
-                override fun onDone(errMessage: String) {
-                    trySend(HealthEvent.Done(errMessage.ifEmpty { null }))
-                    close()
-                }
-            },
-        )
-        awaitClose { run.cancel() }
-    }.buffer(Channel.UNLIMITED) // never drop progress lines or the final Done event
+    fun health(): Flow<HealthEvent> = streams.health()
 
     suspend fun network(node: String): NodeNetwork = remember(networkKey(node)) {
         call { cfg, ctx -> TalosJson.decodeFromString(NodeNetwork.serializer(), Ichorgo.nodeNetwork(cfg, ctx, node)) }

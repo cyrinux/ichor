@@ -72,8 +72,9 @@ struct AppFluxSection: View {
     private func load() async {
         guard let client = model.client else { return }
         let key = model.fluxKey
-        let loaded: LoadState<FluxStatus> = await .from { try await store.load(with: client, key: key) }
-        guard key == model.fluxKey else { return }
-        state = state.refreshed(with: loaded)
+        let store = self.store
+        await store.refresh($state, key: key, seed: false, currentKey: { model.fluxKey }) {
+            try await store.load(with: client, key: key)
+        }
     }
 }

@@ -62,6 +62,7 @@ import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.SkeletonStyle
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.components.copyToClipboard
@@ -231,7 +232,7 @@ fun PodLogSheet(
                     KubeEventsList(pod.namespace, "Pod", pod.name, Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp))
                 } else {
                     when (val s = state) {
-                        UiState.Loading -> LoadingBox()
+                        UiState.Loading -> LoadingBox(style = SkeletonStyle.TEXT)
                         is UiState.Failed -> ErrorBox(s.message, { vm.load() })
                         is UiState.Loaded -> LogText(s.data)
                     }

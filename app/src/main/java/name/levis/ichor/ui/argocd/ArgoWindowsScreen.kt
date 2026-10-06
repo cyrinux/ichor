@@ -29,7 +29,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,10 +58,8 @@ import name.levis.ichor.model.windowSections
 import name.levis.ichor.monitor.freezeReminderHook
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.BackButton
-import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
@@ -121,24 +118,17 @@ fun ArgoWindowsScreen(onBack: () -> Unit) {
         },
     ) { padding ->
         val modifier = Modifier.padding(padding)
-        when (val s = state) {
-            UiState.Loading -> LoadingBox(modifier)
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
-            is UiState.Loaded -> Column(modifier.fillMaxSize()) {
-                PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                    Windows(
-                        s.data,
-                        busy = { vm.freezeBusy(busy, it.project) },
-                        onExtend = { vm.freeze(it.project, ArgoFreezeAction.EXTEND, listOf(ArgoFreezeOptions(window = it.window.id, minutes = FREEZE_EXTEND_MINUTES))) },
-                        onEnd = { ending = it },
-                        onRemove = { removing = it },
-                        onClear = { pws ->
-                            pws.map { it.project }.distinctBy { it.key }.forEach { vm.freeze(it, ArgoFreezeAction.CLEAR_EXPIRED, listOf(ArgoFreezeOptions())) }
-                        },
-                    )
-                }
-                DataFreshness(s, edgeToEdge = false)
-            }
+        Loaded(state, vm::refresh, modifier, freshness = true) { data ->
+            Windows(
+                data,
+                busy = { vm.freezeBusy(busy, it.project) },
+                onExtend = { vm.freeze(it.project, ArgoFreezeAction.EXTEND, listOf(ArgoFreezeOptions(window = it.window.id, minutes = FREEZE_EXTEND_MINUTES))) },
+                onEnd = { ending = it },
+                onRemove = { removing = it },
+                onClear = { pws ->
+                    pws.map { it.project }.distinctBy { it.key }.forEach { vm.freeze(it, ArgoFreezeAction.CLEAR_EXPIRED, listOf(ArgoFreezeOptions())) }
+                },
+            )
         }
     }
 }

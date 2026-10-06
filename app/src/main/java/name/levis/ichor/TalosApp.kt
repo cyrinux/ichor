@@ -55,6 +55,7 @@ import name.levis.ichor.data.VpnMonitor
 import name.levis.ichor.data.VpnOnlyClusters
 import name.levis.ichor.data.KubeScopes
 import name.levis.ichor.data.KubeServers
+import name.levis.ichor.data.SkippedTalosUpdates
 import name.levis.ichor.data.SnapshotKeys
 import name.levis.ichor.data.MetricsStore
 import name.levis.ichor.data.VpnRequiredException
@@ -109,6 +110,8 @@ class TalosApp : Application() {
     /** The followed node maintenance; MaintenanceService keeps the app alive while it runs. */
     val maintenanceManager by lazy { MaintenanceManager(talosRepository, onStarted = { MaintenanceService.start(this) }) }
     val talosUpdateChecker by lazy { TalosUpdateChecker() }
+    /** The Talos release each cluster's update card was skipped for. */
+    val skippedTalosUpdates by lazy { SkippedTalosUpdates(getSharedPreferences(SkippedTalosUpdates.FILE, Context.MODE_PRIVATE)) }
     val uiPreferences by lazy { UiPreferences(getSharedPreferences(UiPreferences.FILE, Context.MODE_PRIVATE)) }
     val clusterColors by lazy { ClusterColors(getSharedPreferences(ClusterColors.FILE, Context.MODE_PRIVATE)) }
     val clusterNames by lazy { ClusterNames(getSharedPreferences(ClusterNames.FILE, Context.MODE_PRIVATE)) }
@@ -367,6 +370,7 @@ class TalosApp : Application() {
                     kubeServers.sync(it.summary)
                     kubeScopes.sync(it.summary)
                     snapshotKeys.sync(it.summary)
+                    skippedTalosUpdates.sync(it.summary)
                     val fingerprints = it.summary.contexts.map { c -> c.fingerprint }
                     launch(Dispatchers.IO) { metricsStore.sync(fingerprints) }
                 }

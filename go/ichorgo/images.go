@@ -63,7 +63,7 @@ func listImagesLegacy(ctx context.Context, c *client.Client) ([]*machineapi.Imag
 		}
 
 		// The one-to-many proxy reports a node failure as metadata on a message.
-		if e := msg.GetMetadata().GetError(); e != "" {
+		if e := metaError(msg.GetMetadata()); e != "" {
 			return nil, errors.New(e)
 		}
 

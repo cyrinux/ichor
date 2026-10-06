@@ -370,7 +370,7 @@ func readLogStream(recv func() (*common.Data, error), maxBytes int) ([]byte, err
 			return buf, friendlyErr(err)
 		}
 
-		if e := msg.GetMetadata().GetError(); e != "" {
+		if e := metaError(msg.GetMetadata()); e != "" {
 			return buf, errors.New(e)
 		}
 

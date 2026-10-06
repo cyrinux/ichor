@@ -32,9 +32,8 @@ enum FreezeReminders {
             UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: gone)
         }
         for pw in running {
-            let fireIn = TimeInterval(pw.window.endsAt) / 1000 - lead - now.timeIntervalSince1970
             // Already inside the lead time: its pending reminder (if any) stays as it is.
-            guard fireIn > 1 else { continue }
+            guard let fireIn = freezeReminderDelay(endsAt: pw.window.endsAt, lead: lead, now: now) else { continue }
             let request = UNNotificationRequest(identifier: identifier(cluster, pw), content: content(cluster, pw),
                                                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: fireIn, repeats: false))
             center.add(request)
@@ -43,7 +42,8 @@ enum FreezeReminders {
 
     /// One per freeze: two freezes of a project ending together each get their reminder.
     private static func identifier(_ cluster: String, _ pw: ProjectWindow) -> String {
-        "\(prefix)\(cluster)|\(pw.project.namespace)/\(pw.project.name)/\(pw.window.id)"
+        freezeReminderID(prefix: prefix, cluster: cluster, namespace: pw.project.namespace, project: pw.project.name,
+                         window: "\(pw.window.id)")
     }
 
     private static func content(_ cluster: String, _ pw: ProjectWindow) -> UNMutableNotificationContent {

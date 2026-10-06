@@ -18,7 +18,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,9 +51,7 @@ import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.BackButton
-import name.levis.ichor.ui.components.DataFreshness
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
@@ -113,15 +110,8 @@ private fun InterfacesTab(
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var showVirtual by rememberSaveable { mutableStateOf(false) }
 
-    when (val s = state) {
-        UiState.Loading -> LoadingBox()
-        is UiState.Failed -> ErrorBox(s.message, vm::refresh)
-        is UiState.Loaded -> Column(Modifier.fillMaxSize()) {
-            PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                NetworkContent(s.data, showVirtual, onShowVirtual = { showVirtual = it })
-            }
-            DataFreshness(s, edgeToEdge = false)
-        }
+    Loaded(state, vm::refresh, freshness = true) { data ->
+        NetworkContent(data, showVirtual, onShowVirtual = { showVirtual = it })
     }
 }
 

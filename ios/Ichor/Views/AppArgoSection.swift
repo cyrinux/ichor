@@ -151,10 +151,10 @@ struct AppArgoSection: View {
     private func load() async {
         guard let client = model.client else { return }
         let key = model.argoKey
-        let cluster = model.activeSummary
-        let loaded: LoadState<ArgoStatus> = await .from { try await store.load(with: client, key: key, cluster: cluster) }
-        guard key == model.argoKey else { return }
-        state = state.refreshed(with: loaded)
+        let cluster = model.activeSummary, store = self.store
+        await store.refresh($state, key: key, seed: false, currentKey: { model.argoKey }) {
+            try await store.load(with: client, key: key, cluster: cluster)
+        }
     }
 
     private func run(_ action: ArgoAction, on argo: ArgoApp, options: ArgoSyncOptions? = nil) async {

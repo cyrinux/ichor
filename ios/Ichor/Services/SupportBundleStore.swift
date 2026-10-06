@@ -9,18 +9,11 @@ enum SupportBundleStore {
 
     /// Newest first; only files this app wrote.
     static func list() throws -> [SupportBundleFile] {
-        let keys: [URLResourceKey] = [.fileSizeKey, .contentModificationDateKey]
-        let urls = try FileManager.default.contentsOfDirectory(at: directory(), includingPropertiesForKeys: keys)
-        let files = urls.filter { isSupportBundleName($0.lastPathComponent) }.map { url in
-            let values = try? url.resourceValues(forKeys: Set(keys))
-            return SupportBundleFile(name: url.lastPathComponent, size: Int64(values?.fileSize ?? 0),
-                                     modified: values?.contentModificationDate ?? .distantPast)
-        }
-        return sortSupportBundles(files)
+        try sortSupportBundles(LocalFileStore.list(in: directory()).filter { isSupportBundleName($0.name) })
     }
 
     static func delete(_ url: URL) throws {
-        try FileManager.default.removeItem(at: url)
+        try LocalFileStore.delete(url)
     }
 
     /// Removes what a collection killed with the app left behind (Go writes NAME.part, then

@@ -55,6 +55,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.SkeletonStyle
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.TooltipIconButton
 
@@ -136,7 +137,7 @@ fun ResourceDetailScreen(
                 return@Column
             }
             when (val s = state) {
-                UiState.Loading -> LoadingBox()
+                UiState.Loading -> LoadingBox(style = SkeletonStyle.TEXT)
                 is UiState.Failed -> ErrorBox(s.message, vm::refresh)
                 is UiState.Loaded -> {
                     if (s.refreshing) LinearProgressIndicator(Modifier.fillMaxWidth())

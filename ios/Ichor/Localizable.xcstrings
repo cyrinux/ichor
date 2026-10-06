@@ -76222,6 +76222,216 @@
         }
       }
     },
+    "Skip %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignorer %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omitir %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропустити %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ überspringen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salta %@"
+          }
+        }
+      }
+    },
+    "Skip Talos %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignorer Talos %@ ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Omitir Talos %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропустити Talos %@?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos %@ überspringen?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saltare Talos %@?"
+          }
+        }
+      }
+    },
+    "Skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignorer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omitir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пропустити"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überspringen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salta"
+          }
+        }
+      }
+    },
+    "This card stays away until a newer release is out." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette carte reste masquée jusqu’à la sortie d’une version plus récente."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta tarjeta no vuelve a aparecer hasta que salga una versión más reciente."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця картка не з’явиться, доки не вийде новіший випуск."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Karte bleibt ausgeblendet, bis eine neuere Version erscheint."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa scheda resta nascosta finché non esce una versione più recente."
+          }
+        }
+      }
+    },
+    "Talos update" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour de Talos"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualización de Talos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення Talos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talos-Update"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamento di Talos"
+          }
+        }
+      }
+    },
+    "A newer Talos release than the nodes run, when there is one" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une version de Talos plus récente que celle des nœuds, quand il y en a une"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una versión de Talos más reciente que la de los nodos, cuando la hay"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новіший випуск Talos, ніж на вузлах, коли такий є"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine neuere Talos-Version als die der Knoten, sobald es eine gibt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una versione di Talos più recente di quella dei nodi, quando c’è"
+          }
+        }
+      }
+    },
     "Cluster checkup" : {
       "extractionState" : "manual",
       "localizations" : {

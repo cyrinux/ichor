@@ -69,18 +69,18 @@ fun freezeReminderHook(app: TalosApp): () -> (ArgoStatus) -> Unit = {
 fun syncFreezeReminders(app: TalosApp, cluster: String?, status: ArgoStatus, now: Long = System.currentTimeMillis()) {
     if (cluster == null) return
     val running = status.runningIchorFreezes.filter { it.window.endsAt > now }
-    val signature = running.map { "${it.key}@${it.window.endsAt}" }.toSet()
-    val previous = synchronized(scheduled) {
-        scheduled.put(cluster, signature).also { if (it == signature) return }
-    }.orEmpty()
+    val plan = synchronized(scheduled) {
+        planFreezeReminders(scheduled[cluster], running.associate { it.key to it.window.endsAt }, now, LEAD_MILLIS)
+            ?.also { scheduled[cluster] = it.signature }
+    } ?: return
     val work = WorkManager.getInstance(app)
     val tag = TAG_PREFIX + cluster
     // Gone since the last load (ended early, removed); after a restart the worker checks itself.
-    val current = running.map { it.key }.toSet()
-    previous.map { it.substringBeforeLast('@') }.filter { it !in current }.forEach { work.cancelUniqueWork(tag + it) }
-    running.filter { it.window.endsAt - LEAD_MILLIS > now }.forEach { pw ->
+    plan.cancel.forEach { work.cancelUniqueWork(tag + it) }
+    running.forEach { pw ->
+        val delay = plan.schedule[pw.key] ?: return@forEach
         val request = OneTimeWorkRequestBuilder<FreezeReminderWorker>()
-            .setInitialDelay(pw.window.endsAt - LEAD_MILLIS - now, TimeUnit.MILLISECONDS)
+            .setInitialDelay(delay, TimeUnit.MILLISECONDS)
             .addTag(tag)
             .setInputData(reminderData(cluster, pw))
             .build()

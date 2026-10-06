@@ -54,8 +54,15 @@ import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.theme.LocalStatusColors
 
+/** A page (or a pane of one) still loading: the grey [style] shapes of what is coming. */
 @Composable
-fun LoadingBox(modifier: Modifier = Modifier) {
+fun LoadingBox(modifier: Modifier = Modifier, style: SkeletonStyle = SkeletonStyle.CARDS) {
+    SkeletonBox(modifier, style)
+}
+
+/** A centred spinner, for a wait too small or too short-lived for a skeleton. */
+@Composable
+fun SpinnerBox(modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator()
     }
@@ -94,7 +101,8 @@ fun ErrorBox(message: UiText, onRetry: () -> Unit, modifier: Modifier = Modifier
 
 /**
  * Loading, error or the data with pull-to-refresh. A [header] (filters, a summary) sits
- * above the refreshable [content], outside the pull gesture.
+ * above the refreshable [content], outside the pull gesture; [freshness] adds the
+ * "updated x min ago" line under it, for a screen without a bottom bar showing it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,21 +111,23 @@ fun <T> Loaded(
     refresh: () -> Unit,
     modifier: Modifier = Modifier,
     header: (@Composable ColumnScope.(T) -> Unit)? = null,
+    freshness: Boolean = false,
     content: @Composable (T) -> Unit,
 ) {
     when (state) {
         UiState.Loading -> LoadingBox(modifier)
         is UiState.Failed -> ErrorBox(state.message, refresh, modifier)
-        is UiState.Loaded -> if (header == null) {
+        is UiState.Loaded -> if (header == null && !freshness) {
             PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = refresh, modifier = modifier.fillMaxSize()) {
                 content(state.data)
             }
         } else {
             Column(modifier.fillMaxSize()) {
-                header(state.data)
+                header?.invoke(this, state.data)
                 PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = refresh, modifier = Modifier.weight(1f)) {
                     content(state.data)
                 }
+                if (freshness) DataFreshness(state, edgeToEdge = false)
             }
         }
     }

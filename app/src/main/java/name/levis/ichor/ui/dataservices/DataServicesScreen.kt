@@ -12,7 +12,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,10 +36,8 @@ import name.levis.ichor.model.detected
 import name.levis.ichor.model.likelyCauses
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.BackButton
-import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.KubeServerDialog
 import name.levis.ichor.ui.components.TooltipIconButton
@@ -104,20 +101,11 @@ fun DataServicesScreen(initial: DataServiceKind? = null, onBack: () -> Unit) {
         },
     ) { padding ->
         val modifier = Modifier.padding(padding)
-        when (val s = state) {
-            UiState.Loading -> LoadingBox(modifier)
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
-            is UiState.Loaded -> {
-                val downNodes = remember(s.data) {
-                    app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
-                }
-                Column(modifier.fillMaxSize()) {
-                    PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                        Systems(s.data, downNodes, initial, vm.garage, vm.longhorn, vm.certificates, vm.cnpg)
-                    }
-                    DataFreshness(s, edgeToEdge = false)
-                }
+        Loaded(state, vm::refresh, modifier, freshness = true) { data ->
+            val downNodes = remember(data) {
+                app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
             }
+            Systems(data, downNodes, initial, vm.garage, vm.longhorn, vm.certificates, vm.cnpg)
         }
     }
 }

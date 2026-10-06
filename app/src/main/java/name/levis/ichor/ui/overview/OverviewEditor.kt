@@ -97,6 +97,7 @@ fun rememberCustomizeTrigger(onCustomize: () -> Unit): () -> Unit {
 @Composable
 fun overviewCardLabel(card: OverviewCard): String = stringResource(
     when (card) {
+        OverviewCard.TALOS_UPDATE -> R.string.overview_card_talos_update
         OverviewCard.SUMMARY -> R.string.overview_card_summary
         OverviewCard.APPS -> R.string.apps_title
         OverviewCard.DATA_SERVICES -> R.string.data_services_title
@@ -111,6 +112,7 @@ fun overviewCardLabel(card: OverviewCard): String = stringResource(
 @Composable
 fun overviewCardDescription(card: OverviewCard): String = stringResource(
     when (card) {
+        OverviewCard.TALOS_UPDATE -> R.string.overview_card_desc_talos_update
         OverviewCard.SUMMARY -> R.string.overview_card_desc_summary
         OverviewCard.APPS -> R.string.overview_card_desc_apps
         OverviewCard.DATA_SERVICES -> R.string.overview_card_desc_data_services
