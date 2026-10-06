@@ -53,8 +53,6 @@ var (
 )
 
 // garageTarget is the Garage container the app runs the CLI in.
-type garageTarget struct{ namespace, pod, container string }
-
 type garageBlockReport struct {
 	Errored            int               `json:"errored"`  // blocks failing to resync, every node
 	Detailed           int               `json:"detailed"` // of which looked up
@@ -251,56 +249,6 @@ func garageTargetOf(ctx context.Context, k *kubeClient, namespace, pod string) (
 	return garageTarget{namespace: namespace, pod: pod, container: container}, nil
 }
 
-// garageMulti is the answer of a node-scoped admin API endpoint: per node ID, a result or an error.
-type garageMulti[T any] struct {
-	Success map[string]T      `json:"success"`
-	Error   map[string]string `json:"error"`
-}
-
-// garageCall runs a node-scoped admin endpoint on node (an ID or "*") through the CLI.
-// Callers pass fixed endpoints; body is encoded as JSON, never interpreted by a shell.
-func garageCall[T any](ctx context.Context, run execFunc, t garageTarget, endpoint, node string, body any) (garageMulti[T], error) {
-	var out garageMulti[T]
-
-	envelope, err := json.Marshal(struct {
-		Node string `json:"node"`
-		Body any    `json:"body"`
-	}{node, body})
-	if err != nil {
-		return out, err
-	}
-
-	argv := []string{"/garage", "json-api", endpoint, string(envelope)}
-
-	for attempt := 0; ; attempt++ {
-		stdout, stderr, err := run(ctx, t.namespace, t.pod, t.container, argv)
-		if err != nil {
-			return out, fmt.Errorf("%s: %w", endpoint, garageCommandError(err, stderr))
-		}
-
-		err = json.Unmarshal(stdout, &out)
-		if err == nil {
-			return out, nil
-		}
-
-		// A large answer sometimes arrives cut short, the exec stream closed before the
-		// last frames: a read is asked again, a write never is.
-		var syntaxErr *json.SyntaxError
-		if garageReads[endpoint] && attempt < garageReadRetries && errors.As(err, &syntaxErr) && ctx.Err() == nil {
-			out = garageMulti[T]{}
-
-			continue
-		}
-
-		return out, fmt.Errorf("unexpected %s answer (%v, %d bytes): %q", endpoint, err, len(stdout), clipUTF8(string(stdout), 200))
-	}
-}
-
-// garageReads are the endpoints garageCall may run again: they change nothing.
-var garageReads = map[string]bool{"ListBlockErrors": true, "GetBlockInfo": true, "ListWorkers": true}
-
-const garageReadRetries = 2
-
 func setGarageTranquility(ctx context.Context, run execFunc, t garageTarget, node string, value int) error {
 	want := strconv.Itoa(value)
 
@@ -356,7 +304,7 @@ func readGarageBlockReport(ctx context.Context, run execFunc, t garageTarget) (g
 			Name string `json:"name"`
 		}](ctx, run, t, "ListWorkers", "*", map[string]bool{"busyOnly": true})
 	})
-	wg.Go(func() { statusOut, _, _ = run(ctx, t.namespace, t.pod, t.container, garageCommands.status) })
+	wg.Go(func() { statusOut, _ = garageRun(ctx, run, t, garageCommands.status) })
 	wg.Wait()
 
 	if errsErr != nil {
@@ -641,12 +589,7 @@ func garageRepairBusy(workers map[string][]struct {
 }
 
 func garageHostnames(statusOut []byte) map[string]string {
-	var st struct {
-		Nodes []struct {
-			ID       string `json:"id"`
-			Hostname string `json:"hostname"`
-		} `json:"nodes"`
-	}
+	var st garageClusterStatus
 
 	out := map[string]string{}
 	if json.Unmarshal(statusOut, &st) == nil {
