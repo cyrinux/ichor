@@ -164,9 +164,9 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 	namespaces := argoNetNamespaces(in.app)
 
 	var (
-		mu   sync.Mutex
-		errs []error
-		wg   sync.WaitGroup
+		mu    sync.Mutex
+		errs  []error
+		tasks []func()
 	)
 
 	fail := func(err error) {
@@ -180,7 +180,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 	for _, ns := range namespaces {
 		base := "/api/v1/namespaces/" + url.PathEscape(ns)
 
-		wg.Go(func() {
+		tasks = append(tasks, func() {
 			var list kubeList[netService]
 			if err := getList(ctx, k, base+"/services", &list); err != nil {
 				fail(err)
@@ -192,7 +192,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 			in.services = append(in.services, list.Items...)
 			mu.Unlock()
 		})
-		wg.Go(func() {
+		tasks = append(tasks, func() {
 			pods, err := readNetPods(ctx, k, base+"/pods")
 			fail(err)
 			mu.Lock()
@@ -208,14 +208,14 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 		nodes      kubeList[netNodeObject]
 	)
 
-	wg.Go(func() { fail(getList(ctx, k, "/apis/networking.k8s.io/v1/ingresses", &ingresses)) })
-	wg.Go(func() {
-		fail(ignoreNotFound(getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/httproutes", &httpRoutes)))
-	})
-	wg.Go(func() { _ = getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/gateways", &gateways) })
-	// Node readiness only colours the last column: without it the graph still shows.
-	wg.Go(func() { _ = getList(ctx, k, "/api/v1/nodes", &nodes) })
-	wg.Wait()
+	tasks = append(tasks,
+		func() { fail(getList(ctx, k, "/apis/networking.k8s.io/v1/ingresses", &ingresses)) },
+		func() { fail(ignoreNotFound(getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/httproutes", &httpRoutes))) },
+		func() { _ = getList(ctx, k, "/apis/"+groupGatewayAPI+"/v1/gateways", &gateways) },
+		// Node readiness only colours the last column: without it the graph still shows.
+		func() { _ = getList(ctx, k, "/api/v1/nodes", &nodes) },
+	)
+	forEachNode(tasks, func(_ int, read func()) { read() })
 
 	if len(errs) > 0 {
 		return argoNetwork{}, errs[0]

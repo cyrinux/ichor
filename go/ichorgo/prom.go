@@ -146,8 +146,7 @@ func promGet(target kubeTarget, src promSource, apiPath string, params url.Value
 		return promHTTPGet(ctx, src, src.URL+apiPath+"?"+params.Encode(), header)
 	}
 
-	path := fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy%s%s?%s",
-		url.PathEscape(src.Namespace), url.PathEscape(src.Service), src.Port, src.PathPrefix, apiPath, params.Encode())
+	path := serviceProxyPath(src.Namespace, fmt.Sprintf("%s:%d", url.PathEscape(src.Service), src.Port), src.PathPrefix+apiPath+"?"+params.Encode())
 
 	type answer struct {
 		status  int
@@ -190,16 +189,6 @@ func promGet(target kubeTarget, src promSource, apiPath string, params url.Value
 }
 
 var errPromTooLarge = errors.New("the answer is larger than 16 MiB: narrow the query (sum by, topk)")
-
-// isKubeStatus tells the API server's own answer (a Status object) from the backend's: a
-// Prometheus envelope has no kind. Only called on errors, whose bodies are small.
-func isKubeStatus(body []byte) bool {
-	var obj struct {
-		Kind string `json:"kind"`
-	}
-
-	return json.Unmarshal(body, &obj) == nil && obj.Kind == "Status"
-}
 
 // promProxyError explains the API server's own answer to a service proxy request.
 func promProxyError(src promSource, status int, body []byte) error {

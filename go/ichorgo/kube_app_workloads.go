@@ -8,7 +8,6 @@ import (
 	"maps"
 	"slices"
 	"strings"
-	"sync"
 )
 
 // appWorkloadsParallel bounds the pods and workloads KubeAppWorkloads reads at once.
@@ -182,36 +181,21 @@ func readEach[K, V any](ctx context.Context, keys []K, read func(context.Context
 
 	values := make([]V, len(keys))
 	found := make([]bool, len(keys))
-	slots := make(chan struct{}, appWorkloadsParallel)
+	forEachLimit(keys, appWorkloadsParallel, func(i int, key K) {
+		// A failed read cancelled the rest: those still queued do nothing.
+		if ctx.Err() != nil {
+			return
+		}
 
-	var wg sync.WaitGroup
+		v, err := read(ctx, key)
 
-	for i, key := range keys {
-		wg.Go(func() {
-			select {
-			case slots <- struct{}{}:
-			case <-ctx.Done():
-				return
-			}
-
-			defer func() { <-slots }()
-
-			if ctx.Err() != nil {
-				return
-			}
-
-			v, err := read(ctx, key)
-
-			switch {
-			case err == nil:
-				values[i], found[i] = v, true
-			case !isNotFound(err):
-				cancel(err) // only the first cause is kept
-			}
-		})
-	}
-
-	wg.Wait()
+		switch {
+		case err == nil:
+			values[i], found[i] = v, true
+		case !isNotFound(err):
+			cancel(err) // only the first cause is kept
+		}
+	})
 
 	if err := context.Cause(ctx); err != nil {
 		return nil, err

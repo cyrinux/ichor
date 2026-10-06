@@ -38,6 +38,7 @@ type upgradePlan struct {
 	Acknowledge  []string `json:"acknowledge"`
 	Forceable    bool     `json:"forceable"` // every blocker is an etcd check that force skips
 	etcdBlockers []string // the blockers force bypasses
+	upgradeOnly  []string // the warnings about upgrading itself, which a reboot plan drops
 	target       planPeer
 	peers        []planPeer // the other nodes
 }
@@ -176,18 +177,7 @@ func installerImage(ctx context.Context, c *client.Client, node string) (string,
 // gatherEtcdHealth lists the etcd members through the first control plane of via that
 // answers (the target first) and asks each member for its status through its own address.
 func gatherEtcdHealth(ctx context.Context, c *client.Client, via []string, node, hostname string) *etcdHealth {
-	var (
-		members []*machineapi.EtcdMember
-		listErr error
-	)
-
-	for _, n := range via {
-		members, listErr = etcdMembers(ctx, c, n)
-		if listErr == nil {
-			break
-		}
-	}
-
+	members, listErr := firstAnswer(via, func(n string) ([]*machineapi.EtcdMember, error) { return etcdMembers(ctx, c, n) })
 	if listErr != nil {
 		return &etcdHealth{err: friendlyError(listErr)}
 	}
@@ -197,10 +187,13 @@ func gatherEtcdHealth(ctx context.Context, c *client.Client, via []string, node,
 
 	h := &etcdHealth{}
 
-	var (
-		mu sync.Mutex
-		wg sync.WaitGroup
-	)
+	// Which members to ask, and whether each is the node being planned.
+	type probe struct {
+		addr string
+		this bool
+	}
+
+	var probes []probe
 
 	for _, m := range members {
 		if m.GetIsLearner() {
@@ -222,20 +215,22 @@ func gatherEtcdHealth(ctx context.Context, c *client.Client, via []string, node,
 			continue
 		}
 
-		wg.Go(func() {
-			healthy := memberHealthy(ctx, c, addr)
-
-			mu.Lock()
-			defer mu.Unlock()
-
-			if healthy {
-				h.healthy++
-				h.thisHealthy = h.thisHealthy || this
-			}
-		})
+		probes = append(probes, probe{addr, this})
 	}
 
-	wg.Wait()
+	var mu sync.Mutex
+
+	forEachNode(probes, func(_ int, p probe) {
+		if _, healthy := memberHealthy(ctx, c, p.addr); !healthy {
+			return
+		}
+
+		mu.Lock()
+		defer mu.Unlock()
+
+		h.healthy++
+		h.thisHealthy = h.thisHealthy || p.this
+	})
 
 	return h
 }
@@ -262,15 +257,17 @@ func memberAddress(m *machineapi.EtcdMember) string {
 	return ""
 }
 
-func memberHealthy(ctx context.Context, c etcdReader, addr string) bool {
+// memberHealthy asks the member at addr for its own etcd status: healthy when it answered
+// without reporting errors.
+func memberHealthy(ctx context.Context, c etcdReader, addr string) (*machineapi.EtcdMemberStatus, bool) {
 	resp, err := c.EtcdStatus(client.WithNode(ctx, addr))
 	if err != nil {
-		return false
+		return nil, false
 	}
 
 	st := first(resp.GetMessages()).GetMemberStatus()
 
-	return st != nil && len(st.GetErrors()) == 0
+	return st, st != nil && len(st.GetErrors()) == 0
 }
 
 // busyStages are the stages in which a node is in the middle of a lifecycle operation.
@@ -307,8 +304,9 @@ func computePlan(in planInput) upgradePlan {
 		plan.CurrentImage = in.defaultImage
 
 		if in.imageErr != "" {
-			plan.Warnings = append(plan.Warnings,
-				"could not read the installer image from the machine config ("+in.imageErr+"); assuming "+defaultInstallerRepo)
+			w := "could not read the installer image from the machine config (" + in.imageErr + "); assuming " + defaultInstallerRepo
+			plan.Warnings = append(plan.Warnings, w)
+			plan.upgradeOnly = append(plan.upgradeOnly, w)
 		}
 	}
 

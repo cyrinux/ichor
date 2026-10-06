@@ -1,14 +1,11 @@
 package ichorgo
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
-	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -35,7 +32,8 @@ const (
 var garageCommands = struct{ health, status, stats, tranquility []string }{
 	health: []string{"/garage", "json-api", "GetClusterHealth"},
 	status: []string{"/garage", "json-api", "GetClusterStatus"},
-	// Node-scoped endpoints take a {node, body} envelope; "*" asks every node.
+	// Node-scoped endpoints take a {node, body} envelope, as garageCall sends it; "*" asks
+	// every node. These two spell out what readGarageInstance asks, for the tests' fake CLI.
 	stats: []string{"/garage", "json-api", "GetNodeStatistics", `{"node":"*","body":null}`},
 	// How hard each node's block resync works: 0 is full speed, Garage's default is 2.
 	tranquility: []string{"/garage", "json-api", "GetWorkerVariable", `{"node":"*","body":{"variable":"` + garageTranquilityVar + `"}}`},
@@ -163,17 +161,11 @@ func readGarage(ctx context.Context, k *kubeClient, run execFunc, pods []dsPod, 
 
 	out := &garageStatus{Instances: make([]garageInstance, len(groups))}
 
-	var wg sync.WaitGroup
-
-	for i, g := range groups {
-		wg.Go(func() {
-			out.Instances[i] = readGarageInstance(ctx, run, g, func(ctx context.Context) (string, string) {
-				return garageProxyHealth(ctx, k, g)
-			})
+	forEachNode(groups, func(i int, g garageGroup) {
+		out.Instances[i] = readGarageInstance(ctx, run, g, func(ctx context.Context) (string, string) {
+			return garageProxyHealth(ctx, k, g)
 		})
-	}
-
-	wg.Wait()
+	})
 
 	return out
 }
@@ -203,72 +195,56 @@ func readGarageInstance(ctx context.Context, run execFunc, g garageGroup, fallba
 		return inst
 	}
 
+	t := garageTarget{namespace: g.namespace, pod: inst.Pod, container: g.container}
+
 	var (
-		outs [4][]byte
-		errs [4]error
-		wg   sync.WaitGroup
+		health, status       []byte
+		healthErr, statusErr error
+		stats                garageMulti[garageNodeStats]
+		vars                 garageMulti[map[string]string]
+		statsErr, varsErr    error
+		wg                   sync.WaitGroup
 	)
 
-	for i, argv := range [][]string{garageCommands.health, garageCommands.status, garageCommands.stats, garageCommands.tranquility} {
-		wg.Go(func() {
-			var stderr []byte
-
-			outs[i], stderr, errs[i] = run(ctx, g.namespace, inst.Pod, g.container, argv)
-			errs[i] = garageCommandError(errs[i], stderr)
-		})
-	}
-
+	wg.Go(func() { health, healthErr = garageRun(ctx, run, t, garageCommands.health) })
+	wg.Go(func() { status, statusErr = garageRun(ctx, run, t, garageCommands.status) })
+	wg.Go(func() { stats, statsErr = garageCall[garageNodeStats](ctx, run, t, "GetNodeStatistics", "*", nil) })
+	wg.Go(func() {
+		vars, varsErr = garageCall[map[string]string](ctx, run, t, "GetWorkerVariable", "*", map[string]string{"variable": garageTranquilityVar})
+	})
 	wg.Wait()
 
-	if errs[0] != nil {
+	if healthErr != nil {
 		// Without the CLI, the admin port still tells healthy from not.
 		inst.Status, inst.Message = fallback(ctx)
-		inst.Message = strings.TrimSpace(inst.Message + " (garage json-api: " + errs[0].Error() + ")")
+		inst.Message = strings.TrimSpace(inst.Message + " (garage json-api: " + healthErr.Error() + ")")
 		inst.Source = garageSourceHealth
 
 		return inst
 	}
 
 	inst.Source = garageSourceCLI
-	if err := applyGarageHealth(&inst, outs[0]); err != nil {
+	if err := applyGarageHealth(&inst, health); err != nil {
 		inst.Message = err.Error()
 
 		return inst
 	}
 
-	if errs[1] == nil {
-		applyGarageStatus(&inst, outs[1], g.pods)
+	if statusErr == nil {
+		applyGarageStatus(&inst, status, g.pods)
 	}
 
-	if errs[2] == nil {
-		applyGarageStats(&inst, outs[2])
+	if statsErr == nil {
+		applyGarageStats(&inst, stats)
 	}
 
-	if errs[3] == nil {
-		applyGarageTranquility(&inst, outs[3])
+	if varsErr == nil {
+		applyGarageTranquility(&inst, vars.Success)
 	}
 
 	inst.Status, inst.Message = garageVerdict(inst)
 
 	return inst
-}
-
-var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*m`)
-
-// garageCommandError keeps the CLI's own "Error: ..." line: its stderr is mostly logs.
-func garageCommandError(err error, stderr []byte) error {
-	var execErr *kubeExecError
-	if !errors.As(err, &execErr) {
-		return err
-	}
-
-	for line := range strings.SplitSeq(ansiEscape.ReplaceAllString(string(stderr), ""), "\n") {
-		if msg, ok := strings.CutPrefix(strings.TrimSpace(line), "Error: "); ok {
-			return errors.New(msg)
-		}
-	}
-
-	return err
 }
 
 func applyGarageHealth(inst *garageInstance, data []byte) error {
@@ -303,26 +279,7 @@ func applyGarageHealth(inst *garageInstance, data []byte) error {
 }
 
 func applyGarageStatus(inst *garageInstance, data []byte, pods []dsPod) {
-	var st struct {
-		LayoutVersion int64 `json:"layoutVersion"`
-		Nodes         []struct {
-			ID              string `json:"id"`
-			Hostname        string `json:"hostname"`
-			GarageVersion   string `json:"garageVersion"`
-			IsUp            bool   `json:"isUp"`
-			LastSeenSecsAgo *int64 `json:"lastSeenSecsAgo"`
-			Draining        bool   `json:"draining"`
-			DataPartition   *struct {
-				Available int64 `json:"available"`
-				Total     int64 `json:"total"`
-			} `json:"dataPartition"`
-			Role *struct {
-				Zone string   `json:"zone"`
-				Tags []string `json:"tags"`
-			} `json:"role"`
-		} `json:"nodes"`
-	}
-
+	var st garageClusterStatus
 	if json.Unmarshal(data, &st) != nil {
 		return
 	}
@@ -375,23 +332,8 @@ func applyGarageStatus(inst *garageInstance, data []byte, pods []dsPod) {
 	})
 }
 
-func applyGarageStats(inst *garageInstance, data []byte) {
-	var stats struct {
-		Success map[string]struct {
-			BlockManagerStats struct {
-				ResyncErrors   int64 `json:"resyncErrors"`
-				ResyncQueueLen int64 `json:"resyncQueueLen"`
-			} `json:"blockManagerStats"`
-			TableStats []struct {
-				InsertQueueLen int64 `json:"insertQueueLen"`
-				MerkleQueueLen int64 `json:"merkleQueueLen"`
-				GcQueueLen     int64 `json:"gcQueueLen"`
-			} `json:"tableStats"`
-		} `json:"success"`
-		Error map[string]string `json:"error"`
-	}
-
-	if json.Unmarshal(data, &stats) != nil || (len(stats.Success) == 0 && len(stats.Error) == 0) {
+func applyGarageStats(inst *garageInstance, stats garageMulti[garageNodeStats]) {
+	if len(stats.Success) == 0 && len(stats.Error) == 0 {
 		return
 	}
 
@@ -425,18 +367,10 @@ func applyGarageStats(inst *garageInstance, data []byte) {
 	}
 }
 
-// applyGarageTranquility reads GetWorkerVariable's {success: {nodeId: {variable: value}}}.
-func applyGarageTranquility(inst *garageInstance, data []byte) {
-	var vars struct {
-		Success map[string]map[string]string `json:"success"`
-	}
-
-	if json.Unmarshal(data, &vars) != nil {
-		return
-	}
-
+// applyGarageTranquility reads GetWorkerVariable's success: {nodeId: {variable: value}}.
+func applyGarageTranquility(inst *garageInstance, vars map[string]map[string]string) {
 	for i, n := range inst.Nodes {
-		if v, err := strconv.ParseInt(vars.Success[n.ID][garageTranquilityVar], 10, 64); err == nil && v >= 0 {
+		if v, err := strconv.ParseInt(vars[n.ID][garageTranquilityVar], 10, 64); err == nil && v >= 0 {
 			inst.Nodes[i].Tranquility = v
 		}
 	}
@@ -544,7 +478,7 @@ func garageProxyHealth(ctx context.Context, k *kubeClient, g garageGroup) (strin
 		} `json:"spec"`
 	}]
 
-	if err := getList(ctx, k, "/api/v1/namespaces/"+url.PathEscape(g.namespace)+"/services", &services); err != nil {
+	if err := getList(ctx, k, scopedPath("/api/v1", g.namespace, "services"), &services); err != nil {
 		return garageUnknown, kubeError(err).Error()
 	}
 
@@ -560,7 +494,7 @@ func garageProxyHealth(ctx context.Context, k *kubeClient, g garageGroup) (strin
 				continue
 			}
 
-			path := fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy/health", url.PathEscape(g.namespace), url.PathEscape(s.Metadata.Name), p.Port)
+			path := serviceProxyPath(g.namespace, fmt.Sprintf("%s:%d", url.PathEscape(s.Metadata.Name), p.Port), "/health")
 
 			status, ctype, body, err := k.getRaw(ctx, path, nil)
 			if err != nil {
@@ -579,7 +513,7 @@ func garageProxyHealth(ctx context.Context, k *kubeClient, g garageGroup) (strin
 func garageHealthFromProxy(status int, ctype string, body []byte) (string, string) {
 	text := clipUTF8(strings.TrimSpace(string(body)), 300)
 
-	if strings.HasPrefix(ctype, "application/json") && bytes.Contains(body, []byte(`"kind":"Status"`)) {
+	if isKubeStatus(body) {
 		return garageUnavailable, "no ready Garage pod behind the admin Service"
 	}
 

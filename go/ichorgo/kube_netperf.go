@@ -179,11 +179,7 @@ func StartNetPerf(configYAML, contextName, kubeServer, serverNode, clientNode st
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), netPerfTimeout)
-	emit := func(p netPerfProgress) {
-		if js, err := toJSON(p); err == nil {
-			listener.OnProgress(js)
-		}
-	}
+	emit := func(p netPerfProgress) { emitJSON(p, listener.OnProgress) }
 
 	go func() {
 		defer cancel()

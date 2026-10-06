@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -100,10 +99,7 @@ func StartUpgrade(configYAML, contextName, kubeServer, node, image string, stage
 }
 
 func emitProgress(l UpgradeListener, phase, message string) {
-	b, err := json.Marshal(upgradeProgress{Phase: phase, Message: message, At: time.Now().UnixMilli()})
-	if err == nil {
-		l.OnProgress(string(b))
-	}
+	emitJSON(upgradeProgress{Phase: phase, Message: message, At: time.Now().UnixMilli()}, l.OnProgress)
 }
 
 // upgradeOptions are what StartUpgrade was asked.
@@ -421,14 +417,4 @@ func followUpgrade(
 
 		timer.Reset(interval)
 	}
-}
-
-type maskedUpgradeListener struct{ UpgradeListener }
-
-func (l maskedUpgradeListener) OnProgress(json string) {
-	l.UpgradeListener.OnProgress(privacy.mask(json))
-}
-
-func (l maskedUpgradeListener) OnDone(newVersion string, errMessage string) {
-	l.UpgradeListener.OnDone(newVersion, privacy.maskPlain(errMessage))
 }

@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -216,10 +215,7 @@ func (r *captureReporter) packet(summary func() packetSummary) {
 
 	r.inWindow++
 
-	b, err := json.Marshal(summary())
-	if err == nil {
-		r.listener.OnPacket(string(b))
-	}
+	emitJSON(summary(), r.listener.OnPacket)
 }
 
 func (r *captureReporter) stats(res captureResult, force bool) {
@@ -357,15 +353,4 @@ func failCapture(f *os.File, part string, res captureResult, err error) (capture
 	_ = os.Remove(part) //nolint:errcheck
 
 	return res, "", err
-}
-
-// maskedCaptureListener masks the live summaries and the error; the file is not masked.
-type maskedCaptureListener struct{ CaptureListener }
-
-func (l maskedCaptureListener) OnPacket(summaryJSON string) {
-	l.CaptureListener.OnPacket(privacy.mask(summaryJSON))
-}
-
-func (l maskedCaptureListener) OnDone(path string, packets int64, bytes int64, errMessage string) {
-	l.CaptureListener.OnDone(path, packets, bytes, privacy.maskPlain(errMessage))
 }

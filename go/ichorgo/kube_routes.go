@@ -182,7 +182,7 @@ const routePodsByName = 8
 func readLabeledPods(ctx context.Context, k *kubeClient, namespace string, names map[string]bool) (kubeList[labeledObject], error) {
 	var list kubeList[labeledObject]
 
-	base := "/api/v1/namespaces/" + url.PathEscape(namespace) + "/pods"
+	base := scopedPath("/api/v1", namespace, "pods")
 	if len(names) > routePodsByName {
 		err := getList(ctx, k, base, &list)
 

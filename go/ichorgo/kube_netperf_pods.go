@@ -157,21 +157,23 @@ func sweepNetPerfNamespaces(ctx context.Context, k *kubeClient, now time.Time) {
 	sweepRunNamespaces(ctx, k, netPerfName, now)
 }
 
+// runNamespace is what sweepRunNamespaces needs of a namespace: when it was made and
+// whether it is already going.
+type runNamespace struct {
+	Metadata struct {
+		Name              string     `json:"name"`
+		CreationTimestamp time.Time  `json:"creationTimestamp"`
+		DeletionTimestamp *time.Time `json:"deletionTimestamp"`
+	} `json:"metadata"`
+}
+
 // sweepRunNamespaces deletes the namespaces of app's runs the app could not finish.
 func sweepRunNamespaces(ctx context.Context, k *kubeClient, app string, now time.Time) {
-	var list struct {
-		Items []struct {
-			Metadata struct {
-				Name              string     `json:"name"`
-				CreationTimestamp time.Time  `json:"creationTimestamp"`
-				DeletionTimestamp *time.Time `json:"deletionTimestamp"`
-			} `json:"metadata"`
-		} `json:"items"`
-	}
+	var list kubeList[runNamespace]
 
 	// Only namespaces this app created: a name prefix and an app label alone may match others.
 	selector := url.QueryEscape("app.kubernetes.io/name=" + app + ",app.kubernetes.io/managed-by=ichor")
-	if k.get(ctx, "/api/v1/namespaces?labelSelector="+selector, &list) != nil {
+	if getList(ctx, k, "/api/v1/namespaces?labelSelector="+selector, &list) != nil {
 		return
 	}
 

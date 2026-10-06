@@ -107,11 +107,7 @@ func StartHubbleFlows(configYAML, contextName, kubeServer, namespace, pod string
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	emit := func(s hubbleSnapshot) {
-		if js, err := toJSON(s); err == nil {
-			listener.OnUpdate(js)
-		}
-	}
+	emit := func(s hubbleSnapshot) { emitJSON(s, listener.OnUpdate) }
 
 	go func() {
 		defer cancel()

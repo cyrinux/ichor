@@ -87,10 +87,8 @@ type hintSet map[string]bool
 func parseHints(hints string) hintSet {
 	set := hintSet{}
 
-	for h := range strings.SplitSeq(hints, ",") {
-		if h = strings.TrimSpace(h); h != "" {
-			set[h] = true
-		}
+	for _, h := range splitCSV(hints) {
+		set[h] = true
 	}
 
 	return set

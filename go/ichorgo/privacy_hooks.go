@@ -191,3 +191,60 @@ func learnDiscoveredHosts(nodes []discoveredNode) {
 
 	privacy.learnHosts(entries)
 }
+
+// The listeners the app passes in, wrapped so every callback is masked like a result.
+
+// maskedDebugListener masks the status and exit messages, which may name the real node.
+// The terminal bytes pass through unmasked (see StartDebugShell).
+type maskedDebugListener struct{ DebugListener }
+
+func (l maskedDebugListener) OnStatus(message string) {
+	l.DebugListener.OnStatus(privacy.maskPlain(message))
+}
+
+func (l maskedDebugListener) OnExit(code int, errMessage string) {
+	l.DebugListener.OnExit(code, privacy.maskPlain(errMessage))
+}
+
+type maskedMaintenanceListener struct{ MaintenanceListener }
+
+func (l maskedMaintenanceListener) OnProgress(json string) {
+	l.MaintenanceListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedMaintenanceListener) OnDone(errMessage string) {
+	l.MaintenanceListener.OnDone(privacy.maskPlain(errMessage))
+}
+
+// maskedCaptureListener masks the live summaries and the error; the file is not masked.
+type maskedCaptureListener struct{ CaptureListener }
+
+func (l maskedCaptureListener) OnPacket(summaryJSON string) {
+	l.CaptureListener.OnPacket(privacy.mask(summaryJSON))
+}
+
+func (l maskedCaptureListener) OnDone(path string, packets int64, bytes int64, errMessage string) {
+	l.CaptureListener.OnDone(path, packets, bytes, privacy.maskPlain(errMessage))
+}
+
+// maskedSupportListener masks the progress and the error: the path is the app's own file and
+// the bundle itself is written unmasked (it is for debugging).
+type maskedSupportListener struct{ SupportListener }
+
+func (l maskedSupportListener) OnProgress(json string) {
+	l.SupportListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedSupportListener) OnDone(path string, size int64, errMessage string) {
+	l.SupportListener.OnDone(path, size, privacy.maskPlain(errMessage))
+}
+
+type maskedUpgradeListener struct{ UpgradeListener }
+
+func (l maskedUpgradeListener) OnProgress(json string) {
+	l.UpgradeListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedUpgradeListener) OnDone(newVersion string, errMessage string) {
+	l.UpgradeListener.OnDone(newVersion, privacy.maskPlain(errMessage))
+}

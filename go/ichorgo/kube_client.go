@@ -13,7 +13,6 @@ import (
 	"net/url"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -64,6 +63,22 @@ func (e *kubeAPIError) Error() string {
 	default:
 		return fmt.Sprintf("Kubernetes API (%d %s): %s", e.Code, e.Reason, e.Message)
 	}
+}
+
+// serviceProxyPath addresses a Service's HTTP port through the API server's proxy: service is
+// "name" or "name:port" (already escaped), path starts with "/".
+func serviceProxyPath(namespace, service, path string) string {
+	return "/api/v1/namespaces/" + url.PathEscape(namespace) + "/services/" + service + "/proxy" + path
+}
+
+// isKubeStatus tells the API server's own answer (a Status object) from the backend's: a
+// Prometheus envelope has no kind. Only called on errors, whose bodies are small.
+func isKubeStatus(body []byte) bool {
+	var obj struct {
+		Kind string `json:"kind"`
+	}
+
+	return json.Unmarshal(body, &obj) == nil && obj.Kind == "Status"
 }
 
 // kubeCode is the HTTP status of a kubeAPIError, 0 for any other error.
@@ -425,129 +440,6 @@ func kubeError(err error) error {
 	return errors.New("Kubernetes API: " + kubeTransportError(err))
 }
 
-// kubeTarget is what a Kubernetes client is opened for: a talosconfig context and the API
-// server address the user set for it, if any.
-type kubeTarget struct {
-	config, context, server string
-}
-
-func (t kubeTarget) key() string { return cacheKey(t.config, t.context+"\x00"+t.server) }
-
-// kubeClients caches one client per kubeTarget for kubeClientTTL.
-var kubeClients = newKubeClientCache(openKubeClientForContext)
-
-type kubeClientEntry struct {
-	client  *kubeClient
-	expires time.Time
-}
-
-// kubeOpening is an open in flight: concurrent callers wait for it instead of each asking
-// Talos for a kubeconfig (every Kubeconfig call signs a new certificate).
-type kubeOpening struct {
-	done   chan struct{}
-	client *kubeClient
-	err    error
-}
-
-type kubeClientCache struct {
-	mu      sync.Mutex
-	entries map[string]kubeClientEntry
-	opening map[string]*kubeOpening
-	open    func(kubeTarget) (*kubeClient, error)
-}
-
-func newKubeClientCache(open func(kubeTarget) (*kubeClient, error)) *kubeClientCache {
-	return &kubeClientCache{entries: map[string]kubeClientEntry{}, opening: map[string]*kubeOpening{}, open: open}
-}
-
-// get returns the cached client, or opens one; fresh tells the client was opened for this call.
-func (c *kubeClientCache) get(target kubeTarget) (k *kubeClient, fresh bool, err error) {
-	key := target.key()
-
-	c.mu.Lock()
-	c.sweepLocked()
-
-	if entry, ok := c.entries[key]; ok {
-		c.mu.Unlock()
-
-		return entry.client, false, nil
-	}
-
-	if op, ok := c.opening[key]; ok {
-		c.mu.Unlock()
-		<-op.done
-
-		return op.client, false, op.err
-	}
-
-	op := &kubeOpening{done: make(chan struct{})}
-	c.opening[key] = op
-	c.mu.Unlock()
-
-	// Deferred so that a panic in open still releases the callers waiting on op.done.
-	defer func() {
-		if op.client == nil && op.err == nil {
-			op.err = errors.New("kubernetes client not opened")
-			err = op.err
-		}
-
-		c.mu.Lock()
-		delete(c.opening, key)
-
-		if op.err == nil {
-			c.entries[key] = kubeClientEntry{client: op.client, expires: time.Now().Add(kubeClientTTL)}
-		}
-		c.mu.Unlock()
-		close(op.done)
-	}()
-
-	op.client, op.err = c.open(target)
-
-	return op.client, true, op.err
-}
-
-// sweepLocked drops expired clients: their keys should not stay in memory.
-func (c *kubeClientCache) sweepLocked() {
-	now := time.Now()
-	for key, entry := range c.entries {
-		if !now.Before(entry.expires) {
-			delete(c.entries, key)
-			entry.client.close()
-		}
-	}
-}
-
-// forget drops k if it is still the cached client, so the next call fetches a new
-// kubeconfig and probes again; a client another call already replaced it with stays.
-func (c *kubeClientCache) forget(target kubeTarget, k *kubeClient) {
-	key := target.key()
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if entry, ok := c.entries[key]; ok && entry.client == k {
-		delete(c.entries, key)
-		k.close()
-	}
-}
-
-// openKubeClientForContext fetches an admin kubeconfig from Talos (bounded by callTimeout)
-// and probes the API server addresses (bounded by kubeProbeTimeout).
-func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
-	var endpoints []string
-
-	kubeconfig, err := withSession(target.config, target.context, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		endpoints = s.context.Endpoints
-
-		return fetchKubeconfig(ctx, s)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return openKubeClient(context.Background(), kubeconfig, endpoints, target.server)
-}
-
 // kubeList is the shape of a Kubernetes list response.
 type kubeList[T any] struct {
 	Items []T `json:"items"`
@@ -626,6 +518,20 @@ func kubeReadJSON[T any](target kubeTarget, demo func() T, fn func(context.Conte
 	return toJSON(res)
 }
 
+// noResult adapts an action to the result-returning helpers.
+func noResult(fn func(context.Context, *kubeClient) error) func(context.Context, *kubeClient) (struct{}, error) {
+	return func(ctx context.Context, k *kubeClient) (struct{}, error) {
+		return struct{}{}, fn(ctx, k)
+	}
+}
+
+// kubeDo is withKubeContext for an action without a result.
+func kubeDo(ctx context.Context, target kubeTarget, fn func(context.Context, *kubeClient) error) error {
+	_, err := withKubeContext(ctx, target, noResult(fn))
+
+	return err
+}
+
 // kubeMutate runs the action fn, refused in the demo inventory. target.context is the
 // unmasked context name.
 func kubeMutate(target kubeTarget, fn func(context.Context, *kubeClient) error) error {
@@ -633,9 +539,7 @@ func kubeMutate(target kubeTarget, fn func(context.Context, *kubeClient) error) 
 		return errDemoUnavailable
 	}
 
-	_, err := withKube(target, func(ctx context.Context, k *kubeClient) (struct{}, error) {
-		return struct{}{}, fn(ctx, k)
-	})
+	_, err := withKube(target, noResult(fn))
 
 	return kubeMutationError(err)
 }

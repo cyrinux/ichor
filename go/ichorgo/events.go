@@ -64,14 +64,13 @@ func runEvents(ctx context.Context, configYAML, contextName, nodes string, tail 
 	if isDemoContext(configYAML, contextName) {
 		targets := demoNodes()
 		selected := func(node string) bool {
-			return strings.TrimSpace(nodes) == "" || slices.Contains(strings.Split(nodes, ","), node)
+			return strings.TrimSpace(nodes) == "" || slices.Contains(splitCSV(nodes), node)
 		}
 		emit := func(n nodeOverview, at time.Time) {
 			if !selected(n.Node) {
 				return
 			}
-			out, _ := toJSON(nodeEvent{Node: n.Node, ID: fmt.Sprintf("demo-%d-%s", at.UnixNano(), n.Hostname), At: at.UnixMilli(), Kind: "service", Subject: "kubelet", Action: "running", Message: "Demo: node health check successful", Severity: "info"})
-			listener.OnEvent(out)
+			emitJSON(nodeEvent{Node: n.Node, ID: fmt.Sprintf("demo-%d-%s", at.UnixNano(), n.Hostname), At: at.UnixMilli(), Kind: "service", Subject: "kubelet", Action: "running", Message: "Demo: node health check successful", Severity: "info"}, listener.OnEvent)
 		}
 		if tail > 0 {
 			for _, n := range targets {
@@ -135,10 +134,7 @@ func runEvents(ctx context.Context, configYAML, contextName, nodes string, tail 
 				privacy.learnHost(ev.Subject, "node")
 			}
 
-			out, err := toJSON(ev)
-			if err == nil {
-				listener.OnEvent(out)
-			}
+			emitJSON(ev, listener.OnEvent)
 		}
 	}
 }

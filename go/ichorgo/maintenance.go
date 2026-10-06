@@ -2,16 +2,13 @@ package ichorgo
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/client"
-	"github.com/siderolabs/talos/pkg/machinery/resources/runtime"
 )
 
 // Node maintenance: cordon → drain → reboot (or shut down, or nothing) → wait until the node
@@ -123,7 +120,7 @@ func gatherMaintenancePlan(ctx context.Context, s *session, kube kubeTarget, nod
 		Hostname:     reboot.Hostname,
 		ControlPlane: reboot.ControlPlane,
 		Blockers:     reboot.Blockers,
-		Warnings:     rebootWarnings(reboot.Warnings),
+		Warnings:     rebootWarnings(reboot),
 		Acknowledge:  reboot.Acknowledge,
 	}
 
@@ -158,11 +155,11 @@ func gatherMaintenancePlan(ctx context.Context, s *session, kube kubeTarget, nod
 }
 
 // rebootWarnings drops the upgrade plan's warnings that are about upgrading, not rebooting.
-func rebootWarnings(warnings []string) []string {
+func rebootWarnings(up upgradePlan) []string {
 	out := []string{}
 
-	for _, w := range warnings {
-		if !strings.HasPrefix(w, noDrainWarning) && !strings.Contains(w, "installer image") {
+	for _, w := range up.Warnings {
+		if !strings.HasPrefix(w, noDrainWarning) && !slices.Contains(up.upgradeOnly, w) {
 			out = append(out, w)
 		}
 	}
@@ -237,10 +234,7 @@ type maintenance struct {
 }
 
 func (m maintenance) emit(phase, message string, pods []drainPod) {
-	b, err := json.Marshal(maintenanceProgress{Phase: phase, Message: message, At: time.Now().UnixMilli(), Pods: pods})
-	if err == nil {
-		m.listener.OnProgress(string(b))
-	}
+	emitJSON(maintenanceProgress{Phase: phase, Message: message, At: time.Now().UnixMilli(), Pods: pods}, m.listener.OnProgress)
 }
 
 // stoppedCordoned explains a run that ended early: the node is left cordoned on purpose.
@@ -288,7 +282,7 @@ func (m maintenance) run(ctx context.Context) error {
 
 	defer lock.release()
 
-	return withKubeContext2(ctx, m.kube, func(ctx context.Context, k *kubeClient) error {
+	return kubeDo(ctx, m.kube, func(ctx context.Context, k *kubeClient) error {
 		return m.steps(ctx, s, k, lock, plan)
 	})
 }
@@ -447,111 +441,4 @@ func drainMessage(pods []drainPod) string {
 	}
 
 	return msg
-}
-
-// backObservation is one poll of a rebooting node.
-type backObservation struct {
-	reachable, running, kubeReady bool
-}
-
-func observeBack(ctx context.Context, c *client.Client, k *kubeClient, node, kubeNode string, since time.Time) backObservation {
-	o := observeNode(ctx, c, node)
-	b := backObservation{reachable: o.reachable, running: o.stage == runtime.MachineStageRunning.String() && o.ready}
-
-	if b.running {
-		ctx, cancel := context.WithTimeout(ctx, nodeTimeout)
-		defer cancel()
-
-		b.kubeReady = kubeNodeReadySince(ctx, k, kubeNode, since)
-	}
-
-	return b
-}
-
-// kubeNodeReadySince tells whether the Kubernetes node is Ready with a heartbeat after since:
-// right after a fast reboot the Node object still says Ready from before it (Kubernetes
-// marks a node NotReady only after a grace period), while the restarted kubelet posts its
-// status, with a fresh heartbeat, as soon as it registers.
-func kubeNodeReadySince(ctx context.Context, k *kubeClient, kubeNode string, since time.Time) bool {
-	var obj struct {
-		Status struct {
-			Conditions []struct {
-				Type              string    `json:"type"`
-				Status            string    `json:"status"`
-				LastHeartbeatTime time.Time `json:"lastHeartbeatTime"`
-			} `json:"conditions"`
-		} `json:"status"`
-	}
-
-	if err := k.get(ctx, "/api/v1/nodes/"+url.PathEscape(kubeNode), &obj); err != nil {
-		return false
-	}
-
-	for _, c := range obj.Status.Conditions {
-		if c.Type == "Ready" {
-			return c.Status == "True" && c.LastHeartbeatTime.After(since)
-		}
-	}
-
-	return false
-}
-
-// waitBack polls until the node went down and came back running with its Kubernetes node
-// Ready. Stopping pods and services takes longer than a poll, so the reboot is seen.
-func waitBack(ctx context.Context, observe func(context.Context) backObservation, emit func(string), interval time.Duration) error {
-	sawDown, last := false, ""
-
-	for {
-		select {
-		case <-ctx.Done():
-			return errors.New("stopped while waiting for the node")
-		case <-time.After(interval):
-		}
-
-		o := observe(ctx)
-		if ctx.Err() != nil {
-			continue
-		}
-
-		var msg string
-
-		switch {
-		case !o.reachable:
-			sawDown, msg = true, "the node is rebooting"
-		case !o.running:
-			sawDown, msg = true, "the node is booting"
-		case !sawDown:
-			msg = "waiting for the node to reboot"
-		case !o.kubeReady:
-			msg = "the node is up, waiting for Kubernetes to report it Ready"
-		default:
-			emit("the node is back and Ready")
-
-			return nil
-		}
-
-		if msg != last {
-			emit(msg)
-			last = msg
-		}
-	}
-}
-
-// withKubeContext2 is withKubeContext for an action without a result.
-func withKubeContext2(ctx context.Context, target kubeTarget, fn func(context.Context, *kubeClient) error) error {
-	_, err := withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (struct{}, error) {
-		return struct{}{}, fn(ctx, k)
-	})
-
-	return err
-}
-
-type maskedMaintenanceListener struct{ MaintenanceListener }
-
-func (l maskedMaintenanceListener) OnProgress(json string) {
-	l.MaintenanceListener.OnProgress(privacy.mask(json))
-}
-
-func (l maskedMaintenanceListener) OnDone(errMessage string) {
-	l.MaintenanceListener.OnDone(privacy.maskPlain(errMessage))
 }

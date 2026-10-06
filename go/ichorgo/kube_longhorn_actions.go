@@ -117,8 +117,7 @@ func longhornAction(ctx context.Context, k *kubeClient, namespace, name, action 
 	}
 
 	// An empty input: Longhorn names the snapshot and picks the volume's backup target.
-	proxy := "/api/v1/namespaces/" + url.PathEscape(namespace) + "/services/" + lhManagerService +
-		"/proxy/v1/volumes/" + url.PathEscape(name) + "?action=" + op
+	proxy := serviceProxyPath(namespace, lhManagerService, "/v1/volumes/"+url.PathEscape(name)+"?action="+op)
 
 	return k.post(ctx, proxy, map[string]any{}, nil)
 }

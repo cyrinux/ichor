@@ -102,7 +102,7 @@ func rolloutStatus(ctx context.Context, k *kubeClient, wk workloadKind, namespac
 	}
 
 	var pods kubeList[podObject]
-	if err := getList(ctx, k, "/api/v1/namespaces/"+url.PathEscape(namespace)+"/pods"+query, &pods); err != nil {
+	if err := getList(ctx, k, scopedPath("/api/v1", namespace, "pods")+query, &pods); err != nil {
 		return kubeRolloutStatus{}, err
 	}
 
