@@ -4,13 +4,13 @@ import Foundation
 // ones alike, as the app shows them (who they apply to, whether they isolate it, what each rule
 // lets through), and the pure logic the Network policies screen lists and words them with.
 
-public enum NetPolicyKind: String, Sendable, CaseIterable {
+public enum NetPolicyKind: String, Sendable, CaseIterable, WireEnum {
     case networkPolicy = "NetworkPolicy"
     case cilium = "CiliumNetworkPolicy"
     case ciliumClusterwide = "CiliumClusterwideNetworkPolicy"
     case unknown = ""
 
-    public init(wire: String) { self = NetPolicyKind(rawValue: wire) ?? .unknown }
+    public static let wireFallback: Self = .unknown
 
     /// The badge: NP, CNP, CCNP.
     public var short: String {
@@ -276,11 +276,11 @@ public struct NetRule: Decodable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey { case deny, peers, ports, l7 }
 }
 
-public enum NetPeerKind: String, Sendable, CaseIterable {
+public enum NetPeerKind: String, Sendable, CaseIterable, WireEnum {
     case pods, namespaces, cidr, entity, fqdn, service, nodes
     case unknown = ""
 
-    public init(wire: String) { self = NetPeerKind(rawValue: wire) ?? .unknown }
+    public static let wireFallback: Self = .unknown
 }
 
 /// Where the pods a peer selects live.
@@ -314,7 +314,7 @@ public struct NetPeer: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        kind = NetPeerKind(wire: try c.field(.kind, ""))
+        kind = try c.wire(.kind)
         namespace = try c.field(.namespace, "")
         namespaceSelector = try c.field(.namespaceSelector, "")
         selector = try c.field(.selector, "")

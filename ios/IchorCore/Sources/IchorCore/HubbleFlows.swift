@@ -137,7 +137,7 @@ public struct HubbleAgentState: Decodable, Equatable, Identifiable, Sendable {
     private enum CodingKeys: String, CodingKey { case node, pod, state, error, flows }
 }
 
-public enum HubbleVerdict: String, Sendable {
+public enum HubbleVerdict: String, Sendable, WireEnum {
     case forwarded = "FORWARDED"
     case dropped = "DROPPED"
     /// Would have been dropped: the policy is in audit mode.
@@ -145,11 +145,11 @@ public enum HubbleVerdict: String, Sendable {
     case error = "ERROR"
     case other = ""
 
-    public init(wire: String) { self = HubbleVerdict(rawValue: wire) ?? .other }
+    public static let wireFallback: Self = .other
 }
 
 /// Why Cilium dropped a flow.
-public enum DropReason: Equatable, Sendable {
+public enum DropReason: Equatable, Sendable, WireDecodable {
     /// No policy allows this traffic.
     case policyDenied
     /// An explicit deny rule matched.

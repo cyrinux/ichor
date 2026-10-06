@@ -82,8 +82,8 @@ public struct Certificate: Decodable, Equatable, Identifiable, Sendable {
         dnsNames = try c.field(.dnsNames, [])
         dnsNameCount = try c.field(.dnsNameCount, 0)
         issuer = try c.field(.issuer, "")
-        health = ServiceHealth(wire: try c.field(.health, ""))
-        reasons = (try c.field(.reasons, [String]())).compactMap(CertReason.init(rawValue:))
+        health = try c.wire(.health)
+        reasons = try c.wireList(.reasons)
         ready = try c.field(.ready, false)
         issuing = try c.field(.issuing, false)
         message = try c.field(.message, "")
@@ -124,7 +124,7 @@ public struct CertIssuer: Decodable, Equatable, Identifiable, Sendable {
         server = try c.field(.server, "")
         ready = try c.field(.ready, false)
         message = try c.field(.message, "")
-        health = ServiceHealth(wire: try c.field(.health, ""))
+        health = try c.wire(.health)
     }
 
     private enum CodingKeys: String, CodingKey { case kind, namespace, name, type, server, ready, message, health }
@@ -173,8 +173,8 @@ public struct DragonflyInstance: Decodable, Equatable, Identifiable, Sendable {
         namespace = try c.field(.namespace, "")
         name = try c.field(.name, "")
         phase = try c.field(.phase, "")
-        health = ServiceHealth(wire: try c.field(.health, ""))
-        reasons = (try c.field(.reasons, [String]())).compactMap(DragonflyReason.init(rawValue:))
+        health = try c.wire(.health)
+        reasons = try c.wireList(.reasons)
         replicas = try c.field(.replicas, 0)
         readyPods = try c.field(.readyPods, 0)
         master = try c.field(.master, "")
@@ -269,8 +269,8 @@ public struct VeleroSchedule: Decodable, Equatable, Identifiable, Sendable {
         paused = try c.field(.paused, false)
         phase = try c.field(.phase, "")
         validationErrors = try c.field(.validationErrors, [])
-        health = ServiceHealth(wire: try c.field(.health, ""))
-        reasons = (try c.field(.reasons, [String]())).compactMap(VeleroReason.init(rawValue:))
+        health = try c.wire(.health)
+        reasons = try c.wireList(.reasons)
         storageLocation = try c.field(.storageLocation, "")
         includedNamespaces = try c.field(.includedNamespaces, [])
         lastBackup = try c.decodeIfPresent(VeleroBackup.self, forKey: .lastBackup)
@@ -324,7 +324,7 @@ public struct VeleroAdhocBackup: Decodable, Equatable, Identifiable, Sendable {
         // The Go core inlines the backup's fields.
         backup = try VeleroBackup(from: decoder)
         storageLocation = try c.field(.storageLocation, "")
-        health = ServiceHealth(wire: try c.field(.health, ""))
+        health = try c.wire(.health)
     }
 
     private enum CodingKeys: String, CodingKey { case namespace, storageLocation, health }
@@ -355,7 +355,7 @@ public struct VeleroLocation: Decodable, Equatable, Identifiable, Sendable {
         phase = try c.field(.phase, "")
         message = try c.field(.message, "")
         lastValidatedAt = try c.field(.lastValidatedAt, 0)
-        health = ServiceHealth(wire: try c.field(.health, ""))
+        health = try c.wire(.health)
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -420,8 +420,8 @@ public struct PerconaCluster: Decodable, Equatable, Identifiable, Sendable {
         message = try c.field(.message, "")
         crVersion = try c.field(.crVersion, "")
         paused = try c.field(.paused, false)
-        health = ServiceHealth(wire: try c.field(.health, ""))
-        reasons = (try c.field(.reasons, [String]())).compactMap(PerconaReason.init(rawValue:))
+        health = try c.wire(.health)
+        reasons = try c.wireList(.reasons)
         pxcSize = try c.field(.pxcSize, 0)
         pxcReady = try c.field(.pxcReady, 0)
         proxy = try c.field(.proxy, "")
@@ -520,8 +520,8 @@ public struct CephCluster: Decodable, Equatable, Identifiable, Sendable {
         phase = try c.field(.phase, "")
         message = try c.field(.message, "")
         cephHealth = try c.field(.cephHealth, "")
-        health = ServiceHealth(wire: try c.field(.health, ""))
-        reasons = (try c.field(.reasons, [String]())).compactMap(CephReason.init(rawValue:))
+        health = try c.wire(.health)
+        reasons = try c.wireList(.reasons)
         checks = try c.field(.checks, [])
         bytesTotal = try c.field(.bytesTotal, 0)
         bytesUsed = try c.field(.bytesUsed, 0)
@@ -577,7 +577,7 @@ public struct CephPool: Decodable, Equatable, Identifiable, Sendable {
         name = try c.field(.name, "")
         kind = try c.field(.kind, "")
         phase = try c.field(.phase, "")
-        health = ServiceHealth(wire: try c.field(.health, ""))
+        health = try c.wire(.health)
     }
 
     private enum CodingKeys: String, CodingKey { case namespace, name, kind, phase, health }
@@ -683,7 +683,7 @@ public struct LonghornVolume: Decodable, Equatable, Identifiable, Sendable {
         pvcName = try c.field(.pvcName, "")
         state = try c.field(.state, "")
         robustness = try c.field(.robustness, "")
-        health = ServiceHealth(wire: try c.field(.health, ""))
+        health = try c.wire(.health)
         replicasDesired = try c.field(.replicasDesired, 0)
         replicasHealthy = try c.field(.replicasHealthy, 0)
         rebuilding = try c.field(.rebuilding, 0)
@@ -967,9 +967,9 @@ public struct CnpgCluster: Decodable, Equatable, Identifiable, Sendable {
         name = try c.decode(String.self, forKey: .name)
         phase = try c.field(.phase, "")
         phaseReason = try c.field(.phaseReason, "")
-        health = ServiceHealth(wire: try c.field(.health, ""))
+        health = try c.wire(.health)
         hibernated = try c.field(.hibernated, false)
-        reasons = (try c.field(.reasons, [String]())).compactMap(CnpgReason.init(rawValue:))
+        reasons = try c.wireList(.reasons)
         instances = try c.field(.instances, 0)
         readyInstances = try c.field(.readyInstances, 0)
         currentPrimary = try c.field(.currentPrimary, "")
@@ -995,7 +995,7 @@ public struct CnpgCluster: Decodable, Equatable, Identifiable, Sendable {
 public typealias CnpgPod = ServicePod
 
 /// Health of one item (a volume, a Postgres cluster), worst first.
-public enum ServiceHealth: Int, Sendable, Comparable, CaseIterable {
+public enum ServiceHealth: Int, Sendable, Comparable, CaseIterable, WireDecodable {
     case critical, warning, unknown, ok, idle
 
     public init(wire: String) {

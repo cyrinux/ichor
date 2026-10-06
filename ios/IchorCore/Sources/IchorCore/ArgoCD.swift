@@ -44,7 +44,7 @@ public struct ArgoStatus: Decodable, Equatable, Sendable {
 }
 
 /// Argo CD's health of an app or a resource.
-public enum ArgoHealth: String, Sendable, CaseIterable {
+public enum ArgoHealth: String, Sendable, CaseIterable, WireEnum {
     case healthy = "Healthy"
     case progressing = "Progressing"
     case degraded = "Degraded"
@@ -52,23 +52,23 @@ public enum ArgoHealth: String, Sendable, CaseIterable {
     case missing = "Missing"
     case unknown = "Unknown"
 
-    public init(wire: String) { self = ArgoHealth(rawValue: wire) ?? .unknown }
+    public static let wireFallback: Self = .unknown
 
     /// Broken: degraded, or a resource that should exist and does not.
     public var broken: Bool { self == .degraded || self == .missing }
 }
 
 /// Whether the live objects match Git.
-public enum ArgoSyncState: String, Sendable, CaseIterable {
+public enum ArgoSyncState: String, Sendable, CaseIterable, WireEnum {
     case synced = "Synced"
     case outOfSync = "OutOfSync"
     case unknown = "Unknown"
 
-    public init(wire: String) { self = ArgoSyncState(rawValue: wire) ?? .unknown }
+    public static let wireFallback: Self = .unknown
 }
 
 /// Phase of a sync operation.
-public enum ArgoPhase: String, Sendable {
+public enum ArgoPhase: String, Sendable, WireEnum {
     case running = "Running"
     case terminating = "Terminating"
     case succeeded = "Succeeded"
@@ -76,7 +76,7 @@ public enum ArgoPhase: String, Sendable {
     case error = "Error"
     case unknown = ""
 
-    public init(wire: String) { self = ArgoPhase(rawValue: wire) ?? .unknown }
+    public static let wireFallback: Self = .unknown
 
     /// Still going: the controller works on it (or is stopping it).
     public var active: Bool { self == .running || self == .terminating }
@@ -132,13 +132,13 @@ public struct ArgoApp: Decodable, Equatable, Identifiable, Sendable {
         name = try c.decode(String.self, forKey: .name)
         project = try c.field(.project, "")
         owner = try c.decodeIfPresent(ArgoOwner.self, forKey: .owner)
-        level = ServiceHealth(wire: try c.field(.level, ""))
+        level = try c.wire(.level)
         icon = try c.field(.icon, "")
         remoteIcon = try c.field(.remoteIcon, "")
         iconURL = try c.field(.iconURL, "")
-        health = ArgoHealth(wire: try c.field(.health, ""))
+        health = try c.wire(.health)
         healthMessage = try c.field(.healthMessage, "")
-        sync = ArgoSyncState(wire: try c.field(.sync, ""))
+        sync = try c.wire(.sync)
         revision = try c.field(.revision, "")
         refreshing = try c.field(.refreshing, "")
         sources = try c.field(.sources, [])
@@ -265,7 +265,7 @@ public struct ArgoOperation: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        phase = ArgoPhase(wire: try c.field(.phase, ""))
+        phase = try c.wire(.phase)
         message = try c.field(.message, "")
         startedAt = try c.field(.startedAt, 0)
         finishedAt = try c.field(.finishedAt, 0)
@@ -348,7 +348,7 @@ public struct ArgoResource: Decodable, Equatable, Identifiable, Sendable {
         kind = try c.field(.kind, "")
         namespace = try c.field(.namespace, "")
         name = try c.field(.name, "")
-        sync = ArgoSyncState(wire: try c.field(.sync, ""))
+        sync = try c.wire(.sync)
         let healthWire: String = try c.field(.health, "")
         health = healthWire.isEmpty ? nil : ArgoHealth(wire: healthWire)
         healthMessage = try c.field(.healthMessage, "")
@@ -409,7 +409,7 @@ public struct ArgoAppSet: Decodable, Equatable, Identifiable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         namespace = try c.field(.namespace, "")
         name = try c.decode(String.self, forKey: .name)
-        level = ServiceHealth(wire: try c.field(.level, ""))
+        level = try c.wire(.level)
         apps = try c.field(.apps, 0)
         conditions = try c.field(.conditions, [])
     }

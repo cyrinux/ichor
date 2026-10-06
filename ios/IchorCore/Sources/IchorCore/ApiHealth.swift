@@ -4,10 +4,10 @@ import Foundation
 // pressure on it, and the pure logic the API server screen words it with.
 
 /// The overall verdict, worst first.
-public enum ApiStatus: String, Sendable {
+public enum ApiStatus: String, Sendable, WireEnum {
     case unhealthy, throttling, busy, ok
 
-    public init(wire: String) { self = ApiStatus(rawValue: wire) ?? .ok }
+    public static let wireFallback: Self = .ok
 }
 
 /// The API server's health and load. Rates are per second over `windowSeconds`, or since the
@@ -43,7 +43,7 @@ public struct ApiHealthReport: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        status = ApiStatus(wire: try c.field(.status, ""))
+        status = try c.wire(.status)
         version = try c.field(.version, "")
         ready = try c.field(.ready, ApiProbe())
         live = try c.field(.live, ApiProbe())
