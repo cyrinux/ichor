@@ -19,7 +19,7 @@ Bring your own cluster: the app needs a talosconfig for a Talos Linux cluster yo
 • Reboot (graceful, power cycle or force) or shut down a node, after typing its hostname to confirm
 • Capture packets live and save a .pcap for Wireshark
 • Upgrade Talos one node at a time, refused if etcd would lose quorum
-• Run the cluster health check, read the machine config, open a debug shell
+• Run the cluster health check, read and edit the machine config (tried with an automatic revert), open a debug shell
 • Issue a talosconfig, renew this phone's certificate, export a kubeconfig
 
 <b>Your phone gets only the access you give it</b>

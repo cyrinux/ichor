@@ -1,6 +1,28 @@
 # D3. Machineconfig patches in try mode
 
-Status: **partial** (read-only today). Size L. Read [../README.md](../README.md) for the conventions.
+Status: **partial** (single-node edit and try mode done). Size L. Read [../README.md](../README.md) for the conventions.
+
+## Done
+
+- **Schema** (`configschema.go`): Talos's `config.schema.json` of the node's version, downloaded
+  once from the Talos repository and kept in the data directory (`MachineConfigSchemaPrepare`).
+- **Tree and field edits** (`configtree.go`, `configedit.go`): `MachineConfigDescribe` turns a
+  config or a draft into a tree with the schema's types, documentation and allowed values;
+  `MachineConfigEdit` applies one set/add/remove to a draft. Both local.
+- **Preview and try** (`configapply.go`, `configsecrets.go`): `MachineConfigPreview` gives the
+  redacted diff and whether a reboot is needed (`ApplyConfiguration` dry run);
+  `StartConfigTry` applies in `TRY` mode with a 1, 5 or 10 minute timeout, then `Keep`
+  (re-apply in `AUTO`) or `Revert`. Hidden secrets are put back from the node's config;
+  changing or removing one is refused. Refused in privacy mode and when the node's config
+  changed since the draft was made.
+- **Apps**: the machine config screen has a Fields view and the YAML, an edit mode for both,
+  a review of the diff and the try screen with its countdown.
+- **Decision changed**: P1 below ("patches, not a YAML editor") was replaced by editing the
+  config itself, field by field with the schema or as YAML: the schema makes fields safe to
+  edit, and the diff shown before applying is what a patch would have been.
+
+Still to do: staged and reboot modes (P3), several nodes (P5), snippets (P6), drift to edit
+(P7), a countdown that survives leaving the screen (P4), probes against a real node.
 
 ## What exists today
 
@@ -9,7 +31,6 @@ Status: **partial** (read-only today). Size L. Read [../README.md](../README.md)
   Android `ui/machineconfig/MachineConfigScreen.kt` (search, copy, reveal), iOS `MachineConfigView.swift`.
 - Config drift (`observations.go` `ClusterDriftSnapshot`/`CompareDrift`, Insights tab 0)
   compares effective values (DNS, NTP, MTU, extensions, Secure Boot, versions) but cannot fix anything.
-- **No `ApplyConfiguration` call exists.**
 - Idea source: `talosctl patch machineconfig --mode try --timeout 5m --patch '…'` applies without
   a reboot and reverts automatically unless re-applied.
 

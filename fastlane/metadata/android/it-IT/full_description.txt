@@ -17,7 +17,7 @@ Porta il tuo cluster: l'app richiede un talosconfig di un cluster Talos Linux ch
 • Riavviare (normale, power cycle o forzato) o spegnere un nodo, dopo averne digitato il nome per conferma
 • Catturare pacchetti in tempo reale e salvare un .pcap per Wireshark
 • Aggiornare Talos un nodo alla volta, rifiutato se etcd perderebbe il quorum
-• Eseguire l'health check del cluster, leggere la configurazione della macchina, aprire una shell di debug
+• Eseguire l'health check del cluster, leggere e modificare la configurazione della macchina (provata con ripristino automatico), aprire una shell di debug
 • Emettere un talosconfig, rinnovare il certificato del telefono, esportare un kubeconfig
 
 <b>Il telefono ha solo l'accesso che gli dai</b>

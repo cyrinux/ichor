@@ -17,7 +17,7 @@ Apportez votre cluster : l'app a besoin d'un talosconfig pour un cluster Talos L
 • Redémarrer (normal, power cycle ou forcé) ou éteindre un nœud, après avoir tapé son nom pour confirmer
 • Capturer des paquets en direct et enregistrer un .pcap pour Wireshark
 • Mettre à jour Talos un nœud à la fois, refusé si etcd perdrait le quorum
-• Lancer le health check du cluster, lire la configuration machine, ouvrir un shell de debug
+• Lancer le health check du cluster, lire et modifier la configuration machine (essayée avec retour automatique), ouvrir un shell de debug
 • Émettre un talosconfig, renouveler le certificat du téléphone, exporter un kubeconfig
 
 <b>Le téléphone n'a que l'accès que vous lui donnez</b>
