@@ -80,9 +80,6 @@ data class ArgoApp(
     /** Defaults the sync sheet's server-side apply to the app's own option. */
     val serverSideApply: Boolean get() = syncOptions.any { it.equals("ServerSideApply=true", ignoreCase = true) }
 
-    /** What a sync with prune would delete. */
-    val pruneCandidates: List<ArgoResource> get() = resources.filter { it.prune }
-
     /** "chart@8.6.0" for a Helm chart, else the target revision or the short synced revision. */
     val versionLabel: String
         get() {

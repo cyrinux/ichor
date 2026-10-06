@@ -17,13 +17,13 @@ import name.levis.ichor.MainActivity
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.model.ArgoFreezeAction
 import name.levis.ichor.model.ArgoFreezeOptions
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.FREEZE_EXTEND_MINUTES
 import name.levis.ichor.model.ProjectWindow
-import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.runningIchorFreezes
 import name.levis.ichor.ui.DeepLink
 import name.levis.ichor.ui.uiText
@@ -51,7 +51,7 @@ private val scheduled = mutableMapOf<String, Set<String>>()
 
 /** The active cluster's fingerprint, null for none or the demo: read when a load starts. */
 fun freezeReminderCluster(app: TalosApp): String? =
-    app.configRepository.config.value?.activeSummary?.takeUnless { it.isDemo }?.fingerprint?.takeIf { it.isNotBlank() }
+    app.configRepository.config.value?.realFingerprint
 
 /** For [name.levis.ichor.ui.argocd.ArgoViewModel]: binds each load to the cluster active when it starts. */
 fun freezeReminderHook(app: TalosApp): () -> (ArgoStatus) -> Unit = {

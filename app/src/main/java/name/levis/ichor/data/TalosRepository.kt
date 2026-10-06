@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.R
@@ -112,7 +113,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
-import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.withLastKnown
 import name.levis.ichor.model.outage
 
@@ -163,7 +163,7 @@ class TalosRepository(
 
     /** The active cluster's fingerprint, when its results may be kept on disk (never the demo's). */
     private fun offlineCluster(): String? =
-        configs.config.value?.activeSummary?.takeUnless { it.isDemo }?.fingerprint?.takeIf { it.isNotBlank() }
+        configs.config.value?.realFingerprint
 
     private fun restored(key: String, cluster: String? = offlineCluster()): Timed<Any>? {
         val serializer = PERSISTED[key.substringBefore('|')] ?: return null

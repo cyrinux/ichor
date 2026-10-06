@@ -12,9 +12,6 @@ fun snapshotCandidates(statuses: List<EtcdNodeStatus>): List<EtcdNodeStatus> =
         // Followers first (the snapshot loads the member serving it), learners and the leader last.
         .sortedWith(compareBy<EtcdNodeStatus> { it.isLeader }.thenBy { it.isLearner }.thenBy { it.node })
 
-/** Default member for a snapshot: a healthy follower, else any healthy member, else none. */
-fun chooseSnapshotMember(statuses: List<EtcdNodeStatus>): EtcdNodeStatus? = snapshotCandidates(statuses).firstOrNull()
-
 /**
  * `etcd-<context>-<hostname>-<yyyyMMdd-HHmm>.snapshot`, with unsafe file name characters
  * replaced; `.snapshot.age` when [encrypted].
@@ -55,9 +52,6 @@ enum class SnapshotMode { KEYS, PASSPHRASE, NONE }
 /** One public key a snapshot is encrypted for, as Ichorgo.checkSnapshotRecipients describes it. */
 @Serializable
 data class SnapshotRecipient(val type: String = "", val comment: String = "")
-
-/** Shortest passphrase Go accepts (snapshotcrypt.go minSnapshotPassphrase). */
-const val MIN_SNAPSHOT_PASSPHRASE = 12
 
 /**
  * Shell commands restoring [fileName] on a Unix machine: decrypt with age (unless [mode] is

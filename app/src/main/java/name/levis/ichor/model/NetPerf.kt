@@ -11,7 +11,6 @@ const val NETPERF_PATH_HOST = "host"
 const val NETPERF_THROUGHPUT = "throughput"
 const val NETPERF_LATENCY = "latency"
 
-const val NETPERF_PHASE_PREPARING = "preparing"
 const val NETPERF_PHASE_STARTING = "starting"
 const val NETPERF_PHASE_TESTING = "testing"
 const val NETPERF_PHASE_CLEANING = "cleaning"

@@ -54,6 +54,3 @@ val FluxStatus.anyBusy: Boolean get() = apps.any { it.isBusy } || sources.any { 
 
 /** Nothing fails and nothing reconciles (suspended ones are the user's choice). */
 val FluxStatus.allFine: Boolean get() = apps.none { it.state == FluxState.FAILING || it.state == FluxState.RECONCILING }
-
-/** The source [app] pulls from, when listed. */
-fun FluxStatus.sourceOf(app: FluxApp): FluxSource? = app.source?.let { ref -> sources.firstOrNull { it.key == ref.key } }

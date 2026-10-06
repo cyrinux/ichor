@@ -25,8 +25,6 @@ fun gitopsValue(severity: String, reason: String): String = "$severity|$reason"
 
 fun gitopsSeverity(value: String): String = value.substringBefore('|')
 
-fun gitopsReason(value: String): String = value.substringAfter('|', "")
-
 /**
  * The Argo CD and Flux apps worth a notification, keyed "argocd|namespace/name" or
  * "flux|Kind namespace/name", valued "severity|reason" (see [gitopsValue]).

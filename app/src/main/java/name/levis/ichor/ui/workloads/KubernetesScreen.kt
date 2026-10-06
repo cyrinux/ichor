@@ -31,14 +31,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.TalosRepository
-import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.isMeteredNetwork
+import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.KubeNamespaces
 import name.levis.ichor.model.KubeScope
 import name.levis.ichor.model.defaultScope
 import name.levis.ichor.model.ShareTarget
-import name.levis.ichor.model.isDemo
 import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
@@ -90,7 +89,7 @@ fun KubernetesScreen(
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val servers by app.kubeServers.servers.collectAsStateWithLifecycle()
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
-    val fingerprint = config?.activeSummary?.takeIf { !it.isDemo && !mask.enabled }?.fingerprint?.takeIf { it.isNotBlank() }
+    val fingerprint = config?.realFingerprint?.takeUnless { mask.enabled }
     var editing by remember { mutableStateOf(false) }
     // Screenshot mode turned on with the dialog open: closed, not just hidden until it is off.
     LaunchedEffect(fingerprint) { if (fingerprint == null) editing = false }
@@ -172,7 +171,7 @@ private fun rememberKubeScope(app: TalosApp, namespaces: NamespacesViewModel, ma
     val stored by app.kubeScopes.scopes.collectAsStateWithLifecycle()
     val listed by namespaces.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (listed == UiState.Loading) namespaces.refresh() }
-    val cluster = config?.activeSummary?.takeIf { !it.isDemo && !masked }?.fingerprint?.takeIf { it.isNotBlank() }
+    val cluster = config?.realFingerprint?.takeUnless { masked }
     var local by rememberSaveable { mutableStateOf<String?>(null) }
     var fromLink by rememberSaveable { mutableStateOf(linked.ifEmpty { null }) }
     val known = (listed as? UiState.Loaded)?.data

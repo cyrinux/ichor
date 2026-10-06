@@ -132,8 +132,6 @@ class FluxTest {
         val calm = FluxStatus(apps = listOf(app("flux-system"), app("redis")), sources = status.sources.filter { !it.isBusy })
         assertTrue(calm.allFine)
         assertFalse(calm.anyBusy)
-        assertEquals("podinfo", status.sourceOf(app("podinfo"))?.name)
-        assertNull(status.sourceOf(app("redis")))
     }
 
     @Test

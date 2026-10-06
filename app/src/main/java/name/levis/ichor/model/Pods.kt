@@ -5,9 +5,6 @@ import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/kube_pods.go.
 
-@Serializable
-data class KubePodList(val pods: List<KubePod> = emptyList())
-
 /** One page of pods (KubePodsPage), in the API server's order. */
 @Serializable
 data class KubePodPage(
