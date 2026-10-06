@@ -38,6 +38,7 @@ type upgradePlan struct {
 	Acknowledge  []string `json:"acknowledge"`
 	Forceable    bool     `json:"forceable"` // every blocker is an etcd check that force skips
 	etcdBlockers []string // the blockers force bypasses
+	upgradeOnly  []string // the warnings about upgrading itself, which a reboot plan drops
 	target       planPeer
 	peers        []planPeer // the other nodes
 }
@@ -303,8 +304,9 @@ func computePlan(in planInput) upgradePlan {
 		plan.CurrentImage = in.defaultImage
 
 		if in.imageErr != "" {
-			plan.Warnings = append(plan.Warnings,
-				"could not read the installer image from the machine config ("+in.imageErr+"); assuming "+defaultInstallerRepo)
+			w := "could not read the installer image from the machine config (" + in.imageErr + "); assuming " + defaultInstallerRepo
+			plan.Warnings = append(plan.Warnings, w)
+			plan.upgradeOnly = append(plan.upgradeOnly, w)
 		}
 	}
 

@@ -122,7 +122,7 @@ func gatherMaintenancePlan(ctx context.Context, s *session, kube kubeTarget, nod
 		Hostname:     reboot.Hostname,
 		ControlPlane: reboot.ControlPlane,
 		Blockers:     reboot.Blockers,
-		Warnings:     rebootWarnings(reboot.Warnings),
+		Warnings:     rebootWarnings(reboot),
 		Acknowledge:  reboot.Acknowledge,
 	}
 
@@ -157,11 +157,11 @@ func gatherMaintenancePlan(ctx context.Context, s *session, kube kubeTarget, nod
 }
 
 // rebootWarnings drops the upgrade plan's warnings that are about upgrading, not rebooting.
-func rebootWarnings(warnings []string) []string {
+func rebootWarnings(up upgradePlan) []string {
 	out := []string{}
 
-	for _, w := range warnings {
-		if !strings.HasPrefix(w, noDrainWarning) && !strings.Contains(w, "installer image") {
+	for _, w := range up.Warnings {
+		if !strings.HasPrefix(w, noDrainWarning) && !slices.Contains(up.upgradeOnly, w) {
 			out = append(out, w)
 		}
 	}
