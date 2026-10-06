@@ -732,6 +732,9 @@
     <string name="machine_config_try_leave_note">Si vous quittez cet écran ou perdez la connexion, le nœud revient de lui-même en arrière.</string>
     <string name="machine_config_kept">La modification est maintenant permanente.</string>
     <string name="machine_config_reverted">Le nœud est revenu à sa configuration précédente.</string>
+    <string name="machine_config_remove_value_text">Il est supprimé du brouillon.</string>
+    <string name="machine_config_try_no_answer">L\'essai s\'est terminé sans réponse du nœud. Vérifiez sa configuration.</string>
+    <string name="machine_config_back_to_draft">Revenir au brouillon</string>
     <string name="machine_config_done">Terminé</string>
     <plurals name="machine_config_fields">
         <item quantity="one">%1$d champ</item>

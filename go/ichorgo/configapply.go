@@ -434,14 +434,23 @@ func runConfigTry(ctx context.Context, a configApplier, t configTry) (string, er
 
 	t.emit(tryPhaseApplying, "", time.Time{})
 
+	sent := time.Now()
+	warning := ""
+
 	if _, err := a.apply(ctx, plan.data, machineapi.ApplyConfigurationRequest_TRY, false, timeout); err != nil {
-		return "", err
+		// The answer can be lost while the node did apply: a change to its network is the
+		// very reason to try one. Only a node showing its previous config has refused.
+		if now, readErr := a.current(ctx); readErr == nil && now.redacted == plan.before {
+			return "", err
+		}
+
+		warning = fmt.Sprintf("the node did not confirm the change (%v): it may hold it, and reverts by itself at the end of the timeout", err)
 	}
 
-	deadline := time.Now().Add(timeout)
-	expired := t.after(timeout)
+	deadline := sent.Add(timeout)
+	expired := t.after(time.Until(deadline))
 
-	t.emit(tryPhaseTrying, "", deadline)
+	t.emit(tryPhaseTrying, warning, deadline)
 
 	for {
 		select {

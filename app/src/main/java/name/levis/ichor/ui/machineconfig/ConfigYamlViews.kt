@@ -17,7 +17,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -28,6 +31,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ConfigSyntaxError
@@ -72,11 +76,19 @@ private fun highlighted(lines: List<String>, query: String, color: Color): Annot
 /** The draft as text. [error] is why it is not valid YAML right now, if it is not. */
 @Composable
 fun ConfigYamlEditor(draft: String, error: ConfigSyntaxError?, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    // The field owns its text and cursor while it is on screen: the draft only changes from
+    // elsewhere (the Fields view) when this editor is not shown, and feeding the text back
+    // from the view model would lose characters typed in between.
+    var field by remember { mutableStateOf(TextFieldValue(draft)) }
     Column(modifier.fillMaxSize().imePadding()) {
         error?.let { SyntaxErrorCard(it, Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
         OutlinedTextField(
-            value = draft,
-            onValueChange = onChange,
+            value = field,
+            onValueChange = {
+                val changed = it.text != field.text
+                field = it
+                if (changed) onChange(it.text)
+            },
             textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = MaterialTheme.typography.bodySmall.fontSize),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false, keyboardType = KeyboardType.Ascii),
             isError = error != null,

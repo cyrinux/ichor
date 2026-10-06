@@ -42,6 +42,14 @@ func restoreSecrets(realYAML, baseYAML, draftYAML string) (string, error) {
 		return "", errors.New("the edited config is empty")
 	}
 
+	// An alias would copy what its anchor holds, a restored secret included, to wherever it
+	// is used. Talos writes neither, so a draft has no use for them.
+	for _, draft := range draftDocs {
+		if usesAnchors(draft) {
+			return "", errors.New("YAML anchors and aliases (&name, *name) are not supported in a machine config edited here")
+		}
+	}
+
 	// A document is found by what it is, not where it is: they may be reordered or dropped.
 	used := make([]bool, len(baseDocs))
 
@@ -79,6 +87,10 @@ func errLeftoverMask(path string) error {
 	return fmt.Errorf("%s holds the mask of a hidden secret that cannot be traced back to it; edit a list item or move it, not both at once", pathLabel(path))
 }
 
+func errSecretChanged(path string) error {
+	return fmt.Errorf("%s is a secret: changing it from the app is not supported", pathLabel(path))
+}
+
 func pathLabel(path string) string {
 	if path == "" {
 		return "the config"
@@ -95,6 +107,11 @@ func restoreNode(real, base, draft *yaml.Node, path string) error {
 			return errLeftoverMask(path)
 		}
 
+		// Something of another shape written over a secret is a changed secret too.
+		if containsMask(base) {
+			return errSecretChanged(path)
+		}
+
 		return nil
 	}
 
@@ -105,12 +122,12 @@ func restoreNode(real, base, draft *yaml.Node, path string) error {
 		return restoreSequence(real, base, draft, path)
 	case yaml.ScalarNode:
 		switch {
-		case base.Value != redacted && draft.Value == redacted:
+		case base.Value != redacted && containsMask(draft):
 			return errLeftoverMask(path)
 		case base.Value != redacted:
 			return nil
 		case draft.Value != redacted:
-			return fmt.Errorf("%s is a secret: changing it from the app is not supported", pathLabel(path))
+			return errSecretChanged(path)
 		}
 
 		draft.Value, draft.Tag, draft.Style = real.Value, real.Tag, real.Style
@@ -138,8 +155,10 @@ func restoreMapping(real, base, draft *yaml.Node, path string) error {
 }
 
 // restoreSequence pairs each item of draft with the item of base it comes from. An untouched
-// item is found wherever it moved; an edited item is paired with the one at its place when
-// the list kept its shape, and counts as new otherwise.
+// item is found wherever it moved. Nothing identifies an edited item, so it is paired with
+// the one at its place only when it is the single edited item of a list that kept its shape;
+// otherwise it counts as new, and a mask in it is refused. When items holding secrets look
+// the same once redacted, they cannot be told apart at all: such a list must keep its shape.
 func restoreSequence(real, base, draft *yaml.Node, path string) error {
 	if len(real.Content) != len(base.Content) {
 		return errors.New("read the node's config: its lists do not line up")
@@ -167,15 +186,21 @@ func restoreSequence(real, base, draft *yaml.Node, path string) error {
 		}
 	}
 
-	// Nothing identifies an edited item, so it is only paired with the one at its place, and
-	// only when the list kept its shape: same length, nothing moved.
-	inPlace := len(draft.Content) == len(base.Content)
+	inPlace, edited := len(draft.Content) == len(base.Content), 0
 
 	for i, j := range from {
 		inPlace = inPlace && (j < 0 || j == i)
+
+		if j < 0 {
+			edited++
+		}
 	}
 
-	if inPlace {
+	if !inPlace && hasTwinSecrets(base) {
+		return fmt.Errorf("%s holds secrets that cannot be told apart: edit its items without adding, removing or moving any", pathLabel(path))
+	}
+
+	if inPlace && edited == 1 {
 		for i := range from {
 			from[i] = i
 		}
@@ -206,6 +231,42 @@ func joinPath(path, key string) string {
 	}
 
 	return path + "." + key
+}
+
+// hasTwinSecrets tells whether two items of list hold a secret and look the same redacted.
+func hasTwinSecrets(list *yaml.Node) bool {
+	for i, a := range list.Content {
+		if !containsMask(a) {
+			continue
+		}
+
+		for _, b := range list.Content[i+1:] {
+			if nodesEqual(a, b) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// usesAnchors tells whether n or anything under it is an alias or carries an anchor.
+func usesAnchors(n *yaml.Node) bool {
+	if n == nil {
+		return false
+	}
+
+	if n.Kind == yaml.AliasNode || n.Anchor != "" {
+		return true
+	}
+
+	for _, c := range n.Content {
+		if usesAnchors(c) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // containsMask tells whether n or anything under it is the mask of a secret.

@@ -9,6 +9,8 @@ struct ConfigTryView: View {
     let base: String
     let draft: String
     let timeoutSeconds: Int
+    /// How the try ended, told once, before the screen is closed.
+    let onOutcome: (ConfigTryOutcome) -> Void
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -107,7 +109,8 @@ struct ConfigTryView: View {
             Text("The node is back on its previous config.").font(.headline).multilineTextAlignment(.center)
         case .failed(let message):
             Image(systemName: "xmark.octagon.fill").font(.system(size: 56)).foregroundStyle(.statusBad)
-            Text(verbatim: message).multilineTextAlignment(.center).textSelection(.enabled)
+            Text(verbatim: message.isEmpty ? String(localized: "The config could not be applied.") : message)
+                .multilineTextAlignment(.center).textSelection(.enabled)
         }
         Button { dismiss() } label: {
             Text("Done").frame(maxWidth: .infinity)
@@ -124,7 +127,7 @@ struct ConfigTryView: View {
     private func run() async {
         guard handle == nil else { return }
         guard let client = model.client else {
-            outcome = .failed(String(localized: "The config could not be applied."))
+            finish(.failed(String(localized: "The config could not be applied.")))
             return
         }
         let run = client.tryMachineConfig(node: node, base: base, draft: draft, timeoutSeconds: timeoutSeconds)
@@ -137,11 +140,16 @@ struct ConfigTryView: View {
                 progress = update
                 requested = false
             case .done(let result):
-                outcome = result
+                finish(result)
                 announce(resultAnnouncement(result))
             }
         }
         restoreIdleTimer()
+    }
+
+    private func finish(_ result: ConfigTryOutcome) {
+        outcome = result
+        onOutcome(result)
     }
 
     private func resultAnnouncement(_ outcome: ConfigTryOutcome) -> String {

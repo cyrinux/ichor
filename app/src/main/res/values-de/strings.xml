@@ -725,6 +725,9 @@
     <string name="machine_config_try_leave_note">Wenn du diesen Bildschirm verlässt oder die Verbindung verlierst, setzt sich der Node selbst zurück.</string>
     <string name="machine_config_kept">Die Änderung ist jetzt dauerhaft.</string>
     <string name="machine_config_reverted">Der Node nutzt wieder seine vorherige Konfiguration.</string>
+    <string name="machine_config_remove_value_text">Es wird aus dem Entwurf entfernt.</string>
+    <string name="machine_config_try_no_answer">Der Versuch endete ohne Antwort des Nodes. Prüfe seine Konfiguration.</string>
+    <string name="machine_config_back_to_draft">Zurück zum Entwurf</string>
     <string name="machine_config_done">Fertig</string>
     <plurals name="machine_config_fields">
         <item quantity="one">%1$d Feld</item>

@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ConfigEdit
 import name.levis.ichor.model.ConfigPreview
+import name.levis.ichor.model.ConfigSyntaxError
 import name.levis.ichor.model.ConfigTree
 import name.levis.ichor.model.ConfigTryCommand
 import name.levis.ichor.model.ConfigTryState
@@ -24,6 +25,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.uiStateOf
 import name.levis.ichor.ui.uiText
+import name.levis.ichor.ui.userMessage
 
 /**
  * What the machine config screen shows besides the node's YAML: its tree, and the draft
@@ -32,6 +34,8 @@ import name.levis.ichor.ui.uiText
 data class ConfigEditorState(
     /** The tree of the draft while editing, of the node's config otherwise. */
     val tree: ConfigTree? = null,
+    /** The draft changed since [tree] was made: its paths may point at other fields. */
+    val treeStale: Boolean = false,
     /** The redacted config the draft was made from. */
     val base: String = "",
     /** Non-null while editing. */
@@ -45,7 +49,7 @@ data class ConfigEditorState(
 ) {
     val editing: Boolean get() = draft != null
     val dirty: Boolean get() = draft != null && draft != base
-    val canReview: Boolean get() = dirty && !busy && tree?.error == null
+    val canReview: Boolean get() = dirty && !busy && !treeStale && tree?.error == null
 }
 
 /** How long typing in the YAML editor rests before the draft is parsed again. */
@@ -67,12 +71,15 @@ class MachineConfigViewModel(private val talos: TalosRepository, private val nod
     /** Refused edits, to show once. */
     val messages: SharedFlow<UiText> = _messages.asSharedFlow()
 
+    // Keep and Revert are only offered once the node holds the change, when the run listens.
     private val commands = MutableSharedFlow<ConfigTryCommand>(extraBufferCapacity = 1)
 
     /** The Talos version whose schema describes the tree; empty until known (or when it cannot be). */
     private var schemaVersion = ""
     private var editWhenLoaded = false
     private var describing: Job? = null
+    private var applying: Job? = null
+    private var reviewing: Job? = null
     private var trying: Job? = null
 
     init {
@@ -86,16 +93,18 @@ class MachineConfigViewModel(private val talos: TalosRepository, private val nod
 
     // Not cached anywhere: the revealed config holds the cluster's secrets.
     override suspend fun fetch(): String {
-        val yaml = talos.machineConfig(node, _revealed.value)
-        val edit = editWhenLoaded && !_revealed.value
+        val edit = editWhenLoaded
         editWhenLoaded = false
-        _editor.update { ConfigEditorState(base = if (edit) yaml else "", draft = if (edit) yaml else null) }
+        val yaml = talos.machineConfig(node, _revealed.value)
+        // A draft only ever starts from the redacted config.
+        val draft = yaml.takeIf { edit && !_revealed.value }
+        _editor.update { ConfigEditorState(base = draft.orEmpty(), draft = draft) }
         describe(yaml)
         return yaml
     }
 
     fun reveal(on: Boolean) {
-        if (_revealed.value == on) return
+        if (_revealed.value == on || _editor.value.editing) return
         _revealed.value = on
         refresh(reset = true) // never show secrets after hiding them, even while refetching
     }
@@ -114,14 +123,17 @@ class MachineConfigViewModel(private val talos: TalosRepository, private val nod
     /** Drops the draft; the node was not changed. */
     fun discard() {
         describing?.cancel()
-        _editor.update { ConfigEditorState(tree = it.tree) }
+        applying?.cancel()
+        reviewing?.cancel()
+        _editor.update { ConfigEditorState(tree = it.tree, treeStale = true) }
         (state.value as? UiState.Loaded)?.data?.let { text -> viewModelScope.launch { describe(text) } }
     }
 
     /** The YAML editor's text: kept at once, parsed when typing rests. */
     fun setDraft(text: String) {
-        if (_editor.value.draft == null) return
-        _editor.update { it.copy(draft = text) }
+        val current = _editor.value.draft ?: return
+        if (current == text) return
+        _editor.update { it.copy(draft = text, treeStale = true) }
         describing?.cancel()
         describing = viewModelScope.launch {
             delay(DESCRIBE_DEBOUNCE_MS)
@@ -131,14 +143,19 @@ class MachineConfigViewModel(private val talos: TalosRepository, private val nod
 
     /** One field edit from the tree. A refused edit leaves the draft as it was and says why. */
     fun apply(edit: ConfigEdit) {
-        val draft = _editor.value.draft ?: return
-        if (_editor.value.busy) return
+        val editor = _editor.value
+        val draft = editor.draft ?: return
+        // The edit's path comes from the tree: it must be the tree of this very draft.
+        if (editor.busy || editor.treeStale) return
         _editor.update { it.copy(busy = true) }
-        viewModelScope.launch {
+        applying = viewModelScope.launch {
             try {
                 val edited = talos.machineConfigEdit(draft, edit)
-                _editor.update { it.copy(draft = edited) }
-                describe(edited)
+                // Only when the draft is still the one that was edited (not discarded meanwhile).
+                if (_editor.value.draft == draft) {
+                    _editor.update { it.copy(draft = edited, treeStale = true) }
+                    describe(edited)
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
@@ -153,49 +170,84 @@ class MachineConfigViewModel(private val talos: TalosRepository, private val nod
     fun review() {
         val editor = _editor.value
         val draft = editor.draft ?: return
+        reviewing?.cancel()
         _editor.update { it.copy(review = UiState.Loading) }
-        viewModelScope.launch {
+        reviewing = viewModelScope.launch {
             val preview = uiStateOf { talos.machineConfigPreview(node, editor.base, draft) }
-            _editor.update { if (it.review != null) it.copy(review = preview) else it }
+            // The diff shown must be the one of the draft that a try would send.
+            _editor.update { if (it.review != null && it.draft == draft) it.copy(review = preview) else it }
         }
     }
 
-    fun closeReview() = _editor.update { it.copy(review = null) }
+    fun closeReview() {
+        reviewing?.cancel()
+        _editor.update { it.copy(review = null) }
+    }
 
     /** Applies the draft in try mode: the node reverts after [timeoutSeconds] unless [keep] is called. */
     fun startTry(timeoutSeconds: Int) {
         val editor = _editor.value
         val draft = editor.draft ?: return
-        if (trying?.isActive == true) return
+        if (trying?.isActive == true || editor.review !is UiState.Loaded) return
         _editor.update { it.copy(run = ConfigTryState.Running(ConfigTryState.APPLYING)) }
         trying = viewModelScope.launch {
-            talos.tryMachineConfig(node, editor.base, draft, timeoutSeconds, commands).collect { event ->
-                _editor.update { it.copy(run = it.run.after(event)) }
+            try {
+                talos.tryMachineConfig(node, editor.base, draft, timeoutSeconds, commands).collect { event ->
+                    _editor.update { it.copy(run = it.run.after(event)) }
+                }
+                // The run always ends with how it ended; without it, nothing can be said.
+                _editor.update { if (it.run is ConfigTryState.Running) it.copy(run = ConfigTryState.Failed("")) else it }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                _editor.update { it.copy(run = ConfigTryState.Failed(e.userMessage())) }
             }
         }
     }
 
-    fun keep() {
-        commands.tryEmit(ConfigTryCommand.KEEP)
+    fun keep() = command(ConfigTryCommand.KEEP, ConfigTryState.KEEPING)
+
+    fun revertNow() = command(ConfigTryCommand.REVERT, ConfigTryState.REVERTING)
+
+    /** Sends [command] once: the screen shows [phase] at once, so a second tap cannot follow. */
+    private fun command(command: ConfigTryCommand, phase: String) {
+        val run = _editor.value.run as? ConfigTryState.Running ?: return
+        if (!run.trying) return
+        _editor.update { it.copy(run = run.copy(phase = phase, message = "")) }
+        commands.tryEmit(command)
     }
 
-    fun revertNow() {
-        commands.tryEmit(ConfigTryCommand.REVERT)
-    }
-
-    /** Leaves a finished try: back to the node's config, read again. */
+    /**
+     * Leaves a finished try. Kept or reverted: back to the node's config, read again. Failed:
+     * back to the draft, which is still there to fix or try again.
+     */
     fun finishTry() {
-        if (_editor.value.run is ConfigTryState.Running) return
-        trying?.cancel()
-        _editor.update { ConfigEditorState(tree = it.tree) }
-        refresh(reset = true)
+        when (_editor.value.run) {
+            null, is ConfigTryState.Running -> return
+            is ConfigTryState.Failed -> _editor.update { it.copy(run = null, review = null) }
+            ConfigTryState.Kept, ConfigTryState.Reverted -> {
+                _editor.update { ConfigEditorState(tree = it.tree, treeStale = true) }
+                refresh(reset = true)
+            }
+        }
     }
 
     private fun currentText(): String? = _editor.value.draft ?: (state.value as? UiState.Loaded)?.data
 
     private suspend fun describe(text: String) {
-        val tree = runCatching { talos.machineConfigDescribe(text, schemaVersion) }.getOrNull() ?: return
-        // A newer text may have come meanwhile: only the tree of what is shown is kept.
-        _editor.update { if (it.draft == null || it.draft == text) it.copy(tree = tree) else it }
+        val revealed = _revealed.value
+        val tree = try {
+            talos.machineConfigDescribe(text, schemaVersion)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            ConfigTree(error = ConfigSyntaxError(message = e.userMessage()))
+        }
+        // A newer text may have come meanwhile: only the tree of what is shown is kept, and
+        // never the tree of a revealed config once its secrets were hidden again.
+        _editor.update {
+            val current = if (it.draft == null) _revealed.value == revealed else it.draft == text
+            if (current) it.copy(tree = tree, treeStale = false) else it
+        }
     }
 }

@@ -275,8 +275,10 @@ func (b treeBuilder) pick(sch *schemaNode, node *yaml.Node) *schemaNode {
 }
 
 func (b treeBuilder) build(node *yaml.Node, sch *schemaNode, key string, path []string) *configNode {
-	if node.Kind == yaml.AliasNode && node.Alias != nil {
-		node = node.Alias
+	// An alias is shown as written, never followed: a draft is typed by hand, and aliases of
+	// aliases would make the tree as large as one likes. Such a draft cannot be applied anyway.
+	if node.Kind == yaml.AliasNode {
+		return &configNode{Key: key, Path: slices.Clone(path), Type: configTypeString, Value: "*" + node.Value}
 	}
 
 	sch = b.pick(sch, node)

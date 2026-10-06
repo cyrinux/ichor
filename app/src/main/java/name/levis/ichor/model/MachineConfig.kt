@@ -199,6 +199,18 @@ sealed interface ConfigRow {
     }
 }
 
+/**
+ * A key per row for a list on screen, unique even when the YAML repeats a key (which a
+ * hand-edited draft can do): the row's id, numbered from its second occurrence.
+ */
+fun List<ConfigRow>.listKeys(): List<String> {
+    val seen = HashMap<String, Int>()
+    return map { row ->
+        val n = seen.merge(row.id, 1, Int::plus) ?: 1
+        if (n == 1) row.id else "${row.id}#$n"
+    }
+}
+
 fun fieldId(doc: Int, path: List<String>): String = "$doc\u001F" + path.joinToString("\u001F")
 
 /**

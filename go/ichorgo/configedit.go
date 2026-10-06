@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -199,19 +200,20 @@ func newConfigValue(typ, value string) (*yaml.Node, error) {
 
 		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!bool", Value: value}, nil
 	case configTypeInteger:
-		value = strings.TrimSpace(value)
-		if _, err := strconv.ParseInt(value, 10, 64); err != nil {
+		// Written back in base 10: YAML would read "010" as octal.
+		n, err := strconv.ParseInt(strings.TrimSpace(value), 10, 64)
+		if err != nil {
 			return nil, fmt.Errorf("%q is not a whole number", value)
 		}
 
-		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!int", Value: value}, nil
+		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!int", Value: strconv.FormatInt(n, 10)}, nil
 	case configTypeNumber:
-		value = strings.TrimSpace(value)
-		if _, err := strconv.ParseFloat(value, 64); err != nil {
+		f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+		if err != nil || math.IsNaN(f) || math.IsInf(f, 0) {
 			return nil, fmt.Errorf("%q is not a number", value)
 		}
 
-		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!float", Value: value}, nil
+		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!float", Value: strconv.FormatFloat(f, 'g', -1, 64)}, nil
 	}
 
 	// Any type: what YAML reads, so true, 5 and text all work.
@@ -222,6 +224,11 @@ func newConfigValue(typ, value string) (*yaml.Node, error) {
 
 	if doc.Content[0].Kind != yaml.ScalarNode {
 		return nil, errors.New("only a single value can be typed here; use the YAML editor for more")
+	}
+
+	// YAML dropped or folded part of the text (a "#" comment, a line break): it is text.
+	if doc.Content[0].Value != strings.TrimSpace(value) || doc.Content[0].Anchor != "" {
+		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: value}, nil
 	}
 
 	return &yaml.Node{Kind: yaml.ScalarNode, Tag: doc.Content[0].Tag, Value: doc.Content[0].Value}, nil

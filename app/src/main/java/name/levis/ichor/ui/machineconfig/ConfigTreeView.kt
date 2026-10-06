@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ChevronRight
@@ -41,6 +41,7 @@ import name.levis.ichor.model.ConfigNode
 import name.levis.ichor.model.ConfigRow
 import name.levis.ichor.model.ConfigTree
 import name.levis.ichor.model.ConfigType
+import name.levis.ichor.model.listKeys
 import name.levis.ichor.model.rows
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.EmptyText
@@ -57,6 +58,7 @@ private val Indent = 14.dp
  * The machine config field by field: one section per YAML document, objects and lists that
  * open on tap, and what the schema says under each key. While [editing], a value opens its
  * editor, and objects and lists can grow or be removed; [onEdit] gets each change.
+ * [expanded] holds the ids of the open objects and lists (see [ConfigRow.id]).
  */
 @Composable
 fun ConfigTreeView(
@@ -64,13 +66,15 @@ fun ConfigTreeView(
     query: String,
     editing: Boolean,
     enabled: Boolean,
+    expanded: Set<String>,
+    onExpanded: (Set<String>) -> Unit,
     onEdit: (ConfigEdit) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var expanded by remember { mutableStateOf(emptySet<String>()) }
     var sheet by remember { mutableStateOf<ConfigSheet?>(null) }
-    var removing by remember { mutableStateOf<ConfigRow.Field?>(null) }
+    var removing by remember { mutableStateOf<Removal?>(null) }
     val rows = remember(tree, expanded, query) { tree.rows(expanded, query) }
+    val keys = remember(rows) { rows.listKeys() }
 
     if (rows.isEmpty()) {
         EmptyText(stringResource(R.string.machine_config_no_match), modifier.padding(16.dp))
@@ -81,16 +85,16 @@ fun ConfigTreeView(
         if (!tree.schema) {
             item(key = "no-schema") { InfoNotice(stringResource(R.string.machine_config_no_schema), Modifier.padding(vertical = 8.dp)) }
         }
-        items(rows, key = { it.id }) { row ->
+        itemsIndexed(rows, key = { i, _ -> keys[i] }) { _, row ->
             when (row) {
                 is ConfigRow.Title -> SectionTitle(row.title, Modifier.padding(top = 8.dp))
                 is ConfigRow.Field -> when {
                     !row.isRoot -> FieldRow(
                         row = row,
                         editing = editing && enabled,
-                        onToggle = { expanded = if (row.id in expanded) expanded - row.id else expanded + row.id },
+                        onToggle = { onExpanded(if (row.id in expanded) expanded - row.id else expanded + row.id) },
                         onOpen = { sheet = it },
-                        onRemove = { removing = row },
+                        onRemove = { removing = Removal(row.doc, row.node) },
                     )
                     editing && row.node.canGrow -> TextButton(enabled = enabled, onClick = { sheet = ConfigSheet.Add(row.doc, row.node) }) {
                         Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -101,22 +105,27 @@ fun ConfigTreeView(
         }
     }
 
-    sheet?.let { ConfigSheetHost(it, onEdit = onEdit, onDismiss = { sheet = null }) }
+    sheet?.let { open ->
+        ConfigSheetHost(open, onEdit = onEdit, onRemove = { removing = Removal(it.doc, it.node) }, onDismiss = { sheet = null })
+    }
 
-    removing?.let { row ->
+    removing?.let { removal ->
         ConfirmDialog(
-            title = stringResource(R.string.machine_config_remove_title, row.node.key),
-            text = stringResource(R.string.machine_config_remove_text),
+            title = stringResource(R.string.machine_config_remove_title, removal.node.key),
+            text = stringResource(if (removal.node.isContainer) R.string.machine_config_remove_text else R.string.machine_config_remove_value_text),
             confirm = stringResource(R.string.machine_config_remove),
             onConfirm = {
                 removing = null
-                onEdit(ConfigEdit.remove(row.doc, row.node.path))
+                onEdit(ConfigEdit.remove(removal.doc, removal.node.path))
             },
             onDismiss = { removing = null },
             destructive = true,
         )
     }
 }
+
+/** A field the user asked to remove, until confirmed. */
+private data class Removal(val doc: Int, val node: ConfigNode)
 
 @Composable
 private fun FieldRow(

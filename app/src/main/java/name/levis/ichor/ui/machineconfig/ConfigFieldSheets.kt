@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -59,7 +60,7 @@ sealed interface ConfigSheet {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConfigSheetHost(sheet: ConfigSheet, onEdit: (ConfigEdit) -> Unit, onDismiss: () -> Unit) {
+fun ConfigSheetHost(sheet: ConfigSheet, onEdit: (ConfigEdit) -> Unit, onRemove: (ConfigSheet.Value) -> Unit, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             Modifier
@@ -75,7 +76,15 @@ fun ConfigSheetHost(sheet: ConfigSheet, onEdit: (ConfigEdit) -> Unit, onDismiss:
                 onDismiss()
             }
             when (sheet) {
-                is ConfigSheet.Value -> ValueSheet(sheet, done, onDismiss)
+                is ConfigSheet.Value -> ValueSheet(
+                    sheet,
+                    onEdit = done,
+                    onRemove = {
+                        onDismiss()
+                        onRemove(sheet)
+                    },
+                    onDismiss = onDismiss,
+                )
                 is ConfigSheet.Add -> AddSheet(sheet, done, onDismiss)
             }
         }
@@ -87,7 +96,7 @@ private fun scalarType(type: String): String =
     if (type == ConfigType.STRING || type == ConfigType.INTEGER || type == ConfigType.NUMBER || type == ConfigType.BOOLEAN) type else ConfigType.ANY
 
 @Composable
-private fun ValueSheet(sheet: ConfigSheet.Value, onEdit: (ConfigEdit) -> Unit, onDismiss: () -> Unit) {
+private fun ValueSheet(sheet: ConfigSheet.Value, onEdit: (ConfigEdit) -> Unit, onRemove: () -> Unit, onDismiss: () -> Unit) {
     val node = sheet.node
     val type = scalarType(node.type)
     var value by remember(node) { mutableStateOf(node.value) }
@@ -96,12 +105,12 @@ private fun ValueSheet(sheet: ConfigSheet.Value, onEdit: (ConfigEdit) -> Unit, o
     if (node.description.isNotEmpty()) MutedText(node.description)
     ConfigValueInput(type, node.allowed, value) { value = it }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        TextButton(onClick = { onEdit(ConfigEdit.remove(sheet.doc, node.path)) }) {
+        TextButton(onClick = onRemove) {
             Text(stringResource(R.string.machine_config_remove), color = LocalStatusColors.current.bad)
         }
         Spacer(Modifier.weight(1f))
         TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
-        Button(enabled = value != node.value, onClick = { onEdit(ConfigEdit.set(sheet.doc, node.path, type, value)) }) {
+        Button(enabled = value != node.value && isComplete(type, node.allowed, value), onClick = { onEdit(ConfigEdit.set(sheet.doc, node.path, type, value)) }) {
             Text(stringResource(R.string.machine_config_save))
         }
     }
@@ -156,18 +165,28 @@ private fun AddSheet(sheet: ConfigSheet.Add, onEdit: (ConfigEdit) -> Unit, onDis
     if (type != ConfigType.OBJECT && type != ConfigType.ARRAY) {
         ConfigValueInput(type, picked?.allowed.orEmpty(), value) { value = it }
     }
+    // An on/off value that was never touched is off, not empty.
+    val sent = if (type == ConfigType.BOOLEAN && value.isEmpty()) "false" else value
     Row(verticalAlignment = Alignment.CenterVertically) {
         Spacer(Modifier.weight(1f))
         TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         Button(
-            enabled = isList || key.isNotEmpty(),
-            onClick = {
-                // An on/off value that was never touched is off, not empty.
-                val sent = if (type == ConfigType.BOOLEAN && value.isEmpty()) "false" else value
-                onEdit(ConfigEdit.add(sheet.doc, node.path, if (isList) "" else key, type, sent))
-            },
+            enabled = (isList || key.isNotEmpty()) && isComplete(type, picked?.allowed.orEmpty(), sent),
+            onClick = { onEdit(ConfigEdit.add(sheet.doc, node.path, if (isList) "" else key, type, sent)) },
         ) { Text(stringResource(R.string.machine_config_add)) }
     }
+}
+
+/**
+ * Whether [value] can be sent as a [type]: one of the [allowed] values when the schema lists
+ * them, and something typed for a number. Text may be empty; objects and lists start empty.
+ */
+private fun isComplete(type: String, allowed: List<String>, value: String): Boolean = when {
+    type == ConfigType.OBJECT || type == ConfigType.ARRAY -> true
+    allowed.isNotEmpty() -> value in allowed
+    type == ConfigType.INTEGER -> value.trim().toLongOrNull() != null
+    type == ConfigType.NUMBER -> value.trim().toDoubleOrNull() != null
+    else -> true
 }
 
 @Composable
@@ -208,9 +227,12 @@ private fun ChipRow(options: List<String>, selected: String, label: @Composable 
 private fun ConfigValueInput(type: String, allowed: List<String>, value: String, onValue: (String) -> Unit) {
     when {
         allowed.isNotEmpty() -> ChipRow(allowed, selected = value, onSelect = onValue)
-        type == ConfigType.BOOLEAN -> Row(verticalAlignment = Alignment.CenterVertically) {
+        type == ConfigType.BOOLEAN -> Row(
+            Modifier.fillMaxWidth().toggleable(value = value == "true", role = Role.Switch, onValueChange = { onValue(it.toString()) }),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(stringResource(R.string.machine_config_value), Modifier.weight(1f))
-            Switch(checked = value == "true", onCheckedChange = { onValue(it.toString()) })
+            Switch(checked = value == "true", onCheckedChange = null)
         }
         else -> OutlinedTextField(
             value = value,

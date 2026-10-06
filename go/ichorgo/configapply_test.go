@@ -45,6 +45,10 @@ type fakeConfigNode struct {
 	calls    []fakeApply
 	reboot   bool    // what AUTO answers
 	failures []error // returned by the next real (not dry run) AUTO applies
+	// tryErr is what a TRY answers; tryApplies tells whether the node applied it all the
+	// same (an answer lost on the way back).
+	tryErr     error
+	tryApplies bool
 }
 
 func newFakeConfigNode(t *testing.T) *fakeConfigNode {
@@ -78,7 +82,13 @@ func (n *fakeConfigNode) apply(_ context.Context, data []byte, mode machineapi.A
 	switch {
 	case dryRun:
 	case mode == machineapi.ApplyConfigurationRequest_TRY:
-		n.previous, n.active = n.active, data
+		if n.tryErr == nil || n.tryApplies {
+			n.previous, n.active = n.active, data
+		}
+
+		if n.tryErr != nil {
+			return configApplyResult{}, n.tryErr
+		}
 	default:
 		if len(n.failures) > 0 {
 			err := n.failures[0]
@@ -293,7 +303,7 @@ func TestRestoreSecretsInLists(t *testing.T) {
 		"reordered":            {"peers:\n" + item("c") + item("a") + item("b"), "peers:\n    - name: c\n      key: secret-c\n    - name: a\n      key: secret-a\n    - name: b\n      key: secret-b\n"},
 		"one removed":          {"peers:\n" + item("a") + item("c"), "peers:\n    - name: a\n      key: secret-a\n    - name: c\n      key: secret-c\n"},
 		"one added":            {base + "    - name: d\n      key: new-key\n", real + "    - name: d\n      key: new-key\n"},
-		"edited in place":      {strings.Replace(base, "name: b", "name: b2", 1), strings.Replace(real, "name: b", "name: b2", 1)},
+		"one edited in place":  {strings.Replace(base, "name: b", "name: b2", 1), strings.Replace(real, "name: b", "name: b2", 1)},
 		"edited and one gone":  {"peers:\n" + strings.Replace(item("b"), "name: b", "name: b2", 1) + item("c"), ""},
 		"edited and moved":     {"peers:\n" + strings.Replace(item("b"), "name: b", "name: b2", 1) + item("a") + item("c"), ""},
 		"added with a mask":    {base + item("d"), ""},

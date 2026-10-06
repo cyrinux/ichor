@@ -732,6 +732,9 @@
     <string name="machine_config_try_leave_note">Si sales de esta pantalla o pierdes la conexión, el nodo se revierte solo.</string>
     <string name="machine_config_kept">El cambio ya es permanente.</string>
     <string name="machine_config_reverted">El nodo ha vuelto a su configuración anterior.</string>
+    <string name="machine_config_remove_value_text">Se quita del borrador.</string>
+    <string name="machine_config_try_no_answer">La prueba terminó sin respuesta del nodo. Comprueba su configuración.</string>
+    <string name="machine_config_back_to_draft">Volver al borrador</string>
     <string name="machine_config_done">Listo</string>
     <plurals name="machine_config_fields">
         <item quantity="one">%1$d campo</item>

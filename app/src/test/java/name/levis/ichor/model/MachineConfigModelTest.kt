@@ -63,6 +63,19 @@ class MachineConfigModelTest {
     }
 
     @Test
+    fun listKeysStayUniqueWhenTheYamlRepeatsAKey() {
+        val twice = TalosJson.decodeFromString(
+            ConfigTree.serializer(),
+            """{"documents":[{"index":0,"title":"v1alpha1","node":{"type":"object","children":[
+                {"key":"debug","path":["debug"],"type":"boolean","value":"true"},
+                {"key":"debug","path":["debug"],"type":"boolean","value":"false"}]}}]}""",
+        )
+        val keys = twice.rows(emptySet()).listKeys()
+        assertEquals(keys.size, keys.toSet().size)
+        assertEquals(tree.rows(emptySet()).map { it.id }, tree.rows(emptySet()).listKeys())
+    }
+
+    @Test
     fun searchOpensWhatMatchesAndDropsTheRest() {
         assertEquals(listOf("machine", "certSANs", "0"), fields(tree.rows(emptySet(), "192.0")))
         // A matching container keeps everything under it.

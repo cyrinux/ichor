@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.machineconfig
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -165,7 +166,14 @@ fun ConfigTryContent(run: ConfigTryState, onKeep: () -> Unit, onRevert: () -> Un
         }
         ConfigTryState.Kept -> Ended(Icons.Outlined.CheckCircle, status.ok, stringResource(R.string.machine_config_kept), onDone, modifier)
         ConfigTryState.Reverted -> Ended(Icons.Outlined.Restore, status.muted, stringResource(R.string.machine_config_reverted), onDone, modifier)
-        is ConfigTryState.Failed -> Ended(Icons.Outlined.ErrorOutline, status.bad, run.message, onDone, modifier)
+        is ConfigTryState.Failed -> Ended(
+            Icons.Outlined.ErrorOutline,
+            status.bad,
+            run.message.ifEmpty { stringResource(R.string.machine_config_try_no_answer) },
+            onDone,
+            modifier,
+            done = R.string.machine_config_back_to_draft,
+        )
     }
 }
 
@@ -192,7 +200,14 @@ private fun Trying(run: ConfigTryState.Running, onKeep: () -> Unit, onRevert: ()
 }
 
 @Composable
-private fun Ended(icon: ImageVector, tint: Color, text: String, onDone: () -> Unit, modifier: Modifier = Modifier) {
+private fun Ended(
+    icon: ImageVector,
+    tint: Color,
+    text: String,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+    @StringRes done: Int = R.string.machine_config_done,
+) {
     Column(
         modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
@@ -200,6 +215,6 @@ private fun Ended(icon: ImageVector, tint: Color, text: String, onDone: () -> Un
     ) {
         Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(56.dp))
         Text(text, textAlign = TextAlign.Center)
-        Button(onClick = onDone) { Text(stringResource(R.string.machine_config_done)) }
+        Button(onClick = onDone) { Text(stringResource(done)) }
     }
 }

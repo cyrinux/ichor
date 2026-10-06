@@ -793,6 +793,9 @@
     <string name="machine_config_try_leave_note">Якщо ви залишите цей екран або втратите з\'єднання, вузол сам поверне попередню конфігурацію.</string>
     <string name="machine_config_kept">Зміна тепер постійна.</string>
     <string name="machine_config_reverted">Вузол повернувся до попередньої конфігурації.</string>
+    <string name="machine_config_remove_value_text">Його буде вилучено з чернетки.</string>
+    <string name="machine_config_try_no_answer">Випробування завершилося без відповіді вузла. Перевірте його конфігурацію.</string>
+    <string name="machine_config_back_to_draft">Назад до чернетки</string>
     <string name="machine_config_done">Готово</string>
     <plurals name="machine_config_fields">
         <item quantity="one">%1$d поле</item>

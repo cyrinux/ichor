@@ -39,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,6 +51,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
@@ -97,12 +99,15 @@ fun MachineConfigScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var view by rememberSaveable { mutableStateOf(ConfigView.FIELDS) }
     var confirmingDiscard by rememberSaveable { mutableStateOf(false) }
+    // Kept here so the tree stays as it was opened across the review, the YAML view and a rotation.
+    var expanded by rememberSaveable(stateSaver = listSaver(save = { it.toList() }, restore = { it.toSet() })) { mutableStateOf(emptySet<String>()) }
     var confirmingTry by rememberSaveable { mutableStateOf<Int?>(null) }
 
     SecureWhile(revealed)
 
     LaunchedEffect(vm) {
-        vm.messages.collect { snackbar.showSnackbar(it.resolve(context), withDismissAction = true, duration = SnackbarDuration.Long) }
+        // The latest refusal replaces the one on screen instead of waiting behind it.
+        vm.messages.collectLatest { snackbar.showSnackbar(it.resolve(context), withDismissAction = true, duration = SnackbarDuration.Long) }
     }
 
     // With the app lock on, revealing secrets or changing the node needs a fresh fingerprint/PIN.
@@ -238,9 +243,17 @@ fun MachineConfigScreen(
                         when {
                             view == ConfigView.YAML && draft != null -> ConfigYamlEditor(draft, tree?.error, vm::setDraft)
                             view == ConfigView.YAML -> YamlView(shown.orEmpty(), query)
-                            tree == null -> LoadingBox()
+                            tree == null || editor.treeStale -> LoadingBox()
                             tree.error != null -> SyntaxErrorCard(tree.error, Modifier.padding(16.dp))
-                            else -> ConfigTreeView(tree, query, editing = editor.editing, enabled = !editor.busy, onEdit = vm::apply)
+                            else -> ConfigTreeView(
+                                tree,
+                                query,
+                                editing = editor.editing,
+                                enabled = !editor.busy,
+                                expanded = expanded,
+                                onExpanded = { expanded = it },
+                                onEdit = vm::apply,
+                            )
                         }
                     }
                 }

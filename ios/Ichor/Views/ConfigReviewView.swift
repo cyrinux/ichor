@@ -8,7 +8,7 @@ struct ConfigReviewView: View {
     let hostname: String
     let base: String
     let draft: String
-    /// A try was started and is over, whatever its result.
+    /// A try changed (or may have changed) the node and is over: its config is to be read again.
     let onFinished: () -> Void
 
     @Environment(AppModel.self) private var model
@@ -17,6 +17,7 @@ struct ConfigReviewView: View {
     @State private var timeout = 300
     @State private var confirming = false
     @State private var trying = false
+    @State private var failed = false
     @State private var message: String?
 
     var body: some View {
@@ -35,8 +36,10 @@ struct ConfigReviewView: View {
         } message: {
             Text("The node applies it now and reverts by itself after \(timeout / 60) min unless you keep it.")
         }
-        .fullScreenCover(isPresented: $trying, onDismiss: onFinished) {
-            ConfigTryView(node: node, hostname: hostname, base: base, draft: draft, timeoutSeconds: timeout)
+        .fullScreenCover(isPresented: $trying, onDismiss: tryClosed) {
+            ConfigTryView(node: node, hostname: hostname, base: base, draft: draft, timeoutSeconds: timeout) { outcome in
+                if case .failed = outcome { failed = true }
+            }
         }
     }
 
@@ -88,6 +91,16 @@ struct ConfigReviewView: View {
     }
 
     /// Applying needs a fresh Face ID / passcode when the app lock is on, like revealing secrets.
+    /// A failed try leaves the draft as it is, to fix or try again; anything else ends the edit.
+    private func tryClosed() {
+        if failed {
+            failed = false
+            dismiss()
+        } else {
+            onFinished()
+        }
+    }
+
     private func startTry() async {
         message = nil
         if model.lock.enabled,

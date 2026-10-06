@@ -68,8 +68,12 @@ type schemaFailure struct {
 // schemaStore keeps one schema per Talos version: in memory, then in the data directory,
 // and only then from the network, so a version is downloaded once.
 type schemaStore struct {
-	mu     sync.Mutex
-	loaded map[string]*configSchema
+	// fetching is held for a whole prepare, download included: two screens asking at once
+	// still fetch only once. mu only guards the maps and the files, so describing a config
+	// never waits for a download.
+	fetching sync.Mutex
+	mu       sync.Mutex
+	loaded   map[string]*configSchema
 	// failed remembers a failed download a while: offline, every opening of the screen
 	// would wait for the timeout.
 	failed map[string]schemaFailure
@@ -158,26 +162,23 @@ func (st *schemaStore) prepare(ctx context.Context, version string) (*configSche
 		return nil, "", fmt.Errorf("no config schema for Talos version %q", version)
 	}
 
-	// Held during the download: two screens asking at once still fetch only once.
-	st.mu.Lock()
-	defer st.mu.Unlock()
+	st.fetching.Lock()
+	defer st.fetching.Unlock()
 
-	if schema, source := st.local(version); schema != nil {
-		return schema, source, nil
-	}
-
-	if f, ok := st.failed[version]; ok && time.Since(f.at) < configSchemaRetry {
-		return nil, "", f.err
+	if schema, source, err := st.known(version); schema != nil || err != nil {
+		return schema, source, err
 	}
 
 	body, err := st.fetch(ctx, version)
-	if err != nil {
-		st.failed[version] = schemaFailure{at: time.Now(), err: err}
 
-		return nil, "", err
+	var schema *configSchema
+	if err == nil {
+		schema, err = parseConfigSchema(body)
 	}
 
-	schema, err := parseConfigSchema(body)
+	st.mu.Lock()
+	defer st.mu.Unlock()
+
 	if err != nil {
 		st.failed[version] = schemaFailure{at: time.Now(), err: err}
 
@@ -191,7 +192,23 @@ func (st *schemaStore) prepare(ctx context.Context, version string) (*configSche
 	return schema, schemaSourceNetwork, nil
 }
 
-// local looks in memory, then on disk. The caller holds the lock.
+// known is what is already there for version: the schema, or the recent failure to get it.
+func (st *schemaStore) known(version string) (*configSchema, string, error) {
+	st.mu.Lock()
+	defer st.mu.Unlock()
+
+	if schema, source := st.local(version); schema != nil {
+		return schema, source, nil
+	}
+
+	if f, ok := st.failed[version]; ok && time.Since(f.at) < configSchemaRetry {
+		return nil, "", f.err
+	}
+
+	return nil, "", nil
+}
+
+// local looks in memory, then on disk. The caller holds mu.
 func (st *schemaStore) local(version string) (*configSchema, string) {
 	if schema, ok := st.loaded[version]; ok {
 		return schema, schemaSourceMemory
