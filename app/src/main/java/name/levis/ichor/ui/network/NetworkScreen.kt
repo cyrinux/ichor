@@ -60,6 +60,8 @@ import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.components.SwipeTabPager
+import name.levis.ichor.ui.components.TWO_TABS
 
 class NetworkViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<NodeNetwork>() {
     override val keepsDataOnFailure = true
@@ -91,9 +93,11 @@ fun NetworkScreen(node: String, hostname: String, onBack: () -> Unit) {
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.network_tab_interfaces)) })
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.network_tab_connections)) })
             }
-            when (tab) {
-                0 -> InterfacesTab(node)
-                else -> ConnectionsTab(node)
+            SwipeTabPager(TWO_TABS, tab, onSelect = { tab = it }) { page ->
+                when (page) {
+                    0 -> InterfacesTab(node)
+                    else -> ConnectionsTab(node)
+                }
             }
         }
     }

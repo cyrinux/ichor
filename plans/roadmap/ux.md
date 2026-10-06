@@ -6,6 +6,8 @@ when work starts. Conventions: [README.md](README.md#conventions-every-plan-foll
 Navigation today: Android one `NavHost` (`ui/Navigation.kt` `Routes`), Overview as hub (top-bar
 icons `OverviewActions.kt`, overflow `ClusterMenu.kt`), node screens with tabs; iOS one
 `NavigationStack` with `enum Route` (`IchorApp.swift`), external routing via `NotificationRouter`.
+Android tab screens swipe between tabs (`ui/components/SwipeTabs.kt` `SwipeTabPager`; not
+Import, whose QR tab would start the camera mid-swipe, nor Argo CD, whose rows swipe to sync); iOS segmented pickers still tap only.
 
 ## U1. Actionable notifications: partial → actions (M)
 

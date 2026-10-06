@@ -43,6 +43,8 @@ import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.components.SwipeTabPager
+import name.levis.ichor.ui.components.TWO_TABS
 
 /**
  * Flux's Kustomizations and HelmReleases (first tab) and their sources (second), read through
@@ -104,10 +106,12 @@ fun FluxScreen(onBack: () -> Unit, onApp: (kind: String, namespace: String, name
                     Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.flux_tab_sources)) })
                 }
                 PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                    if (tab == 0) {
-                        FluxAppsTab(s.data, busy, onOpen = { onApp(it.kind, it.namespace, it.name) })
-                    } else {
-                        FluxSourcesTab(s.data, busy, onAct = { src, action -> confirm = FluxConfirm(action, src.kind, src.namespace, src.name) })
+                    SwipeTabPager(TWO_TABS, tab, onSelect = { tab = it }) { page ->
+                        if (page == 0) {
+                            FluxAppsTab(s.data, busy, onOpen = { onApp(it.kind, it.namespace, it.name) })
+                        } else {
+                            FluxSourcesTab(s.data, busy, onAct = { src, action -> confirm = FluxConfirm(action, src.kind, src.namespace, src.name) })
+                        }
                     }
                 }
                 DataFreshness(s, edgeToEdge = false)
