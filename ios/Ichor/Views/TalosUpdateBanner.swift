@@ -1,13 +1,15 @@
 import SwiftUI
 import IchorCore
 
-/// "Talos v1.14.2 is available · 8 nodes on older versions" at the top of the overview.
-/// Admins open the rollout (TalosRolloutView); other roles get the info only.
+/// "Talos v1.14.2 is available · 8 nodes on older versions", one of the overview's arranged
+/// sections. Admins open the rollout (TalosRolloutView); other roles get the info only. That
+/// release can be skipped for the cluster: the next one shows the section again.
 struct TalosUpdateSection: View {
     let info: TalosUpdateInfo
     let nodes: [NodeOverview]
 
     @Environment(AppModel.self) private var model
+    @State private var confirmSkip = false
 
     private var outdated: Int {
         nodes.filter { $0.reachable && isOutdatedTalos($0.version, latest: info.latest) }.count
@@ -17,7 +19,7 @@ struct TalosUpdateSection: View {
     private var canUpgrade: Bool { model.allows(.upgrade) }
 
     var body: some View {
-        if let count = talosUpdateBannerCount(info, localOutdated: outdated) {
+        if let count = talosUpdateBannerCount(info, localOutdated: outdated, skipped: model.activeSkippedTalosUpdate) {
             Section {
                 if canUpgrade {
                     NavigationLink {
@@ -28,10 +30,22 @@ struct TalosUpdateSection: View {
                 } else {
                     bannerLabel(count: count)
                 }
-                if info.notes.hasPrefix("https://"), let url = URL(string: info.notes) {
-                    Link(destination: url) {
-                        Label("Release notes", systemImage: "doc.text")
+                HStack {
+                    if info.notes.hasPrefix("https://"), let url = URL(string: info.notes) {
+                        Link(destination: url) {
+                            Label("Release notes", systemImage: "doc.text")
+                        }
                     }
+                    Spacer()
+                    Button("Skip \(info.latest)") { confirmSkip = true }
+                }
+                // Two controls in one row: each takes its own taps.
+                .buttonStyle(.borderless)
+                .confirmationDialog(String(localized: "Skip Talos \(info.latest)?"), isPresented: $confirmSkip, titleVisibility: .visible) {
+                    Button("Skip") { withAnimation { model.skipTalosUpdate(info.latest) } }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("This card stays away until a newer release is out.")
                 }
             }
         }

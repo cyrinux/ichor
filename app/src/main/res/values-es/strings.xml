@@ -4,6 +4,7 @@
     <!-- Common -->
     <string name="common_back">Atrás</string>
     <string name="common_cancel">Cancelar</string>
+    <string name="common_undo">Deshacer</string>
     <string name="common_close">Cerrar</string>
     <string name="common_ok">Aceptar</string>
     <string name="common_retry">Reintentar</string>
@@ -1072,6 +1073,8 @@
     <string name="overview_talos_release_notes">Notas de la versión</string>
     <string name="overview_talos_tap_upgrade">Toca para actualizar un nodo.</string>
     <string name="overview_talos_pick_node">Actualizar a %1$s</string>
+    <string name="overview_talos_skip">Omitir %1$s</string>
+    <string name="overview_talos_skipped">Talos %1$s omitido hasta la próxima versión</string>
     <string name="overview_talos_rollout_control_plane">Plano de control · %1$d/%2$d listos</string>
     <string name="overview_talos_rollout_workers">Workers · %1$d/%2$d listos</string>
     <string name="overview_talos_rollout_workers_wait">Disponibles después del plano de control.</string>
@@ -2437,6 +2440,8 @@
     <string name="diff_show">Mostrar cambios</string>
     <string name="diff_hide">Ocultar cambios</string>
     <string name="overview_card_desc_flux">Kustomizations y HelmReleases listas, reconciliando o con fallos</string>
+    <string name="overview_card_talos_update">Actualización de Talos</string>
+    <string name="overview_card_desc_talos_update">Una versión de Talos más reciente que la de los nodos, cuando la hay</string>
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
     <string name="argo_freeze_title">Congelar Argo CD</string>

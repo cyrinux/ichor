@@ -3,6 +3,8 @@ package name.levis.ichor.model
 import name.levis.ichor.data.TalosJson
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -41,6 +43,27 @@ class TalosUpdateTest {
     fun outdatedOldestFirst() {
         val nodes = listOf(node("b", "v1.14.1"), node("a", "v1.13.5"), node("c", "v1.14.2"), node("d", "v1.13.0", reachable = false), node("e", "v1.14.1"))
         assertEquals(listOf("a", "b", "e"), outdatedNodes(nodes, "v1.14.2").map { it.hostname })
+    }
+
+    @Test
+    fun offersTheReleaseWithTheNodesBehindIt() {
+        val check = TalosUpdateCheck(latest = "v1.14.2", newer = true, notes = "https://example.org/v1.14.2")
+        val nodes = listOf(node("b", "v1.14.1"), node("a", "v1.13.5"), node("c", "v1.14.2"))
+        assertEquals(TalosUpdateOffer("v1.14.2", "https://example.org/v1.14.2", outdated = 2), talosUpdateOffer(check, nodes, skipped = null))
+        // An answer for other versions (mid-upgrade, another cluster): the nodes are counted here.
+        assertEquals(2, talosUpdateOffer(check.copy(newer = false), nodes, skipped = null)?.outdated)
+        assertNull(talosUpdateOffer(check.copy(latest = ""), nodes, skipped = null))
+        // Nobody reachable is behind.
+        assertNull(talosUpdateOffer(check, listOf(node("c", "v1.14.2"), node("d", "v1.13.0", reachable = false)), skipped = null))
+    }
+
+    @Test
+    fun aSkippedReleaseIsNotOfferedUntilTheNextOne() {
+        val check = TalosUpdateCheck(latest = "v1.14.2", newer = true)
+        val nodes = listOf(node("a", "v1.13.5"))
+        assertNull(talosUpdateOffer(check, nodes, skipped = "v1.14.2"))
+        assertNotNull(talosUpdateOffer(check.copy(latest = "v1.14.3"), nodes, skipped = "v1.14.2"))
+        assertNotNull(talosUpdateOffer(check, nodes, skipped = ""))
     }
 
     @Test

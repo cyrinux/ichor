@@ -33,4 +33,12 @@ final class TalosUpdateTests: XCTestCase {
         XCTAssertNil(talosUpdateBannerCount(TalosUpdateInfo(latest: "v1.14.2", newer: false, outdated: 2), localOutdated: 2))
         XCTAssertNil(talosUpdateBannerCount(TalosUpdateInfo(latest: "", newer: true), localOutdated: 2))
     }
+
+    func testASkippedReleaseIsNotOfferedUntilTheNextOne() {
+        let info = TalosUpdateInfo(latest: "v1.14.2", newer: true, outdated: 8)
+        XCTAssertNil(talosUpdateBannerCount(info, localOutdated: 3, skipped: "v1.14.2"))
+        XCTAssertEqual(talosUpdateBannerCount(info, localOutdated: 3, skipped: "v1.14.1"), 8)
+        XCTAssertEqual(talosUpdateBannerCount(info, localOutdated: 3, skipped: ""), 8)
+        XCTAssertEqual(talosUpdateBannerCount(info, localOutdated: 3, skipped: nil), 8)
+    }
 }
