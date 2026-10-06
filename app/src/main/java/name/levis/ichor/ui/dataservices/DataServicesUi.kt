@@ -32,6 +32,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
@@ -45,22 +47,10 @@ import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.health
 import name.levis.ichor.model.summary
+import name.levis.ichor.model.title
 import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.theme.LocalStatusColors
-
-/** Product names: never translated. */
-val DataServiceKind.title: String
-    get() = when (this) {
-        DataServiceKind.LONGHORN -> "Longhorn"
-        DataServiceKind.GARAGE -> "Garage"
-        DataServiceKind.CNPG -> "CloudNativePG"
-        DataServiceKind.DRAGONFLY -> "Dragonfly"
-        DataServiceKind.MARIADB -> "MariaDB"
-        DataServiceKind.PERCONA -> "Percona XtraDB Cluster"
-        DataServiceKind.CERT_MANAGER -> "cert-manager"
-        DataServiceKind.VELERO -> "Velero"
-        DataServiceKind.CEPH -> "Rook Ceph"
-    }
+import name.levis.ichor.util.timeAgo
 
 /** The tab's name, short enough for four tabs. */
 val DataServiceKind.tabTitle: String
@@ -190,3 +180,60 @@ fun CauseBanner(text: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun LikelyCause.text(): String = pluralStringResource(R.plurals.data_services_likely_cause, problems, node, problems)
+
+/** "Pending", "on node-1" or the raw phase: where a data service's pod runs. */
+@Composable
+fun podWhere(node: String, phase: String): String = when {
+    node.isEmpty() && phase == "Pending" -> stringResource(R.string.cnpg_pod_pending)
+    node.isNotEmpty() -> stringResource(R.string.data_services_on_node, node)
+    else -> phase
+}
+
+/** The role an operator gave a pod, localized; null for none. */
+@Composable
+fun podRoleLabel(role: String): String? = when (role) {
+    "primary" -> stringResource(R.string.cnpg_role_primary)
+    "replica" -> stringResource(R.string.cnpg_role_replica)
+    "master" -> stringResource(R.string.dragonfly_role_master)
+    "member" -> stringResource(R.string.mariadb_role_member)
+    "" -> null
+    else -> role
+}
+
+/** One pod under its cluster's row: a dot for readiness, then "name · role · where". */
+@Composable
+fun DataPodLine(name: String, ready: Boolean, node: String, phase: String, role: String = "", indent: Dp = 22.dp) {
+    Row(Modifier.padding(start = indent, top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        HealthDot(if (ready) ServiceHealth.OK else ServiceHealth.CRITICAL, Modifier.size(8.dp))
+        Spacer(Modifier.size(8.dp))
+        Text(
+            listOfNotNull(name, podRoleLabel(role), podWhere(node, phase)).filter { it.isNotEmpty() }.joinToString(" · "),
+            style = MaterialTheme.typography.labelSmall,
+            fontFamily = FontFamily.Monospace,
+            color = if (ready) MaterialTheme.colorScheme.onSurface else LocalStatusColors.current.bad,
+        )
+    }
+}
+
+/**
+ * A cluster's row head: its health dot and monospace [label], then [details] joined on one
+ * line, in the health's colour when it needs attention.
+ */
+@Composable
+fun ServiceRowHeader(health: ServiceHealth, label: String, details: List<String>) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        HealthDot(health)
+        Spacer(Modifier.size(12.dp))
+        Text(label, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+    Text(
+        details.joinToString(" · "),
+        style = MaterialTheme.typography.labelSmall,
+        color = health.color().takeIf { health.needsAttention } ?: MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 22.dp),
+    )
+}
+
+/** "3 hours ago", or "never" for an unknown time. */
+@Composable
+fun agoOrNever(millis: Long): String = timeAgo(millis).ifEmpty { stringResource(R.string.cnpg_never) }

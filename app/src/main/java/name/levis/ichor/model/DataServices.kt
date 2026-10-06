@@ -738,6 +738,38 @@ enum class DataServiceKind(val catalogId: String) {
     CEPH("rook"),
 }
 
+/** Product names: never translated. */
+val DataServiceKind.title: String
+    get() = when (this) {
+        DataServiceKind.LONGHORN -> "Longhorn"
+        DataServiceKind.GARAGE -> "Garage"
+        DataServiceKind.CNPG -> "CloudNativePG"
+        DataServiceKind.DRAGONFLY -> "Dragonfly"
+        DataServiceKind.MARIADB -> "MariaDB"
+        DataServiceKind.PERCONA -> "Percona XtraDB Cluster"
+        DataServiceKind.CERT_MANAGER -> "cert-manager"
+        DataServiceKind.VELERO -> "Velero"
+        DataServiceKind.CEPH -> "Rook Ceph"
+    }
+
+/** The system a data alert's "system|label" key names (monitor dataIssuesOf). */
+val DataServiceKind.alertSystem: String
+    get() = when (this) {
+        DataServiceKind.LONGHORN -> "longhorn"
+        DataServiceKind.GARAGE -> "garage"
+        DataServiceKind.CNPG -> "cnpg"
+        DataServiceKind.DRAGONFLY -> "dragonfly"
+        DataServiceKind.MARIADB -> "mariadb"
+        DataServiceKind.PERCONA -> "percona"
+        DataServiceKind.CERT_MANAGER -> "certmanager"
+        DataServiceKind.VELERO -> "velero"
+        DataServiceKind.CEPH -> "ceph"
+    }
+
+/** The kind behind a data alert's system name; CloudNativePG for one an older snapshot wrote. */
+fun dataServiceKindOf(alertSystem: String): DataServiceKind =
+    DataServiceKind.entries.firstOrNull { it.alertSystem == alertSystem } ?: DataServiceKind.CNPG
+
 /** The catalog ids among the inventory's apps, for KubeDataServices: "" when none runs. */
 fun Inventory.dataServiceHints(): String {
     val ids = apps.map { it.id }.toSet()

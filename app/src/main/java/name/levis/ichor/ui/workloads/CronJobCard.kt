@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.workloads
 
-import android.text.format.DateUtils
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -58,6 +57,7 @@ import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.util.timeAgo
 
 /** One CronJob: who it is, when it runs, how its last runs went, Suspend/Resume and Run now. Tap for the runs. */
 @Composable
@@ -144,7 +144,7 @@ private fun CronJobTiming(cronJob: KubeCronJob) {
             cronJob.suspended -> MetaChip(Icons.Outlined.PauseCircle, stringResource(R.string.cronjobs_suspended), LocalStatusColors.current.warn)
             // Not from cached data that has gone by.
             cronJob.nextRun > System.currentTimeMillis() -> {
-                val next = DateUtils.getRelativeTimeSpanString(cronJob.nextRun, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)
+                val next = timeAgo(cronJob.nextRun)
                 MetaChip(Icons.Outlined.Update, stringResource(R.string.cronjobs_next_run, next))
             }
         }
@@ -180,7 +180,7 @@ private fun RunHistoryStrip(runs: List<KubeJobRun>) {
 @Composable
 private fun LastRunText(run: KubeJobRun?) {
     val text = run?.let { r ->
-        val ago = DateUtils.getRelativeTimeSpanString(r.started, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)
+        val ago = timeAgo(r.started)
         val duration = r.durationMillis?.let { localizedDuration(it / 1000) }
         listOfNotNull(stringResource(R.string.cronjobs_last_run, ago), duration).joinToString("  ·  ")
     } ?: stringResource(R.string.cronjobs_no_runs)
@@ -237,7 +237,7 @@ private fun RunRow(run: KubeJobRun) {
         Box(Modifier.size(8.dp).background(run.runState.color(), CircleShape))
         Column(Modifier.weight(1f)) {
             Text(run.name, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            val ago = DateUtils.getRelativeTimeSpanString(run.started, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)
+            val ago = timeAgo(run.started)
             val parts = listOfNotNull(stringResource(run.runState.label), ago.toString(), run.durationMillis?.let { localizedDuration(it / 1000) })
             Text(parts.joinToString("  ·  "), style = MaterialTheme.typography.labelSmall, color = muted)
         }

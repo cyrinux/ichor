@@ -111,11 +111,7 @@ private fun CheckLine(check: CephCheck) {
 
 @Composable
 private fun OsdLine(osd: CephOsd, withNamespace: Boolean) {
-    val where = when {
-        osd.node.isEmpty() && osd.phase == "Pending" -> stringResource(R.string.cnpg_pod_pending)
-        osd.node.isNotEmpty() -> stringResource(R.string.data_services_on_node, osd.node)
-        else -> osd.phase
-    }
+    val where = podWhere(osd.node, osd.phase)
     Row(Modifier.padding(horizontal = 16.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
         HealthDot(if (osd.ready) ServiceHealth.OK else ServiceHealth.CRITICAL, Modifier.size(8.dp))
         Spacer(Modifier.size(8.dp))

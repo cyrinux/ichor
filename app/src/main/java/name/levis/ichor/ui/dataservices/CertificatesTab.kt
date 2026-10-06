@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.dataservices
 
-import android.text.format.DateUtils
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,6 +41,7 @@ import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.util.timeAgo
 
 /**
  * Every certificate (problems first, then the soonest expiry) with its issuer, then the issuers.
@@ -182,7 +182,7 @@ private fun IssuerRow(issuer: CertIssuer) {
 private fun expiryText(cert: Certificate): String {
     if (cert.notAfter <= 0) return stringResource(R.string.certmanager_not_issued)
     val now = System.currentTimeMillis()
-    val relative = DateUtils.getRelativeTimeSpanString(cert.notAfter, now, DateUtils.MINUTE_IN_MILLIS).toString()
+    val relative = timeAgo(cert.notAfter, now)
     return stringResource(if (cert.notAfter > now) R.string.certmanager_expires else R.string.certmanager_expired, relative)
 }
 

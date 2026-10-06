@@ -1,6 +1,5 @@
 package name.levis.ichor.ui.workloads
 
-import android.text.format.DateUtils
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -65,6 +64,7 @@ import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiStateOf
+import name.levis.ichor.util.timeAgo
 
 /**
  * One workload's actions: restart, a scale stepper (Deployments and StatefulSets) and, for a
@@ -241,7 +241,7 @@ private fun RevisionRow(revision: KubeRevision, enabled: Boolean, onRollback: ()
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.workloads_revision, revision.revision), style = MaterialTheme.typography.bodyMedium)
                 if (revision.created > 0) {
-                    MutedText(DateUtils.getRelativeTimeSpanString(revision.created, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS).toString())
+                    MutedText(timeAgo(revision.created))
                 }
                 if (revision.current) StatusPill(stringResource(R.string.workloads_revision_current), colors.ok)
             }

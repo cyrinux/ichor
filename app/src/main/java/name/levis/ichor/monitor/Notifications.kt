@@ -14,6 +14,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import name.levis.ichor.MainActivity
 import name.levis.ichor.R
+import name.levis.ichor.model.dataServiceKindOf
+import name.levis.ichor.model.title
 import name.levis.ichor.ui.DeepLink
 
 private const val CHANNEL_ID = "cluster-alerts"
@@ -144,17 +146,7 @@ private fun gitopsAlertText(context: Context, alert: Alert): String {
 
 /** "Longhorn · critical" from a data alert's "system|severity" detail. */
 private fun dataAlertText(context: Context, alert: Alert): String {
-    val system = when (alert.detail.substringBefore('|')) {
-        "longhorn" -> "Longhorn"
-        "garage" -> "Garage"
-        "dragonfly" -> "Dragonfly"
-        "mariadb" -> "MariaDB"
-        "percona" -> "Percona XtraDB Cluster"
-        "certmanager" -> "cert-manager"
-        "velero" -> "Velero"
-        "ceph" -> "Rook Ceph"
-        else -> "CloudNativePG"
-    }
+    val system = dataServiceKindOf(alert.detail.substringBefore('|')).title
     if (!alert.problem) return system
     val severity = when (alert.detail.substringAfter('|')) {
         DATA_CRITICAL -> context.getString(R.string.data_services_health_critical)

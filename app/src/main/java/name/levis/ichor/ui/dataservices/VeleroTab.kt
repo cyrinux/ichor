@@ -140,7 +140,7 @@ private fun Details(s: VeleroSchedule) {
             InfoRow(stringResource(R.string.cnpg_last_backup), b.name, mono = true)
             InfoRow(stringResource(R.string.cnpg_phase), listOfNotNull(b.phase, countsText(b.errors, b.warnings)).joinToString(" · "))
         }
-        InfoRow(stringResource(R.string.velero_last_success), ago(s.lastSuccessAt))
+        InfoRow(stringResource(R.string.velero_last_success), agoOrNever(s.lastSuccessAt))
         s.lastBackup?.failureReason?.takeIf { it.isNotEmpty() }?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = colors.bad) }
         s.validationErrors.forEach { Text(it, style = MaterialTheme.typography.labelSmall, color = colors.warn) }
     }
@@ -188,6 +188,3 @@ private fun reasonText(reason: VeleroReason): String = when (reason) {
     VeleroReason.STALE -> stringResource(R.string.velero_reason_stale)
     VeleroReason.INVALID -> stringResource(R.string.velero_reason_invalid)
 }
-
-@Composable
-private fun ago(millis: Long): String = timeAgo(millis).ifEmpty { stringResource(R.string.cnpg_never) }
