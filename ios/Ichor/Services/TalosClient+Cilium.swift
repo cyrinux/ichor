@@ -24,7 +24,7 @@ extension TalosClient {
     /// Follows the cluster's flows live (`hubble observe --follow` in every cilium-agent);
     /// cancelling the consuming task stops it.
     func hubbleFlows(_ filter: HubbleFilter) -> AsyncStream<HubbleEvent> {
-        AsyncStream(bufferingPolicy: .bufferingNewest(4)) { continuation in
+        Self.bridged(buffering: .bufferingNewest(4)) { continuation in
             let bridge = HubbleBridge(
                 update: { continuation.yield(.update($0)) },
                 done: {
@@ -34,29 +34,19 @@ extension TalosClient {
             )
             let wire = filter.wire
             let run = IchorgoStartHubbleFlows(config, context, kubeServer, wire.namespace, wire.pod, filter.dropsOnly, bridge)
-            continuation.onTermination = { _ in
-                run?.cancel()
-                _ = bridge // keep the listener alive for the whole stream
-            }
+            return BridgedRun(bridge) { run?.cancel() }
         }
     }
 }
 
 private final class HubbleBridge: NSObject, IchorgoHubbleListenerProtocol, @unchecked Sendable {
-    private let update: @Sendable (HubbleSnapshot) -> Void
-    private let done: @Sendable (String?) -> Void
+    private let sink: JSONSink<HubbleSnapshot>
 
     init(update: @escaping @Sendable (HubbleSnapshot) -> Void, done: @escaping @Sendable (String?) -> Void) {
-        self.update = update
-        self.done = done
+        sink = JSONSink(item: update, done: done)
     }
 
-    func onUpdate(_ json: String?) {
-        guard let json, let decoded = try? TalosJSON.decode(HubbleSnapshot.self, from: json) else { return }
-        update(decoded)
-    }
+    func onUpdate(_ json: String?) { sink.emit(json) }
 
-    func onDone(_ errMessage: String?) {
-        done(errMessage.nonEmpty)
-    }
+    func onDone(_ errMessage: String?) { sink.finish(errMessage) }
 }

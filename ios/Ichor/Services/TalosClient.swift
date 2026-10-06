@@ -312,7 +312,7 @@ struct TalosClient: Sendable {
     /// unless `encryption` is .none; cancelling the consuming task cancels the transfer (Go
     /// then removes the partial file).
     func etcdSnapshot(node: String, destPath: String, encryption: SnapshotEncryption) -> AsyncStream<SnapshotEvent> {
-        AsyncStream { continuation in
+        Self.bridged { continuation in
             let bridge = SnapshotBridge(
                 progress: { continuation.yield(.progress(bytes: $0)) },
                 done: {
@@ -329,17 +329,14 @@ struct TalosClient: Sendable {
             case .passphrase(let passphrase):
                 run = IchorgoStartEtcdSnapshotEncrypted(config, context, node, destPath, "", passphrase, bridge)
             }
-            continuation.onTermination = { _ in
-                run?.cancel()
-                _ = bridge // keep the listener alive for the whole transfer
-            }
+            return BridgedRun(bridge) { run?.cancel() }
         }
     }
 
     /// `talosctl events` from nodes (nil = the context's nodes), replaying the last `tail` per
     /// node first (os:reader); cancelling the consuming task cancels the stream.
     func events(node: String?, tail: Int = 50) -> AsyncStream<EventStreamItem> {
-        AsyncStream { continuation in
+        Self.bridged { continuation in
             let bridge = EventsBridge(
                 event: { continuation.yield(.event($0)) },
                 done: {
@@ -348,16 +345,13 @@ struct TalosClient: Sendable {
                 }
             )
             let run = IchorgoStartEvents(config, context, node ?? "", tail, bridge)
-            continuation.onTermination = { _ in
-                run?.cancel()
-                _ = bridge // keep the listener alive for the whole stream
-            }
+            return BridgedRun(bridge) { run?.cancel() }
         }
     }
 
     /// `talosctl logs -f` (kernel log when `service` is nil), starting with the last `tailLines`.
     func followLogs(node: String, service: String?, tailLines: Int = 200) -> AsyncStream<LogFollowItem> {
-        AsyncStream { continuation in
+        Self.bridged { continuation in
             let bridge = LogBridge(
                 line: { continuation.yield(.line($0)) },
                 done: {
@@ -366,10 +360,7 @@ struct TalosClient: Sendable {
                 }
             )
             let run = IchorgoStartLogFollow(config, context, node, service ?? "", tailLines, bridge)
-            continuation.onTermination = { _ in
-                run?.cancel()
-                _ = bridge // keep the listener alive for the whole stream
-            }
+            return BridgedRun(bridge) { run?.cancel() }
         }
     }
 
@@ -448,7 +439,7 @@ struct TalosClient: Sendable {
 
     /// Streams the server-side health check; cancelling the consuming task cancels the check.
     func health() -> AsyncStream<HealthEvent> {
-        AsyncStream { continuation in
+        Self.bridged { continuation in
             let bridge = HealthBridge(
                 progress: { continuation.yield(.progress(node: $0, message: $1)) },
                 done: {
@@ -457,10 +448,7 @@ struct TalosClient: Sendable {
                 }
             )
             let run = IchorgoStartClusterHealth(config, context, bridge)
-            continuation.onTermination = { _ in
-                run?.cancel()
-                _ = bridge // keep the listener alive for the whole check
-            }
+            return BridgedRun(bridge) { run?.cancel() }
         }
     }
 
@@ -531,22 +519,15 @@ private final class SnapshotBridge: NSObject, IchorgoSnapshotListenerProtocol, @
 }
 
 private final class EventsBridge: NSObject, IchorgoEventListenerProtocol, @unchecked Sendable {
-    private let event: @Sendable (NodeEvent) -> Void
-    private let done: @Sendable (String?) -> Void
+    private let sink: JSONSink<NodeEvent>
 
     init(event: @escaping @Sendable (NodeEvent) -> Void, done: @escaping @Sendable (String?) -> Void) {
-        self.event = event
-        self.done = done
+        sink = JSONSink(item: event, done: done)
     }
 
-    func onEvent(_ json: String?) {
-        guard let json, let decoded = try? TalosJSON.decode(NodeEvent.self, from: json) else { return }
-        event(decoded)
-    }
+    func onEvent(_ json: String?) { sink.emit(json) }
 
-    func onDone(_ errMessage: String?) {
-        done(errMessage.nonEmpty)
-    }
+    func onDone(_ errMessage: String?) { sink.finish(errMessage) }
 }
 
 final class LogBridge: NSObject, IchorgoLogListenerProtocol, @unchecked Sendable {
