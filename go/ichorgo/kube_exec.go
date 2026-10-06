@@ -113,7 +113,7 @@ func (k *kubeClient) execWith(ctx context.Context, limits execLimits, namespace,
 func (k *kubeClient) execConfig(namespace, pod, container string, argv []string) (*websocket.Config, error) {
 	query := url.Values{"container": {container}, "command": argv, "stdout": {"true"}, "stderr": {"true"}}
 
-	u, err := k.endpoint("/api/v1/namespaces/" + url.PathEscape(namespace) + "/pods/" + url.PathEscape(pod) + "/exec?" + query.Encode())
+	u, err := k.endpoint(podPath(namespace, pod) + "/exec?" + query.Encode())
 	if err != nil {
 		return nil, err
 	}

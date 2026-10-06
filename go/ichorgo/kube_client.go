@@ -66,6 +66,22 @@ func (e *kubeAPIError) Error() string {
 	}
 }
 
+// serviceProxyPath addresses a Service's HTTP port through the API server's proxy: service is
+// "name" or "name:port" (already escaped), path starts with "/".
+func serviceProxyPath(namespace, service, path string) string {
+	return "/api/v1/namespaces/" + url.PathEscape(namespace) + "/services/" + service + "/proxy" + path
+}
+
+// isKubeStatus tells the API server's own answer (a Status object) from the backend's: a
+// Prometheus envelope has no kind. Only called on errors, whose bodies are small.
+func isKubeStatus(body []byte) bool {
+	var obj struct {
+		Kind string `json:"kind"`
+	}
+
+	return json.Unmarshal(body, &obj) == nil && obj.Kind == "Status"
+}
+
 // kubeCode is the HTTP status of a kubeAPIError, 0 for any other error.
 func kubeCode(err error) int {
 	var apiErr *kubeAPIError

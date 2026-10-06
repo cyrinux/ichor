@@ -1,7 +1,6 @@
 package ichorgo
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -479,7 +478,7 @@ func garageProxyHealth(ctx context.Context, k *kubeClient, g garageGroup) (strin
 		} `json:"spec"`
 	}]
 
-	if err := getList(ctx, k, "/api/v1/namespaces/"+url.PathEscape(g.namespace)+"/services", &services); err != nil {
+	if err := getList(ctx, k, scopedPath("/api/v1", g.namespace, "services"), &services); err != nil {
 		return garageUnknown, kubeError(err).Error()
 	}
 
@@ -495,7 +494,7 @@ func garageProxyHealth(ctx context.Context, k *kubeClient, g garageGroup) (strin
 				continue
 			}
 
-			path := fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy/health", url.PathEscape(g.namespace), url.PathEscape(s.Metadata.Name), p.Port)
+			path := serviceProxyPath(g.namespace, fmt.Sprintf("%s:%d", url.PathEscape(s.Metadata.Name), p.Port), "/health")
 
 			status, ctype, body, err := k.getRaw(ctx, path, nil)
 			if err != nil {
@@ -514,7 +513,7 @@ func garageProxyHealth(ctx context.Context, k *kubeClient, g garageGroup) (strin
 func garageHealthFromProxy(status int, ctype string, body []byte) (string, string) {
 	text := clipUTF8(strings.TrimSpace(string(body)), 300)
 
-	if strings.HasPrefix(ctype, "application/json") && bytes.Contains(body, []byte(`"kind":"Status"`)) {
+	if isKubeStatus(body) {
 		return garageUnavailable, "no ready Garage pod behind the admin Service"
 	}
 
