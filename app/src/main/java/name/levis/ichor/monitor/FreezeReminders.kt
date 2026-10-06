@@ -124,7 +124,7 @@ class FreezeReminderWorker(context: Context, params: WorkerParameters) : Corouti
     /** False when the freeze was ended or changed meanwhile; true when that cannot be told (another cluster, offline). */
     private suspend fun stillRunning(): Boolean {
         val app = applicationContext as TalosApp
-        val stored = app.configRepository.config.value ?: app.configRepository.load()
+        val stored = app.configRepository.config.value ?: runCatching { app.configRepository.load() }.getOrElse { return true }
         if (stored?.activeSummary?.fingerprint != inputData.getString(KEY_CLUSTER)) return true
         val status = runCatching { app.talosRepository.argoCD() }.getOrNull() ?: return true
         val window = inputData.getString(KEY_WINDOW)
@@ -157,7 +157,8 @@ class FreezeExtendWorker(context: Context, params: WorkerParameters) : Coroutine
         val app = applicationContext as TalosApp
         val res = AppLocale.wrap(applicationContext)
         val id = notificationId(inputData)
-        val stored = app.configRepository.config.value ?: app.configRepository.load()
+        val stored = app.configRepository.config.value
+            ?: runCatching { app.configRepository.load() }.getOrElse { return Result.retry() }
         val title = res.getString(R.string.argo_freeze_reminder_title)
         if (stored?.activeSummary?.fingerprint != inputData.getString(KEY_CLUSTER)) {
             postFreezeNotice(applicationContext, id, title, res.getString(R.string.argo_freeze_extend_other_cluster))

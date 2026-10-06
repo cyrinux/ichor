@@ -630,6 +630,9 @@
     <string name="lock_onboarding_private_desc">Screenshots and the recent apps preview stay blank, and alerts hide cluster details on the lock screen.</string>
     <string name="lock_onboarding_no_lock">No screen lock on this device</string>
     <string name="lock_onboarding_open_settings">Open security settings</string>
+    <string name="config_unreadable_title">The stored config could not be read</string>
+    <string name="config_unreadable_body">Your talosconfig is still on this device, but it could not be decrypted just now. This can happen right after an update. Try again; if it keeps failing, import your talosconfig again.</string>
+    <string name="config_unreadable_import">Import it again</string>
     <string name="lock_onboarding_delete">Delete the imported config instead</string>
     <string name="lock_onboarding_delete_title">Delete talosconfig?</string>
     <string name="lock_onboarding_delete_body">The config of every cluster, with their client keys, will be removed from this device.</string>

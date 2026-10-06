@@ -635,6 +635,9 @@
     <string name="lock_onboarding_private_desc">Les captures d\'écran et l\'aperçu des apps récentes restent vides, et les alertes masquent les détails du cluster sur l\'écran de verrouillage.</string>
     <string name="lock_onboarding_no_lock">Aucun verrouillage d\'écran sur cet appareil</string>
     <string name="lock_onboarding_open_settings">Ouvrir les paramètres de sécurité</string>
+    <string name="config_unreadable_title">La config enregistrée est illisible</string>
+    <string name="config_unreadable_body">Votre talosconfig est toujours sur cet appareil, mais elle n\'a pas pu être déchiffrée pour le moment. Cela peut arriver juste après une mise à jour. Réessayez ; si l\'échec persiste, importez à nouveau votre talosconfig.</string>
+    <string name="config_unreadable_import">L\'importer à nouveau</string>
     <string name="lock_onboarding_delete">Supprimer plutôt la config importée</string>
     <string name="lock_onboarding_delete_title">Supprimer le talosconfig ?</string>
     <string name="lock_onboarding_delete_body">La config de chaque cluster, avec ses clés client, sera supprimée de cet appareil.</string>

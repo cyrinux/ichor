@@ -635,6 +635,9 @@
     <string name="lock_onboarding_private_desc">Las capturas y la vista previa de apps recientes quedan en blanco, y las alertas ocultan los detalles del clúster en la pantalla de bloqueo.</string>
     <string name="lock_onboarding_no_lock">Este dispositivo no tiene bloqueo de pantalla</string>
     <string name="lock_onboarding_open_settings">Abrir los ajustes de seguridad</string>
+    <string name="config_unreadable_title">No se pudo leer la configuración guardada</string>
+    <string name="config_unreadable_body">Tu talosconfig sigue en este dispositivo, pero no se pudo descifrar en este momento. Puede ocurrir justo después de una actualización. Reinténtalo; si sigue fallando, importa de nuevo tu talosconfig.</string>
+    <string name="config_unreadable_import">Importarla de nuevo</string>
     <string name="lock_onboarding_delete">Eliminar la configuración importada en su lugar</string>
     <string name="lock_onboarding_delete_title">¿Eliminar el talosconfig?</string>
     <string name="lock_onboarding_delete_body">La configuración de cada clúster, con sus claves de cliente, se eliminará de este dispositivo.</string>

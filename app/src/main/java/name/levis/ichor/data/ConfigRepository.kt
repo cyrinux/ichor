@@ -8,6 +8,7 @@ import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.ImportChoice
 import name.levis.ichor.model.ImportConflict
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -33,6 +34,9 @@ val StoredConfig.activeSummary: ContextSummary?
 val StoredConfig.realFingerprint: String?
     get() = activeSummary?.takeUnless { it.isDemo }?.fingerprint?.takeIf { it.isNotBlank() }
 
+/** A config is stored but could not be read: the Keystore is busy or lost its key, or the file is damaged. */
+class ConfigUnreadableException(cause: Throwable) : Exception("Stored config could not be read", cause)
+
 /** [guard] may hold back a call to the cluster on screen by throwing, e.g. off its VPN. */
 class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Unit = {}) {
 
@@ -54,11 +58,22 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
     private val _generation = MutableStateFlow(0)
     val generation: StateFlow<Int> = _generation.asStateFlow()
 
-    /** Loads the stored config, if any. Returns null when nothing was imported yet. */
-    suspend fun load(): StoredConfig? = withContext(Dispatchers.IO) {
-        val bytes = runCatching { store.read() }.getOrNull() ?: return@withContext null
-        val yaml = bytes.decodeToString()
-        val summary = runCatching { parse(yaml) }.getOrNull() ?: return@withContext null
+    /**
+     * Loads the stored config, if any. Returns null only when nothing was imported yet. A
+     * read that fails is tried again (the Keystore may be busy for a moment, e.g. while the
+     * app starts after an update) and then throws [ConfigUnreadableException]: the config
+     * may still be there, so it must not be taken for a first start.
+     */
+    suspend fun load(): StoredConfig? = writing {
+        // Already loaded by another caller (the monitor, the widget) while this one waited.
+        _config.value?.let { return@writing it }
+        val (yaml, summary) = try {
+            retrying { store.read()?.decodeToString()?.let { it to parse(it) } }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw ConfigUnreadableException(e)
+        } ?: return@writing null
         val stored = StoredConfig(yaml, summary, resolveActive(summary, prefs.getString(KEY_CONTEXT, null), savedIndex()))
         _config.value = stored
         stored
