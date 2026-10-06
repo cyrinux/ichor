@@ -1,0 +1,7 @@
+• The Talos upgrade chooser becomes a rollout plan with progress
+• The Talos upgrade chooser lists nodes by role, control plane first
+• Flux diff in the Go core
+• A finished run off the latest release and a stale etcd read no longer hold the rollout
+• Restore the delegate import and the CronJobs icon tests
+• Read LICENSE.MIT files in the license listing
+• Website layout on phones and tablets
