@@ -7,22 +7,6 @@ extension UTType {
     static var pcap: UTType { UTType(filenameExtension: "pcap", conformingTo: .data) ?? .data }
 }
 
-/// A capture file handed to fileExporter without loading it in memory.
-struct PcapDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [.pcap] }
-    let url: URL
-
-    init(url: URL) { self.url = url }
-
-    init(configuration: ReadConfiguration) throws {
-        throw CocoaError(.featureUnsupported) // export only
-    }
-
-    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        try FileWrapper(url: url, options: .immediate)
-    }
-}
-
 /// Capture files kept on the phone: open, share, delete; total size.
 struct CapturesListView: View {
     @State private var files: LoadState<[CaptureFile]> = .loading
