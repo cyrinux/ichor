@@ -10,18 +10,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,8 +23,10 @@ import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.NodeStats
 import name.levis.ichor.model.StatsPoint
 import name.levis.ichor.model.ratesBetween
+import name.levis.ichor.ui.PollWhileStarted
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.pollEvery
 import name.levis.ichor.ui.theme.LocalChartColors
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.userMessage
@@ -49,30 +45,24 @@ class LiveStatsViewModel(private val talos: TalosRepository, private val node: S
     val state: StateFlow<LiveState> = _state.asStateFlow()
     private var last: NodeStats? = null
 
-    suspend fun poll() {
-        while (true) {
-            runCatching { talos.stats(node) }.fold(
-                onSuccess = { sample ->
-                    val point = last?.let { ratesBetween(it, sample) }
-                    val detail = last?.let { talos.bottlenecks(it, sample) }
-                    last = sample
-                    _state.value = _state.value.let { s ->
-                        s.copy(
-                            points = if (point == null) s.points else (s.points + point).takeLast(MAX_POINTS),
-                            error = null,
-                            cpuCount = sample.cpuCount,
-                            bottlenecks = detail,
-                        )
-                    }
-                },
-                onFailure = {
-                    // Leaving the tab cancels the call: that is not an error to show on return.
-                    if (it is CancellationException) throw it
-                    last = null
-                    _state.value = _state.value.copy(error = it.userMessage(), bottlenecks = null)
-                },
+    suspend fun poll(): Nothing = pollEvery(
+        { POLL_SECONDS * 1000 },
+        { talos.stats(node) },
+        {
+            last = null
+            _state.value = _state.value.copy(error = it.userMessage(), bottlenecks = null)
+        },
+    ) { sample ->
+        val point = last?.let { ratesBetween(it, sample) }
+        val detail = last?.let { talos.bottlenecks(it, sample) }
+        last = sample
+        _state.value = _state.value.let { s ->
+            s.copy(
+                points = if (point == null) s.points else (s.points + point).takeLast(MAX_POINTS),
+                error = null,
+                cpuCount = sample.cpuCount,
+                bottlenecks = detail,
             )
-            delay(POLL_SECONDS * 1000)
         }
     }
 }
@@ -83,9 +73,7 @@ fun LiveStatsTab(
     vm: LiveStatsViewModel = viewModel(key = "live-$node", factory = factory { LiveStatsViewModel(app.talosRepository, node) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    // Poll only while visible: leaving the tab or backgrounding the app stops it.
-    LaunchedEffect(lifecycle) { lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { vm.poll() } }
+    PollWhileStarted { vm.poll() }
 
     val colors = LocalChartColors.current
     val points = state.points
