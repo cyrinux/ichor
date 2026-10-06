@@ -102,12 +102,8 @@ struct FluxAppView: View {
         while busy { try? await Task.sleep(for: .milliseconds(100)) }
         busy = true
         defer { busy = false }
-        if let failure = await store.run(action, on: app.target, with: client) {
-            message = failure
-        } else {
-            succeeded += 1
-            announce(String(localized: "Done"))
-        }
+        let failure = await store.run(action, on: app.target, with: client)
+        if recordActionOutcome(failure, message: &message, succeeded: &succeeded) { announce(String(localized: "Done")) }
         await load()
     }
 }
