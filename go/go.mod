@@ -6,7 +6,7 @@ require (
 	filippo.io/age v1.3.2
 	github.com/cosi-project/runtime v1.16.3
 	github.com/fluxcd/pkg/envsubst v1.8.0
-	github.com/gopacket/gopacket v1.7.3
+	github.com/gopacket/gopacket v1.7.4
 	github.com/siderolabs/talos/pkg/machinery v1.14.2
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
 	golang.org/x/crypto v0.57.0

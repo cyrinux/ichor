@@ -89,7 +89,7 @@ jobs:
           fi
           echo "ok=$ok" >>"$GITHUB_OUTPUT"
 
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
         if: steps.ci.outputs.ok == 'true' && !inputs.dry_run && env.DEPLOY_KEY != ''
 
       # --yes commits the drafted Play notes ("docs: Google Play release notes for vX.Y.Z")
