@@ -36,4 +36,11 @@ class FormatTest {
         assertEquals(10, daysUntil(now / 1000 + 10 * 86_400, now))
         assertEquals(-1, daysUntil(now / 1000 - 60, now))
     }
+
+    @Test
+    fun percentIsLocaleIndependent() {
+        assertEquals("12.3%", formatPercent(12.345))
+        assertEquals("50%", formatPercent(50.0, decimals = 0))
+        assertEquals("0.00%", formatPercent(0.0, decimals = 2))
+    }
 }
