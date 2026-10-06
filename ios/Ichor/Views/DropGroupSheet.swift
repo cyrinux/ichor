@@ -71,7 +71,7 @@ struct DropGroupSheet: View {
                 InfoChip(text: "×\(group.count)", monospaced: true)
             }
             Text(verbatim: group.reason.text).font(.callout)
-            Text("Last seen \(Date(epochMillis: group.lastSeen).formatted(.relative(presentation: .named)))")
+            Text("Last seen \(relativeTime(group.lastSeen))")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             if !group.nodes.isEmpty {

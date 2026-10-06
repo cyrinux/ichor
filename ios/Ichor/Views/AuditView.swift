@@ -82,7 +82,7 @@ private struct AuditReportSections: View {
 
     var body: some View {
         Section {
-            Text("\(report.requests) requests over \(formatDuration(Int64(report.seconds))) from \(report.nodes.count) control planes, \(formatMegabytes(report.bytesRead)) read")
+            Text("\(report.requests) requests over \(localizedDuration(Int64(report.seconds))) from \(report.nodes.count) control planes, \(formatMegabytes(report.bytesRead)) read")
                 .font(.callout)
         }
         if report.requests == 0 {

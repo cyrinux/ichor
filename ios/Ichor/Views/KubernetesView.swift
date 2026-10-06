@@ -362,8 +362,7 @@ private struct WorkloadRow: View {
                 .foregroundStyle(stateColor)
                 .monospacedDigit()
                 if workload.restartedAt > 0 {
-                    let at = Date(epochMillis: workload.restartedAt)
-                    Text("restarted \(at.formatted(.relative(presentation: .named)))")
+                    Text("restarted \(relativeTime(workload.restartedAt))")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

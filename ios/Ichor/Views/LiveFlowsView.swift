@@ -232,7 +232,7 @@ private struct DropGroupRow: View {
             }
             .font(.caption.weight(.medium))
             Text(verbatim: group.reason.text).font(.caption).foregroundStyle(.secondary)
-            Text(verbatim: ([Date(epochMillis: group.lastSeen).formatted(.relative(presentation: .named))] + group.nodes)
+            Text(verbatim: ([relativeTime(group.lastSeen)] + group.nodes)
                 .joined(separator: " · "))
                 .font(.caption2)
                 .foregroundStyle(.secondary)

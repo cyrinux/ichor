@@ -61,7 +61,7 @@ struct LonghornList: View {
             }
         }
         .confirmationDialog(confirmEvict.map { String(localized: "Evict the replicas of \($0.name)?") } ?? "",
-                            isPresented: Binding(get: { confirmEvict != nil }, set: { if !$0 { confirmEvict = nil } }),
+                            isPresented: $confirmEvict.isPresent(),
                             titleVisibility: .visible,
                             presenting: confirmEvict) { node in
             Button("Evict replicas", role: .destructive) {
@@ -71,9 +71,7 @@ struct LonghornList: View {
         } message: { node in
             Text("Longhorn copies every replica on \(node.name) to other nodes, then removes them. Scheduling stays off until you turn it back on.")
         }
-        .alert(resultMessage ?? "", isPresented: Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })) {
-            Button("OK") {}
-        }
+        .messageAlert($resultMessage)
     }
 
     private func volumeRow(_ volume: LonghornVolume) -> some View {

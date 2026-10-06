@@ -60,7 +60,7 @@ struct CnpgList: View {
         .refreshable { await refresh() }
         .themedBackground()
         .confirmationDialog(confirmBackup.map { String(localized: "Back up \($0.label) now?") } ?? "",
-                            isPresented: Binding(get: { confirmBackup != nil }, set: { if !$0 { confirmBackup = nil } }),
+                            isPresented: $confirmBackup.isPresent(),
                             titleVisibility: .visible,
                             presenting: confirmBackup) { cluster in
             Button("Back up now") { Task { await backup(cluster) } }
@@ -68,9 +68,7 @@ struct CnpgList: View {
         } message: { _ in
             Text("CloudNativePG takes a full base backup with the method the cluster is set up for (barman-cloud plugin, object store or volume snapshot). It loads the instance it runs on and adds to the backup storage.")
         }
-        .alert(resultMessage ?? "", isPresented: Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })) {
-            Button("OK") {}
-        }
+        .messageAlert($resultMessage)
     }
 
     private func backup(_ cluster: CnpgCluster) async {

@@ -22,7 +22,7 @@ struct GarageList: View {
         .refreshable { await refresh() }
         .themedBackground()
         .confirmationDialog(confirm.map(\.title) ?? "",
-                            isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }),
+                            isPresented: $confirm.isPresent(),
                             titleVisibility: .visible,
                             presenting: confirm) { request in
             Button {
@@ -38,9 +38,7 @@ struct GarageList: View {
                 Text("The node goes back to Garage's default resync pace, lighter on disk and network IO.")
             }
         }
-        .alert(resultMessage ?? "", isPresented: Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })) {
-            Button("OK") {}
-        }
+        .messageAlert($resultMessage)
     }
 
     private func setTranquility(_ request: TranquilityRequest) async {
@@ -205,7 +203,7 @@ private struct NodeRow: View {
         var parts: [String] = []
         if !node.up {
             parts.append(node.lastSeenSecs >= 0
-                ? String(localized: "down, last seen \(formatDuration(node.lastSeenSecs)) ago")
+                ? String(localized: "down, last seen \(localizedDuration(node.lastSeenSecs)) ago")
                 : String(localized: "down"))
         }
         if !node.kubeNode.isEmpty { parts.append(String(localized: "on \(node.kubeNode)")) }

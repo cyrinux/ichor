@@ -234,14 +234,14 @@ private struct CronJobRow: View {
                 MetaChip(symbol: "pause.circle", text: Text("suspended"), color: .orange)
             } else if Date(epochMillis: cronJob.nextRun) > .now {
                 // Not from cached data that has gone by.
-                MetaChip(symbol: "arrow.clockwise", text: Text("next \(Date(epochMillis: cronJob.nextRun).formatted(.relative(presentation: .named)))"))
+                MetaChip(symbol: "arrow.clockwise", text: Text("next \(relativeTime(cronJob.nextRun))"))
             }
         }
     }
 
     @ViewBuilder private var lastRun: some View {
         if let run = cronJob.runs.first {
-            let ago = Date(epochMillis: run.started).formatted(.relative(presentation: .named))
+            let ago = relativeTime(run.started)
             let duration = run.duration.map { Duration.seconds($0).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .narrow)) }
             (Text("last run \(ago)") + Text(verbatim: duration.map { " · \($0)" } ?? ""))
                 .font(.caption)
@@ -359,7 +359,7 @@ private struct RunList: View {
                             .font(.footnote.monospaced())
                             .lineLimit(1)
                             .truncationMode(.middle)
-                        let ago = Date(epochMillis: run.started).formatted(.relative(presentation: .named))
+                        let ago = relativeTime(run.started)
                         let duration = run.duration.map { Duration.seconds($0).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .narrow)) }
                         (Text(run.runState.label) + Text(verbatim: " · \(ago)" + (duration.map { " · \($0)" } ?? "")))
                             .font(.caption)

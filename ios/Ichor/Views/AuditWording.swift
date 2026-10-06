@@ -26,7 +26,7 @@ extension AuditFinding {
         case .widespreadErrors: return String(localized: "\(f.actors) clients get server errors (\(f.code)), mostly on \(f.verb) \(f.resource)")
         case .widespreadSlow: return String(localized: "\(f.actors) clients wait \(formatMs(f.value)) on average")
         case .widespreadWatchChurn: return String(localized: "\(f.actors) clients' watches end every \(formatSeconds(f.value))")
-        case .staleLog: return String(localized: "The API server on \(f.name) logged nothing for \(formatDuration(Int64(f.value)))")
+        case .staleLog: return String(localized: "The API server on \(f.name) logged nothing for \(localizedDuration(Int64(f.value)))")
         case .unauthorized: return String(localized: "Refused \(f.count) times (401): its credentials are not valid")
         case nil: return kindName
         }

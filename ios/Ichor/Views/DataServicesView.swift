@@ -70,11 +70,6 @@ struct DataServicesView: View {
 }
 
 /// Relative time of a unix-ms instant ("3 days ago"), or never.
-func relativeTime(_ millis: Int64) -> String {
-    guard millis > 0 else { return String(localized: "never") }
-    return Date(epochMillis: millis).formatted(.relative(presentation: .named))
-}
-
 /// A system that was found but could not be read: shown inside its own list only.
 struct ErrorLine: View {
     let error: String
