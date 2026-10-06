@@ -134,7 +134,7 @@ func followLog(ctx context.Context, configYAML, contextName, node string, open l
 			return friendlyError(err)
 		}
 
-		if e := msg.GetMetadata().GetError(); e != "" {
+		if e := metaError(msg.GetMetadata()); e != "" {
 			return e
 		}
 

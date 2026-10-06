@@ -176,7 +176,7 @@ func auditBackups(ctx context.Context, s *session) []string {
 
 	for {
 		info, err := stream.Recv()
-		if err != nil || info.GetMetadata().GetError() != "" {
+		if err != nil || metaError(info.GetMetadata()) != "" {
 			break
 		}
 
