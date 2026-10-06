@@ -3,15 +3,21 @@ package name.levis.ichor.util
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 
-/** Reads the whole stream, failing once more than [maxBytes] would be read. */
-fun readBounded(stream: InputStream, maxBytes: Int): ByteArray {
+/** Reads at most [limit] bytes (InputStream.readNBytes needs API 33). */
+fun InputStream.readAtMost(limit: Int): ByteArray {
     val out = ByteArrayOutputStream()
-    val buffer = ByteArray(8 * 1024)
-    while (true) {
-        val n = stream.read(buffer)
+    val buffer = ByteArray(16 * 1024)
+    while (out.size() < limit) {
+        val n = read(buffer, 0, minOf(buffer.size, limit - out.size()))
         if (n < 0) break
-        require(out.size() + n <= maxBytes) { "File is too large to be a talosconfig" }
         out.write(buffer, 0, n)
     }
     return out.toByteArray()
+}
+
+/** Reads the whole stream, failing with [tooLarge] once it holds more than [maxBytes]. */
+fun readBounded(stream: InputStream, maxBytes: Int, tooLarge: String = "File is too large"): ByteArray {
+    val bytes = stream.readAtMost(maxBytes + 1)
+    require(bytes.size <= maxBytes) { tooLarge }
+    return bytes
 }
