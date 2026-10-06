@@ -309,6 +309,30 @@ public func isOutdatedTalos(_ version: String, latest: String) -> Bool {
     isTalosDowngrade(from: latest, to: version)
 }
 
+/// The upgrade chooser's nodes by role, in the order to upgrade them: control plane first.
+public struct TalosUpgradeChoices: Equatable, Sendable {
+    public let controlPlane: [NodeOverview]
+    public let workers: [NodeOverview]
+
+    public var count: Int { controlPlane.count + workers.count }
+    /// The workers are better left for later: a control-plane node is still on an older version.
+    public var workersWait: Bool { !controlPlane.isEmpty }
+}
+
+/// Reachable nodes older than `latest`, oldest first then by hostname, split by role; a node
+/// that is not control plane counts as a worker.
+public func talosUpgradeChoices(_ nodes: [NodeOverview], latest: String) -> TalosUpgradeChoices {
+    let outdated = nodes.filter { $0.reachable && isOutdatedTalos($0.version, latest: latest) }
+        .sorted { a, b in
+            if a.version != b.version { return isTalosDowngrade(from: b.version, to: a.version) }
+            return a.hostname < b.hostname
+        }
+    return TalosUpgradeChoices(
+        controlPlane: outdated.filter { $0.role == "controlplane" },
+        workers: outdated.filter { $0.role != "controlplane" }
+    )
+}
+
 /// TalosUpdateCheck's input: one known version per node (duplicates kept, Go counts the
 /// outdated entries), sorted so the same cluster gives the same string, comma-separated.
 public func talosVersionsCSV(_ versions: [String]) -> String {

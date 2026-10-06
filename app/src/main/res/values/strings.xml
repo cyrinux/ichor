@@ -1065,6 +1065,8 @@
     <string name="overview_talos_tap_upgrade">Tap to upgrade a node.</string>
     <string name="overview_talos_pick_node">Upgrade to %1$s</string>
     <string name="overview_talos_pick_hint">Upgrade one node at a time, control-plane nodes first, and wait for each to be healthy again.</string>
+    <string name="overview_talos_pick_workers">Workers</string>
+    <string name="overview_talos_pick_workers_later">Workers · after the control plane</string>
     <plurals name="overview_talos_outdated">
         <item quantity="one">%1$d node on an older version</item>
         <item quantity="other">%1$d nodes on older versions</item>

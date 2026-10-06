@@ -1160,6 +1160,8 @@
     <string name="overview_talos_tap_upgrade">Торкніться, щоб оновити вузол.</string>
     <string name="overview_talos_pick_node">Оновити до %1$s</string>
     <string name="overview_talos_pick_hint">Оновлюйте по одному вузлу, спершу вузли площини керування, і чекайте, доки кожен знову стане справним.</string>
+    <string name="overview_talos_pick_workers">Робочі вузли</string>
+    <string name="overview_talos_pick_workers_later">Робочі вузли · після площини керування</string>
     <plurals name="overview_talos_outdated">
         <item quantity="one">%1$d вузол на старішій версії</item>
         <item quantity="few">%1$d вузли на старіших версіях</item>

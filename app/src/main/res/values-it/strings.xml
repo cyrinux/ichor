@@ -1069,6 +1069,8 @@
     <string name="overview_talos_tap_upgrade">Tocca per aggiornare un nodo.</string>
     <string name="overview_talos_pick_node">Aggiorna a %1$s</string>
     <string name="overview_talos_pick_hint">Aggiorna un nodo alla volta, prima i nodi del control plane, e attendi che ciascuno torni sano.</string>
+    <string name="overview_talos_pick_workers">Worker</string>
+    <string name="overview_talos_pick_workers_later">Worker · dopo il control plane</string>
     <plurals name="overview_talos_outdated">
         <item quantity="one">%1$d nodo con una versione precedente</item>
         <item quantity="other">%1$d nodi con versioni precedenti</item>

@@ -52,6 +52,20 @@ fun outdatedNodes(nodes: List<NodeOverview>, latest: String): List<NodeOverview>
             }
         }
 
+/** The upgrade chooser's nodes by role, in the order to upgrade them: control plane first. */
+data class UpgradeChoices(val controlPlane: List<NodeOverview>, val workers: List<NodeOverview>) {
+    val count: Int get() = controlPlane.size + workers.size
+
+    /** The workers are better left for later: a control-plane node is still on an older version. */
+    val workersWait: Boolean get() = controlPlane.isNotEmpty()
+}
+
+/** [outdatedNodes] split by role; a node that is not control plane counts as a worker. */
+fun upgradeChoices(nodes: List<NodeOverview>, latest: String): UpgradeChoices {
+    val (controlPlane, workers) = outdatedNodes(nodes, latest).partition { it.role == "controlplane" }
+    return UpgradeChoices(controlPlane, workers)
+}
+
 /** Whether a check made at [lastAt] for [lastKey] can be reused for [key] at [now]. */
 fun talosUpdateFresh(lastAt: Long, lastKey: String?, key: String, now: Long): Boolean =
     lastKey == key && lastAt > 0 && now - lastAt < TALOS_UPDATE_INTERVAL_MILLIS

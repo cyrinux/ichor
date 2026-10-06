@@ -1062,6 +1062,8 @@
     <string name="overview_talos_tap_upgrade">Tippen, um einen Knoten zu aktualisieren.</string>
     <string name="overview_talos_pick_node">Auf %1$s aktualisieren</string>
     <string name="overview_talos_pick_hint">Aktualisiere einen Knoten nach dem anderen, Control-Plane-Knoten zuerst, und warte, bis jeder wieder gesund ist.</string>
+    <string name="overview_talos_pick_workers">Worker</string>
+    <string name="overview_talos_pick_workers_later">Worker · nach der Control Plane</string>
     <plurals name="overview_talos_outdated">
         <item quantity="one">%1$d Knoten mit älterer Version</item>
         <item quantity="other">%1$d Knoten mit älteren Versionen</item>

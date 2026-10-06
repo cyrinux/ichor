@@ -9,23 +9,16 @@ struct TalosUpdateSection: View {
 
     @Environment(AppModel.self) private var model
 
-    /// Oldest first, then by hostname.
-    private var outdated: [NodeOverview] {
-        nodes.filter { $0.reachable && isOutdatedTalos($0.version, latest: info.latest) }
-            .sorted { a, b in
-                if a.version != b.version { return isTalosDowngrade(from: b.version, to: a.version) }
-                return a.hostname < b.hostname
-            }
-    }
+    private var choices: TalosUpgradeChoices { talosUpgradeChoices(nodes, latest: info.latest) }
 
-    private var canUpgrade: Bool { model.allows(.upgrade) && !outdated.isEmpty }
+    private var canUpgrade: Bool { model.allows(.upgrade) && choices.count > 0 }
 
     var body: some View {
-        if let count = talosUpdateBannerCount(info, localOutdated: outdated.count) {
+        if let count = talosUpdateBannerCount(info, localOutdated: choices.count) {
             Section {
                 if canUpgrade {
                     NavigationLink {
-                        OutdatedNodesView(latest: info.latest, nodes: outdated)
+                        OutdatedNodesView(latest: info.latest, choices: choices)
                     } label: {
                         bannerLabel(count: count)
                     }
@@ -56,30 +49,51 @@ struct TalosUpdateSection: View {
     }
 }
 
-/// Nodes older than the latest release; each opens its upgrade with that version preselected.
+/// Nodes older than the latest release under their role, control plane first; each opens its
+/// upgrade with that version preselected. The workers stay tappable while a control-plane node is
+/// outdated (the order is advice, and a new release is often tried on a worker first), only dimmed.
 private struct OutdatedNodesView: View {
     let latest: String
-    let nodes: [NodeOverview]
+    let choices: TalosUpgradeChoices
 
     var body: some View {
         List {
-            Section {
-                ForEach(nodes) { node in
-                    NavigationLink {
-                        UpgradeView(node: node.node, hostname: node.hostname, initialVersion: latest)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(verbatim: node.hostname).font(.headline)
-                            Text(verbatim: "\(node.version) · \(node.node)").font(.caption.monospaced()).foregroundStyle(.secondary)
-                        }
-                    }
+            if !choices.controlPlane.isEmpty {
+                Section {
+                    ForEach(choices.controlPlane) { row($0, dimmed: false) }
+                } header: {
+                    Text("Control plane")
+                } footer: {
+                    if choices.workers.isEmpty { hint }
                 }
-            } footer: {
-                Text("Upgrade one node at a time, control-plane nodes first, and wait for each to be healthy again.")
+            }
+            if !choices.workers.isEmpty {
+                Section {
+                    ForEach(choices.workers) { row($0, dimmed: choices.workersWait) }
+                } header: {
+                    if choices.workersWait { Text("Workers · after the control plane") } else { Text("Workers") }
+                } footer: {
+                    hint
+                }
             }
         }
         .themedBackground()
         .navigationTitle(String(localized: "Upgrade which node to \(latest)?"))
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var hint: some View {
+        Text("Upgrade one node at a time, control-plane nodes first, and wait for each to be healthy again.")
+    }
+
+    private func row(_ node: NodeOverview, dimmed: Bool) -> some View {
+        NavigationLink {
+            UpgradeView(node: node.node, hostname: node.hostname, initialVersion: latest)
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: node.hostname).font(.headline).foregroundStyle(dimmed ? .secondary : .primary)
+                Text(verbatim: "\(node.version) · \(node.node)").font(.caption.monospaced()).foregroundStyle(.secondary)
+            }
+        }
     }
 }

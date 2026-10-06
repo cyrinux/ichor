@@ -23,6 +23,27 @@ final class TalosUpdateTests: XCTestCase {
         XCTAssertTrue(shouldCheckTalosUpdate(lastCheck: now.addingTimeInterval(60), now: now), "clock moved back")
     }
 
+    func testUpgradeChoicesByRole() {
+        func node(_ name: String, _ version: String, role: String = "worker", reachable: Bool = true) -> NodeOverview {
+            NodeOverview(node: name, hostname: name, reachable: reachable, version: version, role: role)
+        }
+        let nodes = [
+            node("w2", "v1.14.1"), node("w1", "v1.13.5"),
+            node("cp2", "v1.14.1", role: "controlplane"), node("cp1", "v1.14.1", role: "controlplane"),
+            node("cp3", "v1.14.2", role: "controlplane"), node("cp4", "v1.13.0", role: "controlplane", reachable: false),
+            node("x", "v1.14.1", role: ""),
+        ]
+        let choices = talosUpgradeChoices(nodes, latest: "v1.14.2")
+        XCTAssertEqual(choices.controlPlane.map(\.hostname), ["cp1", "cp2"])
+        XCTAssertEqual(choices.workers.map(\.hostname), ["w1", "w2", "x"])
+        XCTAssertEqual(choices.count, 5)
+        XCTAssertTrue(choices.workersWait)
+
+        let workersOnly = talosUpgradeChoices(nodes.filter { $0.role != "controlplane" }, latest: "v1.14.2")
+        XCTAssertTrue(workersOnly.controlPlane.isEmpty)
+        XCTAssertFalse(workersOnly.workersWait)
+    }
+
     func testOutdatedAndInput() {
         XCTAssertTrue(isOutdatedTalos("v1.13.4", latest: "v1.14.2"))
         XCTAssertFalse(isOutdatedTalos("v1.14.2", latest: "v1.14.2"))

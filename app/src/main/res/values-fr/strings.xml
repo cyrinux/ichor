@@ -1069,6 +1069,8 @@
     <string name="overview_talos_tap_upgrade">Touchez pour mettre à jour un nœud.</string>
     <string name="overview_talos_pick_node">Mettre à jour vers %1$s</string>
     <string name="overview_talos_pick_hint">Mettez à jour un nœud à la fois, en commençant par le control plane, et attendez que chacun soit de nouveau sain.</string>
+    <string name="overview_talos_pick_workers">Workers</string>
+    <string name="overview_talos_pick_workers_later">Workers · après le control plane</string>
     <plurals name="overview_talos_outdated">
         <item quantity="one">%1$d nœud sur une version antérieure</item>
         <item quantity="other">%1$d nœuds sur des versions antérieures</item>
