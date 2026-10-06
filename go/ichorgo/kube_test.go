@@ -33,7 +33,7 @@ type fakeKubeAPI struct {
 }
 
 type fakeKubeRequest struct {
-	method, path, contentType, auth, body string
+	method, path, contentType, auth, body, query string
 }
 
 func newFakeKubeAPI(t *testing.T, answers map[string]string) *fakeKubeAPI {
@@ -44,7 +44,7 @@ func newFakeKubeAPI(t *testing.T, answers map[string]string) *fakeKubeAPI {
 		body, _ := io.ReadAll(r.Body)
 
 		f.mu.Lock()
-		f.requests = append(f.requests, fakeKubeRequest{r.Method, r.URL.Path, r.Header.Get("Content-Type"), r.Header.Get("Authorization"), string(body)})
+		f.requests = append(f.requests, fakeKubeRequest{r.Method, r.URL.Path, r.Header.Get("Content-Type"), r.Header.Get("Authorization"), string(body), r.URL.RawQuery})
 		answer, ok := f.answers[r.Method+" "+r.URL.Path]
 		f.mu.Unlock()
 

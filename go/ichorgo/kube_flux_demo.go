@@ -148,3 +148,26 @@ func demoFlux(now time.Time) fluxStatus {
 
 	return out
 }
+
+// demoFluxDiff is the diff of a demo Kustomization: a new revision that bumps an image,
+// adds a ConfigMap, prunes a Service, and an encrypted Secret, around unchanged objects.
+func demoFluxDiff(namespace, name string) fluxDiff {
+	const rev = "main@sha1:4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d"
+	const oldRev = "main@sha1:91c0a7e6d5b4c3a29180f7e6d5c4b3a291807f6e"
+
+	return fluxDiff{
+		Kind: "Kustomization", Namespace: namespace, Name: name, Revision: rev, Applied: oldRev, Warnings: []string{},
+		Resources: []kubeDiffResource{
+			{Group: "", Version: "v1", Kind: "ConfigMap", Namespace: "web", Name: "web-settings", Change: diffChangeCreated,
+				Diff: "--- live\n+++ wanted\n@@ -0,0 +1,10 @@\n+apiVersion: v1\n+data:\n+  CACHE_TTL: \"300\"\n+  LOG_LEVEL: info\n+kind: ConfigMap\n+metadata:\n+  labels:\n+    kustomize.toolkit.fluxcd.io/name: " + name + "\n+    kustomize.toolkit.fluxcd.io/namespace: " + namespace + "\n+  name: web-settings\n"},
+			{Group: "apps", Version: "v1", Kind: "Deployment", Namespace: "web", Name: "web", Change: diffChangeChanged,
+				Diff: "--- live\n+++ wanted\n@@ -40,9 +40,11 @@\n     spec:\n       containers:\n-      - image: ghcr.io/example/web:1.8.2\n+      - envFrom:\n+        - configMapRef:\n+            name: web-settings\n+        image: ghcr.io/example/web:1.9.0\n         imagePullPolicy: IfNotPresent\n         name: web\n         ports:\n"},
+			{Group: "", Version: "v1", Kind: "Service", Namespace: "web", Name: "web-legacy", Change: diffChangeDeleted,
+				Diff: "--- live\n+++ wanted\n@@ -1,12 +0,0 @@\n-apiVersion: v1\n-kind: Service\n-metadata:\n-  name: web-legacy\n-  namespace: web\n-spec:\n-  ports:\n-  - port: 80\n-    protocol: TCP\n-    targetPort: 8080\n-  selector:\n-    app: web\n"},
+			{Group: "", Version: "v1", Kind: "Secret", Namespace: "web", Name: "web-credentials", Change: diffChangeEncrypted},
+			{Group: "", Version: "v1", Kind: "Namespace", Name: "web", Change: diffChangeUnchanged},
+			{Group: "", Version: "v1", Kind: "Service", Namespace: "web", Name: "web", Change: diffChangeUnchanged},
+			{Group: "networking.k8s.io", Version: "v1", Kind: "Ingress", Namespace: "web", Name: "web", Change: diffChangeUnchanged},
+		},
+	}
+}
