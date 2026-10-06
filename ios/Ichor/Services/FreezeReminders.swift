@@ -19,7 +19,7 @@ enum FreezeReminders {
     /// fingerprint), and drops that cluster's reminders of freezes that are gone.
     static func sync(_ status: ArgoStatus, cluster: String, now: Date = Date()) {
         guard !cluster.isEmpty else { return }
-        let nowMs = Int64(now.timeIntervalSince1970 * 1000)
+        let nowMs = now.epochMillis
         let running = status.runningIchorFreezes.filter { $0.window.endsAt > nowMs }
         let signature = Set(running.map { "\(identifier(cluster, $0))@\($0.window.endsAt)" })
         guard scheduled[cluster] != signature else { return }
@@ -50,7 +50,7 @@ enum FreezeReminders {
         let content = UNMutableNotificationContent()
         let scope = (pw.window.namespaces + pw.window.applications).joined(separator: ", ")
         let subject = [pw.project.name, scope].filter { !$0.isEmpty }.joined(separator: " · ")
-        let end = Date(timeIntervalSince1970: TimeInterval(pw.window.endsAt) / 1000).formatted(date: .omitted, time: .shortened)
+        let end = Date(epochMillis: pw.window.endsAt).formatted(date: .omitted, time: .shortened)
         content.title = String(localized: "Argo CD freeze ending")
         content.body = String(localized: "The freeze on \(subject) ends at \(end): Argo CD then puts back what was changed by hand.")
         content.categoryIdentifier = category

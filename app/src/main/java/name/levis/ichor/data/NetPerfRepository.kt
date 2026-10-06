@@ -68,6 +68,6 @@ class NetPerfRepository(private val configs: ConfigRepository, private val kubeS
     /** The config to call with and the Kubernetes API address the user set ("" for the kubeconfig's). */
     private fun target(): Pair<StoredConfig, String> {
         val stored = configs.forCall()
-        return stored to stored.activeSummary?.fingerprint?.let { kubeServers.servers.value[it] }.orEmpty()
+        return stored to kubeServers.serverFor(stored)
     }
 }

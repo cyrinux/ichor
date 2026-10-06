@@ -306,7 +306,7 @@ struct TimeSeriesChart: View {
         let value: Double
     }
 
-    private var dates: [Date] { times.map { Date(timeIntervalSince1970: Double($0) / 1000) } }
+    private var dates: [Date] { times.map { Date(epochMillis: $0) } }
 
     private var points: [Point] {
         var out: [Point] = []

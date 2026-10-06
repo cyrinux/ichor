@@ -35,6 +35,9 @@ public extension Date {
     init(epochMillis: Int64) {
         self.init(timeIntervalSince1970: TimeInterval(epochMillis) / 1000)
     }
+
+    /// The instant in Unix milliseconds, as the Go core reports times.
+    var epochMillis: Int64 { Int64(timeIntervalSince1970 * 1000) }
 }
 
 /// `date` as `format` in `timeZone`, with the POSIX locale so file names never vary by region.
@@ -57,9 +60,4 @@ public func usedFraction(total: UInt64, available: UInt64) -> Double {
 public func daysUntil(_ epochSeconds: Int64, now: Date = Date()) -> Int {
     let delta = Double(epochSeconds) - now.timeIntervalSince1970
     return Int((delta / 86_400).rounded(.down))
-}
-
-public func certExpiryText(_ notAfter: Int64, now: Date = Date()) -> String {
-    let days = daysUntil(notAfter, now: now)
-    return days < 0 ? "expired \(-days) days ago" : "in \(days) days"
 }

@@ -2,19 +2,6 @@ import Foundation
 
 // Mirrors go/ichorgo/kube_cronjobs.go.
 
-public struct KubeCronJobList: Decodable, Equatable, Sendable {
-    public let cronJobs: [KubeCronJob]
-
-    public init(cronJobs: [KubeCronJob] = []) { self.cronJobs = cronJobs }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        cronJobs = try c.field(.cronJobs, [])
-    }
-
-    private enum CodingKeys: String, CodingKey { case cronJobs }
-}
-
 /// A CronJob with its schedule, recent runs and the ichor.levis.name/* settings (KubeCronJobs).
 public struct KubeCronJob: Codable, Equatable, Identifiable, Sendable {
     public let namespace: String

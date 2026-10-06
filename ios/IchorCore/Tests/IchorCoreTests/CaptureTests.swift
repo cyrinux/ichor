@@ -93,9 +93,6 @@ final class CaptureTests: XCTestCase {
         let other = CaptureFile(name: "notes.txt", size: 5, modified: Date(timeIntervalSince1970: 3))
         XCTAssertEqual(sortCaptureFiles([old, other, new]).map(\.name), ["b.pcap", "a.pcap"])
         XCTAssertEqual(totalCaptureSize([old, new]), 40)
-        XCTAssertEqual(pcapPageOffsets(total: 0), [0])
-        XCTAssertEqual(pcapPageOffsets(total: 500), [0])
-        XCTAssertEqual(pcapPageOffsets(total: 1001), [0, 500, 1000])
     }
 
     func testLiveListKeepsNewest() {

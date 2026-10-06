@@ -40,7 +40,7 @@ class SupportBundleRepository(private val configs: ConfigRepository, private val
         val run = Ichorgo.startSupportBundle(
             stored.yaml,
             stored.activeContext,
-            stored.activeSummary?.fingerprint?.let { kubeServers.servers.value[it] }.orEmpty(),
+            kubeServers.serverFor(stored),
             nodes.joinToString(","),
             dest.path,
             object : SupportListener {

@@ -27,7 +27,7 @@ enum AppBackup {
                 wakeOnLan: WakeOnLanStore.shared.allTargets
             )
         )
-        let json = String(decoding: try JSONEncoder().encode(payload), as: UTF8.self)
+        let json = try TalosJSON.encode(payload)
         return try await localized { try await TalosClient.encryptBackup(payload: json, passphrase: passphrase) }
     }
 

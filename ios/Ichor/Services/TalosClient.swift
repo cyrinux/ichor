@@ -32,7 +32,6 @@ enum SnapshotEvent: Sendable {
 /// An imported context named like a stored one (see ImportConflicts in Go).
 struct ImportConflict: Decodable, Sendable {
     let index: Int
-    let suggested: String
     let sameAs: String?
 }
 
@@ -169,12 +168,12 @@ struct TalosClient: Sendable {
         try await json { IchorgoCompareDrift(baseline, current, $0) }
     }
     static func updateIncident(previous: String, observation: String, events: [NodeEvent]) async throws -> String {
-        let encoded = String(decoding: try JSONEncoder().encode(events), as: UTF8.self)
+        let encoded = try TalosJSON.encode(events)
         return try await run { IchorgoUpdateIncident(previous, observation, encoded, $0) }
     }
     static func bottlenecks(previous: NodeStats, current: NodeStats) async throws -> Bottlenecks {
-        let a = String(decoding: try JSONEncoder().encode(previous), as: UTF8.self)
-        let b = String(decoding: try JSONEncoder().encode(current), as: UTF8.self)
+        let a = try TalosJSON.encode(previous)
+        let b = try TalosJSON.encode(current)
         return try await json { IchorgoCalculateBottlenecks(a, b, $0) }
     }
 
@@ -238,7 +237,7 @@ struct TalosClient: Sendable {
     /// The Deployments, StatefulSets and DaemonSets running pods (an app's), through their
     /// owners (os:admin): only those pods and workloads are read, never a cluster-wide list.
     func appWorkloads(pods: [RoutePod]) async throws -> [KubeWorkload] {
-        let encoded = String(decoding: try JSONEncoder().encode(pods), as: UTF8.self)
+        let encoded = try TalosJSON.encode(pods)
         let list: KubeWorkloadList = try await Self.json { [config, context, kubeServer] in
             IchorgoKubeAppWorkloads(config, context, kubeServer, encoded, $0)
         }
@@ -247,7 +246,7 @@ struct TalosClient: Sendable {
 
     /// workloads as they are now (os:admin); one deleted since is left out.
     func workloadsNamed(_ workloads: [WorkloadRef]) async throws -> [KubeWorkload] {
-        let encoded = String(decoding: try JSONEncoder().encode(workloads), as: UTF8.self)
+        let encoded = try TalosJSON.encode(workloads)
         let list: KubeWorkloadList = try await Self.json { [config, context, kubeServer] in
             IchorgoKubeWorkloadsNamed(config, context, kubeServer, encoded, $0)
         }
@@ -256,7 +255,7 @@ struct TalosClient: Sendable {
 
     /// The Ingress and HTTPRoute URLs serving pods (os:admin).
     func appRoutes(pods: [RoutePod]) async throws -> [KubeRoute] {
-        let encoded = String(decoding: try JSONEncoder().encode(pods), as: UTF8.self)
+        let encoded = try TalosJSON.encode(pods)
         let list: KubeRouteList = try await Self.json { [config, context, kubeServer] in
             IchorgoKubeAppRoutes(config, context, kubeServer, encoded, $0)
         }

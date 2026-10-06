@@ -35,6 +35,6 @@ extension TalosClient {
     }
 
     private static func encode(_ source: PromSource) throws -> String {
-        String(decoding: try JSONEncoder().encode(source), as: UTF8.self)
+        try TalosJSON.encode(source)
     }
 }

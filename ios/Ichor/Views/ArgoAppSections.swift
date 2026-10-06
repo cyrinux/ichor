@@ -191,7 +191,7 @@ struct ArgoOperationSection: View {
     @ViewBuilder private var elapsed: some View {
         if operation.startedAt > 0 {
             TimelineView(.periodic(from: .now, by: 1)) { context in
-                let end = operation.finishedAt > 0 ? operation.finishedAt : Int64(context.date.timeIntervalSince1970 * 1000)
+                let end = operation.finishedAt > 0 ? operation.finishedAt : context.date.epochMillis
                 let seconds = max(0, (end - operation.startedAt) / 1000)
                 Text(verbatim: Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .narrow)))
             }

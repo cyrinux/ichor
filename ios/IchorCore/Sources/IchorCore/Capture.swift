@@ -265,12 +265,6 @@ public func totalCaptureSize(_ files: [CaptureFile]) -> Int64 {
     files.reduce(Int64(0)) { $0 &+ max($1.size, 0) }
 }
 
-/// Offsets of the pages of a capture holding `total` packets.
-public func pcapPageOffsets(total: Int, pageSize: Int = pcapPageSize) -> [Int] {
-    guard total > 0, pageSize > 0 else { return [0] }
-    return Array(stride(from: 0, to: total, by: pageSize))
-}
-
 /// "01:05": minutes and seconds elapsed in a capture (at most 5 min).
 public func formatElapsed(_ seconds: Int) -> String {
     let s = max(seconds, 0)

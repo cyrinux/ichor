@@ -216,12 +216,6 @@ public func normalizedPath(_ path: String) -> String {
     return "/" + parts.joined(separator: "/")
 }
 
-/// "/var/lib" → "/var"; the root is its own parent.
-public func parentPath(_ path: String) -> String {
-    let parts = normalizedPath(path).split(separator: "/")
-    return "/" + parts.dropLast().joined(separator: "/")
-}
-
 /// One step of the path bar: what to show and where it leads.
 public struct PathCrumb: Equatable, Identifiable, Sendable {
     public let name: String

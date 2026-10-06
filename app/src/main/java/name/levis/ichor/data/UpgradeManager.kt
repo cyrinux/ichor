@@ -132,5 +132,5 @@ class UpgradeManager(
 
     /** The Kubernetes API address the user set for the active cluster ("" for the kubeconfig's). */
     private fun kubeServer(stored: StoredConfig): String =
-        stored.activeSummary?.fingerprint?.let { kubeServers.servers.value[it] }.orEmpty()
+        kubeServers.serverFor(stored)
 }

@@ -766,7 +766,7 @@ class TalosRepository(
         listener: MaintenanceListener,
     ): MaintenanceRun {
         val stored = configs.forCall()
-        val server = stored.activeSummary?.fingerprint?.let { kubeServers.servers.value[it] }.orEmpty()
+        val server = kubeServers.serverFor(stored)
         return Ichorgo.startNodeMaintenance(stored.yaml, stored.activeContext, server, node, action.wire, includeBare, acknowledged, listener)
     }
 
@@ -983,7 +983,7 @@ class TalosRepository(
     /** [call] with the Kubernetes API address the user set for the cluster ("" for the kubeconfig's). */
     private suspend fun <T> kubeCall(block: (config: String, context: String, kubeServer: String) -> T): T {
         val stored = configs.forCall()
-        val server = stored.activeSummary?.fingerprint?.let { kubeServers.servers.value[it] }.orEmpty()
+        val server = kubeServers.serverFor(stored)
         return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext, server) }
     }
 }

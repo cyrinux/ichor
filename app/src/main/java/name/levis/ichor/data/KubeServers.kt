@@ -18,6 +18,9 @@ class KubeServers(private val prefs: SharedPreferences) {
     )
     val servers: StateFlow<Map<String, String>> = _servers.asStateFlow()
 
+    /** The address set for [stored]'s active cluster, "" for the kubeconfig's own. */
+    fun serverFor(stored: StoredConfig): String = stored.activeSummary?.fingerprint?.let { servers.value[it] }.orEmpty()
+
     /** Forgets the addresses of the clusters no longer in [summary]. */
     fun sync(summary: ConfigSummary) = store(keepClusterNames(_servers.value, summary.contexts.map { it.fingerprint }))
 

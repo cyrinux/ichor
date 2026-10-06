@@ -348,6 +348,11 @@ public enum TalosJSON {
     public static func decode<T: Decodable>(_ type: T.Type, from json: String) throws -> T {
         try JSONDecoder().decode(type, from: Data(json.utf8))
     }
+
+    /// `value` as the JSON string the Go core takes.
+    public static func encode<T: Encodable>(_ value: T) throws -> String {
+        String(decoding: try JSONEncoder().encode(value), as: UTF8.self)
+    }
 }
 
 public struct KubeSpanOverview: Decodable, Equatable, Sendable {

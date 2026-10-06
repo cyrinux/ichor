@@ -86,12 +86,3 @@ public struct SupportState: Equatable, Sendable {
         return now.timeIntervalSince(lastAsked) >= 90 * day
     }
 }
-
-public extension ContextSummary {
-    /// Short access level for the UI: "admin", "operator" or "read-only".
-    var accessLabel: String {
-        if roles.contains("os:admin") { return "admin" }
-        if roles.contains("os:operator") { return "operator" }
-        return "read-only"
-    }
-}

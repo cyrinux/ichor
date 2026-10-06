@@ -235,7 +235,7 @@ public struct UpgradeProgress: Decodable, Equatable, Sendable {
         if let ms = try? c.decodeIfPresent(Int64.self, forKey: .at) {
             at = ms
         } else if let text = try? c.decodeIfPresent(String.self, forKey: .at), let date = ISO8601DateFormatter().date(from: text) {
-            at = Int64(date.timeIntervalSince1970 * 1000)
+            at = date.epochMillis
         } else {
             at = 0
         }

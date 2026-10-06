@@ -91,7 +91,7 @@ final class InsightsSession {
                     case .done(let problem):
                         if let problem {
                             error = problem
-                            let now = Int64(Date().timeIntervalSince1970 * 1000)
+                            let now = Date().epochMillis
                             pending.append(NodeEvent(node: "", eventId: "stream-\(now)", at: now, kind: "recording", subject: "events", action: "unavailable", message: problem, severity: "warning"))
                         }
                     }
@@ -124,7 +124,7 @@ final class InsightsSession {
         var events = pending
         pending = []
         if pendingLost > 0 {
-            let now = Int64(Date().timeIntervalSince1970 * 1000)
+            let now = Date().epochMillis
             events.append(NodeEvent(node: "", eventId: "overflow-\(now)", at: now, kind: "recording", subject: "events", action: "overflow", message: "{\"discarded\":\(pendingLost)}", severity: "warning"))
             pendingLost = 0
         }

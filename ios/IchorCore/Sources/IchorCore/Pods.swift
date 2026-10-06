@@ -2,19 +2,6 @@ import Foundation
 
 // Mirrors go/ichorgo/kube_pods.go.
 
-public struct KubePodList: Decodable, Equatable, Sendable {
-    public let pods: [KubePod]
-
-    public init(pods: [KubePod] = []) { self.pods = pods }
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        pods = try c.field(.pods, [])
-    }
-
-    private enum CodingKeys: String, CodingKey { case pods }
-}
-
 /// A Kubernetes pod with the status `kubectl get pods` shows (KubePods).
 public struct KubePod: Codable, Equatable, Identifiable, Sendable {
     public let namespace: String

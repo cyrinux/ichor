@@ -42,7 +42,7 @@ class DiagnosisRepository(private val configs: ConfigRepository, private val kub
      */
     suspend fun collect(anonymize: Boolean): Diagnosis {
         val stored = configs.forCall()
-        val server = stored.activeSummary?.fingerprint?.let { kubeServers.servers.value[it] }.orEmpty()
+        val server = kubeServers.serverFor(stored)
         return withContext(Dispatchers.IO) { Ichorgo.collectDiagnosis(stored.yaml, stored.activeContext, server, anonymize) }
     }
 

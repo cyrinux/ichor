@@ -16,7 +16,7 @@ final class CronJobsTests: XCTestCase {
         "nextRun":2,"images":["postgres:17"],
         "runs":[{"name":"db-backup-manual-x","state":"failed","manual":true,"started":1000,"finished":95000}]}]}
         """
-        let c = try XCTUnwrap(try TalosJSON.decode(KubeCronJobList.self, from: json).cronJobs.first)
+        let c = try XCTUnwrap(try TalosJSON.decode(KubeCronJobPage.self, from: json).cronJobs.first)
         XCTAssertEqual(c.id, "shop/db-backup")
         XCTAssertEqual(c.displayName, "Database backup")
         XCTAssertEqual(c.runState, .failed)

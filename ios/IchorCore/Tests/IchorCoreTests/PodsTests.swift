@@ -11,11 +11,11 @@ final class PodsTests: XCTestCase {
 
     func testDecodesTheGoJSON() throws {
         let json = #"{"pods":[{"namespace":"shop","name":"web-1","status":"Init:1/2","healthy":false,"ready":0,"containers":2,"restarts":3,"node":"w1","owner":"ReplicaSet/web","created":1,"images":["nginx"]}]}"#
-        let p = try XCTUnwrap(TalosJSON.decode(KubePodList.self, from: json).pods.first)
+        let p = try XCTUnwrap(TalosJSON.decode(KubePodPage.self, from: json).pods.first)
         XCTAssertEqual(p.restarts, 3)
         XCTAssertEqual(p.id, "shop/web-1")
         XCTAssertTrue(p.transitional)
-        XCTAssertEqual(try TalosJSON.decode(KubePodList.self, from: "{}"), KubePodList())
+        XCTAssertEqual(try TalosJSON.decode(KubePodPage.self, from: "{}").pods, [])
     }
 
     func testUnhealthyFirstThenNamespaceAndName() {
