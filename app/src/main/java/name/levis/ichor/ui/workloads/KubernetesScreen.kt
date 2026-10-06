@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.MonitorHeart
+import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.Stream
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,6 +70,7 @@ fun KubernetesScreen(
     onBack: () -> Unit,
     onNetworkPolicies: () -> Unit,
     onApiHealth: () -> Unit,
+    onCheckup: () -> Unit,
     onFlows: (namespace: String?, pod: String?) -> Unit,
     focus: KubeFocus = KubeFocus(0),
 ) {
@@ -123,6 +125,7 @@ fun KubernetesScreen(
                 navigationIcon = { BackButton(onBack) },
                 actions = {
                     if (tab < ShareTarget.KUBE_TABS.size) ShareLinkButton(ShareTarget.kubernetes(tab))
+                    TooltipIconButton(Icons.Outlined.HealthAndSafety, stringResource(R.string.checkup_title), onClick = onCheckup)
                     TooltipIconButton(Icons.Outlined.MonitorHeart, stringResource(R.string.apihealth_title), onClick = onApiHealth)
                     TooltipIconButton(Icons.Outlined.Policy, stringResource(R.string.netpol_title), onClick = onNetworkPolicies)
                     if (hasCilium) {

@@ -42,6 +42,17 @@ data class ClusterSnapshot(
     val gitopsIssues: Map<String, String> = emptyMap(),
     /** GitOps warnings seen once and not notified yet. */
     val gitopsPending: List<String> = emptyList(),
+    /** Watching the cluster checkup was on for this check (opt-in). */
+    val checkupWatched: Boolean = false,
+    /** The checkup could be read this time. */
+    val checkupChecked: Boolean = false,
+    /**
+     * Checkup findings ("section|kind|subject" → severity, see [checkupIssuesWithGaps]), kept like
+     * [dataIssues].
+     */
+    val checkupIssues: Map<String, String> = emptyMap(),
+    /** Checkup warnings seen once and not notified yet. */
+    val checkupPending: List<String> = emptyList(),
 ) {
     val readyCount: Int get() = nodes.values.count { it.health == NodeHealth.READY }
     val notReadyCount: Int get() = nodes.values.count { it.health == NodeHealth.NOT_READY }
@@ -70,7 +81,13 @@ fun snapshotOf(
     /** GitOps apps watched ([gitopsIssues] null when watched but unreadable, see [gitopsIssuesOf]). */
     gitopsWatched: Boolean = false,
     gitopsIssues: Map<String, String>? = null,
+    /** The checkup watched ([checkupIssues] null when watched but unreadable). */
+    checkupWatched: Boolean = false,
+    checkupIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
+    checkupWatched = checkupWatched,
+    checkupChecked = checkupWatched && checkupIssues != null,
+    checkupIssues = checkupIssues?.takeIf { checkupWatched }.orEmpty(),
     gitopsWatched = gitopsWatched,
     gitopsChecked = gitopsWatched && gitopsIssues != null,
     gitopsIssues = gitopsIssues?.takeIf { gitopsWatched }.orEmpty(),

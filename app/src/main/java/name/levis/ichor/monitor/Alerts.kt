@@ -4,14 +4,14 @@ import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.util.daysUntil
 
 /** What an alert is about; Notifications.kt turns it into translated text. */
-enum class AlertKind { NODE_READY, NODE_NOT_READY, NODE_UNREACHABLE, ETCD_ALARM, CERT_EXPIRING, CERT_EXPIRED, DATA_PROBLEM, DATA_OK, GITOPS_PROBLEM, GITOPS_OK }
+enum class AlertKind { NODE_READY, NODE_NOT_READY, NODE_UNREACHABLE, ETCD_ALARM, CERT_EXPIRING, CERT_EXPIRED, DATA_PROBLEM, DATA_OK, GITOPS_PROBLEM, GITOPS_OK, CHECKUP_PROBLEM, CHECKUP_OK }
 
 /**
  * [key] identifies the subject, so a newer alert replaces the older notification.
  * [subject]: hostname (node), alarm name (etcd), volume/cluster (data services) or
- * "namespace/name" (Argo CD) / "Kind namespace/name" (Flux);
+ * "namespace/name" (Argo CD) / "Kind namespace/name" (Flux), or what a checkup finding is about;
  * [detail]: node address/reason, etcd member, "system|severity" (data services) or
- * "tool|severity|reason" (GitOps apps);
+ * "tool|severity|reason" (GitOps apps), "section|kind|severity" (checkup);
  * [days]: days until (or since) the certificate expiry.
  */
 data class Alert(
@@ -73,6 +73,7 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
 
     val data = if (blind) prev.dataTrack else evaluateTrack(prev?.dataTrack, cur.dataTrack, comparable, { it }, ::dataAlert, alerts)
     val gitops = if (blind) prev.gitopsTrack else evaluateTrack(prev?.gitopsTrack, cur.gitopsTrack, comparable, ::gitopsSeverity, ::gitopsAlert, alerts)
+    val checkup = if (blind) prev.checkupTrack else evaluateTrack(prev?.checkupTrack, cur.checkupTrack, comparable, { it }, ::checkupAlert, alerts)
 
     val next = if (blind) prev.copy(certNotAfter = cur.certNotAfter) else cur
     return Evaluation(
@@ -87,6 +88,10 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             gitopsChecked = gitops.checked,
             gitopsIssues = gitops.issues,
             gitopsPending = gitops.pending,
+            checkupWatched = checkup.watched,
+            checkupChecked = checkup.checked,
+            checkupIssues = checkup.issues,
+            checkupPending = checkup.pending,
         ),
     )
 }
@@ -96,6 +101,7 @@ private data class Track(val watched: Boolean, val checked: Boolean, val issues:
 
 private val ClusterSnapshot.dataTrack: Track get() = Track(dataWatched, dataChecked, dataIssues, dataPending)
 private val ClusterSnapshot.gitopsTrack: Track get() = Track(gitopsWatched, gitopsChecked, gitopsIssues, gitopsPending)
+private val ClusterSnapshot.checkupTrack: Track get() = Track(checkupWatched, checkupChecked, checkupIssues, checkupPending)
 
 /**
  * Issues of one track (key → value, [severityOf] reading [DATA_CRITICAL] or [DATA_WARNING] from the
@@ -149,6 +155,18 @@ private fun gitopsAlert(key: String, value: String, problem: Boolean): Alert = A
     subject = key.substringAfter('|'),
     detail = key.substringBefore('|') + "|" + value,
 )
+
+/** [key] "section|kind|subject", [severity] the finding's: detail "section|kind|severity". */
+private fun checkupAlert(key: String, severity: String, problem: Boolean): Alert {
+    val parts = key.split('|', limit = 3)
+    return Alert(
+        key = "checkup:$key",
+        kind = if (problem) AlertKind.CHECKUP_PROBLEM else AlertKind.CHECKUP_OK,
+        problem = problem,
+        subject = parts.getOrElse(2) { "" },
+        detail = listOf(parts[0], parts.getOrElse(1) { "" }, severity).joinToString("|"),
+    )
+}
 
 private fun dataAlert(key: String, severity: String, problem: Boolean): Alert = Alert(
     key = "data:$key",

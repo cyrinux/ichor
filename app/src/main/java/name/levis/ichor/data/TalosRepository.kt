@@ -12,6 +12,9 @@ import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.SnapshotListener
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ApiHealthReport
+import name.levis.ichor.model.CheckupReport
+import name.levis.ichor.model.KubeEvent
+import name.levis.ichor.model.KubeEventList
 import name.levis.ichor.model.AuditReport
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.SupportedIntegrations
@@ -599,6 +602,22 @@ class TalosRepository(
     }
 
     /**
+     * The cluster checkup (os:admin): what no other screen shows, section by section. It lists the
+     * cluster's pods and asks every kubelet for its volumes: on demand, never cached.
+     */
+    suspend fun checkup(): CheckupReport = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(CheckupReport.serializer(), Ichorgo.kubeCheckup(cfg, ctx, server))
+    }
+
+    /**
+     * The Kubernetes events of the [kind] named [name] in [namespace], newest first (os:admin); with
+     * an empty [kind], those of [name] and of what it owns by name (ReplicaSets, pods).
+     */
+    suspend fun kubeEvents(namespace: String, kind: String, name: String): List<KubeEvent> = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeEventList.serializer(), Ichorgo.kubeEvents(cfg, ctx, server, namespace, kind, name)).events
+    }
+
+    /**
      * Who loads the Kubernetes API server over the last [minutes], from the control planes'
      * audit logs read through the Talos API (os:admin): tens of MB, never cached.
      */
@@ -704,6 +723,9 @@ class TalosRepository(
 
     /** `talosctl reboot -m [mode]` (default, powercycle, force); needs os:operator or higher. */
     suspend fun reboot(node: String, mode: String) = call { cfg, ctx -> Ichorgo.reboot(cfg, ctx, node, mode) }
+
+    /** `talosctl rollback`: [node] reboots into the Talos it ran before its last upgrade (os:admin). */
+    suspend fun rollback(node: String) = call { cfg, ctx -> Ichorgo.rollback(cfg, ctx, node) }
 
     /** `talosctl shutdown [--force]` (force skips cordon/drain); needs os:operator or higher. */
     suspend fun shutdown(node: String, force: Boolean) = call { cfg, ctx -> Ichorgo.shutdown(cfg, ctx, node, force) }

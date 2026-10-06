@@ -76221,6 +76221,4652 @@
           }
         }
       }
+    },
+    "Cluster checkup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bilan du cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chequeo del clúster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster-Check"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controllo del cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірка кластера"
+          }
+        }
+      }
+    },
+    "What the other screens do not show, read from the Kubernetes API. Nothing is changed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce que les autres écrans ne montrent pas, lu depuis l’API Kubernetes. Rien n’est modifié."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo que las demás pantallas no muestran, leído de la API de Kubernetes. No se cambia nada."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was die anderen Ansichten nicht zeigen, aus der Kubernetes-API gelesen. Nichts wird verändert."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciò che le altre schermate non mostrano, letto dall’API Kubernetes. Nulla viene modificato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Те, чого не показують інші екрани, прочитане з API Kubernetes. Нічого не змінюється."
+          }
+        }
+      }
+    },
+    "Needs attention" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À traiter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requiere atención"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handlungsbedarf"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richiede attenzione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Потребує уваги"
+          }
+        }
+      }
+    },
+    "Warnings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avertissements"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advertencias"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnungen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередження"
+          }
+        }
+      }
+    },
+    "All clear" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien à signaler"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todo en orden"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles in Ordnung"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutto a posto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усе гаразд"
+          }
+        }
+      }
+    },
+    "Critical: %@  ·  Warnings: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Critical: %1$@  ·  Warnings: %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Critiques : %1$@  ·  Avertissements : %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Críticos: %1$@  ·  Advertencias: %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kritisch: %1$@  ·  Warnungen: %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Critici: %1$@  ·  Avvisi: %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Критичних: %1$@  ·  Попереджень: %2$@"
+          }
+        }
+      }
+    },
+    "Nothing found in %@ checks." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien trouvé sur %@ vérifications."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada encontrado en %@ comprobaciones."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts gefunden in %@ Prüfungen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun problema in %@ controlli."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого не знайдено в %@ перевірках."
+          }
+        }
+      }
+    },
+    "Nothing found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien trouvé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada encontrado"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts gefunden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun problema"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого не знайдено"
+          }
+        }
+      }
+    },
+    "Nothing found. Checked: %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien trouvé. Vérifiés : %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada encontrado. Comprobados: %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts gefunden. Geprüft: %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun problema. Controllati: %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого не знайдено. Перевірено: %@."
+          }
+        }
+      }
+    },
+    "And %@ more, not shown." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Et %@ de plus, non affichés."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Y %@ más, no mostrados."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Und %@ weitere, nicht angezeigt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E altri %@, non mostrati."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "І ще %@, не показано."
+          }
+        }
+      }
+    },
+    "Show all (%@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout afficher (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar todo (%@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle anzeigen (%@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra tutto (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати все (%@)"
+          }
+        }
+      }
+    },
+    "Could not be read: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture impossible : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo leer: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konnte nicht gelesen werden: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lettura non riuscita: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося прочитати: %@"
+          }
+        }
+      }
+    },
+    "On node %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur le nœud %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En el nodo %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Node %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sul nodo %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На вузлі %@"
+          }
+        }
+      }
+    },
+    "memory" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mémoire"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "memoria"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speicher"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "memoria"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "пам’ять"
+          }
+        }
+      }
+    },
+    "Requests against allocatable, per node" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demandes (requests) face à l’allouable, par nœud"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitudes (requests) frente a lo asignable, por nodo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requests gegenüber dem Zuteilbaren, pro Node"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richieste (requests) rispetto all’allocabile, per nodo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запити (requests) відносно доступного, по вузлах"
+          }
+        }
+      }
+    },
+    "%@ / %@ pods" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ pods"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ pods"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ pods"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ Pods"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ pod"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ подів"
+          }
+        }
+      }
+    },
+    "%@ / %@ cores" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ cores"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ cœurs"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ núcleos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ Kerne"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ core"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ / %2$@ ядер"
+          }
+        }
+      }
+    },
+    "Roles, taints and labels" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rôles, taints et labels"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roles, taints y etiquetas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rollen, Taints und Labels"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruoli, taint ed etichette"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ролі, taint-и та мітки"
+          }
+        }
+      }
+    },
+    "cordoned" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cordonné"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "acordonado"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gesperrt (cordon)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "isolato (cordon)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ізольований (cordon)"
+          }
+        }
+      }
+    },
+    "no taint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aucun taint"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sin taints"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kein Taint"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nessun taint"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "без taint-ів"
+          }
+        }
+      }
+    },
+    "Labels: %@ (tap to show)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labels : %@ (toucher pour afficher)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etiquetas: %@ (toque para ver)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labels: %@ (zum Anzeigen tippen)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etichette: %@ (tocca per mostrare)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Міток: %@ (торкніться, щоб показати)"
+          }
+        }
+      }
+    },
+    "Volumes, fullest first" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volumes, les plus pleins d’abord"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volúmenes, los más llenos primero"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volumes, die vollsten zuerst"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volumi, i più pieni per primi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Томи, найповніші спочатку"
+          }
+        }
+      }
+    },
+    "Level unknown: not mounted, or its node did not answer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niveau inconnu : non monté, ou son nœud n’a pas répondu"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nivel desconocido: no montado, o su nodo no respondió"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füllstand unbekannt: nicht eingehängt, oder sein Node hat nicht geantwortet"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Livello sconosciuto: non montato, o il suo nodo non ha risposto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рівень невідомий: не змонтовано або вузол не відповів"
+          }
+        }
+      }
+    },
+    "Releases" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Releases"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Releases"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Releases"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Release"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Релізи"
+          }
+        }
+      }
+    },
+    "Revision %@, %@ ago" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revision %1$@, %2$@ ago"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Révision %1$@, il y a %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisión %1$@, hace %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revision %1$@, vor %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisione %1$@, %2$@ fa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ревізія %1$@, %2$@ тому"
+          }
+        }
+      }
+    },
+    "Checkup and API server" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bilan et serveur d’API"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chequeo y servidor de la API"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check und API-Server"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controllo e server API"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірка та сервер API"
+          }
+        }
+      }
+    },
+    "Reading the cluster…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture du cluster…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leyendo el clúster…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cluster wird gelesen…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lettura del cluster…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читання кластера…"
+          }
+        }
+      }
+    },
+    "Pods that crash, cannot start or were killed, Jobs that failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pods qui plantent, ne démarrent pas ou ont été tués, Jobs en échec"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pods que fallan, no arrancan o fueron eliminados, Jobs fallidos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pods, die abstürzen, nicht starten oder beendet wurden, fehlgeschlagene Jobs"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pod che vanno in crash, non partono o sono stati terminati, Job falliti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поди, що падають, не стартують або були вбиті, невдалі Job-и"
+          }
+        }
+      }
+    },
+    "Warning events" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Événements d’avertissement"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eventos de advertencia"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warn-Ereignisse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eventi di avviso"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Події-попередження"
+          }
+        }
+      }
+    },
+    "What Kubernetes complained about in the last hour" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce dont Kubernetes s’est plaint depuis une heure"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De qué se quejó Kubernetes en la última hora"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Worüber sich Kubernetes in der letzten Stunde beschwert hat"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Di cosa si è lamentato Kubernetes nell’ultima ora"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На що скаржився Kubernetes за останню годину"
+          }
+        }
+      }
+    },
+    "Claims nearly full, not bound or lost" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volumes presque pleins, non liés ou perdus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volúmenes casi llenos, sin enlazar o perdidos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fast volle, nicht gebundene oder verlorene Volumes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volumi quasi pieni, non associati o persi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Томи майже повні, не прив’язані або втрачені"
+          }
+        }
+      }
+    },
+    "Upgrade readiness" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prêt pour la mise à niveau"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listo para actualizar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrade-Bereitschaft"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pronto per l’aggiornamento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готовність до оновлення"
+          }
+        }
+      }
+    },
+    "Deprecated API versions something still calls" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versions d’API dépréciées encore appelées"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versiones de API obsoletas que algo aún llama"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veraltete API-Versionen, die noch aufgerufen werden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versioni di API deprecate ancora chiamate"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застарілі версії API, які ще хтось викликає"
+          }
+        }
+      }
+    },
+    "Admission webhooks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webhooks d’admission"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webhooks de admisión"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Admission-Webhooks"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webhook di ammissione"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вебхуки допуску"
+          }
+        }
+      }
+    },
+    "Webhooks whose backend is down" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webhooks dont le service ne répond plus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webhooks cuyo servicio está caído"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webhooks, deren Dienst ausgefallen ist"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webhook il cui servizio non risponde"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вебхуки, сервіс яких не працює"
+          }
+        }
+      }
+    },
+    "Capacity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capacité"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capacidad"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapazität"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capacità"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Місткість"
+          }
+        }
+      }
+    },
+    "What pods request against what nodes offer, and quotas" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce que les pods demandent face à ce qu’offrent les nœuds, et les quotas"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo que piden los pods frente a lo que ofrecen los nodos, y las cuotas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was Pods anfordern gegenüber dem, was die Nodes bieten, und Quotas"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciò che i pod richiedono rispetto a ciò che offrono i nodi, e le quote"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Що запитують поди проти того, що дають вузли, і квоти"
+          }
+        }
+      }
+    },
+    "Cordoned, under pressure or out of step with the API server" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cordonnés, sous pression ou en décalage avec le serveur d’API"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acordonados, bajo presión o desfasados del servidor de la API"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesperrt, unter Druck oder nicht im Gleichschritt mit dem API-Server"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isolati, sotto pressione o non allineati al server API"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ізольовані, під тиском або не узгоджені із сервером API"
+          }
+        }
+      }
+    },
+    "Load balancers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Répartiteurs de charge"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balanceadores de carga"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Load Balancer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bilanciatori di carico"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Балансувальники"
+          }
+        }
+      }
+    },
+    "Services waiting for an address, pools running out" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Services en attente d’une adresse, pools épuisés"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Services a la espera de una dirección, pools agotados"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Services, die auf eine Adresse warten, erschöpfte Pools"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Service in attesa di un indirizzo, pool esauriti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервіси, що чекають на адресу, вичерпані пули"
+          }
+        }
+      }
+    },
+    "Stuck deletions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suppressions bloquées"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminaciones atascadas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hängende Löschungen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminazioni bloccate"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завислі видалення"
+          }
+        }
+      }
+    },
+    "Namespaces, pods and claims that never finish terminating" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespaces, pods et volumes qui n’en finissent pas de se terminer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespaces, pods y volúmenes que nunca terminan de eliminarse"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespaces, Pods und Volumes, die nie fertig beendet werden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespace, pod e volumi che non finiscono mai di terminare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Простори імен, поди й томи, що ніяк не завершаться"
+          }
+        }
+      }
+    },
+    "Certificate requests" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demandes de certificat"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitudes de certificado"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikatsanfragen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richieste di certificato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запити сертифікатів"
+          }
+        }
+      }
+    },
+    "Requests nobody approved" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demandes que personne n’a approuvées"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitudes que nadie aprobó"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anfragen, die niemand genehmigt hat"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richieste che nessuno ha approvato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запити, які ніхто не схвалив"
+          }
+        }
+      }
+    },
+    "External secrets" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secrets externes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secretos externos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Externe Secrets"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret esterni"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зовнішні секрети"
+          }
+        }
+      }
+    },
+    "Secrets that no longer sync from their store" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secrets qui ne se synchronisent plus depuis leur store"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secretos que ya no se sincronizan desde su store"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secrets, die nicht mehr aus ihrem Store synchronisiert werden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret che non si sincronizzano più dal loro store"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Секрети, що більше не синхронізуються зі свого сховища"
+          }
+        }
+      }
+    },
+    "Helm releases" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Releases Helm"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Releases de Helm"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helm-Releases"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Release Helm"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Релізи Helm"
+          }
+        }
+      }
+    },
+    "Releases that failed or hang" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Releases en échec ou bloquées"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Releases fallidas o bloqueadas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlgeschlagene oder hängende Releases"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Release fallite o bloccate"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Релізи, що зазнали невдачі або зависли"
+          }
+        }
+      }
+    },
+    "Crashes and restarts in a loop (%@ restarts)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plante et redémarre en boucle (%@ redémarrages)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falla y se reinicia en bucle (%@ reinicios)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stürzt ab und startet in einer Schleife neu (%@ Neustarts)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Va in crash e si riavvia in ciclo (%@ riavvii)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Падає й перезапускається по колу (перезапусків: %@)"
+          }
+        }
+      }
+    },
+    "Its image cannot be pulled: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son image ne peut pas être téléchargée : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede descargar su imagen: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sein Image kann nicht geladen werden: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sua immagine non può essere scaricata: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається завантажити образ: %@"
+          }
+        }
+      }
+    },
+    "No node can take it, for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun nœud ne peut l’accueillir, depuis %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún nodo puede alojarlo, desde hace %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Node kann ihn aufnehmen, seit %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun nodo può ospitarlo, da %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жоден вузол не може його прийняти, уже %@"
+          }
+        }
+      }
+    },
+    "Scheduled %@ ago, its containers still do not start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planifié il y a %@, ses conteneurs ne démarrent toujours pas"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planificado hace %@, sus contenedores siguen sin arrancar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vor %@ eingeplant, seine Container starten immer noch nicht"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pianificato %@ fa, i suoi container non partono ancora"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заплановано %@ тому, контейнери досі не стартують"
+          }
+        }
+      }
+    },
+    "Runs but is not ready: %@ of %@ containers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runs but is not ready: %1$@ of %2$@ containers"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tourne mais n’est pas prêt : %1$@ conteneurs sur %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En ejecución pero no listo: %1$@ de %2$@ contenedores"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Läuft, ist aber nicht bereit: %1$@ von %2$@ Containern"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In esecuzione ma non pronto: %1$@ container su %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Працює, але не готовий: %1$@ з %2$@ контейнерів"
+          }
+        }
+      }
+    },
+    "Status %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "État %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stato %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стан %@"
+          }
+        }
+      }
+    },
+    "Killed for using more memory than its limit (%@ restarts)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tué pour avoir dépassé sa limite mémoire (%@ redémarrages)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminado por superar su límite de memoria (%@ reinicios)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beendet, weil das Speicherlimit überschritten wurde (%@ Neustarts)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminato per aver superato il limite di memoria (%@ riavvii)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убитий за перевищення ліміту пам’яті (перезапусків: %@)"
+          }
+        }
+      }
+    },
+    "The Job gave up %@ ago" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Job a abandonné il y a %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El Job se rindió hace %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Job hat vor %@ aufgegeben"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il Job ha rinunciato %@ fa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Job здався %@ тому"
+          }
+        }
+      }
+    },
+    "%@, %@ times, last %@ ago" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ times, last %3$@ ago"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ fois, dernier il y a %3$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ veces, la última hace %3$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@-mal, zuletzt vor %3$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ volte, l’ultima %3$@ fa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, разів: %2$@, востаннє %3$@ тому"
+          }
+        }
+      }
+    },
+    "%@ used of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ used of %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ utilisés sur %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ usado de %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ von %2$@ belegt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ usato su %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зайнято %1$@ з %2$@"
+          }
+        }
+      }
+    },
+    "%@ of its inodes are used" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ de ses inodes sont utilisés"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ de sus inodos están en uso"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ seiner Inodes sind belegt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ dei suoi inode sono in uso"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використано %@ його inode-ів"
+          }
+        }
+      }
+    },
+    "Not bound for %@ (storage class %@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not bound for %1$@ (storage class %2$@)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non lié depuis %1$@ (classe de stockage %2$@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin enlazar desde hace %1$@ (clase de almacenamiento %2$@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seit %1$@ nicht gebunden (Storage-Klasse %2$@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non associato da %1$@ (classe di storage %2$@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не прив’язаний уже %1$@ (клас сховища %2$@)"
+          }
+        }
+      }
+    },
+    "Its volume no longer exists" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son volume n’existe plus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su volumen ya no existe"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sein Volume existiert nicht mehr"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il suo volume non esiste più"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його том більше не існує"
+          }
+        }
+      }
+    },
+    "The volume is in the Failed phase" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le volume est en phase Failed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El volumen está en fase Failed"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Volume ist in der Phase Failed"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il volume è in fase Failed"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Том у фазі Failed"
+          }
+        }
+      }
+    },
+    "Kept after its claim %@ was deleted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservé après la suppression de sa demande %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservado tras eliminar su claim %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behalten, nachdem sein Claim %@ gelöscht wurde"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservato dopo l’eliminazione del suo claim %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережений після видалення його claim %@"
+          }
+        }
+      }
+    },
+    "Still requested; Kubernetes %@ removes it" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encore appelée ; Kubernetes %@ la supprime"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún se solicita; Kubernetes %@ la elimina"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird noch aufgerufen; Kubernetes %@ entfernt sie"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancora richiesta; Kubernetes %@ la rimuove"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ще викликається; Kubernetes %@ її вилучає"
+          }
+        }
+      }
+    },
+    "Deprecated, and still requested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dépréciée, et encore appelée"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obsoleta, y aún se solicita"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Veraltet und noch aufgerufen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deprecata, e ancora richiesta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застаріла й досі викликається"
+          }
+        }
+      }
+    },
+    "%@ webhook: its Service %@ has no ready endpoint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ webhook: its Service %2$@ has no ready endpoint"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webhook %1$@ : son Service %2$@ n’a aucun endpoint prêt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webhook %1$@: su Service %2$@ no tiene ningún endpoint listo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@-Webhook: sein Service %2$@ hat keinen bereiten Endpoint"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webhook %1$@: il suo Service %2$@ non ha endpoint pronti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вебхук %1$@: його Service %2$@ не має готових endpoint-ів"
+          }
+        }
+      }
+    },
+    "%@ of its %@ is requested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ of its %2$@ is requested"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ de sa %2$@ est demandée"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ de su %2$@ está solicitado"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ seiner Ressource %2$@ sind angefordert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ della sua %2$@ è richiesto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запитано %1$@ його ресурсу «%2$@»"
+          }
+        }
+      }
+    },
+    "%@ pods of the %@ the kubelet accepts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ pods of the %2$@ the kubelet accepts"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ pods sur les %2$@ que le kubelet accepte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ pods de los %2$@ que acepta el kubelet"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ Pods von den %2$@, die das Kubelet annimmt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ pod sui %2$@ che il kubelet accetta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ подів із %2$@, які приймає kubelet"
+          }
+        }
+      }
+    },
+    "Its pods would not fit on the other nodes: not enough free %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses pods ne tiendraient pas sur les autres nœuds : pas assez de %@ libre"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sus pods no cabrían en los demás nodos: no hay suficiente %@ libre"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seine Pods würden nicht auf die anderen Nodes passen: zu wenig freie Ressource %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I suoi pod non entrerebbero negli altri nodi: non c’è abbastanza %@ libera"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його поди не помістяться на інших вузлах: бракує вільного ресурсу «%@»"
+          }
+        }
+      }
+    },
+    "%@ of the quota for %@ is used" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ of the quota for %2$@ is used"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ du quota de %2$@ est utilisé"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ de la cuota de %2$@ está en uso"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ der Quota für %2$@ sind belegt"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ della quota di %2$@ è in uso"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використано %1$@ квоти на %2$@"
+          }
+        }
+      }
+    },
+    "Kubernetes sees it as not ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes le voit comme non prêt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes lo ve como no listo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes sieht ihn als nicht bereit"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes lo vede come non pronto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes вважає його неготовим"
+          }
+        }
+      }
+    },
+    "Under pressure: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sous pression : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bajo presión: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unter Druck: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sotto pressione: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Під тиском: %@"
+          }
+        }
+      }
+    },
+    "Cordoned for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cordonné depuis %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acordonado desde hace %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seit %@ gesperrt (cordon)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isolato (cordon) da %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ізольований (cordon) уже %@"
+          }
+        }
+      }
+    },
+    "Cordoned: no new pod is scheduled on it" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cordonné : aucun nouveau pod n’y est planifié"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acordonado: no se planifica ningún pod nuevo en él"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesperrt (cordon): keine neuen Pods werden darauf eingeplant"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isolato (cordon): nessun nuovo pod vi viene pianificato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ізольований (cordon): нові поди на нього не плануються"
+          }
+        }
+      }
+    },
+    "Its kubelet is %@, the API server %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its kubelet is %1$@, the API server %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son kubelet est en %1$@, le serveur d’API en %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su kubelet es %1$@, el servidor de la API %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sein Kubelet ist %1$@, der API-Server %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il suo kubelet è %1$@, il server API %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його kubelet — %1$@, сервер API — %2$@"
+          }
+        }
+      }
+    },
+    "No address for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune adresse depuis %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin dirección desde hace %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seit %@ keine Adresse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun indirizzo da %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає адреси вже %@"
+          }
+        }
+      }
+    },
+    "No address left (pool of %@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plus aucune adresse (pool de %@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No quedan direcciones (pool de %@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Adresse mehr frei (Pool mit %@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun indirizzo rimasto (pool da %@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Адрес не лишилося (пул із %@)"
+          }
+        }
+      }
+    },
+    "Overlaps another pool" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chevauche un autre pool"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se solapa con otro pool"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Überschneidet sich mit einem anderen Pool"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si sovrappone a un altro pool"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перетинається з іншим пулом"
+          }
+        }
+      }
+    },
+    "Deleting for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En suppression depuis %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminándose desde hace %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird seit %@ gelöscht"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In eliminazione da %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видаляється вже %@"
+          }
+        }
+      }
+    },
+    "%@ certificate requests wait for approval (%@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ certificate requests wait for approval (%2$@)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ demandes de certificat attendent une approbation (%2$@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ solicitudes de certificado esperan aprobación (%2$@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ Zertifikatsanfragen warten auf Genehmigung (%2$@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ richieste di certificato attendono l’approvazione (%2$@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запитів сертифікатів, що чекають схвалення: %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "%@ certificate requests were denied (%@)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ certificate requests were denied (%2$@)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ demandes de certificat ont été refusées (%2$@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ solicitudes de certificado fueron denegadas (%2$@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ Zertifikatsanfragen wurden abgelehnt (%2$@)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ richieste di certificato sono state rifiutate (%2$@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відхилених запитів сертифікатів: %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "Does not sync from store %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne se synchronise pas depuis le store %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se sincroniza desde el store %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird nicht aus dem Store %@ synchronisiert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non si sincronizza dallo store %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не синхронізується зі сховища %@"
+          }
+        }
+      }
+    },
+    "This %@ cannot reach its backend" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce %@ ne peut pas joindre son backend"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este %@ no alcanza su backend"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser %@ erreicht sein Backend nicht"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo %@ non raggiunge il suo backend"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей %@ не може досягти свого бекенду"
+          }
+        }
+      }
+    },
+    "Revision %@ failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La révision %@ a échoué"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La revisión %@ falló"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revision %@ ist fehlgeschlagen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La revisione %@ è fallita"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ревізія %@ зазнала невдачі"
+          }
+        }
+      }
+    },
+    "Stuck in %@ for %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stuck in %1$@ for %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloquée en %1$@ depuis %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atascada en %1$@ desde hace %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hängt seit %2$@ in %1$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloccata in %1$@ da %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зависла в %1$@ уже %2$@"
+          }
+        }
+      }
+    },
+    "Open its previous log from the Pods tab: the last lines before the exit say why. A wrong command, a missing config or secret, or a dependency that is down are the usual causes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrez son journal précédent depuis l’onglet Pods : les dernières lignes avant l’arrêt disent pourquoi. Une mauvaise commande, une config ou un secret manquant, ou une dépendance en panne sont les causes habituelles."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abra su registro anterior desde la pestaña Pods: las últimas líneas antes de la salida dicen por qué. Un comando erróneo, una configuración o secreto ausente, o una dependencia caída son las causas habituales."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnen Sie sein vorheriges Log im Tab Pods: die letzten Zeilen vor dem Ende sagen, warum. Ein falscher Befehl, eine fehlende Konfiguration oder ein fehlendes Secret oder eine ausgefallene Abhängigkeit sind die üblichen Ursachen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri il suo log precedente dalla scheda Pod: le ultime righe prima dell’uscita dicono perché. Un comando errato, una configurazione o un secret mancante, o una dipendenza non disponibile sono le cause abituali."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрийте його попередній журнал на вкладці Поди: останні рядки перед виходом пояснюють причину. Зазвичай це хибна команда, відсутня конфігурація чи секрет або недоступна залежність."
+          }
+        }
+      }
+    },
+    "Check the image name and tag, that the registry answers from the node, and the pull secret if the registry is private." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifiez le nom et le tag de l’image, que le registre répond depuis le nœud, et le secret de pull si le registre est privé."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compruebe el nombre y la etiqueta de la imagen, que el registro responde desde el nodo y el secreto de pull si el registro es privado."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfen Sie Namen und Tag des Images, ob die Registry vom Node aus antwortet, und das Pull-Secret bei einer privaten Registry."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlla nome e tag dell’immagine, che il registro risponda dal nodo e il secret di pull se il registro è privato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірте назву й тег образу, чи відповідає реєстр із вузла, а для приватного реєстру — pull-секрет."
+          }
+        }
+      }
+    },
+    "The scheduler’s message says what is missing: free CPU or memory, a node matching its selector or affinity, a toleration for a taint, or a volume in the right zone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le message du planificateur dit ce qui manque : du CPU ou de la mémoire libre, un nœud correspondant à son sélecteur ou son affinité, une tolérance pour un taint, ou un volume dans la bonne zone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El mensaje del planificador dice qué falta: CPU o memoria libre, un nodo que cumpla su selector o afinidad, una tolerancia para un taint o un volumen en la zona correcta."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Meldung des Schedulers sagt, was fehlt: freie CPU oder freier Speicher, ein Node passend zu Selector oder Affinität, eine Toleration für einen Taint oder ein Volume in der richtigen Zone."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il messaggio dello scheduler dice cosa manca: CPU o memoria libera, un nodo che rispetti il suo selettore o affinità, una toleration per un taint o un volume nella zona giusta."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомлення планувальника каже, чого бракує: вільного CPU чи пам’яті, вузла під його селектор чи афінність, toleration для taint-а або тому в потрібній зоні."
+          }
+        }
+      }
+    },
+    "Usually a volume that does not attach or mount, a missing ConfigMap or Secret, or the network plugin failing to set the pod up: its events say which." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le plus souvent un volume qui ne s’attache ou ne se monte pas, un ConfigMap ou un Secret manquant, ou le plugin réseau qui n’arrive pas à préparer le pod : ses événements disent lequel."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normalmente un volumen que no se conecta o no se monta, un ConfigMap o Secret ausente, o el plugin de red que no logra preparar el pod: sus eventos dicen cuál."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meist ein Volume, das sich nicht anhängen oder einhängen lässt, eine fehlende ConfigMap oder ein fehlendes Secret, oder das Netzwerk-Plugin kann den Pod nicht einrichten: seine Ereignisse sagen, was."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Di solito un volume che non si collega o non si monta, un ConfigMap o Secret mancante, o il plugin di rete che non riesce a preparare il pod: i suoi eventi dicono quale."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зазвичай том не під’єднується чи не монтується, бракує ConfigMap або Secret, або мережевий плагін не може налаштувати под: його події підкажуть, що саме."
+          }
+        }
+      }
+    },
+    "Its readiness probe fails: the app is up but refuses traffic. Check its log and what it depends on." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sa sonde de disponibilité échoue : l’application tourne mais refuse le trafic. Regardez son journal et ce dont elle dépend."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su sonda de disponibilidad falla: la aplicación está en marcha pero rechaza el tráfico. Revise su registro y sus dependencias."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seine Readiness-Probe schlägt fehl: die Anwendung läuft, nimmt aber keinen Traffic an. Prüfen Sie ihr Log und ihre Abhängigkeiten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sua readiness probe fallisce: l’app è attiva ma rifiuta il traffico. Controlla il suo log e ciò da cui dipende."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його readiness-проба не проходить: застосунок працює, але не приймає трафік. Перевірте його журнал і залежності."
+          }
+        }
+      }
+    },
+    "Read its log, then delete it: its controller starts a new one." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lisez son journal, puis supprimez-le : son contrôleur en démarre un nouveau."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lea su registro y luego elimínelo: su controlador inicia uno nuevo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lesen Sie sein Log und löschen Sie ihn dann: sein Controller startet einen neuen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leggi il suo log, poi eliminalo: il suo controller ne avvia uno nuovo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитайте його журнал, а потім видаліть: контролер запустить новий."
+          }
+        }
+      }
+    },
+    "Raise its memory limit, or find the leak: it will be killed again at the same point." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Augmentez sa limite mémoire, ou trouvez la fuite : il sera de nouveau tué au même point."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suba su límite de memoria o encuentre la fuga: volverá a ser eliminado en el mismo punto."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erhöhen Sie sein Speicherlimit oder finden Sie das Leck: er wird an derselben Stelle wieder beendet."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aumenta il suo limite di memoria, o trova la perdita: verrà terminato di nuovo allo stesso punto."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підніміть його ліміт пам’яті або знайдіть витік: його знову вб’ють у тій самій точці."
+          }
+        }
+      }
+    },
+    "Read the log of its last pod, fix the cause, then run it again (CronJobs tab: Run now)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lisez le journal de son dernier pod, corrigez la cause, puis relancez-le (onglet CronJobs : Lancer maintenant)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lea el registro de su último pod, corrija la causa y vuelva a ejecutarlo (pestaña CronJobs: Ejecutar ahora)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lesen Sie das Log seines letzten Pods, beheben Sie die Ursache und starten Sie ihn erneut (Tab CronJobs: Jetzt ausführen)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leggi il log del suo ultimo pod, correggi la causa, poi eseguilo di nuovo (scheda CronJob: Esegui ora)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитайте журнал його останнього пода, усуньте причину й запустіть знову (вкладка CronJobs: Запустити зараз)."
+          }
+        }
+      }
+    },
+    "Grow the claim if its storage class allows expansion, or free space: a full volume stops databases and corrupts what is being written." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrandissez le volume si sa classe de stockage le permet, ou libérez de la place : un volume plein arrête les bases de données et corrompt ce qui est en cours d’écriture."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amplíe el volumen si su clase de almacenamiento lo permite, o libere espacio: un volumen lleno detiene las bases de datos y corrompe lo que se está escribiendo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergrößern Sie das Volume, wenn seine Storage-Klasse es erlaubt, oder schaffen Sie Platz: ein volles Volume stoppt Datenbanken und beschädigt, was gerade geschrieben wird."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amplia il volume se la sua classe di storage lo consente, o libera spazio: un volume pieno ferma i database e corrompe ciò che si sta scrivendo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збільште том, якщо його клас сховища дозволяє розширення, або звільніть місце: повний том зупиняє бази даних і псує те, що записується."
+          }
+        }
+      }
+    },
+    "Too many small files: delete some, or recreate the filesystem with more inodes. Free bytes do not help once inodes run out." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trop de petits fichiers : supprimez-en, ou recréez le système de fichiers avec plus d’inodes. L’espace libre ne sert à rien une fois les inodes épuisés."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demasiados archivos pequeños: elimine algunos o vuelva a crear el sistema de archivos con más inodos. El espacio libre no sirve cuando se agotan los inodos."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu viele kleine Dateien: löschen Sie einige oder legen Sie das Dateisystem mit mehr Inodes neu an. Freier Platz hilft nicht, wenn die Inodes ausgehen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Troppi file piccoli: eliminane alcuni, o ricrea il filesystem con più inode. Lo spazio libero non serve quando gli inode finiscono."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Забагато дрібних файлів: видаліть частину або перестворіть файлову систему з більшою кількістю inode-ів. Вільні байти не допоможуть, коли inode-и скінчилися."
+          }
+        }
+      }
+    },
+    "Check that the storage class exists and that its provisioner runs; the claim’s events give the provisioner’s error." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifiez que la classe de stockage existe et que son provisionneur tourne ; les événements de la demande donnent l’erreur du provisionneur."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compruebe que la clase de almacenamiento existe y que su aprovisionador funciona; los eventos del claim dan el error del aprovisionador."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfen Sie, ob die Storage-Klasse existiert und ihr Provisioner läuft; die Ereignisse des Claims nennen den Fehler des Provisioners."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlla che la classe di storage esista e che il suo provisioner sia attivo; gli eventi del claim riportano l’errore del provisioner."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірте, чи існує клас сховища і чи працює його провізіонер; події claim-а містять помилку провізіонера."
+          }
+        }
+      }
+    },
+    "The PersistentVolume was deleted under the claim. Restore the data from a backup into a new claim." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le PersistentVolume a été supprimé sous la demande. Restaurez les données depuis une sauvegarde dans une nouvelle demande."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El PersistentVolume fue eliminado bajo el claim. Restaure los datos desde una copia de seguridad en un claim nuevo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das PersistentVolume wurde unter dem Claim gelöscht. Stellen Sie die Daten aus einem Backup in einen neuen Claim wieder her."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il PersistentVolume è stato eliminato sotto il claim. Ripristina i dati da un backup in un nuovo claim."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PersistentVolume видалили з-під claim-а. Відновіть дані з резервної копії в новий claim."
+          }
+        }
+      }
+    },
+    "Its reclaim failed. Check the storage backend, then delete the PersistentVolume by hand." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sa récupération a échoué. Vérifiez le backend de stockage, puis supprimez le PersistentVolume à la main."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su recuperación falló. Compruebe el backend de almacenamiento y elimine el PersistentVolume a mano."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seine Rückgewinnung ist fehlgeschlagen. Prüfen Sie das Storage-Backend und löschen Sie das PersistentVolume dann von Hand."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il suo recupero è fallito. Controlla il backend di storage, poi elimina il PersistentVolume a mano."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його звільнення не вдалося. Перевірте бекенд сховища, а потім видаліть PersistentVolume вручну."
+          }
+        }
+      }
+    },
+    "Its data is still there (Retain). Delete the PersistentVolume when you no longer need it, or clear its claimRef to reuse it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses données sont toujours là (Retain). Supprimez le PersistentVolume quand vous n’en avez plus besoin, ou videz son claimRef pour le réutiliser."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sus datos siguen ahí (Retain). Elimine el PersistentVolume cuando ya no lo necesite, o vacíe su claimRef para reutilizarlo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seine Daten sind noch da (Retain). Löschen Sie das PersistentVolume, wenn Sie es nicht mehr brauchen, oder leeren Sie seine claimRef, um es wiederzuverwenden."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I suoi dati sono ancora lì (Retain). Elimina il PersistentVolume quando non ti serve più, o svuota il suo claimRef per riutilizzarlo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його дані ще на місці (Retain). Видаліть PersistentVolume, коли він більше не потрібен, або очистьте його claimRef, щоб використати знову."
+          }
+        }
+      }
+    },
+    "Something still calls this API version: update the manifests, charts or controllers that use it before upgrading Kubernetes. The audit analysis on the API server screen names the client." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelque chose appelle encore cette version d’API : mettez à jour les manifestes, charts ou contrôleurs qui l’utilisent avant de mettre Kubernetes à niveau. L’analyse d’audit de l’écran du serveur d’API nomme le client."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algo sigue llamando a esta versión de la API: actualice los manifiestos, charts o controladores que la usan antes de actualizar Kubernetes. El análisis de auditoría de la pantalla del servidor de la API nombra al cliente."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etwas ruft diese API-Version noch auf: aktualisieren Sie die Manifeste, Charts oder Controller, die sie nutzen, bevor Sie Kubernetes aktualisieren. Die Audit-Analyse in der API-Server-Ansicht nennt den Client."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualcosa chiama ancora questa versione dell’API: aggiorna i manifest, i chart o i controller che la usano prima di aggiornare Kubernetes. L’analisi di audit nella schermata del server API indica il client."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щось досі викликає цю версію API: оновіть маніфести, чарти чи контролери, які нею користуються, перш ніж оновлювати Kubernetes. Аналіз аудиту на екрані сервера API називає клієнта."
+          }
+        }
+      }
+    },
+    "With failurePolicy Fail, every request it matches is refused until its pods are back: creating pods can be blocked cluster-wide. Restart its Deployment, or delete the webhook configuration if the tool is gone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avec failurePolicy Fail, chaque requête qu’il intercepte est refusée tant que ses pods ne sont pas revenus : la création de pods peut être bloquée dans tout le cluster. Redémarrez son Deployment, ou supprimez la configuration du webhook si l’outil n’existe plus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con failurePolicy Fail, cada petición que intercepta se rechaza hasta que vuelvan sus pods: la creación de pods puede quedar bloqueada en todo el clúster. Reinicie su Deployment, o elimine la configuración del webhook si la herramienta ya no existe."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit failurePolicy Fail wird jede passende Anfrage abgelehnt, bis seine Pods zurück sind: das Erstellen von Pods kann clusterweit blockiert sein. Starten Sie sein Deployment neu oder löschen Sie die Webhook-Konfiguration, wenn das Werkzeug nicht mehr existiert."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con failurePolicy Fail, ogni richiesta che intercetta viene rifiutata finché i suoi pod non tornano: la creazione di pod può restare bloccata in tutto il cluster. Riavvia il suo Deployment, o elimina la configurazione del webhook se lo strumento non c’è più."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З failurePolicy Fail кожен запит, що під нього підпадає, відхиляється, доки не повернуться його поди: створення подів може бути заблоковане в усьому кластері. Перезапустіть його Deployment або видаліть конфігурацію вебхука, якщо інструмента вже немає."
+          }
+        }
+      }
+    },
+    "With failurePolicy Ignore, requests go through without it: what it validates or injects is silently not applied." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avec failurePolicy Ignore, les requêtes passent sans lui : ce qu’il valide ou injecte n’est silencieusement pas appliqué."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con failurePolicy Ignore, las peticiones pasan sin él: lo que valida o inyecta no se aplica, sin avisar."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit failurePolicy Ignore laufen Anfragen ohne ihn durch: was er prüft oder einfügt, wird stillschweigend nicht angewendet."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con failurePolicy Ignore, le richieste passano senza di lui: ciò che convalida o inietta non viene applicato, in silenzio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З failurePolicy Ignore запити проходять без нього: те, що він перевіряє чи додає, мовчки не застосовується."
+          }
+        }
+      }
+    },
+    "New pods will no longer fit here. Add a node, lower the requests that are larger than real usage, or move workloads." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les nouveaux pods n’y tiendront plus. Ajoutez un nœud, baissez les demandes supérieures à l’usage réel, ou déplacez des charges."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los pods nuevos ya no cabrán aquí. Añada un nodo, reduzca las solicitudes mayores que el uso real o mueva cargas."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Pods passen hier nicht mehr hin. Fügen Sie einen Node hinzu, senken Sie Requests, die über dem echten Verbrauch liegen, oder verschieben Sie Workloads."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I nuovi pod non entreranno più qui. Aggiungi un nodo, riduci le richieste superiori all’uso reale, o sposta dei workload."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нові поди сюди вже не помістяться. Додайте вузол, зменште запити, що перевищують реальне споживання, або перенесіть навантаження."
+          }
+        }
+      }
+    },
+    "Past the limit, pods stay Pending whatever CPU and memory are free. Spread the pods, or raise maxPods in the kubelet configuration." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Au-delà de la limite, les pods restent Pending quels que soient le CPU et la mémoire libres. Répartissez les pods, ou augmentez maxPods dans la configuration du kubelet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasado el límite, los pods quedan en Pending por mucha CPU y memoria libre que haya. Reparta los pods o suba maxPods en la configuración del kubelet."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über dem Limit bleiben Pods Pending, egal wie viel CPU und Speicher frei sind. Verteilen Sie die Pods oder erhöhen Sie maxPods in der Kubelet-Konfiguration."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oltre il limite, i pod restano Pending qualunque sia la CPU e la memoria libera. Distribuisci i pod, o aumenta maxPods nella configurazione del kubelet."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Понад ліміт поди лишаються Pending, хоч скільки вільно CPU й пам’яті. Розподіліть поди або збільште maxPods у конфігурації kubelet."
+          }
+        }
+      }
+    },
+    "Draining it for an upgrade, or losing it, would leave pods Pending. Keep one node’s worth of requests free across the cluster. A rough sum: it ignores affinities." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le vider pour une mise à niveau, ou le perdre, laisserait des pods Pending. Gardez libre l’équivalent des demandes d’un nœud dans le cluster. Somme approximative : elle ignore les affinités."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaciarlo para una actualización, o perderlo, dejaría pods en Pending. Mantenga libre en el clúster el equivalente a las solicitudes de un nodo. Suma aproximada: ignora las afinidades."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihn für ein Upgrade zu leeren oder ihn zu verlieren, ließe Pods Pending zurück. Halten Sie clusterweit die Requests eines Nodes frei. Eine grobe Summe: Affinitäten bleiben unberücksichtigt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svuotarlo per un aggiornamento, o perderlo, lascerebbe dei pod Pending. Tieni libero nel cluster l’equivalente delle richieste di un nodo. Somma approssimativa: ignora le affinità."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Якщо звільнити його для оновлення або втратити, поди лишаться Pending. Тримайте в кластері вільним обсяг запитів одного вузла. Це груба сума: афінності не враховано."
+          }
+        }
+      }
+    },
+    "Once the quota is full, the namespace’s new pods and claims are refused. Raise the quota, or free what is unused." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une fois le quota plein, les nouveaux pods et volumes du namespace sont refusés. Augmentez le quota, ou libérez ce qui ne sert plus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuando la cuota se llena, se rechazan los nuevos pods y volúmenes del namespace. Suba la cuota o libere lo que no se usa."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ist die Quota voll, werden neue Pods und Volumes des Namespaces abgelehnt. Erhöhen Sie die Quota oder geben Sie Unbenutztes frei."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quando la quota è piena, i nuovi pod e volumi del namespace vengono rifiutati. Aumenta la quota, o libera ciò che non serve."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коли квота заповнена, нові поди й томи простору імен відхиляються. Збільште квоту або звільніть невикористане."
+          }
+        }
+      }
+    },
+    "Its kubelet no longer reports: check the node’s services and kernel log from its page." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son kubelet ne donne plus de nouvelles : regardez les services du nœud et son journal noyau depuis sa page."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Su kubelet ya no informa: revise los servicios del nodo y el registro del kernel desde su página."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sein Kubelet meldet sich nicht mehr: prüfen Sie die Dienste des Nodes und das Kernel-Log auf seiner Seite."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il suo kubelet non risponde più: controlla i servizi del nodo e il log del kernel dalla sua pagina."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його kubelet більше не звітує: перевірте сервіси вузла й журнал ядра на його сторінці."
+          }
+        }
+      }
+    },
+    "The kubelet evicts pods while this lasts. Free the resource on the node, or move workloads away." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le kubelet évince des pods tant que cela dure. Libérez la ressource sur le nœud, ou déplacez des charges."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El kubelet desaloja pods mientras dure. Libere el recurso en el nodo o mueva cargas a otro."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Kubelet verdrängt Pods, solange das anhält. Geben Sie die Ressource auf dem Node frei oder verschieben Sie Workloads."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il kubelet espelle pod finché dura. Libera la risorsa sul nodo, o sposta dei workload."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поки це триває, kubelet виселяє поди. Звільніть ресурс на вузлі або перенесіть навантаження."
+          }
+        }
+      }
+    },
+    "No new pod is scheduled on it. Uncordon it from its page once the maintenance is over." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun nouveau pod n’y est planifié. Décordonnez-le depuis sa page une fois la maintenance terminée."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se planifica ningún pod nuevo en él. Quítele el acordonamiento desde su página cuando termine el mantenimiento."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es werden keine neuen Pods darauf eingeplant. Heben Sie die Sperre auf seiner Seite auf, sobald die Wartung vorbei ist."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun nuovo pod vi viene pianificato. Rimuovi l’isolamento dalla sua pagina a manutenzione finita."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нові поди на нього не плануються. Зніміть ізоляцію на його сторінці, коли обслуговування завершено."
+          }
+        }
+      }
+    },
+    "A kubelet may be up to three minor versions older than the API server, never newer. Finish the Kubernetes upgrade on this node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un kubelet peut avoir jusqu’à trois versions mineures de retard sur le serveur d’API, jamais d’avance. Terminez la mise à niveau de Kubernetes sur ce nœud."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un kubelet puede ir hasta tres versiones menores por detrás del servidor de la API, nunca por delante. Termine la actualización de Kubernetes en este nodo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Kubelet darf bis zu drei Minor-Versionen älter als der API-Server sein, nie neuer. Schließen Sie das Kubernetes-Upgrade auf diesem Node ab."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un kubelet può essere fino a tre versioni minori più vecchio del server API, mai più recente. Completa l’aggiornamento di Kubernetes su questo nodo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubelet може бути щонайбільше на три мінорні версії старішим за сервер API, але ніколи новішим. Завершіть оновлення Kubernetes на цьому вузлі."
+          }
+        }
+      }
+    },
+    "Nothing gave this LoadBalancer Service an IP: the pool is empty, no pool matches its labels or class, or the load balancer controller is down." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien n’a donné d’IP à ce Service LoadBalancer : le pool est vide, aucun pool ne correspond à ses labels ou à sa classe, ou le contrôleur de répartition est en panne."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada dio una IP a este Service LoadBalancer: el pool está vacío, ningún pool coincide con sus etiquetas o su clase, o el controlador del balanceador está caído."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts hat diesem LoadBalancer-Service eine IP gegeben: der Pool ist leer, kein Pool passt zu seinen Labels oder seiner Klasse, oder der Load-Balancer-Controller ist ausgefallen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nulla ha dato un IP a questo Service LoadBalancer: il pool è vuoto, nessun pool corrisponde alle sue etichette o alla sua classe, o il controller del bilanciatore non è attivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ніхто не видав IP цьому Service типу LoadBalancer: пул порожній, жоден пул не відповідає його міткам чи класу або контролер балансувальника не працює."
+          }
+        }
+      }
+    },
+    "Add addresses to the pool, or free those of Services you no longer need." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoutez des adresses au pool, ou libérez celles des Services dont vous n’avez plus besoin."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añada direcciones al pool o libere las de los Services que ya no necesita."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fügen Sie dem Pool Adressen hinzu oder geben Sie die von nicht mehr benötigten Services frei."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi indirizzi al pool, o libera quelli dei Service che non ti servono più."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додайте адреси до пулу або звільніть адреси сервісів, які більше не потрібні."
+          }
+        }
+      }
+    },
+    "Cilium disables a pool that conflicts with another. Fix the ranges so they no longer overlap." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium désactive un pool en conflit avec un autre. Corrigez les plages pour qu’elles ne se chevauchent plus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium desactiva un pool que entra en conflicto con otro. Corrija los rangos para que no se solapen."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium deaktiviert einen Pool, der mit einem anderen kollidiert. Korrigieren Sie die Bereiche, damit sie sich nicht mehr überschneiden."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium disattiva un pool in conflitto con un altro. Correggi gli intervalli perché non si sovrappongano."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cilium вимикає пул, що конфліктує з іншим. Виправте діапазони, щоб вони не перетиналися."
+          }
+        }
+      }
+    },
+    "Something inside cannot be removed: usually a resource whose finalizer’s controller is gone, or an API that no longer answers. Remove what the message names; clearing finalizers by hand is the last resort." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelque chose à l’intérieur ne peut pas être supprimé : le plus souvent une ressource dont le contrôleur du finalizer a disparu, ou une API qui ne répond plus. Supprimez ce que le message nomme ; vider les finalizers à la main est le dernier recours."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algo dentro no se puede eliminar: normalmente un recurso cuyo controlador del finalizer ya no existe, o una API que ya no responde. Elimine lo que nombra el mensaje; vaciar los finalizers a mano es el último recurso."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etwas darin lässt sich nicht entfernen: meist eine Ressource, deren Finalizer-Controller fehlt, oder eine API, die nicht mehr antwortet. Entfernen Sie, was die Meldung nennt; Finalizer von Hand zu leeren ist das letzte Mittel."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualcosa all’interno non può essere rimosso: di solito una risorsa il cui controller del finalizer non c’è più, o un’API che non risponde più. Rimuovi ciò che il messaggio indica; svuotare i finalizer a mano è l’ultima risorsa."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щось усередині не вдається вилучити: зазвичай ресурс, контролера фіналізатора якого вже немає, або API, що більше не відповідає. Приберіть те, що названо в повідомленні; очищення фіналізаторів вручну — крайній засіб."
+          }
+        }
+      }
+    },
+    "Its node may be unreachable, or a finalizer holds it. If the node is gone for good, force the deletion with kubectl delete --force." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son nœud est peut-être injoignable, ou un finalizer le retient. Si le nœud est perdu pour de bon, forcez la suppression avec kubectl delete --force."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puede que su nodo sea inalcanzable, o que un finalizer lo retenga. Si el nodo se perdió definitivamente, fuerce la eliminación con kubectl delete --force."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sein Node ist vielleicht nicht erreichbar, oder ein Finalizer hält ihn fest. Ist der Node endgültig weg, erzwingen Sie das Löschen mit kubectl delete --force."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il suo nodo potrebbe essere irraggiungibile, o un finalizer lo trattiene. Se il nodo è perso per sempre, forza l’eliminazione con kubectl delete --force."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Можливо, його вузол недосяжний або його тримає фіналізатор. Якщо вузол втрачено назавжди, примусово видаліть через kubectl delete --force."
+          }
+        }
+      }
+    },
+    "A pod still mounts it (pvc-protection): the claim goes once that pod is deleted." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un pod le monte encore (pvc-protection) : la demande disparaît une fois ce pod supprimé."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un pod aún lo monta (pvc-protection): el claim desaparece cuando se elimina ese pod."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Pod hängt es noch ein (pvc-protection): der Claim verschwindet, sobald dieser Pod gelöscht ist."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un pod lo monta ancora (pvc-protection): il claim sparisce quando quel pod viene eliminato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Його ще монтує под (pvc-protection): claim зникне, щойно цей под буде видалено."
+          }
+        }
+      }
+    },
+    "Nobody approves them: kubelet serving certificates need an approver (kubelet-serving-cert-approver) or kubectl certificate approve. Until then logs, exec and metrics from this node fail." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personne ne les approuve : les certificats serveur des kubelets ont besoin d’un approbateur (kubelet-serving-cert-approver) ou de kubectl certificate approve. D’ici là, les journaux, exec et les métriques de ce nœud échouent."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nadie las aprueba: los certificados de servidor de los kubelets necesitan un aprobador (kubelet-serving-cert-approver) o kubectl certificate approve. Hasta entonces fallan los registros, exec y las métricas de este nodo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niemand genehmigt sie: Kubelet-Serving-Zertifikate brauchen einen Approver (kubelet-serving-cert-approver) oder kubectl certificate approve. Bis dahin schlagen Logs, exec und Metriken dieses Nodes fehl."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuno le approva: i certificati server dei kubelet richiedono un approvatore (kubelet-serving-cert-approver) o kubectl certificate approve. Fino ad allora log, exec e metriche di questo nodo falliscono."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Їх ніхто не схвалює: серверним сертифікатам kubelet потрібен схвалювач (kubelet-serving-cert-approver) або kubectl certificate approve. Доти журнали, exec і метрики з цього вузла не працюватимуть."
+          }
+        }
+      }
+    },
+    "The approver refused them: its message says why." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’approbateur les a refusées : son message dit pourquoi."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El aprobador las rechazó: su mensaje dice por qué."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Approver hat sie abgelehnt: seine Meldung sagt, warum."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’approvatore le ha rifiutate: il suo messaggio dice perché."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Схвалювач їх відхилив: його повідомлення пояснює чому."
+          }
+        }
+      }
+    },
+    "The Secret keeps its last value, or does not exist. Check the store’s credentials and that the remote key exists." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Secret garde sa dernière valeur, ou n’existe pas. Vérifiez les identifiants du store et que la clé distante existe."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El Secret conserva su último valor, o no existe. Compruebe las credenciales del store y que la clave remota existe."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Secret behält seinen letzten Wert oder existiert nicht. Prüfen Sie die Zugangsdaten des Stores und ob der entfernte Schlüssel existiert."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il Secret mantiene l’ultimo valore, o non esiste. Controlla le credenziali dello store e che la chiave remota esista."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Secret зберігає останнє значення або не існує. Перевірте облікові дані сховища й чи існує віддалений ключ."
+          }
+        }
+      }
+    },
+    "Every ExternalSecret using it stops syncing. Check its credentials, its address and the provider’s status." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les ExternalSecret qui l’utilisent cessent de se synchroniser. Vérifiez ses identifiants, son adresse et l’état du fournisseur."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los ExternalSecret que lo usan dejan de sincronizarse. Compruebe sus credenciales, su dirección y el estado del proveedor."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jedes ExternalSecret, das ihn nutzt, wird nicht mehr synchronisiert. Prüfen Sie seine Zugangsdaten, seine Adresse und den Status des Anbieters."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni ExternalSecret che lo usa smette di sincronizzarsi. Controlla le sue credenziali, il suo indirizzo e lo stato del provider."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі ExternalSecret, що ним користуються, перестають синхронізуватися. Перевірте його облікові дані, адресу та стан провайдера."
+          }
+        }
+      }
+    },
+    "Run helm history to see why, then helm rollback or a new upgrade." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancez helm history pour voir pourquoi, puis helm rollback ou une nouvelle mise à niveau."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecute helm history para ver por qué, y luego helm rollback o una nueva actualización."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Führen Sie helm history aus, um den Grund zu sehen, dann helm rollback oder ein neues Upgrade."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui helm history per vedere perché, poi helm rollback o un nuovo aggiornamento."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустіть helm history, щоб побачити причину, потім helm rollback або нове оновлення."
+          }
+        }
+      }
+    },
+    "A Helm operation was interrupted and left its lock: helm rollback to the last deployed revision releases it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une opération Helm a été interrompue et a laissé son verrou : helm rollback vers la dernière révision déployée le libère."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una operación de Helm se interrumpió y dejó su bloqueo: helm rollback a la última revisión desplegada lo libera."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Helm-Operation wurde unterbrochen und hat ihre Sperre hinterlassen: helm rollback auf die letzte ausgerollte Revision gibt sie frei."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un’operazione Helm è stata interrotta e ha lasciato il suo blocco: helm rollback all’ultima revisione distribuita lo rilascia."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Операцію Helm перервали, і лишилося її блокування: helm rollback до останньої розгорнутої ревізії його знімає."
+          }
+        }
+      }
+    },
+    "No event. Kubernetes keeps them for one hour." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun événement. Kubernetes les garde une heure."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin eventos. Kubernetes los conserva una hora."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Ereignis. Kubernetes bewahrt sie eine Stunde auf."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun evento. Kubernetes li conserva per un’ora."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подій немає. Kubernetes зберігає їх одну годину."
+          }
+        }
+      }
+    },
+    "%@ ago" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "il y a %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hace %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vor %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ fa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ тому"
+          }
+        }
+      }
+    },
+    "Also alerts on what the checkup finds: pods that crash or cannot start, volumes nearly full, admission webhooks without a backend, load balancers without an address. Each check uses the Kubernetes API (os:admin), lists every pod and asks each kubelet for its volumes." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerte aussi sur ce que le bilan trouve : pods qui plantent ou ne démarrent pas, volumes presque pleins, webhooks d’admission sans service, répartiteurs sans adresse. Chaque vérification utilise l’API Kubernetes (os:admin), liste tous les pods et demande ses volumes à chaque kubelet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "También avisa de lo que encuentra el chequeo: pods que fallan o no arrancan, volúmenes casi llenos, webhooks de admisión sin servicio, balanceadores sin dirección. Cada comprobación usa la API de Kubernetes (os:admin), lista todos los pods y pide sus volúmenes a cada kubelet."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldet auch, was der Check findet: Pods, die abstürzen oder nicht starten, fast volle Volumes, Admission-Webhooks ohne Dienst, Load Balancer ohne Adresse. Jede Prüfung nutzt die Kubernetes-API (os:admin), listet alle Pods und fragt jedes Kubelet nach seinen Volumes."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisa anche di ciò che il controllo trova: pod che vanno in crash o non partono, volumi quasi pieni, webhook di ammissione senza servizio, bilanciatori senza indirizzo. Ogni controllo usa l’API Kubernetes (os:admin), elenca tutti i pod e chiede a ogni kubelet i suoi volumi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Також сповіщає про знахідки перевірки: поди, що падають чи не стартують, майже повні томи, вебхуки допуску без сервісу, балансувальники без адреси. Кожна перевірка використовує API Kubernetes (os:admin), перелічує всі поди й запитує томи в кожного kubelet."
+          }
+        }
+      }
+    },
+    "Resolved: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Résolu : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resuelto: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behoben: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Risolto: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вирішено: %@"
+          }
+        }
+      }
+    },
+    "Roll back to the previous Talos" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revenir au Talos précédent"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver al Talos anterior"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zum vorherigen Talos zurückkehren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torna al Talos precedente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повернутися до попереднього Talos"
+          }
+        }
+      }
+    },
+    "Roll back %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurer %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revertir %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ zurücksetzen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкотити %@"
+          }
+        }
+      }
+    },
+    "The node reboots now into the Talos version it ran before its last upgrade, without draining its pods. For an upgrade that boots but misbehaves." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nœud redémarre maintenant sur la version de Talos d’avant sa dernière mise à niveau, sans vider ses pods. Pour une mise à niveau qui démarre mais se comporte mal."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nodo se reinicia ahora en la versión de Talos anterior a su última actualización, sin vaciar sus pods. Para una actualización que arranca pero funciona mal."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Node startet jetzt in die Talos-Version vor seinem letzten Upgrade neu, ohne seine Pods zu leeren. Für ein Upgrade, das startet, sich aber falsch verhält."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il nodo si riavvia ora nella versione di Talos precedente all’ultimo aggiornamento, senza svuotare i suoi pod. Per un aggiornamento che parte ma funziona male."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вузол зараз перезавантажиться у версію Talos, що була до останнього оновлення, без виселення подів. Для оновлення, яке завантажується, але працює неправильно."
+          }
+        }
+      }
+    },
+    "Rollback started: %@ is rebooting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restauration lancée : %@ redémarre"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reversión iniciada: %@ se está reiniciando"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zurücksetzen gestartet: %@ startet neu"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristino avviato: %@ si sta riavviando"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкат розпочато: %@ перезавантажується"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

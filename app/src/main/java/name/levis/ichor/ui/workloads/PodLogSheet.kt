@@ -28,6 +28,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -163,6 +168,8 @@ fun PodLogSheet(
     val detail by vm.detail.collectAsStateWithLifecycle()
     val lastTermination = detail?.lastTermination.orEmpty()
     val text = (state as? UiState.Loaded)?.data
+    // The pod's events in place of its log: why it does not start, when there is no log yet.
+    var events by rememberSaveable(pod.key) { mutableStateOf(false) }
     LaunchedEffect(pod.key) { vm.open(pod) }
     DisposableEffect(vm) {
         onDispose {
@@ -187,7 +194,7 @@ fun PodLogSheet(
                     shareLog(context, pod, text.orEmpty())
                 })
             }
-            if (containers.isNotEmpty() || pod.restarts > 0) {
+            run {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(containers, key = { "c-$it" }) { c ->
                         FilterChip(
@@ -205,6 +212,9 @@ fun PodLogSheet(
                             )
                         }
                     }
+                    item(key = "events") {
+                        FilterChip(selected = events, onClick = { events = !events }, label = { Text(stringResource(R.string.kube_events_title)) })
+                    }
                 }
             }
             if (lastTermination.isNotEmpty()) {
@@ -217,10 +227,14 @@ fun PodLogSheet(
             }
             InfoNotice(stringResource(R.string.pod_logs_tail, POD_LOG_TAIL), Modifier.padding(horizontal = 16.dp))
             Box(Modifier.weight(1f)) {
-                when (val s = state) {
-                    UiState.Loading -> LoadingBox()
-                    is UiState.Failed -> ErrorBox(s.message, { vm.load() })
-                    is UiState.Loaded -> LogText(s.data)
+                if (events) {
+                    KubeEventsList(pod.namespace, "Pod", pod.name, Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp))
+                } else {
+                    when (val s = state) {
+                        UiState.Loading -> LoadingBox()
+                        is UiState.Failed -> ErrorBox(s.message, { vm.load() })
+                        is UiState.Loaded -> LogText(s.data)
+                    }
                 }
             }
         }
