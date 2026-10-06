@@ -1,0 +1,10 @@
+• Group the node menu into sections
+• Skeleton instead of a spinner while a page loads
+• The Talos update notice is a card to arrange, hide, or skip per release
+• Flux diff on iOS
+• Swipe sideways between tabs on Android
+• Flux diff on Android
+• A Talos update check cancelled mid-flight is asked again
+• Name TalosClient.bridged explicitly
+• Do not take an unreadable config for a first start
+• The update check and install no longer swallow a cancellation
