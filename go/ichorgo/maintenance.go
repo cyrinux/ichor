@@ -294,15 +294,7 @@ func (m maintenance) refusal(plan maintenancePlan) error {
 		return nil
 	}
 
-	if len(plan.Blockers) > 0 {
-		return errors.New("maintenance refused: " + strings.Join(plan.Blockers, "; "))
-	}
-
-	if len(plan.Acknowledge) > 0 && !m.acknowledged {
-		return errors.New("maintenance refused until confirmed: " + strings.Join(plan.Acknowledge, "; "))
-	}
-
-	return nil
+	return plan.checks().refusal("maintenance", m.acknowledged)
 }
 
 // recheck runs again, right before the reboot or shutdown, the checks the plan made before
