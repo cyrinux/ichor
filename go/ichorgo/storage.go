@@ -304,7 +304,7 @@ func readDiskUsage(ctx context.Context, s *session, root string, depth int) ([]*
 			return nil, err
 		}
 
-		if e := info.GetMetadata().GetError(); e != "" {
+		if e := metaError(info.GetMetadata()); e != "" {
 			return nil, errors.New(e)
 		}
 
@@ -336,7 +336,7 @@ func listDirectories(ctx context.Context, s *session, root string, depth int) (m
 			return nil, err
 		}
 
-		if e := info.GetMetadata().GetError(); e != "" {
+		if e := metaError(info.GetMetadata()); e != "" {
 			return nil, errors.New(e)
 		}
 

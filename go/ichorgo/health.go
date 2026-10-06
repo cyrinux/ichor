@@ -96,12 +96,12 @@ func runHealth(ctx context.Context, configYAML, contextName string, listener Hea
 			return healthFailure(last, err)
 		}
 
-		if md := msg.GetMetadata(); md.GetError() != "" {
-			return md.GetError()
+		if md := msg.GetMetadata(); metaError(md) != "" {
+			return metaError(md)
 		}
 
 		last = msg.GetMessage()
-		listener.OnProgress(msg.GetMetadata().GetHostname(), last)
+		listener.OnProgress(metaHost(msg.GetMetadata()), last)
 	}
 }
 
