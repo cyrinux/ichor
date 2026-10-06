@@ -642,6 +642,20 @@ func kubeReadJSON[T any](target kubeTarget, demo func() T, fn func(context.Conte
 	return toJSON(res)
 }
 
+// noResult adapts an action to the result-returning helpers.
+func noResult(fn func(context.Context, *kubeClient) error) func(context.Context, *kubeClient) (struct{}, error) {
+	return func(ctx context.Context, k *kubeClient) (struct{}, error) {
+		return struct{}{}, fn(ctx, k)
+	}
+}
+
+// kubeDo is withKubeContext for an action without a result.
+func kubeDo(ctx context.Context, target kubeTarget, fn func(context.Context, *kubeClient) error) error {
+	_, err := withKubeContext(ctx, target, noResult(fn))
+
+	return err
+}
+
 // kubeMutate runs the action fn, refused in the demo inventory. target.context is the
 // unmasked context name.
 func kubeMutate(target kubeTarget, fn func(context.Context, *kubeClient) error) error {
@@ -649,9 +663,7 @@ func kubeMutate(target kubeTarget, fn func(context.Context, *kubeClient) error) 
 		return errDemoUnavailable
 	}
 
-	_, err := withKube(target, func(ctx context.Context, k *kubeClient) (struct{}, error) {
-		return struct{}{}, fn(ctx, k)
-	})
+	_, err := withKube(target, noResult(fn))
 
 	return kubeMutationError(err)
 }

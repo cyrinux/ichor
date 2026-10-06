@@ -418,13 +418,3 @@ func followUpgrade(
 		timer.Reset(interval)
 	}
 }
-
-type maskedUpgradeListener struct{ UpgradeListener }
-
-func (l maskedUpgradeListener) OnProgress(json string) {
-	l.UpgradeListener.OnProgress(privacy.mask(json))
-}
-
-func (l maskedUpgradeListener) OnDone(newVersion string, errMessage string) {
-	l.UpgradeListener.OnDone(newVersion, privacy.maskPlain(errMessage))
-}

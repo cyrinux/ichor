@@ -284,7 +284,7 @@ func (m maintenance) run(ctx context.Context) error {
 
 	defer lock.release()
 
-	return withKubeContext2(ctx, m.kube, func(ctx context.Context, k *kubeClient) error {
+	return kubeDo(ctx, m.kube, func(ctx context.Context, k *kubeClient) error {
 		return m.steps(ctx, s, k, lock, plan)
 	})
 }
@@ -531,23 +531,4 @@ func waitBack(ctx context.Context, observe func(context.Context) backObservation
 			last = msg
 		}
 	}
-}
-
-// withKubeContext2 is withKubeContext for an action without a result.
-func withKubeContext2(ctx context.Context, target kubeTarget, fn func(context.Context, *kubeClient) error) error {
-	_, err := withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (struct{}, error) {
-		return struct{}{}, fn(ctx, k)
-	})
-
-	return err
-}
-
-type maskedMaintenanceListener struct{ MaintenanceListener }
-
-func (l maskedMaintenanceListener) OnProgress(json string) {
-	l.MaintenanceListener.OnProgress(privacy.mask(json))
-}
-
-func (l maskedMaintenanceListener) OnDone(errMessage string) {
-	l.MaintenanceListener.OnDone(privacy.maskPlain(errMessage))
 }

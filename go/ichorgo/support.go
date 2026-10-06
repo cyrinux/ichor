@@ -354,15 +354,3 @@ func bundleFileName(name string) string {
 
 	return out
 }
-
-// maskedSupportListener masks the progress and the error: the path is the app's own file and
-// the bundle itself is written unmasked (it is for debugging).
-type maskedSupportListener struct{ SupportListener }
-
-func (l maskedSupportListener) OnProgress(json string) {
-	l.SupportListener.OnProgress(privacy.mask(json))
-}
-
-func (l maskedSupportListener) OnDone(path string, size int64, errMessage string) {
-	l.SupportListener.OnDone(path, size, privacy.maskPlain(errMessage))
-}

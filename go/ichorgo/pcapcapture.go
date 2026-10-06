@@ -354,14 +354,3 @@ func failCapture(f *os.File, part string, res captureResult, err error) (capture
 
 	return res, "", err
 }
-
-// maskedCaptureListener masks the live summaries and the error; the file is not masked.
-type maskedCaptureListener struct{ CaptureListener }
-
-func (l maskedCaptureListener) OnPacket(summaryJSON string) {
-	l.CaptureListener.OnPacket(privacy.mask(summaryJSON))
-}
-
-func (l maskedCaptureListener) OnDone(path string, packets int64, bytes int64, errMessage string) {
-	l.CaptureListener.OnDone(path, packets, bytes, privacy.maskPlain(errMessage))
-}
