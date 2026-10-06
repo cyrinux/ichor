@@ -238,13 +238,12 @@ func demoIntegrations() integrationReport {
 			{ID: "coreos.com", Groups: []integrationGroup{
 				{Name: "monitoring.coreos.com", Version: "v1", Kinds: []string{"Alertmanager", "PodMonitor", "Prometheus", "PrometheusRule", "ServiceMonitor"}},
 			}},
-			{ID: "external-secrets.io", Groups: []integrationGroup{
-				{Name: "external-secrets.io", Version: "v1", Kinds: []string{"ClusterSecretStore", "ExternalSecret", "SecretStore"}},
-				{Name: "generators.external-secrets.io", Version: "v1alpha1", Kinds: []string{"Password"}},
-			}},
 			{ID: "kyverno.io", Groups: []integrationGroup{
 				{Name: "kyverno.io", Version: "v1", Kinds: []string{"ClusterPolicy", "Policy"}},
 				{Name: "reports.kyverno.io", Version: "v1", Kinds: []string{"ClusterEphemeralReport", "EphemeralReport"}},
+			}},
+			{ID: "metallb.io", Groups: []integrationGroup{
+				{Name: "metallb.io", Version: "v1beta1", Kinds: []string{"BGPPeer", "IPAddressPool", "L2Advertisement"}},
 			}},
 			{ID: "traefik.io", Groups: []integrationGroup{
 				{Name: "traefik.io", Version: "v1alpha1", Kinds: []string{"IngressRoute", "Middleware", "TLSOption"}},

@@ -117,6 +117,9 @@ fun WorkloadSheet(
                 HorizontalDivider()
                 HistorySection(workload, actions, workload.key in busy, onRollback)
             }
+            HorizontalDivider()
+            Text(stringResource(R.string.kube_events_title), style = MaterialTheme.typography.titleSmall)
+            KubeEventsList(workload.namespace, "", workload.name)
         }
     }
 }

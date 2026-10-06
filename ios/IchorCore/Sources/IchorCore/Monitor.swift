@@ -25,12 +25,20 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// GitOps app issues ("tool|subject" → "severity:reason", see gitopsIssuesOf), kept like dataIssues.
     public var gitopsIssues: [String: String]
     public var gitopsPending: [String]
+    /// Watching the cluster checkup was on for this check (opt-in), and it could be read.
+    public var checkupWatched: Bool
+    public var checkupChecked: Bool
+    /// Checkup findings ("section|kind|subject" → severity, see CheckupReport.alertIssues), kept like dataIssues.
+    public var checkupIssues: [String: String]
+    public var checkupPending: [String]
 
     public init(context: String, takenAt: Date, nodes: [String: NodeState], etcdAlarms: [String] = [],
                 etcdChecked: Bool = false, certNotAfter: Int64 = 0, lastCertWarnDay: Int64 = -1,
                 dataWatched: Bool = false, dataChecked: Bool = false, dataIssues: [String: String] = [:], dataPending: [String] = [],
                 gitopsWatched: Bool = false, gitopsChecked: Bool = false, gitopsIssues: [String: String] = [:],
-                gitopsPending: [String] = []) {
+                gitopsPending: [String] = [],
+                checkupWatched: Bool = false, checkupChecked: Bool = false, checkupIssues: [String: String] = [:],
+                checkupPending: [String] = []) {
         self.context = context
         self.takenAt = takenAt
         self.nodes = nodes
@@ -46,9 +54,13 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.gitopsChecked = gitopsChecked
         self.gitopsIssues = gitopsIssues
         self.gitopsPending = gitopsPending
+        self.checkupWatched = checkupWatched
+        self.checkupChecked = checkupChecked
+        self.checkupIssues = checkupIssues
+        self.checkupPending = checkupPending
     }
 
-    /// Snapshots saved by older versions lack the data-service and GitOps fields.
+    /// Snapshots saved by older versions lack the data-service, GitOps and checkup fields.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         context = try c.decode(String.self, forKey: .context)
@@ -66,6 +78,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         gitopsChecked = try c.field(.gitopsChecked, false)
         gitopsIssues = try c.field(.gitopsIssues, [:])
         gitopsPending = try c.field(.gitopsPending, [])
+        checkupWatched = try c.field(.checkupWatched, false)
+        checkupChecked = try c.field(.checkupChecked, false)
+        checkupIssues = try c.field(.checkupIssues, [:])
+        checkupPending = try c.field(.checkupPending, [])
     }
 
     var dataTrack: IssueTrack {
@@ -76,6 +92,11 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     var gitopsTrack: IssueTrack {
         get { IssueTrack(watched: gitopsWatched, checked: gitopsChecked, issues: gitopsIssues, pending: gitopsPending) }
         set { (gitopsWatched, gitopsChecked, gitopsIssues, gitopsPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
+    }
+
+    var checkupTrack: IssueTrack {
+        get { IssueTrack(watched: checkupWatched, checked: checkupChecked, issues: checkupIssues, pending: checkupPending) }
+        set { (checkupWatched, checkupChecked, checkupIssues, checkupPending) = (newValue.watched, newValue.checked, newValue.issues, newValue.pending) }
     }
 
     public var readyCount: Int { nodes.values.filter { $0.health == .ready }.count }
@@ -102,9 +123,11 @@ public struct NodeState: Codable, Equatable, Sendable {
 
 /// dataWatched: watching data services was on; dataServices: nil when watched but unreadable.
 /// gitopsWatched: watching GitOps apps was on; gitopsIssues (see gitopsIssuesOf): nil when unreadable.
+/// checkupWatched: watching the checkup was on; checkupIssues: nil when unreadable.
 public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNotAfter: Int64, takenAt: Date,
                        dataWatched: Bool = false, dataServices: DataServices? = nil,
-                       gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil) -> ClusterSnapshot {
+                       gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil,
+                       checkupWatched: Bool = false, checkupIssues: [String: String]? = nil) -> ClusterSnapshot {
     var nodes: [String: NodeState] = [:]
     for n in overview.nodes {
         let reason = n.error ?? n.unmetConditions.map { "\($0.name): \($0.reason)" }.joined(separator: "; ")
@@ -123,7 +146,10 @@ public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNot
         dataIssues: dataWatched ? dataServices.map(dataIssuesOf) ?? [:] : [:],
         gitopsWatched: gitopsWatched,
         gitopsChecked: gitopsWatched && gitopsIssues != nil,
-        gitopsIssues: gitopsWatched ? gitopsIssues ?? [:] : [:]
+        gitopsIssues: gitopsWatched ? gitopsIssues ?? [:] : [:],
+        checkupWatched: checkupWatched,
+        checkupChecked: checkupWatched && checkupIssues != nil,
+        checkupIssues: checkupWatched ? checkupIssues ?? [:] : [:]
     )
 }
 
@@ -325,6 +351,7 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
     } else {
         next.dataTrack = evaluateData(previous: previous, current: current, comparable: comparable, alerts: &alerts)
         next.gitopsTrack = evaluateGitOps(previous: previous, current: current, comparable: comparable, alerts: &alerts)
+        next.checkupTrack = evaluateCheckup(previous: previous, current: current, comparable: comparable, alerts: &alerts)
     }
     if let previous, comparable, !current.unreachableAsAWhole {
         for addr in current.nodes.keys.sorted() {

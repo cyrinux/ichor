@@ -113,6 +113,7 @@ fun UpgradeScreen(
     var menuOpen by remember { mutableStateOf(false) }
     var forceWarning by remember { mutableStateOf(false) }
     var confirming by remember { mutableStateOf<UpgradeChoice?>(null) }
+    var rollingBack by remember { mutableStateOf(false) }
     val following = current?.takeIf { it.node == node }
     LaunchedEffect(Unit) { if (plan == UiState.Loading) planVm.refresh() }
 
@@ -128,6 +129,29 @@ fun UpgradeScreen(
                 AuthResult.Success -> confirming = choice
                 is AuthResult.Failure -> snackbar.showSnackbar(auth.message)
             }
+        }
+    }
+
+    // The same two steps as an upgrade: the node reboots at once, into another Talos.
+    fun requestRollback() {
+        val activity = context.findFragmentActivity()
+        if (!app.appLock.enabled.value || activity == null) {
+            rollingBack = true
+            return
+        }
+        scope.launch {
+            when (val auth = authenticate(activity, context.getString(R.string.rollback_title, hostname), context.getString(R.string.rollback_confirm))) {
+                AuthResult.Success -> rollingBack = true
+                is AuthResult.Failure -> snackbar.showSnackbar(auth.message)
+            }
+        }
+    }
+
+    fun rollback() {
+        rollingBack = false
+        scope.launch {
+            val result = runCatching { app.talosRepository.rollback(node) }
+            snackbar.showSnackbar(result.exceptionOrNull()?.uiText()?.resolve(context) ?: context.getString(R.string.rollback_started, hostname))
         }
     }
 
@@ -159,17 +183,26 @@ fun UpgradeScreen(
                 },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
-                    // Force is tucked away and only offered when etcd checks block the upgrade.
-                    if (following == null && showForce) {
+                    if (following == null) {
                         Box {
                             TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { menuOpen = true })
                             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                                // Force is tucked away and only offered when etcd checks block the upgrade.
+                                if (showForce) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.upgrade_force)) },
+                                        trailingIcon = { Checkbox(checked = force, onCheckedChange = null) },
+                                        onClick = {
+                                            menuOpen = false
+                                            if (force) force = false else forceWarning = true
+                                        },
+                                    )
+                                }
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.upgrade_force)) },
-                                    trailingIcon = { Checkbox(checked = force, onCheckedChange = null) },
+                                    text = { Text(stringResource(R.string.rollback_menu)) },
                                     onClick = {
                                         menuOpen = false
-                                        if (force) force = false else forceWarning = true
+                                        requestRollback()
                                     },
                                 )
                             }
@@ -223,6 +256,18 @@ fun UpgradeScreen(
             onDismiss = { forceWarning = false },
             destructive = true,
         )
+    }
+    if (rollingBack) {
+        HostnameConfirmDialog(
+            title = stringResource(R.string.rollback_title, hostname),
+            hostname = hostname,
+            confirmLabel = stringResource(R.string.rollback_confirm),
+            onConfirm = ::rollback,
+            onDismiss = { rollingBack = false },
+            emphasized = true,
+        ) {
+            Text(stringResource(R.string.rollback_body), style = MaterialTheme.typography.bodyMedium)
+        }
     }
     confirming?.let { choice ->
         val from = (plan as? UiState.Loaded)?.data?.currentVersion.orEmpty()

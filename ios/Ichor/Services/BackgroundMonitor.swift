@@ -50,6 +50,13 @@ enum BackgroundMonitor {
         set { UserDefaults.standard.set(newValue, forKey: gitopsKey) }
     }
 
+    static let checkupKey = "monitor.checkup"
+    /// Opt-in: also run the cluster checkup through the Kubernetes API.
+    static var checkupWatched: Bool {
+        get { UserDefaults.standard.bool(forKey: checkupKey) }
+        set { UserDefaults.standard.set(newValue, forKey: checkupKey) }
+    }
+
     /// Call once, before the app finishes launching.
     static func register() {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: taskID, using: nil) { task in
@@ -97,10 +104,15 @@ enum BackgroundMonitor {
         let previous = SharedStore.snapshot()
         let known = knownGitOpsIssues(previous, context: overview.context)
         let gitopsIssues = watchGitOps ? await readGitOps(client, known: known) : nil
+        // And for the checkup: it lists the cluster's pods and asks every kubelet.
+        let watchCheckup = checkupWatched && context?.allows(.workloads) == true
+        let knownCheckup = knownCheckupIssues(previous, context: overview.context)
+        let checkupIssues = watchCheckup ? await readCheckup(client, known: knownCheckup) : nil
         let now = Date()
         let current = snapshotOf(overview, etcd: etcd, certNotAfter: context?.certNotAfter ?? 0, takenAt: now,
                                  dataWatched: watchData, dataServices: dataServices,
-                                 gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues)
+                                 gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
+                                 checkupWatched: watchCheckup, checkupIssues: checkupIssues)
         let result = evaluate(previous: previous, current: current, now: now)
         SharedStore.save(result.next)
         guard alertsEnabled else { return }
@@ -116,6 +128,13 @@ enum BackgroundMonitor {
         async let argo = try? client.argoCD()
         async let flux = try? client.flux()
         return gitopsIssuesWithGaps(argo: await argo, flux: await flux, known: known)
+    }
+
+    /// The checkup's findings worth an alert; nil when it could not be read. A section that could
+    /// not be read keeps what the last snapshot knew of it.
+    private static func readCheckup(_ client: TalosClient, known: [String: String]) async -> [String: String]? {
+        guard let report = try? await client.checkup() else { return nil }
+        return checkupIssuesWithGaps(report, known: known)
     }
 
     /// IchorCore builds English alerts; this rebuilds their text in the user's
@@ -153,6 +172,13 @@ enum BackgroundMonitor {
             return (String(localized: "\(label) needs attention"), "\(system) · \(severity)")
         case "gitops":
             return localizedGitOps(alert, subject: subject, value: snapshot.gitopsIssues[subject])
+        case "checkup":
+            // "section|kind|subject": the section names what kind of trouble, the subject what has it.
+            let finding = CheckupSubject(key: subject)
+            guard alert.problem else { return (CheckupText.monitorCheckupOk(finding.subject), CheckupText.checkupTitle) }
+            let section = CheckupSectionID(rawValue: finding.section)?.title ?? finding.section
+            let severity = snapshot.checkupIssues[subject] == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
+            return ("\(section): \(finding.subject)", "\(CheckupText.checkupTitle) · \(severity)")
         default:
             return (alert.title, alert.text)
         }

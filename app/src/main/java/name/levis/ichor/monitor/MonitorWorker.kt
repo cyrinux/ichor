@@ -51,11 +51,23 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             null
         }
 
+        // And for the checkup: it lists the cluster's pods and asks every kubelet. A section that
+        // could not be read keeps its known findings.
+        val watchCheckup = store.checkupWatched.value && active?.allows(Feature.WORKLOADS) == true
+        val checkupIssues = if (watchCheckup) {
+            runCatching { app.talosRepository.checkup() }.getOrNull()
+                ?.let { checkupIssuesWithGaps(it, known = knownCheckupIssues(store.snapshot(), overview.context)) }
+        } else {
+            null
+        }
+
         val now = System.currentTimeMillis()
         val current = snapshotOf(
             overview, etcd, certNotAfter, now, active?.fingerprint.orEmpty(), watchData, dataServices,
             gitopsWatched = watchGitops,
             gitopsIssues = gitopsIssues,
+            checkupWatched = watchCheckup,
+            checkupIssues = checkupIssues,
         )
         val evaluation = evaluate(store.snapshot(), current, now)
         store.saveSnapshot(evaluation.next)

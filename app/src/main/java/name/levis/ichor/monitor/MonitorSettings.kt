@@ -42,6 +42,16 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         _gitopsWatched.value = watched
     }
 
+    private val _checkupWatched = MutableStateFlow(prefs.getBoolean(KEY_CHECKUP, false))
+
+    /** Opt-in: also run the cluster checkup through the Kubernetes API. */
+    val checkupWatched: StateFlow<Boolean> = _checkupWatched.asStateFlow()
+
+    fun setCheckupWatched(watched: Boolean) {
+        prefs.edit().putBoolean(KEY_CHECKUP, watched).apply()
+        _checkupWatched.value = watched
+    }
+
     fun setAlertsEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_ENABLED, enabled).apply()
         _alertsEnabled.value = enabled
@@ -90,5 +100,6 @@ class MonitorStore(private val prefs: SharedPreferences, private val snapshotFil
         private const val KEY_SNAPSHOT = "snapshot"
         private const val KEY_DATA_SERVICES = "data_services_watched"
         private const val KEY_GITOPS = "gitops_watched"
+        private const val KEY_CHECKUP = "checkup_watched"
     }
 }

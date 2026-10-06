@@ -21,6 +21,7 @@ Every idea was checked against the code (Go core, Android, iOS) on 2026-10-04. S
 | D7 | cert-manager renew, Ingress/Gateway TLS expiry | **partial**: certificates and alerts exist read-only (`kube_certmanager.go`) | [07-certificates.md](devops/07-certificates.md) | S |
 | D8 | Image hygiene (unpinned list, ImagePullBackOff explained) | **partial**: per-app `unpinned`/`drift` flags on Android only | [08-image-hygiene.md](devops/08-image-hygiene.md) | S |
 | D9 | Argo CD freeze (deny sync window per app / namespace / project, windows screen) | **implemented** (Go, Android, iOS) | [09-argocd-freeze.md](devops/09-argocd-freeze.md) | M |
+| D10 | Cluster checkup: the blind spots on one screen (workload failures, Kubernetes events, PVC fill, deprecated APIs, dead webhooks, capacity, LoadBalancer addresses, stuck Terminating, pending CSRs, External Secrets, Helm releases), checkup alerts, Talos rollback | **implemented** (Go, Android, iOS) | [10-cluster-checkup.md](devops/10-cluster-checkup.md) | L |
 
 ## Sysadmin: keep the platform alive
 

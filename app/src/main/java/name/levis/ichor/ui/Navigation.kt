@@ -41,6 +41,7 @@ import name.levis.ichor.ui.argocd.ArgoAppsScreen
 import name.levis.ichor.ui.argocd.ArgoWindowsScreen
 import name.levis.ichor.ui.backup.IncomingBackup
 import name.levis.ichor.ui.capture.CaptureFileScreen
+import name.levis.ichor.ui.checkup.CheckupScreen
 import name.levis.ichor.ui.capture.CaptureScreen
 import name.levis.ichor.ui.capture.CapturesScreen
 import name.levis.ichor.ui.changelog.ChangelogScreen
@@ -134,6 +135,7 @@ private object Routes {
         "workloads?tab=${focus.tab}&key=${Uri.encode(focus.key)}&ns=${Uri.encode(focus.namespace)}&name=${Uri.encode(focus.name)}"
     const val NETWORK_POLICIES = "netpol"
     const val API_HEALTH = "apihealth"
+    const val CHECKUP = "checkup"
     const val AUDIT = "audit"
     const val FLOWS = "flows?ns={ns}&pod={pod}"
 
@@ -211,7 +213,7 @@ private object Routes {
 }
 
 /** Screens a notification can open directly (see MainActivity.EXTRA_OPEN). */
-enum class DeepLink { ISSUE_CONFIG, DEMO, ARGO_WINDOWS, ARGO_CD, FLUX }
+enum class DeepLink { ISSUE_CONFIG, DEMO, ARGO_WINDOWS, ARGO_CD, FLUX, CHECKUP }
 
 /**
  * [deepLink]: a screen to open once over the overview; [onDeepLinkHandled] then clears it.
@@ -305,6 +307,9 @@ fun Navigation(
             }
             DeepLink.FLUX -> if (!startWithImport && canUseKube()) {
                 nav.navigate(Routes.FLUX) { launchSingleTop = true }
+            }
+            DeepLink.CHECKUP -> if (!startWithImport && canUseKube()) {
+                nav.navigate(Routes.CHECKUP) { launchSingleTop = true }
             }
         }
         onDeepLinkHandled()
@@ -613,12 +618,14 @@ fun Navigation(
                 onBack = { nav.popBackStack() },
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
                 onApiHealth = { nav.navigate(Routes.API_HEALTH) },
+                onCheckup = { nav.navigate(Routes.CHECKUP) },
                 onFlows = { ns, pod -> nav.navigate(Routes.flows(ns, pod)) },
             )
         }
         composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }
         composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.CHECKUP) { CheckupScreen(onBack = { nav.popBackStack() }) }
         composable(
             Routes.FLOWS,
             arguments = listOf(
