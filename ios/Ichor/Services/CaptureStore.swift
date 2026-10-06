@@ -13,18 +13,11 @@ enum CaptureStore {
 
     /// Newest first.
     static func list() throws -> [CaptureFile] {
-        let keys: [URLResourceKey] = [.fileSizeKey, .contentModificationDateKey]
-        let urls = try FileManager.default.contentsOfDirectory(at: directory(), includingPropertiesForKeys: keys)
-        let files = urls.map { url in
-            let values = try? url.resourceValues(forKeys: Set(keys))
-            return CaptureFile(name: url.lastPathComponent, size: Int64(values?.fileSize ?? 0),
-                               modified: values?.contentModificationDate ?? .distantPast)
-        }
-        return sortCaptureFiles(files)
+        try sortCaptureFiles(LocalFileStore.list(in: directory()))
     }
 
     static func delete(_ url: URL) throws {
-        try FileManager.default.removeItem(at: url)
+        try LocalFileStore.delete(url)
     }
 }
 

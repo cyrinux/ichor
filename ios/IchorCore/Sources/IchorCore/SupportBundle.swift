@@ -92,11 +92,6 @@ public func isStaleSupportPartName(_ name: String) -> Bool {
     name.hasSuffix(".part") && isSupportBundleName(String(name.dropLast(".part".count)))
 }
 
-/// The nodes to collect from, as Go wants them: the selected ones in the cluster's order.
-public func supportNodesCSV(all: [String], selected: Set<String>) -> String {
-    all.filter(selected.contains).joined(separator: ",")
-}
-
 /// "support-<context>-<yyyyMMdd-HHmmss>.zip", safe as a file name whatever the context is
 /// called: runs of other characters become one "-", at most 40 characters of context.
 public func supportBundleFilename(context: String, date: Date, timeZone: TimeZone = .current) -> String {
@@ -124,19 +119,8 @@ public func isSupportBundleName(_ name: String) -> Bool {
 }
 
 /// A bundle kept on the phone.
-public struct SupportBundleFile: Equatable, Identifiable, Sendable {
-    public let name: String
-    public let size: Int64
-    public let modified: Date
-
-    public var id: String { name }
-
-    public init(name: String, size: Int64, modified: Date) {
-        self.name = name
-        self.size = size
-        self.modified = modified
-    }
-}
+/// A support bundle kept on the phone.
+public typealias SupportBundleFile = LocalFile
 
 /// Newest first, then by name.
 public func sortSupportBundles(_ files: [SupportBundleFile]) -> [SupportBundleFile] {

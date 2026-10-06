@@ -2,22 +2,6 @@ import SwiftUI
 import IchorCore
 import UniformTypeIdentifiers
 
-/// A support bundle handed to fileExporter; the wrapper reads the file lazily, not in memory.
-struct SupportBundleDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [.zip] }
-    let url: URL
-
-    init(url: URL) { self.url = url }
-
-    init(configuration: ReadConfiguration) throws {
-        throw CocoaError(.featureUnsupported) // export only
-    }
-
-    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        try FileWrapper(url: url, options: [])
-    }
-}
-
 /// `talosctl support` (any role; what the role cannot read is left out): pick the nodes, collect their logs and state into a zip
 /// kept on the phone, then share it, save it to Files or delete it.
 struct SupportBundleView: View {
@@ -250,39 +234,7 @@ private struct SupportBundleActions: View {
     let url: URL
     let onDelete: () -> Void
 
-    @State private var exporting = false
-    @State private var confirmDelete = false
-    @State private var message: String?
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                ShareLink(item: url) { Label("Share", systemImage: "square.and.arrow.up") }
-                Spacer()
-                Button { exporting = true } label: { Label("Save to Files", systemImage: "folder") }
-                Spacer()
-                Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: "trash") }
-            }
-            .buttonStyle(.bordered)
-            .labelStyle(.iconOnly)
-            if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
-        }
-        .fileExporter(isPresented: $exporting, document: SupportBundleDocument(url: url), contentType: .zip,
-                      defaultFilename: url.lastPathComponent) { result in
-            switch result {
-            case .success: message = String(localized: "Saved.")
-            case .failure(let error): message = error.localizedDescription
-            }
-        }
-        .confirmationDialog(Text("Delete this bundle?"), isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) {
-                do {
-                    try SupportBundleStore.delete(url)
-                    onDelete()
-                } catch {
-                    message = error.localizedDescription
-                }
-            }
-        }
+        LocalFileActions(url: url, contentType: .zip, deleteTitle: Text("Delete this bundle?"), onDelete: onDelete)
     }
 }
