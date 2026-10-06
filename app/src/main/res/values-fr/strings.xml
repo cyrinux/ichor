@@ -2289,6 +2289,10 @@
     <string name="node_menu_maintenance">Maintenance…</string>
     <string name="node_menu_cordon">Isoler (cordon)</string>
     <string name="node_menu_uncordon">Lever l\'isolement</string>
+    <string name="node_menu_group_inspect">Inspecter</string>
+    <string name="node_menu_group_troubleshoot">Dépanner</string>
+    <string name="node_menu_group_operate">Administrer</string>
+    <string name="node_menu_group_power">Alimentation</string>
     <string name="cordon_confirm_title">Isoler %1$s&#160;?</string>
     <string name="cordon_confirm_body">Aucun nouveau pod n\'est planifié sur %1$s. Les pods qui y tournent déjà restent.</string>
     <string name="uncordon_confirm_title">Lever l\'isolement de %1$s&#160;?</string>
