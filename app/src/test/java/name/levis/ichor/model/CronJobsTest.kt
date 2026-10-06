@@ -27,7 +27,7 @@ class CronJobsTest {
         assertEquals("Database backup", c.displayName)
         assertEquals(JobRunState.FAILED, c.runState)
         assertFalse(c.triggerable)
-        assertTrue(c.hasIcon)
+        assertEquals("postgresql", c.iconApp.icon)
         val run = c.runs.single()
         assertTrue(run.manual)
         assertEquals(94_000L, run.durationMillis)
@@ -51,9 +51,9 @@ class CronJobsTest {
     @Test
     fun noIconUsesTheDefault() {
         val c = KubeCronJob("a", "b")
-        assertFalse(c.hasIcon)
+        assertNull(c.iconApp.remoteIconSlug)
         assertEquals("b", c.displayName)
-        assertFalse(KubeCronJob("a", "b", remoteIcon = "../x").hasIcon)
+        assertNull(KubeCronJob("a", "b", remoteIcon = "../x").iconApp.remoteIconSlug)
     }
 
     @Test
