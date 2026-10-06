@@ -46,6 +46,10 @@ import name.levis.ichor.ui.flows.CiliumViewModel
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.SwipeTabPager
+
+/** Workloads, Pods, CronJobs and NetPerf. */
+private val KUBE_TABS = listOf(0, 1, 2, 3)
 
 /**
  * The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
@@ -59,6 +63,7 @@ import name.levis.ichor.ui.components.TooltipIconButton
  * [focus] (a share link) opens a tab, scoped to and searched for one item, whose sheet opens
  * once its row loads.
  */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KubernetesScreen(
@@ -72,7 +77,8 @@ fun KubernetesScreen(
     var query by rememberSaveable { mutableStateOf(focus.name) }
     // The item of the link still to show; the keys of another tab are not its.
     var pending by rememberSaveable { mutableStateOf(focus.key) }
-    val focusKey = pending.takeIf { it.isNotEmpty() && tab == focus.tab }
+    // Not for a page only dragged into view either.
+    val focusKey = { page: Int -> pending.takeIf { it.isNotEmpty() && page == focus.tab && page == tab } }
     val onFocused = { pending = "" }
 
     val app = LocalContext.current.applicationContext as TalosApp
@@ -137,19 +143,21 @@ fun KubernetesScreen(
                 Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.cronjobs_title)) })
                 Tab(selected = tab == 3, onClick = { tab = 3 }, text = { Text(stringResource(R.string.netperf_tab)) })
             }
-            when (tab) {
-                0 -> WorkloadsTab(scope, query, onQuery = { query = it }, vm = workloads, focusKey = focusKey, onFocused = onFocused)
-                1 -> PodsTab(
-                    scope,
-                    query,
-                    onQuery = { query = it },
-                    onFlows = if (hasCilium) ({ pod -> onFlows(pod.namespace, pod.name) }) else null,
-                    vm = pods,
-                    focusKey = focusKey,
-                    onFocused = onFocused,
-                )
-                2 -> CronJobsTab(scope, query, onQuery = { query = it }, vm = cronJobs, focusKey = focusKey, onFocused = onFocused)
-                else -> NetPerfTab(netPerf)
+            SwipeTabPager(KUBE_TABS, tab, onSelect = { tab = it }) { page ->
+                when (page) {
+                    0 -> WorkloadsTab(scope, query, onQuery = { query = it }, vm = workloads, focusKey = focusKey(page), onFocused = onFocused)
+                    1 -> PodsTab(
+                        scope,
+                        query,
+                        onQuery = { query = it },
+                        onFlows = if (hasCilium) ({ pod -> onFlows(pod.namespace, pod.name) }) else null,
+                        vm = pods,
+                        focusKey = focusKey(page),
+                        onFocused = onFocused,
+                    )
+                    2 -> CronJobsTab(scope, query, onQuery = { query = it }, vm = cronJobs, focusKey = focusKey(page), onFocused = onFocused)
+                    else -> NetPerfTab(netPerf)
+                }
             }
         }
     }

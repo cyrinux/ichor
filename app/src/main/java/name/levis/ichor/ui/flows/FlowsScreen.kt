@@ -67,6 +67,8 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.components.SwipeTabPager
+import name.levis.ichor.ui.components.TWO_TABS
 
 /**
  * The cluster's network flows live through Hubble, like Hubble UI: drops grouped by endpoints
@@ -221,24 +223,26 @@ private fun Flows(vm: FlowsViewModel, state: FlowsState) {
         last.value?.let { DropDetailSheet(it, vm, onDismiss = { openDrop = null }) }
     }
 
-    LazyColumn(Modifier.fillMaxSize()) {
-        item(key = "status") { StreamStatus(snapshot) }
-        item(key = "tabs") {
-            PrimaryTabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.flows_tab_drops)) })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.flows_tab_all)) })
-            }
+    Column(Modifier.fillMaxSize()) {
+        PrimaryTabRow(selectedTabIndex = tab) {
+            Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.flows_tab_drops)) })
+            Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.flows_tab_all)) })
         }
-        when {
-            snapshot == null -> item(key = "waiting") { if (state.streaming) LoadingBox(Modifier.padding(32.dp)) else EmptyText(stringResource(R.string.flows_no_flows)) }
-            tab == 0 && snapshot.drops.isEmpty() -> item(key = "none") { EmptyText(stringResource(R.string.flows_no_drops)) }
-            tab == 0 -> items(snapshot.drops, key = { "drop-" + it.key }) { group ->
-                DropCard(group, onClick = { openDrop = group.key })
-            }
-            snapshot.flows.isEmpty() -> item(key = "none") { EmptyText(stringResource(R.string.flows_no_flows)) }
-            else -> items(snapshot.flows.size, key = { "flow-$it" }) { i ->
-                FlowLine(snapshot.flows[i])
-                HorizontalDivider()
+        SwipeTabPager(TWO_TABS, tab, onSelect = { tab = it }) { page ->
+            LazyColumn(Modifier.fillMaxSize()) {
+                item(key = "status") { StreamStatus(snapshot) }
+                when {
+                    snapshot == null -> item(key = "waiting") { if (state.streaming) LoadingBox(Modifier.padding(32.dp)) else EmptyText(stringResource(R.string.flows_no_flows)) }
+                    page == 0 && snapshot.drops.isEmpty() -> item(key = "none") { EmptyText(stringResource(R.string.flows_no_drops)) }
+                    page == 0 -> items(snapshot.drops, key = { "drop-" + it.key }) { group ->
+                        DropCard(group, onClick = { openDrop = group.key })
+                    }
+                    snapshot.flows.isEmpty() -> item(key = "none") { EmptyText(stringResource(R.string.flows_no_flows)) }
+                    else -> items(snapshot.flows.size, key = { "flow-$it" }) { i ->
+                        FlowLine(snapshot.flows[i])
+                        HorizontalDivider()
+                    }
+                }
             }
         }
     }

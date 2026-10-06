@@ -53,6 +53,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import name.levis.ichor.ui.components.localizedDuration
+import name.levis.ichor.ui.components.SwipeTabPager
 
 class KubeSpanViewModel(private val talos: TalosRepository) : LoadingViewModel<KubeSpanOverview>() {
     override val keepsDataOnFailure = true
@@ -95,14 +96,16 @@ fun KubeSpanScreen(
                 Tab(selected = tab == MAP_TAB, onClick = { tab = MAP_TAB }, text = { Text(stringResource(R.string.topology_tab_map)) })
                 Tab(selected = tab == PEERS_TAB, onClick = { tab = PEERS_TAB }, text = { Text(stringResource(R.string.topology_tab_peers)) })
             }
-            if (tab == MAP_TAB) {
-                Loaded(mapState, mapVm::refresh) { TopologyContent(it, onNode) }
-            } else {
-                Loaded(state, vm::refresh) { data ->
-                    val hostnames = vm.hostnames()
-                    LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        item { Summary(data.nodes) }
-                        items(data.nodes, key = { it.node }) { NodeCard(it, hostnames[it.node] ?: it.node) }
+            SwipeTabPager(listOf(MAP_TAB, PEERS_TAB), tab, onSelect = { tab = it }) { page ->
+                if (page == MAP_TAB) {
+                    Loaded(mapState, mapVm::refresh) { TopologyContent(it, onNode) }
+                } else {
+                    Loaded(state, vm::refresh) { data ->
+                        val hostnames = vm.hostnames()
+                        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            item { Summary(data.nodes) }
+                            items(data.nodes, key = { it.node }) { NodeCard(it, hostnames[it.node] ?: it.node) }
+                        }
                     }
                 }
             }

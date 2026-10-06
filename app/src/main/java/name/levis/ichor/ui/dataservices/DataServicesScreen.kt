@@ -45,6 +45,7 @@ import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.KubeServerDialog
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.SwipeTabPager
 
 /**
  * Longhorn volumes, Garage clusters and CloudNativePG clusters, one tab per system the cluster
@@ -129,8 +130,9 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
         EmptyText(stringResource(R.string.data_services_none))
         return
     }
-    var selected by rememberSaveable { mutableStateOf(initial) }
-    val tab = selected?.takeIf { it in kinds } ?: kinds.first()
+    // Picked once: a system detected later, before it in the list, doesn't take its place.
+    var selected by rememberSaveable { mutableStateOf(initial ?: kinds.first()) }
+    val tab = selected.takeIf { it in kinds } ?: kinds.first()
     val causes = remember(services, downNodes) { services.likelyCauses(downNodes) }
 
     Column(Modifier.fillMaxSize()) {
@@ -143,16 +145,18 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
                 }
             }
         }
-        when (tab) {
-            DataServiceKind.LONGHORN -> LonghornTab(services.longhorn!!, longhorn, garageDetected = services.garage != null, onGarage = { selected = DataServiceKind.GARAGE })
-            DataServiceKind.GARAGE -> GarageTab(services.garage!!, garage)
-            DataServiceKind.CNPG -> CnpgTab(services.cnpg!!, cnpg)
-            DataServiceKind.DRAGONFLY -> DragonflyTab(services.dragonfly!!)
-            DataServiceKind.MARIADB -> MariaDbTab(services.mariadb!!)
-            DataServiceKind.PERCONA -> PerconaTab(services.percona!!)
-            DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!, certificates)
-            DataServiceKind.VELERO -> VeleroTab(services.velero!!)
-            DataServiceKind.CEPH -> CephTab(services.ceph!!)
+        SwipeTabPager(kinds, tab, onSelect = { selected = it }) { page ->
+            when (page) {
+                DataServiceKind.LONGHORN -> LonghornTab(services.longhorn!!, longhorn, garageDetected = services.garage != null, onGarage = { selected = DataServiceKind.GARAGE })
+                DataServiceKind.GARAGE -> GarageTab(services.garage!!, garage)
+                DataServiceKind.CNPG -> CnpgTab(services.cnpg!!, cnpg)
+                DataServiceKind.DRAGONFLY -> DragonflyTab(services.dragonfly!!)
+                DataServiceKind.MARIADB -> MariaDbTab(services.mariadb!!)
+                DataServiceKind.PERCONA -> PerconaTab(services.percona!!)
+                DataServiceKind.CERT_MANAGER -> CertificatesTab(services.certManager!!, certificates)
+                DataServiceKind.VELERO -> VeleroTab(services.velero!!)
+                DataServiceKind.CEPH -> CephTab(services.ceph!!)
+            }
         }
     }
 }
