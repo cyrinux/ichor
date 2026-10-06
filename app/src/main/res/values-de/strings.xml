@@ -628,6 +628,9 @@
     <string name="lock_onboarding_private_desc">Screenshots und die Vorschau der letzten Apps bleiben leer, und Warnungen verbergen Cluster-Details auf dem Sperrbildschirm.</string>
     <string name="lock_onboarding_no_lock">Keine Displaysperre auf diesem Gerät</string>
     <string name="lock_onboarding_open_settings">Sicherheitseinstellungen öffnen</string>
+    <string name="config_unreadable_title">Die gespeicherte Config konnte nicht gelesen werden</string>
+    <string name="config_unreadable_body">Ihre talosconfig ist noch auf diesem Gerät, konnte aber gerade nicht entschlüsselt werden. Das kann direkt nach einem Update passieren. Versuchen Sie es erneut; schlägt es weiterhin fehl, importieren Sie Ihre talosconfig erneut.</string>
+    <string name="config_unreadable_import">Erneut importieren</string>
     <string name="lock_onboarding_delete">Stattdessen die importierte Config löschen</string>
     <string name="lock_onboarding_delete_title">talosconfig löschen?</string>
     <string name="lock_onboarding_delete_body">Die Config jedes Clusters wird samt Client-Schlüsseln von diesem Gerät entfernt.</string>

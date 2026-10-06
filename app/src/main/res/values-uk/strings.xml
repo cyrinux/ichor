@@ -686,6 +686,9 @@
     <string name="lock_onboarding_private_desc">Знімки екрана й попередній перегляд недавніх застосунків порожні, а сповіщення приховують деталі кластера на екрані блокування.</string>
     <string name="lock_onboarding_no_lock">На цьому пристрої немає блокування екрана</string>
     <string name="lock_onboarding_open_settings">Відкрити налаштування безпеки</string>
+    <string name="config_unreadable_title">Не вдалося прочитати збережену конфігурацію</string>
+    <string name="config_unreadable_body">Ваш talosconfig досі на цьому пристрої, але зараз його не вдалося розшифрувати. Таке трапляється одразу після оновлення. Спробуйте ще раз; якщо помилка повторюється, імпортуйте talosconfig знову.</string>
+    <string name="config_unreadable_import">Імпортувати знову</string>
     <string name="lock_onboarding_delete">Натомість видалити імпортовану конфігурацію</string>
     <string name="lock_onboarding_delete_title">Видалити talosconfig?</string>
     <string name="lock_onboarding_delete_body">Конфігурацію кожного кластера разом із клієнтськими ключами буде видалено з цього пристрою.</string>
