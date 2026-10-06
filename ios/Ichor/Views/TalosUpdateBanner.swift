@@ -73,7 +73,7 @@ private struct TalosRolloutView: View {
         guard let target = job.target else { return nil }
         switch job.outcome {
         case .unfollowed?: return nil
-        case .succeeded?: return RolloutRun(node: target.node, waiting: true, finished: true)
+        case .succeeded(let newVersion)?: return RolloutRun(node: target.node, waiting: true, finished: true, reached: newVersion)
         case .failed?: return RolloutRun(node: target.node, finished: true, failed: true)
         case nil: return RolloutRun(node: target.node, waiting: upgradeWaitsForNode(job.events))
         }
@@ -113,7 +113,14 @@ private struct TalosRolloutView: View {
         .navigationDestination(item: $opened) { node in
             UpgradeView(node: node.node, hostname: node.hostname, initialVersion: latest)
         }
-        .task(id: healthKey) { etcd = (try? await model.client?.etcd())?.health }
+        .task(id: healthKey) {
+            // Asked again while a member is unhealthy: it recovers without any node changing in the overview.
+            repeat {
+                etcd = (try? await model.client?.etcd())?.health
+                guard etcd?.degraded == true else { break }
+                try? await Task.sleep(for: .seconds(5))
+            } while !Task.isCancelled
+        }
         .alert(
             Text("Upgrade \(anyway?.node.hostname ?? "") before the control plane?"),
             isPresented: Binding(get: { anyway != nil }, set: { if !$0 { anyway = nil } }),

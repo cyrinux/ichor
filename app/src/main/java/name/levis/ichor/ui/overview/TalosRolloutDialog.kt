@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.EtcdHealth
@@ -67,16 +68,21 @@ fun TalosRolloutDialog(nodes: List<NodeOverview>, latest: String, onUpgrade: (No
     // upgrade screen's own etcd checks still apply.
     val healthKey = remember(nodes) { nodes.map { Triple(it.reachable, it.ready, it.version) } }
     val etcd by produceState<EtcdHealth?>(null, healthKey) {
-        value = try {
-            app.talosRepository.etcd().health()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (_: Exception) {
-            null
+        // Asked again while a member is unhealthy: it recovers without any node changing in the overview.
+        while (true) {
+            value = try {
+                app.talosRepository.etcd().health()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            if (value?.degraded != true) break
+            delay(ETCD_RECHECK_MILLIS)
         }
     }
     val rollout = remember(nodes, latest, run, etcd) {
-        val followed = run?.let { RolloutRun(it.node, upgradeWaitsForNode(it.events), it.finished, it.error != null) }
+        val followed = run?.let { RolloutRun(it.node, upgradeWaitsForNode(it.events), it.finished, it.error != null, it.newVersion) }
         rollout(nodes, latest, followed, etcd)
     }
     var anyway by remember { mutableStateOf<RolloutRow?>(null) }
@@ -139,6 +145,8 @@ fun TalosRolloutDialog(nodes: List<NodeOverview>, latest: String, onUpgrade: (No
         )
     }
 }
+
+private const val ETCD_RECHECK_MILLIS = 5_000L
 
 /** Why nothing else can start now, pinned above the list. */
 @Composable

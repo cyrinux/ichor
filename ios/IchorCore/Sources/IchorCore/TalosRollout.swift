@@ -15,19 +15,21 @@ public struct RolloutRow: Equatable, Identifiable, Sendable {
     public var done: Bool { state == .done }
 }
 
-/// The upgrade the app follows, as the rollout needs it (`waiting`: the node rebooted and is
-/// coming back).
+/// The upgrade the app follows, as the rollout needs it. `waiting`: the node rebooted and is
+/// coming back. `reached`: the version a finished run left the node on ("" when it did not say).
 public struct RolloutRun: Equatable, Sendable {
     public let node: String
     public let waiting: Bool
     public let finished: Bool
     public let failed: Bool
+    public let reached: String
 
-    public init(node: String, waiting: Bool = false, finished: Bool = false, failed: Bool = false) {
+    public init(node: String, waiting: Bool = false, finished: Bool = false, failed: Bool = false, reached: String = "") {
         self.node = node
         self.waiting = waiting
         self.finished = finished
         self.failed = failed
+        self.reached = reached
     }
 }
 
@@ -73,9 +75,12 @@ public struct TalosRollout: Equatable, Sendable {
             if talosVersionParts(node.version) != nil, !isOutdatedTalos(node.version, latest: latest) {
                 return node.health == .ready ? .done : .waitingHealthy
             }
-            // Upgraded, but the overview still shows what the node ran before: not pending again.
-            if let own { return own.failed ? .failed : .waitingHealthy }
-            return .pending
+            guard let own else { return .pending }
+            if own.failed { return .failed }
+            // Upgraded to latest, but the overview still shows what the node ran before. A run
+            // that ended elsewhere (staged, or another target) leaves the node pending.
+            let reachedLatest = talosVersionParts(own.reached) != nil && !isOutdatedTalos(own.reached, latest: latest)
+            return reachedLatest ? .waitingHealthy : .pending
         }
         // Done last; else the oldest version first (unknown ones last), then by hostname.
         let rows = nodes.map { RolloutRow(node: $0, state: state($0)) }.sorted { a, b in

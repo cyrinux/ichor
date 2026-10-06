@@ -80,9 +80,17 @@ final class TalosRolloutTests: XCTestCase {
         XCTAssertFalse(plan.canOpen(row(plan, "cp2")))
 
         // The run ended well, the overview still shows the old version: not pending again.
-        let stale = TalosRollout(nodes: cluster(), latest: latest, run: RolloutRun(node: "cp1", waiting: true, finished: true))
+        let stale = TalosRollout(nodes: cluster(), latest: latest,
+                                 run: RolloutRun(node: "cp1", waiting: true, finished: true, reached: latest))
         XCTAssertEqual(row(stale, "cp1").state, .waitingHealthy)
         XCTAssertEqual(stale.hold, .upgrading(row(stale, "cp1").node, waiting: true))
+
+        // A finished run that did not bring the node to latest (staged, another target) holds nothing.
+        for reached in ["", "v1.14.1"] {
+            let other = TalosRollout(nodes: cluster(), latest: latest, run: RolloutRun(node: "cp1", finished: true, reached: reached))
+            XCTAssertEqual(row(other, "cp1").state, .pending)
+            XCTAssertNil(other.hold)
+        }
     }
 
     func testFailedNodeIsRetriedFirst() {

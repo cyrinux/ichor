@@ -7,8 +7,17 @@ data class RolloutRow(val node: NodeOverview, val state: RolloutState) {
     val done: Boolean get() = state == RolloutState.DONE
 }
 
-/** The upgrade the app follows, as the rollout needs it ([waiting]: the node rebooted and is coming back). */
-data class RolloutRun(val node: String, val waiting: Boolean = false, val finished: Boolean = false, val failed: Boolean = false)
+/**
+ * The upgrade the app follows, as the rollout needs it. [waiting]: the node rebooted and is
+ * coming back. [reached]: the version a finished run left the node on ("" when it did not say).
+ */
+data class RolloutRun(
+    val node: String,
+    val waiting: Boolean = false,
+    val finished: Boolean = false,
+    val failed: Boolean = false,
+    val reached: String = "",
+)
 
 /** etcd members answering without errors, out of all of them. */
 data class EtcdHealth(val healthy: Int, val members: Int) {
@@ -100,8 +109,9 @@ fun rollout(nodes: List<NodeOverview>, latest: String, run: RolloutRun? = null, 
             own != null && !own.finished -> if (own.waiting) RolloutState.WAITING_HEALTHY else RolloutState.UPGRADING
             upToDate -> if (node.healthy) RolloutState.DONE else RolloutState.WAITING_HEALTHY
             own?.failed == true -> RolloutState.FAILED
-            // Upgraded, but the overview still shows what the node ran before.
-            own != null -> RolloutState.WAITING_HEALTHY
+            // Upgraded to latest, but the overview still shows what the node ran before. A run
+            // that ended elsewhere (staged, or another target) leaves the node pending.
+            own != null && versionParts(own.reached).isNotEmpty() && !isOlderVersion(own.reached, latest) -> RolloutState.WAITING_HEALTHY
             else -> RolloutState.PENDING
         }
     }

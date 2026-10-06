@@ -83,9 +83,16 @@ class TalosRolloutTest {
         assertFalse(plan.canOpen(plan.row("cp2")))
 
         // The run ended well, the overview still shows the old version: not pending again.
-        val stale = rollout(cluster, latest, RolloutRun("cp1", waiting = true, finished = true))
+        val stale = rollout(cluster, latest, RolloutRun("cp1", waiting = true, finished = true, reached = latest))
         assertEquals(RolloutState.WAITING_HEALTHY, stale.row("cp1").state)
         assertEquals(RolloutHold.Upgrading(stale.row("cp1").node, waiting = true), stale.hold)
+
+        // A finished run that did not bring the node to latest (staged, another target) holds nothing.
+        listOf("", "v1.14.1").forEach { reached ->
+            val other = rollout(cluster, latest, RolloutRun("cp1", finished = true, reached = reached))
+            assertEquals(RolloutState.PENDING, other.row("cp1").state)
+            assertNull(other.hold)
+        }
     }
 
     @Test
