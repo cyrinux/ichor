@@ -206,7 +206,7 @@ private fun FileSource(onYaml: (String) -> Unit) {
         if (uri == null) return@rememberLauncherForActivityResult
         runCatching {
             context.contentResolver.openInputStream(uri)?.use { stream ->
-                readBounded(stream, MAX_CONFIG_BYTES).decodeToString()
+                readBounded(stream, MAX_CONFIG_BYTES, "File is too large to be a talosconfig").decodeToString()
             } ?: throw LocalizedException(UiText.Res(R.string.import_could_not_open))
         }.fold(
             onSuccess = { readError = null; onYaml(it) },

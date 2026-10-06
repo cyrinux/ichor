@@ -13,6 +13,7 @@ import name.levis.ichor.data.TalosJson
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.uiText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,6 +75,8 @@ class UpdateManager(
             val release = withContext(Dispatchers.IO) { fetchLatestRelease() }
             prefs.edit().putLong(KEY_LAST_CHECK, System.currentTimeMillis()).apply()
             release?.let { selectUpdate(it, BuildConfig.VERSION_NAME, Build.SUPPORTED_ABIS.toList()) }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             _state.value = UpdateState.Failed(UiText.Res(R.string.update_check_failed, e.uiText()))
             return
@@ -101,6 +104,8 @@ class UpdateManager(
             withContext(Dispatchers.IO) { verify(apk, info) }
             _state.value = UpdateState.Installing
             withContext(Dispatchers.IO) { install(apk) }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             _state.value = UpdateState.Failed(e.uiText(), info)
         }
