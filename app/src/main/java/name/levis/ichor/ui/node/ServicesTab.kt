@@ -23,7 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,9 +44,7 @@ import name.levis.ichor.ui.components.FeatureMenuItem
 import name.levis.ichor.model.offeredActions
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
-import name.levis.ichor.ui.components.DataFreshness
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
@@ -67,24 +64,17 @@ fun ServicesTab(
     val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
 
-    when (val s = state) {
-        UiState.Loading -> LoadingBox()
-        is UiState.Failed -> ErrorBox(s.message, vm::refresh)
-        is UiState.Loaded -> Column(Modifier.fillMaxSize()) {
-            PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(s.data, key = { it.id }) { svc ->
-                        ServiceRow(
-                            svc,
-                            onClick = { onService(svc.id) },
-                            actions = if (onAction == null || busy) emptyList() else svc.offeredActions(),
-                            onAction = { action -> onAction?.invoke(ServiceRequest(svc.id, action)) },
-                            actionsNotice = actionsNotice,
-                        )
-                    }
-                }
+    Loaded(state, vm::refresh, freshness = true) { data ->
+        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(data, key = { it.id }) { svc ->
+                ServiceRow(
+                    svc,
+                    onClick = { onService(svc.id) },
+                    actions = if (onAction == null || busy) emptyList() else svc.offeredActions(),
+                    onAction = { action -> onAction?.invoke(ServiceRequest(svc.id, action)) },
+                    actionsNotice = actionsNotice,
+                )
             }
-            DataFreshness(s, edgeToEdge = false)
         }
     }
 }
