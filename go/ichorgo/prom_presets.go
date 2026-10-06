@@ -26,6 +26,13 @@ var promPresets = []promPreset{
 		Query: `topk(10, sum by (namespace, pod) (increase(kube_pod_container_status_restarts_total[1h])) > 0)`},
 	{ID: "apiserver-errors", Title: "API server 5xx", Unit: "persec", Legend: "{{verb}}",
 		Query: `sum by (verb) (rate(apiserver_request_total{code=~"5.."}[5m]))`},
+	// etcd's own metrics: Talos serves them when cluster.etcd.extraArgs sets listen-metrics-urls.
+	{ID: "etcd-wal-fsync", Title: "etcd WAL fsync (p99, ms)", Unit: "", Legend: "{{instance}}",
+		Query: `1000 * histogram_quantile(0.99, sum by (instance, le) (rate(etcd_disk_wal_fsync_duration_seconds_bucket[5m])))`},
+	{ID: "etcd-backend-commit", Title: "etcd backend commit (p99, ms)", Unit: "", Legend: "{{instance}}",
+		Query: `1000 * histogram_quantile(0.99, sum by (instance, le) (rate(etcd_disk_backend_commit_duration_seconds_bucket[5m])))`},
+	{ID: "etcd-leader-changes", Title: "etcd leader changes (1 h)", Unit: "count", Legend: "{{instance}}",
+		Query: `increase(etcd_server_leader_changes_seen_total[1h])`},
 	{ID: "filesystem", Title: "Node disk free", Unit: "percent", Legend: "{{instance}} {{mountpoint}}",
 		Query: `100 * node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs"}`},
 }

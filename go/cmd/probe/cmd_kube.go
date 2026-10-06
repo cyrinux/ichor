@@ -89,6 +89,23 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "checkup", args: "", run: func(e env) (out string, err error) {
+		// checkup: what no other screen shows (failing pods, full volumes, dead webhooks...).
+		out, err = ichorgo.KubeCheckup(e.cfg, e.context, e.kubeServer)
+
+		return out, err
+	}},
+	{name: "kube-events", args: "NAMESPACE [KIND] [NAME]", run: func(e env) (out string, err error) {
+		// kube-events NAMESPACE [KIND] NAME: an object's events; without KIND, NAME's and what it owns.
+		kind, name := flag.Arg(2), flag.Arg(3)
+		if name == "" {
+			kind, name = "", kind
+		}
+
+		out, err = ichorgo.KubeEvents(e.cfg, e.context, e.kubeServer, flag.Arg(1), kind, name)
+
+		return out, err
+	}},
 	{name: "audit", args: "[MINUTES]", run: func(e env) (out string, err error) {
 		// audit [MINUTES]: reads the control planes' audit logs (os:admin), 15 minutes by default.
 		minutes, _ := strconv.Atoi(flag.Arg(1)) //nolint:errcheck
