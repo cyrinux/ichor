@@ -225,7 +225,8 @@ public func dataIssuesOf(_ services: DataServices) -> [String: String] {
 }
 
 /// Product name of a data-service issue key's system.
-private func dataSystemTitle(_ key: String) -> String {
+/// The product behind a data-issue key ("system|label"): names are never translated.
+public func dataSystemTitle(_ key: String) -> String {
     switch key.split(separator: "|", maxSplits: 1).first.map(String.init) ?? "" {
     case "longhorn": "Longhorn"
     case "garage": "Garage"

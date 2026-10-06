@@ -123,11 +123,11 @@ struct UpgradeView: View {
 
     private func currentSection(_ plan: UpgradePlan) -> some View {
         Section("Current") {
-            LabeledContent("Version", value: plan.currentVersion.isEmpty ? "—" : plan.currentVersion)
+            LabeledContent("Version", value: plan.currentVersion.or("—"))
             LabeledContent("Role", value: plan.controlPlane ? String(localized: "Control plane") : String(localized: "Worker"))
             VStack(alignment: .leading, spacing: 2) {
                 Text("Image").font(.caption).foregroundStyle(.secondary)
-                Text(verbatim: plan.currentImage.isEmpty ? "—" : plan.currentImage)
+                Text(verbatim: plan.currentImage.or("—"))
                     .font(.caption.monospaced()).textSelection(.enabled)
             }
             if !plan.schematic.isEmpty {
@@ -336,7 +336,7 @@ private struct UpgradeProgressView: View {
             }
             if let target = job.target {
                 Section {
-                    LabeledContent("Version", value: "\(target.fromVersion.isEmpty ? "—" : target.fromVersion) → \(target.toVersion)")
+                    LabeledContent("Version", value: "\(target.fromVersion.or("—")) → \(target.toVersion)")
                     Text(verbatim: target.image).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
                 }
             }

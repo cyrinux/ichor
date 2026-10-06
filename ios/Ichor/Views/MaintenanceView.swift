@@ -52,7 +52,7 @@ struct MaintenanceView: View {
             }
             Section {
                 LabeledContent("Role", value: plan.controlPlane ? String(localized: "Control plane") : String(localized: "Worker"))
-                LabeledContent("Kubernetes node", value: plan.kubeNode.isEmpty ? "—" : plan.kubeNode)
+                LabeledContent("Kubernetes node", value: plan.kubeNode.or("—"))
                 LabeledContent("Scheduling") {
                     Text(plan.cordoned ? String(localized: "Cordoned") : String(localized: "Schedulable"))
                         .foregroundStyle(plan.cordoned ? Color.statusWarn : Color.secondary)

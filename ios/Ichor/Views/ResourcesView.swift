@@ -32,7 +32,7 @@ struct ResourceTypesView: View {
                             }
                         }
                     } header: {
-                        Text(verbatim: group.namespace.isEmpty ? "—" : group.namespace).textCase(nil)
+                        Text(verbatim: group.namespace.or("—")).textCase(nil)
                     }
                 }
             }

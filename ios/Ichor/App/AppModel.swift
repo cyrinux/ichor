@@ -147,7 +147,7 @@ final class AppModel {
     func setKubeServer(_ server: String, for context: ContextSummary) {
         guard !context.fingerprint.isEmpty else { return }
         var servers = kubeServers
-        servers[context.fingerprint] = server.isEmpty ? nil : server
+        servers[context.fingerprint] = server.nonEmpty
         storeKubeServers(servers)
     }
 
@@ -156,7 +156,7 @@ final class AppModel {
         guard let fingerprint = activeSummary?.fingerprint, !fingerprint.isEmpty else { return }
         var saved = snapshotKeys
         let trimmed = keys.trimmingCharacters(in: .whitespacesAndNewlines)
-        saved[fingerprint] = trimmed.isEmpty ? nil : trimmed
+        saved[fingerprint] = trimmed.nonEmpty
         storeSnapshotKeys(saved)
     }
 

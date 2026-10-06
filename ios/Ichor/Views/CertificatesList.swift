@@ -141,7 +141,7 @@ private struct IssuerRow: View {
                 Text(verbatim: issuer.label).font(.subheadline.monospaced()).lineLimit(1)
             }
             let state: String? = issuer.ready ? nil : String(localized: "not ready")
-            Text(verbatim: [type, issuer.server.isEmpty ? nil : issuer.server, state].compactMap { $0 }.joined(separator: " · "))
+            Text(verbatim: [type, issuer.server.nonEmpty, state].compactMap { $0 }.joined(separator: " · "))
                 .font(.caption)
                 .foregroundStyle(issuer.health.needsAttention ? issuer.health.color : .secondary)
             if !issuer.ready && !issuer.message.isEmpty {

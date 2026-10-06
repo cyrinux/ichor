@@ -201,52 +201,16 @@ public struct MaintenanceProgress: Decodable, Equatable, Sendable {
 }
 
 /// A row of the maintenance timeline.
-public struct MaintenanceStep: Equatable, Identifiable, Sendable {
-    public let phase: MaintenancePhase
-    public let state: UpgradeStepState
-    /// Unix ms the phase was first reported, 0 when not reached.
-    public let at: Int64
-    /// Latest message of the phase.
-    public let message: String
-
-    public var id: MaintenancePhase { phase }
-
-    public init(phase: MaintenancePhase, state: UpgradeStepState, at: Int64 = 0, message: String = "") {
-        self.phase = phase
-        self.state = state
-        self.at = at
-        self.message = message
-    }
-}
+public typealias MaintenanceStep = TimelineStep<MaintenancePhase>
 
 /// Timeline of `action`'s phases from the events so far, like upgradeTimeline: phases only
 /// move forward, `finished` marks them all done, `failure` marks the furthest one failed.
 public func maintenanceTimeline(_ events: [MaintenanceProgress], action: MaintenanceAction, finished: Bool = false,
                                 failure: String? = nil) -> [MaintenanceStep] {
     let phases = MaintenancePhase.steps(for: action)
-    var first: [MaintenancePhase: Int64] = [:]
-    var messages: [MaintenancePhase: String] = [:]
-    var furthest: MaintenancePhase?
-    for event in events {
-        guard let phase = MaintenancePhase(rawValue: event.phase), phases.contains(phase) else { continue }
-        if first[phase] == nil { first[phase] = event.at }
-        if !event.message.isEmpty { messages[phase] = event.message }
-        if furthest.map({ phase > $0 }) ?? true { furthest = phase }
-    }
-    return phases.map { phase in
-        let at = first[phase] ?? 0
-        let message = messages[phase] ?? ""
-        if let failure {
-            let failed = furthest ?? phases[0]
-            if phase < failed { return MaintenanceStep(phase: phase, state: .done, at: at, message: message) }
-            if phase == failed { return MaintenanceStep(phase: phase, state: .failed, at: at, message: failure) }
-            return MaintenanceStep(phase: phase, state: .pending)
-        }
-        if finished { return MaintenanceStep(phase: phase, state: .done, at: at, message: message) }
-        guard let furthest else { return MaintenanceStep(phase: phase, state: .pending) }
-        let state: UpgradeStepState = phase < furthest ? .done : phase == furthest ? .current : .pending
-        return MaintenanceStep(phase: phase, state: state, at: at, message: message)
-    }
+    return foldTimeline(events, phases: phases, finished: finished, failure: failure,
+                        phase: { MaintenancePhase(rawValue: $0.phase).flatMap { phases.contains($0) ? $0 : nil } },
+                        at: \.at, message: \.message)
 }
 
 /// The pods of the latest event that listed them (the drain's live states).

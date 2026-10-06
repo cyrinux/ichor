@@ -25,9 +25,17 @@ public func formatDuration(_ seconds: Int64) -> String {
     return "\(minutes)m"
 }
 
+public extension String {
+    /// The string, or nil when empty.
+    var nonEmpty: String? { isEmpty ? nil : self }
+
+    /// The string, or `fallback` when empty: "—" in a table.
+    func or(_ fallback: String) -> String { isEmpty ? fallback : self }
+}
+
 public extension Optional where Wrapped == String {
     /// The string, or nil when it is nil or empty.
-    var nonEmpty: String? { flatMap { $0.isEmpty ? nil : $0 } }
+    var nonEmpty: String? { flatMap(\.nonEmpty) }
 }
 
 public extension Date {

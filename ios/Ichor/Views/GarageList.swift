@@ -99,7 +99,7 @@ private struct InstanceSection: View {
                 }
             } else {
                 Label {
-                    Text("Only the basic status is available: \(instance.message.isEmpty ? "—" : instance.message)")
+                    Text("Only the basic status is available: \(instance.message.or("—"))")
                 } icon: {
                     Image(systemName: "info.circle")
                 }

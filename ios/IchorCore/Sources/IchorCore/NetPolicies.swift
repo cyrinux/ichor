@@ -122,7 +122,7 @@ public struct NetPolicyRef: Codable, Equatable, Hashable, Sendable {
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(kind, forKey: .kind)
-        try c.encodeIfPresent(Optional(namespace).nonEmpty, forKey: .namespace)
+        try c.encodeIfPresent(namespace.nonEmpty, forKey: .namespace)
         try c.encode(name, forKey: .name)
     }
 

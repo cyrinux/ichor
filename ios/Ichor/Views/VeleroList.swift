@@ -141,6 +141,6 @@ private struct AdhocRow: View {
         let b = backup.backup
         let at = b.completedAt > 0 ? b.completedAt : b.startedAt
         return [b.phase, at > 0 ? relativeTime(at) : nil, countsText(errors: b.errors, warnings: b.warnings),
-                b.failureReason.isEmpty ? nil : b.failureReason].compactMap { $0 }.joined(separator: " · ")
+                b.failureReason.nonEmpty].compactMap { $0 }.joined(separator: " · ")
     }
 }

@@ -93,7 +93,7 @@ private struct ProcessRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline) {
-                Text(verbatim: row.process.command.isEmpty ? "—" : row.process.command)
+                Text(verbatim: row.process.command.or("—"))
                     .font(.headline)
                     .lineLimit(1)
                 Spacer()

@@ -222,19 +222,19 @@ public struct HubblePeer: Codable, Equatable, Hashable, Sendable {
 
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encodeIfPresent(Optional(namespace).nonEmpty, forKey: .namespace)
-        try c.encodeIfPresent(Optional(pod).nonEmpty, forKey: .pod)
-        try c.encodeIfPresent(Optional(workload).nonEmpty, forKey: .workload)
+        try c.encodeIfPresent(namespace.nonEmpty, forKey: .namespace)
+        try c.encodeIfPresent(pod.nonEmpty, forKey: .pod)
+        try c.encodeIfPresent(workload.nonEmpty, forKey: .workload)
         if identity != 0 { try c.encode(identity, forKey: .identity) }
-        try c.encodeIfPresent(Optional(ip).nonEmpty, forKey: .ip)
+        try c.encodeIfPresent(ip.nonEmpty, forKey: .ip)
         if !names.isEmpty { try c.encode(names, forKey: .names) }
-        try c.encodeIfPresent(Optional(reserved).nonEmpty, forKey: .reserved)
+        try c.encodeIfPresent(reserved.nonEmpty, forKey: .reserved)
     }
 
     /// "namespace/pod", else a DNS name, the IP, the reserved identity ("world").
     public var label: String {
         if !pod.isEmpty { return namespace.isEmpty ? pod : "\(namespace)/\(pod)" }
-        return names.first ?? ip.nonEmptyOr(reserved.nonEmptyOr(namespace.nonEmptyOr("?")))
+        return names.first ?? ip.or(reserved.or(namespace.or("?")))
     }
 
     /// What a rule would name to allow it: "namespace/workload", a DNS name, an IP.
@@ -244,10 +244,6 @@ public struct HubblePeer: Codable, Equatable, Hashable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey { case namespace, pod, workload, identity, ip, names, reserved }
-}
-
-private extension String {
-    func nonEmptyOr(_ fallback: String) -> String { isEmpty ? fallback : self }
 }
 
 /// "TCP 5432", "UDP 53", "ICMPv4": what a flow's port reads as.
@@ -324,14 +320,14 @@ public struct HubbleFlow: Codable, Equatable, Sendable {
         try c.encode(time, forKey: .time)
         try c.encode(node, forKey: .node)
         try c.encode(verdictName, forKey: .verdict)
-        try c.encodeIfPresent(Optional(reasonName).nonEmpty, forKey: .reason)
-        try c.encodeIfPresent(Optional(directionName).nonEmpty, forKey: .direction)
-        try c.encodeIfPresent(Optional(`protocol`).nonEmpty, forKey: .protocol)
+        try c.encodeIfPresent(reasonName.nonEmpty, forKey: .reason)
+        try c.encodeIfPresent(directionName.nonEmpty, forKey: .direction)
+        try c.encodeIfPresent(`protocol`.nonEmpty, forKey: .protocol)
         if port > 0 { try c.encode(port, forKey: .port) }
-        try c.encodeIfPresent(Optional(flags).nonEmpty, forKey: .flags)
+        try c.encodeIfPresent(flags.nonEmpty, forKey: .flags)
         if reply { try c.encode(reply, forKey: .reply) }
-        try c.encodeIfPresent(Optional(type).nonEmpty, forKey: .type)
-        try c.encodeIfPresent(Optional(l7).nonEmpty, forKey: .l7)
+        try c.encodeIfPresent(type.nonEmpty, forKey: .type)
+        try c.encodeIfPresent(l7.nonEmpty, forKey: .l7)
         try c.encode(source, forKey: .source)
         try c.encode(destination, forKey: .destination)
         if !deniedBy.isEmpty { try c.encode(deniedBy, forKey: .deniedBy) }

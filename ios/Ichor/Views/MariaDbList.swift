@@ -36,7 +36,7 @@ private struct ClusterRow: View {
             ForEach(cluster.pods) { pod in
                 HStack(spacing: 6) {
                     HealthDot(health: pod.ready ? .ok : .critical, size: 8)
-                    Text(verbatim: podLine(pod)).font(.caption.monospaced()).foregroundStyle(pod.ready ? .primary : Color.red)
+                    Text(verbatim: pod.line).font(.caption.monospaced()).foregroundStyle(pod.ready ? .primary : Color.red)
                 }
             }
             if let backups {
@@ -56,7 +56,7 @@ private struct ClusterRow: View {
         case "standalone": String(localized: "standalone")
         case "replication": String(localized: "replication")
         case "galera": "Galera"
-        default: cluster.topology.isEmpty ? nil : cluster.topology
+        default: cluster.topology.nonEmpty
         }
     }
 
@@ -80,22 +80,5 @@ private struct ClusterRow: View {
         // The operator's own words (switching primary, updating...).
         case .notReady: cluster.message.isEmpty ? String(localized: "not ready") : String(localized: "operator: \(cluster.message)")
         }
-    }
-
-    private func podLine(_ pod: MariaDbPod) -> String {
-        let role: String? = switch pod.role {
-        case "primary": String(localized: "primary")
-        case "replica": String(localized: "replica")
-        case "member": String(localized: "member")
-        default: pod.role.isEmpty ? nil : pod.role
-        }
-        let place: String = if pod.node.isEmpty && pod.phase == "Pending" {
-            String(localized: "pending, not scheduled")
-        } else if !pod.node.isEmpty {
-            String(localized: "on \(pod.node)")
-        } else {
-            pod.phase
-        }
-        return [pod.name, role, place].compactMap { $0 }.joined(separator: " · ")
     }
 }

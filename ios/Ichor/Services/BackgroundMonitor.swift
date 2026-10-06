@@ -147,17 +147,7 @@ enum BackgroundMonitor {
             // "system|label": the label names the volume or cluster, the system goes in the text.
             let issue = subject.split(separator: "|", maxSplits: 1).map(String.init)
             let label = issue.last ?? subject
-            let system = switch issue.first ?? "" {
-            case "longhorn": "Longhorn"
-            case "garage": "Garage"
-            case "dragonfly": "Dragonfly"
-            case "mariadb": "MariaDB"
-            case "percona": "Percona XtraDB Cluster"
-            case "certmanager": "cert-manager"
-            case "velero": "Velero"
-            case "ceph": "Rook Ceph"
-            default: "CloudNativePG"
-            }
+            let system = dataSystemTitle(subject)
             guard alert.problem else { return (String(localized: "\(label) is healthy again"), system) }
             let severity = snapshot.dataIssues[subject] == dataCritical ? ServiceHealth.critical.label : ServiceHealth.warning.label
             return (String(localized: "\(label) needs attention"), "\(system) · \(severity)")

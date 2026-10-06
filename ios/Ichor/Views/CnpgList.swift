@@ -144,7 +144,7 @@ private struct ClusterRow: View {
                 ForEach(cluster.instancePods) { pod in
                     HStack(spacing: 6) {
                         HealthDot(health: pod.ready ? .ok : .critical, size: 8)
-                        Text(verbatim: podLine(pod)).font(.caption.monospaced()).foregroundStyle(pod.ready ? .primary : Color.red)
+                        Text(verbatim: pod.line).font(.caption.monospaced()).foregroundStyle(pod.ready ? .primary : Color.red)
                     }
                 }
             }
@@ -166,22 +166,6 @@ private struct ClusterRow: View {
         }
     }
 
-    private func podLine(_ pod: CnpgPod) -> String {
-        let role: String? = switch pod.role {
-        case "primary": String(localized: "primary")
-        case "replica": String(localized: "replica")
-        default: nil
-        }
-        let place: String = if pod.node.isEmpty && pod.phase == "Pending" {
-            String(localized: "pending, not scheduled")
-        } else if !pod.node.isEmpty {
-            String(localized: "on \(pod.node)")
-        } else {
-            pod.phase
-        }
-        return [pod.name, role, place].compactMap { $0 }.joined(separator: " · ")
-    }
-
     private var archivingText: String {
         switch cluster.archiving {
         case "ok": String(localized: "working")
@@ -193,7 +177,7 @@ private struct ClusterRow: View {
 
     private var backupMethod: String {
         switch cluster.backupMethod {
-        case "plugin": String(localized: "barman-cloud plugin (\(cluster.objectStore.isEmpty ? "—" : cluster.objectStore))")
+        case "plugin": String(localized: "barman-cloud plugin (\(cluster.objectStore.or("—")))")
         case "in-tree": String(localized: "barman object store")
         default: String(localized: "not configured")
         }
