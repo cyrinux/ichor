@@ -16,4 +16,12 @@ extension TalosClient {
             _ = IchorgoKubeFluxAction(config, context, kubeServer, target.kind, target.namespace, target.name, action.rawValue, error)
         }
     }
+
+    /// What reconciling the Flux object target now would change, object by object (os:admin,
+    /// read only: server-side apply dry runs). Not cached: always fresh.
+    func fluxDiff(of target: FluxRef) async throws -> FluxDiff {
+        try await Self.json { [config, context, kubeServer] in
+            IchorgoKubeFluxDiff(config, context, kubeServer, target.kind, target.namespace, target.name, $0)
+        }
+    }
 }
