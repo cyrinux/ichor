@@ -50,7 +50,7 @@ struct KubeSpanMapTab: View {
         }
         .refreshable { await refresh() }
         .themedBackground()
-        .sheet(isPresented: Binding(get: { link != nil }, set: { if !$0 { link = nil } })) {
+        .sheet(isPresented: $link.isPresent()) {
             if let index = link, topology.links.indices.contains(index) {
                 let shown = topology.links[index]
                 TopologyLinkSheet(

@@ -86,7 +86,7 @@ private struct ApiVerdictSection: View {
                 StatusPill(label: report.status.label, color: report.status.color)
                 Spacer()
                 if !report.version.isEmpty {
-                    Text(verbatim: report.uptimeSeconds > 0 ? "\(report.version) · \(formatDuration(report.uptimeSeconds))" : report.version)
+                    Text(verbatim: report.uptimeSeconds > 0 ? "\(report.version) · \(localizedDuration(report.uptimeSeconds))" : report.version)
                         .font(.caption.monospaced())
                         .foregroundStyle(.secondary)
                 }

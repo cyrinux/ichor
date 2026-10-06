@@ -185,7 +185,7 @@ struct OverviewView: View {
         } message: {
             Text(publicIPDetectionNotice)
         }
-        .alert("Public IPs", isPresented: Binding(get: { detectIPsError != nil }, set: { if !$0 { detectIPsError = nil } })) {
+        .alert("Public IPs", isPresented: $detectIPsError.isPresent()) {
             Button("OK") {}
         } message: {
             Text(verbatim: detectIPsError ?? "")

@@ -12,7 +12,7 @@ public enum ArgoNetLayer: Int, Sendable, CaseIterable, Comparable {
     public static func < (a: ArgoNetLayer, b: ArgoNetLayer) -> Bool { a.rawValue < b.rawValue }
 }
 
-public enum ArgoNetKind: String, Sendable, CaseIterable {
+public enum ArgoNetKind: String, Sendable, CaseIterable, WireEnum {
     case host = "Host"
     case loadBalancer = "LoadBalancer"
     case gateway = "Gateway"
@@ -23,7 +23,7 @@ public enum ArgoNetKind: String, Sendable, CaseIterable {
     case node = "Node"
     case unknown = ""
 
-    public init(wire: String) { self = ArgoNetKind(rawValue: wire) ?? .unknown }
+    public static let wireFallback: Self = .unknown
 
     /// A Gateway or a route, which a shared one (not the app's) can be.
     public var routesTraffic: Bool { self == .gateway || self == .ingress || self == .httpRoute }
@@ -86,11 +86,11 @@ public struct ArgoNetNode: Decodable, Equatable, Identifiable, Sendable {
         id = try c.field(.id, "")
         let wire = try c.field(.layer, 0)
         layer = ArgoNetLayer(rawValue: min(max(wire, 0), ArgoNetLayer.node.rawValue)) ?? .entry
-        kind = ArgoNetKind(wire: try c.field(.kind, ""))
+        kind = try c.wire(.kind)
         namespace = try c.field(.namespace, "")
         name = try c.field(.name, "")
         detail = try c.field(.detail, "")
-        health = ServiceHealth(wire: try c.field(.health, ""))
+        health = try c.wire(.health)
         url = try c.field(.url, "")
         managed = try c.field(.managed, false)
     }
@@ -125,7 +125,7 @@ public struct ArgoNetEdge: Decodable, Equatable, Hashable, Identifiable, Sendabl
         let c = try decoder.container(keyedBy: CodingKeys.self)
         from = try c.field(.from, "")
         to = try c.field(.to, "")
-        health = ServiceHealth(wire: try c.field(.health, ""))
+        health = try c.wire(.health)
     }
 
     private enum CodingKeys: String, CodingKey { case from, to, health }
@@ -146,7 +146,7 @@ public struct ArgoNetProblem: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        kind = ArgoNetKind(wire: try c.field(.kind, ""))
+        kind = try c.wire(.kind)
         namespace = try c.field(.namespace, "")
         name = try c.field(.name, "")
         detail = try c.field(.detail, "")

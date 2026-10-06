@@ -7,7 +7,7 @@ public let clusterNameMax = 40
 public func normalizeClusterName(_ input: String) -> String? {
     let name = String(input.trimmingCharacters(in: .whitespacesAndNewlines).prefix(clusterNameMax))
         .trimmingCharacters(in: .whitespacesAndNewlines)
-    return name.isEmpty ? nil : name
+    return name.nonEmpty
 }
 
 /// The names of `saved` (by fingerprint) whose cluster is still among `fingerprints`.

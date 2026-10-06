@@ -42,7 +42,7 @@ private struct ClusterRow: View {
             ForEach(cluster.pods) { pod in
                 HStack(spacing: 6) {
                     HealthDot(health: pod.ready ? .ok : .critical, size: 8)
-                    Text(verbatim: podLine(pod)).font(.caption.monospaced()).foregroundStyle(pod.ready ? .primary : Color.red)
+                    Text(verbatim: pod.line).font(.caption.monospaced()).foregroundStyle(pod.ready ? .primary : Color.red)
                 }
             }
         }
@@ -81,16 +81,5 @@ private struct ClusterRow: View {
         case .backupFailed: String(localized: "last backup failed")
         case .backupStale: String(localized: "no recent backup")
         }
-    }
-
-    private func podLine(_ pod: PerconaPod) -> String {
-        let place: String = if pod.node.isEmpty && pod.phase == "Pending" {
-            String(localized: "pending, not scheduled")
-        } else if !pod.node.isEmpty {
-            String(localized: "on \(pod.node)")
-        } else {
-            pod.phase
-        }
-        return [pod.name, place].filter { !$0.isEmpty }.joined(separator: " · ")
     }
 }

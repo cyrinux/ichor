@@ -12,52 +12,16 @@ struct FluxSection: View {
     let downNodes: Set<String>
 
     var body: some View {
-        switch state {
-        case .loading:
-            Section {
-                VStack(alignment: .leading, spacing: 10) {
-                    header(count: 0)
-                    FluxStateBar(counts: [(state: .ready, count: 1)])
-                    Text(verbatim: "Flux objects ready").font(.caption)
-                }
-                .redacted(reason: .placeholder)
-            }
-        case .failed(let message):
-            Section {
-                NavigationLink(value: Route.flux(downNodes: downNodes)) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: "Flux").font(.headline)
-                        Text("Could not read: \(message)").font(.caption).foregroundStyle(.secondary).lineLimit(2)
-                    }
-                }
-            }
-        case .loaded(let status, _, _):
-            if status.installed && !status.apps.isEmpty {
-                Section {
-                    NavigationLink(value: Route.flux(downNodes: downNodes)) { content(status) }
-                }
-            }
-        }
-    }
-
-    private func header(count: Int) -> some View {
-        HStack(spacing: 10) {
-            if let app {
-                AppIconView(app: app, size: 28)
-            } else {
-                Image(systemName: "arrow.triangle.branch")
-                    .frame(width: 28, height: 28)
-                    .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
-            }
-            Text(verbatim: "Flux").font(.headline)
-            Spacer()
-            Text("\(count) apps").font(.subheadline).foregroundStyle(.secondary).monospacedDigit()
-        }
+        GitOpsOverviewSection(title: "Flux", route: .flux(downNodes: downNodes), app: app, state: state,
+                              installed: { $0.installed && !$0.apps.isEmpty }) {
+            FluxStateBar(counts: [(state: .ready, count: 1)])
+            Text(verbatim: "Flux objects ready").font(.caption)
+        } content: { content($0) }
     }
 
     private func content(_ status: FluxStatus) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            header(count: status.apps.count)
+            GitOpsSectionHeader(app: app, title: "Flux", count: status.apps.count)
             FluxStateBar(counts: status.stateCounts)
             if status.allCalm && status.failingSources.isEmpty {
                 Text("All Kustomizations and HelmReleases ready").font(.caption).foregroundStyle(.secondary)

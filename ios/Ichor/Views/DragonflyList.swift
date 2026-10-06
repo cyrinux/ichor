@@ -36,7 +36,7 @@ private struct InstanceRow: View {
             ForEach(instance.pods) { pod in
                 HStack(spacing: 6) {
                     HealthDot(health: pod.ready ? .ok : .critical, size: 8)
-                    Text(verbatim: podLine(pod)).font(.caption.monospaced()).foregroundStyle(pod.ready ? .primary : Color.red)
+                    Text(verbatim: pod.line).font(.caption.monospaced()).foregroundStyle(pod.ready ? .primary : Color.red)
                 }
             }
         }
@@ -56,21 +56,5 @@ private struct InstanceRow: View {
         // The operator's phase is its own word (a rolling update, replication being set up).
         case .notReady: String(localized: "operator: \(instance.phase)")
         }
-    }
-
-    private func podLine(_ pod: DragonflyPod) -> String {
-        let role: String? = switch pod.role {
-        case "master": String(localized: "master")
-        case "replica": String(localized: "replica")
-        default: pod.role.isEmpty ? nil : pod.role
-        }
-        let place: String = if pod.node.isEmpty && pod.phase == "Pending" {
-            String(localized: "pending, not scheduled")
-        } else if !pod.node.isEmpty {
-            String(localized: "on \(pod.node)")
-        } else {
-            pod.phase
-        }
-        return [pod.name, role, place].compactMap { $0 }.joined(separator: " · ")
     }
 }

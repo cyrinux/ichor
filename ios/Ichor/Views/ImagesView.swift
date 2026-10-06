@@ -36,15 +36,7 @@ struct ImagesView: View {
                     ForEach(shown) { ImageRow(image: $0) }
                 }
             }
-            .overlay {
-                if shown.isEmpty {
-                    if query.isEmpty {
-                        ContentUnavailableView("No images", systemImage: "shippingbox")
-                    } else {
-                        ContentUnavailableView.search(text: query)
-                    }
-                }
-            }
+            .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No images", systemImage: "shippingbox") }
             .refreshable { await load() }
             .themedBackground()
         }

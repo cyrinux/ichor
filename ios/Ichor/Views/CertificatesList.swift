@@ -31,7 +31,7 @@ struct CertificatesList: View {
         .refreshable { await refresh() }
         .themedBackground()
         .confirmationDialog(confirmRenew.map { String(localized: "Renew \($0.label)?") } ?? "",
-                            isPresented: Binding(get: { confirmRenew != nil }, set: { if !$0 { confirmRenew = nil } }),
+                            isPresented: $confirmRenew.isPresent(),
                             titleVisibility: .visible,
                             presenting: confirmRenew) { cert in
             Button("Renew now") { Task { await renew(cert) } }
@@ -39,9 +39,7 @@ struct CertificatesList: View {
         } message: { _ in
             Text("cert-manager issues the certificate again now, whatever its renewal time. An ACME issuer such as Let’s Encrypt counts it against its rate limits.")
         }
-        .alert(resultMessage ?? "", isPresented: Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })) {
-            Button("OK") {}
-        }
+        .messageAlert($resultMessage)
     }
 
     private func certificateRow(_ cert: Certificate) -> some View {
@@ -141,7 +139,7 @@ private struct IssuerRow: View {
                 Text(verbatim: issuer.label).font(.subheadline.monospaced()).lineLimit(1)
             }
             let state: String? = issuer.ready ? nil : String(localized: "not ready")
-            Text(verbatim: [type, issuer.server.isEmpty ? nil : issuer.server, state].compactMap { $0 }.joined(separator: " · "))
+            Text(verbatim: [type, issuer.server.nonEmpty, state].compactMap { $0 }.joined(separator: " · "))
                 .font(.caption)
                 .foregroundStyle(issuer.health.needsAttention ? issuer.health.color : .secondary)
             if !issuer.ready && !issuer.message.isEmpty {

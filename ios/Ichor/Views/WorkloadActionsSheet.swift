@@ -222,7 +222,7 @@ private struct RevisionRow: View {
                     if revision.current { StatusPill(label: String(localized: "current"), color: .statusOK) }
                 }
                 if revision.created > 0 {
-                    Text(Date(epochMillis: revision.created).formatted(.relative(presentation: .named)))
+                    Text(relativeTime(revision.created))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 ForEach(revision.images, id: \.self) { image in

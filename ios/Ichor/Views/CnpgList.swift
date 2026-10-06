@@ -60,7 +60,7 @@ struct CnpgList: View {
         .refreshable { await refresh() }
         .themedBackground()
         .confirmationDialog(confirmBackup.map { String(localized: "Back up \($0.label) now?") } ?? "",
-                            isPresented: Binding(get: { confirmBackup != nil }, set: { if !$0 { confirmBackup = nil } }),
+                            isPresented: $confirmBackup.isPresent(),
                             titleVisibility: .visible,
                             presenting: confirmBackup) { cluster in
             Button("Back up now") { Task { await backup(cluster) } }
@@ -68,9 +68,7 @@ struct CnpgList: View {
         } message: { _ in
             Text("CloudNativePG takes a full base backup with the method the cluster is set up for (barman-cloud plugin, object store or volume snapshot). It loads the instance it runs on and adds to the backup storage.")
         }
-        .alert(resultMessage ?? "", isPresented: Binding(get: { resultMessage != nil }, set: { if !$0 { resultMessage = nil } })) {
-            Button("OK") {}
-        }
+        .messageAlert($resultMessage)
     }
 
     private func backup(_ cluster: CnpgCluster) async {
@@ -144,7 +142,7 @@ private struct ClusterRow: View {
                 ForEach(cluster.instancePods) { pod in
                     HStack(spacing: 6) {
                         HealthDot(health: pod.ready ? .ok : .critical, size: 8)
-                        Text(verbatim: podLine(pod)).font(.caption.monospaced()).foregroundStyle(pod.ready ? .primary : Color.red)
+                        Text(verbatim: pod.line).font(.caption.monospaced()).foregroundStyle(pod.ready ? .primary : Color.red)
                     }
                 }
             }
@@ -166,22 +164,6 @@ private struct ClusterRow: View {
         }
     }
 
-    private func podLine(_ pod: CnpgPod) -> String {
-        let role: String? = switch pod.role {
-        case "primary": String(localized: "primary")
-        case "replica": String(localized: "replica")
-        default: nil
-        }
-        let place: String = if pod.node.isEmpty && pod.phase == "Pending" {
-            String(localized: "pending, not scheduled")
-        } else if !pod.node.isEmpty {
-            String(localized: "on \(pod.node)")
-        } else {
-            pod.phase
-        }
-        return [pod.name, role, place].compactMap { $0 }.joined(separator: " · ")
-    }
-
     private var archivingText: String {
         switch cluster.archiving {
         case "ok": String(localized: "working")
@@ -193,7 +175,7 @@ private struct ClusterRow: View {
 
     private var backupMethod: String {
         switch cluster.backupMethod {
-        case "plugin": String(localized: "barman-cloud plugin (\(cluster.objectStore.isEmpty ? "—" : cluster.objectStore))")
+        case "plugin": String(localized: "barman-cloud plugin (\(cluster.objectStore.or("—")))")
         case "in-tree": String(localized: "barman object store")
         default: String(localized: "not configured")
         }

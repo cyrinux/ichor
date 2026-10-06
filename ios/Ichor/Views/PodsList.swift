@@ -40,15 +40,7 @@ struct PodsList: View {
                     if load.hasMore && query.isEmpty { LoadMoreRow { list.loadMore(model: model) } }
                 }
             }
-            .overlay {
-                if shown.isEmpty {
-                    if query.isEmpty {
-                        ContentUnavailableView("No pods", systemImage: "cube")
-                    } else {
-                        ContentUnavailableView.search(text: query)
-                    }
-                }
-            }
+            .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No pods", systemImage: "cube") }
             .refreshable { await list.refresh(model: model) }
             .themedBackground()
         }

@@ -152,7 +152,7 @@ private struct TypedNamespaceField: View {
 
     private func apply() {
         let typed = text.trimmingCharacters(in: .whitespaces)
-        control.onScope(KubeScope(namespace: typed.isEmpty ? nil : typed, chosen: true))
+        control.onScope(KubeScope(namespace: typed.nonEmpty, chosen: true))
     }
 }
 

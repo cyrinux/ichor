@@ -54,7 +54,7 @@ struct GarageBlockErrorsView: View {
             Text("Launches a block-refs and a block-rc metadata repair on every Garage node when needed (not while one runs, nor with a node unreachable), and retries the resync of unreferenced blocks. Repairs run in the background and add disk and network load for a while.")
         }
         .alert(Text("Repair"),
-               isPresented: Binding(get: { repairSummary != nil }, set: { if !$0 { repairSummary = nil } }),
+               isPresented: $repairSummary.isPresent(),
                presenting: repairSummary) { _ in
             Button("OK") {}
         } message: { summary in
@@ -177,7 +177,7 @@ private struct BlockRow: View {
 
     private var details: String {
         var parts = [String(localized: "\(block.errors) attempts")]
-        if block.nextTrySecs >= 0 { parts.append(String(localized: "next try in \(formatDuration(block.nextTrySecs))")) }
+        if block.nextTrySecs >= 0 { parts.append(String(localized: "next try in \(localizedDuration(block.nextTrySecs))")) }
         if block.staleRef { parts.append(String(localized: "stale reference")) }
         if block.refcountMismatch { parts.append(String(localized: "reference count off")) }
         return parts.joined(separator: " · ")

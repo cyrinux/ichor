@@ -75,7 +75,7 @@ struct AppTile: View {
         } else if app.unpinned {
             Text(verbatim: ":latest").foregroundStyle(attentionColor)
         } else {
-            Text(verbatim: app.version.isEmpty ? "—" : app.version).foregroundStyle(.secondary)
+            Text(verbatim: app.version.or("—")).foregroundStyle(.secondary)
         }
     }
 }

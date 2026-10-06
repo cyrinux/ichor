@@ -151,15 +151,7 @@ struct FluxSourcesList: View {
                 }
             }
         }
-        .overlay {
-            if shown.isEmpty {
-                if !query.isEmpty {
-                    ContentUnavailableView.search(text: query)
-                } else {
-                    ContentUnavailableView("No Flux sources", systemImage: "arrow.triangle.branch")
-                }
-            }
-        }
+        .emptyOverlay(shown.isEmpty, query: query) { ContentUnavailableView("No Flux sources", systemImage: "arrow.triangle.branch") }
         .refreshable { await refresh() }
         .themedBackground()
     }

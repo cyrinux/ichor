@@ -118,7 +118,7 @@ private struct PoolRow: View {
             HealthDot(health: pool.health).padding(.top, 5)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: pool.label).font(.subheadline.monospaced()).lineLimit(1)
-                Text(verbatim: [kindLabel, pool.phase.isEmpty ? nil : pool.phase].compactMap { $0 }.joined(separator: " · "))
+                Text(verbatim: [kindLabel, pool.phase.nonEmpty].compactMap { $0 }.joined(separator: " · "))
                     .font(.caption)
                     .foregroundStyle(pool.health.needsAttention ? pool.health.color : .secondary)
             }

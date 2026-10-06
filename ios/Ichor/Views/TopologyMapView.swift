@@ -225,7 +225,7 @@ private struct TopologyNodeChip: View {
     private var detail: String { pickLabel ?? zone ?? role }
 
     private var accessibilityValue: String {
-        var parts = [pickLabel, role, node.zone.isEmpty ? nil : node.zone].compactMap { $0 }
+        var parts = [pickLabel, role, node.zone.nonEmpty].compactMap { $0 }
         if broken > 0 { parts.append(String(localized: "\(broken) peer links down")) }
         if let error = node.error { parts.append(error) }
         return parts.joined(separator: ", ")

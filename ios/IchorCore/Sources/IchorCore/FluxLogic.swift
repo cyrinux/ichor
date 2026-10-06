@@ -62,7 +62,7 @@ public extension FluxApp {
 
     /// For AppIconView: the catalog icon the Go core matched, a monogram of the name otherwise.
     var iconApp: InventoryApp {
-        InventoryApp(id: name, name: name, icon: icon.isEmpty ? nil : icon, remoteIcon: remoteIcon.isEmpty ? nil : remoteIcon)
+        InventoryApp(id: name, name: name, icon: icon.nonEmpty, remoteIcon: remoteIcon.nonEmpty)
     }
 
     /// The Kustomization's inventory by kind, kinds and names sorted.

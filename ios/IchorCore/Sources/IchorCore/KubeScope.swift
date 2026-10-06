@@ -99,81 +99,53 @@ public func settingKubeScope(_ scope: KubeScope, for fingerprint: String, in sco
 
 // MARK: - Pages of the Go page functions
 
-/// One page of pods (KubePodsPage), in the API server's order.
-public struct KubePodPage: Decodable, Sendable {
-    public let pods: [KubePod]
+/// An item the Go core pages (KubePodsPage, KubeWorkloadsPage, KubeCronJobsPage), under `pageKey`.
+public protocol KubePageItem: Decodable, Sendable {
+    static var pageKey: String { get }
+}
+
+/// One page of `Item`s as the Go page functions answer, in the API server's order.
+public struct KubePageWire<Item: KubePageItem>: Decodable, Sendable {
+    public let items: [Item]
     public let continueToken: String
     public let remaining: Int64
     public let complete: Bool
 
     public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        pods = try c.field(.pods, [])
-        continueToken = try c.field(.continueToken, "")
-        remaining = try c.field(.remaining, -1)
-        complete = try c.field(.complete, true)
+        let c = try decoder.container(keyedBy: Key.self)
+        items = try c.field(Key(Item.pageKey), [])
+        continueToken = try c.field(Key("continue"), "")
+        remaining = try c.field(Key("remaining"), -1)
+        complete = try c.field(Key("complete"), true)
     }
+
+    public var page: KubePage<Item> { page(detailed: true) }
 
     /// `detailed`: asked as full objects rather than a Table.
-    public func page(detailed: Bool) -> KubePage<KubePod> {
-        KubePage(items: pods, continueToken: continueToken, remaining: remaining, complete: complete, detailed: detailed)
+    public func page(detailed: Bool) -> KubePage<Item> {
+        KubePage(items: items, continueToken: continueToken, remaining: remaining, complete: complete, detailed: detailed)
     }
 
-    private enum CodingKeys: String, CodingKey {
-        case pods, remaining, complete
-        case continueToken = "continue"
-    }
-}
-
-/// One page of one workload kind (KubeWorkloadsPage), in the API server's order.
-public struct KubeWorkloadPage: Decodable, Sendable {
-    public let workloads: [KubeWorkload]
-    public let continueToken: String
-    public let remaining: Int64
-    public let complete: Bool
-
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        workloads = try c.field(.workloads, [])
-        continueToken = try c.field(.continueToken, "")
-        remaining = try c.field(.remaining, -1)
-        complete = try c.field(.complete, true)
-    }
-
-    public var page: KubePage<KubeWorkload> {
-        KubePage(items: workloads, continueToken: continueToken, remaining: remaining, complete: complete)
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case workloads, remaining, complete
-        case continueToken = "continue"
+    private struct Key: CodingKey {
+        let stringValue: String
+        var intValue: Int? { nil }
+        init(_ name: String) { stringValue = name }
+        init?(stringValue: String) { self.stringValue = stringValue }
+        init?(intValue: Int) { nil }
     }
 }
 
-/// One page of CronJobs with their runs (KubeCronJobsPage), in the API server's order.
-public struct KubeCronJobPage: Decodable, Sendable {
-    public let cronJobs: [KubeCronJob]
-    public let continueToken: String
-    public let remaining: Int64
-    public let complete: Bool
+public typealias KubePodPage = KubePageWire<KubePod>
+public typealias KubeWorkloadPage = KubePageWire<KubeWorkload>
+public typealias KubeCronJobPage = KubePageWire<KubeCronJob>
 
-    public init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        cronJobs = try c.field(.cronJobs, [])
-        continueToken = try c.field(.continueToken, "")
-        remaining = try c.field(.remaining, -1)
-        complete = try c.field(.complete, true)
-    }
+extension KubePod: KubePageItem { public static let pageKey = "pods" }
+extension KubeWorkload: KubePageItem { public static let pageKey = "workloads" }
+extension KubeCronJob: KubePageItem { public static let pageKey = "cronJobs" }
 
-    public var page: KubePage<KubeCronJob> {
-        KubePage(items: cronJobs, continueToken: continueToken, remaining: remaining, complete: complete)
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case cronJobs, remaining, complete
-        case continueToken = "continue"
-    }
-}
+public extension KubePageWire where Item == KubePod { var pods: [KubePod] { items } }
+public extension KubePageWire where Item == KubeWorkload { var workloads: [KubeWorkload] { items } }
+public extension KubePageWire where Item == KubeCronJob { var cronJobs: [KubeCronJob] { items } }
 
 // MARK: - Workload kinds, paged side by side
 

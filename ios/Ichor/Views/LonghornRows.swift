@@ -125,7 +125,7 @@ struct LonghornNodeRow: View {
                 if disk.maximum > 0 {
                     ProgressView(value: min(1, Double(disk.scheduled) / Double(disk.maximum))).tint(disk.schedulable ? .accentColor : attentionColor)
                 }
-                Text(verbatim: [disk.path.isEmpty ? nil : disk.path,
+                Text(verbatim: [disk.path.nonEmpty,
                                 String(localized: "\(formatBytes(disk.scheduled)) of \(formatBytes(disk.maximum)) scheduled"),
                                 disk.schedulable ? nil : String(localized: "scheduling disabled")].compactMap { $0 }.joined(separator: " · "))
                     .font(.caption).foregroundStyle(.secondary)

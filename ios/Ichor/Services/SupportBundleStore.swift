@@ -5,16 +5,7 @@ import UIKit
 /// Support bundles in Application Support/support, excluded from backups (they hold logs and
 /// cluster details, and are easy to recreate).
 enum SupportBundleStore {
-    static func directory() throws -> URL {
-        var url = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
-                                              appropriateFor: nil, create: true)
-            .appendingPathComponent("support", isDirectory: true)
-        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        var values = URLResourceValues()
-        values.isExcludedFromBackup = true
-        try url.setResourceValues(values)
-        return url
-    }
+    static func directory() throws -> URL { try AppSupport.excludedFolder("support") }
 
     /// Newest first; only files this app wrote.
     static func list() throws -> [SupportBundleFile] {

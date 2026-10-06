@@ -242,66 +242,16 @@ public struct UpgradeProgress: Decodable, Equatable, Sendable {
     }
 }
 
-public enum UpgradeStepState: Equatable, Sendable {
-    case pending, current, done, failed
-}
-
 /// A row of the progress timeline.
-public struct UpgradeStep: Equatable, Identifiable, Sendable {
-    public let phase: UpgradePhase
-    public let state: UpgradeStepState
-    /// Unix ms the phase was first reported, 0 when not reached.
-    public let at: Int64
-    /// Latest message of the phase.
-    public let message: String
-
-    public var id: UpgradePhase { phase }
-
-    public init(phase: UpgradePhase, state: UpgradeStepState, at: Int64 = 0, message: String = "") {
-        self.phase = phase
-        self.state = state
-        self.at = at
-        self.message = message
-    }
-}
+public typealias UpgradeStep = TimelineStep<UpgradePhase>
 
 /// Timeline of all phases from the events received so far. Phases only move forward: a late
 /// event of an earlier phase only updates its message. `failure` marks the furthest phase
 /// (or "requested" when nothing was reported) failed, with the failure as its message.
 public func upgradeTimeline(_ events: [UpgradeProgress], finished: Bool = false, failure: String? = nil) -> [UpgradeStep] {
-    var first: [UpgradePhase: Int64] = [:]
-    var messages: [UpgradePhase: String] = [:]
-    var furthest: UpgradePhase?
-    for event in events {
-        guard let phase = UpgradePhase(go: event.phase) else {
-            // Unknown phase name: its message goes to the current step.
-            if let furthest, !event.message.isEmpty { messages[furthest] = event.message }
-            continue
-        }
-        if first[phase] == nil { first[phase] = event.at }
-        if !event.message.isEmpty { messages[phase] = event.message }
-        if furthest.map({ phase > $0 }) ?? true { furthest = phase }
-    }
-    if let failure {
-        let failed = furthest ?? .requested
-        return UpgradePhase.allCases.map { phase in
-            if phase < failed { return UpgradeStep(phase: phase, state: .done, at: first[phase] ?? 0, message: messages[phase] ?? "") }
-            if phase == failed { return UpgradeStep(phase: phase, state: .failed, at: first[phase] ?? 0, message: failure) }
-            return UpgradeStep(phase: phase, state: .pending)
-        }
-    }
-    let reached = finished ? UpgradePhase.done : furthest
-    return UpgradePhase.allCases.map { phase in
-        let state: UpgradeStepState
-        if let reached, phase < reached || (phase == reached && (phase == .done || finished)) {
-            state = .done
-        } else if phase == reached {
-            state = .current
-        } else {
-            state = .pending
-        }
-        return UpgradeStep(phase: phase, state: state, at: first[phase] ?? 0, message: messages[phase] ?? "")
-    }
+    // An unknown phase name lends its message to the current step.
+    foldTimeline(events, phases: UpgradePhase.allCases, finished: finished, failure: failure, terminal: .done,
+                 strayMessagesToCurrent: true, phase: { UpgradePhase(go: $0.phase) }, at: \.at, message: \.message)
 }
 
 /// TalosUpdateCheck's answer: the latest stable Talos and how many nodes run an older one.
