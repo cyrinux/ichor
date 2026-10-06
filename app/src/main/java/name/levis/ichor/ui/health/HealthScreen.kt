@@ -39,8 +39,11 @@ import androidx.compose.material3.OutlinedButton
 import name.levis.ichor.data.HealthEvent
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.healthCheckNote
+import androidx.compose.ui.graphics.Color
 import name.levis.ichor.model.Feature
+import name.levis.ichor.model.HealthLineStatus
 import name.levis.ichor.model.allows
+import name.levis.ichor.model.healthLineStatus
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.RoleNotice
@@ -127,12 +130,30 @@ fun HealthScreen(
             }
             Card(Modifier.fillMaxWidth().weight(1f)) {
                 LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    itemsIndexed(state.lines) { _, line ->
-                        Text(line, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
+                    itemsIndexed(state.lines) { index, line ->
+                        val failed = state.error != null && index == state.lines.lastIndex
+                        Text(
+                            line,
+                            color = healthLineColor(healthLineStatus(line, failed)),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontFamily.Monospace,
+                        )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun healthLineColor(status: HealthLineStatus): Color {
+    val colors = LocalStatusColors.current
+    return when (status) {
+        HealthLineStatus.OK -> colors.ok
+        HealthLineStatus.PENDING -> colors.muted
+        HealthLineStatus.WARN -> colors.warn
+        HealthLineStatus.BAD -> colors.bad
+        HealthLineStatus.INFO -> Color.Unspecified
     }
 }
 

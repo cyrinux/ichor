@@ -41,8 +41,9 @@ struct HealthView: View {
                     }
                 }
                 Section {
-                    ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                    ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
                         Text(line).font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(lineColor(healthLineStatus(line, failed: error != nil && index == lines.count - 1)))
                     }
                 }
             }
@@ -51,6 +52,16 @@ struct HealthView: View {
         .navigationTitle("Cluster health")
         .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .screen(.health)) } }
         .task(id: runID) { await run() }
+    }
+
+    private func lineColor(_ status: HealthLineStatus) -> Color {
+        switch status {
+        case .ok: .statusOK
+        case .pending: .secondary
+        case .warn: .statusWarn
+        case .bad: .statusBad
+        case .info: .primary
+        }
     }
 
     private func run() async {
