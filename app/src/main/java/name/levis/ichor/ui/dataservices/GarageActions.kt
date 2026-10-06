@@ -13,12 +13,10 @@ import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
@@ -29,6 +27,7 @@ import name.levis.ichor.model.GarageInstance
 import name.levis.ichor.model.GarageNode
 import name.levis.ichor.model.GarageRepairOutcome
 import name.levis.ichor.model.GarageRepairResult
+import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
@@ -59,29 +58,21 @@ class GarageActions(
     private val talos: TalosRepository,
     private val onChanged: () -> Unit,
 ) {
-    private val _tuning = MutableStateFlow<Set<String>>(emptySet())
+    private val actions = KeyedActions<GarageActionResult>(scope)
     /** Keys ([tuningKey]) of the nodes whose tranquility change is in flight. */
-    val tuning: StateFlow<Set<String>> = _tuning.asStateFlow()
+    val tuning: StateFlow<Set<String>> get() = actions.busy
 
     private val _sheet = MutableStateFlow<GarageBlocksState?>(null)
     /** The open block report, null when closed. */
     val sheet: StateFlow<GarageBlocksState?> = _sheet.asStateFlow()
     private var loadJob: Job? = null
 
-    // A queue, not a state: two actions finishing together each get their message.
-    private val _results = Channel<GarageActionResult>(Channel.BUFFERED)
-    val results: Flow<GarageActionResult> = _results.receiveAsFlow()
+    val results: Flow<GarageActionResult> get() = actions.results
 
     fun setTranquility(instance: GarageInstance, node: GarageNode, value: Long) {
-        val key = tuningKey(instance, node)
-        if (key in _tuning.value) return
-        _tuning.update { it + key }
-        scope.launch {
-            val outcome = runCatching { talos.garageSetTranquility(instance, node.id, value) }
-            _tuning.update { it - key }
-            _results.send(GarageActionResult.Tranquility(node.label, value, outcome.exceptionOrNull()?.uiText()))
-            if (outcome.isSuccess) onChanged()
-        }
+        actions.launch(tuningKey(instance, node), { talos.garageSetTranquility(instance, node.id, value) }, {
+            GarageActionResult.Tranquility(node.label, value, it.exceptionOrNull()?.uiText())
+        }, onChanged)
     }
 
     fun openReport(instance: GarageInstance) {
@@ -115,19 +106,22 @@ class GarageActions(
     fun repair() {
         val current = _sheet.value ?: return
         if (current.repairing) return
-        _sheet.update { it?.copy(repairing = true) }
-        scope.launch {
-            val outcome = runCatching { talos.garageRepairBlocks(current.instance) }
-            _sheet.update { it?.copy(repairing = false) }
-            _results.send(GarageActionResult.Repair(outcome.getOrNull(), outcome.exceptionOrNull()?.uiText()))
-            if (outcome.isSuccess) {
-                reload()
-                onChanged()
+        actions.launch(REPAIR_KEY + current.instance.label, {
+            _sheet.update { it?.copy(repairing = true) }
+            try {
+                talos.garageRepairBlocks(current.instance)
+            } finally {
+                _sheet.update { it?.copy(repairing = false) }
             }
+        }, { GarageActionResult.Repair(it.getOrNull(), it.exceptionOrNull()?.uiText()) }) {
+            reload()
+            onChanged()
         }
     }
 
     companion object {
+        private const val REPAIR_KEY = "repair|"
+
         fun tuningKey(instance: GarageInstance, node: GarageNode) = "${instance.label}|${node.id}"
     }
 }

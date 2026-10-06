@@ -9,17 +9,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.CnpgCluster
+import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.uiText
 
@@ -35,24 +31,17 @@ class CnpgActions(
     private val talos: TalosRepository,
     private val onChanged: () -> Unit,
 ) {
-    private val _busy = MutableStateFlow<Set<String>>(emptySet())
+    private val actions = KeyedActions<CnpgBackupResult>(scope)
     /** Labels of the clusters with a backup request in flight. */
-    val busy: StateFlow<Set<String>> = _busy.asStateFlow()
+    val busy: StateFlow<Set<String>> get() = actions.busy
 
-    // A queue, not a state: two backups finishing together each get their message.
-    private val _results = Channel<CnpgBackupResult>(Channel.BUFFERED)
-    val results: Flow<CnpgBackupResult> = _results.receiveAsFlow()
+    val results: Flow<CnpgBackupResult> get() = actions.results
 
     fun backup(cluster: CnpgCluster) {
         val key = cluster.label
-        if (key in _busy.value) return
-        _busy.update { it + key }
-        scope.launch {
-            val outcome = runCatching { talos.cnpgBackup(cluster.namespace, cluster.name) }
-            _busy.update { it - key }
-            _results.send(CnpgBackupResult(key, outcome.getOrNull().orEmpty(), outcome.exceptionOrNull()?.uiText()))
-            if (outcome.isSuccess) onChanged()
-        }
+        actions.launch(key, { talos.cnpgBackup(cluster.namespace, cluster.name) }, {
+            CnpgBackupResult(key, it.getOrNull().orEmpty(), it.exceptionOrNull()?.uiText())
+        }, onChanged)
     }
 }
 

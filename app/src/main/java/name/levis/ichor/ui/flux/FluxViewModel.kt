@@ -4,13 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.data.FLUX
 import name.levis.ichor.data.TalosRepository
@@ -20,6 +17,7 @@ import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.anyBusy
 import name.levis.ichor.model.fluxKey
+import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.refreshFailed
@@ -43,13 +41,11 @@ class FluxViewModel(private val talos: TalosRepository) : ViewModel() {
     /** Polls until then (epoch millis) even with nothing seen reconciling yet: the controller takes a moment. */
     private var boostUntil = 0L
 
-    private val _busy = MutableStateFlow<Set<String>>(emptySet())
+    private val actions = KeyedActions<FluxActionResult>(viewModelScope)
     /** Keys ([fluxKey]) of the objects whose action request is in flight. */
-    val busy: StateFlow<Set<String>> = _busy.asStateFlow()
+    val busy: StateFlow<Set<String>> get() = actions.busy
 
-    // A queue, not a state: two actions finishing together each get their message.
-    private val _results = Channel<FluxActionResult>(Channel.BUFFERED)
-    val results: Flow<FluxActionResult> = _results.receiveAsFlow()
+    val results: Flow<FluxActionResult> get() = actions.results
 
     /** Rollout restarts of a Kustomization's workloads, followed like an action. */
     val restarts = WorkloadRestarts(viewModelScope, talos) { boost() }
@@ -110,16 +106,9 @@ class FluxViewModel(private val talos: TalosRepository) : ViewModel() {
 
     /** Runs [action] on the object [kind] [namespace]/[name], then follows the outcome. */
     fun act(kind: String, namespace: String, name: String, action: FluxAction) {
-        val key = fluxKey(kind, namespace, name)
-        if (key in _busy.value) return
-        _busy.update { it + key }
-        viewModelScope.launch {
-            val error = runCatching { talos.fluxAction(kind, namespace, name, action) }.exceptionOrNull()
-                ?.takeUnless { it is CancellationException }?.uiText()
-            _busy.update { it - key }
-            _results.send(FluxActionResult(action, name, error))
-            if (error == null) boost()
-        }
+        actions.launch(fluxKey(kind, namespace, name), { talos.fluxAction(kind, namespace, name, action) }, {
+            FluxActionResult(action, name, it.exceptionOrNull()?.uiText())
+        }, ::boost)
     }
 
     /**

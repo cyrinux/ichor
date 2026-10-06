@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -22,16 +21,8 @@ import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.argocd.ArgoSelfHealer
 import name.levis.ichor.ui.argocd.argoSelfHealer
 import name.levis.ichor.ui.argocd.freezeForHandChange
+import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.uiText
-
-/** [runCatching] that lets a cancellation through instead of reporting it as a failure. */
-internal suspend fun <T> cancellableCatching(block: suspend () -> T): Result<T> = try {
-    Result.success(block())
-} catch (e: CancellationException) {
-    throw e
-} catch (e: Throwable) {
-    Result.failure(e)
-}
 
 /** The last scale of a workload: its [warning] (a HorizontalPodAutoscaler manages it), or why it failed. */
 data class ScaleOutcome(val workloadKey: String, val replicas: Int, val warning: String = "", val error: UiText? = null)

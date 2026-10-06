@@ -11,18 +11,17 @@ import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.CertDetails
 import name.levis.ichor.model.Certificate
+import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.uiText
 
@@ -47,31 +46,22 @@ class CertificateActions(
     private val talos: TalosRepository,
     private val onChanged: () -> Unit,
 ) {
-    private val _busy = MutableStateFlow<Set<String>>(emptySet())
+    private val actions = KeyedActions<CertificateRenewResult>(scope)
     /** Labels of the certificates with a renewal request in flight. */
-    val busy: StateFlow<Set<String>> = _busy.asStateFlow()
+    val busy: StateFlow<Set<String>> get() = actions.busy
 
     private val _sheet = MutableStateFlow<CertDetailsState?>(null)
     /** The open details, null when closed. */
     val sheet: StateFlow<CertDetailsState?> = _sheet.asStateFlow()
     private var loadJob: Job? = null
 
-    // A queue, not a state: two renewals finishing together each get their message.
-    private val _results = Channel<CertificateRenewResult>(Channel.BUFFERED)
-    val results: Flow<CertificateRenewResult> = _results.receiveAsFlow()
+    val results: Flow<CertificateRenewResult> get() = actions.results
 
     fun renew(cert: Certificate) {
         val key = cert.label
-        if (key in _busy.value) return
-        _busy.update { it + key }
-        scope.launch {
-            val outcome = runCatching { talos.renewCertificate(cert.namespace, cert.name) }
-            _busy.update { it - key }
-            _results.send(CertificateRenewResult(key, outcome.exceptionOrNull()?.uiText()))
-            if (outcome.isSuccess) {
-                onChanged()
-                if (_sheet.value?.cert?.label == key) reload()
-            }
+        actions.launch(key, { talos.renewCertificate(cert.namespace, cert.name) }, { CertificateRenewResult(key, it.exceptionOrNull()?.uiText()) }) {
+            onChanged()
+            if (_sheet.value?.cert?.label == key) reload()
         }
     }
 
