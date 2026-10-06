@@ -2586,6 +2586,31 @@
     <string name="flux_done_resume">%1$s відновлено</string>
     <string name="flux_done_force">%1$s: оновлення запитано</string>
     <string name="flux_done_reset">%1$s: збої скинуто</string>
+    <string name="flux_show_diff">Показати diff</string>
+    <string name="flux_diff_title">Diff</string>
+    <string name="flux_diff_built">Зібрано з</string>
+    <string name="flux_diff_applied">Востаннє застосовано</string>
+    <string name="flux_diff_in_sync">Нічого не зміниться: кластер відповідає джерелу.</string>
+    <string name="flux_diff_dry_run">Зібрано в кластері так, як це робить Flux, і надіслано на API-сервер як dry run server-side apply: нічого не змінено. Значення Secret приховано.</string>
+    <plurals name="flux_diff_unchanged">
+        <item quantity="one">%1$d незмінний об’єкт</item>
+        <item quantity="few">%1$d незмінні об’єкти</item>
+        <item quantity="many">%1$d незмінних об’єктів</item>
+        <item quantity="other">%1$d незмінного об’єкта</item>
+    </plurals>
+    <string name="diff_change_created">Створено</string>
+    <string name="diff_change_changed">Змінено</string>
+    <string name="diff_change_deleted">Видалено</string>
+    <string name="diff_change_encrypted">Зашифровано</string>
+    <string name="diff_change_ignored">Пропущено</string>
+    <string name="diff_change_error">Помилка</string>
+    <string name="diff_change_unchanged">Без змін</string>
+    <string name="diff_change_encrypted_hint">Зашифровано SOPS: не порівнюється, ключ залишається в кластері.</string>
+    <string name="diff_change_ignored_hint">Flux його не чіпає (узгодження вимкнено, пропущено або створюється лише раз).</string>
+    <string name="diff_refused">API-сервер відхилив: %1$s</string>
+    <string name="diff_truncated">Diff обрізано до 64 КБ.</string>
+    <string name="diff_show">Показати зміни</string>
+    <string name="diff_hide">Сховати зміни</string>
     <string name="overview_card_desc_flux">Готові, ті, що узгоджуються, та збійні Kustomization і HelmRelease</string>
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->

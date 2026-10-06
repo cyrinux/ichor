@@ -52,6 +52,7 @@ import name.levis.ichor.ui.etcd.EtcdScreen
 import name.levis.ichor.ui.events.EventsScreen
 import name.levis.ichor.ui.flows.FlowsScreen
 import name.levis.ichor.ui.flux.FluxAppScreen
+import name.levis.ichor.ui.flux.FluxDiffScreen
 import name.levis.ichor.ui.flux.FluxScreen
 import name.levis.ichor.ui.funding.FundingScreen
 import name.levis.ichor.ui.hardware.HardwareScreen
@@ -152,6 +153,9 @@ private object Routes {
 
     fun fluxApp(kind: String, namespace: String, name: String) =
         "flux-app?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
+    const val FLUX_DIFF = "flux-diff?kind={kind}&ns={ns}&name={name}"
+    fun fluxDiff(kind: String, namespace: String, name: String) =
+        "flux-diff?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
     const val DEBUG = "debug?addr={addr}&host={host}&ctx={ctx}"
     const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}"
     const val NETWORK = "network?addr={addr}&host={host}"
@@ -671,12 +675,31 @@ fun Navigation(
                 navArgument("name") { type = NavType.StringType; defaultValue = "" },
             ),
         ) { entry ->
+            val kind = entry.arguments?.getString("kind").orEmpty()
+            val ns = entry.arguments?.getString("ns").orEmpty()
+            val name = entry.arguments?.getString("name").orEmpty()
             FluxAppScreen(
+                kind = kind,
+                namespace = ns,
+                name = name,
+                onBack = { nav.popBackStack() },
+                onNode = { n, tab -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab)) },
+                onDiff = { nav.navigate(Routes.fluxDiff(kind, ns, name)) },
+            )
+        }
+        composable(
+            Routes.FLUX_DIFF,
+            arguments = listOf(
+                navArgument("kind") { type = NavType.StringType; defaultValue = "" },
+                navArgument("ns") { type = NavType.StringType; defaultValue = "" },
+                navArgument("name") { type = NavType.StringType; defaultValue = "" },
+            ),
+        ) { entry ->
+            FluxDiffScreen(
                 kind = entry.arguments?.getString("kind").orEmpty(),
                 namespace = entry.arguments?.getString("ns").orEmpty(),
                 name = entry.arguments?.getString("name").orEmpty(),
                 onBack = { nav.popBackStack() },
-                onNode = { n, tab -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab)) },
             )
         }
         composable(Routes.ETCD) { EtcdScreen(onBack = { nav.popBackStack() }) }
