@@ -1,0 +1,145 @@
+package name.levis.ichor.data
+
+import name.levis.ichorgo.EventListener
+import name.levis.ichorgo.HealthListener
+import name.levis.ichorgo.LogListener
+import name.levis.ichorgo.SnapshotListener
+import name.levis.ichorgo.Ichorgo
+import name.levis.ichor.model.TalosEvent
+import name.levis.ichor.model.SnapshotEncryption
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.callbackFlow
+
+/** Events streamed by the cluster health check. */
+sealed interface HealthEvent {
+    data class Progress(val node: String, val message: String) : HealthEvent
+    data class Done(val error: String?) : HealthEvent
+}
+
+/** Events streamed by an etcd snapshot download. */
+sealed interface SnapshotEvent {
+    data class Progress(val bytes: Long) : SnapshotEvent
+    data class Done(val path: String, val size: Long, val sha256: String) : SnapshotEvent
+    data class Failed(val message: String) : SnapshotEvent
+}
+
+/** Items of a live stream (events, followed log). [Done] ends it; [error] null when cancelled. */
+sealed interface StreamItem<out T> {
+    data class Item<T>(val value: T) : StreamItem<T>
+    data class Done(val error: String?) : StreamItem<Nothing>
+}
+
+/**
+ * The Go core's live streams (events, followed logs, the health check, an etcd snapshot) as
+ * flows: cancelling the collector cancels the run. [TalosRepository] exposes them.
+ */
+internal class TalosStreams(private val configs: ConfigRepository) {
+    fun events(nodes: List<String>, tail: Int): Flow<StreamItem<TalosEvent>> = callbackFlow {
+        val stored = configs.forCall()
+        val run = Ichorgo.startEvents(
+            stored.yaml,
+            stored.activeContext,
+            nodes.joinToString(","),
+            tail.toLong(),
+            object : EventListener {
+                override fun onEvent(json: String) {
+                    runCatching { TalosJson.decodeFromString(TalosEvent.serializer(), json) }
+                        .onSuccess { trySend(StreamItem.Item(it)) }
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED)
+
+    fun followLogs(node: String, service: String?, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
+        val stored = configs.forCall()
+        val run = Ichorgo.startLogFollow(
+            stored.yaml,
+            stored.activeContext,
+            node,
+            service.orEmpty(),
+            tailLines.toLong(),
+            object : LogListener {
+                override fun onLine(line: String) {
+                    trySend(StreamItem.Item(line))
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED)
+
+    fun followContainerLogs(node: String, containerId: String, tailLines: Int): Flow<StreamItem<String>> = callbackFlow {
+        val stored = configs.forCall()
+        val run = Ichorgo.startContainerLogFollow(
+            stored.yaml,
+            stored.activeContext,
+            node,
+            containerId,
+            tailLines.toLong(),
+            object : LogListener {
+                override fun onLine(line: String) {
+                    trySend(StreamItem.Item(line))
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED)
+
+    fun etcdSnapshot(node: String, destPath: String, encryption: SnapshotEncryption): Flow<SnapshotEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val listener = object : SnapshotListener {
+            override fun onProgress(bytes: Long) {
+                trySend(SnapshotEvent.Progress(bytes))
+            }
+
+            override fun onDone(path: String, size: Long, sha256: String, errMessage: String) {
+                trySend(if (errMessage.isEmpty()) SnapshotEvent.Done(path, size, sha256) else SnapshotEvent.Failed(errMessage))
+                close()
+            }
+        }
+        val (yaml, context) = stored.yaml to stored.activeContext
+        val run = when (encryption) {
+            SnapshotEncryption.None -> Ichorgo.startEtcdSnapshot(yaml, context, node, destPath, listener)
+            is SnapshotEncryption.Keys -> Ichorgo.startEtcdSnapshotEncrypted(yaml, context, node, destPath, encryption.recipients, "", listener)
+            is SnapshotEncryption.Passphrase -> Ichorgo.startEtcdSnapshotEncrypted(yaml, context, node, destPath, "", encryption.passphrase, listener)
+        }
+        awaitClose { run.cancel() }
+    }.buffer(Channel.CONFLATED) // progress may be dropped, the final event is always kept
+
+    fun health(): Flow<HealthEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val run = Ichorgo.startClusterHealth(
+            stored.yaml,
+            stored.activeContext,
+            object : HealthListener {
+                override fun onProgress(node: String, message: String) {
+                    trySend(HealthEvent.Progress(node, message))
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(HealthEvent.Done(errMessage.ifEmpty { null }))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED) // never drop progress lines or the final Done event
+}
