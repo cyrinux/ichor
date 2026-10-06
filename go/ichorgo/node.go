@@ -60,7 +60,7 @@ func NodeServices(configYAML, contextName, node string) (out string, err error) 
 		if len(msgs) == 0 {
 			return "", errors.New("node returned no service data")
 		}
-		if problem := msgs[0].GetMetadata().GetError(); problem != "" {
+		if problem := metaError(msgs[0].GetMetadata()); problem != "" {
 			return "", s.friendlyErr(node, errors.New(problem))
 		}
 

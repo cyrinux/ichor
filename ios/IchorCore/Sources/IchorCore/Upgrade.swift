@@ -315,8 +315,9 @@ public func talosVersionsCSV(_ versions: [String]) -> String {
     versions.filter { !$0.isEmpty }.sorted().joined(separator: ",")
 }
 
-/// Nodes on the banner: count from Go, else the local one; nil when there is nothing to show.
-public func talosUpdateBannerCount(_ info: TalosUpdateInfo, localOutdated: Int) -> Int? {
-    guard info.newer, !info.latest.isEmpty else { return nil }
+/// Nodes on the banner: count from Go, else the local one; nil when there is nothing to show,
+/// or when that very release was `skipped` ("v1.14.2") for the cluster. The next one shows again.
+public func talosUpdateBannerCount(_ info: TalosUpdateInfo, localOutdated: Int, skipped: String? = nil) -> Int? {
+    guard info.newer, !info.latest.isEmpty, info.latest != skipped else { return nil }
     return info.outdated > 0 ? info.outdated : localOutdated
 }

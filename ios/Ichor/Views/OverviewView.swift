@@ -73,11 +73,11 @@ struct OverviewView: View {
                     if !discovered.isEmpty {
                         Section { DiscoveredNodesBanner(count: discovered.count) { showDiscovered = true } }
                     }
-                    if let update { TalosUpdateSection(info: update, nodes: overview.nodes) }
                     if support.visible { Section { SupportCard(prompt: support) } }
                     // The sections as arranged (Customize overview, in the ⋯ menu).
                     ForEach(layout.visible) { card in section(card, overview: overview) }
-                    if layout.visible.isEmpty {
+                    // The Talos update section alone, with no release to offer, leaves the list as empty.
+                    if layout.visible.allSatisfy({ $0 == .talosUpdate && !offersTalosUpdate }) {
                         Section {
                             Button { customizing = true } label: {
                                 Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
@@ -217,6 +217,11 @@ struct OverviewView: View {
             argo = nil
             flux = nil
         }
+        // The Talos update section shown again: its check was not made while hidden.
+        .onChange(of: layout.hidden.contains(.talosUpdate)) { _, hidden in
+            guard !hidden, case .loaded(let overview, _, _) = state else { return }
+            Task { await checkTalosUpdate(overview, id: loadID) }
+        }
         // Another cluster: never its name over the previous one's nodes.
         .onChange(of: model.activeContext) {
             state = .loading
@@ -260,6 +265,8 @@ struct OverviewView: View {
     @ViewBuilder
     private func section(_ card: OverviewCard, overview: ClusterOverview) -> some View {
         switch card {
+        case .talosUpdate:
+            if let update { TalosUpdateSection(info: update, nodes: overview.nodes) }
         case .summary:
             Section {
                 ClusterSummaryCard(
@@ -443,15 +450,27 @@ struct OverviewView: View {
                 let key = model.topologyKey
                 Task { await TopologyStore.shared.load(with: client, key: key) }
             }
-            let info = model.activeSummary?.demo == true
-                ? nil : await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
+            await checkTalosUpdate(overview, id: id)
             guard id == loadID else { return }
-            update = info
             // What each node's Talos version can do, cached per version: gates menus and screens.
             await model.loadFeatures(of: overview.nodes)
             // Discovery asks the nodes too: pointless while none answers.
             if overview.outage == nil { await discover(with: client, id: id) }
         }
+    }
+
+    /// Whether the Talos update section has something to show: a newer release, not skipped.
+    private var offersTalosUpdate: Bool {
+        update.flatMap { talosUpdateBannerCount($0, localOutdated: 0, skipped: model.activeSkippedTalosUpdate) } != nil
+    }
+
+    /// Not asked (an internet call) for the demo cluster, or while its section is hidden.
+    private func checkTalosUpdate(_ overview: ClusterOverview, id: String) async {
+        let unasked = model.activeSummary?.demo == true || layout.hidden.contains(.talosUpdate)
+        let info = unasked
+            ? nil : await TalosUpdateChecker.refresh(nodeVersions: overview.nodes.filter(\.reachable).map(\.version))
+        guard id == loadID else { return }
+        update = info
     }
 
     /// `fetched` with the nodes that stopped answering filled in from the overview on screen

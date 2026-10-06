@@ -56,7 +56,7 @@ func NodeStats(configYAML, contextName, node string) (out string, err error) {
 		empty := &emptypb.Empty{}
 
 		stat, err := mc.SystemStat(nodeCtx, empty)
-		err = statsResponseError(len(stat.GetMessages()), first(stat.GetMessages()).GetMetadata().GetError(), err)
+		err = statsResponseError(len(stat.GetMessages()), metaError(first(stat.GetMessages()).GetMetadata()), err)
 		if err != nil {
 			return "", s.friendlyErr(node, err)
 		}
@@ -73,10 +73,10 @@ func NodeStats(configYAML, contextName, node string) (out string, err error) {
 		read, write := diskTotals(first(disk.GetMessages()).GetDevices())
 		meminfo := first(mem.GetMessages()).GetMeminfo()
 
-		memErr = statsResponseError(len(mem.GetMessages()), first(mem.GetMessages()).GetMetadata().GetError(), memErr)
-		loadErr = statsResponseError(len(load.GetMessages()), first(load.GetMessages()).GetMetadata().GetError(), loadErr)
-		netErr = statsResponseError(len(net.GetMessages()), first(net.GetMessages()).GetMetadata().GetError(), netErr)
-		diskErr = statsResponseError(len(disk.GetMessages()), first(disk.GetMessages()).GetMetadata().GetError(), diskErr)
+		memErr = statsResponseError(len(mem.GetMessages()), metaError(first(mem.GetMessages()).GetMetadata()), memErr)
+		loadErr = statsResponseError(len(load.GetMessages()), metaError(first(load.GetMessages()).GetMetadata()), loadErr)
+		netErr = statsResponseError(len(net.GetMessages()), metaError(first(net.GetMessages()).GetMetadata()), netErr)
+		diskErr = statsResponseError(len(disk.GetMessages()), metaError(first(disk.GetMessages()).GetMetadata()), diskErr)
 		problems := map[string]string{}
 		for section, e := range map[string]error{"memory": memErr, "load": loadErr, "network": netErr, "disk": diskErr} {
 			if e != nil {

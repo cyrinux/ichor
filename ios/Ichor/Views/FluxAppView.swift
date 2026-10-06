@@ -38,14 +38,7 @@ struct FluxAppView: View {
                     .themedBackground()
             }
         }
-        .task(id: model.fluxKey) {
-            await load()
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(2))
-                if Task.isCancelled { return }
-                if store.shouldPoll(for: model.fluxKey) { await load() }
-            }
-        }
+        .gitOpsPolling(key: model.fluxKey, shouldPoll: { store.shouldPoll(for: model.fluxKey) }, load: { await load() })
         .navigationTitle(Text(verbatim: name))
         .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .fluxApp(kind: kind, namespace: namespace, name: name)) } }
         .navigationBarTitleDisplayMode(.inline)
@@ -99,9 +92,10 @@ struct FluxAppView: View {
     private func load() async {
         guard let client = model.client else { return }
         let key = model.fluxKey
-        if case .loading = state, let known = store.status(for: key) { state = .loaded(known, at: Date()) }
-        let loaded: LoadState<FluxStatus> = await .from { try await store.load(with: client, key: key) }
-        if key == model.fluxKey { state = state.refreshed(with: loaded) }
+        let store = self.store
+        await store.refresh($state, key: key, currentKey: { model.fluxKey }) {
+            try await store.load(with: client, key: key)
+        }
     }
 
     private func run(_ action: FluxAction, on app: FluxApp) async {

@@ -1,6 +1,7 @@
 package name.levis.ichor.ui.flux
 
 import name.levis.ichor.model.ShareTarget
+import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +21,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,10 +44,7 @@ import name.levis.ichor.model.NodeOverview
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.argocd.UnhealthyPodRow
 import name.levis.ichor.ui.components.BackButton
-import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
-import name.levis.ichor.ui.components.ErrorBox
-import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.dataservices.downHostnames
@@ -101,19 +98,12 @@ fun FluxAppScreen(
         },
     ) { padding ->
         val modifier = Modifier.padding(padding)
-        when (val s = state) {
-            UiState.Loading -> LoadingBox(modifier)
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
-            is UiState.Loaded -> Column(modifier.fillMaxSize()) {
-                PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
-                    if (app == null) {
-                        EmptyText(stringResource(R.string.flux_app_gone, name))
-                    } else {
-                        val overview = remember(s.data) { talos.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value }
-                        AppDetail(app, app.key in busy, vm, overview, onNode, onDiff)
-                    }
-                }
-                DataFreshness(s, edgeToEdge = false)
+        Loaded(state, vm::refresh, modifier, freshness = true) { data ->
+            if (app == null) {
+                EmptyText(stringResource(R.string.flux_app_gone, name))
+            } else {
+                val overview = remember(data) { talos.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value }
+                AppDetail(app, app.key in busy, vm, overview, onNode, onDiff)
             }
         }
     }

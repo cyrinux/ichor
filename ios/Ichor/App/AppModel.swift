@@ -31,6 +31,7 @@ final class AppModel {
         static let clusterNames = "clusterNames"
         static let kubeServers = "kubeServers"
         static let snapshotKeys = "snapshotKeys"
+        static let skippedTalosUpdates = "skippedTalosUpdates"
         static let keepLastKnown = "keepLastKnownState"
         static let vpnOnly = "vpnOnlyClusters"
     }
@@ -66,6 +67,10 @@ final class AppModel {
     /// The public keys (age, SSH or YubiKey, one per line) each cluster's etcd snapshots were
     /// last encrypted for, by context fingerprint. Not secret; only on this device.
     private(set) var snapshotKeys: [String: String]
+
+    /// The Talos release ("v1.14.2") each cluster's update card was skipped for, by context
+    /// fingerprint: the card stays away until a newer one is out. Only on this device.
+    private(set) var skippedTalosUpdates: [String: String]
 
     /// The clusters reached over a VPN only, by context fingerprint: without a VPN up the app
     /// does not try them (screens say to connect it, background checks wait). Only on this device.
@@ -106,6 +111,7 @@ final class AppModel {
         clusterNames = UserDefaults.standard.dictionary(forKey: Keys.clusterNames) as? [String: String] ?? [:]
         kubeServers = UserDefaults.standard.dictionary(forKey: Keys.kubeServers) as? [String: String] ?? [:]
         snapshotKeys = UserDefaults.standard.dictionary(forKey: Keys.snapshotKeys) as? [String: String] ?? [:]
+        skippedTalosUpdates = UserDefaults.standard.dictionary(forKey: Keys.skippedTalosUpdates) as? [String: String] ?? [:]
         vpnOnly = Set(UserDefaults.standard.stringArray(forKey: Keys.vpnOnly) ?? [])
         VpnMonitor.shared.onConnect = { [weak self] in self?.reloadIfHeldBack() }
     }
@@ -166,6 +172,23 @@ final class AppModel {
         guard keys != snapshotKeys else { return }
         snapshotKeys = keys
         UserDefaults.standard.set(keys, forKey: Keys.snapshotKeys)
+    }
+
+    /// Skips the Talos release `version` for the active cluster: its update card stays away
+    /// until a newer one is out.
+    func skipTalosUpdate(_ version: String) {
+        guard let fingerprint = activeSummary?.fingerprint, !fingerprint.isEmpty, !version.isEmpty else { return }
+        var saved = skippedTalosUpdates
+        saved[fingerprint] = version
+        storeSkippedTalosUpdates(saved)
+    }
+
+    var activeSkippedTalosUpdate: String? { activeSummary.flatMap { skippedTalosUpdates[$0.fingerprint] } }
+
+    private func storeSkippedTalosUpdates(_ versions: [String: String]) {
+        guard versions != skippedTalosUpdates else { return }
+        skippedTalosUpdates = versions
+        UserDefaults.standard.set(versions, forKey: Keys.skippedTalosUpdates)
     }
 
     private func storeKubeServers(_ servers: [String: String]) {
@@ -516,6 +539,7 @@ final class AppModel {
         storeNames(keepClusterNames(saved: clusterNames, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeKubeServers(keepClusterNames(saved: kubeServers, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeSnapshotKeys(keepClusterNames(saved: snapshotKeys, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        storeSkippedTalosUpdates(keepClusterNames(saved: skippedTalosUpdates, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeVpnOnly(keepVpnOnly(saved: vpnOnly, fingerprints: newSummary.contexts.map(\.fingerprint)))
         WakeOnLanStore.shared.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         LastKnownStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))

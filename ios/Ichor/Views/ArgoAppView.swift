@@ -50,14 +50,7 @@ struct ArgoAppView: View {
                     .themedBackground()
             }
         }
-        .task(id: model.argoKey) {
-            await load()
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(2))
-                if Task.isCancelled { return }
-                if store.shouldPoll(for: model.argoKey) { await load() }
-            }
-        }
+        .gitOpsPolling(key: model.argoKey, shouldPoll: { store.shouldPoll(for: model.argoKey) }, load: { await load() })
         .navigationTitle(Text(verbatim: name))
         .toolbar { ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .argoApp(namespace: namespace, name: name)) } }
         .navigationBarTitleDisplayMode(.inline)
@@ -187,13 +180,13 @@ struct ArgoAppView: View {
     private func load() async {
         guard let client = model.client else { return }
         let key = model.argoKey
-        if case .loading = state, let known = store.status(for: key) { state = .loaded(known, at: Date()) }
         // The network graph is read alongside, so the two refresh together.
         let graph = self.network, appNamespace = self.namespace, appName = self.name
         async let traffic: Void = graph.load(with: client, key: key, namespace: appNamespace, name: appName)
-        let cluster = model.activeSummary
-        let loaded: LoadState<ArgoStatus> = await .from { try await store.load(with: client, key: key, cluster: cluster) }
-        if key == model.argoKey { state = state.refreshed(with: loaded) }
+        let cluster = model.activeSummary, store = self.store
+        await store.refresh($state, key: key, currentKey: { model.argoKey }) {
+            try await store.load(with: client, key: key, cluster: cluster)
+        }
         await traffic
     }
 
