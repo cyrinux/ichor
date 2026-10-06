@@ -7,6 +7,7 @@
     <string name="common_close">Cerrar</string>
     <string name="common_ok">Aceptar</string>
     <string name="common_retry">Reintentar</string>
+    <string name="common_loading">Cargando</string>
     <string name="common_refresh">Actualizar</string>
     <string name="common_delete">Eliminar</string>
     <string name="common_more">Más</string>

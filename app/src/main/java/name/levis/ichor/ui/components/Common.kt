@@ -54,8 +54,15 @@ import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.theme.LocalStatusColors
 
+/** A page (or a pane of one) still loading: the grey [style] shapes of what is coming. */
 @Composable
-fun LoadingBox(modifier: Modifier = Modifier) {
+fun LoadingBox(modifier: Modifier = Modifier, style: SkeletonStyle = SkeletonStyle.CARDS) {
+    SkeletonBox(modifier, style)
+}
+
+/** A centred spinner, for a wait too small or too short-lived for a skeleton. */
+@Composable
+fun SpinnerBox(modifier: Modifier = Modifier) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator()
     }

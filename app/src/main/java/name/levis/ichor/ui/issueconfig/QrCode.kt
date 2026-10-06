@@ -20,7 +20,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.SpinnerBox
 
 /** Quiet zone in modules (the QR specification asks for 4). */
 private const val QR_MARGIN = 4
@@ -65,7 +65,7 @@ fun QrCode(text: String, contentDescription: String, onTooLarge: @Composable () 
         value = QrRender.Done(withContext(Dispatchers.Default) { qrBitmap(text) })
     }
     when (val r = render) {
-        QrRender.Pending -> LoadingBox(modifier.fillMaxWidth().aspectRatio(1f))
+        QrRender.Pending -> SpinnerBox(modifier.fillMaxWidth().aspectRatio(1f))
         is QrRender.Done -> r.bitmap?.let { bitmap ->
             Image(
                 bitmap = bitmap,

@@ -9,6 +9,7 @@
     <string name="common_close">Close</string>
     <string name="common_ok">OK</string>
     <string name="common_retry">Retry</string>
+    <string name="common_loading">Loading</string>
     <string name="common_refresh">Refresh</string>
     <string name="common_delete">Delete</string>
     <string name="common_more">More</string>
