@@ -1,7 +1,5 @@
 package name.levis.ichor.ui.flows
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +54,7 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.netpol.PolicyDetailSheet
 import name.levis.ichor.ui.netpol.TagBadge
 import java.text.DateFormat
@@ -176,6 +175,6 @@ private fun formatTime(millis: Long): String =
 
 private fun copyFlow(context: Context, flow: HubbleFlow) {
     val json = TalosJson.encodeToString(HubbleFlow.serializer(), flow)
-    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("flow", json))
+    copyToClipboard(context, "flow", json)
     Toast.makeText(context, R.string.flows_copied, Toast.LENGTH_SHORT).show()
 }

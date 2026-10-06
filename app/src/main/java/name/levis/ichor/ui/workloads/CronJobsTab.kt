@@ -48,6 +48,7 @@ import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.components.ResultToasts
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
@@ -241,15 +242,10 @@ fun CronJobsTab(
 
 /** A toast for each manual run outcome of [results]. */
 @Composable
-private fun CronRunToasts(results: Flow<CronRunResult>) {
-    val context = LocalContext.current
-    LaunchedEffect(results) {
-        results.collect { r ->
-            val text = r.error?.resolve(context)?.let { context.getString(R.string.cronjobs_run_failed, r.cronJob.displayName, it) }
-                ?: context.getString(R.string.cronjobs_run_done, r.job.ifEmpty { r.cronJob.name })
-            Toast.makeText(context, text, if (r.error == null) Toast.LENGTH_SHORT else Toast.LENGTH_LONG).show()
-        }
-    }
+private fun CronRunToasts(results: Flow<CronRunResult>) = ResultToasts(results) { context, r ->
+    val text = r.error?.resolve(context)?.let { context.getString(R.string.cronjobs_run_failed, r.cronJob.displayName, it) }
+        ?: context.getString(R.string.cronjobs_run_done, r.job.ifEmpty { r.cronJob.name })
+    text to (r.error != null)
 }
 
 @Composable

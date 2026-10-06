@@ -1,9 +1,6 @@
 package name.levis.ichor.ui.machineconfig
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
-import android.os.PersistableBundle
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,6 +67,7 @@ import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.components.TooltipIconButton
@@ -236,11 +234,5 @@ private fun highlighted(lines: List<String>, query: String, color: Color): Annot
     }
 }
 
-private fun copy(context: Context, text: String, sensitive: Boolean) {
-    val clip = ClipData.newPlainText(context.getString(R.string.machine_config_title), text)
-    if (sensitive) {
-        // Keeps revealed secrets out of the clipboard preview (honoured from Android 13).
-        clip.description.extras = PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE", true) }
-    }
-    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(clip)
-}
+private fun copy(context: Context, text: String, sensitive: Boolean) =
+    copyToClipboard(context, context.getString(R.string.machine_config_title), text, sensitive)

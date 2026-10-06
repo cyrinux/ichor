@@ -1,10 +1,7 @@
 package name.levis.ichor.ui.dataservices
 
-import android.widget.Toast
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +19,7 @@ import name.levis.ichor.model.Certificate
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.ResultToasts
 import name.levis.ichor.ui.uiText
 
 /** The open details of [cert]: its issuance chain, events and controller log lines. */
@@ -94,15 +92,10 @@ class CertificateActions(
 
 /** A toast for each outcome of [results]. */
 @Composable
-fun CertificateRenewToasts(results: Flow<CertificateRenewResult>) {
-    val context = LocalContext.current
-    LaunchedEffect(results) {
-        results.collect { r ->
-            val text = r.error?.resolve(context)?.let { context.getString(R.string.certmanager_renew_failed, r.label, it) }
-                ?: context.getString(R.string.certmanager_renew_started, r.label)
-            Toast.makeText(context, text, if (r.error != null) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
-        }
-    }
+fun CertificateRenewToasts(results: Flow<CertificateRenewResult>) = ResultToasts(results) { context, r ->
+    val text = r.error?.resolve(context)?.let { context.getString(R.string.certmanager_renew_failed, r.label, it) }
+        ?: context.getString(R.string.certmanager_renew_started, r.label)
+    text to (r.error != null)
 }
 
 /** Confirms a forced renewal: an ACME issuer counts it against its rate limits. */

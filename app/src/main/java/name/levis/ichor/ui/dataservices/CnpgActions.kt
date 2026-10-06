@@ -1,10 +1,7 @@
 package name.levis.ichor.ui.dataservices
 
-import android.widget.Toast
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +13,7 @@ import name.levis.ichor.model.CnpgCluster
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.components.ResultToasts
 import name.levis.ichor.ui.uiText
 
 /** Outcome of an on-demand backup of the cluster [label]: the new Backup's name, or the error. */
@@ -46,15 +44,10 @@ class CnpgActions(
 
 /** A toast for each outcome of [results]. */
 @Composable
-fun CnpgBackupToasts(results: Flow<CnpgBackupResult>) {
-    val context = LocalContext.current
-    LaunchedEffect(results) {
-        results.collect { r ->
-            val text = r.error?.resolve(context)?.let { context.getString(R.string.cnpg_backup_failed, r.label, it) }
-                ?: context.getString(R.string.cnpg_backup_started, r.backup)
-            Toast.makeText(context, text, if (r.error != null) Toast.LENGTH_LONG else Toast.LENGTH_SHORT).show()
-        }
-    }
+fun CnpgBackupToasts(results: Flow<CnpgBackupResult>) = ResultToasts(results) { context, r ->
+    val text = r.error?.resolve(context)?.let { context.getString(R.string.cnpg_backup_failed, r.label, it) }
+        ?: context.getString(R.string.cnpg_backup_started, r.backup)
+    text to (r.error != null)
 }
 
 /** Confirms an on-demand backup: it loads the instance it runs on and fills the object store. */

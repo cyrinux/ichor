@@ -2,9 +2,6 @@ package name.levis.ichor.ui.overview
 
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +45,7 @@ import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.WolTarget
 import name.levis.ichor.model.notice
 import name.levis.ichor.model.support
+import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.components.rememberNodeFeatures
 import name.levis.ichor.ui.components.text
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -169,7 +167,7 @@ fun NodeActionsSheet(
                 }
             }
             Item(Icons.Outlined.ContentCopy, stringResource(R.string.overview_action_copy_ip, node.node)) {
-                copy(context, node.node)
+                copyToClipboard(context, context.getString(R.string.overview_clip_label), node.node)
                 onDismiss()
             }
         }
@@ -192,7 +190,3 @@ private fun Item(icon: ImageVector, label: String, danger: Boolean = false, disa
     )
 }
 
-private fun copy(context: Context, text: String) {
-    val clipboard = context.getSystemService(ClipboardManager::class.java)
-    clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.overview_clip_label), text))
-}

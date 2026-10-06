@@ -1,8 +1,5 @@
 package name.levis.ichor.ui.etcd
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,6 +38,7 @@ import name.levis.ichor.ui.backup.PassphraseField
 import name.levis.ichor.ui.backup.newPassphraseError
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /** What the keys field currently holds, as checked by Go. */
@@ -194,14 +192,10 @@ fun SnapshotRestoreDialog(commands: String, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = { copyText(context, commands) }) { Text(stringResource(R.string.etcd_snapshot_restore_copy)) }
+            TextButton(onClick = { copyToClipboard(context, "talosctl", commands) }) { Text(stringResource(R.string.etcd_snapshot_restore_copy)) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_ok)) } },
     )
-}
-
-private fun copyText(context: Context, text: String) {
-    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("talosctl", text))
 }
 
 private const val KEYS_DEBOUNCE_MS = 300L
