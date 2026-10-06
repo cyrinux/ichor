@@ -242,74 +242,85 @@ extension NodeDetailView {
     @ViewBuilder
     private var menuItems: some View {
         ShareLinkButton(target: .node(address: ref.address, hostname: ref.hostname, tab: tab.rawValue.lowercased()))
-        Button { showingKernelLog = true } label: {
-            Label("Kernel log", systemImage: "terminal")
-        }
-        FeatureButton(title: String(localized: "Events"), systemImage: "list.bullet.rectangle", support: support(.events)) {
-            showingEvents = true
-        }
-        FeatureButton(title: String(localized: "Network"), systemImage: "network", support: support(.network)) {
-            showingNetwork = true
-        }
-        FeatureButton(title: String(localized: "Storage"), systemImage: "internaldrive", support: support(.mounts)) {
-            showingStorage = true
-        }
-        FeatureButton(title: String(localized: "Images"), systemImage: "shippingbox", support: support(.images)) {
-            showingImages = true
-        }
-        if model.allows(.resourceBrowser) {
-            FeatureButton(title: String(localized: "Resources browser"), systemImage: "square.stack.3d.up", support: support(.resourceBrowser)) {
-                showingResources = true
+        Section("Inspect") {
+            Button { showingKernelLog = true } label: {
+                Label("Kernel log", systemImage: "terminal")
             }
-        }
-        FeatureButton(title: String(localized: "About this node"), systemImage: "info.circle", support: support(.hardware)) {
-            showingHardware = true
-        }
-        // A Group: a view builder takes at most ten views.
-        Group {
-            if model.allows(.debugShell) {
-                FeatureButton(title: String(localized: "Debug shell"), systemImage: "apple.terminal", support: support(.debugShell)) {
-                    showingDebugShell = true
+            FeatureButton(title: String(localized: "Events"), systemImage: "list.bullet.rectangle", support: support(.events)) {
+                showingEvents = true
+            }
+            FeatureButton(title: String(localized: "Network"), systemImage: "network", support: support(.network)) {
+                showingNetwork = true
+            }
+            FeatureButton(title: String(localized: "Storage"), systemImage: "internaldrive", support: support(.mounts)) {
+                showingStorage = true
+            }
+            FeatureButton(title: String(localized: "Images"), systemImage: "shippingbox", support: support(.images)) {
+                showingImages = true
+            }
+            if model.allows(.resourceBrowser) {
+                FeatureButton(title: String(localized: "Resources browser"), systemImage: "square.stack.3d.up", support: support(.resourceBrowser)) {
+                    showingResources = true
                 }
             }
-            if model.allows(.machineConfig) {
-                FeatureButton(title: String(localized: "Machine config"), systemImage: "doc.text", support: support(.machineConfig)) {
-                    showingMachineConfig = true
-                }
+            FeatureButton(title: String(localized: "About this node"), systemImage: "info.circle", support: support(.hardware)) {
+                showingHardware = true
             }
-            if model.allows(.packetCapture) {
-                FeatureButton(title: String(localized: "Capture packets"), systemImage: "antenna.radiowaves.left.and.right",
-                              support: support(.packetCapture)) {
-                    showingCapture = true
-                }
-            }
-            if model.allows(.upgrade) {
-                FeatureButton(title: String(localized: "Upgrade Talos…"), systemImage: "arrow.up.circle", support: support(.upgrade)) {
-                    showingUpgrade = true
-                }
-            }
-            // Cordon and drain go through the Kubernetes API (os:admin, like the workloads).
+            // The Pods tab reads the containers through Talos (CRI); this asks the API server (os:admin).
             if model.allows(.workloads) {
-                // The Pods tab reads the containers through Talos (CRI); this asks the API server.
                 Button { showingKubePods = true } label: {
                     Label("Kubernetes pods", systemImage: "cube")
                 }
-                Button { showingMaintenance = true } label: {
-                    Label("Maintenance…", systemImage: "wrench.and.screwdriver")
+            }
+        }
+        // A section the role leaves empty would still show its title.
+        if model.allows(.debugShell) || model.allows(.packetCapture) {
+            Section("Troubleshoot") {
+                if model.allows(.debugShell) {
+                    FeatureButton(title: String(localized: "Debug shell"), systemImage: "apple.terminal", support: support(.debugShell)) {
+                        showingDebugShell = true
+                    }
                 }
-                // An uncordon mid-drain lets the evicted pods come back before the reboot.
-                Button { showingCordon = true } label: {
-                    Label("Cordon / uncordon…", systemImage: "nosign")
+                if model.allows(.packetCapture) {
+                    FeatureButton(title: String(localized: "Capture packets"), systemImage: "antenna.radiowaves.left.and.right",
+                                  support: support(.packetCapture)) {
+                        showingCapture = true
+                    }
                 }
-                .disabled(maintenanceRunning)
+            }
+        }
+        if model.allows(.machineConfig) || model.allows(.upgrade) || model.allows(.workloads) {
+            Section("Operate") {
+                if model.allows(.machineConfig) {
+                    FeatureButton(title: String(localized: "Machine config"), systemImage: "doc.text", support: support(.machineConfig)) {
+                        showingMachineConfig = true
+                    }
+                }
+                if model.allows(.upgrade) {
+                    FeatureButton(title: String(localized: "Upgrade Talos…"), systemImage: "arrow.up.circle", support: support(.upgrade)) {
+                        showingUpgrade = true
+                    }
+                }
+                // Cordon and drain go through the Kubernetes API (os:admin, like the workloads).
+                if model.allows(.workloads) {
+                    Button { showingMaintenance = true } label: {
+                        Label("Maintenance…", systemImage: "wrench.and.screwdriver")
+                    }
+                    // An uncordon mid-drain lets the evicted pods come back before the reboot.
+                    Button { showingCordon = true } label: {
+                        Label("Cordon / uncordon…", systemImage: "nosign")
+                    }
+                    .disabled(maintenanceRunning)
+                }
             }
         }
         // Power actions only exist for configs whose role allows them.
         if model.allows(.power) {
-            Divider()
-            ForEach(PowerAction.allCases) { action in
-                Button(role: .destructive) { powerAction = action } label: {
-                    Label(action.localizedTitle, systemImage: "power")
+            Section("Power") {
+                ForEach(PowerAction.allCases) { action in
+                    Button(role: .destructive) { powerAction = action } label: {
+                        Label(action.localizedTitle, systemImage: "power")
+                    }
                 }
             }
         }

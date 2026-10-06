@@ -2293,6 +2293,10 @@
     <string name="node_menu_maintenance">Mantenimiento…</string>
     <string name="node_menu_cordon">Acordonar</string>
     <string name="node_menu_uncordon">Desacordonar</string>
+    <string name="node_menu_group_inspect">Inspeccionar</string>
+    <string name="node_menu_group_troubleshoot">Diagnosticar</string>
+    <string name="node_menu_group_operate">Administrar</string>
+    <string name="node_menu_group_power">Energía</string>
     <string name="cordon_confirm_title">¿Acordonar %1$s?</string>
     <string name="cordon_confirm_body">No se programan pods nuevos en %1$s. Los pods que ya se ejecutan allí se quedan.</string>
     <string name="uncordon_confirm_title">¿Desacordonar %1$s?</string>
