@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -216,10 +215,7 @@ func (r *captureReporter) packet(summary func() packetSummary) {
 
 	r.inWindow++
 
-	b, err := json.Marshal(summary())
-	if err == nil {
-		r.listener.OnPacket(string(b))
-	}
+	emitJSON(summary(), r.listener.OnPacket)
 }
 
 func (r *captureReporter) stats(res captureResult, force bool) {

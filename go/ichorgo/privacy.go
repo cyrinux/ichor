@@ -97,8 +97,8 @@ func SetPrivacyMask(enabled bool, extraWords string) {
 func parseMaskWords(csv string) []string {
 	var words []string
 
-	for w := range strings.SplitSeq(csv, ",") {
-		if w = strings.ToLower(strings.TrimSpace(w)); w != "" && !slices.Contains(words, w) {
+	for _, w := range splitCSV(csv) {
+		if w = strings.ToLower(w); !slices.Contains(words, w) {
 			words = append(words, w)
 		}
 	}

@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -237,10 +236,7 @@ type maintenance struct {
 }
 
 func (m maintenance) emit(phase, message string, pods []drainPod) {
-	b, err := json.Marshal(maintenanceProgress{Phase: phase, Message: message, At: time.Now().UnixMilli(), Pods: pods})
-	if err == nil {
-		m.listener.OnProgress(string(b))
-	}
+	emitJSON(maintenanceProgress{Phase: phase, Message: message, At: time.Now().UnixMilli(), Pods: pods}, m.listener.OnProgress)
 }
 
 // stoppedCordoned explains a run that ended early: the node is left cordoned on purpose.

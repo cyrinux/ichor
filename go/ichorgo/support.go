@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"archive/zip"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -101,11 +100,7 @@ func runSupportBundle(ctx context.Context, configYAML, contextName, kubeServer, 
 
 	sections = append(sections, clusterBundleSection(s, kubeTarget{configYAML, contextName, kubeServer}))
 
-	progress := func(p supportProgress) {
-		if b, err := json.Marshal(p); err == nil {
-			listener.OnProgress(string(b))
-		}
-	}
+	progress := func(p supportProgress) { emitJSON(p, listener.OnProgress) }
 
 	return writeBundle(ctx, destPath, sections, progress, time.Now())
 }
@@ -114,12 +109,7 @@ func runSupportBundle(ctx context.Context, configYAML, contextName, kubeServer, 
 func supportTargets(contextNodes []string, nodes string) ([]string, error) {
 	var out []string
 
-	for _, n := range strings.Split(nodes, ",") {
-		n = strings.TrimSpace(n)
-		if n == "" || slices.Contains(out, n) {
-			continue
-		}
-
+	for _, n := range splitCSV(nodes) {
 		if !slices.Contains(contextNodes, n) {
 			return nil, fmt.Errorf("node %q is not part of this context", n)
 		}

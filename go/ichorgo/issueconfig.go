@@ -74,12 +74,7 @@ func GenerateTalosconfig(configYAML, contextName, roles string, ttlHours int) (o
 func parseRoles(roles string) ([]string, error) {
 	var out []string
 
-	for r := range strings.SplitSeq(roles, ",") {
-		r = strings.TrimSpace(r)
-		if r == "" || slices.Contains(out, r) {
-			continue
-		}
-
+	for _, r := range splitCSV(roles) {
 		if !slices.Contains(allowedRoles, r) {
 			return nil, fmt.Errorf("unknown role %q (%s)", r, strings.Join(allowedRoles, ", "))
 		}
