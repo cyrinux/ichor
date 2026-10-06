@@ -4,6 +4,7 @@
     <!-- Common -->
     <string name="common_back">Zurück</string>
     <string name="common_cancel">Abbrechen</string>
+    <string name="common_close">Schließen</string>
     <string name="common_ok">OK</string>
     <string name="common_retry">Erneut versuchen</string>
     <string name="common_refresh">Aktualisieren</string>
@@ -1061,9 +1062,22 @@
     <string name="overview_talos_release_notes">Versionshinweise</string>
     <string name="overview_talos_tap_upgrade">Tippen, um einen Knoten zu aktualisieren.</string>
     <string name="overview_talos_pick_node">Auf %1$s aktualisieren</string>
-    <string name="overview_talos_pick_hint">Aktualisiere einen Knoten nach dem anderen, Control-Plane-Knoten zuerst, und warte, bis jeder wieder gesund ist.</string>
-    <string name="overview_talos_pick_workers">Worker</string>
-    <string name="overview_talos_pick_workers_later">Worker · nach der Control Plane</string>
+    <string name="overview_talos_rollout_control_plane">Control Plane · %1$d/%2$d fertig</string>
+    <string name="overview_talos_rollout_workers">Worker · %1$d/%2$d fertig</string>
+    <string name="overview_talos_rollout_workers_wait">Verfügbar nach der Control Plane.</string>
+    <string name="overview_talos_rollout_next">Nächsten aktualisieren: %1$s</string>
+    <string name="overview_talos_rollout_upgrading">%1$s wird aktualisiert…</string>
+    <string name="overview_talos_rollout_waiting">%1$s ist aktualisiert. Warten, bis der Knoten wieder gesund ist…</string>
+    <string name="overview_talos_rollout_etcd_short">etcd %1$d/%2$d</string>
+    <string name="overview_talos_rollout_unreachable">%1$s ist nicht erreichbar. Erst abwarten, dann einen weiteren Knoten aktualisieren.</string>
+    <string name="overview_talos_rollout_not_ready">%1$s ist nicht bereit. Erst abwarten, dann einen weiteren Knoten aktualisieren.</string>
+    <string name="overview_talos_rollout_etcd">etcd hat nur %1$d von %2$d gesunden Mitgliedern. Erst beheben, dann einen Knoten aktualisieren.</string>
+    <string name="overview_talos_rollout_state_upgrading">Wird aktualisiert</string>
+    <string name="overview_talos_rollout_state_waiting">Warten auf gesunden Zustand</string>
+    <string name="overview_talos_rollout_state_retry">Fehlgeschlagen · Wiederholen</string>
+    <string name="overview_talos_rollout_anyway_title">%1$s vor der Control Plane aktualisieren?</string>
+    <string name="overview_talos_rollout_anyway_body">Control-Plane-Knoten kommen normalerweise zuerst, und erst %1$d von %2$d sind fertig. Bei einem Patch-Release ist die Reihenfolge unkritisch.</string>
+    <string name="overview_talos_rollout_anyway">Trotzdem aktualisieren</string>
     <plurals name="overview_talos_outdated">
         <item quantity="one">%1$d Knoten mit älterer Version</item>
         <item quantity="other">%1$d Knoten mit älteren Versionen</item>

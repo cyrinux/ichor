@@ -29579,41 +29579,6 @@
         }
       }
     },
-    "Upgrade one node at a time, control-plane nodes first, and wait for each to be healthy again." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einen Knoten nach dem anderen aktualisieren, Control-Plane-Knoten zuerst, und warten, bis jeder wieder gesund ist."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Actualiza un nodo a la vez, primero los del plano de control, y espera a que cada uno vuelva a estar sano."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mettez à jour un nœud à la fois, les nœuds control plane d'abord, et attendez que chacun soit de nouveau sain."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aggiorna un nodo alla volta, prima i nodi control plane, e attendi che ciascuno torni integro."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Оновлюйте по одному вузлу, спочатку вузли control plane, і чекайте, доки кожен знову стане справним."
-          }
-        }
-      }
-    },
     "Tap to upgrade a node." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -75012,72 +74977,562 @@
         }
       }
     },
-    "Workers" : {
+    "Control plane · %lld/%lld done" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Worker"
+            "value" : "Control Plane · %lld/%lld fertig"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Workers"
+            "value" : "Plano de control · %lld/%lld listos"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Workers"
+            "value" : "Control plane · %lld/%lld terminés"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Worker"
+            "value" : "Control plane · %lld/%lld completati"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Worker-вузли"
+            "value" : "Control plane · %lld/%lld готово"
           }
         }
       }
     },
-    "Workers · after the control plane" : {
+    "Workers · %lld/%lld done" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Worker · nach der Control Plane"
+            "value" : "Worker · %lld/%lld fertig"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Workers · después del plano de control"
+            "value" : "Workers · %lld/%lld listos"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Workers · après le control plane"
+            "value" : "Workers · %lld/%lld terminés"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Worker · dopo il control plane"
+            "value" : "Worker · %lld/%lld completati"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Worker-вузли · після control plane"
+            "value" : "Worker-вузли · %lld/%lld готово"
+          }
+        }
+      }
+    },
+    "Available after the control plane." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verfügbar nach der Control Plane."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disponibles después del plano de control."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disponibles après le control plane."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disponibili dopo il control plane."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступні після control plane."
+          }
+        }
+      }
+    },
+    "Upgrade next: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächsten aktualisieren: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar el siguiente: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour le suivant : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna il prossimo: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити наступний: %@"
+          }
+        }
+      }
+    },
+    "Upgrading %@…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ wird aktualisiert…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizando %@…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour de %@…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamento di %@…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення %@…"
+          }
+        }
+      }
+    },
+    "%@ is upgraded. Waiting for it to be healthy…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist aktualisiert. Warten, bis der Knoten wieder gesund ist…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ está actualizado. Esperando a que vuelva a estar sano…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ est à jour. En attente qu'il soit de nouveau sain…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ è aggiornato. In attesa che torni sano…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ оновлено. Чекаємо, доки він знову стане справним…"
+          }
+        }
+      }
+    },
+    "etcd %lld/%lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd %lld/%lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd %lld/%lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd %lld/%lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd %lld/%lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd %lld/%lld"
+          }
+        }
+      }
+    },
+    "%@ is unreachable. Wait for it before upgrading another node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist nicht erreichbar. Erst abwarten, dann einen weiteren Knoten aktualisieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ no responde. Espera a que vuelva antes de actualizar otro nodo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ est injoignable. Attendez son retour avant de mettre à jour un autre nœud."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ non è raggiungibile. Attendi che torni prima di aggiornare un altro nodo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ недоступний. Дочекайтеся його, перш ніж оновлювати інший вузол."
+          }
+        }
+      }
+    },
+    "%@ is not ready. Wait for it before upgrading another node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ist nicht bereit. Erst abwarten, dann einen weiteren Knoten aktualisieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ no está listo. Espéralo antes de actualizar otro nodo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ n'est pas prêt. Attendez-le avant de mettre à jour un autre nœud."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ non è pronto. Attendilo prima di aggiornare un altro nodo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ не готовий. Дочекайтеся його, перш ніж оновлювати інший вузол."
+          }
+        }
+      }
+    },
+    "etcd has %lld of %lld members healthy. Fix it before upgrading a node." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd hat nur %lld von %lld gesunden Mitgliedern. Erst beheben, dann einen Knoten aktualisieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd solo tiene %lld de %lld miembros sanos. Corrígelo antes de actualizar un nodo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd n'a que %lld membres sains sur %lld. Corrigez cela avant de mettre à jour un nœud."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "etcd ha solo %lld membri sani su %lld. Risolvi prima di aggiornare un nodo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В etcd справні лише %lld із %lld учасників. Виправте це, перш ніж оновлювати вузол."
+          }
+        }
+      }
+    },
+    "Upgrading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird aktualisiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizando"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In aggiornamento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлюється"
+          }
+        }
+      }
+    },
+    "Waiting for healthy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warten auf gesunden Zustand"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando a que esté sano"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente d'un état sain"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In attesa che sia sano"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очікування справності"
+          }
+        }
+      }
+    },
+    "Failed · Retry" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlgeschlagen · Wiederholen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falló · Reintentar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec · Réessayer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non riuscito · Riprova"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Помилка · Повторити"
+          }
+        }
+      }
+    },
+    "Upgrade %@ before the control plane?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ vor der Control Plane aktualisieren?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Actualizar %@ antes que el plano de control?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour %@ avant le control plane ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornare %@ prima del control plane?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити %@ раніше за control plane?"
+          }
+        }
+      }
+    },
+    "Control-plane nodes normally go first, and only %lld of %lld are done. For a patch release the order is harmless." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Control-Plane-Knoten kommen normalerweise zuerst, und erst %lld von %lld sind fertig. Bei einem Patch-Release ist die Reihenfolge unkritisch."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los nodos del plano de control suelen ir primero, y solo %lld de %lld están listos. En una versión de parche el orden no importa."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les nœuds control plane passent normalement en premier, et seuls %lld sur %lld sont terminés. Pour une version corrective, l'ordre est sans conséquence."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I nodi del control plane di norma vanno per primi, e solo %lld su %lld sono completati. Per una patch release l'ordine non ha conseguenze."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вузли control plane зазвичай оновлюють першими, а готово лише %lld із %lld. Для патч-релізу порядок не має значення."
+          }
+        }
+      }
+    },
+    "Upgrade anyway" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trotzdem aktualisieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar de todos modos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour quand même"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna comunque"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усе одно оновити"
           }
         }
       }

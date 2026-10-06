@@ -4,6 +4,7 @@
     <!-- Common -->
     <string name="common_back">Назад</string>
     <string name="common_cancel">Скасувати</string>
+    <string name="common_close">Закрити</string>
     <string name="common_ok">OK</string>
     <string name="common_retry">Повторити</string>
     <string name="common_refresh">Оновити</string>
@@ -1159,9 +1160,22 @@
     <string name="overview_talos_release_notes">Примітки до випуску</string>
     <string name="overview_talos_tap_upgrade">Торкніться, щоб оновити вузол.</string>
     <string name="overview_talos_pick_node">Оновити до %1$s</string>
-    <string name="overview_talos_pick_hint">Оновлюйте по одному вузлу, спершу вузли площини керування, і чекайте, доки кожен знову стане справним.</string>
-    <string name="overview_talos_pick_workers">Робочі вузли</string>
-    <string name="overview_talos_pick_workers_later">Робочі вузли · після площини керування</string>
+    <string name="overview_talos_rollout_control_plane">Площина керування · %1$d/%2$d готово</string>
+    <string name="overview_talos_rollout_workers">Робочі вузли · %1$d/%2$d готово</string>
+    <string name="overview_talos_rollout_workers_wait">Доступні після площини керування.</string>
+    <string name="overview_talos_rollout_next">Оновити наступний: %1$s</string>
+    <string name="overview_talos_rollout_upgrading">Оновлення %1$s…</string>
+    <string name="overview_talos_rollout_waiting">%1$s оновлено. Чекаємо, доки він знову стане справним…</string>
+    <string name="overview_talos_rollout_etcd_short">etcd %1$d/%2$d</string>
+    <string name="overview_talos_rollout_unreachable">%1$s недоступний. Дочекайтеся його, перш ніж оновлювати інший вузол.</string>
+    <string name="overview_talos_rollout_not_ready">%1$s не готовий. Дочекайтеся його, перш ніж оновлювати інший вузол.</string>
+    <string name="overview_talos_rollout_etcd">В etcd справні лише %1$d із %2$d учасників. Виправте це, перш ніж оновлювати вузол.</string>
+    <string name="overview_talos_rollout_state_upgrading">Оновлюється</string>
+    <string name="overview_talos_rollout_state_waiting">Очікування справності</string>
+    <string name="overview_talos_rollout_state_retry">Помилка · Повторити</string>
+    <string name="overview_talos_rollout_anyway_title">Оновити %1$s раніше за площину керування?</string>
+    <string name="overview_talos_rollout_anyway_body">Вузли площини керування зазвичай оновлюють першими, а готово лише %1$d із %2$d. Для патч-релізу порядок не має значення.</string>
+    <string name="overview_talos_rollout_anyway">Усе одно оновити</string>
     <plurals name="overview_talos_outdated">
         <item quantity="one">%1$d вузол на старішій версії</item>
         <item quantity="few">%1$d вузли на старіших версіях</item>

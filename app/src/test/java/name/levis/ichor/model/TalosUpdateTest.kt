@@ -8,8 +8,8 @@ import org.junit.Test
 
 class TalosUpdateTest {
 
-    private fun node(name: String, version: String, reachable: Boolean = true, role: String = "worker") =
-        NodeOverview(node = "192.0.2.$name", hostname = name, reachable = reachable, version = version, role = role)
+    private fun node(name: String, version: String, reachable: Boolean = true) =
+        NodeOverview(node = "192.0.2.$name", hostname = name, reachable = reachable, version = version)
 
     @Test
     fun decodes() {
@@ -41,27 +41,6 @@ class TalosUpdateTest {
     fun outdatedOldestFirst() {
         val nodes = listOf(node("b", "v1.14.1"), node("a", "v1.13.5"), node("c", "v1.14.2"), node("d", "v1.13.0", reachable = false), node("e", "v1.14.1"))
         assertEquals(listOf("a", "b", "e"), outdatedNodes(nodes, "v1.14.2").map { it.hostname })
-    }
-
-    @Test
-    fun choicesByRole() {
-        val nodes = listOf(
-            node("w2", "v1.14.1"),
-            node("w1", "v1.13.5"),
-            node("cp2", "v1.14.1", role = "controlplane"),
-            node("cp1", "v1.14.1", role = "controlplane"),
-            node("cp3", "v1.14.2", role = "controlplane"),
-            node("x", "v1.14.1", role = "unknown"),
-        )
-        val choices = upgradeChoices(nodes, "v1.14.2")
-        assertEquals(listOf("cp1", "cp2"), choices.controlPlane.map { it.hostname })
-        assertEquals(listOf("w1", "w2", "x"), choices.workers.map { it.hostname })
-        assertEquals(5, choices.count)
-        assertTrue(choices.workersWait)
-
-        val workersOnly = upgradeChoices(nodes.filter { it.role != "controlplane" }, "v1.14.2")
-        assertTrue(workersOnly.controlPlane.isEmpty())
-        assertFalse(workersOnly.workersWait)
     }
 
     @Test

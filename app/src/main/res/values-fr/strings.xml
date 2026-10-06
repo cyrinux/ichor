@@ -4,6 +4,7 @@
     <!-- Common -->
     <string name="common_back">Retour</string>
     <string name="common_cancel">Annuler</string>
+    <string name="common_close">Fermer</string>
     <string name="common_ok">OK</string>
     <string name="common_retry">Réessayer</string>
     <string name="common_refresh">Actualiser</string>
@@ -1068,9 +1069,22 @@
     <string name="overview_talos_release_notes">Notes de version</string>
     <string name="overview_talos_tap_upgrade">Touchez pour mettre à jour un nœud.</string>
     <string name="overview_talos_pick_node">Mettre à jour vers %1$s</string>
-    <string name="overview_talos_pick_hint">Mettez à jour un nœud à la fois, en commençant par le control plane, et attendez que chacun soit de nouveau sain.</string>
-    <string name="overview_talos_pick_workers">Workers</string>
-    <string name="overview_talos_pick_workers_later">Workers · après le control plane</string>
+    <string name="overview_talos_rollout_control_plane">Control plane · %1$d/%2$d terminés</string>
+    <string name="overview_talos_rollout_workers">Workers · %1$d/%2$d terminés</string>
+    <string name="overview_talos_rollout_workers_wait">Disponibles après le control plane.</string>
+    <string name="overview_talos_rollout_next">Mettre à jour le suivant : %1$s</string>
+    <string name="overview_talos_rollout_upgrading">Mise à jour de %1$s…</string>
+    <string name="overview_talos_rollout_waiting">%1$s est à jour. En attente qu\'il soit de nouveau sain…</string>
+    <string name="overview_talos_rollout_etcd_short">etcd %1$d/%2$d</string>
+    <string name="overview_talos_rollout_unreachable">%1$s est injoignable. Attendez son retour avant de mettre à jour un autre nœud.</string>
+    <string name="overview_talos_rollout_not_ready">%1$s n\'est pas prêt. Attendez-le avant de mettre à jour un autre nœud.</string>
+    <string name="overview_talos_rollout_etcd">etcd n\'a que %1$d membres sains sur %2$d. Corrigez cela avant de mettre à jour un nœud.</string>
+    <string name="overview_talos_rollout_state_upgrading">Mise à jour</string>
+    <string name="overview_talos_rollout_state_waiting">En attente d\'un état sain</string>
+    <string name="overview_talos_rollout_state_retry">Échec · Réessayer</string>
+    <string name="overview_talos_rollout_anyway_title">Mettre à jour %1$s avant le control plane ?</string>
+    <string name="overview_talos_rollout_anyway_body">Les nœuds control plane passent normalement en premier, et seuls %1$d sur %2$d sont terminés. Pour une version corrective, l\'ordre est sans conséquence.</string>
+    <string name="overview_talos_rollout_anyway">Mettre à jour quand même</string>
     <plurals name="overview_talos_outdated">
         <item quantity="one">%1$d nœud sur une version antérieure</item>
         <item quantity="other">%1$d nœuds sur des versions antérieures</item>

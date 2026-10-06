@@ -4,6 +4,7 @@
     <!-- Common -->
     <string name="common_back">Atrás</string>
     <string name="common_cancel">Cancelar</string>
+    <string name="common_close">Cerrar</string>
     <string name="common_ok">Aceptar</string>
     <string name="common_retry">Reintentar</string>
     <string name="common_refresh">Actualizar</string>
@@ -1068,9 +1069,22 @@
     <string name="overview_talos_release_notes">Notas de la versión</string>
     <string name="overview_talos_tap_upgrade">Toca para actualizar un nodo.</string>
     <string name="overview_talos_pick_node">Actualizar a %1$s</string>
-    <string name="overview_talos_pick_hint">Actualiza un nodo cada vez, primero los del plano de control, y espera a que cada uno vuelva a estar sano.</string>
-    <string name="overview_talos_pick_workers">Workers</string>
-    <string name="overview_talos_pick_workers_later">Workers · después del plano de control</string>
+    <string name="overview_talos_rollout_control_plane">Plano de control · %1$d/%2$d listos</string>
+    <string name="overview_talos_rollout_workers">Workers · %1$d/%2$d listos</string>
+    <string name="overview_talos_rollout_workers_wait">Disponibles después del plano de control.</string>
+    <string name="overview_talos_rollout_next">Actualizar el siguiente: %1$s</string>
+    <string name="overview_talos_rollout_upgrading">Actualizando %1$s…</string>
+    <string name="overview_talos_rollout_waiting">%1$s está actualizado. Esperando a que vuelva a estar sano…</string>
+    <string name="overview_talos_rollout_etcd_short">etcd %1$d/%2$d</string>
+    <string name="overview_talos_rollout_unreachable">%1$s no responde. Espera a que vuelva antes de actualizar otro nodo.</string>
+    <string name="overview_talos_rollout_not_ready">%1$s no está listo. Espéralo antes de actualizar otro nodo.</string>
+    <string name="overview_talos_rollout_etcd">etcd solo tiene %1$d de %2$d miembros sanos. Corrígelo antes de actualizar un nodo.</string>
+    <string name="overview_talos_rollout_state_upgrading">Actualizando</string>
+    <string name="overview_talos_rollout_state_waiting">Esperando a que esté sano</string>
+    <string name="overview_talos_rollout_state_retry">Falló · Reintentar</string>
+    <string name="overview_talos_rollout_anyway_title">¿Actualizar %1$s antes que el plano de control?</string>
+    <string name="overview_talos_rollout_anyway_body">Los nodos del plano de control suelen ir primero, y solo %1$d de %2$d están listos. En una versión de parche el orden no importa.</string>
+    <string name="overview_talos_rollout_anyway">Actualizar de todos modos</string>
     <plurals name="overview_talos_outdated">
         <item quantity="one">%1$d nodo con una versión anterior</item>
         <item quantity="other">%1$d nodos con versiones anteriores</item>
