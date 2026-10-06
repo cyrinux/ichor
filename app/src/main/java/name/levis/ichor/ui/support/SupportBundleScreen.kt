@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
@@ -54,6 +53,7 @@ import name.levis.ichor.model.notice
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.KeepScreenOn
@@ -143,17 +143,16 @@ fun SupportBundleScreen(
     }
 
     deleting?.let { file ->
-        AlertDialog(
-            onDismissRequest = { deleting = null },
-            title = { Text(stringResource(R.string.support_bundle_delete_title)) },
-            text = { Text(stringResource(R.string.capture_delete_body, file.name)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    deleting = null
-                    vm.delete(file)
-                }) { Text(stringResource(R.string.common_delete)) }
+        ConfirmDialog(
+            title = stringResource(R.string.support_bundle_delete_title),
+            text = stringResource(R.string.capture_delete_body, file.name),
+            confirm = stringResource(R.string.common_delete),
+            onConfirm = {
+                deleting = null
+                vm.delete(file)
             },
-            dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(R.string.common_cancel)) } },
+            onDismiss = { deleting = null },
+            destructive = true,
         )
     }
 }

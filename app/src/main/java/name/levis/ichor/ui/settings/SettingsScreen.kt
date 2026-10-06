@@ -9,12 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +33,7 @@ import name.levis.ichor.model.Feature
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.notice
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.rememberClusterSupport
@@ -137,20 +136,19 @@ fun SettingsScreen(
     }
 
     if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            title = { Text(stringResource(R.string.settings_delete_title)) },
-            text = { Text(stringResource(R.string.settings_delete_body)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmDelete = false
-                    scope.launch {
-                        configs.clear()
-                        onCleared()
-                    }
-                }) { Text(stringResource(R.string.common_delete)) }
+        ConfirmDialog(
+            title = stringResource(R.string.settings_delete_title),
+            text = stringResource(R.string.settings_delete_body),
+            confirm = stringResource(R.string.common_delete),
+            onConfirm = {
+                confirmDelete = false
+                scope.launch {
+                    configs.clear()
+                    onCleared()
+                }
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.common_cancel)) } },
+            onDismiss = { confirmDelete = false },
+            destructive = true,
         )
     }
 }

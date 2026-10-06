@@ -15,7 +15,6 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
@@ -29,7 +28,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -69,6 +67,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.LoadingBox
@@ -213,17 +212,16 @@ fun UpgradeScreen(
     }
 
     if (forceWarning) {
-        AlertDialog(
-            onDismissRequest = { forceWarning = false },
-            title = { Text(stringResource(R.string.upgrade_force_title)) },
-            text = { Text(stringResource(R.string.upgrade_force_warning)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    forceWarning = false
-                    force = true
-                }) { Text(stringResource(R.string.upgrade_force_enable), color = LocalStatusColors.current.bad) }
+        ConfirmDialog(
+            title = stringResource(R.string.upgrade_force_title),
+            text = stringResource(R.string.upgrade_force_warning),
+            confirm = stringResource(R.string.upgrade_force_enable),
+            onConfirm = {
+                forceWarning = false
+                force = true
             },
-            dismissButton = { TextButton(onClick = { forceWarning = false }) { Text(stringResource(R.string.common_cancel)) } },
+            onDismiss = { forceWarning = false },
+            destructive = true,
         )
     }
     confirming?.let { choice ->

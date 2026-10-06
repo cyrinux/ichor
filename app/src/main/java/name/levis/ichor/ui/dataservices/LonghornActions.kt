@@ -40,6 +40,7 @@ import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.LonghornAction
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
@@ -156,13 +157,12 @@ fun ReplicaCountDialog(label: String, current: Int, choices: IntRange, onConfirm
 /** Confirms an eviction: every replica on [node] is copied elsewhere, then removed. */
 @Composable
 fun EvictConfirmDialog(node: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.longhorn_evict_title, node)) },
-        text = { Text(stringResource(R.string.longhorn_evict_text, node)) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) { Text(stringResource(R.string.longhorn_action_evict), color = LocalStatusColors.current.warn) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    ConfirmDialog(
+        title = stringResource(R.string.longhorn_evict_title, node),
+        text = stringResource(R.string.longhorn_evict_text, node),
+        confirm = stringResource(R.string.longhorn_action_evict),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        confirmColor = LocalStatusColors.current.warn,
     )
 }

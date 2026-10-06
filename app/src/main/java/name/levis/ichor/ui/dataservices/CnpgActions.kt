@@ -1,9 +1,7 @@
 package name.levis.ichor.ui.dataservices
 
 import android.widget.Toast
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
@@ -17,6 +15,7 @@ import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.CnpgCluster
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.uiText
 
 /** Outcome of an on-demand backup of the cluster [label]: the new Backup's name, or the error. */
@@ -61,11 +60,11 @@ fun CnpgBackupToasts(results: Flow<CnpgBackupResult>) {
 /** Confirms an on-demand backup: it loads the instance it runs on and fills the object store. */
 @Composable
 fun CnpgBackupConfirmDialog(cluster: CnpgCluster, onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.cnpg_backup_title, cluster.label)) },
-        text = { Text(stringResource(R.string.cnpg_backup_text)) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.cnpg_backup_now)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
+    ConfirmDialog(
+        title = stringResource(R.string.cnpg_backup_title, cluster.label),
+        text = stringResource(R.string.cnpg_backup_text),
+        confirm = stringResource(R.string.cnpg_backup_now),
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
     )
 }

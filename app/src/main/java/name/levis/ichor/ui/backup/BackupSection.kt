@@ -1,10 +1,8 @@
 package name.levis.ichor.ui.backup
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +21,7 @@ import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.factory
 import kotlinx.coroutines.launch
@@ -60,17 +59,15 @@ fun BackupSection(hasConfig: Boolean, vm: BackupViewModel = viewModel(factory = 
     BackupStatus(state)
 
     if (confirmRestore) {
-        AlertDialog(
-            onDismissRequest = { confirmRestore = false },
-            title = { Text(stringResource(R.string.backup_restore)) },
-            text = { Text(stringResource(R.string.backup_restore_replace_warning)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmRestore = false
-                    pickBackup()
-                }) { Text(stringResource(R.string.backup_restore_pick)) }
+        ConfirmDialog(
+            title = stringResource(R.string.backup_restore),
+            text = stringResource(R.string.backup_restore_replace_warning),
+            confirm = stringResource(R.string.backup_restore_pick),
+            onConfirm = {
+                confirmRestore = false
+                pickBackup()
             },
-            dismissButton = { TextButton(onClick = { confirmRestore = false }) { Text(stringResource(R.string.common_cancel)) } },
+            onDismiss = { confirmRestore = false },
         )
     }
 }

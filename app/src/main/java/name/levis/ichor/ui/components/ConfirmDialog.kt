@@ -9,7 +9,10 @@ import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import name.levis.ichor.ui.theme.LocalStatusColors
 
-/** Yes/cancel dialog; [destructive] colours the [confirm] button as a warning. */
+/**
+ * Yes/cancel dialog; [destructive] colours the [confirm] button as an error, [confirmColor]
+ * as anything else (a caution in the warn colour).
+ */
 @Composable
 fun ConfirmDialog(
     title: String,
@@ -18,6 +21,7 @@ fun ConfirmDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     destructive: Boolean = false,
+    confirmColor: Color = Color.Unspecified,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -25,7 +29,7 @@ fun ConfirmDialog(
         text = { Text(text) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(confirm, color = if (destructive) LocalStatusColors.current.bad else Color.Unspecified)
+                Text(confirm, color = if (destructive) LocalStatusColors.current.bad else confirmColor)
             }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },

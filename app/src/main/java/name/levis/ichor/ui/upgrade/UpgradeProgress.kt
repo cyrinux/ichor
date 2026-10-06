@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,7 +22,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +39,7 @@ import name.levis.ichor.data.UpgradeRunState
 import name.levis.ichor.model.StepStatus
 import name.levis.ichor.model.UpgradePhase
 import name.levis.ichor.model.upgradeTimeline
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.KeepScreenOn
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -98,17 +97,15 @@ fun UpgradeProgress(run: UpgradeRunState, onStopFollowing: () -> Unit, onClose: 
     }
 
     if (confirmStop) {
-        AlertDialog(
-            onDismissRequest = { confirmStop = false },
-            title = { Text(stringResource(R.string.upgrade_stop_following_title)) },
-            text = { Text(stringResource(R.string.upgrade_stop_following_body, run.hostname)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmStop = false
-                    onStopFollowing()
-                }) { Text(stringResource(R.string.upgrade_stop_following)) }
+        ConfirmDialog(
+            title = stringResource(R.string.upgrade_stop_following_title),
+            text = stringResource(R.string.upgrade_stop_following_body, run.hostname),
+            confirm = stringResource(R.string.upgrade_stop_following),
+            onConfirm = {
+                confirmStop = false
+                onStopFollowing()
             },
-            dismissButton = { TextButton(onClick = { confirmStop = false }) { Text(stringResource(R.string.common_cancel)) } },
+            onDismiss = { confirmStop = false },
         )
     }
 }
