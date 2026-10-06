@@ -1,7 +1,7 @@
 import SwiftUI
 import IchorCore
 
-/// Spinner / error with retry / content for a LoadState.
+/// Skeleton / error with retry / content for a LoadState.
 struct LoadStateView<T, Content: View>: View {
     let state: LoadState<T>
     let retry: () async -> Void
@@ -14,7 +14,7 @@ struct LoadStateView<T, Content: View>: View {
         case .loading where model?.vpnHeldBack == true, .failed where model?.vpnHeldBack == true:
             VpnRequiredView(retry: retry)
         case .loading:
-            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+            SkeletonView()
         case .failed(let message):
             // "This node's Talos version cannot do that" is information, not a failure.
             if let notice = versionNotice(message) {

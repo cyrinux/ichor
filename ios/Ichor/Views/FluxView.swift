@@ -68,15 +68,8 @@ struct FluxView: View {
             }
         }
         .searchable(text: $query, prompt: Text("Name, namespace, path or URL"))
-        .task(id: model.fluxKey) {
-            await load()
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(2))
-                if Task.isCancelled { return }
-                // An app pushed on top polls for itself.
-                if !covered && store.shouldPoll(for: model.fluxKey) { await load() }
-            }
-        }
+        // An app pushed on top polls for itself.
+        .gitOpsPolling(key: model.fluxKey, paused: { covered }, shouldPoll: { store.shouldPoll(for: model.fluxKey) }, load: { await load() })
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
         .navigationTitle(Text(verbatim: "Flux"))
@@ -148,10 +141,10 @@ struct FluxView: View {
     private func load() async {
         guard let client = model.client else { return }
         let key = model.fluxKey
-        if case .loading = state, let known = store.status(for: key) { state = .loaded(known, at: Date()) }
-        let loaded: LoadState<FluxStatus> = await .from { try await store.load(with: client, key: key) }
-        guard key == model.fluxKey else { return }
-        state = state.refreshed(with: loaded)
+        let store = self.store
+        await store.refresh($state, key: key, currentKey: { model.fluxKey }) {
+            try await store.load(with: client, key: key)
+        }
     }
 
     /// Runs action on target, then reads again.

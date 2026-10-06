@@ -254,13 +254,13 @@ func watchEvents(ctx context.Context, c *client.Client, tail int, ch chan<- even
 
 		var ev nodeEvent
 
-		if md := msg.GetMetadata(); md.GetError() != "" {
-			node := md.GetHostname()
+		if md := msg.GetMetadata(); metaError(md) != "" {
+			node := metaHost(md)
 			if node == "" {
 				node = defaultNode
 			}
 
-			ev = nodeFailedEvent(node, md.GetError(), time.Now())
+			ev = nodeFailedEvent(node, metaError(md), time.Now())
 		} else {
 			decoded, err := client.UnmarshalEvent(msg)
 			if err != nil {

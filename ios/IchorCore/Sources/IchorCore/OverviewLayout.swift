@@ -3,6 +3,7 @@ import Foundation
 /// The overview's sections that can be moved and hidden; banners and notices stay on top.
 /// Raw values are Android's `OverviewCard` names, so the saved form reads the same on both.
 public enum OverviewCard: String, CaseIterable, Sendable, Hashable, Identifiable {
+    case talosUpdate = "TALOS_UPDATE"
     case summary = "SUMMARY"
     case apps = "APPS"
     case dataServices = "DATA_SERVICES"
@@ -15,11 +16,14 @@ public enum OverviewCard: String, CaseIterable, Sendable, Hashable, Identifiable
 
     /// Only shown when the cluster has what they report on.
     public var whenDetected: Bool { self == .dataServices || self == .argoCD || self == .flux }
+
+    /// Was pinned above the sections before it could be arranged: a layout saved then keeps it first.
+    public var leadsWhenNew: Bool { self == .talosUpdate }
 }
 
 /// The overview's sections in the order chosen, and those hidden. Every section is in `order`
-/// exactly once, so one added by a later release shows up (last) without touching the saved
-/// layout. Same rules and saved form as Android's `OverviewLayout`; one layout for every cluster.
+/// exactly once, so one added by a later release shows up (last, or first when it `leadsWhenNew`)
+/// without touching the saved layout. Same rules and saved form as Android's `OverviewLayout`; one layout for every cluster.
 public struct OverviewLayout: Equatable, Sendable {
     /// The `@AppStorage` key the encoded layout is kept under.
     public static let storageKey = "overview.layout"
@@ -78,7 +82,7 @@ public struct OverviewLayout: Equatable, Sendable {
         order.map { hidden.contains($0) ? "-\($0.rawValue)" : $0.rawValue }.joined(separator: ",")
     }
 
-    /// Reads `encoded`'s form; unknown or repeated names are skipped, missing sections appended.
+    /// Reads `encoded`'s form; unknown or repeated names are skipped, missing sections added.
     public static func parse(_ text: String?) -> OverviewLayout {
         guard let text, !text.trimmingCharacters(in: .whitespaces).isEmpty else { return OverviewLayout() }
         var known: [OverviewCard] = []
@@ -91,7 +95,8 @@ public struct OverviewLayout: Equatable, Sendable {
             known.append(card)
             if isHidden { hidden.insert(card) }
         }
-        return OverviewLayout(order: known + OverviewCard.allCases.filter { !known.contains($0) }, hidden: hidden)
+        let missing = OverviewCard.allCases.filter { !known.contains($0) }
+        return OverviewLayout(order: missing.filter(\.leadsWhenNew) + known + missing.filter { !$0.leadsWhenNew }, hidden: hidden)
     }
 }
 

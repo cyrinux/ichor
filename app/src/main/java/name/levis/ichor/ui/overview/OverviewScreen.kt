@@ -31,6 +31,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -66,6 +70,7 @@ import name.levis.ichor.model.groupNodes
 import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.OverviewCard
+import name.levis.ichor.model.talosUpdateOffer
 import name.levis.ichor.model.OverviewLayout
 import name.levis.ichor.model.ClusterTime
 import name.levis.ichor.model.ContextSummary
@@ -269,9 +274,29 @@ fun OverviewScreen(
     LaunchedEffect(loaded, config?.activeContext, invalidations) {
         if (loaded) discoveryVm.discover() else discoveryVm.clear()
     }
+    // The Talos release each cluster's update card was skipped for; the snackbar takes it back.
+    val skippedTalosUpdates by app.skippedTalosUpdates.versions.collectAsStateWithLifecycle()
+    val snackbar = remember { SnackbarHostState() }
+    val skipTalosUpdate: (String) -> Unit = { version ->
+        config?.activeSummary?.fingerprint?.let { fingerprint ->
+            val before = skippedTalosUpdates[fingerprint]
+            app.skippedTalosUpdates.set(fingerprint, version)
+            scope.launch {
+                // Not queued behind another cluster's: its undo would come too late.
+                snackbar.currentSnackbarData?.dismiss()
+                val result = snackbar.showSnackbar(
+                    context.getString(R.string.overview_talos_skipped, version),
+                    actionLabel = context.getString(R.string.common_undo),
+                    duration = SnackbarDuration.Long,
+                )
+                if (result == SnackbarResult.ActionPerformed) app.skippedTalosUpdates.set(fingerprint, before)
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = { DataFreshness(state) },
+        snackbarHost = { SnackbarHost(snackbar) },
         // The AI diagnosis is optional: no trace of it unless it was turned on in Settings.
         floatingActionButton = {
             if (ai.enabled && !customizing) {
@@ -443,6 +468,8 @@ fun OverviewScreen(
                     canShell = config?.activeSummary?.allows(Feature.DEBUG_SHELL) == true,
                     canUpgrade = config?.activeSummary?.allows(Feature.UPGRADE) == true,
                     onUpgrade = onUpgrade,
+                    skippedTalosUpdate = config?.activeSummary?.fingerprint?.let(skippedTalosUpdates::get),
+                    onSkipTalosUpdate = skipTalosUpdate,
                     live = liveState.takeIf { liveEnabled },
                     discovered = discovered.size,
                     onDiscovered = { showDiscovered = true },
@@ -488,6 +515,8 @@ private fun NodeList(
     canShell: Boolean,
     canUpgrade: Boolean,
     onUpgrade: (NodeOverview, String) -> Unit,
+    skippedTalosUpdate: String?,
+    onSkipTalosUpdate: (String) -> Unit,
     live: ClusterLiveState?,
     discovered: Int,
     onDiscovered: () -> Unit,
@@ -514,6 +543,18 @@ private fun NodeList(
         )
     }
     val nodeGroups = remember(overview, topology) { topology.groupNodes(overview.nodes) }
+    // Not asked (an internet call) for the demo cluster, or while its card is hidden.
+    val talosCheck = if (certificate?.isDemo == true || OverviewCard.TALOS_UPDATE in layout.hidden) null
+    else rememberTalosUpdateCheck(overview.nodes)
+    val talosUpdate = remember(talosCheck, overview.nodes, skippedTalosUpdate) {
+        talosCheck?.let { talosUpdateOffer(it, overview.nodes, skippedTalosUpdate) }
+    }
+    // The rollout stays open across the upgrade screen and until closed, even once its card is
+    // gone (no reachable node is outdated any more).
+    var rollingOut by rememberSaveable { mutableStateOf(false) }
+    if (rollingOut && canUpgrade && talosCheck != null) {
+        TalosRolloutDialog(overview.nodes, talosCheck.latest, onUpgrade = { onUpgrade(it, talosCheck.latest) }, onDismiss = { rollingOut = false })
+    }
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -529,10 +570,19 @@ private fun NodeList(
         if (BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) item { SupportCard(onFunding) }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
         if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
-        if (certificate?.isDemo != true) item { TalosUpdateBanner(overview.nodes, canUpgrade, onUpgrade) }
         // The cards, as arranged; a long press on one opens the arrangement.
         layout.visible.forEach { card ->
             when (card) {
+                OverviewCard.TALOS_UPDATE -> if (talosUpdate != null) item(key = card.name) {
+                    Box(Modifier.longPressToCustomize(onCustomize)) {
+                        TalosUpdateCard(
+                            talosUpdate,
+                            canUpgrade,
+                            onRollout = { rollingOut = true },
+                            onSkip = { onSkipTalosUpdate(talosUpdate.latest) },
+                        )
+                    }
+                }
                 OverviewCard.SUMMARY -> item(key = card.name) {
                     ClusterSummaryCard(
                         clusterName ?: overview.context,
@@ -585,7 +635,8 @@ private fun NodeList(
                 }
             }
         }
-        if (layout.visible.isEmpty()) item(key = "all-hidden") {
+        // The Talos update card alone, with no release to offer, leaves the overview as empty.
+        if (layout.visible.none { it != OverviewCard.TALOS_UPDATE || talosUpdate != null }) item(key = "all-hidden") {
             Card(onClick = onCustomize, modifier = Modifier.fillMaxWidth()) {
                 MutedText(stringResource(R.string.overview_edit_all_hidden), modifier = Modifier.padding(16.dp))
             }

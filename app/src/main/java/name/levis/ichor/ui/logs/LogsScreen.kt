@@ -72,6 +72,7 @@ import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LiveIndicator
 import name.levis.ichor.ui.components.LoadingBox
+import name.levis.ichor.ui.components.SkeletonStyle
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.userMessage
 import name.levis.ichor.ui.components.TooltipIconButton
@@ -258,7 +259,7 @@ fun LogsScreen(
                 LogContent(followState.entries, truncated = false, view, live = true)
             } else {
                 when (val s = state) {
-                    UiState.Loading -> LoadingBox()
+                    UiState.Loading -> LoadingBox(style = SkeletonStyle.TEXT)
                     is UiState.Failed -> ErrorBox(s.message, vm::refresh)
                     is UiState.Loaded -> {
                         val entries = remember(s.data) { s.data.toEntries().numbered() }

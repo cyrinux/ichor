@@ -271,7 +271,7 @@ func probeEndpoint(ctx context.Context, cfgCtx *clientconfig.Context, endpoint s
 
 	probe := endpointProbe{Endpoint: endpoint}
 	if msgs := resp.GetMessages(); len(msgs) > 0 {
-		probe.Hostname = msgs[0].GetMetadata().GetHostname()
+		probe.Hostname = metaHost(msgs[0].GetMetadata())
 		probe.Version = msgs[0].GetVersion().GetTag()
 	}
 

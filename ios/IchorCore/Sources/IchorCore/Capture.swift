@@ -241,19 +241,8 @@ private func captureFileSafe(_ text: String, fallback: String) -> String {
 }
 
 /// A capture file on the phone.
-public struct CaptureFile: Equatable, Identifiable, Sendable {
-    public let name: String
-    public let size: Int64
-    public let modified: Date
-
-    public var id: String { name }
-
-    public init(name: String, size: Int64, modified: Date) {
-        self.name = name
-        self.size = size
-        self.modified = modified
-    }
-}
+/// A capture kept on the phone.
+public typealias CaptureFile = LocalFile
 
 /// Newest first; only .pcap files.
 public func sortCaptureFiles(_ files: [CaptureFile]) -> [CaptureFile] {

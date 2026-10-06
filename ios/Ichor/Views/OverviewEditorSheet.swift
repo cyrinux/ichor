@@ -30,6 +30,7 @@ extension OverviewAction {
 extension OverviewCard {
     var title: Text {
         switch self {
+        case .talosUpdate: Text("Talos update")
         case .summary: Text("Cluster summary")
         case .apps: Text("Apps")
         case .dataServices: Text("Data services")
@@ -43,6 +44,7 @@ extension OverviewCard {
     /// One line on what the section shows, so the editor's names need no guessing.
     var detail: Text {
         switch self {
+        case .talosUpdate: Text("A newer Talos release than the nodes run, when there is one")
         case .summary: Text("Nodes, Talos version, CPU and memory at a glance")
         case .apps: Text("Apps running on the cluster and those that need a look")
         case .dataServices: Text("Health of Longhorn, Garage and CloudNativePG")

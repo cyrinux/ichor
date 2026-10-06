@@ -6,9 +6,11 @@
     <!-- Common -->
     <string name="common_back">Back</string>
     <string name="common_cancel">Cancel</string>
+    <string name="common_undo">Undo</string>
     <string name="common_close">Close</string>
     <string name="common_ok">OK</string>
     <string name="common_retry">Retry</string>
+    <string name="common_loading">Loading</string>
     <string name="common_refresh">Refresh</string>
     <string name="common_delete">Delete</string>
     <string name="common_more">More</string>
@@ -1068,6 +1070,8 @@
     <string name="overview_talos_release_notes">Release notes</string>
     <string name="overview_talos_tap_upgrade">Tap to upgrade a node.</string>
     <string name="overview_talos_pick_node">Upgrade to %1$s</string>
+    <string name="overview_talos_skip">Skip %1$s</string>
+    <string name="overview_talos_skipped">Talos %1$s skipped until the next release</string>
     <string name="overview_talos_rollout_control_plane">Control plane · %1$d/%2$d done</string>
     <string name="overview_talos_rollout_workers">Workers · %1$d/%2$d done</string>
     <string name="overview_talos_rollout_workers_wait">Available after the control plane.</string>
@@ -2437,6 +2441,8 @@
     <string name="diff_show">Show changes</string>
     <string name="diff_hide">Hide changes</string>
     <string name="overview_card_desc_flux">Ready, reconciling and failing Kustomizations and HelmReleases</string>
+    <string name="overview_card_talos_update">Talos update</string>
+    <string name="overview_card_desc_talos_update">A newer Talos release than the nodes run, when there is one</string>
 
     <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
     <string name="argo_freeze_title">Freeze Argo CD</string>

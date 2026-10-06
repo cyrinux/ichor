@@ -46,7 +46,7 @@ struct MetricsView: View {
     var body: some View {
         Group {
             if !loaded {
-                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                SkeletonView()
             } else if let source = config.source {
                 panels(source)
             } else {

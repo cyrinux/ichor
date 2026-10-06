@@ -117,7 +117,7 @@ func drainStream(recv func() (*common.Data, error), n int) (logTail, error) {
 			return logTail{}, friendlyErr(err)
 		}
 
-		if e := msg.GetMetadata().GetError(); e != "" {
+		if e := metaError(msg.GetMetadata()); e != "" {
 			return logTail{}, errors.New(e)
 		}
 

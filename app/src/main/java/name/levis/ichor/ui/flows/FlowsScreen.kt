@@ -64,6 +64,7 @@ import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.LiveIndicator
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SpinnerBox
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -232,7 +233,7 @@ private fun Flows(vm: FlowsViewModel, state: FlowsState) {
             LazyColumn(Modifier.fillMaxSize()) {
                 item(key = "status") { StreamStatus(snapshot) }
                 when {
-                    snapshot == null -> item(key = "waiting") { if (state.streaming) LoadingBox(Modifier.padding(32.dp)) else EmptyText(stringResource(R.string.flows_no_flows)) }
+                    snapshot == null -> item(key = "waiting") { if (state.streaming) SpinnerBox(Modifier.padding(32.dp)) else EmptyText(stringResource(R.string.flows_no_flows)) }
                     page == 0 && snapshot.drops.isEmpty() -> item(key = "none") { EmptyText(stringResource(R.string.flows_no_drops)) }
                     page == 0 -> items(snapshot.drops, key = { "drop-" + it.key }) { group ->
                         DropCard(group, onClick = { openDrop = group.key })

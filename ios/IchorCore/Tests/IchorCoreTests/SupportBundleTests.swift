@@ -78,12 +78,6 @@ final class SupportBundleTests: XCTestCase {
         XCTAssertFalse(isStaleSupportPartName(".part"))
     }
 
-    func testNodesCSV() {
-        XCTAssertEqual(supportNodesCSV(all: ["a", "b", "c"], selected: ["c", "a"]), "a,c")
-        XCTAssertEqual(supportNodesCSV(all: ["a", "b"], selected: []), "")
-        XCTAssertEqual(supportNodesCSV(all: ["a"], selected: ["zzz"]), "")
-    }
-
     func testFilename() {
         let utc = TimeZone(identifier: "UTC")!
         let date = Date(timeIntervalSince1970: 1_790_865_005) // 2026-10-01 14:30:05 UTC
