@@ -27,7 +27,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
+import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -226,8 +226,8 @@ private fun Flows(vm: FlowsViewModel, state: FlowsState) {
 
     Column(Modifier.fillMaxSize()) {
         PrimaryTabRow(selectedTabIndex = tab) {
-            Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.flows_tab_drops)) })
-            Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.flows_tab_all)) })
+            AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.flows_tab_drops)) })
+            AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.flows_tab_all)) })
         }
         SwipeTabPager(TWO_TABS, tab, onSelect = { tab = it }) { page ->
             LazyColumn(Modifier.fillMaxSize()) {

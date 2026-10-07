@@ -5,7 +5,7 @@ import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Tab
+import name.levis.ichor.ui.components.AppTab
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -93,8 +93,8 @@ fun KubeSpanScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             PrimaryTabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == MAP_TAB, onClick = { tab = MAP_TAB }, text = { Text(stringResource(R.string.topology_tab_map)) })
-                Tab(selected = tab == PEERS_TAB, onClick = { tab = PEERS_TAB }, text = { Text(stringResource(R.string.topology_tab_peers)) })
+                AppTab(selected = tab == MAP_TAB, onClick = { tab = MAP_TAB }, text = { Text(stringResource(R.string.topology_tab_map)) })
+                AppTab(selected = tab == PEERS_TAB, onClick = { tab = PEERS_TAB }, text = { Text(stringResource(R.string.topology_tab_peers)) })
             }
             SwipeTabPager(listOf(MAP_TAB, PEERS_TAB), tab, onSelect = { tab = it }) { page ->
                 if (page == MAP_TAB) {

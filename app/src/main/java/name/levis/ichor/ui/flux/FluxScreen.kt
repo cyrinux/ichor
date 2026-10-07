@@ -13,7 +13,7 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
+import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -102,8 +102,8 @@ fun FluxScreen(onBack: () -> Unit, onApp: (kind: String, namespace: String, name
                     return@Column
                 }
                 PrimaryTabRow(selectedTabIndex = tab) {
-                    Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.flux_tab_apps)) })
-                    Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.flux_tab_sources)) })
+                    AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.flux_tab_apps)) })
+                    AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.flux_tab_sources)) })
                 }
                 PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
                     SwipeTabPager(TWO_TABS, tab, onSelect = { tab = it }) { page ->

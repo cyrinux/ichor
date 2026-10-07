@@ -15,7 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Tab
+import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -87,8 +87,8 @@ fun NetworkScreen(node: String, hostname: String, onBack: () -> Unit) {
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             PrimaryTabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.network_tab_interfaces)) })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.network_tab_connections)) })
+                AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.network_tab_interfaces)) })
+                AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.network_tab_connections)) })
             }
             SwipeTabPager(TWO_TABS, tab, onSelect = { tab = it }) { page ->
                 when (page) {
