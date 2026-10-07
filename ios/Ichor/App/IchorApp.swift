@@ -88,7 +88,7 @@ struct RootView: View {
     private var content: some View {
         if !model.loaded {
             ProgressView().task { await model.load() }
-        } else if model.yaml == nil {
+        } else if !model.hasConfig {
             NavigationStack { ImportView() }
         } else if !model.lock.enabled && AppLockState.required(for: model.summary?.contexts ?? []) {
             // Right after the first import, or on updating from an optional lock.
@@ -169,6 +169,20 @@ enum Route: Hashable {
     case diagnosis(note: String)
 }
 
+/// The home screen: the Talos overview, or the Kubernetes home of a cluster added from a kubeconfig.
+private struct HomeView: View {
+    @Binding var path: [Route]
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if model.activeIsKube {
+            KubeHomeView(path: $path)
+        } else {
+            OverviewView(path: $path)
+        }
+    }
+}
+
 struct NodeRef: Hashable {
     let address: String
     let hostname: String
@@ -185,7 +199,7 @@ struct MainNavigation: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            OverviewView(path: $path)
+            HomeView(path: $path)
                 .navigationDestination(for: Route.self) { route in
                     switch route {
                     case .node(let ref): NodeDetailView(ref: ref)
@@ -313,7 +327,7 @@ struct MainNavigation: View {
                 return
             }
             path = []
-            if let route = await target.route(client: model.client) { path = [route] }
+            if let route = await target.route(client: model.client, kube: model.activeIsKube) { path = [route] }
         }
     }
 

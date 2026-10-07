@@ -2,7 +2,8 @@ import SwiftUI
 import IchorCore
 import UniformTypeIdentifiers
 
-/// Admin kubeconfig export (os:admin), written only to the file the user picks.
+/// Kubeconfig export, written only to the file the user picks: the admin one Talos issues
+/// (os:admin), or the stored one of a cluster added from a kubeconfig.
 struct KubeconfigSection: View {
     @Environment(AppModel.self) private var model
     @State private var document: YAMLDocument?
@@ -14,12 +15,18 @@ struct KubeconfigSection: View {
         Section {
             Button(busy ? String(localized: "Exporting…") : String(localized: "Export kubeconfig…")) { Task { await export() } }
                 .disabled(busy)
-            Link("Get kubenav", destination: URL(string: "https://apps.apple.com/app/kubenav/id1494512160")!)
+            if !model.activeIsKube {
+                Link("Get kubenav", destination: URL(string: "https://apps.apple.com/app/kubenav/id1494512160")!)
+            }
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
         } header: {
             Text("Kubernetes")
         } footer: {
-            Text("Anyone with this file has full access to the Kubernetes cluster: keep it private. In kubenav, add a cluster from the file.")
+            if model.activeIsKube {
+                Text("The kubeconfig of this cluster, as it was imported. Anyone with this file has the access it grants: keep it private.")
+            } else {
+                Text("Anyone with this file has full access to the Kubernetes cluster: keep it private. In kubenav, add a cluster from the file.")
+            }
         }
         .fileExporter(isPresented: $exporting, document: document, contentType: .yaml,
                       defaultFilename: "kubeconfig-\(model.activeContext).yaml") { result in
@@ -40,7 +47,12 @@ struct KubeconfigSection: View {
         busy = true
         defer { busy = false }
         do {
-            document = YAMLDocument(text: try await client.kubeconfig())
+            // A cluster added from a kubeconfig: its own context, from the stored kubeconfig.
+            if model.activeIsKube {
+                document = YAMLDocument(text: try await TalosClient.exportKubeContext(stored: client.config, context: client.context))
+            } else {
+                document = YAMLDocument(text: try await client.kubeconfig())
+            }
             exporting = true
         } catch {
             message = error.localizedDescription

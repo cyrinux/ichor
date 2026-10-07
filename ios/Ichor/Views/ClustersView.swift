@@ -106,8 +106,11 @@ struct ClustersView: View {
             }
             Section {
                 NavigationLink(value: Route.importConfig) { Label("Add a cluster", systemImage: "plus") }
-                Button { scanning = true } label: {
-                    Label("Search the local network", systemImage: "antenna.radiowaves.left.and.right")
+                // It looks for Talos endpoints, with the talosconfig's credentials.
+                if model.yaml != nil {
+                    Button { scanning = true } label: {
+                        Label("Search the local network", systemImage: "antenna.radiowaves.left.and.right")
+                    }
                 }
             }
         }
@@ -197,8 +200,9 @@ struct ClustersView: View {
                 Label("VPN only", systemImage: "lock.shield")
             }
         }
-        // Not in screenshot mode (the endpoints shown are fake), nor for the demo.
-        if !model.labels.masked && !context.demo {
+        // Not in screenshot mode (the endpoints shown are fake), nor for the demo; Talos endpoints
+        // only (a kubeconfig cluster's server comes with its kubeconfig).
+        if !model.labels.masked && !context.demo && !context.isKube {
             Button { editingEndpoints = context } label: { Label("Edit endpoints", systemImage: "point.3.connected.trianglepath.dotted") }
         }
         if !model.labels.masked && !context.fingerprint.isEmpty {
