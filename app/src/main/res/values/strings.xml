@@ -543,7 +543,7 @@
     <string name="about_disclaimer">Not affiliated with Sidero Labs. Talos is a trademark of Sidero Labs, Inc.</string>
 
     <!-- Import -->
-    <string name="import_title">Import talosconfig</string>
+    <string name="import_title">Add a cluster</string>
     <string name="import_help">How to create a talosconfig</string>
     <string name="import_tab_file">File</string>
     <string name="import_tab_paste">Paste</string>
