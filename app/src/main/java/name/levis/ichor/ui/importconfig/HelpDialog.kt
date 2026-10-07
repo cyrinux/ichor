@@ -96,11 +96,32 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
                 Command("adb push talosconfig-phone /sdcard/Download/")
                 Step(stringResource(R.string.help_step_qr))
                 Command("qrencode -t ansiutf8 -r talosconfig-phone")
+                Step(stringResource(R.string.help_qr_compressed))
+                Command(COMPRESSED_QR_COMMAND)
                 MutedText(stringResource(R.string.help_cleanup))
+                KubeconfigHelp()
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.help_got_it)) } },
     )
+}
+
+/**
+ * A config too large for one QR code (a kubeconfig with an embedded client certificate)
+ * fits once compressed: the importer expands an "ichor-config:" payload (see
+ * go/ichorgo/import_text.go). Works for a talosconfig too.
+ */
+private const val COMPRESSED_QR_COMMAND =
+    "printf 'ichor-config:%s' \"\$(gzip -9c talosconfig-phone | basenc --base64url -w0)\" | qrencode -t ansiutf8"
+
+/** Clusters added from a kubeconfig: what works today, and how to make one the app can read. */
+@Composable
+private fun KubeconfigHelp() {
+    Text(stringResource(R.string.help_kube_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
+    Text(stringResource(R.string.help_kube_body), style = MaterialTheme.typography.bodyMedium)
+    Step(stringResource(R.string.help_kube_flatten))
+    Command("kubectl config view --flatten --minify > kubeconfig-phone")
+    MutedText(stringResource(R.string.help_kube_later))
 }
 
 @Composable

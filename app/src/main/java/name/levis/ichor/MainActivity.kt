@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.core.content.IntentCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -185,10 +186,18 @@ private fun Intent.shareLink(): String? {
 private fun Intent.clusterFingerprint(): String? = getStringExtra(MainActivity.EXTRA_CLUSTER)?.takeIf { it.isNotBlank() }
 
 /**
- * A file opened with the app (see the manifest's intent filters); its content tells whether it
- * is a backup. Not file://: another app could point it at this app's private files.
+ * A file opened with the app or shared to it (see the manifest's intent filters); its content
+ * tells a backup from a config to import. Not file://: another app could point it at this
+ * app's private files.
  */
-private fun Intent.backupFile(): Uri? = data?.takeIf { action == Intent.ACTION_VIEW && it.scheme == "content" }
+private fun Intent.backupFile(): Uri? {
+    val uri = when (action) {
+        Intent.ACTION_VIEW -> data
+        Intent.ACTION_SEND -> IntentCompat.getParcelableExtra(this, Intent.EXTRA_STREAM, Uri::class.java)
+        else -> null
+    }
+    return uri?.takeIf { it.scheme == "content" }
+}
 
 private fun Intent.deepLink(): DeepLink? {
     val uri = data

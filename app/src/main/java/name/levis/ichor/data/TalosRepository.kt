@@ -54,6 +54,7 @@ import name.levis.ichor.model.SELECTED_PODS_PAGE
 import name.levis.ichor.model.KubeCronJobPage
 import name.levis.ichor.model.KubeWorkloadPage
 import name.levis.ichor.model.KubeNamespaces
+import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.KUBE_PAGE_SIZE
 import name.levis.ichor.model.KubeRoute
@@ -374,8 +375,20 @@ class TalosRepository(
             ?.let { if (it.raw.isEmpty()) it.copy(raw = line) else it }
             ?: LogEntry.plain(line)
 
-    /** Admin kubeconfig (os:admin role). A credential: only hand it to where the user chose. */
-    suspend fun kubeconfig(): String = kubeCall { cfg, ctx, server -> Ichorgo.kubeconfig(cfg, ctx, server) }
+    /**
+     * Admin kubeconfig (os:admin role), or for a cluster added from a kubeconfig its stored
+     * context as imported. A credential: only hand it to where the user chose.
+     */
+    suspend fun kubeconfig(): String {
+        val stored = configs.forCall()
+        if (stored.activeIsKube) return withContext(Dispatchers.IO) { Ichorgo.exportKubeContext(stored.kubeYaml, stored.activeContext) }
+        return kubeCall { cfg, ctx, server -> Ichorgo.kubeconfig(cfg, ctx, server) }
+    }
+
+    /** The cluster's nodes as Kubernetes lists them: the home of a cluster added from a kubeconfig. */
+    suspend fun kubeNodes(): KubeNodesOverview = remember(KUBE_NODES) {
+        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubeNodesOverview.serializer(), Ichorgo.kubeNodes(cfg, ctx, server)) }
+    }
 
     /**
      * The Deployments, StatefulSets and DaemonSets running [pods] (an app's), through their
@@ -833,14 +846,16 @@ class TalosRepository(
 
     /**
      * Hosts of [networks] (IPv4 or IPv6 CIDRs) answering the Talos API with the credentials of one of
-     * the stored contexts. Not through [call]: it looks for any cluster, on whatever network.
+     * the stored Talos contexts. Not through [call]: it looks for any cluster, on whatever network.
      */
     suspend fun findEndpoints(networks: List<String>): List<EndpointMatch> {
         val stored = configs.config.value ?: throw NoConfigException()
+        // Only clusters added from a kubeconfig: no Talos credentials to search with.
+        if (stored.talosYaml.isBlank()) return emptyList()
         return withContext(Dispatchers.IO) {
             TalosJson.decodeFromString(
                 ListSerializer(EndpointMatch.serializer()),
-                Ichorgo.findEndpoints(stored.yaml, networks.joinToString(",")),
+                Ichorgo.findEndpoints(stored.talosYaml, networks.joinToString(",")),
             )
         }
     }
@@ -849,7 +864,7 @@ class TalosRepository(
     suspend fun probeEndpoint(contextName: String, endpoint: String): EndpointProbe {
         val stored = configs.config.value ?: throw NoConfigException()
         return withContext(Dispatchers.IO) {
-            TalosJson.decodeFromString(EndpointProbe.serializer(), Ichorgo.probeEndpoint(stored.yaml, contextName, endpoint))
+            TalosJson.decodeFromString(EndpointProbe.serializer(), Ichorgo.probeEndpoint(stored.yamlFor(contextName), contextName, endpoint))
         }
     }
 

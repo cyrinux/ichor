@@ -71,7 +71,7 @@ class DebugShell internal constructor(
         emulator.clearScreen()
         setState(ShellState.Starting(UiText.Res(R.string.debug_connecting)))
         session = Ichorgo.startDebugShell(
-            stored.yaml, key.context, key.node, image, args,
+            stored.yamlFor(key.context), key.context, key.node, image, args,
             size.first.toLong(), size.second.toLong(),
             object : DebugListener {
                 override fun onStatus(message: String) {

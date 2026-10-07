@@ -3,6 +3,10 @@ package name.levis.ichor.data
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
+import name.levis.ichor.model.KIND_KUBE
+import name.levis.ichor.model.accessLabel
+import name.levis.ichor.model.isKube
+import name.levis.ichor.R
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -36,6 +40,22 @@ class FeatureTest {
         assertFalse(op.allows(Feature.CGROUPS))
         assertTrue(op.allows(Feature.RESOURCE_BROWSER))
         assertTrue(op.allows(Feature.SUPPORT_BUNDLE))
+    }
+
+    @Test
+    fun kubeconfigClusterOnlyReachesKubernetes() {
+        // No Talos API: every Talos feature is out, whatever roles a summary might carry.
+        val kube = ContextSummary(name = "eks", kind = KIND_KUBE, roles = listOf("os:admin"))
+        val allowed = setOf(Feature.WORKLOADS, Feature.KUBECONFIG)
+        Feature.entries.forEach { assertEquals(it.name, it in allowed, kube.allows(it)) }
+        assertTrue(kube.isKube)
+        assertEquals(R.string.common_kind_kubernetes, kube.accessLabel)
+    }
+
+    @Test
+    fun talosIsTheDefaultKind() {
+        assertFalse(ctx("os:admin").isKube)
+        assertEquals(R.string.common_access_admin, ctx("os:admin").accessLabel)
     }
 
     @Test

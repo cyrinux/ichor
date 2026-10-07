@@ -81,6 +81,7 @@ import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.accessLabel
 import name.levis.ichor.model.hueOf
+import name.levis.ichor.model.isKube
 import name.levis.ichor.model.seedFromHue
 import name.levis.ichor.model.seedOf
 import name.levis.ichor.monitor.CERT_WARN_DAYS
@@ -264,8 +265,9 @@ fun ClusterSheet(
                     vpnOnly = context.fingerprint in vpnOnly,
                     onVpnOnly = { on: Boolean -> onVpnOnly(context, on) }.takeIf { context.fingerprint.isNotBlank() },
                     onRemove = { removing = context },
-                    // Not in screenshot mode (the endpoints shown are fake), nor for the demo.
-                    onEndpoints = onEndpoints?.let { edit -> { edit(context) } }?.takeIf { !labels.masked && !context.demo },
+                    // Not in screenshot mode (the endpoints shown are fake), nor for the demo, nor for a
+                    // cluster added from a kubeconfig (its server is no Talos endpoint).
+                    onEndpoints = onEndpoints?.let { edit -> { edit(context) } }?.takeIf { !labels.masked && !context.demo && !context.isKube },
                 )
             }
             // What the lock on a row means, once there is one.

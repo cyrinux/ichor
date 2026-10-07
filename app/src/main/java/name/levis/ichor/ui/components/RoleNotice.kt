@@ -11,7 +11,26 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.Feature
+import name.levis.ichor.model.isKube
+
+/**
+ * Explains why a feature is unavailable for [cluster]: the talosconfig's roles, or for a
+ * cluster added from a kubeconfig, that it has no Talos API (no role would help).
+ */
+@Composable
+fun RoleNotice(feature: Feature, cluster: ContextSummary, modifier: Modifier = Modifier) {
+    if (cluster.isKube) TalosOnlyNotice(modifier) else RoleNotice(feature, cluster.roles, modifier)
+}
+
+/** A Talos screen reached on a cluster added from a kubeconfig (a link, a notification). */
+@Composable
+fun TalosOnlyNotice(modifier: Modifier = Modifier) {
+    Card(modifier.fillMaxWidth()) {
+        MutedText(stringResource(R.string.common_talos_only), modifier = Modifier.padding(16.dp))
+    }
+}
 
 /** Explains why a feature is unavailable with the imported talosconfig's roles. */
 @Composable

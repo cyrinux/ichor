@@ -14,12 +14,16 @@ data class ImportConflict(
     val sameAs: String? = null,
 )
 
-/** What the user picked for a conflict: a name of their own (blank: the suggested one), or replacing [ImportConflict.sameAs]. */
+/**
+ * What the user picked for a conflict: a name of their own (blank: the suggested one), or
+ * replacing [ImportConflict.sameAs]. [skip] leaves a kubeconfig context out (unchecked).
+ */
 @Serializable
 data class ImportChoice(
     val index: Int,
     val name: String = "",
     val replace: Boolean = false,
+    val skip: Boolean = false,
 )
 
 /**
@@ -34,9 +38,10 @@ fun takenNameChoices(
     imported: List<String>,
 ): Set<Int> {
     val byIndex = choices.associateBy { it.index }
-    val defaults = conflicts.filter { byIndex[it.index]?.let { c -> c.replace || c.name.isNotBlank() } != true }
+    // A skipped context (kubeconfig import) takes no name.
+    val defaults = conflicts.filter { byIndex[it.index]?.let { c -> c.skip || c.replace || c.name.isNotBlank() } != true }
         .map { it.suggested }
-    val chosen = choices.filter { !it.replace && it.name.isNotBlank() }
+    val chosen = choices.filter { !it.skip && !it.replace && it.name.isNotBlank() }
     val counts = chosen.groupingBy { it.name.trim() }.eachCount()
     return chosen.filter { choice ->
         val name = choice.name.trim()

@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.HealthLineStatus
 import name.levis.ichor.model.allows
+import name.levis.ichor.model.isKube
 import name.levis.ichor.model.healthLineStatus
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
@@ -117,8 +118,8 @@ fun HealthScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (!allowed) {
-                RoleNotice(Feature.HEALTH, summary.roles)
-                MutedText(stringResource(R.string.health_any_role_hint))
+                summary?.let { RoleNotice(Feature.HEALTH, it) }
+                if (summary?.isKube != true) MutedText(stringResource(R.string.health_any_role_hint))
                 return@Column
             }
             HealthHeader(state, onRerun = vm::start)

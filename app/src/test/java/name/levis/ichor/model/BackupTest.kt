@@ -88,6 +88,34 @@ class BackupTest {
     }
 
     @Test
+    fun formatTwoOnlyWithAKubeconfig() {
+        assertEquals(1, backupFormat(null))
+        assertEquals(1, backupFormat("  "))
+        assertEquals(2, backupFormat("apiVersion: v1\nkind: Config\n"))
+    }
+
+    @Test
+    fun kubeconfigPayloadKeepsAnEmptyTalosconfig() {
+        val kube = "apiVersion: v1\nkind: Config\n"
+        val payload = BackupPayload(format = backupFormat(kube), platform = "android", talosconfig = "", kubeconfig = kube)
+
+        val json = TalosJson.encodeToString(BackupPayload.serializer(), payload)
+
+        assertTrue("\"format\":2" in json)
+        assertTrue("older apps require the field", "\"talosconfig\":\"\"" in json)
+        assertEquals(payload, TalosJson.decodeFromString(BackupPayload.serializer(), json))
+    }
+
+    @Test
+    fun aTalosOnlyPayloadHasNoKubeconfigKey() {
+        val json = TalosJson.encodeToString(BackupPayload.serializer(), BackupPayload(talosconfig = "context: lab\n"))
+
+        assertTrue("\"format\":1" in json)
+        assertTrue("\"kubeconfig\"" !in json)
+        assertNull(TalosJson.decodeFromString(BackupPayload.serializer(), json).kubeconfig)
+    }
+
+    @Test
     fun decodesAnIosPayload() {
         val json = """
             {"format":1,"platform":"ios","createdAt":1790000000,"talosconfig":"context: lab\n",
