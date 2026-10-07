@@ -419,6 +419,17 @@ func KubeSetCredentials(storedYAML, contextName, secretsJSON string) (err error)
 	defer cancel()
 
 	_, expiry, updated, err := cm.mint(ctx, state)
+
+	// A method that completes in the browser (IAM Identity Center) keeps what was entered
+	// and asks for the sign-in: the app starts it on this error.
+	var needSignIn *errSignInRequired
+	if _, interactive := cm.(interactiveMethod); interactive && errors.As(err, &needSignIn) {
+		kubeAuth.forget(sc.key)
+		kubeAuth.save(sc.key, state)
+
+		return err
+	}
+
 	if err != nil {
 		return err
 	}
