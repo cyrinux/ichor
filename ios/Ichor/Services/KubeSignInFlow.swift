@@ -40,7 +40,7 @@ final class KubeSignInFlow {
     func signIn(_ target: KubeSignInTarget, secrets: String) async {
         phase = .working
         do {
-            try await TalosClient.setCredentials(kube: target.kube, context: target.context, secrets: secrets)
+            try await TalosClient.setCredentials(kube: target.kube, context: target.context, secrets: secrets, talos: target.talos)
             phase = .signedIn
         } catch {
             let message = error.localizedDescription
@@ -59,7 +59,7 @@ final class KubeSignInFlow {
         let id = runID
         cancelled = false
         phase = .working
-        let run = TalosClient.startSignIn(kube: target.kube, context: target.context)
+        let run = TalosClient.startSignIn(kube: target.kube, context: target.context, talos: target.talos)
         cancelRun = run.cancel
         completeRun = run.complete
         Task {

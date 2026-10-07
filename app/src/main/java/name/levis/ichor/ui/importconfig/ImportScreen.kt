@@ -296,9 +296,15 @@ private fun PreviewCard(
                     val name = if (ctx.name == summary.current) stringResource(R.string.import_context_current, ctx.name) else ctx.name
                     Text(name, style = MaterialTheme.typography.titleMedium)
                     InfoRow(stringResource(R.string.common_label_endpoints), ctx.endpoints.joinToString("\n"), mono = true)
-                    InfoRow(stringResource(R.string.common_label_nodes), if (ctx.nodes.isEmpty()) stringResource(R.string.import_nodes_endpoints) else "${ctx.nodes.size}")
-                    InfoRow(stringResource(R.string.common_label_roles), ctx.roles.joinToString())
-                    InfoRow(stringResource(R.string.common_label_cert_expires), certExpiry(ctx.certNotAfter))
+                    val noNodes = stringResource(if (ctx.omni) R.string.import_nodes_omni else R.string.import_nodes_endpoints)
+                    InfoRow(stringResource(R.string.common_label_nodes), if (ctx.nodes.isEmpty()) noNodes else "${ctx.nodes.size}")
+                    if (ctx.omni) {
+                        InfoRow(stringResource(R.string.import_omni_cluster), ctx.cluster)
+                        InfoRow(stringResource(R.string.import_omni_identity), ctx.identity, mono = true)
+                    } else {
+                        InfoRow(stringResource(R.string.common_label_roles), ctx.roles.joinToString())
+                        InfoRow(stringResource(R.string.common_label_cert_expires), certExpiry(ctx.certNotAfter))
+                    }
                     preview.conflicts.firstOrNull { it.index == index }?.let { conflict ->
                         NameConflict(
                             name = ctx.name,

@@ -38,6 +38,9 @@ type contextSummary struct {
 	Omni     bool   `json:"omni,omitempty"`
 	Identity string `json:"identity,omitempty"`
 	Cluster  string `json:"cluster,omitempty"`
+	// SignIn is the method an Omni context signs in with, like a kubeconfig context's (see
+	// TalosSignInInfo); "" for a certificate.
+	SignIn string `json:"signIn,omitempty"`
 }
 
 // ParseConfig validates a talosconfig YAML and returns a JSON configSummary.

@@ -585,7 +585,7 @@ private val HUE_BAR: List<Color> = (0..MAX_HUE.toInt() step HUE_BAR_STEP).map { 
  * cluster is stored ([contexts]).
  */
 private fun clusterAccount(context: ContextSummary, contexts: List<ContextSummary>): Int? = when {
-    context.isKube -> R.string.kube_signin_menu.takeIf { context.signIn.isNotEmpty() }
+    context.isKube || context.omni -> R.string.kube_signin_menu.takeIf { context.signIn.isNotEmpty() }
     context.demo -> null
     else -> R.string.kube_access_menu.takeIf { contexts.any { it.isKube } }
 }

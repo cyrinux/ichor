@@ -44,8 +44,8 @@ fun ManageClustersSheet(
     var account by remember { mutableStateOf<ContextSummary?>(null) }
     var signingIn by remember { mutableStateOf<String?>(null) }
     // Which kubeconfig clusters wait for a sign-in: read from what is stored, no network.
-    val signInNeeded by produceState(emptySet<String>(), config.kubeYaml, invalidations) {
-        value = config.summary.contexts.filter { it.isKube && it.signIn.isNotEmpty() }
+    val signInNeeded by produceState(emptySet<String>(), config.kubeYaml, config.talosYaml, invalidations) {
+        value = config.summary.contexts.filter { it.signIn.isNotEmpty() }
             .filter { runCatching { app.kubeAuthRepository.info(it.name)?.signedIn == false }.getOrDefault(false) }
             .map { it.name }
             .toSet()
@@ -86,7 +86,7 @@ fun ManageClustersSheet(
     )
 
     account?.let { cluster ->
-        if (cluster.isKube) {
+        if (cluster.isKube || cluster.omni) {
             SignInAccountDialog(
                 cluster = cluster,
                 label = labels.of(cluster),

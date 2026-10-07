@@ -269,9 +269,15 @@ private struct PreviewList: View {
             ForEach(summary.contexts) { ctx in
                 Section(ctx.name == summary.current ? String(localized: "\(ctx.name) (current)") : ctx.name) {
                     LabeledContent("Endpoints", value: ctx.endpoints.joined(separator: "\n"))
-                    LabeledContent("Nodes", value: ctx.nodes.isEmpty ? String(localized: "endpoints") : "\(ctx.nodes.count)")
-                    LabeledContent("Roles", value: ctx.roles.joined(separator: ", "))
-                    LabeledContent("Cert expires", value: localizedCertExpiry(ctx.certNotAfter))
+                    let noNodes = ctx.omni ? String(localized: "learned from Omni") : String(localized: "endpoints")
+                    LabeledContent("Nodes", value: ctx.nodes.isEmpty ? noNodes : "\(ctx.nodes.count)")
+                    if ctx.omni {
+                        LabeledContent("Omni cluster", value: ctx.cluster ?? "")
+                        LabeledContent("Omni identity", value: ctx.identity ?? "")
+                    } else {
+                        LabeledContent("Roles", value: ctx.roles.joined(separator: ", "))
+                        LabeledContent("Cert expires", value: localizedCertExpiry(ctx.certNotAfter))
+                    }
                 }
             }
             if adding {

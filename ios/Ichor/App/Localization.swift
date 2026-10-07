@@ -107,6 +107,7 @@ extension ContextSummary {
     /// added from a kubeconfig (its access is its RBAC, the app does not know it).
     var localizedAccessLabel: String {
         if isKube { return String(localized: "Kubernetes") }
+        if omni { return "Sidero Omni" }
         if roles.contains("os:admin") { return String(localized: "admin") }
         if roles.contains("os:operator") { return String(localized: "operator") }
         return String(localized: "read-only")

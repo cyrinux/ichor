@@ -69,6 +69,7 @@ class KubeSignInTest {
         assertEquals(FieldKind.JSON, credentialField("gcpServiceAccountJson")?.kind)
         assertEquals(FieldKind.SECRET, credentialField("doApiToken")?.kind)
         assertEquals(FieldKind.TEXT, credentialField("awsRegion")?.kind)
+        assertEquals(FieldKind.SECRET, credentialField("serviceAccountKey")?.kind)
         assertNull(credentialField("somethingNew"))
     }
 

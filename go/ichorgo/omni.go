@@ -78,6 +78,7 @@ func summarizeOmniContext(name string, ctx *clientconfig.Context) (contextSummar
 		Omni:        true,
 		Identity:    omniIdentity(ctx),
 		Cluster:     ctx.Cluster,
+		SignIn:      omniMethodName(ctx),
 	}, nil
 }
 
