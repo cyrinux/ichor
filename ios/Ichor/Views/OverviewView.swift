@@ -596,8 +596,9 @@ private struct CertExpiryBanner: View {
     }
 }
 
-/// One site's nodes in the overview's nodes section. Collapsed (the default): a chip per calm
-/// node, a full row only for those needing attention, so a problem never hides behind the fold.
+/// One site's nodes in the overview's nodes section. Collapsed (the default): a chip per node,
+/// one with a problem tinted in its status colour so it stands out without growing the card;
+/// expanded: a full row per node with the details.
 private struct NodeGroupRows: View {
     let nodes: [NodeOverview]
     let expanded: Bool
@@ -605,10 +606,13 @@ private struct NodeGroupRows: View {
     @Binding var path: [Route]
 
     var body: some View {
-        let calm = expanded ? [] : nodes.filter { !$0.needsAttention }
-        if !calm.isEmpty {
+        if expanded {
+            ForEach(nodes) { node in
+                NodeListRow(node: node, sharedVersion: sharedVersion, path: $path)
+            }
+        } else {
             ChipFlow(spacing: 8) {
-                ForEach(calm) { node in
+                ForEach(nodes) { node in
                     NodeChip(node: node) { path.append(.node(node.ref)) }
                         .contextMenu { NodeMenu(node: node, path: $path) }
                 }
@@ -616,28 +620,28 @@ private struct NodeGroupRows: View {
             .buttonStyle(.borderless)
             .padding(.vertical, 4)
         }
-        ForEach(expanded ? nodes : nodes.filter(\.needsAttention)) { node in
-            NodeListRow(node: node, sharedVersion: sharedVersion, path: $path)
-        }
     }
 }
 
-/// A calm node in the collapsed nodes section: its status dot and hostname; tap opens it.
+/// A node in the collapsed nodes section: its status dot and hostname, the whole chip tinted
+/// when it has a problem since no row spells it out; tap opens it.
 private struct NodeChip: View {
     let node: NodeOverview
     let open: () -> Void
 
     var body: some View {
+        let status = node.status
+        let calm = status == .ready
         Button(action: open) {
             HStack(spacing: 6) {
-                Circle().fill(node.health.color).frame(width: 8, height: 8)
+                Circle().fill(status.color).frame(width: 8, height: 8)
                 Text(verbatim: node.hostname).font(.subheadline).lineLimit(1)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background(Color.secondary.opacity(0.12), in: Capsule())
+            .background(calm ? Color.secondary.opacity(0.12) : status.color.opacity(0.16), in: Capsule())
         }
-        .foregroundStyle(.primary)
-        .accessibilityLabel(Text(verbatim: "\(node.hostname), \(node.health.label)"))
+        .foregroundStyle(calm ? Color.primary : status.color)
+        .accessibilityLabel(Text(verbatim: "\(node.hostname), \(status.label)"))
     }
 }
