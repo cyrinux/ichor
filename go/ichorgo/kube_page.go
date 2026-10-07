@@ -51,7 +51,9 @@ type kubePage struct {
 // kubeTable is the part of a metav1.Table the app reads.
 type kubeTable struct {
 	Columns []struct {
-		Name string `json:"name"`
+		Name     string `json:"name"`
+		Type     string `json:"type"`
+		Priority int    `json:"priority"`
 	} `json:"columnDefinitions"`
 	Rows []kubeTableRow `json:"rows"`
 }

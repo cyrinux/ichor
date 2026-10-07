@@ -308,3 +308,22 @@ func kubeClusterIdentity(cluster *kubeStoreCluster) string {
 func sameKubeCluster(a, b *kubeStoreCluster) bool {
 	return a != nil && b != nil && kubeClusterIdentity(a) != "" && kubeClusterIdentity(a) == kubeClusterIdentity(b)
 }
+
+// kubeContextYAMLWithoutUser is kubeContextYAML with the user's credentials replaced by a
+// placeholder token: for a context whose token comes from a sign-in method.
+func kubeContextYAMLWithoutUser(storedYAML, name string) (string, error) {
+	doc, err := loadKubeconfigDoc(storedYAML)
+	if err != nil {
+		return "", err
+	}
+
+	single, err := doc.single(name)
+	if err != nil {
+		return "", err
+	}
+
+	single.Users[0].User = kubeStoreUser{}.User
+	single.Users[0].User.Token = "signed-in"
+
+	return encodeKubeconfigDoc(single)
+}

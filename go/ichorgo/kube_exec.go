@@ -77,7 +77,7 @@ func (k *kubeClient) execWith(ctx context.Context, limits execLimits, namespace,
 		return nil, nil, fmt.Errorf("invalid exec target %q %v", container, argv)
 	}
 
-	cfg, err := k.execConfig(namespace, pod, container, argv)
+	cfg, err := k.execConfig(ctx, namespace, pod, container, argv)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -110,7 +110,7 @@ func (k *kubeClient) execWith(ctx context.Context, limits execLimits, namespace,
 	return readExecStream(ws, limits.maxOutput)
 }
 
-func (k *kubeClient) execConfig(namespace, pod, container string, argv []string) (*websocket.Config, error) {
+func (k *kubeClient) execConfig(ctx context.Context, namespace, pod, container string, argv []string) (*websocket.Config, error) {
 	query := url.Values{"container": {container}, "command": argv, "stdout": {"true"}, "stderr": {"true"}}
 
 	u, err := k.endpoint(podPath(namespace, pod) + "/exec?" + query.Encode())
@@ -130,8 +130,13 @@ func (k *kubeClient) execConfig(namespace, pod, container string, argv []string)
 	cfg.Dialer = &net.Dialer{Timeout: kubeProbeTimeout}
 	cfg.Header.Set("User-Agent", "ichor")
 
-	if k.token != "" {
-		cfg.Header.Set("Authorization", "Bearer "+k.token)
+	token, err := k.bearer(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if token != "" {
+		cfg.Header.Set("Authorization", "Bearer "+token)
 	}
 
 	return cfg, nil

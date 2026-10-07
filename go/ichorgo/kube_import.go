@@ -30,6 +30,9 @@ type kubeContextSummary struct {
 	// Problem is a kubeProblem code when the context cannot be added; the apps localize it.
 	Problem       string `json:"problem,omitempty"`
 	ProblemDetail string `json:"problemDetail,omitempty"`
+	// SignIn is the method the app signs in with ("" for static credentials); see
+	// KubeSignInInfo for how and whether it is signed in.
+	SignIn string `json:"signIn,omitempty"`
 }
 
 type kubeconfigSummary struct {
@@ -97,6 +100,9 @@ func summarizeKubeContext(doc *kubeconfigDoc, name string) kubeContextSummary {
 	}
 
 	s.Problem, s.ProblemDetail = kubeContextProblem(doc, name, cluster, user)
+	if s.Problem == "" && supportedSignIn(s.Auth) {
+		s.SignIn = s.Auth
+	}
 
 	return s
 }
@@ -302,7 +308,15 @@ func kubeContextProblem(doc *kubeconfigDoc, name string, cluster *kubeStoreClust
 	case authExec:
 		return KubeProblemExec, u.Exec.Command
 	default:
-		return KubeProblemSignInLater, method
+		if !supportedSignIn(method) {
+			return KubeProblemSignInLater, method
+		}
+
+		if _, err := newSignInMethod(method, user, cluster); err != nil {
+			return KubeProblemInvalid, err.Error()
+		}
+
+		return "", ""
 	}
 
 	single, err := doc.single(name)
