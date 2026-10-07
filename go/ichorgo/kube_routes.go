@@ -105,6 +105,10 @@ func appRoutes(ctx context.Context, k *kubeClient, pods []routePod) (kubeRouteLi
 		return kubeRouteList{}, err
 	}
 
+	if len(httpRoutes.Items) > 0 {
+		gateways.Items = withPublicPorts(ctx, k, gateways.Items)
+	}
+
 	routes := append(ingressRoutes(ingresses.Items, services), httpRouteRoutes(httpRoutes.Items, gateways.Items, services)...)
 
 	return kubeRouteList{Routes: uniqueRoutes(routes)}, nil

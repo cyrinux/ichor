@@ -58,6 +58,8 @@ type gatewayObject struct {
 			Value string `json:"value"`
 		} `json:"addresses"`
 	} `json:"status"`
+	// publicPorts maps listener ports to the ports clients reach them at (withPublicPorts).
+	publicPorts map[int32]int32
 }
 
 // routeTarget is a path of an HTTPRoute and the Service it sends it to.
@@ -132,8 +134,8 @@ func httpRouteTargets(hr httpRouteObject, services map[serviceRef]bool) []routeT
 	return targets
 }
 
-// routeParents returns the listeners hr attaches to (sectionName and port narrow them) and
-// the addresses of its Gateways.
+// routeParents returns the listeners hr attaches to (sectionName and port narrow them), at
+// their public ports when known, and the addresses of its Gateways.
 func routeParents(hr httpRouteObject, gateways []gatewayObject) ([]gatewayListener, []string) {
 	var (
 		listeners []gatewayListener
@@ -156,6 +158,10 @@ func routeParents(hr httpRouteObject, gateways []gatewayObject) ([]gatewayListen
 
 		for _, l := range gateways[i].Spec.Listeners {
 			if (ref.SectionName == "" || ref.SectionName == l.Name) && (ref.Port == 0 || ref.Port == l.Port) {
+				if public, ok := gateways[i].publicPorts[l.Port]; ok {
+					l.Port = public
+				}
+
 				listeners = append(listeners, l)
 			}
 		}
