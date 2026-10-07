@@ -3286,4 +3286,6 @@
     <string name="imagescan_operator_failed">Не вдалося прочитати звіти Trivy Operator: %1$s</string>
     <string name="imagescan_not_scanned">Не перевірено.</string>
     <string name="imagescan_timed_out">Перевірка тривала задовго й була зупинена.</string>
+    <string name="kube_eks_account">акаунт %1$s</string>
+    <string name="kube_gke_project">проєкт %1$s</string>
 </resources>

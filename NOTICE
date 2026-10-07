@@ -22,7 +22,9 @@ This product includes third-party software:
   Attribution 4.0 International (CC BY 4.0), by selfh.st; resized.
 
 Application names and logos are trademarks of their respective owners and are shown
-only to identify the software running in a cluster; this project is not affiliated
-with or endorsed by them.
+only to identify the software running in a cluster, or the platform a cluster runs on
+(Kubernetes is a trademark of The Linux Foundation; AWS of Amazon.com, Inc.; Google
+Cloud of Google LLC; Azure of Microsoft Corporation; DigitalOcean of DigitalOcean,
+LLC); this project is not affiliated with or endorsed by them.
 
 Talos is a trademark of Sidero Labs, Inc. This project is not affiliated with Sidero Labs.

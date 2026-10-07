@@ -33,6 +33,15 @@ CDN = "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons"
 SELFHST = "sh:"
 SELFHST_CDN = "https://cdn.jsdelivr.net/gh/selfhst/icons"
 SIZE = 96
+# Logos the cluster selector shows for a managed cluster (model/ClusterLogo.kt, IchorCore
+# ClusterLogo.swift), bundled with the app icons: file name -> Dashboard Icons slug. Talos,
+# Kubernetes and Rancher come from the catalog.
+CLUSTER_ICONS = {
+    "aws": "aws",
+    "google-cloud": "google-cloud-platform",
+    "azure": "azure",
+    "digital-ocean": "digital-ocean",
+}
 CATEGORIES = {
     "system", "networking", "storage", "observability", "security", "database",
     "messaging", "devops", "media", "home", "productivity", "ai", "web",
@@ -51,6 +60,8 @@ def validate(apps: list[dict]) -> list[str]:
         if app_id in ids:
             errors.append(f"duplicate id {app_id}")
         ids.add(app_id)
+        if app_id in CLUSTER_ICONS:
+            errors.append(f"{app_id}: file name taken by a cluster logo (CLUSTER_ICONS)")
         if app.get("cat") not in CATEGORIES:
             errors.append(f"{app_id}: unknown category {app.get('cat')!r}")
         for name in app.get("match", [app_id]):
@@ -106,6 +117,8 @@ def sync(apps: list[dict]) -> list[str]:
         if icon:
             ref = icon.removeprefix(SELFHST)
             sources[app["id"]] = selfhst_urls(ref, selfhst) if icon.startswith(SELFHST) else homarr_urls(icon, meta)
+    for name, slug in CLUSTER_ICONS.items():
+        sources[name] = homarr_urls(slug, meta)
     errors = [f"{app_id}: no upstream icon" for app_id, urls in sources.items() if urls is None]
     if errors:
         return errors
@@ -121,9 +134,10 @@ def sync(apps: list[dict]) -> list[str]:
 
 
 def check_bundle(apps: list[dict]) -> list[str]:
+    names = [app["id"] for app in apps if icon_of(app)] + list(CLUSTER_ICONS)
     return [
-        f"{app['id']}: missing {ASSETS.relative_to(ROOT)}/{app['id']}.webp"
-        for app in apps if icon_of(app) and not (ASSETS / f"{app['id']}.webp").exists()
+        f"{name}: missing {ASSETS.relative_to(ROOT)}/{name}.webp"
+        for name in names if not (ASSETS / f"{name}.webp").exists()
     ]
 
 

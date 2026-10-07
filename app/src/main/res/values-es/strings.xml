@@ -3092,4 +3092,6 @@
     <string name="imagescan_operator_failed">No se pudieron leer los informes del Trivy Operator: %1$s</string>
     <string name="imagescan_not_scanned">No analizada.</string>
     <string name="imagescan_timed_out">El análisis tardó demasiado y se detuvo.</string>
+    <string name="kube_eks_account">cuenta %1$s</string>
+    <string name="kube_gke_project">proyecto %1$s</string>
 </resources>
