@@ -1,6 +1,6 @@
 # D12. Image vulnerability scan
 
-Status: **Go core and Android done**; iOS remains. Size M (Go M, Android S, iOS S).
+Status: **implemented** (Go, Android, iOS). Size M (Go M, Android S, iOS S).
 
 Scan an app's images for known vulnerabilities on demand, read the report on the phone and
 export it in a standard format (SARIF, CycloneDX) to hand to GitHub code scanning, Defect
@@ -62,9 +62,12 @@ Dojo, Dependency-Track or a colleague.
 - Export menu: HTML, SARIF, CycloneDX, CSV, JSON, written by the core and shared as a file
   (`cache/scans`, one at a time, removed when the report closes).
 
-## iOS
+## iOS (done)
 
-Same screens; export through `ShareLink` with a temporary file.
+Same as Android: `AppScanSection` in the app sheet, the scan kept app-wide by
+`ImageScanJob.shared`, `ImageScanReportView` pushed from the sheet with its filters and
+expandable findings, and an Export menu (core-written file in `tmp/scans`, kept an hour,
+shown in the system share sheet). Models and their logic in `IchorCore/ImageScan.swift`.
 
 ## Later
 
