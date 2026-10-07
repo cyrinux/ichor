@@ -2,7 +2,8 @@ import SwiftUI
 import IchorCore
 
 /// One app of the inventory: what needs a look, where it runs, its Argo CD Applications (or the
-/// Flux summary on the Flux tile) and workloads to restart (os:admin), its images and pods.
+/// Flux summary on the Flux tile), workloads to restart and its images' vulnerabilities
+/// (os:admin), its images and pods.
 struct AppDetailSheet: View {
     let app: InventoryApp
     /// Address → hostname of the overview's nodes.
@@ -35,6 +36,7 @@ struct AppDetailSheet: View {
                     if app.id == fluxCatalogID { AppFluxSection() }
                     AppRoutesSection(app: app)
                     AppWorkloadsSection(app: app)
+                    if !app.pods.isEmpty { AppScanSection(app: app) }
                 }
                 if !app.images.isEmpty {
                     Section("Images") {
