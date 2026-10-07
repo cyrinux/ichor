@@ -1336,6 +1336,8 @@
     <string name="endpoint_scan_added_to">Añadido a %1$s</string>
     <string name="endpoint_scan_discovery_hint">Solo se añaden los nodos que aceptan las credenciales del clúster. Cuando el clúster responda, la vista general ofrecerá añadir sus otros nodos.</string>
     <string name="endpoints_edit">Editar endpoints</string>
+    <string name="no_endpoint_title">Ningún endpoint</string>
+    <string name="no_endpoint_body">Este talosconfig no indica ninguna dirección para llegar al clúster. Busca sus nodos en las redes cercanas al teléfono o añade la dirección de un nodo.</string>
     <string name="endpoints_title">Endpoints de %1$s</string>
     <string name="endpoints_body">Las direcciones por las que la app llega a la API de Talos (puerto 50000 salvo que se indique, p. ej. 192.168.1.10:50001). Prueba uno con las credenciales del clúster; uno que no responde ahora se puede guardar igualmente, puede responder a través de una VPN.</string>
     <string name="endpoints_add_label">Añadir un endpoint</string>

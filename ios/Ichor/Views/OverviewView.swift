@@ -45,54 +45,61 @@ struct OverviewView: View {
     @State private var visible = false
 
     var body: some View {
-        LoadStateView(state: state, retry: load) { overview in
-            // No node answered (VPN off, another network): one notice instead of a list of red
-            // nodes, unless they are known from before (then the list, under a banner).
-            if let outage = overview.outage, !showNodesAnyway, !overview.showsLastKnown {
-                ClusterUnreachableView(
-                    outage: outage,
-                    endpoints: model.activeSummary?.endpoints ?? [],
-                    retry: load,
-                    showNodes: { showNodesAnyway = true }
-                )
-                .themedBackground()
+        Group {
+            // A talosconfig generated before the cluster had addresses: nothing to load yet.
+            if let context = model.activeSummary, context.needsEndpoint {
+                NoEndpointsView(context: context).themedBackground()
             } else {
-                List {
-                    if let outage = overview.outage, overview.showsLastKnown {
-                        Section { LastKnownBanner(outage: outage, retry: load) }
-                    }
-                    if model.activeSummary?.demo == true {
-                        Section {
-                            Text("Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.")
-                                .font(.callout).foregroundStyle(.secondary)
-                        }
-                    }
-                    if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
-                        Section { CertExpiryBanner(notAfter: ctx.certNotAfter) }
-                    }
-                    if !discovered.isEmpty {
-                        Section { DiscoveredNodesBanner(count: discovered.count) { showDiscovered = true } }
-                    }
-                    if support.visible { Section { SupportCard(prompt: support) } }
-                    // The sections as arranged (Customize overview, in the ⋯ menu).
-                    ForEach(layout.visible) { card in section(card, overview: overview) }
-                    // The Talos update section alone, with no release to offer, leaves the list as empty.
-                    if layout.visible.allSatisfy({ $0 == .talosUpdate && !offersTalosUpdate }) {
-                        Section {
-                            Button { customizing = true } label: {
-                                Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
+                LoadStateView(state: state, retry: load) { overview in
+                    // No node answered (VPN off, another network): one notice instead of a list of red
+                    // nodes, unless they are known from before (then the list, under a banner).
+                    if let outage = overview.outage, !showNodesAnyway, !overview.showsLastKnown {
+                        ClusterUnreachableView(
+                            outage: outage,
+                            endpoints: model.activeSummary?.endpoints ?? [],
+                            retry: load,
+                            showNodes: { showNodesAnyway = true }
+                        )
+                        .themedBackground()
+                    } else {
+                        List {
+                            if let outage = overview.outage, overview.showsLastKnown {
+                                Section { LastKnownBanner(outage: outage, retry: load) }
+                            }
+                            if model.activeSummary?.demo == true {
+                                Section {
+                                    Text("Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.")
+                                        .font(.callout).foregroundStyle(.secondary)
+                                }
+                            }
+                            if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
+                                Section { CertExpiryBanner(notAfter: ctx.certNotAfter) }
+                            }
+                            if !discovered.isEmpty {
+                                Section { DiscoveredNodesBanner(count: discovered.count) { showDiscovered = true } }
+                            }
+                            if support.visible { Section { SupportCard(prompt: support) } }
+                            // The sections as arranged (Customize overview, in the ⋯ menu).
+                            ForEach(layout.visible) { card in section(card, overview: overview) }
+                            // The Talos update section alone, with no release to offer, leaves the list as empty.
+                            if layout.visible.allSatisfy({ $0 == .talosUpdate && !offersTalosUpdate }) {
+                                Section {
+                                    Button { customizing = true } label: {
+                                        Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
+                                    }
+                                }
                             }
                         }
+                        .refreshable {
+                            await load()
+                            // Sites rarely change: the map is only asked again on a pull.
+                            if let client = model.client, outage == nil {
+                                await TopologyStore.shared.load(with: client, key: model.topologyKey, force: true)
+                            }
+                        }
+                        .themedBackground()
                     }
                 }
-                .refreshable {
-                    await load()
-                    // Sites rarely change: the map is only asked again on a pull.
-                    if let client = model.client, outage == nil {
-                        await TopologyStore.shared.load(with: client, key: model.topologyKey, force: true)
-                    }
-                }
-                .themedBackground()
             }
         }
         .navigationTitle(model.activeLabel)

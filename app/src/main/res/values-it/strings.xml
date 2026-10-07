@@ -1336,6 +1336,8 @@
     <string name="endpoint_scan_added_to">Aggiunto a %1$s</string>
     <string name="endpoint_scan_discovery_hint">Vengono aggiunti solo i nodi che accettano le credenziali del cluster. Quando il cluster risponde, la panoramica propone di aggiungere gli altri nodi.</string>
     <string name="endpoints_edit">Modifica endpoint</string>
+    <string name="no_endpoint_title">Nessun endpoint</string>
+    <string name="no_endpoint_body">Questo talosconfig non indica alcun indirizzo per raggiungere il cluster. Cerca i suoi nodi nelle reti intorno al telefono, o aggiungi l\'indirizzo di un nodo.</string>
     <string name="endpoints_title">Endpoint di %1$s</string>
     <string name="endpoints_body">Gli indirizzi tramite cui l\'app raggiunge l\'API Talos (porta 50000 se non indicata, ad es. 192.168.1.10:50001). Provane uno con le credenziali del cluster; uno che ora non risponde può comunque essere salvato, potrebbe rispondere tramite una VPN.</string>
     <string name="endpoints_add_label">Aggiungi un endpoint</string>

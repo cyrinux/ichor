@@ -39,6 +39,10 @@ func openSession(configYAML, contextName string) (*session, error) {
 		return nil, errDemoUnavailable
 	}
 
+	if len(cfgCtx.Endpoints) == 0 {
+		return nil, errNoEndpoints
+	}
+
 	// client.New only dials lazily, so no context is needed here.
 	c, err := client.New(context.Background(), client.WithConfigContext(cfgCtx))
 	if err != nil {

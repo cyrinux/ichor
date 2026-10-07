@@ -60,6 +60,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.isDemo
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
+import name.levis.ichor.model.needsEndpoint
 import name.levis.ichor.update.StoreUpdateState
 import name.levis.ichor.update.UpdateState
 import name.levis.ichor.data.TalosRepository
@@ -420,6 +421,11 @@ fun OverviewScreen(
             onBarChange = app.uiPreferences::setOverviewBar,
             modifier = Modifier.padding(padding),
             absent = absentCards,
+        )
+        else if (config?.activeSummary?.needsEndpoint == true) NoEndpointsBox(
+            onScan = { scanningEndpoints = true },
+            onAddEndpoint = { editingEndpoints = config?.activeContext }.takeIf { !clusterLabels.masked },
+            modifier = Modifier.padding(padding),
         )
         else when (val s = state) {
             UiState.Loading -> LoadingBox(Modifier.padding(padding))

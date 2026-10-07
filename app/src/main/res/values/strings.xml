@@ -1332,6 +1332,8 @@
     <string name="endpoint_scan_added_to">Added to %1$s</string>
     <string name="endpoint_scan_discovery_hint">Only nodes that accept the cluster\'s credentials are added. Once the cluster answers, the overview offers to add its other nodes.</string>
     <string name="endpoints_edit">Edit endpoints</string>
+    <string name="no_endpoint_title">No endpoint yet</string>
+    <string name="no_endpoint_body">This talosconfig lists no address to reach the cluster. Search the networks around the phone for its nodes, or add a node\'s address.</string>
     <string name="endpoints_title">Endpoints of %1$s</string>
     <string name="endpoints_body">The addresses the app reaches the Talos API through (port 50000 unless given, e.g. 192.168.1.10:50001). Test one with the cluster\'s credentials; one that does not answer now can still be saved, it may answer over a VPN.</string>
     <string name="endpoints_add_label">Add an endpoint</string>
