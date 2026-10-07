@@ -13,14 +13,16 @@ struct ImportView: View {
     }
 
     @Environment(AppModel.self) private var model
-    @State private var source = Source.file
+    /// The paste or QR sheet, when open.
+    @State private var source: Source?
     @State private var pasted = ""
     @State private var showingImporter = false
     @State private var preview: Preview?
     @State private var error: String?
     @State private var busy = false
     @State private var showingHelp = false
-    @State private var showingDiscovery = false
+    /// The provider cloud discovery opens on, while its sheet is up.
+    @State private var discovery: DiscoveryStart?
     /// The credentials cloud discovery found the previewed clusters with: the added ones that
     /// sign in with credentials are signed in with them.
     @State private var discovered: DiscoveredClusters?
@@ -32,17 +34,22 @@ struct ImportView: View {
         case kube(yaml: String, summary: ConfigSummary, conflicts: [KubeImportConflict])
     }
 
-    enum Source: String, CaseIterable, Identifiable {
-        case file = "File", paste = "Paste", qr = "QR code"
+    /// The sources the drop zone opens in a sheet; a file goes straight to the file picker.
+    enum Source: String, Identifiable {
+        case paste, qr
         var id: String { rawValue }
 
         var label: String {
             switch self {
-            case .file: String(localized: "File")
             case .paste: String(localized: "Paste")
             case .qr: String(localized: "QR code")
             }
         }
+    }
+
+    struct DiscoveryStart: Identifiable {
+        let provider: String
+        var id: String { provider }
     }
 
     var body: some View {
@@ -68,8 +75,11 @@ struct ImportView: View {
             }
         }
         .sheet(isPresented: $showingHelp) { HelpSheet() }
-        .sheet(isPresented: $showingDiscovery) {
-            CloudDiscoveryView { found in validate(found.kubeconfig, discovered: found) }
+        .sheet(item: $discovery) { start in
+            CloudDiscoveryView(provider: start.provider) { found in validate(found.kubeconfig, discovered: found) }
+        }
+        .sheet(item: $source) { source in
+            sourceSheet(source)
         }
         // A file opened with Ichor (IncomingConfig): previewed like a picked one.
         .task(id: NotificationRouter.shared.pendingImportText) {
@@ -80,71 +90,119 @@ struct ImportView: View {
         }
     }
 
+    /// One drop zone for either config (the core tells them apart), the cloud accounts
+    /// discovery reaches, then the demo and a backup restore.
     private var picker: some View {
-        VStack(spacing: 16) {
-            VStack(spacing: 8) {
-                Text("No cluster yet? Explore Ichor with a sample Talos cluster.")
-                    .font(.callout).foregroundStyle(.secondary)
-                Button("Try demo") {
-                    busy = true
-                    Task {
-                        do { await save(try await TalosClient.demoConfig(), replacingSameCluster: true) }
-                        catch { self.error = error.localizedDescription; busy = false }
+        ScrollView {
+            VStack(spacing: 20) {
+                dropZone
+                if let error { Text(error).foregroundStyle(.statusBad).font(.footnote) }
+                if busy { ProgressView() }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Add from a cloud account").font(.headline)
+                    ChipFlow(spacing: 8) {
+                        ForEach(kubeDiscoverProviders, id: \.self) { provider in
+                            Button { discovery = DiscoveryStart(provider: provider) } label: {
+                                Label(KubeAuthWording.providerLabel(provider), systemImage: "cloud")
+                            }
+                            .buttonStyle(.bordered)
+                        }
                     }
                 }
-                .buttonStyle(.bordered)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .disabled(busy)
-                // A restore replaces every cluster: offered when there is none yet.
-                if !model.hasConfig {
-                    Text("Moving from another phone? Restore the backup you made there.")
-                        .font(.callout).foregroundStyle(.secondary)
-                    RestoreBackupButton(confirmFirst: false, onRestored: onImported) { error = $0 }
-                        .buttonStyle(.bordered)
-                        .disabled(busy)
+                HStack(spacing: 20) {
+                    Button("Try demo") {
+                        busy = true
+                        Task {
+                            do { await save(try await TalosClient.demoConfig(), replacingSameCluster: true) }
+                            catch { self.error = error.localizedDescription; busy = false }
+                        }
+                    }
+                    // A restore replaces every cluster: offered when there is none yet.
+                    if !model.hasConfig {
+                        RestoreBackupButton(confirmFirst: false, onRestored: onImported) { error = $0 }
+                    }
                 }
+                .buttonStyle(.borderless)
+                .disabled(busy)
             }
-            Button { showingDiscovery = true } label: {
-                Label("Add from a cloud account", systemImage: "cloud")
-            }
-            .buttonStyle(.bordered)
-            .disabled(busy)
-            Picker("Source", selection: $source) {
-                ForEach(Source.allCases) { Text($0.label).tag($0) }
-            }
-            .pickerStyle(.segmented)
+            .padding()
+        }
+    }
 
-            if let error { Text(error).foregroundStyle(.statusBad).font(.footnote) }
-            if busy { ProgressView() }
-
-            switch source {
-            case .file:
-                Text("Select your talosconfig (~/.talos/config) or kubeconfig (~/.kube/config) from your workstation, e.g. shared via AirDrop to Files.")
-                    .font(.callout).foregroundStyle(.secondary)
-                // On the button, not the screen: the restore button has a file importer of its own.
+    /// The Ichor glyph over the two config kinds, and the three ways to bring one in.
+    private var dropZone: some View {
+        VStack(spacing: 12) {
+            IchorGlyph()
+                .foregroundStyle(.tint)
+                .frame(width: 64, height: 64)
+            Text("Import a config file").font(.headline)
+            HStack(spacing: 6) {
+                FormatPill(text: "talosconfig", color: .orange)
+                FormatPill(text: "kubeconfig", color: .blue)
+            }
+            Text("From ~/.talos/config or ~/.kube/config on your workstation. Ichor recognizes which one it is.")
+                .font(.footnote).foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            HStack(spacing: 8) {
+                // On the tile, not the screen: the restore button has a file importer of its own.
                 // Any file: a kubeconfig is often named "config", with no extension.
-                Button("Choose file") { showingImporter = true }
-                    .buttonStyle(.borderedProminent)
+                SourceTile(title: String(localized: "File"), systemImage: "doc") { showingImporter = true }
                     .fileImporter(isPresented: $showingImporter, allowedContentTypes: [.yaml, .plainText, .data, .item]) { result in
                         switch result {
                         case .success(let url): readFile(url)
                         case .failure(let failure): error = failure.localizedDescription
                         }
                     }
-                Spacer()
-            case .paste:
-                TextEditor(text: $pasted)
-                    .font(.system(.footnote, design: .monospaced))
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .border(.quaternary)
-                Button("Validate") { validate(pasted) }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(pasted.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            case .qr:
-                QRScannerView { validate($0) }
+                SourceTile(title: Source.paste.label, systemImage: "doc.on.clipboard") { source = .paste }
+                SourceTile(title: Source.qr.label, systemImage: "qrcode.viewfinder") { source = .qr }
             }
+            .disabled(busy)
         }
         .padding()
+        .frame(maxWidth: .infinity)
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(.tertiary, style: StrokeStyle(lineWidth: 1.5, dash: [8, 6]))
+        }
+    }
+
+    /// Pasted YAML or a scanned QR code; what they give is previewed once the sheet closes.
+    private func sourceSheet(_ source: Source) -> some View {
+        NavigationStack {
+            Group {
+                switch source {
+                case .paste:
+                    VStack(spacing: 16) {
+                        TextEditor(text: $pasted)
+                            .font(.system(.footnote, design: .monospaced))
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .border(.quaternary)
+                        Button("Validate") {
+                            self.source = nil
+                            validate(pasted)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(pasted.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                    .padding()
+                case .qr:
+                    QRScannerView { text in
+                        self.source = nil
+                        validate(text)
+                    }
+                }
+            }
+            .navigationTitle(source.label)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", role: .cancel) { self.source = nil }
+                }
+            }
+        }
     }
 
     private func readFile(_ url: URL) {
@@ -250,6 +308,41 @@ struct ImportView: View {
         }
         model.reloadKubernetes()
         return failures
+    }
+}
+
+/// A config format the drop zone takes, as a small tinted tag.
+private struct FormatPill: View {
+    let text: String
+    let color: Color
+
+    var body: some View {
+        Text(verbatim: text)
+            .font(.caption.monospaced())
+            .padding(.horizontal, 8).padding(.vertical, 2)
+            .foregroundStyle(color)
+            .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+}
+
+/// One way into the drop zone: an icon over its name.
+private struct SourceTile: View {
+    let title: String
+    let systemImage: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: systemImage).font(.title3)
+                Text(verbatim: title).font(.footnote)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.tint)
     }
 }
 

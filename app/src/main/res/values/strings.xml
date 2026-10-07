@@ -550,9 +550,9 @@
     <string name="import_tab_qr">QR code</string>
     <string name="import_could_not_open">Could not open file</string>
     <string name="import_file_too_large">File is too large to be a talosconfig</string>
-    <string name="import_file_hint">Select your talosconfig (the file at ~/.talos/config on your workstation). Copy it to the phone with adb push, Syncthing, etc.</string>
-    <string name="import_choose_file">Choose file</string>
-    <string name="import_paste_label">talosconfig YAML</string>
+    <string name="import_bring_title">Import a config file</string>
+    <string name="import_detects">From ~/.talos/config or ~/.kube/config on your workstation. Ichor recognizes which one it is.</string>
+    <string name="import_paste_label">talosconfig or kubeconfig YAML</string>
     <string name="import_validate">Validate</string>
     <string name="import_valid">Config is valid</string>
     <string name="import_context_current">%1$s (current)</string>
@@ -1300,7 +1300,6 @@
     <string name="ai_disclaimer">AI answers can be wrong. Check a command before running it, especially one that resets a node or changes etcd.</string>
     <string name="ai_health_diagnose">Diagnose with AI</string>
     <string name="demo_try">Try demo</string>
-    <string name="demo_hint">No cluster yet? Explore Ichor with a sample Talos cluster.</string>
     <string name="demo_notice">Demo cluster · Sample data. Cluster changes are unavailable. Remove the demo from Manage clusters when finished.</string>
     <string name="overview_discovered_nodes_hint">Tap to add them to the talosconfig.</string>
     <string name="discover_nodes_title">Add discovered nodes</string>
@@ -1368,7 +1367,6 @@
     <string name="backup_desc">Save your clusters and settings to a file encrypted with a passphrase, to restore them on a new phone (Android or iOS). Without the passphrase the file cannot be opened.</string>
     <string name="backup_create">Back up clusters and settings</string>
     <string name="backup_restore">Restore a backup</string>
-    <string name="backup_restore_hint">Moving from another phone? Restore the backup you made there.</string>
     <string name="backup_restore_pick">Choose file</string>
     <string name="backup_restore_replace_warning">Restoring replaces every cluster and setting on this device with those of the backup.</string>
     <string name="backup_auth">Back up clusters and their credentials</string>
@@ -2854,7 +2852,6 @@
     <!-- Clusters added from a kubeconfig (no Talos API) -->
     <string name="common_kind_kubernetes">Kubernetes</string>
     <string name="common_talos_only">Not available for this cluster: it was added from a kubeconfig, so the app reaches its Kubernetes API only, not Talos.</string>
-    <string name="import_kube_hint">A kubeconfig works too, with a client certificate or a token.</string>
     <string name="import_kube_title">Choose the clusters to add</string>
     <string name="import_kube_none_importable">None of these clusters can be added yet.</string>
     <string name="import_kube_server">Server</string>
@@ -2957,7 +2954,6 @@
     <string name="kube_access_hint">The Kubernetes screens of this cluster use these credentials. Talos calls keep the talosconfig.</string>
     <string name="kube_access_talos">Talos admin kubeconfig</string>
     <string name="import_kube_signin_follows">Signs in with %1$s: you sign in once it is added.</string>
-    <string name="kube_discover_hint">Or add the clusters of a cloud account, without a kubeconfig.</string>
     <string name="kube_discover_entry">Add from a cloud account</string>
     <string name="kube_discover_title">Add from a cloud account</string>
     <string name="kube_discover_body">The app lists the account\'s clusters; you choose which to add. They then sign in with these credentials.</string>

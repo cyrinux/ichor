@@ -1,14 +1,17 @@
 package name.levis.ichor.ui.backup
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -77,6 +80,8 @@ fun BackupSection(hasConfig: Boolean, vm: BackupViewModel = viewModel(factory = 
 fun RestoreBackupButton(onRestored: () -> Unit, vm: BackupViewModel = viewModel(factory = factory { BackupViewModel(app.backupManager) })) {
     val state by vm.state.collectAsStateWithLifecycle()
     val pickBackup = BackupFlow(vm, onRestored)
-    OutlinedButton(onClick = pickBackup, enabled = state != BackupState.Restoring) { Text(stringResource(R.string.backup_restore)) }
-    if (state is BackupState.Failed) BackupStatus(state)
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        TextButton(onClick = pickBackup, enabled = state != BackupState.Restoring) { Text(stringResource(R.string.backup_restore)) }
+        if (state is BackupState.Failed) BackupStatus(state)
+    }
 }

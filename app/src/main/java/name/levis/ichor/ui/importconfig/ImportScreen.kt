@@ -2,16 +2,10 @@ package name.levis.ichor.ui.importconfig
 
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.MutedText
-import name.levis.ichor.ui.components.VersionFooter
-import name.levis.ichor.ui.uiText
-import name.levis.ichor.ui.UiText
-import name.levis.ichor.ui.LocalizedException
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,14 +17,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentPaste
-import androidx.compose.material.icons.outlined.FileOpen
-import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.ui.platform.LocalContext
 import name.levis.ichor.TalosApp
@@ -39,21 +29,17 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
-import name.levis.ichor.ui.components.AppTab
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -65,7 +51,6 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.daysUntil
-import name.levis.ichor.util.readBounded
 import name.levis.ichor.ui.components.TooltipIconButton
 
 // As the Go core's limit on a decoded "ichor-config:" payload, and iOS.
@@ -85,8 +70,11 @@ fun ImportScreen(
     // Keep the demo entry visible on first launch; config help is available in the toolbar.
     val firstRun = app().configRepository.config.collectAsStateWithLifecycle().value == null
     var showHelp by rememberSaveable { mutableStateOf(false) }
-    // Hoisted so the chosen tab and pasted text survive the Validating -> Invalid round trip.
-    var tab by rememberSaveable { mutableIntStateOf(0) }
+    // Hoisted so the chosen source and pasted text survive the Validating -> Invalid round trip.
+    var source by rememberSaveable { mutableStateOf(ImportSource.PICK) }
+    // In the paste or QR view: back returns to the drop zone, not out of the screen.
+    val inSource = source != ImportSource.PICK && (state is ImportState.Idle || state is ImportState.Invalid)
+    BackHandler(enabled = inSource) { source = ImportSource.PICK }
     // Not saveable: it may contain the client private key, which must not land in saved instance state.
     var pasted by remember { mutableStateOf("") }
 
@@ -112,8 +100,10 @@ fun ImportScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.import_title)) },
                 navigationIcon = {
-                    onBack?.let {
-                        BackButton(it)
+                    if (inSource) {
+                        BackButton { source = ImportSource.PICK }
+                    } else {
+                        onBack?.let { BackButton(it) }
                     }
                 },
                 actions = {
@@ -142,15 +132,15 @@ fun ImportScreen(
                     onCancel = vm::reset,
                 )
                 is ImportState.Discover -> DiscoverCard(s, onDiscover = vm::discover, onCancel = vm::reset)
-                ImportState.Validating, ImportState.Saved ->Box(Modifier.fillMaxSize(), Alignment.Center) {
+                ImportState.Validating, ImportState.Saved -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator()
                 }
                 else -> SourcePicker(
+                    source = source,
                     error = (s as? ImportState.Invalid)?.message,
-                    tab = tab,
-                    onTab = { tab = it },
                     pasted = pasted,
                     onPasted = { pasted = it },
+                    onSource = { source = it },
                     onYaml = vm::submit,
                     onDemo = vm::startDemo,
                     onDiscover = vm::startDiscovery,
@@ -158,119 +148,6 @@ fun ImportScreen(
                     restore = if (firstRun) ({ RestoreBackupButton(onRestored = onImported) }) else null,
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun SourcePicker(
-    error: String?,
-    tab: Int,
-    onTab: (Int) -> Unit,
-    pasted: String,
-    onPasted: (String) -> Unit,
-    onYaml: (String) -> Unit,
-    onDemo: () -> Unit,
-    onDiscover: () -> Unit,
-    restore: (@Composable () -> Unit)?,
-) {
-    val tabs = listOf(
-        stringResource(R.string.import_tab_file) to Icons.Outlined.FileOpen,
-        stringResource(R.string.import_tab_paste) to Icons.Outlined.ContentPaste,
-        stringResource(R.string.import_tab_qr) to Icons.Outlined.QrCodeScanner,
-    )
-
-    Column(Modifier.fillMaxSize()) {
-        Card(Modifier.fillMaxWidth().padding(16.dp)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.demo_hint), style = MaterialTheme.typography.bodyMedium)
-                OutlinedButton(onClick = onDemo) { Text(stringResource(R.string.demo_try)) }
-                restore?.let {
-                    Text(stringResource(R.string.backup_restore_hint), style = MaterialTheme.typography.bodyMedium)
-                    it()
-                }
-                Text(stringResource(R.string.kube_discover_hint), style = MaterialTheme.typography.bodyMedium)
-                OutlinedButton(onClick = onDiscover) { Text(stringResource(R.string.kube_discover_entry)) }
-            }
-        }
-        PrimaryTabRow(selectedTabIndex = tab) {
-            tabs.forEachIndexed { index, (label, icon) ->
-                AppTab(
-                    selected = tab == index,
-                    onClick = { onTab(index) },
-                    text = { Text(label) },
-                    icon = { Icon(icon, contentDescription = null) },
-                )
-            }
-        }
-        if (error != null) {
-            Text(
-                error,
-                color = LocalStatusColors.current.bad,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(16.dp),
-            )
-        }
-        Box(Modifier.weight(1f)) {
-            when (tab) {
-                0 -> FileSource(onYaml)
-                1 -> PasteSource(pasted, onPasted, onYaml)
-                else -> QrScanner(onScanned = onYaml)
-            }
-        }
-        VersionFooter()
-    }
-}
-
-@Composable
-private fun FileSource(onYaml: (String) -> Unit) {
-    val context = LocalContext.current
-    var readError by rememberSaveable { mutableStateOf<String?>(null) }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        runCatching {
-            context.contentResolver.openInputStream(uri)?.use { stream ->
-                readBounded(stream, MAX_CONFIG_BYTES, "File is too large to be a talosconfig").decodeToString()
-            } ?: throw LocalizedException(UiText.Res(R.string.import_could_not_open))
-        }.fold(
-            onSuccess = { readError = null; onYaml(it) },
-            onFailure = {
-                // readBounded rejects oversized files with IllegalArgumentException.
-                readError = if (it is IllegalArgumentException) {
-                    context.getString(R.string.import_file_too_large)
-                } else {
-                    it.uiText().resolve(context)
-                }
-            },
-        )
-    }
-
-    Column(
-        Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            stringResource(R.string.import_file_hint),
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        MutedText(stringResource(R.string.import_kube_hint))
-        Button(onClick = { picker.launch(arrayOf("*/*")) }) { Text(stringResource(R.string.import_choose_file)) }
-        readError?.let { Text(it, color = LocalStatusColors.current.bad) }
-    }
-}
-
-@Composable
-private fun PasteSource(text: String, onText: (String) -> Unit, onYaml: (String) -> Unit) {
-    Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(
-            value = text,
-            onValueChange = { if (it.length <= MAX_CONFIG_BYTES) onText(it) },
-            label = { Text(stringResource(R.string.import_paste_label)) },
-            textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-            modifier = Modifier.fillMaxWidth().weight(1f),
-        )
-        Button(onClick = { onYaml(text) }, enabled = text.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.import_validate))
         }
     }
 }
