@@ -137,7 +137,7 @@ struct ClustersView: View {
             isPresented: $renaming.isPresent(),
             presenting: renaming
         ) { context in
-            TextField("Name", text: $newName, prompt: Text(verbatim: context.name))
+            TextField("Name", text: $newName, prompt: Text(verbatim: parseCloudContext(context.name)?.cluster ?? context.name))
             Button("OK") { model.rename(context, to: newName) }
             Button("Cancel", role: .cancel) {}
         } message: { context in
@@ -155,9 +155,7 @@ struct ClustersView: View {
         return HStack {
             Button { model.activeContext = context.name } label: {
                 HStack {
-                    Image(systemName: active ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(active ? Color.accentColor : Color.secondary)
-                        .accessibilityHidden(true)
+                    ClusterLogoView(context: context, color: color(of: context).wrappedValue, selected: active)
                     VStack(alignment: .leading) {
                         HStack(spacing: 4) {
                             Text(model.labels.of(context)).foregroundStyle(Color.primary)
@@ -168,9 +166,13 @@ struct ClustersView: View {
                                     .accessibilityLabel(Text("VPN only"))
                             }
                         }
+                        let cloud = model.labels.cloud(context)
                         // Renamed: which talosconfig context that is.
                         if model.labels.given(context) != nil {
-                            Text(context.name).font(.caption).foregroundStyle(Color.secondary)
+                            Text(verbatim: cloud?.cluster ?? context.name).font(.caption).foregroundStyle(Color.secondary)
+                        }
+                        if let cloud {
+                            Text(verbatim: cloud.localizedDetail).font(.caption).foregroundStyle(Color.secondary)
                         }
                         Text([context.endpoints.first, context.localizedAccessLabel].compactMap { $0 }.joined(separator: " · "))
                             .font(.caption)

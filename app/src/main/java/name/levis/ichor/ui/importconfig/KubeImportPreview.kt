@@ -28,8 +28,10 @@ import name.levis.ichor.model.KubeImportRow
 import name.levis.ichor.model.kubeAuthLabel
 import name.levis.ichor.model.kubeImportRows
 import name.levis.ichor.model.kubeProblemText
+import name.levis.ichor.model.parseCloudContext
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.cloudDetail
 import name.levis.ichor.ui.kubeauth.signInMethodText
 import name.levis.ichor.ui.theme.LocalStatusColors
 
@@ -89,14 +91,18 @@ private fun KubeContextRow(
     onReplace: (Boolean) -> Unit,
 ) {
     val ctx = row.context
+    // EKS and GKE name contexts by ARN or gke_project_location_name: show the cluster's name.
+    val cloud = parseCloudContext(ctx.name)
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = row.included, onCheckedChange = onInclude, enabled = row.importable)
-                val name = if (current) stringResource(R.string.import_context_current, ctx.name) else ctx.name
+                val shown = cloud?.cluster ?: ctx.name
+                val name = if (current) stringResource(R.string.import_context_current, shown) else shown
                 Text(name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
             }
             Column(Modifier.padding(start = 12.dp)) {
+                if (cloud != null) MutedText(cloudDetail(cloud))
                 InfoRow(stringResource(R.string.import_kube_server), ctx.endpoints.joinToString("\n"), mono = true)
                 InfoRow(stringResource(R.string.import_kube_auth), authText(ctx.auth, ctx.authDetail))
                 if (ctx.user.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_user), ctx.user)

@@ -83,11 +83,14 @@ import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.accessLabel
 import name.levis.ichor.model.hueOf
 import name.levis.ichor.model.isKube
+import name.levis.ichor.model.parseCloudContext
 import name.levis.ichor.model.seedFromHue
 import name.levis.ichor.model.seedOf
 import name.levis.ichor.monitor.CERT_WARN_DAYS
+import name.levis.ichor.ui.components.ClusterLogo
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.cloudDetail
 import name.levis.ichor.ui.importconfig.certExpiry
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.daysUntil
@@ -359,10 +362,12 @@ private fun ClusterRow(
         headlineContent = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         supportingContent = {
             Column {
+                val cloud = labels.cloud(context)
                 // Renamed: which talosconfig context that is.
                 if (labels.given(context) != null) {
-                    Text(context.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(cloud?.cluster ?: context.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
+                if (cloud != null) Text(cloudDetail(cloud), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (vpnOnly) {
                         Icon(
@@ -387,7 +392,7 @@ private fun ClusterRow(
                 if (signInNeeded) Text(stringResource(R.string.kube_signin_needed), color = LocalStatusColors.current.warn)
             }
         },
-        leadingContent = { ClusterDot(color, selected) },
+        leadingContent = { ClusterLogo(context, color, selected) },
         trailingContent = {
             ClusterRowMenu(
                 label = label,
@@ -409,14 +414,6 @@ private fun ClusterRow(
             .fillMaxWidth()
             .selectable(selected = selected, role = Role.RadioButton, onClick = onSelect),
     )
-}
-
-/** The cluster's color, checked for the one on screen. */
-@Composable
-private fun ClusterDot(color: Color, selected: Boolean) {
-    Box(Modifier.size(28.dp).background(color, CircleShape), contentAlignment = Alignment.Center) {
-        if (selected) Icon(Icons.Outlined.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
-    }
 }
 
 @Composable
@@ -507,7 +504,7 @@ private fun ClusterNameDialog(context: ContextSummary, given: String, onRename: 
     var name by remember { mutableStateOf(given) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.clusters_rename, given.ifEmpty { context.name })) },
+        title = { Text(stringResource(R.string.clusters_rename, given.ifEmpty { parseCloudContext(context.name)?.cluster ?: context.name })) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(

@@ -339,11 +339,15 @@ private struct KubePreviewList: View {
 
     @ViewBuilder
     private func row(_ ctx: ContextSummary, index: Int) -> some View {
+        // EKS and GKE name contexts by ARN or gke_project_location_name: show the cluster's name.
+        let cloud = parseCloudContext(ctx.name)
+        let shown = cloud?.cluster ?? ctx.name
         Toggle(isOn: member(index, of: $selected)) {
-            Text(verbatim: ctx.name == summary.current ? String(localized: "\(ctx.name) (current)") : ctx.name)
+            Text(verbatim: ctx.name == summary.current ? String(localized: "\(shown) (current)") : shown)
                 .font(.headline)
         }
         .disabled(ctx.problem != nil)
+        if let cloud { Text(verbatim: cloud.localizedDetail).font(.footnote).foregroundStyle(.secondary) }
         LabeledContent("Server", value: ctx.endpoints.first ?? "")
         LabeledContent("Sign-in", value: ctx.localizedAuthLabel)
         if ctx.problem == nil, let method = ctx.signIn {
