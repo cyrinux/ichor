@@ -21,7 +21,8 @@ next-version:
 
 # Tag a release. The APK's versionName/versionCode derive from the tag and the
 # commit count, so this is the only step a release needs. The tree must be
-# clean, the tag is annotated with the changelog, and nothing is pushed for you.
+# clean and HEAD must be origin/main, the tag is annotated with the changelog, and
+# nothing is pushed for you: push main and the tag together with `--atomic`.
 # `auto` picks the version from the commits since the last tag (scripts/next-version.py:
 # breaking -> major, feat -> minor, fix/perf -> patch), as the daily auto-release does.
 # --yes accepts the drafted Google Play notes as is: no editor, terminal or not.
@@ -56,6 +57,14 @@ release-tag version *flags:
         echo "Refusing to tag a dirty tree; commit or stash first." >&2
         exit 1
     fi
+    # Only tag what main already is. A tag on a commit that main never gets (the notes
+    # commit rebased onto a newer main on push) is invisible to `git describe`, so every
+    # later build is versioned from the previous tag.
+    git fetch -q origin main
+    if [[ "$(git rev-parse HEAD)" != "$(git rev-parse FETCH_HEAD)" ]]; then
+        echo "HEAD is not origin/main; release from an up-to-date main (git switch main && git pull --ff-only)." >&2
+        exit 1
+    fi
     if git rev-parse -q --verify "refs/tags/v${version}" >/dev/null; then
         echo "Tag v${version} already exists." >&2
         exit 1
@@ -87,7 +96,9 @@ release-tag version *flags:
         git log --no-merges --format='- %s' "$range"
     } | git tag "$sign" "v${version}" -F -
     echo "Tagged v${version}$( [[ -n "$previous" ]] && echo " (changes since ${previous})" )."
-    echo "Push it with: git push origin v${version}"
+    # --atomic: if main moved meanwhile, neither the notes commit nor the tag lands.
+    echo "Push it with: git push --atomic origin HEAD:main v${version}"
+    echo "If that is rejected, drop the tag (git tag -d v${version}) and release again from the new main."
 
 # Debug APK (Go tests, gomobile AAR, Kotlin unit tests, assemble).
 build:
