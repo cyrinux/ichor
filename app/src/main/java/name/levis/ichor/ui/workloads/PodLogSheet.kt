@@ -70,6 +70,7 @@ import name.levis.ichor.ui.components.LiveIndicator
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.SkeletonStyle
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.upwardScrollStaysInSheet
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.share.ShareLinkButton
@@ -282,7 +283,7 @@ fun PodLogSheet(
             } else {
                 InfoNotice(stringResource(R.string.pod_logs_tail, POD_LOG_TAIL), Modifier.padding(horizontal = 16.dp))
             }
-            Box(Modifier.weight(1f)) {
+            Box(Modifier.weight(1f).upwardScrollStaysInSheet()) {
                 if (events) {
                     KubeEventsList(pod.namespace, "Pod", pod.name, Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp))
                 } else if (follow) {
