@@ -88157,6 +88157,601 @@
           }
         }
       }
+    },
+    "Roll back to revision %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Revision %@ zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revertir a la revisión %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revenir à la révision %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina la revisione %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкотити до ревізії %@"
+          }
+        }
+      }
+    },
+    "Now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahora"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actuellement"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ora"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зараз"
+          }
+        }
+      }
+    },
+    "After" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Danach"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Después"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Après"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dopo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Після"
+          }
+        }
+      }
+    },
+    "%@ objects already match and are left alone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Objekte stimmen schon überein und bleiben unverändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ objetos ya coinciden y no se tocan."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ objets correspondent déjà et ne sont pas touchés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ oggetti corrispondono già e non vengono toccati."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ об'єктів уже збігаються й лишаються без змін."
+          }
+        }
+      }
+    },
+    "No object changes: only the release record moves back." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Objekt ändert sich: Nur der Release-Eintrag wird zurückgesetzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún objeto cambia: solo el registro de la release vuelve atrás."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun objet ne change : seul l'enregistrement de la release revient en arrière."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun oggetto cambia: torna indietro solo il record della release."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жоден об'єкт не змінюється: відкочується лише запис релізу."
+          }
+        }
+      }
+    },
+    "create" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "anlegen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "crear"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "créer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "crea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "створити"
+          }
+        }
+      }
+    },
+    "update" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "actualizar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "modifier"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aggiorna"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "оновити"
+          }
+        }
+      }
+    },
+    "delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eliminar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "supprimer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "elimina"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "видалити"
+          }
+        }
+      }
+    },
+    "kept" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bleibt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "se conserva"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "conservé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "mantenuto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "лишається"
+          }
+        }
+      }
+    },
+    "Objects marked helm.sh/resource-policy: keep stay, as with helm rollback." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit helm.sh/resource-policy: keep markierte Objekte bleiben, wie bei helm rollback."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los objetos marcados helm.sh/resource-policy: keep se quedan, como con helm rollback."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les objets marqués helm.sh/resource-policy: keep restent, comme avec helm rollback."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli oggetti marcati helm.sh/resource-policy: keep restano, come con helm rollback."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об'єкти з helm.sh/resource-policy: keep лишаються, як і з helm rollback."
+          }
+        }
+      }
+    },
+    "The Flux HelmRelease %@ manages this release: it is suspended first, otherwise Flux would upgrade it straight back. Fix the version in Git, then resume it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Flux-HelmRelease %@ verwaltet dieses Release: Es wird zuerst angehalten, sonst würde Flux sofort wieder aktualisieren. Korrigieren Sie die Version in Git und setzen Sie es dann fort."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La HelmRelease de Flux %@ gestiona esta release: primero se suspende, si no Flux la volvería a actualizar enseguida. Corrija la versión en Git y luego reanúdela."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La HelmRelease Flux %@ gère cette release : elle est d'abord suspendue, sinon Flux la remettrait aussitôt à jour. Corrigez la version dans Git, puis reprenez-la."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La HelmRelease di Flux %@ gestisce questa release: viene prima sospesa, altrimenti Flux la aggiornerebbe subito di nuovo. Correggi la versione in Git, poi riprendila."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flux HelmRelease %@ керує цим релізом: спершу його призупинено, інакше Flux одразу оновить його назад. Виправте версію в Git, потім відновіть."
+          }
+        }
+      }
+    },
+    "Cannot roll back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zurücksetzen nicht möglich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede revertir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retour impossible"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile ripristinare"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкотити неможливо"
+          }
+        }
+      }
+    },
+    "Each change passed a dry run on the API server. Nothing has changed yet." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jede Änderung hat einen Probelauf auf dem API-Server bestanden. Noch hat sich nichts geändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada cambio pasó una prueba en seco en el API server. Todavía no ha cambiado nada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque changement a passé un essai à blanc sur l'API server. Rien n'a encore changé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni modifica ha superato una prova a vuoto sull'API server. Non è ancora cambiato nulla."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кожна зміна пройшла пробний запуск на API-сервері. Поки нічого не змінено."
+          }
+        }
+      }
+    },
+    "Like helm rollback: a new revision is recorded with the older one's chart and values, and helm history agrees afterwards." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie helm rollback: Eine neue Revision mit Chart und Werten der älteren wird angelegt, helm history stimmt danach überein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Como helm rollback: se registra una nueva revisión con el chart y los valores de la anterior, y helm history coincide después."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comme helm rollback : une nouvelle révision est enregistrée avec le chart et les valeurs de l'ancienne, et helm history est d'accord ensuite."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Come helm rollback: viene registrata una nuova revisione con il chart e i valori di quella vecchia, e helm history concorda dopo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як helm rollback: записується нова ревізія з чартом і значеннями старої, і helm history потім збігається."
+          }
+        }
+      }
+    },
+    "Checking what would change…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüfe, was sich ändern würde…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando qué cambiaría…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérification de ce qui changerait…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica di cosa cambierebbe…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірка, що зміниться…"
+          }
+        }
+      }
+    },
+    "Rolled back to revision %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Revision %@ zurückgesetzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revertido a la revisión %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revenu à la révision %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristinata la revisione %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкочено до ревізії %@."
+          }
+        }
+      }
+    },
+    "Upgrades are done with Helm or your GitOps tool. From the history, the release can be rolled back to an older revision." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrades erfolgen mit Helm oder Ihrem GitOps-Werkzeug. Im Verlauf lässt sich das Release auf eine ältere Revision zurücksetzen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las actualizaciones se hacen con Helm o su herramienta GitOps. Desde el historial, la release puede volver a una revisión anterior."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les mises à jour se font avec Helm ou votre outil GitOps. Depuis l'historique, la release peut revenir à une révision antérieure."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli aggiornamenti si fanno con Helm o con lo strumento GitOps. Dalla cronologia, la release può tornare a una revisione precedente."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення робляться через Helm або ваш GitOps-інструмент. З історії реліз можна відкотити до старішої ревізії."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

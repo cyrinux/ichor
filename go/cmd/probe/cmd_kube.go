@@ -106,6 +106,28 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "helm-rollback-plan", args: "NAMESPACE NAME [REVISION]", run: func(e env) (out string, err error) {
+		// helm-rollback-plan NAMESPACE NAME [REVISION]: what a rollback would change, dry-run only.
+		revision, err := helmRevisionArg(flag.Arg(3))
+		if err == nil {
+			out, err = ichorgo.KubeHelmRollbackPlan(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision)
+		}
+
+		return out, err
+	}},
+	{name: "helm-rollback", args: "NAMESPACE NAME [REVISION]", run: func(e env) (out string, err error) {
+		// helm-rollback NAMESPACE NAME [REVISION]: rolls the release back (0 or none: the previous revision).
+		revision, err := helmRevisionArg(flag.Arg(3))
+		if err != nil {
+			return "", err
+		}
+
+		if err = ichorgo.KubeHelmRollback(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), revision); err == nil {
+			out = "rolled back"
+		}
+
+		return out, err
+	}},
 	{name: "audit", args: "[MINUTES]", run: func(e env) (out string, err error) {
 		// audit [MINUTES]: reads the control planes' audit logs (os:admin), 15 minutes by default.
 		minutes, _ := strconv.Atoi(flag.Arg(1)) //nolint:errcheck
@@ -224,4 +246,18 @@ func runCordon(e env) (out string, err error) {
 	}
 
 	return out, err
+}
+
+// helmRevisionArg is an optional revision argument: none is 0, the previous revision.
+func helmRevisionArg(arg string) (int, error) {
+	if arg == "" {
+		return 0, nil
+	}
+
+	revision, err := strconv.Atoi(arg)
+	if err != nil {
+		return 0, fmt.Errorf("revision %q is not a number", arg)
+	}
+
+	return revision, nil
 }

@@ -139,6 +139,10 @@ struct HelmReleaseView: View {
     @State private var tab = Tab.summary
     @State private var query = ""
     @State private var message: String?
+    /// The revision whose rollback sheet is open.
+    @State private var rollingBack: HelmRevision?
+    /// Set by the sheet on success, announced once it has gone.
+    @State private var rolledBackTo: Int?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -173,6 +177,10 @@ struct HelmReleaseView: View {
             }
         }
         .messageAlert($message)
+        .sheet(item: $rollingBack, onDismiss: rollbackDismissed) { revision in
+            HelmRollbackSheet(namespace: namespace, name: name, revision: revision.revision,
+                              rolledBack: { rolledBackTo = revision.revision }, reload: load)
+        }
         .task(id: kubeNamespacesKey(model)) { await load() }
     }
 
@@ -219,14 +227,16 @@ struct HelmReleaseView: View {
             if !detail.history.isEmpty {
                 Section {
                     ForEach(detail.history) { revision in
-                        HelmRevisionRow(revision: revision, current: revision.revision == release.revision)
+                        let current = revision.revision == release.revision
+                        HelmRevisionRow(revision: revision, current: current,
+                                        rollBack: current ? nil : { rollingBack = revision })
                     }
                 } header: {
                     Text("History")
                 }
             }
             Section {
-                Text("Read-only: upgrades and rollbacks are done with Helm or your GitOps tool.")
+                Text("Upgrades are done with Helm or your GitOps tool. From the history, the release can be rolled back to an older revision.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -252,6 +262,16 @@ struct HelmReleaseView: View {
         state = state.refreshed(with: fetched)
     }
 
+    /// After the rollback sheet: says how it ended (the alert waits for the sheet to go) and
+    /// reads the release again either way.
+    private func rollbackDismissed() {
+        if let revision = rolledBackTo {
+            message = String(localized: "Rolled back to revision \(String(revision)).")
+            rolledBackTo = nil
+        }
+        Task { await load() }
+    }
+
     /// Device-only pasteboard: values can hold secrets.
     private func copy(_ text: String) {
         UIPasteboard.general.setItems([[UTType.utf8PlainText.identifier: text]], options: [.localOnly: true])
@@ -259,12 +279,26 @@ struct HelmReleaseView: View {
     }
 }
 
-/// A revision of the history: number, status, when, and Helm's description.
+/// A revision of the history: number, status, when, and Helm's description; an older one can
+/// be rolled back to.
 private struct HelmRevisionRow: View {
     let revision: HelmRevision
     let current: Bool
+    /// nil for the current revision.
+    let rollBack: (() -> Void)?
 
     var body: some View {
+        HStack(spacing: 8) {
+            details
+            if let rollBack {
+                Button("Roll back", action: rollBack)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+            }
+        }
+    }
+
+    private var details: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 8) {
                 Text(verbatim: "#\(revision.revision)")
