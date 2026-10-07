@@ -1383,6 +1383,7 @@
     <string name="backup_restore_desc">Saisissez la phrase secrète utilisée pour chiffrer la sauvegarde.</string>
     <string name="backup_restore_confirm">Restaurer</string>
     <string name="backup_sealing">Chiffrement…</string>
+    <string name="backup_restoring">Restauration…</string>
     <string name="backup_saved">Sauvegarde enregistrée. Conservez la phrase secrète en lieu sûr.</string>
     <string name="backup_restored">Sauvegarde restaurée.</string>
     <string name="backup_err_wrong_passphrase">Phrase secrète incorrecte, ou fichier endommagé.</string>

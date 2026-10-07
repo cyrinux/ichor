@@ -1379,6 +1379,7 @@
     <string name="backup_restore_desc">Enter the passphrase the backup was encrypted with.</string>
     <string name="backup_restore_confirm">Restore</string>
     <string name="backup_sealing">Encrypting…</string>
+    <string name="backup_restoring">Restoring…</string>
     <string name="backup_saved">Backup saved. Keep the passphrase somewhere safe.</string>
     <string name="backup_restored">Backup restored.</string>
     <string name="backup_err_wrong_passphrase">Wrong passphrase, or the file is damaged.</string>

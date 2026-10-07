@@ -1487,6 +1487,7 @@
     <string name="backup_restore_desc">Введіть парольну фразу, якою зашифровано резервну копію.</string>
     <string name="backup_restore_confirm">Відновити</string>
     <string name="backup_sealing">Шифрування…</string>
+    <string name="backup_restoring">Відновлення…</string>
     <string name="backup_saved">Резервну копію збережено. Зберігайте парольну фразу в надійному місці.</string>
     <string name="backup_restored">Резервну копію відновлено.</string>
     <string name="backup_err_wrong_passphrase">Неправильна парольна фраза або файл пошкоджено.</string>
