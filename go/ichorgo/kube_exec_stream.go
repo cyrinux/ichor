@@ -27,7 +27,7 @@ func (k *kubeClient) execLines(ctx context.Context, namespace, pod, container st
 		return fmt.Errorf("invalid exec target %q %v", container, argv)
 	}
 
-	cfg, err := k.execConfig(namespace, pod, container, argv)
+	cfg, err := k.execConfig(ctx, namespace, pod, container, argv)
 	if err != nil {
 		return err
 	}

@@ -15,6 +15,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -116,6 +117,31 @@ contexts:
 `, crt, key, jwt)
 }
 
+// cloudProblem is what the preview says of a recognised cloud method: nothing once the app
+// signs in with it.
+func cloudProblem(method string) string {
+	if supportedSignIn(method) {
+		return ""
+	}
+
+	return KubeProblemSignInLater
+}
+
+// importableNames are the contexts of yaml the preview marks importable, in its order.
+func importableNames(t *testing.T, yaml string) []string {
+	t.Helper()
+
+	var names []string
+
+	for _, c := range parseKubeSummary(t, yaml).Contexts {
+		if c.Problem == "" {
+			names = append(names, c.Name)
+		}
+	}
+
+	return names
+}
+
 func parseKubeSummary(t *testing.T, yaml string) kubeconfigSummary {
 	t.Helper()
 
@@ -167,13 +193,13 @@ func TestParseKubeconfigPreview(t *testing.T) {
 	want := map[string]row{
 		"cert":        {authCert, "", ""},
 		"sa":          {authToken, "", ""},
-		"eks":         {authEKS, "prod", KubeProblemSignInLater},
-		"gke":         {authGKE, "", KubeProblemSignInLater},
-		"oidc":        {authOIDC, "https://id.example.org", KubeProblemSignInLater},
-		"azure":       {authAzure, "t1", KubeProblemSignInLater},
-		"do":          {authDigitalOcean, "", KubeProblemSignInLater},
-		"rancher":     {authRancher, "rancher.example.org", KubeProblemSignInLater},
-		"legacy-oidc": {authOIDC, "https://old.example.org", KubeProblemSignInLater},
+		"eks":         {authEKS, "prod", cloudProblem(authEKS)},
+		"gke":         {authGKE, "", cloudProblem(authGKE)},
+		"oidc":        {authOIDC, "https://id.example.org", ""},
+		"azure":       {authAzure, "t1", cloudProblem(authAzure)},
+		"do":          {authDigitalOcean, "", cloudProblem(authDigitalOcean)},
+		"rancher":     {authRancher, "rancher.example.org", cloudProblem(authRancher)},
+		"legacy-oidc": {authOIDC, "https://old.example.org", KubeProblemInvalid}, // no client ID
 		"custom":      {authExec, "my-auth", KubeProblemExec},
 		"basic":       {authBasic, "", KubeProblemBasicAuth},
 		"token-file":  {authToken, "", KubeProblemFilePath},
@@ -247,14 +273,32 @@ func TestParseKubeconfigRejectsBrokenFiles(t *testing.T) {
 }
 
 func TestMergeKubeconfigImportsOnlyWhatWorks(t *testing.T) {
-	merged, err := MergeKubeconfig("", "", testKubeconfigAllAuth(t), "")
+	added := testKubeconfigAllAuth(t)
+
+	merged, err := MergeKubeconfig("", "", added, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	want := importableNames(t, added)
+	if !slices.Contains(want, "cert") || !slices.Contains(want, "sa") || !slices.Contains(want, "oidc") || slices.Contains(want, "basic") {
+		t.Fatalf("importable %v", want)
+	}
+
 	s := parseKubeSummary(t, merged)
-	if len(s.Contexts) != 2 || s.Contexts[0].Name != "cert" || s.Contexts[1].Name != "sa" {
-		t.Fatalf("merged contexts: %+v", s.Contexts)
+
+	var got []string
+
+	for _, c := range s.Contexts {
+		got = append(got, c.Name)
+
+		if (c.Name == "oidc") != (c.SignIn == authOIDC) || (c.Name == "cert" && c.SignIn != "") {
+			t.Errorf("%s: sign-in %q", c.Name, c.SignIn)
+		}
+	}
+
+	if !slices.Equal(got, want) {
+		t.Fatalf("merged %v, want %v", got, want)
 	}
 
 	if s.Current != "sa" {
@@ -271,34 +315,36 @@ func TestMergeKubeconfigImportsOnlyWhatWorks(t *testing.T) {
 		if c.Context.Cluster != c.Name || c.Context.User != c.Name {
 			t.Errorf("%s: cluster %q user %q", c.Name, c.Context.Cluster, c.Context.User)
 		}
+
+		if c.Name == "sa" && c.Context.Namespace != "ops" {
+			t.Error("namespace lost")
+		}
 	}
 
-	if len(doc.Clusters) != 2 || len(doc.Users) != 2 {
+	if len(doc.Clusters) != len(want) || len(doc.Users) != len(want) {
 		t.Errorf("%d clusters, %d users", len(doc.Clusters), len(doc.Users))
 	}
+}
 
-	if doc.Contexts[1].Context.Namespace != "ops" {
-		t.Error("namespace lost")
+// skipChoices skips every context of yaml but keep.
+func skipChoices(t *testing.T, yaml string, keep ...string) string {
+	t.Helper()
+
+	var choices []importChoice
+
+	for i, c := range parseKubeSummary(t, yaml).Contexts {
+		if !slices.Contains(keep, c.Name) {
+			choices = append(choices, importChoice{Index: i, Skip: true})
+		}
 	}
+
+	return mustJSON(t, choices)
 }
 
 func TestMergeKubeconfigSkipsAndRefusesEmpty(t *testing.T) {
 	added := testKubeconfigAllAuth(t)
 
-	// cert is index 1 and sa index 14 in ParseKubeconfig's order.
-	s := parseKubeSummary(t, added)
-	certIdx, saIdx := -1, -1
-
-	for i, c := range s.Contexts {
-		switch c.Name {
-		case "cert":
-			certIdx = i
-		case "sa":
-			saIdx = i
-		}
-	}
-
-	merged, err := MergeKubeconfig("", "", added, fmt.Sprintf(`[{"index":%d,"skip":true}]`, certIdx))
+	merged, err := MergeKubeconfig("", "", added, skipChoices(t, added, "sa"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -307,8 +353,7 @@ func TestMergeKubeconfigSkipsAndRefusesEmpty(t *testing.T) {
 		t.Fatalf("skip ignored: %+v", got.Contexts)
 	}
 
-	_, err = MergeKubeconfig("", "", added, fmt.Sprintf(`[{"index":%d,"skip":true},{"index":%d,"skip":true}]`, certIdx, saIdx))
-	if err == nil {
+	if _, err := MergeKubeconfig("", "", added, skipChoices(t, added)); err == nil {
 		t.Fatal("importing nothing must fail")
 	}
 }
@@ -408,7 +453,9 @@ func TestMergeKubeconfigReplacesSameCluster(t *testing.T) {
 }
 
 func TestRemoveAndExportKubeContext(t *testing.T) {
-	stored, err := MergeKubeconfig("", "", testKubeconfigAllAuth(t), "")
+	added := testKubeconfigAllAuth(t)
+
+	stored, err := MergeKubeconfig("", "", added, skipChoices(t, added, "cert", "sa"))
 	if err != nil {
 		t.Fatal(err)
 	}

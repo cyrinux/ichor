@@ -23,6 +23,7 @@ var kubeClients = newKubeClientCache(openKubeClientForContext)
 
 type kubeClientEntry struct {
 	client  *kubeClient
+	target  kubeTarget
 	expires time.Time
 }
 
@@ -80,7 +81,7 @@ func (c *kubeClientCache) get(target kubeTarget) (k *kubeClient, fresh bool, err
 		delete(c.opening, key)
 
 		if op.err == nil {
-			c.entries[key] = kubeClientEntry{client: op.client, expires: time.Now().Add(kubeClientTTL)}
+			c.entries[key] = kubeClientEntry{client: op.client, target: target, expires: time.Now().Add(kubeClientTTL)}
 		}
 		c.mu.Unlock()
 		close(op.done)
@@ -116,17 +117,26 @@ func (c *kubeClientCache) forget(target kubeTarget, k *kubeClient) {
 	}
 }
 
+// forgetConfig drops every client of the context (any API server address): its credentials
+// changed (signed in or out).
+func (c *kubeClientCache) forgetConfig(config, context string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for key, entry := range c.entries {
+		if entry.target.config == config && entry.target.context == context {
+			delete(c.entries, key)
+			entry.client.close()
+		}
+	}
+}
+
 // openKubeClientForContext fetches an admin kubeconfig from Talos (bounded by callTimeout)
 // and probes the API server addresses (bounded by kubeProbeTimeout). A cluster added from a
 // kubeconfig uses its own context, at its own server only.
 func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
 	if isKubeconfig(target.config) {
-		kubeconfig, err := kubeContextYAML(target.config, target.context)
-		if err != nil {
-			return nil, err
-		}
-
-		return openKubeClient(context.Background(), kubeconfig, nil, target.server)
+		return openStoredKubeClient(target)
 	}
 
 	var endpoints []string
@@ -141,4 +151,46 @@ func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
 	}
 
 	return openKubeClient(context.Background(), kubeconfig, endpoints, target.server)
+}
+
+// openStoredKubeClient opens a cluster added from a kubeconfig. A context that signs in
+// through a method gets its token source; the first token is minted before probing, so a
+// needed sign-in is reported as such rather than as an unreachable server.
+func openStoredKubeClient(target kubeTarget) (*kubeClient, error) {
+	sc, err := signInContext(target.config, target.context)
+	if err != nil {
+		return nil, err
+	}
+
+	if sc.method == nil {
+		kubeconfig, err := kubeContextYAML(target.config, target.context)
+		if err != nil {
+			return nil, err
+		}
+
+		return openKubeClient(context.Background(), kubeconfig, nil, target.server)
+	}
+
+	tokens := kubeAuth.source(sc.key, sc.method)
+
+	ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
+	defer cancel()
+
+	if _, err := tokens.get(ctx); err != nil {
+		return nil, err
+	}
+
+	kubeconfig, err := kubeContextYAMLWithoutUser(target.config, target.context)
+	if err != nil {
+		return nil, err
+	}
+
+	creds, err := parseKubeconfig(kubeconfig)
+	if err != nil {
+		return nil, err
+	}
+
+	creds.token, creds.tokens = "", tokens
+
+	return openKubeClientCreds(context.Background(), creds, nil, target.server)
 }

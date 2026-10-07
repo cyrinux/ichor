@@ -32,7 +32,9 @@ type kubeClient struct {
 	base  *url.URL
 	http  *http.Client
 	token string
-	tls   *tls.Config // the kubeconfig's TLS settings, for connections outside http (exec)
+	// tokens replaces token for a cluster that signs in through a method (OIDC, EKS…).
+	tokens *authTokenSource
+	tls    *tls.Config // the kubeconfig's TLS settings, for connections outside http (exec)
 	// namespace is the kubeconfig context's namespace, "" when it sets none.
 	namespace string
 }
@@ -115,6 +117,11 @@ func openKubeClient(ctx context.Context, kubeconfig string, talosEndpoints []str
 		return nil, err
 	}
 
+	return openKubeClientCreds(ctx, creds, talosEndpoints, server)
+}
+
+// openKubeClientCreds is openKubeClient for credentials already read.
+func openKubeClientCreds(ctx context.Context, creds *kubeCredentials, talosEndpoints []string, server string) (*kubeClient, error) {
 	candidates := []*url.URL{creds.server}
 
 	switch {
@@ -222,7 +229,16 @@ func newKubeClient(base *url.URL, creds *kubeCredentials) *kubeClient {
 		Transport: transport,
 		// The API server does not redirect; never send the credentials anywhere else.
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
-	}, token: creds.token, tls: creds.tls.Clone(), namespace: creds.namespace}
+	}, token: creds.token, tokens: creds.tokens, tls: creds.tls.Clone(), namespace: creds.namespace}
+}
+
+// bearer is the token to send, "" for none (a client certificate).
+func (k *kubeClient) bearer(ctx context.Context) (string, error) {
+	if k.tokens != nil {
+		return k.tokens.get(ctx)
+	}
+
+	return k.token, nil
 }
 
 // close drops the client's idle connections (its TLS sessions hold the client key).
@@ -387,8 +403,13 @@ func (k *kubeClient) request(ctx context.Context, method, path, accept, contentT
 		req.Header.Set("Content-Type", contentType)
 	}
 
-	if k.token != "" {
-		req.Header.Set("Authorization", "Bearer "+k.token)
+	token, err := k.bearer(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
 	}
 
 	return k.http.Do(req)
@@ -437,6 +458,11 @@ func kubeError(err error) error {
 	var apiErr *kubeAPIError
 	if errors.As(err, &apiErr) {
 		return apiErr
+	}
+
+	var signIn *errSignInRequired
+	if errors.As(err, &signIn) {
+		return signIn
 	}
 
 	return errors.New("Kubernetes API: " + kubeTransportError(err))
@@ -491,6 +517,10 @@ func callKube[T any](ctx context.Context, target kubeTarget, k *kubeClient, fres
 		switch {
 		case errors.As(err, &apiErr):
 			if apiErr.Code == http.StatusUnauthorized {
+				if k.tokens != nil {
+					k.tokens.invalidate()
+				}
+
 				kubeClients.forget(target, k)
 			}
 		case errors.Is(err, context.Canceled):
