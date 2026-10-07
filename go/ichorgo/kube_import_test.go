@@ -567,3 +567,48 @@ func TestKubeNodesForbidden(t *testing.T) {
 		t.Fatalf("got %s", out)
 	}
 }
+
+func TestTalosImportAvoidsKubeNames(t *testing.T) {
+	talos := testConfig(t, time.Now().Add(time.Hour))
+
+	var ts configSummary
+
+	out, err := ParseConfig(talos)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := json.Unmarshal([]byte(out), &ts); err != nil {
+		t.Fatal(err)
+	}
+
+	name := ts.Contexts[0].Name
+
+	kube, err := MergeKubeconfig("", "", strings.ReplaceAll(singleTokenKubeconfig("https://a.example.org:6443", "t"), "name: x\n", "name: "+name+"\n"), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	conflicts, err := TalosImportConflicts("", kube, talos)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(conflicts, `"suggested":"`+name+`-1"`) {
+		t.Fatalf("conflicts %s", conflicts)
+	}
+
+	merged, err := MergeTalosconfig("", kube, talos, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	out, err = ParseConfig(merged)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(out, `"name":"`+name+`-1"`) || !strings.Contains(out, `"current":"`+name+`-1"`) {
+		t.Fatalf("merged %s", out)
+	}
+}

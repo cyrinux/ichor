@@ -17,13 +17,30 @@ import (
 func ImportConflicts(storedYAML, addedYAML string) (out string, err error) {
 	defer maskResult(&out, &err)
 
+	return importConflicts(storedYAML, "", addedYAML)
+}
+
+// TalosImportConflicts is ImportConflicts when clusters added from a kubeconfig (kubeYAML,
+// the stored kubeconfig) are stored too: their names are taken as well, since the app shows
+// both kinds in one list. storedYAML may be "" when only kubeconfig clusters are stored.
+func TalosImportConflicts(storedYAML, kubeYAML, addedYAML string) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	return importConflicts(storedYAML, kubeYAML, addedYAML)
+}
+
+func importConflicts(storedYAML, kubeYAML, addedYAML string) (string, error) {
 	stored, added, err := loadMergeInputs(storedYAML, addedYAML)
 	if err != nil {
 		return "", err
 	}
 
+	taken, err := takenAcross(stored, kubeYAML)
+	if err != nil {
+		return "", err
+	}
+
 	conflicts := []importConflict{}
-	taken := takenNames(stored)
 	reserved := takenNames(added)
 
 	for i, name := range sortedContextNames(added) {
@@ -72,6 +89,19 @@ func MergeConfig(storedYAML, addedYAML, choicesJSON string) (out string, err err
 	// The result is a talosconfig the app stores: only the error is masked.
 	defer maskErr(&err)
 
+	return mergeConfig(storedYAML, "", addedYAML, choicesJSON)
+}
+
+// MergeTalosconfig is MergeConfig when clusters added from a kubeconfig are stored too (see
+// TalosImportConflicts). storedYAML may be "": the result then holds addedYAML's contexts.
+func MergeTalosconfig(storedYAML, kubeYAML, addedYAML, choicesJSON string) (out string, err error) {
+	// The result is a talosconfig the app stores: only the error is masked.
+	defer maskErr(&err)
+
+	return mergeConfig(storedYAML, kubeYAML, addedYAML, choicesJSON)
+}
+
+func mergeConfig(storedYAML, kubeYAML, addedYAML, choicesJSON string) (string, error) {
 	stored, added, err := loadMergeInputs(storedYAML, addedYAML)
 	if err != nil {
 		return "", err
@@ -87,7 +117,11 @@ func MergeConfig(storedYAML, addedYAML, choicesJSON string) (out string, err err
 		contexts[name] = c
 	}
 
-	taken := takenNames(stored)
+	taken, err := takenAcross(stored, kubeYAML)
+	if err != nil {
+		return "", err
+	}
+
 	reserved := takenNames(added)
 	current := defaultContextName(added)
 
@@ -116,8 +150,9 @@ func MergeConfig(storedYAML, addedYAML, choicesJSON string) (out string, err err
 }
 
 func loadMergeInputs(storedYAML, addedYAML string) (stored, added *clientconfig.Config, err error) {
-	stored, err = parseTalosconfig(storedYAML)
-	if err != nil {
+	if strings.TrimSpace(storedYAML) == "" {
+		stored = &clientconfig.Config{Contexts: map[string]*clientconfig.Context{}}
+	} else if stored, err = parseTalosconfig(storedYAML); err != nil {
 		return nil, nil, fmt.Errorf("stored talosconfig: %w", err)
 	}
 
@@ -146,6 +181,22 @@ func parseImportChoices(choicesJSON string) (map[int]importChoice, error) {
 	}
 
 	return byIndex, nil
+}
+
+// takenAcross is the names of stored's contexts and of the stored kubeconfig's ("" for none).
+func takenAcross(stored *clientconfig.Config, kubeYAML string) (map[string]bool, error) {
+	taken := takenNames(stored)
+
+	kube, err := loadStoredKubeconfig(kubeYAML)
+	if err != nil {
+		return nil, err
+	}
+
+	for name := range kubeNames(kube) {
+		taken[name] = true
+	}
+
+	return taken, nil
 }
 
 func takenNames(cfg *clientconfig.Config) map[string]bool {
