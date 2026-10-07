@@ -4,7 +4,7 @@ Status: **study**, checked against the code on 2026-10-06. Nothing is built.
 
 Goal: add a cluster from a kubeconfig alone, with no talosconfig, and use every Kubernetes feature
 of the app on it. Target auth methods: ServiceAccount token and client cert, kubectl
-`oidc-login` (kubelogin), AWS EKS, GCP GKE. AKS (Azure `kubelogin`) is a natural follow-up.
+`oidc-login` (kubelogin), AWS EKS, GCP GKE. Later: Azure AKS, DigitalOcean, Rancher (§5.5–5.7).
 
 ## 1. Where we are
 
@@ -245,6 +245,55 @@ Ways to get one on a phone:
 
 Recommendation: service account key first, OIDC for user identity, no Google user sign-in.
 
+### 5.5 Azure AKS (later)
+
+Two kinds of AKS kubeconfig:
+- **Local accounts**: client cert in the kubeconfig, works with K1 as is.
+- **Entra ID** (the common enterprise setup): `exec` with `command: kubelogin` and
+  `args: [get-token, --login, devicecode|interactive|spn|azurecli, --server-id <app id>,
+  --client-id <app id>, --tenant-id <tenant>, --environment …]`. Recognise it and mint an Entra
+  token with audience `<server-id>/.default` through the K2 OIDC code: device code (works with
+  the client id from the kubeconfig) or PKCE with a redirect. `--login spn` → client credentials
+  grant with a stored client id + secret (sealed, backed up like other static secrets).
+  `--login azurecli` / `workloadidentity` / `msi` have no meaning on a phone: map them to device
+  code with the same server id.
+
+Discovery (K7): an Entra token for `https://management.azure.com/.default`, then ARM
+`GET /subscriptions/{id}/providers/Microsoft.ContainerService/managedClusters` and
+`POST …/listClusterUserCredential`. Clusters with local accounts disabled return the `kubelogin`
+kubeconfig, which goes through the recognition above (kubenav gets no credentials there).
+
+### 5.6 DigitalOcean (later)
+
+- The kubeconfig downloaded from the control panel has a **static token valid 7 days**: works
+  with K1, with an expiry warning; kubenav never refreshes it.
+- `doctl kubernetes cluster kubeconfig save` writes `exec: doctl kubernetes cluster kubeconfig
+  exec-credential --version=v1beta1 <cluster id>`. That command calls the DigitalOcean API for
+  short-lived cluster credentials (token + `expires_at`). Recognise it: the user gives a
+  **scoped DigitalOcean API token** (read access to Kubernetes, nothing else), Go calls the
+  credentials endpoint and refreshes before `expires_at`. The cluster id comes from the args.
+- Discovery (K7): the same token lists the account's clusters, so no kubeconfig is needed.
+
+### 5.7 Rancher (later)
+
+- Rancher-generated kubeconfigs point at `https://<rancher>/k8s/clusters/<id>` with a static
+  Rancher API token (`kubeconfig-u-…`): works with K1; expiry from the token's TTL. Contexts for
+  the **authorized cluster endpoint** (direct to the downstream API server) are ordinary contexts.
+- When Rancher is set to not generate tokens (`kubeconfig-generate-token=false`) the kubeconfig
+  uses `exec: rancher token --server … --user … --auth-provider …`. Recognise it and ask for a
+  Rancher **API key** (created by the user under "Account & API Keys", ideally scoped to a
+  cluster and with a TTL) rather than storing a password as kubenav does.
+- Discovery (K7): with the API key, list `/v3/clusters` and call each cluster's
+  `generateKubeconfig` action.
+- SSO-only Rancher users (GitHub, Keycloak, Entra behind Rancher): their CLI login flow is
+  Rancher-specific; study it when this phase starts, API keys first.
+
+### 5.8 Static-token providers
+
+Linode/Akamai LKE, Scaleway Kapsule, OVHcloud, Civo, self-hosted k3s/kubeadm/RKE2: their
+kubeconfigs carry a token or a client cert, so they work with K1 and need no provider code.
+Discovery for them is not planned.
+
 ## 6. UI
 
 - **Capabilities.** Expose `capabilities` on the cluster (`talos`, `kube`, later `audit`) and
@@ -274,7 +323,7 @@ DigitalOcean, Rancher, OIDC). Against the Kubernetes side of this app:
 
 | kubenav has | Here | Gap |
 |---|---|---|
-| Kubeconfig import, cloud sign-ins | none (this study) | K1–K4, K6 |
+| Kubeconfig import, cloud sign-ins | none (this study) | K1–K4, K6–K9 |
 | Browse any kind, CRDs (API discovery) | typed lists only (workloads, pods, cronjobs, routes, netpol, operators) | **generic browser**: `/api` + `/apis` discovery, table view via `Accept: application/json;as=Table` (columns come from the server, no per-kind code), namespaced filter, search. M |
 | YAML view / edit / apply | read-only views, Argo/Flux diff | YAML view for every object (S); edit + server-side dry-run + apply with a diff before confirm (M) |
 | Pod logs | `KubePodLogs` (snapshot, tail, previous) | follow/stream, multi-container, search (S) |
@@ -338,8 +387,10 @@ to learn its mechanisms, not to copy code. What it does and how we do it better:
 | K3 | EKS | exec recognition, SigV4 presign, IAM Identity Center device flow, static keys fallback, AssumeRole | M |
 | K4 | GKE | gke plugin recognition, service account key | S |
 | K5 | Hybrid Talos + own kubeconfig | per-cluster Kubernetes access choice | S |
-| K6 | AKS | Azure kubelogin recognition on top of K2 device code | S |
-| K7 | Cloud discovery | after an AWS / GCP (later Azure) sign-in, list the account's clusters and add them without a kubeconfig | M |
+| K6 | AKS (§5.5) | Azure kubelogin recognition (devicecode, spn) on top of K2 | S |
+| K7 | Cloud discovery | after an AWS / GCP / Azure / DigitalOcean / Rancher sign-in, list the account's clusters and add them without a kubeconfig | M |
+| K8 | DigitalOcean (§5.6) | doctl exec recognition, scoped API token, credentials refresh before `expires_at` | S |
+| K9 | Rancher (§5.7) | rancher exec recognition, API key, `generateKubeconfig` | S–M |
 
 K1 alone delivers SA and client-cert clusters on both platforms. Release K1 + KN together as the
 "any Kubernetes cluster" version; K2 (OIDC) next, since kubenav users with SSO need it. Each

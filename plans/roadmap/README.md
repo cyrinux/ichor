@@ -42,7 +42,7 @@ Every idea was checked against the code (Go core, Android, iOS) on 2026-10-04. S
 
 | # | Feature | Status today | Plan | Size |
 |---|---------|--------------|------|------|
-| K | Kubeconfig clusters without Talos (ServiceAccount, cert, OIDC, EKS, GKE, AKS), import, backup, kubenav parity | **missing**: kubeconfigs only come from Talos (`kubeconfig.go`); exec/auth-provider rejected | [kubeconfig-only.md](kubeconfig-only.md) | XL |
+| K | Kubeconfig clusters without Talos (ServiceAccount, cert, OIDC, EKS, GKE; later AKS, DigitalOcean, Rancher), import, backup, kubenav parity | **missing**: kubeconfigs only come from Talos (`kubeconfig.go`); exec/auth-provider rejected | [kubeconfig-only.md](kubeconfig-only.md) | XL |
 
 ## UX: calm, fast, glanceable
 
