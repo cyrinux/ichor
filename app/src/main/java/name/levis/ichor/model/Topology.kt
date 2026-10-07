@@ -28,6 +28,8 @@ data class TopologyNode(
     val kubespan: Boolean = false,
     val queried: Boolean = false,
     val error: String? = null,
+    /** When an unreachable node last answered (epoch millis), kept by the app: see withLastKnown. */
+    val lastSeen: Long? = null,
 )
 
 @Serializable

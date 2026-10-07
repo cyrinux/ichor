@@ -51,6 +51,7 @@ import name.levis.ichor.model.TopologyNode
 import name.levis.ichor.model.TopologySite
 import name.levis.ichor.model.brokenLinks
 import name.levis.ichor.model.countryFlag
+import name.levis.ichor.ui.components.agoLabel
 import name.levis.ichor.ui.theme.LocalStatusColors
 import kotlin.math.roundToInt
 
@@ -261,8 +262,11 @@ private fun NodeChip(
                 Text(node.hostname.ifBlank { node.id }, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 val flag = countryFlag(node.country)
                 val zone = node.zone.takeIf { it.isNotBlank() }?.let { listOf(flag, it).filter(String::isNotBlank).joinToString(" ") }
+                // Down but seen before: since when, its zone is the site it sits on.
+                val lastSeen = node.lastSeen?.takeIf { node.error != null }
+                    ?.let { stringResource(R.string.overview_node_last_seen, agoLabel(System.currentTimeMillis() - it)) }
                 Text(
-                    pickLabel ?: zone ?: stringResource(if (controlPlane) R.string.topology_role_controlplane else R.string.topology_role_worker),
+                    pickLabel ?: lastSeen ?: zone ?: stringResource(if (controlPlane) R.string.topology_role_controlplane else R.string.topology_role_worker),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

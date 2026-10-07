@@ -66,8 +66,11 @@ struct KubeSpanView: View {
         if case .loading = map, let known = TopologyStore.shared.topology(for: key) {
             map = .loaded(known, at: Date())
         }
-        let fetched: LoadState<ClusterTopology> = await .from { try await client.topology() }
-        if case .loaded(let topology, _, _) = fetched { TopologyStore.shared.remember(topology, for: key) }
+        var fetched: LoadState<ClusterTopology> = await .from { try await client.topology() }
+        // Kept with the nodes that no longer answer named as the map before knew them.
+        if case .loaded(let topology, let at, _) = fetched {
+            fetched = .loaded(TopologyStore.shared.remember(topology, for: key), at: at)
+        }
         map = map.refreshed(with: fetched)
     }
 

@@ -222,12 +222,19 @@ private struct TopologyNodeChip: View {
         }
     }
 
-    private var detail: String { pickLabel ?? zone ?? role }
+    /// Down but seen before: since when (its zone is the site it sits on).
+    private var lastSeen: String? {
+        guard node.error != nil, let seen = node.lastSeenDate else { return nil }
+        return String(localized: "Last seen \(FreshnessFooter.ago(Date().timeIntervalSince(seen)))")
+    }
+
+    private var detail: String { pickLabel ?? lastSeen ?? zone ?? role }
 
     private var accessibilityValue: String {
         var parts = [pickLabel, role, node.zone.nonEmpty].compactMap { $0 }
         if broken > 0 { parts.append(String(localized: "\(broken) peer links down")) }
         if let error = node.error { parts.append(error) }
+        if let lastSeen { parts.append(lastSeen) }
         return parts.joined(separator: ", ")
     }
 
