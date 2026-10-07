@@ -83,6 +83,37 @@
                 <data android:pathPattern=".*\\..*\\..*\\.ichorbackup" />
                 <data android:pathPattern=".*\\..*\\..*\\..*\\.ichorbackup" />
             </intent-filter>
+            <!-- A kubeconfig or talosconfig opened with the app or shared to it (mail, file
+                 manager): it lands in the import preview. YAML types only, never all text: a
+                 file named config or *.kubeconfig comes as a generic binary (above). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/yaml" />
+                <data android:mimeType="application/x-yaml" />
+                <data android:mimeType="text/yaml" />
+                <data android:mimeType="text/x-yaml" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.kubeconfig" />
+                <data android:pathPattern=".*\\..*\\.kubeconfig" />
+                <data android:pathPattern=".*\\.yaml" />
+                <data android:pathPattern=".*\\..*\\.yaml" />
+                <data android:pathPattern=".*\\.yml" />
+                <data android:pathPattern=".*\\..*\\.yml" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
         </activity>
 
         <!-- Shares saved packet captures with the app the user picks. -->

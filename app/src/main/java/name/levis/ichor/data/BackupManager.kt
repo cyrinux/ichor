@@ -5,6 +5,7 @@ import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.model.BackupPayload
 import name.levis.ichor.model.BackupSettings
 import name.levis.ichor.model.backupClusters
+import name.levis.ichor.model.backupFormat
 import name.levis.ichor.model.restoredClusters
 import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.ui.LocalizedException
@@ -17,7 +18,7 @@ import kotlinx.coroutines.withContext
 data class RestoreOutcome(val languageChanged: Boolean, val language: String)
 
 /**
- * Backs up the talosconfig and the settings that go with it into a file sealed with a
+ * Backs up the talosconfig, the kubeconfig and the settings that go with them into a file sealed with a
  * passphrase (Argon2id + AES-256-GCM, in the Go core), and restores one, on this device or
  * on another, Android or iOS. The stored config cannot be copied as it is: its key never
  * leaves this device's keystore.
@@ -40,10 +41,13 @@ class BackupManager(
         withContext(Dispatchers.Default) {
             val stored = configs.config.value ?: throw NoConfigException()
             val mask = ui.privacyMask.value
+            val kubeconfig = stored.kubeYaml.takeIf { it.isNotBlank() }
             val payload = BackupPayload(
+                format = backupFormat(kubeconfig),
                 platform = "android",
                 createdAt = now,
-                talosconfig = stored.yaml,
+                talosconfig = stored.talosYaml,
+                kubeconfig = kubeconfig,
                 activeContextIndex = configs.activeIndex(),
                 settings = BackupSettings(
                     themeMode = ui.themeMode.value.name.lowercase(),
@@ -79,7 +83,8 @@ class BackupManager(
         val settings = payload.settings
         // The config first: on failure nothing else changed. Screenshot mode comes after it,
         // its re-parse then reads the restored config (applied before, it could race the write).
-        configs.replace(payload.talosconfig, payload.activeContextIndex)
+        // Both stores in one go: a backup without a kubeconfig removes the clusters added from one.
+        configs.replace(payload.talosconfig, payload.kubeconfig.orEmpty(), payload.activeContextIndex)
         val summary = configs.config.value?.summary ?: throw NoConfigException()
         val fingerprints = summary.contexts.map { it.fingerprint }
 

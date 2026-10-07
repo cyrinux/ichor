@@ -6,19 +6,23 @@ import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.model.ConfigSummary
 import name.levis.ichor.model.ImportChoice
 import name.levis.ichor.model.ImportConflict
+import name.levis.ichor.model.initialKubeChoices
 import name.levis.ichor.model.takenNameChoices
 import name.levis.ichor.ui.userMessage
+import name.levis.ichorgo.Ichorgo
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 sealed interface ImportState {
     data object Idle : ImportState
     data object Validating : ImportState
 
     /**
-     * A valid config, with its contexts named like stored ones ([conflicts]) and what the
+     * A valid talosconfig, with its contexts named like stored ones ([conflicts]) and what the
      * user picked for each ([choices], one per conflict). [error] is a failed save, kept on
      * the preview so the choices can be fixed.
      */
@@ -33,6 +37,24 @@ sealed interface ImportState {
         val canImport: Boolean get() = takenNames.isEmpty()
     }
 
+    /**
+     * A kubeconfig: one row per context, each checked when it can be added ([choices], one per
+     * context, by position; an unchecked one is skipped), with its conflicts as for a talosconfig.
+     */
+    data class KubePreview(
+        val yaml: String,
+        val summary: ConfigSummary,
+        val conflicts: List<ImportConflict> = emptyList(),
+        val choices: List<ImportChoice> = initialKubeChoices(summary),
+        val takenNames: Set<Int> = emptySet(),
+        val error: String? = null,
+    ) : ImportState {
+        val canImport: Boolean get() = takenNames.isEmpty() && choices.any { !it.skip }
+
+        // Holds credentials: never in a log line.
+        override fun toString() = "KubePreview(${summary.contexts.size} contexts)"
+    }
+
     data class Invalid(val message: String) : ImportState
     data object Saved : ImportState
 }
@@ -41,13 +63,27 @@ class ImportViewModel(private val configs: ConfigRepository) : ViewModel() {
     private val _state = MutableStateFlow<ImportState>(ImportState.Idle)
     val state: StateFlow<ImportState> = _state.asStateFlow()
 
-    /** Validates candidate YAML from any source (file, paste, QR) and shows a preview. */
-    fun submit(yaml: String) {
+    /**
+     * Validates text from any source (file, paste, QR, a file opened with the app) and shows a
+     * preview. A compressed "ichor-config:" payload is expanded first; the app then tells a
+     * kubeconfig from a talosconfig, the user does not pick.
+     */
+    fun submit(text: String) {
         _state.value = ImportState.Validating
         viewModelScope.launch {
-            _state.value = runCatching {
-                ImportState.Preview(yaml, configs.validate(yaml), configs.importConflicts(yaml))
-            }.getOrElse { ImportState.Invalid(it.userMessage()) }
+            _state.value = runCatching { preview(text) }.getOrElse { ImportState.Invalid(it.userMessage()) }
+        }
+    }
+
+    private suspend fun preview(text: String): ImportState {
+        val (yaml, kube) = withContext(Dispatchers.IO) {
+            val decoded = Ichorgo.decodeImportText(text)
+            decoded to Ichorgo.isKubeconfig(decoded)
+        }
+        return if (kube) {
+            ImportState.KubePreview(yaml, configs.validateKube(yaml), configs.kubeImportConflicts(yaml))
+        } else {
+            ImportState.Preview(yaml, configs.validate(yaml), configs.importConflicts(yaml))
         }
     }
 
@@ -57,27 +93,49 @@ class ImportViewModel(private val configs: ConfigRepository) : ViewModel() {
     /** Replaces the stored context of the same cluster with the conflict at [index], or not. */
     fun setReplace(index: Int, replace: Boolean) = updateChoice(index) { it.copy(replace = replace) }
 
+    /** Adds the kubeconfig context at [index], or leaves it out. */
+    fun setIncluded(index: Int, included: Boolean) = updateChoice(index) { it.copy(skip = !included) }
+
     private fun updateChoice(index: Int, change: (ImportChoice) -> ImportChoice) {
-        val preview = _state.value as? ImportState.Preview ?: return
-        val choices = preview.choices.map { if (it.index == index) change(it) else it }
-        _state.value = preview.copy(choices = choices, takenNames = takenNames(preview, choices), error = null)
+        when (val preview = _state.value) {
+            is ImportState.Preview -> {
+                val choices = preview.choices.map { if (it.index == index) change(it) else it }
+                _state.value = preview.copy(choices = choices, takenNames = takenNames(preview.conflicts, choices, preview.summary), error = null)
+            }
+            is ImportState.KubePreview -> {
+                val choices = preview.choices.map { if (it.index == index) change(it) else it }
+                _state.value = preview.copy(choices = choices, takenNames = takenNames(preview.conflicts, choices, preview.summary), error = null)
+            }
+            else -> Unit
+        }
     }
 
-    private fun takenNames(preview: ImportState.Preview, choices: List<ImportChoice>): Set<Int> {
+    private fun takenNames(conflicts: List<ImportConflict>, choices: List<ImportChoice>, summary: ConfigSummary): Set<Int> {
         val stored = configs.config.value?.summary?.contexts.orEmpty().map { it.name }.toSet()
-        return takenNameChoices(preview.conflicts, choices, stored, preview.summary.contexts.map { it.name })
+        return takenNameChoices(conflicts, choices, stored, summary.contexts.map { it.name })
     }
 
     fun confirm() {
-        val preview = _state.value as? ImportState.Preview ?: return
-        if (!preview.canImport) return
+        val save: suspend () -> Unit = when (val preview = _state.value) {
+            is ImportState.Preview -> if (preview.canImport) ({ configs.save(preview.yaml, preview.choices) }) else return
+            is ImportState.KubePreview -> if (preview.canImport) ({ configs.saveKube(preview.yaml, preview.choices) }) else return
+            else -> return
+        }
+        val preview = _state.value
         _state.value = ImportState.Validating
         viewModelScope.launch {
-            _state.value = runCatching { configs.save(preview.yaml, preview.choices) }.fold(
+            _state.value = runCatching { save() }.fold(
                 onSuccess = { ImportState.Saved },
-                onFailure = { preview.copy(error = it.userMessage()) },
+                onFailure = { failed(preview, it.userMessage()) },
             )
         }
+    }
+
+    /** [preview] again, with the save's [error]. */
+    private fun failed(preview: ImportState, error: String): ImportState = when (preview) {
+        is ImportState.Preview -> preview.copy(error = error)
+        is ImportState.KubePreview -> preview.copy(error = error)
+        else -> ImportState.Invalid(error)
     }
 
     fun reset() {

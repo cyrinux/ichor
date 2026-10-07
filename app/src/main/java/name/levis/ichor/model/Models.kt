@@ -22,12 +22,33 @@ data class ContextSummary(
     val endpoints: List<String> = emptyList(),
     val nodes: List<String> = emptyList(),
     val roles: List<String> = emptyList(),
+    /** The client certificate's expiry, or a kubeconfig token's (JWT `exp`); 0 when unknown. */
     val certNotAfter: Long = 0,
     val demo: Boolean = false,
+    /** [KIND_TALOS] (a talosconfig context) or [KIND_KUBE] (added from a kubeconfig, no Talos API). */
+    val kind: String = KIND_TALOS,
+    // Kubeconfig contexts only (ParseKubeconfig): what the import preview and the home show.
+    val namespace: String = "",
+    /** How the context signs in: cert, token, eks, gke, oidc… (the Go core's kubeContextSummary). */
+    val auth: String = "",
+    /** What the sign-in method signs in to (EKS cluster, OIDC issuer), if anything. */
+    val authDetail: String = "",
+    /** Who the credentials are: the certificate's common name or the token's subject. */
+    val user: String = "",
+    val insecure: Boolean = false,
+    /** Why the context cannot be added (a kube-* code), "" when it can. */
+    val problem: String = "",
+    val problemDetail: String = "",
 )
+
+const val KIND_TALOS = "talos"
+const val KIND_KUBE = "kube"
 
 /** Preserved even when screenshot mode masks the endpoint. */
 val ContextSummary.isDemo: Boolean get() = demo
+
+/** Added from a kubeconfig: only the Kubernetes API, no Talos one. */
+val ContextSummary.isKube: Boolean get() = kind == KIND_KUBE
 
 /** Features gated by Talos RBAC (rules from Talos v1.14 machined.go). */
 enum class Feature(@StringRes val label: Int, val roles: Set<String>) {
@@ -70,11 +91,20 @@ enum class Feature(@StringRes val label: Int, val roles: Set<String>) {
         }
 }
 
-fun ContextSummary.allows(feature: Feature): Boolean = roles.any { it in feature.roles }
+/**
+ * What a cluster added from a kubeconfig can do: its credentials only reach the Kubernetes
+ * API, so every feature that goes through Talos is out. What they may do in Kubernetes is
+ * the API's call (it answers 403).
+ */
+private val KUBE_FEATURES = setOf(Feature.WORKLOADS, Feature.KUBECONFIG)
 
-/** Short access level for the UI: "admin", "operator" or "read-only". */
+fun ContextSummary.allows(feature: Feature): Boolean =
+    if (isKube) feature in KUBE_FEATURES else roles.any { it in feature.roles }
+
+/** Short access level for the UI: "admin", "operator" or "read-only"; "Kubernetes" for a kubeconfig cluster. */
 val ContextSummary.accessLabel: Int
     @StringRes get() = when {
+        isKube -> R.string.common_kind_kubernetes
         "os:admin" in roles -> R.string.common_access_admin
         "os:operator" in roles -> R.string.common_access_operator
         else -> R.string.common_access_read_only

@@ -149,7 +149,7 @@ fun IssueConfigScreen(
         ) {
             when {
                 summary == null -> Unit
-                !summary.allows(Feature.ISSUE_CONFIG) -> RoleNotice(Feature.ISSUE_CONFIG, summary.roles)
+                !summary.allows(Feature.ISSUE_CONFIG) -> RoleNotice(Feature.ISSUE_CONFIG, summary)
                 else -> when (val s = state) {
                     is IssueState.Renewed -> RenewedContent(s, onDone = ::leave)
                     is IssueState.Issued -> IssuedContent(s, onDone = ::leave)

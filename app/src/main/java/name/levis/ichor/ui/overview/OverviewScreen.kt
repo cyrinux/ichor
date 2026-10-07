@@ -63,6 +63,7 @@ import name.levis.ichor.model.allows
 import name.levis.ichor.update.StoreUpdateState
 import name.levis.ichor.update.UpdateState
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.data.TOPOLOGY
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.NodeFilter
@@ -150,6 +151,9 @@ fun OverviewScreen(
     onClustersCleared: () -> Unit,
     onChangelog: () -> Unit,
     onAllNodes: (NodeFilter?) -> Unit,
+    onCheckup: () -> Unit,
+    onApiHealth: () -> Unit,
+    onNetworkPolicies: () -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
@@ -159,12 +163,33 @@ fun OverviewScreen(
     argoVm: ArgoViewModel = viewModel(key = "overview-argocd", factory = factory { ArgoViewModel(app.talosRepository, freezeReminderHook(app)) }),
     fluxVm: FluxViewModel = viewModel(key = "overview-flux", factory = factory { FluxViewModel(app.talosRepository) }),
 ) {
+    // A cluster added from a kubeconfig has no Talos overview: its Kubernetes home instead,
+    // before any of the Talos loads below start.
+    val shown by vm.configs.config.collectAsStateWithLifecycle()
+    if (shown?.activeIsKube == true) {
+        KubeHomeScreen(
+            KubeHomeNavigation(
+                onWorkloads = onWorkloads,
+                onMetrics = onMetrics,
+                onCheckup = onCheckup,
+                onApiHealth = onApiHealth,
+                onNetworkPolicies = onNetworkPolicies,
+                onArgoCD = onArgoCD,
+                onFlux = onFlux,
+                onSettings = onSettings,
+                onFunding = onFunding,
+                onAddCluster = onAddCluster,
+                onClustersCleared = onClustersCleared,
+                onChangelog = onChangelog,
+            ),
+        )
+        return
+    }
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
     val ai by app.aiPreferences.settings.collectAsStateWithLifecycle()
     val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
-    val vpnOnly by app.vpnOnly.fingerprints.collectAsStateWithLifecycle()
     val clusterLabels = rememberClusterLabels()
     val scope = rememberCoroutineScope()
     var showClusters by remember { mutableStateOf(false) }
@@ -342,35 +367,14 @@ fun OverviewScreen(
         },
     ) { padding ->
         config?.takeIf { showClusters }?.let { stored ->
-            ClusterSheet(
+            ManageClustersSheet(
                 config = stored,
                 colors = clusterColors,
                 labels = clusterLabels,
-                onSelect = {
-                    showClusters = false
-                    app.selectCluster(it)
-                },
-                onRename = { cluster, name -> app.renameCluster(cluster.fingerprint, name) },
-                onColor = { cluster, color -> app.clusterColors.set(cluster.fingerprint, color) },
-                vpnOnly = vpnOnly,
-                onVpnOnly = { cluster, on -> app.setVpnOnly(cluster.fingerprint, on) },
-                onAdd = {
-                    showClusters = false
-                    onAddCluster()
-                },
-                onRemove = { name ->
-                    scope.launch {
-                        runCatching { app.removeCluster(name) }.fold(
-                            onSuccess = { remains -> if (!remains) onClustersCleared() },
-                            onFailure = { Toast.makeText(context, it.userMessage(), Toast.LENGTH_LONG).show() },
-                        )
-                    }
-                },
-                onDismiss = { showClusters = false },
-                onEndpoints = {
-                    showClusters = false
-                    editingEndpoints = it.name
-                },
+                onClose = { showClusters = false },
+                onAddCluster = onAddCluster,
+                onClustersCleared = onClustersCleared,
+                onEndpoints = { editingEndpoints = it.name },
             )
         }
         config?.let { stored ->
@@ -677,7 +681,7 @@ private fun CertificateBanner(summary: ContextSummary, onIssueConfig: () -> Unit
  * ones. A small icon rather than a label, so it stays out of the way in the screenshots.
  */
 @Composable
-private fun ScreenshotModeIcon() {
+internal fun ScreenshotModeIcon() {
     val prefs = (LocalContext.current.applicationContext as TalosApp).uiPreferences
     val mask by prefs.privacyMask.collectAsStateWithLifecycle()
     if (!mask.enabled) return
@@ -691,7 +695,7 @@ private fun ScreenshotModeIcon() {
 
 /** Shown when the daily check found a newer release; opens Settings → Updates. */
 @Composable
-private fun UpdateBanner(onClick: () -> Unit) {
+internal fun UpdateBanner(onClick: () -> Unit) {
     val updates = (LocalContext.current.applicationContext as TalosApp).updateManager
     val state by updates.state.collectAsStateWithLifecycle()
     val available = state as? UpdateState.Available ?: return
@@ -707,7 +711,7 @@ private fun UpdateBanner(onClick: () -> Unit) {
 
 /** Play build: an update Play has (declined at launch), being downloaded, or ready to install. */
 @Composable
-private fun StoreUpdateBanner() {
+internal fun StoreUpdateBanner() {
     val updates = (LocalContext.current.applicationContext as TalosApp).storeUpdater
     val state by updates.state.collectAsStateWithLifecycle()
     val (text, onClick) = when (state) {
@@ -733,7 +737,7 @@ private fun StoreUpdateBanner() {
  * Sponsors in the open-source builds, [onFunding] (Play in-app purchases) in the Play build.
  */
 @Composable
-private fun SupportCard(onFunding: () -> Unit) {
+internal fun SupportCard(onFunding: () -> Unit) {
     val context = LocalContext.current
     val prompt = (context.applicationContext as TalosApp).supportPrompt
     val visible by prompt.visible.collectAsStateWithLifecycle()

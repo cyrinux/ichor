@@ -68,7 +68,7 @@ import name.levis.ichor.util.daysUntil
 import name.levis.ichor.util.readBounded
 import name.levis.ichor.ui.components.TooltipIconButton
 
-private const val MAX_CONFIG_BYTES = 256 * 1024
+internal const val MAX_CONFIG_BYTES = 256 * 1024
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,6 +76,8 @@ fun ImportScreen(
     onImported: () -> Unit,
     onBack: (() -> Unit)? = null,
     autoStartDemo: Boolean = false,
+    incoming: String? = null,
+    onIncomingTaken: () -> Unit = {},
     vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -89,6 +91,13 @@ fun ImportScreen(
 
     LaunchedEffect(autoStartDemo) {
         if (autoStartDemo && state is ImportState.Idle) vm.startDemo()
+    }
+
+    // A config opened with the app (a file manager, a mail): straight to its preview.
+    LaunchedEffect(incoming) {
+        val text = incoming ?: return@LaunchedEffect
+        vm.submit(text)
+        onIncomingTaken()
     }
 
     LaunchedEffect(state) {
@@ -122,7 +131,16 @@ fun ImportScreen(
                     onConfirm = vm::confirm,
                     onCancel = vm::reset,
                 )
-                ImportState.Validating, ImportState.Saved -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+                is ImportState.KubePreview -> KubePreviewCard(
+                    s,
+                    adding = !firstRun,
+                    onInclude = vm::setIncluded,
+                    onRename = vm::rename,
+                    onReplace = vm::setReplace,
+                    onConfirm = vm::confirm,
+                    onCancel = vm::reset,
+                )
+                ImportState.Validating, ImportState.Saved ->Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator()
                 }
                 else -> SourcePicker(
@@ -229,6 +247,7 @@ private fun FileSource(onYaml: (String) -> Unit) {
             stringResource(R.string.import_file_hint),
             style = MaterialTheme.typography.bodyMedium,
         )
+        MutedText(stringResource(R.string.import_kube_hint))
         Button(onClick = { picker.launch(arrayOf("*/*")) }) { Text(stringResource(R.string.import_choose_file)) }
         readError?.let { Text(it, color = LocalStatusColors.current.bad) }
     }
@@ -306,7 +325,7 @@ private fun PreviewCard(
  * it (the suggested free name by default) or, for the same cluster, replaces the stored one.
  */
 @Composable
-private fun NameConflict(
+internal fun NameConflict(
     name: String,
     conflict: ImportConflict,
     choice: ImportChoice,

@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -19,6 +21,7 @@ import androidx.navigation.navArgument
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.KubeFocus
@@ -243,6 +246,9 @@ fun Navigation(
     val nav = rememberNavController()
     val context = LocalContext.current
     val linkLocked by app.appLock.locked.collectAsStateWithLifecycle()
+    // A config opened with the app, until the import screen took it. Not saveable: it holds
+    // credentials, which must not land in saved instance state.
+    var incomingConfig by remember { mutableStateOf<String?>(null) }
 
     // Like a launcher shortcut, on the overview of the cluster the link names (the context on
     // screen when it is one of that cluster), then the screen it names over it. Read once
@@ -297,7 +303,8 @@ fun Navigation(
         if (deepLink == null) return@LaunchedEffect
         when (deepLink) {
             DeepLink.DEMO -> nav.navigate(Routes.DEMO) { launchSingleTop = true }
-            DeepLink.ISSUE_CONFIG -> if (!startWithImport) {
+            // The certificate alert of a Talos cluster: the one on screen may be a kubeconfig one since.
+            DeepLink.ISSUE_CONFIG -> if (!startWithImport && app.configRepository.config.value?.activeSummary?.allows(Feature.ISSUE_CONFIG) == true) {
                 nav.navigate(Routes.ISSUE_CONFIG) { launchSingleTop = true }
             }
             DeepLink.ARGO_WINDOWS -> if (!startWithImport) {
@@ -323,6 +330,8 @@ fun Navigation(
         composable(Routes.METRICS) { name.levis.ichor.ui.metrics.MetricsScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.IMPORT) {
             ImportScreen(
+                incoming = incomingConfig,
+                onIncomingTaken = { incomingConfig = null },
                 onImported = {
                     app.launchSync(runNow = true)
                     nav.resetTo(Routes.OVERVIEW)
@@ -365,6 +374,9 @@ fun Navigation(
                 onClustersCleared = { nav.resetTo(Routes.IMPORT) },
                 onChangelog = { nav.navigate(Routes.CHANGELOG) },
                 onAllNodes = { nav.navigate(Routes.nodes(it)) },
+                onCheckup = { nav.navigate(Routes.CHECKUP) },
+                onApiHealth = { nav.navigate(Routes.API_HEALTH) },
+                onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
             )
             // After an update: what changed since the build that ran before.
             WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
@@ -765,6 +777,10 @@ fun Navigation(
                 app.launchSync(runNow = true)
                 nav.resetTo(Routes.OVERVIEW)
             },
+            onConfig = { text ->
+                incomingConfig = text
+                nav.navigate(Routes.IMPORT) { launchSingleTop = true }
+            },
         )
     }
 }
@@ -804,11 +820,12 @@ private fun NavHostController.openNodeAction(n: NodeOverview, action: NodeAction
 /**
  * The route a share link opens over the overview; null for the overview itself. A node only
  * when it is one of the cluster's (with its role, for the control-plane warnings): a link
- * cannot point the app's Talos calls at another address.
+ * cannot point the app's Talos calls at another address. A Talos screen on a cluster added
+ * from a kubeconfig (another phone's context of the same name) stays on its home.
  */
 private suspend fun ShareTarget.route(app: TalosApp): String? = when (target) {
-    ShareTarget.ETCD -> Routes.ETCD
-    ShareTarget.HEALTH -> Routes.HEALTH
+    ShareTarget.ETCD -> Routes.ETCD.takeUnless { app.configRepository.config.value?.activeIsKube == true }
+    ShareTarget.HEALTH -> Routes.HEALTH.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.ARGO_CD -> Routes.ARGO_CD
     ShareTarget.FLUX -> Routes.FLUX
     ShareTarget.NODE -> runCatching { app.talosRepository.overview() }.getOrNull()?.nodes

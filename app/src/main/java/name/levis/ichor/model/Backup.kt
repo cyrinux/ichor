@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 
 /**
  * What an app backup holds once the Go core opened it (Ichorgo.decryptBackup): the
- * talosconfig and the settings that go with it. The iOS app writes and reads the same JSON,
+ * talosconfig, the kubeconfig of the clusters added without Talos, and the settings that go
+ * with them. The iOS app writes and reads the same JSON,
  * so a backup moves between platforms; a setting one app does not have is left out (null)
  * and the restoring app keeps its current value.
  *
@@ -16,12 +17,18 @@ import kotlinx.serialization.Serializable
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class BackupPayload(
-    /** The payload version, checked by the Go core; bump it for changes older apps cannot read. */
+    /**
+     * The payload version, checked by the Go core; bump it for changes older apps cannot read.
+     * See [backupFormat]: 2 only when [kubeconfig] is there.
+     */
     @EncodeDefault val format: Int = BACKUP_FORMAT,
     val platform: String = "",
     /** Unix seconds. */
     val createdAt: Long = 0,
-    val talosconfig: String,
+    /** "" when every cluster came from a kubeconfig (format 2); always written, older apps require it. */
+    @EncodeDefault val talosconfig: String = "",
+    /** The stored kubeconfig (format 2), null when no cluster was added from one. */
+    val kubeconfig: String? = null,
     /** The cluster on screen, by position: screenshot mode masks context names. */
     val activeContextIndex: Int = -1,
     val settings: BackupSettings = BackupSettings(),
@@ -61,6 +68,16 @@ data class BackupCluster(
 data class BackupWolTarget(val mac: String, val broadcast: String = "", val port: Int = WOL_DEFAULT_PORT)
 
 const val BACKUP_FORMAT = 1
+
+/** The format that adds [BackupPayload.kubeconfig]. */
+const val BACKUP_FORMAT_KUBE = 2
+
+/**
+ * The format of a backup holding [kubeconfig]: 2 only with a kubeconfig, so older apps keep
+ * reading the backups they can restore whole, and refuse ("update the app") one whose
+ * kubeconfig clusters they would silently drop.
+ */
+fun backupFormat(kubeconfig: String?): Int = if (kubeconfig.isNullOrBlank()) BACKUP_FORMAT else BACKUP_FORMAT_KUBE
 
 /** The per-cluster settings of this device, as a backup stores them (only clusters still in [fingerprints]). */
 fun backupClusters(
