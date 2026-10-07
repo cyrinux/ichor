@@ -51,10 +51,11 @@ import name.levis.ichor.R
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.NodeGroup
 import name.levis.ichor.model.NodeOverview
+import name.levis.ichor.model.NodeStatus
 import name.levis.ichor.model.health
 import name.levis.ichor.model.isDenseCluster
-import name.levis.ichor.model.needsAttention
 import name.levis.ichor.model.sharedVersion
+import name.levis.ichor.model.status
 import name.levis.ichor.model.shownPublicIps
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.NodeHealthPill
@@ -64,9 +65,9 @@ import name.levis.ichor.ui.kubespan.siteTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
- * The nodes as one card, like Apps and Data services. Collapsed (the default), a chip per calm
- * node and a full row only for those needing attention, so a problem never hides behind the
- * fold; expanded, a swipeable row per node. The title toggles between the two.
+ * The nodes as one card, like Apps and Data services. Collapsed (the default), a chip per node,
+ * one with a problem tinted in its status colour so it still stands out without growing the
+ * card; expanded, a swipeable row per node with the details. The title toggles between the two.
  *
  * Past NODE_DENSE_THRESHOLD nodes it turns dense (see DenseNodes) and the title opens the
  * Nodes screen ([onAllNodes]) instead: a card holding hundreds of rows defeats the home screen.
@@ -120,10 +121,9 @@ fun NodesCard(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = if (g > 0) 12.dp else 4.dp, bottom = 2.dp),
             )
-            val (calm, rows) = if (expanded) emptyList<NodeOverview>() to group.nodes else group.nodes.partition { !it.needsAttention }
-            if (calm.isNotEmpty()) NodeChips(calm, onNode, onLive, onMore)
-            rows.forEachIndexed { i, node ->
-                if (i > 0 || calm.isNotEmpty()) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            if (!expanded) NodeChips(group.nodes, onNode, onLive, onMore)
+            else group.nodes.forEachIndexed { i, node ->
+                if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
                 SwipeableNodeRow(node, publicIps, sharedVersion, onNode, onLive, onMore)
             }
         }
@@ -158,7 +158,7 @@ internal fun SwipeableNodeRow(
     }
 }
 
-/** Calm nodes, a chip each: tap opens the node, a long press its actions. */
+/** A chip per node: tap opens the node, a long press its actions. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun NodeChips(
@@ -179,11 +179,14 @@ private fun NodeChips(
 @Composable
 private fun NodeChip(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> Unit, onLive: () -> Unit) {
     val liveLabel = stringResource(R.string.overview_action_live_graphs)
-    val status = stringResource(R.string.common_status_ready)
-    val color = LocalStatusColors.current.ok
+    val status = statusLabel(node.status)
+    val color = statusColor(node.status)
+    // A problem tints the whole chip, not just its dot: the collapsed card has no row to spell it out.
+    val calm = node.status == NodeStatus.READY
     Surface(
         shape = RoundedCornerShape(50),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = if (calm) MaterialTheme.colorScheme.surfaceVariant else color.copy(alpha = 0.16f),
+        contentColor = if (calm) MaterialTheme.colorScheme.onSurfaceVariant else color,
         modifier = Modifier.combinedClickable(
             onClick = onClick,
             onLongClick = onLongClick,

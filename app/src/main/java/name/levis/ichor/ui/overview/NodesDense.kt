@@ -135,7 +135,7 @@ private fun countLabel(status: NodeStatus) = when (status) {
 
 /** Warn for a ready node reporting a problem too: it is listed as one, it must not look calm. */
 @Composable
-private fun statusColor(status: NodeStatus): Color {
+internal fun statusColor(status: NodeStatus): Color {
     val colors = LocalStatusColors.current
     return when (status) {
         NodeStatus.READY -> colors.ok
@@ -145,7 +145,7 @@ private fun statusColor(status: NodeStatus): Color {
 }
 
 @Composable
-private fun statusLabel(status: NodeStatus): String = stringResource(
+internal fun statusLabel(status: NodeStatus): String = stringResource(
     when (status) {
         NodeStatus.READY -> R.string.common_status_ready
         NodeStatus.ATTENTION -> R.string.nodes_filter_attention
