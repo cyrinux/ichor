@@ -2187,12 +2187,13 @@ kubectl label cronjob wipe-staging ichor.levis.name/trigger=false</code></pre>
                 <td class="role" translate="no">reader</td>
               </tr>
               <tr>
-                <td class="cmd" translate="no">talosctl get machineconfig</td>
+                <td class="cmd" translate="no">talosctl apply-config --mode try</td>
                 <td class="what">
                   <strong>Machine config</strong
                   ><span
-                    >The node's configuration, secrets hidden unless you reveal
-                    them.</span
+                    >The node's configuration field by field or as YAML, secrets
+                    hidden unless you reveal them. Edit it and try the change:
+                    the node goes back by itself unless you keep it.</span
                   >
                 </td>
                 <td class="role" translate="no">admin</td>

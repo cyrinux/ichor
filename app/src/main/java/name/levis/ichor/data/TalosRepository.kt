@@ -4,10 +4,18 @@ import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.R
+import name.levis.ichorgo.ConfigTryListener
 import name.levis.ichorgo.MaintenanceListener
 import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ApiHealthReport
+import name.levis.ichor.model.ConfigEdit
+import name.levis.ichor.model.ConfigPreview
+import name.levis.ichor.model.ConfigSchemaStatus
+import name.levis.ichor.model.ConfigTree
+import name.levis.ichor.model.ConfigTryCommand
+import name.levis.ichor.model.ConfigTryEvent
+import name.levis.ichor.model.ConfigTryProgress
 import name.levis.ichor.model.CheckupReport
 import name.levis.ichor.model.KubeEvent
 import name.levis.ichor.model.KubeEventList
@@ -100,11 +108,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.KSerializer
@@ -220,6 +233,71 @@ class TalosRepository(
     suspend fun machineConfig(node: String, revealSecrets: Boolean): String = call { cfg, ctx ->
         Ichorgo.nodeMachineConfig(cfg, ctx, node, revealSecrets)
     }
+
+    /**
+     * Makes the Talos config schema of [node]'s version ready for [machineConfigDescribe]:
+     * downloaded the first time a version is seen, then kept by the core. A schema that
+     * cannot be had is not an error ([ConfigSchemaStatus.available] is false).
+     */
+    suspend fun machineConfigSchema(node: String): ConfigSchemaStatus = call { cfg, ctx ->
+        TalosJson.decodeFromString(ConfigSchemaStatus.serializer(), Ichorgo.machineConfigSchemaPrepare(cfg, ctx, node))
+    }
+
+    /** [yaml] (a machine config or a draft of one) as a tree, described with the schema of [talosVersion] when the core has it. Local. */
+    suspend fun machineConfigDescribe(yaml: String, talosVersion: String): ConfigTree = withContext(Dispatchers.IO) {
+        TalosJson.decodeFromString(ConfigTree.serializer(), Ichorgo.machineConfigDescribe(yaml, talosVersion))
+    }
+
+    /** [draft] with [edit] applied. Local: nothing is sent to the node. */
+    suspend fun machineConfigEdit(draft: String, edit: ConfigEdit): String = withContext(Dispatchers.IO) {
+        Ichorgo.machineConfigEdit(draft, TalosJson.encodeToString(ConfigEdit.serializer(), edit))
+    }
+
+    /**
+     * What applying [draft] to [node] would change (os:admin), validated by the node with a dry
+     * run. [base] is the redacted config the draft was made from; refused when the node no
+     * longer holds it.
+     */
+    suspend fun machineConfigPreview(node: String, base: String, draft: String): ConfigPreview = call { cfg, ctx ->
+        TalosJson.decodeFromString(ConfigPreview.serializer(), Ichorgo.machineConfigPreview(cfg, ctx, node, base, draft))
+    }
+
+    /**
+     * Applies [draft] to [node] in Talos's try mode for [timeoutSeconds] and follows it: the
+     * node reverts by itself unless [ConfigTryCommand.KEEP] comes through [commands] first.
+     * Cancelling the collection only stops following; the node still reverts.
+     */
+    fun tryMachineConfig(node: String, base: String, draft: String, timeoutSeconds: Int, commands: Flow<ConfigTryCommand>): Flow<ConfigTryEvent> = callbackFlow {
+        val stored = configs.forCall()
+        val run = Ichorgo.startConfigTry(
+            stored.yaml,
+            stored.activeContext,
+            node,
+            base,
+            draft,
+            timeoutSeconds.toLong(),
+            object : ConfigTryListener {
+                override fun onProgress(json: String) {
+                    runCatching { TalosJson.decodeFromString(ConfigTryProgress.serializer(), json) }
+                        .onSuccess { trySend(ConfigTryEvent.Progress(it)) }
+                }
+
+                override fun onDone(outcome: String, errMessage: String) {
+                    trySend(ConfigTryEvent.Done(outcome, errMessage))
+                    close()
+                }
+            },
+        )
+        launch {
+            commands.collect {
+                when (it) {
+                    ConfigTryCommand.KEEP -> run.keep()
+                    ConfigTryCommand.REVERT -> run.revert()
+                }
+            }
+        }
+        awaitClose { run.cancel() }
+    }.buffer(Channel.UNLIMITED)
 
     /** `talosctl etcd alarm disarm` through [node] (os:operator or os:admin); alarms are cluster-wide. */
     suspend fun etcdAlarmDisarm(node: String) = call { cfg, ctx -> Ichorgo.etcdAlarmDisarm(cfg, ctx, node) }

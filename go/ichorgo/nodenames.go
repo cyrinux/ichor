@@ -63,6 +63,14 @@ func SetDataDir(dir string, key []byte) {
 	nodeNames.dir, nodeNames.aead = dir, aead
 }
 
+// dataDir is the directory given to SetDataDir ("" when there is none).
+func dataDir() string {
+	nodeNames.Lock()
+	defer nodeNames.Unlock()
+
+	return nodeNames.dir
+}
+
 // rememberNodeNames records the names of the nodes that said them and gives those that could
 // not the last ones recorded. live lists the fingerprints of every context of the talosconfig.
 // Best effort: an unreadable or unwritable file only means nothing is remembered.

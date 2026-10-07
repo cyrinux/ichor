@@ -23,7 +23,17 @@ func NodeMachineConfig(configYAML, contextName, node string, revealSecrets bool)
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
 	if isDemoContext(configYAML, contextName) {
-		return demoRead("NodeMachineConfig", configYAML, contextName, node)
+		text, err := demoRead("NodeMachineConfig", configYAML, contextName, node)
+		if err != nil {
+			return "", err
+		}
+
+		// Written as a node would give it back, so the demo can be edited and compared.
+		if canonical, err := canonicalConfig(text); err == nil {
+			return canonical, nil
+		}
+
+		return text, nil
 	}
 
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {

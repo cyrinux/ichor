@@ -17,7 +17,7 @@ Bringen Sie Ihren eigenen Cluster mit: Die App braucht eine talosconfig für ein
 • Einen Node neu starten (normal, Power-Cycle oder erzwungen) oder herunterfahren, nach Eingabe seines Hostnamens
 • Pakete live mitschneiden und als .pcap für Wireshark speichern
 • Talos Node für Node aktualisieren, abgelehnt wenn etcd das Quorum verlieren würde
-• Cluster-Health-Check ausführen, Maschinenkonfiguration lesen, Debug-Shell öffnen
+• Cluster-Health-Check ausführen, Maschinenkonfiguration lesen und bearbeiten (mit automatischem Zurücksetzen ausprobiert), Debug-Shell öffnen
 • Eine talosconfig ausstellen, das Zertifikat des Telefons erneuern, eine kubeconfig exportieren
 
 <b>Das Telefon bekommt nur den Zugriff, den Sie ihm geben</b>

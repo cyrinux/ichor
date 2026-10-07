@@ -17,7 +17,7 @@ Trae tu propio clúster: la aplicación necesita un talosconfig de un clúster T
 • Reiniciar (normal, power cycle o forzado) o apagar un nodo, tras escribir su nombre para confirmar
 • Capturar paquetes en vivo y guardar un .pcap para Wireshark
 • Actualizar Talos nodo a nodo, rechazado si etcd perdiera el quórum
-• Ejecutar el health check del clúster, leer la configuración de la máquina, abrir un shell de depuración
+• Ejecutar el health check del clúster, leer y editar la configuración de la máquina (probada con reversión automática), abrir un shell de depuración
 • Emitir un talosconfig, renovar el certificado del teléfono, exportar un kubeconfig
 
 <b>El teléfono solo tiene el acceso que tú le das</b>
