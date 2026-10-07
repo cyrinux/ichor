@@ -28,9 +28,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -207,21 +210,19 @@ private fun CgroupNotes(row: CgroupRow) {
             stringResource(R.string.node_pressure_memory) to it.memory.some10,
             stringResource(R.string.node_pressure_io) to it.io.some10,
         ).filter { (_, v) -> pressureLevel(v) != PressureLevel.OK }
-    }.orEmpty()
+    }.orEmpty().map { (label, v) ->
+        stringResource(R.string.node_cgroups_waiting, label, formatPercent(v)) to levelColor(pressureLevel(v))
+    }
     if (notes.isEmpty() && waiting.isEmpty()) return
-    Row {
-        if (notes.isNotEmpty()) {
-            Text(notes.joinToString(" · "), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        waiting.forEachIndexed { i, (label, value) ->
-            Text(
-                (if (i == 0 && notes.isEmpty()) "" else " · ") +
-                    stringResource(R.string.node_cgroups_waiting, label, formatPercent(value)),
-                style = MaterialTheme.typography.labelSmall,
-                color = levelColor(pressureLevel(value)),
-            )
+    // One text so the line wraps as a whole instead of squeezing the pressure into a narrow column.
+    val text = buildAnnotatedString {
+        append(notes.joinToString(" · "))
+        waiting.forEach { (note, color) ->
+            if (length > 0) append(" · ")
+            withStyle(SpanStyle(color = color)) { append(note) }
         }
     }
+    Text(text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /**
