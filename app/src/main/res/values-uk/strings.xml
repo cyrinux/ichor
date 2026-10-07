@@ -599,7 +599,7 @@
     <string name="about_disclaimer">Не пов\'язано з Sidero Labs. Talos — торговельна марка Sidero Labs, Inc.</string>
 
     <!-- Import -->
-    <string name="import_title">Імпорт talosconfig</string>
+    <string name="import_title">Додати кластер</string>
     <string name="import_help">Як створити talosconfig</string>
     <string name="import_tab_file">Файл</string>
     <string name="import_tab_paste">Вставити</string>

@@ -88,7 +88,6 @@
                  file named config or *.kubeconfig comes as a generic binary (above). -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-                <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:scheme="content" />
                 <data android:mimeType="application/yaml" />
@@ -109,9 +108,14 @@
                 <data android:pathPattern=".*\\.yml" />
                 <data android:pathPattern=".*\\..*\\.yml" />
             </intent-filter>
+            <!-- Shared: the file comes as EXTRA_STREAM, not as the intent's data, so no scheme. -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/yaml" />
+                <data android:mimeType="application/x-yaml" />
+                <data android:mimeType="text/yaml" />
+                <data android:mimeType="text/x-yaml" />
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
         </activity>

@@ -231,13 +231,19 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
     /**
      * Writes [talos] and [kube] as the stored configs (a store left empty is deleted) and shows
      * [active] (null: the summary's current context), which [remember] also saves as the context
-     * to come back to. Only a store that changed is written.
+     * to come back to. Only a store that changed is written; when the second write fails the
+     * first one is undone, so the disk never holds half of a change (a restore, an import).
      */
     private suspend fun commit(talos: String, kube: String, summary: ConfigSummary, active: String?, remember: Boolean = true) {
         val shown = active ?: summary.current
         val previous = _config.value
-        if (previous == null || previous.talosYaml != talos) persist(store, talos)
-        if (previous == null || previous.kubeYaml != kube) persist(kubeStore, kube)
+        val writes = listOfNotNull(
+            StoreWrite({ persist(store, talos) }, { persist(store, previous?.talosYaml.orEmpty()) })
+                .takeIf { previous == null || previous.talosYaml != talos },
+            StoreWrite({ persist(kubeStore, kube) }, { persist(kubeStore, previous?.kubeYaml.orEmpty()) })
+                .takeIf { previous == null || previous.kubeYaml != kube },
+        )
+        writeAll(writes)
         if (remember) saveActive(summary, shown)
         _config.value = StoredConfig(talos, kube, summary, shown)
         _generation.value++
@@ -337,4 +343,25 @@ internal fun activeIndexAfterRemoval(active: Int, removed: Int, remaining: Int):
     active > removed -> active - 1
     active == removed -> minOf(removed, remaining - 1)
     else -> active
+}
+
+/** A write of one store, and how to put back what it held before. */
+internal class StoreWrite(val write: () -> Unit, val undo: () -> Unit)
+
+/**
+ * Runs [writes] in order. When one throws, those already done are undone, newest first, and
+ * the failure is rethrown: the stores keep what they held together. An undo that fails too
+ * is attached to the failure rather than hiding it.
+ */
+internal fun writeAll(writes: List<StoreWrite>) {
+    val done = mutableListOf<StoreWrite>()
+    try {
+        writes.forEach { step ->
+            step.write()
+            done += step
+        }
+    } catch (e: Exception) {
+        done.asReversed().forEach { runCatching(it.undo).exceptionOrNull()?.let(e::addSuppressed) }
+        throw e
+    }
 }

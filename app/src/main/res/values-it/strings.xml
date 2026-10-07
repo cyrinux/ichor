@@ -548,7 +548,7 @@
     <string name="about_disclaimer">Non affiliata a Sidero Labs. Talos è un marchio di Sidero Labs, Inc.</string>
 
     <!-- Import -->
-    <string name="import_title">Importa talosconfig</string>
+    <string name="import_title">Aggiungi un cluster</string>
     <string name="import_help">Come creare un talosconfig</string>
     <string name="import_tab_file">File</string>
     <string name="import_tab_paste">Incolla</string>

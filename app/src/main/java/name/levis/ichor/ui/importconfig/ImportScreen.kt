@@ -68,7 +68,8 @@ import name.levis.ichor.util.daysUntil
 import name.levis.ichor.util.readBounded
 import name.levis.ichor.ui.components.TooltipIconButton
 
-internal const val MAX_CONFIG_BYTES = 256 * 1024
+// As the Go core's limit on a decoded "ichor-config:" payload, and iOS.
+internal const val MAX_CONFIG_BYTES = 1 shl 20
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
