@@ -23,6 +23,12 @@ struct KubeHomeView: View {
                     NavigationLink(value: Route.workloads) {
                         Label("Kubernetes workloads", systemImage: "square.stack.3d.up")
                     }
+                    NavigationLink { KubeBrowserView() } label: {
+                        Label("Resources", systemImage: "square.grid.3x3")
+                    }
+                    NavigationLink { HelmReleasesView() } label: {
+                        Label("Helm releases", systemImage: "shippingbox")
+                    }
                     NavigationLink(value: Route.argoCD(downNodes: [])) {
                         Label { Text(verbatim: "Argo CD") } icon: { Image(systemName: "arrow.triangle.branch") }
                     }
