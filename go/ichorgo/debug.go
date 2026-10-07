@@ -24,12 +24,29 @@ type DebugListener interface {
 	OnExit(code int, errMessage string)
 }
 
-// DebugSession is a running debug container; methods are safe from any thread.
+// DebugSession is a running terminal: a debug container, or a shell in a pod (StartPodShell).
+// Its methods are safe from any thread.
 type DebugSession struct {
 	listener DebugListener
-	send     chan *machineapi.DebugContainerRunRequest
+	send     chan shellInput
 	cancel   context.CancelFunc
 	exitOnce sync.Once
+}
+
+// shellInput is typed bytes, or a terminal resize when data is nil.
+type shellInput struct {
+	data       []byte
+	cols, rows int
+}
+
+func newDebugSession(listener DebugListener) (*DebugSession, context.Context) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	return &DebugSession{
+		listener: maskedDebugListener{listener},
+		send:     make(chan shellInput, 256),
+		cancel:   cancel,
+	}, ctx
 }
 
 const defaultDebugShell = "/bin/sh"
@@ -48,12 +65,7 @@ func StartDebugShell(configYAML, contextName, node, image, args string, cols, ro
 	// sequences may split an address anywhere), so screenshot mode does not cover the shell.
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	d := &DebugSession{
-		listener: maskedDebugListener{listener},
-		send:     make(chan *machineapi.DebugContainerRunRequest, 256),
-		cancel:   cancel,
-	}
+	d, ctx := newDebugSession(listener)
 
 	go d.run(ctx, configYAML, contextName, node, strings.TrimSpace(image), debugArgs(args), cols, rows)
 
@@ -62,18 +74,14 @@ func StartDebugShell(configYAML, contextName, node, image, args string, cols, ro
 
 // Write sends keyboard input to the container.
 func (d *DebugSession) Write(data []byte) {
-	d.enqueue(&machineapi.DebugContainerRunRequest{
-		Request: &machineapi.DebugContainerRunRequest_StdinData{StdinData: append([]byte(nil), data...)},
-	})
+	if len(data) > 0 {
+		d.enqueue(shellInput{data: append([]byte(nil), data...)})
+	}
 }
 
 // Resize tells the container's TTY about the terminal size.
 func (d *DebugSession) Resize(cols, rows int) {
-	d.enqueue(&machineapi.DebugContainerRunRequest{
-		Request: &machineapi.DebugContainerRunRequest_TermResize{
-			TermResize: &machineapi.DebugContainerTerminalResize{Width: int32(cols), Height: int32(rows)},
-		},
-	})
+	d.enqueue(shellInput{cols: cols, rows: rows})
 }
 
 // Close ends the session; OnExit is still called (with -1 if it had not exited yet).
@@ -81,9 +89,9 @@ func (d *DebugSession) Close() {
 	d.cancel()
 }
 
-func (d *DebugSession) enqueue(req *machineapi.DebugContainerRunRequest) {
+func (d *DebugSession) enqueue(in shellInput) {
 	select {
-	case d.send <- req:
+	case d.send <- in:
 	default: // the shell is not consuming input; dropping beats blocking the UI thread
 	}
 }
@@ -169,12 +177,24 @@ func (d *DebugSession) forwardInput(ctx context.Context, stream machineapi.Debug
 		select {
 		case <-ctx.Done():
 			return
-		case req := <-d.send:
-			if err := stream.Send(req); err != nil {
+		case in := <-d.send:
+			if err := stream.Send(in.talosRequest()); err != nil {
 				return
 			}
 		}
 	}
+}
+
+func (in shellInput) talosRequest() *machineapi.DebugContainerRunRequest {
+	if in.data == nil {
+		return &machineapi.DebugContainerRunRequest{
+			Request: &machineapi.DebugContainerRunRequest_TermResize{
+				TermResize: &machineapi.DebugContainerTerminalResize{Width: int32(in.cols), Height: int32(in.rows)},
+			},
+		}
+	}
+
+	return &machineapi.DebugContainerRunRequest{Request: &machineapi.DebugContainerRunRequest_StdinData{StdinData: in.data}}
 }
 
 func (d *DebugSession) receive(ctx context.Context, stream machineapi.DebugService_ContainerRunClient) {

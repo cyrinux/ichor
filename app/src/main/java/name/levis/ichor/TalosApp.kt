@@ -101,7 +101,7 @@ class TalosApp : Application() {
         )
     }
     /** Debug shells, kept open across screens until exited (see DebugShellService). */
-    val debugShells by lazy { DebugShells(this, configRepository) }
+    val debugShells by lazy { DebugShells(this, configRepository, kubeServers) }
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
     val netPerfRepository by lazy { NetPerfRepository(configRepository, kubeServers) }
     val ciliumRepository by lazy { CiliumRepository(configRepository, kubeServers) }

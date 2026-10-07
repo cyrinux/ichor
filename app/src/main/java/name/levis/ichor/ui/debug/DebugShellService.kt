@@ -110,7 +110,8 @@ class DebugShellService : Service() {
             .putExtra(MainActivity.EXTRA_SHELL_HOST, shell.hostname)
         val exit = Intent(this, DebugShellService::class.java).setAction(ACTION_EXIT).putShell(shell.key)
         val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        val builder = baseNotification(res.getString(R.string.debug_notification_title, shell.hostname))
+        val title = if (shell.key.isPod) R.string.pod_shell_on else R.string.debug_notification_title
+        val builder = baseNotification(res.getString(title, shell.hostname))
             .setContentText(res.getString(R.string.debug_notification_text))
             .setContentIntent(PendingIntent.getActivity(this, id, open, flags))
             .addAction(0, res.getString(R.string.debug_notification_exit), PendingIntent.getService(this, id, exit, flags))
@@ -145,12 +146,17 @@ class DebugShellService : Service() {
 
 private fun Intent.putShell(key: ShellKey): Intent =
     putExtra(MainActivity.EXTRA_SHELL_CONTEXT, key.context).putExtra(MainActivity.EXTRA_SHELL_NODE, key.node)
+        .putExtra(MainActivity.EXTRA_SHELL_NAMESPACE, key.namespace).putExtra(MainActivity.EXTRA_SHELL_POD, key.pod)
+        .putExtra(MainActivity.EXTRA_SHELL_CONTAINER, key.container)
 
-/** The shell a notification intent names, if it names one. */
+/** The shell a notification intent names, if it names one: a node's, or a pod's. */
 fun Intent.shellKey(): ShellKey? {
     val context = getStringExtra(MainActivity.EXTRA_SHELL_CONTEXT) ?: return null
-    val node = getStringExtra(MainActivity.EXTRA_SHELL_NODE)?.takeIf { it.isNotBlank() } ?: return null
-    return ShellKey(context, node)
+    val node = getStringExtra(MainActivity.EXTRA_SHELL_NODE).orEmpty()
+    val namespace = getStringExtra(MainActivity.EXTRA_SHELL_NAMESPACE).orEmpty()
+    val pod = getStringExtra(MainActivity.EXTRA_SHELL_POD).orEmpty()
+    if (node.isBlank() && (pod.isBlank() || namespace.isBlank())) return null
+    return ShellKey(context, node, namespace, pod, getStringExtra(MainActivity.EXTRA_SHELL_CONTAINER).orEmpty())
 }
 
 /** (Re)creating the channel also updates its name and description to the current language. */

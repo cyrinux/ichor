@@ -619,6 +619,10 @@
     <string name="debug_group_capture">Captura</string>
     <string name="debug_group_node">Nodo</string>
     <string name="debug_group_throughput">Ancho de banda</string>
+    <string name="pod_shell_title">Shell</string>
+    <string name="pod_shell_on">Shell en %1$s</string>
+    <string name="pod_shell_intro">Abre un terminal en el contenedor en ejecución de %1$s, como kubectl exec -it. Deja el comando vacío para ejecutar bash, o sh si la imagen no tiene bash.</string>
+    <string name="pod_shell_command_auto">bash, o sh</string>
 
     <!-- App lock -->
     <string name="lock_prompt">Desbloquear Ichor</string>

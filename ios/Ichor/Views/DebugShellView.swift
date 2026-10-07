@@ -90,7 +90,9 @@ struct DebugShellView: View {
             return
         }
         error = nil
-        shell.start(client: client, node: node, image: image, args: args)
+        shell.start { listener, cols, rows in
+            client.startDebugShell(node: node, image: image, args: args, cols: cols, rows: rows, listener: listener)
+        }
     }
 }
 
@@ -188,15 +190,16 @@ final class DebugShell {
         }
     }
 
-    func start(client: TalosClient, node: String, image: String, args: String) {
+    /// Starts a session through `open` (a debug container, or a pod's shell), given the
+    /// listener and the terminal's columns and rows.
+    func start(_ open: (IchorgoDebugListenerProtocol, Int, Int) -> IchorgoDebugSession?) {
         stop()
         terminal.getTerminal().resetToInitialState()
         state = .starting(String(localized: "Connecting…"))
         let bridge = Bridge(owner: self)
         self.bridge = bridge
         let terminal = terminal.getTerminal()
-        session = client.startDebugShell(node: node, image: image, args: args,
-                                         cols: max(terminal.cols, 20), rows: max(terminal.rows, 5), listener: bridge)
+        session = open(bridge, max(terminal.cols, 20), max(terminal.rows, 5))
     }
 
     func write(_ bytes: ArraySlice<UInt8>) { session?.write(Data(bytes)) }
@@ -242,7 +245,7 @@ final class DebugShell {
     }
 }
 
-private struct TerminalHost: UIViewRepresentable {
+struct TerminalHost: UIViewRepresentable {
     let shell: DebugShell
 
     func makeCoordinator() -> Coordinator { Coordinator(shell: shell) }

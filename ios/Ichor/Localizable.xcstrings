@@ -88717,6 +88717,111 @@
           }
         }
       }
+    },
+    "Shell in %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell in %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell en %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell dans %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell in %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оболонка в %@"
+          }
+        }
+      }
+    },
+    "Opens a terminal in the running container of %@, like kubectl exec -it. Leave the command empty to run bash, or sh when the image has no bash." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet ein Terminal im laufenden Container von %@, wie kubectl exec -it. Lass den Befehl leer, um bash zu starten, oder sh, wenn das Image kein bash hat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre un terminal en el contenedor en ejecución de %@, como kubectl exec -it. Deja el comando vacío para ejecutar bash, o sh si la imagen no tiene bash."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre un terminal dans le conteneur en cours d'exécution de %@, comme kubectl exec -it. Laissez la commande vide pour lancer bash, ou sh si l'image n'a pas bash."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apre un terminale nel container in esecuzione di %@, come kubectl exec -it. Lascia vuoto il comando per avviare bash, o sh se l'immagine non ha bash."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває термінал у запущеному контейнері %@, як kubectl exec -it. Залиште команду порожньою, щоб запустити bash, або sh, якщо в образі немає bash."
+          }
+        }
+      }
+    },
+    "bash, or sh" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bash, sonst sh"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bash, o sh"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bash, ou sh"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bash, o sh"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bash або sh"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

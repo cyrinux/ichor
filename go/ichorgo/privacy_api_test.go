@@ -11,13 +11,14 @@ import (
 )
 
 // Exported functions whose result is a credential or file the user saves: only their errors
-// are masked. The debug shell's terminal stream is not masked at all, nor its snippets
+// are masked. The shells' terminal stream (debug and pod) is not masked at all, nor its snippets
 // (fixed commands whose well-known addresses masking would break), nor the GitHub links of
 // integration requests (opened, not shown; built from already masked results), nor share
 // links (built from the masked names on screen).
 var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "MergeKubeconfig", "RemoveKubeContext", "ExportKubeContext", "MergeTalosconfig", "DecodeImportText", "KubeAuthForBackup", "DiscoverClusters", "AddContextNodes", "SetContextEndpoints", "AddContextEndpoint", "DemoConfig", "DecryptBackup", "NormalizeKubeServer", "NormalizePromSource", "DebugSnippets", "IntegrationIssueURL", "IntegrationSearchURL", "BuildShareLink"}
 
-var unmaskedListeners = []string{"StartDebugShell"}
+// The shells wrap their listener in newDebugSession: status and exit masked, not the terminal.
+var unmaskedListeners = []string{"StartDebugShell", "StartPodShell"}
 
 // TestExportedFuncsUsePrivacyHooks checks every exported function of the package: masked
 // context names and nodes coming from the app are unmasked on entry, and results, errors
