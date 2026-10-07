@@ -31,7 +31,7 @@ type session struct {
 }
 
 func openSession(configYAML, contextName string) (*session, error) {
-	_, cfgCtx, err := resolveContext(configYAML, contextName)
+	name, cfgCtx, err := resolveContext(configYAML, contextName)
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +39,24 @@ func openSession(configYAML, contextName string) (*session, error) {
 		return nil, errDemoUnavailable
 	}
 
+	opts := []client.OptionFunc{client.WithConfigContext(cfgCtx)}
+
+	if isOmni(cfgCtx) {
+		plain, signer, err := omniSessionContext(name, cfgCtx)
+		if err != nil {
+			return nil, err
+		}
+
+		// WithConfigContext ignores the context's cluster: Omni needs it to proxy.
+		opts = []client.OptionFunc{
+			client.WithConfigContext(plain),
+			client.WithCluster(cfgCtx.Cluster),
+			client.WithGRPCDialOptions(signer.dialOptions()...),
+		}
+	}
+
 	// client.New only dials lazily, so no context is needed here.
-	c, err := client.New(context.Background(), client.WithConfigContext(cfgCtx))
+	c, err := client.New(context.Background(), opts...)
 	if err != nil {
 		return nil, fmt.Errorf("create Talos client: %w", err)
 	}

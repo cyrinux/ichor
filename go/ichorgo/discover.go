@@ -59,7 +59,13 @@ func DiscoverNodes(configYAML, contextName string) (out string, err error) {
 
 		targets := targetNodes(s.context)
 
-		members, err := listMembers(ctx, s.client, targets)
+		asked := targets
+		if len(asked) == 0 && isOmni(s.context) {
+			// Omni answers a request naming no node from the cluster itself.
+			asked = []string{""}
+		}
+
+		members, err := listMembers(ctx, s.client, asked)
 		if err != nil {
 			return "", err
 		}
@@ -85,7 +91,11 @@ func listMembers(ctx context.Context, c *client.Client, targets []string) ([]clu
 			return members, nil
 		}
 
-		errs = append(errs, fmt.Errorf("%s: %s", node, friendlyError(err)))
+		if node == "" {
+			errs = append(errs, errors.New(friendlyError(err)))
+		} else {
+			errs = append(errs, fmt.Errorf("%s: %s", node, friendlyError(err)))
+		}
 	}
 
 	if len(errs) == 0 {
@@ -99,7 +109,11 @@ func nodeMembers(ctx context.Context, c *client.Client, node string) ([]clusterM
 	ctx, cancel := context.WithTimeout(ctx, nodeTimeout)
 	defer cancel()
 
-	list, err := safe.StateListAll[*cluster.Member](client.WithNode(ctx, node), c.COSI)
+	if node != "" {
+		ctx = client.WithNode(ctx, node)
+	}
+
+	list, err := safe.StateListAll[*cluster.Member](ctx, c.COSI)
 	if err != nil {
 		return nil, err
 	}

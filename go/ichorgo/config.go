@@ -151,7 +151,7 @@ func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, e
 
 func summarizeOmniContext(name string, ctx *clientconfig.Context) (contextSummary, error) {
 	if strings.TrimSpace(ctx.Cluster) == "" {
-		return contextSummary{}, errors.New("Omni context without its cluster name")
+		return contextSummary{}, errors.New("the Omni context has no cluster name")
 	}
 
 	return contextSummary{
@@ -210,11 +210,12 @@ func defaultContextName(cfg *clientconfig.Config) string {
 	return sortedContextNames(cfg)[0]
 }
 
-// targetNodes mirrors talosctl: nodes default to the endpoints when unset.
-// Duplicates are dropped, keeping first-seen order.
+// targetNodes mirrors talosctl: nodes default to the endpoints when unset (not for Omni,
+// whose endpoint is the Omni instance, not a node). Duplicates are dropped, keeping
+// first-seen order.
 func targetNodes(ctx *clientconfig.Context) []string {
 	nodes := ctx.Nodes
-	if len(nodes) == 0 {
+	if len(nodes) == 0 && !isOmni(ctx) {
 		nodes = ctx.Endpoints
 	}
 

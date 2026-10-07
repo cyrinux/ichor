@@ -46,14 +46,22 @@ func StartKubeSignIn(storedYAML, contextName string, listener SignInListener) *S
 
 	listener = maskedSignInListener{listener}
 
+	return startSignIn(listener, func(ctx context.Context, listener SignInListener, callbacks <-chan string) error {
+		return runSignIn(ctx, storedYAML, contextName, listener, callbacks)
+	})
+}
+
+// startSignIn runs a sign-in in the background (listener already masked): OnDone gets its
+// outcome, "" when it succeeded or was cancelled.
+func startSignIn(listener SignInListener, run func(context.Context, SignInListener, <-chan string) error) *SignInRun {
 	ctx, cancel := context.WithCancel(context.Background())
-	run := &SignInRun{cancel: cancel, callbacks: make(chan string, 1)}
+	handle := &SignInRun{cancel: cancel, callbacks: make(chan string, 1)}
 
 	go func() {
 		defer cancel()
 		defer onPanic(listener.OnDone)
 
-		err := runSignIn(ctx, storedYAML, contextName, listener, run.callbacks)
+		err := run(ctx, listener, handle.callbacks)
 		if errors.Is(err, context.Canceled) {
 			err = nil
 		}
@@ -66,7 +74,7 @@ func StartKubeSignIn(storedYAML, contextName string, listener SignInListener) *S
 		listener.OnDone(msg)
 	}()
 
-	return run
+	return handle
 }
 
 func runSignIn(ctx context.Context, storedYAML, contextName string, listener SignInListener, callbacks <-chan string) error {
