@@ -1,0 +1,8 @@
+• Open Apps on the Attention chip from the home card's pill
+• Name unreachable nodes on the cluster map from the last map
+• Collapsed nodes card shows only chips, tinted on a problem
+• Cluster checkup, object events, checkup alerts, rollback
+• Cluster checkup screen, object events, checkup alerts, rollback
+• Color the cluster health check lines by status
+• Cluster checkup, Kubernetes events and Talos rollback
+• Group the node menu into sections
