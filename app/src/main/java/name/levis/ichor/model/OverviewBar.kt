@@ -20,3 +20,13 @@ enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOW
 }
 
 typealias KubernetesBar = ActionBar<KubernetesAction>
+
+/** What a Kubernetes object's app bar offers (the resource browser's object screen). */
+enum class KubeObjectAction { EDIT, REFRESH, COPY, SHARE, PORT_FORWARD;
+
+    companion object {
+        val bar = ActionBarKind(entries, defaultIcons = 3)
+    }
+}
+
+typealias KubeObjectBar = ActionBar<KubeObjectAction>
