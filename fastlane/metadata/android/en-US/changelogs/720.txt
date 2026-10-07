@@ -1,0 +1,9 @@
+• Run the image scan as a self-cleaning Job
+• Open a shell in a running pod container
+• Customizable Kubernetes top bar, like the overview's
+• Scan an app's images for vulnerabilities (Go core)
+• Helm rollback, with a dry-run plan
+• Kubernetes resource browser, object YAML edit, Helm, log follow and port-forward on Android
+• Sign-in screens and cloud discovery on iOS
+• Sealed sign-in store and Kubernetes access on iOS
+• Kubeconfig sign-in, backup and Kubernetes access logic in IchorCore
