@@ -132,6 +132,47 @@ func TestAppRoutesHTTPRoute(t *testing.T) {
 	}
 }
 
+// A controller listening on 8443 behind a LoadBalancer Service on 443 (Traefik): the URL is
+// the public port, 443 left out; a port two Services publish differently keeps the listener's.
+func TestAppRoutesHTTPRoutePublicPort(t *testing.T) {
+	k := openRoutesKube(t, map[string]string{
+		"GET /apis/networking.k8s.io/v1/ingresses": `{"items":[]}`,
+		"GET /apis/gateway.networking.k8s.io/v1/gateways": `{"items":[
+			{"metadata":{"name":"public","namespace":"gw"},"spec":{"listeners":[
+				{"name":"web","port":8000,"protocol":"HTTP","hostname":"plain.example"},
+				{"name":"websecure","port":8443,"protocol":"HTTPS","hostname":"*.shop.example"},
+				{"name":"alt","port":9443,"protocol":"HTTPS","hostname":"alt.example"}]}}]}`,
+		"GET /apis/gateway.networking.k8s.io/v1/httproutes": `{"items":[
+			{"metadata":{"name":"web","namespace":"shop"},"spec":{
+				"parentRefs":[{"name":"public","namespace":"gw"}],
+				"hostnames":["www.shop.example","plain.example","alt.example"],
+				"rules":[{"backendRefs":[{"name":"web"}]}]}}]}`,
+		"GET /api/v1/services": `{"items":[
+			{"metadata":{"name":"traefik","namespace":"gw"},"spec":{"type":"LoadBalancer","ports":[
+				{"name":"web","port":80,"protocol":"TCP","targetPort":8000},
+				{"name":"websecure","port":443,"protocol":"TCP","targetPort":"websecure"},
+				{"name":"alt","port":443,"protocol":"TCP","targetPort":9443}]}},
+			{"metadata":{"name":"other","namespace":"gw"},"spec":{"type":"LoadBalancer","ports":[
+				{"name":"alt","port":10443,"targetPort":9443}]}}]}`,
+		"GET /apis/discovery.k8s.io/v1/namespaces/gw/endpointslices": `{"items":[
+			{"ports":[{"name":"web","port":8000},{"name":"websecure","port":8443}]}]}`,
+	})
+
+	list, err := appRoutes(context.Background(), k, []routePod{{"shop", "web-1"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := strings.Join([]string{
+		"HTTPRoute http://plain.example web",
+		"HTTPRoute https://alt.example:9443 web",
+		"HTTPRoute https://www.shop.example web",
+	}, "\n")
+	if got := routeURLs(list.Routes); got != want {
+		t.Fatalf("got\n%s\nwant\n%s", got, want)
+	}
+}
+
 func TestAppRoutesTailscaleIngress(t *testing.T) {
 	for _, tc := range []struct {
 		name, spec, status, want string
