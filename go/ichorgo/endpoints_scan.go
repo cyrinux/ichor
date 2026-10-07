@@ -250,6 +250,10 @@ func isControlPlane(role string) bool { return role == "controlplane" || role ==
 // probeEndpoint calls Version on endpoint itself (no node proxying) with cfgCtx's credentials,
 // on a client of its own: the cached sessions are for the stored endpoints.
 func probeEndpoint(ctx context.Context, cfgCtx *clientconfig.Context, endpoint string) (endpointProbe, error) {
+	if isOmni(cfgCtx) {
+		return endpointProbe{}, errOmniNotProbed
+	}
+
 	single := *cfgCtx
 	single.Endpoints = []string{endpoint}
 	single.Nodes = nil
@@ -306,7 +310,8 @@ func FindEndpoints(configYAML, cidrs string) (out string, err error) {
 
 	contexts := make(map[string]*clientconfig.Context, len(cfg.Contexts))
 	for name, c := range cfg.Contexts {
-		if c != nil && !slices.Contains(c.Endpoints, demoEndpoint) {
+		// An Omni cluster is reached through Omni: no node of it to find on the network.
+		if c != nil && !slices.Contains(c.Endpoints, demoEndpoint) && !isOmni(c) {
 			contexts[name] = c
 		}
 	}

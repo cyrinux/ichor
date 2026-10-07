@@ -5,13 +5,12 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"io"
+	"net/url"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/cosi-project/runtime/pkg/safe"
-	"github.com/siderolabs/go-api-signature/pkg/client/interceptor"
-	"github.com/siderolabs/go-api-signature/pkg/message"
 	"github.com/siderolabs/talos/pkg/machinery/client"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 	"github.com/siderolabs/talos/pkg/machinery/resources/cluster"
@@ -45,15 +44,26 @@ func isOmniServiceAccount(identity string) bool {
 	return strings.HasSuffix(strings.ToLower(identity), serviceAccountDomain)
 }
 
-// omniClusterKey identifies an Omni cluster: its instance and its name there (Omni contexts
-// have no CA to tell clusters apart).
-func omniClusterKey(ctx *clientconfig.Context) string {
-	endpoint := ""
-	if len(ctx.Endpoints) > 0 {
-		endpoint = strings.ToLower(endpointHost(ctx.Endpoints[0]))
+// omniHost is the Omni instance of ctx: the host of its endpoint, an https URL.
+func omniHost(ctx *clientconfig.Context) string {
+	if len(ctx.Endpoints) == 0 {
+		return ""
 	}
 
-	return "omni\x00" + endpoint + "\x00" + ctx.Cluster
+	endpoint := strings.TrimSpace(ctx.Endpoints[0])
+	if strings.Contains(endpoint, "://") {
+		if u, err := url.Parse(endpoint); err == nil {
+			return strings.ToLower(u.Host)
+		}
+	}
+
+	return strings.ToLower(endpointHost(endpoint))
+}
+
+// omniClusterKey identifies an Omni cluster: its instance and its name there. Not its CA:
+// a self-hosted Omni's is the instance's, shared by all its clusters.
+func omniClusterKey(ctx *clientconfig.Context) string {
+	return "omni\x00" + omniHost(ctx) + "\x00" + ctx.Cluster
 }
 
 func omniClusterHash(ctx *clientconfig.Context) [sha256.Size]byte {
@@ -82,62 +92,43 @@ func summarizeOmniContext(name string, ctx *clientconfig.Context) (contextSummar
 	}, nil
 }
 
-// errOmniIssue: Omni issues the talosconfigs of its clusters, a context of it has no CA.
-var errOmniIssue = errors.New("this cluster is managed by Omni: download its talosconfig from Omni")
+var (
+	// errOmniIssue: Omni issues the talosconfigs of its clusters, a context of it has no CA.
+	errOmniIssue = errors.New("this cluster is managed by Omni: download its talosconfig from Omni")
+	// errOmniNoMachines: the key works, the cluster has no machine with an address yet.
+	errOmniNoMachines = errors.New("omni lists no machine in this cluster")
+	// errOmniNotProbed: an Omni context has no endpoint on the local network to look for.
+	errOmniNotProbed = errors.New("an Omni cluster is reached through Omni, not probed")
+)
 
 // omniClientOptions are the client options of the Omni context stored under key, signed
 // with its stored sign-in.
-func omniClientOptions(key string, cfgCtx *clientconfig.Context) ([]client.OptionFunc, error) {
+func omniClientOptions(key string, cfgCtx *clientconfig.Context) ([]client.OptionFunc, *omniSigning, error) {
 	signer, err := loadOmniSigner(key, cfgCtx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return omniClientOptionsFor(cfgCtx, signer, func() (omniSigner, error) { return loadOmniSigner(key, cfgCtx) })
+	opts, signing := omniClientOptionsFor(cfgCtx, signer, func() (omniSigner, error) { return loadOmniSigner(key, cfgCtx) })
+
+	return opts, signing, nil
 }
 
 // omniClientOptionsFor are the client options of an Omni context signing with signer: the
-// context without its siderov1 auth (the library's interceptor reads keys from disk and
-// opens a browser), our own signing interceptor, and the cluster Omni routes the calls to.
-// When Omni refuses the key, reload may give a newer one (nil: there is none).
-func omniClientOptionsFor(cfgCtx *clientconfig.Context, signer omniSigner, reload func() (omniSigner, error)) ([]client.OptionFunc, error) {
+// context without its siderov1 auth (the library would install its own interceptor), ours
+// (see omniSigning), and the cluster Omni routes the calls to. When Omni refuses the key,
+// reload may give a newer one (nil: there is none).
+func omniClientOptionsFor(cfgCtx *clientconfig.Context, signer omniSigner, reload func() (omniSigner, error)) ([]client.OptionFunc, *omniSigning) {
 	unsigned := *cfgCtx
 	unsigned.Auth.SideroV1 = nil
 
-	refused := talosSignInRequired(omniMethodName(cfgCtx), "Omni refused the key")
-
-	sign := interceptor.New(interceptor.Options{
-		InfoWriter: io.Discard,
-		Identity:   signer.identity,
-		ClientName: "ichor",
-		GetUserKeyFunc: func(context.Context, *grpc.ClientConn, *interceptor.Options) (message.Signer, error) {
-			return signer.key, nil
-		},
-		// Omni refused the key (expired, revoked): a newer one may have been stored since,
-		// else the user has to sign in again.
-		RenewUserKeyFunc: func(context.Context, *grpc.ClientConn, *interceptor.Options) (message.Signer, error) {
-			if reload == nil {
-				return nil, refused
-			}
-
-			fresh, err := reload()
-			if err != nil {
-				return nil, err
-			}
-
-			if fresh.key.Fingerprint() == signer.key.Fingerprint() {
-				return nil, refused
-			}
-
-			return fresh.key, nil
-		},
-	})
+	signing := &omniSigning{method: omniMethodName(cfgCtx), reload: reload, signer: signer}
 
 	opts := []client.OptionFunc{
 		client.WithConfigContext(&unsigned),
 		client.WithGRPCDialOptions(
-			grpc.WithChainUnaryInterceptor(sign.Unary()),
-			grpc.WithChainStreamInterceptor(sign.Stream()),
+			grpc.WithChainUnaryInterceptor(signing.unary()),
+			grpc.WithChainStreamInterceptor(signing.stream()),
 		),
 	}
 
@@ -145,7 +136,7 @@ func omniClientOptionsFor(cfgCtx *clientconfig.Context, signer omniSigner, reloa
 		opts = append(opts, client.WithCluster(cfgCtx.Cluster))
 	}
 
-	return opts, nil
+	return opts, signing
 }
 
 // learnOmniNodes lists the cluster's members through Omni, without a node: Omni picks a
@@ -157,7 +148,12 @@ func learnOmniNodes(ctx context.Context, c *client.Client) ([]hostEntry, error) 
 
 	list, err := safe.StateListAll[*cluster.Member](ctx, c.COSI)
 	if err != nil {
-		return nil, fmt.Errorf("list the cluster's machines through Omni: %w", err)
+		// A sign-in request keeps its code first, for the apps.
+		if needSignIn := (*errSignInRequired)(nil); errors.As(err, &needSignIn) {
+			return nil, needSignIn
+		}
+
+		return nil, fmt.Errorf("list the cluster's machines through Omni: %s", friendlyError(err))
 	}
 
 	var nodes []hostEntry
@@ -170,11 +166,15 @@ func learnOmniNodes(ctx context.Context, c *client.Client) ([]hostEntry, error) 
 	}
 
 	if len(nodes) == 0 {
-		return nil, errors.New("omni lists no machine in this cluster")
+		return nil, errOmniNoMachines
 	}
 
 	return nodes, nil
 }
+
+// readyRetry is how long a failed node lookup answers every caller, rather than each one
+// waiting for its own.
+const readyRetry = 5 * time.Second
 
 // ready completes a session before its first use: an Omni context without nodes learns
 // them once. Readers of s.context all come through here, so the update is never raced.
@@ -188,8 +188,14 @@ func (s *session) ready(ctx context.Context) error {
 		return nil
 	}
 
+	if s.readyErr != nil && time.Since(s.readyErrAt) < readyRetry {
+		return s.readyErr
+	}
+
 	nodes, err := learnOmniNodes(ctx, s.client)
 	if err != nil {
+		s.readyErr, s.readyErrAt = err, time.Now()
+
 		return err
 	}
 
@@ -201,7 +207,7 @@ func (s *session) ready(ctx context.Context) error {
 	}
 
 	s.context = &learned
-	s.isReady = true
+	s.isReady, s.readyErr = true, nil
 
 	return nil
 }

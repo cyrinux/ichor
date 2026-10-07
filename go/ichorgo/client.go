@@ -26,11 +26,15 @@ type session struct {
 	context *clientconfig.Context
 	onClose func() // test hook
 
-	// authKey is where an Omni context's sign-in is kept ("" for a certificate).
+	// authKey is where an Omni context's sign-in is kept ("" for a certificate), signing
+	// what signs its calls.
 	authKey string
+	signing *omniSigning
 
-	readyMu sync.Mutex // see ready
-	isReady bool
+	readyMu    sync.Mutex // see ready
+	isReady    bool
+	readyErr   error
+	readyErrAt time.Time
 
 	versions    sync.Map // node -> Talos version tag, see nodeVersion
 	definitions sync.Map // node -> *resourceTypes, see resourceDefinitions
@@ -48,10 +52,12 @@ func openSession(configYAML, contextName string) (*session, error) {
 	opts := []client.OptionFunc{client.WithConfigContext(cfgCtx)}
 	authKey := ""
 
+	var signing *omniSigning
+
 	if isOmni(cfgCtx) {
 		authKey = contextFingerprint(name, cfgCtx)
 
-		if opts, err = omniClientOptions(authKey, cfgCtx); err != nil {
+		if opts, signing, err = omniClientOptions(authKey, cfgCtx); err != nil {
 			return nil, err
 		}
 	}
@@ -62,7 +68,7 @@ func openSession(configYAML, contextName string) (*session, error) {
 		return nil, fmt.Errorf("create Talos client: %w", err)
 	}
 
-	return &session{client: c, context: cfgCtx, authKey: authKey}, nil
+	return &session{client: c, context: cfgCtx, authKey: authKey, signing: signing}, nil
 }
 
 func (s *session) Close() {
@@ -77,11 +83,22 @@ func (s *session) Close() {
 
 var sessions = newSessionCache(sessionIdle, openSession)
 
-// acquireSession is sessions.acquire for a session ready to use (see session.ready).
+// acquireSession is sessions.acquire for a session ready to use (see session.ready). An Omni
+// session whose key expired is opened again: from the store, which may hold a newer key,
+// else the open asks for a sign-in.
 func acquireSession(configYAML, contextName string) (*session, func(), error) {
 	s, release, err := sessions.acquire(configYAML, contextName)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if s.signing != nil && s.signing.expired() {
+		release()
+		sessions.forgetAuth(s.authKey)
+
+		if s, release, err = sessions.acquire(configYAML, contextName); err != nil {
+			return nil, nil, err
+		}
 	}
 
 	if err := s.ready(context.Background()); err != nil {

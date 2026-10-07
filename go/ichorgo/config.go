@@ -156,7 +156,7 @@ func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, e
 // renewed certificate and moved endpoints. Letters only, so that masking, which rewrites
 // names and addresses, never touches it.
 func contextFingerprint(name string, ctx *clientconfig.Context) string {
-	if isOmni(ctx) && ctx.CA == "" {
+	if isOmni(ctx) {
 		return letterHash(sha256.Sum256([]byte(name + "\x00" + omniClusterKey(ctx))))
 	}
 

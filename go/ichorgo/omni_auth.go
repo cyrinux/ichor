@@ -221,16 +221,15 @@ func TalosSetCredentials(storedYAML, contextName, secretsJSON string) (err error
 		User:    signer.identity,
 	})
 	sessions.forgetAuth(sc.key)
+	kubeClients.forgetConfig(storedYAML, contextName)
 
 	return nil
 }
 
-// checkOmniSigner makes one signed call through Omni with signer.
+// checkOmniSigner makes one signed call through Omni with signer. A cluster with no machine
+// yet still proves the key.
 func checkOmniSigner(ctx context.Context, cfgCtx *clientconfig.Context, signer omniSigner) error {
-	opts, err := omniClientOptionsFor(cfgCtx, signer, nil)
-	if err != nil {
-		return err
-	}
+	opts, _ := omniClientOptionsFor(cfgCtx, signer, nil)
 
 	c, err := client.New(ctx, opts...)
 	if err != nil {
@@ -239,8 +238,8 @@ func checkOmniSigner(ctx context.Context, cfgCtx *clientconfig.Context, signer o
 
 	defer c.Close() //nolint:errcheck
 
-	if _, err := learnOmniNodes(ctx, c); err != nil {
-		return errors.New(friendlyError(errors.Unwrap(err)))
+	if _, err := learnOmniNodes(ctx, c); err != nil && !errors.Is(err, errOmniNoMachines) {
+		return err
 	}
 
 	return nil
@@ -289,6 +288,9 @@ func runOmniSignIn(ctx context.Context, storedYAML, contextName string, listener
 
 	identity := omniIdentity(sc.ctx)
 
+	// The key lives from now, not from its confirmation.
+	expires := time.Now().Add(omniKeyLifetime)
+
 	key, err := pgp.GenerateKey("ichor", runtime.GOOS+"/"+runtime.GOARCH, identity, omniKeyLifetime)
 	if err != nil {
 		return fmt.Errorf("generate a key: %w", err)
@@ -310,9 +312,10 @@ func runOmniSignIn(ctx context.Context, storedYAML, contextName string, listener
 		Method:         omniUserMethod,
 		Session:        map[string]string{omniKeySession: armored},
 		User:           identity,
-		SessionExpires: time.Now().Add(omniKeyLifetime).Unix(),
+		SessionExpires: expires.Unix(),
 	})
 	sessions.forgetAuth(sc.key)
+	kubeClients.forgetConfig(storedYAML, contextName)
 
 	return nil
 }
@@ -372,6 +375,7 @@ func TalosSignOut(storedYAML, contextName string) (err error) {
 
 	kubeAuth.forget(sc.key)
 	sessions.forgetAuth(sc.key)
+	kubeClients.forgetConfig(storedYAML, contextName)
 
 	return nil
 }

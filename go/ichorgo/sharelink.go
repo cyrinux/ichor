@@ -74,7 +74,7 @@ var (
 // certificate (the DER, so that a re-encoded PEM still matches). Letters only, like the
 // context fingerprint, so masking never rewrites it.
 func clusterID(ctx *clientconfig.Context) string {
-	if isOmni(ctx) && ctx.CA == "" {
+	if isOmni(ctx) {
 		return letterHash(omniClusterHash(ctx))
 	}
 

@@ -283,8 +283,8 @@ func sameCluster(a, b *clientconfig.Context) bool {
 		return false
 	}
 
-	if isOmni(a) && isOmni(b) && a.CA == "" && b.CA == "" {
-		return a.Cluster != "" && omniClusterKey(a) == omniClusterKey(b)
+	if isOmni(a) || isOmni(b) {
+		return isOmni(a) && isOmni(b) && a.Cluster != "" && omniClusterKey(a) == omniClusterKey(b)
 	}
 
 	return a.CA != "" && a.CA == b.CA
