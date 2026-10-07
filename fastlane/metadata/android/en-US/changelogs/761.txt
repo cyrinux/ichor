@@ -1,0 +1,9 @@
+• Scan an app's images for vulnerabilities from its sheet (iOS)
+• Add a Talos or Omni cluster from a form
+• Build a talosconfig from a form, Talos or Omni
+• Sign in to Omni clusters on Android and iOS
+• Cloud logos on the add screen's provider chips
+• Talos contexts managed by Omni (siderov1 auth)
+• Import talosconfigs without endpoints, ask for one
+• Scan binary gzip QR codes for large configs
+• Readable content width on foldables and tablets (Android)
