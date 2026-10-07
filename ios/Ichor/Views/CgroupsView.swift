@@ -130,26 +130,30 @@ private struct CgroupRowView: View {
     }
 
     /// Only what stands out: a memory limit, disk traffic, OOM kills and pressure worth a look.
+    /// One text so the line wraps as a whole rather than truncating the pressure.
     @ViewBuilder private var notes: some View {
+        let parts = noteParts
+        if let first = parts.first {
+            parts.dropFirst().reduce(first) { $0 + Text(verbatim: " · ") + $1 }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var noteParts: [Text] {
         let n = row.node
         let waiting = n.pressure.map { p in
             [(String(localized: "CPU"), p.cpu.some10), (String(localized: "Memory"), p.memory.some10), (String(localized: "Disk I/O"), p.io.some10)]
                 .filter { pressureLevel($0.1) != .ok }
         } ?? []
-        let hasNotes = n.memMax > 0 || (row.ioPerSecond ?? 0) >= 1024 || n.oomKills > 0
-        if hasNotes || !waiting.isEmpty {
-            HStack(spacing: 8) {
-                if n.memMax > 0 { Text("limit \(formatBytes(n.memMax))") }
-                if let io = row.ioPerSecond, io >= 1024 { Text("disk \(formatBytes(UInt64(io)))/s") }
-                if n.oomKills > 0 { Text("OOM-killed \(Int(n.oomKills)) times").foregroundStyle(.statusBad) }
-                ForEach(waiting, id: \.0) { label, value in
-                    Text("waits for \(label) \(String(format: "%.1f%%", value))").foregroundStyle(pressureColor(value))
-                }
-            }
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
+        var parts: [Text] = []
+        if n.memMax > 0 { parts.append(Text("limit \(formatBytes(n.memMax))")) }
+        if let io = row.ioPerSecond, io >= 1024 { parts.append(Text("disk \(formatBytes(UInt64(io)))/s")) }
+        if n.oomKills > 0 { parts.append(Text("OOM-killed \(Int(n.oomKills)) times").foregroundStyle(.statusBad)) }
+        parts += waiting.map { label, value in
+            Text("waits for \(label) \(String(format: "%.1f%%", value))").foregroundStyle(pressureColor(value))
         }
+        return parts
     }
 }
 
