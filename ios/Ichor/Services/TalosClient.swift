@@ -48,6 +48,9 @@ struct TalosClient: Sendable {
     let context: String
     /// The Kubernetes API address the user set for the cluster, "" for the kubeconfig's.
     var kubeServer = ""
+    /// A Talos cluster whose Kubernetes calls go through a stored kubeconfig context (K5), nil
+    /// for the admin kubeconfig Talos issues. See kubeConfig.
+    var kubeLink: KubeLink?
 
     static func parse(_ yaml: String) async throws -> ConfigSummary {
         try await json { IchorgoParseConfig(yaml, $0) }
@@ -195,21 +198,21 @@ struct TalosClient: Sendable {
 
     /// `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin).
     func rolloutRestart(_ workload: KubeWorkload) async throws {
-        try await Self.run { [config, context, kubeServer] error -> Void in
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeRolloutRestart(config, context, kubeServer, workload.kind, workload.namespace, workload.name, error)
         }
     }
 
     /// `kubectl rollout status KIND/NAME -n NAMESPACE` with the pods (os:admin). Never cached: polled.
     func rolloutStatus(_ workload: KubeWorkload) async throws -> KubeRolloutStatus {
-        try await Self.json { [config, context, kubeServer] in
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeRolloutStatus(config, context, kubeServer, workload.kind, workload.namespace, workload.name, $0)
         }
     }
 
     /// `kubectl create job --from=cronjob/NAME -n NAMESPACE` (os:admin): the new Job's name.
     func triggerCronJob(_ cronJob: KubeCronJob) async throws -> String {
-        try await Self.run { [config, context, kubeServer] error -> String in
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
             IchorgoKubeTriggerCronJob(config, context, kubeServer, cronJob.namespace, cronJob.name, error)
         }
     }
@@ -218,7 +221,7 @@ struct TalosClient: Sendable {
     /// owners (os:admin): only those pods and workloads are read, never a cluster-wide list.
     func appWorkloads(pods: [RoutePod]) async throws -> [KubeWorkload] {
         let encoded = try TalosJSON.encode(pods)
-        let list: KubeWorkloadList = try await Self.json { [config, context, kubeServer] in
+        let list: KubeWorkloadList = try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeAppWorkloads(config, context, kubeServer, encoded, $0)
         }
         return list.workloads
@@ -227,7 +230,7 @@ struct TalosClient: Sendable {
     /// workloads as they are now (os:admin); one deleted since is left out.
     func workloadsNamed(_ workloads: [WorkloadRef]) async throws -> [KubeWorkload] {
         let encoded = try TalosJSON.encode(workloads)
-        let list: KubeWorkloadList = try await Self.json { [config, context, kubeServer] in
+        let list: KubeWorkloadList = try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeWorkloadsNamed(config, context, kubeServer, encoded, $0)
         }
         return list.workloads
@@ -236,7 +239,7 @@ struct TalosClient: Sendable {
     /// The Ingress and HTTPRoute URLs serving pods (os:admin).
     func appRoutes(pods: [RoutePod]) async throws -> [KubeRoute] {
         let encoded = try TalosJSON.encode(pods)
-        let list: KubeRouteList = try await Self.json { [config, context, kubeServer] in
+        let list: KubeRouteList = try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoKubeAppRoutes(config, context, kubeServer, encoded, $0)
         }
         return list.routes
@@ -244,7 +247,7 @@ struct TalosClient: Sendable {
 
     /// `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one.
     func deletePod(_ pod: KubePod) async throws {
-        try await Self.run { [config, context, kubeServer] error -> Void in
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
             _ = IchorgoKubeDeletePod(config, context, kubeServer, pod.namespace, pod.name, error)
         }
     }

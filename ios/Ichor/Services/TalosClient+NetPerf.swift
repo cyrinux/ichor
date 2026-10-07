@@ -13,7 +13,7 @@ enum NetPerfEvent: Sendable {
 extension TalosClient {
     /// The Kubernetes nodes a test can run between, by name.
     func netPerfNodes() async throws -> [NetPerfNode] {
-        let list: NetPerfNodeList = try await Self.json { [config, context, kubeServer] in
+        let list: NetPerfNodeList = try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoNetPerfNodes(config, context, kubeServer, $0)
         }
         return list.nodes
@@ -22,7 +22,7 @@ extension TalosClient {
     /// Asks every ready node's public IP from the internet: one curl pod per node in a temporary
     /// namespace (os:admin). It takes up to a few minutes (the image pull).
     func detectPublicIPs() async throws -> PublicIPReport {
-        try await Self.json { [config, context, kubeServer] in
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoDetectPublicIPs(config, context, kubeServer, $0)
         }
     }
@@ -39,7 +39,7 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartNetPerf(config, context, kubeServer, setup.server, setup.client,
+        let run = IchorgoStartNetPerf(kubeConfig, kubeContext, kubeAPIServer, setup.server, setup.client,
                                           setup.hostNetwork, setup.seconds, bridge)
         continuation.onTermination = { _ in
             run?.cancel()

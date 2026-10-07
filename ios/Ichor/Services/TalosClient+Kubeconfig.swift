@@ -70,6 +70,6 @@ extension TalosClient {
     /// The cluster's nodes as the Kubernetes API sees them, and its version: the home of a
     /// cluster added from a kubeconfig.
     func kubeNodes() async throws -> KubeNodesOverview {
-        try await Self.json { [config, context, kubeServer] in IchorgoKubeNodes(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeNodes(config, context, kubeServer, $0) }
     }
 }

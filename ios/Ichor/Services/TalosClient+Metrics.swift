@@ -7,7 +7,7 @@ import IchorCore
 extension TalosClient {
     /// Query APIs among the cluster's Services, the likeliest first.
     func promDiscover() async throws -> [PromSource] {
-        let found: PromDiscovery = try await Self.json { [config, context, kubeServer] in
+        let found: PromDiscovery = try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoPromDiscover(config, context, kubeServer, $0)
         }
         return found.sources
@@ -16,7 +16,7 @@ extension TalosClient {
     /// `query` from `start` to `end` (unix seconds) against `source`, about 250 points.
     func promRange(_ source: PromSource, query: String, start: Int64, end: Int64) async throws -> PromResult {
         let sourceJSON = try Self.encode(source)
-        return try await Self.json { [config, context, kubeServer] in
+        return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
             IchorgoPromQueryRange(config, context, kubeServer, sourceJSON, query, start, end, 0, $0)
         }
     }

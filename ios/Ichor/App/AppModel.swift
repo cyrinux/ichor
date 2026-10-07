@@ -30,6 +30,7 @@ final class AppModel {
         static let clusterColors = "clusterColors"
         static let clusterNames = "clusterNames"
         static let kubeServers = "kubeServers"
+        static let kubeAccess = "kubeAccess"
         static let snapshotKeys = "snapshotKeys"
         static let skippedTalosUpdates = "skippedTalosUpdates"
         static let keepLastKnown = "keepLastKnownState"
@@ -73,6 +74,11 @@ final class AppModel {
     /// The Kubernetes API address the user set for clusters, by context fingerprint, to use
     /// instead of the one in the kubeconfig Talos issues (checked by TalosClient.normalizeKubeServer).
     private(set) var kubeServers: [String: String]
+
+    /// The Kubernetes access of Talos clusters (K5): Talos fingerprint → fingerprint of the
+    /// kubeconfig cluster their Kubernetes calls go through; absent: the admin kubeconfig
+    /// Talos issues. Only on this device and in backups.
+    private(set) var kubeAccess: [String: String]
 
     /// The public keys (age, SSH or YubiKey, one per line) each cluster's etcd snapshots were
     /// last encrypted for, by context fingerprint. Not secret; only on this device.
@@ -120,6 +126,7 @@ final class AppModel {
         clusterColors = UserDefaults.standard.dictionary(forKey: Keys.clusterColors) as? [String: Int] ?? [:]
         clusterNames = UserDefaults.standard.dictionary(forKey: Keys.clusterNames) as? [String: String] ?? [:]
         kubeServers = UserDefaults.standard.dictionary(forKey: Keys.kubeServers) as? [String: String] ?? [:]
+        kubeAccess = UserDefaults.standard.dictionary(forKey: Keys.kubeAccess) as? [String: String] ?? [:]
         snapshotKeys = UserDefaults.standard.dictionary(forKey: Keys.snapshotKeys) as? [String: String] ?? [:]
         skippedTalosUpdates = UserDefaults.standard.dictionary(forKey: Keys.skippedTalosUpdates) as? [String: String] ?? [:]
         vpnOnly = Set(UserDefaults.standard.stringArray(forKey: Keys.vpnOnly) ?? [])
@@ -130,7 +137,8 @@ final class AppModel {
     var client: TalosClient? {
         guard !vpnHeldBack else { return nil }
         let kubeServer = activeSummary.flatMap { kubeServers[$0.fingerprint] } ?? ""
-        return config(for: activeSummary).map { TalosClient(config: $0, context: activeContext, kubeServer: kubeServer) }
+        let link = kubeLink(for: activeSummary)
+        return config(for: activeSummary).map { TalosClient(config: $0, context: activeContext, kubeServer: kubeServer, kubeLink: link) }
     }
 
     var activeSummary: ContextSummary? { summary?.context(named: activeContext) }
@@ -212,6 +220,19 @@ final class AppModel {
         UserDefaults.standard.set(versions, forKey: Keys.skippedTalosUpdates)
     }
 
+    /// A sign-in, a sign-out or a new Kubernetes access changed what the cluster's calls can
+    /// do: the screens reload.
+    func reloadKubernetes() {
+        dataGeneration += 1
+    }
+
+    /// Stores the Kubernetes access links (see kubeAccess).
+    func storeKubeAccess(_ links: [String: String]) {
+        guard links != kubeAccess else { return }
+        kubeAccess = links
+        UserDefaults.standard.set(links, forKey: Keys.kubeAccess)
+    }
+
     private func storeKubeServers(_ servers: [String: String]) {
         guard servers != kubeServers else { return }
         kubeServers = servers
@@ -244,7 +265,7 @@ final class AppModel {
     }
 
     /// Privileged actions are only shown when the imported config's role allows them.
-    func allows(_ feature: Feature) -> Bool { activeSummary?.allows(feature) ?? false }
+    func allows(_ feature: Feature) -> Bool { activeSummary?.allows(feature, kubeLinked: kubeLink(for: activeSummary) != nil) ?? false }
 
     /// The active cluster's public IP probe; none in screenshot mode (kept unmasked).
     var activePublicIPs: PublicIPReport? {
@@ -409,11 +430,12 @@ final class AppModel {
 
     /// Restored names (all of them) and colors (the others keep the one just assigned) of the stored clusters.
     func restoreClusterSettings(names: [String: String], colors: [String: Int], kubeServers servers: [String: String],
-                                vpnOnly restoredVpnOnly: Set<String> = []) {
+                                vpnOnly restoredVpnOnly: Set<String> = [], kubeAccess links: [String: String] = [:]) {
         storeColors(clusterColors.merging(colors) { _, new in new })
         storeNames(names)
         storeKubeServers(servers)
         storeVpnOnly(restoredVpnOnly)
+        storeKubeAccess(links)
     }
 
     /// Removes the cluster `name` (a context and its credentials) from the store it is in,
@@ -567,7 +589,9 @@ final class AppModel {
         PublicIPStore.wipe()
         MetricsStore.keep(fingerprints: []) // their credentials go with the config
         WakeOnLanStore.shared.wipe()
+        KubeAuthStore.shared.wipe() // its sealed item went with the others
         storeVpnOnly([])
+        storeKubeAccess([:])
         publicIPReports = [:]
         SharedStore.save(nil) // the widget stops showing the old cluster
         forgetFeatures()
@@ -660,6 +684,10 @@ final class AppModel {
         storeSnapshotKeys(keepClusterNames(saved: snapshotKeys, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeSkippedTalosUpdates(keepClusterNames(saved: skippedTalosUpdates, fingerprints: newSummary.contexts.map(\.fingerprint)))
         storeVpnOnly(keepVpnOnly(saved: vpnOnly, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        // Sign-ins and Kubernetes access links go with their clusters.
+        let kubeFingerprints = newKubeSummary?.contexts.map(\.fingerprint) ?? []
+        storeKubeAccess(keepKubeAccess(kubeAccess, talos: newTalosSummary?.contexts.map(\.fingerprint) ?? [], kube: kubeFingerprints))
+        KubeAuthStore.shared.keep(fingerprints: kubeFingerprints)
         WakeOnLanStore.shared.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         LastKnownStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         MetricsStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
