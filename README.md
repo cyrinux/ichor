@@ -37,8 +37,9 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   open an app in the browser from its sheet, at the hosts of the Ingresses and Gateway API
   HTTPRoutes whose Services select its pods; browse any resource, CRDs included, with the
   columns `kubectl get` prints, read and edit its YAML (a dry-run diff first; a change made
-  meanwhile is never overwritten), list Helm releases, follow a pod's log and port-forward to
-  it on the phone (127.0.0.1 only); or export a kubeconfig.
+  meanwhile is never overwritten), list Helm releases and roll one back to an earlier revision
+  (a dry-run plan first; a release Flux manages is suspended first), follow a pod's log and
+  port-forward to it on the phone (127.0.0.1 only); or export a kubeconfig.
 - **Argo CD:** when the cluster runs it, list its Applications with their health and sync state,
   follow a sync wave by wave, and sync (with prune, dry run, selected resources…), refresh,
   terminate a sync, pause or resume auto-sync, or roll back to an earlier deployment. Ichor
@@ -255,7 +256,8 @@ verdict, then one card per area with its findings, worst first, each worded with
 Kubernetes' own message. The capacity card draws what the pods of each node request against
 what it offers (the scheduler's view, not live usage); the volumes card the fill level of every
 claim, read from each node's kubelet; the nodes card the roles, taints and labels; the Helm card
-the releases at their latest revision.
+the releases at their latest revision, each one opening its history, values, notes and manifest,
+where a failed upgrade can be rolled back.
 
 - **Thresholds:** a volume warns at 85 % and is critical at 95 % (inodes 90 / 98 %), a node at
   90 % of its allocatable CPU or memory requested, a quota at 90 %. A pod counts as stuck after

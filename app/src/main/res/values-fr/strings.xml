@@ -2075,6 +2075,7 @@
     </plurals>
     <string name="overview_card_summary">Résumé du cluster</string>
     <string name="overview_edit_title">Personnaliser la vue d’ensemble</string>
+    <string name="bar_edit_title">Personnaliser la barre du haut</string>
     <string name="overview_edit_done">OK</string>
     <string name="overview_edit_hint">Faites glisser une carte par sa poignée pour la déplacer. Les cartes masquées peuvent être réaffichées plus bas.</string>
     <string name="overview_edit_drag">Faire glisser pour déplacer</string>
@@ -3027,4 +3028,23 @@
     <string name="kb_forward_open">Ouvrir dans le navigateur</string>
     <string name="kb_forward_no_browser">Aucun navigateur pour l\'ouvrir.</string>
     <string name="kb_forward_connection_errors">Connexions échouées</string>
+    <string name="helm_rollback_action">Revenir</string>
+    <string name="helm_rollback_title">Revenir à la révision %1$s</string>
+    <string name="helm_rollback_now">Actuellement</string>
+    <string name="helm_rollback_after">Après</string>
+    <string name="helm_rollback_changes">Changements</string>
+    <string name="helm_rollback_unchanged">%1$s objets correspondent déjà et ne sont pas touchés.</string>
+    <string name="helm_rollback_none">Aucun objet ne change : seul l\'enregistrement de la release revient en arrière.</string>
+    <string name="helm_rollback_create">créer</string>
+    <string name="helm_rollback_update">modifier</string>
+    <string name="helm_rollback_delete">supprimer</string>
+    <string name="helm_rollback_keep">conservé</string>
+    <string name="helm_rollback_keep_hint">Les objets marqués helm.sh/resource-policy: keep restent, comme avec helm rollback.</string>
+    <string name="helm_rollback_flux">La HelmRelease Flux %1$s gère cette release : elle est d\'abord suspendue, sinon Flux la remettrait aussitôt à jour. Corrigez la version dans Git, puis reprenez-la.</string>
+    <string name="helm_rollback_blocked">Retour impossible</string>
+    <string name="helm_rollback_checked">Chaque changement a passé un essai à blanc sur l\'API server. Rien n\'a encore changé.</string>
+    <string name="helm_rollback_how">Comme helm rollback : une nouvelle révision est enregistrée avec le chart et les valeurs de l\'ancienne, et helm history est d\'accord ensuite.</string>
+    <string name="helm_rollback_checking">Vérification de ce qui changerait…</string>
+    <string name="helm_rollback_done">Revenu à la révision %1$s.</string>
+    <string name="helm_rollback_footer">Les mises à jour se font avec Helm ou votre outil GitOps. Depuis l\'historique, la release peut revenir à une révision antérieure.</string>
 </resources>

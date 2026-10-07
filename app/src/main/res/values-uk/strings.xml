@@ -2245,6 +2245,7 @@
     </plurals>
     <string name="overview_card_summary">Зведення кластера</string>
     <string name="overview_edit_title">Налаштувати огляд</string>
+    <string name="bar_edit_title">Налаштувати верхню панель</string>
     <string name="overview_edit_done">Готово</string>
     <string name="overview_edit_hint">Перетягніть картку за маркер, щоб перемістити її. Приховані картки можна повернути нижче.</string>
     <string name="overview_edit_drag">Перетягніть, щоб перемістити</string>
@@ -3221,4 +3222,23 @@
     <string name="kb_forward_open">Відкрити в браузері</string>
     <string name="kb_forward_no_browser">Немає браузера, щоб відкрити.</string>
     <string name="kb_forward_connection_errors">Невдалі з\'єднання</string>
+    <string name="helm_rollback_action">Відкотити</string>
+    <string name="helm_rollback_title">Відкотити до ревізії %1$s</string>
+    <string name="helm_rollback_now">Зараз</string>
+    <string name="helm_rollback_after">Після</string>
+    <string name="helm_rollback_changes">Зміни</string>
+    <string name="helm_rollback_unchanged">%1$s об\'єктів уже збігаються й лишаються без змін.</string>
+    <string name="helm_rollback_none">Жоден об\'єкт не змінюється: відкочується лише запис релізу.</string>
+    <string name="helm_rollback_create">створити</string>
+    <string name="helm_rollback_update">оновити</string>
+    <string name="helm_rollback_delete">видалити</string>
+    <string name="helm_rollback_keep">лишається</string>
+    <string name="helm_rollback_keep_hint">Об\'єкти з helm.sh/resource-policy: keep лишаються, як і з helm rollback.</string>
+    <string name="helm_rollback_flux">Flux HelmRelease %1$s керує цим релізом: спершу його призупинено, інакше Flux одразу оновить його назад. Виправте версію в Git, потім відновіть.</string>
+    <string name="helm_rollback_blocked">Відкотити неможливо</string>
+    <string name="helm_rollback_checked">Кожна зміна пройшла пробний запуск на API-сервері. Поки нічого не змінено.</string>
+    <string name="helm_rollback_how">Як helm rollback: записується нова ревізія з чартом і значеннями старої, і helm history потім збігається.</string>
+    <string name="helm_rollback_checking">Перевірка, що зміниться…</string>
+    <string name="helm_rollback_done">Відкочено до ревізії %1$s.</string>
+    <string name="helm_rollback_footer">Оновлення робляться через Helm або ваш GitOps-інструмент. З історії реліз можна відкотити до старішої ревізії.</string>
 </resources>

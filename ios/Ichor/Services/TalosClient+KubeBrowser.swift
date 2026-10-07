@@ -68,6 +68,22 @@ extension TalosClient {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeHelmRelease(config, context, kubeServer, namespace, name, $0) }
     }
 
+    /// What rolling the release back to `revision` (0: the previous one) would change, each
+    /// change dry-run on the API server. Read-only.
+    func helmRollbackPlan(namespace: String, name: String, revision: Int) async throws -> HelmRollbackPlan {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeHelmRollbackPlan(config, context, kubeServer, namespace, name, revision, $0)
+        }
+    }
+
+    /// Rolls the release back to `revision` (0: the previous one), as `helm rollback` does: a
+    /// new revision with the older one's chart and values.
+    func helmRollback(namespace: String, name: String, revision: Int) async throws {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeHelmRollback(config, context, kubeServer, namespace, name, revision, error)
+        }
+    }
+
     /// `kubectl logs -f --tail`: the last `tailLines`, then each new line, until the consuming
     /// task is cancelled or the container stops. `container` may be "" for a pod with one.
     func followPodLogs(namespace: String, pod: String, container: String, tailLines: Int = 200) -> AsyncStream<LogFollowItem> {

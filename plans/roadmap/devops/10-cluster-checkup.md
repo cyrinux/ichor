@@ -55,7 +55,8 @@ Not in the checkup, but part of the same work:
 7. **Read-only.** The checkup changes nothing. Fixing goes through the screens that exist
    (pods, workloads, node maintenance) or `kubectl`.
 8. **Helm releases are read from Secret metadata only** (`owner=helm` labels: name, status,
-   version), never their payload. No rollback: that needs the Helm library and the chart.
+   version), never their payload. A release opens its detail, where it can be rolled back (D11,
+   [11-helm.md](11-helm.md)).
 
 ## Go (`go/ichorgo`)
 

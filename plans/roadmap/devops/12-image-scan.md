@@ -1,4 +1,4 @@
-# D11. Image vulnerability scan
+# D12. Image vulnerability scan
 
 Status: **Go core done**. Size M (Go M, Android S, iOS S).
 

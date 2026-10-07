@@ -2071,6 +2071,7 @@
     </plurals>
     <string name="overview_card_summary">Cluster summary</string>
     <string name="overview_edit_title">Customize overview</string>
+    <string name="bar_edit_title">Customize top bar</string>
     <string name="overview_edit_done">Done</string>
     <string name="overview_edit_hint">Drag a card by its handle to move it. Hidden cards can be added back below.</string>
     <string name="overview_edit_drag">Drag to move</string>
@@ -3023,4 +3024,23 @@
     <string name="kb_forward_open">Open in browser</string>
     <string name="kb_forward_no_browser">No browser to open it.</string>
     <string name="kb_forward_connection_errors">Failed connections</string>
+    <string name="helm_rollback_action">Roll back</string>
+    <string name="helm_rollback_title">Roll back to revision %1$s</string>
+    <string name="helm_rollback_now">Now</string>
+    <string name="helm_rollback_after">After</string>
+    <string name="helm_rollback_changes">Changes</string>
+    <string name="helm_rollback_unchanged">%1$s objects already match and are left alone.</string>
+    <string name="helm_rollback_none">No object changes: only the release record moves back.</string>
+    <string name="helm_rollback_create">create</string>
+    <string name="helm_rollback_update">update</string>
+    <string name="helm_rollback_delete">delete</string>
+    <string name="helm_rollback_keep">kept</string>
+    <string name="helm_rollback_keep_hint">Objects marked helm.sh/resource-policy: keep stay, as with helm rollback.</string>
+    <string name="helm_rollback_flux">The Flux HelmRelease %1$s manages this release: it is suspended first, otherwise Flux would upgrade it straight back. Fix the version in Git, then resume it.</string>
+    <string name="helm_rollback_blocked">Cannot roll back</string>
+    <string name="helm_rollback_checked">Each change passed a dry run on the API server. Nothing has changed yet.</string>
+    <string name="helm_rollback_how">Like helm rollback: a new revision is recorded with the older one\'s chart and values, and helm history agrees afterwards.</string>
+    <string name="helm_rollback_checking">Checking what would change…</string>
+    <string name="helm_rollback_done">Rolled back to revision %1$s.</string>
+    <string name="helm_rollback_footer">Upgrades are done with Helm or your GitOps tool. From the history, the release can be rolled back to an older revision.</string>
 </resources>

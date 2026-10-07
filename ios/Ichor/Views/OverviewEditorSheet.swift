@@ -1,7 +1,7 @@
 import SwiftUI
 import IchorCore
 
-extension OverviewAction {
+extension OverviewAction: BarActionLook {
     var systemImage: String {
         switch self {
         case .health: "heart.text.square"
@@ -67,12 +67,11 @@ struct OverviewEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     private var layout: OverviewLayout { .parse(layoutText) }
-    private var bar: OverviewBar { .parse(barText) }
 
     var body: some View {
         NavigationStack {
             List {
-                barSection
+                ActionBarSection<OverviewAction>(text: $barText)
                 cardsSection
                 if !layout.hiddenCards(absent: absent).isEmpty {
                     Section("Hidden cards") {
@@ -103,30 +102,6 @@ struct OverviewEditorSheet: View {
         }
     }
 
-    private var barSection: some View {
-        Section {
-            ForEach(bar.slots) { slot in
-                switch slot {
-                case .menuLine:
-                    Label("In the ⋯ menu", systemImage: "ellipsis.circle")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .moveDisabled(true)
-                case .action(let action):
-                    BarRow(action: action, inMenu: bar.menu.contains(action)) { save(bar.toBar(action)) } toMenu: { save(bar.toMenu(action)) }
-                }
-            }
-            .onMove { source, destination in save(bar.moving(fromOffsets: source, toOffset: destination)) }
-            if !bar.isDefault {
-                Button("Reset to default") { save(OverviewBar()) }
-            }
-        } header: {
-            Text("Top bar")
-        } footer: {
-            Text("Drag an action above the line to show it as an icon, or below to put it in the ⋯ menu.")
-        }
-    }
-
     private var cardsSection: some View {
         Section {
             ForEach(layout.visible(absent: absent)) { card in
@@ -150,33 +125,6 @@ struct OverviewEditorSheet: View {
 
     private func save(_ layout: OverviewLayout) {
         withAnimation { layoutText = layout.encoded }
-    }
-
-    private func save(_ bar: OverviewBar) {
-        withAnimation { barText = bar.encoded }
-    }
-}
-
-private struct BarRow: View {
-    let action: OverviewAction
-    let inMenu: Bool
-    let toBar: () -> Void
-    let toMenu: () -> Void
-
-    var body: some View {
-        HStack {
-            Label { action.title } icon: { Image(systemName: action.systemImage) }
-            Spacer()
-            if inMenu {
-                Button(action: toBar) { Image(systemName: "arrow.up.circle") }
-                    .buttonStyle(.borderless)
-                    .accessibilityLabel(Text("Show as an icon"))
-            } else {
-                Button(action: toMenu) { Image(systemName: "arrow.down.circle") }
-                    .buttonStyle(.borderless)
-                    .accessibilityLabel(Text("Move to the menu"))
-            }
-        }
     }
 }
 
