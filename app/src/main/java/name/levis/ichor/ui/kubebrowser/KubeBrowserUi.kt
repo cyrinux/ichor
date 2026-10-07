@@ -34,12 +34,14 @@ import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
- * Browser screens a sheet deep in a Kubernetes list can open (a pod's YAML, a port-forward):
+ * Browser screens a sheet deep in a Kubernetes list can open (a pod's YAML, a port-forward, a shell):
  * provided by the navigation, null where nothing can be opened.
  */
 class KubeLinks(
     val onObject: (KubeObjectRef) -> Unit,
     val onPortForward: (namespace: String, pod: String) -> Unit,
+    /** A terminal in [container] of the pod ("" for its only one), `kubectl exec -it`. */
+    val onShell: (namespace: String, pod: String, container: String) -> Unit,
 )
 
 val LocalKubeLinks = compositionLocalOf<KubeLinks?> { null }

@@ -28,6 +28,17 @@ class DebugShellsTest {
     }
 
     @Test
+    fun aPodShellIsOnePerContainer() {
+        val web = ShellKey("prod", "", "apps", "web-0", "web")
+        assertTrue(web.isPod)
+        assertFalse(ShellKey("prod", "10.0.0.2").isPod)
+        assertEquals(web, ShellKey("prod", "", "apps", "web-0", "web"))
+        // Its sidecar is another shell, with its own notification.
+        assertNotEquals(web.notificationId, web.copy(container = "envoy").notificationId)
+        assertEquals(listOf(web), orphanedShells(listOf(web), setOf("lab")))
+    }
+
+    @Test
     fun notificationIdsArePositive() {
         listOf(ShellKey("", ""), ShellKey("prod", "10.0.0.2"), ShellKey("a", "b"))
             .forEach { assertTrue(it.notificationId > 0) }

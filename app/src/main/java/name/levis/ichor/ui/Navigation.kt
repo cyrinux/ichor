@@ -52,6 +52,7 @@ import name.levis.ichor.ui.changelog.ChangelogScreen
 import name.levis.ichor.ui.changelog.WhatsNewHost
 import name.levis.ichor.ui.debug.DebugShellScreen
 import name.levis.ichor.ui.debug.LiveShell
+import name.levis.ichor.ui.debug.ShellKey
 import name.levis.ichor.ui.diagnosis.DiagnosisScreen
 import name.levis.ichor.ui.etcd.EtcdScreen
 import name.levis.ichor.ui.events.EventsScreen
@@ -169,6 +170,7 @@ private object Routes {
     fun fluxDiff(kind: String, namespace: String, name: String) =
         "flux-diff?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
     const val DEBUG = "debug?addr={addr}&host={host}&ctx={ctx}"
+    const val POD_SHELL = "pod-shell?ctx={ctx}&ns={ns}&pod={pod}&c={c}"
     const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}"
     const val NETWORK = "network?addr={addr}&host={host}"
     const val HARDWARE = "hardware?addr={addr}&host={host}"
@@ -206,6 +208,10 @@ private object Routes {
     /** [context]: the cluster (talosconfig context) of the node; blank for the one on screen. */
     fun debug(addr: String, host: String, context: String = "") =
         "debug?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&ctx=${Uri.encode(context)}"
+
+    /** `kubectl exec -it` in [container] ("" for the pod's only one) of a pod of [context]'s cluster. */
+    fun podShell(context: String, namespace: String, pod: String, container: String) =
+        "pod-shell?ctx=${Uri.encode(context)}&ns=${Uri.encode(namespace)}&pod=${Uri.encode(pod)}&c=${Uri.encode(container)}"
     const val HEALTH = "health"
     const val SETTINGS = "settings"
     const val DIAGNOSIS = "diagnosis?note={note}"
@@ -281,10 +287,17 @@ fun Navigation(
         val shell = openShell ?: return@LaunchedEffect
         val top = nav.currentBackStackEntry
         val active = app.configRepository.config.value?.activeContext.orEmpty()
-        val showing = top?.destination?.route == Routes.DEBUG &&
-            top.arguments?.getString("addr") == shell.key.node &&
-            top.arguments?.getString("ctx").orEmpty().ifEmpty { active } == shell.key.context
-        if (!startWithImport && !showing) nav.navigate(Routes.debug(shell.key.node, shell.hostname, shell.key.context))
+        val key = shell.key
+        val args = top?.arguments
+        val showing = if (key.isPod) {
+            top?.destination?.route == Routes.POD_SHELL && args?.getString("ctx") == key.context &&
+                args.getString("ns") == key.namespace && args.getString("pod") == key.pod && args.getString("c").orEmpty() == key.container
+        } else {
+            top?.destination?.route == Routes.DEBUG && args?.getString("addr") == key.node &&
+                args.getString("ctx").orEmpty().ifEmpty { active } == key.context
+        }
+        val route = if (key.isPod) Routes.podShell(key.context, key.namespace, key.pod, key.container) else Routes.debug(key.node, shell.hostname, key.context)
+        if (!startWithImport && !showing) nav.navigate(route)
         onShellOpened()
     }
 
@@ -334,6 +347,10 @@ fun Navigation(
         KubeLinks(
             onObject = { nav.navigate(KubeBrowserRoutes.obj(it)) },
             onPortForward = { ns, pod -> nav.navigate(KubeBrowserRoutes.forward(ns, pod)) },
+            onShell = { ns, pod, container ->
+                val active = app.configRepository.config.value?.activeContext.orEmpty()
+                nav.navigate(Routes.podShell(active, ns, pod, container))
+            },
         )
     }
 
@@ -593,9 +610,20 @@ fun Navigation(
             val context = entry.arguments?.getString("ctx").orEmpty()
                 .ifEmpty { app.configRepository.config.value?.activeContext.orEmpty() }
             DebugShellScreen(
-                node = addr,
+                key = ShellKey(context, addr),
                 hostname = entry.arguments?.getString("host") ?: addr,
-                context = context,
+                onBack = { nav.popBackStack() },
+            )
+        }
+        composable(
+            Routes.POD_SHELL,
+            arguments = listOf("ctx", "ns", "pod", "c").map { navArgument(it) { type = NavType.StringType; defaultValue = "" } },
+        ) { entry ->
+            val a = entry.arguments
+            val pod = a?.getString("pod").orEmpty()
+            DebugShellScreen(
+                key = ShellKey(a?.getString("ctx").orEmpty(), "", a?.getString("ns").orEmpty(), pod, a?.getString("c").orEmpty()),
+                hostname = pod,
                 onBack = { nav.popBackStack() },
             )
         }

@@ -267,6 +267,13 @@ fun PodLogSheet(
                                 links.onPortForward(pod.namespace, pod.name)
                             }, label = { Text(stringResource(R.string.kb_forward_title)) })
                         }
+                        item(key = "shell") {
+                            // In the container picked for the log; "" lets Kubernetes pick the only one.
+                            AssistChip(onClick = {
+                                onDismiss()
+                                links.onShell(pod.namespace, pod.name, query.container)
+                            }, label = { Text(stringResource(R.string.pod_shell_title)) })
+                        }
                     }
                 }
             }

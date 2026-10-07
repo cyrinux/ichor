@@ -670,6 +670,10 @@
     <string name="debug_group_capture">Захоплення</string>
     <string name="debug_group_node">Вузол</string>
     <string name="debug_group_throughput">Пропускна здатність</string>
+    <string name="pod_shell_title">Оболонка</string>
+    <string name="pod_shell_on">Оболонка в %1$s</string>
+    <string name="pod_shell_intro">Відкриває термінал у запущеному контейнері %1$s, як kubectl exec -it. Залиште команду порожньою, щоб запустити bash, або sh, якщо в образі немає bash.</string>
+    <string name="pod_shell_command_auto">bash або sh</string>
 
     <!-- App lock -->
     <string name="lock_prompt">Розблокуйте Ichor</string>

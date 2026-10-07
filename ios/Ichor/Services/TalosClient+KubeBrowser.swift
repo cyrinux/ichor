@@ -84,6 +84,13 @@ extension TalosClient {
         }
     }
 
+    /// `kubectl exec -it`: a terminal in `container` ("" for the pod's only one); an empty
+    /// command runs bash, or sh. Events go to the listener (from Go threads).
+    func startPodShell(namespace: String, pod: String, container: String, command: String, cols: Int, rows: Int,
+                       listener: IchorgoDebugListenerProtocol) -> IchorgoDebugSession? {
+        IchorgoStartPodShell(kubeConfig, kubeContext, kubeAPIServer, namespace, pod, container, command, cols, rows, listener)
+    }
+
     /// Forwards a port of the phone's loopback address to `remotePort` of the pod until the
     /// consuming task is cancelled; nothing listens on the network the phone is on.
     func portForward(namespace: String, pod: String, remotePort: Int) -> AsyncStream<PortForwardEvent> {

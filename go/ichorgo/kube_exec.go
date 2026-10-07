@@ -69,34 +69,15 @@ func (k *kubeClient) exec(ctx context.Context, namespace, pod, container string,
 
 // execWith is exec with its own limits, for the commands that answer more than a status.
 func (k *kubeClient) execWith(ctx context.Context, limits execLimits, namespace, pod, container string, argv []string) (stdout, stderr []byte, err error) {
-	if err := validateKubeName("pod", namespace, pod); err != nil {
-		return nil, nil, err
-	}
-
-	if !kubeNamePattern.MatchString(container) || len(argv) == 0 {
-		return nil, nil, fmt.Errorf("invalid exec target %q %v", container, argv)
-	}
-
-	cfg, err := k.execConfig(ctx, namespace, pod, container, argv)
-	if err != nil {
+	if err := validateExecTarget(namespace, pod, container, argv); err != nil {
 		return nil, nil, err
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, limits.timeout)
 	defer cancel()
 
-	ws, err := cfg.DialContext(ctx)
+	ws, err := k.dialExec(ctx, namespace, pod, container, argv, false)
 	if err != nil {
-		// websocket.DialError does not unwrap: look at its Err by hand.
-		var dialErr *websocket.DialError
-		if errors.As(err, &dialErr) {
-			if errors.Is(dialErr.Err, websocket.ErrBadStatus) {
-				return nil, nil, errExecRefused
-			}
-
-			return nil, nil, dialErr.Err
-		}
-
 		return nil, nil, err
 	}
 	defer ws.Close() //nolint:errcheck
@@ -110,8 +91,34 @@ func (k *kubeClient) execWith(ctx context.Context, limits execLimits, namespace,
 	return readExecStream(ws, limits.maxOutput)
 }
 
-func (k *kubeClient) execConfig(ctx context.Context, namespace, pod, container string, argv []string) (*websocket.Config, error) {
-	query := url.Values{"container": {container}, "command": argv, "stdout": {"true"}, "stderr": {"true"}}
+// validateExecTarget checks the pod, the container ("" lets Kubernetes pick a pod's only one)
+// and that there is a command.
+func validateExecTarget(namespace, pod, container string, argv []string) error {
+	if err := validateKubeName("pod", namespace, pod); err != nil {
+		return err
+	}
+
+	if (container != "" && !kubeNamePattern.MatchString(container)) || len(argv) == 0 {
+		return fmt.Errorf("invalid exec target %q %v", container, argv)
+	}
+
+	return nil
+}
+
+// dialExec opens the exec stream of argv in the container: stdout and stderr only, or with
+// tty, stdin and a terminal (stderr then comes merged into stdout, as Kubernetes requires).
+func (k *kubeClient) dialExec(ctx context.Context, namespace, pod, container string, argv []string, tty bool) (*websocket.Conn, error) {
+	query := url.Values{"command": argv, "stdout": {"true"}}
+	if container != "" {
+		query.Set("container", container)
+	}
+
+	if tty {
+		query.Set("stdin", "true")
+		query.Set("tty", "true")
+	} else {
+		query.Set("stderr", "true")
+	}
 
 	u, err := k.endpoint(podPath(namespace, pod) + "/exec?" + query.Encode())
 	if err != nil {
@@ -139,7 +146,22 @@ func (k *kubeClient) execConfig(ctx context.Context, namespace, pod, container s
 		cfg.Header.Set("Authorization", "Bearer "+token)
 	}
 
-	return cfg, nil
+	ws, err := cfg.DialContext(ctx)
+	if err != nil {
+		// websocket.DialError does not unwrap: look at its Err by hand.
+		var dialErr *websocket.DialError
+		if errors.As(err, &dialErr) {
+			if errors.Is(dialErr.Err, websocket.ErrBadStatus) {
+				return nil, errExecRefused
+			}
+
+			return nil, dialErr.Err
+		}
+
+		return nil, err
+	}
+
+	return ws, nil
 }
 
 // readExecStream demultiplexes the frames until the server closes the stream.

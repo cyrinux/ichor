@@ -19,30 +19,12 @@ const kubeExecMaxLine = 256 << 10
 // to kubeExecMaxOutput, for the error of a command that failed. onStart, when set, is called
 // once the command runs.
 func (k *kubeClient) execLines(ctx context.Context, namespace, pod, container string, argv []string, onStart func(), onLine func([]byte)) error {
-	if err := validateKubeName("pod", namespace, pod); err != nil {
+	if err := validateExecTarget(namespace, pod, container, argv); err != nil {
 		return err
 	}
 
-	if !kubeNamePattern.MatchString(container) || len(argv) == 0 {
-		return fmt.Errorf("invalid exec target %q %v", container, argv)
-	}
-
-	cfg, err := k.execConfig(ctx, namespace, pod, container, argv)
+	ws, err := k.dialExec(ctx, namespace, pod, container, argv, false)
 	if err != nil {
-		return err
-	}
-
-	ws, err := cfg.DialContext(ctx)
-	if err != nil {
-		var dialErr *websocket.DialError
-		if errors.As(err, &dialErr) {
-			if errors.Is(dialErr.Err, websocket.ErrBadStatus) {
-				return errExecRefused
-			}
-
-			return dialErr.Err
-		}
-
 		return err
 	}
 

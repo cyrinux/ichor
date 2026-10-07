@@ -7,7 +7,7 @@ import IchorCore
 /// only keeps the running container's. A pod with several containers asks which one. A row
 /// read from a Table (a large cluster's) has no containers nor last termination: the pod is
 /// read in full first. Follow streams new lines (`kubectl logs -f`) while the sheet is open;
-/// the toolbar also opens the pod's events and a port-forward.
+/// the toolbar also opens the pod's events, a port-forward and a shell in the container.
 struct PodLogsSheet: View {
     let pod: KubePod
 
@@ -39,6 +39,7 @@ struct PodLogsSheet: View {
     @State private var follower = LogFollower()
     @State private var display = LogDisplay()
     @State private var forwarding = false
+    @State private var shelling = false
 
     /// The pod with its containers and last termination when known.
     private var shown: KubePod { detail ?? pod }
@@ -79,6 +80,9 @@ struct PodLogsSheet: View {
                         Button { forwarding = true } label: {
                             Label("Port forward", systemImage: "arrow.left.arrow.right.circle")
                         }
+                        Button { shelling = true } label: {
+                            Label("Shell", systemImage: "terminal")
+                        }
                     } label: {
                         Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
                     }
@@ -95,6 +99,10 @@ struct PodLogsSheet: View {
             .onChange(of: following) { _, on in if on { previous = false } }
             .navigationDestination(isPresented: $forwarding) {
                 PortForwardView(namespace: pod.namespace, pod: pod.name)
+            }
+            // In the container picked for the log; "" lets Kubernetes pick the only one.
+            .navigationDestination(isPresented: $shelling) {
+                PodShellView(namespace: pod.namespace, pod: pod.name, container: container)
             }
             .messageAlert($message)
         }

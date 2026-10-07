@@ -153,10 +153,13 @@ class MainActivity : FragmentActivity() {
         /** The fingerprint of the cluster a launcher shortcut opens. */
         const val EXTRA_CLUSTER = "name.levis.ichor.CLUSTER"
 
-        /** The debug shell a notification opens: its cluster (context), node and hostname. */
+        /** The debug shell a notification opens: its cluster (context), node and hostname, or its pod. */
         const val EXTRA_SHELL_CONTEXT = "name.levis.ichor.SHELL_CONTEXT"
         const val EXTRA_SHELL_NODE = "name.levis.ichor.SHELL_NODE"
         const val EXTRA_SHELL_HOST = "name.levis.ichor.SHELL_HOST"
+        const val EXTRA_SHELL_NAMESPACE = "name.levis.ichor.SHELL_NAMESPACE"
+        const val EXTRA_SHELL_POD = "name.levis.ichor.SHELL_POD"
+        const val EXTRA_SHELL_CONTAINER = "name.levis.ichor.SHELL_CONTAINER"
     }
 }
 
@@ -172,7 +175,7 @@ private class LaunchTargets(
 private fun Intent.debugShell(): LiveShell? {
     if (action != DebugShellService.ACTION_OPEN) return null
     val key = shellKey() ?: return null
-    return LiveShell(key, getStringExtra(MainActivity.EXTRA_SHELL_HOST)?.takeIf { it.isNotBlank() } ?: key.node)
+    return LiveShell(key, getStringExtra(MainActivity.EXTRA_SHELL_HOST)?.takeIf { it.isNotBlank() } ?: key.node.ifEmpty { key.pod })
 }
 
 /** The URL of a share link (ichor://open, or the website page forwarding to it), not yet checked. */

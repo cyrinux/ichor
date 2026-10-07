@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import name.levis.ichor.TalosApp
 import name.levis.ichor.security.AuthResult
@@ -53,17 +54,20 @@ import org.connectbot.terminal.Terminal
 private const val DEFAULT_IMAGE = "nicolaka/netshoot:latest"
 private const val DEFAULT_ARGS = "/bin/sh"
 
-/** `talosctl debug -n NODE IMAGE --args ARGS`: a privileged container with a terminal. */
+/**
+ * `talosctl debug -n NODE IMAGE --args ARGS`: a privileged container with a terminal. For a
+ * pod's [key], `kubectl exec -it`: a terminal in its running container. [hostname] names the
+ * node, or the pod.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DebugShellScreen(
-    node: String,
+    key: ShellKey,
     hostname: String,
-    context: String,
     onBack: () -> Unit,
     vm: DebugShellViewModel = viewModel(
-        key = "debug-$context-$node",
-        factory = factory { DebugShellViewModel(app.debugShells, ShellKey(context, node), hostname) },
+        key = "debug-$key",
+        factory = factory { DebugShellViewModel(app.debugShells, key, hostname) },
     ),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -85,8 +89,11 @@ fun DebugShellScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(stringResource(R.string.debug_title))
-                        Text(hostname, style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(if (key.isPod) R.string.pod_shell_title else R.string.debug_title))
+                        Text(
+                            if (key.isPod) listOf(key.namespace, hostname, key.container).filter { it.isNotEmpty() }.joinToString(" / ") else hostname,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
                     }
                 },
                 // Back leaves the shell running: its notification opens it again.
@@ -101,7 +108,7 @@ fun DebugShellScreen(
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize().imePadding()) {
             when (val s = state) {
-                ShellState.Setup -> SetupForm(hostname, onStart = vm::start)
+                ShellState.Setup -> if (key.isPod) PodSetupForm(hostname, onStart = vm::start) else SetupForm(hostname, onStart = vm::start)
                 else -> Column(Modifier.fillMaxSize().background(TerminalBackground)) {
                     StatusLine(s, onRestart = vm::reset)
                     Terminal(
@@ -114,7 +121,8 @@ fun DebugShellScreen(
                     if (s is ShellState.Running) {
                         ExtraKeys(
                             onKey = vm::send,
-                            onSnippets = if (vm.snippets.isEmpty()) null else ({ showSnippets = true }),
+                            // The snippets are node diagnostics, for netshoot: not for any pod's image.
+                            onSnippets = if (key.isPod || vm.snippets.isEmpty()) null else ({ showSnippets = true }),
                         )
                     }
                 }
@@ -135,17 +143,9 @@ private fun SetupForm(hostname: String, onStart: (String, String) -> Unit) {
 
     fun start() {
         prefs.edit().putString("image", image.trim()).putString("args", args.trim()).apply()
-        val activity = context.findFragmentActivity()
-        if (!appLock.enabled.value || activity == null) {
-            onStart(image, args)
-            return
-        }
         // With the app lock on, a privileged shell needs a fresh fingerprint/PIN, like reboot.
-        scope.launch {
-            when (val auth = authenticate(activity, context.getString(R.string.debug_auth, hostname))) {
-                AuthResult.Success -> onStart(image, args)
-                is AuthResult.Failure -> error = auth.message
-            }
+        authenticated(context, appLock.enabled.value, scope, context.getString(R.string.debug_auth, hostname), onError = { error = it }) {
+            onStart(image, args)
         }
     }
 
@@ -175,6 +175,65 @@ private fun SetupForm(hostname: String, onStart: (String, String) -> Unit) {
         )
         error?.let { Text(it, color = LocalStatusColors.current.bad) }
         Button(onClick = ::start, enabled = image.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.debug_start)) }
+    }
+}
+
+/** `kubectl exec -it`: the command only; empty runs bash, or sh when the image lacks it. */
+@Composable
+private fun PodSetupForm(pod: String, onStart: (String, String) -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val prefs = remember { context.getSharedPreferences("ichor-debug", Context.MODE_PRIVATE) }
+    var command by rememberSaveable { mutableStateOf(prefs.getString("pod-command", "").orEmpty()) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val appLock = (context.applicationContext as TalosApp).appLock
+
+    fun start() {
+        prefs.edit().putString("pod-command", command.trim()).apply()
+        // A shell can read the container's secrets: with the app lock on, it asks like the node's.
+        authenticated(context, appLock.enabled.value, scope, context.getString(R.string.pod_shell_on, pod), onError = { error = it }) {
+            onStart("", command)
+        }
+    }
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(stringResource(R.string.pod_shell_intro, pod), style = MaterialTheme.typography.bodyMedium)
+        OutlinedTextField(
+            value = command,
+            onValueChange = { command = it },
+            label = { Text(stringResource(R.string.debug_command)) },
+            placeholder = { Text(stringResource(R.string.pod_shell_command_auto), fontFamily = FontFamily.Monospace) },
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        error?.let { Text(it, color = LocalStatusColors.current.bad) }
+        Button(onClick = ::start, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.debug_start)) }
+    }
+}
+
+/** Runs [onAllowed] at once, or with the app lock on after a fresh fingerprint/PIN ([reason]). */
+private fun authenticated(
+    context: Context,
+    locked: Boolean,
+    scope: CoroutineScope,
+    reason: String,
+    onError: (String) -> Unit,
+    onAllowed: () -> Unit,
+) {
+    val activity = context.findFragmentActivity()
+    if (!locked || activity == null) {
+        onAllowed()
+        return
+    }
+    scope.launch {
+        when (val auth = authenticate(activity, reason)) {
+            AuthResult.Success -> onAllowed()
+            is AuthResult.Failure -> onError(auth.message)
+        }
     }
 }
 
