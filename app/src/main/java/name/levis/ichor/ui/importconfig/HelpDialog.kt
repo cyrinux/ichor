@@ -108,11 +108,11 @@ fun TalosconfigHelpDialog(onDismiss: () -> Unit) {
 
 /**
  * A config too large for one QR code (a kubeconfig with an embedded client certificate)
- * fits once compressed: the importer expands an "ichor-config:" payload (see
- * go/ichorgo/import_text.go). Works for a talosconfig too.
+ * fits once compressed: the scanner reads raw gzip in a binary code (see
+ * go/ichorgo/qr_payload.go), and the importer expands an "ichor-config:" text payload too
+ * (go/ichorgo/import_text.go). Works for a kubeconfig as well.
  */
-private const val COMPRESSED_QR_COMMAND =
-    "printf 'ichor-config:%s' \"\$(gzip -9c talosconfig-phone | basenc --base64url -w0)\" | qrencode -t ansiutf8"
+private const val COMPRESSED_QR_COMMAND = "gzip -9 < talosconfig-phone | qrencode -8 -t ansiutf8"
 
 /** Clusters added from a kubeconfig: what works today, and how to make one the app can read. */
 @Composable

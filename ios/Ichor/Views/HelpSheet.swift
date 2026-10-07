@@ -64,7 +64,7 @@ struct HelpSheet: View {
                     Text("Keep only the cluster to add, with its certificates in the file:").font(.footnote)
                     CommandRow("kubectl config view --flatten --minify > kubeconfig-phone")
                     Text("Too large for a QR code? Compress it, the app expands it:").font(.footnote)
-                    CommandRow("printf 'ichor-config:%s' \"$(gzip -9c kubeconfig-phone | basenc --base64url -w0)\" | qrencode -t ansiutf8")
+                    CommandRow("gzip -9 < kubeconfig-phone | qrencode -8 -t ansiutf8")
                     Text("Prefer a ServiceAccount with read-only rights over your admin credentials.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
