@@ -382,7 +382,7 @@ class TalosRepository(
     suspend fun kubeconfig(): String {
         val stored = configs.forCall()
         if (stored.activeIsKube) return withContext(Dispatchers.IO) { Ichorgo.exportKubeContext(stored.kubeYaml, stored.activeContext) }
-        return kubeCall { cfg, ctx, server -> Ichorgo.kubeconfig(cfg, ctx, server) }
+        return talosKubeCall { cfg, ctx, server -> Ichorgo.kubeconfig(cfg, ctx, server) }
     }
 
     /** The cluster's nodes as Kubernetes lists them: the home of a cluster added from a kubeconfig. */
@@ -689,7 +689,7 @@ class TalosRepository(
     suspend fun deletePod(pod: KubePod) = kubeCall { cfg, ctx, server -> Ichorgo.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
 
     /** What a maintenance of [node] would do: pods to evict, budgets, reboot checks (os:admin). Never cached. */
-    suspend fun maintenancePlan(node: String): MaintenancePlan = kubeCall { cfg, ctx, server ->
+    suspend fun maintenancePlan(node: String): MaintenancePlan = talosKubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(MaintenancePlan.serializer(), Ichorgo.nodeMaintenancePlan(cfg, ctx, server, node))
     }
 
@@ -910,8 +910,17 @@ class TalosRepository(
         return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) }
     }
 
-    /** [call] with the Kubernetes API address the user set for the cluster ("" for the kubeconfig's). */
+    /**
+     * A Kubernetes call with the Kubernetes API address the user set for the cluster ("" for the
+     * kubeconfig's), through the cluster's Kubernetes access when set (K5, see [kubeTarget]).
+     */
     private suspend fun <T> kubeCall(block: (config: String, context: String, kubeServer: String) -> T): T {
+        val target = kubeServers.targetFor(configs.forCall())
+        return withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
+    }
+
+    /** A call that needs both Talos and Kubernetes (maintenance, the admin kubeconfig): always the Talos path. */
+    private suspend fun <T> talosKubeCall(block: (config: String, context: String, kubeServer: String) -> T): T {
         val stored = configs.forCall()
         val server = kubeServers.serverFor(stored)
         return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext, server) }

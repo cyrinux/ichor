@@ -30,6 +30,7 @@ import name.levis.ichor.model.kubeImportRows
 import name.levis.ichor.model.kubeProblemText
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.kubeauth.signInMethodText
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /**
@@ -102,6 +103,10 @@ private fun KubeContextRow(
                 if (ctx.namespace.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_namespace), ctx.namespace)
                 if (ctx.certNotAfter > 0) InfoRow(stringResource(R.string.import_kube_expires), certExpiry(ctx.certNotAfter))
                 if (ctx.insecure) MutedText(stringResource(R.string.import_kube_insecure))
+                // Added without credentials: the cluster's home asks to sign in.
+                if (row.importable && ctx.signIn.isNotEmpty()) {
+                    MutedText(stringResource(R.string.import_kube_signin_follows, signInMethodText(ctx.signIn)))
+                }
                 if (!row.importable) Problem(ctx.problem, ctx.problemDetail)
                 row.conflict?.let { conflict ->
                     NameConflict(
