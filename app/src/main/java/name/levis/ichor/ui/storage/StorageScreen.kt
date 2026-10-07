@@ -74,6 +74,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import java.util.Locale
+import name.levis.ichor.ui.components.pageContent
 
 /** Depth asked to `talosctl usage`: the direct children of the opened directory. */
 private const val DISK_USAGE_DEPTH = 1
@@ -158,7 +159,7 @@ fun StorageScreen(
             )
         },
     ) { padding ->
-        PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = vm::refresh, modifier = Modifier.padding(padding).fillMaxSize()) {
+        PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = vm::refresh, modifier = Modifier.pageContent(padding).fillMaxSize()) {
             LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 item(key = "mounts") {
                     SectionCard(stringResource(R.string.storage_section_mounts), features.support(TalosFeature.MOUNTS)) {

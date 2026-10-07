@@ -48,6 +48,7 @@ import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.components.pageContent
 
 /** The windows offered, in minutes. */
 private val AUDIT_WINDOWS = listOf(5, 15, 60)
@@ -90,7 +91,7 @@ fun AuditScreen(
             )
         },
     ) { padding ->
-        LazyColumn(Modifier.padding(padding).fillMaxSize()) {
+        LazyColumn(Modifier.pageContent(padding).fillMaxSize()) {
             item(key = "intro") { AuditIntro(minutes, onMinutes = { minutes = it }, onRun = run, running = started && state !is UiState.Loaded && state !is UiState.Failed) }
             if (started) auditResult(state, vm::refresh)
         }

@@ -53,6 +53,7 @@ import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.components.pageContent
 
 class ResourceKindsViewModel(private val browser: KubeBrowserRepository) : LoadingViewModel<ApiResourceList>() {
     override suspend fun fetch() = browser.apiResources()
@@ -83,7 +84,7 @@ fun ResourceKindsScreen(
             )
         },
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
+        Column(Modifier.pageContent(padding).fillMaxSize()) {
             SearchField(query, { query = it }, stringResource(R.string.kb_search_kinds), Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp))
             when (val s = state) {
                 UiState.Loading -> LoadingBox()

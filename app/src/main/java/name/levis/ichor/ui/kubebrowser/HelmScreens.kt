@@ -67,6 +67,7 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SkeletonStyle
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.emptyOrNoMatch
+import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.workloads.KubeFilters
@@ -129,7 +130,7 @@ fun HelmReleasesScreen(
             )
         },
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
+        Column(Modifier.pageContent(padding).fillMaxSize()) {
             val loaded = (state as? UiState.Loaded)?.data
             val listed = remember(loaded) { loaded.orEmpty().map { it.namespace }.distinct().sorted() }
             KubeFilters(control, listed, query, { query = it }, R.string.kb_helm_search)

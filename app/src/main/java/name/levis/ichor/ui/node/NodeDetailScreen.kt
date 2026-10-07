@@ -86,6 +86,7 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.SwipeTabPager
+import name.levis.ichor.ui.components.pageContent
 
 /** How long after a service action the list is fetched again, once the state settled. */
 private const val SERVICE_SETTLE_MILLIS = 2_500L
@@ -299,7 +300,7 @@ fun NodeDetailScreen(
             )
         },
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
+        Column(Modifier.pageContent(padding).fillMaxSize()) {
             // Cgroups (admin configs) and Kubernetes pods (with an API server) may be hidden.
             val tabs = nodeTabs(canCgroups, canKubePods)
             val shownTab = shownNodeTab(tab, tabs)

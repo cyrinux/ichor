@@ -44,6 +44,7 @@ import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.components.pageContent
 
 /** Reading it scrapes /metrics twice a few seconds apart: loaded on demand, never polled. */
 class ApiHealthViewModel(private val talos: TalosRepository) : LoadingViewModel<ApiHealthReport>() {
@@ -75,7 +76,7 @@ fun ApiHealthScreen(
             )
         },
     ) { padding ->
-        val modifier = Modifier.padding(padding)
+        val modifier = Modifier.pageContent(padding)
         Loaded(state, vm::refresh, modifier) { data ->
             ApiHealthList(data, onAudit)
             

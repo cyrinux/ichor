@@ -47,6 +47,7 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.SectionTitle
 import kotlinx.coroutines.launch
 import name.levis.ichor.data.REPO_URL_BASE
+import name.levis.ichor.ui.components.pageContent
 
 /** GitHub's issue chooser: bug report or integration request. */
 private val REPORT_BUG_URL = "$REPO_URL_BASE${BuildConfig.UPDATE_REPO}/issues/new/choose"
@@ -82,7 +83,7 @@ fun SettingsScreen(
         },
     ) { padding ->
         Column(
-            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AppearanceSection(uiPreferences)

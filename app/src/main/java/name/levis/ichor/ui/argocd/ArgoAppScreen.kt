@@ -73,6 +73,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
+import name.levis.ichor.ui.components.pageContent
 
 /**
  * One Argo CD Application: the hero, its conditions, the running or last sync, the sync-waves
@@ -117,7 +118,7 @@ fun ArgoAppScreen(
             )
         },
     ) { padding ->
-        val modifier = Modifier.padding(padding)
+        val modifier = Modifier.pageContent(padding)
         when (val s = state) {
             UiState.Loading -> LoadingBox(modifier)
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)

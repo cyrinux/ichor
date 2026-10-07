@@ -45,6 +45,7 @@ import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.LiveIndicator
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.components.pageContent
 
 /** Machine events of one node ([node]) or of every node of the context ([node] null). */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,7 +94,7 @@ fun EventsScreen(
             )
         },
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
+        Column(Modifier.pageContent(padding).fillMaxSize()) {
             Row(
                 Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),

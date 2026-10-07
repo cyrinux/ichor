@@ -54,6 +54,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.pageContent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -116,7 +117,7 @@ fun CaptureScreen(
         },
         bottomBar = { session?.let { s -> CaptureBar(s, onStop = vm::stop) } },
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
+        Column(Modifier.pageContent(padding).fillMaxSize()) {
             val s = session
             if (s == null) {
                 CaptureSetup(links, options, filterError, filterChecking, onChange = vm::update, onStart = vm::start)

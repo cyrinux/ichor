@@ -62,6 +62,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import java.io.File
 import name.levis.ichor.util.formatDateTime
+import name.levis.ichor.ui.components.pageContent
 
 class CapturesViewModel(private val captures: CaptureRepository) : LoadingViewModel<List<CaptureFile>>() {
     override suspend fun fetch() = captures.list()
@@ -101,7 +102,7 @@ fun CapturesScreen(
             )
         },
     ) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize()) {
+        Box(Modifier.pageContent(padding).fillMaxSize()) {
             when (val s = state) {
                 UiState.Loading -> LoadingBox()
                 is UiState.Failed -> ErrorBox(s.message, vm::refresh)

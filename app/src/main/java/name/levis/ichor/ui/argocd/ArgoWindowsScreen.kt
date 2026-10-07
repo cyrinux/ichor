@@ -67,6 +67,7 @@ import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
+import name.levis.ichor.ui.components.pageContent
 
 /**
  * Every sync window of every project: the active ones (Ichor's freezes with "+1 h" and "End"),
@@ -117,7 +118,7 @@ fun ArgoWindowsScreen(onBack: () -> Unit) {
             )
         },
     ) { padding ->
-        val modifier = Modifier.padding(padding)
+        val modifier = Modifier.pageContent(padding)
         Loaded(state, vm::refresh, modifier, freshness = true) { data ->
             Windows(
                 data,

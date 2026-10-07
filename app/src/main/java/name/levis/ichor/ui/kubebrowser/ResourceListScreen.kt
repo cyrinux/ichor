@@ -73,6 +73,7 @@ import name.levis.ichor.ui.workloads.NamespacesViewModel
 import name.levis.ichor.ui.workloads.PagedListViewModel
 import name.levis.ichor.ui.workloads.PagedProgress
 import name.levis.ichor.ui.workloads.rememberKubeScope
+import name.levis.ichor.ui.components.pageContent
 
 /** The objects of one resource, page by page in the server's order, as its Table shows them. */
 class ResourceListViewModel(
@@ -123,7 +124,7 @@ fun ResourceListScreen(
             )
         },
     ) { padding ->
-        val body = Modifier.padding(padding).fillMaxSize()
+        val body = Modifier.pageContent(padding).fillMaxSize()
         val content: @Composable ColumnScope.(UiState.Loaded<PagedLoad<ResourceRow>>) -> Unit = { s ->
             Rows(s, query, wide, onWide = { wide = it }, showNamespace = type.namespaced && vm.scope.namespace == null, vm = vm, onObject = onObject)
         }
