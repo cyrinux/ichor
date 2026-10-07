@@ -548,9 +548,9 @@
     <string name="import_tab_qr">QR-Code</string>
     <string name="import_could_not_open">Datei konnte nicht geöffnet werden</string>
     <string name="import_file_too_large">Datei ist zu groß für eine talosconfig</string>
-    <string name="import_file_hint">Wähle deine talosconfig aus (die Datei ~/.talos/config auf deinem Rechner). Kopiere sie per adb push, Syncthing usw. auf das Smartphone.</string>
-    <string name="import_choose_file">Datei auswählen</string>
-    <string name="import_paste_label">talosconfig-YAML</string>
+    <string name="import_bring_title">Konfigurationsdatei importieren</string>
+    <string name="import_detects">Aus ~/.talos/config oder ~/.kube/config auf deinem Rechner. Ichor erkennt, welche es ist.</string>
+    <string name="import_paste_label">talosconfig- oder kubeconfig-YAML</string>
     <string name="import_validate">Prüfen</string>
     <string name="import_valid">Konfiguration ist gültig</string>
     <string name="import_context_current">%1$s (aktuell)</string>
@@ -1296,7 +1296,6 @@
     <string name="ai_disclaimer">KI-Antworten können falsch sein. Prüfen Sie einen Befehl, bevor Sie ihn ausführen, besonders wenn er einen Knoten zurücksetzt oder etcd verändert.</string>
     <string name="ai_health_diagnose">Mit KI diagnostizieren</string>
     <string name="demo_try">Demo ausprobieren</string>
-    <string name="demo_hint">Noch kein Cluster? Erkunde Ichor mit einem Talos-Beispielcluster.</string>
     <string name="demo_notice">Demo-Cluster · Beispieldaten. Clusteränderungen sind nicht verfügbar. Entferne die Demo anschließend unter Cluster verwalten.</string>
     <string name="overview_discovered_nodes_hint">Tippen, um sie zur talosconfig hinzuzufügen.</string>
     <string name="discover_nodes_title">Gefundene Nodes hinzufügen</string>
@@ -1364,7 +1363,6 @@
     <string name="backup_desc">Speichere deine Cluster und Einstellungen in einer mit einer Passphrase verschlüsselten Datei, um sie auf einem neuen Telefon (Android oder iOS) wiederherzustellen. Ohne die Passphrase lässt sich die Datei nicht öffnen.</string>
     <string name="backup_create">Cluster und Einstellungen sichern</string>
     <string name="backup_restore">Sicherung wiederherstellen</string>
-    <string name="backup_restore_hint">Wechselst du das Telefon? Stelle die dort erstellte Sicherung wieder her.</string>
     <string name="backup_restore_pick">Datei wählen</string>
     <string name="backup_restore_replace_warning">Die Wiederherstellung ersetzt alle Cluster und Einstellungen auf diesem Gerät durch die der Sicherung.</string>
     <string name="backup_auth">Cluster und ihre Zugangsdaten sichern</string>
@@ -2850,7 +2848,6 @@
     <!-- Clusters added from a kubeconfig (no Talos API) -->
     <string name="common_kind_kubernetes">Kubernetes</string>
     <string name="common_talos_only">Für diesen Cluster nicht verfügbar: Er wurde aus einer kubeconfig hinzugefügt, die App erreicht also nur seine Kubernetes-API, nicht Talos.</string>
-    <string name="import_kube_hint">Eine kubeconfig geht auch, mit Client-Zertifikat oder Token.</string>
     <string name="import_kube_title">Hinzuzufügende Cluster wählen</string>
     <string name="import_kube_none_importable">Keiner dieser Cluster kann bisher hinzugefügt werden.</string>
     <string name="import_kube_server">Server</string>
@@ -2953,7 +2950,6 @@
     <string name="kube_access_hint">Die Kubernetes-Ansichten dieses Clusters nutzen diese Zugangsdaten. Talos-Aufrufe behalten die talosconfig.</string>
     <string name="kube_access_talos">Talos-Admin-Kubeconfig</string>
     <string name="import_kube_signin_follows">Meldet sich mit %1$s an: du meldest dich nach dem Hinzufügen an.</string>
-    <string name="kube_discover_hint">Oder füge die Cluster eines Cloud-Kontos hinzu, ohne Kubeconfig.</string>
     <string name="kube_discover_entry">Aus einem Cloud-Konto hinzufügen</string>
     <string name="kube_discover_title">Aus einem Cloud-Konto hinzufügen</string>
     <string name="kube_discover_body">Die App listet die Cluster des Kontos auf; du wählst aus, welche hinzugefügt werden. Sie melden sich dann mit diesen Zugangsdaten an.</string>

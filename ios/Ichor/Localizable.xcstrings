@@ -6538,46 +6538,6 @@
         }
       }
     },
-    "Moving from another phone? Restore the backup you made there." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Moving from another phone? Restore the backup you made there."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vous changez de téléphone ? Restaurez la sauvegarde faite sur l’ancien."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¿Vienes de otro teléfono? Restaura la copia de seguridad que hiciste allí."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Переходите з іншого телефона? Відновіть резервну копію, створену на ньому."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wechselst du das Telefon? Stelle die dort erstellte Sicherung wieder her."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arrivi da un altro telefono? Ripristina il backup creato lì."
-          }
-        }
-      }
-    },
     "Cluster insights" : {
       "localizations" : {
         "en" : {
@@ -7535,47 +7495,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Спробувати демо"
-          }
-        }
-      }
-    },
-    "No cluster yet? Explore Ichor with a sample Talos cluster." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No cluster yet? Explore Ichor with a sample Talos cluster."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pas encore de cluster ? Explorez Ichor avec un exemple de cluster Talos."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¿Aún no tienes un clúster? Explora Ichor con un clúster Talos de ejemplo."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noch kein Cluster? Erkunde Ichor mit einem Talos-Beispielcluster."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Non hai ancora un cluster? Esplora Ichor con un cluster Talos di esempio."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ще немає кластера? Ознайомтеся з Ichor на прикладі кластера Talos."
           }
         }
       }
@@ -83293,41 +83212,6 @@
         }
       }
     },
-    "Select your talosconfig (~/.talos/config) or kubeconfig (~/.kube/config) from your workstation, e.g. shared via AirDrop to Files." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choisissez votre talosconfig (~/.talos/config) ou kubeconfig (~/.kube/config) de votre poste, par exemple partagé par AirDrop vers Fichiers."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selecciona tu talosconfig (~/.talos/config) o kubeconfig (~/.kube/config) de tu equipo, por ejemplo compartido por AirDrop a Archivos."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Виберіть свій talosconfig (~/.talos/config) або kubeconfig (~/.kube/config) з робочого комп’ютера, наприклад надісланий через AirDrop у Файли."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle deine talosconfig (~/.talos/config) oder kubeconfig (~/.kube/config) von deinem Rechner, z. B. per AirDrop in Dateien geteilt."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seleziona il tuo talosconfig (~/.talos/config) o kubeconfig (~/.kube/config) dal tuo computer, ad esempio condiviso con AirDrop su File."
-          }
-        }
-      }
-    },
     "This file is not a talosconfig or a kubeconfig." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -88819,6 +88703,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "bash або sh"
+          }
+        }
+      }
+    },
+    "Import a config file" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importer un fichier de configuration"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importar un archivo de configuración"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імпортувати файл конфігурації"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurationsdatei importieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importa un file di configurazione"
+          }
+        }
+      }
+    },
+    "From ~/.talos/config or ~/.kube/config on your workstation. Ichor recognizes which one it is." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depuis ~/.talos/config ou ~/.kube/config sur votre poste de travail. Ichor reconnaît lequel c'est."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desde ~/.talos/config o ~/.kube/config de tu equipo. Ichor reconoce cuál es."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З ~/.talos/config або ~/.kube/config на робочому комп'ютері. Ichor сам визначить, що це."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus ~/.talos/config oder ~/.kube/config auf deinem Rechner. Ichor erkennt, welche es ist."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da ~/.talos/config o ~/.kube/config sulla tua workstation. Ichor riconosce quale dei due è."
           }
         }
       }
