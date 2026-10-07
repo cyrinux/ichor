@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.model.ApiResourceList
 import name.levis.ichor.model.HelmReleaseDetail
 import name.levis.ichor.model.HelmReleaseList
+import name.levis.ichor.model.HelmRollbackPlan
 import name.levis.ichor.model.KUBE_PAGE_SIZE
 import name.levis.ichor.model.KubeEditPreview
 import name.levis.ichor.model.KubeObjectRef
@@ -72,6 +73,16 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
 
     suspend fun helmRelease(namespace: String, name: String): HelmReleaseDetail = kubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(HelmReleaseDetail.serializer(), Ichorgo.kubeHelmRelease(cfg, ctx, server, namespace, name))
+    }
+
+    /** What rolling the release back to [revision] (0 for the previous one) would change, from dry runs. */
+    suspend fun helmRollbackPlan(namespace: String, name: String, revision: Int): HelmRollbackPlan = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(HelmRollbackPlan.serializer(), Ichorgo.kubeHelmRollbackPlan(cfg, ctx, server, namespace, name, revision.toLong()))
+    }
+
+    /** Rolls the release back to [revision] like `helm rollback`, suspending its Flux HelmRelease first. */
+    suspend fun helmRollback(namespace: String, name: String, revision: Int) = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeHelmRollback(cfg, ctx, server, namespace, name, revision.toLong())
     }
 
     /**

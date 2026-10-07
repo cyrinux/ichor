@@ -1,7 +1,7 @@
 import Foundation
 
-// Helm releases, read-only (go/ichorgo/kube_helm.go): what `helm list` and `helm get` show,
-// decoded from the release Secrets by the Go core.
+// Helm releases (go/ichorgo/kube_helm.go): what `helm list` and `helm get` show, decoded from
+// the release Secrets by the Go core, and the rollback plan (kube_helm_rollback.go).
 
 /// The latest revision of a release (KubeHelmReleases).
 public struct HelmReleaseSummary: Decodable, Equatable, Hashable, Identifiable, Sendable {
@@ -153,4 +153,107 @@ public func sortHelmReleases(_ releases: [HelmReleaseSummary]) -> [HelmReleaseSu
     return releases.sorted {
         (rank($0.tone), $0.namespace, $0.name) < (rank($1.tone), $1.namespace, $1.name)
     }
+}
+
+/// One object of a rollback (KubeHelmRollbackPlan): what happens to it, and the dry run's
+/// error when the API server refused the change.
+public struct HelmRollbackChange: Decodable, Equatable, Hashable, Identifiable, Sendable {
+    /// create, update, delete or keep (helm.sh/resource-policy: keep, left in place).
+    public let action: String
+    public let kind: String
+    public let namespace: String
+    public let name: String
+    /// "" when the dry run passed.
+    public let error: String
+
+    public var id: String { "\(action)/\(kind)/\(namespace)/\(name)" }
+
+    public init(action: String, kind: String, namespace: String = "", name: String, error: String = "") {
+        self.action = action
+        self.kind = kind
+        self.namespace = namespace
+        self.name = name
+        self.error = error
+    }
+
+    private enum CodingKeys: String, CodingKey { case action, kind, namespace, name, error }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        action = try c.field(.action, "")
+        kind = try c.field(.kind, "")
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+        error = try c.field(.error, "")
+    }
+
+    /// "Deployment apps/web", "ClusterRole web" for a cluster-scoped object.
+    public var label: String {
+        namespace.isEmpty ? "\(kind) \(name)" : "\(kind) \(namespace)/\(name)"
+    }
+}
+
+/// What rolling a release back to an older revision would do, every change dry-run first
+/// (KubeHelmRollbackPlan). Nothing has changed when it is read.
+public struct HelmRollbackPlan: Decodable, Equatable, Sendable {
+    public let namespace: String
+    public let name: String
+    /// The current revision, and the one rolled back to.
+    public let from: Int
+    public let to: Int
+    /// "site-1.1.0", as `helm list` shows the chart.
+    public let fromChart: String
+    public let toChart: String
+    public let fromAppVersion: String
+    public let toAppVersion: String
+    public let changes: [HelmRollbackChange]
+    /// Objects already as the older revision has them.
+    public let unchanged: Int
+    /// "namespace/name" of the Flux HelmRelease managing the release, "" when none.
+    public let fluxOwner: String
+    /// Why the rollback cannot run; empty when it can.
+    public let blockers: [String]
+
+    public init(namespace: String = "", name: String = "", from: Int = 0, to: Int = 0, fromChart: String = "",
+                toChart: String = "", fromAppVersion: String = "", toAppVersion: String = "",
+                changes: [HelmRollbackChange] = [], unchanged: Int = 0, fluxOwner: String = "", blockers: [String] = []) {
+        self.namespace = namespace
+        self.name = name
+        self.from = from
+        self.to = to
+        self.fromChart = fromChart
+        self.toChart = toChart
+        self.fromAppVersion = fromAppVersion
+        self.toAppVersion = toAppVersion
+        self.changes = changes
+        self.unchanged = unchanged
+        self.fluxOwner = fluxOwner
+        self.blockers = blockers
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case namespace, name, from, to, fromChart, toChart, fromAppVersion, toAppVersion, changes, unchanged, fluxOwner, blockers
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+        from = try c.field(.from, 0)
+        to = try c.field(.to, 0)
+        fromChart = try c.field(.fromChart, "")
+        toChart = try c.field(.toChart, "")
+        fromAppVersion = try c.field(.fromAppVersion, "")
+        toAppVersion = try c.field(.toAppVersion, "")
+        changes = try c.field(.changes, [])
+        unchanged = try c.field(.unchanged, 0)
+        fluxOwner = try c.field(.fluxOwner, "")
+        blockers = try c.field(.blockers, [])
+    }
+
+    /// Nothing stops it: the confirm button is enabled.
+    public var canRun: Bool { blockers.isEmpty }
+
+    /// Some object is marked helm.sh/resource-policy: keep.
+    public var keepsObjects: Bool { changes.contains { $0.action == "keep" } }
 }

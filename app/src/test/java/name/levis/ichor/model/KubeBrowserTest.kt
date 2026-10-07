@@ -177,4 +177,25 @@ class KubeBrowserTest {
         assertEquals(buffer, buffer.append(emptyList()))
         assertEquals(MAX_FOLLOW_LINES, FollowBuffer().append(List(MAX_FOLLOW_LINES + 10) { "x" }).lines.size)
     }
+
+    @Test
+    fun helmRollbackPlanDecodesWithDefaults() {
+        val json = """
+            {"namespace":"web","name":"site","from":3,"to":2,"fromChart":"site-1.1.0","toChart":"site-1.0.0",
+             "fromAppVersion":"1.1","toAppVersion":"1.0","future":true,
+             "changes":[{"action":"update","kind":"Deployment","namespace":"web","name":"site","error":"","extra":1},
+                        {"action":"delete","kind":"ConfigMap","namespace":"web","name":"new","error":"forbidden"}],
+             "unchanged":4,"fluxOwner":"flux-system/site","blockers":null}
+        """.trimIndent()
+        val plan = TalosJson.decodeFromString(HelmRollbackPlan.serializer(), json)
+        assertEquals(3, plan.from)
+        assertEquals(2, plan.to)
+        assertEquals(listOf("update", "delete"), plan.changes.map { it.action })
+        assertEquals("forbidden", plan.changes[1].error)
+        assertEquals(4, plan.unchanged)
+        assertEquals("flux-system/site", plan.fluxOwner)
+        assertTrue(plan.canRun)
+        assertFalse(plan.copy(blockers = listOf("pending")).canRun)
+        assertEquals(HelmRollbackPlan(), TalosJson.decodeFromString(HelmRollbackPlan.serializer(), "{}"))
+    }
 }

@@ -693,7 +693,7 @@ fun Navigation(
         composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }
         composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }
-        composable(Routes.CHECKUP) { CheckupScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.CHECKUP) { CheckupScreen(onBack = { nav.popBackStack() }, onOpenRelease = { ns, name -> nav.navigate(KubeBrowserRoutes.helmRelease(ns, name)) }) }
         composable(
             Routes.FLOWS,
             arguments = listOf(

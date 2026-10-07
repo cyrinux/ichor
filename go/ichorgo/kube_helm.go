@@ -66,10 +66,11 @@ type helmRelease struct {
 	Namespace string `json:"namespace"`
 	Version   int    `json:"version"`
 	Info      struct {
-		Status       string    `json:"status"`
-		LastDeployed time.Time `json:"last_deployed"`
-		Description  string    `json:"description"`
-		Notes        string    `json:"notes"`
+		Status        string    `json:"status"`
+		FirstDeployed time.Time `json:"first_deployed"`
+		LastDeployed  time.Time `json:"last_deployed"`
+		Description   string    `json:"description"`
+		Notes         string    `json:"notes"`
 	} `json:"info"`
 	Chart struct {
 		Metadata struct {
@@ -80,6 +81,11 @@ type helmRelease struct {
 	} `json:"chart"`
 	Config   map[string]any `json:"config"`
 	Manifest string         `json:"manifest"`
+	Hooks    []struct {
+		Name   string   `json:"name"`
+		Kind   string   `json:"kind"`
+		Events []string `json:"events"`
+	} `json:"hooks"`
 }
 
 // helmSecretRef is a release revision as its Secret's labels tell it.
@@ -144,11 +150,10 @@ func KubeHelmRelease(configYAML, contextName, kubeServer, namespace, name string
 			return helmReleaseDetail{}, err
 		}
 
+		refs = helmHistoryRefs(refs, name)
 		if len(refs) == 0 {
 			return helmReleaseDetail{}, fmt.Errorf("no Helm release %s/%s", namespace, name)
 		}
-
-		slices.SortFunc(refs, func(a, b helmSecretRef) int { return cmp.Compare(b.revision, a.revision) })
 
 		rel, err := readHelmRelease(ctx, k, refs[0])
 		if err != nil {
@@ -254,37 +259,47 @@ func readHelmRelease(ctx context.Context, k *kubeClient, ref helmSecretRef) (hel
 // decodeHelmRelease reads a release Secret's "release" value: base64 (the Secret's) of
 // base64 (Helm's) of gzipped JSON. Old releases may lack the gzip.
 func decodeHelmRelease(data string) (helmRelease, error) {
+	raw, err := helmReleaseJSON(data)
+	if err != nil {
+		return helmRelease{}, err
+	}
+
+	var rel helmRelease
+	if err := json.Unmarshal(raw, &rel); err != nil {
+		return helmRelease{}, fmt.Errorf("Helm release: %w", err)
+	}
+
+	return rel, nil
+}
+
+// helmReleaseJSON undoes the two base64 layers and the gzip of a Secret's "release" value.
+func helmReleaseJSON(data string) ([]byte, error) {
 	outer, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-		return helmRelease{}, fmt.Errorf("Helm release: %w", err)
+		return nil, fmt.Errorf("Helm release: %w", err)
 	}
 
 	inner, err := base64.StdEncoding.DecodeString(string(outer))
 	if err != nil {
-		return helmRelease{}, fmt.Errorf("Helm release: %w", err)
+		return nil, fmt.Errorf("Helm release: %w", err)
 	}
 
 	if bytes.HasPrefix(inner, []byte{0x1f, 0x8b}) {
 		r, err := gzip.NewReader(bytes.NewReader(inner))
 		if err != nil {
-			return helmRelease{}, fmt.Errorf("Helm release: %w", err)
+			return nil, fmt.Errorf("Helm release: %w", err)
 		}
 
 		if inner, err = io.ReadAll(io.LimitReader(r, helmReleaseMax+1)); err != nil {
-			return helmRelease{}, fmt.Errorf("Helm release: %w", err)
+			return nil, fmt.Errorf("Helm release: %w", err)
 		}
 
 		if len(inner) > helmReleaseMax {
-			return helmRelease{}, errors.New("Helm release is too large")
+			return nil, errors.New("Helm release is too large")
 		}
 	}
 
-	var rel helmRelease
-	if err := json.Unmarshal(inner, &rel); err != nil {
-		return helmRelease{}, fmt.Errorf("Helm release: %w", err)
-	}
-
-	return rel, nil
+	return inner, nil
 }
 
 func summarizeRelease(rel helmRelease, ref helmSecretRef) helmReleaseSummary {
@@ -314,13 +329,29 @@ func demoHelmReleases() helmReleaseList {
 func demoHelmRelease(namespace, name string) helmReleaseDetail {
 	for _, r := range demoHelmReleases().Releases {
 		if r.Namespace == namespace && r.Name == name {
+			day := int64(24 * 60 * 60)
+
 			return helmReleaseDetail{
 				helmReleaseSummary: r, Description: "Upgrade complete", Values: "replicaCount: 2\n",
 				Manifest: "# Demo cluster: no real manifest.\n",
-				History:  []helmRevision{{Revision: r.Revision, Status: r.Status, Updated: r.Updated}},
+				History: []helmRevision{
+					{Revision: r.Revision, Status: r.Status, Updated: r.Updated},
+					{Revision: r.Revision - 1, Status: helmStatusSuperseded, Updated: r.Updated - 9*day},
+					{Revision: r.Revision - 2, Status: helmStatusSuperseded, Updated: r.Updated - 30*day},
+				},
 			}
 		}
 	}
 
 	return helmReleaseDetail{helmReleaseSummary: helmReleaseSummary{Name: name, Namespace: namespace}, History: []helmRevision{}}
+}
+
+// demoPreviousVersion is the chart version before v: its last number one lower.
+func demoPreviousVersion(v string) string {
+	i := strings.LastIndexByte(v, '.')
+	if n, err := strconv.Atoi(v[i+1:]); err == nil && n > 0 {
+		return v[:i+1] + strconv.Itoa(n-1)
+	}
+
+	return v
 }

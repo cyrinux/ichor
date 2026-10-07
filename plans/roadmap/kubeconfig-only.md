@@ -331,7 +331,7 @@ DigitalOcean, Rancher, OIDC). Against the Kubernetes side of this app:
 | Exec / terminal | `kube_exec*.go` | none |
 | Events | only machined events (Talos) | Kubernetes Events list per object and namespace (S) |
 | Port-forward | none | SPDY/websocket port-forward to a local port for the phone's browser (M; useful for dashboards) |
-| Helm releases | none | list/history/values from `sh.helm.release.v1` Secrets (gzip+base64 JSON), rollback later (M) |
+| Helm releases | list, history, values, notes, manifest, rollback ([D11](devops/11-helm.md)) | none |
 | Prometheus dashboards | presets + service-proxy queries | parity, nothing to do |
 | Desktop app | none | out of scope |
 
@@ -363,7 +363,7 @@ to learn its mechanisms, not to copy code. What it does and how we do it better:
 | Streaming | logs follow, exec and port-forward go through a local Go HTTP/WebSocket server, credentials in request headers | no local server: gomobile callbacks as `kube_exec_stream.go` and `kube_hubble_stream.go` already do. Port-forward binds `127.0.0.1` only, random port, one session per forward, stops with the screen (Android foreground service if kept in background) |
 | Resource browser | hardcoded kinds, one widget each; CRDs via CRD list + client-side `additionalPrinterColumns` jsonPath; no watch, refresh button | `/api` + `/apis` discovery, server-side Table (`as=Table`) for every kind incl. CRDs, so no per-kind code and the columns match `kubectl get`; watch for live lists on open screens |
 | Edit | YAML → JSON Patch diff, no `resourceVersion` check (overwrites a concurrent change) | server-side apply with `dryRun=All` first, show the diff (we have `kube_diff*.go`), apply with field manager `ichor`; conflict = clear message, never a silent overwrite |
-| Helm | Helm SDK (list, history, rollback, uninstall) | read-only first, decoding `sh.helm.release.v1` Secrets ourselves (base64 → gzip → JSON, no Helm SDK in the binary); rollback later and only if worth the size |
+| Helm | Helm SDK (list, history, rollback, uninstall) | decoding `sh.helm.release.v1` Secrets ourselves (base64 → gzip → JSON, no Helm SDK in the binary); rollback done the same way, with a dry-run plan ([D11](devops/11-helm.md)) |
 | Node shell | privileged busybox `chroot /host` pod | Talos clusters keep the Talos API (no shell needed); for other clusters, an ephemeral debug container on the node with an explicit "privileged pod" warning, off by default |
 | Help content | advises a cluster-admin ServiceAccount | least-privilege SA templates (read-only, read + restart, etc.) with copyable YAML |
 
