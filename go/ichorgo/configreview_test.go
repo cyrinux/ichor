@@ -149,11 +149,21 @@ func TestSchemaCachedDoesNotWaitForADownload(t *testing.T) {
 		_, _ = w.Write([]byte(testSchema)) //nolint:errcheck
 	}))
 	defer srv.Close()
-	defer close(release)
 
 	store := testSchemaStore(srv, t.TempDir())
+	prepared := make(chan struct{})
 
-	go store.prepare(context.Background(), "v1.13.6") //nolint:errcheck
+	go func() {
+		defer close(prepared)
+
+		store.prepare(context.Background(), "v1.13.6") //nolint:errcheck
+	}()
+
+	// The download writes into the temp dir: it must end before the test's cleanup removes it.
+	defer func() {
+		close(release)
+		<-prepared
+	}()
 
 	<-started
 

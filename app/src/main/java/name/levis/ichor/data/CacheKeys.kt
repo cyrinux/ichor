@@ -4,6 +4,7 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
+import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.KubeCronJob
 import name.levis.ichor.model.KubeWorkload
@@ -27,6 +28,9 @@ const val WORKLOADS = "workloads"
 const val PODS = "pods"
 const val CRON_JOBS = "cronjobs"
 const val NAMESPACES = "namespaces"
+
+/** The home of a cluster added from a kubeconfig (its nodes, from the Kubernetes API). */
+const val KUBE_NODES = "kubenodes"
 
 /**
  * Keys of a Kubernetes list loaded page by page for [namespace] (null: every one), kept like
@@ -52,6 +56,7 @@ fun imagesKey(node: String) = "images|$node"
  */
 internal val PERSISTED: Map<String, KSerializer<*>> = mapOf(
     OVERVIEW to ClusterOverview.serializer(),
+    KUBE_NODES to KubeNodesOverview.serializer(),
     ETCD to EtcdOverview.serializer(),
     KUBESPAN to KubeSpanOverview.serializer(),
     TOPOLOGY to ClusterTopology.serializer(),

@@ -26,6 +26,33 @@ final class BackupTests: XCTestCase {
         ))
     }
 
+    func testFormatTwoOnlyWithAKubeconfig() {
+        XCTAssertEqual(backupPayloadFormat(kubeconfig: nil), 1)
+        XCTAssertEqual(backupPayloadFormat(kubeconfig: " \n"), 1)
+        XCTAssertEqual(backupPayloadFormat(kubeconfig: "apiVersion: v1\nkind: Config\n"), 2)
+    }
+
+    func testKubeconfigOnlyPayload() throws {
+        // Android may leave the empty talosconfig out.
+        let json = #"{"format":2,"platform":"android","kubeconfig":"kind: Config\n","activeContextIndex":0}"#
+        let payload = try JSONDecoder().decode(BackupPayload.self, from: Data(json.utf8))
+        XCTAssertEqual(payload.talosconfig, "")
+        XCTAssertNil(restoredTalosconfig(payload))
+        XCTAssertEqual(restoredKubeconfig(payload), "kind: Config\n")
+
+        // A format 1 payload's kubeconfig is not one (older apps never wrote it).
+        let old = BackupPayload(format: 1, talosconfig: "context: lab\n", kubeconfig: "kind: Config\n")
+        XCTAssertNil(restoredKubeconfig(old))
+        XCTAssertEqual(restoredTalosconfig(old), "context: lab\n")
+    }
+
+    func testPayloadWithoutKubeconfigLeavesItOut() throws {
+        let payload = BackupPayload(format: backupPayloadFormat(kubeconfig: nil), talosconfig: "context: lab\n")
+        let json = String(decoding: try JSONEncoder().encode(payload), as: UTF8.self)
+        XCTAssertFalse(json.contains("kubeconfig"))
+        XCTAssertTrue(json.contains(#""format":1"#))
+    }
+
     func testMinimalPayloadDecodes() throws {
         let payload = try JSONDecoder().decode(BackupPayload.self, from: Data(#"{"format":1,"talosconfig":"x"}"#.utf8))
         XCTAssertNil(payload.settings)

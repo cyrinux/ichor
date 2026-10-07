@@ -29,6 +29,7 @@ import name.levis.ichor.data.TalosRepository
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
+import name.levis.ichor.model.isKube
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.RoleNotice
 import name.levis.ichor.security.AppLock
@@ -55,8 +56,9 @@ private sealed interface ExportState {
 }
 
 /**
- * Exports the cluster's admin kubeconfig (os:admin role) to a file the user picks, then offers
- * to open kubenav, which imports kubeconfigs through its own file picker (it has no intents).
+ * Exports the cluster's admin kubeconfig (os:admin role), or the stored one of a cluster added
+ * from a kubeconfig, to a file the user picks, then offers to open kubenav, which imports
+ * kubeconfigs through its own file picker (it has no intents).
  */
 @Composable
 fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: ContextSummary) {
@@ -99,7 +101,8 @@ fun KubeconfigSection(talos: TalosRepository, appLock: AppLock, talosContext: Co
     SectionTitle(stringResource(R.string.settings_kube_section))
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            MutedText(stringResource(R.string.settings_kube_desc))
+            // A cluster added from a kubeconfig exports that kubeconfig, not one Talos issues.
+            MutedText(stringResource(if (talosContext.isKube) R.string.settings_kube_desc_imported else R.string.settings_kube_desc))
             if (!talosContext.allows(Feature.KUBECONFIG)) {
                 RoleNotice(Feature.KUBECONFIG, talosContext.roles)
             } else OutlinedButton(

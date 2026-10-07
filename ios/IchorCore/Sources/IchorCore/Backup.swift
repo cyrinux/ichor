@@ -13,8 +13,12 @@ public struct BackupPayload: Codable, Equatable, Sendable {
     public var platform: String?
     /// Unix seconds.
     public var createdAt: Int64?
+    /// "" when only clusters added from a kubeconfig are stored (format 2).
     public var talosconfig: String
-    /// The cluster on screen, by position: the screenshot mode masks context names.
+    /// The stored kubeconfig (clusters added without Talos), format 2 only; nil when there is none.
+    public var kubeconfig: String?
+    /// The cluster on screen, by position (Talos clusters, then kubeconfig ones): the
+    /// screenshot mode masks context names.
     public var activeContextIndex: Int?
     public var settings: BackupSettings?
     /// Per-cluster options by context fingerprint, which both apps compute alike in the Go core.
@@ -22,15 +26,34 @@ public struct BackupPayload: Codable, Equatable, Sendable {
 
     public init(
         format: Int = backupFormat, platform: String? = nil, createdAt: Int64? = nil, talosconfig: String,
-        activeContextIndex: Int? = nil, settings: BackupSettings? = nil, clusters: [String: BackupCluster]? = nil
+        kubeconfig: String? = nil, activeContextIndex: Int? = nil, settings: BackupSettings? = nil,
+        clusters: [String: BackupCluster]? = nil
     ) {
         self.format = format
         self.platform = platform
         self.createdAt = createdAt
         self.talosconfig = talosconfig
+        self.kubeconfig = kubeconfig
         self.activeContextIndex = activeContextIndex
         self.settings = settings
         self.clusters = clusters
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case format, platform, createdAt, talosconfig, kubeconfig, activeContextIndex, settings, clusters
+    }
+
+    // A format 2 payload may leave the talosconfig out (or null) when it only holds a kubeconfig.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        format = try c.decode(Int.self, forKey: .format)
+        platform = try c.decodeIfPresent(String.self, forKey: .platform)
+        createdAt = try c.decodeIfPresent(Int64.self, forKey: .createdAt)
+        talosconfig = try c.field(.talosconfig, "")
+        kubeconfig = try c.decodeIfPresent(String.self, forKey: .kubeconfig)
+        activeContextIndex = try c.decodeIfPresent(Int.self, forKey: .activeContextIndex)
+        settings = try c.decodeIfPresent(BackupSettings.self, forKey: .settings)
+        clusters = try c.decodeIfPresent([String: BackupCluster].self, forKey: .clusters)
     }
 }
 
@@ -96,6 +119,29 @@ public struct BackupWolTarget: Codable, Equatable, Sendable {
 }
 
 public let backupFormat = 1
+
+/// The format of a payload holding a kubeconfig: older apps refuse it ("update the app")
+/// instead of restoring it without its kubeconfig clusters.
+public let backupFormatKubeconfig = 2
+
+/// The format to write: 2 only when there are kubeconfig clusters, so backups of Talos
+/// clusters alone stay readable by older apps. Same rule as Android.
+public func backupPayloadFormat(kubeconfig: String?) -> Int {
+    let kube = kubeconfig?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    return kube.isEmpty ? backupFormat : backupFormatKubeconfig
+}
+
+/// The kubeconfig of a restored payload: only a format 2 one carries it, nil when it holds none.
+public func restoredKubeconfig(_ payload: BackupPayload) -> String? {
+    guard payload.format >= backupFormatKubeconfig else { return nil }
+    let kube = payload.kubeconfig ?? ""
+    return kube.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : kube
+}
+
+/// The talosconfig of a restored payload, nil when it holds none (a format 2 kubeconfig-only one).
+public func restoredTalosconfig(_ payload: BackupPayload) -> String? {
+    payload.talosconfig.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : payload.talosconfig
+}
 
 /// The shortest passphrase the Go core accepts (BackupMinPassphrase), in characters.
 public let backupMinPassphrase = 12

@@ -43,7 +43,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Camera preview that reports the first QR code payload once.
- * Generate one on the desktop with: qrencode -r ~/.talos/config -o talosconfig.png
+ * Generate one on the desktop with: qrencode -r ~/.talos/config -o talosconfig.png, or for a
+ * config too large for one code, the compressed form (see HelpDialog: ichor-config:).
  */
 @Composable
 fun QrScanner(onScanned: (String) -> Unit, modifier: Modifier = Modifier) {

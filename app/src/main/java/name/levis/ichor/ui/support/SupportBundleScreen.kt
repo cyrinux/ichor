@@ -123,7 +123,7 @@ fun SupportBundleScreen(
                 )
             }
             when {
-                summary != null && !summary.allows(Feature.SUPPORT_BUNDLE) -> item { RoleNotice(Feature.SUPPORT_BUNDLE, summary.roles) }
+                summary != null && !summary.allows(Feature.SUPPORT_BUNDLE) -> item { RoleNotice(Feature.SUPPORT_BUNDLE, summary) }
                 support.notice != null -> item { support.notice?.let { InfoNotice(it.text()) } }
                 else -> item { RunCard(state, vm) }
             }

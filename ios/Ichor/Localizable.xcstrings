@@ -83327,6 +83327,1616 @@
           }
         }
       }
+    },
+    "Select your talosconfig (~/.talos/config) or kubeconfig (~/.kube/config) from your workstation, e.g. shared via AirDrop to Files." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez votre talosconfig (~/.talos/config) ou kubeconfig (~/.kube/config) de votre poste, par exemple partagé par AirDrop vers Fichiers."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona tu talosconfig (~/.talos/config) o kubeconfig (~/.kube/config) de tu equipo, por ejemplo compartido por AirDrop a Archivos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть свій talosconfig (~/.talos/config) або kubeconfig (~/.kube/config) з робочого комп’ютера, наприклад надісланий через AirDrop у Файли."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle deine talosconfig (~/.talos/config) oder kubeconfig (~/.kube/config) von deinem Rechner, z. B. per AirDrop in Dateien geteilt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleziona il tuo talosconfig (~/.talos/config) o kubeconfig (~/.kube/config) dal tuo computer, ad esempio condiviso con AirDrop su File."
+          }
+        }
+      }
+    },
+    "This file is not a talosconfig or a kubeconfig." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce fichier n'est ni un talosconfig ni un kubeconfig."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este archivo no es un talosconfig ni un kubeconfig."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей файл не є ні talosconfig, ні kubeconfig."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Datei ist weder eine talosconfig noch eine kubeconfig."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo file non è né un talosconfig né un kubeconfig."
+          }
+        }
+      }
+    },
+    "Choose the clusters to add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez les clusters à ajouter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige los clústeres que añadir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть кластери для додавання"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle die Cluster zum Hinzufügen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli i cluster da aggiungere"
+          }
+        }
+      }
+    },
+    "A kubeconfig with a client certificate or a token works. Cloud sign-ins (EKS, GKE, OIDC…) come in a later version." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un kubeconfig avec un certificat client ou un jeton fonctionne. Les connexions cloud (EKS, GKE, OIDC…) arrivent dans une prochaine version."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funciona un kubeconfig con un certificado de cliente o un token. Los inicios de sesión en la nube (EKS, GKE, OIDC…) llegarán en una versión posterior."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Працює kubeconfig із клієнтським сертифікатом або токеном. Хмарні входи (EKS, GKE, OIDC…) з’являться в наступній версії."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine kubeconfig mit Client-Zertifikat oder Token funktioniert. Cloud-Anmeldungen (EKS, GKE, OIDC…) kommen in einer späteren Version."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funziona un kubeconfig con un certificato client o un token. Gli accessi cloud (EKS, GKE, OIDC…) arriveranno in una versione successiva."
+          }
+        }
+      }
+    },
+    "Sign-in" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connexion"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicio de sesión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вхід"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accesso"
+          }
+        }
+      }
+    },
+    "Signed in as" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecté en tant que"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesión iniciada como"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увійшли як"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angemeldet als"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accesso come"
+          }
+        }
+      }
+    },
+    "The server certificate is not checked (insecure-skip-tls-verify)." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le certificat du serveur n'est pas vérifié (insecure-skip-tls-verify)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El certificado del servidor no se comprueba (insecure-skip-tls-verify)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сертифікат сервера не перевіряється (insecure-skip-tls-verify)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Serverzertifikat wird nicht geprüft (insecure-skip-tls-verify)."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il certificato del server non viene verificato (insecure-skip-tls-verify)."
+          }
+        }
+      }
+    },
+    "Replace %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplacer %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reemplazar %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінити %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ersetzen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sostituisci %@"
+          }
+        }
+      }
+    },
+    "The name is taken: added as %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nom est déjà pris : ajouté sous %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nombre ya existe: se añade como %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва зайнята: додано як %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Name ist vergeben: hinzugefügt als %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il nome è già usato: aggiunto come %@."
+          }
+        }
+      }
+    },
+    "Client certificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificat client"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificado de cliente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Клієнтський сертифікат"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Client-Zertifikat"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificato client"
+          }
+        }
+      }
+    },
+    "Exec plugin" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugin exec"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugin exec"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плагін exec"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exec-Plugin"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugin exec"
+          }
+        }
+      }
+    },
+    "Auth provider" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fournisseur d'authentification"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proveedor de autenticación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Постачальник автентифікації"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auth-Provider"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Provider di autenticazione"
+          }
+        }
+      }
+    },
+    "Username and password" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom d'utilisateur et mot de passe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuario y contraseña"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ім’я користувача та пароль"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzername und Passwort"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome utente e password"
+          }
+        }
+      }
+    },
+    "The context names a cluster the file does not have." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le contexte désigne un cluster absent du fichier."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El contexto nombra un clúster que el archivo no tiene."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контекст указує на кластер, якого немає у файлі."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Kontext nennt einen Cluster, den die Datei nicht enthält."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il contesto indica un cluster che il file non contiene."
+          }
+        }
+      }
+    },
+    "The context names a user the file does not have." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le contexte désigne un utilisateur absent du fichier."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El contexto nombra un usuario que el archivo no tiene."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контекст указує на користувача, якого немає у файлі."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Kontext nennt einen Benutzer, den die Datei nicht enthält."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il contesto indica un utente che il file non contiene."
+          }
+        }
+      }
+    },
+    "The server is not https: Ichor only connects over TLS." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur n'est pas en https : Ichor ne se connecte qu'en TLS."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor no es https: Ichor solo se conecta por TLS."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер не https: Ichor підключається лише через TLS."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server ist nicht https: Ichor verbindet sich nur über TLS."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il server non è https: Ichor si connette solo tramite TLS."
+          }
+        }
+      }
+    },
+    "Certificates or keys are file paths. Run kubectl config view --flatten --minify and import its output." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les certificats ou clés sont des chemins de fichiers. Lancez kubectl config view --flatten --minify et importez sa sortie."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los certificados o claves son rutas de archivo. Ejecuta kubectl config view --flatten --minify e importa su salida."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сертифікати або ключі вказано як шляхи до файлів. Виконайте kubectl config view --flatten --minify та імпортуйте результат."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikate oder Schlüssel sind Dateipfade. Führe kubectl config view --flatten --minify aus und importiere die Ausgabe."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificati o chiavi sono percorsi di file. Esegui kubectl config view --flatten --minify e importa il suo output."
+          }
+        }
+      }
+    },
+    "Connecting through a proxy (proxy-url) is not supported." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La connexion via un proxy (proxy-url) n'est pas prise en charge."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La conexión a través de un proxy (proxy-url) no es compatible."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підключення через проксі (proxy-url) не підтримується."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungen über einen Proxy (proxy-url) werden nicht unterstützt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La connessione tramite un proxy (proxy-url) non è supportata."
+          }
+        }
+      }
+    },
+    "Signing in with a username and password is not supported." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La connexion par nom d'utilisateur et mot de passe n'est pas prise en charge."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El inicio de sesión con usuario y contraseña no es compatible."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вхід з ім’ям користувача та паролем не підтримується."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anmeldung mit Benutzername und Passwort wird nicht unterstützt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'accesso con nome utente e password non è supportato."
+          }
+        }
+      }
+    },
+    "Signing in with %@ comes in a later version." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La connexion avec %@ arrive dans une prochaine version."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El inicio de sesión con %@ llegará en una versión posterior."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вхід через %@ з’явиться в наступній версії."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anmeldung mit %@ kommt in einer späteren Version."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'accesso con %@ arriverà in una versione successiva."
+          }
+        }
+      }
+    },
+    "This exec plugin cannot run on a phone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce plugin exec ne peut pas tourner sur un téléphone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este plugin exec no puede ejecutarse en un teléfono."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей плагін exec не може працювати на телефоні."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Exec-Plugin kann nicht auf einem Telefon laufen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo plugin exec non può essere eseguito su un telefono."
+          }
+        }
+      }
+    },
+    "This exec plugin cannot run on a phone: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce plugin exec ne peut pas tourner sur un téléphone : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este plugin exec no puede ejecutarse en un teléfono: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей плагін exec не може працювати на телефоні: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Exec-Plugin kann nicht auf einem Telefon laufen: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo plugin exec non può essere eseguito su un telefono: %@"
+          }
+        }
+      }
+    },
+    "The user has no credentials: no client certificate and no token." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'utilisateur n'a pas d'identifiants : ni certificat client ni jeton."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El usuario no tiene credenciales: ni certificado de cliente ni token."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Користувач не має облікових даних: ні клієнтського сертифіката, ні токена."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Benutzer hat keine Zugangsdaten: weder Client-Zertifikat noch Token."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'utente non ha credenziali: né certificato client né token."
+          }
+        }
+      }
+    },
+    "This context is not valid." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce contexte n'est pas valide."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este contexto no es válido."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей контекст недійсний."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Kontext ist ungültig."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo contesto non è valido."
+          }
+        }
+      }
+    },
+    "This context is not valid: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce contexte n'est pas valide : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este contexto no es válido: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей контекст недійсний: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Kontext ist ungültig: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo contesto non è valido: %@"
+          }
+        }
+      }
+    },
+    "The backup holds no cluster." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sauvegarde ne contient aucun cluster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La copia de seguridad no contiene ningún clúster."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Резервна копія не містить жодного кластера."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Sicherung enthält keinen Cluster."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il backup non contiene alcun cluster."
+          }
+        }
+      }
+    },
+    "Nodes ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nœuds prêts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nodos listos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готові вузли"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereite Nodes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nodi pronti"
+          }
+        }
+      }
+    },
+    "These credentials may not list the nodes. The other screens show what they may read." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces identifiants ne peuvent pas lister les nœuds. Les autres écrans montrent ce qu'ils peuvent lire."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estas credenciales no pueden listar los nodos. Las demás pantallas muestran lo que pueden leer."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ці облікові дані не можуть переглядати вузли. Інші екрани показують те, що їм дозволено читати."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Zugangsdaten dürfen die Nodes nicht auflisten. Die anderen Ansichten zeigen, was sie lesen dürfen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queste credenziali non possono elencare i nodi. Le altre schermate mostrano ciò che possono leggere."
+          }
+        }
+      }
+    },
+    "%@ CPU" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ CPU"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ CPU"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ЦП"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ CPU"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ CPU"
+          }
+        }
+      }
+    },
+    "The kubeconfig credentials have expired. Import a new kubeconfig." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les identifiants du kubeconfig ont expiré. Importez un nouveau kubeconfig."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las credenciales del kubeconfig han caducado. Importa un kubeconfig nuevo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Облікові дані kubeconfig закінчилися. Імпортуйте новий kubeconfig."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Zugangsdaten der kubeconfig sind abgelaufen. Importiere eine neue kubeconfig."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le credenziali del kubeconfig sono scadute. Importa un nuovo kubeconfig."
+          }
+        }
+      }
+    },
+    "The kubeconfig credentials expire %@. Import a new kubeconfig before then." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les identifiants du kubeconfig expirent %@. Importez un nouveau kubeconfig d'ici là."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las credenciales del kubeconfig caducan %@. Importa un kubeconfig nuevo antes."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Облікові дані kubeconfig спливають %@. Імпортуйте новий kubeconfig до того часу."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Zugangsdaten der kubeconfig laufen %@ ab. Importiere vorher eine neue kubeconfig."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le credenziali del kubeconfig scadono %@. Importa un nuovo kubeconfig prima di allora."
+          }
+        }
+      }
+    },
+    "Background checks watch Talos clusters: the cluster on screen, added from a kubeconfig, is not checked." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les vérifications en arrière-plan surveillent les clusters Talos : le cluster affiché, ajouté depuis un kubeconfig, n'est pas vérifié."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las comprobaciones en segundo plano vigilan los clústeres Talos: el clúster en pantalla, añadido desde un kubeconfig, no se comprueba."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фонові перевірки стежать за кластерами Talos: кластер на екрані, доданий з kubeconfig, не перевіряється."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundprüfungen überwachen Talos-Cluster: Der angezeigte Cluster, aus einer kubeconfig hinzugefügt, wird nicht geprüft."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I controlli in background sorvegliano i cluster Talos: il cluster sullo schermo, aggiunto da un kubeconfig, non viene controllato."
+          }
+        }
+      }
+    },
+    "Delete all clusters" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer tous les clusters"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar todos los clústeres"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити всі кластери"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Cluster löschen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina tutti i cluster"
+          }
+        }
+      }
+    },
+    "Delete all clusters?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer tous les clusters ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar todos los clústeres?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити всі кластери?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Cluster löschen?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminare tutti i cluster?"
+          }
+        }
+      }
+    },
+    "The kubeconfig of this cluster, as it was imported. Anyone with this file has the access it grants: keep it private." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le kubeconfig de ce cluster, tel qu'il a été importé. Quiconque possède ce fichier a l'accès qu'il accorde : gardez-le privé."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El kubeconfig de este clúster, tal como se importó. Quien tenga este archivo tiene el acceso que concede: mantenlo privado."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubeconfig цього кластера в тому вигляді, в якому його імпортовано. Будь-хто з цим файлом має доступ, який він надає: зберігайте його в таємниці."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die kubeconfig dieses Clusters, wie sie importiert wurde. Wer diese Datei hat, hat den Zugriff, den sie gewährt: halte sie privat."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il kubeconfig di questo cluster, così come è stato importato. Chiunque abbia questo file ha l'accesso che concede: tienilo privato."
+          }
+        }
+      }
+    },
+    "Any Kubernetes cluster: a kubeconfig" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout cluster Kubernetes : un kubeconfig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cualquier clúster Kubernetes: un kubeconfig"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Будь-який кластер Kubernetes: kubeconfig"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeder Kubernetes-Cluster: eine kubeconfig"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualsiasi cluster Kubernetes: un kubeconfig"
+          }
+        }
+      }
+    },
+    "A kubeconfig with a client certificate or a token works: k3s, kubeadm, RKE2 or a managed cluster with a ServiceAccount. Cloud sign-ins (EKS, GKE, OIDC…) come in a later version." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un kubeconfig avec un certificat client ou un jeton fonctionne : k3s, kubeadm, RKE2 ou un cluster managé avec un ServiceAccount. Les connexions cloud (EKS, GKE, OIDC…) arrivent dans une prochaine version."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funciona un kubeconfig con un certificado de cliente o un token: k3s, kubeadm, RKE2 o un clúster gestionado con un ServiceAccount. Los inicios de sesión en la nube (EKS, GKE, OIDC…) llegarán en una versión posterior."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Працює kubeconfig із клієнтським сертифікатом або токеном: k3s, kubeadm, RKE2 або керований кластер із ServiceAccount. Хмарні входи (EKS, GKE, OIDC…) з’являться в наступній версії."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine kubeconfig mit Client-Zertifikat oder Token funktioniert: k3s, kubeadm, RKE2 oder ein verwalteter Cluster mit einem ServiceAccount. Cloud-Anmeldungen (EKS, GKE, OIDC…) kommen in einer späteren Version."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funziona un kubeconfig con un certificato client o un token: k3s, kubeadm, RKE2 o un cluster gestito con un ServiceAccount. Gli accessi cloud (EKS, GKE, OIDC…) arriveranno in una versione successiva."
+          }
+        }
+      }
+    },
+    "Keep only the cluster to add, with its certificates in the file:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne gardez que le cluster à ajouter, avec ses certificats dans le fichier :"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conserva solo el clúster que añadir, con sus certificados en el archivo:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Залиште лише кластер для додавання, із сертифікатами у файлі:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behalte nur den hinzuzufügenden Cluster, mit seinen Zertifikaten in der Datei:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni solo il cluster da aggiungere, con i suoi certificati nel file:"
+          }
+        }
+      }
+    },
+    "Too large for a QR code? Compress it, the app expands it:" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trop grand pour un QR code ? Compressez-le, l'app le décompresse :"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Demasiado grande para un código QR? Comprímelo, la app lo descomprime:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завеликий для QR-коду? Стисніть його, застосунок розпакує:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu groß für einen QR-Code? Komprimiere ihn, die App entpackt ihn:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Troppo grande per un codice QR? Comprimilo, l'app lo decomprime:"
+          }
+        }
+      }
+    },
+    "Prefer a ServiceAccount with read-only rights over your admin credentials." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préférez un ServiceAccount en lecture seule à vos identifiants admin."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prefiere un ServiceAccount de solo lectura a tus credenciales de administrador."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надавайте перевагу ServiceAccount лише для читання замість облікових даних адміністратора."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nutze lieber einen ServiceAccount mit Leserechten als deine Admin-Zugangsdaten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preferisci un ServiceAccount in sola lettura alle tue credenziali di amministratore."
+          }
+        }
+      }
+    },
+    "A stored config could not be read. Nothing is changed until it can be." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une config enregistrée n'a pas pu être lue. Rien n'est modifié tant qu'elle ne peut pas l'être."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo leer una configuración guardada. No se cambia nada hasta que se pueda leer."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося прочитати збережену конфігурацію. Нічого не змінюється, доки її не вдасться прочитати."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine gespeicherte Konfiguration konnte nicht gelesen werden. Nichts wird geändert, bis sie lesbar ist."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è stato possibile leggere una configurazione salvata. Nulla viene modificato finché non sarà leggibile."
+          }
+        }
+      }
+    },
+    "The stored config could not be read" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La config enregistrée n'a pas pu être lue"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo leer la configuración guardada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося прочитати збережену конфігурацію"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die gespeicherte Konfiguration konnte nicht gelesen werden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è stato possibile leggere la configurazione salvata"
+          }
+        }
+      }
+    },
+    "Try again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réessayer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintentar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спробувати ще раз"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut versuchen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riprova"
+          }
+        }
+      }
+    },
+    "Your kubeconfig is still on this device, but it could not be read just now. Try again; if it keeps failing, delete the stored clusters and import them again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre kubeconfig est toujours sur cet appareil, mais il n'a pas pu être lu pour l'instant. Réessayez ; si l'échec persiste, supprimez les clusters enregistrés et importez-les à nouveau."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu kubeconfig sigue en este dispositivo, pero no se pudo leer ahora. Inténtalo de nuevo; si sigue fallando, elimina los clústeres guardados e impórtalos otra vez."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш kubeconfig усе ще на цьому пристрої, але зараз його не вдалося прочитати. Спробуйте ще раз; якщо помилка повторюється, видаліть збережені кластери та імпортуйте їх знову."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine kubeconfig ist noch auf diesem Gerät, konnte aber gerade nicht gelesen werden. Versuche es erneut; wenn es weiter fehlschlägt, lösche die gespeicherten Cluster und importiere sie neu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo kubeconfig è ancora su questo dispositivo, ma al momento non è stato possibile leggerlo. Riprova; se continua a non riuscire, elimina i cluster salvati e importali di nuovo."
+          }
+        }
+      }
+    },
+    "Your talosconfig is still on this device, but it could not be read just now. Try again; if it keeps failing, delete the stored clusters and import them again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre talosconfig est toujours sur cet appareil, mais il n'a pas pu être lu pour l'instant. Réessayez ; si l'échec persiste, supprimez les clusters enregistrés et importez-les à nouveau."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu talosconfig sigue en este dispositivo, pero no se pudo leer ahora. Inténtalo de nuevo; si sigue fallando, elimina los clústeres guardados e impórtalos otra vez."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш talosconfig усе ще на цьому пристрої, але зараз його не вдалося прочитати. Спробуйте ще раз; якщо помилка повторюється, видаліть збережені кластери та імпортуйте їх знову."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine talosconfig ist noch auf diesem Gerät, konnte aber gerade nicht gelesen werden. Versuche es erneut; wenn es weiter fehlschlägt, lösche die gespeicherten Cluster und importiere sie neu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo talosconfig è ancora su questo dispositivo, ma al momento non è stato possibile leggerlo. Riprova; se continua a non riuscire, elimina i cluster salvati e importali di nuovo."
+          }
+        }
+      }
+    },
+    "Your talosconfig and kubeconfig are still on this device, but they could not be read just now. Try again; if it keeps failing, delete the stored clusters and import them again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre talosconfig et votre kubeconfig sont toujours sur cet appareil, mais ils n'ont pas pu être lus pour l'instant. Réessayez ; si l'échec persiste, supprimez les clusters enregistrés et importez-les à nouveau."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu talosconfig y tu kubeconfig siguen en este dispositivo, pero no se pudieron leer ahora. Inténtalo de nuevo; si sigue fallando, elimina los clústeres guardados e impórtalos otra vez."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваші talosconfig і kubeconfig усе ще на цьому пристрої, але зараз їх не вдалося прочитати. Спробуйте ще раз; якщо помилка повторюється, видаліть збережені кластери та імпортуйте їх знову."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine talosconfig und kubeconfig sind noch auf diesem Gerät, konnten aber gerade nicht gelesen werden. Versuche es erneut; wenn es weiter fehlschlägt, lösche die gespeicherten Cluster und importiere sie neu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo talosconfig e il tuo kubeconfig sono ancora su questo dispositivo, ma al momento non è stato possibile leggerli. Riprova; se continua a non riuscire, elimina i cluster salvati e importali di nuovo."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

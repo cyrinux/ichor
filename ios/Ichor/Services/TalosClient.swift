@@ -81,19 +81,6 @@ struct TalosClient: Sendable {
         try await run { IchorgoReplaceContextCredentials(stored, generated, context, $0) }
     }
 
-    /// The contexts of `added` named like one of `stored`: the free name each gets, and the
-    /// stored context of the same cluster (same CA) it may replace instead.
-    static func importConflicts(stored: String, added: String) async throws -> [ImportConflict] {
-        try await json { IchorgoImportConflicts(stored, added, $0) }
-    }
-
-    /// `stored` with the contexts of `added` added: a context per cluster. A stored context is
-    /// never overwritten: one of that name is added as name-1, unless `choices` (a JSON array
-    /// of {index, name, replace}, see MergeConfig in Go) names it or replaces the same cluster.
-    static func mergeConfig(stored: String, added: String, choices: String = "") async throws -> String {
-        try await run { IchorgoMergeConfig(stored, added, choices, $0) }
-    }
-
     /// The backup file of `payload` (backup JSON) sealed with `passphrase` (Argon2id, AES-256-GCM).
     static func encryptBackup(payload: String, passphrase: String) async throws -> Data {
         try await run { IchorgoEncryptBackup(payload, passphrase, $0) ?? Data() }

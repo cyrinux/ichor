@@ -18,7 +18,7 @@ struct BackupSection: View {
     var body: some View {
         Section {
             Button("Back up clusters and settings…") { Task { await startBackup() } }
-                .disabled(model.yaml == nil)
+                .disabled(!model.hasConfig)
                 .fileExporter(isPresented: $exporting, document: document, contentType: .ichorBackup,
                               defaultFilename: backupFileName(date: Date())) { result in
                     switch result {

@@ -31,6 +31,20 @@ public struct ConfigSummary: Decodable, Equatable, Sendable {
         return contexts[index + step].name
     }
 
+    /// One list of the stored clusters: the talosconfig's contexts, then the kubeconfig's
+    /// (names are unique across both, the Go core sees to it). The current context is the
+    /// talosconfig's, or the kubeconfig's when there is no talosconfig. Nil when neither is stored.
+    public static func combined(talos: ConfigSummary?, kube: ConfigSummary?) -> ConfigSummary? {
+        switch (talos, kube) {
+        case (nil, nil): return nil
+        case (let talos?, nil): return talos
+        case (nil, let kube?): return kube
+        case (let talos?, let kube?):
+            let current = talos.contexts.isEmpty ? kube.current : talos.current
+            return ConfigSummary(current: current, contexts: talos.contexts + kube.contexts)
+        }
+    }
+
     /// Where the active context is once the one at `removed` is gone, among the `remaining`
     /// ones: it keeps showing the same context, or the removed one's neighbour.
     public static func activeIndexAfterRemoval(active: Int, removed: Int, remaining: Int) -> Int {
@@ -42,20 +56,41 @@ public struct ConfigSummary: Decodable, Equatable, Sendable {
 
 public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     public let name: String
+    /// "talos" for a talosconfig context, "kube" for one added from a kubeconfig (no Talos API).
+    public let kind: String
     /// Identifies the cluster whatever the screenshot mode does to `name`; keys its color.
     public let fingerprint: String
     /// The same for every context of the cluster, on any phone: what share links name.
     public let clusterID: String
+    /// Talos endpoints; the API server URL for a kubeconfig context.
     public let endpoints: [String]
     public let nodes: [String]
     public let roles: [String]
+    /// Client certificate expiry, or a kubeconfig token's `exp` (0: unknown).
     public let certNotAfter: Int64
     public let demo: Bool
+    /// Kubeconfig contexts only (ParseKubeconfig): the default namespace, how it signs in
+    /// (cert, token, eks, oidc…) and to what, who the credentials are, and why it cannot be
+    /// added (a kube-… problem code, nil when it can).
+    public let namespace: String?
+    public let auth: String?
+    public let authDetail: String?
+    public let user: String?
+    public let insecure: Bool
+    public let problem: String?
+    public let problemDetail: String?
 
     public var id: String { name }
 
-    public init(name: String, fingerprint: String = "", clusterID: String = "", endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0, demo: Bool = false) {
+    /// Added from a kubeconfig: the Kubernetes API only, no Talos.
+    public var isKube: Bool { kind == ContextKind.kube }
+
+    public init(name: String, kind: String = ContextKind.talos, fingerprint: String = "", clusterID: String = "",
+                endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0,
+                demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,
+                user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil) {
         self.name = name
+        self.kind = kind
         self.fingerprint = fingerprint
         self.clusterID = clusterID
         self.endpoints = endpoints
@@ -63,17 +98,26 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         self.roles = roles
         self.certNotAfter = certNotAfter
         self.demo = demo
+        self.namespace = namespace
+        self.auth = auth
+        self.authDetail = authDetail
+        self.user = user
+        self.insecure = insecure
+        self.problem = problem
+        self.problemDetail = problemDetail
     }
 
     private enum CodingKeys: String, CodingKey {
-        case name, fingerprint, endpoints, nodes, roles, certNotAfter, demo
+        case name, kind, fingerprint, endpoints, nodes, roles, certNotAfter, demo
+        case namespace, auth, authDetail, user, insecure, problem, problemDetail
         case clusterID = "clusterId"
     }
 
-    // Go encodes empty (nil) slices as null here.
+    // Go encodes empty (nil) slices as null here; older cores send no kind (Talos then).
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         name = try c.decode(String.self, forKey: .name)
+        kind = try c.field(.kind, ContextKind.talos)
         fingerprint = try c.field(.fingerprint, "")
         clusterID = try c.field(.clusterID, "")
         endpoints = try c.field(.endpoints, [])
@@ -81,7 +125,20 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         roles = try c.field(.roles, [])
         certNotAfter = try c.field(.certNotAfter, 0)
         demo = try c.field(.demo, false)
+        namespace = try c.decodeIfPresent(String.self, forKey: .namespace)
+        auth = try c.decodeIfPresent(String.self, forKey: .auth)
+        authDetail = try c.decodeIfPresent(String.self, forKey: .authDetail)
+        user = try c.decodeIfPresent(String.self, forKey: .user)
+        insecure = try c.field(.insecure, false)
+        problem = try c.decodeIfPresent(String.self, forKey: .problem)
+        problemDetail = try c.decodeIfPresent(String.self, forKey: .problemDetail)
     }
+}
+
+/// The kinds of cluster (ContextSummary.kind).
+public enum ContextKind {
+    public static let talos = "talos"
+    public static let kube = "kube"
 }
 
 public struct ClusterOverview: Codable, Equatable, Sendable {
@@ -334,6 +391,9 @@ public enum Feature: CaseIterable, Sendable {
         }
     }
 
+    /// What a cluster added from a kubeconfig can use: the Kubernetes API, and its kubeconfig.
+    public static let kubernetes: Set<Feature> = [.workloads, .kubeconfig]
+
     public var minimumRole: String {
         if roles.contains("os:reader") { return "os:reader" }
         return roles.contains("os:operator") ? "os:operator" : "os:admin"
@@ -341,7 +401,12 @@ public enum Feature: CaseIterable, Sendable {
 }
 
 public extension ContextSummary {
-    func allows(_ feature: Feature) -> Bool { roles.contains { feature.roles.contains($0) } }
+    /// A Talos context by its roles; one added from a kubeconfig has the Kubernetes features
+    /// only (its own RBAC answers for them), never a Talos one.
+    func allows(_ feature: Feature) -> Bool {
+        if isKube { return Feature.kubernetes.contains(feature) }
+        return roles.contains { feature.roles.contains($0) }
+    }
 }
 
 public enum TalosJSON {

@@ -66,8 +66,13 @@ final class QuickActionSceneDelegate: NSObject, UIWindowSceneDelegate {
         completionHandler(open(shortcutItem))
     }
 
-    /// Checked (ParseShareLink) once the app is unlocked, not here.
+    /// Checked (ParseShareLink) once the app is unlocked, not here. A file is a config opened
+    /// with Ichor, for the import preview.
     private func open(_ url: URL) {
+        if url.isFileURL {
+            IncomingConfig.receive(url)
+            return
+        }
         guard url.scheme == "ichor", url.host == "open" else { return }
         NotificationRouter.shared.pendingShareLink = url
     }

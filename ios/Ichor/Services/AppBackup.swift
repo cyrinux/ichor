@@ -1,7 +1,8 @@
 import Foundation
 import IchorCore
 
-/// Backs up the talosconfig and the settings that go with it into a file sealed with a
+/// Backs up the talosconfig, the kubeconfig of the clusters added without Talos, and the
+/// settings that go with them into a file sealed with a
 /// passphrase (Argon2id + AES-256-GCM, in the Go core), and restores one, on this device or
 /// on another, iOS or Android. The stored config cannot be copied as it is: its key never
 /// leaves this device's Secure Enclave.
@@ -9,13 +10,15 @@ import IchorCore
 enum AppBackup {
     /// The backup file of the stored config and settings, sealed with `passphrase`.
     static func create(model: AppModel, passphrase: String) async throws -> Data {
-        guard let yaml = model.yaml, let summary = model.summary else {
+        guard model.hasConfig, let summary = model.summary else {
             throw TalosError(message: String(localized: "No talosconfig is stored."))
         }
         let payload = BackupPayload(
+            format: backupPayloadFormat(kubeconfig: model.kubeYAML),
             platform: "ios",
             createdAt: Int64(Date().timeIntervalSince1970),
-            talosconfig: yaml,
+            talosconfig: model.yaml ?? "",
+            kubeconfig: model.kubeYAML,
             activeContextIndex: summary.contexts.firstIndex { $0.name == model.activeContext },
             settings: backupSettings(model: model),
             clusters: backupClusters(
@@ -39,8 +42,9 @@ enum AppBackup {
             throw BackupError.invalidContent
         }
         let settings = payload.settings
-        // The config first: on failure nothing else changed. The screenshot mode re-parses it after.
-        try await model.replace(yaml: payload.talosconfig, activeIndex: payload.activeContextIndex)
+        // Both configs first: on failure nothing else changed. The screenshot mode re-parses them after.
+        try await model.replace(talos: restoredTalosconfig(payload), kube: restoredKubeconfig(payload),
+                                activeIndex: payload.activeContextIndex)
         let restored = restoredClusters(payload.clusters, fingerprints: model.summary?.contexts.map(\.fingerprint) ?? [])
         // Checked like a typed one: an address the Go core refuses is dropped.
         var kubeServers: [String: String] = [:]

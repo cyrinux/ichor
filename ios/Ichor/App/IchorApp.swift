@@ -27,8 +27,9 @@ struct IchorApp: App {
                 .environment(support)
                 .environment(ai)
                 .task { support.onLaunch() }
-                // A share link while the app runs (the scene delegate takes it at launch).
+                // A share link or a config file while the app runs (the scene delegate takes them at launch).
                 .onOpenURL { url in
+                    if url.isFileURL { IncomingConfig.receive(url) }
                     if url.scheme == "ichor", url.host == "open" { NotificationRouter.shared.pendingShareLink = url }
                 }
                 .onChange(of: scenePhase) { _, phase in
@@ -88,7 +89,10 @@ struct RootView: View {
     private var content: some View {
         if !model.loaded {
             ProgressView().task { await model.load() }
-        } else if model.yaml == nil {
+        } else if !model.unreadable.isEmpty {
+            // Fail closed: neither store is shown while one cannot be read.
+            ConfigUnreadableView()
+        } else if !model.hasConfig {
             NavigationStack { ImportView() }
         } else if !model.lock.enabled && AppLockState.required(for: model.summary?.contexts ?? []) {
             // Right after the first import, or on updating from an optional lock.
@@ -169,6 +173,20 @@ enum Route: Hashable {
     case diagnosis(note: String)
 }
 
+/// The home screen: the Talos overview, or the Kubernetes home of a cluster added from a kubeconfig.
+private struct HomeView: View {
+    @Binding var path: [Route]
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if model.activeIsKube {
+            KubeHomeView(path: $path)
+        } else {
+            OverviewView(path: $path)
+        }
+    }
+}
+
 struct NodeRef: Hashable {
     let address: String
     let hostname: String
@@ -185,7 +203,7 @@ struct MainNavigation: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            OverviewView(path: $path)
+            HomeView(path: $path)
                 .navigationDestination(for: Route.self) { route in
                     switch route {
                     case .node(let ref): NodeDetailView(ref: ref)
@@ -243,6 +261,10 @@ struct MainNavigation: View {
         // Mounted under the lock screen once unlocked: a link waits for the next unlock.
         .onChange(of: model.lock.locked) { _, locked in
             if !locked, NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
+            if !locked { openImport() }
+        }
+        .onChange(of: NotificationRouter.shared.pendingImportText) { _, pending in
+            if pending != nil { openImport() }
         }
         .onChange(of: NotificationRouter.shared.pendingGitOps) { _, pending in
             if pending != nil { openGitOps() }
@@ -253,6 +275,7 @@ struct MainNavigation: View {
             if NotificationRouter.shared.pendingArgoWindows { openArgoWindows() }
             if NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
             if NotificationRouter.shared.pendingGitOps != nil { openGitOps() }
+            openImport()
         }
         .messageAlert($freezeMessage)
         .messageAlert($linkMessage)
@@ -313,8 +336,15 @@ struct MainNavigation: View {
                 return
             }
             path = []
-            if let route = await target.route(client: model.client) { path = [route] }
+            if let route = await target.route(client: model.client, kube: model.activeIsKube) { path = [route] }
         }
+    }
+
+    /// From a config file opened with Ichor: the import screen, which previews it (and takes
+    /// the text from NotificationRouter itself, also when it is already on screen).
+    private func openImport() {
+        guard !model.lock.locked, NotificationRouter.shared.pendingImportText != nil, path.last != .importConfig else { return }
+        path.append(.importConfig)
     }
 
     /// From a GitOps app alert: the Argo CD or Flux screen of the cluster on screen, when this

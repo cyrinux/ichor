@@ -548,7 +548,7 @@
     <string name="about_disclaimer">Non affiliata a Sidero Labs. Talos è un marchio di Sidero Labs, Inc.</string>
 
     <!-- Import -->
-    <string name="import_title">Importa talosconfig</string>
+    <string name="import_title">Aggiungi un cluster</string>
     <string name="import_help">Come creare un talosconfig</string>
     <string name="import_tab_file">File</string>
     <string name="import_tab_paste">Incolla</string>
@@ -2850,4 +2850,50 @@
     <string name="rollback_started">Ripristino avviato: %1$s si sta riavviando</string>
     <string name="checkup_health_menu">Controllo e server API</string>
     <string name="checkup_reading">Lettura del cluster…</string>
+    <!-- Clusters added from a kubeconfig (no Talos API) -->
+    <string name="common_kind_kubernetes">Kubernetes</string>
+    <string name="common_talos_only">Non disponibile per questo cluster: è stato aggiunto da un kubeconfig, quindi l\'app raggiunge solo la sua API Kubernetes, non Talos.</string>
+    <string name="import_kube_hint">Funziona anche un kubeconfig, con un certificato client o un token.</string>
+    <string name="import_kube_title">Scegli i cluster da aggiungere</string>
+    <string name="import_kube_none_importable">Nessuno di questi cluster può ancora essere aggiunto.</string>
+    <string name="import_kube_server">Server</string>
+    <string name="import_kube_auth">Accesso</string>
+    <string name="import_kube_user">Utente</string>
+    <string name="import_kube_namespace">Namespace</string>
+    <string name="import_kube_expires">Le credenziali scadono</string>
+    <string name="import_kube_insecure">La verifica TLS è disattivata per questo server.</string>
+    <string name="kube_auth_cert">Certificato client</string>
+    <string name="kube_auth_token">Token</string>
+    <string name="kube_auth_eks">Accesso AWS EKS</string>
+    <string name="kube_auth_gke">Accesso Google GKE</string>
+    <string name="kube_auth_oidc">Accesso OIDC</string>
+    <string name="kube_auth_azure">Accesso Azure</string>
+    <string name="kube_auth_digitalocean">Accesso DigitalOcean</string>
+    <string name="kube_auth_rancher">Accesso Rancher</string>
+    <string name="kube_auth_exec">Plugin exec</string>
+    <string name="kube_auth_provider">Provider di autenticazione</string>
+    <string name="kube_auth_basic">Nome utente e password</string>
+    <string name="kube_auth_none">Nessuna credenziale</string>
+    <string name="kube_problem_cluster_missing">Il suo cluster manca nel file.</string>
+    <string name="kube_problem_user_missing">Il suo utente manca nel file.</string>
+    <string name="kube_problem_not_https">Il server non usa HTTPS: sono supportati solo server HTTPS.</string>
+    <string name="kube_problem_file_path">Legge file dal tuo computer. Esegui lì kubectl config view --flatten --minify e importa il risultato.</string>
+    <string name="kube_problem_proxy">La connessione tramite proxy (proxy-url) non è supportata.</string>
+    <string name="kube_problem_basic_auth">L\'accesso con nome utente e password non è supportato.</string>
+    <string name="kube_problem_sign_in_later">Questo accesso non è ancora supportato: arriverà in una versione futura.</string>
+    <string name="kube_problem_exec">Questo plugin exec non è supportato. Usa un certificato client o un token.</string>
+    <string name="kube_problem_no_credentials">Non ha credenziali: aggiungi un certificato client o un token.</string>
+    <string name="kube_problem_invalid">Impossibile leggere questo contesto.</string>
+    <string name="help_qr_compressed">Troppo grande per un solo codice QR (un kubeconfig con certificato)? Comprimilo prima:</string>
+    <string name="help_kube_title">Da un kubeconfig</string>
+    <string name="help_kube_body">Funziona anche un kubeconfig con un certificato client o un token: l\'app mostra allora il lato Kubernetes di quel cluster (workload, nodi, Argo CD, Flux…), senza Talos.</string>
+    <string name="help_kube_flatten">Rendilo autonomo (certificati inclusi, solo il contesto corrente), poi trasferiscilo come un talosconfig:</string>
+    <string name="help_kube_later">Gli accessi cloud (EKS, GKE, OIDC…) arriveranno in una versione futura.</string>
+    <string name="settings_kube_desc_imported">Esporta il kubeconfig di questo cluster, così come è stato importato. Chiunque abbia questo file ha lo stesso accesso al cluster Kubernetes: tienilo privato.</string>
+    <string name="kube_home_renew">Importa un nuovo kubeconfig per questo cluster per sostituirle.</string>
+    <string name="kube_home_version">Kubernetes %1$s</string>
+    <string name="kube_home_nodes_forbidden">Queste credenziali non possono elencare i nodi. Le altre schermate Kubernetes funzionano, nei limiti di ciò che consentono.</string>
+    <string name="kube_home_no_nodes">Nessun nodo.</string>
+    <string name="kube_home_more_nodes">+%1$d altri</string>
+    <string name="kube_node_cordoned">Isolato (cordon)</string>
 </resources>

@@ -26,6 +26,9 @@ final class NotificationRouter {
 
     /// A share link (ichor://open?…) was opened: the screen it names, once unlocked.
     var pendingShareLink: URL?
+
+    /// A config file opened with Ichor (IncomingConfig): its text, for the import preview.
+    var pendingImportText: String?
 }
 
 /// The screen a GitOps alert leads to.

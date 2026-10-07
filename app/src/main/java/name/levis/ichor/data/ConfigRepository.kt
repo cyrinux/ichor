@@ -1,13 +1,12 @@
 package name.levis.ichor.data
 
 import android.content.Context
-import name.levis.ichor.model.isDemo
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.model.ConfigSummary
-import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.ImportChoice
 import name.levis.ichor.model.ImportConflict
+import name.levis.ichor.model.isKube
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,33 +19,20 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import java.io.File
 
-/** The stored talosconfig (a context per imported cluster) plus the context the user is looking at. */
-data class StoredConfig(
-    val yaml: String,
-    val summary: ConfigSummary,
-    val activeContext: String,
-)
-
-val StoredConfig.activeSummary: ContextSummary?
-    get() = summary.contexts.firstOrNull { it.name == activeContext }
-
-/** The active cluster's fingerprint, to key its state: null for the demo or when unknown. */
-val StoredConfig.realFingerprint: String?
-    get() = activeSummary?.takeUnless { it.isDemo }?.fingerprint?.takeIf { it.isNotBlank() }
-
 /** A config is stored but could not be read: the Keystore is busy or lost its key, or the file is damaged. */
 class ConfigUnreadableException(cause: Throwable) : Exception("Stored config could not be read", cause)
 
 /** [guard] may hold back a call to the cluster on screen by throwing, e.g. off its VPN. */
 class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Unit = {}) {
 
-    private val store = SecureStore(
-        File(context.filesDir, "talosconfig.enc"),
-        strongBoxAvailable = hasStrongBox(context.packageManager),
-    )
+    private val strongBox = hasStrongBox(context.packageManager)
+    private val store = SecureStore(File(context.filesDir, "talosconfig.enc"), strongBoxAvailable = strongBox)
+
+    /** Clusters added from a kubeconfig: a second sealed file with a key of its own, protected alike. */
+    private val kubeStore = SecureStore(File(context.filesDir, "kubeconfig.enc"), keyAlias = "kubeconfig", strongBoxAvailable = strongBox)
 
     /** Where the key protecting the stored config lives (null before the first import). */
-    fun keyProtection(): KeyProtection? = runCatching { store.protection() }.getOrNull()
+    fun keyProtection(): KeyProtection? = runCatching { store.protection() ?: kubeStore.protection() }.getOrNull()
     private val prefs = context.getSharedPreferences("ichor", Context.MODE_PRIVATE)
 
     private val writes = Mutex()
@@ -59,28 +45,39 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
     val generation: StateFlow<Int> = _generation.asStateFlow()
 
     /**
-     * Loads the stored config, if any. Returns null only when nothing was imported yet. A
-     * read that fails is tried again (the Keystore may be busy for a moment, e.g. while the
-     * app starts after an update) and then throws [ConfigUnreadableException]: the config
-     * may still be there, so it must not be taken for a first start.
+     * Loads the stored config, if any. Returns null only when nothing was imported yet (neither
+     * a talosconfig nor a kubeconfig). A read that fails is tried again (the Keystore may be busy
+     * for a moment, e.g. while the app starts after an update) and then throws
+     * [ConfigUnreadableException]: the config may still be there, so it must not be taken for a
+     * first start.
      */
     suspend fun load(): StoredConfig? = writing {
         // Already loaded by another caller (the monitor, the widget) while this one waited.
         _config.value?.let { return@writing it }
-        val (yaml, summary) = try {
-            retrying { store.read()?.decodeToString()?.let { it to parse(it) } }
+        val stored = try {
+            retrying { readStored() }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             throw ConfigUnreadableException(e)
         } ?: return@writing null
-        val stored = StoredConfig(yaml, summary, resolveActive(summary, prefs.getString(KEY_CONTEXT, null), savedIndex()))
         _config.value = stored
         stored
     }
 
-    /** Validates without storing; throws with a readable message when invalid. */
-    suspend fun validate(yaml: String): ConfigSummary = withContext(Dispatchers.IO) { parse(yaml) }
+    private fun readStored(): StoredConfig? {
+        val talos = store.read()?.decodeToString()
+        val kube = kubeStore.read()?.decodeToString()
+        if (talos == null && kube == null) return null
+        val summary = parse(talos.orEmpty(), kube.orEmpty())
+        return StoredConfig(talos.orEmpty(), kube.orEmpty(), summary, resolveActive(summary, prefs.getString(KEY_CONTEXT, null), savedIndex()))
+    }
+
+    /** Validates a talosconfig without storing it; throws with a readable message when invalid. */
+    suspend fun validate(yaml: String): ConfigSummary = withContext(Dispatchers.IO) { parseTalos(yaml) }
+
+    /** A kubeconfig's contexts, each importable or saying why not; throws when it is not a kubeconfig. */
+    suspend fun validateKube(yaml: String): ConfigSummary = withContext(Dispatchers.IO) { parseKube(yaml) }
 
     /** Adds the local demo alongside any imported clusters, replacing a demo added before. */
     suspend fun saveDemo() = withContext(Dispatchers.IO) {
@@ -88,42 +85,64 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
         save(yaml, importConflicts(yaml).filter { it.sameAs != null }.map { ImportChoice(it.index, replace = true) })
     }
 
-    /** The contexts of [yaml] named like a stored one (none before the first import). */
+    /** The contexts of the talosconfig [yaml] named like a stored cluster of either kind (none before the first import). */
     suspend fun importConflicts(yaml: String): List<ImportConflict> = withContext(Dispatchers.IO) {
         val current = _config.value ?: return@withContext emptyList()
-        TalosJson.decodeFromString(ListSerializer(ImportConflict.serializer()), Ichorgo.importConflicts(current.yaml, yaml))
+        decodeConflicts(Ichorgo.talosImportConflicts(current.talosYaml, current.kubeYaml, yaml))
+    }
+
+    /** The contexts of the kubeconfig [yaml] named like a stored cluster of either kind. */
+    suspend fun kubeImportConflicts(yaml: String): List<ImportConflict> = withContext(Dispatchers.IO) {
+        val current = _config.value ?: return@withContext emptyList()
+        decodeConflicts(Ichorgo.kubeImportConflicts(current.kubeYaml, current.talosYaml, yaml))
     }
 
     /**
-     * Stores [yaml]. With a config already stored its contexts are added to it (one stored
-     * talosconfig, a context per cluster). A stored context is never overwritten: one named
-     * like it gets the name in [choices], else name-1, name-2…, unless [choices] asks to
-     * replace the stored context of the same cluster (see [importConflicts]). The imported
-     * config's current context becomes the one shown.
+     * Stores the talosconfig [yaml]. With a config already stored its contexts are added to it
+     * (one stored talosconfig, a context per cluster). A stored context is never overwritten:
+     * one named like a stored cluster (of either kind) gets the name in [choices], else name-1,
+     * name-2…, unless [choices] asks to replace the stored context of the same cluster (see
+     * [importConflicts]). The imported config's current context becomes the one shown.
      */
     suspend fun save(yaml: String, choices: List<ImportChoice> = emptyList()) = writing {
-        val merged = _config.value?.let {
-            Ichorgo.mergeConfig(it.yaml, yaml, TalosJson.encodeToString(ListSerializer(ImportChoice.serializer()), choices))
-        } ?: yaml
-        commit(merged, parse(merged), active = null)
+        val current = _config.value
+        val talos = current?.let { Ichorgo.mergeTalosconfig(it.talosYaml, it.kubeYaml, yaml, encodeChoices(choices)) } ?: yaml
+        val kube = current?.kubeYaml.orEmpty()
+        val talosSummary = parseTalos(talos)
+        commit(talos, kube, mergeSummaries(talosSummary, parseKubeOrNull(kube)), active = talosSummary.current)
     }
 
     /**
-     * Replaces the stored config with [yaml] (a restored backup) in one write, so a failure
-     * leaves the previous one in place, and shows the context at [activeIndex].
+     * Stores the contexts of the kubeconfig [yaml] the user kept (see [ImportChoice.skip]), next
+     * to the stored ones, named like [save] does. Its current context (or the first one kept)
+     * becomes the one shown. Throws when no context can be added.
      */
-    suspend fun replace(yaml: String, activeIndex: Int) = writing {
-        val summary = parse(yaml)
-        commit(yaml, summary, contextAt(summary, activeIndex))
+    suspend fun saveKube(yaml: String, choices: List<ImportChoice>) = writing {
+        val current = _config.value
+        val talos = current?.talosYaml.orEmpty()
+        val kube = Ichorgo.mergeKubeconfig(current?.kubeYaml.orEmpty(), talos, yaml, encodeChoices(choices))
+        val kubeSummary = parseKube(kube)
+        commit(talos, kube, mergeSummaries(parseTalosOrNull(talos), kubeSummary), active = kubeSummary.current)
+    }
+
+    /**
+     * Replaces the stored configs with [talos] and [kube] (a restored backup, either may be "")
+     * and shows the context at [activeIndex]. Both are read before anything is written, so an
+     * invalid one leaves the previous configs in place.
+     */
+    suspend fun replace(talos: String, kube: String, activeIndex: Int) = writing {
+        require(talos.isNotBlank() || kube.isNotBlank()) { "no cluster to restore" }
+        val summary = parse(talos, kube)
+        commit(talos, kube, summary, contextAt(summary, activeIndex))
     }
 
     /** The position of the context on screen (contexts keep their order whether masked or not). */
     fun activeIndex(): Int = _config.value?.let { it.summary.indexOf(it.activeContext) } ?: -1
 
     /**
-     * Removes the cluster [name] (a context and its credentials) from the stored config,
+     * Removes the cluster [name] (a context and its credentials) from the config holding it,
      * showing its neighbour if it was the active one. Removing the last one deletes the
-     * stored config. Returns whether a config is still stored.
+     * stored configs. Returns whether a config is still stored.
      */
     suspend fun removeContext(name: String): Boolean = writing {
         val current = _config.value ?: return@writing false
@@ -133,15 +152,22 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
             clear()
             return@writing false
         }
-        val remaining = Ichorgo.removeContext(current.yaml, name)
-        val summary = parse(remaining)
+        val (talos, kube) = withoutContext(current, name, current.summary.contexts[removed].isKube)
+        val summary = parse(talos, kube)
         // By position: the masked names of screenshot mode may change with the set of contexts.
         val active = contextAt(
             summary,
             activeIndexAfterRemoval(current.summary.indexOf(current.activeContext), removed, summary.contexts.size),
         )
-        commit(remaining, summary, active)
+        commit(talos, kube, summary, active)
         true
+    }
+
+    /** The stored configs without [name]: the store holding it shrinks, or is emptied by its last context. */
+    private fun withoutContext(current: StoredConfig, name: String, kube: Boolean): Pair<String, String> = when {
+        kube -> current.talosYaml to Ichorgo.removeKubeContext(current.kubeYaml, name)
+        talosContextCount(current.summary) == 1 -> "" to current.kubeYaml
+        else -> Ichorgo.removeContext(current.talosYaml, name) to current.kubeYaml
     }
 
     /**
@@ -150,11 +176,11 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      * the context the user is looking at. The result goes through the import validation.
      */
     suspend fun replaceCredentials(contextName: String, generatedYaml: String) = writing {
-        val current = _config.value ?: throw NoConfigException()
-        val merged = Ichorgo.replaceContextCredentials(current.yaml, generatedYaml, contextName)
-        val summary = parse(merged)
+        val current = talosStored()
+        val merged = Ichorgo.replaceContextCredentials(current.talosYaml, generatedYaml, contextName)
+        val summary = parse(merged, current.kubeYaml)
         check(summary.contexts.any { it.name == current.activeContext }) { "context ${current.activeContext} disappeared" }
-        commit(merged, summary, current.activeContext, remember = false)
+        commit(merged, current.kubeYaml, summary, current.activeContext, remember = false)
     }
 
     /**
@@ -185,23 +211,46 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
     private suspend fun <T> writing(block: suspend CoroutineScope.() -> T): T =
         writes.withLock { withContext(Dispatchers.IO, block) }
 
-    /** Stores the stored config changed by [change], keeping the context the user is looking at. */
+    /**
+     * Stores the talosconfig changed by [change], keeping the context the user is looking at.
+     * Endpoints, nodes and credentials are Talos things: the kubeconfig is left as it is.
+     */
     private suspend fun edit(change: (String) -> String) = writing {
+        val current = talosStored()
+        val updated = change(current.talosYaml)
+        commit(updated, current.kubeYaml, parse(updated, current.kubeYaml), current.activeContext, remember = false)
+    }
+
+    /** The stored config, for a change of its talosconfig: there must be one. */
+    private fun talosStored(): StoredConfig {
         val current = _config.value ?: throw NoConfigException()
-        val updated = change(current.yaml)
-        commit(updated, parse(updated), current.activeContext, remember = false)
+        check(current.talosYaml.isNotBlank()) { "no talosconfig stored" }
+        return current
     }
 
     /**
-     * Writes [yaml] as the stored config and shows [active] (null: the config's own current
-     * context), which [remember] also saves as the context to come back to.
+     * Writes [talos] and [kube] as the stored configs (a store left empty is deleted) and shows
+     * [active] (null: the summary's current context), which [remember] also saves as the context
+     * to come back to. Only a store that changed is written; when the second write fails the
+     * first one is undone, so the disk never holds half of a change (a restore, an import).
      */
-    private suspend fun commit(yaml: String, summary: ConfigSummary, active: String?, remember: Boolean = true) {
+    private suspend fun commit(talos: String, kube: String, summary: ConfigSummary, active: String?, remember: Boolean = true) {
         val shown = active ?: summary.current
-        store.write(yaml.encodeToByteArray())
+        val previous = _config.value
+        val writes = listOfNotNull(
+            StoreWrite({ persist(store, talos) }, { persist(store, previous?.talosYaml.orEmpty()) })
+                .takeIf { previous == null || previous.talosYaml != talos },
+            StoreWrite({ persist(kubeStore, kube) }, { persist(kubeStore, previous?.kubeYaml.orEmpty()) })
+                .takeIf { previous == null || previous.kubeYaml != kube },
+        )
+        writeAll(writes)
         if (remember) saveActive(summary, shown)
-        _config.value = StoredConfig(yaml, summary, shown)
+        _config.value = StoredConfig(talos, kube, summary, shown)
         _generation.value++
+    }
+
+    private fun persist(target: SecureStore, yaml: String) {
+        if (yaml.isBlank()) target.clear() else target.write(yaml.encodeToByteArray())
     }
 
     /**
@@ -221,26 +270,42 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
         prefs.edit().putString(KEY_CONTEXT, name).putInt(KEY_CONTEXT_INDEX, summary.indexOf(name)).apply()
 
     /**
-     * Parses the stored config again, keeping the selected context. Screenshot mode masks
-     * the summary (context names, endpoints), so it is re-read when the mask changes.
+     * Parses the stored configs again, keeping the selected context. Screenshot mode masks
+     * the summary (context names, endpoints, servers), so it is re-read when the mask changes.
      */
     suspend fun reparse() = withContext(Dispatchers.IO) {
         val current = _config.value ?: return@withContext
-        val summary = parse(current.yaml)
-        _config.value = StoredConfig(current.yaml, summary, contextAt(summary, current.summary.indexOf(current.activeContext)))
+        val summary = parse(current.talosYaml, current.kubeYaml)
+        _config.value = current.copy(summary = summary, activeContext = contextAt(summary, current.summary.indexOf(current.activeContext)))
     }
 
     private fun savedIndex(): Int = prefs.getInt(KEY_CONTEXT_INDEX, -1)
 
     suspend fun clear() = withContext(Dispatchers.IO) {
         store.clear()
+        kubeStore.clear()
         prefs.edit().clear().apply()
         _config.value = null
         _generation.value++
     }
 
-    private fun parse(yaml: String): ConfigSummary =
+    /** Both stores as one list; a store left empty ("") holds no cluster. */
+    private fun parse(talos: String, kube: String): ConfigSummary = mergeSummaries(parseTalosOrNull(talos), parseKubeOrNull(kube))
+
+    private fun parseTalos(yaml: String): ConfigSummary =
         TalosJson.decodeFromString(ConfigSummary.serializer(), Ichorgo.parseConfig(yaml))
+
+    private fun parseKube(yaml: String): ConfigSummary =
+        TalosJson.decodeFromString(ConfigSummary.serializer(), Ichorgo.parseKubeconfig(yaml))
+
+    private fun parseTalosOrNull(yaml: String): ConfigSummary? = yaml.takeIf { it.isNotBlank() }?.let(::parseTalos)
+    private fun parseKubeOrNull(yaml: String): ConfigSummary? = yaml.takeIf { it.isNotBlank() }?.let(::parseKube)
+
+    private fun decodeConflicts(json: String): List<ImportConflict> =
+        TalosJson.decodeFromString(ListSerializer(ImportConflict.serializer()), json)
+
+    private fun encodeChoices(choices: List<ImportChoice>): String =
+        TalosJson.encodeToString(ListSerializer(ImportChoice.serializer()), choices)
 
     private companion object {
         const val KEY_CONTEXT = "active_context"
@@ -278,4 +343,25 @@ internal fun activeIndexAfterRemoval(active: Int, removed: Int, remaining: Int):
     active > removed -> active - 1
     active == removed -> minOf(removed, remaining - 1)
     else -> active
+}
+
+/** A write of one store, and how to put back what it held before. */
+internal class StoreWrite(val write: () -> Unit, val undo: () -> Unit)
+
+/**
+ * Runs [writes] in order. When one throws, those already done are undone, newest first, and
+ * the failure is rethrown: the stores keep what they held together. An undo that fails too
+ * is attached to the failure rather than hiding it.
+ */
+internal fun writeAll(writes: List<StoreWrite>) {
+    val done = mutableListOf<StoreWrite>()
+    try {
+        writes.forEach { step ->
+            step.write()
+            done += step
+        }
+    } catch (e: Exception) {
+        done.asReversed().forEach { runCatching(it.undo).exceptionOrNull()?.let(e::addSuppressed) }
+        throw e
+    }
 }
