@@ -44,6 +44,8 @@ import name.levis.ichor.model.memory
 import name.levis.ichor.model.shortDigest
 import name.levis.ichor.model.state
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.imagescan.AppScanUi
+import name.levis.ichor.ui.imagescan.appScanSection
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
@@ -54,7 +56,8 @@ import name.levis.ichor.util.formatBytes
  * One app: what it is, which versions run, the URLs it is served at ([routes]) and its
  * workloads to restart ([restart]), both null when the role cannot reach the Kubernetes API,
  * the Argo CD Applications deploying it ([argo], null without Argo CD), Flux's summary on the
- * Flux tile ([flux], null elsewhere), its images and its
+ * Flux tile ([flux], null elsewhere), its images' vulnerabilities ([scan], null when the role
+ * cannot reach the Kubernetes API), its images and its
  * pods. [nodes] names the node addresses; tapping a pod opens its node's pods ([onPodNode]
  * with the node address).
  */
@@ -67,6 +70,7 @@ fun AppDetailSheet(
     restart: AppRestartUi?,
     argo: AppArgoUi?,
     flux: AppFluxUi? = null,
+    scan: AppScanUi? = null,
     onPodNode: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -82,6 +86,7 @@ fun AppDetailSheet(
             restart?.let { appWorkloadsSection(it) }
             argo?.let { appArgoSection(it) }
             flux?.let { appFluxSection(it) }
+            scan?.takeIf { app.pods.isNotEmpty() }?.let { appScanSection(it) }
             if (app.images.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.apps_detail_images)) }
                 val drifting = app.driftingRepos

@@ -1,6 +1,6 @@
 # D12. Image vulnerability scan
 
-Status: **Go core done**. Size M (Go M, Android S, iOS S).
+Status: **Go core and Android done**; iOS remains. Size M (Go M, Android S, iOS S).
 
 Scan an app's images for known vulnerabilities on demand, read the report on the phone and
 export it in a standard format (SARIF, CycloneDX) to hand to GitHub code scanning, Defect
@@ -49,15 +49,18 @@ Dojo, Dependency-Track or a colleague.
   fixable first, score.
 - Demo mode: a canned report.
 
-## Android
+## Android (done)
 
-1. App sheet → "Scan images" (Kubernetes apps, admin kubeconfig): first
-   `ImageScanOperatorReports`; offer "Scan now" (always) and show the operator report if any.
-2. Progress screen (phase, image i/n, Cancel) like the network test.
-3. Report screen: severity chips with counts, "fixable only" toggle (on), one card per image
-   (OS, error, base image hint), vulnerabilities grouped by package, row → sheet with
-   description, score, link.
-4. Export menu: SARIF, CycloneDX, HTML, CSV, JSON via `FileExport.kt`/`shareFile`.
+- App sheet → "Vulnerabilities" section (Kubernetes apps, admin kubeconfig): the Trivy
+  Operator's report when it has one (`ImageScanOperatorReports`, read when the sheet opens),
+  else a hint naming the `ichor-imagescan` namespace; "Scan images" / "Scan again".
+- The scan is kept app-wide by `ImageScanRepository` (one at a time), so it goes on when the
+  sheet or the Apps screen closes: phase, image i of n, Stop.
+- Report sheet: severity pills, "fixable only" (on) and severity filters, one block per image
+  (OS, digest, pods, error, base image hint), findings grouped by package; a finding opens in
+  place (description, CVSS, advisory link).
+- Export menu: HTML, SARIF, CycloneDX, CSV, JSON, written by the core and shared as a file
+  (`cache/scans`, one at a time, removed when the report closes).
 
 ## iOS
 
