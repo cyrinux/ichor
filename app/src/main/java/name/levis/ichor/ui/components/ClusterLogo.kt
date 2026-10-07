@@ -33,10 +33,6 @@ import name.levis.ichor.model.clusterLogo
  */
 @Composable
 fun ClusterLogo(context: ContextSummary, color: Color, selected: Boolean, size: Dp = 32.dp) {
-    val loader = (LocalContext.current.applicationContext as TalosApp).appIcons
-    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    val icon = clusterLogo(context)
-    val logo by produceState(loader.peekBundled(icon, dark), icon, dark) { value = loader.bundled(icon, dark) }
     Box(Modifier.size(size)) {
         Box(
             Modifier.fillMaxSize()
@@ -44,7 +40,7 @@ fun ClusterLogo(context: ContextSummary, color: Color, selected: Boolean, size: 
                 .padding(size * LOGO_INSET),
             contentAlignment = Alignment.Center,
         ) {
-            logo?.let { Image(it, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
+            BundledLogo(clusterLogo(context), Modifier.fillMaxSize())
         }
         if (selected) {
             Box(
@@ -58,6 +54,15 @@ fun ClusterLogo(context: ContextSummary, color: Color, selected: Boolean, size: 
             }
         }
     }
+}
+
+/** A bundled logo (assets/appicons) by [icon] name, in its dark variant on a dark theme. */
+@Composable
+fun BundledLogo(icon: String, modifier: Modifier = Modifier) {
+    val loader = (LocalContext.current.applicationContext as TalosApp).appIcons
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val logo by produceState(loader.peekBundled(icon, dark), icon, dark) { value = loader.bundled(icon, dark) }
+    logo?.let { Image(it, contentDescription = null, contentScale = ContentScale.Fit, modifier = modifier) }
 }
 
 private const val LOGO_INSET = 0.2f
