@@ -6,7 +6,8 @@ import IchorCore
 /// (os:admin), with the previous run's (`--previous`) when its containers restarted: Talos
 /// only keeps the running container's. A pod with several containers asks which one. A row
 /// read from a Table (a large cluster's) has no containers nor last termination: the pod is
-/// read in full first.
+/// read in full first. Follow streams new lines (`kubectl logs -f`) while the sheet is open;
+/// the toolbar also opens the pod's events and a port-forward.
 struct PodLogsSheet: View {
     let pod: KubePod
 
@@ -33,6 +34,11 @@ struct PodLogsSheet: View {
     @State private var detail: KubePod?
     /// Whether the full pod was asked for already.
     @State private var detailAsked = false
+    /// Streams new lines instead of showing the last ones.
+    @State private var following = false
+    @State private var follower = LogFollower()
+    @State private var display = LogDisplay()
+    @State private var forwarding = false
 
     /// The pod with its containers and last termination when known.
     private var shown: KubePod { detail ?? pod }
@@ -43,7 +49,11 @@ struct PodLogsSheet: View {
                 if containers.count > 1 || shown.restarts > 0 {
                     options.padding(.horizontal).padding(.vertical, 8)
                 }
-                LoadStateView(state: state, retry: { refreshes += 1 }) { text in LogText(lines: podLogLines(text), previous: previous) }
+                if following {
+                    FollowList(follower: follower, display: $display)
+                } else {
+                    LoadStateView(state: state, retry: { refreshes += 1 }) { text in LogText(lines: podLogLines(text), previous: previous) }
+                }
             }
             .themedBackground()
             .navigationTitle(Text(verbatim: pod.name))
@@ -51,25 +61,41 @@ struct PodLogsSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
                 ToolbarItemGroup(placement: .primaryAction) {
+                    Toggle(isOn: $following) {
+                        Label("Follow", systemImage: "dot.radiowaves.left.and.right")
+                    }
+                    .toggleStyle(.button)
                     // Why it does not start, when there is no log yet.
                     NavigationLink {
                         KubeEventsPage(namespace: pod.namespace, kind: "Pod", name: pod.name)
                     } label: {
                         Image(systemName: "bell.badge").accessibilityLabel(Text(verbatim: CheckupText.kubeEventsTitle))
                     }
-                    if case .loaded(let text, _, _) = state, !text.isEmpty {
-                        Menu {
+                    Menu {
+                        if !following, case .loaded(let text, _, _) = state, !text.isEmpty {
                             Button { copy(text) } label: { Label("Copy", systemImage: "doc.on.doc") }
                             ShareLink(item: text) { Label("Share", systemImage: "square.and.arrow.up") }
-                        } label: {
-                            Image(systemName: "square.and.arrow.up").accessibilityLabel(Text("Share"))
                         }
+                        Button { forwarding = true } label: {
+                            Label("Port forward", systemImage: "arrow.left.arrow.right.circle")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
                     }
-                    Button { refreshes += 1 } label: { Image(systemName: "arrow.clockwise") }
-                        .accessibilityLabel(Text("Refresh"))
+                    if !following {
+                        Button { refreshes += 1 } label: { Image(systemName: "arrow.clockwise") }
+                            .accessibilityLabel(Text("Refresh"))
+                    }
                 }
             }
-            .task(id: "\(container)/\(previous)/\(refreshes)") { await load() }
+            .task(id: "\(container)/\(previous)/\(refreshes)/\(following)") {
+                if following { await follow() } else { await load() }
+            }
+            // A previous run's log has no new lines.
+            .onChange(of: following) { _, on in if on { previous = false } }
+            .navigationDestination(isPresented: $forwarding) {
+                PortForwardView(namespace: pod.namespace, pod: pod.name)
+            }
             .messageAlert($message)
         }
     }
@@ -91,6 +117,7 @@ struct PodLogsSheet: View {
                         }
                     }
                 }
+                .disabled(following)
             }
         }
     }
@@ -120,6 +147,18 @@ struct PodLogsSheet: View {
                 state = .failed(error.localizedDescription)
             }
         }
+    }
+
+    /// Streams the selected container's log while following; a pod with several containers
+    /// gets its first one picked first (the task then follows that one).
+    private func follow() async {
+        guard let client = model.client else { return }
+        if await readDetail(client) { return }
+        if container.isEmpty, containers.count > 1 {
+            container = containers[0]
+            return
+        }
+        await follower.follow(client.followPodLogs(namespace: pod.namespace, pod: pod.name, container: container))
     }
 
     /// Reads the pod in full once when its row had no containers; true when that picked a

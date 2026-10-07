@@ -1,0 +1,182 @@
+import SwiftUI
+import UniformTypeIdentifiers
+import IchorCore
+
+/// One object of any kind: its YAML (numbered, searchable, copy and share) without
+/// managedFields, its Kubernetes events, and Edit when the kind may be updated. A Secret's
+/// values stay hidden until asked for, behind Face ID / the passcode when the app lock is on,
+/// and it cannot be edited while they are hidden. A pod also opens its logs and a port-forward.
+struct KubeObjectView: View {
+    let resource: KubeAPIResource
+    /// "" for a cluster-scoped object.
+    let namespace: String
+    let name: String
+
+    // Explicit: the private @State makes the memberwise init private.
+    init(resource: KubeAPIResource, namespace: String, name: String) {
+        self.resource = resource
+        self.namespace = namespace
+        self.name = name
+    }
+
+    private enum Tab: Hashable { case yaml, events }
+
+    @Environment(AppModel.self) private var model
+    @State private var tab = Tab.yaml
+    @State private var state: LoadState<String> = .loading
+    @State private var reveal = false
+    @State private var query = ""
+    @State private var message: String?
+    @State private var editing: KubeEditTarget?
+    @State private var logsPod: KubePod?
+    @State private var forwarding = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            switch tab {
+            case .yaml:
+                LoadStateView(state: state, retry: load) { yaml in
+                    ConfigYamlLines(yaml: yaml, query: query, refresh: load)
+                }
+            case .events:
+                List {
+                    Section { KubeEventsRows(namespace: namespace, kind: resource.kind, name: name) }
+                }
+                .themedBackground()
+            }
+        }
+        .searchable(text: $query, prompt: Text("Filter lines"))
+        .autocorrectionDisabled()
+        .textInputAutocapitalization(.never)
+        .navigationTitle(Text(verbatim: name))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { toolbar }
+        .sheet(item: $editing) { target in
+            KubeObjectEditView(target: target) {
+                Task { await load() }
+            }
+        }
+        .sheet(item: $logsPod) { PodLogsSheet(pod: $0) }
+        .navigationDestination(isPresented: $forwarding) {
+            PortForwardView(namespace: namespace, pod: name)
+        }
+        .messageAlert($message)
+        .task(id: "\(kubeNamespacesKey(model))|\(reveal)") { await load() }
+    }
+
+    @ViewBuilder private var header: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Text(verbatim: resource.kind).font(.subheadline.weight(.semibold))
+                if !namespace.isEmpty {
+                    Text(verbatim: "· \(namespace)").font(.subheadline).foregroundStyle(.secondary)
+                }
+            }
+            .lineLimit(1)
+            if !namespace.isEmpty {
+                Picker(selection: $tab) {
+                    Text(verbatim: "YAML").tag(Tab.yaml)
+                    Text(verbatim: CheckupText.kubeEventsTitle).tag(Tab.events)
+                } label: {
+                    EmptyView()
+                }
+                .pickerStyle(.segmented)
+            }
+            if resource.isSecret && reveal {
+                Label("Secret values are shown in clear. Don't share screenshots.", systemImage: "exclamationmark.triangle.fill")
+                    .font(.footnote)
+                    .foregroundStyle(.statusWarn)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+    }
+
+    @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+        ToolbarItemGroup(placement: .primaryAction) {
+            if resource.canUpdate, case .loaded = state {
+                Button { startEditing() } label: { Label("Edit", systemImage: "pencil") }
+            }
+            Menu {
+                if case .loaded(let yaml, _, _) = state {
+                    Button { copy(yaml) } label: { Label("Copy", systemImage: "doc.on.doc") }
+                    ShareLink(item: yaml) { Label("Share", systemImage: "square.and.arrow.up") }
+                }
+                if resource.isSecret {
+                    Button { Task { await setReveal(!reveal) } } label: {
+                        if reveal {
+                            Label("Hide secret values", systemImage: "eye.slash")
+                        } else {
+                            Label("Show secret values", systemImage: "eye")
+                        }
+                    }
+                }
+                if resource.isPod {
+                    Button { logsPod = KubePod(namespace: namespace, name: name) } label: {
+                        Label("Logs", systemImage: "doc.text")
+                    }
+                    Button { forwarding = true } label: {
+                        Label("Port forward", systemImage: "arrow.left.arrow.right.circle")
+                    }
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
+            }
+        }
+    }
+
+    /// The YAML, Secret values only when revealed; a newer toggle wins over an older load.
+    private func load() async {
+        guard let client = model.client else { return }
+        let wanted = reveal
+        let result: LoadState<String> = await .from {
+            try await client.objectYAML(resource, namespace: namespace, name: name, reveal: wanted)
+        }
+        guard wanted == reveal else { return }
+        state = state.refreshed(with: result)
+    }
+
+    /// Showing a Secret's values needs a fresh Face ID / passcode when the app lock is on;
+    /// hiding them reads the object again so they leave the screen and memory.
+    private func setReveal(_ on: Bool) async {
+        if on, model.lock.enabled,
+           let failure = await Authenticator.authenticate(reason: String(localized: "Show the values of Secret \(name)")) {
+            message = failure
+            return
+        }
+        state = .loading
+        reveal = on
+    }
+
+    /// Editing works on the YAML on screen; a Secret's hidden values would be saved as their
+    /// placeholders, so they must be shown first.
+    private func startEditing() {
+        guard case .loaded(let yaml, _, _) = state else { return }
+        if resource.isSecret && (!reveal || hasHiddenSecretValues(yaml)) {
+            message = String(localized: "Show the Secret's values before editing it.")
+            return
+        }
+        editing = KubeEditTarget(resource: resource, namespace: namespace, name: name, yaml: yaml)
+    }
+
+    /// Device-only pasteboard; revealed values expire from it after two minutes.
+    private func copy(_ yaml: String) {
+        let options: [UIPasteboard.OptionsKey: Any] = reveal
+            ? [.localOnly: true, .expirationDate: Date().addingTimeInterval(120)]
+            : [.localOnly: true]
+        UIPasteboard.general.setItems([[UTType.utf8PlainText.identifier: yaml]], options: options)
+        message = reveal ? String(localized: "Copied. The clipboard is cleared in 2 minutes.") : String(localized: "Copied.")
+    }
+}
+
+/// The object an edit starts from: its YAML as read.
+struct KubeEditTarget: Identifiable {
+    let resource: KubeAPIResource
+    let namespace: String
+    let name: String
+    let yaml: String
+
+    var id: String { "\(resource.id)/\(namespace)/\(name)" }
+}
