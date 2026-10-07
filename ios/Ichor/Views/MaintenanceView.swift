@@ -3,7 +3,8 @@ import IchorCore
 
 /// Node maintenance (os:admin): the plan (pods the drain evicts or leaves, their budgets,
 /// the reboot checks), then the run cordon → drain → reboot or shutdown → uncordon. One
-/// maintenance at a time in the app.
+/// maintenance at a time in the app. On a cluster without Talos (`node`: the Kubernetes node
+/// name) it is a drain only: no action to pick, no reboot checks.
 struct MaintenanceView: View {
     let node: String
     let hostname: String
@@ -16,6 +17,7 @@ struct MaintenanceView: View {
     @State private var message: String?
 
     private var job: MaintenanceJob { .shared }
+    private var kube: Bool { model.activeIsKube }
 
     var body: some View {
         Group {
@@ -25,9 +27,12 @@ struct MaintenanceView: View {
                 LoadStateView(state: plan, retry: loadPlan) { plan in form(plan) }
             }
         }
-        .navigationTitle(String(localized: "Maintenance · \(hostname)"))
+        .navigationTitle(kube ? String(localized: "Drain · \(hostname)") : String(localized: "Maintenance · \(hostname)"))
         .navigationBarTitleDisplayMode(.inline)
-        .task { await loadPlan() }
+        .task {
+            if kube { action = .none }
+            await loadPlan()
+        }
     }
 
     /// Another maintenance or an upgrade runs: the cluster lock would refuse this one anyway.
@@ -51,14 +56,16 @@ struct MaintenanceView: View {
                 }
             }
             Section {
-                LabeledContent("Role", value: plan.controlPlane ? String(localized: "Control plane") : String(localized: "Worker"))
+                if !kube {
+                    LabeledContent("Role", value: plan.controlPlane ? String(localized: "Control plane") : String(localized: "Worker"))
+                }
                 LabeledContent("Kubernetes node", value: plan.kubeNode.or("—"))
                 LabeledContent("Scheduling") {
                     Text(plan.cordoned ? String(localized: "Cordoned") : String(localized: "Schedulable"))
                         .foregroundStyle(plan.cordoned ? Color.statusWarn : Color.secondary)
                 }
             }
-            actionSection
+            if !kube { actionSection }
             podsSection(String(localized: "Evicted (\(groups.toEvict.count))"), pods: groups.toEvict,
                         footer: String(localized: "Evictions honour PodDisruptionBudgets: a budget that allows no disruption makes the drain wait, it never forces."))
             if !groups.bare.isEmpty { bareSection(groups.bare) }
@@ -76,7 +83,7 @@ struct MaintenanceView: View {
         .themedBackground()
         .sheet(isPresented: $confirming) {
             HostnameConfirmationSheet(
-                title: String(localized: "Maintenance of \(hostname)?"),
+                title: kube ? String(localized: "Drain \(hostname)?") : String(localized: "Maintenance of \(hostname)?"),
                 message: confirmationMessage(plan),
                 hostname: hostname,
                 actionTitle: startTitle,
@@ -177,7 +184,11 @@ struct MaintenanceView: View {
 
     private func loadPlan() async {
         guard let client = model.client else { return }
-        plan = await .from { try await client.maintenancePlan(node: node) }
+        if kube {
+            plan = await .from { try await client.kubeDrainPlan(kubeNode: node) }
+        } else {
+            plan = await .from { try await client.maintenancePlan(node: node) }
+        }
     }
 
     /// App lock first (like reboot), then the typed hostname.
@@ -195,7 +206,7 @@ struct MaintenanceView: View {
         let acknowledgments = plan.acknowledgments(for: action)
         guard let client = model.client, !busy, plan.canStart(action: action, acknowledged: Set(acknowledgments)) else { return }
         job.start(client: client, target: MaintenanceJob.Target(node: node, hostname: hostname, action: action,
-                                                                wasCordoned: plan.cordoned),
+                                                                wasCordoned: plan.cordoned, kube: kube),
                   includeBare: includeBare, acknowledged: !acknowledgments.isEmpty)
     }
 }

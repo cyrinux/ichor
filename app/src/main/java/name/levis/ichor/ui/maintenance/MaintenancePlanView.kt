@@ -54,11 +54,12 @@ data class MaintenanceChoice(val action: MaintenanceAction, val includeBare: Boo
 /**
  * The maintenance plan: what follows the drain, the pods it evicts or leaves, and the checks
  * of a reboot or shutdown. [busyWith] names what already runs in the app (start disabled).
+ * [kube]: a cluster without Talos, which can only be drained (no action to pick, no checks).
  */
 @Composable
-fun MaintenancePlanView(plan: MaintenancePlan, demo: Boolean, busyWith: String?, onStart: (MaintenanceChoice) -> Unit) {
+fun MaintenancePlanView(plan: MaintenancePlan, demo: Boolean, busyWith: String?, kube: Boolean = false, onStart: (MaintenanceChoice) -> Unit) {
     val colors = LocalStatusColors.current
-    var action by rememberSaveable { mutableStateOf(MaintenanceAction.REBOOT) }
+    var action by rememberSaveable(kube) { mutableStateOf(if (kube) MaintenanceAction.NONE else MaintenanceAction.REBOOT) }
     var includeBare by rememberSaveable { mutableStateOf(false) }
     var ticked by rememberSaveable(plan.acknowledge) { mutableStateOf(setOf<Int>()) }
     val groups = remember(plan.pods) { plan.drainGroups() }
@@ -76,8 +77,12 @@ fun MaintenancePlanView(plan: MaintenancePlan, demo: Boolean, busyWith: String?,
             }
         }
 
-        SectionTitle(stringResource(R.string.maintenance_action))
-        ActionPicker(action) { action = it }
+        if (kube) {
+            MutedText(stringResource(R.string.maintenance_action_none_desc))
+        } else {
+            SectionTitle(stringResource(R.string.maintenance_action))
+            ActionPicker(action) { action = it }
+        }
 
         PodGroup(stringResource(R.string.maintenance_pods_evict, groups.evict.size), groups.evict, stringResource(R.string.maintenance_no_pods))
         if (groups.bare.isNotEmpty()) {
@@ -91,7 +96,7 @@ fun MaintenancePlanView(plan: MaintenancePlan, demo: Boolean, busyWith: String?,
         }
         if (groups.leftAlone.isNotEmpty()) LeftAlone(groups.leftAlone)
 
-        Checks(plan, action, ticked) { i, on -> ticked = if (on) ticked + i else ticked - i }
+        if (!kube) Checks(plan, action, ticked) { i, on -> ticked = if (on) ticked + i else ticked - i }
         if (busyWith != null) Text(busyWith, color = colors.warn, style = MaterialTheme.typography.bodySmall)
         Button(
             onClick = { onStart(MaintenanceChoice(action, includeBare, maintenanceAcknowledged(plan, action, ticked.size))) },

@@ -2357,6 +2357,7 @@
     <string name="node_menu_maintenance">Manutenzione…</string>
     <string name="node_menu_cordon">Isola (cordon)</string>
     <string name="node_menu_uncordon">Rimuovi isolamento</string>
+    <string name="node_menu_drain">Svuota…</string>
     <string name="node_menu_group_inspect">Ispeziona</string>
     <string name="node_menu_group_troubleshoot">Diagnostica</string>
     <string name="node_menu_group_operate">Gestisci</string>

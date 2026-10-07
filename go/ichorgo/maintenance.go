@@ -325,33 +325,9 @@ func (m maintenance) recheck(ctx context.Context, s *session, k *kubeClient, loc
 }
 
 func (m maintenance) steps(ctx context.Context, s *session, k *kubeClient, lock *upgradeLock, plan maintenancePlan) error {
-	m.emit(phaseCordon, "cordoning "+plan.KubeNode, nil)
-
-	if err := setUnschedulable(ctx, k, plan.KubeNode, true); err != nil {
-		return fmt.Errorf("%w; %s may be cordoned now: check it before trying again", kubeMutationError(err), plan.KubeNode)
-	}
-
-	// Listed again now that nothing new is scheduled here, like kubectl drain: a pod placed
-	// between the plan and the cordon must be evicted too, not killed by the reboot.
-	listed, err := drainPods(ctx, k, plan.KubeNode)
+	pods, err := cordonAndDrain(ctx, k, plan.KubeNode, m.includeBare, m.emit)
 	if err != nil {
-		return stoppedCordoned(plan.KubeNode, err)
-	}
-
-	pods := toEvict(listed, m.includeBare)
-	m.emit(phaseDrain, fmt.Sprintf("evicting %d pods", len(pods)), pods)
-
-	drainCtx, drainCancel := context.WithTimeout(ctx, drainTimeout)
-	err = drain(drainCtx, k, pods, func(p []drainPod) { m.emit(phaseDrain, drainMessage(p), p) }, drainPollInterval)
-
-	drainCancel()
-
-	if err != nil {
-		if ctx.Err() == nil && drainCtx.Err() != nil {
-			err = fmt.Errorf("the drain did not finish within %s (%s)", drainTimeout, drainMessage(pods))
-		}
-
-		return stoppedCordoned(plan.KubeNode, err)
+		return err
 	}
 
 	switch m.action {
@@ -413,6 +389,41 @@ func (m maintenance) steps(ctx context.Context, s *session, k *kubeClient, lock 
 	}
 
 	return nil
+}
+
+// cordonAndDrain cordons kubeNode, then evicts its pods (bare ones only with includeBare)
+// within drainTimeout; it returns the evicted pods. On failure the node stays cordoned.
+func cordonAndDrain(ctx context.Context, k *kubeClient, kubeNode string, includeBare bool, emit func(phase, message string, pods []drainPod)) ([]drainPod, error) {
+	emit(phaseCordon, "cordoning "+kubeNode, nil)
+
+	if err := setUnschedulable(ctx, k, kubeNode, true); err != nil {
+		return nil, fmt.Errorf("%w; %s may be cordoned now: check it before trying again", kubeMutationError(err), kubeNode)
+	}
+
+	// Listed again now that nothing new is scheduled here, like kubectl drain: a pod placed
+	// between the plan and the cordon must be evicted too, not killed by the reboot.
+	listed, err := drainPods(ctx, k, kubeNode)
+	if err != nil {
+		return nil, stoppedCordoned(kubeNode, err)
+	}
+
+	pods := toEvict(listed, includeBare)
+	emit(phaseDrain, fmt.Sprintf("evicting %d pods", len(pods)), pods)
+
+	drainCtx, drainCancel := context.WithTimeout(ctx, drainTimeout)
+	err = drain(drainCtx, k, pods, func(p []drainPod) { emit(phaseDrain, drainMessage(p), p) }, drainPollInterval)
+
+	drainCancel()
+
+	if err != nil {
+		if ctx.Err() == nil && drainCtx.Err() != nil {
+			err = fmt.Errorf("the drain did not finish within %s (%s)", drainTimeout, drainMessage(pods))
+		}
+
+		return nil, stoppedCordoned(kubeNode, err)
+	}
+
+	return pods, nil
 }
 
 func drainMessage(pods []drainPod) string {

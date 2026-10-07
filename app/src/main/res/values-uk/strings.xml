@@ -2537,6 +2537,7 @@
     <string name="node_menu_maintenance">Обслуговування…</string>
     <string name="node_menu_cordon">Ізолювати (cordon)</string>
     <string name="node_menu_uncordon">Зняти ізоляцію</string>
+    <string name="node_menu_drain">Звільнити…</string>
     <string name="node_menu_group_inspect">Огляд</string>
     <string name="node_menu_group_troubleshoot">Діагностика</string>
     <string name="node_menu_group_operate">Керування</string>

@@ -2349,6 +2349,7 @@
     <string name="node_menu_maintenance">Wartung…</string>
     <string name="node_menu_cordon">Absperren (cordon)</string>
     <string name="node_menu_uncordon">Freigeben (uncordon)</string>
+    <string name="node_menu_drain">Leeren…</string>
     <string name="node_menu_group_inspect">Untersuchen</string>
     <string name="node_menu_group_troubleshoot">Fehlersuche</string>
     <string name="node_menu_group_operate">Verwalten</string>

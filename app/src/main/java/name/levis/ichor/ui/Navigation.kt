@@ -409,6 +409,7 @@ fun Navigation(
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
+                onDrain = { nav.navigate(Routes.maintenance(it, it)) },
             )
             // After an update: what changed since the build that ran before.
             WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })

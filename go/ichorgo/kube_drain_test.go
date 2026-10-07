@@ -64,6 +64,8 @@ func (d *drainAPI) handler(w http.ResponseWriter, r *http.Request) {
 		_, _ = io.WriteString(w, drainPodsJSON)
 	case r.Method == http.MethodGet && r.URL.Path == "/apis/policy/v1/poddisruptionbudgets":
 		_, _ = io.WriteString(w, drainPDBsJSON)
+	case r.Method == http.MethodGet && r.URL.Path == "/api/v1/nodes/w1":
+		_, _ = io.WriteString(w, `{"metadata":{"name":"w1"},"spec":{"unschedulable":true}}`)
 	case r.Method == http.MethodPatch && r.URL.Path == "/api/v1/nodes/w1":
 		d.patches = append(d.patches, r.Header.Get("Content-Type")+" "+string(body))
 		_, _ = io.WriteString(w, `{}`)

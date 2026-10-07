@@ -2357,6 +2357,7 @@
     <string name="node_menu_maintenance">Maintenance…</string>
     <string name="node_menu_cordon">Isoler (cordon)</string>
     <string name="node_menu_uncordon">Lever l\'isolement</string>
+    <string name="node_menu_drain">Drainer…</string>
     <string name="node_menu_group_inspect">Inspecter</string>
     <string name="node_menu_group_troubleshoot">Dépanner</string>
     <string name="node_menu_group_operate">Administrer</string>

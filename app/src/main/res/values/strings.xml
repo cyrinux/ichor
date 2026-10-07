@@ -2353,6 +2353,7 @@
     <string name="node_menu_maintenance">Maintenance…</string>
     <string name="node_menu_cordon">Cordon</string>
     <string name="node_menu_uncordon">Uncordon</string>
+    <string name="node_menu_drain">Drain…</string>
     <string name="node_menu_group_inspect">Inspect</string>
     <string name="node_menu_group_troubleshoot">Troubleshoot</string>
     <string name="node_menu_group_operate">Operate</string>

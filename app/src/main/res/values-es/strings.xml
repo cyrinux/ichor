@@ -2357,6 +2357,7 @@
     <string name="node_menu_maintenance">Mantenimiento…</string>
     <string name="node_menu_cordon">Acordonar</string>
     <string name="node_menu_uncordon">Desacordonar</string>
+    <string name="node_menu_drain">Drenar…</string>
     <string name="node_menu_group_inspect">Inspeccionar</string>
     <string name="node_menu_group_troubleshoot">Diagnosticar</string>
     <string name="node_menu_group_operate">Administrar</string>

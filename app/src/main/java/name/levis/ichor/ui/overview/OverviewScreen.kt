@@ -157,6 +157,7 @@ fun OverviewScreen(
     onNetworkPolicies: () -> Unit,
     onResources: () -> Unit,
     onHelm: () -> Unit,
+    onDrain: (node: String) -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
@@ -186,6 +187,7 @@ fun OverviewScreen(
                 onChangelog = onChangelog,
                 onResources = onResources,
                 onHelm = onHelm,
+                onDrain = onDrain,
             ),
         )
         return

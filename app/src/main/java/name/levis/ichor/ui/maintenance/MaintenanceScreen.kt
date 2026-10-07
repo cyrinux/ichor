@@ -31,6 +31,7 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.MaintenanceManager
+import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.MaintenancePlan
 import name.levis.ichor.model.isDemo
@@ -52,7 +53,10 @@ class MaintenancePlanViewModel(private val maintenances: MaintenanceManager, pri
     override suspend fun fetch() = maintenances.plan(node)
 }
 
-/** Node maintenance: the plan, then the followed run (which goes on when leaving the screen). */
+/**
+ * Node maintenance: the plan, then the followed run (which goes on when leaving the screen).
+ * On a cluster without Talos ([node]: the Kubernetes node name) it is a drain only.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaintenanceScreen(
@@ -72,6 +76,7 @@ fun MaintenanceScreen(
     val scope = rememberCoroutineScope()
     var confirming by remember { mutableStateOf<MaintenanceChoice?>(null) }
     val following = current?.takeIf { it.node == node }
+    val kube = config?.activeIsKube == true
     LaunchedEffect(Unit) { if (plan == UiState.Loading) planVm.refresh() }
 
     fun start(choice: MaintenanceChoice, name: String) {
@@ -114,7 +119,7 @@ fun MaintenanceScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(stringResource(R.string.maintenance_title))
+                        Text(stringResource(if (kube) R.string.maintenance_phase_drain else R.string.maintenance_title))
                         Text(hostname, style = MaterialTheme.typography.labelMedium)
                     }
                 },
@@ -141,6 +146,7 @@ fun MaintenanceScreen(
                             plan = s.data,
                             demo = config?.activeSummary?.isDemo == true,
                             busyWith = busyWith,
+                            kube = kube,
                             onStart = { confirming = it },
                         )
                     }
