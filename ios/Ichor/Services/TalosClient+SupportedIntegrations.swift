@@ -13,6 +13,6 @@ extension TalosClient {
     /// The same list with whether the cluster runs each one, from one API discovery (os:admin).
     /// hints: see supportedIntegrationHints.
     func supportedIntegrations(hints: String) async throws -> SupportedIntegrations {
-        try await Self.json { [config, context, kubeServer] in IchorgoKubeSupportedIntegrations(config, context, kubeServer, hints, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeSupportedIntegrations(config, context, kubeServer, hints, $0) }
     }
 }

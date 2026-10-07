@@ -1,6 +1,7 @@
 # Study: kubeconfig-only clusters (no Talos)
 
-Status: **study**, checked against the code on 2026-10-06. Nothing is built.
+Status: **implemented** (2026-10-07): K1 #201/#202, Go core for KN and K2–K9 #203, apps #204.
+The study below is kept as written; see the PRs for what differs in detail.
 
 Goal: add a cluster from a kubeconfig alone, with no talosconfig, and use every Kubernetes feature
 of the app on it. Target auth methods: ServiceAccount token and client cert, kubectl

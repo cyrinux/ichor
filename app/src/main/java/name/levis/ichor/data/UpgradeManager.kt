@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.ui.goErrorText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -98,7 +99,7 @@ class UpgradeManager(
         override fun onDone(newVersion: String, errMessage: String) {
             _current.update {
                 if (it?.node == node && it.running) {
-                    it.copy(finished = true, newVersion = newVersion, error = errMessage.ifEmpty { null })
+                    it.copy(finished = true, newVersion = newVersion, error = errMessage.ifEmpty { null }?.let(::goErrorText))
                 } else {
                     it
                 }

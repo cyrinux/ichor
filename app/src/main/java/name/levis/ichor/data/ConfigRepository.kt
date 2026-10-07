@@ -22,8 +22,15 @@ import java.io.File
 /** A config is stored but could not be read: the Keystore is busy or lost its key, or the file is damaged. */
 class ConfigUnreadableException(cause: Throwable) : Exception("Stored config could not be read", cause)
 
-/** [guard] may hold back a call to the cluster on screen by throwing, e.g. off its VPN. */
-class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Unit = {}) {
+/**
+ * [guard] may hold back a call to the cluster on screen by throwing, e.g. off its VPN.
+ * [kubeAccess] gives the Talos clusters' Kubernetes access (see [KubeAccess]), set on their summaries.
+ */
+class ConfigRepository(
+    context: Context,
+    private val guard: (StoredConfig) -> Unit = {},
+    private val kubeAccess: () -> Map<String, String> = { emptyMap() },
+) {
 
     private val strongBox = hasStrongBox(context.packageManager)
     private val store = SecureStore(File(context.filesDir, "talosconfig.enc"), strongBoxAvailable = strongBox)
@@ -69,7 +76,7 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
         val talos = store.read()?.decodeToString()
         val kube = kubeStore.read()?.decodeToString()
         if (talos == null && kube == null) return null
-        val summary = parse(talos.orEmpty(), kube.orEmpty())
+        val summary = linked(parse(talos.orEmpty(), kube.orEmpty()))
         return StoredConfig(talos.orEmpty(), kube.orEmpty(), summary, resolveActive(summary, prefs.getString(KEY_CONTEXT, null), savedIndex()))
     }
 
@@ -234,7 +241,8 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      * to come back to. Only a store that changed is written; when the second write fails the
      * first one is undone, so the disk never holds half of a change (a restore, an import).
      */
-    private suspend fun commit(talos: String, kube: String, summary: ConfigSummary, active: String?, remember: Boolean = true) {
+    private suspend fun commit(talos: String, kube: String, parsed: ConfigSummary, active: String?, remember: Boolean = true) {
+        val summary = linked(parsed)
         val shown = active ?: summary.current
         val previous = _config.value
         val writes = listOfNotNull(
@@ -275,9 +283,17 @@ class ConfigRepository(context: Context, private val guard: (StoredConfig) -> Un
      */
     suspend fun reparse() = withContext(Dispatchers.IO) {
         val current = _config.value ?: return@withContext
-        val summary = parse(current.talosYaml, current.kubeYaml)
+        val summary = linked(parse(current.talosYaml, current.kubeYaml))
         _config.value = current.copy(summary = summary, activeContext = contextAt(summary, current.summary.indexOf(current.activeContext)))
     }
+
+    /** Sets the Kubernetes access on the stored clusters again, after it changed. */
+    fun relink() {
+        val current = _config.value ?: return
+        _config.value = current.copy(summary = linked(current.summary))
+    }
+
+    private fun linked(summary: ConfigSummary): ConfigSummary = withKubeAccess(summary, kubeAccess())
 
     private fun savedIndex(): Int = prefs.getInt(KEY_CONTEXT_INDEX, -1)
 

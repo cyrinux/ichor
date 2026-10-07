@@ -20,6 +20,10 @@ struct ImportView: View {
     @State private var error: String?
     @State private var busy = false
     @State private var showingHelp = false
+    @State private var showingDiscovery = false
+    /// The credentials cloud discovery found the previewed clusters with: the added ones that
+    /// sign in with credentials are signed in with them.
+    @State private var discovered: DiscoveredClusters?
 
     /// A validated config waiting for the user's go: a talosconfig, or a kubeconfig with the
     /// stored clusters its contexts are named like.
@@ -50,7 +54,7 @@ struct ImportView: View {
                 }
             case .kube(let yaml, let summary, let conflicts)?:
                 KubePreviewList(summary: summary, conflicts: conflicts, busy: busy, onCancel: { self.preview = nil }) { choices in
-                    Task { await saveKube(yaml, choices: choices) }
+                    Task { await saveKube(yaml, summary: summary, conflicts: conflicts, choices: choices) }
                 }
             case nil:
                 picker
@@ -64,6 +68,9 @@ struct ImportView: View {
             }
         }
         .sheet(isPresented: $showingHelp) { HelpSheet() }
+        .sheet(isPresented: $showingDiscovery) {
+            CloudDiscoveryView { found in validate(found.kubeconfig, discovered: found) }
+        }
         // A file opened with Ichor (IncomingConfig): previewed like a picked one.
         .task(id: NotificationRouter.shared.pendingImportText) {
             guard let text = NotificationRouter.shared.pendingImportText else { return }
@@ -96,6 +103,11 @@ struct ImportView: View {
                         .disabled(busy)
                 }
             }
+            Button { showingDiscovery = true } label: {
+                Label("Add from a cloud account", systemImage: "cloud")
+            }
+            .buttonStyle(.bordered)
+            .disabled(busy)
             Picker("Source", selection: $source) {
                 ForEach(Source.allCases) { Text($0.label).tag($0) }
             }
@@ -152,8 +164,9 @@ struct ImportView: View {
 
     /// Expands a compressed payload (a large config in a QR code), then takes the talosconfig
     /// or the kubeconfig flow.
-    private func validate(_ text: String) {
+    private func validate(_ text: String, discovered found: DiscoveredClusters? = nil) {
         busy = true
+        discovered = found
         Task {
             defer { busy = false }
             do {
@@ -185,16 +198,58 @@ struct ImportView: View {
         }
     }
 
-    private func saveKube(_ yaml: String, choices: [KubeImportChoice]) async {
+    private func saveKube(_ yaml: String, summary: ConfigSummary, conflicts: [KubeImportConflict],
+                          choices: [KubeImportChoice]) async {
         busy = true
         defer { busy = false }
         do {
             try await model.saveKube(added: yaml, choices: choices)
-            onImported()
         } catch {
             self.error = error.localizedDescription
             preview = nil
+            return
         }
+        guard let found = discovered else {
+            onImported()
+            return
+        }
+        discovered = nil
+        let failures = await signInDiscovered(summary: summary, conflicts: conflicts, choices: choices, secrets: found.secrets)
+        if failures.isEmpty {
+            onImported()
+        } else {
+            // The clusters are added; those not signed in say so on their home.
+            error = String(localized: "Clusters added. Some could not be signed in: \(failures.joined(separator: "; "))")
+            preview = nil
+        }
+    }
+
+    /// Signs the discovered clusters just added in with the account's credentials, those that
+    /// sign in with credentials; the others (OIDC, Azure device code) wait for the user. The
+    /// errors of the others, by context.
+    private func signInDiscovered(summary: ConfigSummary, conflicts: [KubeImportConflict],
+                                  choices: [KubeImportChoice], secrets: String) async -> [String] {
+        guard let kube = model.kubeYAML else { return [] }
+        let skipped = Set(choices.filter { $0.skip == true }.map(\.index))
+        let names = importedSignInContexts(
+            summary: summary,
+            selected: Set(summary.contexts.indices).subtracting(skipped),
+            replacing: Set(choices.filter { $0.replace == true }.map(\.index)),
+            conflicts: conflicts.map { (index: $0.index, suggested: $0.suggested) }
+        )
+        var failures: [String] = []
+        for name in names {
+            do {
+                try await TalosClient.setCredentials(kube: kube, context: name, secrets: secrets)
+            } catch {
+                let message = error.localizedDescription
+                if !isNotCredentialsMethod(message) && !isKubeSignInRequired(message) {
+                    failures.append("\(name): \(message)")
+                }
+            }
+        }
+        model.reloadKubernetes()
+        return failures
     }
 }
 
@@ -263,7 +318,7 @@ private struct KubePreviewList: View {
             Section {
                 Text("Choose the clusters to add").font(.headline)
             } footer: {
-                Text("A kubeconfig with a client certificate or a token works. Cloud sign-ins (EKS, GKE, OIDC…) come in a later version.")
+                Text("A client certificate or a token works as it is. A cluster that signs in (OIDC, EKS, GKE, AKS, DigitalOcean, Rancher) asks for it once added.")
             }
             ForEach(Array(summary.contexts.enumerated()), id: \.element.id) { index, ctx in
                 Section {
@@ -291,6 +346,10 @@ private struct KubePreviewList: View {
         .disabled(ctx.problem != nil)
         LabeledContent("Server", value: ctx.endpoints.first ?? "")
         LabeledContent("Sign-in", value: ctx.localizedAuthLabel)
+        if ctx.problem == nil, let method = ctx.signIn {
+            Text("Signs in with \(KubeAuthWording.methodLabel(method)) once added.")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
         if let user = ctx.user, !user.isEmpty { LabeledContent("Signed in as", value: user) }
         if let namespace = ctx.namespace, !namespace.isEmpty { LabeledContent("Namespace", value: namespace) }
         if ctx.certNotAfter > 0 { LabeledContent("Expires", value: localizedCertExpiry(ctx.certNotAfter)) }

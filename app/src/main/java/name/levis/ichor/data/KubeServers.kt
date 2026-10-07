@@ -18,6 +18,9 @@ class KubeServers(prefs: SharedPreferences) {
     /** The address set for [stored]'s active cluster, "" for the kubeconfig's own. */
     fun serverFor(stored: StoredConfig): String = stored.activeSummary?.fingerprint?.let { servers.value[it] }.orEmpty()
 
+    /** Where [stored]'s Kubernetes calls go: through its Kubernetes access when set (see [kubeTarget]). */
+    fun targetFor(stored: StoredConfig): KubeTarget = kubeTarget(stored, servers.value)
+
     /** Forgets the addresses of the clusters no longer in [summary]. */
     fun sync(summary: ConfigSummary) = map.store(keepClusterNames(map.values.value, summary.contexts.map { it.fingerprint }))
 

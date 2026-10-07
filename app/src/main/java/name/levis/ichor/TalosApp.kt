@@ -55,9 +55,15 @@ import name.levis.ichor.data.VpnMonitor
 import name.levis.ichor.data.VpnOnlyClusters
 import name.levis.ichor.data.KubeScopes
 import name.levis.ichor.data.KubeServers
+import name.levis.ichor.data.KubeAccess
+import name.levis.ichor.data.KubeAuthRepository
+import name.levis.ichor.data.KubeAuthStore
+import name.levis.ichor.data.SecureStoreValue
+import name.levis.ichor.data.hasStrongBox
 import name.levis.ichor.data.SkippedTalosUpdates
 import name.levis.ichor.data.SnapshotKeys
 import name.levis.ichor.data.MetricsStore
+import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.data.VpnRequiredException
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.EndpointMatch
@@ -77,7 +83,13 @@ import kotlinx.coroutines.launch
 
 /** Holds app-wide singletons (manual DI; the app is small). */
 class TalosApp : Application() {
-    val configRepository by lazy { ConfigRepository(this, guard = ::holdBackOffVpn) }
+    val configRepository by lazy { ConfigRepository(this, guard = ::holdBackOffVpn, kubeAccess = { kubeAccess.links.value }) }
+
+    /** The sign-ins of kubeconfig clusters (tokens, keys typed), sealed like the configs; the Go core reads and writes it. */
+    val kubeAuthStore by lazy {
+        KubeAuthStore(SecureStoreValue(java.io.File(filesDir, KubeAuthStore.FILE), KubeAuthStore.KEY_ALIAS, hasStrongBox(packageManager)))
+    }
+    val kubeAuthRepository by lazy { KubeAuthRepository(configRepository) }
     val talosRepository by lazy { TalosRepository(configRepository, kubeServers, offlineCache) }
 
     /** Last known cluster data on disk, only while "Keep last known state" is on (Settings → Privacy). */
@@ -93,6 +105,8 @@ class TalosApp : Application() {
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
     val netPerfRepository by lazy { NetPerfRepository(configRepository, kubeServers) }
     val ciliumRepository by lazy { CiliumRepository(configRepository, kubeServers) }
+    /** Any kind as YAML, Helm releases, followed pod logs and port-forwards (Kubernetes API only). */
+    val kubeBrowser by lazy { KubeBrowserRepository(configRepository, kubeServers) }
     val netPerfHistory by lazy { NetPerfHistory(java.io.File(noBackupFilesDir, "netperf")) }
     val publicIps by lazy {
         PublicIpRepository(
@@ -126,6 +140,8 @@ class TalosApp : Application() {
     }
     val vpnOnly by lazy { VpnOnlyClusters(getSharedPreferences(VpnOnlyClusters.FILE, Context.MODE_PRIVATE)) }
     val kubeServers by lazy { KubeServers(getSharedPreferences(KubeServers.FILE, Context.MODE_PRIVATE)) }
+    /** The kubeconfig cluster each Talos cluster's Kubernetes calls go through, when not the Talos admin kubeconfig. */
+    val kubeAccess by lazy { KubeAccess(getSharedPreferences(KubeAccess.FILE, Context.MODE_PRIVATE)) }
     /** The namespace each cluster's Kubernetes screen lists. */
     val kubeScopes by lazy { KubeScopes(getSharedPreferences(KubeScopes.FILE, Context.MODE_PRIVATE)) }
     /** Public keys each cluster's etcd snapshots are encrypted for. */
@@ -171,7 +187,7 @@ class TalosApp : Application() {
     /** Passphrase-sealed backups of the config and settings, restorable on another device (Android or iOS). */
     val backupManager by lazy {
         BackupManager(
-            configRepository, uiPreferences, clusterColors, clusterNames, vpnOnly, kubeServers, wakeOnLan, monitorStore,
+            configRepository, uiPreferences, clusterColors, clusterNames, vpnOnly, kubeServers, kubeAccess, kubeAuthStore, wakeOnLan, monitorStore,
             setPrivacyMask = ::setPrivacyMask,
             notificationsAllowed = { canPostNotifications(this) },
             onRestored = {
@@ -215,6 +231,35 @@ class TalosApp : Application() {
     fun setKubeServer(fingerprint: String, server: String) {
         kubeServers.set(fingerprint, server)
         if (fingerprint == configRepository.config.value?.activeSummary?.fingerprint) talosRepository.invalidate()
+    }
+
+    /**
+     * Sets the Kubernetes access of the Talos cluster [fingerprint]: the kubeconfig cluster
+     * [kubeFingerprint], or null for the Talos admin kubeconfig. Its Kubernetes screens reload.
+     */
+    fun setKubeAccess(fingerprint: String, kubeFingerprint: String?) {
+        kubeAccess.set(fingerprint, kubeFingerprint)
+        configRepository.relink()
+        if (fingerprint == configRepository.config.value?.activeSummary?.fingerprint) talosRepository.invalidate()
+    }
+
+    /**
+     * Brings the app back over the browser a sign-in finished in. The task comes to the front
+     * as it was (no new screen); Android may refuse it while the app is in the background.
+     */
+    fun bringToFront() {
+        val intent = android.content.Intent(this, MainActivity::class.java).addFlags(
+            android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
+                android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP,
+        )
+        runCatching { startActivity(intent) }
+    }
+
+    /** A kubeconfig cluster was signed in or out: what was loaded without (or with) it goes. */
+    fun signInChanged() {
+        talosRepository.invalidate()
+        launchSync(runNow = true)
     }
 
     /** Throws [VpnRequiredException] instead of trying a VPN-only cluster while no VPN is up. */
@@ -263,7 +308,12 @@ class TalosApp : Application() {
     }
 
     suspend fun removeCluster(name: String): Boolean {
-        val wasShown = name == configRepository.config.value?.activeContext
+        val stored = configRepository.config.value
+        // Its sign-in goes with it, the token the core holds in memory too.
+        if (stored?.summary?.contexts?.any { it.name == name && it.signIn.isNotEmpty() } == true) {
+            runCatching { kubeAuthRepository.signOut(name) }
+        }
+        val wasShown = name == stored?.activeContext
         val remains = configRepository.removeContext(name)
         if (wasShown) forgetShownCluster() else launchSync(runNow = true)
         return remains
@@ -353,7 +403,10 @@ class TalosApp : Application() {
     override fun onCreate() {
         super.onCreate()
         syncLanguage()
-        // Before any Talos call: the monitor worker and the widget run in this process too.
+        // Errors turned into text away from a screen are localized with the app's language.
+        name.levis.ichor.ui.AppTexts.context = this
+        // Before any Go call: the monitor worker and the widget run in this process too.
+        Ichorgo.setAuthStore(kubeAuthStore)
         applyPrivacyMask(uiPreferences.privacyMask.value)
         // Where Go remembers node names, so a node that is down still shows its hostname.
         Ichorgo.setDataDir(noBackupFilesDir.path, coreDataKey() ?: ByteArray(0))
@@ -368,14 +421,23 @@ class TalosApp : Application() {
                     publicIps.sync(it.summary)
                     vpnOnly.sync(it.summary)
                     kubeServers.sync(it.summary)
+                    kubeAccess.sync(it.summary)
+                    launch(Dispatchers.IO) { kubeAuthStore.retain(it.summary.contexts.map { c -> c.fingerprint }) }
                     kubeScopes.sync(it.summary)
                     snapshotKeys.sync(it.summary)
                     skippedTalosUpdates.sync(it.summary)
                     val fingerprints = it.summary.contexts.map { c -> c.fingerprint }
                     launch(Dispatchers.IO) { metricsStore.sync(fingerprints) }
                 }
-                // The deleted config takes the metrics setups (and their credentials) with it.
-                if (stored == null && configRepository.generation.value > 0) launch(Dispatchers.IO) { metricsStore.sync(emptyList()) }
+                // The deleted config takes the metrics setups (and their credentials) with it, and the sign-ins.
+                if (stored == null && configRepository.generation.value > 0) {
+                    launch(Dispatchers.IO) { metricsStore.sync(emptyList()) }
+                    launch(Dispatchers.IO) {
+                        kubeAuthStore.clear()
+                        // Drops the tokens the core keeps in memory.
+                        Ichorgo.setAuthStore(kubeAuthStore)
+                    }
+                }
                 // A removed cluster (or the deleted config) takes its shells with it.
                 if (stored != null || configRepository.generation.value > 0) {
                     debugShells.retainContexts(stored?.summary?.contexts.orEmpty().map { c -> c.name }.toSet())

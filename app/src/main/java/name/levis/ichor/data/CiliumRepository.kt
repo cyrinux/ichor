@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.ui.goErrorText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -21,14 +22,14 @@ import name.levis.ichorgo.Ichorgo
 class CiliumRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers) {
     /** Whether Cilium runs, and with Hubble. */
     suspend fun status(): CiliumStatus = withContext(Dispatchers.IO) {
-        val (stored, server) = target()
-        TalosJson.decodeFromString(CiliumStatus.serializer(), Ichorgo.kubeCilium(stored.yaml, stored.activeContext, server))
+        val target = target()
+        TalosJson.decodeFromString(CiliumStatus.serializer(), Ichorgo.kubeCilium(target.yaml, target.context, target.server))
     }
 
     /** Kubernetes NetworkPolicies and, with Cilium, its own policies. */
     suspend fun policies(): NetPolicyReport = withContext(Dispatchers.IO) {
-        val (stored, server) = target()
-        TalosJson.decodeFromString(NetPolicyReport.serializer(), Ichorgo.kubeNetworkPolicies(stored.yaml, stored.activeContext, server))
+        val target = target()
+        TalosJson.decodeFromString(NetPolicyReport.serializer(), Ichorgo.kubeNetworkPolicies(target.yaml, target.context, target.server))
     }
 
     /**
@@ -37,11 +38,11 @@ class CiliumRepository(private val configs: ConfigRepository, private val kubeSe
      * collector stops it.
      */
     fun flows(filter: HubbleFilter): Flow<StreamItem<HubbleSnapshot>> = callbackFlow {
-        val (stored, server) = target()
+        val target = target()
         val run = Ichorgo.startHubbleFlows(
-            stored.yaml,
-            stored.activeContext,
-            server,
+            target.yaml,
+            target.context,
+            target.server,
             filter.namespace.orEmpty(),
             filter.pod.orEmpty(),
             filter.dropsOnly,
@@ -52,7 +53,7 @@ class CiliumRepository(private val configs: ConfigRepository, private val kubeSe
                 }
 
                 override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
+                    trySend(StreamItem.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
                     close()
                 }
             },
@@ -60,9 +61,6 @@ class CiliumRepository(private val configs: ConfigRepository, private val kubeSe
         awaitClose { run.cancel() }
     }.buffer(Channel.CONFLATED)
 
-    /** The config to call with and the Kubernetes API address the user set ("" for the kubeconfig's). */
-    private fun target(): Pair<StoredConfig, String> {
-        val stored = configs.forCall()
-        return stored to kubeServers.serverFor(stored)
-    }
+    /** Where the calls go: the cluster's config or its Kubernetes access (see [kubeTarget]). */
+    private fun target(): KubeTarget = kubeServers.targetFor(configs.forCall())
 }

@@ -1,0 +1,251 @@
+import Foundation
+
+// Signing kubeconfig clusters in (Go kube_auth*.go, kube_discover.go): what the core says about
+// a cluster's sign-in, the auth states the app keeps for it, and the hybrid Talos + kubeconfig
+// access (K5). Same rules as Android.
+
+/// The code an error of the Go core starts with when the cluster needs the user to sign in.
+public let kubeSignInRequiredCode = "kube-sign-in-required"
+
+/// What follows the sign-in code in a core error ("sign in to this cluster (eks): …"), nil when
+/// `message` is not about a sign-in.
+public func kubeSignInRequiredReason(_ message: String) -> String? {
+    guard let range = message.range(of: kubeSignInRequiredCode) else { return nil }
+    let rest = message[range.upperBound...].drop { $0 == ":" || $0 == " " }
+    return String(rest)
+}
+
+/// Whether `message` (a core error) says the cluster needs a sign-in.
+public func isKubeSignInRequired(_ message: String) -> Bool {
+    kubeSignInRequiredReason(message) != nil
+}
+
+/// How a stored kubeconfig context signs in (Go KubeSignInInfo; nil for static credentials).
+public struct KubeSignInInfo: Decodable, Equatable, Sendable {
+    /// oidc, eks, gke, azure, digitalocean, rancher.
+    public let method: String
+    /// "browser" (OIDC, device code included) or "credentials" (fields to enter).
+    public let kind: String
+    /// The fields of the first option.
+    public let fields: [String]
+    /// The alternative field sets (EKS: IAM Identity Center, or access keys).
+    public let options: [[String]]
+    public let signedIn: Bool
+    public let user: String?
+    /// When a new sign-in will be needed, Unix seconds (0: unknown).
+    public let sessionExpires: Int64
+
+    public init(method: String, kind: String, fields: [String] = [], options: [[String]] = [],
+                signedIn: Bool = false, user: String? = nil, sessionExpires: Int64 = 0) {
+        self.method = method
+        self.kind = kind
+        self.fields = fields
+        self.options = options
+        self.signedIn = signedIn
+        self.user = user
+        self.sessionExpires = sessionExpires
+    }
+
+    private enum CodingKeys: String, CodingKey { case method, kind, fields, options, signedIn, user, sessionExpires }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        method = try c.field(.method, "")
+        kind = try c.field(.kind, "browser")
+        fields = try c.field(.fields, [])
+        options = try c.field(.options, [])
+        signedIn = try c.field(.signedIn, false)
+        user = try c.decodeIfPresent(String.self, forKey: .user).flatMap { $0.isEmpty ? nil : $0 }
+        sessionExpires = try c.field(.sessionExpires, 0)
+    }
+
+    public var isCredentials: Bool { kind == "credentials" }
+
+    /// The field sets to choose from: the options, else the fields alone.
+    public var fieldSets: [[String]] {
+        if !options.isEmpty { return options }
+        return fields.isEmpty ? [] : [fields]
+    }
+
+    /// The decoded answer of KubeSignInInfo: nil for "" (static credentials).
+    public static func decode(_ json: String) throws -> KubeSignInInfo? {
+        guard !json.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        return try TalosJSON.decode(KubeSignInInfo.self, from: json)
+    }
+}
+
+/// What an interactive sign-in asks the app to show (Go signInPrompt).
+public struct KubeSignInPrompt: Decodable, Equatable, Sendable {
+    /// "browser": open `url`, it comes back by itself. "device": show `userCode`, open `url`.
+    public let kind: String
+    public let url: String
+    public let userCode: String?
+    public let verificationURL: String?
+    /// Where the browser comes back (a loopback address).
+    public let redirectPrefix: String?
+    /// Seconds the device code stays valid (0: unknown).
+    public let expiresIn: Int
+
+    public init(kind: String, url: String, userCode: String? = nil, verificationURL: String? = nil,
+                redirectPrefix: String? = nil, expiresIn: Int = 0) {
+        self.kind = kind
+        self.url = url
+        self.userCode = userCode
+        self.verificationURL = verificationURL
+        self.redirectPrefix = redirectPrefix
+        self.expiresIn = expiresIn
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case kind, url, userCode, redirectPrefix, expiresIn
+        case verificationURL = "verificationUrl"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try c.field(.kind, "browser")
+        url = try c.field(.url, "")
+        userCode = try c.decodeIfPresent(String.self, forKey: .userCode)
+        verificationURL = try c.decodeIfPresent(String.self, forKey: .verificationURL)
+        redirectPrefix = try c.decodeIfPresent(String.self, forKey: .redirectPrefix)
+        expiresIn = try c.field(.expiresIn, 0)
+    }
+
+    public var isDevice: Bool { kind == "device" }
+
+    /// The page to open: the complete verification URL when given, else `url`.
+    public var openURL: String {
+        if isDevice, url.isEmpty, let verificationURL { return verificationURL }
+        return url
+    }
+}
+
+// MARK: - Fields
+
+/// How a sign-in or discovery field is entered.
+public enum KubeFieldInput: Equatable, Sendable {
+    /// A secret on one line (SecureField).
+    case secret
+    /// A JSON document, pasted or picked from a file (GCP service account key).
+    case json
+    /// Plain text (IDs, URLs, regions).
+    case plain
+}
+
+public func kubeFieldInput(_ field: String) -> KubeFieldInput {
+    switch field {
+    case "gcpServiceAccountJson": .json
+    case "awsSecretAccessKey", "awsSessionToken", "azureClientSecret", "doApiToken", "rancherApiKey": .secret
+    default: .plain
+    }
+}
+
+/// Fields that may be left empty.
+public func kubeFieldOptional(_ field: String) -> Bool {
+    field == "awsSessionToken"
+}
+
+/// The JSON object of `values` for `fields` (trimmed, empty ones left out), as KubeSetCredentials
+/// and DiscoverClusters take it.
+public func kubeSecretsJSON(fields: [String], values: [String: String]) -> String {
+    var secrets: [String: String] = [:]
+    for field in fields {
+        let value = (values[field] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !value.isEmpty { secrets[field] = value }
+    }
+    let data = (try? JSONSerialization.data(withJSONObject: secrets, options: [.sortedKeys])) ?? Data("{}".utf8)
+    return String(decoding: data, as: UTF8.self)
+}
+
+/// Whether every required field of `fields` has a value.
+public func kubeFieldsComplete(_ fields: [String], values: [String: String]) -> Bool {
+    fields.allSatisfy { kubeFieldOptional($0) || !(values[$0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+}
+
+/// The providers cloud discovery offers, in the order shown (Go KubeDiscoverFields keys).
+public let kubeDiscoverProviders = ["eks", "gke", "aks", "digitalocean", "rancher"]
+
+/// KubeDiscoverFields' answer: the fields per provider.
+public func decodeKubeDiscoverFields(_ json: String) throws -> [String: [String]] {
+    try TalosJSON.decode([String: [String]].self, from: json)
+}
+
+/// The stored names of the contexts an import added that sign in through a method (`signIn`):
+/// those the user kept, under the name the core gives a taken one unless it replaced the same
+/// cluster. What discovery signs in with the account's credentials once saved.
+public func importedSignInContexts(summary: ConfigSummary, selected: Set<Int>, replacing: Set<Int>,
+                                   conflicts: [(index: Int, suggested: String)]) -> [String] {
+    summary.contexts.indices.compactMap { index in
+        let ctx = summary.contexts[index]
+        guard selected.contains(index), ctx.problem == nil, ctx.signIn != nil else { return nil }
+        if !replacing.contains(index), let conflict = conflicts.first(where: { $0.index == index }) {
+            return conflict.suggested
+        }
+        return ctx.name
+    }
+}
+
+/// The message KubeSetCredentials answers for a context that does not sign in with credentials:
+/// discovery skips those quietly.
+public func isNotCredentialsMethod(_ message: String) -> Bool {
+    message.contains("does not sign in with credentials")
+}
+
+// MARK: - Auth states
+
+/// The auth states the app keeps for Go's AuthStore: cluster fingerprint → state JSON, sealed
+/// as one item. Pure operations; KubeAuthStore holds the sealed copy.
+public enum KubeAuthMap {
+    /// The map stored as `data`; empty for nil or anything unreadable.
+    public static func decode(_ data: Data?) -> [String: String] {
+        guard let data, let map = try? JSONDecoder().decode([String: String].self, from: data) else { return [:] }
+        return map
+    }
+
+    public static func encode(_ map: [String: String]) -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        return (try? encoder.encode(map)) ?? Data("{}".utf8)
+    }
+
+    /// `map` with `key` set to `state`; "" (or a blank key) deletes / changes nothing.
+    public static func saving(_ map: [String: String], key: String, state: String) -> [String: String] {
+        guard !key.isEmpty else { return map }
+        var out = map
+        out[key] = state.isEmpty ? nil : state
+        return out
+    }
+
+    /// Only the states of the clusters still stored.
+    public static func keeping(_ map: [String: String], fingerprints: [String]) -> [String: String] {
+        let known = Set(fingerprints.filter { !$0.isEmpty })
+        return map.filter { known.contains($0.key) && !$0.value.isEmpty }
+    }
+}
+
+// MARK: - Hybrid access (K5)
+
+/// The stored kubeconfig context the Kubernetes calls of `talos` go through, nil when it uses
+/// the admin kubeconfig Talos issues: a Talos cluster linked (`links`: Talos fingerprint → kube
+/// fingerprint) to a kube cluster still stored (`kubeContexts`).
+public func kubeAccessContext(of talos: ContextSummary?, links: [String: String], kubeContexts: [ContextSummary]) -> String? {
+    guard let talos, !talos.isKube, !talos.demo, !talos.fingerprint.isEmpty,
+          let target = links[talos.fingerprint], !target.isEmpty else { return nil }
+    return kubeContexts.first { $0.isKube && $0.fingerprint == target }?.name
+}
+
+/// The links whose Talos cluster and kube cluster are both still stored.
+public func keepKubeAccess(_ links: [String: String], talos: [String], kube: [String]) -> [String: String] {
+    let talosKnown = Set(talos.filter { !$0.isEmpty }), kubeKnown = Set(kube.filter { !$0.isEmpty })
+    return links.filter { talosKnown.contains($0.key) && kubeKnown.contains($0.value) }
+}
+
+public extension ContextSummary {
+    /// `allows`, for a Talos cluster whose Kubernetes access goes through a stored kubeconfig
+    /// when `kubeLinked`: the Kubernetes screens then answer to that kubeconfig's RBAC, not the
+    /// talosconfig's role. Talos features (the admin kubeconfig export included) keep the role.
+    func allows(_ feature: Feature, kubeLinked: Bool) -> Bool {
+        if kubeLinked && !isKube && feature == .workloads { return true }
+        return allows(feature)
+    }
+}

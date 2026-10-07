@@ -3,6 +3,7 @@ package name.levis.ichor.ui
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -65,6 +66,9 @@ import name.levis.ichor.ui.images.ImagesScreen
 import name.levis.ichor.ui.importconfig.ImportScreen
 import name.levis.ichor.ui.integrations.IntegrationsScreen
 import name.levis.ichor.ui.issueconfig.IssueConfigScreen
+import name.levis.ichor.ui.kubebrowser.KubeBrowserRoutes
+import name.levis.ichor.ui.kubebrowser.KubeLinks
+import name.levis.ichor.ui.kubebrowser.LocalKubeLinks
 import name.levis.ichor.ui.kubespan.KubeSpanScreen
 import name.levis.ichor.ui.logs.LogsScreen
 import name.levis.ichor.ui.machineconfig.MachineConfigScreen
@@ -325,7 +329,16 @@ fun Navigation(
         onDeepLinkHandled()
     }
 
+    // Browser screens a pod's sheet opens: its YAML, a port-forward.
+    val kubeLinks = remember(nav) {
+        KubeLinks(
+            onObject = { nav.navigate(KubeBrowserRoutes.obj(it)) },
+            onPortForward = { ns, pod -> nav.navigate(KubeBrowserRoutes.forward(ns, pod)) },
+        )
+    }
+
     NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW) {
+        with(KubeBrowserRoutes) { kubeBrowserScreens(nav, kubeLinks) }
         composable(Routes.INSIGHTS) { name.levis.ichor.ui.insights.InsightsScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.METRICS) { name.levis.ichor.ui.metrics.MetricsScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.IMPORT) {
@@ -377,6 +390,8 @@ fun Navigation(
                 onCheckup = { nav.navigate(Routes.CHECKUP) },
                 onApiHealth = { nav.navigate(Routes.API_HEALTH) },
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
+                onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
+                onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
             )
             // After an update: what changed since the build that ran before.
             WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
@@ -404,41 +419,43 @@ fun Navigation(
         ) { entry ->
             val addr = entry.arguments?.getString("addr").orEmpty()
             val host = entry.arguments?.getString("host") ?: addr
-            NodeDetailScreen(
-                node = addr,
-                hostname = host,
-                role = entry.arguments?.getString("role") ?: "unknown",
-                initialTab = entry.arguments?.getInt("tab") ?: 0,
-                initialAction = when (entry.arguments?.getString("action")) {
-                    "reboot" -> PowerAction.REBOOT
-                    "shutdown" -> PowerAction.SHUTDOWN
-                    else -> null
-                },
-                onBack = { nav.popBackStack() },
-                onLogs = { service -> nav.navigate(Routes.logs(addr, host, service)) },
-                onContainerLogs = { c ->
-                    nav.navigate(Routes.containerLogs(addr, host, c.id, containerLogTitle(c), containerLogSubtitle(c)))
-                },
-                onMenu = { item ->
-                    when (item) {
-                        NodeMenuEntry.KERNEL_LOG -> Routes.logs(addr, host, null)
-                        NodeMenuEntry.EVENTS -> Routes.events(addr, host)
-                        NodeMenuEntry.NETWORK -> Routes.network(addr, host)
-                        NodeMenuEntry.HARDWARE -> Routes.hardware(addr, host)
-                        NodeMenuEntry.IMAGES -> Routes.images(addr, host)
-                        NodeMenuEntry.STORAGE -> Routes.storage(addr, host)
-                        NodeMenuEntry.RESOURCES -> Routes.resources(addr, host)
-                        NodeMenuEntry.DEBUG_SHELL -> Routes.debug(addr, host)
-                        NodeMenuEntry.CAPTURE -> Routes.capture(addr, host)
-                        NodeMenuEntry.CAPTURES -> Routes.CAPTURES
-                        NodeMenuEntry.MACHINE_CONFIG -> Routes.machineConfig(addr, host)
-                        NodeMenuEntry.UPGRADE -> Routes.upgrade(addr, host)
-                        NodeMenuEntry.MAINTENANCE -> Routes.maintenance(addr, host)
-                        // Handled on the node screen (a confirmation, no screen of its own).
-                        NodeMenuEntry.CORDON -> null
-                    }?.let { nav.navigate(it) }
-                },
-            )
+            CompositionLocalProvider(LocalKubeLinks provides kubeLinks) {
+                NodeDetailScreen(
+                    node = addr,
+                    hostname = host,
+                    role = entry.arguments?.getString("role") ?: "unknown",
+                    initialTab = entry.arguments?.getInt("tab") ?: 0,
+                    initialAction = when (entry.arguments?.getString("action")) {
+                        "reboot" -> PowerAction.REBOOT
+                        "shutdown" -> PowerAction.SHUTDOWN
+                        else -> null
+                    },
+                    onBack = { nav.popBackStack() },
+                    onLogs = { service -> nav.navigate(Routes.logs(addr, host, service)) },
+                    onContainerLogs = { c ->
+                        nav.navigate(Routes.containerLogs(addr, host, c.id, containerLogTitle(c), containerLogSubtitle(c)))
+                    },
+                    onMenu = { item ->
+                        when (item) {
+                            NodeMenuEntry.KERNEL_LOG -> Routes.logs(addr, host, null)
+                            NodeMenuEntry.EVENTS -> Routes.events(addr, host)
+                            NodeMenuEntry.NETWORK -> Routes.network(addr, host)
+                            NodeMenuEntry.HARDWARE -> Routes.hardware(addr, host)
+                            NodeMenuEntry.IMAGES -> Routes.images(addr, host)
+                            NodeMenuEntry.STORAGE -> Routes.storage(addr, host)
+                            NodeMenuEntry.RESOURCES -> Routes.resources(addr, host)
+                            NodeMenuEntry.DEBUG_SHELL -> Routes.debug(addr, host)
+                            NodeMenuEntry.CAPTURE -> Routes.capture(addr, host)
+                            NodeMenuEntry.CAPTURES -> Routes.CAPTURES
+                            NodeMenuEntry.MACHINE_CONFIG -> Routes.machineConfig(addr, host)
+                            NodeMenuEntry.UPGRADE -> Routes.upgrade(addr, host)
+                            NodeMenuEntry.MAINTENANCE -> Routes.maintenance(addr, host)
+                            // Handled on the node screen (a confirmation, no screen of its own).
+                            NodeMenuEntry.CORDON -> null
+                        }?.let { nav.navigate(it) }
+                    },
+                )
+            }
         }
         composable(
             Routes.MACHINE_CONFIG,
@@ -627,19 +644,23 @@ fun Navigation(
             ),
         ) { entry ->
             val args = entry.arguments
-            name.levis.ichor.ui.workloads.KubernetesScreen(
-                focus = KubeFocus(
-                    args?.getInt("tab") ?: 0,
-                    args?.getString("key").orEmpty(),
-                    args?.getString("ns").orEmpty(),
-                    args?.getString("name").orEmpty(),
-                ),
-                onBack = { nav.popBackStack() },
-                onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
-                onApiHealth = { nav.navigate(Routes.API_HEALTH) },
-                onCheckup = { nav.navigate(Routes.CHECKUP) },
-                onFlows = { ns, pod -> nav.navigate(Routes.flows(ns, pod)) },
-            )
+            CompositionLocalProvider(LocalKubeLinks provides kubeLinks) {
+                name.levis.ichor.ui.workloads.KubernetesScreen(
+                    focus = KubeFocus(
+                        args?.getInt("tab") ?: 0,
+                        args?.getString("key").orEmpty(),
+                        args?.getString("ns").orEmpty(),
+                        args?.getString("name").orEmpty(),
+                    ),
+                    onBack = { nav.popBackStack() },
+                    onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
+                    onApiHealth = { nav.navigate(Routes.API_HEALTH) },
+                    onCheckup = { nav.navigate(Routes.CHECKUP) },
+                    onFlows = { ns, pod -> nav.navigate(Routes.flows(ns, pod)) },
+                    onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
+                    onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
+                )
+            }
         }
         composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }

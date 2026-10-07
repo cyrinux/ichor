@@ -34,6 +34,11 @@ data class BackupPayload(
     val settings: BackupSettings = BackupSettings(),
     /** Per-cluster options by context fingerprint, which both apps compute alike in the Go core. */
     val clusters: Map<String, BackupCluster> = emptyMap(),
+    /**
+     * The sign-ins of kubeconfig clusters by fingerprint (format 2), as Ichorgo.kubeAuthForBackup
+     * keeps them: the secrets the user entered, never this device's session tokens.
+     */
+    val kubeAuth: Map<String, String>? = null,
 )
 
 @Serializable
@@ -62,6 +67,8 @@ data class BackupCluster(
     val wakeOnLan: Map<String, BackupWolTarget> = emptyMap(),
     /** The Kubernetes API address to use instead of the kubeconfig's. */
     val kubeServer: String? = null,
+    /** A Talos cluster's Kubernetes access: the fingerprint of the kubeconfig cluster it goes through. */
+    val kubeAccess: String? = null,
 )
 
 @Serializable
@@ -87,6 +94,7 @@ fun backupClusters(
     vpnOnly: Set<String>,
     wakeOnLan: Map<String, WolTarget>,
     kubeServers: Map<String, String>,
+    kubeAccess: Map<String, String> = emptyMap(),
 ): Map<String, BackupCluster> = fingerprints.filter { it.isNotBlank() }.distinct().associateWith { fp ->
     BackupCluster(
         name = names[fp],
@@ -96,6 +104,7 @@ fun backupClusters(
             .mapKeys { (key, _) -> key.substringAfter('|') }
             .mapValues { (_, t) -> BackupWolTarget(t.mac, t.broadcast, t.port) },
         kubeServer = kubeServers[fp],
+        kubeAccess = kubeAccess[fp],
     )
 }
 
@@ -108,6 +117,8 @@ data class RestoredClusters(
     val wakeOnLan: Map<String, WolTarget>,
     /** Trimmed; the Go core checks them before they are stored. */
     val kubeServers: Map<String, String>,
+    /** Only links between two restored clusters. */
+    val kubeAccess: Map<String, String> = emptyMap(),
 )
 
 /** [clusters] narrowed to [fingerprints] (the restored config's) and validated. */
@@ -124,6 +135,7 @@ fun restoredClusters(clusters: Map<String, BackupCluster>, fingerprints: List<St
             }
         }.toMap(),
         kubeServers = known.mapNotNull { (fp, c) -> c.kubeServer?.trim()?.takeIf { it.isNotEmpty() }?.let { fp to it } }.toMap(),
+        kubeAccess = known.mapNotNull { (fp, c) -> c.kubeAccess?.takeIf { it != fp && it in fingerprints }?.let { fp to it } }.toMap(),
     )
 }
 
@@ -141,3 +153,18 @@ private val BACKUP_MAGIC = "ICHORBAK".toByteArray(Charsets.US_ASCII)
 /** Whether [file] starts like a backup: tells one opened from a file manager from any other file. */
 fun looksLikeBackup(file: ByteArray): Boolean =
     file.size >= BACKUP_MAGIC.size && BACKUP_MAGIC.indices.all { file[it] == BACKUP_MAGIC[it] }
+
+/**
+ * The sign-ins a backup keeps for the kubeconfig clusters [fingerprints], from this device's
+ * [states] narrowed by [forBackup] (Ichorgo.kubeAuthForBackup: "" when nothing is worth
+ * keeping); null when none is left.
+ */
+fun backupKubeAuth(fingerprints: List<String>, states: Map<String, String>, forBackup: (String) -> String): Map<String, String>? =
+    fingerprints.filter { it.isNotBlank() }.distinct()
+        .mapNotNull { fp -> states[fp]?.let { runCatching { forBackup(it) }.getOrNull() }?.takeIf { it.isNotBlank() }?.let { fp to it } }
+        .toMap()
+        .ifEmpty { null }
+
+/** The sign-ins of [kubeAuth] (a backup's) for the restored kubeconfig clusters [fingerprints]. */
+fun restoredKubeAuth(kubeAuth: Map<String, String>?, fingerprints: List<String>): Map<String, String> =
+    kubeAuth.orEmpty().filter { (fp, state) -> fp.isNotBlank() && fp in fingerprints && state.isNotBlank() }

@@ -154,6 +154,8 @@ fun OverviewScreen(
     onCheckup: () -> Unit,
     onApiHealth: () -> Unit,
     onNetworkPolicies: () -> Unit,
+    onResources: () -> Unit,
+    onHelm: () -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
@@ -181,6 +183,8 @@ fun OverviewScreen(
                 onAddCluster = onAddCluster,
                 onClustersCleared = onClustersCleared,
                 onChangelog = onChangelog,
+                onResources = onResources,
+                onHelm = onHelm,
             ),
         )
         return

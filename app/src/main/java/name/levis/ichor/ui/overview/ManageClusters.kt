@@ -3,7 +3,11 @@ package name.levis.ichor.ui.overview
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
@@ -11,11 +15,16 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.ClusterLabels
+import name.levis.ichor.model.isKube
+import name.levis.ichor.ui.kubeauth.KubeAccessDialog
+import name.levis.ichor.ui.kubeauth.SignInAccountDialog
+import name.levis.ichor.ui.kubeauth.SignInSheet
 import name.levis.ichor.ui.userMessage
 
 /**
  * The cluster sheet as both homes (Talos overview, Kubernetes home) open it: pick, rename,
- * color, VPN only, remove, add. [onEndpoints] edits a Talos cluster's endpoints, when offered.
+ * color, VPN only, sign-in or Kubernetes access, remove, add. [onEndpoints] edits a Talos
+ * cluster's endpoints, when offered.
  */
 @Composable
 fun ManageClustersSheet(
@@ -30,7 +39,17 @@ fun ManageClustersSheet(
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
     val vpnOnly by app.vpnOnly.fingerprints.collectAsStateWithLifecycle()
+    val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    var account by remember { mutableStateOf<ContextSummary?>(null) }
+    var signingIn by remember { mutableStateOf<String?>(null) }
+    // Which kubeconfig clusters wait for a sign-in: read from what is stored, no network.
+    val signInNeeded by produceState(emptySet<String>(), config.kubeYaml, invalidations) {
+        value = config.summary.contexts.filter { it.isKube && it.signIn.isNotEmpty() }
+            .filter { runCatching { app.kubeAuthRepository.info(it.name)?.signedIn == false }.getOrDefault(false) }
+            .map { it.name }
+            .toSet()
+    }
     ClusterSheet(
         config = config,
         colors = colors,
@@ -62,5 +81,33 @@ fun ManageClustersSheet(
                 edit(cluster)
             }
         },
+        signInNeeded = signInNeeded,
+        onAccount = { account = it },
     )
+
+    account?.let { cluster ->
+        if (cluster.isKube) {
+            SignInAccountDialog(
+                cluster = cluster,
+                label = labels.of(cluster),
+                onSignIn = {
+                    account = null
+                    signingIn = cluster.name
+                },
+                onDismiss = { account = null },
+            )
+        } else {
+            val links by app.kubeAccess.links.collectAsStateWithLifecycle()
+            KubeAccessDialog(
+                label = labels.of(cluster),
+                current = links[cluster.fingerprint].orEmpty(),
+                kubeClusters = config.summary.contexts.filter { it.isKube }.map { it to labels.of(it) },
+                onPick = { app.setKubeAccess(cluster.fingerprint, it) },
+                onDismiss = { account = null },
+            )
+        }
+    }
+    signingIn?.let { name ->
+        SignInSheet(context = name, onDismiss = { signingIn = null }, onSignedIn = { signingIn = null })
+    }
 }

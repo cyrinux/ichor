@@ -236,6 +236,8 @@ struct KubeListFrame<T: Codable & Sendable, Content: View>: View {
     let query: String
     /// The namespaces of loaded rows, offered while the cluster's are unknown.
     let namespaces: ([T]) -> [String]
+    /// Whether the list is per namespace: a cluster-scoped kind has no scope to pick.
+    var scoped = true
     @ViewBuilder let content: (PagedLoad<T>) -> Content
 
     @Environment(AppModel.self) private var model
@@ -251,10 +253,12 @@ struct KubeListFrame<T: Codable & Sendable, Content: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            KubeScopeBar(control: control, loaded: loadedNamespaces)
-                .background(.bar)
-            Divider()
-            if !control.ready {
+            if scoped {
+                KubeScopeBar(control: control, loaded: loadedNamespaces)
+                    .background(.bar)
+                Divider()
+            }
+            if scoped && !control.ready {
                 ContentUnavailableView {
                     Label("Namespace", systemImage: "square.dashed")
                 } description: {

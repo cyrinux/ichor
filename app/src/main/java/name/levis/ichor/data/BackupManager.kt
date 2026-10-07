@@ -6,7 +6,10 @@ import name.levis.ichor.model.BackupPayload
 import name.levis.ichor.model.BackupSettings
 import name.levis.ichor.model.backupClusters
 import name.levis.ichor.model.backupFormat
+import name.levis.ichor.model.backupKubeAuth
+import name.levis.ichor.model.isKube
 import name.levis.ichor.model.restoredClusters
+import name.levis.ichor.model.restoredKubeAuth
 import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
@@ -30,6 +33,8 @@ class BackupManager(
     private val names: ClusterNames,
     private val vpnOnly: VpnOnlyClusters,
     private val kubeServers: KubeServers,
+    private val kubeAccess: KubeAccess,
+    private val kubeAuth: KubeAuthStore,
     private val wakeOnLan: WakeOnLanStore,
     private val monitor: MonitorStore,
     private val setPrivacyMask: (PrivacyMask) -> Unit,
@@ -66,7 +71,11 @@ class BackupManager(
                     vpnOnly.fingerprints.value,
                     wakeOnLan.targets.value,
                     kubeServers.servers.value,
+                    kubeAccess.links.value,
                 ),
+                kubeAuth = kubeconfig?.let {
+                    backupKubeAuth(stored.summary.contexts.filter { c -> c.isKube }.map { c -> c.fingerprint }, kubeAuth.all(), Ichorgo::kubeAuthForBackup)
+                },
             )
             backupCall { Ichorgo.encryptBackup(TalosJson.encodeToString(BackupPayload.serializer(), payload), passphrase) }
         }
@@ -87,6 +96,8 @@ class BackupManager(
         configs.replace(payload.talosconfig, payload.kubeconfig.orEmpty(), payload.activeContextIndex)
         val summary = configs.config.value?.summary ?: throw NoConfigException()
         val fingerprints = summary.contexts.map { it.fingerprint }
+        // After the configs, as the per-cluster settings: what was signed in on this device stays.
+        kubeAuth.restore(restoredKubeAuth(payload.kubeAuth, summary.contexts.filter { it.isKube }.map { it.fingerprint }))
 
         // Syncing the stores to the new config already forgot the clusters no longer stored.
         val restored = restoredClusters(payload.clusters, fingerprints)
@@ -96,7 +107,9 @@ class BackupManager(
             vpnOnly.set(fp, fp in restored.vpnOnly)
             // Checked like a typed one: an address the Go core refuses is dropped.
             kubeServers.set(fp, restored.kubeServers[fp]?.let { runCatching { Ichorgo.normalizeKubeServer(it) }.getOrNull() }.orEmpty())
+            kubeAccess.set(fp, restored.kubeAccess[fp])
         }
+        configs.relink()
         (wakeOnLan.targets.value.keys - restored.wakeOnLan.keys)
             .filter { it.substringBefore('|') in fingerprints }
             .forEach { wakeOnLan.set(it.substringBefore('|'), it.substringAfter('|'), null) }

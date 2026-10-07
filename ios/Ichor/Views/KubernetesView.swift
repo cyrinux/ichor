@@ -19,6 +19,9 @@ struct KubernetesView: View {
         case apiHealth
         case policies
         case flows(HubbleFilter)
+        /// Every kind the API server serves (the resource browser).
+        case resources
+        case helm
     }
 
     @Environment(AppModel.self) private var model
@@ -107,6 +110,14 @@ struct KubernetesView: View {
             }
             ToolbarItem(placement: .primaryAction) {
                 Menu {
+                    Button { netScreen = .resources } label: { Label("Resources", systemImage: "square.grid.3x3") }
+                    Button { netScreen = .helm } label: { Label("Helm releases", systemImage: "shippingbox") }
+                } label: {
+                    Label("Resources", systemImage: "square.grid.3x3")
+                }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
                     Button { netScreen = .checkup } label: { Label(CheckupText.checkupTitle, systemImage: "stethoscope") }
                     Button { netScreen = .apiHealth } label: { Label("API server", systemImage: "heart.text.square") }
                 } label: {
@@ -153,6 +164,8 @@ struct KubernetesView: View {
             case .apiHealth: ApiHealthView()
             case .policies: NetPoliciesView()
             case .flows(let filter): LiveFlowsView(cilium: cilium ?? CiliumStatus(), filter: filter)
+            case .resources: KubeBrowserView()
+            case .helm: HelmReleasesView()
             }
         }
         .task(id: model.client?.kubeServer) {

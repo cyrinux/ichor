@@ -6,7 +6,7 @@ extension TalosClient {
     /// The API groups the cluster serves that Ichor does not read yet, by operator, with their
     /// kinds (os:admin). Built-in Kubernetes groups are left out.
     func integrations() async throws -> IntegrationReport {
-        try await Self.json { [config, context, kubeServer] in IchorgoKubeIntegrations(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeIntegrations(config, context, kubeServer, $0) }
     }
 
     /// The GitHub page opening a pre-filled integration request on repo ("owner/name") for

@@ -2,6 +2,7 @@ package name.levis.ichor.model
 
 import androidx.annotation.StringRes
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import name.levis.ichor.R
 
 // Mirrors the JSON produced by the Go core (go/ichorgo).
@@ -39,6 +40,13 @@ data class ContextSummary(
     /** Why the context cannot be added (a kube-* code), "" when it can. */
     val problem: String = "",
     val problemDetail: String = "",
+    /** The method the app signs in with (oidc, eks, gke, azure, digitalocean, rancher), "" for static credentials. */
+    val signIn: String = "",
+    /**
+     * A Talos cluster's Kubernetes access: the fingerprint of the stored kubeconfig cluster its
+     * Kubernetes calls go through, "" for the Talos admin kubeconfig. Set by the app, not the core.
+     */
+    @Transient val kubeAccess: String = "",
 )
 
 const val KIND_TALOS = "talos"
@@ -98,8 +106,15 @@ enum class Feature(@StringRes val label: Int, val roles: Set<String>) {
  */
 private val KUBE_FEATURES = setOf(Feature.WORKLOADS, Feature.KUBECONFIG)
 
-fun ContextSummary.allows(feature: Feature): Boolean =
-    if (isKube) feature in KUBE_FEATURES else roles.any { it in feature.roles }
+/**
+ * A Talos cluster whose Kubernetes access goes through a kubeconfig cluster ([ContextSummary.kubeAccess])
+ * reaches Kubernetes with those credentials, whatever its Talos role.
+ */
+fun ContextSummary.allows(feature: Feature): Boolean = when {
+    isKube -> feature in KUBE_FEATURES
+    feature == Feature.WORKLOADS && kubeAccess.isNotEmpty() -> true
+    else -> roles.any { it in feature.roles }
+}
 
 /** Short access level for the UI: "admin", "operator" or "read-only"; "Kubernetes" for a kubeconfig cluster. */
 val ContextSummary.accessLabel: Int

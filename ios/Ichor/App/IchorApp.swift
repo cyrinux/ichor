@@ -14,6 +14,8 @@ struct IchorApp: App {
         // Before any Talos call, including the background refresh task registered below.
         TalosClient.applyStoredPrivacyMask()
         TalosClient.setDataDirectory()
+        // Where Go keeps the sign-ins of kubeconfig clusters, before any Kubernetes call.
+        KubeAuthStore.register()
         SupportBundleStore.removeStaleParts()
         BackgroundMonitor.register()
         BackgroundMonitor.registerCategories()

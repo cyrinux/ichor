@@ -52,6 +52,7 @@ import name.levis.ichor.model.versionNotice
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.kubeauth.SignInAction
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /** A page (or a pane of one) still loading: the grey [style] shapes of what is coming. */
@@ -95,7 +96,11 @@ fun ErrorBox(message: UiText, onRetry: () -> Unit, modifier: Modifier = Modifier
         Spacer(Modifier.height(12.dp))
         Text(text, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(16.dp))
-        Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Refused for want of a sign-in: signing in is the way out, then it loads again.
+            SignInAction(message, onSignedIn = onRetry)
+            Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+        }
     }
 }
 

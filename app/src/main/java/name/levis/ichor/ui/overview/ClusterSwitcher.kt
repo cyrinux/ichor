@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Router
@@ -233,6 +234,8 @@ fun ClusterSheet(
     onRemove: (String) -> Unit,
     onDismiss: () -> Unit,
     onEndpoints: ((ContextSummary) -> Unit)? = null,
+    signInNeeded: Set<String> = emptySet(),
+    onAccount: ((ContextSummary) -> Unit)? = null,
 ) {
     var removing by remember { mutableStateOf<ContextSummary?>(null) }
     var renaming by remember { mutableStateOf<ContextSummary?>(null) }
@@ -268,6 +271,8 @@ fun ClusterSheet(
                     // Not in screenshot mode (the endpoints shown are fake), nor for the demo, nor for a
                     // cluster added from a kubeconfig (its server is no Talos endpoint).
                     onEndpoints = onEndpoints?.let { edit -> { edit(context) } }?.takeIf { !labels.masked && !context.demo && !context.isKube },
+                    signInNeeded = context.name in signInNeeded,
+                    account = onAccount?.let { open -> clusterAccount(context, contexts)?.let { it to { open(context) } } },
                 )
             }
             // What the lock on a row means, once there is one.
@@ -346,6 +351,8 @@ private fun ClusterRow(
     onVpnOnly: ((Boolean) -> Unit)?,
     onRemove: () -> Unit,
     onEndpoints: (() -> Unit)?,
+    signInNeeded: Boolean,
+    account: Pair<Int, () -> Unit>?,
 ) {
     val label = labels.of(context)
     ListItem(
@@ -377,6 +384,7 @@ private fun ClusterRow(
                         color = LocalStatusColors.current.warn,
                     )
                 }
+                if (signInNeeded) Text(stringResource(R.string.kube_signin_needed), color = LocalStatusColors.current.warn)
             }
         },
         leadingContent = { ClusterDot(color, selected) },
@@ -388,6 +396,7 @@ private fun ClusterRow(
                 vpnOnly = vpnOnly,
                 onVpnOnly = onVpnOnly,
                 onEndpoints = onEndpoints,
+                account = account,
                 onRemove = onRemove,
             )
         },
@@ -418,6 +427,7 @@ private fun ClusterRowMenu(
     vpnOnly: Boolean,
     onVpnOnly: ((Boolean) -> Unit)?,
     onEndpoints: (() -> Unit)?,
+    account: Pair<Int, () -> Unit>?,
     onRemove: () -> Unit,
 ) {
     var open by remember { mutableStateOf(false) }
@@ -457,6 +467,13 @@ private fun ClusterRowMenu(
                     text = { Text(stringResource(R.string.common_label_endpoints)) },
                     leadingIcon = { Icon(Icons.Outlined.Router, contentDescription = null) },
                     onClick = item(it),
+                )
+            }
+            account?.let { (title, onOpen) ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(title)) },
+                    leadingIcon = { Icon(Icons.Outlined.Key, contentDescription = null) },
+                    onClick = item(onOpen),
                 )
             }
             HorizontalDivider()
@@ -564,3 +581,14 @@ private const val HUE_BAR_STEP = 30
 
 private val HUE_BAR: List<Color> = (0..MAX_HUE.toInt() step HUE_BAR_STEP).map { Color(seedFromHue(it.toFloat())) } +
     Color(seedFromHue(MAX_HUE))
+
+/**
+ * The account entry of [context]'s menu, if any: the sign-in of a kubeconfig cluster that
+ * signs in through a method, the Kubernetes access of a Talos cluster once a kubeconfig
+ * cluster is stored ([contexts]).
+ */
+private fun clusterAccount(context: ContextSummary, contexts: List<ContextSummary>): Int? = when {
+    context.isKube -> R.string.kube_signin_menu.takeIf { context.signIn.isNotEmpty() }
+    context.demo -> null
+    else -> R.string.kube_access_menu.takeIf { contexts.any { it.isKube } }
+}
