@@ -105,3 +105,45 @@ struct DiscoveredNodesSheet: View {
         role == "controlplane" ? String(localized: "control plane") : role
     }
 }
+
+/// The cluster on screen targets no node yet (an Omni cluster just added): the way to its
+/// members, found by cluster discovery.
+struct NoNodesCard: View {
+    /// Members already found, offered at once.
+    let discovered: Int
+    /// Runs discovery and offers what it found; the error, if it found nothing.
+    let find: () async -> String?
+    let open: () -> Void
+
+    @State private var finding = false
+    @State private var error: String?
+
+    init(discovered: Int, find: @escaping () async -> String?, open: @escaping () -> Void) {
+        self.discovered = discovered
+        self.find = find
+        self.open = open
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("No nodes yet", systemImage: "server.rack").font(.headline)
+            Text("Add the cluster's nodes to see them here.").font(.footnote).foregroundStyle(.secondary)
+            if let error { Text(error).font(.footnote).foregroundStyle(.statusBad) }
+            Button {
+                if discovered > 0 {
+                    open()
+                } else {
+                    Task {
+                        finding = true
+                        error = await find()
+                        finding = false
+                    }
+                }
+            } label: {
+                if finding { ProgressView() } else { Text("Find nodes") }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(finding)
+        }
+    }
+}

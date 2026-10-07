@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import name.levis.ichor.R
 import name.levis.ichor.i18n.AppLocale
+import name.levis.ichor.model.omniSignInNeeded
 import name.levis.ichor.model.signInMethodName
 import name.levis.ichor.model.signInNeeded
 
@@ -26,12 +27,16 @@ sealed interface UiText {
      */
     data class SignInRequired(val method: String, val reason: String = "") : UiText
 
+    /** A call refused because the Omni cluster has no usable key ([reason]: what the core said). */
+    data class OmniSignInRequired(val reason: String = "") : UiText
+
     fun resolve(context: Context): String = when (this) {
         is Raw -> text
         is Res -> context.getString(id, *args.map { if (it is UiText) it.resolve(context) else it }.toTypedArray())
         is SignInRequired -> signInMethodName(method)?.let { context.getString(R.string.kube_signin_required_error, context.getString(it)) }
             ?: method.takeIf { it.isNotEmpty() }?.let { context.getString(R.string.kube_signin_required_error, it) }
             ?: context.getString(R.string.kube_signin_required_error_plain)
+        is OmniSignInRequired -> context.getString(R.string.omni_signin_required_error)
     }
 }
 
@@ -46,8 +51,9 @@ object AppTexts {
  * the app's language, never with the core's code. Anything else stays as it is.
  */
 fun goErrorText(message: String): String {
-    val needed = signInNeeded(message) ?: return message
-    val text = UiText.SignInRequired(needed.method, needed.reason)
+    val text = omniSignInNeeded(message)?.let { UiText.OmniSignInRequired(it) }
+        ?: signInNeeded(message)?.let { UiText.SignInRequired(it.method, it.reason) }
+        ?: return message
     return AppTexts.context?.let { text.resolve(AppLocale.wrap(it)) } ?: SIGN_IN_REQUIRED_FALLBACK
 }
 
@@ -61,5 +67,6 @@ fun UiText.asString(): String = resolve(LocalContext.current)
 open class LocalizedException(val text: UiText) : Exception(text.toString())
 
 fun Throwable.uiText(): UiText = (this as? LocalizedException)?.text
+    ?: omniSignInNeeded(message)?.let { UiText.OmniSignInRequired(it) }
     ?: signInNeeded(message)?.let { UiText.SignInRequired(it.method, it.reason) }
     ?: UiText.Raw(userMessage())

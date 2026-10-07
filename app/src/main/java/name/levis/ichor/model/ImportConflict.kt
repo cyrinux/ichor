@@ -48,3 +48,18 @@ fun takenNameChoices(
         name in stored || name in imported || name in defaults || (counts[name] ?: 0) > 1
     }.map { it.index }.toSet()
 }
+
+/**
+ * The name the imported context at [index] (named [imported]) is stored under once saved: the
+ * stored context it replaces, the name chosen for its conflict (blank: the suggested one), or
+ * its own name when it had no conflict.
+ */
+fun storedContextName(index: Int, imported: String, conflicts: List<ImportConflict>, choices: List<ImportChoice>): String {
+    val conflict = conflicts.firstOrNull { it.index == index } ?: return imported
+    val choice = choices.firstOrNull { it.index == index } ?: ImportChoice(index)
+    return when {
+        choice.replace && conflict.sameAs != null -> conflict.sameAs
+        choice.name.isNotBlank() -> choice.name.trim()
+        else -> conflict.suggested
+    }
+}

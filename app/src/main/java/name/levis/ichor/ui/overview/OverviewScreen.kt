@@ -578,7 +578,13 @@ private fun NodeList(
         if (BuildConfig.SELF_UPDATE) item { UpdateBanner(onClick = onSettings) } else item { StoreUpdateBanner() }
         if (BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) item { SupportCard(onFunding) }
         certificate?.let { item { CertificateBanner(it, onIssueConfig) } }
+        // An Omni cluster starts without nodes: discovery finds them, pulling asks again.
         if (discovered > 0) item { DiscoveredNodesBanner(discovered, onDiscovered) }
+        else if (overview.nodes.isEmpty()) item {
+            Card(Modifier.fillMaxWidth()) {
+                MutedText(stringResource(R.string.omni_no_nodes), modifier = Modifier.padding(16.dp))
+            }
+        }
         // The cards, as arranged; a long press on one opens the arrangement.
         layout.visible.forEach { card ->
             when (card) {

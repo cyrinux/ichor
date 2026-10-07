@@ -16,7 +16,9 @@ import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.isKube
+import name.levis.ichor.model.isOmni
 import name.levis.ichor.ui.kubeauth.KubeAccessDialog
+import name.levis.ichor.ui.kubeauth.OmniSignInSheet
 import name.levis.ichor.ui.kubeauth.SignInAccountDialog
 import name.levis.ichor.ui.kubeauth.SignInSheet
 import name.levis.ichor.ui.userMessage
@@ -45,12 +47,13 @@ fun ManageClustersSheet(
     var signingIn by remember { mutableStateOf<String?>(null) }
     // Removals still writing the stored config: their rows show a spinner until they are gone.
     var removingNames by remember { mutableStateOf(emptySet<String>()) }
-    // Which kubeconfig clusters wait for a sign-in: read from what is stored, no network.
-    val signInNeeded by produceState(emptySet<String>(), config.kubeYaml, invalidations) {
-        value = config.summary.contexts.filter { it.isKube && it.signIn.isNotEmpty() }
+    // Which kubeconfig and Omni clusters wait for a sign-in: read from what is stored, no network.
+    val signInNeeded by produceState(emptySet<String>(), config.kubeYaml, config.talosYaml, invalidations) {
+        val kube = config.summary.contexts.filter { it.isKube && it.signIn.isNotEmpty() }
             .filter { runCatching { app.kubeAuthRepository.info(it.name)?.signedIn == false }.getOrDefault(false) }
-            .map { it.name }
-            .toSet()
+        val omni = config.summary.contexts.filter { it.isOmni }
+            .filter { runCatching { !app.omniAuthRepository.info(it.name).signedIn }.getOrDefault(false) }
+        value = (kube + omni).map { it.name }.toSet()
     }
     ClusterSheet(
         config = config,
@@ -91,7 +94,9 @@ fun ManageClustersSheet(
     )
 
     account?.let { cluster ->
-        if (cluster.isKube) {
+        if (cluster.isOmni) {
+            OmniSignInSheet(context = cluster.name, onDismiss = { account = null }, onSignedIn = { account = null })
+        } else if (cluster.isKube) {
             SignInAccountDialog(
                 cluster = cluster,
                 label = labels.of(cluster),

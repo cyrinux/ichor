@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.ContentPaste
+import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.QrCodeScanner
 import androidx.compose.material3.AssistChip
@@ -54,6 +55,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.DiscoveryProvider
+import name.levis.ichor.model.TalosForm
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.components.VersionFooter
@@ -61,8 +63,8 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.util.readBounded
 
-/** Where the add screen takes a config from: the drop zone, or the paste and QR screens it opens. */
-internal enum class ImportSource { PICK, PASTE, QR }
+/** Where the add screen takes a config from: the drop zone, or the paste, QR and form screens it opens. */
+internal enum class ImportSource { PICK, PASTE, QR, FORM }
 
 @Composable
 internal fun SourcePicker(
@@ -70,6 +72,9 @@ internal fun SourcePicker(
     error: String?,
     pasted: String,
     onPasted: (String) -> Unit,
+    form: TalosForm,
+    onForm: (TalosForm) -> Unit,
+    onSubmitForm: (TalosForm) -> Unit,
     onSource: (ImportSource) -> Unit,
     onYaml: (String) -> Unit,
     onDemo: () -> Unit,
@@ -90,6 +95,7 @@ internal fun SourcePicker(
                 ImportSource.PICK -> Sources(onSource, onYaml, onDemo, onDiscover, restore)
                 ImportSource.PASTE -> PasteSource(pasted, onPasted, onYaml)
                 ImportSource.QR -> QrScanner(onScanned = onYaml)
+                ImportSource.FORM -> TalosFormSource(form, onForm, onSubmitForm)
             }
         }
         VersionFooter()
@@ -118,7 +124,12 @@ private fun Sources(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        DropZone(onFile = pickFile, onPaste = { onSource(ImportSource.PASTE) }, onQr = { onSource(ImportSource.QR) })
+        DropZone(
+            onFile = pickFile,
+            onPaste = { onSource(ImportSource.PASTE) },
+            onQr = { onSource(ImportSource.QR) },
+            onForm = { onSource(ImportSource.FORM) },
+        )
         readError?.let { Text(it, color = LocalStatusColors.current.bad) }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.kube_discover_entry), style = MaterialTheme.typography.titleSmall)
@@ -145,9 +156,9 @@ private fun Sources(
     }
 }
 
-/** The Ichor glyph over the two config kinds, and the three ways to bring one in. */
+/** The Ichor glyph over the two config kinds, the three ways to bring one in, and the form. */
 @Composable
-private fun DropZone(onFile: () -> Unit, onPaste: () -> Unit, onQr: () -> Unit) {
+private fun DropZone(onFile: () -> Unit, onPaste: () -> Unit, onQr: () -> Unit, onForm: () -> Unit) {
     Column(
         Modifier.fillMaxWidth().dashedBorder(MaterialTheme.colorScheme.outline, 20.dp).padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -174,6 +185,7 @@ private fun DropZone(onFile: () -> Unit, onPaste: () -> Unit, onQr: () -> Unit) 
             SourceTile(stringResource(R.string.import_tab_file), Icons.Outlined.FileOpen, onFile, Modifier.weight(1f))
             SourceTile(stringResource(R.string.import_tab_paste), Icons.Outlined.ContentPaste, onPaste, Modifier.weight(1f))
             SourceTile(stringResource(R.string.import_tab_qr), Icons.Outlined.QrCodeScanner, onQr, Modifier.weight(1f))
+            SourceTile(stringResource(R.string.import_form_tab), Icons.Outlined.EditNote, onForm, Modifier.weight(1f))
         }
     }
 }
@@ -223,7 +235,7 @@ private fun Modifier.dashedBorder(color: Color, radius: Dp): Modifier = drawBehi
 
 /** Opens the document picker; the chosen file's text goes to [onYaml], a read failure to [onError]. */
 @Composable
-private fun rememberConfigFilePicker(onYaml: (String) -> Unit, onError: (String) -> Unit): () -> Unit {
+internal fun rememberConfigFilePicker(onYaml: (String) -> Unit, onError: (String) -> Unit): () -> Unit {
     val context = LocalContext.current
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri == null) return@rememberLauncherForActivityResult

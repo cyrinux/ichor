@@ -3090,4 +3090,38 @@
     <string name="imagescan_timed_out">The scan took too long and was stopped.</string>
     <string name="kube_eks_account">account %1$s</string>
     <string name="kube_gke_project">project %1$s</string>
+
+    <!-- Talos form, Omni -->
+    <string name="import_form_tab">Enter details</string>
+    <string name="import_form_name">Cluster name</string>
+    <string name="import_form_continue">Continue</string>
+    <string name="import_form_mode_talos">Talos</string>
+    <string name="import_form_mode_omni">Omni</string>
+    <string name="import_form_endpoints">Endpoints</string>
+    <string name="import_form_endpoints_hint">One per line: IP address or host name</string>
+    <string name="import_form_nodes">Nodes</string>
+    <string name="import_form_nodes_hint">One per line. Empty: the endpoints</string>
+    <string name="import_form_ca">CA certificate</string>
+    <string name="import_form_crt">Client certificate</string>
+    <string name="import_form_key">Client key</string>
+    <string name="import_form_pem_hint">PEM text, or base64 as in a talosconfig.</string>
+    <string name="import_form_pick_file">Pick file</string>
+    <string name="import_form_omni_url">Omni URL</string>
+    <string name="import_form_omni_cluster">Cluster in Omni</string>
+    <string name="import_form_omni_identity">Account email</string>
+    <string name="import_form_omni_identity_hint">Needed to sign in with the browser</string>
+    <string name="import_form_omni_key_hint">Leave the key empty to sign in with the browser once the cluster is added.</string>
+    <string name="omni_access_label">Omni</string>
+    <string name="omni_signin_required_error">Sign in to Omni to reach this cluster.</string>
+    <string name="omni_feature_unavailable">Not available for a cluster reached through Omni: it has no client certificate, Omni signs its requests.</string>
+    <string name="omni_signin_title">Sign in to Omni</string>
+    <string name="omni_signin_key_hint">Paste a service account key (in Omni: Settings, Service accounts). It is stored encrypted on this device.</string>
+    <string name="omni_signin_use_key">Use this key</string>
+    <string name="omni_signin_browser_hint">Or approve a key for %1$s in the browser; it lasts 6 hours.</string>
+    <string name="omni_signin_browser">Sign in with browser</string>
+    <string name="omni_signin_needs_identity">Signing in with the browser needs your Omni account\'s email: add the cluster again with it, or use a service account key.</string>
+    <string name="omni_field_service_account_key">Service account key</string>
+    <string name="omni_key_not_stored">The cluster was added, but its Omni key was not stored: %1$s</string>
+    <string name="omni_nodes_discovered">Its nodes are found through cluster discovery once it is added.</string>
+    <string name="omni_no_nodes">No nodes yet. They are found through cluster discovery: pull to refresh, then add the ones offered.</string>
 </resources>

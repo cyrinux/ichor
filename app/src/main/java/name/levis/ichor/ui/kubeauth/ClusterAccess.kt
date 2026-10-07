@@ -23,7 +23,10 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import name.levis.ichor.data.StoredConfig
+import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.signInContextFor
+import name.levis.ichor.model.isOmni
 import name.levis.ichor.ui.UiText
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -62,27 +65,32 @@ fun SignInBanner(method: String, needed: SignInNeeded?, onSignIn: () -> Unit) {
 /**
  * "Sign in" for an error card whose call was refused for want of a sign-in: opens the sign-in
  * of the cluster the call was for (the one on screen, or the kubeconfig cluster a Talos one
- * reaches Kubernetes through). Nothing when [message] is another error or no cluster can sign in.
+ * reaches Kubernetes through; for Omni, the Talos cluster on screen). Nothing when [message] is another error or no cluster can sign in.
  */
 @Composable
 fun SignInAction(message: UiText, onSignedIn: () -> Unit) {
-    if (message !is UiText.SignInRequired) return
+    if (message !is UiText.SignInRequired && message !is UiText.OmniSignInRequired) return
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
-    val target = config?.let(::signInContextFor) ?: return
+    val omni = message is UiText.OmniSignInRequired
+    val target = config?.let { if (omni) omniSignInContextFor(it) else signInContextFor(it) } ?: return
     var open by remember { mutableStateOf(false) }
     Button(onClick = { open = true }) { Text(stringResource(R.string.kube_signin_action)) }
     if (open) {
-        SignInSheet(
-            context = target,
-            onDismiss = { open = false },
-            onSignedIn = {
-                open = false
-                onSignedIn()
-            },
-        )
+        val done = {
+            open = false
+            onSignedIn()
+        }
+        if (omni) {
+            OmniSignInSheet(context = target, onDismiss = { open = false }, onSignedIn = done)
+        } else {
+            SignInSheet(context = target, onDismiss = { open = false }, onSignedIn = done)
+        }
     }
 }
+
+/** The cluster on screen when it is reached through Omni: the one an Omni sign-in is for. */
+private fun omniSignInContextFor(stored: StoredConfig): String? = stored.activeSummary?.takeIf { it.isOmni }?.name
 
 /** How [info]'s sign-in stands: who, and until when when the core knows. */
 @Composable

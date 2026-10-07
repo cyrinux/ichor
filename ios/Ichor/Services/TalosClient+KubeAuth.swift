@@ -66,6 +66,12 @@ extension TalosClient {
     /// `done`; `complete` hands over a callback URL the app received, `cancel` stops waiting.
     static func startSignIn(kube: String, context: String)
         -> (events: AsyncStream<KubeSignInEvent>, complete: @Sendable (String) -> Void, cancel: @Sendable () -> Void) {
+        signInRun { IchorgoStartKubeSignIn(kube, context, $0) }
+    }
+
+    /// The events of the sign-in `start` begins with the listener it is given (kube or Omni).
+    static func signInRun(_ start: (SignInBridge) -> IchorgoSignInRun?)
+        -> (events: AsyncStream<KubeSignInEvent>, complete: @Sendable (String) -> Void, cancel: @Sendable () -> Void) {
         let (stream, continuation) = AsyncStream.makeStream(of: KubeSignInEvent.self)
         let bridge = SignInBridge(
             prompt: { continuation.yield(.prompt($0)) },
@@ -74,7 +80,7 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartKubeSignIn(kube, context, bridge)
+        let run = start(bridge)
         continuation.onTermination = { _ in
             run?.cancel()
             _ = bridge // keep the listener alive for the whole sign-in
@@ -83,7 +89,8 @@ extension TalosClient {
     }
 }
 
-private final class SignInBridge: NSObject, IchorgoSignInListenerProtocol, @unchecked Sendable {
+/// Hands a sign-in's events (kube or Omni) to Swift closures.
+final class SignInBridge: NSObject, IchorgoSignInListenerProtocol, @unchecked Sendable {
     private let prompt: @Sendable (KubeSignInPrompt) -> Void
     private let done: @Sendable (String?) -> Void
 

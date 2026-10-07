@@ -44,6 +44,7 @@ struct SettingsView: View {
             AppIconsSection()
             MonitoringSection()
             AISection()
+            if let target = model.activeOmniTarget { OmniSignInSection(target: target) }
             if model.allows(.kubeconfig) { KubeconfigSection() }
             Section("Config") {
                 if let protection = SecureConfigStore.protection {

@@ -19,6 +19,8 @@ struct LoadStateView<T, Content: View>: View {
             // A cluster that needs its user to sign in: the way to, rather than an error.
             if let reason = kubeSignInRequiredReason(message), let target = model?.activeSignInTarget {
                 KubeSignInRequiredView(target: target, reason: reason, retry: retry)
+            } else if let reason = omniSignInRequiredReason(message), let target = model?.activeOmniTarget {
+                OmniSignInRequiredView(target: target, reason: reason, retry: retry)
             } else if let notice = versionNotice(message) {
                 // "This node's Talos version cannot do that" is information, not a failure.
                 VersionNoticeView(notice: notice, detail: message, retry: retry)

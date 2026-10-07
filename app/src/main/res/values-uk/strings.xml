@@ -3288,4 +3288,38 @@
     <string name="imagescan_timed_out">Перевірка тривала задовго й була зупинена.</string>
     <string name="kube_eks_account">акаунт %1$s</string>
     <string name="kube_gke_project">проєкт %1$s</string>
+
+    <!-- Talos form, Omni -->
+    <string name="import_form_tab">Ввести дані</string>
+    <string name="import_form_name">Назва кластера</string>
+    <string name="import_form_continue">Продовжити</string>
+    <string name="import_form_mode_talos">Talos</string>
+    <string name="import_form_mode_omni">Omni</string>
+    <string name="import_form_endpoints">Кінцеві точки</string>
+    <string name="import_form_endpoints_hint">По одному в рядку: IP-адреса або ім\'я хоста</string>
+    <string name="import_form_nodes">Вузли</string>
+    <string name="import_form_nodes_hint">По одному в рядку. Порожньо: кінцеві точки</string>
+    <string name="import_form_ca">Сертифікат CA</string>
+    <string name="import_form_crt">Клієнтський сертифікат</string>
+    <string name="import_form_key">Клієнтський ключ</string>
+    <string name="import_form_pem_hint">Текст PEM або base64, як у talosconfig.</string>
+    <string name="import_form_pick_file">Вибрати файл</string>
+    <string name="import_form_omni_url">URL Omni</string>
+    <string name="import_form_omni_cluster">Кластер в Omni</string>
+    <string name="import_form_omni_identity">Ел. пошта облікового запису</string>
+    <string name="import_form_omni_identity_hint">Потрібна для входу через браузер</string>
+    <string name="import_form_omni_key_hint">Залиште ключ порожнім, щоб увійти через браузер після додавання кластера.</string>
+    <string name="omni_access_label">Omni</string>
+    <string name="omni_signin_required_error">Увійдіть в Omni, щоб отримати доступ до цього кластера.</string>
+    <string name="omni_feature_unavailable">Недоступно для кластера, до якого доступ через Omni: він не має клієнтського сертифіката, запити підписує Omni.</string>
+    <string name="omni_signin_title">Вхід в Omni</string>
+    <string name="omni_signin_key_hint">Вставте ключ сервісного облікового запису (в Omni: Settings, Service accounts). Він зберігається зашифрованим на цьому пристрої.</string>
+    <string name="omni_signin_use_key">Використати цей ключ</string>
+    <string name="omni_signin_browser_hint">Або схваліть ключ для %1$s у браузері; він діє 6 годин.</string>
+    <string name="omni_signin_browser">Увійти через браузер</string>
+    <string name="omni_signin_needs_identity">Для входу через браузер потрібна ел. пошта облікового запису Omni: додайте кластер ще раз із нею або використайте ключ сервісного облікового запису.</string>
+    <string name="omni_field_service_account_key">Ключ сервісного облікового запису</string>
+    <string name="omni_key_not_stored">Кластер додано, але його ключ Omni не збережено: %1$s</string>
+    <string name="omni_nodes_discovered">Його вузли буде знайдено через виявлення кластера після додавання.</string>
+    <string name="omni_no_nodes">Вузлів поки немає. Їх знаходить виявлення кластера: потягніть, щоб оновити, і додайте запропоновані.</string>
 </resources>

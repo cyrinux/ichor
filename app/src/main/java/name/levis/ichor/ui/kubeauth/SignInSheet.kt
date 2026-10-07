@@ -144,7 +144,7 @@ private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (
  * code is shown big, to copy, with a button opening the page to enter it.
  */
 @Composable
-private fun Waiting(prompt: SignInPrompt?, onCancel: () -> Unit) {
+internal fun Waiting(prompt: SignInPrompt?, onCancel: () -> Unit) {
     val context = LocalContext.current
     val noBrowser = stringResource(R.string.kube_signin_no_browser)
     val open = { url: String -> if (!openInBrowser(context, url)) Toast.makeText(context, noBrowser, Toast.LENGTH_LONG).show() }

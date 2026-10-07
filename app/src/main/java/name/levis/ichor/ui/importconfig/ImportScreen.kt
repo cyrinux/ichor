@@ -5,6 +5,7 @@ import name.levis.ichor.ui.components.MutedText
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,6 +46,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.model.ImportChoice
 import name.levis.ichor.model.ImportConflict
+import name.levis.ichor.model.TalosForm
+import name.levis.ichor.model.isOmni
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.backup.RestoreBackupButton
 import name.levis.ichor.ui.components.InfoRow
@@ -65,7 +68,7 @@ fun ImportScreen(
     autoStartDemo: Boolean = false,
     incoming: String? = null,
     onIncomingTaken: () -> Unit = {},
-    vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository, app.kubeAuthRepository) }),
+    vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository, app.kubeAuthRepository, app.omniAuthRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     // Keep the demo entry visible on first launch; config help is available in the toolbar.
@@ -78,6 +81,9 @@ fun ImportScreen(
     BackHandler(enabled = inSource) { source = ImportSource.PICK }
     // Not saveable: it may contain the client private key, which must not land in saved instance state.
     var pasted by remember { mutableStateOf("") }
+    // Not saveable either, for the same reason (and the Omni service account key).
+    var form by remember { mutableStateOf(TalosForm()) }
+    val context = LocalContext.current
 
     LaunchedEffect(autoStartDemo) {
         if (autoStartDemo && state is ImportState.Idle) vm.startDemo()
@@ -91,7 +97,10 @@ fun ImportScreen(
     }
 
     LaunchedEffect(state) {
-        if (state is ImportState.Saved) onImported()
+        val saved = state as? ImportState.Saved ?: return@LaunchedEffect
+        // The cluster is stored all the same: it asks for a sign-in on its screens.
+        saved.warning?.let { Toast.makeText(context, context.getString(R.string.omni_key_not_stored, it), Toast.LENGTH_LONG).show() }
+        onImported()
     }
 
     if (showHelp) TalosconfigHelpDialog(onDismiss = { showHelp = false })
@@ -120,6 +129,7 @@ fun ImportScreen(
                     adding = !firstRun,
                     onRename = vm::rename,
                     onReplace = vm::setReplace,
+                    onOmniKey = vm::setOmniKey,
                     onConfirm = vm::confirm,
                     onCancel = vm::reset,
                 )
@@ -133,7 +143,7 @@ fun ImportScreen(
                     onCancel = vm::reset,
                 )
                 is ImportState.Discover -> DiscoverCard(s, onDiscover = vm::discover, onCancel = vm::reset)
-                ImportState.Validating, ImportState.Saved -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+                ImportState.Validating, is ImportState.Saved -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator()
                 }
                 else -> SourcePicker(
@@ -141,6 +151,9 @@ fun ImportScreen(
                     error = (s as? ImportState.Invalid)?.message,
                     pasted = pasted,
                     onPasted = { pasted = it },
+                    form = form,
+                    onForm = { form = it },
+                    onSubmitForm = vm::submitForm,
                     onSource = { source = it },
                     onYaml = vm::submit,
                     onDemo = vm::startDemo,
@@ -159,6 +172,7 @@ private fun PreviewCard(
     adding: Boolean,
     onRename: (Int, String) -> Unit,
     onReplace: (Int, Boolean) -> Unit,
+    onOmniKey: (Int, String) -> Unit,
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
 ) {
@@ -173,10 +187,15 @@ private fun PreviewCard(
                 Column(Modifier.padding(16.dp)) {
                     val name = if (ctx.name == summary.current) stringResource(R.string.import_context_current, ctx.name) else ctx.name
                     Text(name, style = MaterialTheme.typography.titleMedium)
-                    InfoRow(stringResource(R.string.common_label_endpoints), ctx.endpoints.joinToString("\n"), mono = true)
-                    InfoRow(stringResource(R.string.common_label_nodes), if (ctx.nodes.isEmpty()) stringResource(R.string.import_nodes_endpoints) else "${ctx.nodes.size}")
-                    InfoRow(stringResource(R.string.common_label_roles), ctx.roles.joinToString())
-                    InfoRow(stringResource(R.string.common_label_cert_expires), certExpiry(ctx.certNotAfter))
+                    if (ctx.isOmni) {
+                        // No certificate nor roles: Omni signs the requests in.
+                        OmniContextRows(ctx, preview.omniKeys[index].orEmpty()) { onOmniKey(index, it) }
+                    } else {
+                        InfoRow(stringResource(R.string.common_label_endpoints), ctx.endpoints.joinToString("\n"), mono = true)
+                        InfoRow(stringResource(R.string.common_label_nodes), if (ctx.nodes.isEmpty()) stringResource(R.string.import_nodes_endpoints) else "${ctx.nodes.size}")
+                        InfoRow(stringResource(R.string.common_label_roles), ctx.roles.joinToString())
+                        InfoRow(stringResource(R.string.common_label_cert_expires), certExpiry(ctx.certNotAfter))
+                    }
                     preview.conflicts.firstOrNull { it.index == index }?.let { conflict ->
                         NameConflict(
                             name = ctx.name,

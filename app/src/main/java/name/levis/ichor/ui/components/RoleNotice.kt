@@ -14,14 +14,22 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.isKube
+import name.levis.ichor.model.isOmni
 
 /**
  * Explains why a feature is unavailable for [cluster]: the talosconfig's roles, or for a
- * cluster added from a kubeconfig, that it has no Talos API (no role would help).
+ * cluster added from a kubeconfig, that it has no Talos API (no role would help), or for one
+ * reached through Omni, that it has no client certificate.
  */
 @Composable
 fun RoleNotice(feature: Feature, cluster: ContextSummary, modifier: Modifier = Modifier) {
-    if (cluster.isKube) TalosOnlyNotice(modifier) else RoleNotice(feature, cluster.roles, modifier)
+    when {
+        cluster.isKube -> TalosOnlyNotice(modifier)
+        cluster.isOmni -> Card(modifier.fillMaxWidth()) {
+            MutedText(stringResource(R.string.omni_feature_unavailable), modifier = Modifier.padding(16.dp))
+        }
+        else -> RoleNotice(feature, cluster.roles, modifier)
+    }
 }
 
 /** A Talos screen reached on a cluster added from a kubeconfig (a link, a notification). */

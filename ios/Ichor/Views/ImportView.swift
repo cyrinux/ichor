@@ -26,6 +26,8 @@ struct ImportView: View {
     /// The credentials cloud discovery found the previewed clusters with: the added ones that
     /// sign in with credentials are signed in with them.
     @State private var discovered: DiscoveredClusters?
+    /// An Omni service account key to set once the previewed talosconfig is added ("" for none).
+    @State private var omniKey = ""
 
     /// A validated config waiting for the user's go: a talosconfig, or a kubeconfig with the
     /// stored clusters its contexts are named like.
@@ -36,13 +38,14 @@ struct ImportView: View {
 
     /// The sources the drop zone opens in a sheet; a file goes straight to the file picker.
     enum Source: String, Identifiable {
-        case paste, qr
+        case paste, qr, form
         var id: String { rawValue }
 
         var label: String {
             switch self {
             case .paste: String(localized: "Paste")
             case .qr: String(localized: "QR code")
+            case .form: String(localized: "Enter details")
             }
         }
     }
@@ -56,7 +59,8 @@ struct ImportView: View {
         Group {
             switch preview {
             case .talos(let yaml, let summary)?:
-                PreviewList(summary: summary, adding: model.hasConfig, busy: busy, onCancel: { self.preview = nil }) {
+                PreviewList(summary: summary, adding: model.hasConfig, busy: busy, omniKey: $omniKey,
+                            onCancel: { self.preview = nil }) {
                     Task { await save(yaml) }
                 }
             case .kube(let yaml, let summary, let conflicts)?:
@@ -79,7 +83,11 @@ struct ImportView: View {
             CloudDiscoveryView(provider: start.provider) { found in validate(found.kubeconfig, discovered: found) }
         }
         .sheet(item: $source) { source in
-            sourceSheet(source)
+            if source == .form {
+                TalosFormView { yaml, key in validate(yaml, omniKey: key) }
+            } else {
+                sourceSheet(source)
+            }
         }
         // A file opened with Ichor (IncomingConfig): previewed like a picked one.
         .task(id: NotificationRouter.shared.pendingImportText) {
@@ -157,6 +165,7 @@ struct ImportView: View {
                     }
                 SourceTile(title: Source.paste.label, systemImage: "doc.on.clipboard") { source = .paste }
                 SourceTile(title: Source.qr.label, systemImage: "qrcode.viewfinder") { source = .qr }
+                SourceTile(title: Source.form.label, systemImage: "square.and.pencil") { source = .form }
             }
             .disabled(busy)
         }
@@ -193,6 +202,8 @@ struct ImportView: View {
                         self.source = nil
                         validate(text)
                     }
+                case .form:
+                    EmptyView() // its own sheet, TalosFormView
                 }
             }
             .navigationTitle(source.label)
@@ -221,10 +232,11 @@ struct ImportView: View {
     }
 
     /// Expands a compressed payload (a large config in a QR code), then takes the talosconfig
-    /// or the kubeconfig flow.
-    private func validate(_ text: String, discovered found: DiscoveredClusters? = nil) {
+    /// or the kubeconfig flow. `omniKey`: a service account key the form was given.
+    private func validate(_ text: String, discovered found: DiscoveredClusters? = nil, omniKey key: String = "") {
         busy = true
         discovered = found
+        omniKey = key
         Task {
             defer { busy = false }
             do {
@@ -249,10 +261,32 @@ struct ImportView: View {
         defer { busy = false }
         do {
             try await model.save(yaml: yaml, replacingSameCluster: replacingSameCluster)
-            onImported()
         } catch {
             self.error = error.localizedDescription
             preview = nil
+            return
+        }
+        if let failure = await setOmniKey() {
+            // The cluster is added; its key can be entered again from its screens.
+            error = String(localized: "Cluster added, but its key was not saved: \(failure)")
+            preview = nil
+            return
+        }
+        onImported()
+    }
+
+    /// Sets the Omni service account key entered on the cluster just added (the imported
+    /// config's current context, now the active one). The error, if it could not be set.
+    private func setOmniKey() async -> String? {
+        let key = omniKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        omniKey = ""
+        guard !key.isEmpty, let target = model.activeOmniTarget else { return nil }
+        do {
+            try await TalosClient.omniSetServiceAccount(config: target.config, context: target.context, key: key)
+            model.reloadKubernetes()
+            return nil
+        } catch {
+            return error.localizedDescription
         }
     }
 
@@ -351,6 +385,8 @@ private struct PreviewList: View {
     /// A config is already stored: this one is added to it.
     let adding: Bool
     let busy: Bool
+    /// The service account key of the Omni cluster added, when it is one.
+    @Binding var omniKey: String
     let onCancel: () -> Void
     let onImport: () -> Void
 
@@ -361,10 +397,27 @@ private struct PreviewList: View {
             }
             ForEach(summary.contexts) { ctx in
                 Section(ctx.name == summary.current ? String(localized: "\(ctx.name) (current)") : ctx.name) {
-                    LabeledContent("Endpoints", value: ctx.endpoints.joined(separator: "\n"))
-                    LabeledContent("Nodes", value: ctx.nodes.isEmpty ? String(localized: "endpoints") : "\(ctx.nodes.count)")
-                    LabeledContent("Roles", value: ctx.roles.joined(separator: ", "))
-                    LabeledContent("Cert expires", value: localizedCertExpiry(ctx.certNotAfter))
+                    if ctx.isOmni {
+                        // Through Omni: no client certificate, so no roles nor expiry.
+                        LabeledContent("Omni address", value: ctx.endpoints.first ?? "")
+                        LabeledContent("Cluster", value: ctx.omniCluster ?? "")
+                        if let identity = ctx.identity { LabeledContent("Account email", value: identity) }
+                    } else {
+                        LabeledContent("Endpoints", value: ctx.endpoints.joined(separator: "\n"))
+                        LabeledContent("Nodes", value: ctx.nodes.isEmpty ? String(localized: "endpoints") : "\(ctx.nodes.count)")
+                        LabeledContent("Roles", value: ctx.roles.joined(separator: ", "))
+                        LabeledContent("Cert expires", value: localizedCertExpiry(ctx.certNotAfter))
+                    }
+                }
+            }
+            // The key goes to the context added as the current one (the one an Omni download holds).
+            if summary.context(named: summary.current)?.isOmni == true {
+                Section {
+                    OmniKeyField(key: $omniKey)
+                } header: {
+                    Text("Service account key")
+                } footer: {
+                    Text("Optional. Without a key, sign in with the browser once the cluster is added.")
                 }
             }
             if adding {

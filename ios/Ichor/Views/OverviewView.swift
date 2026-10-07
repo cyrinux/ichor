@@ -70,7 +70,10 @@ struct OverviewView: View {
                     if let ctx = model.activeSummary, ctx.certNotAfter > 0, daysUntil(ctx.certNotAfter) <= certWarnDays {
                         Section { CertExpiryBanner(notAfter: ctx.certNotAfter) }
                     }
-                    if !discovered.isEmpty {
+                    if overview.nodes.isEmpty && model.activeSummary?.demo != true {
+                        // No node targeted yet (an Omni cluster just added): the way to its members.
+                        Section { NoNodesCard(discovered: discovered.count, find: findNodes) { showDiscovered = true } }
+                    } else if !discovered.isEmpty {
                         Section { DiscoveredNodesBanner(count: discovered.count) { showDiscovered = true } }
                     }
                     if support.visible { Section { SupportCard(prompt: support) } }
@@ -573,6 +576,20 @@ struct OverviewView: View {
         let discovery = try? await client.discoverNodes()
         guard id == loadID else { return }
         discovered = discovery?.offer(dismissed: model.dismissedNodes(of: model.activeContext)) ?? []
+    }
+
+    /// Asked from the no-nodes card, members set aside included: what it found is offered at
+    /// once; the error otherwise.
+    private func findNodes() async -> String? {
+        guard let client = model.client else { return nil }
+        do {
+            discovered = try await client.discoverNodes().offer(dismissed: [])
+        } catch {
+            return error.localizedDescription
+        }
+        guard !discovered.isEmpty else { return String(localized: "No other nodes were found.") }
+        showDiscovered = true
+        return nil
     }
 }
 

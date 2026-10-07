@@ -85,6 +85,7 @@ import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.accessLabel
 import name.levis.ichor.model.hueOf
 import name.levis.ichor.model.isKube
+import name.levis.ichor.model.isOmni
 import name.levis.ichor.model.parseCloudContext
 import name.levis.ichor.model.seedFromHue
 import name.levis.ichor.model.seedOf
@@ -593,11 +594,12 @@ private val HUE_BAR: List<Color> = (0..MAX_HUE.toInt() step HUE_BAR_STEP).map { 
 
 /**
  * The account entry of [context]'s menu, if any: the sign-in of a kubeconfig cluster that
- * signs in through a method, the Kubernetes access of a Talos cluster once a kubeconfig
+ * signs in through a method or of an Omni cluster, the Kubernetes access of a Talos cluster once a kubeconfig
  * cluster is stored ([contexts]).
  */
 private fun clusterAccount(context: ContextSummary, contexts: List<ContextSummary>): Int? = when {
     context.isKube -> R.string.kube_signin_menu.takeIf { context.signIn.isNotEmpty() }
+    context.isOmni -> R.string.kube_signin_menu
     context.demo -> null
     else -> R.string.kube_access_menu.takeIf { contexts.any { it.isKube } }
 }

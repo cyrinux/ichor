@@ -59,6 +59,7 @@ import name.levis.ichor.data.KubeServers
 import name.levis.ichor.data.KubeAccess
 import name.levis.ichor.data.KubeAuthRepository
 import name.levis.ichor.data.KubeAuthStore
+import name.levis.ichor.data.OmniAuthRepository
 import name.levis.ichor.data.SecureStoreValue
 import name.levis.ichor.data.hasStrongBox
 import name.levis.ichor.data.SkippedTalosUpdates
@@ -91,6 +92,8 @@ class TalosApp : Application() {
         KubeAuthStore(SecureStoreValue(java.io.File(filesDir, KubeAuthStore.FILE), KubeAuthStore.KEY_ALIAS, hasStrongBox(packageManager)))
     }
     val kubeAuthRepository by lazy { KubeAuthRepository(configRepository) }
+    /** The sign-ins of Omni clusters, in the same store. */
+    val omniAuthRepository by lazy { OmniAuthRepository(configRepository) }
     val talosRepository by lazy { TalosRepository(configRepository, kubeServers, offlineCache) }
 
     /** Last known cluster data on disk, only while "Keep last known state" is on (Settings → Privacy). */

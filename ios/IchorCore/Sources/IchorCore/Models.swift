@@ -82,17 +82,25 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     /// The method the app signs this kubeconfig context in with (oidc, eks, gke, azure,
     /// digitalocean, rancher), nil for static credentials (see KubeSignInInfo).
     public let signIn: String?
+    /// Talos contexts reached through Omni (auth "omni"): the cluster's name in Omni, and the
+    /// account's email a browser sign-in uses (nil when the context names none).
+    public let omniCluster: String?
+    public let identity: String?
 
     public var id: String { name }
 
     /// Added from a kubeconfig: the Kubernetes API only, no Talos.
     public var isKube: Bool { kind == ContextKind.kube }
 
+    /// A Talos cluster reached through Omni: no client certificate (no roles nor expiry), each
+    /// request signed with a key the user enters or approves in the browser.
+    public var isOmni: Bool { !isKube && auth == ContextAuth.omni }
+
     public init(name: String, kind: String = ContextKind.talos, fingerprint: String = "", clusterID: String = "",
                 endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0,
                 demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,
                 user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil,
-                signIn: String? = nil) {
+                signIn: String? = nil, omniCluster: String? = nil, identity: String? = nil) {
         self.name = name
         self.kind = kind
         self.fingerprint = fingerprint
@@ -110,11 +118,13 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         self.problem = problem
         self.problemDetail = problemDetail
         self.signIn = signIn
+        self.omniCluster = omniCluster
+        self.identity = identity
     }
 
     private enum CodingKeys: String, CodingKey {
         case name, kind, fingerprint, endpoints, nodes, roles, certNotAfter, demo
-        case namespace, auth, authDetail, user, insecure, problem, problemDetail, signIn
+        case namespace, auth, authDetail, user, insecure, problem, problemDetail, signIn, omniCluster, identity
         case clusterID = "clusterId"
     }
 
@@ -138,7 +148,14 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         problem = try c.decodeIfPresent(String.self, forKey: .problem)
         problemDetail = try c.decodeIfPresent(String.self, forKey: .problemDetail)
         signIn = try c.decodeIfPresent(String.self, forKey: .signIn).flatMap { $0.isEmpty ? nil : $0 }
+        omniCluster = try c.decodeIfPresent(String.self, forKey: .omniCluster).flatMap { $0.isEmpty ? nil : $0 }
+        identity = try c.decodeIfPresent(String.self, forKey: .identity).flatMap { $0.isEmpty ? nil : $0 }
     }
+}
+
+/// How a Talos context authenticates (ContextSummary.auth), when not with a client certificate.
+public enum ContextAuth {
+    public static let omni = "omni"
 }
 
 /// The kinds of cluster (ContextSummary.kind).
@@ -411,6 +428,9 @@ public extension ContextSummary {
     /// only (its own RBAC answers for them), never a Talos one.
     func allows(_ feature: Feature) -> Bool {
         if isKube { return Feature.kubernetes.contains(feature) }
+        // Omni's own RBAC answers, unknown here: everything is offered, except renewing a
+        // client certificate the context does not have.
+        if isOmni && roles.isEmpty { return feature != .issueConfig }
         return roles.contains { feature.roles.contains($0) }
     }
 }

@@ -28,7 +28,7 @@ struct KubeSignInSheet: View {
         NavigationStack {
             Form {
                 statusSection
-                KubeSignInProgress(flow: flow, target: target)
+                KubeSignInProgress(flow: flow)
                 if let info {
                     if info.isCredentials {
                         KubeCredentialsForm(info: info, busy: flow.isRunning) { secrets in
@@ -113,10 +113,15 @@ struct KubeSignInSheet: View {
     }
 }
 
-/// Where an interactive sign-in is: waiting for the browser, a device code to enter, done, or why it failed.
-private struct KubeSignInProgress: View {
+/// Where an interactive sign-in is: waiting for the browser, a device code to enter, done, or
+/// why it failed. Omni sign-ins too.
+struct KubeSignInProgress: View {
     let flow: KubeSignInFlow
-    let target: KubeSignInTarget
+
+    // Explicit: the private @Environment property makes the memberwise init private.
+    init(flow: KubeSignInFlow) {
+        self.flow = flow
+    }
 
     @Environment(\.openURL) private var openURL
 

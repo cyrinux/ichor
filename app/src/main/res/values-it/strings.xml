@@ -3094,4 +3094,38 @@
     <string name="imagescan_timed_out">L\'analisi ha richiesto troppo tempo ed è stata fermata.</string>
     <string name="kube_eks_account">account %1$s</string>
     <string name="kube_gke_project">progetto %1$s</string>
+
+    <!-- Talos form, Omni -->
+    <string name="import_form_tab">Inserisci dati</string>
+    <string name="import_form_name">Nome del cluster</string>
+    <string name="import_form_continue">Continua</string>
+    <string name="import_form_mode_talos">Talos</string>
+    <string name="import_form_mode_omni">Omni</string>
+    <string name="import_form_endpoints">Endpoint</string>
+    <string name="import_form_endpoints_hint">Uno per riga: indirizzo IP o nome host</string>
+    <string name="import_form_nodes">Nodi</string>
+    <string name="import_form_nodes_hint">Uno per riga. Vuoto: gli endpoint</string>
+    <string name="import_form_ca">Certificato della CA</string>
+    <string name="import_form_crt">Certificato client</string>
+    <string name="import_form_key">Chiave client</string>
+    <string name="import_form_pem_hint">Testo PEM, o base64 come in un talosconfig.</string>
+    <string name="import_form_pick_file">Scegli file</string>
+    <string name="import_form_omni_url">URL di Omni</string>
+    <string name="import_form_omni_cluster">Cluster in Omni</string>
+    <string name="import_form_omni_identity">Email dell\'account</string>
+    <string name="import_form_omni_identity_hint">Necessaria per accedere con il browser</string>
+    <string name="import_form_omni_key_hint">Lascia vuota la chiave per accedere con il browser dopo aver aggiunto il cluster.</string>
+    <string name="omni_access_label">Omni</string>
+    <string name="omni_signin_required_error">Accedi a Omni per raggiungere questo cluster.</string>
+    <string name="omni_feature_unavailable">Non disponibile per un cluster raggiunto tramite Omni: non ha un certificato client, Omni firma le sue richieste.</string>
+    <string name="omni_signin_title">Accedi a Omni</string>
+    <string name="omni_signin_key_hint">Incolla una chiave di account di servizio (in Omni: Settings, Service accounts). Viene salvata cifrata su questo dispositivo.</string>
+    <string name="omni_signin_use_key">Usa questa chiave</string>
+    <string name="omni_signin_browser_hint">Oppure approva una chiave per %1$s nel browser; dura 6 ore.</string>
+    <string name="omni_signin_browser">Accedi con il browser</string>
+    <string name="omni_signin_needs_identity">L\'accesso con il browser richiede l\'email del tuo account Omni: aggiungi di nuovo il cluster con essa, oppure usa una chiave di account di servizio.</string>
+    <string name="omni_field_service_account_key">Chiave dell\'account di servizio</string>
+    <string name="omni_key_not_stored">Il cluster è stato aggiunto, ma la sua chiave Omni non è stata salvata: %1$s</string>
+    <string name="omni_nodes_discovered">I suoi nodi vengono trovati tramite il rilevamento del cluster una volta aggiunto.</string>
+    <string name="omni_no_nodes">Ancora nessun nodo. Vengono trovati tramite il rilevamento del cluster: trascina per aggiornare, poi aggiungi quelli proposti.</string>
 </resources>

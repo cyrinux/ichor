@@ -30,7 +30,7 @@ data class ContextSummary(
     val kind: String = KIND_TALOS,
     // Kubeconfig contexts only (ParseKubeconfig): what the import preview and the home show.
     val namespace: String = "",
-    /** How the context signs in: cert, token, eks, gke, oidc… (the Go core's kubeContextSummary). */
+    /** How the context signs in: cert, token, eks, gke, oidc… (the Go core's kubeContextSummary); "omni" for a Talos context reached through Omni. */
     val auth: String = "",
     /** What the sign-in method signs in to (EKS cluster, OIDC issuer), if anything. */
     val authDetail: String = "",
@@ -42,6 +42,9 @@ data class ContextSummary(
     val problemDetail: String = "",
     /** The method the app signs in with (oidc, eks, gke, azure, digitalocean, rancher), "" for static credentials. */
     val signIn: String = "",
+    // Omni talosconfig contexts only (see isOmni): the cluster Omni proxies to, and the email a browser sign-in uses.
+    val omniCluster: String = "",
+    val identity: String = "",
     /**
      * A Talos cluster's Kubernetes access: the fingerprint of the stored kubeconfig cluster its
      * Kubernetes calls go through, "" for the Talos admin kubeconfig. Set by the app, not the core.
@@ -112,6 +115,8 @@ private val KUBE_FEATURES = setOf(Feature.WORKLOADS, Feature.KUBECONFIG)
  */
 fun ContextSummary.allows(feature: Feature): Boolean = when {
     isKube -> feature in KUBE_FEATURES
+    // No roles to read: Omni decides. Issuing a client certificate does not apply to it.
+    isOmni -> feature != Feature.ISSUE_CONFIG
     feature == Feature.WORKLOADS && kubeAccess.isNotEmpty() -> true
     else -> roles.any { it in feature.roles }
 }
@@ -120,6 +125,7 @@ fun ContextSummary.allows(feature: Feature): Boolean = when {
 val ContextSummary.accessLabel: Int
     @StringRes get() = when {
         isKube -> R.string.common_kind_kubernetes
+        isOmni -> R.string.omni_access_label
         "os:admin" in roles -> R.string.common_access_admin
         "os:operator" in roles -> R.string.common_access_operator
         else -> R.string.common_access_read_only

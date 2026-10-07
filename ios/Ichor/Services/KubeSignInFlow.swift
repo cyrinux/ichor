@@ -5,7 +5,8 @@ import Observation
 import UIKit
 
 /// One sign-in of a kubeconfig cluster, as the sign-in sheet drives it: credentials checked by
-/// the Go core, then (EKS IAM Identity Center, OIDC, Azure) the browser or a device code.
+/// the Go core, then (EKS IAM Identity Center, OIDC, Azure) the browser or a device code. Omni
+/// clusters sign in the same way: a service account key, or the browser.
 /// Only ever started by the user: background checks never open a browser.
 @Observable
 @MainActor
@@ -54,12 +55,36 @@ final class KubeSignInFlow {
 
     /// Starts the browser or device-code sign-in of `target`.
     func start(_ target: KubeSignInTarget) {
+        begin { TalosClient.startSignIn(kube: target.kube, context: target.context) }
+    }
+
+    /// Starts the browser sign-in of the Omni cluster `target`.
+    func startOmni(_ target: OmniSignInTarget) {
+        begin { TalosClient.startOmniSignIn(config: target.config, context: target.context) }
+    }
+
+    /// Signs the Omni cluster `target` in with a service account key.
+    func setServiceAccount(_ target: OmniSignInTarget, key: String) async {
+        // A browser sign-in under way is dropped, its end ignored.
+        stopRun()
+        runID += 1
+        phase = .working
+        do {
+            try await TalosClient.omniSetServiceAccount(config: target.config, context: target.context, key: key)
+            phase = .signedIn
+        } catch {
+            phase = .failed(error.localizedDescription)
+        }
+    }
+
+    private func begin(_ startRun: () -> (events: AsyncStream<KubeSignInEvent>, complete: @Sendable (String) -> Void,
+                                          cancel: @Sendable () -> Void)) {
         stopRun()
         runID += 1
         let id = runID
         cancelled = false
         phase = .working
-        let run = TalosClient.startSignIn(kube: target.kube, context: target.context)
+        let run = startRun()
         cancelRun = run.cancel
         completeRun = run.complete
         Task {

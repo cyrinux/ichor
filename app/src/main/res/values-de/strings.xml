@@ -3086,4 +3086,38 @@
     <string name="imagescan_timed_out">Die Prüfung hat zu lange gedauert und wurde gestoppt.</string>
     <string name="kube_eks_account">Konto %1$s</string>
     <string name="kube_gke_project">Projekt %1$s</string>
+
+    <!-- Talos form, Omni -->
+    <string name="import_form_tab">Eingeben</string>
+    <string name="import_form_name">Clustername</string>
+    <string name="import_form_continue">Weiter</string>
+    <string name="import_form_mode_talos">Talos</string>
+    <string name="import_form_mode_omni">Omni</string>
+    <string name="import_form_endpoints">Endpunkte</string>
+    <string name="import_form_endpoints_hint">Einer pro Zeile: IP-Adresse oder Hostname</string>
+    <string name="import_form_nodes">Knoten</string>
+    <string name="import_form_nodes_hint">Einer pro Zeile. Leer: die Endpunkte</string>
+    <string name="import_form_ca">CA-Zertifikat</string>
+    <string name="import_form_crt">Client-Zertifikat</string>
+    <string name="import_form_key">Client-Schlüssel</string>
+    <string name="import_form_pem_hint">PEM-Text oder Base64 wie in einer talosconfig.</string>
+    <string name="import_form_pick_file">Datei wählen</string>
+    <string name="import_form_omni_url">Omni-URL</string>
+    <string name="import_form_omni_cluster">Cluster in Omni</string>
+    <string name="import_form_omni_identity">E-Mail des Kontos</string>
+    <string name="import_form_omni_identity_hint">Nötig für die Anmeldung im Browser</string>
+    <string name="import_form_omni_key_hint">Lass den Schlüssel leer, um dich nach dem Hinzufügen des Clusters im Browser anzumelden.</string>
+    <string name="omni_access_label">Omni</string>
+    <string name="omni_signin_required_error">Melde dich bei Omni an, um diesen Cluster zu erreichen.</string>
+    <string name="omni_feature_unavailable">Nicht verfügbar für einen Cluster, der über Omni erreicht wird: Er hat kein Client-Zertifikat, Omni signiert seine Anfragen.</string>
+    <string name="omni_signin_title">Bei Omni anmelden</string>
+    <string name="omni_signin_key_hint">Füge einen Dienstkonto-Schlüssel ein (in Omni: Settings, Service accounts). Er wird verschlüsselt auf diesem Gerät gespeichert.</string>
+    <string name="omni_signin_use_key">Diesen Schlüssel verwenden</string>
+    <string name="omni_signin_browser_hint">Oder bestätige einen Schlüssel für %1$s im Browser; er gilt 6 Stunden.</string>
+    <string name="omni_signin_browser">Im Browser anmelden</string>
+    <string name="omni_signin_needs_identity">Die Anmeldung im Browser braucht die E-Mail deines Omni-Kontos: Füge den Cluster damit erneut hinzu oder verwende einen Dienstkonto-Schlüssel.</string>
+    <string name="omni_field_service_account_key">Dienstkonto-Schlüssel</string>
+    <string name="omni_key_not_stored">Der Cluster wurde hinzugefügt, aber sein Omni-Schlüssel wurde nicht gespeichert: %1$s</string>
+    <string name="omni_nodes_discovered">Seine Knoten werden nach dem Hinzufügen über die Cluster-Erkennung gefunden.</string>
+    <string name="omni_no_nodes">Noch keine Knoten. Sie werden über die Cluster-Erkennung gefunden: Zum Aktualisieren ziehen und die angebotenen hinzufügen.</string>
 </resources>

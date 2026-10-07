@@ -3094,4 +3094,38 @@
     <string name="imagescan_timed_out">El análisis tardó demasiado y se detuvo.</string>
     <string name="kube_eks_account">cuenta %1$s</string>
     <string name="kube_gke_project">proyecto %1$s</string>
+
+    <!-- Talos form, Omni -->
+    <string name="import_form_tab">Introducir datos</string>
+    <string name="import_form_name">Nombre del clúster</string>
+    <string name="import_form_continue">Continuar</string>
+    <string name="import_form_mode_talos">Talos</string>
+    <string name="import_form_mode_omni">Omni</string>
+    <string name="import_form_endpoints">Endpoints</string>
+    <string name="import_form_endpoints_hint">Uno por línea: dirección IP o nombre de host</string>
+    <string name="import_form_nodes">Nodos</string>
+    <string name="import_form_nodes_hint">Uno por línea. Vacío: los endpoints</string>
+    <string name="import_form_ca">Certificado de la CA</string>
+    <string name="import_form_crt">Certificado de cliente</string>
+    <string name="import_form_key">Clave de cliente</string>
+    <string name="import_form_pem_hint">Texto PEM, o base64 como en un talosconfig.</string>
+    <string name="import_form_pick_file">Elegir archivo</string>
+    <string name="import_form_omni_url">URL de Omni</string>
+    <string name="import_form_omni_cluster">Clúster en Omni</string>
+    <string name="import_form_omni_identity">Correo de la cuenta</string>
+    <string name="import_form_omni_identity_hint">Necesario para iniciar sesión con el navegador</string>
+    <string name="import_form_omni_key_hint">Deja la clave vacía para iniciar sesión con el navegador cuando se haya añadido el clúster.</string>
+    <string name="omni_access_label">Omni</string>
+    <string name="omni_signin_required_error">Inicia sesión en Omni para acceder a este clúster.</string>
+    <string name="omni_feature_unavailable">No disponible para un clúster al que se accede a través de Omni: no tiene certificado de cliente, Omni firma sus peticiones.</string>
+    <string name="omni_signin_title">Iniciar sesión en Omni</string>
+    <string name="omni_signin_key_hint">Pega una clave de cuenta de servicio (en Omni: Settings, Service accounts). Se guarda cifrada en este dispositivo.</string>
+    <string name="omni_signin_use_key">Usar esta clave</string>
+    <string name="omni_signin_browser_hint">O aprueba una clave para %1$s en el navegador; dura 6 horas.</string>
+    <string name="omni_signin_browser">Iniciar sesión con el navegador</string>
+    <string name="omni_signin_needs_identity">Iniciar sesión con el navegador requiere el correo de tu cuenta de Omni: vuelve a añadir el clúster con él, o usa una clave de cuenta de servicio.</string>
+    <string name="omni_field_service_account_key">Clave de cuenta de servicio</string>
+    <string name="omni_key_not_stored">Se añadió el clúster, pero su clave de Omni no se guardó: %1$s</string>
+    <string name="omni_nodes_discovered">Sus nodos se encuentran mediante el descubrimiento del clúster una vez añadido.</string>
+    <string name="omni_no_nodes">Aún no hay nodos. Se encuentran mediante el descubrimiento del clúster: desliza para actualizar y añade los que se ofrezcan.</string>
 </resources>
