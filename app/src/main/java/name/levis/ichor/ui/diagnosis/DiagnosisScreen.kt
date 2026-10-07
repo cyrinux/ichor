@@ -52,6 +52,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.pageContent
 
 /**
  * The optional AI diagnosis: shows the report that would be sent, then either asks the
@@ -104,7 +105,7 @@ fun DiagnosisScreen(
         },
     ) { padding ->
         Column(
-            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             ReportCard(report, onRetry = vm::collect)

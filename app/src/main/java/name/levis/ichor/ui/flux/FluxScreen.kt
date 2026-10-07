@@ -45,6 +45,7 @@ import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.SwipeTabPager
 import name.levis.ichor.ui.components.TWO_TABS
+import name.levis.ichor.ui.components.pageContent
 
 /**
  * Flux's Kustomizations and HelmReleases (first tab) and their sources (second), read through
@@ -92,7 +93,7 @@ fun FluxScreen(onBack: () -> Unit, onApp: (kind: String, namespace: String, name
             )
         },
     ) { padding ->
-        val modifier = Modifier.padding(padding)
+        val modifier = Modifier.pageContent(padding)
         when (val s = state) {
             UiState.Loading -> LoadingBox(modifier)
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)

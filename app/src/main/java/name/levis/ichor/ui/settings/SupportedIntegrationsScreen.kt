@@ -58,6 +58,7 @@ import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.UiText
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichor.data.TalosJson
+import name.levis.ichor.ui.components.pageContent
 
 /** What the screen shows: the list, and why the cluster could not be asked when it could not. */
 private data class SupportedIntegrationsView(val list: SupportedIntegrations, val problem: UiText? = null)
@@ -97,7 +98,7 @@ fun SupportedIntegrationsScreen(configs: ConfigRepository, talos: TalosRepositor
         },
     ) { padding ->
         LazyColumn(
-            Modifier.padding(padding).fillMaxSize(),
+            Modifier.pageContent(padding).fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {

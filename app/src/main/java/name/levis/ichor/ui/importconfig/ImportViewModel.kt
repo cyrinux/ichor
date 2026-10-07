@@ -63,11 +63,13 @@ sealed interface ImportState {
     }
 
     /**
-     * Adding clusters from a cloud account (K7): the fields each provider asks for; [running]
-     * while the account's clusters are listed, [error] when that failed.
+     * Adding clusters from a cloud account (K7): the fields each provider asks for, starting
+     * on the [initial] provider; [running] while the account's clusters are listed, [error]
+     * when that failed.
      */
     data class Discover(
         val fields: Map<DiscoveryProvider, List<String>>,
+        val initial: DiscoveryProvider? = null,
         val running: Boolean = false,
         val error: String? = null,
     ) : ImportState
@@ -133,10 +135,10 @@ class ImportViewModel(private val configs: ConfigRepository, private val auth: K
     }
 
     /** Shows the cloud providers whose clusters can be added from an account. */
-    fun startDiscovery() {
+    fun startDiscovery(provider: DiscoveryProvider? = null) {
         _state.value = ImportState.Validating
         viewModelScope.launch {
-            _state.value = runCatching { ImportState.Discover(discoveryFields(auth.discoveryFields())) }
+            _state.value = runCatching { ImportState.Discover(discoveryFields(auth.discoveryFields()), initial = provider) }
                 .getOrElse { ImportState.Invalid(it.userMessage()) }
         }
     }

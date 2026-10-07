@@ -555,9 +555,9 @@
     <string name="import_tab_qr">Código QR</string>
     <string name="import_could_not_open">No se ha podido abrir el archivo</string>
     <string name="import_file_too_large">El archivo es demasiado grande para ser un talosconfig</string>
-    <string name="import_file_hint">Selecciona tu talosconfig (el archivo ~/.talos/config de tu equipo). Cópialo al teléfono con adb push, Syncthing, etc.</string>
-    <string name="import_choose_file">Elegir archivo</string>
-    <string name="import_paste_label">YAML del talosconfig</string>
+    <string name="import_bring_title">Importar un archivo de configuración</string>
+    <string name="import_detects">Desde ~/.talos/config o ~/.kube/config de tu equipo. Ichor reconoce cuál es.</string>
+    <string name="import_paste_label">YAML del talosconfig o del kubeconfig</string>
     <string name="import_validate">Validar</string>
     <string name="import_valid">La configuración es válida</string>
     <string name="import_context_current">%1$s (actual)</string>
@@ -1303,7 +1303,6 @@
     <string name="ai_disclaimer">Las respuestas de la IA pueden ser erróneas. Comprueba un comando antes de ejecutarlo, sobre todo si restablece un nodo o modifica etcd.</string>
     <string name="ai_health_diagnose">Diagnosticar con IA</string>
     <string name="demo_try">Probar demo</string>
-    <string name="demo_hint">¿Aún no tienes un clúster? Explora Ichor con un clúster Talos de ejemplo.</string>
     <string name="demo_notice">Clúster de demostración · Datos de ejemplo. No se puede modificar el clúster. Elimina la demo en Gestionar clústeres cuando termines.</string>
     <string name="overview_discovered_nodes_hint">Toca para añadirlos al talosconfig.</string>
     <string name="discover_nodes_title">Añadir nodos descubiertos</string>
@@ -1374,7 +1373,6 @@
     <string name="backup_desc">Guarda tus clústeres y ajustes en un archivo cifrado con una frase de contraseña para restaurarlos en un teléfono nuevo (Android o iOS). Sin la frase de contraseña no se puede abrir el archivo.</string>
     <string name="backup_create">Copia de seguridad de clústeres y ajustes</string>
     <string name="backup_restore">Restaurar una copia de seguridad</string>
-    <string name="backup_restore_hint">¿Vienes de otro teléfono? Restaura la copia de seguridad que hiciste allí.</string>
     <string name="backup_restore_pick">Elegir archivo</string>
     <string name="backup_restore_replace_warning">Restaurar sustituye todos los clústeres y ajustes de este dispositivo por los de la copia de seguridad.</string>
     <string name="backup_auth">Copia de seguridad de los clústeres y sus credenciales</string>
@@ -2860,7 +2858,6 @@
     <!-- Clusters added from a kubeconfig (no Talos API) -->
     <string name="common_kind_kubernetes">Kubernetes</string>
     <string name="common_talos_only">No disponible para este clúster: se añadió desde un kubeconfig, así que la app solo llega a su API de Kubernetes, no a Talos.</string>
-    <string name="import_kube_hint">Un kubeconfig también sirve, con un certificado de cliente o un token.</string>
     <string name="import_kube_title">Elige los clústeres que añadir</string>
     <string name="import_kube_none_importable">Ninguno de estos clústeres se puede añadir todavía.</string>
     <string name="import_kube_server">Servidor</string>
@@ -2963,7 +2960,6 @@
     <string name="kube_access_hint">Las pantallas de Kubernetes de este clúster usan estas credenciales. Las llamadas a Talos siguen con el talosconfig.</string>
     <string name="kube_access_talos">Kubeconfig de administrador de Talos</string>
     <string name="import_kube_signin_follows">Inicia sesión con %1$s: inicias sesión una vez añadido.</string>
-    <string name="kube_discover_hint">O añade los clústeres de una cuenta en la nube, sin kubeconfig.</string>
     <string name="kube_discover_entry">Añadir desde una cuenta en la nube</string>
     <string name="kube_discover_title">Añadir desde una cuenta en la nube</string>
     <string name="kube_discover_body">La app lista los clústeres de la cuenta; eliges cuáles añadir. Después inician sesión con estas credenciales.</string>

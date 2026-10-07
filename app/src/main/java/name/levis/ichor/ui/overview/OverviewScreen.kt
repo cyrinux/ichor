@@ -116,6 +116,7 @@ import name.levis.ichor.model.inventoryBadges
 import name.levis.ichor.ui.argocd.ArgoViewModel
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
 import name.levis.ichor.ui.dataservices.downHostnames
+import name.levis.ichor.ui.components.pageContent
 
 class OverviewViewModel(
     val talos: TalosRepository,
@@ -419,7 +420,7 @@ fun OverviewScreen(
             onChange = app.uiPreferences::setOverviewLayout,
             bar = bar,
             onBarChange = app.uiPreferences::setOverviewBar,
-            modifier = Modifier.padding(padding),
+            modifier = Modifier.pageContent(padding),
             absent = absentCards,
         )
         else if (config?.activeSummary?.needsEndpoint == true) NoEndpointsBox(
@@ -428,8 +429,8 @@ fun OverviewScreen(
             modifier = Modifier.padding(padding),
         )
         else when (val s = state) {
-            UiState.Loading -> LoadingBox(Modifier.padding(padding))
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.padding(padding))
+            UiState.Loading -> LoadingBox(Modifier.pageContent(padding))
+            is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.pageContent(padding))
             is UiState.Loaded -> PullToRefreshBox(
                 isRefreshing = s.refreshing,
                 onRefresh = {
@@ -441,7 +442,7 @@ fun OverviewScreen(
                     if (dataHints.isNotEmpty()) dataVm.refresh()
                     scope.launch { discoveryVm.discover() }
                 },
-                modifier = Modifier.padding(padding).fillMaxSize(),
+                modifier = Modifier.pageContent(padding).fillMaxSize(),
             ) {
                 val down = s.data.outage
                 // With nodes known from before, they stay listed under a banner instead.

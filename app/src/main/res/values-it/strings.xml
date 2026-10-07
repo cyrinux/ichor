@@ -555,9 +555,9 @@
     <string name="import_tab_qr">Codice QR</string>
     <string name="import_could_not_open">Impossibile aprire il file</string>
     <string name="import_file_too_large">Il file è troppo grande per essere un talosconfig</string>
-    <string name="import_file_hint">Seleziona il tuo talosconfig (il file ~/.talos/config sulla tua workstation). Copialo sul telefono con adb push, Syncthing, ecc.</string>
-    <string name="import_choose_file">Scegli file</string>
-    <string name="import_paste_label">YAML del talosconfig</string>
+    <string name="import_bring_title">Importa un file di configurazione</string>
+    <string name="import_detects">Da ~/.talos/config o ~/.kube/config sulla tua workstation. Ichor riconosce quale dei due è.</string>
+    <string name="import_paste_label">YAML del talosconfig o del kubeconfig</string>
     <string name="import_validate">Convalida</string>
     <string name="import_valid">La configurazione è valida</string>
     <string name="import_context_current">%1$s (attuale)</string>
@@ -1303,7 +1303,6 @@
     <string name="ai_disclaimer">Le risposte dell’IA possono essere sbagliate. Controlla un comando prima di eseguirlo, soprattutto se reimposta un nodo o modifica etcd.</string>
     <string name="ai_health_diagnose">Diagnostica con l’IA</string>
     <string name="demo_try">Prova la demo</string>
-    <string name="demo_hint">Non hai ancora un cluster? Esplora Ichor con un cluster Talos di esempio.</string>
     <string name="demo_notice">Cluster dimostrativo · Dati di esempio. Le modifiche al cluster non sono disponibili. Rimuovi la demo da Gestisci cluster al termine.</string>
     <string name="overview_discovered_nodes_hint">Tocca per aggiungerli al talosconfig.</string>
     <string name="discover_nodes_title">Aggiungi i nodi rilevati</string>
@@ -1374,7 +1373,6 @@
     <string name="backup_desc">Salva i tuoi cluster e le impostazioni in un file cifrato con una passphrase, per ripristinarli su un nuovo telefono (Android o iOS). Senza la passphrase il file non può essere aperto.</string>
     <string name="backup_create">Backup di cluster e impostazioni</string>
     <string name="backup_restore">Ripristina un backup</string>
-    <string name="backup_restore_hint">Arrivi da un altro telefono? Ripristina il backup creato lì.</string>
     <string name="backup_restore_pick">Scegli file</string>
     <string name="backup_restore_replace_warning">Il ripristino sostituisce tutti i cluster e le impostazioni di questo dispositivo con quelli del backup.</string>
     <string name="backup_auth">Backup dei cluster e delle loro credenziali</string>
@@ -2860,7 +2858,6 @@
     <!-- Clusters added from a kubeconfig (no Talos API) -->
     <string name="common_kind_kubernetes">Kubernetes</string>
     <string name="common_talos_only">Non disponibile per questo cluster: è stato aggiunto da un kubeconfig, quindi l\'app raggiunge solo la sua API Kubernetes, non Talos.</string>
-    <string name="import_kube_hint">Funziona anche un kubeconfig, con un certificato client o un token.</string>
     <string name="import_kube_title">Scegli i cluster da aggiungere</string>
     <string name="import_kube_none_importable">Nessuno di questi cluster può ancora essere aggiunto.</string>
     <string name="import_kube_server">Server</string>
@@ -2963,7 +2960,6 @@
     <string name="kube_access_hint">Le schermate Kubernetes di questo cluster usano queste credenziali. Le chiamate Talos restano sul talosconfig.</string>
     <string name="kube_access_talos">Kubeconfig admin di Talos</string>
     <string name="import_kube_signin_follows">Accede con %1$s: accedi dopo averlo aggiunto.</string>
-    <string name="kube_discover_hint">Oppure aggiungi i cluster di un account cloud, senza kubeconfig.</string>
     <string name="kube_discover_entry">Aggiungi da un account cloud</string>
     <string name="kube_discover_title">Aggiungi da un account cloud</string>
     <string name="kube_discover_body">L\'app elenca i cluster dell\'account; scegli quali aggiungere. Poi accedono con queste credenziali.</string>

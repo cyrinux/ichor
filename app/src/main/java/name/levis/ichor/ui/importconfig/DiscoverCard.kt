@@ -48,7 +48,7 @@ internal fun DiscoverCard(
     onCancel: () -> Unit,
 ) {
     val providers = state.fields.keys.toList()
-    var provider by remember { mutableStateOf(providers.firstOrNull()) }
+    var provider by remember { mutableStateOf(state.initial?.takeIf { it in providers } ?: providers.firstOrNull()) }
     // Not saveable: secrets never go into saved instance state.
     val values = remember { mutableStateMapOf<String, String>() }
     val fields = provider?.let { state.fields[it] }.orEmpty()

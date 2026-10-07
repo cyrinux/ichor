@@ -57,6 +57,7 @@ import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.components.pageContent
 
 class NetPoliciesViewModel(private val cilium: CiliumRepository) : LoadingViewModel<NetPolicyReport>() {
     override suspend fun fetch() = cilium.policies()
@@ -101,7 +102,7 @@ fun NetworkPoliciesScreen(
             )
         },
     ) { padding ->
-        val modifier = Modifier.padding(padding)
+        val modifier = Modifier.pageContent(padding)
         Loaded(state, vm::refresh, modifier) { data ->
             PolicyList(data, namespace, query, onNamespace = { namespace = it }, onQuery = { query = it }, onOpen = { open = it.key })
             

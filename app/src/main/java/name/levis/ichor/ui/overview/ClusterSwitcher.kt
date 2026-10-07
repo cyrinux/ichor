@@ -35,6 +35,7 @@ import androidx.compose.material.icons.outlined.UnfoldMore
 import androidx.compose.material.icons.outlined.VpnLock
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,6 +62,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -102,6 +104,9 @@ private val SWIPE_THRESHOLD = 56.dp
 private const val MAX_DOTS = 6
 
 private const val SWATCHES_PER_ROW = 4
+
+/** A row whose cluster is being removed fades while the spinner turns. */
+private const val REMOVING_ALPHA = 0.5f
 
 /**
  * Swiping the overview's top bar sideways shows the previous or next cluster, like pages
@@ -221,6 +226,7 @@ private fun ClusterPosition(contexts: List<ContextSummary>, active: Int, colors:
 /**
  * The imported clusters: pick the one to show, rename it, change its color, set it to be
  * reached over a VPN only ([vpnOnly], by fingerprint), remove it, or add one. Removing asks first; [onRemove] then drops the cluster's credentials from the device.
+ * The clusters in [removingNames] are on their way out: a spinner instead of their menu.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -239,6 +245,7 @@ fun ClusterSheet(
     onEndpoints: ((ContextSummary) -> Unit)? = null,
     signInNeeded: Set<String> = emptySet(),
     onAccount: ((ContextSummary) -> Unit)? = null,
+    removingNames: Set<String> = emptySet(),
 ) {
     var removing by remember { mutableStateOf<ContextSummary?>(null) }
     var renaming by remember { mutableStateOf<ContextSummary?>(null) }
@@ -276,6 +283,7 @@ fun ClusterSheet(
                     onEndpoints = onEndpoints?.let { edit -> { edit(context) } }?.takeIf { !labels.masked && !context.demo && !context.isKube },
                     signInNeeded = context.name in signInNeeded,
                     account = onAccount?.let { open -> clusterAccount(context, contexts)?.let { it to { open(context) } } },
+                    beingRemoved = context.name in removingNames,
                 )
             }
             // What the lock on a row means, once there is one.
@@ -356,6 +364,7 @@ private fun ClusterRow(
     onEndpoints: (() -> Unit)?,
     signInNeeded: Boolean,
     account: Pair<Int, () -> Unit>?,
+    beingRemoved: Boolean,
 ) {
     val label = labels.of(context)
     ListItem(
@@ -394,7 +403,9 @@ private fun ClusterRow(
         },
         leadingContent = { ClusterLogo(context, color, selected) },
         trailingContent = {
-            ClusterRowMenu(
+            if (beingRemoved) {
+                CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
+            } else ClusterRowMenu(
                 label = label,
                 onRename = onRename,
                 onColor = onColor,
@@ -412,7 +423,8 @@ private fun ClusterRow(
             .padding(horizontal = 8.dp)
             .clip(MaterialTheme.shapes.large)
             .fillMaxWidth()
-            .selectable(selected = selected, role = Role.RadioButton, onClick = onSelect),
+            .selectable(selected = selected, enabled = !beingRemoved, role = Role.RadioButton, onClick = onSelect)
+            .alpha(if (beingRemoved) REMOVING_ALPHA else 1f),
     )
 }
 

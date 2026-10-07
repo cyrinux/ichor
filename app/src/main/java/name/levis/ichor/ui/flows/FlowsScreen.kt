@@ -70,6 +70,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.components.SwipeTabPager
 import name.levis.ichor.ui.components.TWO_TABS
+import name.levis.ichor.ui.components.pageContent
 
 /**
  * The cluster's network flows live through Hubble, like Hubble UI: drops grouped by endpoints
@@ -124,7 +125,7 @@ fun FlowsScreen(
             }
         },
     ) { padding ->
-        val modifier = Modifier.padding(padding)
+        val modifier = Modifier.pageContent(padding)
         when (val s = status) {
             UiState.Loading -> LoadingBox(modifier)
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)

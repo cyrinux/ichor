@@ -59,6 +59,7 @@ import name.levis.ichor.ui.overview.healthSummary
 import name.levis.ichor.ui.overview.rememberPublicIpDetection
 import name.levis.ichor.ui.overview.rememberWakeOnLan
 import name.levis.ichor.ui.overview.siteLabel
+import name.levis.ichor.ui.components.pageContent
 
 /**
  * Every node of a large cluster, where the dense home card only shows dots: search by hostname
@@ -105,9 +106,9 @@ fun NodesScreen(
         },
     ) { padding ->
         when (val s = state) {
-            UiState.Loading -> LoadingBox(Modifier.padding(padding))
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.padding(padding))
-            is UiState.Loaded -> Column(Modifier.padding(padding).fillMaxSize()) {
+            UiState.Loading -> LoadingBox(Modifier.pageContent(padding))
+            is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.pageContent(padding))
+            is UiState.Loaded -> Column(Modifier.pageContent(padding).fillMaxSize()) {
                 // In the map's order, site by site, as on home.
                 val groups = remember(s.data) { vm.talos.cached<ClusterTopology>(TOPOLOGY)?.value.groupNodes(s.data.nodes) }
                 val shown = remember(groups, query, filter, site) { groups.filterNodes(query, filter, site) }

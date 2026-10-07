@@ -27,6 +27,7 @@ import name.levis.ichor.ui.workloads.NetPerfTab
 import name.levis.ichor.ui.workloads.netPerfViewModel
 import java.text.DateFormat
 import name.levis.ichor.util.formatDateTime
+import name.levis.ichor.ui.components.pageContent
 
 /** Drift, Recorder and NetPerf. */
 private val INSIGHTS_TABS = listOf(0, 1, 2)
@@ -63,7 +64,7 @@ fun InsightsScreen(onBack: () -> Unit) {
             BackButton(onBack)
         })
     }) { padding ->
-        Column(Modifier.padding(padding)) {
+        Column(Modifier.pageContent(padding)) {
             SecondaryTabRow(selectedTabIndex = tab) {
                 AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.insights_drift)) })
                 AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.insights_recorder)) })

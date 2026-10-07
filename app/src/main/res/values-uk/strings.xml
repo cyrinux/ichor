@@ -606,9 +606,9 @@
     <string name="import_tab_qr">QR-код</string>
     <string name="import_could_not_open">Не вдалося відкрити файл</string>
     <string name="import_file_too_large">Файл завеликий для talosconfig</string>
-    <string name="import_file_hint">Виберіть свій talosconfig (файл ~/.talos/config на робочому комп\'ютері). Скопіюйте його на телефон через adb push, Syncthing тощо.</string>
-    <string name="import_choose_file">Вибрати файл</string>
-    <string name="import_paste_label">talosconfig YAML</string>
+    <string name="import_bring_title">Імпортувати файл конфігурації</string>
+    <string name="import_detects">З ~/.talos/config або ~/.kube/config на робочому комп\'ютері. Ichor сам визначить, що це.</string>
+    <string name="import_paste_label">talosconfig або kubeconfig YAML</string>
     <string name="import_validate">Перевірити</string>
     <string name="import_valid">Конфігурація дійсна</string>
     <string name="import_context_current">%1$s (поточний)</string>
@@ -1400,7 +1400,6 @@
     <string name="ai_disclaimer">Відповіді ШІ можуть бути хибними. Перевіряйте команду перед виконанням, особливо якщо вона скидає вузол або змінює etcd.</string>
     <string name="ai_health_diagnose">Діагностувати за допомогою ШІ</string>
     <string name="demo_try">Спробувати демо</string>
-    <string name="demo_hint">Ще немає кластера? Ознайомтеся з Ichor на прикладі кластера Talos.</string>
     <string name="demo_notice">Демонстраційний кластер · Приклад даних. Зміни кластера недоступні. Видаліть демо в розділі Керування кластерами після завершення.</string>
     <string name="overview_discovered_nodes_hint">Торкніться, щоб додати їх до talosconfig.</string>
     <string name="discover_nodes_title">Додати знайдені вузли</string>
@@ -1478,7 +1477,6 @@
     <string name="backup_desc">Збережіть кластери та налаштування у файл, зашифрований парольною фразою, щоб відновити їх на новому телефоні (Android або iOS). Без парольної фрази файл не відкрити.</string>
     <string name="backup_create">Створити резервну копію кластерів і налаштувань</string>
     <string name="backup_restore">Відновити резервну копію</string>
-    <string name="backup_restore_hint">Переходите з іншого телефона? Відновіть резервну копію, створену на ньому.</string>
     <string name="backup_restore_pick">Вибрати файл</string>
     <string name="backup_restore_replace_warning">Відновлення замінить усі кластери й налаштування на цьому пристрої даними з резервної копії.</string>
     <string name="backup_auth">Резервна копія кластерів та їхніх облікових даних</string>
@@ -3054,7 +3052,6 @@
     <!-- Clusters added from a kubeconfig (no Talos API) -->
     <string name="common_kind_kubernetes">Kubernetes</string>
     <string name="common_talos_only">Недоступно для цього кластера: його додано з kubeconfig, тож застосунок бачить лише його Kubernetes API, а не Talos.</string>
-    <string name="import_kube_hint">Kubeconfig теж підходить — з клієнтським сертифікатом або токеном.</string>
     <string name="import_kube_title">Виберіть кластери для додавання</string>
     <string name="import_kube_none_importable">Жоден із цих кластерів поки не можна додати.</string>
     <string name="import_kube_server">Сервер</string>
@@ -3157,7 +3154,6 @@
     <string name="kube_access_hint">Екрани Kubernetes цього кластера використовують ці облікові дані. Виклики Talos і далі йдуть через talosconfig.</string>
     <string name="kube_access_talos">Адмін-kubeconfig Talos</string>
     <string name="import_kube_signin_follows">Входить через %1$s: ви ввійдете після додавання.</string>
-    <string name="kube_discover_hint">Або додайте кластери хмарного облікового запису без kubeconfig.</string>
     <string name="kube_discover_entry">Додати з хмарного облікового запису</string>
     <string name="kube_discover_title">Додати з хмарного облікового запису</string>
     <string name="kube_discover_body">Застосунок покаже кластери облікового запису; ви оберете, які додати. Потім вони входитимуть із цими обліковими даними.</string>

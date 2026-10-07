@@ -14,12 +14,14 @@ struct DiscoveredClusters: Equatable {
 struct CloudDiscoveryView: View {
     let onFound: (DiscoveredClusters) -> Void
 
-    init(onFound: @escaping (DiscoveredClusters) -> Void) {
+    /// Opens on `provider`, one of kubeDiscoverProviders.
+    init(provider: String = kubeDiscoverProviders[0], onFound: @escaping (DiscoveredClusters) -> Void) {
         self.onFound = onFound
+        _provider = State(initialValue: provider)
     }
 
     @Environment(\.dismiss) private var dismiss
-    @State private var provider = kubeDiscoverProviders[0]
+    @State private var provider: String
     @State private var fieldsByProvider: [String: [String]] = [:]
     @State private var values: [String: String] = [:]
     @State private var busy = false

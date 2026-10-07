@@ -83,6 +83,7 @@ import name.levis.ichor.ui.importconfig.certExpiry
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.util.formatDate
+import name.levis.ichor.ui.components.pageContent
 
 /**
  * Issues a talosconfig (os:admin): renews this context's certificate in place, or creates
@@ -144,7 +145,7 @@ fun IssueConfigScreen(
         },
     ) { padding ->
         Column(
-            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             when {

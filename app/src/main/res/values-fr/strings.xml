@@ -555,9 +555,9 @@
     <string name="import_tab_qr">Code QR</string>
     <string name="import_could_not_open">Impossible d\'ouvrir le fichier</string>
     <string name="import_file_too_large">Le fichier est trop volumineux pour être un talosconfig</string>
-    <string name="import_file_hint">Sélectionnez votre talosconfig (le fichier ~/.talos/config de votre poste de travail). Copiez-le sur le téléphone avec adb push, Syncthing, etc.</string>
-    <string name="import_choose_file">Choisir un fichier</string>
-    <string name="import_paste_label">YAML du talosconfig</string>
+    <string name="import_bring_title">Importer un fichier de configuration</string>
+    <string name="import_detects">Depuis ~/.talos/config ou ~/.kube/config sur votre poste de travail. Ichor reconnaît lequel c\'est.</string>
+    <string name="import_paste_label">YAML du talosconfig ou du kubeconfig</string>
     <string name="import_validate">Valider</string>
     <string name="import_valid">La configuration est valide</string>
     <string name="import_context_current">%1$s (actuel)</string>
@@ -1303,7 +1303,6 @@
     <string name="ai_disclaimer">Les réponses de l’IA peuvent être fausses. Vérifiez une commande avant de l’exécuter, surtout si elle réinitialise un nœud ou modifie etcd.</string>
     <string name="ai_health_diagnose">Diagnostiquer avec l’IA</string>
     <string name="demo_try">Essayer la démo</string>
-    <string name="demo_hint">Pas encore de cluster ? Explorez Ichor avec un exemple de cluster Talos.</string>
     <string name="demo_notice">Cluster de démonstration · Données fictives. Les modifications du cluster sont indisponibles. Supprimez la démo dans Gérer les clusters une fois terminé.</string>
     <string name="overview_discovered_nodes_hint">Touchez pour les ajouter au talosconfig.</string>
     <string name="discover_nodes_title">Ajouter les nœuds découverts</string>
@@ -1374,7 +1373,6 @@
     <string name="backup_desc">Enregistrez vos clusters et réglages dans un fichier chiffré par une phrase secrète, pour les restaurer sur un nouveau téléphone (Android ou iOS). Sans la phrase secrète, le fichier ne peut pas être ouvert.</string>
     <string name="backup_create">Sauvegarder clusters et réglages</string>
     <string name="backup_restore">Restaurer une sauvegarde</string>
-    <string name="backup_restore_hint">Vous changez de téléphone ? Restaurez la sauvegarde faite sur l’ancien.</string>
     <string name="backup_restore_pick">Choisir le fichier</string>
     <string name="backup_restore_replace_warning">La restauration remplace tous les clusters et réglages de cet appareil par ceux de la sauvegarde.</string>
     <string name="backup_auth">Sauvegarder les clusters et leurs identifiants</string>
@@ -2860,7 +2858,6 @@
     <!-- Clusters added from a kubeconfig (no Talos API) -->
     <string name="common_kind_kubernetes">Kubernetes</string>
     <string name="common_talos_only">Indisponible pour ce cluster : il a été ajouté depuis un kubeconfig, l’app n’atteint donc que son API Kubernetes, pas Talos.</string>
-    <string name="import_kube_hint">Un kubeconfig fonctionne aussi, avec un certificat client ou un jeton.</string>
     <string name="import_kube_title">Choisissez les clusters à ajouter</string>
     <string name="import_kube_none_importable">Aucun de ces clusters ne peut encore être ajouté.</string>
     <string name="import_kube_server">Serveur</string>
@@ -2963,7 +2960,6 @@
     <string name="kube_access_hint">Les écrans Kubernetes de ce cluster utilisent ces identifiants. Les appels Talos gardent le talosconfig.</string>
     <string name="kube_access_talos">Kubeconfig admin de Talos</string>
     <string name="import_kube_signin_follows">Se connecte avec %1$s : vous vous connectez une fois ajouté.</string>
-    <string name="kube_discover_hint">Ou ajoutez les clusters d\'un compte cloud, sans kubeconfig.</string>
     <string name="kube_discover_entry">Ajouter depuis un compte cloud</string>
     <string name="kube_discover_title">Ajouter depuis un compte cloud</string>
     <string name="kube_discover_body">L\'app liste les clusters du compte ; vous choisissez ceux à ajouter. Ils se connectent ensuite avec ces identifiants.</string>

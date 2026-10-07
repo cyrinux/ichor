@@ -63,6 +63,7 @@ import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.components.pageContent
 
 /**
  * Argo CD's Applications (first tab) and its ApplicationSets and projects (second), read through
@@ -153,7 +154,7 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
             }
         },
     ) { padding ->
-        val modifier = Modifier.padding(padding)
+        val modifier = Modifier.pageContent(padding)
         when (val s = state) {
             UiState.Loading -> LoadingBox(modifier)
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)

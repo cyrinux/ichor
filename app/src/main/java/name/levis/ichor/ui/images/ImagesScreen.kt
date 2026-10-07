@@ -52,6 +52,7 @@ import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.util.formatBytes
 import name.levis.ichor.util.formatDate
+import name.levis.ichor.ui.components.pageContent
 
 class ImagesViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<List<ImageInfo>>() {
     override val keepsDataOnFailure = true
@@ -91,7 +92,7 @@ fun ImagesScreen(
         Loaded(
             state,
             vm::refresh,
-            Modifier.padding(padding),
+            Modifier.pageContent(padding),
             header = { images ->
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     MutedText(pluralStringResource(R.plurals.images_summary, images.size, images.size, formatBytes(images.totalSize)))

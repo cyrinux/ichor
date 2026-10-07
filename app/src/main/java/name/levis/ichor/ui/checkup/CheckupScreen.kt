@@ -63,6 +63,7 @@ import name.levis.ichor.ui.components.expandable
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.components.pageContent
 
 /** A checkup lists the cluster's pods and asks every kubelet: loaded on demand, never polled. */
 class CheckupViewModel(private val talos: TalosRepository) : LoadingViewModel<CheckupReport>() {
@@ -93,7 +94,7 @@ fun CheckupScreen(
             )
         },
     ) { padding ->
-        Loaded(state, vm::refresh, Modifier.padding(padding)) { report -> CheckupList(report, onOpenRelease) }
+        Loaded(state, vm::refresh, Modifier.pageContent(padding)) { report -> CheckupList(report, onOpenRelease) }
     }
 }
 

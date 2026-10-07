@@ -61,6 +61,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import name.levis.ichor.ui.components.pageContent
 
 data class HealthState(
     val running: Boolean = false,
@@ -116,7 +117,7 @@ fun HealthScreen(
             )
         },
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(Modifier.pageContent(padding).fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (!allowed) {
                 summary?.let { RoleNotice(Feature.HEALTH, it) }
                 if (summary?.isKube != true) MutedText(stringResource(R.string.health_any_role_hint))
