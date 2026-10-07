@@ -88,7 +88,8 @@ enum BackgroundMonitor {
         let context = summary.context(named: contextName)
         // The checks start from the Talos overview: a cluster added from a kubeconfig has none.
         // The widget stops showing the Talos cluster checked before (Android's clearSnapshot).
-        if context?.isKube == true {
+        // Nor has a Talos cluster without an endpoint yet.
+        if context?.isKube == true || context?.needsEndpoint == true {
             if SharedStore.snapshot() != nil { SharedStore.save(nil) }
             return
         }
