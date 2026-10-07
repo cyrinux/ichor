@@ -39,7 +39,7 @@ struct KubeResourceListView: View {
 
     var body: some View {
         let control = resource.namespaced ? scope.control(model: model) : KubeScopeControl(scope: KubeScope(), namespaces: nil) { _ in }
-        KubeListFrame(control: control, list: list, query: query, namespaces: rowNamespaces, scoped: resource.namespaced) { load in
+        KubeListFrame(control: control, list: list, query: query, namespaces: resourceRowNamespaces, scoped: resource.namespaced) { load in
             rows(load, showNamespace: resource.namespaced && control.scope.namespace == nil)
         }
         .searchable(text: $query, prompt: Text("Name or any column"))
@@ -92,10 +92,6 @@ struct KubeResourceListView: View {
         }
         .refreshable { await list.refresh(model: model) }
         .themedBackground()
-    }
-
-    private func rowNamespaces(_ rows: [KubeResourceRow]) -> [String] {
-        Array(Set(rows.map(\.namespace).filter { !$0.isEmpty })).sorted()
     }
 }
 

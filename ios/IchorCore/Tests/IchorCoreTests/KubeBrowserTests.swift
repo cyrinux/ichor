@@ -136,4 +136,11 @@ final class KubeBrowserTests: XCTestCase {
         XCTAssertTrue(isKubeEditConflict("the object changed since it was opened: reload it and edit again"))
         XCTAssertFalse(isKubeEditConflict("Kubernetes API: permission denied"))
     }
+
+    func testResourceRowNamespacesSortedWithoutClusterScoped() {
+        let rows = [KubeResourceRow(name: "a", namespace: "web"), KubeResourceRow(name: "b"),
+                    KubeResourceRow(name: "c", namespace: "apps"), KubeResourceRow(name: "d", namespace: "web")]
+        XCTAssertEqual(resourceRowNamespaces(rows), ["apps", "web"])
+        XCTAssertEqual(resourceRowNamespaces([]), [])
+    }
 }

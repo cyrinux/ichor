@@ -183,6 +183,12 @@ public struct KubeResourceRow: Codable, Equatable, Hashable, Identifiable, Senda
     }
 }
 
+/// The namespaces of listed objects, sorted, cluster-scoped ones ("") left out: the
+/// namespace menu of a resource list.
+public func resourceRowNamespaces(_ rows: [KubeResourceRow]) -> [String] {
+    Array(Set(rows.map(\.namespace).filter { !$0.isEmpty })).sorted()
+}
+
 /// One page of KubeResourcePage.
 public struct KubeResourcePage: Decodable, Equatable, Sendable {
     public let columns: [KubeResourceColumn]
