@@ -100,4 +100,46 @@ class NetPoliciesTest {
         assertEquals("http", NetPort("ANY", "http").label)
         assertNull(NetPort("ANY", "").label)
     }
+
+    // KubeNetworkPolicies on a Calico cluster (go/ichorgo/kube_netpol_calico.go).
+    @Test
+    fun decodesCalicoPolicies() {
+        val calico = TalosJson.decodeFromString(
+            NetPolicyReport.serializer(),
+            """
+                {"calico":true,"policies":[
+                 {"kind":"NetworkPolicy.projectcalico.org","namespace":"shop","name":"default.api-egress","subject":"app == 'api'","tier":"default","order":100,"ingress":false,"egress":true,"ingressRules":[],
+                  "egressRules":[{"peers":[{"kind":"pods","selector":"app == 'db'"}],"ports":[{"protocol":"TCP","port":"5432"}]},
+                                 {"deny":true,"peers":[{"kind":"cidr","value":"0.0.0.0/0"},{"kind":"other","value":"not 10.0.0.0/8"}],"ports":[{"protocol":"TCP","port":"8000","endPort":8100}]},
+                                 {"action":"pass","peers":[{"kind":"service","value":"shop/frontend"}],"ports":[]},
+                                 {"action":"log","peers":[],"ports":[]}],"pods":["shop/api-1"],"podCount":1},
+                 {"kind":"GlobalNetworkPolicy","name":"default.team-a","subject":"all()","subjectNamespace":"team-a-web","order":10.5,"ingress":true,"egress":false,
+                  "ingressRules":[{"peers":[{"kind":"pods","namespace":"team-a-web"}],"ports":[]}],"egressRules":[],"pods":["team-a-web/web-1"],"podCount":1}
+                ],"namespaces":[{"namespace":"shop","pods":3,"ingressIsolated":0,"egressIsolated":1,"policies":1}]}
+            """,
+        )
+        assertTrue(calico.calico)
+        assertEquals(false, calico.cilium)
+
+        val api = calico.policies.first { it.name == "default.api-egress" }
+        assertEquals("Calico NP", api.kindShort)
+        assertEquals("app == 'api'", api.subject)
+        assertEquals(listOf("", "", NETRULE_PASS, NETRULE_LOG), api.egressRules.map { it.action })
+        assertTrue(api.egressRules[1].deny)
+        assertEquals(NETPEER_OTHER, api.egressRules[1].peers[1].kind)
+        assertEquals("TCP 8000–8100", api.egressRules[1].ports.single().label)
+
+        val team = calico.policies.first { it.name == "default.team-a" }
+        assertEquals("GNP", team.kindShort)
+        assertTrue(team.clusterWide)
+        assertEquals("team-a-web", team.subjectNamespace)
+        // The namespace filter keeps a cluster-wide policy pinned to it.
+        assertEquals(listOf("default.team-a"), calico.grouped("team-a-web", "").flatMap { it.second }.map { it.name })
+        assertEquals("100", api.orderText)
+        assertEquals("10.5", team.orderText)
+        assertEquals("default", api.tier)
+        // "calico" finds both of Calico's kinds, "gnp" the global ones.
+        assertEquals(listOf("default.api-egress", "default.team-a"), calico.grouped(null, "calico").flatMap { it.second }.map { it.name })
+        assertEquals(listOf("default.team-a"), calico.grouped(null, "gnp").flatMap { it.second }.map { it.name })
+    }
 }

@@ -115,7 +115,7 @@ func cpuTimes(s *machineapi.CPUStat) (busy, total float64) {
 }
 
 // Virtual interfaces would double-count pod traffic (veth + bridge + host side).
-var virtualNetPrefixes = []string{"lo", "veth", "cni", "cilium", "flannel", "lxc", "kube-", "docker", "br-", "vxlan", "genev", "tunl", "dummy"}
+var virtualNetPrefixes = []string{"lo", "veth", "cni", "cilium", "cali", "wireguard.cali", "flannel", "lxc", "kube-", "docker", "br-", "vxlan", "genev", "tunl", "dummy"}
 
 func networkTotals(devices []*machineapi.NetDev) (rx, tx uint64) {
 	for _, d := range devices {

@@ -59,9 +59,11 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   Like Argo CD, Ichor writes the annotations and `spec.suspend` the `flux` CLI does, with the
   admin kubeconfig: nothing to install in the cluster.
 - **Network policies:** every NetworkPolicy and, with Cilium, CiliumNetworkPolicy and
-  CiliumClusterwideNetworkPolicy, in plain words: the pods each one selects, whether they are
-  isolated in each direction, and what each rule lets in or out (pods, namespaces, CIDRs, entities,
-  FQDNs, ports, HTTP/DNS rules), with each namespace's share of isolated pods.
+  CiliumClusterwideNetworkPolicy, with Calico its NetworkPolicy and GlobalNetworkPolicy
+  (selectors in Calico's own language, Allow/Deny/Pass/Log rules, read from its CRDs or its
+  API server), in plain words: the pods each one selects, whether they are isolated in each
+  direction, and what each rule lets in or out (pods, namespaces, CIDRs, entities, FQDNs,
+  ports, HTTP/DNS rules), with each namespace's share of isolated pods.
 - **API server health and pressure:** the Kubernetes API server's readyz and livez checks, and
   what loads it right now: Ichor reads its `/metrics` twice a few seconds apart and shows the
   request rate, 5xx and 429 answers, which clients send the requests (API Priority and Fairness

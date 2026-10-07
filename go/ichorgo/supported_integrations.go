@@ -13,9 +13,10 @@ type integrationSpec struct {
 	ID      string // catalog app id: the icon, the image match and the inventory hint
 	Name    string // a proper noun: never translated
 	Website string
-	// Groups the readers ask; the first one tells whether the project is installed. Without
-	// any, the project is found by its running pods (catalog id ID).
-	Groups []string
+	// Groups the readers ask; the first one tells whether the project is installed (any of
+	// them when AnyGroup). Without any, the project is found by its running pods (catalog id ID).
+	Groups   []string
+	AnyGroup bool
 	// Resource of Groups[0] that must be served too, when the group is shared with other
 	// projects ("" when the group is enough).
 	Resource string
@@ -39,6 +40,8 @@ var integrationSpecs = []integrationSpec{
 	{ID: "velero", Name: "Velero", Website: "https://velero.io", Groups: []string{groupVelero}},
 	{ID: "cert-manager", Name: "cert-manager", Website: "https://cert-manager.io", Groups: []string{groupCertManager, groupACME}},
 	{ID: "cilium", Name: "Cilium", Website: "https://cilium.io", Groups: []string{groupCilium}},
+	// Calico's CRDs come with the Kubernetes datastore; with the etcd one only its API server tells.
+	{ID: "calico", Name: "Calico", Website: "https://docs.tigera.io/calico/latest/about/", Groups: []string{groupCalicoCRD, groupCalico}, AnyGroup: true},
 	{ID: "external-secrets", Name: "External Secrets Operator", Website: "https://external-secrets.io", Groups: []string{groupExternalSecrets}},
 	{ID: "gateway-api", Name: "Gateway API", Website: "https://gateway-api.sigs.k8s.io", Groups: []string{groupGatewayAPI}},
 	{ID: "prometheus", Name: "Prometheus", Website: "https://prometheus.io", ServiceKind: "prometheus"},
@@ -149,7 +152,7 @@ func readSupportedIntegrations(ctx context.Context, k *kubeClient, hints hintSet
 
 	items := integrationList(func(s integrationSpec) detection {
 		if len(s.Groups) > 0 {
-			version, ok := groups[s.Groups[0]]
+			version, ok := servedGroup(s, groups)
 			if !ok || s.Resource != "" && !resourceFor[s.ID] {
 				return detection{}
 			}
@@ -181,6 +184,23 @@ func firstGroup(s integrationSpec) string {
 	}
 
 	return s.Groups[0]
+}
+
+// servedGroup is the version of the group that tells s is installed: its first one, or with
+// AnyGroup the first one the cluster serves.
+func servedGroup(s integrationSpec, groups map[string]string) (string, bool) {
+	candidates := s.Groups[:1]
+	if s.AnyGroup {
+		candidates = s.Groups
+	}
+
+	for _, g := range candidates {
+		if version, ok := groups[g]; ok {
+			return version, true
+		}
+	}
+
+	return "", false
 }
 
 // runningApps maps the catalog ids of the running pods' images to the first pod found

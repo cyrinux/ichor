@@ -65,8 +65,9 @@ class NetPoliciesViewModel(private val cilium: CiliumRepository) : LoadingViewMo
 
 /**
  * The cluster's network policies, whatever the CNI: Kubernetes NetworkPolicies and, with
- * Cilium, CiliumNetworkPolicies and CiliumClusterwideNetworkPolicies. How isolated each
- * namespace is on top, then the policies by namespace; one opens its rules.
+ * Cilium, CiliumNetworkPolicies and CiliumClusterwideNetworkPolicies, with Calico its
+ * NetworkPolicies and GlobalNetworkPolicies. How isolated each namespace is on top, then
+ * the policies by namespace; one opens its rules.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

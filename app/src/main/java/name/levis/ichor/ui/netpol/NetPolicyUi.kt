@@ -44,6 +44,8 @@ import name.levis.ichor.model.NETPEER_NONE
 import name.levis.ichor.model.NETPEER_OTHER
 import name.levis.ichor.model.NETPEER_PODS
 import name.levis.ichor.model.NETPEER_SERVICE
+import name.levis.ichor.model.NETRULE_LOG
+import name.levis.ichor.model.NETRULE_PASS
 import name.levis.ichor.model.NetPeer
 import name.levis.ichor.model.NetPolicy
 import name.levis.ichor.model.NetRule
@@ -157,10 +159,11 @@ fun RuleCard(rule: NetRule, ingress: Boolean, policy: NetPolicy) {
     OutlinedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (rule.deny) {
-                    TagBadge(stringResource(R.string.netpol_deny), colors.bad)
-                } else {
-                    TagBadge(stringResource(R.string.netpol_allow), colors.ok)
+                when {
+                    rule.deny -> TagBadge(stringResource(R.string.netpol_deny), colors.bad)
+                    rule.action == NETRULE_PASS -> TagBadge(stringResource(R.string.netpol_pass), colors.warn)
+                    rule.action == NETRULE_LOG -> TagBadge(stringResource(R.string.netpol_log), colors.muted)
+                    else -> TagBadge(stringResource(R.string.netpol_allow), colors.ok)
                 }
                 Text(
                     stringResource(if (ingress) R.string.netpol_from else R.string.netpol_to),

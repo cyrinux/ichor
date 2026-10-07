@@ -2123,6 +2123,10 @@
     <string name="netpol_not_restricted_but">Nicht eingeschränkt, außer was die Regeln unten verweigern.</string>
     <string name="netpol_allow">Erlauben</string>
     <string name="netpol_deny">Verweigern</string>
+    <string name="netpol_pass">Weiterreichen</string>
+    <string name="netpol_log">Nur protokollieren</string>
+    <string name="netpol_tier">Stufe %1$s</string>
+    <string name="netpol_order">Reihenfolge %1$s</string>
     <string name="netpol_from">Von</string>
     <string name="netpol_to">Nach</string>
     <string name="netpol_any_peer">Alle</string>
