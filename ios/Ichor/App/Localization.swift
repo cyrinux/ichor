@@ -103,8 +103,10 @@ extension PowerRequest {
 }
 
 extension ContextSummary {
-    /// Localized `accessLabel`: "admin", "operator" or "read-only".
+    /// Localized `accessLabel`: "admin", "operator" or "read-only"; "Kubernetes" for a cluster
+    /// added from a kubeconfig (its access is its RBAC, the app does not know it).
     var localizedAccessLabel: String {
+        if isKube { return String(localized: "Kubernetes") }
         if roles.contains("os:admin") { return String(localized: "admin") }
         if roles.contains("os:operator") { return String(localized: "operator") }
         return String(localized: "read-only")

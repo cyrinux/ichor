@@ -27,8 +27,10 @@ struct ShareLinkButton: View {
 extension ShareTarget {
     /// The screen the link opens over the overview; nil for the overview itself. A node only
     /// when it is one of the cluster's (with its role, for the control-plane warnings): a link
-    /// cannot point the app's Talos calls at another address.
-    func route(client: TalosClient?) async -> Route? {
+    /// cannot point the app's Talos calls at another address. On a cluster added from a
+    /// kubeconfig (`kube`) the Talos screens have nothing to show: its home opens instead.
+    func route(client: TalosClient?, kube: Bool = false) async -> Route? {
+        if kube, [Target.node, .etcd, .health].contains(target) { return nil }
         if target == .node {
             guard let nodes = try? await client?.overview().nodes,
                   let node = nodes.first(where: { !addr.isEmpty && $0.node == addr || !host.isEmpty && $0.hostname == host })

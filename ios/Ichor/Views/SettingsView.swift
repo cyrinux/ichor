@@ -49,12 +49,15 @@ struct SettingsView: View {
                 if let protection = SecureConfigStore.protection {
                     LabeledContent("Encryption key", value: protection.label)
                 }
-                NavigationLink("Add a cluster (import a talosconfig)", value: Route.importConfig)
+                NavigationLink(model.kubeYAML == nil ? LocalizedStringKey("Add a cluster (import a talosconfig)") : "Add a cluster", value: Route.importConfig)
                 if model.allows(.issueConfig) {
                     NavigationLink("Renew my certificate…", value: Route.issueConfig(renew: true))
                     NavigationLink("Create a config for another device…", value: Route.issueConfig(renew: false))
                 }
-                Button("Delete stored talosconfig", role: .destructive) { confirmDelete = true }
+                // Both stores go: with kubeconfig clusters stored, say so.
+                Button(model.kubeYAML == nil ? LocalizedStringKey("Delete stored talosconfig") : "Delete all clusters", role: .destructive) {
+                    confirmDelete = true
+                }
             }
             BackupSection()
             SupportSection()
@@ -62,7 +65,8 @@ struct SettingsView: View {
         }
         .themedBackground()
         .navigationTitle("Settings")
-        .confirmationDialog("Delete talosconfig?", isPresented: $confirmDelete, titleVisibility: .visible) {
+        .confirmationDialog(model.kubeYAML == nil ? LocalizedStringKey("Delete talosconfig?") : "Delete all clusters?",
+                            isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { model.clear() }
         } message: {
             Text("The config of every cluster, with their client keys, will be removed from this device.")
