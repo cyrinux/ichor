@@ -26,6 +26,10 @@ data class ContextSummary(
     /** The client certificate's expiry, or a kubeconfig token's (JWT `exp`); 0 when unknown. */
     val certNotAfter: Long = 0,
     val demo: Boolean = false,
+    /** A Talos context signed in through Sidero Omni (no certificate): who it signs as, and the Omni cluster. */
+    val omni: Boolean = false,
+    val identity: String = "",
+    val cluster: String = "",
     /** [KIND_TALOS] (a talosconfig context) or [KIND_KUBE] (added from a kubeconfig, no Talos API). */
     val kind: String = KIND_TALOS,
     // Kubeconfig contexts only (ParseKubeconfig): what the import preview and the home show.
@@ -40,7 +44,7 @@ data class ContextSummary(
     /** Why the context cannot be added (a kube-* code), "" when it can. */
     val problem: String = "",
     val problemDetail: String = "",
-    /** The method the app signs in with (oidc, eks, gke, azure, digitalocean, rancher), "" for static credentials. */
+    /** The method the app signs in with (oidc, eks, gke, azure, digitalocean, rancher; omni, omni-service-account for a Talos context through Omni), "" for static credentials. */
     val signIn: String = "",
     /**
      * A Talos cluster's Kubernetes access: the fingerprint of the stored kubeconfig cluster its
@@ -116,13 +120,19 @@ private val KUBE_FEATURES = setOf(Feature.WORKLOADS, Feature.KUBECONFIG)
 fun ContextSummary.allows(feature: Feature): Boolean = when {
     isKube -> feature in KUBE_FEATURES
     feature == Feature.WORKLOADS && kubeAccess.isNotEmpty() -> true
+    // Omni applies the user's own role to every call; it never lets Talos issue credentials.
+    omni -> feature !in OMNI_UNAVAILABLE
     else -> roles.any { it in feature.roles }
 }
+
+/** What a cluster reached through Omni cannot do: Omni issues its talosconfigs and kubeconfigs. */
+private val OMNI_UNAVAILABLE = setOf(Feature.ISSUE_CONFIG, Feature.KUBECONFIG, Feature.WORKLOADS)
 
 /** Short access level for the UI: "admin", "operator" or "read-only"; "Kubernetes" for a kubeconfig cluster. */
 val ContextSummary.accessLabel: Int
     @StringRes get() = when {
         isKube -> R.string.common_kind_kubernetes
+        omni -> R.string.kube_signin_method_omni
         "os:admin" in roles -> R.string.common_access_admin
         "os:operator" in roles -> R.string.common_access_operator
         else -> R.string.common_access_read_only

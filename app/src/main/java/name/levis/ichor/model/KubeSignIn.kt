@@ -80,6 +80,8 @@ fun signInMethodName(method: String): Int? = when (method) {
     "azure" -> R.string.kube_signin_method_azure
     "digitalocean" -> R.string.kube_signin_method_digitalocean
     "rancher" -> R.string.kube_signin_method_rancher
+    "omni" -> R.string.kube_signin_method_omni
+    "omni-service-account" -> R.string.kube_signin_method_omni_sa
     else -> null
 }
 
@@ -107,6 +109,7 @@ private val FIELDS = listOf(
     CredentialField("doApiToken", R.string.kube_field_do_token, FieldKind.SECRET),
     CredentialField("rancherServer", R.string.kube_field_rancher_server, FieldKind.TEXT),
     CredentialField("rancherApiKey", R.string.kube_field_rancher_key, FieldKind.SECRET),
+    CredentialField("serviceAccountKey", R.string.kube_field_omni_service_account_key, FieldKind.SECRET),
 ).associateBy { it.name }
 
 /** The field [name], or null when the core asks for one the app does not know (shown by name, as a secret). */

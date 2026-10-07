@@ -22,6 +22,7 @@ enum KubeAuthWording {
         case "doApiToken": String(localized: "DigitalOcean API token")
         case "rancherApiKey": String(localized: "Rancher API key")
         case "rancherServer": String(localized: "Rancher server URL")
+        case "serviceAccountKey": String(localized: "Service account key (OMNI_SERVICE_ACCOUNT_KEY)")
         default: field
         }
     }

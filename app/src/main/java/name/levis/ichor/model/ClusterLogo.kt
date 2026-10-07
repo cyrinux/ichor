@@ -17,6 +17,10 @@ private val authLogos = mapOf(
     "rancher" to "rancher",
 )
 
+/** The cloud of a discovery provider (DiscoveryProvider.id): AKS signs in as "azure". */
+fun discoveryLogo(provider: String): String =
+    authLogos[if (provider == "aks") "azure" else provider] ?: LOGO_KUBERNETES
+
 /** The managed services' API server hosts (GKE's is a bare IP). */
 private val hostLogos = mapOf(
     ".eks.amazonaws.com" to LOGO_AWS,

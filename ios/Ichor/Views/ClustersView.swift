@@ -233,7 +233,7 @@ struct ClustersView: View {
         if !context.isKube && !context.demo && !context.fingerprint.isEmpty && !model.kubeContexts.isEmpty {
             kubeAccessPicker(context)
         }
-        if context.isKube, let target = model.signInTarget(for: context) {
+        if context.isKube || context.omni, let target = model.signInTarget(for: context) {
             Button { signingIn = target } label: { Label("Sign in", systemImage: "person.badge.key") }
         }
         Button(role: .destructive) { removing = context } label: { Label("Delete", systemImage: "trash") }
@@ -256,15 +256,12 @@ struct ClustersView: View {
         .pickerStyle(.menu)
     }
 
-    /// Whether each kubeconfig cluster that signs in through a method is signed in.
+    /// Whether each cluster that signs in through a method (kubeconfig, Omni) is signed in.
     private func loadSignIns() async {
-        guard let kube = model.kubeYAML else {
-            signIns = [:]
-            return
-        }
         var loaded: [String: KubeSignInInfo] = [:]
-        for context in model.kubeContexts where context.signIn != nil {
-            if let info = try? await TalosClient.signInInfo(kube: kube, context: context.name) {
+        for context in model.summary?.contexts ?? [] where context.signIn != nil {
+            guard let target = model.signInTarget(for: context), target.context == context.name else { continue }
+            if let info = try? await TalosClient.signInInfo(kube: target.kube, context: target.context, talos: target.talos) {
                 loaded[context.fingerprint] = info
             }
         }

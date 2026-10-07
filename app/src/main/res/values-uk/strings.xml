@@ -3290,4 +3290,10 @@
     <string name="imagescan_timed_out">Перевірка тривала задовго й була зупинена.</string>
     <string name="kube_eks_account">акаунт %1$s</string>
     <string name="kube_gke_project">проєкт %1$s</string>
+    <string name="kube_signin_method_omni">Sidero Omni</string>
+    <string name="kube_signin_method_omni_sa">Сервісний обліковий запис Omni</string>
+    <string name="kube_field_omni_service_account_key">Ключ сервісного облікового запису (OMNI_SERVICE_ACCOUNT_KEY)</string>
+    <string name="import_omni_identity">Ідентичність Omni</string>
+    <string name="import_omni_cluster">Кластер Omni</string>
+    <string name="import_nodes_omni">отримані з Omni</string>
 </resources>

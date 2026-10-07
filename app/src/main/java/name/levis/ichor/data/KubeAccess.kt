@@ -73,6 +73,6 @@ fun kubeTarget(stored: StoredConfig, servers: Map<String, String>): KubeTarget {
  */
 fun signInContextFor(stored: StoredConfig): String? {
     val active = stored.activeSummary ?: return null
-    val target = if (active.isKube) active else stored.summary.contexts.firstOrNull { it.isKube && active.kubeAccess.isNotEmpty() && it.fingerprint == active.kubeAccess }
+    val target = if (active.isKube || active.omni) active else stored.summary.contexts.firstOrNull { it.isKube && active.kubeAccess.isNotEmpty() && it.fingerprint == active.kubeAccess }
     return target?.takeIf { it.signIn.isNotEmpty() }?.name
 }

@@ -40,6 +40,10 @@ func GenerateTalosconfig(configYAML, contextName, roles string, ttlHours int) (o
 		return "", fmt.Errorf("certificate lifetime must be between 1 and %d hours", maxTalosconfigTTLHours)
 	}
 
+	if _, cfgCtx, err := resolveContext(configYAML, contextName); err == nil && isOmni(cfgCtx) {
+		return "", errOmniIssue
+	}
+
 	return withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
 		name, _, err := resolveContext(configYAML, contextName)
 		if err != nil {

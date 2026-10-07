@@ -1,15 +1,17 @@
 import Foundation
 import IchorCore
 
-/// A stored kubeconfig context that signs in through a method: what the sign-in screens act on.
+/// A stored context that signs in through a method: what the sign-in screens act on. A
+/// kubeconfig context, or a talosconfig context managed by Sidero Omni (`talos`).
 struct KubeSignInTarget: Identifiable, Equatable {
-    /// The stored kubeconfig.
+    /// The stored config the context is in: the kubeconfig, or the talosconfig when `talos`.
     let kube: String
     let context: String
     /// The cluster's fingerprint (the auth state's key).
     let fingerprint: String
     /// How the cluster is called on screen.
     let label: String
+    var talos = false
 
     var id: String { fingerprint + "|" + context }
 }
@@ -46,7 +48,12 @@ extension AppModel {
     /// The sign-in `context` needs, nil when it has static credentials: its own for a cluster
     /// added from a kubeconfig, that of its Kubernetes access for a linked Talos cluster.
     func signInTarget(for context: ContextSummary?) -> KubeSignInTarget? {
-        guard let context, let kubeYAML else { return nil }
+        guard let context else { return nil }
+        if context.omni {
+            guard let yaml, context.signIn != nil else { return nil }
+            return KubeSignInTarget(kube: yaml, context: context.name, fingerprint: context.fingerprint, label: labels.of(context), talos: true)
+        }
+        guard let kubeYAML else { return nil }
         let kube = context.isKube ? context : kubeAccessTarget(of: context)
         guard let kube, kube.signIn != nil else { return nil }
         return KubeSignInTarget(kube: kubeYAML, context: kube.name, fingerprint: kube.fingerprint, label: labels.of(kube))

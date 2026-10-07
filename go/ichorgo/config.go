@@ -33,6 +33,14 @@ type contextSummary struct {
 	Roles        []string `json:"roles"`
 	CertNotAfter int64    `json:"certNotAfter"`
 	Demo         bool     `json:"demo,omitempty"`
+	// Omni is set for a context signed in through Omni (no certificate): Identity is who it
+	// signs as, Cluster the Omni cluster.
+	Omni     bool   `json:"omni,omitempty"`
+	Identity string `json:"identity,omitempty"`
+	Cluster  string `json:"cluster,omitempty"`
+	// SignIn is the method an Omni context signs in with, like a kubeconfig context's (see
+	// TalosSignInInfo); "" for a certificate.
+	SignIn string `json:"signIn,omitempty"`
 }
 
 // ParseConfig validates a talosconfig YAML and returns a JSON configSummary.
@@ -115,6 +123,10 @@ var errNoEndpoints = errors.New("this cluster has no endpoint: add a node's addr
 
 // summarizeContext accepts a context without endpoints (see errNoEndpoints).
 func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, error) {
+	if isOmni(ctx) {
+		return summarizeOmniContext(name, ctx)
+	}
+
 	tlsCert, err := client.CertificateFromConfigContext(ctx)
 	if err != nil {
 		return contextSummary{}, fmt.Errorf("invalid client certificate: %w", err)
@@ -146,6 +158,10 @@ func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, e
 // renewed certificate and moved endpoints. Letters only, so that masking, which rewrites
 // names and addresses, never touches it.
 func contextFingerprint(name string, ctx *clientconfig.Context) string {
+	if isOmni(ctx) {
+		return letterHash(sha256.Sum256([]byte(name + "\x00" + omniClusterKey(ctx))))
+	}
+
 	return letterHash(sha256.Sum256([]byte(name + "\x00" + ctx.CA)))
 }
 
@@ -183,11 +199,12 @@ func defaultContextName(cfg *clientconfig.Config) string {
 	return sortedContextNames(cfg)[0]
 }
 
-// targetNodes mirrors talosctl: nodes default to the endpoints when unset.
+// targetNodes mirrors talosctl: nodes default to the endpoints when unset, except through
+// Omni, whose endpoint is no node (a session learns them, see session.ready).
 // Duplicates are dropped, keeping first-seen order.
 func targetNodes(ctx *clientconfig.Context) []string {
 	nodes := ctx.Nodes
-	if len(nodes) == 0 {
+	if len(nodes) == 0 && !isOmni(ctx) {
 		nodes = ctx.Endpoints
 	}
 

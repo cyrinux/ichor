@@ -74,6 +74,10 @@ var (
 // certificate (the DER, so that a re-encoded PEM still matches). Letters only, like the
 // context fingerprint, so masking never rewrites it.
 func clusterID(ctx *clientconfig.Context) string {
+	if isOmni(ctx) {
+		return letterHash(omniClusterHash(ctx))
+	}
+
 	data := []byte(strings.TrimSpace(ctx.CA))
 	if decoded, err := base64.StdEncoding.DecodeString(ctx.CA); err == nil {
 		if block, _ := pem.Decode(decoded); block != nil {

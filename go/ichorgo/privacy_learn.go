@@ -7,6 +7,8 @@ import (
 	"net/netip"
 	"slices"
 	"strings"
+
+	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 )
 
 // What the mask learns about a cluster: the real names and addresses its results carry,
@@ -46,7 +48,26 @@ func (m *privacyMask) learnConfig(configYAML string) {
 		for _, target := range slices.Concat(ctx.Endpoints, ctx.Nodes) {
 			m.learnTargetLocked(target)
 		}
+
+		m.learnOmniLocked(ctx)
 	}
+}
+
+// learnOmniLocked hides what an Omni context names: who it signs as (an account's email,
+// a service account's name) and its Omni cluster.
+func (m *privacyMask) learnOmniLocked(ctx *clientconfig.Context) {
+	if !isOmni(ctx) {
+		return
+	}
+
+	user, domain, _ := strings.Cut(omniIdentity(ctx), "@")
+	m.learnContextPartLocked(user, maskedUser)
+
+	if !strings.EqualFold("@"+domain, serviceAccountDomain) {
+		m.learnDomainLocked(domain)
+	}
+
+	m.learnContextPartLocked(ctx.Cluster, maskedCluster)
 }
 
 // learnKubeconfigLocked is learnConfig for a kubeconfig: its context names and API servers.
