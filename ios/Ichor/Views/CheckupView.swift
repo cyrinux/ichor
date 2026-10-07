@@ -167,7 +167,11 @@ private struct CheckupSectionBody: View {
         case .storage:
             CheckupRows(title: CheckupText.checkupVolumesTitle, rows: report.volumes) { CheckupVolumeRow(volume: $0) }
         case .helm:
-            CheckupRows(title: CheckupText.checkupReleasesTitle, rows: report.releases) { CheckupReleaseRow(release: $0, now: now) }
+            CheckupRows(title: CheckupText.checkupReleasesTitle, rows: report.releases) { release in
+                NavigationLink { HelmReleaseView(namespace: release.namespace, name: release.name) } label: {
+                    CheckupReleaseRow(release: release, now: now)
+                }
+            }
         default:
             EmptyView()
         }
@@ -328,7 +332,7 @@ private struct CheckupVolumeRow: View {
     }
 }
 
-/// A Helm release at its latest revision.
+/// A Helm release at its latest revision; opens it (history, rollback).
 private struct CheckupReleaseRow: View {
     let release: CheckupRelease
     let now: Int64

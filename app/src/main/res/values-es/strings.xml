@@ -3027,4 +3027,23 @@
     <string name="kb_forward_open">Abrir en el navegador</string>
     <string name="kb_forward_no_browser">No hay navegador para abrirlo.</string>
     <string name="kb_forward_connection_errors">Conexiones fallidas</string>
+    <string name="helm_rollback_action">Revertir</string>
+    <string name="helm_rollback_title">Revertir a la revisión %1$s</string>
+    <string name="helm_rollback_now">Ahora</string>
+    <string name="helm_rollback_after">Después</string>
+    <string name="helm_rollback_changes">Cambios</string>
+    <string name="helm_rollback_unchanged">%1$s objetos ya coinciden y no se tocan.</string>
+    <string name="helm_rollback_none">Ningún objeto cambia: solo el registro de la release vuelve atrás.</string>
+    <string name="helm_rollback_create">crear</string>
+    <string name="helm_rollback_update">actualizar</string>
+    <string name="helm_rollback_delete">eliminar</string>
+    <string name="helm_rollback_keep">se conserva</string>
+    <string name="helm_rollback_keep_hint">Los objetos marcados helm.sh/resource-policy: keep se quedan, como con helm rollback.</string>
+    <string name="helm_rollback_flux">La HelmRelease de Flux %1$s gestiona esta release: primero se suspende, si no Flux la volvería a actualizar enseguida. Corrija la versión en Git y luego reanúdela.</string>
+    <string name="helm_rollback_blocked">No se puede revertir</string>
+    <string name="helm_rollback_checked">Cada cambio pasó una prueba en seco en el API server. Todavía no ha cambiado nada.</string>
+    <string name="helm_rollback_how">Como helm rollback: se registra una nueva revisión con el chart y los valores de la anterior, y helm history coincide después.</string>
+    <string name="helm_rollback_checking">Comprobando qué cambiaría…</string>
+    <string name="helm_rollback_done">Revertido a la revisión %1$s.</string>
+    <string name="helm_rollback_footer">Las actualizaciones se hacen con Helm o su herramienta GitOps. Desde el historial, la release puede volver a una revisión anterior.</string>
 </resources>

@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.checkup
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -27,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -180,12 +182,14 @@ fun VolumeLevels(volumes: List<CheckupVolume>) {
     }
 }
 
-/** The Helm releases at their latest revision, those in trouble first. */
+/** The Helm releases at their latest revision, those in trouble first; tapping one opens it. */
 @Composable
-fun HelmReleases(releases: List<CheckupRelease>, now: Long) {
+fun HelmReleases(releases: List<CheckupRelease>, now: Long, onOpenRelease: (namespace: String, name: String) -> Unit) {
     val colors = LocalStatusColors.current
+    val open = stringResource(R.string.common_open)
     MeasuredList(stringResource(R.string.checkup_releases_title), releases) { r ->
-        Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = open) { onOpenRelease(r.namespace, r.name) }.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(Modifier.weight(1f)) {
                 Text("${r.namespace}/${r.name}", style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 MutedText(stringResource(R.string.checkup_release_revision, r.revision.toString(), ageSince(r.updated, now)), maxLines = 1)

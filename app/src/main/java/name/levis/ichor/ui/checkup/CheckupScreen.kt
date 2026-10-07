@@ -78,6 +78,7 @@ class CheckupViewModel(private val talos: TalosRepository) : LoadingViewModel<Ch
 @Composable
 fun CheckupScreen(
     onBack: () -> Unit,
+    onOpenRelease: (namespace: String, name: String) -> Unit,
     vm: CheckupViewModel = viewModel(factory = factory { CheckupViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -92,12 +93,12 @@ fun CheckupScreen(
             )
         },
     ) { padding ->
-        Loaded(state, vm::refresh, Modifier.padding(padding)) { report -> CheckupList(report) }
+        Loaded(state, vm::refresh, Modifier.padding(padding)) { report -> CheckupList(report, onOpenRelease) }
     }
 }
 
 @Composable
-private fun CheckupList(report: CheckupReport) {
+private fun CheckupList(report: CheckupReport, onOpenRelease: (namespace: String, name: String) -> Unit) {
     // Fixed while the report is on screen: the ages must not drift between recompositions.
     val now = remember(report) { System.currentTimeMillis() }
     val sections = report.shownSections
@@ -115,7 +116,7 @@ private fun CheckupList(report: CheckupReport) {
         items(sections, key = { it.id }) { section ->
             val expanded = section.id in open
             SectionCard(section, expanded, onToggle = { open = if (expanded) open - section.id else open + section.id }) {
-                SectionBody(section, report, now)
+                SectionBody(section, report, now, onOpenRelease)
             }
         }
     }
@@ -212,7 +213,7 @@ private fun SectionBadges(section: CheckupSection) {
 
 /** A section's findings, then what it measured: node requests, volume levels, taints, releases. */
 @Composable
-private fun SectionBody(section: CheckupSection, report: CheckupReport, now: Long) {
+private fun SectionBody(section: CheckupSection, report: CheckupReport, now: Long, onOpenRelease: (namespace: String, name: String) -> Unit) {
     if (section.error.isNotEmpty()) InlineError(stringResource(R.string.checkup_section_error, section.error))
     if (section.findings.isEmpty() && section.error.isEmpty()) {
         MutedText(stringResource(R.string.checkup_nothing_in, section.checked.toString()))
@@ -223,6 +224,6 @@ private fun SectionBody(section: CheckupSection, report: CheckupReport, now: Lon
         CheckupSectionId.CAPACITY -> NodeRequests(report.nodes)
         CheckupSectionId.NODES -> NodeTaints(report.nodes)
         CheckupSectionId.STORAGE -> VolumeLevels(report.volumes)
-        CheckupSectionId.HELM -> HelmReleases(report.releases, now)
+        CheckupSectionId.HELM -> HelmReleases(report.releases, now, onOpenRelease)
     }
 }
