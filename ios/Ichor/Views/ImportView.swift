@@ -36,13 +36,14 @@ struct ImportView: View {
 
     /// The sources the drop zone opens in a sheet; a file goes straight to the file picker.
     enum Source: String, Identifiable {
-        case paste, qr
+        case paste, qr, form
         var id: String { rawValue }
 
         var label: String {
             switch self {
             case .paste: String(localized: "Paste")
             case .qr: String(localized: "QR code")
+            case .form: String(localized: "Enter details")
             }
         }
     }
@@ -79,7 +80,12 @@ struct ImportView: View {
             CloudDiscoveryView(provider: start.provider) { found in validate(found.kubeconfig, discovered: found) }
         }
         .sheet(item: $source) { source in
-            sourceSheet(source)
+            if source == .form {
+                // A talosconfig built from what is typed, previewed like an imported one.
+                TalosFormView { yaml in validate(yaml) }
+            } else {
+                sourceSheet(source)
+            }
         }
         // A file opened with Ichor (IncomingConfig): previewed like a picked one.
         .task(id: NotificationRouter.shared.pendingImportText) {
@@ -161,6 +167,7 @@ struct ImportView: View {
                     }
                 SourceTile(title: Source.paste.label, systemImage: "doc.on.clipboard") { source = .paste }
                 SourceTile(title: Source.qr.label, systemImage: "qrcode.viewfinder") { source = .qr }
+                SourceTile(title: Source.form.label, systemImage: "square.and.pencil") { source = .form }
             }
             .disabled(busy)
         }
@@ -197,6 +204,8 @@ struct ImportView: View {
                         self.source = nil
                         validate(text)
                     }
+                case .form:
+                    EmptyView() // its own sheet, TalosFormView
                 }
             }
             .navigationTitle(source.label)

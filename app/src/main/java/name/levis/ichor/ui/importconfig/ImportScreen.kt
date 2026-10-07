@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.model.ImportChoice
 import name.levis.ichor.model.ImportConflict
+import name.levis.ichor.model.TalosForm
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.backup.RestoreBackupButton
 import name.levis.ichor.ui.components.InfoRow
@@ -78,6 +79,8 @@ fun ImportScreen(
     BackHandler(enabled = inSource) { source = ImportSource.PICK }
     // Not saveable: it may contain the client private key, which must not land in saved instance state.
     var pasted by remember { mutableStateOf("") }
+    // Not saveable either, for the same reason.
+    var form by remember { mutableStateOf(TalosForm()) }
 
     LaunchedEffect(autoStartDemo) {
         if (autoStartDemo && state is ImportState.Idle) vm.startDemo()
@@ -141,6 +144,9 @@ fun ImportScreen(
                     error = (s as? ImportState.Invalid)?.message,
                     pasted = pasted,
                     onPasted = { pasted = it },
+                    form = form,
+                    onForm = { form = it },
+                    onSubmitForm = vm::submitForm,
                     onSource = { source = it },
                     onYaml = vm::submit,
                     onDemo = vm::startDemo,

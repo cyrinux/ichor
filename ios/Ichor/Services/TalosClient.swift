@@ -61,6 +61,12 @@ struct TalosClient: Sendable {
         try await run { IchorgoNormalizeKubeServer(input, $0) }
     }
 
+    /// A one-context talosconfig from the "Enter details" form, imported like a pasted one.
+    static func buildTalosconfig(_ form: TalosForm) async throws -> String {
+        let formJSON = try form.json()
+        return try await run { IchorgoBuildTalosconfig(formJSON, $0) }
+    }
+
     static func demoConfig() async throws -> String {
         try await run { IchorgoDemoConfig($0) }
     }

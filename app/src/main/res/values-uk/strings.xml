@@ -3294,4 +3294,22 @@
     <string name="import_omni_identity">Ідентичність Omni</string>
     <string name="import_omni_cluster">Кластер Omni</string>
     <string name="import_nodes_omni">отримані з Omni</string>
+
+    <!-- Add-cluster form -->
+    <string name="import_form_tab">Ввести дані</string>
+    <string name="import_form_name">Назва кластера</string>
+    <string name="import_form_continue">Продовжити</string>
+    <string name="import_form_mode_talos">Talos</string>
+    <string name="import_form_mode_omni">Omni</string>
+    <string name="import_form_endpoints">Кінцеві точки</string>
+    <string name="import_form_endpoints_hint">По одному в рядку: IP-адреса або ім\'я хоста</string>
+    <string name="import_form_nodes">Вузли</string>
+    <string name="import_form_nodes_hint">По одному в рядку. Порожньо: кінцеві точки</string>
+    <string name="import_form_ca">Сертифікат CA</string>
+    <string name="import_form_crt">Клієнтський сертифікат</string>
+    <string name="import_form_key">Клієнтський ключ</string>
+    <string name="import_form_pem_hint">Текст PEM або base64, як у talosconfig.</string>
+    <string name="import_form_pick_file">Вибрати файл</string>
+    <string name="import_form_omni_url">URL Omni</string>
+    <string name="import_form_omni_identity_hint">Ел. пошта вашого облікового запису Omni або ідентичність сервісного облікового запису (ім\'я@serviceaccount.omni.sidero.dev)</string>
 </resources>

@@ -240,6 +240,12 @@ public func keepKubeAccess(_ links: [String: String], talos: [String], kube: [St
     return links.filter { talosKnown.contains($0.key) && kubeKnown.contains($0.value) }
 }
 
+/// The clusters whose states the auth store keeps (keyed by fingerprint): every cluster added
+/// from a kubeconfig, and the Talos clusters reached through Omni (their keys).
+public func authStoreFingerprints(talos: [ContextSummary], kube: [ContextSummary]) -> [String] {
+    kube.map(\.fingerprint) + talos.filter { $0.omni && !$0.isKube }.map(\.fingerprint)
+}
+
 public extension ContextSummary {
     /// `allows`, for a Talos cluster whose Kubernetes access goes through a stored kubeconfig
     /// when `kubeLinked`: the Kubernetes screens then answer to that kubeconfig's RBAC, not the

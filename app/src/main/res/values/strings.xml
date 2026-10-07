@@ -3096,4 +3096,22 @@
     <string name="import_omni_identity">Omni identity</string>
     <string name="import_omni_cluster">Omni cluster</string>
     <string name="import_nodes_omni">learned from Omni</string>
+
+    <!-- Add-cluster form -->
+    <string name="import_form_tab">Enter details</string>
+    <string name="import_form_name">Cluster name</string>
+    <string name="import_form_continue">Continue</string>
+    <string name="import_form_mode_talos">Talos</string>
+    <string name="import_form_mode_omni">Omni</string>
+    <string name="import_form_endpoints">Endpoints</string>
+    <string name="import_form_endpoints_hint">One per line: IP address or host name</string>
+    <string name="import_form_nodes">Nodes</string>
+    <string name="import_form_nodes_hint">One per line. Empty: the endpoints</string>
+    <string name="import_form_ca">CA certificate</string>
+    <string name="import_form_crt">Client certificate</string>
+    <string name="import_form_key">Client key</string>
+    <string name="import_form_pem_hint">PEM text, or base64 as in a talosconfig.</string>
+    <string name="import_form_pick_file">Pick file</string>
+    <string name="import_form_omni_url">Omni URL</string>
+    <string name="import_form_omni_identity_hint">Your Omni account email, or a service account\'s identity (name@serviceaccount.omni.sidero.dev)</string>
 </resources>
