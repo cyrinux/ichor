@@ -3,6 +3,9 @@ package name.levis.ichor.model
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosJson
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.goErrorText
+import name.levis.ichor.ui.uiText
+import name.levis.ichor.ui.userMessage
 import name.levis.ichor.ui.overview.KubeSignInBanner
 import name.levis.ichor.ui.overview.kubeSignInBanner
 import org.junit.Assert.assertEquals
@@ -103,5 +106,17 @@ class KubeSignInTest {
         assertNull(kubeSignInBanner(signedIn, UiText.Raw("timeout")))
         assertNull(kubeSignInBanner(null, null))
         assertEquals(KubeSignInBanner("oidc", SignInNeeded("oidc", "refresh token expired")), kubeSignInBanner(signedIn, refused))
+        assertEquals(KubeSignInBanner("eks", SignInNeeded("eks", "")), kubeSignInBanner(null, UiText.SignInRequired("eks")))
+    }
+
+    @Test
+    fun coreCodeNeverBecomesUserText() {
+        val refused = Exception("kube pods: kube-sign-in-required: sign in to this cluster (azure): AADSTS70043")
+
+        assertEquals(UiText.SignInRequired("azure", "AADSTS70043"), refused.uiText())
+        assertFalse(refused.userMessage().contains(KUBE_SIGN_IN_REQUIRED))
+        assertFalse(goErrorText("kube-sign-in-required: sign in to this cluster (oidc)").contains(KUBE_SIGN_IN_REQUIRED))
+        assertEquals("connection refused", goErrorText("connection refused"))
+        assertEquals(UiText.Raw("timeout"), Exception("timeout").uiText())
     }
 }

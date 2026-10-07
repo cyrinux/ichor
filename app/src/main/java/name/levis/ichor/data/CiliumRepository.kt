@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.ui.goErrorText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -52,7 +53,7 @@ class CiliumRepository(private val configs: ConfigRepository, private val kubeSe
                 }
 
                 override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
+                    trySend(StreamItem.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
                     close()
                 }
             },

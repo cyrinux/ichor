@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.ui.goErrorText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -50,7 +51,7 @@ class SupportBundleRepository(private val configs: ConfigRepository, private val
                 }
 
                 override fun onDone(path: String, size: Long, errMessage: String) {
-                    trySend(if (errMessage.isEmpty()) SupportEvent.Done(path, size) else SupportEvent.Failed(errMessage))
+                    trySend(if (errMessage.isEmpty()) SupportEvent.Done(path, size) else SupportEvent.Failed(goErrorText(errMessage)))
                     close()
                 }
             },

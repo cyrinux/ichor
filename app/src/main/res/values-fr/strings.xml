@@ -2962,4 +2962,6 @@
     <string name="kube_discover_body">L\'app liste les clusters du compte ; vous choisissez ceux à ajouter. Ils se connectent ensuite avec ces identifiants.</string>
     <string name="kube_discover_least_privilege">Utilisez des identifiants qui peuvent seulement lister et lire les clusters, pas les clés admin de votre compte.</string>
     <string name="kube_discover_find">Trouver les clusters</string>
+    <string name="kube_signin_required_error">Connectez-vous à ce cluster pour continuer (%1$s).</string>
+    <string name="kube_signin_required_error_plain">Connectez-vous à ce cluster pour continuer.</string>
 </resources>

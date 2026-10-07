@@ -2954,4 +2954,6 @@
     <string name="kube_discover_body">Die App listet die Cluster des Kontos auf; du wählst aus, welche hinzugefügt werden. Sie melden sich dann mit diesen Zugangsdaten an.</string>
     <string name="kube_discover_least_privilege">Nutze Zugangsdaten, die Cluster nur auflisten und lesen dürfen, nicht die Admin-Schlüssel deines Kontos.</string>
     <string name="kube_discover_find">Cluster suchen</string>
+    <string name="kube_signin_required_error">Melde dich bei diesem Cluster an, um fortzufahren (%1$s).</string>
+    <string name="kube_signin_required_error_plain">Melde dich bei diesem Cluster an, um fortzufahren.</string>
 </resources>

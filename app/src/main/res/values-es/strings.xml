@@ -2962,4 +2962,6 @@
     <string name="kube_discover_body">La app lista los clústeres de la cuenta; eliges cuáles añadir. Después inician sesión con estas credenciales.</string>
     <string name="kube_discover_least_privilege">Usa credenciales que solo puedan listar y leer clústeres, no las claves de administrador de tu cuenta.</string>
     <string name="kube_discover_find">Buscar clústeres</string>
+    <string name="kube_signin_required_error">Inicia sesión en este clúster para continuar (%1$s).</string>
+    <string name="kube_signin_required_error_plain">Inicia sesión en este clúster para continuar.</string>
 </resources>

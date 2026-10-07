@@ -2958,4 +2958,6 @@
     <string name="kube_discover_body">The app lists the account\'s clusters; you choose which to add. They then sign in with these credentials.</string>
     <string name="kube_discover_least_privilege">Use credentials that can only list and read clusters, not your account\'s admin keys.</string>
     <string name="kube_discover_find">Find clusters</string>
+    <string name="kube_signin_required_error">Sign in to this cluster to continue (%1$s).</string>
+    <string name="kube_signin_required_error_plain">Sign in to this cluster to continue.</string>
 </resources>

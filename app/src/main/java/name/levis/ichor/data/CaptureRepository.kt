@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.ui.goErrorText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -72,7 +73,7 @@ class CaptureRepository(private val configs: ConfigRepository, filesDir: File) {
                 }
 
                 override fun onDone(path: String, packets: Long, bytes: Long, errMessage: String) {
-                    events.trySend(CaptureEvent.Done(path, packets, bytes, errMessage.ifEmpty { null }))
+                    events.trySend(CaptureEvent.Done(path, packets, bytes, errMessage.ifEmpty { null }?.let(::goErrorText)))
                     events.close()
                 }
             },

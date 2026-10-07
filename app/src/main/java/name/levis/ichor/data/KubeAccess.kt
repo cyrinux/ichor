@@ -66,3 +66,13 @@ fun kubeTarget(stored: StoredConfig, servers: Map<String, String>): KubeTarget {
         KubeTarget(stored.yaml, stored.activeContext, active?.fingerprint?.let { servers[it] }.orEmpty())
     }
 }
+
+/**
+ * The kubeconfig cluster to sign in to when a Kubernetes call of [stored]'s active cluster asks
+ * for it: the active one itself, or the one a Talos cluster goes through (K5); null otherwise.
+ */
+fun signInContextFor(stored: StoredConfig): String? {
+    val active = stored.activeSummary ?: return null
+    val target = if (active.isKube) active else stored.summary.contexts.firstOrNull { it.isKube && active.kubeAccess.isNotEmpty() && it.fingerprint == active.kubeAccess }
+    return target?.takeIf { it.signIn.isNotEmpty() }?.name
+}

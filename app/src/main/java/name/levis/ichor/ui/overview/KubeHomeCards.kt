@@ -33,6 +33,7 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.importconfig.certExpiry
+import name.levis.ichor.ui.kubeauth.SignInAction
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.daysUntil
 
@@ -59,7 +60,10 @@ internal fun KubeUnreachableCard(message: UiText, onRetry: () -> Unit) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.overview_unreachable_title), style = MaterialTheme.typography.titleMedium)
             Text(message.asString(), style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.bad)
-            Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SignInAction(message, onSignedIn = onRetry)
+                Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+            }
         }
     }
 }

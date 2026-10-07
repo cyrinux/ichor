@@ -56,6 +56,18 @@ class KubeAccessTest {
     }
 
     @Test
+    fun signInGoesToTheClusterTheCallWasFor() {
+        val signs = summary.copy(contexts = summary.contexts.map { if (it.name == "oidc") it.copy(signIn = "oidc") else it })
+        val linked = withKubeAccess(signs, mapOf("t1" to "k1"))
+
+        assertEquals("oidc", signInContextFor(StoredConfig("t", "k", linked, "oidc")))
+        assertEquals("oidc", signInContextFor(StoredConfig("t", "k", linked, "prod")))
+        assertEquals(null, signInContextFor(StoredConfig("t", "k", linked, "lab")))
+        // Static credentials: nothing to sign in to.
+        assertEquals(null, signInContextFor(StoredConfig("t", "k", withKubeAccess(summary, mapOf("t1" to "k1")), "prod")))
+    }
+
+    @Test
     fun linkedClusterAllowsKubernetesWithoutAdmin() {
         val reader = withKubeAccess(summary, mapOf("t1" to "k1")).contexts.first()
 

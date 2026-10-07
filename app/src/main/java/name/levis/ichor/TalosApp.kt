@@ -240,6 +240,19 @@ class TalosApp : Application() {
         if (fingerprint == configRepository.config.value?.activeSummary?.fingerprint) talosRepository.invalidate()
     }
 
+    /**
+     * Brings the app back over the browser a sign-in finished in. The task comes to the front
+     * as it was (no new screen); Android may refuse it while the app is in the background.
+     */
+    fun bringToFront() {
+        val intent = android.content.Intent(this, MainActivity::class.java).addFlags(
+            android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
+                android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP,
+        )
+        runCatching { startActivity(intent) }
+    }
+
     /** A kubeconfig cluster was signed in or out: what was loaded without (or with) it goes. */
     fun signInChanged() {
         talosRepository.invalidate()
@@ -387,6 +400,8 @@ class TalosApp : Application() {
     override fun onCreate() {
         super.onCreate()
         syncLanguage()
+        // Errors turned into text away from a screen are localized with the app's language.
+        name.levis.ichor.ui.AppTexts.context = this
         // Before any Go call: the monitor worker and the widget run in this process too.
         Ichorgo.setAuthStore(kubeAuthStore)
         applyPrivacyMask(uiPreferences.privacyMask.value)

@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.EventListener
 import name.levis.ichorgo.HealthListener
 import name.levis.ichorgo.LogListener
@@ -51,7 +52,7 @@ internal class TalosStreams(private val configs: ConfigRepository) {
                 }
 
                 override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
+                    trySend(StreamItem.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
                     close()
                 }
             },
@@ -73,7 +74,7 @@ internal class TalosStreams(private val configs: ConfigRepository) {
                 }
 
                 override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
+                    trySend(StreamItem.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
                     close()
                 }
             },
@@ -95,7 +96,7 @@ internal class TalosStreams(private val configs: ConfigRepository) {
                 }
 
                 override fun onDone(errMessage: String) {
-                    trySend(StreamItem.Done(errMessage.ifEmpty { null }))
+                    trySend(StreamItem.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
                     close()
                 }
             },
@@ -135,7 +136,7 @@ internal class TalosStreams(private val configs: ConfigRepository) {
                 }
 
                 override fun onDone(errMessage: String) {
-                    trySend(HealthEvent.Done(errMessage.ifEmpty { null }))
+                    trySend(HealthEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
                     close()
                 }
             },

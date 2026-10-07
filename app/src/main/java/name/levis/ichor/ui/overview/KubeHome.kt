@@ -232,7 +232,11 @@ internal data class KubeSignInBanner(val method: String, val needed: SignInNeede
  * asking for a sign-in ([failure], the core's message).
  */
 internal fun kubeSignInBanner(info: KubeSignInInfo?, failure: UiText?): KubeSignInBanner? {
-    val needed = (failure as? UiText.Raw)?.text?.let(::signInNeeded)
+    val needed = when (failure) {
+        is UiText.SignInRequired -> SignInNeeded(failure.method, failure.reason)
+        is UiText.Raw -> signInNeeded(failure.text)
+        else -> null
+    }
     return when {
         needed != null -> KubeSignInBanner(info?.method ?: needed.method, needed)
         info != null && !info.signedIn -> KubeSignInBanner(info.method, null)

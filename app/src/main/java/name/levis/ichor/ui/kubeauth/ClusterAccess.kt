@@ -18,7 +18,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import name.levis.ichor.data.signInContextFor
+import name.levis.ichor.ui.UiText
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +56,31 @@ fun SignInBanner(method: String, needed: SignInNeeded?, onSignIn: () -> Unit) {
             needed?.reason?.takeIf { it.isNotEmpty() }?.let { MutedText(it) }
             Button(onClick = onSignIn) { Text(stringResource(R.string.kube_signin_action)) }
         }
+    }
+}
+
+/**
+ * "Sign in" for an error card whose call was refused for want of a sign-in: opens the sign-in
+ * of the cluster the call was for (the one on screen, or the kubeconfig cluster a Talos one
+ * reaches Kubernetes through). Nothing when [message] is another error or no cluster can sign in.
+ */
+@Composable
+fun SignInAction(message: UiText, onSignedIn: () -> Unit) {
+    if (message !is UiText.SignInRequired) return
+    val app = LocalContext.current.applicationContext as TalosApp
+    val config by app.configRepository.config.collectAsStateWithLifecycle()
+    val target = config?.let(::signInContextFor) ?: return
+    var open by remember { mutableStateOf(false) }
+    Button(onClick = { open = true }) { Text(stringResource(R.string.kube_signin_action)) }
+    if (open) {
+        SignInSheet(
+            context = target,
+            onDismiss = { open = false },
+            onSignedIn = {
+                open = false
+                onSignedIn()
+            },
+        )
     }
 }
 

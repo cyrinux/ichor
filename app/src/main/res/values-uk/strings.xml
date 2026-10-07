@@ -3156,4 +3156,6 @@
     <string name="kube_discover_body">Застосунок покаже кластери облікового запису; ви оберете, які додати. Потім вони входитимуть із цими обліковими даними.</string>
     <string name="kube_discover_least_privilege">Використовуйте облікові дані, що можуть лише переглядати й читати кластери, а не адмінські ключі облікового запису.</string>
     <string name="kube_discover_find">Знайти кластери</string>
+    <string name="kube_signin_required_error">Увійдіть у цей кластер, щоб продовжити (%1$s).</string>
+    <string name="kube_signin_required_error_plain">Увійдіть у цей кластер, щоб продовжити.</string>
 </resources>

@@ -36,7 +36,12 @@ sealed interface SignInUi {
  * Signs the kubeconfig cluster [context] in: with credentials the user enters, or in the
  * browser / with a device code. Only from a screen the user opened, never in the background.
  */
-class SignInViewModel(private val repo: KubeAuthRepository, private val context: String) : ViewModel() {
+class SignInViewModel(
+    private val repo: KubeAuthRepository,
+    private val context: String,
+    /** A browser or device-code sign-in worked: the user is still in the browser, bring the app back. */
+    private val onBrowserDone: () -> Unit = {},
+) : ViewModel() {
     private val _state = MutableStateFlow<SignInUi>(SignInUi.Loading)
     val state: StateFlow<SignInUi> = _state.asStateFlow()
     private var run: Job? = null
@@ -93,7 +98,7 @@ class SignInViewModel(private val repo: KubeAuthRepository, private val context:
                 repo.signIn(context).collect { event ->
                     _state.value = when (event) {
                         is SignInEvent.Prompt -> SignInUi.Waiting(info, event.prompt)
-                        is SignInEvent.Done -> event.error?.let { SignInUi.Ready(info, error = it) } ?: SignInUi.Done
+                        is SignInEvent.Done -> event.error?.let { SignInUi.Ready(info, error = it) } ?: SignInUi.Done.also { onBrowserDone() }
                     }
                 }
             } catch (e: CancellationException) {

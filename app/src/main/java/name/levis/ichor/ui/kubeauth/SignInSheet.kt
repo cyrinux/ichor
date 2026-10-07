@@ -61,7 +61,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 @Composable
 fun SignInSheet(context: String, onDismiss: () -> Unit, onSignedIn: () -> Unit) {
     val app = LocalContext.current.applicationContext as TalosApp
-    val vm: SignInViewModel = viewModel(key = "kube-sign-in-$context", factory = factory { SignInViewModel(app.kubeAuthRepository, context) })
+    val vm: SignInViewModel = viewModel(key = "kube-sign-in-$context", factory = factory { SignInViewModel(app.kubeAuthRepository, context, onBrowserDone = app::bringToFront) })
     val state by vm.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(context) { vm.load() }

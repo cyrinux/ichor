@@ -12,6 +12,7 @@ import name.levis.ichor.model.KubeSignInInfo
 import name.levis.ichor.model.SignInPrompt
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.SignInListener
+import name.levis.ichor.ui.goErrorText
 
 /** What an interactive sign-in reports: a prompt to show, then its end ([error] null on success or cancel). */
 sealed interface SignInEvent {
@@ -54,7 +55,7 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
                 }
 
                 override fun onDone(errMessage: String) {
-                    trySend(SignInEvent.Done(errMessage.ifEmpty { null }))
+                    trySend(SignInEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
                     close()
                 }
             },
