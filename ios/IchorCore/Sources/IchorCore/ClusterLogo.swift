@@ -17,6 +17,13 @@ private let authLogos = [
     "rancher": "rancher",
 ]
 
+/// The cloud of a discovery provider (kubeDiscoverProviders, or "omni"): AKS signs in as
+/// "azure"; Omni's clusters are Talos ones.
+public func discoveryLogo(_ provider: String) -> String {
+    if provider == "omni" { return logoTalos }
+    return authLogos[provider == "aks" ? "azure" : provider] ?? logoKubernetes
+}
+
 /// The managed services' API server hosts (GKE's is a bare IP).
 private let hostLogos = [
     (".eks.amazonaws.com", logoAWS),

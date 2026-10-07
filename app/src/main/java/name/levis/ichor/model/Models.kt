@@ -64,6 +64,9 @@ val ContextSummary.isDemo: Boolean get() = demo
 /** Added from a kubeconfig: only the Kubernetes API, no Talos one. */
 val ContextSummary.isKube: Boolean get() = kind == KIND_KUBE
 
+/** A Talos cluster that lists no endpoint (a talosconfig generated before it had addresses): nothing to reach yet. */
+val ContextSummary.needsEndpoint: Boolean get() = endpoints.isEmpty() && !demo && !isKube
+
 /** Features gated by Talos RBAC (rules from Talos v1.14 machined.go). */
 enum class Feature(@StringRes val label: Int, val roles: Set<String>) {
     POWER(R.string.common_feature_power, setOf("os:admin", "os:operator")),

@@ -84,6 +84,11 @@ func omniClusterHash(ctx *clientconfig.Context) [sha256.Size]byte {
 // summarizeOmniContext is summarizeContext for an Omni context: no certificate, so no roles
 // (Omni's own role for the identity applies) and no expiry.
 func summarizeOmniContext(name string, ctx *clientconfig.Context) (contextSummary, error) {
+	// Its endpoint is the Omni instance, which no search of the local network finds.
+	if len(ctx.Endpoints) == 0 {
+		return contextSummary{}, errors.New("no Omni endpoint defined")
+	}
+
 	if omniIdentity(ctx) == "" {
 		return contextSummary{}, errors.New("no Omni identity (auth.siderov1.identity) defined")
 	}

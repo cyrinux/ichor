@@ -185,7 +185,9 @@ class TalosApp : Application() {
         AiPreferences(
             getSharedPreferences(AiPreferences.FILE, Context.MODE_PRIVATE),
             diagnosisRepository.providers.map { it.id },
-        ) { provider -> SecureStore(java.io.File(filesDir, "ai-key-$provider.enc"), keyAlias = "ai-key-$provider") }
+            { provider -> SecureStore(java.io.File(filesDir, "ai-key-$provider.enc"), keyAlias = "ai-key-$provider") },
+            ProcessLifecycleOwner.get().lifecycleScope,
+        )
     }
 
     /** Passphrase-sealed backups of the config and settings, restorable on another device (Android or iOS). */
@@ -422,7 +424,8 @@ class TalosApp : Application() {
                     clusterColors.sync(it.summary)
                     clusterNames.sync(it.summary)
                     wakeOnLan.sync(it.summary)
-                    publicIps.sync(it.summary)
+                    // Rewrites a sealed file (a Keystore call): off the main thread, its store is locked.
+                    launch(Dispatchers.IO) { publicIps.sync(it.summary) }
                     vpnOnly.sync(it.summary)
                     kubeServers.sync(it.summary)
                     kubeAccess.sync(it.summary)

@@ -96,6 +96,10 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     /// Added from a kubeconfig: the Kubernetes API only, no Talos.
     public var isKube: Bool { kind == ContextKind.kube }
 
+    /// A Talos cluster that lists no endpoint (a talosconfig generated before it had
+    /// addresses): nothing to reach until one is added or found on the network.
+    public var needsEndpoint: Bool { endpoints.isEmpty && !demo && !isKube }
+
     public init(name: String, kind: String = ContextKind.talos, fingerprint: String = "", clusterID: String = "",
                 endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0,
                 demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,

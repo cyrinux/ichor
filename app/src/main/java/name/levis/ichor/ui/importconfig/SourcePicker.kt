@@ -17,7 +17,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.QrCodeScanner
@@ -54,8 +53,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.DiscoveryProvider
+import name.levis.ichor.model.discoveryLogo
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
+import name.levis.ichor.ui.components.BundledLogo
 import name.levis.ichor.ui.components.VersionFooter
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
@@ -127,9 +128,7 @@ private fun Sources(
                     AssistChip(
                         onClick = { onDiscover(provider) },
                         label = { Text(stringResource(provider.label)) },
-                        leadingIcon = {
-                            Icon(Icons.Outlined.Cloud, contentDescription = null, Modifier.size(AssistChipDefaults.IconSize))
-                        },
+                        leadingIcon = { BundledLogo(discoveryLogo(provider.id), Modifier.size(AssistChipDefaults.IconSize)) },
                     )
                 }
             }

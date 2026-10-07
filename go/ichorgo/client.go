@@ -49,6 +49,10 @@ func openSession(configYAML, contextName string) (*session, error) {
 		return nil, errDemoUnavailable
 	}
 
+	if len(cfgCtx.Endpoints) == 0 {
+		return nil, errNoEndpoints
+	}
+
 	opts := []client.OptionFunc{client.WithConfigContext(cfgCtx)}
 	authKey := ""
 
