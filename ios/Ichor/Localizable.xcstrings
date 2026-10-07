@@ -84727,6 +84727,216 @@
           }
         }
       }
+    },
+    "A stored config could not be read. Nothing is changed until it can be." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une config enregistrée n'a pas pu être lue. Rien n'est modifié tant qu'elle ne peut pas l'être."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo leer una configuración guardada. No se cambia nada hasta que se pueda leer."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося прочитати збережену конфігурацію. Нічого не змінюється, доки її не вдасться прочитати."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine gespeicherte Konfiguration konnte nicht gelesen werden. Nichts wird geändert, bis sie lesbar ist."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è stato possibile leggere una configurazione salvata. Nulla viene modificato finché non sarà leggibile."
+          }
+        }
+      }
+    },
+    "The stored config could not be read" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La config enregistrée n'a pas pu être lue"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo leer la configuración guardada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося прочитати збережену конфігурацію"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die gespeicherte Konfiguration konnte nicht gelesen werden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non è stato possibile leggere la configurazione salvata"
+          }
+        }
+      }
+    },
+    "Try again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réessayer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintentar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спробувати ще раз"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut versuchen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riprova"
+          }
+        }
+      }
+    },
+    "Your kubeconfig is still on this device, but it could not be read just now. Try again; if it keeps failing, delete the stored clusters and import them again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre kubeconfig est toujours sur cet appareil, mais il n'a pas pu être lu pour l'instant. Réessayez ; si l'échec persiste, supprimez les clusters enregistrés et importez-les à nouveau."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu kubeconfig sigue en este dispositivo, pero no se pudo leer ahora. Inténtalo de nuevo; si sigue fallando, elimina los clústeres guardados e impórtalos otra vez."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш kubeconfig усе ще на цьому пристрої, але зараз його не вдалося прочитати. Спробуйте ще раз; якщо помилка повторюється, видаліть збережені кластери та імпортуйте їх знову."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine kubeconfig ist noch auf diesem Gerät, konnte aber gerade nicht gelesen werden. Versuche es erneut; wenn es weiter fehlschlägt, lösche die gespeicherten Cluster und importiere sie neu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo kubeconfig è ancora su questo dispositivo, ma al momento non è stato possibile leggerlo. Riprova; se continua a non riuscire, elimina i cluster salvati e importali di nuovo."
+          }
+        }
+      }
+    },
+    "Your talosconfig is still on this device, but it could not be read just now. Try again; if it keeps failing, delete the stored clusters and import them again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre talosconfig est toujours sur cet appareil, mais il n'a pas pu être lu pour l'instant. Réessayez ; si l'échec persiste, supprimez les clusters enregistrés et importez-les à nouveau."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu talosconfig sigue en este dispositivo, pero no se pudo leer ahora. Inténtalo de nuevo; si sigue fallando, elimina los clústeres guardados e impórtalos otra vez."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш talosconfig усе ще на цьому пристрої, але зараз його не вдалося прочитати. Спробуйте ще раз; якщо помилка повторюється, видаліть збережені кластери та імпортуйте їх знову."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine talosconfig ist noch auf diesem Gerät, konnte aber gerade nicht gelesen werden. Versuche es erneut; wenn es weiter fehlschlägt, lösche die gespeicherten Cluster und importiere sie neu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo talosconfig è ancora su questo dispositivo, ma al momento non è stato possibile leggerlo. Riprova; se continua a non riuscire, elimina i cluster salvati e importali di nuovo."
+          }
+        }
+      }
+    },
+    "Your talosconfig and kubeconfig are still on this device, but they could not be read just now. Try again; if it keeps failing, delete the stored clusters and import them again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre talosconfig et votre kubeconfig sont toujours sur cet appareil, mais ils n'ont pas pu être lus pour l'instant. Réessayez ; si l'échec persiste, supprimez les clusters enregistrés et importez-les à nouveau."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu talosconfig y tu kubeconfig siguen en este dispositivo, pero no se pudieron leer ahora. Inténtalo de nuevo; si sigue fallando, elimina los clústeres guardados e impórtalos otra vez."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваші talosconfig і kubeconfig усе ще на цьому пристрої, але зараз їх не вдалося прочитати. Спробуйте ще раз; якщо помилка повторюється, видаліть збережені кластери та імпортуйте їх знову."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine talosconfig und kubeconfig sind noch auf diesem Gerät, konnten aber gerade nicht gelesen werden. Versuche es erneut; wenn es weiter fehlschlägt, lösche die gespeicherten Cluster und importiere sie neu."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo talosconfig e il tuo kubeconfig sono ancora su questo dispositivo, ma al momento non è stato possibile leggerli. Riprova; se continua a non riuscire, elimina i cluster salvati e importali di nuovo."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

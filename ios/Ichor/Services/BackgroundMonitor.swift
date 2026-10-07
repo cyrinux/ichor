@@ -83,11 +83,16 @@ enum BackgroundMonitor {
         // Both stores, as the app lists them: the saved position counts kubeconfig clusters too.
         let stored = StoredConfigs.load()
         let parsed = await stored.parsed()
-        guard let summary = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube) else { return }
+        guard parsed.unreadable.isEmpty, let summary = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube) else { return }
         let contextName = summary.selectedContext(index: AppModel.savedContextIndex, name: UserDefaults.standard.string(forKey: "activeContext"))
         let context = summary.context(named: contextName)
         // The checks start from the Talos overview: a cluster added from a kubeconfig has none.
-        guard context?.isKube != true, let yaml = stored.talos else { return }
+        // The widget stops showing the Talos cluster checked before (Android's clearSnapshot).
+        if context?.isKube == true {
+            if SharedStore.snapshot() != nil { SharedStore.save(nil) }
+            return
+        }
+        guard let yaml = stored.talos else { return }
         // A VPN-only cluster waits for its VPN: without it the check could only time out.
         let vpnOnly = Set(UserDefaults.standard.stringArray(forKey: "vpnOnlyClusters") ?? [])
         if let fingerprint = context?.fingerprint, vpnOnly.contains(fingerprint) {

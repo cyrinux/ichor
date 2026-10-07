@@ -64,6 +64,13 @@ struct ImportView: View {
             }
         }
         .sheet(isPresented: $showingHelp) { HelpSheet() }
+        // A file opened with Ichor (IncomingConfig): previewed like a picked one.
+        .task(id: NotificationRouter.shared.pendingImportText) {
+            guard let text = NotificationRouter.shared.pendingImportText else { return }
+            NotificationRouter.shared.pendingImportText = nil
+            preview = nil
+            validate(text)
+        }
     }
 
     private var picker: some View {
@@ -133,7 +140,7 @@ struct ImportView: View {
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         do {
             let data = try Data(contentsOf: url)
-            guard data.count <= 1024 * 1024, let text = String(data: data, encoding: .utf8) else {
+            guard data.count <= IncomingConfig.maxBytes, let text = String(data: data, encoding: .utf8) else {
                 error = String(localized: "This file is not a talosconfig or a kubeconfig.")
                 return
             }

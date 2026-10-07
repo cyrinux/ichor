@@ -79,6 +79,20 @@ targets:
         NSLocalNetworkUsageDescription: Reach your clusters' nodes on this network, search it for them, and wake them with Wake-on-LAN.
         UIBackgroundModes: [fetch]
         BGTaskSchedulerPermittedIdentifiers: [name.levis.ichor.refresh]
+        # "Open with", the share sheet and AirDrop: YAML files (talosconfigs, kubeconfigs) and
+        # *.kubeconfig land in the import preview (IncomingConfig.swift). A copy, not in place.
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Talos or Kubernetes config
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [public.yaml, name.levis.ichor.kubeconfig]
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: name.levis.ichor.kubeconfig
+            UTTypeDescription: Kubernetes config
+            UTTypeConformsTo: [public.yaml]
+            UTTypeTagSpecification:
+              public.filename-extension: [kubeconfig]
+        LSSupportsOpeningDocumentsInPlace: false
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UISupportedInterfaceOrientations~ipad:
           - UIInterfaceOrientationPortrait
