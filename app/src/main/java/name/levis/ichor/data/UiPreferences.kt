@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import name.levis.ichor.R
+import name.levis.ichor.model.KubernetesAction
+import name.levis.ichor.model.KubernetesBar
+import name.levis.ichor.model.OverviewAction
 import name.levis.ichor.model.OverviewBar
 import name.levis.ichor.model.OverviewLayout
 
@@ -81,8 +84,12 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _nodesExpanded = MutableStateFlow(prefs.getBoolean(KEY_NODES_EXPANDED, false))
     val nodesExpanded: StateFlow<Boolean> = _nodesExpanded.asStateFlow()
     /** The overview's app-bar actions: their order and which are icons or in its menu. */
-    private val _overviewBar = MutableStateFlow(OverviewBar.parse(prefs.getString(KEY_OVERVIEW_BAR, null)))
+    private val _overviewBar = MutableStateFlow(OverviewAction.bar.parse(prefs.getString(KEY_OVERVIEW_BAR, null)))
     val overviewBar: StateFlow<OverviewBar> = _overviewBar.asStateFlow()
+
+    /** The Kubernetes screen's app-bar actions, arranged the same way. */
+    private val _kubernetesBar = MutableStateFlow(KubernetesAction.bar.parse(prefs.getString(KEY_KUBERNETES_BAR, null)))
+    val kubernetesBar: StateFlow<KubernetesBar> = _kubernetesBar.asStateFlow()
 
     private val _privacyMask = MutableStateFlow(
         PrivacyMask(prefs.getBoolean(KEY_PRIVACY_MASK, false), prefs.getString(KEY_PRIVACY_WORDS, "").orEmpty()),
@@ -130,6 +137,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _overviewBar.value = bar
     }
 
+    fun setKubernetesBar(bar: KubernetesBar) {
+        prefs.edit().putString(KEY_KUBERNETES_BAR, bar.encode()).apply()
+        _kubernetesBar.value = bar
+    }
+
     fun setThemeMode(mode: ThemeMode) {
         prefs.edit().putString(KEY_THEME, mode.name).apply()
         _themeMode.value = mode
@@ -154,6 +166,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_OVERVIEW_LAYOUT = "overview_layout"
         private const val KEY_NODES_EXPANDED = "overview_nodes_expanded"
         private const val KEY_OVERVIEW_BAR = "overview_bar"
+        private const val KEY_KUBERNETES_BAR = "kubernetes_bar"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */
         fun storedLanguage(context: Context): String =

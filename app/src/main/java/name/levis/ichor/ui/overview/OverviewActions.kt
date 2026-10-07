@@ -1,26 +1,14 @@
 package name.levis.ichor.ui.overview
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Hub
-import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material.icons.outlined.Widgets
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -28,7 +16,8 @@ import name.levis.ichor.model.OverviewAction
 import name.levis.ichor.model.OverviewBar
 import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.clusterSupport
-import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.ActionBarActions
+import name.levis.ichor.ui.components.ActionLook
 import name.levis.ichor.ui.components.rememberClusterFeatures
 
 /** Where the overview's app-bar actions lead. */
@@ -73,6 +62,9 @@ fun overviewActionLabel(action: OverviewAction): String = when (action) {
     OverviewAction.SETTINGS -> stringResource(R.string.overview_action_settings)
 }
 
+/** How the overview's actions look, in its bar and its editor. */
+val overviewActionLook = ActionLook<OverviewAction>(::overviewActionIcon) { overviewActionLabel(it) }
+
 /**
  * The overview's app-bar actions as arranged in [bar]: its icons, then the rest behind a menu,
  * so the cluster name keeps room on a phone. The menu also leads to arranging them.
@@ -101,33 +93,13 @@ fun OverviewActions(
         OverviewAction.WORKLOADS, OverviewAction.METRICS -> workloads
         else -> true
     }
-    bar.icons.filter(::offered).forEach { action ->
-        TooltipIconButton(overviewActionIcon(action), overviewActionLabel(action), onClick = nav.open(action), enabled = enabled(action))
-    }
-    var open by remember { mutableStateOf(false) }
-    Box {
-        TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { open = true })
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            val close = { open = false }
-            val menu = bar.menu.filter(::offered)
-            menu.forEach { action ->
-                MenuAction(overviewActionIcon(action), overviewActionLabel(action), close, nav.open(action), enabled(action))
-            }
-            if (menu.isNotEmpty()) HorizontalDivider()
-            MenuAction(Icons.Outlined.Edit, stringResource(R.string.overview_edit_title), close, onCustomize)
-        }
-    }
-}
-
-@Composable
-private fun MenuAction(icon: ImageVector, label: String, close: () -> Unit, onClick: () -> Unit, enabled: Boolean = true) {
-    DropdownMenuItem(
-        text = { Text(label) },
-        leadingIcon = { Icon(icon, contentDescription = null) },
-        enabled = enabled,
-        onClick = {
-            close()
-            onClick()
-        },
+    ActionBarActions(
+        bar = bar,
+        look = overviewActionLook,
+        onClick = { nav.open(it)() },
+        customizeLabel = stringResource(R.string.overview_edit_title),
+        onCustomize = onCustomize,
+        offered = ::offered,
+        enabled = ::enabled,
     )
 }

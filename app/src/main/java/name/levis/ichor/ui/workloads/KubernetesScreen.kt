@@ -1,26 +1,15 @@
 package name.levis.ichor.ui.workloads
 
-import androidx.compose.foundation.layout.Box
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Category
-import androidx.compose.material.icons.outlined.Dns
-import androidx.compose.material.icons.outlined.Inventory2
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.MonitorHeart
-import androidx.compose.material.icons.outlined.HealthAndSafety
-import androidx.compose.material.icons.outlined.Policy
-import androidx.compose.material.icons.outlined.Stream
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,15 +33,17 @@ import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.model.KubeFocus
 import name.levis.ichor.model.KubeNamespaces
 import name.levis.ichor.model.KubeScope
+import name.levis.ichor.model.KubernetesAction
 import name.levis.ichor.model.defaultScope
 import name.levis.ichor.model.ShareTarget
-import name.levis.ichor.ui.share.ShareLinkButton
+import name.levis.ichor.ui.share.rememberShareLink
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.flows.CiliumViewModel
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.factory
-import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.ActionBarActions
+import name.levis.ichor.ui.components.ActionBarEditor
 import name.levis.ichor.ui.components.SwipeTabPager
 
 /** Workloads, Pods, CronJobs and NetPerf. */
@@ -62,7 +53,8 @@ private val KUBE_TABS = listOf(0, 1, 2, 3)
  * The cluster's Kubernetes side, through the Kubernetes API with the admin kubeconfig Talos
  * issues (os:admin): workloads with rollout restart, pods, CronJobs with a manual run, and a
  * network test between two nodes. The namespace listed (remembered per cluster) and the
- * search carry over between the tabs. The top bar sets the API address to use instead of the
+ * search carry over between the tabs. Its top bar is arranged like the overview's: the
+ * actions shown as icons or kept in its menu are the user's choice. The top bar sets the API address to use instead of the
  * kubeconfig's, for a cluster the phone reaches another way (not in screenshot mode: the
  * dialog would show the real address). It also opens the API server health, the network
  * policies and, with Cilium,
@@ -112,6 +104,10 @@ fun KubernetesScreen(
     // Screenshot mode turned on with the dialog open: closed, not just hidden until it is off.
     LaunchedEffect(fingerprint) { if (fingerprint == null) editing = false }
     val scope = rememberKubeScope(app, namespaces, mask.enabled, focus.namespace)
+    val bar by app.uiPreferences.kubernetesBar.collectAsStateWithLifecycle()
+    var customizing by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = customizing) { customizing = false }
+    val share = rememberShareLink()
 
     if (editing && fingerprint != null) {
         KubeServerDialog(
@@ -130,25 +126,47 @@ fun KubernetesScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            if (customizing) TopAppBar(
+                title = { Text(stringResource(R.string.bar_edit_title)) },
+                actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
+            ) else TopAppBar(
                 title = { Text("Kubernetes") },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
-                    if (tab < ShareTarget.KUBE_TABS.size) ShareLinkButton(ShareTarget.kubernetes(tab))
-                    TooltipIconButton(Icons.Outlined.HealthAndSafety, stringResource(R.string.checkup_title), onClick = onCheckup)
-                    TooltipIconButton(Icons.Outlined.MonitorHeart, stringResource(R.string.apihealth_title), onClick = onApiHealth)
-                    TooltipIconButton(Icons.Outlined.Policy, stringResource(R.string.netpol_title), onClick = onNetworkPolicies)
-                    if (hasCilium) {
-                        TooltipIconButton(Icons.Outlined.Stream, stringResource(R.string.flows_title), onClick = { onFlows(scope.scope.namespace, null) })
-                    }
-                    if (fingerprint != null) {
-                        TooltipIconButton(Icons.Outlined.Dns, stringResource(R.string.kube_server_title), onClick = { editing = true })
-                    }
-                    BrowserMenu(onResources, onHelm)
+                    ActionBarActions(
+                        bar = bar,
+                        look = kubernetesActionLook,
+                        onClick = { action ->
+                            when (action) {
+                                KubernetesAction.CHECKUP -> onCheckup()
+                                KubernetesAction.NETWORK_POLICIES -> onNetworkPolicies()
+                                KubernetesAction.SHARE -> share(ShareTarget.kubernetes(tab))
+                                KubernetesAction.API_HEALTH -> onApiHealth()
+                                KubernetesAction.FLOWS -> onFlows(scope.scope.namespace, null)
+                                KubernetesAction.RESOURCES -> onResources()
+                                KubernetesAction.HELM -> onHelm()
+                                KubernetesAction.API_ADDRESS -> editing = true
+                            }
+                        },
+                        customizeLabel = stringResource(R.string.bar_edit_title),
+                        onCustomize = { customizing = true },
+                        offered = { action ->
+                            when (action) {
+                                KubernetesAction.SHARE -> tab < ShareTarget.KUBE_TABS.size
+                                KubernetesAction.FLOWS -> hasCilium
+                                KubernetesAction.API_ADDRESS -> fingerprint != null
+                                else -> true
+                            }
+                        },
+                    )
                 },
             )
         },
     ) { padding ->
+        if (customizing) {
+            ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.padding(padding))
+            return@Scaffold
+        }
         Column(Modifier.padding(padding).fillMaxSize()) {
             PrimaryScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {
                 AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.workloads_title)) })
@@ -205,33 +223,6 @@ internal fun rememberKubeScope(app: TalosApp, namespaces: NamespacesViewModel, m
         KubeScopeControl(scope ?: KubeScope(), known, ready = scope != null) { picked ->
             fromLink = null
             if (cluster != null) app.kubeScopes.set(cluster, picked) else local = picked.stored
-        }
-    }
-}
-
-/** Overflow menu: the generic browser and Helm, for what the tabs do not list. */
-@Composable
-private fun BrowserMenu(onResources: () -> Unit, onHelm: () -> Unit) {
-    var open by remember { mutableStateOf(false) }
-    Box {
-        TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { open = true })
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.kb_title)) },
-                leadingIcon = { Icon(Icons.Outlined.Category, contentDescription = null) },
-                onClick = {
-                    open = false
-                    onResources()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.kb_helm_title)) },
-                leadingIcon = { Icon(Icons.Outlined.Inventory2, contentDescription = null) },
-                onClick = {
-                    open = false
-                    onHelm()
-                },
-            )
         }
     }
 }

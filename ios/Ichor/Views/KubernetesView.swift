@@ -9,7 +9,8 @@ import IchorCore
 /// the network policies and, with Cilium, the live flows; it also sets the API address to use
 /// instead of the kubeconfig's, for a cluster the phone reaches another way (not in screenshot
 /// mode: the alert would show the real address). A share link's focus opens a tab, scoped to
-/// and searched for one item, whose sheet opens once its row loads.
+/// and searched for one item, whose sheet opens once its row loads. Like the overview's, its
+/// toolbar is arranged by the user: which actions are icons and which are in the ⋯ menu.
 struct KubernetesView: View {
     enum Tab: Hashable { case workloads, pods, cronJobs, network }
 
@@ -47,6 +48,8 @@ struct KubernetesView: View {
         try await client.cronJobsPage(namespace: namespace, token: token)
     }
     @State private var editingServer = false
+    @AppStorage(KubernetesBar.storageKey) private var barText = ""
+    @State private var customizingBar = false
     @State private var serverInput = ""
     @State private var serverError: String?
     /// Kept across tabs: only leaving the screen stops a running network test.
@@ -88,6 +91,43 @@ struct KubernetesView: View {
         }
     }
 
+    private var bar: KubernetesBar { .parse(barText) }
+
+    /// Only what can run here: the share link of a list tab, Live flows with Cilium, the
+    /// address where it can be set.
+    private func offered(_ action: KubernetesAction) -> Bool {
+        switch action {
+        case .share: sharedTab != nil
+        case .flows: cilium?.installed == true
+        case .apiAddress: editable != nil
+        default: true
+        }
+    }
+
+    @ViewBuilder
+    private func barButton(_ action: KubernetesAction) -> some View {
+        if action == .share, let sharedTab {
+            ShareLinkButton(target: .kubernetes(tab: sharedTab))
+        } else {
+            Button { open(action) } label: { Label { action.title } icon: { Image(systemName: action.systemImage) } }
+        }
+    }
+
+    private func open(_ action: KubernetesAction) {
+        switch action {
+        case .checkup: netScreen = .checkup
+        case .networkPolicies: netScreen = .policies
+        case .share: break
+        case .apiHealth: netScreen = .apiHealth
+        case .flows: netScreen = .flows(HubbleFilter())
+        case .resources: netScreen = .resources
+        case .helm: netScreen = .helm
+        case .apiAddress:
+            serverInput = model.client?.kubeServer ?? ""
+            editingServer = true
+        }
+    }
+
     /// The cluster whose API address can be set: not the demo, not in screenshot mode.
     private var editable: ContextSummary? {
         model.activeSummary.flatMap { $0.demo || $0.fingerprint.isEmpty || model.privacyMask ? nil : $0 }
@@ -105,48 +145,21 @@ struct KubernetesView: View {
         // A new address: the lists load again through it.
         .id(model.client?.kubeServer)
         .toolbar {
-            if let sharedTab {
-                ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .kubernetes(tab: sharedTab)) }
-            }
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
+                // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
+                ForEach(bar.icons.filter(offered)) { action in barButton(action) }
                 Menu {
-                    Button { netScreen = .resources } label: { Label("Resources", systemImage: "square.grid.3x3") }
-                    Button { netScreen = .helm } label: { Label("Helm releases", systemImage: "shippingbox") }
+                    let menu = bar.menu.filter(offered)
+                    ForEach(menu) { action in barButton(action) }
+                    if !menu.isEmpty { Divider() }
+                    Button { customizingBar = true } label: { Label("Customize top bar", systemImage: "pencil") }
                 } label: {
-                    Label("Resources", systemImage: "square.grid.3x3")
+                    Image(systemName: "ellipsis.circle")
                 }
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Button { netScreen = .checkup } label: { Label(CheckupText.checkupTitle, systemImage: "stethoscope") }
-                    Button { netScreen = .apiHealth } label: { Label("API server", systemImage: "heart.text.square") }
-                } label: {
-                    Label(CheckupText.checkupHealthMenu, systemImage: "stethoscope")
-                }
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Button { netScreen = .policies } label: { Label("Network policies", systemImage: "shield.lefthalf.filled") }
-                    if let cilium, cilium.installed {
-                        Button { netScreen = .flows(HubbleFilter()) } label: {
-                            Label("Live flows", systemImage: "point.3.filled.connected.trianglepath.dotted")
-                        }
-                    }
-                } label: {
-                    Label("Network policies and flows", systemImage: "shield.lefthalf.filled")
-                }
-            }
-            if editable != nil {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        serverInput = model.client?.kubeServer ?? ""
-                        editingServer = true
-                    } label: {
-                        Label("Kubernetes API address", systemImage: "server.rack")
-                    }
-                }
+                .accessibilityLabel(Text("More"))
             }
         }
+        .sheet(isPresented: $customizingBar) { ActionBarEditorSheet(KubernetesAction.self) }
         .alert("Kubernetes API address", isPresented: $editingServer) {
             TextField(text: $serverInput, prompt: Text(verbatim: "k8s.example.com:6443")) { Text("Address") }
                 .keyboardType(.URL)
@@ -401,6 +414,34 @@ private struct WorkloadRow: View {
         case .progressing: .orange
         case .degraded: .red
         default: .secondary
+        }
+    }
+}
+
+extension KubernetesAction: BarActionLook {
+    var systemImage: String {
+        switch self {
+        case .checkup: "stethoscope"
+        case .networkPolicies: "shield.lefthalf.filled"
+        case .share: "link"
+        case .apiHealth: "heart.text.square"
+        case .flows: "point.3.filled.connected.trianglepath.dotted"
+        case .resources: "square.grid.3x3"
+        case .helm: "shippingbox"
+        case .apiAddress: "server.rack"
+        }
+    }
+
+    var title: Text {
+        switch self {
+        case .checkup: Text(CheckupText.checkupTitle)
+        case .networkPolicies: Text("Network policies")
+        case .share: Text("Share link")
+        case .apiHealth: Text("API server")
+        case .flows: Text("Live flows")
+        case .resources: Text("Resources")
+        case .helm: Text("Helm releases")
+        case .apiAddress: Text("Kubernetes API address")
         }
     }
 }

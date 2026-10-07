@@ -52715,41 +52715,6 @@
         }
       }
     },
-    "Network policies and flows" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Netzwerkrichtlinien und Flows"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Políticas de red y flujos"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Politiques réseau et flux"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Policy di rete e flussi"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Мережеві політики й потоки"
-          }
-        }
-      }
-    },
     "Nodes %@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -65968,6 +65933,41 @@
         }
       }
     },
+    "Customize top bar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personnaliser la barre du haut"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personalizar la barra superior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налаштувати верхню панель"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obere Leiste anpassen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personalizza la barra superiore"
+          }
+        }
+      }
+    },
     "Top bar" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -77507,41 +77507,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ревізія %1$@, %2$@ тому"
-          }
-        }
-      }
-    },
-    "Checkup and API server" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bilan et serveur d’API"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chequeo y servidor de la API"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Check und API-Server"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Controllo e server API"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Перевірка та сервер API"
           }
         }
       }

@@ -51,7 +51,10 @@ import name.levis.ichor.R
 import name.levis.ichor.model.OverviewCard
 import name.levis.ichor.model.OverviewBar
 import name.levis.ichor.model.OverviewLayout
+import name.levis.ichor.ui.components.BarDragState
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.components.actionBarItems
 import name.levis.ichor.ui.components.TooltipIconButton
 
 private val ROW_SPACING = 8.dp
@@ -176,7 +179,7 @@ fun OverviewEditor(
         verticalArrangement = Arrangement.spacedBy(ROW_SPACING),
         modifier = modifier.fillMaxSize(),
     ) {
-        overviewBarItems(bar, { currentBar }, { changeBar(it) }, barDrag, spacing)
+        actionBarItems(bar, overviewActionLook, { currentBar }, { changeBar(it) }, barDrag, spacing)
         item(key = "hint") {
             SectionTitle(stringResource(R.string.overview_edit_cards), stringResource(R.string.overview_edit_hint), Modifier.padding(top = 16.dp))
         }

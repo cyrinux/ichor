@@ -2075,6 +2075,7 @@
     </plurals>
     <string name="overview_card_summary">Résumé du cluster</string>
     <string name="overview_edit_title">Personnaliser la vue d’ensemble</string>
+    <string name="bar_edit_title">Personnaliser la barre du haut</string>
     <string name="overview_edit_done">OK</string>
     <string name="overview_edit_hint">Faites glisser une carte par sa poignée pour la déplacer. Les cartes masquées peuvent être réaffichées plus bas.</string>
     <string name="overview_edit_drag">Faire glisser pour déplacer</string>
