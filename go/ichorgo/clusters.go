@@ -58,6 +58,8 @@ type importChoice struct {
 	Index   int    `json:"index"`
 	Name    string `json:"name,omitempty"`
 	Replace bool   `json:"replace,omitempty"`
+	// Skip leaves the context out (kubeconfig imports, where the user picks the contexts).
+	Skip bool `json:"skip,omitempty"`
 }
 
 // MergeConfig returns storedYAML with the contexts of addedYAML added, so several clusters

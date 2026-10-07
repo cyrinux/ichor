@@ -21,6 +21,8 @@ type configSummary struct {
 
 type contextSummary struct {
 	Name string `json:"name"`
+	// Kind is "talos" for a talosconfig context, "kube" for a kubeconfig one (kube_store.go).
+	Kind string `json:"kind"`
 	// Fingerprint identifies the context whatever screenshot mode does to its name, so the
 	// app can attach settings (its color) to a cluster.
 	Fingerprint string `json:"fingerprint"`
@@ -64,6 +66,10 @@ func ParseConfig(configYAML string) (out string, err error) {
 func loadConfig(configYAML string) (*clientconfig.Config, error) {
 	if strings.TrimSpace(configYAML) == "" {
 		return nil, errors.New("talosconfig is empty")
+	}
+
+	if isKubeconfig(configYAML) {
+		return nil, errTalosUnavailable
 	}
 
 	cfg, err := parseTalosconfig(configYAML)
@@ -123,6 +129,7 @@ func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, e
 
 	return contextSummary{
 		Name:         name,
+		Kind:         kindTalos,
 		Fingerprint:  contextFingerprint(name, ctx),
 		ClusterID:    clusterID(ctx),
 		Endpoints:    slices.Clone(ctx.Endpoints),

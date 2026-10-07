@@ -124,6 +124,7 @@ func TestBuildTalosconfig(t *testing.T) {
 		Current: "lab",
 		Contexts: []contextSummary{{
 			Name:         "lab",
+			Kind:         kindTalos,
 			Fingerprint:  got.Contexts[0].Fingerprint, // covered by TestContextFingerprint
 			ClusterID:    got.Contexts[0].ClusterID,   // covered by TestClusterIDIgnoresContextName
 			Endpoints:    src.Endpoints,

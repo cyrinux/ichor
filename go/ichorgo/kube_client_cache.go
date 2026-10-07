@@ -117,8 +117,18 @@ func (c *kubeClientCache) forget(target kubeTarget, k *kubeClient) {
 }
 
 // openKubeClientForContext fetches an admin kubeconfig from Talos (bounded by callTimeout)
-// and probes the API server addresses (bounded by kubeProbeTimeout).
+// and probes the API server addresses (bounded by kubeProbeTimeout). A cluster added from a
+// kubeconfig uses its own context, at its own server only.
 func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
+	if isKubeconfig(target.config) {
+		kubeconfig, err := kubeContextYAML(target.config, target.context)
+		if err != nil {
+			return nil, err
+		}
+
+		return openKubeClient(context.Background(), kubeconfig, nil, target.server)
+	}
+
 	var endpoints []string
 
 	kubeconfig, err := withSession(target.config, target.context, callTimeout, func(ctx context.Context, s *session) (string, error) {

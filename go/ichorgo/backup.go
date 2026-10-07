@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"unicode/utf8"
 
 	"golang.org/x/crypto/argon2"
@@ -46,8 +47,8 @@ const (
 // BackupMinPassphrase is the shortest passphrase EncryptBackup accepts, in characters.
 const BackupMinPassphrase = 12
 
-// BackupPayloadFormat is the payload's "format" field this core understands.
-const BackupPayloadFormat = 1
+// BackupPayloadFormat is the newest payload "format" this core understands (see backupPayload).
+const BackupPayloadFormat = 2
 
 const (
 	backupMagic       = "ICHORBAK"
@@ -206,9 +207,13 @@ func backupAEAD(passphrase string, p backupParams) (cipher.AEAD, error) {
 }
 
 // backupPayload is the part of the payload the core checks; the apps own the other fields.
+// Format 1 holds a talosconfig; format 2 adds the stored kubeconfig (clusters added without
+// Talos), either of them may then be empty. The apps write 1 when there is no kubeconfig,
+// so older apps keep reading their backups, and refuse a 2 instead of dropping its clusters.
 type backupPayload struct {
 	Format      int    `json:"format"`
 	Talosconfig string `json:"talosconfig"`
+	Kubeconfig  string `json:"kubeconfig,omitempty"`
 }
 
 func validateBackupPayload(raw []byte) (backupPayload, error) {
@@ -229,13 +234,32 @@ func validateBackupPayload(raw []byte) (backupPayload, error) {
 		return backupPayload{}, fmt.Errorf("%s: payload format %d, update the app", BackupErrUnsupported, p.Format)
 	}
 
-	cfg, err := loadConfig(p.Talosconfig)
-	if err != nil {
-		return backupPayload{}, fmt.Errorf("%s: %w", BackupErrInvalidContent, err)
+	hasTalos := p.Format == 1 || strings.TrimSpace(p.Talosconfig) != ""
+	hasKube := p.Format >= 2 && strings.TrimSpace(p.Kubeconfig) != ""
+
+	if !hasTalos && !hasKube {
+		return backupPayload{}, errors.New(BackupErrInvalidContent + ": no cluster in the backup")
 	}
 
-	if len(cfg.Contexts) == 0 {
-		return backupPayload{}, errors.New(BackupErrInvalidContent + ": no cluster in the talosconfig")
+	if hasTalos {
+		cfg, err := loadConfig(p.Talosconfig)
+		if err != nil {
+			return backupPayload{}, fmt.Errorf("%s: %w", BackupErrInvalidContent, err)
+		}
+
+		if len(cfg.Contexts) == 0 {
+			return backupPayload{}, errors.New(BackupErrInvalidContent + ": no cluster in the talosconfig")
+		}
+	}
+
+	if hasKube {
+		if !isKubeconfig(p.Kubeconfig) {
+			return backupPayload{}, errors.New(BackupErrInvalidContent + ": the kubeconfig is not one")
+		}
+
+		if _, err := loadKubeconfigDoc(p.Kubeconfig); err != nil {
+			return backupPayload{}, fmt.Errorf("%s: %w", BackupErrInvalidContent, err)
+		}
 	}
 
 	return p, nil
