@@ -33,6 +33,11 @@ type contextSummary struct {
 	Roles        []string `json:"roles"`
 	CertNotAfter int64    `json:"certNotAfter"`
 	Demo         bool     `json:"demo,omitempty"`
+	// Auth is "omni" for a cluster reached through Omni (omni.go): no client certificate,
+	// so no roles nor expiry; OmniCluster and Identity come from its context.
+	Auth        string `json:"auth,omitempty"`
+	OmniCluster string `json:"omniCluster,omitempty"`
+	Identity    string `json:"identity,omitempty"`
 }
 
 // ParseConfig validates a talosconfig YAML and returns a JSON configSummary.
@@ -113,6 +118,10 @@ func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, e
 		return contextSummary{}, errors.New("no endpoints defined")
 	}
 
+	if isOmni(ctx) {
+		return summarizeOmniContext(name, ctx)
+	}
+
 	tlsCert, err := client.CertificateFromConfigContext(ctx)
 	if err != nil {
 		return contextSummary{}, fmt.Errorf("invalid client certificate: %w", err)
@@ -140,11 +149,31 @@ func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, e
 	}, nil
 }
 
+func summarizeOmniContext(name string, ctx *clientconfig.Context) (contextSummary, error) {
+	if strings.TrimSpace(ctx.Cluster) == "" {
+		return contextSummary{}, errors.New("Omni context without its cluster name")
+	}
+
+	return contextSummary{
+		Name:        name,
+		Kind:        kindTalos,
+		Fingerprint: contextFingerprint(name, ctx),
+		ClusterID:   clusterID(ctx),
+		Endpoints:   slices.Clone(ctx.Endpoints),
+		Nodes:       slices.Clone(ctx.Nodes),
+		Roles:       []string{},
+		Auth:        authOmni,
+		OmniCluster: ctx.Cluster,
+		Identity:    ctx.Auth.SideroV1.Identity,
+	}, nil
+}
+
 // contextFingerprint is stable for a context name within a cluster (its CA): it survives a
-// renewed certificate and moved endpoints. Letters only, so that masking, which rewrites
+// renewed certificate and moved endpoints (for Omni: its instance and cluster, clusterKey).
+// Letters only, so that masking, which rewrites
 // names and addresses, never touches it.
 func contextFingerprint(name string, ctx *clientconfig.Context) string {
-	return letterHash(sha256.Sum256([]byte(name + "\x00" + ctx.CA)))
+	return letterHash(sha256.Sum256([]byte(name + "\x00" + clusterKey(ctx))))
 }
 
 const fingerprintLength = 16
