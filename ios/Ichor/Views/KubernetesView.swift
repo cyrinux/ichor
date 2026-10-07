@@ -15,6 +15,7 @@ struct KubernetesView: View {
 
     /// A screen pushed from the toolbar or a pod.
     enum NetScreen: Hashable {
+        case checkup
         case apiHealth
         case policies
         case flows(HubbleFilter)
@@ -105,7 +106,12 @@ struct KubernetesView: View {
                 ToolbarItem(placement: .primaryAction) { ShareLinkButton(target: .kubernetes(tab: sharedTab)) }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button { netScreen = .apiHealth } label: { Label("API server", systemImage: "heart.text.square") }
+                Menu {
+                    Button { netScreen = .checkup } label: { Label(CheckupText.checkupTitle, systemImage: "stethoscope") }
+                    Button { netScreen = .apiHealth } label: { Label("API server", systemImage: "heart.text.square") }
+                } label: {
+                    Label(CheckupText.checkupHealthMenu, systemImage: "stethoscope")
+                }
             }
             ToolbarItem(placement: .primaryAction) {
                 Menu {
@@ -143,6 +149,7 @@ struct KubernetesView: View {
         .messageAlert($serverError)
         .navigationDestination(item: $netScreen) { screen in
             switch screen {
+            case .checkup: CheckupView()
             case .apiHealth: ApiHealthView()
             case .policies: NetPoliciesView()
             case .flows(let filter): LiveFlowsView(cilium: cilium ?? CiliumStatus(), filter: filter)

@@ -28,6 +28,7 @@ struct UpgradeView: View {
     @State private var force = false
     @State private var confirmForce = false
     @State private var confirming = false
+    @State private var confirmingRollback = false
     @State private var message: String?
 
     private var job: UpgradeJob { .shared }
@@ -89,16 +90,30 @@ struct UpgradeView: View {
         }
         .themedBackground()
         .toolbar {
-            if gate.forceAvailable {
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    if gate.forceAvailable {
                         Button(role: .destructive) { confirmForce = true } label: {
                             Label("Force upgrade…", systemImage: "exclamationmark.triangle")
                         }
-                    } label: {
-                        Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
                     }
+                    Button(role: .destructive) { Task { await requestRollback() } } label: {
+                        Label(CheckupText.rollbackMenu, systemImage: "arrow.uturn.backward")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
                 }
+            }
+        }
+        .sheet(isPresented: $confirmingRollback) {
+            HostnameConfirmationSheet(
+                title: CheckupText.rollbackTitle(hostname),
+                message: CheckupText.rollbackBody,
+                hostname: hostname,
+                actionTitle: CheckupText.rollbackConfirm
+            ) {
+                confirmingRollback = false
+                rollback()
             }
         }
         .alert(Text("Skip the etcd checks?"), isPresented: $confirmForce) {
@@ -283,6 +298,28 @@ struct UpgradeView: View {
             return
         }
         confirming = true
+    }
+
+    /// The same two steps as an upgrade: the node reboots at once, into another Talos.
+    private func requestRollback() async {
+        message = nil
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: CheckupText.rollbackTitle(hostname)) {
+            message = failure
+            return
+        }
+        confirmingRollback = true
+    }
+
+    private func rollback() {
+        guard let client = model.client else { return }
+        Task {
+            do {
+                try await client.rollback(node: node)
+                message = CheckupText.rollbackStarted(hostname)
+            } catch {
+                message = error.localizedDescription
+            }
+        }
     }
 
     /// After the confirmation sheet, which collected the acknowledgments.

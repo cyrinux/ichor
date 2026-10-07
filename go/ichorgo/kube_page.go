@@ -65,10 +65,11 @@ type kubeTableRow struct {
 
 // kubeRowMeta is the metadata of a row's object (includeObject=Metadata).
 type kubeRowMeta struct {
-	Name              string     `json:"name"`
-	Namespace         string     `json:"namespace"`
-	CreationTimestamp time.Time  `json:"creationTimestamp"`
-	DeletionTimestamp *time.Time `json:"deletionTimestamp"`
+	Name              string            `json:"name"`
+	Namespace         string            `json:"namespace"`
+	Labels            map[string]string `json:"labels"`
+	CreationTimestamp time.Time         `json:"creationTimestamp"`
+	DeletionTimestamp *time.Time        `json:"deletionTimestamp"`
 	OwnerReferences   []struct {
 		Kind string `json:"kind"`
 		Name string `json:"name"`

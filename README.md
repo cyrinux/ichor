@@ -71,6 +71,19 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   clients share a symptom (5xx, slowness, watches cut at the same interval) it blames the API
   server, etcd or what sits between them instead, and it tells when a control plane's API server
   stopped logging.
+- **Cluster checkup:** what no other screen shows, on one screen (Kubernetes → Checkup): pods
+  that crash, cannot pull their image, stay Pending or were killed for their memory, failed Jobs,
+  the Warning events of the last hour, volumes nearly full (the kubelets' own figures, no
+  Prometheus needed), claims not bound or lost, deprecated API versions something still calls
+  before the next Kubernetes upgrade, admission webhooks whose Service has no ready endpoint,
+  what pods request against what each node offers (and whether one node's pods would still fit
+  elsewhere), quotas at their limit, nodes left cordoned or under pressure, LoadBalancer Services
+  without an address and empty Cilium pools, namespaces, pods and claims stuck in Terminating,
+  certificate requests nobody approved, External Secrets that do not sync and Helm releases
+  failed or stuck. Every finding says what to change. Read-only; the critical ones can also
+  notify in the background (Settings → Alerts). A pod's log sheet and a workload's sheet show
+  the object's Kubernetes events, like the end of `kubectl describe`. See
+  [Cluster checkup](#cluster-checkup).
 - **Live flows (Cilium + Hubble):** follow the cluster's traffic like Hubble UI, or only what is
   dropped, for a namespace or a pod. Ichor runs `hubble observe --follow` in each cilium-agent pod
   (the CLI ships in the agent image, so nothing is installed and Hubble Relay is not needed), groups
@@ -132,6 +145,8 @@ reads those roles and explains up front when a feature needs more.
 | **App web addresses (Ingress, HTTPRoute)** | `Kubeconfig`, then the Kubernetes API (pods, services, ingresses, httproutes, gateways) | **`os:admin`** |
 | **Network test between two nodes** | `Kubeconfig`, then the Kubernetes API (namespaces, pods) | **`os:admin`** |
 | **Node pressure (PSI) and cgroups (like `talosctl cgroups`)** | `Copy` of `/sys/fs/cgroup`, `Containers` | **`os:admin`** |
+| **Cluster checkup, events of a pod or workload** | `Kubeconfig`, then the Kubernetes API (pods, nodes, events, claims, webhooks, quotas, services, CSRs, secrets metadata…) and each kubelet's `stats/summary` through the API server proxy | **`os:admin`** |
+| **Talos rollback (`talosctl rollback`)** | `Rollback` | **`os:admin`** |
 
 Notes:
 
@@ -225,6 +240,34 @@ kubectl -n shop label cronjob wipe-staging ichor.levis.name/trigger=false
 An icon name that is not a lowercase slug (letters, digits, dashes) is ignored. The next run is
 computed on the phone from the schedule and `timeZone` (UTC without one, like the controller on
 Talos); the app shows none for a schedule it cannot read.
+
+### Cluster checkup
+
+**Kubernetes → Checkup** reads a dozen things nobody opens a screen for and sums them up: a
+verdict, then one card per area with its findings, worst first, each worded with what to do and
+Kubernetes' own message. The capacity card draws what the pods of each node request against
+what it offers (the scheduler's view, not live usage); the volumes card the fill level of every
+claim, read from each node's kubelet; the nodes card the roles, taints and labels; the Helm card
+the releases at their latest revision.
+
+- **Thresholds:** a volume warns at 85 % and is critical at 95 % (inodes 90 / 98 %), a node at
+  90 % of its allocatable CPU or memory requested, a quota at 90 %. A pod counts as stuck after
+  5 minutes Pending or 10 minutes starting; a deletion after 10 minutes; a certificate request
+  after 10 minutes without an answer; a Helm `pending-*` after 10 minutes.
+- **Deprecated APIs** come from the API server's own `apiserver_requested_deprecated_apis`
+  metric: what was requested since it started, not by whom (the audit analysis on the API server
+  screen names the client). Critical when the next minor release removes the version.
+- **Webhooks:** a `failurePolicy: Fail` webhook whose Service has no ready endpoint refuses every
+  request it matches, cluster-wide; `Ignore` silently skips it. Webhooks called by URL are not
+  checked.
+- **Room to drain:** a rough sum of requests over the schedulable nodes, without affinities: a
+  note, never an alert.
+- **Alerts:** Settings → Alerts → Cluster checkup runs it at every background check (it lists every
+  pod and asks each kubelet). A critical finding notifies at once, a warning when seen on two
+  checks in a row, a cleared one once; a section that could not be read keeps what it knew.
+- **Rollback:** on a node's upgrade screen, the menu offers `talosctl rollback` (os:admin): the node
+  reboots at once into the Talos it ran before its last upgrade, for an upgrade that boots but
+  misbehaves. Talos rolls back by itself one that does not boot.
 
 ### Argo CD app icons
 

@@ -51,6 +51,11 @@ struct WorkloadActionsSheet: View {
                 }
                 if workload.canScale { scaleSection }
                 if workload.hasHistory { historySection }
+                Section {
+                    KubeEventsRows(namespace: workload.namespace, kind: "", name: workload.name)
+                } header: {
+                    Text(verbatim: CheckupText.kubeEventsTitle)
+                }
             }
             .themedBackground()
             .navigationTitle(Text(verbatim: workload.name))

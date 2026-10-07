@@ -46,6 +46,7 @@ fun MonitoringSection(app: TalosApp) {
     val enabled by store.alertsEnabled.collectAsStateWithLifecycle()
     val dataWatched by store.dataServicesWatched.collectAsStateWithLifecycle()
     val gitopsWatched by store.gitopsWatched.collectAsStateWithLifecycle()
+    val checkupWatched by store.checkupWatched.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -103,6 +104,19 @@ fun MonitoringSection(app: TalosApp) {
                 Switch(
                     checked = gitopsWatched,
                     onCheckedChange = { store.setGitopsWatched(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            // And for the cluster checkup: it lists every pod and asks each kubelet at every check.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_checkup), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_checkup_desc))
+                }
+                Switch(
+                    checked = checkupWatched,
+                    onCheckedChange = { store.setCheckupWatched(it) },
                     enabled = enabled,
                     modifier = Modifier.padding(start = 12.dp),
                 )

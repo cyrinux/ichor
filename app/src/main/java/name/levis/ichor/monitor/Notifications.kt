@@ -17,6 +17,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.dataServiceKindOf
 import name.levis.ichor.model.title
 import name.levis.ichor.ui.DeepLink
+import name.levis.ichor.ui.checkup.sectionLook
 
 private const val CHANNEL_ID = "cluster-alerts"
 
@@ -67,6 +68,7 @@ private fun alertDestination(alert: Alert): DeepLink? = when (alert.kind) {
     AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED -> DeepLink.ISSUE_CONFIG
     AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK ->
         if (alert.detail.substringBefore('|') == GITOPS_FLUX) DeepLink.FLUX else DeepLink.ARGO_CD
+    AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK -> DeepLink.CHECKUP
     else -> null
 }
 
@@ -105,6 +107,25 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.DATA_PROBLEM -> context.getString(R.string.monitor_data_problem, alert.subject)
     AlertKind.DATA_OK -> context.getString(R.string.monitor_data_ok, alert.subject)
     AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> gitopsAlertTitle(context, alert)
+    AlertKind.CHECKUP_PROBLEM -> checkupAlertTitle(context, alert)
+    AlertKind.CHECKUP_OK -> context.getString(R.string.monitor_checkup_ok, alert.subject)
+}
+
+/** "Volumes: shop/data-postgres-0", from a checkup alert's "section|kind|severity" detail and its subject. */
+private fun checkupAlertTitle(context: Context, alert: Alert): String {
+    val section = sectionLook(alert.detail.substringBefore('|'))?.let { context.getString(it.title) }
+    return listOfNotNull(section, alert.subject).joinToString(": ")
+}
+
+/** "Cluster checkup · critical". */
+private fun checkupAlertText(context: Context, alert: Alert): String {
+    val checkup = context.getString(R.string.checkup_title)
+    if (!alert.problem) return checkup
+    val severity = when (alert.detail.substringAfterLast('|')) {
+        DATA_CRITICAL -> context.getString(R.string.data_services_health_critical)
+        else -> context.getString(R.string.data_services_health_warning)
+    }
+    return context.getString(R.string.monitor_data_text, checkup, severity)
 }
 
 /**
@@ -161,4 +182,5 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.CERT_EXPIRED -> context.resources.getQuantityString(R.plurals.monitor_cert_expired, alert.days, alert.days)
     AlertKind.DATA_PROBLEM, AlertKind.DATA_OK -> dataAlertText(context, alert)
     AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> gitopsAlertText(context, alert)
+    AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK -> checkupAlertText(context, alert)
 }

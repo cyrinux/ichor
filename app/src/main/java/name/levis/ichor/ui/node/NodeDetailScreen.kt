@@ -1,7 +1,6 @@
 package name.levis.ichor.ui.node
 
 import name.levis.ichor.model.ShareTarget
-import name.levis.ichor.ui.share.ShareLinkMenuItem
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -16,7 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -58,14 +56,9 @@ import name.levis.ichor.util.formatBytes
 import name.levis.ichor.ui.components.localizedDuration
 import name.levis.ichor.util.usedFraction
 import java.util.Locale
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.PowerSettingsNew
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -274,41 +267,33 @@ fun NodeDetailScreen(
                     if (powerState is PowerState.Running || controlState is ServiceControlState.Running || cordonBusy) {
                         CircularProgressIndicator(Modifier.size(20.dp).padding(end = 4.dp), strokeWidth = 2.dp)
                     }
-                    Box {
-                        TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { menuOpen = true })
-                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                            NodeMenuItems(
-                                summary = config?.activeSummary,
-                                features = features,
-                                // One upgrade at a time in the app.
-                                busy = buildSet {
-                                    if (upgradeBusyElsewhere || maintenanceRunning) add(NodeMenuEntry.UPGRADE)
-                                    if (upgrading?.running == true || (maintenanceRunning && maintenance?.node != node)) add(NodeMenuEntry.MAINTENANCE)
-                                    if (cordonBusy || (maintenanceRunning && maintenance?.node == node)) add(NodeMenuEntry.CORDON)
-                                },
-                                onPick = { entry ->
-                                    menuOpen = false
-                                    if (entry == NodeMenuEntry.CORDON) confirmingCordon = true else onMenu(entry)
-                                },
-                                cordoned = cordoned[node],
-                            )
-                            ShareLinkMenuItem(ShareTarget.node(node, hostname, tab), onClick = { menuOpen = false })
+                    TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { menuOpen = true })
+                    if (menuOpen) {
+                        NodeMenuSheet(
+                            title = hostname,
+                            summary = config?.activeSummary,
+                            features = features,
+                            // One upgrade at a time in the app.
+                            busy = buildSet {
+                                if (upgradeBusyElsewhere || maintenanceRunning) add(NodeMenuEntry.UPGRADE)
+                                if (upgrading?.running == true || (maintenanceRunning && maintenance?.node != node)) add(NodeMenuEntry.MAINTENANCE)
+                                if (cordonBusy || (maintenanceRunning && maintenance?.node == node)) add(NodeMenuEntry.CORDON)
+                            },
+                            cordoned = cordoned[node],
+                            shareTarget = ShareTarget.node(node, hostname, tab),
                             // Power actions only exist for configs whose role allows them.
-                            if (canPower) {
-                                HorizontalDivider()
-                                PowerAction.entries.forEach { action ->
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(action.title)) },
-                                        leadingIcon = { Icon(Icons.Outlined.PowerSettingsNew, contentDescription = null) },
-                                        enabled = powerState !is PowerState.Running,
-                                        onClick = {
-                                            menuOpen = false
-                                            confirming = action
-                                        },
-                                    )
-                                }
-                            }
-                        }
+                            powerActions = if (canPower) PowerAction.entries else emptyList(),
+                            powerEnabled = powerState !is PowerState.Running,
+                            onPick = { entry ->
+                                menuOpen = false
+                                if (entry == NodeMenuEntry.CORDON) confirmingCordon = true else onMenu(entry)
+                            },
+                            onPower = { action ->
+                                menuOpen = false
+                                confirming = action
+                            },
+                            onDismiss = { menuOpen = false },
+                        )
                     }
                 },
             )

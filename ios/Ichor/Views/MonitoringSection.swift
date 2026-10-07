@@ -5,6 +5,7 @@ struct MonitoringSection: View {
     @State private var enabled = BackgroundMonitor.alertsEnabled
     @State private var dataWatched = BackgroundMonitor.dataServicesWatched
     @State private var gitopsWatched = BackgroundMonitor.gitopsWatched
+    @State private var checkupWatched = BackgroundMonitor.checkupWatched
     @State private var message: String?
 
     var body: some View {
@@ -31,6 +32,19 @@ struct MonitoringSection: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Watch GitOps apps")
                     Text("Argo CD and Flux apps that break or fail to sync; each check reads them through the Kubernetes API.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
+            // Opt-in too: the checkup lists every pod and asks each kubelet at every check.
+            Toggle(isOn: Binding(get: { checkupWatched }, set: { on in
+                BackgroundMonitor.checkupWatched = on
+                checkupWatched = on
+            })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: CheckupText.monitorCheckup)
+                    Text(verbatim: CheckupText.monitorCheckupDesc)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

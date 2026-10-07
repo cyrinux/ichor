@@ -51,6 +51,12 @@ struct PodLogsSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
                 ToolbarItemGroup(placement: .primaryAction) {
+                    // Why it does not start, when there is no log yet.
+                    NavigationLink {
+                        KubeEventsPage(namespace: pod.namespace, kind: "Pod", name: pod.name)
+                    } label: {
+                        Image(systemName: "bell.badge").accessibilityLabel(Text(verbatim: CheckupText.kubeEventsTitle))
+                    }
                     if case .loaded(let text, _, _) = state, !text.isEmpty {
                         Menu {
                             Button { copy(text) } label: { Label("Copy", systemImage: "doc.on.doc") }
