@@ -79,6 +79,7 @@ import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.pageContent
 
 /** Release suggestions shown as chips; any other version can be typed. */
 private const val MAX_RELEASE_CHIPS = 8
@@ -212,7 +213,7 @@ fun UpgradeScreen(
             )
         },
     ) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize()) {
+        Box(Modifier.pageContent(padding).fillMaxSize()) {
             if (following != null) {
                 UpgradeProgress(
                     following,

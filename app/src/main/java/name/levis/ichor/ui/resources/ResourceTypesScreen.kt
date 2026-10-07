@@ -53,6 +53,7 @@ import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.components.rememberNodeFeatures
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.components.pageContent
 
 class ResourceTypesViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<List<ResourceType>>() {
     override fun cached(): TalosRepository.Timed<List<ResourceType>>? = talos.cached(resourceTypesKey(node))
@@ -88,8 +89,8 @@ fun ResourceTypesScreen(
             )
         },
     ) { padding ->
-        FeatureGate(support, Modifier.padding(padding)) {
-            Column(Modifier.padding(padding).fillMaxSize()) {
+        FeatureGate(support, Modifier.pageContent(padding)) {
+            Column(Modifier.pageContent(padding).fillMaxSize()) {
                 SearchField(query, { query = it }, stringResource(R.string.resources_search_types), Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
                 Loaded(state, vm::refresh) { TypeList(it, query, onType) }
             }

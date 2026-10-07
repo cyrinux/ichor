@@ -46,6 +46,7 @@ import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.uiText
+import name.levis.ichor.ui.components.pageContent
 
 class MaintenancePlanViewModel(private val maintenances: MaintenanceManager, private val node: String) : LoadingViewModel<MaintenancePlan>() {
     override suspend fun fetch() = maintenances.plan(node)
@@ -121,7 +122,7 @@ fun MaintenanceScreen(
             )
         },
     ) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize()) {
+        Box(Modifier.pageContent(padding).fillMaxSize()) {
             if (following != null) {
                 MaintenanceRunView(
                     following,

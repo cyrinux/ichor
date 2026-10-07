@@ -65,6 +65,7 @@ import name.levis.ichor.ui.imagescan.AppScanUi
 import name.levis.ichor.ui.imagescan.ImageScanReportOpen
 import name.levis.ichor.ui.imagescan.ImageScanViewModel
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.pageContent
 
 /**
  * Every app running in the cluster as a grid of icons, with search and filters; tapping one
@@ -171,7 +172,7 @@ fun AppsScreen(
             )
         },
     ) { padding ->
-        Loaded(state, vm::refresh, Modifier.padding(padding)) { data ->
+        Loaded(state, vm::refresh, Modifier.pageContent(padding)) { data ->
             AppsGrid(data, onOpen = { selected = it.id }, argoBadges = argoBadges, attention = attention)
             data.apps.firstOrNull { it.id == selected }?.let { detail ->
                 if (canRestart) {

@@ -2446,6 +2446,8 @@ talosctl --talosconfig talosconfig-phone config node &lt;node-1&gt; &lt;node-2&g
               <h3>Import the config</h3>
               <p>Pick the file, paste it, or scan it as a QR code:</p>
               <pre><code>qrencode -t ansiutf8 -r talosconfig-phone</code></pre>
+              <p>Too large for one QR code? Compress it, the app expands it:</p>
+              <pre><code>gzip -9 &lt; talosconfig-phone | qrencode -8 -t ansiutf8</code></pre>
             </li>
           </ol>
 

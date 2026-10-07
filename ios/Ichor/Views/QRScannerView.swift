@@ -1,8 +1,11 @@
+import CoreImage
+import Ichorgo
 import SwiftUI
 import VisionKit
 
 /// Live QR scanner (VisionKit). Generate a code on the desktop with
-/// `qrencode -r ~/.talos/config -o talosconfig.png` (or `just qr`).
+/// `qrencode -r ~/.talos/config -o talosconfig.png` (or `just qr`); a large config fits as
+/// raw gzip: `gzip -9 < config | qrencode -8 -t ansiutf8`.
 struct QRScannerView: View {
     let onScanned: (String) -> Void
 
@@ -55,13 +58,24 @@ private struct Scanner: UIViewControllerRepresentable {
         func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
             guard !delivered else { return }
             for item in addedItems {
-                if case .barcode(let barcode) = item, let payload = barcode.payloadStringValue {
+                if case .barcode(let barcode) = item, let payload = Self.text(of: barcode), !payload.isEmpty {
                     delivered = true
                     dataScanner.stopScanning()
                     onScanned(payload)
                     return
                 }
             }
+        }
+
+        /// The decoded text, or for a binary (gzip) code, which the decoded text mangles,
+        /// its "ichor-config:" form read off the symbol's codewords.
+        private static func text(of barcode: RecognizedItem.Barcode) -> String? {
+            guard let qr = barcode.observation.barcodeDescriptor as? CIQRCodeDescriptor else {
+                return barcode.payloadStringValue
+            }
+            var error: NSError?
+            let text = IchorgoQRCodeText(barcode.payloadStringValue ?? "", qr.errorCorrectedPayload, qr.symbolVersion, &error)
+            return error == nil ? text : barcode.payloadStringValue
         }
     }
 }

@@ -14,6 +14,7 @@ import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import name.levis.ichor.R
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.pageContent
 
 /** Third-party components and their licenses, generated at build time by the AboutLibraries plugin. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,6 +29,6 @@ fun LicensesScreen(onBack: () -> Unit) {
             )
         },
     ) { padding ->
-        LibrariesContainer(libraries, Modifier.padding(padding).fillMaxSize())
+        LibrariesContainer(libraries, Modifier.pageContent(padding).fillMaxSize())
     }
 }

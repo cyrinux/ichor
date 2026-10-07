@@ -59,6 +59,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.components.SwipeTabPager
 import name.levis.ichor.ui.components.TWO_TABS
+import name.levis.ichor.ui.components.pageContent
 
 class NetworkViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<NodeNetwork>() {
     override val keepsDataOnFailure = true
@@ -85,7 +86,7 @@ fun NetworkScreen(node: String, hostname: String, onBack: () -> Unit) {
             )
         },
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
+        Column(Modifier.pageContent(padding).fillMaxSize()) {
             PrimaryTabRow(selectedTabIndex = tab) {
                 AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.network_tab_interfaces)) })
                 AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.network_tab_connections)) })

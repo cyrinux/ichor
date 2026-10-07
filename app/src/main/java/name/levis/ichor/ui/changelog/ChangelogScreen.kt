@@ -40,6 +40,7 @@ import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.InfoBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.components.pageContent
 
 class ChangelogViewModel(private val changelog: ChangelogRepository) : LoadingViewModel<Changelog>() {
     override suspend fun fetch() = changelog.bundled()
@@ -65,11 +66,11 @@ fun ChangelogScreen(
     ) { padding ->
         val releases = (state as? UiState.Loaded)?.data?.releases
         when {
-            state == UiState.Loading -> LoadingBox(Modifier.padding(padding))
+            state == UiState.Loading -> LoadingBox(Modifier.pageContent(padding))
             // Missing or corrupt asset: nothing to show, and nothing the user can do about it.
-            releases.isNullOrEmpty() -> InfoBox(stringResource(R.string.changelog_empty), Modifier.padding(padding))
+            releases.isNullOrEmpty() -> InfoBox(stringResource(R.string.changelog_empty), Modifier.pageContent(padding))
             else -> LazyColumn(
-                Modifier.padding(padding).fillMaxSize(),
+                Modifier.pageContent(padding).fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {

@@ -96,6 +96,7 @@ import name.levis.ichor.ui.components.FeatureGate
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.rememberClusterFeatures
 import name.levis.ichor.ui.components.text
+import name.levis.ichor.ui.components.pageContent
 
 sealed interface DefragState {
     data object Idle : DefragState
@@ -242,13 +243,13 @@ fun EtcdScreen(
         },
     ) { padding ->
         when (val s = state) {
-            UiState.Loading -> LoadingBox(Modifier.padding(padding))
-            is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.padding(padding))
-            is UiState.Loaded -> FeatureGate(clusterSupport(clusterFeatures, TalosFeature.ETCD), Modifier.padding(padding)) {
+            UiState.Loading -> LoadingBox(Modifier.pageContent(padding))
+            is UiState.Failed -> ErrorBox(s.message, vm::refresh, Modifier.pageContent(padding))
+            is UiState.Loaded -> FeatureGate(clusterSupport(clusterFeatures, TalosFeature.ETCD), Modifier.pageContent(padding)) {
                 PullToRefreshBox(
                     isRefreshing = s.refreshing,
                     onRefresh = vm::refresh,
-                    modifier = Modifier.padding(padding).fillMaxSize(),
+                    modifier = Modifier.pageContent(padding).fillMaxSize(),
                 ) {
                     EtcdContent(
                         etcd = s.data,
