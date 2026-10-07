@@ -58,3 +58,11 @@ extension ContextSummary {
         }
     }
 }
+
+extension CloudContext {
+    /// The location and owner under a cloud context's cluster name: "EKS · eu-north-1 · account 12…12".
+    var localizedDetail: String {
+        let owner = provider == Self.eks ? String(localized: "account \(shortOwner)") : String(localized: "project \(shortOwner)")
+        return [provider, location, owner].joined(separator: " · ")
+    }
+}

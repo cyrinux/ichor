@@ -3088,4 +3088,6 @@
     <string name="imagescan_operator_failed">Die Berichte des Trivy Operators konnten nicht gelesen werden: %1$s</string>
     <string name="imagescan_not_scanned">Nicht geprüft.</string>
     <string name="imagescan_timed_out">Die Prüfung hat zu lange gedauert und wurde gestoppt.</string>
+    <string name="kube_eks_account">Konto %1$s</string>
+    <string name="kube_gke_project">Projekt %1$s</string>
 </resources>

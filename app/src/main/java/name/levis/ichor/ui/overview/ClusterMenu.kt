@@ -2,10 +2,6 @@ package name.levis.ichor.ui.overview
 
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkMenuItem
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
@@ -22,7 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -31,6 +26,7 @@ import name.levis.ichor.R
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.model.seedOf
+import name.levis.ichor.ui.components.ClusterLogo
 
 /**
  * The overview title's menu, as on iOS: the clusters behind a "Switch cluster" submenu, so
@@ -61,9 +57,7 @@ fun ClusterMenu(
                 val active = context.name == config.activeContext
                 DropdownMenuItem(
                     text = { Text(labels.of(context), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    leadingIcon = {
-                        Box(Modifier.size(10.dp).background(Color(colors.seedOf(context)), CircleShape))
-                    },
+                    leadingIcon = { ClusterLogo(context, Color(colors.seedOf(context)), selected = false, size = 24.dp) },
                     trailingIcon = if (active) {
                         { Icon(Icons.Outlined.Check, contentDescription = null) }
                     } else {
