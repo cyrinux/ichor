@@ -43,6 +43,8 @@ fun ManageClustersSheet(
     val scope = rememberCoroutineScope()
     var account by remember { mutableStateOf<ContextSummary?>(null) }
     var signingIn by remember { mutableStateOf<String?>(null) }
+    // Removals still writing the stored config: their rows show a spinner until they are gone.
+    var removingNames by remember { mutableStateOf(emptySet<String>()) }
     // Which kubeconfig clusters wait for a sign-in: read from what is stored, no network.
     val signInNeeded by produceState(emptySet<String>(), config.kubeYaml, invalidations) {
         value = config.summary.contexts.filter { it.isKube && it.signIn.isNotEmpty() }
@@ -67,11 +69,13 @@ fun ManageClustersSheet(
             onAddCluster()
         },
         onRemove = { name ->
+            removingNames = removingNames + name
             scope.launch {
                 runCatching { app.removeCluster(name) }.fold(
                     onSuccess = { remains -> if (!remains) onClustersCleared() },
                     onFailure = { Toast.makeText(context, it.userMessage(), Toast.LENGTH_LONG).show() },
                 )
+                removingNames = removingNames - name
             }
         },
         onDismiss = onClose,
@@ -83,6 +87,7 @@ fun ManageClustersSheet(
         },
         signInNeeded = signInNeeded,
         onAccount = { account = it },
+        removingNames = removingNames,
     )
 
     account?.let { cluster ->
