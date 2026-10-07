@@ -23,6 +23,7 @@ Every idea was checked against the code (Go core, Android, iOS) on 2026-10-04. S
 | D9 | Argo CD freeze (deny sync window per app / namespace / project, windows screen) | **implemented** (Go, Android, iOS) | [09-argocd-freeze.md](devops/09-argocd-freeze.md) | M |
 | D10 | Cluster checkup: the blind spots on one screen (workload failures, Kubernetes events, PVC fill, deprecated APIs, dead webhooks, capacity, LoadBalancer addresses, stuck Terminating, pending CSRs, External Secrets, Helm releases), checkup alerts, Talos rollback | **implemented** (Go, Android, iOS) | [10-cluster-checkup.md](devops/10-cluster-checkup.md) | L |
 | D11 | Helm rollback: a bare release back to an earlier revision, as `helm rollback` does, with a dry-run plan; a Flux-managed release suspended first | **implemented** (Go, Android, iOS) | [11-helm.md](devops/11-helm.md) | M |
+| D12 | Image vulnerability scan on demand (self-cleaning Trivy Job or Trivy Operator reports), exported as SARIF / CycloneDX / HTML / CSV | **partial**: Go core (`imagescan*.go`); Android and iOS screens remain | [12-image-scan.md](devops/12-image-scan.md) | M |
 
 ## Sysadmin: keep the platform alive
 

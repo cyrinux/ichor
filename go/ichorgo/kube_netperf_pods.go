@@ -193,11 +193,42 @@ func netPerfPodSpec(name, node string, hostNetwork bool, deadline time.Duration,
 		name, node, hostNetwork, deadline, command...)
 }
 
-// runPodImage is what a run's pods are: their app label, image and container name.
-type runPodImage struct{ app, image, container string }
+// runPodImage is what a run's pods are: their app label, image and container name, and
+// what a run needs beyond the restricted defaults (the image scan's credentials and space).
+type runPodImage struct {
+	app, image, container string
+
+	env       []map[string]string
+	mounts    []map[string]any // besides /tmp
+	volumes   []map[string]any
+	resources map[string]any
+}
 
 // runPodSpec is netPerfPodSpec for any run's pods.
 func runPodSpec(img runPodImage, name, node string, hostNetwork bool, deadline time.Duration, command ...string) map[string]any {
+	container := map[string]any{
+		"name":            img.container,
+		"image":           img.image,
+		"imagePullPolicy": "IfNotPresent",
+		"command":         command,
+		"securityContext": map[string]any{
+			"allowPrivilegeEscalation": false,
+			"readOnlyRootFilesystem":   true,
+			"capabilities":             map[string]any{"drop": []string{"ALL"}},
+		},
+		// netserver's child for each test opens a debug file in /tmp, and exits
+		// (the client sees a connection reset) when it cannot.
+		"volumeMounts": append([]map[string]any{{"name": "tmp", "mountPath": "/tmp"}}, img.mounts...),
+	}
+
+	if len(img.env) > 0 {
+		container["env"] = img.env
+	}
+
+	if img.resources != nil {
+		container["resources"] = img.resources
+	}
+
 	return map[string]any{
 		"apiVersion": "v1",
 		"kind":       "Pod",
@@ -218,23 +249,11 @@ func runPodSpec(img runPodImage, name, node string, hostNetwork bool, deadline t
 				"runAsNonRoot":   true,
 				"runAsUser":      65534,
 				"runAsGroup":     65534,
+				"fsGroup":        65534,
 				"seccompProfile": map[string]string{"type": "RuntimeDefault"},
 			},
-			"containers": []map[string]any{{
-				"name":            img.container,
-				"image":           img.image,
-				"imagePullPolicy": "IfNotPresent",
-				"command":         command,
-				"securityContext": map[string]any{
-					"allowPrivilegeEscalation": false,
-					"readOnlyRootFilesystem":   true,
-					"capabilities":             map[string]any{"drop": []string{"ALL"}},
-				},
-				// netserver's child for each test opens a debug file in /tmp, and exits
-				// (the client sees a connection reset) when it cannot.
-				"volumeMounts": []map[string]string{{"name": "tmp", "mountPath": "/tmp"}},
-			}},
-			"volumes": []map[string]any{{"name": "tmp", "emptyDir": map[string]string{"sizeLimit": "16Mi"}}},
+			"containers": []map[string]any{container},
+			"volumes":    append([]map[string]any{{"name": "tmp", "emptyDir": map[string]string{"sizeLimit": "16Mi"}}}, img.volumes...),
 		},
 	}
 }
