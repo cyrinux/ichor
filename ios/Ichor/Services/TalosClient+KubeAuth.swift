@@ -28,20 +28,23 @@ extension TalosClient {
     /// The address set for the Talos cluster does not apply to a linked kubeconfig.
     var kubeAPIServer: String { kubeLink == nil ? kubeServer : "" }
 
-    /// How `context` signs in; nil for static credentials.
-    static func signInInfo(kube: String, context: String) async throws -> KubeSignInInfo? {
-        let json = try await run { IchorgoKubeSignInInfo(kube, context, $0) }
+    /// How `context` signs in; nil for static credentials. `talos`: `kube` is the stored
+    /// talosconfig and `context` an Omni context of it (the same goes for the calls below).
+    static func signInInfo(kube: String, context: String, talos: Bool = false) async throws -> KubeSignInInfo? {
+        let json = try await run { talos ? IchorgoTalosSignInInfo(kube, context, $0) : IchorgoKubeSignInInfo(kube, context, $0) }
         return try KubeSignInInfo.decode(json)
     }
 
     /// Signs `context` in with what the user entered (`secrets`: field → value JSON). An EKS
     /// IAM Identity Center sign-in throws kube-sign-in-required: then start the interactive one.
-    static func setCredentials(kube: String, context: String, secrets: String) async throws {
-        try await run { error -> Void in _ = IchorgoKubeSetCredentials(kube, context, secrets, error) }
+    static func setCredentials(kube: String, context: String, secrets: String, talos: Bool = false) async throws {
+        try await run { error -> Void in
+            _ = talos ? IchorgoTalosSetCredentials(kube, context, secrets, error) : IchorgoKubeSetCredentials(kube, context, secrets, error)
+        }
     }
 
-    static func signOut(kube: String, context: String) async throws {
-        try await run { error -> Void in _ = IchorgoKubeSignOut(kube, context, error) }
+    static func signOut(kube: String, context: String, talos: Bool = false) async throws {
+        try await run { error -> Void in _ = talos ? IchorgoTalosSignOut(kube, context, error) : IchorgoKubeSignOut(kube, context, error) }
     }
 
     /// A stored auth state as a backup keeps it (no session); "" when nothing is left.
@@ -64,7 +67,7 @@ extension TalosClient {
 
     /// Starts the browser or device-code sign-in of `context`. The stream finishes after
     /// `done`; `complete` hands over a callback URL the app received, `cancel` stops waiting.
-    static func startSignIn(kube: String, context: String)
+    static func startSignIn(kube: String, context: String, talos: Bool = false)
         -> (events: AsyncStream<KubeSignInEvent>, complete: @Sendable (String) -> Void, cancel: @Sendable () -> Void) {
         let (stream, continuation) = AsyncStream.makeStream(of: KubeSignInEvent.self)
         let bridge = SignInBridge(
@@ -74,7 +77,7 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartKubeSignIn(kube, context, bridge)
+        let run = talos ? IchorgoStartTalosSignIn(kube, context, bridge) : IchorgoStartKubeSignIn(kube, context, bridge)
         continuation.onTermination = { _ in
             run?.cancel()
             _ = bridge // keep the listener alive for the whole sign-in

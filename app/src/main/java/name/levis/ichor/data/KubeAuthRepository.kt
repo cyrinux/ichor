@@ -9,6 +9,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import name.levis.ichor.model.KubeSignInInfo
+import name.levis.ichor.model.isKube
 import name.levis.ichor.model.SignInPrompt
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.SignInListener
@@ -21,16 +22,17 @@ sealed interface SignInEvent {
 }
 
 /**
- * Signs the stored kubeconfig clusters in (OIDC, EKS, GKE, AKS, DigitalOcean, Rancher) and
+ * Signs the stored kubeconfig clusters in (OIDC, EKS, GKE, AKS, DigitalOcean, Rancher), and the
+ * talosconfig clusters managed by Sidero Omni (browser or service account key), and
  * finds clusters in a cloud account, through the Go core. What a sign-in keeps goes to the
  * [KubeAuthStore] the app registered. Only screens the user opened call this: background
  * checks and widgets never start a sign-in, their calls just fail with "sign-in required".
  */
 class KubeAuthRepository(private val configs: ConfigRepository) {
 
-    /** How the stored kubeconfig cluster [context] signs in; null for static credentials. */
+    /** How the stored cluster [context] signs in; null for static credentials (or a Talos certificate). */
     suspend fun info(context: String): KubeSignInInfo? = withContext(Dispatchers.IO) {
-        val json = Ichorgo.kubeSignInInfo(kubeYaml(), context)
+        val json = if (isTalos(context)) Ichorgo.talosSignInInfo(talosYaml(), context) else Ichorgo.kubeSignInInfo(kubeYaml(), context)
         json.takeIf { it.isNotBlank() }?.let { TalosJson.decodeFromString(KubeSignInInfo.serializer(), it) }
     }
 
@@ -40,31 +42,38 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
      * method goes on in the browser (EKS with IAM Identity Center).
      */
     suspend fun setCredentials(context: String, secrets: Map<String, String>) = withContext(Dispatchers.IO) {
-        Ichorgo.kubeSetCredentials(kubeYaml(), context, encodeSecrets(secrets))
+        if (isTalos(context)) {
+            Ichorgo.talosSetCredentials(talosYaml(), context, encodeSecrets(secrets))
+        } else {
+            Ichorgo.kubeSetCredentials(kubeYaml(), context, encodeSecrets(secrets))
+        }
     }
 
     /** Signs [context] in in the browser or with a device code; cancelling the collector stops it. */
     fun signIn(context: String): Flow<SignInEvent> = callbackFlow {
-        val run = Ichorgo.startKubeSignIn(
-            kubeYaml(),
-            context,
-            object : SignInListener {
-                override fun onPrompt(json: String) {
-                    runCatching { TalosJson.decodeFromString(SignInPrompt.serializer(), json) }
-                        .onSuccess { trySend(SignInEvent.Prompt(it)) }
-                }
+        val listener = object : SignInListener {
+            override fun onPrompt(json: String) {
+                runCatching { TalosJson.decodeFromString(SignInPrompt.serializer(), json) }
+                    .onSuccess { trySend(SignInEvent.Prompt(it)) }
+            }
 
-                override fun onDone(errMessage: String) {
-                    trySend(SignInEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
-                    close()
-                }
-            },
-        )
+            override fun onDone(errMessage: String) {
+                trySend(SignInEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                close()
+            }
+        }
+        val run = if (isTalos(context)) {
+            Ichorgo.startTalosSignIn(talosYaml(), context, listener)
+        } else {
+            Ichorgo.startKubeSignIn(kubeYaml(), context, listener)
+        }
         awaitClose { run.cancel() }
     }
 
     /** Forgets [context]'s sign-in (its tokens and the secrets entered). */
-    suspend fun signOut(context: String) = withContext(Dispatchers.IO) { Ichorgo.kubeSignOut(kubeYaml(), context) }
+    suspend fun signOut(context: String) = withContext(Dispatchers.IO) {
+        if (isTalos(context)) Ichorgo.talosSignOut(talosYaml(), context) else Ichorgo.kubeSignOut(kubeYaml(), context)
+    }
 
     /** The fields each cloud's discovery asks for, by provider id. */
     suspend fun discoveryFields(): Map<String, List<String>> = withContext(Dispatchers.IO) {
@@ -87,6 +96,12 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
             runCatching { setCredentials(name, secrets) }
         }
     }
+
+    /** Whether [context] is a talosconfig context (Omni signs those in); names are unique across both configs. */
+    private fun isTalos(context: String): Boolean =
+        configs.config.value?.summary?.contexts?.any { it.name == context && !it.isKube } == true
+
+    private fun talosYaml(): String = configs.config.value?.talosYaml?.takeIf { it.isNotBlank() } ?: throw NoConfigException()
 
     private fun kubeYaml(): String = configs.config.value?.kubeYaml?.takeIf { it.isNotBlank() } ?: throw NoConfigException()
 

@@ -82,6 +82,11 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     /// The method the app signs this kubeconfig context in with (oidc, eks, gke, azure,
     /// digitalocean, rancher), nil for static credentials (see KubeSignInInfo).
     public let signIn: String?
+    /// A Talos context signed in through Sidero Omni (no certificate): who it signs as, and
+    /// the Omni cluster. `signIn` is then omni or omni-service-account.
+    public let omni: Bool
+    public let identity: String?
+    public let cluster: String?
 
     public var id: String { name }
 
@@ -92,7 +97,7 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
                 endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0,
                 demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,
                 user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil,
-                signIn: String? = nil) {
+                signIn: String? = nil, omni: Bool = false, identity: String? = nil, cluster: String? = nil) {
         self.name = name
         self.kind = kind
         self.fingerprint = fingerprint
@@ -110,11 +115,15 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         self.problem = problem
         self.problemDetail = problemDetail
         self.signIn = signIn
+        self.omni = omni
+        self.identity = identity
+        self.cluster = cluster
     }
 
     private enum CodingKeys: String, CodingKey {
         case name, kind, fingerprint, endpoints, nodes, roles, certNotAfter, demo
         case namespace, auth, authDetail, user, insecure, problem, problemDetail, signIn
+        case omni, identity, cluster
         case clusterID = "clusterId"
     }
 
@@ -138,6 +147,9 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         problem = try c.decodeIfPresent(String.self, forKey: .problem)
         problemDetail = try c.decodeIfPresent(String.self, forKey: .problemDetail)
         signIn = try c.decodeIfPresent(String.self, forKey: .signIn).flatMap { $0.isEmpty ? nil : $0 }
+        omni = try c.field(.omni, false)
+        identity = try c.decodeIfPresent(String.self, forKey: .identity)
+        cluster = try c.decodeIfPresent(String.self, forKey: .cluster)
     }
 }
 
@@ -397,6 +409,9 @@ public enum Feature: CaseIterable, Sendable {
         }
     }
 
+    /// What a cluster reached through Omni cannot do: Omni issues its talosconfigs and kubeconfigs.
+    public static let omniUnavailable: Set<Feature> = [.issueConfig, .kubeconfig, .workloads]
+
     /// What a cluster added from a kubeconfig can use: the Kubernetes API, and its kubeconfig.
     public static let kubernetes: Set<Feature> = [.workloads, .kubeconfig]
 
@@ -411,6 +426,8 @@ public extension ContextSummary {
     /// only (its own RBAC answers for them), never a Talos one.
     func allows(_ feature: Feature) -> Bool {
         if isKube { return Feature.kubernetes.contains(feature) }
+        // Omni applies the user's own role to every call; it never lets Talos issue credentials.
+        if omni { return !Feature.omniUnavailable.contains(feature) }
         return roles.contains { feature.roles.contains($0) }
     }
 }

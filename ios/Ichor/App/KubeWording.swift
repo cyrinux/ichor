@@ -15,6 +15,8 @@ extension ContextSummary {
         case "azure": "Azure AKS"
         case "digitalocean": "DigitalOcean"
         case "rancher": "Rancher"
+        case "omni": "Sidero Omni"
+        case "omni-service-account": String(localized: "Omni service account")
         case "exec": String(localized: "Exec plugin")
         case "auth-provider": String(localized: "Auth provider")
         case "basic": String(localized: "Username and password")

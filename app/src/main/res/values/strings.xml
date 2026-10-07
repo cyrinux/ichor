@@ -3090,4 +3090,10 @@
     <string name="imagescan_timed_out">The scan took too long and was stopped.</string>
     <string name="kube_eks_account">account %1$s</string>
     <string name="kube_gke_project">project %1$s</string>
+    <string name="kube_signin_method_omni">Sidero Omni</string>
+    <string name="kube_signin_method_omni_sa">Omni service account</string>
+    <string name="kube_field_omni_service_account_key">Service account key (OMNI_SERVICE_ACCOUNT_KEY)</string>
+    <string name="import_omni_identity">Omni identity</string>
+    <string name="import_omni_cluster">Omni cluster</string>
+    <string name="import_nodes_omni">learned from Omni</string>
 </resources>

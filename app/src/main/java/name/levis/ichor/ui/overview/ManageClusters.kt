@@ -46,8 +46,8 @@ fun ManageClustersSheet(
     // Removals still writing the stored config: their rows show a spinner until they are gone.
     var removingNames by remember { mutableStateOf(emptySet<String>()) }
     // Which kubeconfig clusters wait for a sign-in: read from what is stored, no network.
-    val signInNeeded by produceState(emptySet<String>(), config.kubeYaml, invalidations) {
-        value = config.summary.contexts.filter { it.isKube && it.signIn.isNotEmpty() }
+    val signInNeeded by produceState(emptySet<String>(), config.kubeYaml, config.talosYaml, invalidations) {
+        value = config.summary.contexts.filter { it.signIn.isNotEmpty() }
             .filter { runCatching { app.kubeAuthRepository.info(it.name)?.signedIn == false }.getOrDefault(false) }
             .map { it.name }
             .toSet()
@@ -91,7 +91,7 @@ fun ManageClustersSheet(
     )
 
     account?.let { cluster ->
-        if (cluster.isKube) {
+        if (cluster.isKube || cluster.omni) {
             SignInAccountDialog(
                 cluster = cluster,
                 label = labels.of(cluster),
