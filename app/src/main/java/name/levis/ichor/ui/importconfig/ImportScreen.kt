@@ -67,6 +67,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.daysUntil
 import name.levis.ichor.util.readBounded
 import name.levis.ichor.ui.components.TooltipIconButton
+import name.levis.ichor.ui.components.pageContent
 
 // As the Go core's limit on a decoded "ichor-config:" payload, and iOS.
 internal const val MAX_CONFIG_BYTES = 1 shl 20
@@ -122,7 +123,7 @@ fun ImportScreen(
             )
         },
     ) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize()) {
+        Box(Modifier.pageContent(padding).fillMaxSize()) {
             when (val s = state) {
                 is ImportState.Preview -> PreviewCard(
                     s,

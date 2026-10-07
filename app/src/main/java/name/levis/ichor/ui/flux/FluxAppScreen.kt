@@ -52,6 +52,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
+import name.levis.ichor.ui.components.pageContent
 
 /**
  * One Kustomization or HelmRelease: the hero, its actions (each confirmed), its conditions, the
@@ -97,7 +98,7 @@ fun FluxAppScreen(
             )
         },
     ) { padding ->
-        val modifier = Modifier.padding(padding)
+        val modifier = Modifier.pageContent(padding)
         Loaded(state, vm::refresh, modifier, freshness = true) { data ->
             if (app == null) {
                 EmptyText(stringResource(R.string.flux_app_gone, name))

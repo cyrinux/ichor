@@ -73,6 +73,7 @@ import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.userMessage
+import name.levis.ichor.ui.components.pageContent
 
 /** Connection errors kept on screen, the latest ones. */
 private const val FORWARD_ERRORS_MAX = 20
@@ -174,7 +175,7 @@ fun PortForwardScreen(
         },
     ) { padding ->
         Column(
-            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            Modifier.pageContent(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             InfoNotice(stringResource(R.string.kb_forward_local_only))

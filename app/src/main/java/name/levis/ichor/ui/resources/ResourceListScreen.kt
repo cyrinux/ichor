@@ -51,6 +51,7 @@ import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.util.formatDateTime
+import name.levis.ichor.ui.components.pageContent
 
 /** A resource type of a node, as addressed by the list and detail screens. */
 data class ResourceRef(val node: String, val namespace: String, val type: String, val sensitive: Boolean)
@@ -104,7 +105,7 @@ fun ResourceListScreen(
             )
         },
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
+        Column(Modifier.pageContent(padding).fillMaxSize()) {
             SearchField(query, { query = it }, stringResource(R.string.resources_search_items), Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
             Loaded(state, vm::refresh) { ItemList(it, query, onItem) }
         }

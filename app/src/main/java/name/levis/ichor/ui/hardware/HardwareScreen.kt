@@ -53,6 +53,7 @@ import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
+import name.levis.ichor.ui.components.pageContent
 
 class HardwareViewModel(private val talos: TalosRepository, private val node: String) : LoadingViewModel<NodeHardware>() {
     override val keepsDataOnFailure = true
@@ -87,7 +88,7 @@ fun HardwareScreen(
             )
         },
     ) { padding ->
-        Loaded(state, vm::refresh, Modifier.padding(padding)) { data ->
+        Loaded(state, vm::refresh, Modifier.pageContent(padding)) { data ->
             HardwareContent(data)
             
         }

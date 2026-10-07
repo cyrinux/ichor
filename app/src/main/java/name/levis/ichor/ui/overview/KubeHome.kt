@@ -54,6 +54,7 @@ import name.levis.ichor.model.KubeSignInInfo
 import name.levis.ichor.model.SignInNeeded
 import name.levis.ichor.model.signInNeeded
 import androidx.compose.runtime.produceState
+import name.levis.ichor.ui.components.pageContent
 
 class KubeHomeViewModel(val talos: TalosRepository) : LoadingViewModel<KubeNodesOverview>() {
     override val keepsDataOnFailure = true
@@ -170,11 +171,11 @@ fun KubeHomeScreen(
             }
         }
         when (val s = state) {
-            UiState.Loading -> LoadingBox(Modifier.padding(padding))
+            UiState.Loading -> LoadingBox(Modifier.pageContent(padding))
             else -> PullToRefreshBox(
                 isRefreshing = (s as? UiState.Loaded)?.refreshing == true,
                 onRefresh = refresh,
-                modifier = Modifier.padding(padding).fillMaxSize(),
+                modifier = Modifier.pageContent(padding).fillMaxSize(),
             ) {
                 KubeHomeList(
                     cluster = config?.activeSummary,

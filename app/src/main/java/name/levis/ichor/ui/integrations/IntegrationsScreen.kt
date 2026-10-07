@@ -44,6 +44,7 @@ import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.settings.openUrl
+import name.levis.ichor.ui.components.pageContent
 
 /**
  * Request an integration: the operators this cluster runs that Ichor does not show yet
@@ -71,7 +72,7 @@ fun IntegrationsScreen(onBack: () -> Unit) {
             )
         },
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
+        Column(Modifier.pageContent(padding).fillMaxSize()) {
             Loaded(state, vm::refresh) { report -> Report(report, picked, vm) }
         }
     }

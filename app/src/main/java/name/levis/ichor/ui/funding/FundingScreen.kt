@@ -61,6 +61,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
+import name.levis.ichor.ui.components.pageContent
 
 class FundingViewModel(private val roadmap: RoadmapRepository, private val store: FeatureStore) : LoadingViewModel<Roadmap>() {
     override suspend fun fetch(): Roadmap = roadmap.load().also { store.load(it.productIds) }
@@ -92,9 +93,9 @@ fun FundingScreen(
         },
     ) { padding ->
         when (val s = state) {
-            UiState.Loading -> LoadingBox(Modifier.padding(padding))
-            is UiState.Failed -> ErrorBox(s.message, onRetry = { vm.refresh() }, modifier = Modifier.padding(padding))
-            is UiState.Loaded -> FundingList(s.data, store, backed, buy, Modifier.padding(padding))
+            UiState.Loading -> LoadingBox(Modifier.pageContent(padding))
+            is UiState.Failed -> ErrorBox(s.message, onRetry = { vm.refresh() }, modifier = Modifier.pageContent(padding))
+            is UiState.Loaded -> FundingList(s.data, store, backed, buy, Modifier.pageContent(padding))
         }
     }
 }

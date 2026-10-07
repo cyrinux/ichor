@@ -69,6 +69,7 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.formatBytes
 import java.io.File
 import name.levis.ichor.util.formatDateTime
+import name.levis.ichor.ui.components.pageContent
 
 const val SUPPORT_BUNDLE_MIME = "application/zip"
 
@@ -107,7 +108,7 @@ fun SupportBundleScreen(
         },
     ) { padding ->
         LazyColumn(
-            Modifier.padding(padding).fillMaxSize(),
+            Modifier.pageContent(padding).fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

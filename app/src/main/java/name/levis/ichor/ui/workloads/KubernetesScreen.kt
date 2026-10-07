@@ -45,6 +45,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.ActionBarActions
 import name.levis.ichor.ui.components.ActionBarEditor
 import name.levis.ichor.ui.components.SwipeTabPager
+import name.levis.ichor.ui.components.pageContent
 
 /** Workloads, Pods, CronJobs and NetPerf. */
 private val KUBE_TABS = listOf(0, 1, 2, 3)
@@ -164,10 +165,10 @@ fun KubernetesScreen(
         },
     ) { padding ->
         if (customizing) {
-            ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.padding(padding))
+            ActionBarEditor(bar, kubernetesActionLook, app.uiPreferences::setKubernetesBar, Modifier.pageContent(padding))
             return@Scaffold
         }
-        Column(Modifier.padding(padding).fillMaxSize()) {
+        Column(Modifier.pageContent(padding).fillMaxSize()) {
             PrimaryScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {
                 AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.workloads_title)) })
                 AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.pods_title)) })

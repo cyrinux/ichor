@@ -42,6 +42,7 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.KubeServerDialog
 import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.SwipeTabPager
+import name.levis.ichor.ui.components.pageContent
 
 /**
  * Longhorn volumes, Garage clusters and CloudNativePG clusters, one tab per system the cluster
@@ -100,7 +101,7 @@ fun DataServicesScreen(initial: DataServiceKind? = null, onBack: () -> Unit) {
             )
         },
     ) { padding ->
-        val modifier = Modifier.padding(padding)
+        val modifier = Modifier.pageContent(padding)
         Loaded(state, vm::refresh, modifier, freshness = true) { data ->
             val downNodes = remember(data) {
                 app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
