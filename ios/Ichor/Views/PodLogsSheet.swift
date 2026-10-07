@@ -193,18 +193,23 @@ private struct LogText: View {
         } else if lines.isEmpty {
             ContentUnavailableView("No log yet", systemImage: "doc.text")
         } else {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 1) {
-                    ForEach(lines.indices, id: \.self) { index in
-                        Text(verbatim: lines[index])
-                            .font(.caption.monospaced())
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .textSelection(.enabled)
-                    }
+            // A List, not a LazyVStack under .defaultScrollAnchor(.bottom): the stack guesses the
+            // height of the wrapped lines it has not drawn yet, and corrects the offset as they
+            // appear, so scrolling back bounced up and down.
+            ScrollViewReader { proxy in
+                List(lines.indices, id: \.self) { index in
+                    Text(verbatim: lines[index])
+                        .font(.caption.monospaced())
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+                        .listRowInsets(EdgeInsets(top: 0.5, leading: 16, bottom: 0.5, trailing: 16))
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
                 }
-                .padding(.horizontal)
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .onAppear { proxy.scrollTo(lines.count - 1, anchor: .bottom) }
             }
-            .defaultScrollAnchor(.bottom)
         }
     }
 }
