@@ -6,6 +6,8 @@
 **Your Talos cluster, from your phone.** Ichor is a free, open-source Android and iOS app to
 monitor and operate [Talos Linux](https://www.talos.dev) clusters: node health, logs, etcd,
 KubeSpan and live graphs in your pocket, and a notification the moment a node goes down.
+Any other Kubernetes cluster works too, from its kubeconfig: see
+[Kubernetes clusters without Talos](#kubernetes-clusters-without-talos).
 
 Website: <https://cyrinux.github.io/ichor/>
 
@@ -33,7 +35,10 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   with an icon and a title of your choice, see [CronJobs](#cronjobs)); measure the
   network between two nodes (TCP throughput and latency, see [Network test](#network-test));
   open an app in the browser from its sheet, at the hosts of the Ingresses and Gateway API
-  HTTPRoutes whose Services select its pods; or export a kubeconfig to open the cluster in kubenav.
+  HTTPRoutes whose Services select its pods; browse any resource, CRDs included, with the
+  columns `kubectl get` prints, read and edit its YAML (a dry-run diff first; a change made
+  meanwhile is never overwritten), list Helm releases, follow a pod's log and port-forward to
+  it on the phone (127.0.0.1 only); or export a kubeconfig.
 - **Argo CD:** when the cluster runs it, list its Applications with their health and sync state,
   follow a sync wave by wave, and sync (with prune, dry run, selected resources…), refresh,
   terminate a sync, pause or resume auto-sync, or roll back to an earlier deployment. Ichor
@@ -155,6 +160,8 @@ Notes:
   caller's roles, and the Kubernetes checks need an admin kubeconfig. With a lower role, the
   overview and etcd screens give the same node and etcd picture.
 - **Roles combine:** an `os:operator` config can do everything an `os:reader` one can.
+- **Kubernetes access:** see [Kubernetes clusters without Talos](#kubernetes-clusters-without-talos)
+  to use your own kubeconfig identity instead of the admin kubeconfig (no `os:admin` needed).
 - **Kubernetes workloads:** the app asks Talos for an admin kubeconfig and keeps it in memory
   only, for 30 minutes; it is never written to disk. The phone must reach the Kubernetes API
   (port 6443): when the kubeconfig's address (often a VIP or an internal name) does not answer,
@@ -374,6 +381,35 @@ where its color is chosen. Each cluster gets a color of its own, and the app's p
 dark and true black alike) is generated from the color of the cluster on screen, so it is
 always clear which cluster a reboot is about to hit. Background alerts and the widget follow
 the cluster on screen.
+
+### Kubernetes clusters without Talos
+
+A cluster can also be added from a kubeconfig alone, the same ways as a talosconfig (file,
+paste, QR, or "Open with" / the share sheet); the app tells the two apart. The preview lists
+every context with how it signs in, and why one cannot be added (a file path to inline with
+`kubectl config view --flatten --minify`, a proxy, plain HTTP…). These clusters get a
+Kubernetes home (nodes, API server version, who you are signed in as) and every Kubernetes
+screen; the Talos ones are hidden. What they may do is up to their RBAC.
+
+| Kubeconfig user | What the app does |
+|---|---|
+| Client certificate, token (ServiceAccount) | Uses it as is |
+| `kubectl oidc-login` / kubelogin, `auth-provider: oidc` | Signs in in the browser (kubelogin's own `localhost` redirect, so nothing changes on the identity provider) or with a device code; renews the token with the refresh token |
+| `aws eks get-token`, aws-iam-authenticator | IAM Identity Center (device code, like `aws sso login`) or access keys; `--role-arn` through AssumeRole |
+| `gke-gcloud-auth-plugin` | A service account key |
+| Azure `kubelogin` (AKS with Entra ID) | Device code or browser, or a service principal |
+| `doctl … exec-credential` | A DigitalOcean API token (short-lived cluster credentials from it) |
+| `rancher token` | A Rancher API key |
+
+**Add from a cloud account** (on the add screen) lists the clusters of an AWS, Google Cloud,
+Azure, DigitalOcean or Rancher account and adds the ones you pick, signed in with the same
+credentials. A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
+screens (cluster menu → **Kubernetes access**): your own identity and RBAC instead of the
+admin kubeconfig, which also works with an `os:reader` talosconfig.
+
+Sign-in tokens and entered keys are sealed on the device like the configs. Backups keep the
+keys you entered but not the tokens of a sign-in: after a restore, those clusters ask to sign
+in again.
 
 ### Share links
 
