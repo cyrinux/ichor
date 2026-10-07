@@ -134,6 +134,28 @@ public func kubeImportChoices(count: Int, selected: Set<Int>, replacing: Set<Int
     }
 }
 
+/// The two stored configs (the talosconfig, and the kubeconfig of the clusters added without Talos).
+public enum StoredConfigKind: String, CaseIterable, Sendable {
+    case talosconfig, kubeconfig
+}
+
+/// A stored config as the app found it: none stored, read and parsed, or stored but not
+/// readable (not decrypted, or not parsed). Same rule as Android's ConfigUnreadableException.
+public enum StoredConfigStatus: Equatable, Sendable {
+    case absent, loaded, unreadable
+
+    public init(stored: Bool, parsed: Bool) {
+        self = !stored ? .absent : parsed ? .loaded : .unreadable
+    }
+}
+
+/// The stored configs that could not be read, in StoredConfigKind order. While one is listed the
+/// app shows none of them and writes nothing: showing only the other store would let an import,
+/// a removal or a restore overwrite or delete the one it could not read.
+public func unreadableConfigs(_ statuses: [StoredConfigKind: StoredConfigStatus]) -> [StoredConfigKind] {
+    StoredConfigKind.allCases.filter { statuses[$0] == .unreadable }
+}
+
 public extension ConfigSummary {
     /// The positions of the contexts that can be added (no problem): selected at first in an import preview.
     var importableIndices: Set<Int> {

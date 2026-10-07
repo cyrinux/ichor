@@ -45,6 +45,9 @@ final class AppModel {
     /// The two stores parsed apart, to combine again when one of them changes.
     @ObservationIgnored private var talosSummary: ConfigSummary?
     @ObservationIgnored private var kubeSummary: ConfigSummary?
+    /// The stored configs that could not be read at load (decrypted or parsed): the app then
+    /// shows neither and writes nothing until a retry reads them, or the user deletes them.
+    private(set) var unreadable: [StoredConfigKind] = []
     private(set) var loaded = false
     private(set) var lock: AppLockState
 
@@ -316,7 +319,9 @@ final class AppModel {
         WakeOnLanStore.shared.loadIfNeeded()
         let stored = StoredConfigs.load()
         let parsed = await stored.parsed()
-        guard let all = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube) else { return }
+        // Fail closed: one store unreadable shows neither (the other alone could overwrite it).
+        unreadable = parsed.unreadable
+        guard unreadable.isEmpty, let all = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube) else { return }
         apply(talos: parsed.talos == nil ? nil : stored.talos, talosSummary: parsed.talos,
               kube: parsed.kube == nil ? nil : stored.kube, kubeSummary: parsed.kube,
               preferred: all.selectedContext(index: Self.savedContextIndex, name: UserDefaults.standard.string(forKey: Keys.context)))
@@ -328,6 +333,7 @@ final class AppModel {
     /// `replacingSameCluster` (the demo added again) and it is the same cluster (same CA). The
     /// imported config's current context becomes the one shown.
     func save(yaml newYAML: String, replacingSameCluster: Bool = false) async throws {
+        try checkWritable()
         let merged: String
         if yaml != nil || kubeYAML != nil {
             let stored = yaml ?? "", kube = kubeYAML ?? ""
@@ -351,6 +357,7 @@ final class AppModel {
     /// (contexts left out, same cluster replaced; see KubeImportConflicts for the names). The
     /// imported kubeconfig's current context becomes the one shown.
     func saveKube(added: String, choices: [KubeImportChoice]) async throws {
+        try checkWritable()
         let merged = try await TalosClient.mergeKubeconfig(stored: kubeYAML ?? "", talos: yaml ?? "", added: added, choices: choices)
         let parsed = try await TalosClient.parseKubeconfig(merged)
         try SecureConfigStore.save(Data(merged.utf8), item: .kubeconfig)
@@ -361,6 +368,7 @@ final class AppModel {
     /// and shows the context at `activeIndex`. Both are checked before anything is written, and
     /// a failed write puts the previous configs back, so a failure leaves everything as it was.
     func replace(talos newTalos: String?, kube newKube: String?, activeIndex: Int?) async throws {
+        try checkWritable()
         var parsedTalos: ConfigSummary?
         var parsedKube: ConfigSummary?
         if let newTalos { parsedTalos = try await TalosClient.parse(newTalos) }
@@ -381,6 +389,13 @@ final class AppModel {
         apply(talos: newTalos, talosSummary: parsedTalos, kube: newKube, kubeSummary: parsedKube,
               preferred: all.selectedContext(index: activeIndex, name: nil))
         dataGeneration += 1
+    }
+
+    /// Writes are refused while a stored config could not be read (see unreadableConfigs).
+    private func checkWritable() throws {
+        guard unreadable.isEmpty else {
+            throw TalosError(message: String(localized: "A stored config could not be read. Nothing is changed until it can be."))
+        }
     }
 
     /// Stores `text` as `item`, or deletes it when nil.
@@ -405,6 +420,7 @@ final class AppModel {
     /// showing its neighbour if it was the active one. Removing a store's last cluster deletes
     /// that store; removing the very last one deletes everything (clear).
     func removeCluster(_ name: String) async throws {
+        try checkWritable()
         guard let before = summary, let removed = before.contexts.firstIndex(where: { $0.name == name }) else { return }
         guard before.contexts.count > 1 else {
             clear()
@@ -450,6 +466,7 @@ final class AppModel {
     /// single-context talosconfig), keeping the other contexts and the active context. The
     /// result must parse, keep the same contexts and carry exactly the new certificate.
     func renewCredentials(with generated: String) async throws {
+        try checkWritable()
         guard let current = yaml, let before = talosSummary else { throw TalosError(message: String(localized: "No talosconfig is stored.")) }
         let context = activeContext
         let patched = try await TalosClient.replaceContextCredentials(stored: current, generated: generated, context: context)
@@ -467,6 +484,7 @@ final class AppModel {
     /// Adds discovered `nodes` (addresses) to the active context's nodes, keeping the other
     /// contexts; the overview reloads with them.
     func addNodes(_ nodes: [String]) async throws {
+        try checkWritable()
         guard let current = yaml else { throw TalosError(message: String(localized: "No talosconfig is stored.")) }
         let context = activeContext
         let updated = try await TalosClient.addContextNodes(stored: current, context: context, nodes: nodes)
@@ -499,6 +517,7 @@ final class AppModel {
 
     /// Stores an edited config, keeping the context on screen, and reloads the screens.
     private func store(_ updated: String) async throws {
+        try checkWritable()
         let parsed = try await TalosClient.parse(updated)
         try SecureConfigStore.save(Data(updated.utf8))
         let index = summary?.contexts.firstIndex { $0.name == activeContext }
@@ -556,6 +575,7 @@ final class AppModel {
         kubeYAML = nil
         talosSummary = nil
         kubeSummary = nil
+        unreadable = []
         summary = nil
         QuickActions.update(summary: nil, labels: labels)
     }
@@ -616,7 +636,7 @@ final class AppModel {
         let stored = StoredConfigs(talos: yaml, kube: kubeYAML)
         let parsed = await stored.parsed()
         // Both stores parsed before: one that no longer does is kept as it was rather than dropped.
-        guard (yaml == nil) == (parsed.talos == nil), (kubeYAML == nil) == (parsed.kube == nil) else { return }
+        guard parsed.unreadable.isEmpty else { return }
         let index = before.contexts.firstIndex { $0.name == activeContext }
         applyIndex(talos: yaml, talosSummary: parsed.talos, kube: kubeYAML, kubeSummary: parsed.kube, index: index)
     }

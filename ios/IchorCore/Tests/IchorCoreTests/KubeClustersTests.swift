@@ -61,6 +61,16 @@ final class KubeClustersTests: XCTestCase {
         XCTAssertEqual(ConfigSummary.combined(talos: emptyTalos, kube: kube)?.current, "prod")
     }
 
+    func testStoredConfigStatus() {
+        XCTAssertEqual(StoredConfigStatus(stored: false, parsed: false), .absent)
+        XCTAssertEqual(StoredConfigStatus(stored: true, parsed: true), .loaded)
+        XCTAssertEqual(StoredConfigStatus(stored: true, parsed: false), .unreadable)
+
+        XCTAssertEqual(unreadableConfigs([.talosconfig: .loaded, .kubeconfig: .absent]), [])
+        XCTAssertEqual(unreadableConfigs([.talosconfig: .loaded, .kubeconfig: .unreadable]), [.kubeconfig])
+        XCTAssertEqual(unreadableConfigs([.kubeconfig: .unreadable, .talosconfig: .unreadable]), [.talosconfig, .kubeconfig])
+    }
+
     func testImportChoicesSkipAndReplace() throws {
         let choices = kubeImportChoices(count: 4, selected: [1, 2, 3], replacing: [2, 0])
         XCTAssertEqual(choices, [

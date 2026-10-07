@@ -55,6 +55,11 @@ enum SecureConfigStore {
         load(item).flatMap { String(data: $0, encoding: .utf8) }
     }
 
+    /// Whether a sealed `item` is stored, readable or not (the Keychain answers once unlocked).
+    static func isStored(_ item: Item) -> Bool {
+        Keychain.read(item.account) != nil
+    }
+
     /// Deletes `item`; the key goes too once no config is left.
     static func delete(_ item: Item) {
         Keychain.delete(item.account)
