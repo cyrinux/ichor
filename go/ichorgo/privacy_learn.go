@@ -23,6 +23,13 @@ func (m *privacyMask) learnConfig(configYAML string) {
 		return
 	}
 
+	if isKubeconfig(configYAML) {
+		m.learnKubeconfigLocked(configYAML)
+		m.configs[key] = true
+
+		return
+	}
+
 	cfg, err := parseTalosconfig(configYAML)
 	if err != nil {
 		return
@@ -38,6 +45,24 @@ func (m *privacyMask) learnConfig(configYAML string) {
 		ctx := cfg.Contexts[name]
 		for _, target := range slices.Concat(ctx.Endpoints, ctx.Nodes) {
 			m.learnTargetLocked(target)
+		}
+	}
+}
+
+// learnKubeconfigLocked is learnConfig for a kubeconfig: its context names and API servers.
+func (m *privacyMask) learnKubeconfigLocked(configYAML string) {
+	doc, err := loadKubeconfigDoc(configYAML)
+	if err != nil {
+		return
+	}
+
+	names := doc.sortedNames()
+
+	for _, name := range names {
+		m.learnContextLocked(name, names)
+
+		if cluster := clusterOf(doc, name); cluster != nil {
+			m.learnTargetLocked(cluster.Cluster.Server)
 		}
 	}
 }

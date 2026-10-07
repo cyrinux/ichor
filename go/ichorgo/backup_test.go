@@ -152,11 +152,52 @@ func TestBackupValidatesPayload(t *testing.T) {
 		"bad config":    `{"format":1,"talosconfig":"::"}`,
 		"empty config":  `{"format":1,"talosconfig":""}`,
 		"newer payload": `{"format":99,"talosconfig":"x"}`,
+		"no cluster":    `{"format":2,"talosconfig":"","kubeconfig":""}`,
+		"kube in v1":    `{"format":1,"talosconfig":"","kubeconfig":"contexts: [{name: a}]"}`,
+		"bad kube":      `{"format":2,"kubeconfig":"contexts: []"}`,
+		"talos as kube": `{"format":2,"kubeconfig":"context: a\ncontexts: {a: {}}"}`,
 	}
 
 	for name, payload := range cases {
 		if _, err := EncryptBackup(payload, backupTestPassphrase); err == nil {
 			t.Errorf("%s: want an error", name)
+		}
+	}
+}
+
+func TestBackupHoldsKubeconfigClusters(t *testing.T) {
+	kube, err := MergeKubeconfig("", "", singleTokenKubeconfig("https://a.example.org:6443", "t"), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for name, payload := range map[string]map[string]any{
+		"kube only": {"format": 2, "talosconfig": "", "kubeconfig": kube},
+		"both":      {"format": 2, "talosconfig": testConfig(t, time.Now().Add(time.Hour)), "kubeconfig": kube},
+		"talos v2":  {"format": 2, "talosconfig": testConfig(t, time.Now().Add(time.Hour))},
+	} {
+		raw, err := json.Marshal(payload)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		sealed, err := EncryptBackup(string(raw), backupTestPassphrase)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+
+		out, err := DecryptBackup(sealed, backupTestPassphrase)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+
+		var got backupPayload
+		if err := json.Unmarshal([]byte(out), &got); err != nil {
+			t.Fatal(err)
+		}
+
+		if want, _ := payload["kubeconfig"].(string); got.Kubeconfig != want {
+			t.Errorf("%s: kubeconfig not kept", name)
 		}
 	}
 }

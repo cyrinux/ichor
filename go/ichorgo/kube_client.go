@@ -93,6 +93,8 @@ func kubeCode(err error) int {
 
 func isNotFound(err error) bool { return kubeCode(err) == http.StatusNotFound }
 
+func isForbidden(err error) bool { return kubeCode(err) == http.StatusForbidden }
+
 // ignoreNotFound drops a 404: the object is simply absent.
 func ignoreNotFound(err error) error {
 	if isNotFound(err) {
