@@ -173,9 +173,14 @@ class TalosRepository(
         call { cfg, ctx -> TalosJson.decodeFromString(KubeSpanOverview.serializer(), Ichorgo.kubeSpanStatus(cfg, ctx)) }
     }
 
-    /** The cluster map: nodes, KubeSpan links and sites (zones or shared LANs). */
-    suspend fun topology(): ClusterTopology = remember(TOPOLOGY) {
-        call { cfg, ctx -> TalosJson.decodeFromString(ClusterTopology.serializer(), Ichorgo.clusterTopology(cfg, ctx)) }
+    /**
+     * The cluster map: nodes, KubeSpan links and sites (zones or shared LANs). Those that no
+     * longer answer keep their name and site from the last map (see [withLastKnown]).
+     */
+    suspend fun topology(): ClusterTopology = remember(TOPOLOGY) { last ->
+        val fresh = call { cfg, ctx -> TalosJson.decodeFromString(ClusterTopology.serializer(), Ichorgo.clusterTopology(cfg, ctx)) }
+        val previous = last()
+        fresh.withLastKnown(previous?.value, previous?.at ?: 0L)
     }
 
     /** `talosctl -n NODE etcd defrag` (os:operator or os:admin); one member at a time. */

@@ -45,10 +45,12 @@ public struct TopologyNode: Decodable, Equatable, Identifiable, Sendable {
     public let kubespan: Bool
     public let queried: Bool
     public let error: String?
+    /// When an unreachable node last answered (epoch ms), kept by the app: see mergeLastKnown.
+    public let lastSeen: Int64?
 
     public init(id: String, node: String = "", hostname: String = "", role: String = "", addresses: [String] = [],
                 zone: String = "", region: String = "", country: String = "", site: String = "",
-                kubespan: Bool = false, queried: Bool = false, error: String? = nil) {
+                kubespan: Bool = false, queried: Bool = false, error: String? = nil, lastSeen: Int64? = nil) {
         self.id = id
         self.node = node
         self.hostname = hostname
@@ -61,6 +63,7 @@ public struct TopologyNode: Decodable, Equatable, Identifiable, Sendable {
         self.kubespan = kubespan
         self.queried = queried
         self.error = error
+        self.lastSeen = lastSeen
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -81,6 +84,7 @@ public struct TopologyNode: Decodable, Equatable, Identifiable, Sendable {
         kubespan = try c.field(.kubespan, false)
         queried = try c.field(.queried, false)
         error = try c.decodeIfPresent(String.self, forKey: .error)
+        lastSeen = nil
     }
 }
 
