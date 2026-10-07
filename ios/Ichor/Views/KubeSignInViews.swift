@@ -100,7 +100,7 @@ struct KubeSignInSection: View {
 
     private func load() async {
         do {
-            info = try await TalosClient.signInInfo(kube: target.kube, context: target.context)
+            info = try await TalosClient.signInInfo(kube: target.kube, context: target.context, talos: target.talos)
             error = nil
         } catch {
             self.error = error.localizedDescription
@@ -109,7 +109,7 @@ struct KubeSignInSection: View {
 
     private func signOut() async {
         do {
-            try await TalosClient.signOut(kube: target.kube, context: target.context)
+            try await TalosClient.signOut(kube: target.kube, context: target.context, talos: target.talos)
             model.reloadKubernetes()
         } catch {
             self.error = error.localizedDescription

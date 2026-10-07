@@ -68,6 +68,26 @@ class KubeAccessTest {
     }
 
     @Test
+    fun omniClusterSignsItselfIn() {
+        val omni = ContextSummary("acme", fingerprint = "o1", omni = true, signIn = "omni", identity = "someone@example.com")
+        val stored = summary.copy(contexts = summary.contexts + omni)
+
+        assertEquals("acme", signInContextFor(StoredConfig("t", "k", stored, "acme")))
+    }
+
+    @Test
+    fun omniClusterAllowsAllButIssuingCredentials() {
+        val omni = ContextSummary("acme", omni = true)
+
+        assertTrue(omni.allows(Feature.POWER))
+        assertTrue(omni.allows(Feature.UPGRADE))
+        assertFalse(omni.allows(Feature.ISSUE_CONFIG))
+        assertFalse(omni.allows(Feature.KUBECONFIG))
+        assertFalse(omni.allows(Feature.WORKLOADS))
+        assertTrue(omni.copy(kubeAccess = "k1").allows(Feature.WORKLOADS))
+    }
+
+    @Test
     fun linkedClusterAllowsKubernetesWithoutAdmin() {
         val reader = withKubeAccess(summary, mapOf("t1" to "k1")).contexts.first()
 

@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -136,13 +137,6 @@ func TestParseConfigErrors(t *testing.T) {
 		"empty":       "",
 		"not yaml":    "{{{",
 		"no contexts": "context: x\ncontexts: {}\n",
-		"no endpoints": `context: a
-contexts:
-  a:
-    ca: Zm9v
-    crt: Zm9v
-    key: Zm9v
-`,
 		"bad cert": `context: a
 contexts:
   a:
@@ -159,6 +153,45 @@ contexts:
 				t.Fatal("expected error")
 			}
 		})
+	}
+}
+
+// A talosconfig generated before the cluster had addresses (talosctl gen secrets/config
+// without --endpoints) lists none: it imports, and the app then asks for one.
+func TestParseConfigWithoutEndpoints(t *testing.T) {
+	ca, crt, key := testIdentity(t, time.Now().Add(time.Hour))
+	cfg := fmt.Sprintf("context: lab\ncontexts:\n    lab:\n        endpoints: []\n        ca: %s\n        crt: %s\n        key: %s\n", ca, crt, key)
+
+	out, err := ParseConfig(cfg)
+	if err != nil {
+		t.Fatalf("ParseConfig: %v", err)
+	}
+
+	var got configSummary
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatal(err)
+	}
+
+	if len(got.Contexts) != 1 || len(got.Contexts[0].Endpoints) != 0 || len(got.Contexts[0].Nodes) != 0 {
+		t.Fatalf("contexts = %+v", got.Contexts)
+	}
+
+	if _, err := openSession(cfg, "lab"); !errors.Is(err, errNoEndpoints) {
+		t.Errorf("openSession err = %v, want errNoEndpoints", err)
+	}
+
+	added, err := AddContextEndpoint(cfg, "lab", "10.0.0.5")
+	if err != nil {
+		t.Fatalf("AddContextEndpoint: %v", err)
+	}
+
+	_, ctx, err := resolveContext(added, "lab")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if strings.Join(ctx.Endpoints, ",") != "10.0.0.5" || strings.Join(ctx.Nodes, ",") != "10.0.0.5" {
+		t.Errorf("after adding: endpoints %v, nodes %v", ctx.Endpoints, ctx.Nodes)
 	}
 }
 

@@ -90,7 +90,7 @@ func runEvents(ctx context.Context, configYAML, contextName, nodes string, tail 
 			}
 		}
 	}
-	s, release, err := sessions.acquire(configYAML, contextName)
+	s, release, err := acquireSession(configYAML, contextName)
 	if err != nil {
 		return err.Error()
 	}

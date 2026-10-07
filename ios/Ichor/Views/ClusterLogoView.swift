@@ -9,20 +9,13 @@ struct ClusterLogoView: View {
     let selected: Bool
     var size: CGFloat = 32
 
-    @Environment(\.colorScheme) private var scheme
-
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             Circle()
                 .strokeBorder(color, lineWidth: 2)
                 .overlay {
-                    if let logo = BundledAppIcons.image(clusterLogo(context), dark: scheme == .dark) {
-                        Image(uiImage: logo)
-                            .resizable()
-                            .interpolation(.high)
-                            .scaledToFit()
-                            .padding(size * 0.2)
-                    }
+                    BundledLogo(name: clusterLogo(context))
+                        .padding(size * 0.2)
                 }
                 .frame(width: size, height: size)
             if selected {
@@ -36,5 +29,21 @@ struct ClusterLogoView: View {
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)
+    }
+}
+
+/// A bundled logo (appicons) by name, in its dark variant in dark mode.
+struct BundledLogo: View {
+    let name: String
+
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        if let logo = BundledAppIcons.image(name, dark: scheme == .dark) {
+            Image(uiImage: logo)
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+        }
     }
 }

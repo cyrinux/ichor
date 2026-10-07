@@ -1327,6 +1327,8 @@
     <string name="endpoint_scan_added_to">Hinzugefügt zu %1$s</string>
     <string name="endpoint_scan_discovery_hint">Nur Nodes, die die Zugangsdaten des Clusters akzeptieren, werden hinzugefügt. Sobald der Cluster antwortet, bietet die Übersicht an, seine anderen Nodes hinzuzufügen.</string>
     <string name="endpoints_edit">Endpoints bearbeiten</string>
+    <string name="no_endpoint_title">Noch kein Endpoint</string>
+    <string name="no_endpoint_body">Diese talosconfig nennt keine Adresse, um den Cluster zu erreichen. Suche seine Nodes in den Netzwerken um das Telefon oder füge die Adresse eines Nodes hinzu.</string>
     <string name="endpoints_title">Endpoints von %1$s</string>
     <string name="endpoints_body">Die Adressen, über die die App die Talos-API erreicht (Port 50000, sofern nicht angegeben, z. B. 192.168.1.10:50001). Teste einen mit den Zugangsdaten des Clusters; einer, der jetzt nicht antwortet, kann trotzdem gespeichert werden, er antwortet vielleicht über ein VPN.</string>
     <string name="endpoints_add_label">Endpoint hinzufügen</string>
@@ -3088,4 +3090,10 @@
     <string name="imagescan_timed_out">Die Prüfung hat zu lange gedauert und wurde gestoppt.</string>
     <string name="kube_eks_account">Konto %1$s</string>
     <string name="kube_gke_project">Projekt %1$s</string>
+    <string name="kube_signin_method_omni">Sidero Omni</string>
+    <string name="kube_signin_method_omni_sa">Omni-Dienstkonto</string>
+    <string name="kube_field_omni_service_account_key">Dienstkonto-Schlüssel (OMNI_SERVICE_ACCOUNT_KEY)</string>
+    <string name="import_omni_identity">Omni-Identität</string>
+    <string name="import_omni_cluster">Omni-Cluster</string>
+    <string name="import_nodes_omni">von Omni ermittelt</string>
 </resources>

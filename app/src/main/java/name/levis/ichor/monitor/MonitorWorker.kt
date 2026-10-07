@@ -6,8 +6,10 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeIsKube
+import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
+import name.levis.ichor.model.needsEndpoint
 import name.levis.ichor.widget.ClusterWidget
 
 /**
@@ -31,8 +33,9 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         }
 
         // The checks start from the Talos overview: a cluster added from a kubeconfig has none,
-        // so it is not checked, and the widget shows no other cluster's nodes for it.
-        if (stored.activeIsKube) {
+        // so it is not checked, and the widget shows no other cluster's nodes for it. Nor has a
+        // Talos cluster without an endpoint yet.
+        if (stored.activeIsKube || stored.activeSummary?.needsEndpoint == true) {
             store.clearSnapshot()
             ClusterWidget().updateAll(applicationContext)
             return Result.success()
