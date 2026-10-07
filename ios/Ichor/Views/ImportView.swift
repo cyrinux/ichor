@@ -103,7 +103,11 @@ struct ImportView: View {
                     ChipFlow(spacing: 8) {
                         ForEach(kubeDiscoverProviders, id: \.self) { provider in
                             Button { discovery = DiscoveryStart(provider: provider) } label: {
-                                Label(KubeAuthWording.providerLabel(provider), systemImage: "cloud")
+                                Label {
+                                    Text(verbatim: KubeAuthWording.providerLabel(provider))
+                                } icon: {
+                                    BundledLogo(name: discoveryLogo(provider)).frame(width: 18, height: 18)
+                                }
                             }
                             .buttonStyle(.bordered)
                         }
