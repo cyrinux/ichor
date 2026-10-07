@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"slices"
 	"strings"
@@ -44,20 +45,30 @@ func isOmniServiceAccount(identity string) bool {
 	return strings.HasSuffix(strings.ToLower(identity), serviceAccountDomain)
 }
 
-// omniHost is the Omni instance of ctx: the host of its endpoint, an https URL.
+// omniHost is the Omni instance of ctx: the host of its endpoint (an https URL), lower
+// case, with its port unless the default one. However the URL is written (with or without
+// https://, :443, capitals), the same instance is the same host.
 func omniHost(ctx *clientconfig.Context) string {
 	if len(ctx.Endpoints) == 0 {
 		return ""
 	}
 
 	endpoint := strings.TrimSpace(ctx.Endpoints[0])
-	if strings.Contains(endpoint, "://") {
-		if u, err := url.Parse(endpoint); err == nil {
-			return strings.ToLower(u.Host)
-		}
+	if !strings.Contains(endpoint, "://") {
+		endpoint = "https://" + endpoint
 	}
 
-	return strings.ToLower(endpoint)
+	u, err := url.Parse(endpoint)
+	if err != nil || u.Hostname() == "" {
+		return strings.ToLower(strings.TrimSpace(ctx.Endpoints[0]))
+	}
+
+	host := strings.ToLower(u.Hostname())
+	if port := u.Port(); port != "" && port != "443" {
+		return net.JoinHostPort(host, port)
+	}
+
+	return host
 }
 
 // omniClusterKey identifies an Omni cluster: its instance and its name there. Not its CA:
@@ -89,6 +100,7 @@ func summarizeOmniContext(name string, ctx *clientconfig.Context) (contextSummar
 		Identity:    omniIdentity(ctx),
 		Cluster:     ctx.Cluster,
 		SignIn:      omniMethodName(ctx),
+		AuthKey:     omniAuthKey(ctx),
 	}, nil
 }
 

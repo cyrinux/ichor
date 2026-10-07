@@ -30,6 +30,8 @@ data class ContextSummary(
     val omni: Boolean = false,
     val identity: String = "",
     val cluster: String = "",
+    /** Where an Omni context's sign-in is kept (shared by an identity's clusters on one instance). */
+    val authKey: String = "",
     /** [KIND_TALOS] (a talosconfig context) or [KIND_KUBE] (added from a kubeconfig, no Talos API). */
     val kind: String = KIND_TALOS,
     // Kubeconfig contexts only (ParseKubeconfig): what the import preview and the home show.

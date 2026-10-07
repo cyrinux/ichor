@@ -87,6 +87,9 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     public let omni: Bool
     public let identity: String?
     public let cluster: String?
+    /// Where an Omni context's sign-in is kept (shared by an identity's clusters on one
+    /// instance): kept and backed up with the cluster, see signInKeys.
+    public let authKey: String?
 
     public var id: String { name }
 
@@ -97,7 +100,7 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
                 endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0,
                 demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,
                 user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil,
-                signIn: String? = nil, omni: Bool = false, identity: String? = nil, cluster: String? = nil) {
+                signIn: String? = nil, omni: Bool = false, identity: String? = nil, cluster: String? = nil, authKey: String? = nil) {
         self.name = name
         self.kind = kind
         self.fingerprint = fingerprint
@@ -118,12 +121,13 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         self.omni = omni
         self.identity = identity
         self.cluster = cluster
+        self.authKey = authKey
     }
 
     private enum CodingKeys: String, CodingKey {
         case name, kind, fingerprint, endpoints, nodes, roles, certNotAfter, demo
         case namespace, auth, authDetail, user, insecure, problem, problemDetail, signIn
-        case omni, identity, cluster
+        case omni, identity, cluster, authKey
         case clusterID = "clusterId"
     }
 
@@ -150,7 +154,19 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         omni = try c.field(.omni, false)
         identity = try c.decodeIfPresent(String.self, forKey: .identity)
         cluster = try c.decodeIfPresent(String.self, forKey: .cluster)
+        authKey = try c.decodeIfPresent(String.self, forKey: .authKey).flatMap { $0.isEmpty ? nil : $0 }
     }
+}
+
+/// The keys of the sign-ins `contexts` keep in the auth store: a kubeconfig cluster's
+/// fingerprint, an Omni cluster's auth key (one per identity and instance).
+public func signInKeys(_ contexts: [ContextSummary]) -> [String] {
+    var keys: [String] = []
+    for context in contexts {
+        let key = context.isKube ? context.fingerprint : (context.authKey ?? "")
+        if !key.isEmpty && !keys.contains(key) { keys.append(key) }
+    }
+    return keys
 }
 
 /// The kinds of cluster (ContextSummary.kind).

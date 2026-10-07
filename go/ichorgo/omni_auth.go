@@ -220,8 +220,7 @@ func TalosSetCredentials(storedYAML, contextName, secretsJSON string) (err error
 		Secrets: map[string]string{omniServiceAccountField: value},
 		User:    signer.identity,
 	})
-	sessions.forgetAuth(sc.key)
-	kubeClients.forgetConfig(storedYAML, contextName)
+	omniAuthChanged(sc.key)
 
 	return nil
 }
@@ -331,7 +330,7 @@ func signInOmniUser(ctx context.Context, cfgCtx *clientconfig.Context, listener 
 		User:           identity,
 		SessionExpires: expires.Unix(),
 	})
-	sessions.forgetAuth(authKey)
+	omniAuthChanged(authKey)
 
 	return nil
 }
@@ -387,8 +386,7 @@ func TalosSignOut(storedYAML, contextName string) (err error) {
 	}
 
 	kubeAuth.forget(sc.key)
-	sessions.forgetAuth(sc.key)
-	kubeClients.forgetConfig(storedYAML, contextName)
+	omniAuthChanged(sc.key)
 
 	return nil
 }

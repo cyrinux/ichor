@@ -17,7 +17,7 @@ func TestOmniInstancesAreDistinct(t *testing.T) {
 	_, a, _ := resolveContext(omniTalosconfigYAML(testUserIdentity, "https://acme.eu-central-1.omni.example.com", ""), "")
 	_, b, _ := resolveContext(omniTalosconfigYAML(testUserIdentity, "https://other.us-east-1.omni.example.com:443", ""), "")
 
-	if omniHost(a) != "acme.eu-central-1.omni.example.com" || omniHost(b) != "other.us-east-1.omni.example.com:443" {
+	if omniHost(a) != "acme.eu-central-1.omni.example.com" || omniHost(b) != "other.us-east-1.omni.example.com" {
 		t.Fatalf("hosts = %q, %q", omniHost(a), omniHost(b))
 	}
 

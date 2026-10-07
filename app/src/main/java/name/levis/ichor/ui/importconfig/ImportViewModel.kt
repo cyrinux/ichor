@@ -200,6 +200,7 @@ class ImportViewModel(
                     return@launch
                 }
                 onBrowserDone()
+                _state.value = ImportState.Omni(running = true)
                 omniPreview(endpoint, email)
             } catch (e: CancellationException) {
                 throw e

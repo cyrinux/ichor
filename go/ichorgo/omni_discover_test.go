@@ -173,7 +173,7 @@ func TestSetOmniServiceAccount(t *testing.T) {
 	}
 
 	other, _ := testServiceAccountKey(t, time.Hour)
-	if _, err := SetOmniServiceAccount(endpoint, other); !strings.HasPrefix(fmt.Sprint(err), KubeSignInRequired) {
+	if _, err := SetOmniServiceAccount(endpoint, other); fmt.Sprint(err) != "omni refused this service account key" {
 		t.Fatalf("err = %v, want a refused key", err)
 	}
 }

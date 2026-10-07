@@ -30,7 +30,7 @@ enum AppBackup {
                 wakeOnLan: WakeOnLanStore.shared.allTargets,
                 kubeAccess: model.kubeAccess
             ),
-            kubeAuth: backupKubeAuth(fingerprints: model.kubeContexts.map(\.fingerprint))
+            kubeAuth: backupKubeAuth(fingerprints: signInKeys(model.summary?.contexts ?? []))
         )
         let json = try TalosJSON.encode(payload)
         return try await localized { try await TalosClient.encryptBackup(payload: json, passphrase: passphrase) }
@@ -58,7 +58,7 @@ enum AppBackup {
         model.restoreClusterSettings(names: restored.names, colors: restored.colors, kubeServers: kubeServers,
                                      vpnOnly: restored.vpnOnly, kubeAccess: restored.kubeAccess)
         // After the configs: the sign-ins of the kubeconfig clusters restored.
-        KubeAuthStore.shared.restore(restoredKubeAuth(payload, fingerprints: model.kubeContexts.map(\.fingerprint)))
+        KubeAuthStore.shared.restore(restoredKubeAuth(payload, fingerprints: signInKeys(model.summary?.contexts ?? [])))
         WakeOnLanStore.shared.restore(restored.wakeOnLan)
         if let mask = settings?.privacyMask {
             await model.setPrivacyMask(mask, words: settings?.privacyMaskWords ?? "")

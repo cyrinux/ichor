@@ -230,6 +230,27 @@ func (r *authRegistry) source(key string, method signInMethod) *authTokenSource 
 	return s
 }
 
+// forgetPrefix drops the states and tokens of the sources whose key starts with prefix.
+func (r *authRegistry) forgetPrefix(prefix string) {
+	r.mu.Lock()
+
+	var keys []string
+
+	for key := range r.sources {
+		if strings.HasPrefix(key, prefix) {
+			keys = append(keys, key)
+			delete(r.sources, key)
+		}
+	}
+
+	store := r.store
+	r.mu.Unlock()
+
+	for _, key := range keys {
+		store.Save(key, "")
+	}
+}
+
 // forget drops key's state and token: signed out.
 func (r *authRegistry) forget(key string) {
 	r.mu.Lock()

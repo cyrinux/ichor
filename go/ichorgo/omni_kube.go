@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"context"
 	"crypto/sha256"
-	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -30,6 +29,11 @@ const (
 	omniOIDCRedirect = "urn:ietf:wg:oauth:2.0:oob"
 	// omniKubeMethod is the kube sign-in method of an Omni cluster (an Omni sign-in).
 	omniKubeMethod = "omni"
+	// omniKubeSourcePrefix starts the token source keys of Omni clusters (see omniAuthChanged).
+	omniKubeSourcePrefix = "omni-kube\x00"
+	// omniNoKubeGroups: Omni's kube proxy refuses a token without groups, what an identity
+	// with only Omni's Reader role and no access policy gets.
+	omniNoKubeGroups = "omni gives this identity no Kubernetes access: an Omni admin can grant it with an access policy (or the Operator role)"
 )
 
 // omniKubeTokens mints Omni ID tokens for one cluster, signed in as cfgCtx's identity.
@@ -57,18 +61,26 @@ func (m *omniKubeTokens) mint(ctx context.Context, state kubeAuthState) (string,
 	return token, expiry, state, nil
 }
 
-func omniHTTPClient() *http.Client {
+func omniHTTPClient(cfgCtx *clientconfig.Context) (*http.Client, error) {
+	tlsConfig, err := omniTLS(cfgCtx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &http.Client{
 		Timeout:   oidcHTTPTimeout,
-		Transport: &http.Transport{TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: omniTestRoots}, ForceAttemptHTTP2: true},
+		Transport: &http.Transport{TLSClientConfig: tlsConfig, ForceAttemptHTTP2: true},
 		// The authorization request answers with a redirect to Omni's login page: read it.
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
-	}
+	}, nil
 }
 
 // omniOIDCToken is an ID token for cluster's Kubernetes proxy and its expiry.
 func omniOIDCToken(ctx context.Context, cfgCtx *clientconfig.Context, signer omniSigner, issuer, cluster string) (string, time.Time, error) {
-	httpc := omniHTTPClient()
+	httpc, err := omniHTTPClient(cfgCtx)
+	if err != nil {
+		return "", time.Time{}, err
+	}
 
 	var d oidcDiscovery
 	if err := omniGetJSON(ctx, httpc, strings.TrimSuffix(issuer, "/")+"/.well-known/openid-configuration", &d); err != nil || d.AuthorizationEndpoint == "" || d.TokenEndpoint == "" {
@@ -137,12 +149,15 @@ func omniAuthRequest(ctx context.Context, httpc *http.Client, u string) (string,
 	resp.Body.Close() //nolint:errcheck,gosec
 
 	login, err := url.Parse(resp.Header.Get("Location"))
-	if err != nil || resp.StatusCode/100 != 3 || login.Path == "" {
-		return "", fmt.Errorf("Omni OIDC authorization answered %d", resp.StatusCode)
+	if err == nil {
+		// A refusal comes back to the redirect URI (opaque, urn:…?error=…) with its reason.
+		if q, _ := url.ParseQuery(login.RawQuery); q.Get("error") != "" {
+			return "", fmt.Errorf("Omni OIDC authorization: %s %s", q.Get("error"), q.Get("error_description"))
+		}
 	}
 
-	if e := login.Query().Get("error"); e != "" {
-		return "", fmt.Errorf("Omni OIDC authorization: %s %s", e, login.Query().Get("error_description"))
+	if err != nil || resp.StatusCode/100 != 3 || login.Path == "" {
+		return "", fmt.Errorf("Omni OIDC authorization answered %d", resp.StatusCode)
 	}
 
 	return path.Base(login.Path), nil
@@ -219,8 +234,9 @@ func omniExchange(ctx context.Context, httpc *http.Client, endpoint, code, verif
 }
 
 // omniKubeClient opens the Kubernetes API of an Omni session's cluster: Omni's kubeconfig
-// for the server, the app's own tokens for the user.
-func omniKubeClient(ctx context.Context, s *session, server string) (*kubeClient, error) {
+// for the server (its kube proxy: an address set for the cluster does not apply), the app's
+// own tokens for the user.
+func omniKubeClient(ctx context.Context, s *session) (*kubeClient, error) {
 	kubeYAML, issuer, err := omniClusterKubeconfig(ctx, s.context, s.signing.current())
 	if err != nil {
 		return nil, err
@@ -231,7 +247,7 @@ func omniKubeClient(ctx context.Context, s *session, server string) (*kubeClient
 		return nil, err
 	}
 
-	tokens := kubeAuth.source("omni-kube\x00"+s.authKey+"\x00"+s.context.Cluster, &omniKubeTokens{ctx: s.context, issuer: issuer, cluster: s.context.Cluster})
+	tokens := kubeAuth.source(omniKubeSourcePrefix+s.authKey+"\x00"+s.context.Cluster, &omniKubeTokens{ctx: s.context, issuer: issuer, cluster: s.context.Cluster})
 
 	if _, err := tokens.get(ctx); err != nil {
 		return nil, err
@@ -239,7 +255,19 @@ func omniKubeClient(ctx context.Context, s *session, server string) (*kubeClient
 
 	creds.token, creds.tokens = "", tokens
 
-	return openKubeClientCreds(context.Background(), creds, nil, server)
+	k, err := openKubeClientCreds(context.Background(), creds, nil, "")
+	if err != nil {
+		var apiErr *kubeAPIError
+		if errors.As(err, &apiErr) && apiErr.Code == http.StatusUnauthorized {
+			return nil, errors.New(omniNoKubeGroups)
+		}
+
+		return nil, err
+	}
+
+	k.unauthorized = omniNoKubeGroups
+
+	return k, nil
 }
 
 // omniClusterKubeconfig is Omni's kubeconfig of cfgCtx's cluster with its user's exec

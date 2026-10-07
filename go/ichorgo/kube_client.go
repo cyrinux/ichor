@@ -34,7 +34,9 @@ type kubeClient struct {
 	token string
 	// tokens replaces token for a cluster that signs in through a method (OIDC, EKS…).
 	tokens *authTokenSource
-	tls    *tls.Config // the kubeconfig's TLS settings, for connections outside http (exec)
+	// unauthorized is what a refused token means for this cluster, "" for the API server's own message.
+	unauthorized string
+	tls          *tls.Config // the kubeconfig's TLS settings, for connections outside http (exec)
 	// namespace is the kubeconfig context's namespace, "" when it sets none.
 	namespace string
 }
@@ -522,6 +524,10 @@ func callKube[T any](ctx context.Context, target kubeTarget, k *kubeClient, fres
 				}
 
 				kubeClients.forget(target, k)
+
+				if k.unauthorized != "" {
+					return zero, errors.New(k.unauthorized)
+				}
 			}
 		case errors.Is(err, context.Canceled):
 		case fresh && errors.Is(err, context.DeadlineExceeded):

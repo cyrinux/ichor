@@ -10,6 +10,7 @@ import name.levis.ichor.model.backupKubeAuth
 import name.levis.ichor.model.isKube
 import name.levis.ichor.model.restoredClusters
 import name.levis.ichor.model.restoredKubeAuth
+import name.levis.ichor.model.signInKeys
 import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.ui.UiText
@@ -73,9 +74,7 @@ class BackupManager(
                     kubeServers.servers.value,
                     kubeAccess.links.value,
                 ),
-                kubeAuth = kubeconfig?.let {
-                    backupKubeAuth(stored.summary.contexts.filter { c -> c.isKube }.map { c -> c.fingerprint }, kubeAuth.all(), Ichorgo::kubeAuthForBackup)
-                },
+                kubeAuth = backupKubeAuth(signInKeys(stored.summary.contexts), kubeAuth.all(), Ichorgo::kubeAuthForBackup),
             )
             backupCall { Ichorgo.encryptBackup(TalosJson.encodeToString(BackupPayload.serializer(), payload), passphrase) }
         }
@@ -97,7 +96,7 @@ class BackupManager(
         val summary = configs.config.value?.summary ?: throw NoConfigException()
         val fingerprints = summary.contexts.map { it.fingerprint }
         // After the configs, as the per-cluster settings: what was signed in on this device stays.
-        kubeAuth.restore(restoredKubeAuth(payload.kubeAuth, summary.contexts.filter { it.isKube }.map { it.fingerprint }))
+        kubeAuth.restore(restoredKubeAuth(payload.kubeAuth, signInKeys(summary.contexts)))
 
         // Syncing the stores to the new config already forgot the clusters no longer stored.
         val restored = restoredClusters(payload.clusters, fingerprints)

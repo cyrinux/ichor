@@ -34,6 +34,16 @@ final class OmniTests: XCTestCase {
         XCTAssertFalse(omni.allows(.issueConfig))
     }
 
+    func testOmniClustersKeepTheirSharedSignIn() {
+        let contexts = [
+            ContextSummary(name: "lab", fingerprint: "t1"),
+            ContextSummary(name: "acme-demo", fingerprint: "o1", omni: true, authKey: "omnikey"),
+            ContextSummary(name: "acme-prod", fingerprint: "o2", omni: true, authKey: "omnikey"),
+            ContextSummary(name: "oidc", kind: ContextKind.kube, fingerprint: "k1"),
+        ]
+        XCTAssertEqual(signInKeys(contexts), ["omnikey", "k1"])
+    }
+
     func testServiceAccountKeyIsSecret() {
         XCTAssertEqual(kubeFieldInput("serviceAccountKey"), .secret)
     }

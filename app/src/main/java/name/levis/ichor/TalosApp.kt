@@ -69,6 +69,7 @@ import name.levis.ichor.data.VpnRequiredException
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.heldBackForVpn
+import name.levis.ichor.model.signInKeys
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.shortcuts.ClusterShortcuts
 import name.levis.ichor.shortcuts.ShortcutSpec
@@ -425,7 +426,8 @@ class TalosApp : Application() {
                     vpnOnly.sync(it.summary)
                     kubeServers.sync(it.summary)
                     kubeAccess.sync(it.summary)
-                    launch(Dispatchers.IO) { kubeAuthStore.retain(it.summary.contexts.map { c -> c.fingerprint }) }
+                    // Omni sign-ins are kept under their own key, not a fingerprint.
+                    launch(Dispatchers.IO) { kubeAuthStore.retain(it.summary.contexts.map { c -> c.fingerprint } + signInKeys(it.summary.contexts)) }
                     kubeScopes.sync(it.summary)
                     snapshotKeys.sync(it.summary)
                     skippedTalosUpdates.sync(it.summary)

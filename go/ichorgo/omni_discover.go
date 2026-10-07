@@ -77,6 +77,10 @@ func SetOmniServiceAccount(endpoint, serviceAccountKey string) (out string, err 
 
 	// A key Omni authenticates is good, whether or not its role lists clusters.
 	if _, err := listOmniClusters(ctx, cfgCtx, signer); err != nil && status.Code(err) != codes.PermissionDenied {
+		if needSignIn := (*errSignInRequired)(nil); errors.As(err, &needSignIn) {
+			return "", errors.New("omni refused this service account key")
+		}
+
 		return "", omniAPIError(err)
 	}
 
@@ -87,7 +91,7 @@ func SetOmniServiceAccount(endpoint, serviceAccountKey string) (out string, err 
 		Secrets: map[string]string{omniServiceAccountField: strings.TrimSpace(serviceAccountKey)},
 		User:    signer.identity,
 	})
-	sessions.forgetAuth(key)
+	omniAuthChanged(key)
 
 	return identity, nil
 }
@@ -121,8 +125,9 @@ func DiscoverOmniClusters(endpoint, identity string) (out string, err error) {
 
 	// Omni writes its own URL in the configs: the sign-in follows it if it differs.
 	for _, c := range cfg.Contexts {
-		if key := omniAuthKey(c); key != authKey && kubeAuth.load(key).Method == "" {
+		if key := omniAuthKey(c); key != authKey {
 			kubeAuth.save(key, kubeAuth.load(authKey))
+			omniAuthChanged(key)
 		}
 	}
 

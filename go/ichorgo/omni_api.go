@@ -66,6 +66,21 @@ func omniDial(cfgCtx *clientconfig.Context, signing *omniSigning) (*grpc.ClientC
 		host = net.JoinHostPort(strings.Trim(host, "[]"), "443")
 	}
 
+	tlsConfig, err := omniTLS(cfgCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+	if signing != nil {
+		opts = append(opts, grpc.WithChainUnaryInterceptor(signing.unary()), grpc.WithChainStreamInterceptor(signing.stream()))
+	}
+
+	return grpc.NewClient("dns:///"+host, opts...)
+}
+
+// omniTLS trusts the context's CA (a self-hosted Omni), else the system's roots.
+func omniTLS(cfgCtx *clientconfig.Context) (*tls.Config, error) {
 	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: omniTestRoots}
 
 	if cfgCtx.CA != "" {
@@ -80,12 +95,23 @@ func omniDial(cfgCtx *clientconfig.Context, signing *omniSigning) (*grpc.ClientC
 		}
 	}
 
-	opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
-	if signing != nil {
-		opts = append(opts, grpc.WithChainUnaryInterceptor(signing.unary()), grpc.WithChainStreamInterceptor(signing.stream()))
-	}
+	return tlsConfig, nil
+}
 
-	return grpc.NewClient("dns:///"+host, opts...)
+// omniAuthChanged drops what was signed with the sign-in kept under authKey: the sessions,
+// the Kubernetes clients and their tokens of every context of that identity.
+func omniAuthChanged(authKey string) {
+	sessions.forgetAuth(authKey)
+	kubeAuth.forgetPrefix(omniKubeSourcePrefix + authKey + "\x00")
+	kubeClients.forgetWhere(func(t kubeTarget) bool {
+		if isKubeconfig(t.config) {
+			return false
+		}
+
+		_, ctx, err := resolveContext(t.config, t.context)
+
+		return err == nil && isOmni(ctx) && omniAuthKey(ctx) == authKey
+	})
 }
 
 // rawCodec sends and receives messages already encoded (*[]byte).

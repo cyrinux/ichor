@@ -17,11 +17,16 @@ func Kubeconfig(configYAML, contextName, kubeServer string) (out string, err err
 
 	contextName = unmaskContext(configYAML, contextName)
 
+	omni := false
+
 	kubeconfig, err := withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
+		omni = s.signing != nil
+
 		return fetchKubeconfig(ctx, s)
 	})
-	if err != nil {
-		return "", err
+	if err != nil || omni {
+		// Omni's kubeconfig names its kube proxy: an address set for the cluster does not apply.
+		return kubeconfig, err
 	}
 
 	return withKubeServer(kubeconfig, kubeServer)

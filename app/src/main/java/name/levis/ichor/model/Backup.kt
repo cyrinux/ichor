@@ -165,6 +165,18 @@ fun backupKubeAuth(fingerprints: List<String>, states: Map<String, String>, forB
         .toMap()
         .ifEmpty { null }
 
+/**
+ * The keys of the sign-ins [contexts] keep in the auth store: a kubeconfig cluster's
+ * fingerprint, an Omni cluster's auth key (one per identity and instance).
+ */
+fun signInKeys(contexts: List<ContextSummary>): List<String> = contexts.mapNotNull {
+    when {
+        it.isKube -> it.fingerprint
+        it.authKey.isNotEmpty() -> it.authKey
+        else -> null
+    }
+}.distinct()
+
 /** The sign-ins of [kubeAuth] (a backup's) for the restored kubeconfig clusters [fingerprints]. */
 fun restoredKubeAuth(kubeAuth: Map<String, String>?, fingerprints: List<String>): Map<String, String> =
     kubeAuth.orEmpty().filter { (fp, state) -> fp.isNotBlank() && fp in fingerprints && state.isNotBlank() }

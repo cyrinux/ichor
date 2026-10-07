@@ -15,6 +15,9 @@ struct OmniDiscoveryView: View {
     @State private var key = ""
     @State private var busy = false
     @State private var error: String?
+    /// The identity signed in already: a retry lists its clusters again, no new sign-in.
+    @State private var signedIn: String?
+    @State private var work: Task<Void, Never>?
 
     private var endpoint: String { url.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var working: Bool { busy || flow.isRunning }
@@ -76,6 +79,7 @@ struct OmniDiscoveryView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", role: .cancel) {
                         flow.cancel()
+                        work?.cancel()
                         dismiss()
                     }
                 }
@@ -84,19 +88,28 @@ struct OmniDiscoveryView: View {
         .interactiveDismissDisabled(working)
         .onChange(of: flow.phase) { _, phase in
             switch phase {
-            case .signedIn: Task { await discover(identity: email.trimmingCharacters(in: .whitespacesAndNewlines)) }
+            case .signedIn:
+                let identity = email.trimmingCharacters(in: .whitespacesAndNewlines)
+                signedIn = identity
+                work = Task { await discover(identity: identity) }
             case .failed(let message): error = message
             default: break
             }
         }
-        .onChange(of: serviceAccount) { error = nil }
+        .onChange(of: serviceAccount) { error = nil; signedIn = nil }
+        .onChange(of: url) { signedIn = nil }
+        .onChange(of: email) { signedIn = nil }
     }
 
     private func signIn() {
         error = nil
+        if let identity = signedIn {
+            work = Task { await discover(identity: identity) }
+            return
+        }
         if serviceAccount {
             busy = true
-            Task {
+            work = Task {
                 defer { busy = false }
                 do {
                     let identity = try await TalosClient.omniServiceAccount(endpoint: endpoint, key: key.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -115,6 +128,8 @@ struct OmniDiscoveryView: View {
         defer { busy = false }
         do {
             let talosconfig = try await TalosClient.discoverOmni(endpoint: endpoint, identity: identity)
+            // Cancelled meanwhile: the user left, no preview.
+            guard !Task.isCancelled else { return }
             dismiss()
             onFound(talosconfig)
         } catch {
