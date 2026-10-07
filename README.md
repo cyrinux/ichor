@@ -400,6 +400,14 @@ every context with how it signs in, and why one cannot be added (a file path to 
 Kubernetes home (nodes, API server version, who you are signed in as) and every Kubernetes
 screen; the Talos ones are hidden. What they may do is up to their RBAC.
 
+Each node on that home also says where the cloud put it, read from its labels: the
+autoscaler pool it came from (a Karpenter NodePool — open source or EKS Auto Mode — an EKS
+managed node group, a GKE custom compute class or node pool, an AKS agent pool), its
+machine type (`node.kubernetes.io/instance-type`) and whether it is spot, on-demand or
+reserved capacity (`karpenter.sh/capacity-type`, `eks.amazonaws.com/capacityType`,
+`cloud.google.com/gke-spot`, `kubernetes.azure.com/scalesetpriority`). Nothing is shown
+when no such label is set, as on bare metal.
+
 | Kubeconfig user | What the app does |
 |---|---|
 | Client certificate, token (ServiceAccount) | Uses it as is |

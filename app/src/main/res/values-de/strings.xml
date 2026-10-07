@@ -2892,6 +2892,14 @@
     <string name="kube_home_no_nodes">Keine Nodes.</string>
     <string name="kube_home_more_nodes">+%1$d weitere</string>
     <string name="kube_node_cordoned">Abgeriegelt</string>
+    <string name="kube_node_pool_karpenter">Karpenter-Pool %1$s</string>
+    <string name="kube_node_pool_eks">EKS-Knotengruppe %1$s</string>
+    <string name="kube_node_pool_gke_class">GKE-Compute-Klasse %1$s</string>
+    <string name="kube_node_pool_gke">GKE-Knotenpool %1$s</string>
+    <string name="kube_node_pool_aks">AKS-Agentpool %1$s</string>
+    <string name="kube_node_capacity_spot">Spot</string>
+    <string name="kube_node_capacity_on_demand">On-Demand</string>
+    <string name="kube_node_capacity_reserved">Reserviert</string>
     <!-- kube sign-in -->
     <string name="kube_signin_method_oidc">OIDC</string>
     <string name="kube_signin_method_eks">AWS EKS</string>

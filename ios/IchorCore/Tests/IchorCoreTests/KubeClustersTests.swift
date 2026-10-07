@@ -90,6 +90,7 @@ final class KubeClustersTests: XCTestCase {
           {"name":"cp-1","roles":["control-plane"],"ready":true,"cordoned":false,"internalIP":"10.0.0.2",
            "kubelet":"v1.31.2","cpu":4,"memory":8.0e9,"podLimit":110,"pressure":null,"created":1700000000},
           {"name":"w-1","roles":null,"ready":false,"cordoned":true,"externalIP":"203.0.113.4","cpu":2,"memory":4.0e9,
+           "pool":"general","poolKind":"karpenter","instanceType":"m6i.large","capacity":"spot",
            "podLimit":110,"pressure":["DiskPressure"],"created":1700000001}
         ]}
         """
@@ -103,6 +104,12 @@ final class KubeClustersTests: XCTestCase {
         XCTAssertEqual(overview.nodes[1].roles, [])
         XCTAssertEqual(overview.nodes[1].address, "203.0.113.4")
         XCTAssertTrue(overview.nodes[1].needsAttention)
+        XCTAssertNil(overview.nodes[0].pool)
+        XCTAssertNil(overview.nodes[0].capacity)
+        XCTAssertEqual(overview.nodes[1].pool, "general")
+        XCTAssertEqual(overview.nodes[1].poolKind, "karpenter")
+        XCTAssertEqual(overview.nodes[1].instanceType, "m6i.large")
+        XCTAssertEqual(overview.nodes[1].capacity, "spot")
 
         let forbidden = try TalosJSON.decode(KubeNodesOverview.self, from: #"{"serverVersion":"","nodes":null,"forbidden":true}"#)
         XCTAssertTrue(forbidden.forbidden)
