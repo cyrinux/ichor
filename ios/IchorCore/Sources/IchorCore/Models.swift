@@ -79,6 +79,9 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     public let insecure: Bool
     public let problem: String?
     public let problemDetail: String?
+    /// The method the app signs this kubeconfig context in with (oidc, eks, gke, azure,
+    /// digitalocean, rancher), nil for static credentials (see KubeSignInInfo).
+    public let signIn: String?
 
     public var id: String { name }
 
@@ -88,7 +91,8 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     public init(name: String, kind: String = ContextKind.talos, fingerprint: String = "", clusterID: String = "",
                 endpoints: [String] = [], nodes: [String] = [], roles: [String] = [], certNotAfter: Int64 = 0,
                 demo: Bool = false, namespace: String? = nil, auth: String? = nil, authDetail: String? = nil,
-                user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil) {
+                user: String? = nil, insecure: Bool = false, problem: String? = nil, problemDetail: String? = nil,
+                signIn: String? = nil) {
         self.name = name
         self.kind = kind
         self.fingerprint = fingerprint
@@ -105,11 +109,12 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         self.insecure = insecure
         self.problem = problem
         self.problemDetail = problemDetail
+        self.signIn = signIn
     }
 
     private enum CodingKeys: String, CodingKey {
         case name, kind, fingerprint, endpoints, nodes, roles, certNotAfter, demo
-        case namespace, auth, authDetail, user, insecure, problem, problemDetail
+        case namespace, auth, authDetail, user, insecure, problem, problemDetail, signIn
         case clusterID = "clusterId"
     }
 
@@ -132,6 +137,7 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         insecure = try c.field(.insecure, false)
         problem = try c.decodeIfPresent(String.self, forKey: .problem)
         problemDetail = try c.decodeIfPresent(String.self, forKey: .problemDetail)
+        signIn = try c.decodeIfPresent(String.self, forKey: .signIn).flatMap { $0.isEmpty ? nil : $0 }
     }
 }
 

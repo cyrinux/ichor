@@ -27,8 +27,10 @@ enum AppBackup {
                 colors: model.clusterColors,
                 kubeServers: model.kubeServers,
                 vpnOnly: model.vpnOnly,
-                wakeOnLan: WakeOnLanStore.shared.allTargets
-            )
+                wakeOnLan: WakeOnLanStore.shared.allTargets,
+                kubeAccess: model.kubeAccess
+            ),
+            kubeAuth: backupKubeAuth(fingerprints: model.kubeContexts.map(\.fingerprint))
         )
         let json = try TalosJSON.encode(payload)
         return try await localized { try await TalosClient.encryptBackup(payload: json, passphrase: passphrase) }
@@ -54,7 +56,9 @@ enum AppBackup {
             }
         }
         model.restoreClusterSettings(names: restored.names, colors: restored.colors, kubeServers: kubeServers,
-                                     vpnOnly: restored.vpnOnly)
+                                     vpnOnly: restored.vpnOnly, kubeAccess: restored.kubeAccess)
+        // After the configs: the sign-ins of the kubeconfig clusters restored.
+        KubeAuthStore.shared.restore(restoredKubeAuth(payload, fingerprints: model.kubeContexts.map(\.fingerprint)))
         WakeOnLanStore.shared.restore(restored.wakeOnLan)
         if let mask = settings?.privacyMask {
             await model.setPrivacyMask(mask, words: settings?.privacyMaskWords ?? "")
@@ -68,6 +72,18 @@ enum AppBackup {
             BackgroundMonitor.alertsEnabled = on
             if on { BackgroundMonitor.schedule() }
         }
+    }
+
+    /// The sign-ins of the kubeconfig clusters as a backup keeps them (what the user entered,
+    /// no session; Go KubeAuthForBackup), nil when there is none.
+    private static func backupKubeAuth(fingerprints: [String]) -> [String: String]? {
+        let stored = KubeAuthMap.keeping(KubeAuthStore.shared.all() ?? [:], fingerprints: fingerprints)
+        var kept: [String: String] = [:]
+        for (fp, state) in stored {
+            let backup = TalosClient.authForBackup(state)
+            if !backup.isEmpty { kept[fp] = backup }
+        }
+        return kept.isEmpty ? nil : kept
     }
 
     private static func backupSettings(model: AppModel) -> BackupSettings {

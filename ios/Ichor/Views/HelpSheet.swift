@@ -59,7 +59,7 @@ struct HelpSheet: View {
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 Section("Any Kubernetes cluster: a kubeconfig") {
-                    Text("A kubeconfig with a client certificate or a token works: k3s, kubeadm, RKE2 or a managed cluster with a ServiceAccount. Cloud sign-ins (EKS, GKE, OIDC…) come in a later version.")
+                    Text("A kubeconfig with a client certificate or a token works: k3s, kubeadm, RKE2 or a managed cluster with a ServiceAccount. A cluster that signs in (OIDC, EKS, GKE, AKS, DigitalOcean, Rancher) asks for it once added.")
                         .font(.footnote)
                     Text("Keep only the cluster to add, with its certificates in the file:").font(.footnote)
                     CommandRow("kubectl config view --flatten --minify > kubeconfig-phone")

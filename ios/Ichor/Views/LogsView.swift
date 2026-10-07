@@ -20,13 +20,19 @@ final class LogFollower {
     /// Follows a Kubernetes container's log when `containerID` is set, else the service's (the
     /// kernel log when `service` is nil).
     func run(_ client: TalosClient, node: String, service: String?, containerID: String? = nil) async {
+        let stream = containerID.map { client.followContainerLogs(node: node, containerID: $0, tailLines: Self.tailLines) }
+            ?? client.followLogs(node: node, service: service, tailLines: Self.tailLines)
+        await follow(stream)
+    }
+
+    /// Follows `stream` (a Talos or a Kubernetes log) from an empty document, until it ends or
+    /// the task is cancelled.
+    func follow(_ stream: AsyncStream<LogFollowItem>) async {
         document = LogDocument()
         pending = []
         error = nil
         active = true
         defer { active = false }
-        let stream = containerID.map { client.followContainerLogs(node: node, containerID: $0, tailLines: Self.tailLines) }
-            ?? client.followLogs(node: node, service: service, tailLines: Self.tailLines)
         let interval = Self.flushMillis
         await withTaskGroup(of: Void.self) { group in
             group.addTask { await self.consume(stream) }
@@ -240,9 +246,15 @@ private struct SnapshotList: View {
 }
 
 /// Followed lines; keeps the newest line in view unless the user scrolled up to read.
-private struct FollowList: View {
+struct FollowList: View {
     let follower: LogFollower
     @Binding var display: LogDisplay
+
+    // Explicit: the private @State makes the memberwise init private.
+    init(follower: LogFollower, display: Binding<LogDisplay>) {
+        self.follower = follower
+        _display = display
+    }
 
     @State private var pinned = true
     @State private var expanded: Set<Int> = []

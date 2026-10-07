@@ -19,14 +19,16 @@ enum ConfigProtection: String {
 /// the Keychain (this device only, never synced or backed up). Falls back to a Keychain key
 /// where there is no Secure Enclave (e.g. the simulator).
 enum SecureConfigStore {
-    /// The two sealed configs, under the same key.
+    /// The sealed items, under the same key: the two configs, and the sign-ins of the
+    /// kubeconfig clusters (KubeAuthStore).
     enum Item: CaseIterable {
-        case talosconfig, kubeconfig
+        case talosconfig, kubeconfig, kubeAuth
 
         fileprivate var account: String {
             switch self {
             case .talosconfig: "talosconfig.sealed"
             case .kubeconfig: "kubeconfig.sealed"
+            case .kubeAuth: "kubeauth.sealed"
             }
         }
     }
@@ -68,7 +70,7 @@ enum SecureConfigStore {
         }
     }
 
-    /// Deletes both configs and their key.
+    /// Deletes every item and their key.
     static func delete() {
         for item in Item.allCases { Keychain.delete(item.account) }
         SecItemDelete(keyQuery as CFDictionary)

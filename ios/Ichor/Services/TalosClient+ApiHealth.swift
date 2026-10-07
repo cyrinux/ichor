@@ -7,7 +7,7 @@ extension TalosClient {
     /// readyz and livez, then two /metrics scrapes a few seconds apart for the live rates: who
     /// sends requests, the priority levels, the busiest requests and what waits in the queues.
     func apiHealth() async throws -> ApiHealthReport {
-        try await Self.json { [config, context, kubeServer] in IchorgoKubeAPIHealth(config, context, kubeServer, $0) }
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeAPIHealth(config, context, kubeServer, $0) }
     }
 
     /// Who loads the API server over the last `minutes`, from the control planes' audit logs

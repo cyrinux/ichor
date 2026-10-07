@@ -101,20 +101,28 @@ enum BackgroundMonitor {
         }
         // The Kubernetes API address the user set for this cluster, as the app uses it.
         let servers = UserDefaults.standard.dictionary(forKey: "kubeServers") as? [String: String] ?? [:]
-        let client = TalosClient(config: yaml, context: contextName, kubeServer: context.flatMap { servers[$0.fingerprint] } ?? "")
+        // And its Kubernetes access: a linked kubeconfig cluster (K5). A sign-in it needs is never
+        // started from here: its calls fail and the app asks the user to sign in.
+        let links = UserDefaults.standard.dictionary(forKey: "kubeAccess") as? [String: String] ?? [:]
+        let link = stored.kube.flatMap { kube in
+            kubeAccessContext(of: context, links: links, kubeContexts: parsed.kube?.contexts ?? []).map { KubeLink(config: kube, context: $0) }
+        }
+        let client = TalosClient(config: yaml, context: contextName, kubeServer: context.flatMap { servers[$0.fingerprint] } ?? "",
+                                 kubeLink: link)
+        let kubeAllowed = context?.allows(.workloads, kubeLinked: link != nil) == true
         guard let overview = try? await client.overview() else { return }
         let etcd = try? await client.etcd()
         // Opt-in, and only for roles that may use the Kubernetes API: each check then lists custom
         // resources and runs the Garage CLI in a pod.
-        let watchData = dataServicesWatched && context?.allows(.workloads) == true
+        let watchData = dataServicesWatched && kubeAllowed
         let dataServices = watchData ? try? await client.dataServices(hints: "") : nil
         // Same gate for Argo CD and Flux apps, read through their custom resources.
-        let watchGitOps = gitopsWatched && context?.allows(.workloads) == true
+        let watchGitOps = gitopsWatched && kubeAllowed
         let previous = SharedStore.snapshot()
         let known = knownGitOpsIssues(previous, context: overview.context)
         let gitopsIssues = watchGitOps ? await readGitOps(client, known: known) : nil
         // And for the checkup: it lists the cluster's pods and asks every kubelet.
-        let watchCheckup = checkupWatched && context?.allows(.workloads) == true
+        let watchCheckup = checkupWatched && kubeAllowed
         let knownCheckup = knownCheckupIssues(previous, context: overview.context)
         let checkupIssues = watchCheckup ? await readCheckup(client, known: knownCheckup) : nil
         let now = Date()
