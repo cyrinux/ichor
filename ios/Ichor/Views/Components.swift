@@ -204,7 +204,7 @@ extension View {
 /// "2 minutes ago", "in 3 hours"; "never" for a Unix-ms time of 0.
 func relativeTime(_ millis: Int64) -> String {
     guard millis > 0 else { return String(localized: "never") }
-    return relativeTime(millis)
+    return Date(epochMillis: millis).formatted(.relative(presentation: .named))
 }
 
 extension Text {
