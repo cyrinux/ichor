@@ -1323,6 +1323,7 @@
     <string name="backup_restore_desc">Inserisci la passphrase con cui è stato cifrato il backup.</string>
     <string name="backup_restore_confirm">Ripristina</string>
     <string name="backup_sealing">Cifratura…</string>
+    <string name="backup_restoring">Ripristino…</string>
     <string name="backup_saved">Backup salvato. Conserva la passphrase in un posto sicuro.</string>
     <string name="backup_restored">Backup ripristinato.</string>
     <string name="backup_err_wrong_passphrase">Passphrase errata o file danneggiato.</string>

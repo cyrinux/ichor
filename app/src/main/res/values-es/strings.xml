@@ -1323,6 +1323,7 @@
     <string name="backup_restore_desc">Introduce la frase de contraseña con la que se cifró la copia.</string>
     <string name="backup_restore_confirm">Restaurar</string>
     <string name="backup_sealing">Cifrando…</string>
+    <string name="backup_restoring">Restaurando…</string>
     <string name="backup_saved">Copia guardada. Guarda la frase de contraseña en un lugar seguro.</string>
     <string name="backup_restored">Copia restaurada.</string>
     <string name="backup_err_wrong_passphrase">Frase de contraseña incorrecta o archivo dañado.</string>

@@ -181,14 +181,18 @@ private struct UnlockBackupSheet: View {
                 } footer: {
                     Text("Enter the passphrase the backup was encrypted with.")
                 }
-                if busy { ProgressView() }
             }
             .navigationTitle("Open the backup")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.disabled(busy) }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Restore") { Task { await restore() } }.disabled(passphrase.isEmpty || busy)
+                    // The progress takes the place of the button just pressed, so the form keeps its layout.
+                    if busy {
+                        ProgressView().accessibilityLabel("Restoring…")
+                    } else {
+                        Button("Restore") { Task { await restore() } }.disabled(passphrase.isEmpty)
+                    }
                 }
             }
         }

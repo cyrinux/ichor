@@ -6,7 +6,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Visibility
@@ -15,6 +18,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -159,13 +163,19 @@ private fun UnlockDialog(
                 }
                 Text(stringResource(R.string.backup_restore_desc), style = MaterialTheme.typography.bodySmall)
                 PassphraseField(passphrase, { passphrase = it }, stringResource(R.string.backup_passphrase), enabled = !working)
-                if (working) CircularProgressIndicator()
                 error?.let { Text(it.asString(), color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }
             }
         },
         confirmButton = {
+            // The progress sits on the button just pressed, so the dialog keeps its size.
             TextButton(onClick = { onConfirm(passphrase) }, enabled = !working && passphrase.isNotEmpty()) {
-                Text(stringResource(R.string.backup_restore_confirm))
+                if (working) {
+                    CircularProgressIndicator(Modifier.size(16.dp), color = LocalContentColor.current, strokeWidth = 2.dp)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.backup_restoring))
+                } else {
+                    Text(stringResource(R.string.backup_restore_confirm))
+                }
             }
         },
         dismissButton = { TextButton(onClick = onDismiss, enabled = !working) { Text(stringResource(R.string.common_cancel)) } },

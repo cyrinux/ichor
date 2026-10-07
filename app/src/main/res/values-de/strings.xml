@@ -1315,6 +1315,7 @@
     <string name="backup_restore_desc">Gib die Passphrase ein, mit der die Sicherung verschlüsselt wurde.</string>
     <string name="backup_restore_confirm">Wiederherstellen</string>
     <string name="backup_sealing">Wird verschlüsselt…</string>
+    <string name="backup_restoring">Wird wiederhergestellt…</string>
     <string name="backup_saved">Sicherung gespeichert. Bewahre die Passphrase sicher auf.</string>
     <string name="backup_restored">Sicherung wiederhergestellt.</string>
     <string name="backup_err_wrong_passphrase">Falsche Passphrase oder beschädigte Datei.</string>
