@@ -18,6 +18,7 @@ struct KubeHomeView: View {
                     Section { KubeExpiryBanner(notAfter: ctx.certNotAfter) }
                 }
                 summarySection(overview)
+                if let target = model.activeSignInTarget { KubeSignInSection(target: target) }
                 nodesSection(overview)
                 Section {
                     NavigationLink(value: Route.workloads) {

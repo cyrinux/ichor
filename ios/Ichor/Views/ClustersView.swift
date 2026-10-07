@@ -84,6 +84,9 @@ struct ClustersView: View {
     @State private var error: String?
     @State private var editingEndpoints: ContextSummary?
     @State private var scanning = false
+    /// The sign-in of each kubeconfig cluster that signs in through a method, by fingerprint.
+    @State private var signIns: [String: KubeSignInInfo] = [:]
+    @State private var signingIn: KubeSignInTarget?
 
     var body: some View {
         List {
@@ -115,6 +118,8 @@ struct ClustersView: View {
             }
         }
         .endpointTools(editing: $editingEndpoints, scanning: $scanning)
+        .sheet(item: $signingIn) { KubeSignInSheet(target: $0) }
+        .task(id: "\(model.summary?.contexts.map(\.fingerprint) ?? [])#\(model.dataGeneration)") { await loadSignIns() }
         .themedBackground()
         .navigationTitle("Clusters")
         .confirmationDialog(
@@ -170,6 +175,16 @@ struct ClustersView: View {
                         Text([context.endpoints.first, context.localizedAccessLabel].compactMap { $0 }.joined(separator: " · "))
                             .font(.caption)
                             .foregroundStyle(Color.secondary)
+                        if let kube = model.kubeAccessTarget(of: context) {
+                            Text("Kubernetes through \(model.labels.of(kube))")
+                                .font(.caption)
+                                .foregroundStyle(Color.secondary)
+                        }
+                        if let user = signIns[context.fingerprint].flatMap({ $0.signedIn ? $0.user : nil }) {
+                            Text("Signed in as \(user)")
+                                .font(.caption)
+                                .foregroundStyle(Color.secondary)
+                        }
                     }
                     Spacer()
                 }
@@ -177,6 +192,11 @@ struct ClustersView: View {
             }
             .buttonStyle(.plain)
             .accessibilityAddTraits(active ? .isSelected : [])
+            if signIns[context.fingerprint]?.signedIn == false, let target = model.signInTarget(for: context) {
+                Button("Sign in") { signingIn = target }
+                    .buttonStyle(.borderless)
+                    .font(.caption)
+            }
             ColorPicker(String(localized: "Color of \(model.labels.of(context))"), selection: color(of: context), supportsOpacity: false)
                 .labelsHidden()
         }
@@ -208,7 +228,45 @@ struct ClustersView: View {
         if !model.labels.masked && !context.fingerprint.isEmpty {
             Button { startRenaming(context) } label: { Label("Rename", systemImage: "pencil") }
         }
+        if !context.isKube && !context.demo && !context.fingerprint.isEmpty && !model.kubeContexts.isEmpty {
+            kubeAccessPicker(context)
+        }
+        if context.isKube, let target = model.signInTarget(for: context) {
+            Button { signingIn = target } label: { Label("Sign in", systemImage: "person.badge.key") }
+        }
         Button(role: .destructive) { removing = context } label: { Label("Delete", systemImage: "trash") }
+    }
+
+    /// A Talos cluster's Kubernetes access: the admin kubeconfig Talos issues, or a kubeconfig
+    /// cluster (its own identity and RBAC, e.g. an OIDC sign-in).
+    private func kubeAccessPicker(_ context: ContextSummary) -> some View {
+        Picker(selection: Binding(
+            get: { model.kubeAccessTarget(of: context)?.fingerprint ?? "" },
+            set: { fingerprint in model.setKubeAccess(model.kubeContexts.first { $0.fingerprint == fingerprint }, for: context) }
+        )) {
+            Text("Talos admin kubeconfig").tag("")
+            ForEach(model.kubeContexts) { kube in
+                Text(model.labels.of(kube)).tag(kube.fingerprint)
+            }
+        } label: {
+            Label("Kubernetes access", systemImage: "key")
+        }
+        .pickerStyle(.menu)
+    }
+
+    /// Whether each kubeconfig cluster that signs in through a method is signed in.
+    private func loadSignIns() async {
+        guard let kube = model.kubeYAML else {
+            signIns = [:]
+            return
+        }
+        var loaded: [String: KubeSignInInfo] = [:]
+        for context in model.kubeContexts where context.signIn != nil {
+            if let info = try? await TalosClient.signInInfo(kube: kube, context: context.name) {
+                loaded[context.fingerprint] = info
+            }
+        }
+        signIns = loaded
     }
 
     private func color(of context: ContextSummary) -> Binding<Color> {
