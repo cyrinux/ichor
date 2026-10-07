@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -39,8 +40,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.io.File
@@ -51,6 +55,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.POD_LOG_TAIL
 import name.levis.ichor.model.containersToChoose
@@ -61,6 +66,7 @@ import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoNotice
+import name.levis.ichor.ui.components.LiveIndicator
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.SkeletonStyle
 import name.levis.ichor.ui.components.TooltipIconButton
@@ -69,6 +75,7 @@ import name.levis.ichor.ui.components.copyToClipboard
 import name.levis.ichor.ui.share.ShareLinkButton
 import name.levis.ichor.ui.components.shareFile
 import name.levis.ichor.ui.factory
+import name.levis.ichor.ui.kubebrowser.LocalKubeLinks
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.uiText
 
@@ -161,22 +168,36 @@ fun PodLogSheet(
     pod: KubePod,
     onDismiss: () -> Unit,
     vm: PodLogViewModel = viewModel(key = "pod-log", factory = factory { PodLogViewModel(app.talosRepository) }),
+    followVm: PodLogFollowViewModel = viewModel(key = "pod-log-follow", factory = factory { PodLogFollowViewModel(app.kubeBrowser) }),
 ) {
     val context = LocalContext.current
+    val links = LocalKubeLinks.current
     val state by vm.state.collectAsStateWithLifecycle()
+    val followState by followVm.state.collectAsStateWithLifecycle()
     val query by vm.query.collectAsStateWithLifecycle()
     val containers by vm.containers.collectAsStateWithLifecycle()
     val detail by vm.detail.collectAsStateWithLifecycle()
     val lastTermination = detail?.lastTermination.orEmpty()
-    val text = (state as? UiState.Loaded)?.data
     // The pod's events in place of its log: why it does not start, when there is no log yet.
     var events by rememberSaveable(pod.key) { mutableStateOf(false) }
+    // New lines as they are written (`kubectl logs -f`), in place of the last ones read once.
+    var follow by rememberSaveable(pod.key) { mutableStateOf(false) }
+    val snapshot = (state as? UiState.Loaded)?.data
+    val hasText = if (follow) followState.buffer.lines.isNotEmpty() else !snapshot.isNullOrEmpty()
+    // The followed lines joined only when asked: up to MAX_FOLLOW_LINES of them.
+    val text = { if (follow) followState.buffer.text else snapshot.orEmpty() }
     LaunchedEffect(pod.key) { vm.open(pod) }
     DisposableEffect(vm) {
         onDispose {
             vm.close()
+            followVm.clear()
             deleteSharedLogs(context)
         }
+    }
+    // Stream only while following and visible: toggling off, closing or backgrounding cancels it.
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(follow, query.container, lifecycle) {
+        if (follow) lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { followVm.follow(pod.namespace, pod.name, query.container) }
     }
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
@@ -187,12 +208,12 @@ fun PodLogSheet(
                     Text(pod.namespace, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 ShareLinkButton(ShareTarget.pod(pod.namespace, pod.name), icon = Icons.Outlined.Link)
-                TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.pod_logs_copy), enabled = !text.isNullOrEmpty(), onClick = {
-                    copyLog(context, pod, text.orEmpty())
+                TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.pod_logs_copy), enabled = hasText, onClick = {
+                    copyLog(context, pod, text())
                     Toast.makeText(context, R.string.pod_logs_copied, Toast.LENGTH_SHORT).show()
                 })
-                TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.pod_logs_share), enabled = !text.isNullOrEmpty(), onClick = {
-                    shareLog(context, pod, text.orEmpty())
+                TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.pod_logs_share), enabled = hasText, onClick = {
+                    shareLog(context, pod, text())
                 })
             }
             run {
@@ -204,17 +225,47 @@ fun PodLogSheet(
                             label = { Text(c, fontFamily = FontFamily.Monospace) },
                         )
                     }
+                    if (!query.previous) {
+                        item(key = "follow") {
+                            FilterChip(
+                                selected = follow,
+                                enabled = follow || state is UiState.Loaded,
+                                onClick = {
+                                    follow = !follow
+                                    if (!follow) vm.load()
+                                },
+                                label = { Text(stringResource(R.string.logs_follow)) },
+                            )
+                        }
+                    }
                     if (pod.restarts > 0) {
                         item(key = "previous") {
                             FilterChip(
                                 selected = query.previous,
-                                onClick = { vm.load(query.copy(previous = !query.previous)) },
+                                onClick = {
+                                    follow = false
+                                    vm.load(query.copy(previous = !query.previous))
+                                },
                                 label = { Text(stringResource(R.string.pod_logs_previous)) },
                             )
                         }
                     }
                     item(key = "events") {
                         FilterChip(selected = events, onClick = { events = !events }, label = { Text(stringResource(R.string.kube_events_title)) })
+                    }
+                    if (links != null) {
+                        item(key = "yaml") {
+                            AssistChip(onClick = {
+                                onDismiss()
+                                links.onObject(KubeObjectRef.pod(pod.namespace, pod.name))
+                            }, label = { Text(stringResource(R.string.kb_tab_yaml)) })
+                        }
+                        item(key = "forward") {
+                            AssistChip(onClick = {
+                                onDismiss()
+                                links.onPortForward(pod.namespace, pod.name)
+                            }, label = { Text(stringResource(R.string.kb_forward_title)) })
+                        }
                     }
                 }
             }
@@ -226,10 +277,16 @@ fun PodLogSheet(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
-            InfoNotice(stringResource(R.string.pod_logs_tail, POD_LOG_TAIL), Modifier.padding(horizontal = 16.dp))
+            if (follow && !events) {
+                LiveIndicator(followState.streaming, followState.error, Modifier.padding(horizontal = 16.dp))
+            } else {
+                InfoNotice(stringResource(R.string.pod_logs_tail, POD_LOG_TAIL), Modifier.padding(horizontal = 16.dp))
+            }
             Box(Modifier.weight(1f)) {
                 if (events) {
                     KubeEventsList(pod.namespace, "Pod", pod.name, Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp))
+                } else if (follow) {
+                    FollowedLog(followState.buffer)
                 } else {
                     when (val s = state) {
                         UiState.Loading -> LoadingBox(style = SkeletonStyle.TEXT)

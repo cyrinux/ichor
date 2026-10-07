@@ -58,6 +58,7 @@ import name.levis.ichor.data.KubeServers
 import name.levis.ichor.data.SkippedTalosUpdates
 import name.levis.ichor.data.SnapshotKeys
 import name.levis.ichor.data.MetricsStore
+import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.data.VpnRequiredException
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.EndpointMatch
@@ -93,6 +94,8 @@ class TalosApp : Application() {
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
     val netPerfRepository by lazy { NetPerfRepository(configRepository, kubeServers) }
     val ciliumRepository by lazy { CiliumRepository(configRepository, kubeServers) }
+    /** Any kind as YAML, Helm releases, followed pod logs and port-forwards (Kubernetes API only). */
+    val kubeBrowser by lazy { KubeBrowserRepository(configRepository, kubeServers) }
     val netPerfHistory by lazy { NetPerfHistory(java.io.File(noBackupFilesDir, "netperf")) }
     val publicIps by lazy {
         PublicIpRepository(

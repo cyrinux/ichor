@@ -70,6 +70,8 @@ class KubeHomeNavigation(
     val onAddCluster: () -> Unit,
     val onClustersCleared: () -> Unit,
     val onChangelog: () -> Unit,
+    val onResources: () -> Unit,
+    val onHelm: () -> Unit,
 )
 
 /**
