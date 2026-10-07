@@ -57,7 +57,7 @@ func omniHost(ctx *clientconfig.Context) string {
 		}
 	}
 
-	return strings.ToLower(endpointHost(endpoint))
+	return strings.ToLower(endpoint)
 }
 
 // omniClusterKey identifies an Omni cluster: its instance and its name there. Not its CA:

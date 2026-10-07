@@ -14,8 +14,8 @@ import (
 )
 
 func TestOmniInstancesAreDistinct(t *testing.T) {
-	_, a, _ := resolveContext(omniTalosconfig(testUserIdentity, "https://acme.eu-central-1.omni.example.com", ""), "")
-	_, b, _ := resolveContext(omniTalosconfig(testUserIdentity, "https://other.us-east-1.omni.example.com:443", ""), "")
+	_, a, _ := resolveContext(omniTalosconfigYAML(testUserIdentity, "https://acme.eu-central-1.omni.example.com", ""), "")
+	_, b, _ := resolveContext(omniTalosconfigYAML(testUserIdentity, "https://other.us-east-1.omni.example.com:443", ""), "")
 
 	if omniHost(a) != "acme.eu-central-1.omni.example.com" || omniHost(b) != "other.us-east-1.omni.example.com:443" {
 		t.Fatalf("hosts = %q, %q", omniHost(a), omniHost(b))
@@ -26,8 +26,8 @@ func TestOmniInstancesAreDistinct(t *testing.T) {
 	}
 
 	// A self-hosted Omni's CA is the instance's: its clusters stay apart.
-	_, ca1, _ := resolveContext(omniTalosconfig(testUserIdentity, testOmniEndpoint, "Y2E="), "")
-	_, ca2, _ := resolveContext(strings.Replace(omniTalosconfig(testUserIdentity, testOmniEndpoint, "Y2E="), "cluster: demo", "cluster: prod", 1), "")
+	_, ca1, _ := resolveContext(omniTalosconfigYAML(testUserIdentity, testOmniEndpoint, "Y2E="), "")
+	_, ca2, _ := resolveContext(strings.Replace(omniTalosconfigYAML(testUserIdentity, testOmniEndpoint, "Y2E="), "cluster: demo", "cluster: prod", 1), "")
 
 	if sameCluster(ca1, ca2) || clusterID(ca1) == clusterID(ca2) {
 		t.Fatal("two clusters of one self-hosted Omni must not be the same cluster")
@@ -55,10 +55,10 @@ func TestOmniSigningIgnoresTheEnvironment(t *testing.T) {
 
 	encoded, key := testServiceAccountKey(t, time.Hour)
 	endpoint, caB64 := startFakeOmni(t, &fakeOmni{key: key})
-	cfg := omniTalosconfig(testSAIdentity, endpoint, caB64)
+	cfg := omniTalosconfigYAML(testSAIdentity, endpoint, caB64)
 
-	name, ctx, _ := resolveContext(cfg, "")
-	kubeAuth.save(contextFingerprint(name, ctx), kubeAuthState{Method: omniServiceAccountMethod, Secrets: map[string]string{omniServiceAccountField: encoded}})
+	_, ctx, _ := resolveContext(cfg, "")
+	kubeAuth.save(omniAuthKey(ctx), kubeAuthState{Method: omniServiceAccountMethod, Secrets: map[string]string{omniServiceAccountField: encoded}})
 
 	s, err := openSession(cfg, "")
 	if err != nil {
@@ -81,10 +81,10 @@ func TestOmniRenewsToANewerStoredKey(t *testing.T) {
 	oldKey, _ := testServiceAccountKey(t, time.Hour)
 	newKey, serverKey := testServiceAccountKey(t, time.Hour)
 	endpoint, caB64 := startFakeOmni(t, &fakeOmni{key: serverKey})
-	cfg := omniTalosconfig(testSAIdentity, endpoint, caB64)
+	cfg := omniTalosconfigYAML(testSAIdentity, endpoint, caB64)
 
-	name, ctx, _ := resolveContext(cfg, "")
-	key := contextFingerprint(name, ctx)
+	_, ctx, _ := resolveContext(cfg, "")
+	key := omniAuthKey(ctx)
 	kubeAuth.save(key, kubeAuthState{Method: omniServiceAccountMethod, Secrets: map[string]string{omniServiceAccountField: oldKey}})
 
 	s, err := openSession(cfg, "")
@@ -106,7 +106,7 @@ func TestOmniRenewsToANewerStoredKey(t *testing.T) {
 }
 
 func TestOmniContextIsNotProbed(t *testing.T) {
-	_, ctx, _ := resolveContext(omniTalosconfig(testUserIdentity, testOmniEndpoint, ""), "")
+	_, ctx, _ := resolveContext(omniTalosconfigYAML(testUserIdentity, testOmniEndpoint, ""), "")
 
 	if _, err := probeEndpoint(context.Background(), ctx, "10.0.0.1:50000"); !errors.Is(err, errOmniNotProbed) {
 		t.Fatalf("err = %v, want no probe of an Omni context", err)
@@ -116,7 +116,7 @@ func TestOmniContextIsNotProbed(t *testing.T) {
 func TestMaskOmniIdentityAndCluster(t *testing.T) {
 	enableMask(t, "")
 
-	privacy.learnConfig(strings.Replace(omniTalosconfig("jdoe@corp-example.net", testOmniEndpoint, ""), "cluster: demo", "cluster: payments", 1))
+	privacy.learnConfig(strings.Replace(omniTalosconfigYAML("jdoe@corp-example.net", testOmniEndpoint, ""), "cluster: demo", "cluster: payments", 1))
 
 	got := privacy.maskPlain("signed in as jdoe@corp-example.net to payments")
 	if strings.Contains(got, "jdoe") || strings.Contains(got, "corp-example") || strings.Contains(got, "payments") {

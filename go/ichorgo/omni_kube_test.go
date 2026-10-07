@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-// omniKubeconfig is a kubeconfig like `omnictl kubeconfig` writes, for an invented instance:
+// omniKubeconfigSample is a kubeconfig like `omnictl kubeconfig` writes, for an invented instance:
 // kubelogin against Omni's OIDC issuer, the cluster as an extra scope.
-const omniKubeconfig = `apiVersion: v1
+const omniKubeconfigSample = `apiVersion: v1
 kind: Config
 clusters:
 - cluster:
@@ -38,7 +38,7 @@ users:
 `
 
 func TestOmniKubeconfigSignsInWithOIDC(t *testing.T) {
-	out, err := ParseKubeconfig(omniKubeconfig)
+	out, err := ParseKubeconfig(omniKubeconfigSample)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestOmniKubeconfigSignsInWithOIDC(t *testing.T) {
 		t.Fatalf("summary = %+v, want an OIDC sign-in the app can do", ctx)
 	}
 
-	doc, err := loadKubeconfigDoc(omniKubeconfig)
+	doc, err := loadKubeconfigDoc(omniKubeconfigSample)
 	if err != nil {
 		t.Fatal(err)
 	}
