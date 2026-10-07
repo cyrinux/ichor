@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import name.levis.ichor.R
+import name.levis.ichor.model.KubeObjectAction
+import name.levis.ichor.model.KubeObjectBar
 import name.levis.ichor.model.KubernetesAction
 import name.levis.ichor.model.KubernetesBar
 import name.levis.ichor.model.OverviewAction
@@ -91,6 +93,10 @@ class UiPreferences(private val prefs: SharedPreferences) {
     private val _kubernetesBar = MutableStateFlow(KubernetesAction.bar.parse(prefs.getString(KEY_KUBERNETES_BAR, null)))
     val kubernetesBar: StateFlow<KubernetesBar> = _kubernetesBar.asStateFlow()
 
+    /** A Kubernetes object's app-bar actions, one bar for every kind. */
+    private val _kubeObjectBar = MutableStateFlow(KubeObjectAction.bar.parse(prefs.getString(KEY_KUBE_OBJECT_BAR, null)))
+    val kubeObjectBar: StateFlow<KubeObjectBar> = _kubeObjectBar.asStateFlow()
+
     private val _privacyMask = MutableStateFlow(
         PrivacyMask(prefs.getBoolean(KEY_PRIVACY_MASK, false), prefs.getString(KEY_PRIVACY_WORDS, "").orEmpty()),
     )
@@ -142,6 +148,11 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _kubernetesBar.value = bar
     }
 
+    fun setKubeObjectBar(bar: KubeObjectBar) {
+        prefs.edit().putString(KEY_KUBE_OBJECT_BAR, bar.encode()).apply()
+        _kubeObjectBar.value = bar
+    }
+
     fun setThemeMode(mode: ThemeMode) {
         prefs.edit().putString(KEY_THEME, mode.name).apply()
         _themeMode.value = mode
@@ -167,6 +178,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_NODES_EXPANDED = "overview_nodes_expanded"
         private const val KEY_OVERVIEW_BAR = "overview_bar"
         private const val KEY_KUBERNETES_BAR = "kubernetes_bar"
+        private const val KEY_KUBE_OBJECT_BAR = "kube_object_bar"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */
         fun storedLanguage(context: Context): String =

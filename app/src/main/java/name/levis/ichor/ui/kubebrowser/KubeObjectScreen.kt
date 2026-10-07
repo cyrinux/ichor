@@ -12,11 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ContentCopy
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.SettingsEthernet
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,6 +47,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.model.KubeObjectAction
+import name.levis.ichor.model.KubeObjectBar
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.SecureWhile
@@ -60,6 +57,8 @@ import name.levis.ichor.security.findFragmentActivity
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.ActionBarActions
+import name.levis.ichor.ui.components.ActionBarEditor
 import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
@@ -69,7 +68,6 @@ import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SkeletonStyle
 import name.levis.ichor.ui.components.ToggleRow
-import name.levis.ichor.ui.components.TooltipIconButton
 import name.levis.ichor.ui.components.shareText
 import name.levis.ichor.ui.diff.DiffLines
 import name.levis.ichor.ui.factory
@@ -80,7 +78,8 @@ import name.levis.ichor.ui.workloads.KubeEventsList
  * One object of any kind ([ref]) as YAML, with copy and share, a Secret's values behind the
  * app lock, its Kubernetes events, and, when the kind can be updated, an editor whose change
  * is reviewed as a diff (the API server's dry run) before it is saved. A pod also opens a
- * port-forward ([onPortForward]).
+ * port-forward ([onPortForward]). Its top bar is arranged like the overview's: the actions shown
+ * as icons or kept in its menu are the user's choice.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,6 +121,10 @@ fun KubeObjectScreen(
         }
     }
 
+    val bar by app.uiPreferences.kubeObjectBar.collectAsStateWithLifecycle()
+    var customizing by rememberSaveable { mutableStateOf(false) }
+    BackHandler(enabled = customizing) { customizing = false }
+
     val current = edit
     BackHandler(enabled = current != null) {
         when {
@@ -147,7 +150,10 @@ fun KubeObjectScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
+            if (customizing) TopAppBar(
+                title = { Text(stringResource(R.string.bar_edit_title)) },
+                actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
+            ) else TopAppBar(
                 title = {
                     Column {
                         Text(ref.name, fontFamily = FontFamily.Monospace, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -162,13 +168,26 @@ fun KubeObjectScreen(
                 navigationIcon = { BackButton(if (current == null) onBack else ({ if (current.changed) confirmingDiscard = true else vm.cancelEdit() })) },
                 actions = {
                     when {
-                        current == null -> ViewActions(ref, yaml, revealed, onPortForward, onEdit = vm::startEdit, onRefresh = vm::refresh)
+                        current == null -> ViewActions(
+                            ref,
+                            yaml,
+                            revealed,
+                            bar,
+                            onPortForward,
+                            onEdit = vm::startEdit,
+                            onRefresh = vm::refresh,
+                            onCustomize = { customizing = true },
+                        )
                         current.review == null -> TextButton(onClick = vm::review) { Text(stringResource(R.string.kb_review)) }
                     }
                 },
             )
         },
     ) { padding ->
+        if (customizing) {
+            ActionBarEditor(bar, kubeObjectActionLook, app.uiPreferences::setKubeObjectBar, Modifier.padding(padding))
+            return@Scaffold
+        }
         Column(Modifier.padding(padding).fillMaxSize()) {
             when {
                 current?.review != null -> ReviewContent(current, onBack = vm::backToEditor, onSave = vm::save, onRetry = vm::review)
@@ -204,22 +223,37 @@ private fun ViewActions(
     ref: KubeObjectRef,
     yaml: String?,
     revealed: Boolean,
+    bar: KubeObjectBar,
     onPortForward: (() -> Unit)?,
     onEdit: () -> Unit,
     onRefresh: () -> Unit,
+    onCustomize: () -> Unit,
 ) {
     val context = LocalContext.current
-    if (onPortForward != null && ref.isPod) {
-        TooltipIconButton(Icons.Outlined.SettingsEthernet, stringResource(R.string.kb_forward_title), onClick = onPortForward)
-    }
-    TooltipIconButton(Icons.Outlined.ContentCopy, stringResource(R.string.kb_copy), enabled = yaml != null, onClick = {
-        copyWithToast(context, ref.name, yaml.orEmpty(), sensitive = ref.isSecret && revealed)
-    })
-    TooltipIconButton(Icons.Outlined.Share, stringResource(R.string.kb_share), enabled = yaml != null, onClick = {
-        shareText(context, yaml.orEmpty(), context.getString(R.string.kb_share))
-    })
-    if (ref.editable) TooltipIconButton(Icons.Outlined.Edit, stringResource(R.string.kb_edit), enabled = yaml != null, onClick = onEdit)
-    TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = onRefresh)
+    ActionBarActions(
+        bar = bar,
+        look = kubeObjectActionLook,
+        onClick = { action ->
+            when (action) {
+                KubeObjectAction.EDIT -> onEdit()
+                KubeObjectAction.REFRESH -> onRefresh()
+                KubeObjectAction.COPY -> copyWithToast(context, ref.name, yaml.orEmpty(), sensitive = ref.isSecret && revealed)
+                KubeObjectAction.SHARE -> shareText(context, yaml.orEmpty(), context.getString(R.string.kb_share))
+                KubeObjectAction.PORT_FORWARD -> onPortForward?.invoke()
+            }
+        },
+        customizeLabel = stringResource(R.string.bar_edit_title),
+        onCustomize = onCustomize,
+        offered = { action ->
+            when (action) {
+                KubeObjectAction.EDIT -> ref.editable
+                KubeObjectAction.PORT_FORWARD -> onPortForward != null && ref.isPod
+                else -> true
+            }
+        },
+        // Nothing to copy, share or edit before the YAML is read.
+        enabled = { action -> action == KubeObjectAction.REFRESH || action == KubeObjectAction.PORT_FORWARD || yaml != null },
+    )
 }
 
 /** The switch showing a Secret's values, and the warning while they are shown. */
