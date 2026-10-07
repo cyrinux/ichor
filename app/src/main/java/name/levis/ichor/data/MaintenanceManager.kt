@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.ui.goErrorText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -81,7 +82,7 @@ class MaintenanceManager(
 
         override fun onDone(errMessage: String) {
             _current.update {
-                if (it?.node == node && it.running) it.copy(finished = true, error = errMessage.ifEmpty { null }) else it
+                if (it?.node == node && it.running) it.copy(finished = true, error = errMessage.ifEmpty { null }?.let(::goErrorText)) else it
             }
             _current.value?.takeIf { it.node == node }?.let { r ->
                 cordonedAfter(r.action, r.phase, r.running, r.error != null, r.wasCordoned)?.let { remember(node, it) }

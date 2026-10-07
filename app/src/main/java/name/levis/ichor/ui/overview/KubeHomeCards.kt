@@ -33,6 +33,7 @@ import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.importconfig.certExpiry
+import name.levis.ichor.ui.kubeauth.SignInAction
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.daysUntil
 
@@ -59,7 +60,10 @@ internal fun KubeUnreachableCard(message: UiText, onRetry: () -> Unit) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.overview_unreachable_title), style = MaterialTheme.typography.titleMedium)
             Text(message.asString(), style = MaterialTheme.typography.bodySmall, color = LocalStatusColors.current.bad)
-            Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SignInAction(message, onSignedIn = onRetry)
+                Button(onClick = onRetry) { Text(stringResource(R.string.common_retry)) }
+            }
         }
     }
 }
@@ -162,6 +166,8 @@ internal fun KubeToolsCard(nav: KubeHomeNavigation) {
             Text(stringResource(R.string.common_kind_kubernetes), style = MaterialTheme.typography.titleMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = nav.onWorkloads) { Text(stringResource(R.string.overview_action_workloads)) }
+                OutlinedButton(onClick = nav.onResources) { Text(stringResource(R.string.kb_title)) }
+                OutlinedButton(onClick = nav.onHelm) { Text(stringResource(R.string.kb_helm_title)) }
                 OutlinedButton(onClick = nav.onMetrics) { Text(stringResource(R.string.metrics_title)) }
                 OutlinedButton(onClick = nav.onCheckup) { Text(stringResource(R.string.checkup_title)) }
                 OutlinedButton(onClick = nav.onApiHealth) { Text(stringResource(R.string.apihealth_title)) }

@@ -3,6 +3,11 @@ package name.levis.ichor.ui.importconfig
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import name.levis.ichor.data.ConfigRepository
+import name.levis.ichor.data.KubeAuthRepository
+import name.levis.ichor.model.DiscoveryProvider
+import name.levis.ichor.model.discoveryFields
+import name.levis.ichor.model.importedContextNames
+import name.levis.ichor.model.isKube
 import name.levis.ichor.model.ConfigSummary
 import name.levis.ichor.model.ImportChoice
 import name.levis.ichor.model.ImportConflict
@@ -48,6 +53,8 @@ sealed interface ImportState {
         val choices: List<ImportChoice> = initialKubeChoices(summary),
         val takenNames: Set<Int> = emptySet(),
         val error: String? = null,
+        /** The cloud credentials that found these clusters (discovery): the added ones sign in with them. */
+        val discovery: Map<String, String>? = null,
     ) : ImportState {
         val canImport: Boolean get() = takenNames.isEmpty() && choices.any { !it.skip }
 
@@ -55,11 +62,21 @@ sealed interface ImportState {
         override fun toString() = "KubePreview(${summary.contexts.size} contexts)"
     }
 
+    /**
+     * Adding clusters from a cloud account (K7): the fields each provider asks for; [running]
+     * while the account's clusters are listed, [error] when that failed.
+     */
+    data class Discover(
+        val fields: Map<DiscoveryProvider, List<String>>,
+        val running: Boolean = false,
+        val error: String? = null,
+    ) : ImportState
+
     data class Invalid(val message: String) : ImportState
     data object Saved : ImportState
 }
 
-class ImportViewModel(private val configs: ConfigRepository) : ViewModel() {
+class ImportViewModel(private val configs: ConfigRepository, private val auth: KubeAuthRepository) : ViewModel() {
     private val _state = MutableStateFlow<ImportState>(ImportState.Idle)
     val state: StateFlow<ImportState> = _state.asStateFlow()
 
@@ -115,10 +132,35 @@ class ImportViewModel(private val configs: ConfigRepository) : ViewModel() {
         return takenNameChoices(conflicts, choices, stored, summary.contexts.map { it.name })
     }
 
+    /** Shows the cloud providers whose clusters can be added from an account. */
+    fun startDiscovery() {
+        _state.value = ImportState.Validating
+        viewModelScope.launch {
+            _state.value = runCatching { ImportState.Discover(discoveryFields(auth.discoveryFields())) }
+                .getOrElse { ImportState.Invalid(it.userMessage()) }
+        }
+    }
+
+    /**
+     * Lists the clusters the [provider] account reaches with [secrets] and shows them in the
+     * kubeconfig preview; the clusters added then sign in with the same [secrets].
+     */
+    fun discover(provider: DiscoveryProvider, secrets: Map<String, String>) {
+        val discover = _state.value as? ImportState.Discover ?: return
+        if (discover.running) return
+        _state.value = discover.copy(running = true, error = null)
+        viewModelScope.launch {
+            _state.value = runCatching {
+                val yaml = auth.discover(provider.id, secrets)
+                ImportState.KubePreview(yaml, configs.validateKube(yaml), configs.kubeImportConflicts(yaml), discovery = secrets)
+            }.getOrElse { discover.copy(running = false, error = it.userMessage()) }
+        }
+    }
+
     fun confirm() {
         val save: suspend () -> Unit = when (val preview = _state.value) {
             is ImportState.Preview -> if (preview.canImport) ({ configs.save(preview.yaml, preview.choices) }) else return
-            is ImportState.KubePreview -> if (preview.canImport) ({ configs.saveKube(preview.yaml, preview.choices) }) else return
+            is ImportState.KubePreview -> if (preview.canImport) ({ saveKube(preview) }) else return
             else -> return
         }
         val preview = _state.value
@@ -129,6 +171,15 @@ class ImportViewModel(private val configs: ConfigRepository) : ViewModel() {
                 onFailure = { failed(preview, it.userMessage()) },
             )
         }
+    }
+
+    /** Stores the kept contexts of [preview]; those found in a cloud account sign in with its credentials. */
+    private suspend fun saveKube(preview: ImportState.KubePreview) {
+        val before = configs.config.value?.summary?.contexts.orEmpty().map { it.name }.toSet()
+        configs.saveKube(preview.yaml, preview.choices)
+        val secrets = preview.discovery ?: return
+        val after = configs.config.value?.summary?.contexts.orEmpty().filter { it.isKube }.map { it.name }
+        auth.signInDiscovered(importedContextNames(before, after, preview.conflicts, preview.choices), secrets)
     }
 
     /** [preview] again, with the save's [error]. */

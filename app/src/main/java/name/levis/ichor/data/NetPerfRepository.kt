@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.ui.goErrorText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -57,7 +58,7 @@ class NetPerfRepository(private val configs: ConfigRepository, private val kubeS
 
                 override fun onDone(reportJSON: String, errMessage: String) {
                     val report = runCatching { TalosJson.decodeFromString(NetPerfReport.serializer(), reportJSON) }.getOrElse { NetPerfReport() }
-                    events.trySend(NetPerfEvent.Done(report, errMessage.ifEmpty { null }))
+                    events.trySend(NetPerfEvent.Done(report, errMessage.ifEmpty { null }?.let(::goErrorText)))
                     events.close()
                 }
             },

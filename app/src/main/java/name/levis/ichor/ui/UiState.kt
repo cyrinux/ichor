@@ -48,4 +48,4 @@ fun <T> UiState<T>.orRestored(restored: Pair<T, Long>, overFailure: Boolean): Ui
     is UiState.Loaded -> this
 }
 
-fun Throwable.userMessage(): String = message?.takeIf { it.isNotBlank() } ?: javaClass.simpleName
+fun Throwable.userMessage(): String = message?.takeIf { it.isNotBlank() }?.let(::goErrorText) ?: javaClass.simpleName

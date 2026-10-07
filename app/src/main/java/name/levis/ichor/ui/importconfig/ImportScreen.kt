@@ -79,7 +79,7 @@ fun ImportScreen(
     autoStartDemo: Boolean = false,
     incoming: String? = null,
     onIncomingTaken: () -> Unit = {},
-    vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository) }),
+    vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository, app.kubeAuthRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     // Keep the demo entry visible on first launch; config help is available in the toolbar.
@@ -141,6 +141,7 @@ fun ImportScreen(
                     onConfirm = vm::confirm,
                     onCancel = vm::reset,
                 )
+                is ImportState.Discover -> DiscoverCard(s, onDiscover = vm::discover, onCancel = vm::reset)
                 ImportState.Validating, ImportState.Saved ->Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator()
                 }
@@ -152,6 +153,7 @@ fun ImportScreen(
                     onPasted = { pasted = it },
                     onYaml = vm::submit,
                     onDemo = vm::startDemo,
+                    onDiscover = vm::startDiscovery,
                     // A restore replaces every cluster: offered when there is none yet.
                     restore = if (firstRun) ({ RestoreBackupButton(onRestored = onImported) }) else null,
                 )
@@ -169,6 +171,7 @@ private fun SourcePicker(
     onPasted: (String) -> Unit,
     onYaml: (String) -> Unit,
     onDemo: () -> Unit,
+    onDiscover: () -> Unit,
     restore: (@Composable () -> Unit)?,
 ) {
     val tabs = listOf(
@@ -186,6 +189,8 @@ private fun SourcePicker(
                     Text(stringResource(R.string.backup_restore_hint), style = MaterialTheme.typography.bodyMedium)
                     it()
                 }
+                Text(stringResource(R.string.kube_discover_hint), style = MaterialTheme.typography.bodyMedium)
+                OutlinedButton(onClick = onDiscover) { Text(stringResource(R.string.kube_discover_entry)) }
             }
         }
         PrimaryTabRow(selectedTabIndex = tab) {

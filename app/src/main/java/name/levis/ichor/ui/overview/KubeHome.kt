@@ -48,6 +48,12 @@ import name.levis.ichor.ui.components.VersionFooter
 import name.levis.ichor.ui.components.rememberClusterLabels
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.flux.FluxViewModel
+import name.levis.ichor.ui.kubeauth.SignInBanner
+import name.levis.ichor.ui.kubeauth.SignInSheet
+import name.levis.ichor.model.KubeSignInInfo
+import name.levis.ichor.model.SignInNeeded
+import name.levis.ichor.model.signInNeeded
+import androidx.compose.runtime.produceState
 
 class KubeHomeViewModel(val talos: TalosRepository) : LoadingViewModel<KubeNodesOverview>() {
     override val keepsDataOnFailure = true
@@ -70,6 +76,8 @@ class KubeHomeNavigation(
     val onAddCluster: () -> Unit,
     val onClustersCleared: () -> Unit,
     val onChangelog: () -> Unit,
+    val onResources: () -> Unit,
+    val onHelm: () -> Unit,
 )
 
 /**
@@ -94,6 +102,13 @@ fun KubeHomeScreen(
     val clusterLabels = rememberClusterLabels()
     var showClusters by remember { mutableStateOf(false) }
     var clusterMenu by remember { mutableStateOf(false) }
+    var signingIn by remember { mutableStateOf(false) }
+    // How the cluster signs in, read again after each sign-in (invalidations): null for static credentials.
+    val signIn by produceState<KubeSignInInfo?>(null, config?.activeContext, invalidations) {
+        value = config?.activeSummary?.takeIf { it.signIn.isNotEmpty() }?.let { cluster ->
+            runCatching { app.kubeAuthRepository.info(cluster.name) }.getOrNull()
+        }
+    }
 
     LaunchedEffect(config?.activeContext, invalidations) { vm.refresh(reset = true) }
     // No Talos inventory hints at Argo CD or Flux here: both are asked, and answer "not
@@ -149,6 +164,11 @@ fun KubeHomeScreen(
             argoVm.refresh()
             fluxVm.refresh()
         }
+        if (signingIn) {
+            config?.activeContext?.let { name ->
+                SignInSheet(context = name, onDismiss = { signingIn = false }, onSignedIn = { signingIn = false })
+            }
+        }
         when (val s = state) {
             UiState.Loading -> LoadingBox(Modifier.padding(padding))
             else -> PullToRefreshBox(
@@ -161,6 +181,8 @@ fun KubeHomeScreen(
                     name = config?.activeSummary?.let(clusterLabels::of),
                     nodes = (s as? UiState.Loaded)?.data,
                     failure = (s as? UiState.Failed)?.message,
+                    signIn = kubeSignInBanner(signIn, (s as? UiState.Failed)?.message ?: (s as? UiState.Loaded)?.error),
+                    onSignIn = { signingIn = true },
                     onRetry = vm::refresh,
                     argo = argo.takeIf { (it as? UiState.Loaded)?.data?.installed == true },
                     flux = flux.takeIf { (it as? UiState.Loaded)?.data?.installed == true },
@@ -177,6 +199,8 @@ private fun KubeHomeList(
     name: String?,
     nodes: KubeNodesOverview?,
     failure: UiText?,
+    signIn: KubeSignInBanner?,
+    onSignIn: () -> Unit,
     onRetry: () -> Unit,
     argo: UiState<ArgoStatus>?,
     flux: UiState<FluxStatus>?,
@@ -190,12 +214,34 @@ private fun KubeHomeList(
         if (BuildConfig.SELF_UPDATE) item { UpdateBanner(onClick = nav.onSettings) } else item { StoreUpdateBanner() }
         if (BuildConfig.DONATIONS || BuildConfig.FEATURE_FUNDING) item { SupportCard(nav.onFunding) }
         cluster?.let { item { KubeCredentialsBanner(it) } }
-        failure?.let { item(key = "failure") { KubeUnreachableCard(it, onRetry) } }
+        signIn?.let { item(key = "sign-in") { SignInBanner(it.method, it.needed, onSignIn) } }
+        // The banner says it all when the call failed for want of a sign-in.
+        failure?.takeIf { signIn?.needed == null }?.let { item(key = "failure") { KubeUnreachableCard(it, onRetry) } }
         cluster?.let { item(key = "summary") { KubeSummaryCard(name ?: it.name, it, nodes) } }
         if (nodes != null) item(key = "nodes") { KubeNodesCard(nodes) }
         item(key = "tools") { KubeToolsCard(nav) }
         argo?.let { item(key = "argocd") { ArgoCard(it, argoTile = null, downNodes = emptySet(), onOpen = nav.onArgoCD) } }
         flux?.let { item(key = "flux") { FluxCard(it, fluxTile = null, onOpen = nav.onFlux) } }
         item(key = "version") { VersionFooter(onClick = nav.onChangelog) }
+    }
+}
+
+/** The sign-in banner of the kube home: the [method], and what a failed call said ([needed]). */
+internal data class KubeSignInBanner(val method: String, val needed: SignInNeeded?)
+
+/**
+ * The banner to show, if any: the cluster was never signed in ([info]), or a call failed
+ * asking for a sign-in ([failure], the core's message).
+ */
+internal fun kubeSignInBanner(info: KubeSignInInfo?, failure: UiText?): KubeSignInBanner? {
+    val needed = when (failure) {
+        is UiText.SignInRequired -> SignInNeeded(failure.method, failure.reason)
+        is UiText.Raw -> signInNeeded(failure.text)
+        else -> null
+    }
+    return when {
+        needed != null -> KubeSignInBanner(info?.method ?: needed.method, needed)
+        info != null && !info.signedIn -> KubeSignInBanner(info.method, null)
+        else -> null
     }
 }

@@ -18,6 +18,8 @@ type kubeCredentials struct {
 	server *url.URL
 	tls    *tls.Config
 	token  string
+	// tokens replaces token for a context that signs in through a method.
+	tokens *authTokenSource
 	// namespace is the current context's namespace, "" when it sets none.
 	namespace string
 }

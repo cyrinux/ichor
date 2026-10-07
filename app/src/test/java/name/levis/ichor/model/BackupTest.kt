@@ -133,6 +133,45 @@ class BackupTest {
     }
 
     @Test
+    fun backupKubeAuthKeepsWhatIsWorthKeeping() {
+        val states = mapOf("k1" to "with secrets", "k2" to "session only", "k3" to "broken", "gone" to "with secrets")
+        val forBackup = { state: String ->
+            when (state) {
+                "with secrets" -> "secrets"
+                "broken" -> error("auth state: bad JSON")
+                else -> ""
+            }
+        }
+
+        assertEquals(mapOf("k1" to "secrets"), backupKubeAuth(listOf("k1", "k2", "k3", "k4", ""), states, forBackup))
+        assertNull(backupKubeAuth(listOf("k2"), states, forBackup))
+    }
+
+    @Test
+    fun kubeAuthAndAccessRoundTrip() {
+        val payload = BackupPayload(
+            format = BACKUP_FORMAT_KUBE,
+            kubeconfig = "kind: Config",
+            kubeAuth = mapOf("k1" to """{"method":"gke","secrets":{"gcpServiceAccountJson":"{}"}}"""),
+            clusters = backupClusters(listOf("t1", "k1"), emptyMap(), emptyMap(), emptySet(), emptyMap(), emptyMap(), mapOf("t1" to "k1")),
+        )
+        val decoded = TalosJson.decodeFromString(BackupPayload.serializer(), TalosJson.encodeToString(BackupPayload.serializer(), payload))
+
+        assertEquals(payload.kubeAuth, restoredKubeAuth(decoded.kubeAuth, listOf("k1")))
+        assertEquals(emptyMap<String, String>(), restoredKubeAuth(decoded.kubeAuth, listOf("k2")))
+        assertEquals(mapOf("t1" to "k1"), restoredClusters(decoded.clusters, listOf("t1", "k1")).kubeAccess)
+        // A link to a cluster the backup does not restore is dropped.
+        assertEquals(emptyMap<String, String>(), restoredClusters(decoded.clusters, listOf("t1")).kubeAccess)
+    }
+
+    @Test
+    fun olderBackupHasNoKubeAuth() {
+        val payload = TalosJson.decodeFromString(BackupPayload.serializer(), """{"format":2,"talosconfig":"","kubeconfig":"kind: Config"}""")
+        assertNull(payload.kubeAuth)
+        assertEquals(emptyMap<String, String>(), restoredKubeAuth(payload.kubeAuth, listOf("k1")))
+    }
+
+    @Test
     fun fileName() {
         assertEquals("ichor-2026-10-02.ichorbackup", backupFileName(LocalDate.of(2026, 10, 2)))
     }

@@ -1,15 +1,22 @@
 package name.levis.ichor.ui.workloads
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.Stream
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import name.levis.ichor.ui.components.AppTab
@@ -59,7 +66,8 @@ private val KUBE_TABS = listOf(0, 1, 2, 3)
  * kubeconfig's, for a cluster the phone reaches another way (not in screenshot mode: the
  * dialog would show the real address). It also opens the API server health, the network
  * policies and, with Cilium,
- * the live flows ([onFlows] with the namespace and pod to narrow them to, or nulls).
+ * the live flows ([onFlows] with the namespace and pod to narrow them to, or nulls), and from
+ * its menu the browser of every kind ([onResources]) and the Helm releases ([onHelm]).
  * [focus] (a share link) opens a tab, scoped to and searched for one item, whose sheet opens
  * once its row loads.
  */
@@ -72,6 +80,8 @@ fun KubernetesScreen(
     onApiHealth: () -> Unit,
     onCheckup: () -> Unit,
     onFlows: (namespace: String?, pod: String?) -> Unit,
+    onResources: () -> Unit,
+    onHelm: () -> Unit,
     focus: KubeFocus = KubeFocus(0),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(focus.tab) }
@@ -134,6 +144,7 @@ fun KubernetesScreen(
                     if (fingerprint != null) {
                         TooltipIconButton(Icons.Outlined.Dns, stringResource(R.string.kube_server_title), onClick = { editing = true })
                     }
+                    BrowserMenu(onResources, onHelm)
                 },
             )
         },
@@ -177,7 +188,7 @@ class NamespacesViewModel(private val talos: TalosRepository) : LoadingViewModel
  * remembered, until another scope is picked.
  */
 @Composable
-private fun rememberKubeScope(app: TalosApp, namespaces: NamespacesViewModel, masked: Boolean, linked: String = ""): KubeScopeControl {
+internal fun rememberKubeScope(app: TalosApp, namespaces: NamespacesViewModel, masked: Boolean, linked: String = ""): KubeScopeControl {
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val stored by app.kubeScopes.scopes.collectAsStateWithLifecycle()
     val listed by namespaces.state.collectAsStateWithLifecycle()
@@ -194,6 +205,33 @@ private fun rememberKubeScope(app: TalosApp, namespaces: NamespacesViewModel, ma
         KubeScopeControl(scope ?: KubeScope(), known, ready = scope != null) { picked ->
             fromLink = null
             if (cluster != null) app.kubeScopes.set(cluster, picked) else local = picked.stored
+        }
+    }
+}
+
+/** Overflow menu: the generic browser and Helm, for what the tabs do not list. */
+@Composable
+private fun BrowserMenu(onResources: () -> Unit, onHelm: () -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        TooltipIconButton(Icons.Outlined.MoreVert, stringResource(R.string.common_more), onClick = { open = true })
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.kb_title)) },
+                leadingIcon = { Icon(Icons.Outlined.Category, contentDescription = null) },
+                onClick = {
+                    open = false
+                    onResources()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.kb_helm_title)) },
+                leadingIcon = { Icon(Icons.Outlined.Inventory2, contentDescription = null) },
+                onClick = {
+                    open = false
+                    onHelm()
+                },
+            )
         }
     }
 }

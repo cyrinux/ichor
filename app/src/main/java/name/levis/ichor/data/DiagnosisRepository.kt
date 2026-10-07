@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.ui.goErrorText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -65,7 +66,7 @@ class DiagnosisRepository(private val configs: ConfigRepository, private val kub
                     }
 
                     override fun onDone(errMessage: String) {
-                        trySend(AnswerEvent.Done(errMessage.ifEmpty { null }))
+                        trySend(AnswerEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
                         close()
                     }
                 },
