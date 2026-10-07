@@ -23,11 +23,14 @@ public struct BackupPayload: Codable, Equatable, Sendable {
     public var settings: BackupSettings?
     /// Per-cluster options by context fingerprint, which both apps compute alike in the Go core.
     public var clusters: [String: BackupCluster]?
+    /// The sign-ins of the kubeconfig clusters by fingerprint (Go KubeAuthForBackup: what the
+    /// user entered, never a session); nil when there is none. Older apps ignore it.
+    public var kubeAuth: [String: String]?
 
     public init(
         format: Int = backupFormat, platform: String? = nil, createdAt: Int64? = nil, talosconfig: String,
         kubeconfig: String? = nil, activeContextIndex: Int? = nil, settings: BackupSettings? = nil,
-        clusters: [String: BackupCluster]? = nil
+        clusters: [String: BackupCluster]? = nil, kubeAuth: [String: String]? = nil
     ) {
         self.format = format
         self.platform = platform
@@ -37,10 +40,11 @@ public struct BackupPayload: Codable, Equatable, Sendable {
         self.activeContextIndex = activeContextIndex
         self.settings = settings
         self.clusters = clusters
+        self.kubeAuth = kubeAuth
     }
 
     private enum CodingKeys: String, CodingKey {
-        case format, platform, createdAt, talosconfig, kubeconfig, activeContextIndex, settings, clusters
+        case format, platform, createdAt, talosconfig, kubeconfig, activeContextIndex, settings, clusters, kubeAuth
     }
 
     // A format 2 payload may leave the talosconfig out (or null) when it only holds a kubeconfig.
@@ -54,6 +58,7 @@ public struct BackupPayload: Codable, Equatable, Sendable {
         activeContextIndex = try c.decodeIfPresent(Int.self, forKey: .activeContextIndex)
         settings = try c.decodeIfPresent(BackupSettings.self, forKey: .settings)
         clusters = try c.decodeIfPresent([String: BackupCluster].self, forKey: .clusters)
+        kubeAuth = try c.decodeIfPresent([String: String].self, forKey: .kubeAuth)
     }
 }
 
@@ -94,14 +99,18 @@ public struct BackupCluster: Codable, Equatable, Sendable {
     public var wakeOnLan: [String: BackupWolTarget]?
     /// The Kubernetes API address to use instead of the kubeconfig's.
     public var kubeServer: String?
+    /// A Talos cluster's Kubernetes access: the fingerprint of the kubeconfig cluster its
+    /// Kubernetes calls go through (nil: the admin kubeconfig Talos issues).
+    public var kubeAccess: String?
 
     public init(name: String? = nil, color: Int? = nil, vpnOnly: Bool? = nil,
-                wakeOnLan: [String: BackupWolTarget]? = nil, kubeServer: String? = nil) {
+                wakeOnLan: [String: BackupWolTarget]? = nil, kubeServer: String? = nil, kubeAccess: String? = nil) {
         self.name = name
         self.color = color
         self.vpnOnly = vpnOnly
         self.wakeOnLan = wakeOnLan
         self.kubeServer = kubeServer
+        self.kubeAccess = kubeAccess
     }
 }
 
@@ -170,7 +179,7 @@ public func backupPassphraseProblem(_ passphrase: String, again: String) -> Back
 /// `wakeOnLan` is keyed by `wolKey`.
 public func backupClusters(fingerprints: [String], names: [String: String], colors: [String: Int],
                            kubeServers: [String: String], vpnOnly: Set<String> = [],
-                           wakeOnLan: [String: WolTarget] = [:]) -> [String: BackupCluster] {
+                           wakeOnLan: [String: WolTarget] = [:], kubeAccess: [String: String] = [:]) -> [String: BackupCluster] {
     var out: [String: BackupCluster] = [:]
     for fp in fingerprints where !fp.isEmpty {
         var wol: [String: BackupWolTarget] = [:]
@@ -179,7 +188,7 @@ public func backupClusters(fingerprints: [String], names: [String: String], colo
         }
         out[fp] = BackupCluster(name: names[fp], color: colors[fp].map { $0 & 0xFFFFFF },
                                 vpnOnly: vpnOnly.contains(fp) ? true : nil, wakeOnLan: wol.isEmpty ? nil : wol,
-                                kubeServer: kubeServers[fp])
+                                kubeServer: kubeServers[fp], kubeAccess: kubeAccess[fp].flatMap { $0.isEmpty ? nil : $0 })
     }
     return out
 }
@@ -193,6 +202,8 @@ public struct RestoredClusters: Equatable, Sendable {
     public var vpnOnly: Set<String> = []
     /// By `wolKey`, checked like typed ones.
     public var wakeOnLan: [String: WolTarget] = [:]
+    /// Talos fingerprint → kubeconfig cluster fingerprint, both in the restored config.
+    public var kubeAccess: [String: String] = [:]
 }
 
 public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints: [String]) -> RestoredClusters {
@@ -202,7 +213,9 @@ public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints:
     var kubeServers: [String: String] = [:]
     var vpnOnly: Set<String> = []
     var wakeOnLan: [String: WolTarget] = [:]
+    var kubeAccess: [String: String] = [:]
     for (fp, cluster) in clusters ?? [:] where known.contains(fp) {
+        if let target = cluster.kubeAccess, target != fp, known.contains(target) { kubeAccess[fp] = target }
         if cluster.vpnOnly == true { vpnOnly.insert(fp) }
         for (node, wol) in cluster.wakeOnLan ?? [:] {
             let node = node.trimmingCharacters(in: .whitespaces)
@@ -219,7 +232,14 @@ public func restoredClusters(_ clusters: [String: BackupCluster]?, fingerprints:
             kubeServers[fp] = server
         }
     }
-    return RestoredClusters(names: names, colors: colors, kubeServers: kubeServers, vpnOnly: vpnOnly, wakeOnLan: wakeOnLan)
+    return RestoredClusters(names: names, colors: colors, kubeServers: kubeServers, vpnOnly: vpnOnly,
+                            wakeOnLan: wakeOnLan, kubeAccess: kubeAccess)
+}
+
+/// The sign-ins of a restored payload for the clusters it restored (`fingerprints`), empty
+/// states left out.
+public func restoredKubeAuth(_ payload: BackupPayload, fingerprints: [String]) -> [String: String] {
+    KubeAuthMap.keeping(payload.kubeAuth ?? [:], fingerprints: fingerprints)
 }
 
 /// A backup error of the Go core, whose messages start with a code (backup.go).
