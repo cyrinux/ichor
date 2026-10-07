@@ -13,6 +13,7 @@ import name.levis.ichor.data.AiPreferences
 import name.levis.ichor.data.CaptureRepository
 import name.levis.ichor.data.CiliumRepository
 import name.levis.ichor.data.NetPerfHistory
+import name.levis.ichor.data.ImageScanRepository
 import name.levis.ichor.data.NetPerfRepository
 import name.levis.ichor.data.PublicIpRepository
 import name.levis.ichor.data.ChangelogRepository
@@ -104,6 +105,8 @@ class TalosApp : Application() {
     val debugShells by lazy { DebugShells(this, configRepository, kubeServers) }
     val captureRepository by lazy { CaptureRepository(configRepository, filesDir) }
     val netPerfRepository by lazy { NetPerfRepository(configRepository, kubeServers) }
+    /** The image vulnerability scan running or last run, app-wide (see ImageScanRepository). */
+    val imageScanRepository by lazy { ImageScanRepository(configRepository, kubeServers) }
     val ciliumRepository by lazy { CiliumRepository(configRepository, kubeServers) }
     /** Any kind as YAML, Helm releases, followed pod logs and port-forwards (Kubernetes API only). */
     val kubeBrowser by lazy { KubeBrowserRepository(configRepository, kubeServers) }

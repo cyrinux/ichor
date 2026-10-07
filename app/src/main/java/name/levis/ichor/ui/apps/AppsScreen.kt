@@ -60,6 +60,10 @@ import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
 import name.levis.ichor.ui.workloads.RolloutStatusSheet
 import name.levis.ichor.ui.workloads.WorkloadPodsSheet
+import name.levis.ichor.model.ImageScanReport
+import name.levis.ichor.ui.imagescan.AppScanUi
+import name.levis.ichor.ui.imagescan.ImageScanReportOpen
+import name.levis.ichor.ui.imagescan.ImageScanViewModel
 import name.levis.ichor.ui.components.TooltipIconButton
 
 /**
@@ -82,6 +86,7 @@ fun AppsScreen(
     routesVm: AppRoutesViewModel = viewModel(factory = factory { AppRoutesViewModel(app.talosRepository) }),
     argoVm: ArgoViewModel = viewModel(key = "apps-argocd", factory = factory { ArgoViewModel(app.talosRepository, freezeReminderHook(app)) }),
     fluxVm: FluxViewModel = viewModel(key = "apps-flux", factory = factory { FluxViewModel(app.talosRepository) }),
+    scanVm: ImageScanViewModel = viewModel(factory = factory { ImageScanViewModel(app.imageScanRepository) }),
 ) {
     val application = LocalContext.current.applicationContext as TalosApp
     val state by vm.state.collectAsStateWithLifecycle()
@@ -130,6 +135,12 @@ fun AppsScreen(
         if (argoOffered && status != null && inventory != null) status.inventoryBadges(inventory.apps) else emptyMap()
     }
 
+    // Vulnerability scans: through the Kubernetes API too.
+    val operatorReports by scanVm.state.collectAsStateWithLifecycle()
+    val scanSession by scanVm.session.collectAsStateWithLifecycle()
+    // The report open over the app's sheet, with the core's JSON to export it from.
+    var reportOpen by remember { mutableStateOf<Pair<ImageScanReport, String>?>(null) }
+
     // Flux: its own tile's sheet only, when the inventory shows it.
     val fluxOffered = canRestart && inventory?.hasFlux == true
     val fluxState by fluxVm.state.collectAsStateWithLifecycle()
@@ -167,6 +178,7 @@ fun AppsScreen(
                     LaunchedEffect(detail) {
                         workloadsVm.load(detail)
                         routesVm.load(detail)
+                        scanVm.load(detail)
                     }
                 }
                 if (argoOffered) {
@@ -187,10 +199,25 @@ fun AppsScreen(
                     },
                     argo = if (argoOffered) argoUi(detail, argoState, argoBusy, argoVm, onArgoCD, onArgoApp) else null,
                     flux = if (isFlux) AppFluxUi(fluxState, onFlux) else null,
+                    scan = if (canRestart) {
+                        AppScanUi(
+                            operator = operatorReports,
+                            session = scanSession?.takeIf { it.appId == detail.id && it.context == config?.activeContext },
+                            busyElsewhere = scanSession?.let { it.running && (it.appId != detail.id || it.context != config?.activeContext) } == true,
+                            onScan = { scanVm.scan(detail) },
+                            onStop = scanVm::stop,
+                            onOpen = { report, json -> reportOpen = report to json },
+                        )
+                    } else {
+                        null
+                    },
                     onPodNode = { addr -> nodes.openNode(addr, onNode) },
                     onDismiss = { selected = null },
                 )
                 podsOf?.let { WorkloadPodsSheet(it, onDismiss = { podsOf = null }) }
+                reportOpen?.let { (report, json) ->
+                    ImageScanReportOpen(report, json, detail.name, scanVm, onDismiss = { reportOpen = null })
+                }
             }
             
         }
