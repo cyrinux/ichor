@@ -140,7 +140,7 @@ fun OverviewScreen(
     onHealth: () -> Unit,
     onEvents: () -> Unit,
     onInsights: () -> Unit,
-    onApps: () -> Unit,
+    onApps: (attention: Boolean) -> Unit,
     onSettings: () -> Unit,
     onFunding: () -> Unit,
     onIssueConfig: () -> Unit,
@@ -499,7 +499,7 @@ private fun NodeList(
     onIssueConfig: () -> Unit,
     onInsights: () -> Unit,
     apps: UiState<Inventory>,
-    onApps: () -> Unit,
+    onApps: (attention: Boolean) -> Unit,
     dataServices: UiState<DataServices>?,
     dataHints: String,
     onDataServices: (DataServiceKind?) -> Unit,
@@ -596,7 +596,7 @@ private fun NodeList(
                     val argoData = (argo as? UiState.Loaded)?.data
                     val inventory = (apps as? UiState.Loaded)?.data
                     val badges = remember(argoData, inventory) { if (argoData != null && inventory != null) argoData.inventoryBadges(inventory.apps) else emptyMap() }
-                    Box(Modifier.longPressToCustomize(onCustomize)) { AppsCard(apps, onApps, badges) }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { AppsCard(apps, onOpen = { onApps(false) }, argoBadges = badges, onAttention = { onApps(true) }) }
                 }
                 OverviewCard.DATA_SERVICES -> if (dataServices != null) item(key = card.name) {
                     val inventory = (apps as? UiState.Loaded)?.data

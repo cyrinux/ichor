@@ -67,11 +67,12 @@ internal val AppCardShape = RoundedCornerShape(18.dp)
 /**
  * Search, filter chips, the grid of recognised apps, then the Kubernetes/Talos plumbing and
  * the unrecognised apps in sections collapsed by default (opened while searching or filtering).
+ * [attention] starts on the "needs attention" chip.
  */
 @Composable
-fun AppsGrid(inventory: Inventory, onOpen: (InventoryApp) -> Unit, argoBadges: Map<String, ServiceHealth> = emptyMap()) {
+fun AppsGrid(inventory: Inventory, onOpen: (InventoryApp) -> Unit, argoBadges: Map<String, ServiceHealth> = emptyMap(), attention: Boolean = false) {
     var query by rememberSaveable { mutableStateOf("") }
-    var filterKey by rememberSaveable { mutableStateOf(FILTER_ALL) }
+    var filterKey by rememberSaveable { mutableStateOf(if (attention) FILTER_ATTENTION else FILTER_ALL) }
     var systemOpen by rememberSaveable { mutableStateOf(false) }
     var unknownOpen by rememberSaveable { mutableStateOf(false) }
     val apps = inventory.apps

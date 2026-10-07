@@ -279,7 +279,7 @@ struct OverviewView: View {
                 if let access = model.activeSummary?.localizedAccessLabel { Text(access) }
             }
         case .apps:
-            AppsCard(state: inventory, hostnames: hostnames, argo: argoStatus)
+            AppsCard(state: inventory, hostnames: hostnames, argo: argoStatus, path: $path)
         case .dataServices:
             if let dataServices {
                 DataServicesSection(state: dataServices, hints: dataHints, apps: inventoryApps, downNodes: overview.downHostnames)

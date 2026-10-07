@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.overview
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,8 +20,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ServiceHealth
@@ -42,12 +45,13 @@ private val TILE = 36.dp
  * The cluster's apps at a glance, opening the Apps screen: how many run, how many need a
  * look, and a few icons. A skeleton while loading; nothing on failure or without apps, so
  * the inventory never gets in the way of the overview. [argoBadges] marks the apps whose Argo
- * CD app is critical or OutOfSync (by inventory id).
+ * CD app is critical or OutOfSync (by inventory id); its "needs a look" pill opens the Apps
+ * screen on that chip with [onAttention].
  */
 @Composable
-fun AppsCard(state: UiState<Inventory>, onOpen: () -> Unit, argoBadges: Map<String, ServiceHealth> = emptyMap()) {
+fun AppsCard(state: UiState<Inventory>, onOpen: () -> Unit, argoBadges: Map<String, ServiceHealth> = emptyMap(), onAttention: () -> Unit = onOpen) {
     when (state) {
-        UiState.Loading -> AppsCardFrame(subtitle = null, attention = 0, onOpen = onOpen) {
+        UiState.Loading -> AppsCardFrame(subtitle = null, attention = 0, onOpen = onOpen, onAttention = onAttention) {
             repeat(TILES) { AppIconPlaceholder(size = TILE) }
         }
         is UiState.Failed -> Unit
@@ -60,7 +64,7 @@ fun AppsCard(state: UiState<Inventory>, onOpen: () -> Unit, argoBadges: Map<Stri
                 pluralStringResource(R.plurals.apps_running, running, running),
                 pluralStringResource(R.plurals.apps_containers, containers, containers),
             ).joinToString(" · ")
-            AppsCardFrame(subtitle, apps.attentionCount, onOpen) {
+            AppsCardFrame(subtitle, apps.attentionCount, onOpen, onAttention) {
                 val tiles = apps.overviewTiles(TILES)
                 tiles.forEach { app ->
                     Box {
@@ -78,7 +82,7 @@ fun AppsCard(state: UiState<Inventory>, onOpen: () -> Unit, argoBadges: Map<Stri
 }
 
 @Composable
-private fun AppsCardFrame(subtitle: String?, attention: Int, onOpen: () -> Unit, tiles: @Composable () -> Unit) {
+private fun AppsCardFrame(subtitle: String?, attention: Int, onOpen: () -> Unit, onAttention: () -> Unit, tiles: @Composable () -> Unit) {
     Card(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -89,7 +93,11 @@ private fun AppsCardFrame(subtitle: String?, attention: Int, onOpen: () -> Unit,
                     }
                 }
                 if (attention > 0) {
-                    StatusPill(pluralStringResource(R.plurals.apps_attention, attention, attention), LocalStatusColors.current.warn)
+                    StatusPill(
+                        pluralStringResource(R.plurals.apps_attention, attention, attention),
+                        LocalStatusColors.current.warn,
+                        Modifier.clip(RoundedCornerShape(50)).clickable(role = Role.Button, onClick = onAttention),
+                    )
                 }
                 Icon(
                     Icons.AutoMirrored.Outlined.KeyboardArrowRight,

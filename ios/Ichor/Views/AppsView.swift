@@ -9,8 +9,12 @@ struct AppsView: View {
     let hostnames: [String: String]
 
     // Explicit: the private @State properties make the memberwise init private.
-    init(hostnames: [String: String]) {
+    init(hostnames: [String: String], filter: AppFilter = .all) {
         self.hostnames = hostnames
+        _filter = State(initialValue: filter)
+        // A chip opens the groups, as when picked here.
+        _showSystem = State(initialValue: filter != .all)
+        _showUnrecognised = State(initialValue: filter != .all)
     }
 
     @Environment(AppModel.self) private var model
