@@ -110,6 +110,8 @@ private val FIELDS = listOf(
     CredentialField("rancherServer", R.string.kube_field_rancher_server, FieldKind.TEXT),
     CredentialField("rancherApiKey", R.string.kube_field_rancher_key, FieldKind.SECRET),
     CredentialField("serviceAccountKey", R.string.kube_field_omni_service_account_key, FieldKind.SECRET),
+    CredentialField("omniUrl", R.string.omni_field_url, FieldKind.TEXT),
+    CredentialField("omniEmail", R.string.omni_field_email, FieldKind.TEXT),
 ).associateBy { it.name }
 
 /** The field [name], or null when the core asks for one the app does not know (shown by name, as a secret). */
@@ -138,6 +140,8 @@ enum class DiscoveryProvider(val id: String, @StringRes val label: Int) {
     AKS("aks", R.string.kube_signin_method_azure),
     DIGITALOCEAN("digitalocean", R.string.kube_signin_method_digitalocean),
     RANCHER("rancher", R.string.kube_signin_method_rancher),
+    /** Talos clusters of a Sidero Omni account (talosconfigs, not kubeconfigs): see OmniCard. */
+    OMNI("omni", R.string.kube_signin_method_omni),
 }
 
 /** The fields each provider asks for (KubeDiscoverFields), only for the providers the app shows. */

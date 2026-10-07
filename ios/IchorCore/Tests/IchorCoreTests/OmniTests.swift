@@ -25,14 +25,13 @@ final class OmniTests: XCTestCase {
         XCTAssertNil(ctx.identity)
     }
 
-    func testOmniAllowsAllButIssuingCredentials() {
+    func testOmniAllowsAllButIssuingATalosconfig() {
         let omni = ContextSummary(name: "acme", omni: true)
         XCTAssertTrue(omni.allows(.power))
         XCTAssertTrue(omni.allows(.upgrade))
+        XCTAssertTrue(omni.allows(.kubeconfig))
+        XCTAssertTrue(omni.allows(.workloads))
         XCTAssertFalse(omni.allows(.issueConfig))
-        XCTAssertFalse(omni.allows(.kubeconfig))
-        XCTAssertFalse(omni.allows(.workloads))
-        XCTAssertTrue(omni.allows(.workloads, kubeLinked: true))
     }
 
     func testServiceAccountKeyIsSecret() {

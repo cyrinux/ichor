@@ -3294,4 +3294,9 @@
     <string name="import_omni_identity">Ідентичність Omni</string>
     <string name="import_omni_cluster">Кластер Omni</string>
     <string name="import_nodes_omni">отримані з Omni</string>
+    <string name="omni_add_title">Додати кластери з Sidero Omni</string>
+    <string name="omni_add_body">Увійдіть у свій екземпляр Omni: його кластери з\'являться в попередньому перегляді, вже з входом, разом із Kubernetes.</string>
+    <string name="omni_field_url">URL Omni (https://…omni.siderolabs.io)</string>
+    <string name="omni_field_email">Email облікового запису</string>
+    <string name="omni_mode_account">Обліковий запис</string>
 </resources>

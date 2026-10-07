@@ -75,6 +75,36 @@ class KubeAuthRepository(private val configs: ConfigRepository) {
         if (isTalos(context)) Ichorgo.talosSignOut(talosYaml(), context) else Ichorgo.kubeSignOut(kubeYaml(), context)
     }
 
+    /** Signs the account [email] in to the Omni instance at [endpoint] in the browser; cancelling stops it. */
+    fun omniSignIn(endpoint: String, email: String): Flow<SignInEvent> = callbackFlow {
+        val run = Ichorgo.startOmniAccountSignIn(
+            endpoint,
+            email,
+            object : SignInListener {
+                override fun onPrompt(json: String) {
+                    runCatching { TalosJson.decodeFromString(SignInPrompt.serializer(), json) }
+                        .onSuccess { trySend(SignInEvent.Prompt(it)) }
+                }
+
+                override fun onDone(errMessage: String) {
+                    trySend(SignInEvent.Done(errMessage.ifEmpty { null }?.let(::goErrorText)))
+                    close()
+                }
+            },
+        )
+        awaitClose { run.cancel() }
+    }
+
+    /** Checks and stores an Omni service account [key]; returns the identity it signs as. */
+    suspend fun omniServiceAccount(endpoint: String, key: String): String = withContext(Dispatchers.IO) {
+        Ichorgo.setOmniServiceAccount(endpoint, key)
+    }
+
+    /** A talosconfig of the clusters [identity] sees on the Omni instance at [endpoint], for the preview. */
+    suspend fun discoverOmni(endpoint: String, identity: String): String = withContext(Dispatchers.IO) {
+        Ichorgo.discoverOmniClusters(endpoint, identity)
+    }
+
     /** The fields each cloud's discovery asks for, by provider id. */
     suspend fun discoveryFields(): Map<String, List<String>> = withContext(Dispatchers.IO) {
         TalosJson.decodeFromString(MapSerializer(String.serializer(), ListSerializer(String.serializer())), Ichorgo.kubeDiscoverFields())

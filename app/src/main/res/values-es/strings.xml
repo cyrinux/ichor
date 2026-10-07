@@ -3100,4 +3100,9 @@
     <string name="import_omni_identity">Identidad de Omni</string>
     <string name="import_omni_cluster">Clúster de Omni</string>
     <string name="import_nodes_omni">obtenidos de Omni</string>
+    <string name="omni_add_title">Añadir clústeres desde Sidero Omni</string>
+    <string name="omni_add_body">Inicia sesión en tu instancia de Omni: sus clústeres aparecen en la vista previa, ya con sesión iniciada, Kubernetes incluido.</string>
+    <string name="omni_field_url">URL de Omni (https://…omni.siderolabs.io)</string>
+    <string name="omni_field_email">Correo de la cuenta</string>
+    <string name="omni_mode_account">Cuenta</string>
 </resources>

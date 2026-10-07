@@ -26,6 +26,8 @@ struct ImportView: View {
     /// The credentials cloud discovery found the previewed clusters with: the added ones that
     /// sign in with credentials are signed in with them.
     @State private var discovered: DiscoveredClusters?
+    /// The Sidero Omni sheet is up (its clusters come as a talosconfig).
+    @State private var addingFromOmni = false
 
     /// A validated config waiting for the user's go: a talosconfig, or a kubeconfig with the
     /// stored clusters its contexts are named like.
@@ -75,6 +77,9 @@ struct ImportView: View {
             }
         }
         .sheet(isPresented: $showingHelp) { HelpSheet() }
+        .sheet(isPresented: $addingFromOmni) {
+            OmniDiscoveryView { talosconfig in validate(talosconfig) }
+        }
         .sheet(item: $discovery) { start in
             CloudDiscoveryView(provider: start.provider) { found in validate(found.kubeconfig, discovered: found) }
         }
@@ -107,6 +112,10 @@ struct ImportView: View {
                             }
                             .buttonStyle(.bordered)
                         }
+                        Button { addingFromOmni = true } label: {
+                            Label(KubeAuthWording.providerLabel("omni"), systemImage: "cloud")
+                        }
+                        .buttonStyle(.bordered)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

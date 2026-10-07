@@ -117,13 +117,13 @@ private val KUBE_FEATURES = setOf(Feature.WORKLOADS, Feature.KUBECONFIG)
 fun ContextSummary.allows(feature: Feature): Boolean = when {
     isKube -> feature in KUBE_FEATURES
     feature == Feature.WORKLOADS && kubeAccess.isNotEmpty() -> true
-    // Omni applies the user's own role to every call; it never lets Talos issue credentials.
+    // Omni applies the user's own role to every call; Kubernetes goes through its kube proxy.
     omni -> feature !in OMNI_UNAVAILABLE
     else -> roles.any { it in feature.roles }
 }
 
-/** What a cluster reached through Omni cannot do: Omni issues its talosconfigs and kubeconfigs. */
-private val OMNI_UNAVAILABLE = setOf(Feature.ISSUE_CONFIG, Feature.KUBECONFIG, Feature.WORKLOADS)
+/** What a cluster reached through Omni cannot do: Omni issues its talosconfigs, not Talos. */
+private val OMNI_UNAVAILABLE = setOf(Feature.ISSUE_CONFIG)
 
 /** Short access level for the UI: "admin", "operator" or "read-only"; "Kubernetes" for a kubeconfig cluster. */
 val ContextSummary.accessLabel: Int

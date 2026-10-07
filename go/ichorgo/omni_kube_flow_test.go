@@ -194,4 +194,3 @@ func TestOmniKubeTokensNeedSignIn(t *testing.T) {
 		t.Fatalf("err = %v, want a sign-in request", err)
 	}
 }
-

@@ -54,12 +54,16 @@ final class KubeSignInFlow {
 
     /// Starts the browser or device-code sign-in of `target`.
     func start(_ target: KubeSignInTarget) {
+        start(TalosClient.startSignIn(kube: target.kube, context: target.context, talos: target.talos))
+    }
+
+    /// Drives a sign-in started elsewhere (an Omni account, before any of its clusters is stored).
+    func start(_ run: TalosClient.SignInRun) {
         stopRun()
         runID += 1
         let id = runID
         cancelled = false
         phase = .working
-        let run = TalosClient.startSignIn(kube: target.kube, context: target.context, talos: target.talos)
         cancelRun = run.cancel
         completeRun = run.complete
         Task {

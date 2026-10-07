@@ -409,8 +409,8 @@ public enum Feature: CaseIterable, Sendable {
         }
     }
 
-    /// What a cluster reached through Omni cannot do: Omni issues its talosconfigs and kubeconfigs.
-    public static let omniUnavailable: Set<Feature> = [.issueConfig, .kubeconfig, .workloads]
+    /// What a cluster reached through Omni cannot do: Omni issues its talosconfigs, not Talos.
+    public static let omniUnavailable: Set<Feature> = [.issueConfig]
 
     /// What a cluster added from a kubeconfig can use: the Kubernetes API, and its kubeconfig.
     public static let kubernetes: Set<Feature> = [.workloads, .kubeconfig]
@@ -426,7 +426,7 @@ public extension ContextSummary {
     /// only (its own RBAC answers for them), never a Talos one.
     func allows(_ feature: Feature) -> Bool {
         if isKube { return Feature.kubernetes.contains(feature) }
-        // Omni applies the user's own role to every call; it never lets Talos issue credentials.
+        // Omni applies the user's own role to every call; Kubernetes goes through its kube proxy.
         if omni { return !Feature.omniUnavailable.contains(feature) }
         return roles.contains { feature.roles.contains($0) }
     }
