@@ -9,7 +9,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
+import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -128,7 +128,7 @@ private fun Systems(services: DataServices, downNodes: Set<String>, initial: Dat
             // Scrollable: a cluster can run more systems than fit across the screen.
             PrimaryScrollableTabRow(selectedTabIndex = kinds.indexOf(tab), edgePadding = 0.dp) {
                 kinds.forEach { kind ->
-                    Tab(selected = kind == tab, onClick = { selected = kind }, text = { Text(kind.tabTitle, maxLines = 1) })
+                    AppTab(selected = kind == tab, onClick = { selected = kind }, text = { Text(kind.tabTitle, maxLines = 1) })
                 }
             }
         }

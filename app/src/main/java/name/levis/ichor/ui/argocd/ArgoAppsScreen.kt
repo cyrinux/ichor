@@ -23,7 +23,7 @@ import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
+import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -167,8 +167,8 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
                         return@Column
                     }
                     PrimaryTabRow(selectedTabIndex = tab) {
-                        Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.argo_tab_apps)) })
-                        Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.argo_tab_sets)) })
+                        AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.argo_tab_apps)) })
+                        AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.argo_tab_sets)) })
                     }
                     PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
                         if (tab == 0) {

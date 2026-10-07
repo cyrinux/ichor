@@ -17,7 +17,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
+import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.PrimaryScrollableTabRow
 import kotlinx.coroutines.delay
 import androidx.compose.material3.Text
@@ -304,18 +304,18 @@ fun NodeDetailScreen(
             val tabs = nodeTabs(canCgroups, canKubePods)
             val shownTab = shownNodeTab(tab, tabs)
             PrimaryScrollableTabRow(selectedTabIndex = tabs.indexOf(shownTab), edgePadding = 0.dp) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.node_tab_services)) })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.node_tab_resources)) })
-                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.node_tab_live)) })
+                AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.node_tab_services)) })
+                AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.node_tab_resources)) })
+                AppTab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.node_tab_live)) })
                 // Tabs this Talos version lacks stay reachable (dimmed): they say what they need.
                 val dimmed = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                Tab(
+                AppTab(
                     selected = tab == 3,
                     onClick = { tab = 3 },
                     text = { Text(stringResource(R.string.node_tab_processes)) },
                     unselectedContentColor = if (features.support(TalosFeature.PROCESSES).supported) MaterialTheme.colorScheme.onSurfaceVariant else dimmed,
                 )
-                Tab(
+                AppTab(
                     selected = tab == 4,
                     onClick = { tab = 4 },
                     // Next to the Kubernetes pods tab, the Talos (CRI) view is named after what it shows.
@@ -323,10 +323,10 @@ fun NodeDetailScreen(
                     unselectedContentColor = if (features.support(TalosFeature.CONTAINERS).supported) MaterialTheme.colorScheme.onSurfaceVariant else dimmed,
                 )
                 if (canCgroups) {
-                    Tab(selected = tab == CGROUPS_TAB, onClick = { tab = CGROUPS_TAB }, text = { Text(stringResource(R.string.node_tab_cgroups)) })
+                    AppTab(selected = tab == CGROUPS_TAB, onClick = { tab = CGROUPS_TAB }, text = { Text(stringResource(R.string.node_tab_cgroups)) })
                 }
                 if (canKubePods) {
-                    Tab(selected = tab == KUBE_PODS_TAB, onClick = { tab = KUBE_PODS_TAB }, text = { Text(stringResource(R.string.node_tab_kube_pods)) })
+                    AppTab(selected = tab == KUBE_PODS_TAB, onClick = { tab = KUBE_PODS_TAB }, text = { Text(stringResource(R.string.node_tab_kube_pods)) })
                 }
             }
             SwipeTabPager(tabs, shownTab, onSelect = { tab = it }) { page ->

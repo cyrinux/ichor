@@ -39,7 +39,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Tab
+import name.levis.ichor.ui.components.AppTab
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -171,7 +171,7 @@ private fun SourcePicker(
         }
         PrimaryTabRow(selectedTabIndex = tab) {
             tabs.forEachIndexed { index, (label, icon) ->
-                Tab(
+                AppTab(
                     selected = tab == index,
                     onClick = { onTab(index) },
                     text = { Text(label) },

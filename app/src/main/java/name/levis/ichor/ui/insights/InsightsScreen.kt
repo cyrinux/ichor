@@ -18,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.KeepScreenOn
@@ -64,9 +65,9 @@ fun InsightsScreen(onBack: () -> Unit) {
     }) { padding ->
         Column(Modifier.padding(padding)) {
             SecondaryTabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.insights_drift)) })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.insights_recorder)) })
-                Tab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.netperf_tab)) })
+                AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.insights_drift)) })
+                AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.insights_recorder)) })
+                AppTab(selected = tab == 2, onClick = { tab = 2 }, text = { Text(stringResource(R.string.netperf_tab)) })
             }
             SwipeTabPager(INSIGHTS_TABS, tab, onSelect = { tab = it }) { page ->
                 if (page == 2) {
