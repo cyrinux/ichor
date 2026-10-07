@@ -11,7 +11,10 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -489,5 +492,78 @@ func TestParseKubeconfigMasked(t *testing.T) {
 
 	if strings.Contains(out, "acme-corp") || strings.Contains(out, "prod-api") {
 		t.Fatalf("server not masked: %s", out)
+	}
+}
+
+func TestKubeNodes(t *testing.T) {
+	f := newFakeKubeAPI(t, map[string]string{
+		"GET /api/v1/nodes": `{"items":[
+		  {"metadata":{"name":"w1","labels":{"node-role.kubernetes.io/worker":""},"creationTimestamp":"2026-01-02T03:04:05Z"},
+		   "spec":{"unschedulable":true},
+		   "status":{"allocatable":{"cpu":"3500m","memory":"8Gi","pods":"110"},
+		     "conditions":[{"type":"Ready","status":"True"},{"type":"DiskPressure","status":"True"},{"type":"MemoryPressure","status":"False"}],
+		     "addresses":[{"type":"InternalIP","address":"10.0.0.5"},{"type":"Hostname","address":"w1"}],
+		     "nodeInfo":{"kubeletVersion":"v1.34.1","architecture":"arm64"}}},
+		  {"metadata":{"name":"cp1","labels":{"node-role.kubernetes.io/master":""}},
+		   "status":{"conditions":[{"type":"Ready","status":"False"}]}}]}`,
+	})
+
+	stored, err := MergeKubeconfig("", "", strings.Replace(f.kubeconfigFor(f.URL), "https://other.invalid:6443", f.URL, 1), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := KubeNodes(stored, "admin@test", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var got kubeNodesOverview
+	if err := json.Unmarshal([]byte(out), &got); err != nil {
+		t.Fatal(err)
+	}
+
+	if got.ServerVersion != "v1.34.0" || len(got.Nodes) != 2 {
+		t.Fatalf("overview %+v", got)
+	}
+
+	cp, w := got.Nodes[0], got.Nodes[1]
+	if cp.Name != "cp1" || cp.Ready || len(cp.Roles) != 1 || cp.Roles[0] != "control-plane" {
+		t.Errorf("control plane first, legacy master role mapped: %+v", cp)
+	}
+
+	if !w.Ready || !w.Cordoned || w.CPU != 3.5 || w.Memory != 8<<30 || w.PodLimit != 110 || w.InternalIP != "10.0.0.5" ||
+		w.Arch != "arm64" || len(w.Pressure) != 1 || w.Pressure[0] != "DiskPressure" || w.Created == 0 {
+		t.Errorf("worker %+v", w)
+	}
+}
+
+func TestKubeNodesForbidden(t *testing.T) {
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/version" {
+			_, _ = io.WriteString(w, `{"gitVersion":"v1.34.0"}`)
+
+			return
+		}
+
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = io.WriteString(w, `{"kind":"Status","reason":"Forbidden","message":"nodes is forbidden"}`)
+	}))
+	t.Cleanup(srv.Close)
+
+	added := strings.Replace(singleTokenKubeconfig(srv.URL, "t"), "cluster: {server:", "cluster: {insecure-skip-tls-verify: true, server:", 1)
+
+	stored, err := MergeKubeconfig("", "", added, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := KubeNodes(stored, "x", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(out, `"forbidden":true`) || !strings.Contains(out, `"serverVersion":"v1.34.0"`) {
+		t.Fatalf("got %s", out)
 	}
 }
