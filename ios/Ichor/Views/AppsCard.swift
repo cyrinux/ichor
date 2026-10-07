@@ -4,11 +4,13 @@ import IchorCore
 /// The overview's Apps row: how many run, what needs a look and a few icons; opens the Apps
 /// screen. A skeleton while loading; nothing when the inventory failed or is empty, so it
 /// never gets in the way of the overview. With `argo` loaded, an app whose Argo CD
-/// Application is critical or drifting gets the Apps grid's badge.
+/// Application is critical or drifting gets the Apps grid's badge. The "need a look" pill
+/// opens the Apps screen on its Attention chip.
 struct AppsCard: View {
     let state: LoadState<ClusterInventory>
     let hostnames: [String: String]
     var argo: ArgoStatus? = nil
+    @Binding var path: [Route]
 
     @AppStorage(AppIconSettings.remoteKey) private var remoteIcons = false
 
@@ -45,7 +47,11 @@ struct AppsCard: View {
                 }
                 Spacer()
                 if attention > 0 {
-                    StatusPill(label: String(localized: "\(attention) need a look"), color: attentionColor)
+                    // Borderless: its own tap target inside the row's link.
+                    Button { path.append(.apps(hostnames: hostnames, filter: .attention)) } label: {
+                        StatusPill(label: String(localized: "\(attention) need a look"), color: attentionColor)
+                    }
+                    .buttonStyle(.borderless)
                 }
             }
             HStack(spacing: 8) {

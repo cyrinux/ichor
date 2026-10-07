@@ -104,8 +104,11 @@ private object Routes {
     const val SUPPORTED_INTEGRATIONS = "supported-integrations"
     const val FUNDING = "funding"
     const val INSIGHTS = "insights"
-    const val APPS = "apps"
+    const val APPS = "apps?attention={attention}"
     const val METRICS = "metrics"
+
+    /** [attention]: open on the "needs attention" chip. */
+    fun apps(attention: Boolean = false) = "apps?attention=$attention"
 
     fun storage(addr: String, host: String) = "storage?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
@@ -352,7 +355,7 @@ fun Navigation(
                 onHealth = { nav.navigate(Routes.HEALTH) },
                 onEvents = { nav.navigate(Routes.events()) },
                 onInsights = { nav.navigate(Routes.INSIGHTS) },
-                onApps = { nav.navigate(Routes.APPS) },
+                onApps = { attention -> nav.navigate(Routes.apps(attention)) },
                 onSettings = { nav.navigate(Routes.SETTINGS) },
                 onFunding = { nav.navigate(Routes.FUNDING) },
                 onIssueConfig = { nav.navigate(Routes.ISSUE_CONFIG) },
@@ -581,8 +584,12 @@ fun Navigation(
                 onBack = { nav.popBackStack() },
             )
         }
-        composable(Routes.APPS) {
+        composable(
+            Routes.APPS,
+            arguments = listOf(navArgument("attention") { type = NavType.BoolType; defaultValue = false }),
+        ) { entry ->
             AppsScreen(
+                attention = entry.arguments?.getBoolean("attention") == true,
                 onBack = { nav.popBackStack() },
                 // A pod's node, on its Pods tab.
                 onNode = { addr, host, role -> nav.navigate(Routes.node(addr, host, role, tab = 4)) },

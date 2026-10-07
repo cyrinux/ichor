@@ -66,11 +66,13 @@ import name.levis.ichor.ui.components.TooltipIconButton
  * Every app running in the cluster as a grid of icons, with search and filters; tapping one
  * opens its details. [onNode] opens a node's pods (address, hostname, role); [onArgoCD] the Argo
  * CD screen and [onArgoApp] one of its apps (namespace, name); [onFlux] the Flux screen.
+ * [attention] opens it on the "needs attention" chip.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppsScreen(
     onBack: () -> Unit,
+    attention: Boolean = false,
     onNode: (addr: String, host: String, role: String) -> Unit,
     onArgoCD: () -> Unit,
     onArgoApp: (namespace: String, name: String) -> Unit,
@@ -159,7 +161,7 @@ fun AppsScreen(
         },
     ) { padding ->
         Loaded(state, vm::refresh, Modifier.padding(padding)) { data ->
-            AppsGrid(data, onOpen = { selected = it.id }, argoBadges = argoBadges)
+            AppsGrid(data, onOpen = { selected = it.id }, argoBadges = argoBadges, attention = attention)
             data.apps.firstOrNull { it.id == selected }?.let { detail ->
                 if (canRestart) {
                     LaunchedEffect(detail) {
