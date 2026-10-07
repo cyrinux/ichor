@@ -222,6 +222,9 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 	}
 
 	in.ingresses, in.httpRoutes, in.gateways, in.nodes = ingresses.Items, httpRoutes.Items, gateways.Items, nodes.Items
+	if len(in.httpRoutes) > 0 {
+		in.gateways = withPublicPorts(ctx, k, in.gateways)
+	}
 
 	return buildArgoNetwork(in), nil
 }
