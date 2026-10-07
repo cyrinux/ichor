@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +41,7 @@ internal fun KubeNodeMenuSheet(node: KubeNodeInfo, onCordon: () -> Unit, onDrain
         Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp).navigationBarsPadding()) {
             Text(node.name, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             KubeNodeMenuRow(stringResource(if (node.cordoned) R.string.node_menu_uncordon else R.string.node_menu_cordon), Icons.Outlined.Block, onCordon)
-            KubeNodeMenuRow(stringResource(R.string.node_menu_drain), Icons.Outlined.Build, onDrain)
+            KubeNodeMenuRow(stringResource(R.string.node_menu_drain), Icons.AutoMirrored.Outlined.Logout, onDrain)
         }
     }
 }

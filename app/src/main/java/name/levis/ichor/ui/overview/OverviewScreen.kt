@@ -477,6 +477,7 @@ fun OverviewScreen(
                     onNodeAction = onNodeAction,
                     canPower = config?.activeSummary?.allows(Feature.POWER) == true,
                     canShell = config?.activeSummary?.allows(Feature.DEBUG_SHELL) == true,
+                    canDrain = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
                     canUpgrade = config?.activeSummary?.allows(Feature.UPGRADE) == true,
                     onUpgrade = onUpgrade,
                     skippedTalosUpdate = config?.activeSummary?.fingerprint?.let(skippedTalosUpdates::get),
@@ -524,6 +525,7 @@ private fun NodeList(
     onNodeAction: (NodeOverview, NodeAction) -> Unit,
     canPower: Boolean,
     canShell: Boolean,
+    canDrain: Boolean,
     canUpgrade: Boolean,
     onUpgrade: (NodeOverview, String) -> Unit,
     skippedTalosUpdate: String?,
@@ -549,6 +551,7 @@ private fun NodeList(
             canPower = canPower,
             canShell = canShell,
             wol = wakeOnLan(node),
+            canDrain = canDrain,
             onAction = { onNodeAction(node, it) },
             onDismiss = { sheetFor = null },
         )

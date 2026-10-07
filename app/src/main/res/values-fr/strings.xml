@@ -2393,6 +2393,7 @@
     <string name="maintenance_other_running">Une maintenance de %1$s est déjà en cours.</string>
     <string name="maintenance_auth_title">Maintenance de %1$s</string>
     <string name="maintenance_confirm_title">%1$s&#160;: maintenance de %2$s&#160;?</string>
+    <string name="drain_confirm_title">Drainer %1$s&#160;?</string>
     <string name="maintenance_confirm_body">%1$s est isolé, puis ses pods sont évincés (les PodDisruptionBudgets sont respectés&#160;: le drainage les attend).</string>
     <string name="maintenance_pdb">PDB %1$s&#160;: %2$d autorisées</string>
     <string name="maintenance_empty_dir">Perd ses données locales</string>

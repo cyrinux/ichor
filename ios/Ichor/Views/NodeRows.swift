@@ -84,6 +84,12 @@ struct NodeMenu: View {
                     Label("Debug shell", systemImage: "apple.terminal")
                 }
             }
+            // Through the Kubernetes API (os:admin, like the workloads).
+            if model.allows(.workloads) {
+                Button { path.append(.drain(node: node.node, hostname: node.hostname)) } label: {
+                    Label("Drain…", systemImage: "rectangle.portrait.and.arrow.right")
+                }
+            }
             if model.allows(.power) {
                 Button(role: .destructive) { path.append(.nodePower(ref, .reboot)) } label: { Label("Reboot…", systemImage: "power") }
                 Button(role: .destructive) { path.append(.nodePower(ref, .shutdown)) } label: { Label("Shut down…", systemImage: "power") }

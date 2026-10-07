@@ -40,6 +40,7 @@ struct NodeDetailView: View {
     @State private var showingStorage = false
     @State private var showingResources = false
     @State private var showingMaintenance = false
+    @State private var showingDrain = false
     /// The node's pods as the Kubernetes API sees them (os:admin).
     @State private var showingKubePods = false
     /// The cordon / uncordon choice is shown (the node's current state is not known here).
@@ -150,6 +151,9 @@ struct NodeDetailView: View {
         }
         .navigationDestination(isPresented: $showingMaintenance) {
             MaintenanceView(node: ref.address, hostname: ref.hostname)
+        }
+        .navigationDestination(isPresented: $showingDrain) {
+            MaintenanceView(node: ref.address, hostname: ref.hostname, drainOnly: true)
         }
         .navigationDestination(isPresented: $showingKubePods) {
             NodeKubePodsView(node: ref.address, hostname: ref.hostname)
@@ -305,6 +309,9 @@ extension NodeDetailView {
                 if model.allows(.workloads) {
                     Button { showingMaintenance = true } label: {
                         Label("Maintenance…", systemImage: "wrench.and.screwdriver")
+                    }
+                    Button { showingDrain = true } label: {
+                        Label("Drain…", systemImage: "rectangle.portrait.and.arrow.right")
                     }
                     // An uncordon mid-drain lets the evicted pods come back before the reboot.
                     Button { showingCordon = true } label: {

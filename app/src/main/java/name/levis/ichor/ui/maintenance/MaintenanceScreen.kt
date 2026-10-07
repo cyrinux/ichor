@@ -55,7 +55,8 @@ class MaintenancePlanViewModel(private val maintenances: MaintenanceManager, pri
 
 /**
  * Node maintenance: the plan, then the followed run (which goes on when leaving the screen).
- * On a cluster without Talos ([node]: the Kubernetes node name) it is a drain only.
+ * [drainOnly]: a drain alone, without the reboot or shutdown to pick; always so on a cluster
+ * without Talos ([node]: the Kubernetes node name).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +64,7 @@ fun MaintenanceScreen(
     node: String,
     hostname: String,
     onBack: () -> Unit,
+    drainOnly: Boolean = false,
     planVm: MaintenancePlanViewModel = viewModel(key = "maintenance-plan-$node", factory = factory { MaintenancePlanViewModel(app.maintenanceManager, node) }),
 ) {
     val context = LocalContext.current
@@ -76,7 +78,7 @@ fun MaintenanceScreen(
     val scope = rememberCoroutineScope()
     var confirming by remember { mutableStateOf<MaintenanceChoice?>(null) }
     val following = current?.takeIf { it.node == node }
-    val kube = config?.activeIsKube == true
+    val draining = drainOnly || config?.activeIsKube == true
     LaunchedEffect(Unit) { if (plan == UiState.Loading) planVm.refresh() }
 
     fun start(choice: MaintenanceChoice, name: String) {
@@ -119,7 +121,7 @@ fun MaintenanceScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text(stringResource(if (kube) R.string.maintenance_phase_drain else R.string.maintenance_title))
+                        Text(stringResource(if (draining) R.string.maintenance_phase_drain else R.string.maintenance_title))
                         Text(hostname, style = MaterialTheme.typography.labelMedium)
                     }
                 },
@@ -146,7 +148,7 @@ fun MaintenanceScreen(
                             plan = s.data,
                             demo = config?.activeSummary?.isDemo == true,
                             busyWith = busyWith,
-                            kube = kube,
+                            drainOnly = draining,
                             onStart = { confirming = it },
                         )
                     }
@@ -158,9 +160,13 @@ fun MaintenanceScreen(
     confirming?.let { choice ->
         val name = (plan as? UiState.Loaded)?.data?.hostname?.ifEmpty { null } ?: hostname
         HostnameConfirmDialog(
-            title = stringResource(R.string.maintenance_confirm_title, stringResource(choice.action.label), name),
+            title = if (draining) {
+                stringResource(R.string.drain_confirm_title, name)
+            } else {
+                stringResource(R.string.maintenance_confirm_title, stringResource(choice.action.label), name)
+            },
             hostname = name,
-            confirmLabel = stringResource(R.string.maintenance_start),
+            confirmLabel = stringResource(if (draining) R.string.maintenance_phase_drain else R.string.maintenance_start),
             onConfirm = { confirmed(choice, name) },
             onDismiss = { confirming = null },
         ) {

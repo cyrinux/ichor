@@ -13,8 +13,6 @@ struct KubeHomeView: View {
     @State private var state: LoadState<KubeNodesOverview> = .loading
     /// The node whose cordon to change, after a confirmation.
     @State private var cordoning: KubeNodeInfo?
-    /// The node to drain (the maintenance screen, drain only).
-    @State private var draining: String?
     @State private var cordonMessage: String?
 
     var body: some View {
@@ -56,9 +54,6 @@ struct KubeHomeView: View {
             .themedBackground()
         }
         .navigationTitle(model.activeLabel)
-        .navigationDestination(isPresented: Binding(get: { draining != nil }, set: { if !$0 { draining = nil } })) {
-            if let draining { MaintenanceView(node: draining, hostname: draining) }
-        }
         .confirmationDialog(String(localized: "Kubernetes scheduling on \(cordoning?.name ?? "")"),
                             isPresented: Binding(get: { cordoning != nil }, set: { if !$0 { cordoning = nil } }),
                             titleVisibility: .visible, presenting: cordoning) { node in
@@ -156,7 +151,9 @@ struct KubeHomeView: View {
                         Button(node.cordoned ? String(localized: "Uncordon") : String(localized: "Cordon"), systemImage: "nosign") {
                             cordoning = node
                         }
-                        Button("Drain…", systemImage: "wrench.and.screwdriver") { draining = node.name }
+                        Button("Drain…", systemImage: "rectangle.portrait.and.arrow.right") {
+                            path.append(.drain(node: node.name, hostname: node.name))
+                        }
                     } label: {
                         KubeNodeRow(node: node)
                     }

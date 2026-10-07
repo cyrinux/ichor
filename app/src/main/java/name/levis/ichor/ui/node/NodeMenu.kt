@@ -2,6 +2,7 @@ package name.levis.ichor.ui.node
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Build
@@ -50,6 +51,8 @@ enum class NodeMenuEntry(val group: NodeMenuGroup, @StringRes val label: Int, va
     UPGRADE(NodeMenuGroup.OPERATE, R.string.node_menu_upgrade, TalosFeature.UPGRADE, Feature.UPGRADE),
     // Kubernetes calls with the admin kubeconfig (the reboot step needs less): os:admin.
     MAINTENANCE(NodeMenuGroup.OPERATE, R.string.node_menu_maintenance, null, Feature.WORKLOADS),
+    // The maintenance screen in drain-only mode: no reboot or shutdown.
+    DRAIN(NodeMenuGroup.OPERATE, R.string.node_menu_drain, null, Feature.WORKLOADS),
     // Labelled Uncordon when the node is known to be cordoned (see NodeMenuSheet).
     CORDON(NodeMenuGroup.OPERATE, R.string.node_menu_cordon, null, Feature.WORKLOADS),
 }
@@ -68,6 +71,7 @@ internal val NodeMenuEntry.icon: ImageVector
         NodeMenuEntry.MACHINE_CONFIG -> Icons.Outlined.Description
         NodeMenuEntry.UPGRADE -> Icons.Outlined.SystemUpdateAlt
         NodeMenuEntry.MAINTENANCE -> Icons.Outlined.Build
+        NodeMenuEntry.DRAIN -> Icons.AutoMirrored.Outlined.Logout
         NodeMenuEntry.CORDON -> Icons.Outlined.Block
     }
 

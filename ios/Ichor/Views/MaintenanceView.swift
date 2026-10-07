@@ -3,11 +3,12 @@ import IchorCore
 
 /// Node maintenance (os:admin): the plan (pods the drain evicts or leaves, their budgets,
 /// the reboot checks), then the run cordon → drain → reboot or shutdown → uncordon. One
-/// maintenance at a time in the app. On a cluster without Talos (`node`: the Kubernetes node
-/// name) it is a drain only: no action to pick, no reboot checks.
+/// maintenance at a time in the app. `drainOnly`: a drain alone, no action to pick and no
+/// reboot checks; always so on a cluster without Talos (`node`: the Kubernetes node name).
 struct MaintenanceView: View {
     let node: String
     let hostname: String
+    var drainOnly = false
 
     @Environment(AppModel.self) private var model
     @State private var plan: LoadState<MaintenancePlan> = .loading
@@ -18,6 +19,7 @@ struct MaintenanceView: View {
 
     private var job: MaintenanceJob { .shared }
     private var kube: Bool { model.activeIsKube }
+    private var draining: Bool { drainOnly || kube }
 
     var body: some View {
         Group {
@@ -27,10 +29,10 @@ struct MaintenanceView: View {
                 LoadStateView(state: plan, retry: loadPlan) { plan in form(plan) }
             }
         }
-        .navigationTitle(kube ? String(localized: "Drain · \(hostname)") : String(localized: "Maintenance · \(hostname)"))
+        .navigationTitle(draining ? String(localized: "Drain · \(hostname)") : String(localized: "Maintenance · \(hostname)"))
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            if kube { action = .none }
+            if draining { action = .none }
             await loadPlan()
         }
     }
@@ -56,7 +58,7 @@ struct MaintenanceView: View {
                 }
             }
             Section {
-                if !kube {
+                if !draining {
                     LabeledContent("Role", value: plan.controlPlane ? String(localized: "Control plane") : String(localized: "Worker"))
                 }
                 LabeledContent("Kubernetes node", value: plan.kubeNode.or("—"))
@@ -65,13 +67,13 @@ struct MaintenanceView: View {
                         .foregroundStyle(plan.cordoned ? Color.statusWarn : Color.secondary)
                 }
             }
-            if !kube { actionSection }
+            if !draining { actionSection }
             podsSection(String(localized: "Evicted (\(groups.toEvict.count))"), pods: groups.toEvict,
                         footer: String(localized: "Evictions honour PodDisruptionBudgets: a budget that allows no disruption makes the drain wait, it never forces."))
             if !groups.bare.isEmpty { bareSection(groups.bare) }
             podsSection(String(localized: "Left on the node (\(groups.leftAlone.count))"), pods: groups.leftAlone,
                         footer: String(localized: "DaemonSet and static pods stay: they would be recreated on the node."))
-            checksSection(plan)
+            if !draining { checksSection(plan) }
             Section {
                 Button(role: .destructive) { Task { await requestStart() } } label: { Text(startTitle) }
                     .disabled(!canRequest(plan))
@@ -83,7 +85,7 @@ struct MaintenanceView: View {
         .themedBackground()
         .sheet(isPresented: $confirming) {
             HostnameConfirmationSheet(
-                title: kube ? String(localized: "Drain \(hostname)?") : String(localized: "Maintenance of \(hostname)?"),
+                title: draining ? String(localized: "Drain \(hostname)?") : String(localized: "Maintenance of \(hostname)?"),
                 message: confirmationMessage(plan),
                 hostname: hostname,
                 actionTitle: startTitle,
