@@ -38,13 +38,15 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import name.levis.ichorgo.Ichorgo
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Camera preview that reports the first QR code payload once.
  * Generate one on the desktop with: qrencode -r ~/.talos/config -o talosconfig.png, or for a
- * config too large for one code, the compressed form (see HelpDialog: ichor-config:).
+ * config too large for one code, raw gzip (gzip -9 < config | qrencode -8) or the compressed
+ * text form (see HelpDialog: ichor-config:).
  */
 @Composable
 fun QrScanner(onScanned: (String) -> Unit, modifier: Modifier = Modifier) {
@@ -107,8 +109,11 @@ private fun CameraQrPreview(onScanned: (String) -> Unit, modifier: Modifier) {
                 }
                 scanner.process(InputImage.fromMediaImage(media, proxy.imageInfo.rotationDegrees))
                     .addOnSuccessListener { codes ->
-                        val text = codes.firstNotNullOfOrNull { it.rawValue }
-                        if (text != null && delivered.compareAndSet(false, true)) {
+                        // rawBytes carries a binary (gzip) payload that rawValue mangles.
+                        val text = codes.firstOrNull()?.let { code ->
+                            runCatching { Ichorgo.qrCodeText(code.rawValue.orEmpty(), code.rawBytes, 0) }.getOrElse { code.rawValue }
+                        }
+                        if (!text.isNullOrEmpty() && delivered.compareAndSet(false, true)) {
                             ContextCompat.getMainExecutor(context).execute { callback(text) }
                         }
                     }
