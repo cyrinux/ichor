@@ -55,6 +55,8 @@ struct HelpSheet: View {
                 Section("3. Bring it to the phone") {
                     Text("AirDrop it to Files and use File, or show it as a QR code and use QR code:").font(.footnote)
                     CommandRow("qrencode -t ansiutf8 -r talosconfig-phone")
+                    Text("Too large for a QR code? Compress it, the app expands it:").font(.footnote)
+                    CommandRow("gzip -9 < talosconfig-phone | qrencode -8 -t ansiutf8")
                     Text("Delete other copies afterwards: the file contains the private key. The app encrypts it with a Secure Enclave key.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }

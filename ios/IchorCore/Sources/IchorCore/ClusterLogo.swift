@@ -17,6 +17,11 @@ private let authLogos = [
     "rancher": "rancher",
 ]
 
+/// The cloud of a discovery provider (kubeDiscoverProviders): AKS signs in as "azure".
+public func discoveryLogo(_ provider: String) -> String {
+    authLogos[provider == "aks" ? "azure" : provider] ?? logoKubernetes
+}
+
 /// The managed services' API server hosts (GKE's is a bare IP).
 private let hostLogos = [
     (".eks.amazonaws.com", logoAWS),

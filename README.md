@@ -361,7 +361,14 @@ Pick one of these:
 - **File:** `adb push talosconfig-phone /sdcard/Download/`, then choose it in the app.
 - **Paste:** paste the YAML.
 - **QR code:** run `qrencode -r talosconfig-phone -o talosconfig.png` and scan it. This works
-  for configs up to about 2.9 KB.
+  for configs up to about 2.9 KB. A larger one (a kubeconfig with an embedded certificate)
+  usually fits compressed; the app expands it:
+
+  ```sh
+  gzip -9 < talosconfig-phone | qrencode -8 -t ansiutf8
+  ```
+
+  Both forms work, as does the older `ichor-config:` text form (base64url of gzip).
 
 Delete `talosconfig.png` and the copy in `Download/` afterwards; both contain the private key.
 The app stores the config AES-GCM encrypted with an Android Keystore key, excluded from backups.

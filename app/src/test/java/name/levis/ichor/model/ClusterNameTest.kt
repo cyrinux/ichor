@@ -123,4 +123,13 @@ class ClusterNameTest {
         assertEquals("kubernetes", clusterLogo(kube()))
         assertEquals("kubernetes", clusterLogo(kube(auth = "oidc")))
     }
+
+    @Test
+    fun discoveryProvidersShowTheirCloudLogo() {
+        assertEquals(
+            listOf("aws", "google-cloud", "azure", "digital-ocean", "rancher"),
+            DiscoveryProvider.entries.map { discoveryLogo(it.id) },
+        )
+        assertEquals("kubernetes", discoveryLogo("other"))
+    }
 }
