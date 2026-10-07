@@ -2075,6 +2075,7 @@
     </plurals>
     <string name="overview_card_summary">Resumen del clúster</string>
     <string name="overview_edit_title">Personalizar el resumen</string>
+    <string name="bar_edit_title">Personalizar la barra superior</string>
     <string name="overview_edit_done">Listo</string>
     <string name="overview_edit_hint">Arrastra una tarjeta por su asa para moverla. Las tarjetas ocultas se pueden volver a añadir abajo.</string>
     <string name="overview_edit_drag">Arrastrar para mover</string>

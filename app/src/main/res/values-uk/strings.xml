@@ -2245,6 +2245,7 @@
     </plurals>
     <string name="overview_card_summary">Зведення кластера</string>
     <string name="overview_edit_title">Налаштувати огляд</string>
+    <string name="bar_edit_title">Налаштувати верхню панель</string>
     <string name="overview_edit_done">Готово</string>
     <string name="overview_edit_hint">Перетягніть картку за маркер, щоб перемістити її. Приховані картки можна повернути нижче.</string>
     <string name="overview_edit_drag">Перетягніть, щоб перемістити</string>
