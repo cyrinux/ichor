@@ -15,7 +15,7 @@ import (
 // (fixed commands whose well-known addresses masking would break), nor the GitHub links of
 // integration requests (opened, not shown; built from already masked results), nor share
 // links (built from the masked names on screen).
-var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "MergeKubeconfig", "RemoveKubeContext", "ExportKubeContext", "MergeTalosconfig", "DecodeImportText", "AddContextNodes", "SetContextEndpoints", "AddContextEndpoint", "DemoConfig", "DecryptBackup", "NormalizeKubeServer", "NormalizePromSource", "DebugSnippets", "IntegrationIssueURL", "IntegrationSearchURL", "BuildShareLink"}
+var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "MergeKubeconfig", "RemoveKubeContext", "ExportKubeContext", "MergeTalosconfig", "DecodeImportText", "KubeAuthForBackup", "AddContextNodes", "SetContextEndpoints", "AddContextEndpoint", "DemoConfig", "DecryptBackup", "NormalizeKubeServer", "NormalizePromSource", "DebugSnippets", "IntegrationIssueURL", "IntegrationSearchURL", "BuildShareLink"}
 
 var unmaskedListeners = []string{"StartDebugShell"}
 

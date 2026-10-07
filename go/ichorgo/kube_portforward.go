@@ -142,7 +142,7 @@ func runPortForward(ctx context.Context, target kubeTarget, namespace, pod strin
 func forwardConn(ctx context.Context, k *kubeClient, namespace, pod string, port int, conn net.Conn) error {
 	defer conn.Close() //nolint:errcheck
 
-	cfg, err := k.portForwardConfig(namespace, pod, port)
+	cfg, err := k.portForwardConfig(ctx, namespace, pod, port)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func forwardConn(ctx context.Context, k *kubeClient, namespace, pod string, port
 	return err
 }
 
-func (k *kubeClient) portForwardConfig(namespace, pod string, port int) (*websocket.Config, error) {
+func (k *kubeClient) portForwardConfig(ctx context.Context, namespace, pod string, port int) (*websocket.Config, error) {
 	u, err := k.endpoint(podPath(namespace, pod) + "/portforward?" + url.Values{"ports": {strconv.Itoa(port)}}.Encode())
 	if err != nil {
 		return nil, err
@@ -194,8 +194,13 @@ func (k *kubeClient) portForwardConfig(namespace, pod string, port int) (*websoc
 	cfg.Dialer = &net.Dialer{Timeout: kubeProbeTimeout}
 	cfg.Header.Set("User-Agent", "ichor")
 
-	if k.token != "" {
-		cfg.Header.Set("Authorization", "Bearer "+k.token)
+	token, err := k.bearer(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if token != "" {
+		cfg.Header.Set("Authorization", "Bearer "+token)
 	}
 
 	return cfg, nil

@@ -169,11 +169,11 @@ func TestParseKubeconfigPreview(t *testing.T) {
 		"sa":          {authToken, "", ""},
 		"eks":         {authEKS, "prod", KubeProblemSignInLater},
 		"gke":         {authGKE, "", KubeProblemSignInLater},
-		"oidc":        {authOIDC, "https://id.example.org", KubeProblemSignInLater},
+		"oidc":        {authOIDC, "https://id.example.org", ""},
 		"azure":       {authAzure, "t1", KubeProblemSignInLater},
 		"do":          {authDigitalOcean, "", KubeProblemSignInLater},
 		"rancher":     {authRancher, "rancher.example.org", KubeProblemSignInLater},
-		"legacy-oidc": {authOIDC, "https://old.example.org", KubeProblemSignInLater},
+		"legacy-oidc": {authOIDC, "https://old.example.org", KubeProblemInvalid}, // no client ID
 		"custom":      {authExec, "my-auth", KubeProblemExec},
 		"basic":       {authBasic, "", KubeProblemBasicAuth},
 		"token-file":  {authToken, "", KubeProblemFilePath},
@@ -253,8 +253,12 @@ func TestMergeKubeconfigImportsOnlyWhatWorks(t *testing.T) {
 	}
 
 	s := parseKubeSummary(t, merged)
-	if len(s.Contexts) != 2 || s.Contexts[0].Name != "cert" || s.Contexts[1].Name != "sa" {
+	if len(s.Contexts) != 3 || s.Contexts[0].Name != "cert" || s.Contexts[1].Name != "oidc" || s.Contexts[2].Name != "sa" {
 		t.Fatalf("merged contexts: %+v", s.Contexts)
+	}
+
+	if s.Contexts[1].SignIn != authOIDC || s.Contexts[0].SignIn != "" {
+		t.Errorf("sign-in methods: %+v", s.Contexts)
 	}
 
 	if s.Current != "sa" {
@@ -273,11 +277,11 @@ func TestMergeKubeconfigImportsOnlyWhatWorks(t *testing.T) {
 		}
 	}
 
-	if len(doc.Clusters) != 2 || len(doc.Users) != 2 {
+	if len(doc.Clusters) != 3 || len(doc.Users) != 3 {
 		t.Errorf("%d clusters, %d users", len(doc.Clusters), len(doc.Users))
 	}
 
-	if doc.Contexts[1].Context.Namespace != "ops" {
+	if doc.Contexts[2].Context.Namespace != "ops" {
 		t.Error("namespace lost")
 	}
 }
@@ -287,7 +291,7 @@ func TestMergeKubeconfigSkipsAndRefusesEmpty(t *testing.T) {
 
 	// cert is index 1 and sa index 14 in ParseKubeconfig's order.
 	s := parseKubeSummary(t, added)
-	certIdx, saIdx := -1, -1
+	certIdx, saIdx, oidcIdx := -1, -1, -1
 
 	for i, c := range s.Contexts {
 		switch c.Name {
@@ -295,10 +299,12 @@ func TestMergeKubeconfigSkipsAndRefusesEmpty(t *testing.T) {
 			certIdx = i
 		case "sa":
 			saIdx = i
+		case "oidc":
+			oidcIdx = i
 		}
 	}
 
-	merged, err := MergeKubeconfig("", "", added, fmt.Sprintf(`[{"index":%d,"skip":true}]`, certIdx))
+	merged, err := MergeKubeconfig("", "", added, fmt.Sprintf(`[{"index":%d,"skip":true},{"index":%d,"skip":true}]`, certIdx, oidcIdx))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -307,7 +313,7 @@ func TestMergeKubeconfigSkipsAndRefusesEmpty(t *testing.T) {
 		t.Fatalf("skip ignored: %+v", got.Contexts)
 	}
 
-	_, err = MergeKubeconfig("", "", added, fmt.Sprintf(`[{"index":%d,"skip":true},{"index":%d,"skip":true}]`, certIdx, saIdx))
+	_, err = MergeKubeconfig("", "", added, fmt.Sprintf(`[{"index":%d,"skip":true},{"index":%d,"skip":true},{"index":%d,"skip":true}]`, certIdx, saIdx, oidcIdx))
 	if err == nil {
 		t.Fatal("importing nothing must fail")
 	}
@@ -424,6 +430,10 @@ func TestRemoveAndExportKubeContext(t *testing.T) {
 
 	rest, err := RemoveKubeContext(stored, "cert")
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	if rest, err = RemoveKubeContext(rest, "oidc"); err != nil {
 		t.Fatal(err)
 	}
 
