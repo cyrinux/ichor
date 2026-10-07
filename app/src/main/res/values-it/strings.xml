@@ -2079,6 +2079,7 @@
     </plurals>
     <string name="overview_card_summary">Riepilogo del cluster</string>
     <string name="overview_edit_title">Personalizza la panoramica</string>
+    <string name="bar_edit_title">Personalizza la barra superiore</string>
     <string name="overview_edit_done">Fine</string>
     <string name="overview_edit_hint">Trascina una scheda dalla maniglia per spostarla. Le schede nascoste si possono aggiungere di nuovo qui sotto.</string>
     <string name="overview_edit_drag">Trascina per spostare</string>

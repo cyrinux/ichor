@@ -17,7 +17,7 @@ class OverviewBarTest {
 
     @Test
     fun defaultKeepsThreeIconsAndTheRestInTheMenu() {
-        val bar = OverviewBar()
+        val bar = OverviewAction.bar.default
         assertEquals(listOf(HEALTH, EVENTS, WORKLOADS), bar.icons)
         assertEquals(listOf(METRICS, KUBESPAN, ETCD, SETTINGS), bar.menu)
         assertTrue(bar.isDefault)
@@ -25,33 +25,33 @@ class OverviewBarTest {
 
     @Test
     fun movesWithinTheBarAndTheMenu() {
-        assertEquals(listOf(EVENTS, HEALTH, WORKLOADS), OverviewBar().down(HEALTH).icons)
-        assertEquals(listOf(METRICS, ETCD, KUBESPAN, SETTINGS), OverviewBar().up(ETCD).menu)
+        assertEquals(listOf(EVENTS, HEALTH, WORKLOADS), OverviewAction.bar.default.down(HEALTH).icons)
+        assertEquals(listOf(METRICS, ETCD, KUBESPAN, SETTINGS), OverviewAction.bar.default.up(ETCD).menu)
     }
 
     @Test
     fun movingPastTheLineCrossesIntoTheMenuAndBack() {
-        val down = OverviewBar().down(WORKLOADS)
+        val down = OverviewAction.bar.default.down(WORKLOADS)
         assertEquals(listOf(HEALTH, EVENTS), down.icons)
         assertEquals(listOf(WORKLOADS, METRICS, KUBESPAN, ETCD, SETTINGS), down.menu)
-        val up = OverviewBar().up(METRICS)
+        val up = OverviewAction.bar.default.up(METRICS)
         assertEquals(listOf(HEALTH, EVENTS, WORKLOADS, METRICS), up.icons)
-        assertEquals(OverviewBar(), down.up(WORKLOADS))
+        assertEquals(OverviewAction.bar.default, down.up(WORKLOADS))
     }
 
     @Test
     fun endsStayPut() {
-        val bar = OverviewBar()
+        val bar = OverviewAction.bar.default
         assertSame(bar, bar.up(HEALTH))
         assertSame(bar, bar.down(SETTINGS))
     }
 
     @Test
     fun toMenuAndToBarJumpToTheLine() {
-        val bar = OverviewBar().toMenu(HEALTH)
+        val bar = OverviewAction.bar.default.toMenu(HEALTH)
         assertEquals(listOf(EVENTS, WORKLOADS), bar.icons)
         assertEquals(listOf(HEALTH, METRICS, KUBESPAN, ETCD, SETTINGS), bar.menu)
-        val back = OverviewBar().toBar(SETTINGS)
+        val back = OverviewAction.bar.default.toBar(SETTINGS)
         assertEquals(listOf(HEALTH, EVENTS, WORKLOADS, SETTINGS), back.icons)
         assertEquals(listOf(METRICS, KUBESPAN, ETCD), back.menu)
         assertSame(bar, bar.toMenu(METRICS))
@@ -60,24 +60,24 @@ class OverviewBarTest {
 
     @Test
     fun encodeRoundTrips() {
-        val bar = OverviewBar().toBar(ETCD).toMenu(HEALTH)
+        val bar = OverviewAction.bar.default.toBar(ETCD).toMenu(HEALTH)
         assertEquals("EVENTS,WORKLOADS,ETCD|HEALTH,METRICS,KUBESPAN,SETTINGS", bar.encode())
-        assertEquals(bar, OverviewBar.parse(bar.encode()))
-        val empty = OverviewBar().toMenu(HEALTH).toMenu(EVENTS).toMenu(WORKLOADS)
-        assertEquals(empty, OverviewBar.parse(empty.encode()))
+        assertEquals(bar, OverviewAction.bar.parse(bar.encode()))
+        val empty = OverviewAction.bar.default.toMenu(HEALTH).toMenu(EVENTS).toMenu(WORKLOADS)
+        assertEquals(empty, OverviewAction.bar.parse(empty.encode()))
         assertTrue(empty.icons.isEmpty())
     }
 
     @Test
     fun parseFallsBackToDefault() {
-        assertEquals(OverviewBar(), OverviewBar.parse(null))
-        assertEquals(OverviewBar(), OverviewBar.parse(""))
-        assertEquals(OverviewBar(), OverviewBar.parse("garbage"))
+        assertEquals(OverviewAction.bar.default, OverviewAction.bar.parse(null))
+        assertEquals(OverviewAction.bar.default, OverviewAction.bar.parse(""))
+        assertEquals(OverviewAction.bar.default, OverviewAction.bar.parse("garbage"))
     }
 
     @Test
     fun parseSkipsUnknownAndRepeatedAndAppendsMissingToTheMenu() {
-        val bar = OverviewBar.parse("SETTINGS,GONE,SETTINGS|ETCD,SETTINGS")
+        val bar = OverviewAction.bar.parse("SETTINGS,GONE,SETTINGS|ETCD,SETTINGS")
         assertEquals(listOf(SETTINGS), bar.icons)
         assertEquals(listOf(ETCD, HEALTH, EVENTS, WORKLOADS, METRICS, KUBESPAN), bar.menu)
         assertFalse(bar.isDefault)

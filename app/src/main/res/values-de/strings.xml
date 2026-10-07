@@ -2071,6 +2071,7 @@
     </plurals>
     <string name="overview_card_summary">Cluster-Übersicht</string>
     <string name="overview_edit_title">Übersicht anpassen</string>
+    <string name="bar_edit_title">Obere Leiste anpassen</string>
     <string name="overview_edit_done">Fertig</string>
     <string name="overview_edit_hint">Ziehe eine Karte am Griff, um sie zu verschieben. Ausgeblendete Karten lassen sich unten wieder hinzufügen.</string>
     <string name="overview_edit_drag">Zum Verschieben ziehen</string>

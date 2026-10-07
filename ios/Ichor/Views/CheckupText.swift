@@ -32,7 +32,6 @@ enum CheckupText {
     static var checkupVolumeUnmeasured: String { String(localized: "Level unknown: not mounted, or its node did not answer") }
     static var checkupReleasesTitle: String { String(localized: "Releases") }
     static func checkupReleaseRevision(_ a: String, _ b: String) -> String { String(localized: "Revision \(a), \(b) ago") }
-    static var checkupHealthMenu: String { String(localized: "Checkup and API server") }
     static var checkupReading: String { String(localized: "Reading the cluster…") }
     static var checkupSectionWorkloads: String { String(localized: "Workloads") }
     static var checkupSectionWorkloadsHint: String { String(localized: "Pods that crash, cannot start or were killed, Jobs that failed") }
