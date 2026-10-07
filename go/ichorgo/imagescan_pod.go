@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"context"
 	"crypto/rand"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"net/url"
@@ -20,9 +19,6 @@ const (
 	// imageScanName labels the scan namespaces, and prefixes their names.
 	imageScanName      = "ichor-imagescan"
 	imageScanContainer = "trivy"
-	imageScanPod       = "scan"
-	// imageScanSecret holds the pods' pull credentials, merged, for the run.
-	imageScanSecret = "registry-auth"
 	// imageScanStartTimeout bounds the start of the Trivy pod, its image pull included.
 	imageScanStartTimeout = 5 * time.Minute
 	// imageScanPodDeadline bounds the Trivy pod itself.
@@ -33,9 +29,6 @@ const (
 	imageScanDBTimeout    = "15m"
 	// imageScanFollows is how many times a log follow cut short is resumed.
 	imageScanFollows = 10
-	// imageScanStaleAge is when a scan namespace left behind (the app was killed during the
-	// scan) is removed, with the pull credentials copied there: past any scan's end.
-	imageScanStaleAge = imageScanTimeout + 5*time.Minute
 )
 
 // imageScanScript downloads the database once, then scans each image ("$@") into a file
@@ -61,7 +54,7 @@ for img in "$@"; do
 done
 `
 
-// runImageScan scans targets' images with one Trivy pod in a namespace of its own.
+// runImageScan scans targets' images with one Trivy Job (see imagescan_job.go).
 func runImageScan(ctx context.Context, k *kubeClient, refs []routePod, opts imageScanOptions, emit func(imageScanProgress)) (imageScanReport, error) {
 	report := newImageScanReport(imageScanSourceScan, "Trivy "+trivyVersion)
 
@@ -83,22 +76,8 @@ func runImageScan(ctx context.Context, k *kubeClient, refs []routePod, opts imag
 		return report, err
 	}
 
-	sweepImageScans(ctx, k)
-
-	ns, err := createRunNamespace(ctx, k, imageScanName, false)
-	if err != nil {
-		return report, fmt.Errorf("create the scan namespace: %w", err)
-	}
-
-	defer func() {
-		emit(imageScanProgress{Phase: imageScanPhaseCleaning, Steps: len(targets)})
-		deleteNetPerfNamespace(ctx, k, ns)
-	}()
-
-	if auth != nil {
-		if err := k.post(ctx, netPerfNamespacePath(ns)+"/secrets", pullSecretBody(auth), nil); err != nil {
-			return report, fmt.Errorf("copy the pull credentials: %w", kubeError(err))
-		}
+	if err := ensureScanNamespace(ctx, k); err != nil {
+		return report, err
 	}
 
 	nonce, err := scanNonce()
@@ -106,11 +85,30 @@ func runImageScan(ctx context.Context, k *kubeClient, refs []routePod, opts imag
 		return report, err
 	}
 
-	if err := k.post(ctx, netPerfNamespacePath(ns)+"/pods", imageScanPodSpec(nonce, targets, opts, auth != nil), nil); err != nil {
-		return report, kubeError(err)
+	job, secret := "scan-"+nonce[:10], ""
+	if auth != nil {
+		secret = job + "-auth"
 	}
 
-	err = followImageScan(ctx, k, ns, nonce, targets, &report, emit)
+	var created createdJob
+	if err := k.post(ctx, imageScanJobsPath, imageScanJob(job, imageScanPodSpec(nonce, targets, opts, secret)), &created); err != nil {
+		return report, fmt.Errorf("create the scan Job: %w", kubeError(err))
+	}
+
+	defer func() {
+		emit(imageScanProgress{Phase: imageScanPhaseCleaning, Steps: len(targets)})
+		deleteScanJob(ctx, k, job)
+	}()
+
+	// The pod waits for its credentials to mount: they are created once the Job is, to be
+	// owned by it.
+	if auth != nil {
+		if err := k.post(ctx, netPerfNamespacePath(imageScanNamespace)+"/secrets", pullSecretBody(secret, created, auth), nil); err != nil {
+			return report, fmt.Errorf("copy the pull credentials: %w", kubeError(err))
+		}
+	}
+
+	err = followImageScan(ctx, k, job, nonce, targets, &report, emit)
 	report.Finished = time.Now().UnixMilli()
 
 	return report, err
@@ -142,16 +140,6 @@ func targetSecrets(targets []scanTarget) []string {
 	return out
 }
 
-func pullSecretBody(config []byte) map[string]any {
-	return map[string]any{
-		"apiVersion": "v1",
-		"kind":       "Secret",
-		"metadata":   map[string]any{"name": imageScanSecret},
-		"type":       "Opaque",
-		"data":       map[string]string{"config.json": base64.StdEncoding.EncodeToString(config)},
-	}
-}
-
 func scanNonce() (string, error) {
 	b := make([]byte, 12)
 	if _, err := rand.Read(b); err != nil {
@@ -162,8 +150,9 @@ func scanNonce() (string, error) {
 }
 
 // imageScanPodSpec is the Trivy pod: restricted like the network test's, its database and
-// layers in a /work emptyDir, the pull credentials (withAuth) at /docker/config.json.
-func imageScanPodSpec(nonce string, targets []scanTarget, opts imageScanOptions, withAuth bool) map[string]any {
+// layers in a /work emptyDir, the pull credentials (the secret named, if any) at
+// /docker/config.json.
+func imageScanPodSpec(nonce string, targets []scanTarget, opts imageScanOptions, secret string) map[string]any {
 	img := runPodImage{
 		app: imageScanName, image: trivyImage, container: imageScanContainer,
 		env: []map[string]string{
@@ -190,11 +179,11 @@ func imageScanPodSpec(nonce string, targets []scanTarget, opts imageScanOptions,
 		img.env = append(img.env, map[string]string{"name": "TRIVY_JAVA_DB_REPOSITORY", "value": opts.JavaDBRepository})
 	}
 
-	if withAuth {
+	if secret != "" {
 		img.env = append(img.env, map[string]string{"name": "DOCKER_CONFIG", "value": "/docker"})
 		img.mounts = append(img.mounts, map[string]any{"name": "docker", "mountPath": "/docker", "readOnly": true})
 		img.volumes = append(img.volumes, map[string]any{"name": "docker", "secret": map[string]any{
-			"secretName": imageScanSecret, "defaultMode": 0o440,
+			"secretName": secret, "defaultMode": 0o440,
 		}})
 	}
 
@@ -203,13 +192,7 @@ func imageScanPodSpec(nonce string, targets []scanTarget, opts imageScanOptions,
 		command = append(command, t.ref)
 	}
 
-	return runPodSpec(img, imageScanPod, "", false, imageScanPodDeadline, command...)
-}
-
-// sweepImageScans deletes the namespaces, and copied pull credentials, of scans the app
-// could not finish.
-func sweepImageScans(ctx context.Context, k *kubeClient) {
-	sweepRunNamespacesOlder(ctx, k, imageScanName, time.Now(), imageScanStaleAge)
+	return runPodSpec(img, "", "", false, imageScanPodDeadline, command...)
 }
 
 // followImageScan waits for the Trivy pod to start, then follows its log until it ends,
@@ -217,21 +200,26 @@ func sweepImageScans(ctx context.Context, k *kubeClient) {
 // restarted, the phone's network changed) starts over from the top: the reports read again
 // replace the same images. Once the pod ended, a follow that did not read to the end is
 // replaced by one plain read of the whole log.
-func followImageScan(ctx context.Context, k *kubeClient, ns, nonce string, targets []scanTarget, report *imageScanReport, emit func(imageScanProgress)) error {
+func followImageScan(ctx context.Context, k *kubeClient, job, nonce string, targets []scanTarget, report *imageScanReport, emit func(imageScanProgress)) error {
 	emit(imageScanProgress{Phase: imageScanPhaseStarting, Steps: len(targets)})
+
+	podName, err := findScanPod(ctx, k, job, imageScanStartTimeout)
+	if err != nil {
+		return err
+	}
 
 	onWait := func(reason string) {
 		emit(imageScanProgress{Phase: imageScanPhaseStarting, Steps: len(targets), Message: reason})
 	}
 
-	_, err := waitRunPod(ctx, k, "Trivy", ns, imageScanPod, "its node", imageScanStartTimeout, onWait, func(pod netPerfPod) bool {
+	_, err = waitRunPod(ctx, k, "Trivy", imageScanNamespace, podName, "its node", imageScanStartTimeout, onWait, func(pod netPerfPod) bool {
 		return pod.Status.Phase != "Pending" && pod.Status.Phase != ""
 	})
 	if err != nil {
 		return err
 	}
 
-	podPath := netPerfNamespacePath(ns) + "/pods/" + imageScanPod
+	podPath := netPerfNamespacePath(imageScanNamespace) + "/pods/" + url.PathEscape(podName)
 	logPath := func(follow bool) string {
 		return podPath + "/log?" + url.Values{"container": {imageScanContainer}, "follow": {strconv.FormatBool(follow)}}.Encode()
 	}

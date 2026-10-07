@@ -287,7 +287,7 @@ func TestScanLogParserLongLine(t *testing.T) {
 }
 
 func TestImageScanPodSpec(t *testing.T) {
-	spec := imageScanPodSpec("n0nce", testTargets(), imageScanOptions{DBRepository: "registry.lan/trivy-db:2"}, true)
+	spec := imageScanPodSpec("n0nce", testTargets(), imageScanOptions{DBRepository: "registry.lan/trivy-db:2"}, "scan-x-auth")
 
 	js, err := json.Marshal(spec)
 	if err != nil {
@@ -299,7 +299,7 @@ func TestImageScanPodSpec(t *testing.T) {
 		`"image":"` + trivyImage + `"`, `"automountServiceAccountToken":false`, `"readOnlyRootFilesystem":true`,
 		`"runAsNonRoot":true`, `"drop":["ALL"]`, `"activeDeadlineSeconds":2400`,
 		`"name":"TRIVY_DB_REPOSITORY","value":"registry.lan/trivy-db:2"`, `"name":"DOCKER_CONFIG","value":"/docker"`,
-		`"secretName":"registry-auth"`, `"mountPath":"/work"`, `"limits":{"memory":"4Gi"}`,
+		`"secretName":"scan-x-auth"`, `"mountPath":"/work"`, `"limits":{"memory":"4Gi"}`,
 	} {
 		if !strings.Contains(s, want) {
 			t.Errorf("spec lacks %s", want)
@@ -311,7 +311,7 @@ func TestImageScanPodSpec(t *testing.T) {
 		t.Fatalf("command args %v", command[3:])
 	}
 
-	plain, _ := json.Marshal(imageScanPodSpec("n", testTargets(), imageScanOptions{}, false))
+	plain, _ := json.Marshal(imageScanPodSpec("n", testTargets(), imageScanOptions{}, ""))
 	if strings.Contains(string(plain), "DOCKER_CONFIG") || strings.Contains(string(plain), "TRIVY_DB_REPOSITORY") {
 		t.Fatalf("plain spec %s", plain)
 	}
@@ -347,6 +347,8 @@ type fakeImageScanAPI struct {
 	deleted   []string
 	cutFollow bool   // a followed log stops halfway, the plain read has it all
 	secret    string // the merged pull credentials posted
+	job       string // the Job posted
+	nsLabels  string // the scan namespace's labels when it exists, "" when it does not
 }
 
 func newFakeImageScanAPI(t *testing.T) *fakeImageScanAPI {
@@ -389,11 +391,14 @@ func (f *fakeImageScanAPI) serve(w http.ResponseWriter, r *http.Request) {
 	case path == "/api/v1/namespaces/web/secrets/other":
 		write(200, `{"type":"kubernetes.io/dockerconfigjson","data":{".dockerconfigjson":"`+
 			base64.StdEncoding.EncodeToString([]byte(`{"auths":{"quay.io":{"auth":"cTp5"}}}`))+`"}}`)
-	case path == "/api/v1/namespaces" && r.Method == http.MethodGet:
-		old := time.Now().Add(-time.Hour).UTC().Format(time.RFC3339)
-		running := time.Now().Add(-40 * time.Minute).UTC().Format(time.RFC3339)
-		write(200, `{"items":[{"metadata":{"name":"`+imageScanName+`-stale0","creationTimestamp":"`+old+`"}},
-			{"metadata":{"name":"`+imageScanName+`-busy0","creationTimestamp":"`+running+`"}}]}`)
+	case path == "/api/v1/namespaces/"+imageScanNamespace && r.Method == http.MethodGet:
+		if f.nsLabels == "" {
+			write(404, `{"kind":"Status","reason":"NotFound","message":"not found"}`)
+
+			return
+		}
+
+		write(200, `{"metadata":{"labels":`+f.nsLabels+`}}`)
 	case r.Method == http.MethodPost:
 		f.posted = append(f.posted, path)
 
@@ -401,21 +406,42 @@ func (f *fakeImageScanAPI) serve(w http.ResponseWriter, r *http.Request) {
 			f.secret = string(body)
 		}
 
-		if strings.HasSuffix(path, "/pods") {
-			var pod struct {
-				Spec struct {
-					Containers []struct{ Command []string } `json:"containers"`
+		if path == "/api/v1/namespaces" {
+			f.nsLabels = `{"app.kubernetes.io/managed-by":"ichor"}`
+		}
+
+		if strings.HasSuffix(path, "/jobs") {
+			var job struct {
+				Metadata struct{ Name string } `json:"metadata"`
+				Spec     struct {
+					Template struct {
+						Spec struct {
+							Containers []struct{ Command []string } `json:"containers"`
+						} `json:"spec"`
+					} `json:"template"`
 				} `json:"spec"`
 			}
 
-			_ = json.Unmarshal(body, &pod)
-			f.nonce = pod.Spec.Containers[0].Command[4]
+			_ = json.Unmarshal(body, &job)
+			f.job = job.Metadata.Name
+			f.nonce = job.Spec.Template.Spec.Containers[0].Command[4]
+			write(201, `{"metadata":{"name":"`+f.job+`","uid":"0f0e-uid"}}`)
+
+			return
 		}
 
 		write(201, string(body))
 	case r.Method == http.MethodDelete:
-		f.deleted = append(f.deleted, path)
+		f.deleted = append(f.deleted, path+"?"+r.URL.RawQuery)
 		write(200, `{}`)
+	case path == "/api/v1/namespaces/"+imageScanNamespace+"/pods":
+		if r.URL.Query().Get("labelSelector") != imageScanRunLabel+"="+f.job {
+			write(200, `{"items":[]}`)
+
+			return
+		}
+
+		write(200, `{"items":[{"metadata":{"name":"scan"}}]}`)
 	case strings.HasSuffix(path, "/pods/scan/log") && f.cutFollow && r.URL.Query().Get("follow") == "true":
 		log := scanLog(f.nonce)
 		w.Header().Set("Content-Length", strconv.Itoa(len(log)))
@@ -458,13 +484,18 @@ func TestRunImageScan(t *testing.T) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	if len(f.posted) != 3 || !strings.HasSuffix(f.posted[1], "/secrets") || !strings.HasSuffix(f.posted[2], "/pods") {
+	// The namespace is created once, then the Job, then its credentials, owned by it.
+	jobs := "/apis/batch/v1/namespaces/" + imageScanNamespace + "/jobs"
+	if want := []string{"/api/v1/namespaces", jobs, "/api/v1/namespaces/" + imageScanNamespace + "/secrets"}; !slices.Equal(f.posted, want) {
 		t.Fatalf("posted %v", f.posted)
 	}
 
-	// The stale scan's namespace is swept, not the one still running; then this scan's.
-	if len(f.deleted) != 2 || f.deleted[0] != "/api/v1/namespaces/"+imageScanName+"-stale0" ||
-		!strings.HasPrefix(f.deleted[1], "/api/v1/namespaces/"+imageScanName+"-") || strings.HasSuffix(f.deleted[1], "busy0") {
+	if !strings.Contains(f.secret, `"ownerReferences":[{"apiVersion":"batch/v1","blockOwnerDeletion":false,"kind":"Job","name":"`+f.job+`","uid":"0f0e-uid"}]`) {
+		t.Fatalf("secret %s", f.secret)
+	}
+
+	// The Job is deleted with its pod and credentials; the namespace stays.
+	if want := []string{jobs + "/" + f.job + "?propagationPolicy=Background"}; !slices.Equal(f.deleted, want) {
 		t.Fatalf("deleted %v", f.deleted)
 	}
 
@@ -679,5 +710,70 @@ func TestVulnHelpers(t *testing.T) {
 
 	if normalSeverity(" bogus ") != "UNKNOWN" || vulnSeverityRank("bogus") != len(vulnSeverities) || sarifLevel("LOW") != "note" {
 		t.Fatal("severity helpers")
+	}
+}
+
+func TestImageScanJob(t *testing.T) {
+	job := imageScanJob("scan-abc", imageScanPodSpec("n", testTargets(), imageScanOptions{}, ""))
+
+	js, err := json.Marshal(job)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s := string(js)
+	for _, want := range []string{
+		`"kind":"Job"`, `"backoffLimit":0`, `"ttlSecondsAfterFinished":600`, `"activeDeadlineSeconds":2400`,
+		`"app.kubernetes.io/instance":"scan-abc"`, `"restartPolicy":"Never"`, `"automountServiceAccountToken":false`,
+	} {
+		if !strings.Contains(s, want) {
+			t.Errorf("job lacks %s", want)
+		}
+	}
+
+	if strings.Contains(s, `"nodeName"`) && !strings.Contains(s, `"nodeName":""`) {
+		t.Fatalf("job pinned to a node: %s", s)
+	}
+}
+
+func TestEnsureScanNamespace(t *testing.T) {
+	f := newFakeImageScanAPI(t)
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Missing: created; there: kept as is.
+	for range 2 {
+		if err := ensureScanNamespace(context.Background(), k); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if len(f.posted) != 1 {
+		t.Fatalf("posted %v", f.posted)
+	}
+
+	// Someone else's namespace of that name is not used.
+	f.nsLabels = `{"team":"x"}`
+
+	var refusal *netPerfRefusal
+	if err := ensureScanNamespace(context.Background(), k); !errors.As(err, &refusal) {
+		t.Fatalf("got %v", err)
+	}
+}
+
+func TestFindScanPodTimesOut(t *testing.T) {
+	f := newFakeImageScanAPI(t)
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = findScanPod(context.Background(), k, "scan-none", 20*time.Millisecond)
+	if err == nil || !strings.Contains(err.Error(), "started no pod in time") {
+		t.Fatalf("got %v", err)
 	}
 }

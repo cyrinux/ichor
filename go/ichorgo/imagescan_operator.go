@@ -63,9 +63,6 @@ const vulnerabilityReportsPath = "/apis/aquasecurity.github.io/v1alpha1/namespac
 func readOperatorReports(ctx context.Context, k *kubeClient, refs []routePod) (operatorReports, error) {
 	out := operatorReports{Report: newImageScanReport(imageScanSourceOperator, "Trivy Operator")}
 
-	// Opening the scan screen also clears what a scan the app could not finish left behind.
-	sweepImageScans(ctx, k)
-
 	targets, err := readScanTargets(ctx, k, refs)
 
 	var refusal *netPerfRefusal

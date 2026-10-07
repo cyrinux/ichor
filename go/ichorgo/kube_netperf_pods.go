@@ -169,12 +169,6 @@ type runNamespace struct {
 
 // sweepRunNamespaces deletes the namespaces of app's runs the app could not finish.
 func sweepRunNamespaces(ctx context.Context, k *kubeClient, app string, now time.Time) {
-	sweepRunNamespacesOlder(ctx, k, app, now, netPerfStaleAge)
-}
-
-// sweepRunNamespacesOlder is sweepRunNamespaces for runs that may last longer than a test:
-// a namespace is left behind once older than staleAge.
-func sweepRunNamespacesOlder(ctx context.Context, k *kubeClient, app string, now time.Time, staleAge time.Duration) {
 	var list kubeList[runNamespace]
 
 	// Only namespaces this app created: a name prefix and an app label alone may match others.
@@ -185,7 +179,7 @@ func sweepRunNamespacesOlder(ctx context.Context, k *kubeClient, app string, now
 
 	for _, ns := range list.Items {
 		m := ns.Metadata
-		if m.DeletionTimestamp == nil && strings.HasPrefix(m.Name, app+"-") && now.Sub(m.CreationTimestamp) > staleAge {
+		if m.DeletionTimestamp == nil && strings.HasPrefix(m.Name, app+"-") && now.Sub(m.CreationTimestamp) > netPerfStaleAge {
 			deleteNetPerfNamespace(ctx, k, m.Name)
 		}
 	}
