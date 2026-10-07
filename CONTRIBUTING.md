@@ -50,4 +50,4 @@ Contributing doesn't grant rights to the Ichor name or logo; see [TRADEMARKS.md]
 ## Security issues
 
 Don't open a public issue for a vulnerability; use
-[GitHub's private vulnerability reporting](https://github.com/cyrinux/ichor/security/advisories/new).
+[GitHub's private vulnerability reporting](https://github.com/cyrinux/ichor/security/advisories/new); see [SECURITY.md](SECURITY.md).
