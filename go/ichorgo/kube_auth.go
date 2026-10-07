@@ -307,7 +307,12 @@ func newSignInMethod(method string, user *kubeStoreUser, cluster *kubeStoreClust
 	case authCert, authToken:
 		return nil, nil
 	case authOIDC:
-		return newOIDCMethod(user)
+		m, err := newOIDCMethod(user)
+		if err != nil {
+			return nil, err
+		}
+
+		return m, nil
 	}
 
 	if factory, ok := extraSignInMethods[method]; ok {

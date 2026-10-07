@@ -19,14 +19,13 @@ import (
 type fakeIdP struct {
 	*httptest.Server
 
-	mu        sync.Mutex
-	grants    []string
-	refresh   string // the valid refresh token
-	idExpiry  time.Duration
-	nonce     string
-	pending   int // device polls answered authorization_pending first
-	issued    int
-	challenge string
+	mu       sync.Mutex
+	grants   []string
+	refresh  string // the valid refresh token
+	idExpiry time.Duration
+	nonce    string
+	pending  int // device polls answered authorization_pending first
+	issued   int
 }
 
 func idToken(claims map[string]any) string {

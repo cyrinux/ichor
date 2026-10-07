@@ -35,6 +35,8 @@ const (
 var kubeloginListen = []string{"127.0.0.1:8000", "127.0.0.1:18000"}
 
 type oidcMethod struct {
+	// method is the name the sign-in is shown under (oidc, or azure for Entra ID).
+	method                         string
 	issuer, clientID, clientSecret string
 	scopes                         []string
 	deviceCode, useAccessToken     bool
@@ -45,11 +47,11 @@ type oidcMethod struct {
 	tls         *tls.Config
 }
 
-func (m *oidcMethod) name() string { return authOIDC }
+func (m *oidcMethod) name() string { return m.method }
 
 // newOIDCMethod reads the OIDC settings of a kubelogin exec or an oidc auth-provider.
 func newOIDCMethod(user *kubeStoreUser) (*oidcMethod, error) {
-	m := &oidcMethod{redirectHost: "localhost", tls: &tls.Config{MinVersion: tls.VersionTLS12}}
+	m := &oidcMethod{method: authOIDC, redirectHost: "localhost", tls: &tls.Config{MinVersion: tls.VersionTLS12}}
 
 	var caData string
 
@@ -316,7 +318,7 @@ func (m *oidcMethod) mint(ctx context.Context, state kubeAuthState) (string, tim
 
 	refresh := cmpOr(state.session("refresh"), m.seedRefresh)
 	if refresh == "" {
-		return "", time.Time{}, state, signInRequired(authOIDC, "")
+		return "", time.Time{}, state, signInRequired(m.method, "")
 	}
 
 	d, err := m.discover(ctx)
@@ -332,12 +334,12 @@ func (m *oidcMethod) mint(ctx context.Context, state kubeAuthState) (string, tim
 
 	if t.Error != "" {
 		// invalid_grant: the refresh token expired or was revoked.
-		return "", time.Time{}, state.withSession(map[string]string{"refresh": "", "bearer": ""}), signInRequired(authOIDC, cmpOr(t.Description, t.Error))
+		return "", time.Time{}, state.withSession(map[string]string{"refresh": "", "bearer": ""}), signInRequired(m.method, cmpOr(t.Description, t.Error))
 	}
 
 	bearer, expiry, claims, err := m.bearer(t)
 	if err != nil {
-		return "", time.Time{}, state, signInRequired(authOIDC, err.Error())
+		return "", time.Time{}, state, signInRequired(m.method, err.Error())
 	}
 
 	return bearer, expiry, m.session(state, t, bearer, expiry, claims), nil
