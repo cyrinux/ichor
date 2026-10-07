@@ -258,3 +258,13 @@ func (l maskedUpgradeListener) OnProgress(json string) {
 func (l maskedUpgradeListener) OnDone(newVersion string, errMessage string) {
 	l.UpgradeListener.OnDone(newVersion, privacy.maskPlain(errMessage))
 }
+
+type maskedImageScanListener struct{ ImageScanListener }
+
+func (l maskedImageScanListener) OnProgress(json string) {
+	l.ImageScanListener.OnProgress(privacy.mask(json))
+}
+
+func (l maskedImageScanListener) OnDone(reportJSON string, errMessage string) {
+	l.ImageScanListener.OnDone(privacy.mask(reportJSON), privacy.maskPlain(errMessage))
+}
