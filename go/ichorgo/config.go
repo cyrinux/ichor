@@ -116,11 +116,13 @@ func parseTalosconfig(configYAML string) (cfg *clientconfig.Config, err error) {
 	return cfg, nil
 }
 
-func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, error) {
-	if len(ctx.Endpoints) == 0 {
-		return contextSummary{}, errors.New("no endpoints defined")
-	}
+// errNoEndpoints: the context lists no endpoint (a talosconfig generated before the cluster
+// had addresses). It is imported all the same: the app asks for one, typed or found on the
+// network (FindEndpoints).
+var errNoEndpoints = errors.New("this cluster has no endpoint: add a node's address, or search the local network")
 
+// summarizeContext accepts a context without endpoints (see errNoEndpoints).
+func summarizeContext(name string, ctx *clientconfig.Context) (contextSummary, error) {
 	if isOmni(ctx) {
 		return summarizeOmniContext(name, ctx)
 	}

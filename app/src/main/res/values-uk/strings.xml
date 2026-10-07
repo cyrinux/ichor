@@ -1439,6 +1439,8 @@
     <string name="endpoint_scan_added_to">Додано до %1$s</string>
     <string name="endpoint_scan_discovery_hint">Додаються лише вузли, що приймають облікові дані кластера. Щойно кластер відповість, огляд запропонує додати інші його вузли.</string>
     <string name="endpoints_edit">Змінити endpoints</string>
+    <string name="no_endpoint_title">Немає endpoint</string>
+    <string name="no_endpoint_body">Цей talosconfig не містить адреси для доступу до кластера. Знайдіть його вузли в мережах навколо телефона або додайте адресу вузла.</string>
     <string name="endpoints_title">Endpoints %1$s</string>
     <string name="endpoints_body">Адреси, через які застосунок звертається до API Talos (порт 50000, якщо не вказано інший, напр. 192.168.1.10:50001). Перевірте адресу з обліковими даними кластера; ту, що зараз не відповідає, усе одно можна зберегти: вона може відповісти через VPN.</string>
     <string name="endpoints_add_label">Додати endpoint</string>
