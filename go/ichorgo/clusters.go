@@ -276,9 +276,18 @@ func isDigits(s string) bool {
 	return true
 }
 
-// sameCluster: both contexts trust the same CA (a cluster's identity; endpoints may move).
+// sameCluster: both contexts trust the same CA (a cluster's identity; endpoints may move),
+// or both are the same cluster of the same Omni instance.
 func sameCluster(a, b *clientconfig.Context) bool {
-	return a != nil && b != nil && a.CA != "" && a.CA == b.CA
+	if a == nil || b == nil {
+		return false
+	}
+
+	if isOmni(a) && isOmni(b) && a.CA == "" && b.CA == "" {
+		return a.Cluster != "" && omniClusterKey(a) == omniClusterKey(b)
+	}
+
+	return a.CA != "" && a.CA == b.CA
 }
 
 // RemoveContext returns storedYAML without contextName. The last context cannot be

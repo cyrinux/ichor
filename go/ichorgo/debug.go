@@ -110,7 +110,7 @@ func (d *DebugSession) run(ctx context.Context, configYAML, contextName, node, i
 		return
 	}
 
-	s, release, err := sessions.acquire(configYAML, contextName)
+	s, release, err := acquireSession(configYAML, contextName)
 	if err != nil {
 		d.exit(-1, err.Error())
 

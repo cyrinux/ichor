@@ -68,6 +68,13 @@ func (c *sessionCache) release(key string, entry *cacheEntry) {
 		return
 	}
 
+	// Dropped while in use (see forgetAuth): closed by its last user.
+	if c.entries[key] != entry {
+		entry.session.Close()
+
+		return
+	}
+
 	entry.timer = time.AfterFunc(c.idle, func() {
 		c.mu.Lock()
 		defer c.mu.Unlock()
@@ -80,6 +87,34 @@ func (c *sessionCache) release(key string, entry *cacheEntry) {
 		delete(c.entries, key)
 		entry.session.Close()
 	})
+}
+
+// forgetAuth drops the sessions signed with the sign-in kept under authKey, which changed:
+// the next call opens a new one. A session in use is closed when its last call ends.
+func (c *sessionCache) forgetAuth(authKey string) {
+	if authKey == "" {
+		return
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for key, entry := range c.entries {
+		if entry.session.authKey != authKey {
+			continue
+		}
+
+		delete(c.entries, key)
+
+		if entry.timer != nil {
+			entry.timer.Stop()
+			entry.timer = nil
+		}
+
+		if entry.inUse == 0 {
+			entry.session.Close()
+		}
+	}
 }
 
 // cacheKey hashes the config so credentials are not kept as map keys in clear.

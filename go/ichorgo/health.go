@@ -62,7 +62,7 @@ func runHealth(ctx context.Context, configYAML, contextName string, listener Hea
 		}
 		return ""
 	}
-	s, release, err := sessions.acquire(configYAML, contextName)
+	s, release, err := acquireSession(configYAML, contextName)
 	if err != nil {
 		return err.Error()
 	}

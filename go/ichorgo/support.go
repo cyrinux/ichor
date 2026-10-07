@@ -81,7 +81,7 @@ func StartSupportBundle(configYAML, contextName, kubeServer, nodes, destPath str
 }
 
 func runSupportBundle(ctx context.Context, configYAML, contextName, kubeServer, nodes, destPath string, listener SupportListener) (int64, error) {
-	s, release, err := sessions.acquire(configYAML, contextName)
+	s, release, err := acquireSession(configYAML, contextName)
 	if err != nil {
 		return 0, err
 	}

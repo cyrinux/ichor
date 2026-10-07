@@ -26,12 +26,18 @@ type session struct {
 	context *clientconfig.Context
 	onClose func() // test hook
 
+	// authKey is where an Omni context's sign-in is kept ("" for a certificate).
+	authKey string
+
+	readyMu sync.Mutex // see ready
+	isReady bool
+
 	versions    sync.Map // node -> Talos version tag, see nodeVersion
 	definitions sync.Map // node -> *resourceTypes, see resourceDefinitions
 }
 
 func openSession(configYAML, contextName string) (*session, error) {
-	_, cfgCtx, err := resolveContext(configYAML, contextName)
+	name, cfgCtx, err := resolveContext(configYAML, contextName)
 	if err != nil {
 		return nil, err
 	}
@@ -39,13 +45,24 @@ func openSession(configYAML, contextName string) (*session, error) {
 		return nil, errDemoUnavailable
 	}
 
+	opts := []client.OptionFunc{client.WithConfigContext(cfgCtx)}
+	authKey := ""
+
+	if isOmni(cfgCtx) {
+		authKey = contextFingerprint(name, cfgCtx)
+
+		if opts, err = omniClientOptions(authKey, cfgCtx); err != nil {
+			return nil, err
+		}
+	}
+
 	// client.New only dials lazily, so no context is needed here.
-	c, err := client.New(context.Background(), client.WithConfigContext(cfgCtx))
+	c, err := client.New(context.Background(), opts...)
 	if err != nil {
 		return nil, fmt.Errorf("create Talos client: %w", err)
 	}
 
-	return &session{client: c, context: cfgCtx}, nil
+	return &session{client: c, context: cfgCtx, authKey: authKey}, nil
 }
 
 func (s *session) Close() {
@@ -60,9 +77,25 @@ func (s *session) Close() {
 
 var sessions = newSessionCache(sessionIdle, openSession)
 
+// acquireSession is sessions.acquire for a session ready to use (see session.ready).
+func acquireSession(configYAML, contextName string) (*session, func(), error) {
+	s, release, err := sessions.acquire(configYAML, contextName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err := s.ready(context.Background()); err != nil {
+		release()
+
+		return nil, nil, err
+	}
+
+	return s, release, nil
+}
+
 // withSession runs fn with a (reused) session, bounded by timeout.
 func withSession[T any](configYAML, contextName string, timeout time.Duration, fn func(context.Context, *session) (T, error)) (T, error) {
-	s, release, err := sessions.acquire(configYAML, contextName)
+	s, release, err := acquireSession(configYAML, contextName)
 	if err != nil {
 		var zero T
 
@@ -94,7 +127,7 @@ func withNodeSession[T any](configYAML, contextName, node string, timeout time.D
 // acquireNode is sessions.acquire for a call to node, which must be one of the context's
 // targets: a privileged action never falls through to the endpoint.
 func acquireNode(configYAML, contextName, node string) (*session, func(), error) {
-	s, release, err := sessions.acquire(configYAML, contextName)
+	s, release, err := acquireSession(configYAML, contextName)
 	if err != nil {
 		return nil, nil, err
 	}
