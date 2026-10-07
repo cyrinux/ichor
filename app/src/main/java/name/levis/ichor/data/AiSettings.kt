@@ -1,9 +1,12 @@
 package name.levis.ichor.data
 
 import android.content.SharedPreferences
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 /** A model provider the AI diagnosis can use, as listed by the Go core. */
@@ -51,11 +54,15 @@ class AiPreferences(
     private val prefs: SharedPreferences,
     private val providerIds: List<String>,
     private val keyStore: (provider: String) -> SecureStore,
+    private val scope: CoroutineScope,
 ) {
     private val _settings = MutableStateFlow(read())
     val settings: StateFlow<AiSettings> = _settings.asStateFlow()
 
     private val keys = HashMap<String, String>()
+
+    // One at a time, in the order asked: the last key typed is the one stored.
+    private val keyWrites = Dispatchers.IO.limitedParallelism(1)
 
     fun update(settings: AiSettings) {
         prefs.edit().apply {
@@ -76,12 +83,17 @@ class AiPreferences(
         runCatching { keyStore(provider).read()?.decodeToString() }.getOrNull().orEmpty()
     }
 
-    /** Stores the key encrypted; an empty key removes it and its Keystore key. */
+    /**
+     * Uses the key at once and stores it encrypted off the caller's thread (the settings field
+     * saves on every keystroke, a Keystore call each); an empty key removes it and its Keystore key.
+     */
     @Synchronized
     fun setApiKey(provider: String, key: String) {
         val trimmed = key.trim()
-        if (trimmed.isEmpty()) keyStore(provider).clear() else keyStore(provider).write(trimmed.encodeToByteArray())
         keys[provider] = trimmed
+        scope.launch(keyWrites) {
+            runCatching { if (trimmed.isEmpty()) keyStore(provider).clear() else keyStore(provider).write(trimmed.encodeToByteArray()) }
+        }
     }
 
     private fun read() = AiSettings(
