@@ -3,12 +3,19 @@ package name.levis.ichor.ui.metrics
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -16,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,56 +40,73 @@ import name.levis.ichor.model.PromPanel
 import name.levis.ichor.model.PromResult
 import name.levis.ichor.ui.userMessage
 
-/** Adds (blank [initial] id) or edits a panel, from a preset or plain PromQL, with a preview run. */
+/**
+ * Adds (blank [panel] id) or edits a panel, from a preset or plain PromQL, with a preview run.
+ * The draft lives in the caller ([onChange]), so the panel assistant can fill it in; [onAskAi]
+ * opens the assistant, null when AI is off.
+ */
 @Composable
 fun PanelEditorDialog(
-    initial: PromPanel,
+    panel: PromPanel,
+    onChange: (PromPanel) -> Unit,
     presets: List<PromPanel>,
     onPreview: suspend (PromPanel) -> Result<PromResult>,
     onSave: (PromPanel) -> Unit,
     onDismiss: () -> Unit,
+    onAskAi: (() -> Unit)? = null,
 ) {
-    var panel by remember { mutableStateOf(initial) }
     var preview by remember { mutableStateOf<Result<PromResult>?>(null) }
     var running by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
+    // A preview is about one query: another one (typed, picked or proposed) drops it.
+    LaunchedEffect(panel.query) { preview = null }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(if (initial.id.isBlank()) R.string.metrics_add_panel else R.string.metrics_edit_panel)) },
+        title = { Text(stringResource(if (panel.id.isBlank()) R.string.metrics_add_panel else R.string.metrics_edit_panel)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (initial.id.isBlank() && presets.isNotEmpty()) {
-                    PresetPicker(presets) { preset -> panel = preset.copy(id = ""); preview = null }
+                if (panel.id.isBlank() && presets.isNotEmpty()) {
+                    PresetPicker(presets) { preset -> onChange(preset.copy(id = "")) }
                 }
                 OutlinedTextField(
-                    panel.title, { panel = panel.copy(title = it) },
+                    panel.title, { onChange(panel.copy(title = it)) },
                     label = { Text(stringResource(R.string.metrics_panel_title)) },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
-                    panel.query, { panel = panel.copy(query = it); preview = null },
+                    panel.query, { onChange(panel.copy(query = it)) },
                     label = { Text(stringResource(R.string.metrics_panel_query)) },
                     textStyle = TextStyle(fontFamily = FontFamily.Monospace),
                     minLines = 3, modifier = Modifier.fillMaxWidth(),
                 )
-                UnitPicker(panel.unit) { panel = panel.copy(unit = it) }
+                UnitPicker(panel.unit) { onChange(panel.copy(unit = it)) }
                 OutlinedTextField(
-                    panel.legend, { panel = panel.copy(legend = it) },
+                    panel.legend, { onChange(panel.copy(legend = it)) },
                     label = { Text(stringResource(R.string.metrics_panel_legend)) },
                     supportingText = { Text(stringResource(R.string.metrics_panel_legend_hint)) },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                 )
-                OutlinedButton(
-                    enabled = panel.query.isNotBlank() && !running,
-                    onClick = {
-                        running = true
-                        scope.launch {
-                            preview = onPreview(panel)
-                            running = false
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        enabled = panel.query.isNotBlank() && !running,
+                        onClick = {
+                            running = true
+                            scope.launch {
+                                preview = onPreview(panel)
+                                running = false
+                            }
+                        },
+                    ) { Text(stringResource(R.string.metrics_run)) }
+                    if (onAskAi != null) {
+                        OutlinedButton(onClick = onAskAi) {
+                            Icon(Icons.Outlined.AutoAwesome, null, Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(R.string.metrics_ai_ask))
                         }
-                    },
-                ) { Text(stringResource(R.string.metrics_run)) }
+                    }
+                }
                 if (running) LinearProgressIndicator(Modifier.fillMaxWidth())
                 preview?.fold(
                     onSuccess = { PromChart(panel, it) },
@@ -122,7 +147,7 @@ private fun UnitPicker(unit: String, onUnit: (String) -> Unit) {
 }
 
 @Composable
-private fun unitLabel(unit: String): String = stringResource(
+internal fun unitLabel(unit: String): String = stringResource(
     when (unit) {
         "percent" -> R.string.metrics_unit_percent
         "bytes" -> R.string.metrics_unit_bytes

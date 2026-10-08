@@ -19,6 +19,7 @@ import name.levis.ichor.data.PublicIpRepository
 import name.levis.ichor.data.ChangelogRepository
 import name.levis.ichor.data.ClusterColors
 import name.levis.ichor.data.DiagnosisRepository
+import name.levis.ichor.data.MetricsChatRepository
 import name.levis.ichor.data.SecureStore
 import name.levis.ichor.data.KeystoreSealer
 import name.levis.ichor.data.KeystoreValue
@@ -71,6 +72,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.heldBackForVpn
 import name.levis.ichor.model.signInKeys
+import name.levis.ichor.model.signsOutOnRemoval
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.shortcuts.ClusterShortcuts
 import name.levis.ichor.shortcuts.ShortcutSpec
@@ -194,6 +196,8 @@ class TalosApp : Application() {
 
     /** The optional AI diagnosis: off until enabled in Settings. API keys get their own Keystore keys. */
     val diagnosisRepository by lazy { DiagnosisRepository(configRepository, kubeServers) }
+    /** The panel assistant of the Metrics screen, with the same providers and keys. */
+    val metricsChatRepository by lazy { MetricsChatRepository(configRepository, kubeServers) }
     val aiPreferences by lazy {
         AiPreferences(
             getSharedPreferences(AiPreferences.FILE, Context.MODE_PRIVATE),
@@ -328,8 +332,9 @@ class TalosApp : Application() {
 
     suspend fun removeCluster(name: String): Boolean {
         val stored = configRepository.config.value
-        // Its sign-in goes with it, the token the core holds in memory too.
-        if (stored?.summary?.contexts?.any { it.name == name && it.signIn.isNotEmpty() } == true) {
+        // Its sign-in goes with it, the token the core holds in memory too (unless another
+        // Omni cluster of the same identity still uses it).
+        if (stored != null && signsOutOnRemoval(stored.summary.contexts, name)) {
             runCatching { kubeAuthRepository.signOut(name) }
         }
         val wasShown = name == stored?.activeContext

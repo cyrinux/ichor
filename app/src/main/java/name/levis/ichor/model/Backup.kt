@@ -178,6 +178,18 @@ fun signInKeys(contexts: List<ContextSummary>): List<String> = contexts.flatMap 
     }
 }.filter { it.isNotEmpty() }.distinct()
 
+/**
+ * Whether removing the cluster [name] signs it out too. Not an Omni cluster whose sign-in
+ * another stored cluster shares (one key per identity and instance): that one keeps it, and
+ * the store drops the key once no cluster names it.
+ */
+fun signsOutOnRemoval(contexts: List<ContextSummary>, name: String): Boolean {
+    val removed = contexts.firstOrNull { it.name == name } ?: return false
+    if (removed.signIn.isEmpty()) return false
+    if (!removed.omni || removed.authKey.isEmpty()) return true
+    return contexts.none { it.name != name && it.authKey == removed.authKey }
+}
+
 /** The sign-ins of [kubeAuth] (a backup's) for the restored kubeconfig clusters [fingerprints]. */
 fun restoredKubeAuth(kubeAuth: Map<String, String>?, fingerprints: List<String>): Map<String, String> =
     kubeAuth.orEmpty().filter { (fp, state) -> fp.isNotBlank() && fp in fingerprints && state.isNotBlank() }

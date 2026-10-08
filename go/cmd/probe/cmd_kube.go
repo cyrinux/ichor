@@ -228,6 +228,17 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "prom-metrics", args: "SOURCE_JSON", run: func(e env) (out string, err error) {
+		// The metric names the panel assistant would be given; nothing is sent.
+		out, err = ichorgo.PromMetricNames(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+
+		return out, err
+	}},
+	{name: "prom-chat", args: "SOURCE_JSON anthropic|openai QUESTION [MODEL]", run: func(e env) (out string, err error) {
+		err = promChat(e, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
+
+		return noOutput, err
+	}},
 }
 
 // runSuspendCronjob serves suspend-cronjob, resume-cronjob: e.cmd tells which.

@@ -38,7 +38,7 @@ Every idea was checked against the code (Go core, Android, iOS) on 2026-10-04. S
 | S7 | Hardware sensors (temperatures, fans, throttling) | **missing** | S |
 | S8 | Join a node from the phone | **missing** | XL |
 | S9 | Action audit log | **missing** | M |
-| S10 | Omni | **missing** | XL |
+| S10 | Omni | **exists**: account (browser-confirmed key) and service account sign-in, cluster discovery, the Talos API through Omni's proxy, Kubernetes through Omni's proxy with its OIDC; no talosconfig issuing (Omni's) | — |
 
 ## Kubernetes: any cluster from a kubeconfig
 

@@ -171,6 +171,52 @@ func diagnose(cfg, contextName, provider, model string) error {
 	return nil
 }
 
+// panelPrinter prints the explanation as it grows, then the proposed panel on a line.
+type panelPrinter struct {
+	answerPrinter
+	panel chan string
+}
+
+func (p *panelPrinter) OnDone(panelJSON, errMessage string) {
+	p.panel <- panelJSON
+	p.done <- errMessage
+}
+
+// promChat asks the panel assistant one question about the metrics source sourceJSON
+// (see prom-metrics) and prints the answer, then the panel it proposed (checked against the
+// source) as JSON. Like diagnose, it sends data to the provider: the question, the source's
+// metric names, and the queries the model writes.
+func promChat(e env, sourceJSON, provider, question, model string) error {
+	names, err := ichorgo.PromMetricNames(e.cfg, e.context, e.kubeServer, sourceJSON)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "metric names not read, the model gets none:", err)
+	}
+
+	chat, err := ichorgo.NewPromChat(e.cfg, e.context, e.kubeServer, sourceJSON, names, "")
+	if err != nil {
+		return err
+	}
+
+	p := &panelPrinter{answerPrinter{done: make(chan string, 1)}, make(chan string, 1)}
+	chat.Ask(provider, aiKey(provider), model, os.Getenv("ICHOR_AI_BASE_URL"), "en", question, p)
+
+	panel, msg := <-p.panel, <-p.done
+
+	fmt.Println()
+
+	if msg != "" {
+		return fmt.Errorf("prom-chat failed: %s", msg)
+	}
+
+	if panel == "" {
+		fmt.Println("(no panel proposed)")
+	} else {
+		fmt.Println(panel)
+	}
+
+	return nil
+}
+
 func fail(err error) {
 	fmt.Fprintln(os.Stderr, err)
 	os.Exit(1)

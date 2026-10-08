@@ -79,7 +79,7 @@ func streamAnthropic(ctx context.Context, req aiRequest, emit func(string)) erro
 		MaxTokens: anthropicMaxTokens,
 		Stream:    true,
 		System:    req.system,
-		Messages:  []chatMessage{{Role: "user", Content: req.user}},
+		Messages:  req.turns(),
 	}
 
 	// Claude Opus 5.5 defaults to medium effort; a diagnosis is worth the usual high.

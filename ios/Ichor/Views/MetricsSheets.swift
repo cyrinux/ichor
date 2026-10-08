@@ -142,16 +142,22 @@ struct SourceSheet: View {
 }
 
 /// Adds (empty `initial` id) or edits a panel, from a preset or plain PromQL, with a preview run.
+/// With `chat` (AI on), "Ask AI" opens the panel assistant about the draft, which it can replace.
 struct PanelEditorSheet: View {
     let initial: PromPanel
     let presets: [PromPanel]
     let preview: (PromPanel) async -> Result<PromResult, Error>
+    var chat: PanelChatModel? = nil
+    var sourceLabel = ""
+    /// Opens the assistant's conversation about the draft before the sheet shows it.
+    var openChat: (PromPanel) -> Void = { _ in }
     let onSave: (PromPanel) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var panel = PromPanel()
     @State private var running = false
     @State private var result: Result<PromResult, Error>?
+    @State private var chatOpen = false
 
     var body: some View {
         NavigationStack {
@@ -196,6 +202,9 @@ struct PanelEditorSheet: View {
                         }
                     }
                     .disabled(panel.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || running)
+                    if chat != nil {
+                        Button { openChat(panel); chatOpen = true } label: { Label("Ask AI", systemImage: "sparkles") }
+                    }
                     if running { ProgressView() }
                     switch result {
                     case .success(let res): PromChartView(panel: panel, result: res)
@@ -222,17 +231,30 @@ struct PanelEditorSheet: View {
                 }
             }
             .onAppear { panel = initial }
+            .sheet(isPresented: $chatOpen) {
+                if let chat {
+                    // A proposed panel replaces the draft (its id kept); a preview was about the old query.
+                    PanelChatSheet(model: chat, sourceLabel: sourceLabel) { proposed in
+                        panel = proposed.panel(id: initial.id)
+                        result = nil
+                        chatOpen = false
+                    }
+                }
+            }
         }
     }
 
-    private func unitLabel(_ unit: String) -> String {
-        switch unit {
-        case "percent": String(localized: "Percent")
-        case "bytes": String(localized: "Bytes")
-        case "cores": String(localized: "CPU cores")
-        case "persec": String(localized: "Per second")
-        case "count": String(localized: "Count")
-        default: String(localized: "Plain number")
-        }
+    private func unitLabel(_ unit: String) -> String { promUnitLabel(unit) }
+}
+
+/// A panel unit as the user reads it.
+func promUnitLabel(_ unit: String) -> String {
+    switch unit {
+    case "percent": String(localized: "Percent")
+    case "bytes": String(localized: "Bytes")
+    case "cores": String(localized: "CPU cores")
+    case "persec": String(localized: "Per second")
+    case "count": String(localized: "Count")
+    default: String(localized: "Plain number")
     }
 }

@@ -65,39 +65,50 @@ func NormalizePromSource(sourceJSON string) (out string, err error) {
 }
 
 func promRun(target kubeTarget, sourceJSON, apiPath, query string, params url.Values, grid promGrid) (string, error) {
-	query = strings.TrimSpace(query)
-
-	switch {
-	case query == "":
-		return "", errors.New("the query is empty")
-	case len(query) > promMaxQuery:
-		return "", errors.New("the query is longer than 4 KiB")
-	case strings.ContainsRune(query, 0):
-		return "", errors.New("the query has a NUL character")
-	}
-
-	src, err := parsePromSource(sourceJSON)
+	res, err := promQuery(target, sourceJSON, apiPath, query, params, grid)
 	if err != nil {
 		return "", err
 	}
 
+	return toJSON(res)
+}
+
+// promQuery runs query against the source; an error about the query itself is a
+// promQueryError, so a caller can tell it from a source that does not answer.
+func promQuery(target kubeTarget, sourceJSON, apiPath, query string, params url.Values, grid promGrid) (promResult, error) {
+	query = strings.TrimSpace(query)
+
+	switch {
+	case query == "":
+		return promResult{}, promQueryError{errors.New("the query is empty")}
+	case len(query) > promMaxQuery:
+		return promResult{}, promQueryError{errors.New("the query is longer than 4 KiB")}
+	case strings.ContainsRune(query, 0):
+		return promResult{}, promQueryError{errors.New("the query has a NUL character")}
+	}
+
+	src, err := parsePromSource(sourceJSON)
+	if err != nil {
+		return promResult{}, err
+	}
+
 	if isDemoContext(target.config, target.context) {
-		return toJSON(demoPromResult(query, grid))
+		return demoPromResult(query, grid), nil
 	}
 
 	params.Set("query", query)
 
 	status, body, err := promGet(target, src, apiPath, params)
 	if err != nil {
-		return "", err
+		return promResult{}, err
 	}
 
 	res, err := parsePromAnswer(status, body, grid)
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", src.label(), err)
+		return promResult{}, fmt.Errorf("%s: %w", src.label(), err)
 	}
 
-	return toJSON(res)
+	return res, nil
 }
 
 func promRangeGrid(start, end, step int64) (promGrid, error) {
