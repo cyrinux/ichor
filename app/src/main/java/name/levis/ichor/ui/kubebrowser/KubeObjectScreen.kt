@@ -72,14 +72,14 @@ import name.levis.ichor.ui.components.shareText
 import name.levis.ichor.ui.diff.DiffLines
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.machineconfig.ConfigYamlEditor
-import name.levis.ichor.ui.workloads.KubeEventsList
 
 /**
- * One object of any kind ([ref]) as YAML, with copy and share, a Secret's values behind the
- * app lock, its Kubernetes events, and, when the kind can be updated, an editor whose change
- * is reviewed as a diff (the API server's dry run) before it is saved. A pod also opens a
- * port-forward ([onPortForward]). Its top bar is arranged like the overview's: the actions shown
- * as icons or kept in its menu are the user's choice.
+ * One object of any kind ([ref]): first its summary (health, conditions, owners up the chain
+ * through [onOwner] or [onHelmRelease], events, metadata), then its YAML, with copy and share,
+ * a Secret's values behind the app lock, and, when the kind can be updated, an editor whose
+ * change is reviewed as a diff (the API server's dry run) before it is saved. A pod also opens
+ * a port-forward ([onPortForward]). Its top bar is arranged like the overview's: the actions
+ * shown as icons or kept in its menu are the user's choice.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,6 +87,8 @@ fun KubeObjectScreen(
     ref: KubeObjectRef,
     onBack: () -> Unit,
     onPortForward: (() -> Unit)?,
+    onOwner: (KubeObjectRef) -> Unit,
+    onHelmRelease: (namespace: String, name: String) -> Unit,
     vm: KubeObjectViewModel = viewModel(
         key = "kube-object-${ref.group}/${ref.resource}/${ref.namespace}/${ref.name}",
         factory = factory { KubeObjectViewModel(app.kubeBrowser, ref) },
@@ -95,9 +97,13 @@ fun KubeObjectScreen(
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
     val state by vm.yaml.collectAsStateWithLifecycle()
+    val summary by vm.summary.collectAsStateWithLifecycle()
     val revealed by vm.revealed.collectAsStateWithLifecycle()
     val edit by vm.edit.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
+    LaunchedEffect(Unit) {
+        if (state == UiState.Loading) vm.refresh()
+        if (summary == UiState.Loading) vm.refreshSummary()
+    }
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -175,7 +181,7 @@ fun KubeObjectScreen(
                             bar,
                             onPortForward,
                             onEdit = vm::startEdit,
-                            onRefresh = vm::refresh,
+                            onRefresh = vm::refreshAll,
                             onCustomize = { customizing = true },
                         )
                         current.review == null -> TextButton(onClick = vm::review) { Text(stringResource(R.string.kb_review)) }
@@ -196,14 +202,23 @@ fun KubeObjectScreen(
                     ConfigYamlEditor(current.draft, null, vm::changeDraft)
                 }
                 else -> {
-                    if (ref.namespace.isNotEmpty()) {
-                        PrimaryTabRow(selectedTabIndex = tab) {
-                            AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.kb_tab_yaml)) })
-                            AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.kube_events_title)) })
-                        }
+                    PrimaryTabRow(selectedTabIndex = tab) {
+                        AppTab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.kb_tab_summary)) })
+                        AppTab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.kb_tab_yaml)) })
                     }
-                    if (tab == 1 && ref.namespace.isNotEmpty()) {
-                        KubeEventsList(ref.namespace, ref.kind, ref.name, Modifier.verticalScroll(rememberScrollState()).padding(16.dp))
+                    if (tab == 0) {
+                        ObjectSummaryContent(
+                            summary,
+                            onRetry = vm::refreshSummary,
+                            onOwner = { owner ->
+                                val target = owner.toRef()
+                                when {
+                                    owner.isHelmRelease -> onHelmRelease(owner.namespace, owner.name)
+                                    target != null -> onOwner(target)
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
                     } else {
                         if (ref.isSecret) SecretReveal(revealed, ::toggleReveal)
                         when (val s = state) {

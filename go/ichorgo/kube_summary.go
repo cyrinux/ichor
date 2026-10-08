@@ -284,12 +284,17 @@ func resolveOwners(ctx context.Context, r *kindResolver, obj map[string]any, s k
 	})
 
 	for _, m := range managers(s) {
-		if m.Kind == s.Kind && m.Name == s.Name && m.Namespace == s.Namespace {
-			continue // An Application that manages itself (app of apps).
+		if m.Via == ownerViaArgo && m.Namespace == "" {
+			// The object itself is the Application its label names: no need to look it up.
+			if m.Kind == s.Kind && m.Name == s.Name {
+				continue
+			}
+
+			m.Namespace = findArgoApplicationNamespace(ctx, r.k, m.Name)
 		}
 
-		if m.Via == ownerViaArgo && m.Namespace == "" {
-			m.Namespace = findArgoApplicationNamespace(ctx, r.k, m.Name)
+		if m.Kind == s.Kind && m.Name == s.Name && m.Namespace == s.Namespace {
+			continue // An Application that manages itself (app of apps).
 		}
 
 		// A Helm release has no resource; a kind the server does not serve stays untappable.

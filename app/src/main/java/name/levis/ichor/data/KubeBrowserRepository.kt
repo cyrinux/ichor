@@ -14,6 +14,7 @@ import name.levis.ichor.model.HelmRollbackPlan
 import name.levis.ichor.model.KUBE_PAGE_SIZE
 import name.levis.ichor.model.KubeEditPreview
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.KubeObjectSummary
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.ResourcePageJson
 import name.levis.ichor.model.ResourceRow
@@ -53,6 +54,12 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     /** [ref] as YAML; a Secret's values only when [reveal]. Never cached: it may hold secrets. */
     suspend fun objectYaml(ref: KubeObjectRef, reveal: Boolean): String = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeObjectYAML(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, reveal)
+    }
+
+    /** [ref] summed up: conditions, owners and managers, metadata, spec highlights and events. */
+    suspend fun objectSummary(ref: KubeObjectRef): KubeObjectSummary = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeObjectSummary(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name)
+        TalosJson.decodeFromString(KubeObjectSummary.serializer(), json)
     }
 
     /** What saving [edited] as [ref] would store, from a dry run. */

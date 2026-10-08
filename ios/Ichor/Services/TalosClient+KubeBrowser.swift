@@ -41,6 +41,14 @@ extension TalosClient {
         }
     }
 
+    /// One object summed up: conditions, owners and managers, metadata, spec highlights, events.
+    func objectSummary(_ resource: KubeAPIResource, namespace: String, name: String) async throws -> KubeObjectSummary {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeObjectSummary(config, context, kubeServer, resource.group, resource.version, resource.resource,
+                                     namespace, name, $0)
+        }
+    }
+
     /// What saving `edited` would change (a dry run), as a diff.
     func objectUpdatePreview(_ resource: KubeAPIResource, namespace: String, name: String, edited: String) async throws -> KubeEditPreview {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in

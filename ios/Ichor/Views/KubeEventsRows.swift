@@ -18,9 +18,6 @@ struct KubeEventsRows: View {
 
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<[KubeEvent]> = .loading
-    @State private var all = false
-
-    private let preview = 8
 
     var body: some View {
         Group {
@@ -30,20 +27,7 @@ struct KubeEventsRows: View {
             case .failed(let message):
                 ErrorOrNoticeText(message: message)
             case .loaded(let events, _, _):
-                let now = Int64(Date().timeIntervalSince1970 * 1000)
-                if events.isEmpty {
-                    Text(verbatim: CheckupText.kubeEventsEmpty).font(.caption).foregroundStyle(.secondary)
-                }
-                ForEach(Array((all ? events : Array(events.prefix(preview))).enumerated()), id: \.offset) { _, event in
-                    KubeEventRow(event: event, now: now, showObject: kind.isEmpty)
-                }
-                if events.count > preview {
-                    Button {
-                        all.toggle()
-                    } label: {
-                        Text(verbatim: all ? CheckupText.checkupShowLess : CheckupText.checkupShowAll("\(events.count)")).font(.callout)
-                    }
-                }
+                KubeEventsList(events: events, showObject: kind.isEmpty)
             }
         }
         .task(id: "\(namespace)/\(kind)/\(name)") { await load() }
@@ -52,6 +36,39 @@ struct KubeEventsRows: View {
     private func load() async {
         guard let client = model.client else { return }
         state = await .from { try await client.kubeEvents(namespace: namespace, kind: kind, name: name) }
+    }
+}
+
+/// Events already read, as list rows: the first few, then "Show all".
+struct KubeEventsList: View {
+    let events: [KubeEvent]
+    let showObject: Bool
+
+    // Explicit: the private @State makes the memberwise init private.
+    init(events: [KubeEvent], showObject: Bool) {
+        self.events = events
+        self.showObject = showObject
+    }
+
+    @State private var all = false
+
+    private let preview = 8
+
+    var body: some View {
+        let now = Int64(Date().timeIntervalSince1970 * 1000)
+        if events.isEmpty {
+            Text(verbatim: CheckupText.kubeEventsEmpty).font(.caption).foregroundStyle(.secondary)
+        }
+        ForEach(Array((all ? events : Array(events.prefix(preview))).enumerated()), id: \.offset) { _, event in
+            KubeEventRow(event: event, now: now, showObject: showObject)
+        }
+        if events.count > preview {
+            Button {
+                all.toggle()
+            } label: {
+                Text(verbatim: all ? CheckupText.checkupShowLess : CheckupText.checkupShowAll("\(events.count)")).font(.callout)
+            }
+        }
     }
 }
 

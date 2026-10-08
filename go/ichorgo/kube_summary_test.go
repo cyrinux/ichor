@@ -295,6 +295,29 @@ func TestKubeObjectSummaryValidatesAndDemo(t *testing.T) {
 	}
 }
 
+// An Application whose instance label names itself (app of apps) is not its own owner, and
+// no lookup is made for it.
+func TestKubeObjectSummaryArgoApplicationNotItsOwnOwner(t *testing.T) {
+	f := newFakeKubeAPI(t, map[string]string{
+		"GET /apis/argoproj.io/v1alpha1/namespaces/argocd/applications/root": `{"kind":"Application","apiVersion":"argoproj.io/v1alpha1",
+		  "metadata":{"name":"root","namespace":"argocd","labels":{"argocd.argoproj.io/instance":"root"}}}`,
+	})
+
+	s := decodeSummary(t, func() (string, error) {
+		return KubeObjectSummary(kubeStoreFor(t, f), "admin@test", "", "argoproj.io", "v1alpha1", "applications", "argocd", "root")
+	})
+
+	if len(s.Owners) != 0 {
+		t.Errorf("owners %+v", s.Owners)
+	}
+
+	for _, r := range f.recorded() {
+		if r.path == "/apis/argoproj.io/v1alpha1/applications" {
+			t.Error("looked the Application up")
+		}
+	}
+}
+
 func TestTimeMilli(t *testing.T) {
 	if got := timeMilli("2026-01-01T00:00:00Z"); got != time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).UnixMilli() {
 		t.Errorf("got %d", got)
