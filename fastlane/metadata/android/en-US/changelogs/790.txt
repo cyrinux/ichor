@@ -1,0 +1,9 @@
+• Read Calico network policies next to Cilium's
+• Show node pool, instance type and spot capacity on the Kubernetes home
+• Drain entry for every cluster kind
+• Probe signs in to Omni contexts
+• Add Omni clusters from the apps; Kubernetes for Omni clusters
+• Kubernetes of Omni clusters, signed in with Omni
+• Cordon and drain nodes of kubeconfig clusters
+• Add clusters from an Omni sign-in
+• Keep the AKS service principal client ID when its secret rotates
