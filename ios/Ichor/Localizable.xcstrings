@@ -91515,6 +91515,181 @@
           }
         }
       }
+    },
+    "Customize home" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personnaliser l’accueil"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personalizar el inicio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налаштувати головний екран"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startseite anpassen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personalizza la home"
+          }
+        }
+      }
+    },
+    "Kubernetes screens" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Écrans Kubernetes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pantallas de Kubernetes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Екрани Kubernetes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes-Bildschirme"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schermate Kubernetes"
+          }
+        }
+      }
+    },
+    "API server, Kubernetes version, nodes ready and who the credentials are" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveur d’API, version de Kubernetes, nœuds prêts et identité des identifiants"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servidor de API, versión de Kubernetes, nodos listos y quién son las credenciales"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер API, версія Kubernetes, готові вузли та кому належать облікові дані"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API-Server, Kubernetes-Version, bereite Knoten und wer die Anmeldedaten sind"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server API, versione di Kubernetes, nodi pronti e identità delle credenziali"
+          }
+        }
+      }
+    },
+    "Every node as Kubernetes lists it, with cordons and pressure" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque nœud tel que Kubernetes le liste, avec les cordons et la pression"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada nodo tal como Kubernetes lo lista, con acordonamientos y presión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кожен вузол, як його перелічує Kubernetes, із cordon і тиском"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeder Knoten, wie Kubernetes ihn auflistet, mit Cordons und Druck"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ogni nodo come lo elenca Kubernetes, con cordon e pressione"
+          }
+        }
+      }
+    },
+    "Buttons to the Kubernetes screens these credentials can use" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Boutons vers les écrans Kubernetes que ces identifiants peuvent utiliser"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Botones a las pantallas de Kubernetes que estas credenciales pueden usar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кнопки до екранів Kubernetes, доступних цим обліковим даним"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schaltflächen zu den Kubernetes-Bildschirmen, die diese Anmeldedaten nutzen können"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pulsanti verso le schermate Kubernetes che queste credenziali possono usare"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

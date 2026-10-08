@@ -2928,6 +2928,11 @@
     <string name="kube_home_version">Kubernetes %1$s</string>
     <string name="kube_home_nodes_forbidden">Queste credenziali non possono elencare i nodi. Le altre schermate Kubernetes funzionano, nei limiti di ciò che consentono.</string>
     <string name="kube_home_no_nodes">Nessun nodo.</string>
+    <string name="kube_home_edit_title">Personalizza la home</string>
+    <string name="kube_home_card_tools">Schermate Kubernetes</string>
+    <string name="kube_home_card_desc_summary">Server API, versione di Kubernetes, nodi pronti e identità delle credenziali</string>
+    <string name="kube_home_card_desc_nodes">Ogni nodo come lo elenca Kubernetes, con cordon e pressione</string>
+    <string name="kube_home_card_desc_tools">Pulsanti verso le schermate Kubernetes che queste credenziali possono usare</string>
     <string name="kube_node_cordoned">Isolato (cordon)</string>
     <string name="kube_node_pool_karpenter">Pool Karpenter %1$s</string>
     <string name="kube_node_pool_eks">Gruppo di nodi EKS %1$s</string>

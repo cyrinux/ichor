@@ -13,7 +13,12 @@ import name.levis.ichor.model.KubernetesAction
 import name.levis.ichor.model.KubernetesBar
 import name.levis.ichor.model.OverviewAction
 import name.levis.ichor.model.OverviewBar
+import name.levis.ichor.model.OverviewCard
 import name.levis.ichor.model.OverviewLayout
+import name.levis.ichor.model.KubeHomeAction
+import name.levis.ichor.model.KubeHomeBar
+import name.levis.ichor.model.KubeHomeCard
+import name.levis.ichor.model.KubeHomeLayout
 
 enum class ThemeMode(@StringRes val label: Int) {
     AUTO(R.string.settings_theme_auto),
@@ -79,8 +84,12 @@ class UiPreferences(private val prefs: SharedPreferences) {
     val offlineCache: StateFlow<Boolean> = _offlineCache.asStateFlow()
 
     /** The overview's cards: their order and which are hidden (long-press a card to change). */
-    private val _overviewLayout = MutableStateFlow(OverviewLayout.parse(prefs.getString(KEY_OVERVIEW_LAYOUT, null)))
+    private val _overviewLayout = MutableStateFlow(OverviewCard.layout.parse(prefs.getString(KEY_OVERVIEW_LAYOUT, null)))
     val overviewLayout: StateFlow<OverviewLayout> = _overviewLayout.asStateFlow()
+
+    /** The Kubernetes home's cards (a cluster added from a kubeconfig), arranged the same way. */
+    private val _kubeHomeLayout = MutableStateFlow(KubeHomeCard.layout.parse(prefs.getString(KEY_KUBE_HOME_LAYOUT, null)))
+    val kubeHomeLayout: StateFlow<KubeHomeLayout> = _kubeHomeLayout.asStateFlow()
 
     /** The overview's nodes card with a full row per node; collapsed (a chip each) by default. */
     private val _nodesExpanded = MutableStateFlow(prefs.getBoolean(KEY_NODES_EXPANDED, false))
@@ -88,6 +97,10 @@ class UiPreferences(private val prefs: SharedPreferences) {
     /** The overview's app-bar actions: their order and which are icons or in its menu. */
     private val _overviewBar = MutableStateFlow(OverviewAction.bar.parse(prefs.getString(KEY_OVERVIEW_BAR, null)))
     val overviewBar: StateFlow<OverviewBar> = _overviewBar.asStateFlow()
+
+    /** The Kubernetes home's app-bar actions, arranged the same way. */
+    private val _kubeHomeBar = MutableStateFlow(KubeHomeAction.bar.parse(prefs.getString(KEY_KUBE_HOME_BAR, null)))
+    val kubeHomeBar: StateFlow<KubeHomeBar> = _kubeHomeBar.asStateFlow()
 
     /** The Kubernetes screen's app-bar actions, arranged the same way. */
     private val _kubernetesBar = MutableStateFlow(KubernetesAction.bar.parse(prefs.getString(KEY_KUBERNETES_BAR, null)))
@@ -131,6 +144,16 @@ class UiPreferences(private val prefs: SharedPreferences) {
     fun setOverviewLayout(layout: OverviewLayout) {
         prefs.edit().putString(KEY_OVERVIEW_LAYOUT, layout.encode()).apply()
         _overviewLayout.value = layout
+    }
+
+    fun setKubeHomeLayout(layout: KubeHomeLayout) {
+        prefs.edit().putString(KEY_KUBE_HOME_LAYOUT, layout.encode()).apply()
+        _kubeHomeLayout.value = layout
+    }
+
+    fun setKubeHomeBar(bar: KubeHomeBar) {
+        prefs.edit().putString(KEY_KUBE_HOME_BAR, bar.encode()).apply()
+        _kubeHomeBar.value = bar
     }
 
     fun setNodesExpanded(expanded: Boolean) {
@@ -177,6 +200,8 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_OVERVIEW_LAYOUT = "overview_layout"
         private const val KEY_NODES_EXPANDED = "overview_nodes_expanded"
         private const val KEY_OVERVIEW_BAR = "overview_bar"
+        private const val KEY_KUBE_HOME_LAYOUT = "kube_home_layout"
+        private const val KEY_KUBE_HOME_BAR = "kube_home_bar"
         private const val KEY_KUBERNETES_BAR = "kubernetes_bar"
         private const val KEY_KUBE_OBJECT_BAR = "kube_object_bar"
 

@@ -3126,6 +3126,11 @@
     <string name="kube_home_version">Kubernetes %1$s</string>
     <string name="kube_home_nodes_forbidden">Ці облікові дані не можуть переглядати список вузлів. Інші екрани Kubernetes працюють у межах їхніх дозволів.</string>
     <string name="kube_home_no_nodes">Немає вузлів.</string>
+    <string name="kube_home_edit_title">Налаштувати головний екран</string>
+    <string name="kube_home_card_tools">Екрани Kubernetes</string>
+    <string name="kube_home_card_desc_summary">Сервер API, версія Kubernetes, готові вузли та кому належать облікові дані</string>
+    <string name="kube_home_card_desc_nodes">Кожен вузол, як його перелічує Kubernetes, із cordon і тиском</string>
+    <string name="kube_home_card_desc_tools">Кнопки до екранів Kubernetes, доступних цим обліковим даним</string>
     <string name="kube_node_cordoned">Ізольовано (cordon)</string>
     <string name="kube_node_pool_karpenter">Пул Karpenter %1$s</string>
     <string name="kube_node_pool_eks">Група вузлів EKS %1$s</string>

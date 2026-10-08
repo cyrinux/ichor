@@ -156,3 +156,9 @@ Append a line per session: date, phase, what was done, what's next.
   cluster had one NotReady node at the time, which made it a perfect "degraded" sample.
   This motivated D9 (likely-cause correlation). Anonymised fixtures committed.
   Next: phase 1.
+- 2026-10-08: data services on clusters added from a kubeconfig (no Talos inventory, so `hints`
+  is "" and every operator is found from `/apis`): a card on the Kubernetes home on Android and
+  iOS, plus a Data services action in its bar and tools; the likely-cause nodes come from the
+  Kubernetes node list. The Kubernetes home's cards and app bar are arranged like the overview's
+  (`KubeHomeCard`/`KubeHomeAction`, `HomeEditor` on Android, `HomeEditorSheet` on iOS), in a
+  layout of their own. Alerts still skip kube-only clusters.
