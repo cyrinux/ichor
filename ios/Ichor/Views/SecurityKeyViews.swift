@@ -195,6 +195,8 @@ private struct SecurityKeyFlowView: View {
     @State private var busy = false
     @State private var askPin = false
     @State private var pin = ""
+    /// The PIN typed, without the line breaks a pasted one often ends with.
+    private var fidoPin: String { pin.filter { !$0.isNewline } }
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
@@ -204,8 +206,11 @@ private struct SecurityKeyFlowView: View {
                 } else if askPin {
                     Text("This key only makes new credentials with its FIDO PIN. It is used once here; unlocking never asks for it.")
                         .multilineTextAlignment(.center)
-                    SecureField("FIDO PIN", text: $pin).textFieldStyle(.roundedBorder).keyboardType(.numberPad)
-                    Button("OK") { Task { await run(pin: pin) } }.buttonStyle(.borderedProminent).disabled(pin.count < 4)
+                    // A FIDO PIN is any text (4+ code points, at most 63 UTF-8 bytes): the full keyboard.
+                    SecureField("FIDO PIN", text: $pin).textFieldStyle(.roundedBorder)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                    Button("OK") { Task { await run(pin: fidoPin) } }.buttonStyle(.borderedProminent)
+                        .disabled(fidoPin.unicodeScalars.count < 4 || fidoPin.utf8.count > 63)
                 } else {
                     Text(instruction).multilineTextAlignment(.center)
                     if let error { Text(error).font(.footnote).foregroundStyle(.statusBad).multilineTextAlignment(.center) }

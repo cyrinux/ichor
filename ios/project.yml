@@ -17,10 +17,10 @@ settings:
 packages:
   IchorCore:
     path: IchorCore
-  # Terminal emulator for the debug shell (MIT).
+  # Terminal emulator for the debug shell (MIT). Pinned: 1.99.0 dropped TerminalView.getTerminal().
   SwiftTerm:
     url: https://github.com/migueldeicaza/SwiftTerm
-    from: 1.20.0
+    exactVersion: 1.20.0
   # Security keys (YubiKey…) over NFC, Lightning and USB-C for the app lock: Yubico's Swift SDK
   # talks CTAP2 to the key itself (Apache-2.0).
   YubiKit:

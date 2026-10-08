@@ -12,7 +12,7 @@ struct FluxSection: View {
     let downNodes: Set<String>
 
     var body: some View {
-        GitOpsOverviewSection(title: "Flux", route: .flux(downNodes: downNodes), app: app, state: state,
+        GitOpsOverviewSection(title: "Flux", route: .flux(downNodes: downNodes), app: app ?? fluxTile, state: state,
                               installed: { $0.installed && !$0.apps.isEmpty }) {
             FluxStateBar(counts: [(state: .ready, count: 1)])
             Text(verbatim: "Flux objects ready").font(.caption)
@@ -21,7 +21,7 @@ struct FluxSection: View {
 
     private func content(_ status: FluxStatus) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            GitOpsSectionHeader(app: app, title: "Flux", count: status.apps.count)
+            GitOpsSectionHeader(app: app ?? fluxTile, title: "Flux", count: status.apps.count)
             FluxStateBar(counts: status.stateCounts)
             if status.allCalm && status.failingSources.isEmpty {
                 Text("All Kustomizations and HelmReleases ready").font(.caption).foregroundStyle(.secondary)

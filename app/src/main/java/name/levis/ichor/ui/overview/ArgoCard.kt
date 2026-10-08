@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoStatus
+import name.levis.ichor.model.ARGO_CD_TILE
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.activeFreezes
@@ -63,11 +64,13 @@ private const val MAX_PROBLEMS = 2
  * Argo CD at a glance, opening its screen: a segmented health bar and counts, the syncs running
  * with their wave progress, and up to two problem apps with their likely cause (a node Talos
  * reports down first). One calm line when every app is Synced and Healthy. Only composed when
- * the inventory shows Argo CD; a skeleton while loading, one muted line on failure.
+ * the inventory shows Argo CD; a skeleton while loading, one muted line on failure. [argoTile] is
+ * the inventory's own entry when it has one; the bundled logo stands in otherwise (kubeconfig
+ * contexts have no inventory).
  */
 @Composable
 fun ArgoCard(state: UiState<ArgoStatus>, argoTile: InventoryApp?, downNodes: Set<String>, onOpen: () -> Unit) =
-    GitOpsCardFrame(argoTile, R.string.argo_card_title, state, { it.apps.size }, onOpen) { Body(it, downNodes) }
+    GitOpsCardFrame(argoTile ?: ARGO_CD_TILE, R.string.argo_card_title, state, { it.apps.size }, onOpen) { Body(it, downNodes) }
 
 @Composable
 private fun Body(status: ArgoStatus, downNodes: Set<String>) {

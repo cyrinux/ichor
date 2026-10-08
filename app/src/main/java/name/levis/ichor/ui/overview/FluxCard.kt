@@ -29,6 +29,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.FluxApp
 import name.levis.ichor.model.FluxState
 import name.levis.ichor.model.FluxStatus
+import name.levis.ichor.model.FLUX_TILE
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.allFine
 import name.levis.ichor.model.failingApps
@@ -51,11 +52,12 @@ private const val MAX_FAILING = 2
  * Flux at a glance, opening its screen: a segmented bar with how many Kustomizations and
  * HelmReleases are ready, reconciling, failing or suspended, and up to two failing ones with
  * their reason. One calm line when nothing fails or reconciles. Only composed when the inventory
- * shows Flux; a skeleton while loading, one muted line on failure.
+ * shows Flux; a skeleton while loading, one muted line on failure. [fluxTile] is the inventory's
+ * own entry when it has one; the bundled logo stands in otherwise (kubeconfig contexts have no inventory).
  */
 @Composable
 fun FluxCard(state: UiState<FluxStatus>, fluxTile: InventoryApp?, onOpen: () -> Unit) =
-    GitOpsCardFrame(fluxTile, R.string.flux_title, state, { it.apps.size }, onOpen) { Body(it) }
+    GitOpsCardFrame(fluxTile ?: FLUX_TILE, R.string.flux_title, state, { it.apps.size }, onOpen) { Body(it) }
 
 @Composable
 private fun Body(status: FluxStatus) {

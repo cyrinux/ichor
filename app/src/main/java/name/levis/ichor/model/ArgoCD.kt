@@ -371,5 +371,11 @@ fun shortRevision(revision: String): String =
 /** The inventory's catalog id for Argo CD. */
 const val ARGO_CD_CATALOG_ID = "argo-cd"
 
+/**
+ * Argo CD's tile when the inventory has none to offer: the plain kubeconfig home, or the Talos
+ * overview while its inventory still loads. Its icon is bundled (assets/appicons/argo-cd.webp).
+ */
+val ARGO_CD_TILE = InventoryApp(id = ARGO_CD_CATALOG_ID, name = "Argo CD", category = "devops", icon = "argo-cd", known = true)
+
 /** Whether the inventory saw Argo CD running: only then is the cluster asked for Applications. */
 val Inventory.hasArgoCD: Boolean get() = apps.any { it.id == ARGO_CD_CATALOG_ID }

@@ -230,5 +230,11 @@ fun shortFluxRevision(revision: String): String =
 /** The inventory's catalog id for Flux. */
 const val FLUX_CATALOG_ID = "flux"
 
+/**
+ * Flux's tile when the inventory has none to offer: the plain kubeconfig home, or the Talos
+ * overview while its inventory still loads. Its icon is bundled (assets/appicons/flux.webp).
+ */
+val FLUX_TILE = InventoryApp(id = FLUX_CATALOG_ID, name = "Flux", category = "devops", icon = "flux", known = true)
+
 /** Whether the inventory saw Flux running: only then is the cluster asked for its objects. */
 val Inventory.hasFlux: Boolean get() = apps.any { it.id == FLUX_CATALOG_ID }

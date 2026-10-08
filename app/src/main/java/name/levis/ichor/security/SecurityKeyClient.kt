@@ -32,8 +32,11 @@ import com.yubico.yubikit.fido.webauthn.SerializationType
 import com.yubico.yubikit.fido.webauthn.UserVerificationRequirement
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.job
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.security.SecureRandom
 import java.util.Base64
@@ -65,13 +68,20 @@ class SecurityKeyClient(private val activity: Activity) {
     /**
      * Runs [block] with the next key tapped or plugged in. Discovery (NFC reader mode and USB)
      * is on only until [block] returns: an NFC key is only usable while it stays on the phone.
+     *
+     * A command cannot be interrupted once sent: a prompt cancelled mid-exchange leaves its
+     * thread blocked until the key answers or [NFC_TIMEOUT_MS] passes, and the NFC service is
+     * busy meanwhile. Turning the reader mode on again from the main thread then blocks it (an
+     * ANR), so a new prompt first waits, suspended, for the previous command to end.
      */
     suspend fun <T> withKey(block: suspend (YubiKeyDevice) -> T): T {
+        busy.withLock { }
         val device = withContext(Dispatchers.Main.immediate) {
             suspendCancellableCoroutine<YubiKeyDevice> { cont ->
                 val deliver = Callback<YubiKeyDevice> { device -> if (cont.isActive) cont.resume(device) }
                 try {
                     manager.startNfcDiscovery(NfcConfiguration().timeout(NFC_TIMEOUT_MS), activity, deliver)
+                    nfcOwner = this@SecurityKeyClient
                 } catch (_: NfcNotAvailable) {
                     // No NFC, or off: USB only.
                 }
@@ -80,14 +90,21 @@ class SecurityKeyClient(private val activity: Activity) {
             }
         }
         try {
-            return block(device)
+            return busy.withLock { block(device) }
         } finally {
-            stopDiscovery()
+            withContext(NonCancellable + Dispatchers.Main.immediate) { stopDiscovery() }
         }
     }
 
+    /**
+     * The reader mode belongs to the activity, not to this client: a prompt whose command ended
+     * after a newer prompt started must not turn the newer one's reader mode off.
+     */
     private fun stopDiscovery() {
-        runCatching { manager.stopNfcDiscovery(activity) }
+        if (nfcOwner === this) {
+            nfcOwner = null
+            runCatching { manager.stopNfcDiscovery(activity) }
+        }
         runCatching { manager.stopUsbDiscovery() }
     }
 
@@ -186,7 +203,17 @@ class SecurityKeyClient(private val activity: Activity) {
         val USER_ID = "ichor".toByteArray()
         const val ALG_ES256 = -7
         const val PRF = "prf"
-        /** How long the NFC reader mode waits for a tag before the SDK reports a timeout. */
-        const val NFC_TIMEOUT_MS = 60_000
+        /**
+         * How long one NFC command may take (the IsoDep transceive timeout, not a wait for a
+         * tap): a key that stops answering fails within this, as in Yubico's own FIDO UI.
+         */
+        const val NFC_TIMEOUT_MS = 5_000
+
+        /** Held while a command runs on a key, by any prompt of the process; see [withKey]. */
+        val busy = Mutex()
+
+        /** The client whose NFC reader mode is on, if any. */
+        @Volatile
+        var nfcOwner: SecurityKeyClient? = null
     }
 }
