@@ -157,4 +157,22 @@ class SecurityKeysTest {
         assertFalse("short data", AssertionVerifier.verify(key, ByteArray(10), clientDataHash, sign(up)).valid)
         assertFalse("bad stored key", AssertionVerifier.verify(key.copy(publicKey = "AAAA"), up, clientDataHash, sign(up)).valid)
     }
+
+    @Test
+    fun `a FIDO PIN takes any character and counts code points`() {
+        assertTrue(FidoPin.valid("abc1"))
+        assertTrue(FidoPin.valid("p@ss wörd"))
+        assertFalse(FidoPin.valid("123"))
+        // Four emoji are four code points (eight UTF-16 units).
+        assertTrue(FidoPin.valid("\uD83D\uDD11".repeat(4)))
+        assertFalse(FidoPin.valid("\uD83D\uDD11".repeat(3)))
+        assertTrue(FidoPin.valid("a".repeat(63)))
+        assertFalse(FidoPin.valid("a".repeat(64)))
+    }
+
+    @Test
+    fun `a pasted FIDO PIN loses its line breaks only`() {
+        assertEquals("Secret 42", FidoPin.clean("Secret 42\n"))
+        assertEquals("ab cd", FidoPin.clean("\r\nab cd\r\n"))
+    }
 }

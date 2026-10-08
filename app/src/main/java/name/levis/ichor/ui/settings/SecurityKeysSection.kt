@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -49,6 +51,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.DekWrap
 import name.levis.ichor.security.EnrolledKey
+import name.levis.ichor.security.FidoPin
 import name.levis.ichor.security.SECURITY_KEY_MAX
 import name.levis.ichor.security.SecurityKeyClient
 import name.levis.ichor.security.SecurityKeyEnrolment
@@ -182,6 +185,11 @@ private fun SecurityKeyFlowDialog(app: TalosApp, flow: KeyFlow, onDone: () -> Un
     var pinRequest by remember { mutableStateOf<CompletableDeferred<CharArray>?>(null) }
     var pin by remember { mutableStateOf("") }
 
+    fun submitPin() {
+        pinRequest?.complete(pin.toCharArray())
+        pin = ""
+    }
+
     LaunchedEffect(flow, attempt) {
         if (activity == null) return@LaunchedEffect onDone()
         error = null
@@ -227,13 +235,15 @@ private fun SecurityKeyFlowDialog(app: TalosApp, flow: KeyFlow, onDone: () -> Un
                     pinRequest != null -> {
                         Text(stringResource(R.string.security_key_flow_pin_desc), textAlign = TextAlign.Center)
                         Spacer(Modifier.height(12.dp))
+                        // A FIDO PIN is any text, letters included: the full keyboard, not digits only.
                         OutlinedTextField(
                             value = pin,
-                            onValueChange = { pin = it },
+                            onValueChange = { pin = FidoPin.clean(it) },
                             label = { Text(stringResource(R.string.security_key_flow_pin_label)) },
                             singleLine = true,
                             visualTransformation = PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false, imeAction = ImeAction.Done),
+                            keyboardActions = KeyboardActions(onDone = { if (FidoPin.valid(pin)) submitPin() }),
                         )
                     }
                     else -> {
@@ -248,13 +258,9 @@ private fun SecurityKeyFlowDialog(app: TalosApp, flow: KeyFlow, onDone: () -> Un
             when {
                 done -> TextButton(onClick = onDone) { Text(stringResource(R.string.common_ok)) }
                 error != null -> TextButton(onClick = { attempt++ }) { Text(stringResource(R.string.common_retry)) }
-                pinRequest != null -> TextButton(
-                    onClick = {
-                        pinRequest?.complete(pin.toCharArray())
-                        pin = ""
-                    },
-                    enabled = pin.length >= 4,
-                ) { Text(stringResource(R.string.common_ok)) }
+                pinRequest != null -> TextButton(onClick = ::submitPin, enabled = FidoPin.valid(pin)) {
+                    Text(stringResource(R.string.common_ok))
+                }
             }
         },
         dismissButton = {
