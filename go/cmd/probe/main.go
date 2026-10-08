@@ -97,8 +97,11 @@ func main() {
 
 	cfg := string(raw)
 
-	if err := omniSignIn(cfg, *contextName, *omniBrowser); err != nil {
-		fail(fmt.Errorf("omni sign-in: %w", err))
+	// The omni-* commands sign in themselves, to Omni rather than to a cluster.
+	if !strings.HasPrefix(flag.Arg(0), "omni-") {
+		if err := omniSignIn(cfg, *contextName, *omniBrowser); err != nil {
+			fail(fmt.Errorf("omni sign-in: %w", err))
+		}
 	}
 
 	if *mask {

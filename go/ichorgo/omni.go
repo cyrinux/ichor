@@ -114,6 +114,8 @@ var (
 	errOmniIssue = errors.New("this cluster is managed by Omni: download its talosconfig from Omni")
 	// errOmniNoMachines: the key works, the cluster has no machine with an address yet.
 	errOmniNoMachines = errors.New("omni lists no machine in this cluster")
+	// errOmniNoCluster: Omni's talosconfig of a whole account names no cluster to reach.
+	errOmniNoCluster = errors.New("this Omni context names no cluster: add the account's clusters from Omni, or download a cluster's talosconfig")
 	// errOmniNotProbed: an Omni context has no endpoint on the local network to look for.
 	errOmniNotProbed = errors.New("an Omni cluster is reached through Omni, not probed")
 )
@@ -207,6 +209,11 @@ func (s *session) ready(ctx context.Context) error {
 
 	if s.readyErr != nil && time.Since(s.readyErrAt) < readyRetry {
 		return s.readyErr
+	}
+
+	// Omni routes a call by its cluster: without one (and without nodes) it reaches none.
+	if s.context.Cluster == "" {
+		return errOmniNoCluster
 	}
 
 	nodes, err := learnOmniNodes(ctx, s.client)

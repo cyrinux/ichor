@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosi-project/runtime/api/v1alpha1"
 	"github.com/siderolabs/go-api-signature/pkg/message"
 	"github.com/siderolabs/go-api-signature/pkg/pgp"
 	"google.golang.org/grpc"
@@ -15,10 +16,13 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protowire"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // fakeOmniAPI is Omni's own API: the cluster list and the talosconfigs, signed calls only.
 type fakeOmniAPI struct {
+	v1alpha1.UnimplementedStateServer
+
 	key      *pgp.Key
 	clusters []string
 	denyList bool
@@ -29,32 +33,23 @@ func (f *fakeOmniAPI) handle(_ any, stream grpc.ServerStream) error {
 	method, _ := grpc.MethodFromServerStream(stream)
 	md, _ := metadata.FromIncomingContext(stream.Context())
 
+	// Omni routes only this content type to its API (application/grpc+proto goes to its web server).
+	if got := md.Get("content-type"); len(got) != 1 || got[0] != "application/grpc" {
+		return status.Errorf(codes.Unimplemented, "content-type %v reached the web server", got)
+	}
+
 	if err := message.NewGRPC(md, method).VerifySignature(f.key); err != nil {
 		return status.Error(codes.Unauthenticated, err.Error())
 	}
 
-	var req []byte
-	if err := stream.RecvMsg(&req); err != nil {
+	req, err := recvRaw(stream)
+	if err != nil {
 		return err
 	}
 
 	var resp []byte
 
 	switch method {
-	case "/omni.resources.ResourceService/List":
-		if got := md.Get("runtime"); len(got) != 1 || got[0] != "Omni" {
-			return status.Errorf(codes.InvalidArgument, "runtime = %v", got)
-		}
-
-		if f.denyList {
-			return status.Error(codes.PermissionDenied, "no access")
-		}
-
-		for _, name := range f.clusters {
-			item := fmt.Sprintf(`{"metadata":{"id":%q},"spec":{"talos_version":"1.11.2","kubernetes_version":"1.34.1"}}`, name)
-			resp = protowire.AppendTag(resp, 1, protowire.BytesType)
-			resp = protowire.AppendString(resp, item)
-		}
 	case "/management.ManagementService/Talosconfig":
 		cluster := md.Get("context")
 		if len(cluster) != 1 {
@@ -65,16 +60,65 @@ func (f *fakeOmniAPI) handle(_ any, stream grpc.ServerStream) error {
 		resp = protowire.AppendTag(resp, 1, protowire.BytesType)
 		resp = protowire.AppendString(resp, config)
 	default:
+		_ = req
+
 		return status.Errorf(codes.Unimplemented, "%s", method)
 	}
 
-	return stream.SendMsg(&resp)
+	return sendRaw(stream, resp)
+}
+
+// recvRaw and sendRaw carry the fake's messages encoded by hand, as an Empty's unknown fields.
+func recvRaw(stream grpc.ServerStream) ([]byte, error) {
+	in := &emptypb.Empty{}
+	if err := stream.RecvMsg(in); err != nil {
+		return nil, err
+	}
+
+	return in.ProtoReflect().GetUnknown(), nil
+}
+
+func sendRaw(stream grpc.ServerStream, msg []byte) error {
+	out := &emptypb.Empty{}
+	out.ProtoReflect().SetUnknown(msg)
+
+	return stream.SendMsg(out)
+}
+
+// List is Omni's COSI state: the clusters, to a signed call.
+func (f *fakeOmniAPI) List(req *v1alpha1.ListRequest, stream grpc.ServerStreamingServer[v1alpha1.ListResponse]) error {
+	md, _ := metadata.FromIncomingContext(stream.Context())
+
+	if err := message.NewGRPC(md, "/cosi.resource.State/List").VerifySignature(f.key); err != nil {
+		return status.Error(codes.Unauthenticated, err.Error())
+	}
+
+	if req.GetNamespace() != "default" || req.GetType() != "Clusters.omni.sidero.dev" {
+		return status.Errorf(codes.InvalidArgument, "list %s/%s", req.GetNamespace(), req.GetType())
+	}
+
+	if f.denyList {
+		return status.Error(codes.PermissionDenied, "no access")
+	}
+
+	for _, name := range f.clusters {
+		res := &v1alpha1.Resource{
+			Metadata: &v1alpha1.Metadata{Namespace: "default", Type: req.GetType(), Id: name},
+			Spec:     &v1alpha1.Spec{YamlSpec: "kubernetesversion: 1.34.1\ntalosversion: 1.11.2\n"},
+		}
+
+		if err := stream.Send(&v1alpha1.ListResponse{Resource: res}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func startFakeOmniAPI(t *testing.T, f *fakeOmniAPI) string {
 	t.Helper()
 
-	endpoint, caB64 := startTLSServer(t, func(s *grpc.Server) {}, grpc.UnknownServiceHandler(f.handle), grpc.ForceServerCodec(rawCodec{}))
+	endpoint, caB64 := startTLSServer(t, func(s *grpc.Server) { v1alpha1.RegisterStateServer(s, f) }, grpc.UnknownServiceHandler(f.handle))
 
 	ca, _ := base64.StdEncoding.DecodeString(caB64)
 	pool := x509.NewCertPool()

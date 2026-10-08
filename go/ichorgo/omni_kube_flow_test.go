@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosi-project/runtime/api/v1alpha1"
 	"github.com/siderolabs/go-api-signature/pkg/message"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -95,8 +96,8 @@ func (f *omniKubeAPI) handle(srv any, stream grpc.ServerStream) error {
 			return status.Error(codes.Unauthenticated, err.Error())
 		}
 
-		var req []byte
-		if err := stream.RecvMsg(&req); err != nil {
+		req, err := recvRaw(stream)
+		if err != nil {
 			return err
 		}
 
@@ -111,8 +112,7 @@ func (f *omniKubeAPI) handle(srv any, stream grpc.ServerStream) error {
 			return status.Error(codes.Unauthenticated, err.Error())
 		}
 
-		var req []byte
-		if err := stream.RecvMsg(&req); err != nil {
+		if _, err := recvRaw(stream); err != nil {
 			return err
 		}
 
@@ -124,7 +124,7 @@ func (f *omniKubeAPI) handle(srv any, stream grpc.ServerStream) error {
 		return f.fakeOmniAPI.handle(srv, stream)
 	}
 
-	return stream.SendMsg(&resp)
+	return sendRaw(stream, resp)
 }
 
 func TestOmniOIDCTokenWithoutBrowser(t *testing.T) {
@@ -133,7 +133,7 @@ func TestOmniOIDCTokenWithoutBrowser(t *testing.T) {
 	oidc := startFakeOmniOIDC(t)
 	f := &omniKubeAPI{fakeOmniAPI: &fakeOmniAPI{clusters: []string{"demo"}}, issuer: oidc.URL + "/oidc"}
 
-	endpoint, caB64 := startTLSServer(t, func(*grpc.Server) {}, grpc.UnknownServiceHandler(f.handle), grpc.ForceServerCodec(rawCodec{}))
+	endpoint, caB64 := startTLSServer(t, func(s *grpc.Server) { v1alpha1.RegisterStateServer(s, f.fakeOmniAPI) }, grpc.UnknownServiceHandler(f.handle))
 	pool := oidc.Client().Transport.(*http.Transport).TLSClientConfig.RootCAs
 	ca, _ := base64.StdEncoding.DecodeString(caB64)
 	pool.AppendCertsFromPEM(ca)
