@@ -123,6 +123,8 @@ enum Route: Hashable {
     case nodeTab(NodeRef, tab: NodeDetailView.Tab)
     /// Every node of a large cluster (see isDenseCluster), as the overview loaded them; filter preselects one.
     case nodes(filter: NodeFilter?, nodes: [NodeOverview])
+    /// Every node of a large cluster added from a kubeconfig, as its home loaded them; filter preselects one.
+    case kubeNodes(filter: NodeFilter?, nodes: [KubeNodeInfo])
     case logs(node: String, hostname: String, service: String?)
     /// Log of one Kubernetes container (from the Pods tab).
     case containerLogs(node: String, hostname: String, container: LogContainer)
@@ -216,6 +218,7 @@ struct MainNavigation: View {
                     case .nodePower(let ref, let action): NodeDetailView(ref: ref, initialAction: action)
                     case .nodeTab(let ref, let tab): NodeDetailView(ref: ref, initialTab: tab)
                     case .nodes(let filter, let nodes): NodesView(nodes: nodes, filter: filter, path: $path)
+                    case .kubeNodes(let filter, let nodes): KubeNodesView(nodes: nodes, filter: filter, path: $path)
                     case .logs(let node, let hostname, let service):
                         LogsView(node: node, hostname: hostname, service: service)
                     case .containerLogs(let node, let hostname, let container):

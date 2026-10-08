@@ -2904,7 +2904,6 @@
     <string name="kube_home_version">Kubernetes %1$s</string>
     <string name="kube_home_nodes_forbidden">Queste credenziali non possono elencare i nodi. Le altre schermate Kubernetes funzionano, nei limiti di ciò che consentono.</string>
     <string name="kube_home_no_nodes">Nessun nodo.</string>
-    <string name="kube_home_more_nodes">+%1$d altri</string>
     <string name="kube_node_cordoned">Isolato (cordon)</string>
     <string name="kube_node_pool_karpenter">Pool Karpenter %1$s</string>
     <string name="kube_node_pool_eks">Gruppo di nodi EKS %1$s</string>

@@ -2896,7 +2896,6 @@
     <string name="kube_home_version">Kubernetes %1$s</string>
     <string name="kube_home_nodes_forbidden">Diese Zugangsdaten dürfen keine Nodes auflisten. Die anderen Kubernetes-Ansichten funktionieren im Rahmen ihrer Rechte.</string>
     <string name="kube_home_no_nodes">Keine Nodes.</string>
-    <string name="kube_home_more_nodes">+%1$d weitere</string>
     <string name="kube_node_cordoned">Abgeriegelt</string>
     <string name="kube_node_pool_karpenter">Karpenter-Pool %1$s</string>
     <string name="kube_node_pool_eks">EKS-Knotengruppe %1$s</string>
