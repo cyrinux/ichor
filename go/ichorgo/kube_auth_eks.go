@@ -107,6 +107,12 @@ func (m *eksMethod) fieldSets() [][]string {
 	}
 }
 
+// rememberedFields are shown again when the Identity Center session has to be renewed; the
+// access keys never come back out.
+func (m *eksMethod) rememberedFields() []string {
+	return []string{awsFieldSSOStartURL, awsFieldSSORegion, awsFieldAccountID, awsFieldRoleName}
+}
+
 func (m *eksMethod) fromSecrets(s map[string]string) (kubeAuthState, error) {
 	switch {
 	case s[awsFieldSSOStartURL] != "":

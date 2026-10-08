@@ -366,6 +366,9 @@ type kubeSignInKind struct {
 	Fields []string `json:"fields,omitempty"`
 	// Options are the alternative field sets (AWS: keys, or IAM Identity Center).
 	Options [][]string `json:"options,omitempty"`
+	// Values are the stored, non-secret fields of the last sign-in (an IAM Identity Center
+	// start URL, account and role), so a new one only needs confirming.
+	Values map[string]string `json:"values,omitempty"`
 	// SignedIn when a usable state is stored; User and Expires describe it.
 	SignedIn       bool   `json:"signedIn"`
 	User           string `json:"user,omitempty"`
@@ -375,6 +378,12 @@ type kubeSignInKind struct {
 // signInFields lets a credentials method say what it asks for.
 type signInFields interface {
 	fieldSets() [][]string
+}
+
+// signInRemembers lets a credentials method name the fields that are not secrets: the app
+// shows them again when the session has to be renewed.
+type signInRemembers interface {
+	rememberedFields() []string
 }
 
 // KubeSignInInfo describes how the named stored context signs in, as a JSON kubeSignInKind,
@@ -403,6 +412,10 @@ func KubeSignInInfo(storedYAML, contextName string) (out string, err error) {
 	state := kubeAuth.load(sc.key)
 	info.SignedIn = state.Method == sc.method.name() && (len(state.Session) > 0 || len(state.Secrets) > 0)
 	info.User, info.SessionExpires = state.User, state.SessionExpires
+
+	if r, ok := sc.method.(signInRemembers); ok && state.Method == sc.method.name() {
+		info.Values = pick(state.Secrets, r.rememberedFields()...)
+	}
 
 	return toJSON(info)
 }

@@ -11,6 +11,17 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertFalse(isKubeSignInRequired("forbidden"))
     }
 
+    func testRememberedValuesPickTheirOption() throws {
+        let json = """
+        {"method":"eks","kind":"credentials","options":[["awsAccessKeyId","awsSecretAccessKey"],["awsSsoStartUrl","awsSsoRegion"]],
+         "values":{"awsSsoStartUrl":"https://acme.awsapps.com/start","awsSsoRegion":"eu-west-1"},"signedIn":false}
+        """
+        let info = try XCTUnwrap(try KubeSignInInfo.decode(json))
+        XCTAssertEqual(info.values["awsSsoRegion"], "eu-west-1")
+        XCTAssertEqual(info.rememberedOption, 1)
+        XCTAssertTrue(kubeFieldsComplete(info.fieldSets[1], values: info.values))
+    }
+
     func testSignInInfoDecodes() throws {
         let json = """
         {"method":"eks","kind":"credentials","fields":["awsSsoStartUrl","awsSsoRegion","awsAccountId","awsRoleName"],
@@ -24,6 +35,9 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertTrue(info.signedIn)
         XCTAssertEqual(info.user, "arn:aws:iam::1:user/me")
         XCTAssertEqual(info.sessionExpires, 1_790_000_000)
+
+        XCTAssertEqual(info.values, [:])
+        XCTAssertEqual(info.rememberedOption, 0)
 
         let browser = try XCTUnwrap(try KubeSignInInfo.decode(#"{"method":"oidc","kind":"browser","signedIn":false}"#))
         XCTAssertFalse(browser.isCredentials)

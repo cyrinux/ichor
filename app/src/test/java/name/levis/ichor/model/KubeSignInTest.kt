@@ -47,6 +47,21 @@ class KubeSignInTest {
     }
 
     @Test
+    fun rememberedValuesPickTheirOption() {
+        val sets = listOf(listOf("awsSsoStartUrl", "awsSsoRegion"), listOf("awsAccessKeyId", "awsSecretAccessKey"))
+        val fresh = KubeSignInInfo(method = "eks", kind = KubeSignInInfo.KIND_CREDENTIALS, options = sets)
+        assertEquals(0, fresh.rememberedOption)
+        assertTrue(fresh.values.isEmpty())
+
+        val decoded = TalosJson.decodeFromString(
+            KubeSignInInfo.serializer(),
+            """{"method":"eks","kind":"credentials","options":[["awsAccessKeyId","awsSecretAccessKey"],["awsSsoStartUrl","awsSsoRegion"]],"values":{"awsSsoStartUrl":"https://acme.awsapps.com/start","awsSsoRegion":"eu-west-1"},"signedIn":false}""",
+        )
+        assertEquals(1, decoded.rememberedOption)
+        assertTrue(credentialsComplete(decoded.fieldSets[1], decoded.values))
+    }
+
+    @Test
     fun promptDecodes() {
         val device = TalosJson.decodeFromString(SignInPrompt.serializer(), """{"kind":"device","url":"https://idp/device?code=AB","userCode":"AB-CD","verificationUrl":"https://idp/device","expiresIn":600}""")
         assertTrue(device.isDevice)

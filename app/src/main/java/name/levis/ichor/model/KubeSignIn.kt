@@ -17,6 +17,8 @@ data class KubeSignInInfo(
     val fields: List<String> = emptyList(),
     /** Alternative field sets: EKS asks for IAM Identity Center or access keys. */
     val options: List<List<String>> = emptyList(),
+    /** The non-secret fields of the last sign-in, shown again so renewing it only needs confirming. */
+    val values: Map<String, String> = emptyMap(),
     val signedIn: Boolean = false,
     val user: String = "",
     /** When a new sign-in will be needed, unix seconds; 0 when unknown. */
@@ -24,6 +26,9 @@ data class KubeSignInInfo(
 ) {
     /** The field sets to choose from: [options], else [fields] alone. */
     val fieldSets: List<List<String>> get() = options.ifEmpty { listOf(fields) }
+
+    /** The field set to show first: the one the last sign-in filled, else the first. */
+    val rememberedOption: Int get() = fieldSets.indexOfFirst { set -> set.any { values[it].orEmpty().isNotBlank() } }.coerceAtLeast(0)
 
     companion object {
         const val KIND_BROWSER = "browser"

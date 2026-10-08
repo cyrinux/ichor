@@ -190,10 +190,13 @@ struct KubeCredentialsForm: View {
         self.info = info
         self.busy = busy
         self.onSubmit = onSubmit
+        // Starts with what the last sign-in entered (never a secret), so renewing a session is one tap.
+        _option = State(initialValue: info.rememberedOption)
+        _values = State(initialValue: info.values)
     }
 
-    @State private var option = 0
-    @State private var values: [String: String] = [:]
+    @State private var option: Int
+    @State private var values: [String: String]
 
     private var fields: [String] {
         let sets = info.fieldSets
