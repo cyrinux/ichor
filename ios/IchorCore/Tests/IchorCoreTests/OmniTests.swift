@@ -41,7 +41,8 @@ final class OmniTests: XCTestCase {
             ContextSummary(name: "acme-prod", fingerprint: "o2", omni: true, authKey: "omnikey"),
             ContextSummary(name: "oidc", kind: ContextKind.kube, fingerprint: "k1"),
         ]
-        XCTAssertEqual(signInKeys(contexts), ["omnikey", "k1"])
+        XCTAssertEqual(authStoreFingerprints(talos: contexts.filter { !$0.isKube }, kube: contexts.filter(\.isKube)),
+                       ["k1", "o1", "omnikey", "o2"])
     }
 
     func testServiceAccountKeyIsSecret() {

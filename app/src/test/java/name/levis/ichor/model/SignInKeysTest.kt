@@ -15,7 +15,7 @@ class SignInKeysTest {
         )
 
         // A certificate context signs in to nothing; two clusters of one Omni identity share one key.
-        assertEquals(listOf("omnikey", "k1"), signInKeys(contexts))
+        assertEquals(listOf("o1", "omnikey", "o2", "k1"), signInKeys(contexts))
     }
 
     @Test

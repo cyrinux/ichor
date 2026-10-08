@@ -6,6 +6,7 @@ import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.KubeAuthRepository
 import name.levis.ichor.data.SignInEvent
 import name.levis.ichor.model.SignInPrompt
+import name.levis.ichor.model.TalosForm
 import name.levis.ichor.model.DiscoveryProvider
 import name.levis.ichor.model.discoveryFields
 import name.levis.ichor.model.importedContextNames
@@ -108,6 +109,16 @@ class ImportViewModel(
         _state.value = ImportState.Validating
         viewModelScope.launch {
             _state.value = runCatching { preview(text) }.getOrElse { ImportState.Invalid(it.userMessage()) }
+        }
+    }
+
+    /** Builds a talosconfig from the "Enter details" [form] and previews it like any other. */
+    fun submitForm(form: TalosForm) {
+        _state.value = ImportState.Validating
+        viewModelScope.launch {
+            _state.value = runCatching {
+                preview(withContext(Dispatchers.IO) { Ichorgo.buildTalosconfig(form.toJson()) })
+            }.getOrElse { ImportState.Invalid(it.userMessage()) }
         }
     }
 

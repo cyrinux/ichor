@@ -132,7 +132,7 @@ type omniSignInContext struct {
 }
 
 func loadOmniSignInContext(storedYAML, contextName string) (omniSignInContext, error) {
-	_, ctx, err := resolveContext(storedYAML, contextName)
+	name, ctx, err := resolveContext(storedYAML, contextName)
 	if err != nil {
 		return omniSignInContext{}, err
 	}
@@ -145,7 +145,24 @@ func loadOmniSignInContext(storedYAML, contextName string) (omniSignInContext, e
 		return omniSignInContext{}, errors.New("the Omni context has no identity (auth.siderov1.identity)")
 	}
 
-	return omniSignInContext{key: omniAuthKey(ctx), ctx: ctx}, nil
+	return omniSignInContext{key: migrateOmniAuth(name, ctx), ctx: ctx}, nil
+}
+
+// migrateOmniAuth returns the auth key of the Omni context name, moving there a sign-in
+// that v1.14 kept under the context's fingerprint (one per context, not per identity).
+func migrateOmniAuth(name string, ctx *clientconfig.Context) string {
+	key := omniAuthKey(ctx)
+	if kubeAuth.load(key).Method != "" {
+		return key
+	}
+
+	legacy := contextFingerprint(name, ctx)
+	if state := kubeAuth.load(legacy); state.Method != "" {
+		kubeAuth.save(key, state)
+		kubeAuth.forget(legacy)
+	}
+
+	return key
 }
 
 // TalosSignInInfo describes how the named stored talosconfig context signs in, as a JSON

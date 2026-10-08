@@ -41,7 +41,7 @@ type session struct {
 }
 
 func openSession(configYAML, contextName string) (*session, error) {
-	_, cfgCtx, err := resolveContext(configYAML, contextName)
+	name, cfgCtx, err := resolveContext(configYAML, contextName)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func openSession(configYAML, contextName string) (*session, error) {
 	var signing *omniSigning
 
 	if isOmni(cfgCtx) {
-		authKey = omniAuthKey(cfgCtx)
+		authKey = migrateOmniAuth(name, cfgCtx)
 
 		if opts, signing, err = omniClientOptions(authKey, cfgCtx); err != nil {
 			return nil, err

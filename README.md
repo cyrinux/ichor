@@ -1,4 +1,4 @@
-# Ichor for Talos Linux
+# Ichor for Talos Linux, Kubernetes
 
 [![Android CI](https://github.com/cyrinux/ichor/actions/workflows/android.yml/badge.svg?branch=main)](https://github.com/cyrinux/ichor/actions/workflows/android.yml)
 [![iOS CI](https://github.com/cyrinux/ichor/actions/workflows/ios.yml/badge.svg?branch=main)](https://github.com/cyrinux/ichor/actions/workflows/ios.yml)

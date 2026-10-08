@@ -88,7 +88,7 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
     public let identity: String?
     public let cluster: String?
     /// Where an Omni context's sign-in is kept (shared by an identity's clusters on one
-    /// instance): kept and backed up with the cluster, see signInKeys.
+    /// instance): kept and backed up with the cluster, see authStoreFingerprints.
     public let authKey: String?
 
     public var id: String { name }
@@ -160,17 +160,6 @@ public struct ContextSummary: Decodable, Equatable, Identifiable, Sendable {
         cluster = try c.decodeIfPresent(String.self, forKey: .cluster)
         authKey = try c.decodeIfPresent(String.self, forKey: .authKey).flatMap { $0.isEmpty ? nil : $0 }
     }
-}
-
-/// The keys of the sign-ins `contexts` keep in the auth store: a kubeconfig cluster's
-/// fingerprint, an Omni cluster's auth key (one per identity and instance).
-public func signInKeys(_ contexts: [ContextSummary]) -> [String] {
-    var keys: [String] = []
-    for context in contexts {
-        let key = context.isKube ? context.fingerprint : (context.authKey ?? "")
-        if !key.isEmpty && !keys.contains(key) { keys.append(key) }
-    }
-    return keys
 }
 
 /// The kinds of cluster (ContextSummary.kind).

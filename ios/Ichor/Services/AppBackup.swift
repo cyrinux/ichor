@@ -30,7 +30,7 @@ enum AppBackup {
                 wakeOnLan: WakeOnLanStore.shared.allTargets,
                 kubeAccess: model.kubeAccess
             ),
-            kubeAuth: backupKubeAuth(fingerprints: signInKeys(model.summary?.contexts ?? []))
+            kubeAuth: backupKubeAuth(fingerprints: model.signInFingerprints)
         )
         let json = try TalosJSON.encode(payload)
         return try await localized { try await TalosClient.encryptBackup(payload: json, passphrase: passphrase) }
@@ -57,8 +57,8 @@ enum AppBackup {
         }
         model.restoreClusterSettings(names: restored.names, colors: restored.colors, kubeServers: kubeServers,
                                      vpnOnly: restored.vpnOnly, kubeAccess: restored.kubeAccess)
-        // After the configs: the sign-ins of the kubeconfig clusters restored.
-        KubeAuthStore.shared.restore(restoredKubeAuth(payload, fingerprints: signInKeys(model.summary?.contexts ?? [])))
+        // After the configs: the sign-ins of the kubeconfig and Omni clusters restored.
+        KubeAuthStore.shared.restore(restoredKubeAuth(payload, fingerprints: model.signInFingerprints))
         WakeOnLanStore.shared.restore(restored.wakeOnLan)
         if let mask = settings?.privacyMask {
             await model.setPrivacyMask(mask, words: settings?.privacyMaskWords ?? "")
@@ -74,7 +74,7 @@ enum AppBackup {
         }
     }
 
-    /// The sign-ins of the kubeconfig clusters as a backup keeps them (what the user entered,
+    /// The sign-ins of the kubeconfig and Omni clusters as a backup keeps them (what the user entered,
     /// no session; Go KubeAuthForBackup), nil when there is none.
     private static func backupKubeAuth(fingerprints: [String]) -> [String: String]? {
         let stored = KubeAuthMap.keeping(KubeAuthStore.shared.all() ?? [:], fingerprints: fingerprints)

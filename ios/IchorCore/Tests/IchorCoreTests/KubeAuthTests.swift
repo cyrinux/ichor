@@ -178,4 +178,15 @@ final class KubeAuthTests: XCTestCase {
         out.kubeAuth = ["k1": "{}"]
         XCTAssertTrue(try TalosJSON.encode(out).contains("\"kubeAuth\""))
     }
+
+    func testAuthStoreKeepsKubeAndOmniFingerprints() {
+        let talos = [
+            ContextSummary(name: "lab", fingerprint: "t1", roles: ["os:admin"]),
+            ContextSummary(name: "prod", fingerprint: "t2", signIn: "omni", omni: true, identity: "ops@example.com"),
+        ]
+        let kube = [ContextSummary(name: "eks", kind: ContextKind.kube, fingerprint: "k1", auth: "eks")]
+        XCTAssertEqual(authStoreFingerprints(talos: talos, kube: kube), ["k1", "t2"])
+        XCTAssertEqual(authStoreFingerprints(talos: talos, kube: []), ["t2"])
+        XCTAssertEqual(authStoreFingerprints(talos: [], kube: []), [])
+    }
 }

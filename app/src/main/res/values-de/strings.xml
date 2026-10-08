@@ -3094,6 +3094,24 @@
     <string name="import_omni_identity">Omni-Identität</string>
     <string name="import_omni_cluster">Omni-Cluster</string>
     <string name="import_nodes_omni">von Omni ermittelt</string>
+
+    <!-- Add-cluster form -->
+    <string name="import_form_tab">Eingeben</string>
+    <string name="import_form_name">Clustername</string>
+    <string name="import_form_continue">Weiter</string>
+    <string name="import_form_mode_talos">Talos</string>
+    <string name="import_form_mode_omni">Omni</string>
+    <string name="import_form_endpoints">Endpunkte</string>
+    <string name="import_form_endpoints_hint">Einer pro Zeile: IP-Adresse oder Hostname</string>
+    <string name="import_form_nodes">Knoten</string>
+    <string name="import_form_nodes_hint">Einer pro Zeile. Leer: die Endpunkte</string>
+    <string name="import_form_ca">CA-Zertifikat</string>
+    <string name="import_form_crt">Client-Zertifikat</string>
+    <string name="import_form_key">Client-Schlüssel</string>
+    <string name="import_form_pem_hint">PEM-Text oder Base64 wie in einer talosconfig.</string>
+    <string name="import_form_pick_file">Datei wählen</string>
+    <string name="import_form_omni_url">Omni-URL</string>
+    <string name="import_form_omni_identity_hint">Die E-Mail deines Omni-Kontos oder die Identität eines Dienstkontos (name@serviceaccount.omni.sidero.dev)</string>
     <string name="omni_add_title">Cluster aus Sidero Omni hinzufügen</string>
     <string name="omni_add_body">Melde dich bei deiner Omni-Instanz an: ihre Cluster erscheinen in der Vorschau, bereits angemeldet, Kubernetes inklusive.</string>
     <string name="omni_field_url">Omni-URL (https://…omni.siderolabs.io)</string>
