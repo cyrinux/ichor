@@ -30,23 +30,26 @@ public struct KubeSignInInfo: Decodable, Equatable, Sendable {
     public let fields: [String]
     /// The alternative field sets (EKS: IAM Identity Center, or access keys).
     public let options: [[String]]
+    /// The non-secret fields of the last sign-in, shown again so renewing it only needs confirming.
+    public let values: [String: String]
     public let signedIn: Bool
     public let user: String?
     /// When a new sign-in will be needed, Unix seconds (0: unknown).
     public let sessionExpires: Int64
 
     public init(method: String, kind: String, fields: [String] = [], options: [[String]] = [],
-                signedIn: Bool = false, user: String? = nil, sessionExpires: Int64 = 0) {
+                values: [String: String] = [:], signedIn: Bool = false, user: String? = nil, sessionExpires: Int64 = 0) {
         self.method = method
         self.kind = kind
         self.fields = fields
         self.options = options
+        self.values = values
         self.signedIn = signedIn
         self.user = user
         self.sessionExpires = sessionExpires
     }
 
-    private enum CodingKeys: String, CodingKey { case method, kind, fields, options, signedIn, user, sessionExpires }
+    private enum CodingKeys: String, CodingKey { case method, kind, fields, options, values, signedIn, user, sessionExpires }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -54,6 +57,7 @@ public struct KubeSignInInfo: Decodable, Equatable, Sendable {
         kind = try c.field(.kind, "browser")
         fields = try c.field(.fields, [])
         options = try c.field(.options, [])
+        values = try c.field(.values, [:])
         signedIn = try c.field(.signedIn, false)
         user = try c.decodeIfPresent(String.self, forKey: .user).flatMap { $0.isEmpty ? nil : $0 }
         sessionExpires = try c.field(.sessionExpires, 0)
@@ -65,6 +69,11 @@ public struct KubeSignInInfo: Decodable, Equatable, Sendable {
     public var fieldSets: [[String]] {
         if !options.isEmpty { return options }
         return fields.isEmpty ? [] : [fields]
+    }
+
+    /// The field set to show first: the one the last sign-in filled, else the first.
+    public var rememberedOption: Int {
+        fieldSets.firstIndex { set in set.contains { !(values[$0] ?? "").isEmpty } } ?? 0
     }
 
     /// The decoded answer of KubeSignInInfo: nil for "" (static credentials).

@@ -141,6 +141,10 @@ func TestEKSWithKeysAndRole(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	if info, _ := KubeSignInInfo(stored, "admin@test"); strings.Contains(info, `"values"`) || strings.Contains(info, "AKIDBASE") {
+		t.Fatalf("access keys shown again: %s", info)
+	}
+
 	if _, err := KubeNodes(stored, "admin@test", ""); err != nil {
 		t.Fatal(err)
 	}
@@ -173,6 +177,11 @@ func TestEKSWithIdentityCenter(t *testing.T) {
 	err = KubeSetCredentials(stored, "admin@test", `{"awsSsoStartUrl":"https://acme.awsapps.com/start","awsSsoRegion":"eu-west-1","awsAccountId":"123456789012","awsRoleName":"ReadOnly"}`)
 	if err == nil || !strings.HasPrefix(err.Error(), KubeSignInRequired) {
 		t.Fatalf("set credentials: %v", err)
+	}
+
+	// The fields entered come back to fill the form; signing in again only needs confirming.
+	if info, _ := KubeSignInInfo(stored, "admin@test"); !strings.Contains(info, `"values":{"awsAccountId":"123456789012","awsRoleName":"ReadOnly","awsSsoRegion":"eu-west-1","awsSsoStartUrl":"https://acme.awsapps.com/start"}`) {
+		t.Fatalf("info %s", info)
 	}
 
 	rec := recSignIn{prompts: make(chan signInPrompt, 1), done: make(chan string, 1)}

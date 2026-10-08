@@ -112,9 +112,10 @@ private fun SignInTitle(info: KubeSignInInfo) {
 /** The fields to enter; EKS first asks which kind of credentials. */
 @Composable
 private fun CredentialsForm(info: KubeSignInInfo, checking: Boolean, onSubmit: (List<String>, Map<String, String>) -> Unit) {
-    // Not saveable: secrets never go into saved instance state.
-    val values = remember(info.method) { mutableStateMapOf<String, String>() }
-    var option by remember(info.method) { mutableIntStateOf(0) }
+    // Not saveable: secrets never go into saved instance state. Starts with what the last
+    // sign-in entered (never a secret), so renewing a session is one tap.
+    val values = remember(info.method) { mutableStateMapOf<String, String>().apply { putAll(info.values) } }
+    var option by remember(info.method) { mutableIntStateOf(info.rememberedOption) }
     val sets = info.fieldSets
     val fields = sets.getOrElse(option) { sets.first() }
     if (sets.size > 1) {
