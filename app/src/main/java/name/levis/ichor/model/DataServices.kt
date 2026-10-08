@@ -18,6 +18,7 @@ data class DataServices(
     val certManager: CertManagerStatus? = null,
     val velero: VeleroStatus? = null,
     val ceph: CephStatus? = null,
+    val castai: CastAIStatus? = null,
 )
 
 /** Health of one item (a volume, a Postgres cluster), worst first. */
@@ -50,6 +51,7 @@ enum class DataServiceKind(val catalogId: String) {
     CERT_MANAGER("cert-manager"),
     VELERO("velero"),
     CEPH("rook"),
+    CASTAI("castai"),
 }
 
 /** Product names: never translated. */
@@ -64,6 +66,7 @@ val DataServiceKind.title: String
         DataServiceKind.CERT_MANAGER -> "cert-manager"
         DataServiceKind.VELERO -> "Velero"
         DataServiceKind.CEPH -> "Rook Ceph"
+        DataServiceKind.CASTAI -> "CAST AI"
     }
 
 /** The system a data alert's "system|label" key names (monitor dataIssuesOf). */
@@ -78,6 +81,7 @@ val DataServiceKind.alertSystem: String
         DataServiceKind.CERT_MANAGER -> "certmanager"
         DataServiceKind.VELERO -> "velero"
         DataServiceKind.CEPH -> "ceph"
+        DataServiceKind.CASTAI -> "castai"
     }
 
 /** The kind behind a data alert's system name; CloudNativePG for one an older snapshot wrote. */
@@ -102,6 +106,7 @@ val DataServices.detected: List<DataServiceKind>
         DataServiceKind.CERT_MANAGER.takeIf { certManager != null },
         DataServiceKind.VELERO.takeIf { velero != null },
         DataServiceKind.CEPH.takeIf { ceph != null },
+        DataServiceKind.CASTAI.takeIf { castai != null },
     )
 
 /**
@@ -120,6 +125,14 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.CERT_MANAGER -> certManager?.summary()
     DataServiceKind.VELERO -> velero?.summary()
     DataServiceKind.CEPH -> ceph?.summary()
+    DataServiceKind.CASTAI -> castai?.summary()
+}
+
+/** Recommendations are the items; one the autoscaler cannot apply or is told not to needs a look. */
+fun CastAIStatus.summary(): ServiceSummary {
+    if (error.isNotEmpty() && recommendations.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
+    val healths = recommendations.map { it.serviceHealth }
+    return ServiceSummary(recommendations.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
 }
 
 /** Ceph clusters are the items; a pool that is not ready needs a look as much as a cluster. */

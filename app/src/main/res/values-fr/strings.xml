@@ -1829,6 +1829,27 @@
         <item quantity="one">%1$d cluster Ceph</item>
         <item quantity="other">%1$d clusters Ceph</item>
     </plurals>
+    <string name="castai_empty">Aucune recommandation CAST AI.</string>
+    <string name="castai_no_match">Aucune charge de travail ne correspond.</string>
+    <string name="castai_filter_hint">Filtrer par namespace ou charge de travail</string>
+    <string name="castai_cpu_requests">Requêtes CPU</string>
+    <string name="castai_memory_requests">Requêtes mémoire</string>
+    <string name="castai_cpu_delta">%1$s CPU</string>
+    <string name="castai_cpu_line">cpu %1$s</string>
+    <string name="castai_memory_line">mémoire %1$s</string>
+    <string name="castai_mode_immediate">appliquée immédiatement</string>
+    <string name="castai_mode_deferred">appliquée au redémarrage</string>
+    <string name="castai_reason_vpa">non appliquée</string>
+    <string name="castai_reason_hpa">HPA non synchronisé</string>
+    <string name="castai_reason_read_only">lecture seule</string>
+    <plurals name="castai_workloads">
+        <item quantity="one">%1$d charge de travail ajustée</item>
+        <item quantity="other">%1$d charges de travail ajustées</item>
+    </plurals>
+    <plurals name="castai_compared">
+        <item quantity="one">par rapport aux requêtes de %1$d charge de travail avant CAST AI</item>
+        <item quantity="other">par rapport aux requêtes de %1$d charges de travail avant CAST AI</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s n’est pas prêt : cause probable de %2$d problème</item>
         <item quantity="other">%1$s n’est pas prêt : cause probable de %2$d problèmes</item>

@@ -1969,6 +1969,31 @@
         <item quantity="many">%1$d кластерів Ceph</item>
         <item quantity="other">%1$d кластера Ceph</item>
     </plurals>
+    <string name="castai_empty">Немає рекомендацій CAST AI.</string>
+    <string name="castai_no_match">Жодне навантаження не збігається.</string>
+    <string name="castai_filter_hint">Фільтр за простором імен або навантаженням</string>
+    <string name="castai_cpu_requests">Запити CPU</string>
+    <string name="castai_memory_requests">Запити пам’яті</string>
+    <string name="castai_cpu_delta">%1$s CPU</string>
+    <string name="castai_cpu_line">cpu %1$s</string>
+    <string name="castai_memory_line">пам’ять %1$s</string>
+    <string name="castai_mode_immediate">застосовується негайно</string>
+    <string name="castai_mode_deferred">застосовується після перезапуску</string>
+    <string name="castai_reason_vpa">не застосовано</string>
+    <string name="castai_reason_hpa">HPA не синхронізовано</string>
+    <string name="castai_reason_read_only">лише читання</string>
+    <plurals name="castai_workloads">
+        <item quantity="one">%1$d навантаження підлаштовано</item>
+        <item quantity="few">%1$d навантаження підлаштовано</item>
+        <item quantity="many">%1$d навантажень підлаштовано</item>
+        <item quantity="other">%1$d навантаження підлаштовано</item>
+    </plurals>
+    <plurals name="castai_compared">
+        <item quantity="one">порівняно із запитами %1$d навантаження до CAST AI</item>
+        <item quantity="few">порівняно із запитами %1$d навантажень до CAST AI</item>
+        <item quantity="many">порівняно із запитами %1$d навантажень до CAST AI</item>
+        <item quantity="other">порівняно із запитами %1$d навантаження до CAST AI</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s не готовий: імовірна причина %2$d проблеми</item>
         <item quantity="few">%1$s не готовий: імовірна причина %2$d проблем</item>

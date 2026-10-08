@@ -1821,6 +1821,27 @@
         <item quantity="one">%1$d Ceph-Cluster</item>
         <item quantity="other">%1$d Ceph-Cluster</item>
     </plurals>
+    <string name="castai_empty">Keine CAST AI-Empfehlungen.</string>
+    <string name="castai_no_match">Keine passende Arbeitslast.</string>
+    <string name="castai_filter_hint">Nach Namespace oder Arbeitslast filtern</string>
+    <string name="castai_cpu_requests">CPU-Requests</string>
+    <string name="castai_memory_requests">Speicher-Requests</string>
+    <string name="castai_cpu_delta">%1$s CPU</string>
+    <string name="castai_cpu_line">cpu %1$s</string>
+    <string name="castai_memory_line">Speicher %1$s</string>
+    <string name="castai_mode_immediate">sofort angewendet</string>
+    <string name="castai_mode_deferred">beim Neustart angewendet</string>
+    <string name="castai_reason_vpa">nicht angewendet</string>
+    <string name="castai_reason_hpa">HPA nicht synchronisiert</string>
+    <string name="castai_reason_read_only">schreibgeschützt</string>
+    <plurals name="castai_workloads">
+        <item quantity="one">%1$d Arbeitslast angepasst</item>
+        <item quantity="other">%1$d Arbeitslasten angepasst</item>
+    </plurals>
+    <plurals name="castai_compared">
+        <item quantity="one">gegenüber den Requests von %1$d Arbeitslast vor CAST AI</item>
+        <item quantity="other">gegenüber den Requests von %1$d Arbeitslasten vor CAST AI</item>
+    </plurals>
     <plurals name="data_services_likely_cause">
         <item quantity="one">%1$s ist nicht bereit: vermutlich die Ursache von %2$d Problem</item>
         <item quantity="other">%1$s ist nicht bereit: vermutlich die Ursache von %2$d Problemen</item>

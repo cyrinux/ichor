@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"slices"
 	"strings"
 	"time"
 )
@@ -244,7 +245,43 @@ func demoDataServices(now time.Time) dataServices {
 		},
 	}
 
-	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, Ceph: ceph}
+	return dataServices{Longhorn: longhorn, Garage: garage, CNPG: cnpg, Dragonfly: dragonfly, MariaDB: mariadb, Percona: percona, CertManager: certManager, Velero: velero, Ceph: ceph, CastAI: demoCastAI()}
+}
+
+// demoCastAI is the demo cluster's CAST AI recommendations: the Workload Autoscaler right-sizing
+// the demo workloads, one it cannot apply and one it is told not to.
+func demoCastAI() *castAIStatus {
+	container := func(name, origCPU, origMem, cpu, mem, cpuLimit, memLimit string) castAIContainer {
+		return castAIContainer{Name: name, OriginalCPU: origCPU, OriginalMemory: origMem, CPU: cpu, Memory: mem, CPULimit: cpuLimit, MemoryLimit: memLimit}
+	}
+
+	recs := []castAIRecommendation{
+		{Namespace: "demo", Name: "hello-ichor-deployment", Kind: "Deployment", Workload: "hello-ichor", Mode: "deferred", Health: healthOK, Reasons: []string{},
+			Containers:    []castAIContainer{container("hello", "500m", "512Mi", "60m", "180Mi", "1", "512Mi")},
+			CPUDeltaMilli: -440, MemoryDeltaBytes: -332 * 1024 * 1024},
+		{Namespace: "demo", Name: "worker-deployment", Kind: "Deployment", Workload: "worker", Mode: "immediate", Health: healthOK, Reasons: []string{},
+			Containers:    []castAIContainer{container("worker", "250m", "256Mi", "410m", "640Mi", "", "")},
+			CPUDeltaMilli: 160, MemoryDeltaBytes: 384 * 1024 * 1024},
+		{Namespace: "demo", Name: "postgres-statefulset", Kind: "StatefulSet", Workload: "postgres", Mode: "deferred", Health: healthWarning, Reasons: []string{castAIReasonReadOnly}, ReadOnly: true,
+			Message:       "Workload is managed by another autoscaler.",
+			Containers:    []castAIContainer{container("postgres", "1", "2Gi", "350m", "1536Mi", "2", "2Gi")},
+			CPUDeltaMilli: -650, MemoryDeltaBytes: -512 * 1024 * 1024},
+		{Namespace: "kube-system", Name: "coredns-deployment", Kind: "Deployment", Workload: "coredns", Mode: "immediate", Health: healthCritical, Reasons: []string{castAIReasonVPA},
+			Message:       "VPA recommendation could not be applied: the mutating webhook is unreachable.",
+			Containers:    []castAIContainer{container("coredns", "100m", "70Mi", "30m", "90Mi", "", "170Mi")},
+			CPUDeltaMilli: -70, MemoryDeltaBytes: 20 * 1024 * 1024},
+	}
+
+	out := &castAIStatus{Version: castAIVersion, Recommendations: recs}
+	for _, r := range recs {
+		out.Compared++
+		out.CPUDeltaMilli += r.CPUDeltaMilli
+		out.MemoryDeltaBytes += r.MemoryDeltaBytes
+	}
+
+	slices.SortFunc(out.Recommendations, byHealthThenKey(func(r castAIRecommendation) (string, string) { return r.Health, r.Namespace + "/" + r.Name }))
+
+	return out
 }
 
 // demoGarageBlockReport is the demo cluster's blocks failing to resync: one a live object

@@ -56,6 +56,8 @@ fun dataIssuesOf(services: DataServices): Map<String, String> {
     out.flag("ceph", services.ceph?.clusters, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { c -> c.reasonList.any { it in CEPH_ALERT_REASONS } })
     // A pool alerts only when Rook reports it failed.
     out.flag("ceph", services.ceph?.pools, { "${it.kind}/${it.label}" }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
+    // A recommendation CAST AI cannot apply is critical; a read-only or HPA one was chosen: shown, not alerted.
+    out.flag("castai", services.castai?.recommendations, { it.label }, { it.serviceHealth == ServiceHealth.CRITICAL }, { false })
     return out
 }
 
