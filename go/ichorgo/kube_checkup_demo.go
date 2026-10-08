@@ -12,15 +12,7 @@ func demoCheckup(now time.Time) checkupReport {
 
 	const gi = float64(1 << 30)
 
-	nodes := []checkupNode{
-		demoCheckupNode("demo-cp-1", "control-plane", 4, 8*gi, 1.2, 3.1*gi, 14),
-		demoCheckupNode("demo-cp-2", "control-plane", 4, 8*gi, 1.1, 2.9*gi, 13),
-		demoCheckupNode("demo-cp-3", "control-plane", 4, 8*gi, 1.3, 3.4*gi, 15),
-		demoCheckupNode("demo-worker-1", "", 8, 16*gi, 7.4, 11.8*gi, 61),
-		demoCheckupNode("demo-worker-2", "", 8, 16*gi, 5.9, 14.6*gi, 48),
-	}
-	nodes[4].Cordoned = true
-	nodes[4].Taints = []string{taintUnschedulable + ":NoSchedule"}
+	nodes := demoCheckupNodes()
 
 	volumes := []checkupVolume{
 		{Namespace: "demo", Name: "data-postgres-0", Phase: "Bound", StorageClass: "longhorn", Capacity: 20 * gi, Used: 19.3 * gi, UsedPercent: 96.5, InodesPercent: 12, Measured: true, Pod: "postgres-0", Node: "demo-worker-2"},
@@ -86,10 +78,46 @@ func demoCheckup(now time.Time) checkupReport {
 	return checkupReport{Status: checkupVerdict(sections), KubeVersion: "v1.34.1", Sections: sections, Nodes: nodes, Volumes: volumes, Releases: releases}
 }
 
-func demoCheckupNode(name, role string, cores, memory, cpuRequests, memoryRequests float64, pods int) checkupNode {
+// demoCheckupNodes are the demo cluster's nodes (demoNodes, the same five as the overview and
+// the Kubernetes home) as the checkup sees them, with what their pods request; demo-worker-2
+// is cordoned, as in the rest of the demo.
+func demoCheckupNodes() []checkupNode {
+	const gi = float64(1 << 30)
+
+	requests := map[string]struct {
+		cpu, memory float64
+		pods        int
+	}{
+		"demo-cp-1": {1.2, 3.1 * gi, 14}, "demo-cp-2": {1.1, 2.9 * gi, 13}, "demo-cp-3": {1.3, 3.4 * gi, 15},
+		"demo-worker-1": {7.4, 11.8 * gi, 61}, "demo-worker-2": {5.9, 14.6 * gi, 48},
+	}
+
+	nodes := []checkupNode{}
+
+	for _, d := range demoNodes() {
+		role := ""
+		if d.Role == "controlplane" {
+			role = "control-plane"
+		}
+
+		r := requests[d.Hostname]
+		n := demoCheckupNode(d.Hostname, role, d.Arch, float64(d.CPUCount), float64(d.MemTotal), r.cpu, r.memory, r.pods)
+
+		if d.Hostname == "demo-worker-2" {
+			n.Cordoned = true
+			n.Taints = []string{taintUnschedulable + ":NoSchedule"}
+		}
+
+		nodes = append(nodes, n)
+	}
+
+	return nodes
+}
+
+func demoCheckupNode(name, role, arch string, cores, memory, cpuRequests, memoryRequests float64, pods int) checkupNode {
 	n := checkupNode{
 		Name: name, Roles: []string{}, Ready: true, Kubelet: "v1.34.1", Taints: []string{},
-		Labels:         []string{"kubernetes.io/arch=amd64", "kubernetes.io/hostname=" + name, "kubernetes.io/os=linux"},
+		Labels:         []string{"kubernetes.io/arch=" + arch, "kubernetes.io/hostname=" + name, "kubernetes.io/os=linux"},
 		CPURequests:    cpuRequests,
 		CPUAllocatable: cores, CPUPercent: percentOf(cpuRequests, cores),
 		MemoryRequests: memoryRequests, MemoryAllocatable: memory, MemoryPercent: percentOf(memoryRequests, memory),

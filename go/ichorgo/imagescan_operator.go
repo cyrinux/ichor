@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"net/url"
@@ -165,7 +166,7 @@ func operatorRegistry(server string) string {
 
 func operatorImage(t scanTarget, r vulnerabilityReport) scannedImage {
 	img := scannedImage{
-		Image: t.image, Ref: t.ref, Digest: cmpOr(t.digest, r.Report.Artifact.Digest), Pods: t.pods,
+		Image: t.image, Ref: t.ref, Digest: cmp.Or(t.digest, r.Report.Artifact.Digest), Pods: t.pods,
 		OS: strings.TrimSpace(r.Report.OS.Family + " " + r.Report.OS.Name), ScannedAt: r.Report.UpdateTimestamp.UnixMilli(),
 	}
 

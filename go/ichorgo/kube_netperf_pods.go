@@ -29,32 +29,14 @@ type netPerfNodeList struct {
 	Nodes []netPerfNode `json:"nodes"`
 }
 
-type nodeObject struct {
-	Metadata struct {
-		Name   string            `json:"name"`
-		Labels map[string]string `json:"labels"`
-	} `json:"metadata"`
-	Status struct {
-		Addresses []struct {
-			Type    string `json:"type"`
-			Address string `json:"address"`
-		} `json:"addresses"`
-		Conditions []struct {
-			Type   string `json:"type"`
-			Status string `json:"status"`
-		} `json:"conditions"`
-	} `json:"status"`
-}
-
 func listNetPerfNodes(ctx context.Context, k *kubeClient) (netPerfNodeList, error) {
-	var list kubeList[nodeObject]
-
-	if err := getList(ctx, k, "/api/v1/nodes", &list); err != nil {
+	objs, err := listKubeNodeObjects(ctx, k)
+	if err != nil {
 		return netPerfNodeList{}, err
 	}
 
-	out := netPerfNodeList{Nodes: make([]netPerfNode, 0, len(list.Items))}
-	for _, obj := range list.Items {
+	out := netPerfNodeList{Nodes: make([]netPerfNode, 0, len(objs))}
+	for _, obj := range objs {
 		out.Nodes = append(out.Nodes, mapNetPerfNode(obj))
 	}
 
@@ -63,23 +45,8 @@ func listNetPerfNodes(ctx context.Context, k *kubeClient) (netPerfNodeList, erro
 	return out, nil
 }
 
-func mapNetPerfNode(obj nodeObject) netPerfNode {
-	n := netPerfNode{Name: obj.Metadata.Name}
-	_, n.ControlPlane = obj.Metadata.Labels["node-role.kubernetes.io/control-plane"]
-
-	for _, a := range obj.Status.Addresses {
-		if a.Type == "InternalIP" && n.Address == "" {
-			n.Address = a.Address
-		}
-	}
-
-	for _, c := range obj.Status.Conditions {
-		if c.Type == "Ready" {
-			n.Ready = c.Status == "True"
-		}
-	}
-
-	return n
+func mapNetPerfNode(obj kubeNodeObject) netPerfNode {
+	return netPerfNode{Name: obj.Metadata.Name, Address: obj.internalIP(), ControlPlane: obj.controlPlane(), Ready: obj.ready()}
 }
 
 // checkNetPerfNodes refuses a test on a node that is not in the cluster or not ready.

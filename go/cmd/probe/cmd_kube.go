@@ -200,6 +200,14 @@ var kubeCommands = []command{
 	}},
 	{name: "cordon", args: "NODE", run: runCordon},
 	{name: "uncordon", args: "NODE", run: runCordon},
+	{name: "kube-nodes", args: "", run: func(e env) (out string, err error) {
+		// The nodes as the Kubernetes API lists them: the home of a cluster added from a kubeconfig.
+		return ichorgo.KubeNodes(e.cfg, e.context, e.kubeServer)
+	}},
+	{name: "drain-plan", args: "KUBENODE", run: func(e env) (out string, err error) {
+		// Read-only: the drain of a node by its Kubernetes name, without Talos checks.
+		return ichorgo.KubeDrainPlan(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+	}},
 	{name: "maintenance", args: "NODE ACTION", run: func(e env) (out string, err error) {
 		// maintenance NODE reboot|shutdown|none: cordons and drains the node for real.
 		m := maintenanceProbe{done: make(chan string, 1)}
@@ -239,9 +247,18 @@ func runSuspendCronjob(e env) (out string, err error) {
 	return out, err
 }
 
-// runCordon serves cordon, uncordon: e.cmd tells which.
+// runCordon serves cordon, uncordon: e.cmd tells which. A kubeconfig names the node by its
+// Kubernetes name, a talosconfig by its address.
 func runCordon(e env) (out string, err error) {
-	if err = ichorgo.KubeCordon(e.cfg, e.context, e.kubeServer, flag.Arg(1), e.cmd == "cordon"); err == nil {
+	on := e.cmd == "cordon"
+
+	if ichorgo.IsKubeconfig(e.cfg) {
+		err = ichorgo.KubeNodeCordon(e.cfg, e.context, e.kubeServer, flag.Arg(1), on)
+	} else {
+		err = ichorgo.KubeCordon(e.cfg, e.context, e.kubeServer, flag.Arg(1), on)
+	}
+
+	if err == nil {
 		out = e.cmd + "ed"
 	}
 

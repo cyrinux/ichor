@@ -2,9 +2,7 @@ package ichorgo
 
 import (
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"net"
@@ -79,10 +77,8 @@ func clusterID(ctx *clientconfig.Context) string {
 	}
 
 	data := []byte(strings.TrimSpace(ctx.CA))
-	if decoded, err := base64.StdEncoding.DecodeString(ctx.CA); err == nil {
-		if block, _ := pem.Decode(decoded); block != nil {
-			data = block.Bytes
-		}
+	if der := pemCertificateDER(ctx.CA); der != nil {
+		data = der
 	}
 
 	return letterHash(sha256.Sum256(data))

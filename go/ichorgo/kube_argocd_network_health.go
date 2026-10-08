@@ -18,10 +18,8 @@ func argoNetHealth(g *argoNetGraph, in argoNetInput) {
 			h = healthWarning
 		}
 
-		for _, c := range n.Status.Conditions {
-			if c.Type == "Ready" && c.Status != "True" {
-				h = healthCritical
-			}
+		if !n.ready() {
+			h = healthCritical
 		}
 
 		ready[n.Metadata.Name] = h

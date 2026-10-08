@@ -129,29 +129,11 @@ func gatherMaintenancePlan(ctx context.Context, s *session, kube kubeTarget, nod
 		return plan, errKubeNodeUnknown
 	}
 
-	plan.KubeNode, plan.Cordoned = state.Name, state.Unschedulable
+	plan.Cordoned = state.Unschedulable
 
-	pods, err := withKubeContext(ctx, kube, func(ctx context.Context, k *kubeClient) ([]drainPod, error) {
-		return drainPods(ctx, k, state.Name)
+	return withKubeContext(ctx, kube, func(ctx context.Context, k *kubeClient) (maintenancePlan, error) {
+		return drainPlanFor(ctx, k, state.Name, plan)
 	})
-	if err != nil {
-		return plan, err
-	}
-
-	plan.Pods = pods
-
-	for _, p := range pods {
-		switch {
-		case p.Kind == drainBare:
-			plan.Warnings = append(plan.Warnings, fmt.Sprintf("%s/%s has no controller: once evicted it is not recreated", p.Namespace, p.Name))
-		case p.Kind == drainEvict && p.PDB != "" && p.PDBAllowed == 0:
-			plan.Warnings = append(plan.Warnings, fmt.Sprintf("PodDisruptionBudget %s/%s allows no disruption now: the drain waits for it", p.Namespace, p.PDB))
-		}
-	}
-
-	plan.Warnings = slices.Compact(plan.Warnings)
-
-	return plan, nil
 }
 
 // rebootWarnings drops the upgrade plan's warnings that are about upgrading, not rebooting.
@@ -185,9 +167,7 @@ func KubeCordon(configYAML, contextName, kubeServer, node string, on bool) (err 
 		return err
 	}
 
-	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
-		return setUnschedulable(ctx, k, kubeNode, on)
-	})
+	return cordonKubeNode(kubeTarget{configYAML, contextName, kubeServer}, kubeNode, on)
 }
 
 // StartNodeMaintenance cordons node, drains it (evictions honour PodDisruptionBudgets; bare
@@ -234,7 +214,15 @@ type maintenance struct {
 }
 
 func (m maintenance) emit(phase, message string, pods []drainPod) {
-	emitJSON(maintenanceProgress{Phase: phase, Message: message, At: time.Now().UnixMilli(), Pods: pods}, m.listener.OnProgress)
+	progressEmitter(m.listener)(phase, message, pods)
+}
+
+// progressEmitter reports the phases of a run to listener, as StartNodeMaintenance and
+// StartKubeDrain do.
+func progressEmitter(listener MaintenanceListener) func(phase, message string, pods []drainPod) {
+	return func(phase, message string, pods []drainPod) {
+		emitJSON(maintenanceProgress{Phase: phase, Message: message, At: time.Now().UnixMilli(), Pods: pods}, listener.OnProgress)
+	}
 }
 
 // stoppedCordoned explains a run that ended early: the node is left cordoned on purpose.

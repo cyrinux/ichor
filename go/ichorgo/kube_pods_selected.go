@@ -15,7 +15,8 @@ var podPhases = []string{"Pending", "Running", "Succeeded", "Failed", "Unknown"}
 
 // KubeNodeName is the Kubernetes name of the Talos node node (its address), as its kubelet
 // registered it (Talos' NodeStatus resource): what KubeNodePodsPage takes, the mapping
-// KubeCordon and the maintenance plan use too. Reads Talos only.
+// KubeCordon and the maintenance plan use too. Reads Talos only: a cluster added from a
+// kubeconfig knows its nodes by that name already (KubeNodes) and never calls it.
 func KubeNodeName(configYAML, contextName, node string) (out string, err error) {
 	defer maskResult(&out, &err)
 

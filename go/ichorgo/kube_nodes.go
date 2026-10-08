@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"slices"
 	"strings"
 	"time"
@@ -52,14 +53,19 @@ type kubeNodeInfo struct {
 	Created int64 `json:"created"`
 }
 
+// kubeNodeObject is a Node as the API server serves it, with every field a reader of nodes
+// needs (the Kubernetes home, netperf, the checkup, the Argo CD network, drains, the wait
+// after a reboot): one decode shape, read with listKubeNodeObjects or readKubeNodeObject and
+// asked through the accessors below.
 type kubeNodeObject struct {
 	Metadata checkMeta `json:"metadata"`
 	Spec     struct {
-		Unschedulable bool `json:"unschedulable"`
+		Unschedulable bool        `json:"unschedulable"`
+		Taints        []nodeTaint `json:"taints"`
 	} `json:"spec"`
 	Status struct {
 		Allocatable map[string]string `json:"allocatable"`
-		Conditions  kubeConditions    `json:"conditions"`
+		Conditions  []nodeCondition   `json:"conditions"`
 		Addresses   []struct {
 			Type    string `json:"type"`
 			Address string `json:"address"`
@@ -74,7 +80,132 @@ type kubeNodeObject struct {
 	} `json:"status"`
 }
 
+type nodeTaint struct {
+	Key       string     `json:"key"`
+	Value     string     `json:"value"`
+	Effect    string     `json:"effect"`
+	TimeAdded *time.Time `json:"timeAdded"`
+}
+
+// nodeCondition is a kubeCondition with the kubelet heartbeat only Node conditions carry.
+type nodeCondition struct {
+	kubeCondition
+	LastHeartbeatTime time.Time `json:"lastHeartbeatTime"`
+}
+
 var nodePressureConditions = []string{"MemoryPressure", "DiskPressure", "PIDPressure", "NetworkUnavailable"}
+
+// listKubeNodeObjects reads every node of the cluster.
+func listKubeNodeObjects(ctx context.Context, k *kubeClient) ([]kubeNodeObject, error) {
+	return listObjects[kubeNodeObject](ctx, k, "/api/v1/nodes")
+}
+
+// readKubeNodeObject reads the node called name.
+func readKubeNodeObject(ctx context.Context, k *kubeClient, name string) (kubeNodeObject, error) {
+	var obj kubeNodeObject
+
+	err := k.get(ctx, "/api/v1/nodes/"+url.PathEscape(name), &obj)
+
+	return obj, err
+}
+
+// conditions are the node's status conditions, as kubeConditions reads them.
+func (n kubeNodeObject) conditions() kubeConditions {
+	out := make(kubeConditions, len(n.Status.Conditions))
+	for i, c := range n.Status.Conditions {
+		out[i] = c.kubeCondition
+	}
+
+	return out
+}
+
+// ready tells whether the Ready condition is True.
+func (n kubeNodeObject) ready() bool { return n.conditions().is("Ready") }
+
+// readySince tells whether the node is Ready with a kubelet heartbeat after since: right
+// after a fast reboot the Node object still says Ready from before it (Kubernetes marks a
+// node NotReady only after a grace period), while the restarted kubelet posts its status,
+// with a fresh heartbeat, as soon as it registers.
+func (n kubeNodeObject) readySince(since time.Time) bool {
+	for _, c := range n.Status.Conditions {
+		if c.Type == "Ready" {
+			return c.Status == "True" && c.LastHeartbeatTime.After(since)
+		}
+	}
+
+	return false
+}
+
+// roles are the node-role.kubernetes.io/<role> labels, sorted, "control-plane" for the legacy
+// "master" too (nodeRoleNames).
+func (n kubeNodeObject) roles() []string { return nodeRoleNames(n.Metadata.Labels) }
+
+// rawRoles are the role labels as set, sorted: "master" stays "master".
+func (n kubeNodeObject) rawRoles() []string {
+	roles := []string{}
+
+	for key := range n.Metadata.Labels {
+		if role, ok := strings.CutPrefix(key, roleLabelPrefix); ok && role != "" {
+			roles = append(roles, role)
+		}
+	}
+
+	slices.Sort(roles)
+
+	return roles
+}
+
+// controlPlane tells whether the node is labelled as a control plane (or legacy master).
+func (n kubeNodeObject) controlPlane() bool { return slices.Contains(n.roles(), "control-plane") }
+
+// address is the node's first address of type typ ("InternalIP", "ExternalIP", "Hostname"), "" for none.
+func (n kubeNodeObject) address(typ string) string {
+	for _, a := range n.Status.Addresses {
+		if a.Type == typ {
+			return a.Address
+		}
+	}
+
+	return ""
+}
+
+func (n kubeNodeObject) internalIP() string { return n.address("InternalIP") }
+
+// pressure lists the problem conditions that are on (nodePressureConditions); never nil.
+func (n kubeNodeObject) pressure() []string {
+	out := []string{}
+	conds := n.conditions()
+
+	for _, c := range nodePressureConditions {
+		if conds.is(c) {
+			out = append(out, c)
+		}
+	}
+
+	return out
+}
+
+// taintStrings writes the taints as "key=value:Effect" ("key:Effect" without a value); never nil.
+func (n kubeNodeObject) taintStrings() []string {
+	out := []string{}
+
+	for _, t := range n.Spec.Taints {
+		out = append(out, strings.TrimSuffix(t.Key+"="+t.Value, "=")+":"+t.Effect)
+	}
+
+	return out
+}
+
+// cordonedSince is when the unschedulable taint was added, nil when unknown or not cordoned.
+func (n kubeNodeObject) cordonedSince() *time.Time {
+	for _, t := range n.Spec.Taints {
+		if t.Key == taintUnschedulable && t.TimeAdded != nil {
+			return t.TimeAdded
+		}
+	}
+
+	return nil
+}
 
 // KubeNodes lists the cluster's nodes from the Kubernetes API, as a JSON kubeNodesOverview:
 // control planes first, then by name.
@@ -97,7 +228,7 @@ func listKubeNodes(ctx context.Context, k *kubeClient) (kubeNodesOverview, error
 		out.ServerVersion = version.GitVersion
 	}
 
-	objs, err := listObjects[kubeNodeObject](ctx, k, "/api/v1/nodes")
+	objs, err := listKubeNodeObjects(ctx, k)
 	if isForbidden(err) {
 		out.Forbidden = true
 
@@ -119,40 +250,27 @@ func listKubeNodes(ctx context.Context, k *kubeClient) (kubeNodesOverview, error
 
 func mapKubeNode(obj kubeNodeObject) kubeNodeInfo {
 	n := kubeNodeInfo{
-		Name:     obj.Metadata.Name,
-		Roles:    nodeRoleNames(obj.Metadata.Labels),
-		Ready:    obj.Status.Conditions.is("Ready"),
-		Cordoned: obj.Spec.Unschedulable,
-		Kubelet:  obj.Status.NodeInfo.KubeletVersion,
-		OSImage:  obj.Status.NodeInfo.OSImage,
-		Kernel:   obj.Status.NodeInfo.KernelVersion,
-		Runtime:  obj.Status.NodeInfo.ContainerRuntimeVersion,
-		Arch:     obj.Status.NodeInfo.Architecture,
-		CPU:      parseQuantity(obj.Status.Allocatable["cpu"]),
-		Memory:   parseQuantity(obj.Status.Allocatable["memory"]),
-		PodLimit: int(parseQuantity(obj.Status.Allocatable["pods"])),
-		Pressure: []string{},
-		Created:  obj.Metadata.CreationTimestamp.Unix(),
+		Name:       obj.Metadata.Name,
+		Roles:      obj.roles(),
+		Ready:      obj.ready(),
+		Cordoned:   obj.Spec.Unschedulable,
+		InternalIP: obj.internalIP(),
+		ExternalIP: obj.address("ExternalIP"),
+		Kubelet:    obj.Status.NodeInfo.KubeletVersion,
+		OSImage:    obj.Status.NodeInfo.OSImage,
+		Kernel:     obj.Status.NodeInfo.KernelVersion,
+		Runtime:    obj.Status.NodeInfo.ContainerRuntimeVersion,
+		Arch:       obj.Status.NodeInfo.Architecture,
+		CPU:        parseQuantity(obj.Status.Allocatable["cpu"]),
+		Memory:     parseQuantity(obj.Status.Allocatable["memory"]),
+		PodLimit:   int(parseQuantity(obj.Status.Allocatable["pods"])),
+		Pressure:   obj.pressure(),
+		Created:    obj.Metadata.CreationTimestamp.Unix(),
 	}
 
 	n.Pool, n.PoolKind = nodePool(obj.Metadata.Labels)
 	n.InstanceType = firstLabel(obj.Metadata.Labels, instanceTypeLabel, legacyInstanceTypeLabel)
 	n.Capacity = nodeCapacity(obj.Metadata.Labels, n.PoolKind)
-
-	for _, a := range obj.Status.Addresses {
-		switch {
-		case a.Type == "InternalIP" && n.InternalIP == "":
-			n.InternalIP = a.Address
-		case a.Type == "ExternalIP" && n.ExternalIP == "":
-			n.ExternalIP = a.Address
-		}
-	}
-
-	for _, c := range nodePressureConditions {
-		if obj.Status.Conditions.is(c) {
-			n.Pressure = append(n.Pressure, c)
-		}
-	}
 
 	return n
 }

@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
@@ -222,7 +223,7 @@ func omniExchange(ctx context.Context, httpc *http.Client, endpoint, code, verif
 	}
 
 	if t.IDToken == "" {
-		return "", time.Time{}, fmt.Errorf("Omni OIDC token: %s %s", cmpOr(t.Error, resp.Status), t.Description)
+		return "", time.Time{}, fmt.Errorf("Omni OIDC token: %s %s", cmp.Or(t.Error, resp.Status), t.Description)
 	}
 
 	expiry := time.Now().Add(time.Duration(cmpOrInt(t.ExpiresIn, 3600)) * time.Second)

@@ -117,21 +117,6 @@ type netPod struct {
 	labels map[string]string
 }
 
-type netNodeObject struct {
-	Metadata struct {
-		Name string `json:"name"`
-	} `json:"metadata"`
-	Spec struct {
-		Unschedulable bool `json:"unschedulable"`
-	} `json:"spec"`
-	Status struct {
-		Conditions []struct {
-			Type   string `json:"type"`
-			Status string `json:"status"`
-		} `json:"conditions"`
-	} `json:"status"`
-}
-
 // argoNetInput is what the graph is built from, read from the API server.
 type argoNetInput struct {
 	app        argoObject
@@ -140,7 +125,7 @@ type argoNetInput struct {
 	ingresses  []ingressObject
 	httpRoutes []httpRouteObject
 	gateways   []gatewayObject
-	nodes      []netNodeObject
+	nodes      []kubeNodeObject
 }
 
 func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string) (argoNetwork, error) {
@@ -205,7 +190,7 @@ func readArgoNetwork(ctx context.Context, k *kubeClient, namespace, name string)
 		ingresses  kubeList[ingressObject]
 		httpRoutes kubeList[httpRouteObject]
 		gateways   kubeList[gatewayObject]
-		nodes      kubeList[netNodeObject]
+		nodes      kubeList[kubeNodeObject]
 	)
 
 	tasks = append(tasks,
@@ -405,7 +390,7 @@ func httpRouteGateways(routes []httpRouteObject, gateways []gatewayObject, names
 			continue
 		}
 
-		ns := orDefault(ref.Namespace, namespace)
+		ns := cmp.Or(ref.Namespace, namespace)
 		if j := slices.IndexFunc(gateways, func(gw gatewayObject) bool { return gw.Metadata.Namespace == ns && gw.Metadata.Name == ref.Name }); j >= 0 {
 			out = append(out, gateways[j])
 		}

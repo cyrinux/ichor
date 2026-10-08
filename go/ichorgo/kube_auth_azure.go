@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"crypto/tls"
 	"errors"
@@ -49,7 +50,7 @@ func newAzureMethod(user *kubeStoreUser) (signInMethod, error) {
 	var login, serverID, clientID, tenant, environment string
 
 	if e := user.User.Exec; e != nil {
-		login = cmpOr(flagValue(e.Args, "--login", "-l"), "devicecode")
+		login = cmp.Or(flagValue(e.Args, "--login", "-l"), "devicecode")
 		serverID = flagValue(e.Args, "--server-id")
 		clientID = flagValue(e.Args, "--client-id")
 		tenant = flagValue(e.Args, "--tenant-id", "-t")
@@ -92,7 +93,7 @@ func (m *azureSPNMethod) fieldSets() [][]string {
 func (m *azureSPNMethod) rememberedFields() []string { return []string{azureFieldClientID} }
 
 func (m *azureSPNMethod) fromSecrets(s map[string]string) (kubeAuthState, error) {
-	if s[azureFieldClientSecret] == "" || cmpOr(s[azureFieldClientID], m.clientID) == "" {
+	if s[azureFieldClientSecret] == "" || cmp.Or(s[azureFieldClientID], m.clientID) == "" {
 		return kubeAuthState{}, errors.New("enter the service principal's client ID and secret")
 	}
 
@@ -112,7 +113,7 @@ func (m *azureSPNMethod) mint(ctx context.Context, state kubeAuthState) (string,
 		return "", time.Time{}, state, signInRequired(authAzure, "")
 	}
 
-	clientID := cmpOr(state.secret(azureFieldClientID), m.clientID)
+	clientID := cmp.Or(state.secret(azureFieldClientID), m.clientID)
 	o := &oidcMethod{method: authAzure, issuer: m.authority, clientID: clientID, clientSecret: secret, tls: azureTLS()}
 
 	d, err := o.discover(ctx)
@@ -126,7 +127,7 @@ func (m *azureSPNMethod) mint(ctx context.Context, state kubeAuthState) (string,
 	}
 
 	if t.Error != "" || t.AccessToken == "" {
-		return "", time.Time{}, state, signInRequired(authAzure, cmpOr(t.Description, t.Error, "no access token"))
+		return "", time.Time{}, state, signInRequired(authAzure, cmp.Or(t.Description, t.Error, "no access token"))
 	}
 
 	expiry := time.Now().Add(time.Duration(cmpOrInt(t.ExpiresIn, 3600)) * time.Second)

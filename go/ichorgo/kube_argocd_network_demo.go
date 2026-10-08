@@ -63,8 +63,8 @@ func demoArgoNetwork(app string) argoNetwork {
 }
 
 // demoNetNodes: demo-worker-3 is cordoned and not ready, as in the rest of the demo.
-func demoNetNodes() []netNodeObject {
-	var nodes []netNodeObject
+func demoNetNodes() []kubeNodeObject {
+	var nodes []kubeNodeObject
 
 	for _, n := range []string{"demo-worker-1", "demo-worker-2", "demo-worker-3"} {
 		ready, cordoned := "True", "false"
@@ -72,7 +72,7 @@ func demoNetNodes() []netNodeObject {
 			ready, cordoned = "False", "true"
 		}
 
-		nodes = append(nodes, demoNetObject[netNodeObject](`{"metadata":{"name":"`+n+`"},"spec":{"unschedulable":`+cordoned+`},
+		nodes = append(nodes, demoNetObject[kubeNodeObject](`{"metadata":{"name":"`+n+`"},"spec":{"unschedulable":`+cordoned+`},
 		  "status":{"conditions":[{"type":"Ready","status":"`+ready+`"}]}}`))
 	}
 

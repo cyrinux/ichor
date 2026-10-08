@@ -92,7 +92,7 @@ func TestNetPerfPodSpecIsRestricted(t *testing.T) {
 }
 
 func TestMapNetPerfNode(t *testing.T) {
-	var obj nodeObject
+	var obj kubeNodeObject
 	if err := json.Unmarshal([]byte(`{"metadata":{"name":"cp-1","labels":{"node-role.kubernetes.io/control-plane":""}},
 		"status":{"addresses":[{"type":"Hostname","address":"cp-1"},{"type":"InternalIP","address":"192.0.2.10"}],
 		"conditions":[{"type":"MemoryPressure","status":"False"},{"type":"Ready","status":"True"}]}}`), &obj); err != nil {

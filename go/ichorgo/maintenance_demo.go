@@ -6,8 +6,9 @@ package ichorgo
 func demoMaintenancePlan(node string) maintenancePlan {
 	plan := maintenancePlan{Node: node, Hostname: node, KubeNode: node, Blockers: []string{}, Warnings: []string{}, Acknowledge: []string{}}
 
+	// A Talos node is named by its address, a Kubernetes one by its hostname.
 	for _, n := range demoNodes() {
-		if n.Node == node {
+		if n.Node == node || n.Hostname == node {
 			plan.Hostname, plan.KubeNode, plan.ControlPlane = n.Hostname, n.Hostname, n.Role == "controlplane"
 		}
 	}

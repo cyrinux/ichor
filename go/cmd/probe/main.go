@@ -106,8 +106,12 @@ func main() {
 
 	if *mask {
 		ichorgo.SetPrivacyMask(true, *maskWords)
-		// Like the app, which shows the overview first: it teaches the mask the hostnames.
-		_, _ = ichorgo.ClusterOverview(cfg, *contextName) //nolint:errcheck
+		// Like the app, which shows the home first: it teaches the mask the hostnames.
+		if ichorgo.IsKubeconfig(cfg) {
+			_, _ = ichorgo.KubeNodes(cfg, *contextName, *kubeServer) //nolint:errcheck
+		} else {
+			_, _ = ichorgo.ClusterOverview(cfg, *contextName) //nolint:errcheck
+		}
 	}
 
 	c, ok := lookup(flag.Arg(0))

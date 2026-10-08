@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -86,8 +87,8 @@ func newEKSMethod(user *kubeStoreUser) (*eksMethod, error) {
 
 	m := &eksMethod{
 		cluster: flagValue(e.Args, "--cluster-name", "--cluster-id", "-i"),
-		region:  cmpOr(flagValue(e.Args, "--region"), env["AWS_REGION"], env["AWS_DEFAULT_REGION"], "us-east-1"),
-		roleARN: cmpOr(flagValue(e.Args, "--role-arn", "-r"), env["AWS_ROLE_ARN"]),
+		region:  cmp.Or(flagValue(e.Args, "--region"), env["AWS_REGION"], env["AWS_DEFAULT_REGION"], "us-east-1"),
+		roleARN: cmp.Or(flagValue(e.Args, "--role-arn", "-r"), env["AWS_ROLE_ARN"]),
 		http:    awsHTTPClient(),
 	}
 
@@ -229,7 +230,7 @@ func (m *eksMethod) ssoAccessToken(ctx context.Context, state kubeAuthState) (st
 	if err != nil || t.AccessToken == "" {
 		cleared := state.withSession(map[string]string{"ssoRefresh": "", "ssoAccess": ""})
 
-		return "", cleared, signInRequired(authEKS, cmpOr(t.Description, t.Error, errText(err)))
+		return "", cleared, signInRequired(authEKS, cmp.Or(t.Description, t.Error, errText(err)))
 	}
 
 	return t.AccessToken, m.withSSOToken(state, t), nil
@@ -247,7 +248,7 @@ func (m *eksMethod) withSSOToken(state kubeAuthState, t awsSSOToken) kubeAuthSta
 	return state.withSession(map[string]string{
 		"ssoAccess":       t.AccessToken,
 		"ssoAccessExpiry": strconv.FormatInt(time.Now().Add(time.Duration(cmpOrInt(t.ExpiresIn, 3600))*time.Second).Unix(), 10),
-		"ssoRefresh":      cmpOr(t.RefreshToken, state.session("ssoRefresh")),
+		"ssoRefresh":      cmp.Or(t.RefreshToken, state.session("ssoRefresh")),
 	})
 }
 
@@ -282,7 +283,7 @@ func (m *eksMethod) ssoRoleCredentials(ctx context.Context, token string, state 
 	}
 
 	if rc.AccessKeyID == "" {
-		return awsCredentials{}, state, fmt.Errorf("IAM Identity Center gave no role credentials: %s", cmpOr(answer.Message, strconv.Itoa(status)))
+		return awsCredentials{}, state, fmt.Errorf("IAM Identity Center gave no role credentials: %s", cmp.Or(answer.Message, strconv.Itoa(status)))
 	}
 
 	c := awsCredentials{rc.AccessKeyID, rc.SecretAccessKey, rc.SessionToken}
@@ -331,7 +332,7 @@ func (m *eksMethod) assumedRole(ctx context.Context, base awsCredentials, state 
 	}
 
 	if err := xml.Unmarshal(data, &answer); err != nil || answer.Credentials.AccessKeyID == "" {
-		return awsCredentials{}, state, fmt.Errorf("AssumeRole %s: %s", m.roleARN, cmpOr(answer.Error.Message, strconv.Itoa(resp.StatusCode)))
+		return awsCredentials{}, state, fmt.Errorf("AssumeRole %s: %s", m.roleARN, cmp.Or(answer.Error.Message, strconv.Itoa(resp.StatusCode)))
 	}
 
 	c := answer.Credentials
@@ -400,7 +401,7 @@ func (m *eksMethod) signIn(ctx context.Context, state kubeAuthState, prompt func
 		"grantTypes": []string{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
 	}, &client)
 	if err != nil || client.ClientID == "" {
-		return state, fmt.Errorf("IAM Identity Center refused the app: %s", cmpOr(client.Error, errText(err)))
+		return state, fmt.Errorf("IAM Identity Center refused the app: %s", cmp.Or(client.Error, errText(err)))
 	}
 
 	var device struct {
@@ -419,7 +420,7 @@ func (m *eksMethod) signIn(ctx context.Context, state kubeAuthState, prompt func
 		return state, fmt.Errorf("IAM Identity Center gave no device code: %s", errText(err))
 	}
 
-	prompt(signInPrompt{Kind: "device", URL: cmpOr(device.VerificationURIComplete, device.VerificationURI), UserCode: device.UserCode, VerificationURL: device.VerificationURI, ExpiresIn: device.ExpiresIn})
+	prompt(signInPrompt{Kind: "device", URL: cmp.Or(device.VerificationURIComplete, device.VerificationURI), UserCode: device.UserCode, VerificationURL: device.VerificationURI, ExpiresIn: device.ExpiresIn})
 
 	var token awsSSOToken
 

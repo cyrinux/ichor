@@ -40,26 +40,6 @@ const (
 	roleLabelPrefix    = "node-role.kubernetes.io/"
 )
 
-type checkNodeObject struct {
-	Metadata checkMeta `json:"metadata"`
-	Spec     struct {
-		Unschedulable bool `json:"unschedulable"`
-		Taints        []struct {
-			Key       string     `json:"key"`
-			Value     string     `json:"value"`
-			Effect    string     `json:"effect"`
-			TimeAdded *time.Time `json:"timeAdded"`
-		} `json:"taints"`
-	} `json:"spec"`
-	Status struct {
-		Allocatable map[string]string `json:"allocatable"`
-		Conditions  []kubeCondition   `json:"conditions"`
-		NodeInfo    struct {
-			KubeletVersion string `json:"kubeletVersion"`
-		} `json:"nodeInfo"`
-	} `json:"status"`
-}
-
 // checkupNode is a node as Kubernetes sees it: what its pods request of what it offers,
 // and what keeps pods away from it. CPU is in cores, memory in bytes.
 type checkupNode struct {
@@ -105,32 +85,23 @@ func checkupCapacity(ctx context.Context, k *kubeClient, in checkupInput, versio
 		nodes
 }
 
-func mapCheckupNodes(objs []checkNodeObject, pods []checkPod) []checkupNode {
+func mapCheckupNodes(objs []kubeNodeObject, pods []checkPod) []checkupNode {
 	index := map[string]int{}
 	nodes := make([]checkupNode, 0, len(objs))
 
 	for _, obj := range objs {
 		n := checkupNode{
-			Name: obj.Metadata.Name, Roles: []string{}, Taints: []string{}, Labels: []string{},
-			Ready: kubeConditions(obj.Status.Conditions).is("Ready"), Cordoned: obj.Spec.Unschedulable,
+			Name: obj.Metadata.Name, Roles: obj.rawRoles(), Taints: obj.taintStrings(), Labels: []string{},
+			Ready: obj.ready(), Cordoned: obj.Spec.Unschedulable,
 			Kubelet:        obj.Status.NodeInfo.KubeletVersion,
 			CPUAllocatable: parseQuantity(obj.Status.Allocatable["cpu"]), MemoryAllocatable: parseQuantity(obj.Status.Allocatable["memory"]),
 			PodCapacity: int(parseQuantity(obj.Status.Allocatable["pods"])),
 		}
 
 		for key, value := range obj.Metadata.Labels {
-			if role, ok := strings.CutPrefix(key, roleLabelPrefix); ok && role != "" {
-				n.Roles = append(n.Roles, role)
-			}
-
 			n.Labels = append(n.Labels, strings.TrimSuffix(key+"="+value, "="))
 		}
 
-		for _, t := range obj.Spec.Taints {
-			n.Taints = append(n.Taints, strings.TrimSuffix(t.Key+"="+t.Value, "=")+":"+t.Effect)
-		}
-
-		slices.Sort(n.Roles)
 		slices.Sort(n.Labels)
 
 		index[n.Name] = len(nodes)
@@ -254,12 +225,12 @@ func quotaFindings(quotas []quotaObject) []checkupFinding {
 
 // nodeFindings is what Kubernetes itself says of its nodes: not ready, under pressure,
 // left cordoned, or with a kubelet too far from the API server's version.
-func nodeFindings(nodes []checkNodeObject, version string, now time.Time) []checkupFinding {
+func nodeFindings(nodes []kubeNodeObject, version string, now time.Time) []checkupFinding {
 	findings := []checkupFinding{}
 	major, minor, known := kubeMinor(version)
 
 	for _, n := range nodes {
-		conds := kubeConditions(n.Status.Conditions)
+		conds := n.conditions()
 
 		if ready := conds.get("Ready"); ready.Status != "True" {
 			findings = append(findings, checkupFinding{Kind: findNodeNotReady, Severity: sevCritical, Name: n.Metadata.Name, Reason: ready.Reason, Message: ready.Message})
@@ -274,13 +245,11 @@ func nodeFindings(nodes []checkNodeObject, version string, now time.Time) []chec
 		if n.Spec.Unschedulable {
 			f := checkupFinding{Kind: findNodeCordoned, Severity: sevInfo, Name: n.Metadata.Name}
 
-			for _, t := range n.Spec.Taints {
-				if t.Key == taintUnschedulable && t.TimeAdded != nil {
-					f.Since = milli(*t.TimeAdded)
+			if since := n.cordonedSince(); since != nil {
+				f.Since = milli(*since)
 
-					if olderThan(*t.TimeAdded, now, cordonedLong) {
-						f.Severity = sevWarning
-					}
+				if olderThan(*since, now, cordonedLong) {
+					f.Severity = sevWarning
 				}
 			}
 

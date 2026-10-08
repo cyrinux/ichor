@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -657,5 +658,79 @@ func TestTalosImportAvoidsKubeNames(t *testing.T) {
 
 	if !strings.Contains(out, `"name":"`+name+`-1"`) || !strings.Contains(out, `"current":"`+name+`-1"`) {
 		t.Fatalf("merged %s", out)
+	}
+}
+
+// The one certificate decoder behind fingerprints, share links and the import preview.
+func TestPEMCertificateDER(t *testing.T) {
+	crt, _ := testClientCert(t, "alice", nil, time.Unix(2000000000, 0))
+
+	der := pemCertificateDER(crt)
+	if der == nil {
+		t.Fatal("a base64 PEM certificate decodes to nil")
+	}
+
+	if _, err := x509.ParseCertificate(der); err != nil {
+		t.Fatal(err)
+	}
+
+	// Re-encoded (headers, other line breaks) and padded with blanks: the same DER.
+	decoded, _ := base64.StdEncoding.DecodeString(crt)
+	block, _ := pem.Decode(decoded)
+	block.Headers = map[string]string{"Note": "re-encoded"}
+	again := " \n" + base64.StdEncoding.EncodeToString(pem.EncodeToMemory(block)) + "\n"
+
+	if !bytes.Equal(pemCertificateDER(again), der) {
+		t.Error("a re-encoded PEM gives another DER")
+	}
+
+	for _, bad := range []string{"", "not base64!", base64.StdEncoding.EncodeToString([]byte("hello"))} {
+		if pemCertificateDER(bad) != nil {
+			t.Errorf("%q decoded", bad)
+		}
+	}
+}
+
+// An export points the cluster at the address set for it, for a static user and for one that
+// signs in through an exec plugin (whose kubeconfig the client itself cannot read).
+func TestExportKubeContextForRewritesServer(t *testing.T) {
+	f := newFakeKubeAPI(t, nil)
+	static := f.kubeconfigFor(f.URL)
+	exec := strings.Replace(static, "token: secret-token",
+		`exec: {apiVersion: client.authentication.k8s.io/v1beta1, command: kubectl, args: [oidc-login, get-token, "--oidc-issuer-url=https://id.example.org", --oidc-client-id=k8s]}`, 1)
+
+	for name, added := range map[string]string{"static": static, "exec": exec} {
+		t.Run(name, func(t *testing.T) {
+			stored, err := MergeKubeconfig("", "", added, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			plain, err := ExportKubeContextFor(stored, "admin@test", "")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if same, err := ExportKubeContext(stored, "admin@test"); err != nil || same != plain {
+				t.Fatalf("without a server the two exports differ: %v", err)
+			}
+
+			out, err := ExportKubeContextFor(stored, "admin@test", "k8s.example.com:16443")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !strings.Contains(out, "server: https://k8s.example.com:16443") || !strings.Contains(out, "tls-server-name: "+f.Certificate().IPAddresses[0].String()) && !strings.Contains(out, "tls-server-name: 127.0.0.1") {
+				t.Fatalf("export:\n%s", out)
+			}
+
+			if name == "exec" && !strings.Contains(out, "oidc-login") {
+				t.Fatalf("the exec user was dropped:\n%s", out)
+			}
+
+			if name == "static" && !strings.Contains(out, "token: secret-token") {
+				t.Fatalf("the token was dropped:\n%s", out)
+			}
+		})
 	}
 }

@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"bytes"
+	"cmp"
 	"crypto/rand"
 	"encoding/csv"
 	"fmt"
@@ -67,13 +68,13 @@ func vulnScore(v imageVuln) float64 {
 }
 
 func sarifRule(v imageVuln) map[string]any {
-	short := cmpOr(v.Title, v.ID)
+	short := cmp.Or(v.Title, v.ID)
 
 	return map[string]any{
 		"id":                   v.ID,
 		"name":                 sarifRuleName(v),
 		"shortDescription":     map[string]string{"text": short},
-		"fullDescription":      map[string]string{"text": cmpOr(v.Description, short)},
+		"fullDescription":      map[string]string{"text": cmp.Or(v.Description, short)},
 		"defaultConfiguration": map[string]string{"level": sarifLevel(v.Severity)},
 		"helpUri":              v.URL,
 		"help": map[string]string{
@@ -148,7 +149,7 @@ func cycloneDXReport(report imageScanReport, now time.Time) map[string]any {
 		pkgRefs := map[string]bool{}
 
 		for _, v := range img.Vulnerabilities {
-			pkgRef := imageRef + ":" + cmpOr(v.PURL, v.Package+"@"+v.Installed)
+			pkgRef := imageRef + ":" + cmp.Or(v.PURL, v.Package+"@"+v.Installed)
 			if !pkgRefs[pkgRef] {
 				pkgRefs[pkgRef] = true
 				packages = append(packages, cycloneDXPackage(pkgRef, v))
@@ -189,7 +190,7 @@ func cycloneDXReport(report imageScanReport, now time.Time) map[string]any {
 func cycloneDXImage(ref string, img scannedImage, packages []map[string]any) map[string]any {
 	parsed := parseImageRef(img.Image)
 	c := map[string]any{
-		"bom-ref": ref, "type": "container", "name": parsed.Repo(), "version": cmpOr(img.Digest, parsed.Tag),
+		"bom-ref": ref, "type": "container", "name": parsed.Repo(), "version": cmp.Or(img.Digest, parsed.Tag),
 		"components": packages,
 	}
 

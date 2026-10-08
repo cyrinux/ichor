@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	"errors"
 	"io"
 	"strconv"
@@ -144,5 +145,5 @@ func (p *scanLogParser) outcome(pod netPerfPod) error {
 		}
 	}
 
-	return netPerfRefused("the Trivy pod stopped after %d of %d images: %s", p.ended, len(p.targets), cmpOr(reason, pod.Status.Phase))
+	return netPerfRefused("the Trivy pod stopped after %d of %d images: %s", p.ended, len(p.targets), cmp.Or(reason, pod.Status.Phase))
 }

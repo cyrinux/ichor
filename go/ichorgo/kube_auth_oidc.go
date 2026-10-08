@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
@@ -64,7 +65,7 @@ func newOIDCMethod(user *kubeStoreUser) (*oidcMethod, error) {
 		m.deviceCode = flagValue(args, "--grant-type") == "device-code"
 		m.useAccessToken = slices.Contains(args, "--oidc-use-access-token") || flagValue(args, "--oidc-use-access-token") == "true"
 		m.listen = flagValues(args, "--listen-address")
-		m.redirectHost = cmpOr(flagValue(args, "--oidc-redirect-url-hostname"), "localhost")
+		m.redirectHost = cmp.Or(flagValue(args, "--oidc-redirect-url-hostname"), "localhost")
 		caData = flagValue(args, "--certificate-authority-data")
 		m.tls.InsecureSkipVerify = slices.Contains(args, "--insecure-skip-tls-verify") //nolint:gosec // the user's own kubeconfig asks for it
 	} else {
@@ -301,9 +302,9 @@ func cmpOrInt(v, fallback int64) int64 {
 
 // session is the state a token answer leaves: refresh token kept unless a new one came.
 func (m *oidcMethod) session(state kubeAuthState, t oidcTokens, bearer string, expiry time.Time, claims oidcClaims) kubeAuthState {
-	refresh := cmpOr(t.RefreshToken, state.session("refresh"))
+	refresh := cmp.Or(t.RefreshToken, state.session("refresh"))
 	out := state.withSession(map[string]string{"refresh": refresh, "bearer": bearer, "bearerExpiry": strconv.FormatInt(expiry.Unix(), 10)})
-	out.User = cmpOr(claims.Email, claims.Username, claims.Subject, state.User)
+	out.User = cmp.Or(claims.Email, claims.Username, claims.Subject, state.User)
 
 	return out
 }
@@ -316,7 +317,7 @@ func (m *oidcMethod) mint(ctx context.Context, state kubeAuthState) (string, tim
 		}
 	}
 
-	refresh := cmpOr(state.session("refresh"), m.seedRefresh)
+	refresh := cmp.Or(state.session("refresh"), m.seedRefresh)
 	if refresh == "" {
 		return "", time.Time{}, state, signInRequired(m.method, "")
 	}
@@ -334,7 +335,7 @@ func (m *oidcMethod) mint(ctx context.Context, state kubeAuthState) (string, tim
 
 	if t.Error != "" {
 		// invalid_grant: the refresh token expired or was revoked.
-		return "", time.Time{}, state.withSession(map[string]string{"refresh": "", "bearer": ""}), signInRequired(m.method, cmpOr(t.Description, t.Error))
+		return "", time.Time{}, state.withSession(map[string]string{"refresh": "", "bearer": ""}), signInRequired(m.method, cmp.Or(t.Description, t.Error))
 	}
 
 	bearer, expiry, claims, err := m.bearer(t)
@@ -454,7 +455,7 @@ func (m *oidcMethod) browserSignIn(ctx context.Context, state kubeAuthState, d o
 	}
 
 	if e := answer.Get("error"); e != "" {
-		return state, fmt.Errorf("sign-in refused: %s", cmpOr(answer.Get("error_description"), e))
+		return state, fmt.Errorf("sign-in refused: %s", cmp.Or(answer.Get("error_description"), e))
 	}
 
 	if answer.Get("state") != oauthState {
@@ -473,7 +474,7 @@ func (m *oidcMethod) browserSignIn(ctx context.Context, state kubeAuthState, d o
 
 func (m *oidcMethod) finish(state kubeAuthState, t oidcTokens, nonce string) (kubeAuthState, error) {
 	if t.Error != "" {
-		return state, fmt.Errorf("sign-in refused: %s", cmpOr(t.Description, t.Error))
+		return state, fmt.Errorf("sign-in refused: %s", cmp.Or(t.Description, t.Error))
 	}
 
 	bearer, expiry, claims, err := m.bearer(t)
@@ -532,11 +533,11 @@ func (m *oidcMethod) deviceSignIn(ctx context.Context, state kubeAuthState, d oi
 	}
 
 	if a.Error != "" || a.DeviceCode == "" {
-		return state, fmt.Errorf("device code refused: %s", cmpOr(a.Description, a.Error, "no code"))
+		return state, fmt.Errorf("device code refused: %s", cmp.Or(a.Description, a.Error, "no code"))
 	}
 
-	verification := cmpOr(a.VerificationURI, a.VerificationURL)
-	prompt(signInPrompt{Kind: "device", URL: cmpOr(a.VerificationURIComplete, verification), UserCode: a.UserCode, VerificationURL: verification, ExpiresIn: a.ExpiresIn})
+	verification := cmp.Or(a.VerificationURI, a.VerificationURL)
+	prompt(signInPrompt{Kind: "device", URL: cmp.Or(a.VerificationURIComplete, verification), UserCode: a.UserCode, VerificationURL: verification, ExpiresIn: a.ExpiresIn})
 
 	t, err := pollDeviceToken(ctx, a, func(ctx context.Context) (oidcTokens, error) {
 		var t oidcTokens
@@ -580,7 +581,7 @@ func pollDeviceToken(ctx context.Context, a oidcDeviceAnswer, poll func(context.
 		case "slow_down":
 			interval += 5 * time.Second
 		default:
-			return oidcTokens{}, fmt.Errorf("sign-in refused: %s", cmpOr(t.Description, t.Error))
+			return oidcTokens{}, fmt.Errorf("sign-in refused: %s", cmp.Or(t.Description, t.Error))
 		}
 	}
 

@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -128,7 +129,7 @@ func podScanTargets(pod scanPod) []scanTarget {
 	var out []scanTarget
 
 	for _, c := range append(slices.Clone(pod.Spec.InitContainers), pod.Spec.Containers...) {
-		t := scanTarget{image: c.Image, ref: cmpOr(pulled[c.Name], c.Image)}
+		t := scanTarget{image: c.Image, ref: cmp.Or(pulled[c.Name], c.Image)}
 
 		_, t.digest, _ = strings.Cut(t.ref, "@")
 		if t.ref != "" && !slices.ContainsFunc(out, func(o scanTarget) bool { return o.ref == t.ref }) {

@@ -1,6 +1,9 @@
 package ichorgo
 
-import "slices"
+import (
+	"cmp"
+	"slices"
+)
 
 // Gateway API objects (gateway.networking.k8s.io/v1), the fields the app reads.
 
@@ -106,7 +109,7 @@ func httpRouteTargets(hr httpRouteObject, services map[serviceRef]bool) []routeT
 				continue
 			}
 
-			if services[serviceRef{orDefault(b.Namespace, hr.Metadata.Namespace), b.Name}] {
+			if services[serviceRef{cmp.Or(b.Namespace, hr.Metadata.Namespace), b.Name}] {
 				service = b.Name
 
 				break
@@ -147,7 +150,7 @@ func routeParents(hr httpRouteObject, gateways []gatewayObject) ([]gatewayListen
 			continue
 		}
 
-		ns := orDefault(ref.Namespace, hr.Metadata.Namespace)
+		ns := cmp.Or(ref.Namespace, hr.Metadata.Namespace)
 		i := slices.IndexFunc(gateways, func(g gatewayObject) bool {
 			return g.Metadata.Namespace == ns && g.Metadata.Name == ref.Name
 		})
@@ -227,12 +230,4 @@ func isCoreService(group, kind *string) bool {
 // isGatewayRef tells a parentRef to a Gateway, the default.
 func isGatewayRef(ref gatewayParentRef) bool {
 	return (ref.Group == nil || *ref.Group == "gateway.networking.k8s.io") && (ref.Kind == nil || *ref.Kind == "Gateway")
-}
-
-func orDefault(s, def string) string {
-	if s == "" {
-		return def
-	}
-
-	return s
 }

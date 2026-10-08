@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"encoding/json"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -50,8 +51,44 @@ func TestKubeDrainPlan(t *testing.T) {
 		t.Errorf("plan = %+v", plan)
 	}
 
-	if len(plan.Blockers)+len(plan.Warnings)+len(plan.Acknowledge) != 0 {
+	if len(plan.Blockers)+len(plan.Acknowledge) != 0 {
 		t.Errorf("a kube drain has no Talos checks: %+v", plan)
+	}
+
+	// The drain's own warnings, as the Talos maintenance plan gives them.
+	want := []string{
+		"PodDisruptionBudget db/pg-primary allows no disruption now: the drain waits for it",
+		"default/debug has no controller: once evicted it is not recreated",
+	}
+
+	if len(plan.Warnings) != len(want) {
+		t.Fatalf("warnings = %q", plan.Warnings)
+	}
+
+	for _, w := range want {
+		if !slices.Contains(plan.Warnings, w) {
+			t.Errorf("warnings %q lack %q", plan.Warnings, w)
+		}
+	}
+}
+
+// A kube node is named by its hostname: the demo plan still knows its role and static pods.
+func TestDemoKubeDrainPlanByHostname(t *testing.T) {
+	cp := demoKubeDrainPlan("demo-cp-1")
+	if !cp.ControlPlane || cp.Node != "demo-cp-1" || cp.KubeNode != "demo-cp-1" {
+		t.Errorf("control plane plan = %+v", cp)
+	}
+
+	if !slices.ContainsFunc(cp.Pods, func(p drainPod) bool { return p.Kind == drainStatic && p.Name == "kube-apiserver-demo-cp-1" }) {
+		t.Errorf("no static pod in %+v", cp.Pods)
+	}
+
+	if len(cp.Blockers)+len(cp.Acknowledge) != 0 || len(cp.Warnings) != 1 {
+		t.Errorf("a kube drain keeps the drain warnings only: %+v", cp)
+	}
+
+	if w := demoKubeDrainPlan("demo-worker-1"); w.ControlPlane {
+		t.Errorf("worker plan = %+v", w)
 	}
 }
 

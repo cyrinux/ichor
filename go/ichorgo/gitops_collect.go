@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"net/url"
@@ -218,7 +219,7 @@ func renderGitOpsPods(b *strings.Builder, pods []kubePod) {
 			break
 		}
 
-		fmt.Fprintf(b, "      pod %s/%s %s on %s, %d restarts\n", p.Namespace, p.Name, p.Status, orDefault(p.Node, "no node"), p.Restarts)
+		fmt.Fprintf(b, "      pod %s/%s %s on %s, %d restarts\n", p.Namespace, p.Name, p.Status, cmp.Or(p.Node, "no node"), p.Restarts)
 	}
 }
 

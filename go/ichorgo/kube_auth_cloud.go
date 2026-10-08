@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"crypto"
 	"crypto/rsa"
@@ -65,7 +66,7 @@ func cloudJSON(req *http.Request, out any) error {
 
 		_ = json.Unmarshal(data, &e) //nolint:errcheck
 
-		return &cloudHTTPError{status: resp.StatusCode, message: cmpOr(e.Description, e.Message, e.Error, http.StatusText(resp.StatusCode))}
+		return &cloudHTTPError{status: resp.StatusCode, message: cmp.Or(e.Description, e.Message, e.Error, http.StatusText(resp.StatusCode))}
 	}
 
 	return json.Unmarshal(data, out)

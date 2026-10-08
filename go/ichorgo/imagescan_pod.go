@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"cmp"
 	"context"
 	"crypto/rand"
 	"encoding/hex"
@@ -309,7 +310,7 @@ func trivyError(text string) string {
 
 	switch {
 	case reason == "":
-		return cmpOr(last, "Trivy failed without a message")
+		return cmp.Or(last, "Trivy failed without a message")
 	case last == "":
 		return reason
 	default:

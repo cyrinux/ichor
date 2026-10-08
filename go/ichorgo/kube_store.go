@@ -277,6 +277,23 @@ func kubeFingerprint(name string, cluster *kubeStoreCluster) string {
 	return letterHash(sha256.Sum256([]byte("kube\x00" + name + "\x00" + kubeClusterIdentity(cluster))))
 }
 
+// pemCertificateDER is the DER of the first PEM block in data, a base64 PEM as kubeconfigs and
+// talosconfigs carry certificates; nil when data is neither base64 nor PEM. A re-encoded PEM
+// (other line breaks, headers) gives the same bytes, so identities built on it stay stable.
+func pemCertificateDER(data string) []byte {
+	decoded, err := base64.StdEncoding.DecodeString(strings.TrimSpace(data))
+	if err != nil {
+		return nil
+	}
+
+	block, _ := pem.Decode(decoded)
+	if block == nil {
+		return nil
+	}
+
+	return block.Bytes
+}
+
 // kubeClusterID is the same for every context of a cluster: its CA certificate, else its server.
 func kubeClusterID(cluster *kubeStoreCluster) string {
 	return letterHash(sha256.Sum256([]byte(kubeClusterIdentity(cluster))))
@@ -288,10 +305,8 @@ func kubeClusterIdentity(cluster *kubeStoreCluster) string {
 	}
 
 	if data := cluster.Cluster.CertificateAuthorityData; data != "" {
-		if decoded, err := base64.StdEncoding.DecodeString(data); err == nil {
-			if block, _ := pem.Decode(decoded); block != nil {
-				return string(block.Bytes)
-			}
+		if der := pemCertificateDER(data); der != nil {
+			return string(der)
 		}
 
 		return data

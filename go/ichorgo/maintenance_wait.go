@@ -3,7 +3,6 @@ package ichorgo
 import (
 	"context"
 	"errors"
-	"net/url"
 	"time"
 
 	"github.com/siderolabs/talos/pkg/machinery/client"
@@ -31,32 +30,12 @@ func observeBack(ctx context.Context, c *client.Client, k *kubeClient, node, kub
 	return b
 }
 
-// kubeNodeReadySince tells whether the Kubernetes node is Ready with a heartbeat after since:
-// right after a fast reboot the Node object still says Ready from before it (Kubernetes
-// marks a node NotReady only after a grace period), while the restarted kubelet posts its
-// status, with a fresh heartbeat, as soon as it registers.
+// kubeNodeReadySince tells whether the Kubernetes node is Ready with a kubelet heartbeat after
+// since (kubeNodeObject.readySince); an unreadable node is not.
 func kubeNodeReadySince(ctx context.Context, k *kubeClient, kubeNode string, since time.Time) bool {
-	var obj struct {
-		Status struct {
-			Conditions []struct {
-				Type              string    `json:"type"`
-				Status            string    `json:"status"`
-				LastHeartbeatTime time.Time `json:"lastHeartbeatTime"`
-			} `json:"conditions"`
-		} `json:"status"`
-	}
+	obj, err := readKubeNodeObject(ctx, k, kubeNode)
 
-	if err := k.get(ctx, "/api/v1/nodes/"+url.PathEscape(kubeNode), &obj); err != nil {
-		return false
-	}
-
-	for _, c := range obj.Status.Conditions {
-		if c.Type == "Ready" {
-			return c.Status == "True" && c.LastHeartbeatTime.After(since)
-		}
-	}
-
-	return false
+	return err == nil && obj.readySince(since)
 }
 
 // waitBack polls until the node went down and came back running with its Kubernetes node

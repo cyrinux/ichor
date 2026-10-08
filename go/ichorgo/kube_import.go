@@ -1,10 +1,10 @@
 package ichorgo
 
 import (
+	"cmp"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"net/url"
@@ -227,17 +227,12 @@ func (s *kubeContextSummary) describeCredentials(u *kubeStoreUser) {
 }
 
 func firstCertificate(data string) *x509.Certificate {
-	decoded, err := base64.StdEncoding.DecodeString(data)
-	if err != nil {
+	der := pemCertificateDER(data)
+	if der == nil {
 		return nil
 	}
 
-	block, _ := pem.Decode(decoded)
-	if block == nil {
-		return nil
-	}
-
-	cert, err := x509.ParseCertificate(block.Bytes)
+	cert, err := x509.ParseCertificate(der)
 	if err != nil {
 		return nil
 	}
@@ -295,7 +290,7 @@ func kubeContextProblem(doc *kubeconfigDoc, name string, cluster *kubeStoreClust
 	switch method, _ := kubeAuthMethod(user); method {
 	case authCert:
 		if u.ClientCertificateData == "" || u.ClientKeyData == "" {
-			return KubeProblemFilePath, cmpOr(u.ClientCertificate, u.ClientKey)
+			return KubeProblemFilePath, cmp.Or(u.ClientCertificate, u.ClientKey)
 		}
 	case authToken:
 		if u.Token == "" {
@@ -332,16 +327,6 @@ func kubeContextProblem(doc *kubeconfigDoc, name string, cluster *kubeStoreClust
 	}
 
 	return "", ""
-}
-
-func cmpOr(values ...string) string {
-	for _, v := range values {
-		if v != "" {
-			return v
-		}
-	}
-
-	return ""
 }
 
 // KubeImportConflicts is ImportConflicts for a kubeconfig: the contexts of addedYAML named
@@ -612,5 +597,38 @@ func ExportKubeContext(storedYAML, contextName string) (out string, err error) {
 
 	contextName = unmaskContext(storedYAML, contextName)
 
-	return kubeContextYAML(storedYAML, contextName)
+	return exportKubeContext(storedYAML, contextName, "")
+}
+
+// ExportKubeContextFor is ExportKubeContext with the cluster pointed at kubeServer (the API
+// address set for the cluster, see KubePods; "" for the kubeconfig's own), like Kubeconfig
+// does for a Talos cluster, so the file works from where the app does.
+func ExportKubeContextFor(storedYAML, contextName, kubeServer string) (out string, err error) {
+	defer maskErr(&err)
+
+	contextName = unmaskContext(storedYAML, contextName)
+
+	return exportKubeContext(storedYAML, contextName, kubeServer)
+}
+
+func exportKubeContext(storedYAML, contextName, kubeServer string) (string, error) {
+	kubeconfig, err := kubeContextYAML(storedYAML, contextName)
+	if err != nil {
+		return "", err
+	}
+
+	if strings.TrimSpace(kubeServer) == "" {
+		return kubeconfig, nil
+	}
+
+	// A sign-in user (exec, auth-provider) is not one the client reads: the address is
+	// computed from the same context with a placeholder user, and written to the real one.
+	parseable := kubeconfig
+	if _, perr := parseKubeconfig(kubeconfig); perr != nil {
+		if parseable, err = kubeContextYAMLWithoutUser(storedYAML, contextName); err != nil {
+			return "", err
+		}
+	}
+
+	return rewriteKubeServer(kubeconfig, parseable, kubeServer)
 }

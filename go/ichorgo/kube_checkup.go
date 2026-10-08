@@ -116,7 +116,7 @@ type checkupInput struct {
 	groups   map[string]string
 	pods     []checkPod
 	podsErr  error
-	nodes    []checkNodeObject
+	nodes    []kubeNodeObject
 	nodesErr error
 	pvcs     []pvcObject
 	pvcsErr  error
@@ -138,7 +138,7 @@ func readCheckup(ctx context.Context, k *kubeClient, now time.Time) (checkupRepo
 	)
 
 	wg.Go(func() { in.pods, in.podsErr = listCheckPods(ctx, k) })
-	wg.Go(func() { in.nodes, in.nodesErr = listObjects[checkNodeObject](ctx, k, "/api/v1/nodes") })
+	wg.Go(func() { in.nodes, in.nodesErr = listKubeNodeObjects(ctx, k) })
 	wg.Go(func() { in.pvcs, in.pvcsErr = listObjects[pvcObject](ctx, k, "/api/v1/persistentvolumeclaims") })
 	wg.Go(func() { version = readAPIVersion(ctx, k) })
 	wg.Wait()

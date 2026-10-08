@@ -147,11 +147,11 @@ func checkupStorage(ctx context.Context, k *kubeClient, in checkupInput) (checku
 
 // readVolumeUse asks every ready node's kubelet for its volumes' fill level, keyed
 // "namespace/claim". A kubelet that does not answer leaves its volumes unmeasured.
-func readVolumeUse(ctx context.Context, k *kubeClient, nodes []checkNodeObject) map[string]volumeUse {
-	ready := slices.DeleteFunc(slices.Clone(nodes), func(n checkNodeObject) bool { return !kubeConditions(n.Status.Conditions).is("Ready") })
+func readVolumeUse(ctx context.Context, k *kubeClient, nodes []kubeNodeObject) map[string]volumeUse {
+	ready := slices.DeleteFunc(slices.Clone(nodes), func(n kubeNodeObject) bool { return !n.ready() })
 	summaries := make([]kubeletSummary, len(ready))
 
-	forEachLimit(ready, kubeletStatsParallel, func(i int, n checkNodeObject) {
+	forEachLimit(ready, kubeletStatsParallel, func(i int, n kubeNodeObject) {
 		nodeCtx, cancel := context.WithTimeout(ctx, kubeletStatsTimeout)
 		defer cancel()
 

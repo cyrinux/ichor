@@ -143,7 +143,14 @@ func withKubeServer(kubeconfig, server string) (string, error) {
 		return kubeconfig, nil
 	}
 
-	creds, err := parseKubeconfig(kubeconfig)
+	return rewriteKubeServer(kubeconfig, kubeconfig, server)
+}
+
+// rewriteKubeServer points kubeconfig's current cluster at server. parseable is the same
+// kubeconfig with a user the client reads (kubeconfig itself, unless its user signs in
+// through an exec plugin): the address and TLS server name are computed from it.
+func rewriteKubeServer(kubeconfig, parseable, server string) (string, error) {
+	creds, err := parseKubeconfig(parseable)
 	if err != nil {
 		return "", err
 	}
