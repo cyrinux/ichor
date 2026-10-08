@@ -148,3 +148,40 @@ class AlertsTest {
         assertEquals(listOf("cert"), evaluate(snap("a" to READY), snap("a" to READY, cert = in7Days), now).alerts.map { it.key })
     }
 }
+
+class KubeAlertsTest {
+
+    private val now = 1_800_000_000_000L
+
+    private fun kubeSnap(vararg nodes: Pair<String, NodeHealth>, cert: Long, lastWarn: Long = -1) = ClusterSnapshot(
+        context = "eks",
+        takenAt = now,
+        nodes = nodes.associate { (name, h) -> name to NodeState(name, h, if (h == READY) "" else "MemoryPressure") },
+        certNotAfter = cert,
+        lastCertWarnDay = lastWarn,
+        kube = true,
+    )
+
+    @Test
+    fun expiringKubeconfigCredentialsAreWordedForAKubeconfig() {
+        val soon = now / 1000 + 3 * 86_400
+        val alerts = evaluate(null, kubeSnap("a" to READY, cert = soon), now).alerts
+        assertEquals(listOf("cert"), alerts.map { it.key })
+        assertEquals(AlertKind.KUBECONFIG_EXPIRING, alerts.single().kind)
+        assertEquals(3, alerts.single().days)
+        val expired = evaluate(null, kubeSnap("a" to READY, cert = now / 1000 - 2 * 86_400), now).alerts.single()
+        assertEquals(AlertKind.KUBECONFIG_EXPIRED, expired.kind)
+        assertEquals(2, expired.days)
+    }
+
+    @Test
+    fun nodeTransitionsAlertWithoutEtcd() {
+        val far = now / 1000 + 365L * 86_400
+        val prev = kubeSnap("a" to READY, "b" to NOT_READY, cert = far)
+        val cur = kubeSnap("a" to NOT_READY, "b" to READY, cert = far)
+        val result = evaluate(prev, cur, now)
+        assertEquals(listOf(AlertKind.NODE_NOT_READY, AlertKind.NODE_READY), result.alerts.map { it.kind })
+        assertEquals("MemoryPressure", result.alerts[0].detail)
+        assertTrue(result.next.kube)
+    }
+}

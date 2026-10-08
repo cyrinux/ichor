@@ -183,6 +183,7 @@ fun OverviewScreen(
                 onNetworkPolicies = onNetworkPolicies,
                 onArgoCD = onArgoCD,
                 onFlux = onFlux,
+                onDataServices = onDataServices,
                 onSettings = onSettings,
                 onFunding = onFunding,
                 onAddCluster = onAddCluster,
@@ -420,10 +421,12 @@ fun OverviewScreen(
                 onDismiss = { showDiscovered = false },
             )
         }
-        if (customizing) OverviewEditor(
+        if (customizing) HomeEditor(
             layout = layout,
             onChange = app.uiPreferences::setOverviewLayout,
+            look = overviewCardLook,
             bar = bar,
+            barLook = overviewActionLook,
             onBarChange = app.uiPreferences::setOverviewBar,
             modifier = Modifier.pageContent(padding),
             absent = absentCards,

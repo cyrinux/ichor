@@ -76,8 +76,8 @@ enum BackgroundMonitor {
         try? BGTaskScheduler.shared.submit(request)
     }
 
-    /// One check: overview + etcd, diffed with the previous snapshot. Silent if the cluster
-    /// is unreachable as a whole (e.g. off VPN).
+    /// One check: overview + etcd (a cluster added from a kubeconfig: its Kubernetes node list),
+    /// diffed with the previous snapshot. Silent if the cluster is unreachable as a whole (e.g. off VPN).
     static func check() async {
         TalosClient.applyStoredPrivacyMask() // also set at launch; keeps this path self-contained
         // Both stores, as the app lists them: the saved position counts kubeconfig clusters too.
@@ -86,14 +86,14 @@ enum BackgroundMonitor {
         guard parsed.unreadable.isEmpty, let summary = ConfigSummary.combined(talos: parsed.talos, kube: parsed.kube) else { return }
         let contextName = summary.selectedContext(index: AppModel.savedContextIndex, name: UserDefaults.standard.string(forKey: "activeContext"))
         let context = summary.context(named: contextName)
-        // The checks start from the Talos overview: a cluster added from a kubeconfig has none.
-        // The widget stops showing the Talos cluster checked before (Android's clearSnapshot).
-        // Nor has a Talos cluster without an endpoint yet.
-        if context?.isKube == true || context?.needsEndpoint == true {
+        // A Talos cluster without an endpoint yet cannot be checked: the widget stops showing the
+        // cluster checked before (Android's clearSnapshot).
+        if context?.needsEndpoint == true {
             if SharedStore.snapshot() != nil { SharedStore.save(nil) }
             return
         }
-        guard let yaml = stored.talos else { return }
+        let kube = context?.isKube == true
+        guard let yaml = kube ? stored.kube : stored.talos else { return }
         // A VPN-only cluster waits for its VPN: without it the check could only time out.
         let vpnOnly = Set(UserDefaults.standard.stringArray(forKey: "vpnOnlyClusters") ?? [])
         if let fingerprint = context?.fingerprint, vpnOnly.contains(fingerprint) {
@@ -105,14 +105,25 @@ enum BackgroundMonitor {
         // And its Kubernetes access: a linked kubeconfig cluster (K5). A sign-in it needs is never
         // started from here: its calls fail and the app asks the user to sign in.
         let links = UserDefaults.standard.dictionary(forKey: "kubeAccess") as? [String: String] ?? [:]
-        let link = stored.kube.flatMap { kube in
+        let link = kube ? nil : stored.kube.flatMap { kube in
             kubeAccessContext(of: context, links: links, kubeContexts: parsed.kube?.contexts ?? []).map { KubeLink(config: kube, context: $0) }
         }
         let client = TalosClient(config: yaml, context: contextName, kubeServer: context.flatMap { servers[$0.fingerprint] } ?? "",
                                  kubeLink: link)
         let kubeAllowed = context?.allows(.workloads, kubeLinked: link != nil) == true
-        guard let overview = try? await client.overview() else { return }
-        let etcd = try? await client.etcd()
+        // The Talos overview, or the Kubernetes node list of a cluster added from a kubeconfig.
+        // Unreadable (off VPN, a sign-in needed): nothing to compare, the previous snapshot stays.
+        var overview: ClusterOverview?
+        var kubeNodes: KubeNodesOverview?
+        if kube {
+            guard let nodes = try? await client.kubeNodes() else { return }
+            kubeNodes = nodes
+        } else {
+            guard let read = try? await client.overview() else { return }
+            overview = read
+        }
+        var etcd: EtcdOverview?
+        if !kube { etcd = try? await client.etcd() }
         // Opt-in, and only for roles that may use the Kubernetes API: each check then lists custom
         // resources and runs the Garage CLI in a pod.
         let watchData = dataServicesWatched && kubeAllowed
@@ -120,17 +131,27 @@ enum BackgroundMonitor {
         // Same gate for Argo CD and Flux apps, read through their custom resources.
         let watchGitOps = gitopsWatched && kubeAllowed
         let previous = SharedStore.snapshot()
-        let known = knownGitOpsIssues(previous, context: overview.context)
+        let known = knownGitOpsIssues(previous, context: contextName)
         let gitopsIssues = watchGitOps ? await readGitOps(client, known: known) : nil
         // And for the checkup: it lists the cluster's pods and asks every kubelet.
         let watchCheckup = checkupWatched && kubeAllowed
-        let knownCheckup = knownCheckupIssues(previous, context: overview.context)
+        let knownCheckup = knownCheckupIssues(previous, context: contextName)
         let checkupIssues = watchCheckup ? await readCheckup(client, known: knownCheckup) : nil
         let now = Date()
-        let current = snapshotOf(overview, etcd: etcd, certNotAfter: context?.certNotAfter ?? 0, takenAt: now,
+        let current: ClusterSnapshot
+        if let kubeNodes {
+            current = kubeSnapshotOf(kubeNodes, context: contextName, certNotAfter: context?.certNotAfter ?? 0, takenAt: now,
+                                     dataWatched: watchData, dataServices: dataServices,
+                                     gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
+                                     checkupWatched: watchCheckup, checkupIssues: checkupIssues)
+        } else if let overview {
+            current = snapshotOf(overview, etcd: etcd, certNotAfter: context?.certNotAfter ?? 0, takenAt: now,
                                  dataWatched: watchData, dataServices: dataServices,
                                  gitopsWatched: watchGitOps, gitopsIssues: gitopsIssues,
                                  checkupWatched: watchCheckup, checkupIssues: checkupIssues)
+        } else {
+            return
+        }
         let result = evaluate(previous: previous, current: current, now: now)
         SharedStore.save(result.next)
         guard alertsEnabled else { return }
@@ -176,6 +197,12 @@ enum BackgroundMonitor {
             return (String(localized: "etcd alarm raised"), text)
         case "cert":
             let days = daysUntil(snapshot.certNotAfter, now: now)
+            if snapshot.kube {
+                let text = days < 0
+                    ? String(localized: "The kubeconfig credentials expired \(-days) days ago.")
+                    : String(localized: "The kubeconfig credentials expire in \(days) days. Import a new kubeconfig.")
+                return (String(localized: "kubeconfig credentials"), text)
+            }
             let text = days < 0
                 ? String(localized: "The client certificate expired \(-days) days ago.")
                 : String(localized: "The client certificate expires in \(days) days. Generate a new talosconfig.")

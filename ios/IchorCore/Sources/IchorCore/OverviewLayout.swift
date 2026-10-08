@@ -1,8 +1,18 @@
 import Foundation
 
-/// The overview's sections that can be moved and hidden; banners and notices stay on top.
-/// Raw values are Android's `OverviewCard` names, so the saved form reads the same on both.
-public enum OverviewCard: String, CaseIterable, Sendable, Hashable, Identifiable {
+/// A home screen's section that can be moved and hidden; banners and notices stay on top. Raw
+/// values are Android's enum names, so the saved form reads the same on both.
+public protocol HomeCard: RawRepresentable, CaseIterable, Sendable, Hashable, Identifiable where RawValue == String, AllCases == [Self] {
+    /// The `@AppStorage` key the home's encoded layout is kept under.
+    static var layoutStorageKey: String { get }
+    /// Only shown when the cluster has what it reports on.
+    var whenDetected: Bool { get }
+    /// Was pinned above the sections before it could be arranged: a layout saved then keeps it first.
+    var leadsWhenNew: Bool { get }
+}
+
+/// The Talos overview's sections. Raw values are Android's `OverviewCard` names.
+public enum OverviewCard: String, HomeCard {
     case talosUpdate = "TALOS_UPDATE"
     case summary = "SUMMARY"
     case apps = "APPS"
@@ -13,68 +23,86 @@ public enum OverviewCard: String, CaseIterable, Sendable, Hashable, Identifiable
     case timeDrift = "TIME_DRIFT"
 
     public var id: String { rawValue }
+    public static let layoutStorageKey = "overview.layout"
 
-    /// Only shown when the cluster has what they report on.
     public var whenDetected: Bool { self == .dataServices || self == .argoCD || self == .flux }
 
-    /// Was pinned above the sections before it could be arranged: a layout saved then keeps it first.
     public var leadsWhenNew: Bool { self == .talosUpdate }
 }
 
-/// The overview's sections in the order chosen, and those hidden. Every section is in `order`
+/// The sections of the Kubernetes home (a cluster added from a kubeconfig): the API server and
+/// the credentials, the nodes as Kubernetes lists them, the Kubernetes screens, and the operators
+/// found on the cluster. Raw values are Android's `KubeHomeCard` names.
+public enum KubeHomeCard: String, HomeCard {
+    case summary = "SUMMARY"
+    case nodes = "NODES"
+    case tools = "TOOLS"
+    case dataServices = "DATA_SERVICES"
+    case argoCD = "ARGO_CD"
+    case flux = "FLUX"
+
+    public var id: String { rawValue }
+    public static let layoutStorageKey = "kubeHome.layout"
+
+    public var whenDetected: Bool { self == .dataServices || self == .argoCD || self == .flux }
+
+    public var leadsWhenNew: Bool { false }
+}
+
+/// A home's sections in the order chosen, and those hidden. Every section is in `order`
 /// exactly once, so one added by a later release shows up (last, or first when it `leadsWhenNew`)
-/// without touching the saved layout. Same rules and saved form as Android's `OverviewLayout`; one layout for every cluster.
-public struct OverviewLayout: Equatable, Sendable {
+/// without touching the saved layout. Same rules and saved form as Android's `CardLayout`; one layout for every cluster.
+public struct CardLayout<Card: HomeCard>: Equatable, Sendable {
     /// The `@AppStorage` key the encoded layout is kept under.
-    public static let storageKey = "overview.layout"
+    public static var storageKey: String { Card.layoutStorageKey }
 
-    public let order: [OverviewCard]
-    public let hidden: Set<OverviewCard>
+    public let order: [Card]
+    public let hidden: Set<Card>
 
-    public init(order: [OverviewCard] = OverviewCard.allCases, hidden: Set<OverviewCard> = []) {
+    public init(order: [Card] = Card.allCases, hidden: Set<Card> = []) {
         self.order = order
         self.hidden = hidden
     }
 
-    public var visible: [OverviewCard] { order.filter { !hidden.contains($0) } }
-    public var hiddenCards: [OverviewCard] { order.filter { hidden.contains($0) } }
-    public var isDefault: Bool { self == OverviewLayout() }
+    public var visible: [Card] { order.filter { !hidden.contains($0) } }
+    public var hiddenCards: [Card] { order.filter { hidden.contains($0) } }
+    public var isDefault: Bool { self == CardLayout() }
 
     /// Moves the shown section at `from` to `to`, both indices in `visible`. Out of range: unchanged.
-    public func move(from: Int, to: Int) -> OverviewLayout {
+    public func move(from: Int, to: Int) -> CardLayout {
         let shown = visible
         guard shown.indices.contains(from), shown.indices.contains(to), from != to else { return self }
         var moved = shown
         moved.insert(moved.remove(at: from), at: to)
-        return OverviewLayout(order: moved + hiddenCards, hidden: hidden)
+        return CardLayout(order: moved + hiddenCards, hidden: hidden)
     }
 
     /// `visible` without the sections the cluster lacks (`absent`): what the editor offers to arrange.
-    public func visible(absent: Set<OverviewCard>) -> [OverviewCard] { visible.filter { !absent.contains($0) } }
+    public func visible(absent: Set<Card>) -> [Card] { visible.filter { !absent.contains($0) } }
 
     /// `hiddenCards` without the sections the cluster lacks (`absent`).
-    public func hiddenCards(absent: Set<OverviewCard>) -> [OverviewCard] { hiddenCards.filter { !absent.contains($0) } }
+    public func hiddenCards(absent: Set<Card>) -> [Card] { hiddenCards.filter { !absent.contains($0) } }
 
     /// The same as a SwiftUI `onMove` over `visible(absent:)`; absent sections keep their place,
     /// for clusters that have them. No actual move: unchanged.
-    public func moving(fromOffsets source: IndexSet, toOffset destination: Int, absent: Set<OverviewCard> = []) -> OverviewLayout {
+    public func moving(fromOffsets source: IndexSet, toOffset destination: Int, absent: Set<Card> = []) -> CardLayout {
         let shown = visible(absent: absent)
         let moved = movedElements(shown, fromOffsets: source, toOffset: destination)
         guard moved != shown else { return self }
         var next = moved.makeIterator()
         let order = visible.map { absent.contains($0) ? $0 : next.next()! }
-        return OverviewLayout(order: order + hiddenCards, hidden: hidden)
+        return CardLayout(order: order + hiddenCards, hidden: hidden)
     }
 
-    public func hiding(_ card: OverviewCard) -> OverviewLayout {
-        OverviewLayout(order: order, hidden: hidden.union([card]))
+    public func hiding(_ card: Card) -> CardLayout {
+        CardLayout(order: order, hidden: hidden.union([card]))
     }
 
     /// Shows `card` again, after the sections already shown.
-    public func showing(_ card: OverviewCard) -> OverviewLayout {
+    public func showing(_ card: Card) -> CardLayout {
         guard hidden.contains(card) else { return self }
         let rest = hidden.subtracting([card])
-        return OverviewLayout(order: visible + [card] + order.filter { rest.contains($0) }, hidden: rest)
+        return CardLayout(order: visible + [card] + order.filter { rest.contains($0) }, hidden: rest)
     }
 
     /// "SUMMARY,-APPS,NODES": the order, a dash before hidden sections.
@@ -83,22 +111,28 @@ public struct OverviewLayout: Equatable, Sendable {
     }
 
     /// Reads `encoded`'s form; unknown or repeated names are skipped, missing sections added.
-    public static func parse(_ text: String?) -> OverviewLayout {
-        guard let text, !text.trimmingCharacters(in: .whitespaces).isEmpty else { return OverviewLayout() }
-        var known: [OverviewCard] = []
-        var hidden: Set<OverviewCard> = []
+    public static func parse(_ text: String?) -> CardLayout {
+        guard let text, !text.trimmingCharacters(in: .whitespaces).isEmpty else { return CardLayout() }
+        var known: [Card] = []
+        var hidden: Set<Card> = []
         for raw in text.split(separator: ",", omittingEmptySubsequences: false) {
             let name = raw.trimmingCharacters(in: .whitespaces)
             let isHidden = name.hasPrefix("-")
-            guard let card = OverviewCard(rawValue: isHidden ? String(name.dropFirst()) : name),
+            guard let card = Card(rawValue: isHidden ? String(name.dropFirst()) : name),
                   !known.contains(card) else { continue }
             known.append(card)
             if isHidden { hidden.insert(card) }
         }
-        let missing = OverviewCard.allCases.filter { !known.contains($0) }
-        return OverviewLayout(order: missing.filter(\.leadsWhenNew) + known + missing.filter { !$0.leadsWhenNew }, hidden: hidden)
+        let missing = Card.allCases.filter { !known.contains($0) }
+        return CardLayout(order: missing.filter(\.leadsWhenNew) + known + missing.filter { !$0.leadsWhenNew }, hidden: hidden)
     }
 }
+
+/// The Talos overview's sections as arranged.
+public typealias OverviewLayout = CardLayout<OverviewCard>
+
+/// The Kubernetes home's sections as arranged.
+public typealias KubeHomeLayout = CardLayout<KubeHomeCard>
 
 /// `items` after moving those at `source` before the element at `destination` (SwiftUI's
 /// `move(fromOffsets:toOffset:)`, which is not available outside SwiftUI). Offsets out of range are ignored.

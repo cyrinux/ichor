@@ -524,6 +524,19 @@
         <item quantity="many">Термін дії клієнтського сертифіката закінчується через %1$d днів. Згенеруйте новий talosconfig.</item>
         <item quantity="other">Термін дії клієнтського сертифіката закінчується через %1$d дня. Згенеруйте новий talosconfig.</item>
     </plurals>
+    <string name="monitor_kubeconfig_title">Облікові дані kubeconfig</string>
+    <plurals name="monitor_kubeconfig_expired">
+        <item quantity="one">Термін дії облікових даних kubeconfig закінчився %1$d день тому.</item>
+        <item quantity="few">Термін дії облікових даних kubeconfig закінчився %1$d дні тому.</item>
+        <item quantity="many">Термін дії облікових даних kubeconfig закінчився %1$d днів тому.</item>
+        <item quantity="other">Термін дії облікових даних kubeconfig закінчився %1$d дня тому.</item>
+    </plurals>
+    <plurals name="monitor_kubeconfig_expires">
+        <item quantity="one">Термін дії облікових даних kubeconfig закінчується через %1$d день. Імпортуйте новий kubeconfig.</item>
+        <item quantity="few">Термін дії облікових даних kubeconfig закінчується через %1$d дні. Імпортуйте новий kubeconfig.</item>
+        <item quantity="many">Термін дії облікових даних kubeconfig закінчується через %1$d днів. Імпортуйте новий kubeconfig.</item>
+        <item quantity="other">Термін дії облікових даних kubeconfig закінчується через %1$d дня. Імпортуйте новий kubeconfig.</item>
+    </plurals>
 
     <!-- Updates -->
     <string name="update_section">Оновлення</string>
@@ -3126,6 +3139,11 @@
     <string name="kube_home_version">Kubernetes %1$s</string>
     <string name="kube_home_nodes_forbidden">Ці облікові дані не можуть переглядати список вузлів. Інші екрани Kubernetes працюють у межах їхніх дозволів.</string>
     <string name="kube_home_no_nodes">Немає вузлів.</string>
+    <string name="kube_home_edit_title">Налаштувати головний екран</string>
+    <string name="kube_home_card_tools">Екрани Kubernetes</string>
+    <string name="kube_home_card_desc_summary">Сервер API, версія Kubernetes, готові вузли та кому належать облікові дані</string>
+    <string name="kube_home_card_desc_nodes">Кожен вузол, як його перелічує Kubernetes, із cordon і тиском</string>
+    <string name="kube_home_card_desc_tools">Кнопки до екранів Kubernetes, доступних цим обліковим даним</string>
     <string name="kube_node_cordoned">Ізольовано (cordon)</string>
     <string name="kube_node_pool_karpenter">Пул Karpenter %1$s</string>
     <string name="kube_node_pool_eks">Група вузлів EKS %1$s</string>

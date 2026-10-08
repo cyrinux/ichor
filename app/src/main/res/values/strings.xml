@@ -468,6 +468,15 @@
         <item quantity="one">The client certificate expires in %1$d day. Generate a new talosconfig.</item>
         <item quantity="other">The client certificate expires in %1$d days. Generate a new talosconfig.</item>
     </plurals>
+    <string name="monitor_kubeconfig_title">kubeconfig credentials</string>
+    <plurals name="monitor_kubeconfig_expired">
+        <item quantity="one">The kubeconfig credentials expired %1$d day ago.</item>
+        <item quantity="other">The kubeconfig credentials expired %1$d days ago.</item>
+    </plurals>
+    <plurals name="monitor_kubeconfig_expires">
+        <item quantity="one">The kubeconfig credentials expire in %1$d day. Import a new kubeconfig.</item>
+        <item quantity="other">The kubeconfig credentials expire in %1$d days. Import a new kubeconfig.</item>
+    </plurals>
 
     <!-- Updates -->
     <string name="update_section">Updates</string>
@@ -2924,6 +2933,11 @@
     <string name="kube_home_version">Kubernetes %1$s</string>
     <string name="kube_home_nodes_forbidden">These credentials cannot list nodes. The other Kubernetes screens still work, within what they allow.</string>
     <string name="kube_home_no_nodes">No nodes.</string>
+    <string name="kube_home_edit_title">Customize home</string>
+    <string name="kube_home_card_tools">Kubernetes screens</string>
+    <string name="kube_home_card_desc_summary">API server, Kubernetes version, nodes ready and who the credentials are</string>
+    <string name="kube_home_card_desc_nodes">Every node as Kubernetes lists it, with cordons and pressure</string>
+    <string name="kube_home_card_desc_tools">Buttons to the Kubernetes screens these credentials can use</string>
     <string name="kube_node_cordoned">Cordoned</string>
     <string name="kube_node_pool_karpenter">Karpenter pool %1$s</string>
     <string name="kube_node_pool_eks">EKS node group %1$s</string>

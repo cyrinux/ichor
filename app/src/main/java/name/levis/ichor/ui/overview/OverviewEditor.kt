@@ -48,9 +48,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import name.levis.ichor.R
+import name.levis.ichor.model.ActionBar
+import name.levis.ichor.model.CardLayout
+import name.levis.ichor.model.HomeCard
+import name.levis.ichor.model.KubeHomeCard
 import name.levis.ichor.model.OverviewCard
-import name.levis.ichor.model.OverviewBar
-import name.levis.ichor.model.OverviewLayout
+import name.levis.ichor.ui.components.ActionLook
 import name.levis.ichor.ui.components.BarDragState
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
@@ -97,6 +100,9 @@ fun rememberCustomizeTrigger(onCustomize: () -> Unit): () -> Unit {
     }
 }
 
+/** How a home's cards are named in the editor: a label and one line on what the card shows. */
+class CardLook<C>(val label: @Composable (C) -> String, val description: @Composable (C) -> String) where C : Enum<C>, C : HomeCard
+
 @Composable
 fun overviewCardLabel(card: OverviewCard): String = stringResource(
     when (card) {
@@ -126,20 +132,54 @@ fun overviewCardDescription(card: OverviewCard): String = stringResource(
     },
 )
 
+/** The Talos overview's cards in the editor. */
+val overviewCardLook = CardLook<OverviewCard>({ overviewCardLabel(it) }, { overviewCardDescription(it) })
+
+/** The Kubernetes home's cards in the editor. */
+val kubeHomeCardLook = CardLook<KubeHomeCard>(
+    label = {
+        stringResource(
+            when (it) {
+                KubeHomeCard.SUMMARY -> R.string.overview_card_summary
+                KubeHomeCard.NODES -> R.string.overview_stat_nodes
+                KubeHomeCard.TOOLS -> R.string.kube_home_card_tools
+                KubeHomeCard.DATA_SERVICES -> R.string.data_services_title
+                KubeHomeCard.ARGO_CD -> R.string.argo_card_title
+                KubeHomeCard.FLUX -> R.string.flux_title
+            },
+        )
+    },
+    description = {
+        stringResource(
+            when (it) {
+                KubeHomeCard.SUMMARY -> R.string.kube_home_card_desc_summary
+                KubeHomeCard.NODES -> R.string.kube_home_card_desc_nodes
+                KubeHomeCard.TOOLS -> R.string.kube_home_card_desc_tools
+                KubeHomeCard.DATA_SERVICES -> R.string.overview_card_desc_data_services
+                KubeHomeCard.ARGO_CD -> R.string.overview_card_desc_argo_cd
+                KubeHomeCard.FLUX -> R.string.overview_card_desc_flux
+            },
+        )
+    },
+)
+
 /**
- * The overview's app bar and cards to arrange. Cards: drag a shown card by its handle to move it,
- * hide it, or add a hidden one back (at the end). Cards the cluster lacks ([absent]: no Argo CD,
- * no Flux...) are not offered. Every change is applied at once through [onChange] and [onBarChange].
+ * A home's app bar and cards to arrange (the Talos overview's, the Kubernetes home's). Cards: drag
+ * a shown card by its handle to move it, hide it, or add a hidden one back (at the end). Cards the
+ * cluster lacks ([absent]: no Argo CD, no Flux...) are not offered. Every change is applied at once
+ * through [onChange] and [onBarChange].
  */
 @Composable
-fun OverviewEditor(
-    layout: OverviewLayout,
-    onChange: (OverviewLayout) -> Unit,
-    bar: OverviewBar,
-    onBarChange: (OverviewBar) -> Unit,
+fun <C, A : Enum<A>> HomeEditor(
+    layout: CardLayout<C>,
+    onChange: (CardLayout<C>) -> Unit,
+    look: CardLook<C>,
+    bar: ActionBar<A>,
+    barLook: ActionLook<A>,
+    onBarChange: (ActionBar<A>) -> Unit,
     modifier: Modifier = Modifier,
-    absent: Set<OverviewCard> = emptySet(),
-) {
+    absent: Set<C> = emptySet(),
+) where C : Enum<C>, C : HomeCard {
     val current by rememberUpdatedState(layout)
     val currentAbsent by rememberUpdatedState(absent)
     val shownCards = layout.visible(absent)
@@ -148,13 +188,13 @@ fun OverviewEditor(
     val currentBar by rememberUpdatedState(bar)
     val changeBar by rememberUpdatedState(onBarChange)
     val barDrag = remember { BarDragState() }
-    var dragged by remember { mutableStateOf<OverviewCard?>(null) }
+    var dragged by remember { mutableStateOf<C?>(null) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
     // Row heights, to know when the dragged card passed its neighbour's middle.
-    val heights = remember { mutableStateMapOf<OverviewCard, Int>() }
+    val heights = remember { mutableStateMapOf<C, Int>() }
     val spacing = with(LocalDensity.current) { ROW_SPACING.toPx() }
 
-    fun dragBy(card: OverviewCard, delta: Float) {
+    fun dragBy(card: C, delta: Float) {
         dragOffset += delta
         val shown = current.visible(currentAbsent)
         val index = shown.indexOf(card)
@@ -179,7 +219,7 @@ fun OverviewEditor(
         verticalArrangement = Arrangement.spacedBy(ROW_SPACING),
         modifier = modifier.fillMaxSize(),
     ) {
-        actionBarItems(bar, overviewActionLook, { currentBar }, { changeBar(it) }, barDrag, spacing)
+        actionBarItems(bar, barLook, { currentBar }, { changeBar(it) }, barDrag, spacing)
         item(key = "hint") {
             SectionTitle(stringResource(R.string.overview_edit_cards), stringResource(R.string.overview_edit_hint), Modifier.padding(top = 16.dp))
         }
@@ -189,6 +229,7 @@ fun OverviewEditor(
             val moveDown = stringResource(R.string.overview_edit_move_down)
             ShownCardRow(
                 card = card,
+                look = look,
                 onHide = { change(current.hide(card)) },
                 handle = Modifier.pointerInput(card) {
                     detectVerticalDragGestures(
@@ -227,24 +268,25 @@ fun OverviewEditor(
             )
         }
         items(hiddenCards, key = { it.name }) { card ->
-            HiddenCardRow(card, onShow = { change(current.show(card)) }, modifier = Modifier.animateItem())
+            HiddenCardRow(card, look, onShow = { change(current.show(card)) }, modifier = Modifier.animateItem())
         }
         if (!layout.isDefault) item(key = "reset") {
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth().animateItem()) {
-                TextButton(onClick = { change(OverviewLayout()) }) { Text(stringResource(R.string.overview_edit_reset)) }
+                TextButton(onClick = { change(layout.kind.default) }) { Text(stringResource(R.string.overview_edit_reset)) }
             }
         }
     }
 }
 
 @Composable
-private fun ShownCardRow(
-    card: OverviewCard,
+private fun <C> ShownCardRow(
+    card: C,
+    look: CardLook<C>,
     onHide: () -> Unit,
     handle: Modifier,
     modifier: Modifier,
     lifted: Boolean,
-) {
+) where C : Enum<C>, C : HomeCard {
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = if (lifted) 8.dp else 0.dp),
@@ -256,27 +298,27 @@ private fun ShownCardRow(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = handle.padding(12.dp),
             )
-            CardName(card, Modifier.weight(1f))
+            CardName(card, look, Modifier.weight(1f))
             TooltipIconButton(Icons.Outlined.VisibilityOff, stringResource(R.string.overview_edit_hide), onClick = onHide)
         }
     }
 }
 
 @Composable
-private fun HiddenCardRow(card: OverviewCard, onShow: () -> Unit, modifier: Modifier) {
+private fun <C> HiddenCardRow(card: C, look: CardLook<C>, onShow: () -> Unit, modifier: Modifier) where C : Enum<C>, C : HomeCard {
     Card(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 16.dp, end = 4.dp)) {
-            CardName(card, Modifier.weight(1f).alpha(0.6f))
+            CardName(card, look, Modifier.weight(1f).alpha(0.6f))
             TooltipIconButton(Icons.Outlined.Add, stringResource(R.string.overview_edit_show), onClick = onShow)
         }
     }
 }
 
 @Composable
-private fun CardName(card: OverviewCard, modifier: Modifier) {
+private fun <C> CardName(card: C, look: CardLook<C>, modifier: Modifier) where C : Enum<C>, C : HomeCard {
     Column(modifier.padding(vertical = 12.dp)) {
-        Text(overviewCardLabel(card), style = MaterialTheme.typography.titleMedium)
-        MutedText(overviewCardDescription(card))
+        Text(look.label(card), style = MaterialTheme.typography.titleMedium)
+        MutedText(look.description(card))
         if (card.whenDetected) MutedText(stringResource(R.string.overview_edit_when_detected))
     }
 }

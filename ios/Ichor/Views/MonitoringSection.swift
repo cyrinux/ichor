@@ -57,18 +57,11 @@ struct MonitoringSection: View {
                     message = String(localized: "Checked. The widget is updated.")
                 }
             }
-            // The checks start from the Talos overview, which such a cluster does not have.
-            .disabled(model.activeIsKube)
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
         } header: {
             Text("Monitoring")
         } footer: {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within \(certWarnDays) days. iOS decides when background checks run, so alerts can be delayed. The home-screen widget shows the last check.")
-                if model.activeIsKube {
-                    Text("Background checks watch Talos clusters: the cluster on screen, added from a kubeconfig, is not checked.")
-                }
-            }
+            Text("Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within \(certWarnDays) days. iOS decides when background checks run, so alerts can be delayed. The home-screen widget shows the last check.")
         }
     }
 

@@ -3,6 +3,7 @@ package name.levis.ichor.monitor
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.EtcdOverview
+import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.model.health
 import kotlinx.serialization.Serializable
@@ -53,6 +54,11 @@ data class ClusterSnapshot(
     val checkupIssues: Map<String, String> = emptyMap(),
     /** Checkup warnings seen once and not notified yet. */
     val checkupPending: List<String> = emptyList(),
+    /**
+     * The cluster was added from a kubeconfig: its nodes come from the Kubernetes API (ready or
+     * not, never unreachable), there is no etcd, and [certNotAfter] is the kubeconfig's credentials.
+     */
+    val kube: Boolean = false,
 ) {
     val readyCount: Int get() = nodes.values.count { it.health == NodeHealth.READY }
     val notReadyCount: Int get() = nodes.values.count { it.health == NodeHealth.NOT_READY }
@@ -104,5 +110,43 @@ fun snapshotOf(
     etcdAlarms = etcd?.alarms?.map { "${it.memberId}:${it.alarm}" }.orEmpty().sorted(),
     // A failed alarm list is "not checked", never an all-clear.
     etcdChecked = etcd != null && etcd.error == null && etcd.alarmsError == null,
+    certNotAfter = certNotAfter,
+)
+
+/**
+ * The snapshot of a cluster added from a kubeconfig, from the nodes as the Kubernetes API lists
+ * them: a node is ready or not (Kubernetes reports a lost kubelet as not ready), its pressure
+ * conditions are the reason. No etcd. Credentials that may not list nodes give no node at all,
+ * so the opt-in tracks still alert. The other parameters are [snapshotOf]'s.
+ */
+fun kubeSnapshotOf(
+    nodes: KubeNodesOverview,
+    context: String,
+    certNotAfter: Long,
+    takenAt: Long,
+    fingerprint: String = "",
+    dataWatched: Boolean = false,
+    dataServices: DataServices? = null,
+    gitopsWatched: Boolean = false,
+    gitopsIssues: Map<String, String>? = null,
+    checkupWatched: Boolean = false,
+    checkupIssues: Map<String, String>? = null,
+): ClusterSnapshot = ClusterSnapshot(
+    kube = true,
+    checkupWatched = checkupWatched,
+    checkupChecked = checkupWatched && checkupIssues != null,
+    checkupIssues = checkupIssues?.takeIf { checkupWatched }.orEmpty(),
+    gitopsWatched = gitopsWatched,
+    gitopsChecked = gitopsWatched && gitopsIssues != null,
+    gitopsIssues = gitopsIssues?.takeIf { gitopsWatched }.orEmpty(),
+    dataWatched = dataWatched,
+    dataChecked = dataWatched && dataServices != null,
+    dataIssues = dataServices?.takeIf { dataWatched }?.let(::dataIssuesOf).orEmpty(),
+    context = context,
+    fingerprint = fingerprint,
+    takenAt = takenAt,
+    nodes = nodes.nodes.associate { n ->
+        n.name to NodeState(n.name, if (n.ready) NodeHealth.READY else NodeHealth.NOT_READY, n.pressure.joinToString("; "))
+    },
     certNotAfter = certNotAfter,
 )

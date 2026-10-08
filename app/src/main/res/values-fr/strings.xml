@@ -473,6 +473,15 @@
         <item quantity="one">Le certificat client expire dans %1$d jour. Générez un nouveau talosconfig.</item>
         <item quantity="other">Le certificat client expire dans %1$d jours. Générez un nouveau talosconfig.</item>
     </plurals>
+    <string name="monitor_kubeconfig_title">Identifiants du kubeconfig</string>
+    <plurals name="monitor_kubeconfig_expired">
+        <item quantity="one">Les identifiants du kubeconfig ont expiré il y a %1$d jour.</item>
+        <item quantity="other">Les identifiants du kubeconfig ont expiré il y a %1$d jours.</item>
+    </plurals>
+    <plurals name="monitor_kubeconfig_expires">
+        <item quantity="one">Les identifiants du kubeconfig expirent dans %1$d jour. Importez un nouveau kubeconfig.</item>
+        <item quantity="other">Les identifiants du kubeconfig expirent dans %1$d jours. Importez un nouveau kubeconfig.</item>
+    </plurals>
 
     <!-- Updates -->
     <string name="update_section">Mises à jour</string>
@@ -2928,6 +2937,11 @@
     <string name="kube_home_version">Kubernetes %1$s</string>
     <string name="kube_home_nodes_forbidden">Ces identifiants ne peuvent pas lister les nœuds. Les autres écrans Kubernetes fonctionnent, dans la limite de ce qu’ils autorisent.</string>
     <string name="kube_home_no_nodes">Aucun nœud.</string>
+    <string name="kube_home_edit_title">Personnaliser l’accueil</string>
+    <string name="kube_home_card_tools">Écrans Kubernetes</string>
+    <string name="kube_home_card_desc_summary">Serveur d’API, version de Kubernetes, nœuds prêts et identité des identifiants</string>
+    <string name="kube_home_card_desc_nodes">Chaque nœud tel que Kubernetes le liste, avec les cordons et la pression</string>
+    <string name="kube_home_card_desc_tools">Boutons vers les écrans Kubernetes que ces identifiants peuvent utiliser</string>
     <string name="kube_node_cordoned">Cordonné</string>
     <string name="kube_node_pool_karpenter">Pool Karpenter %1$s</string>
     <string name="kube_node_pool_eks">Groupe de nœuds EKS %1$s</string>

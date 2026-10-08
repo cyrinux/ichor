@@ -27,13 +27,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
+import name.levis.ichor.data.KUBE_NODES
 import name.levis.ichor.data.OVERVIEW
+import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.model.ClusterOverview
+import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.detected
 import name.levis.ichor.model.likelyCauses
+import name.levis.ichor.model.notReadyNames
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.EmptyText
@@ -103,8 +107,12 @@ fun DataServicesScreen(initial: DataServiceKind? = null, onBack: () -> Unit) {
     ) { padding ->
         val modifier = Modifier.pageContent(padding)
         Loaded(state, vm::refresh, modifier, freshness = true) { data ->
-            val downNodes = remember(data) {
-                app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
+            // The nodes that are not ready, as the home last saw them: the Talos overview's, or
+            // the Kubernetes home's on a cluster added from a kubeconfig.
+            val kube = config?.activeIsKube == true
+            val downNodes = remember(data, kube) {
+                if (kube) app.talosRepository.cached<KubeNodesOverview>(KUBE_NODES)?.value?.notReadyNames().orEmpty()
+                else app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
             }
             Systems(data, downNodes, initial, vm.garage, vm.longhorn, vm.certificates, vm.cnpg)
         }

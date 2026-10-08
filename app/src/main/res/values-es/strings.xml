@@ -473,6 +473,15 @@
         <item quantity="one">El certificado de cliente caduca en %1$d día. Genera un nuevo talosconfig.</item>
         <item quantity="other">El certificado de cliente caduca en %1$d días. Genera un nuevo talosconfig.</item>
     </plurals>
+    <string name="monitor_kubeconfig_title">Credenciales del kubeconfig</string>
+    <plurals name="monitor_kubeconfig_expired">
+        <item quantity="one">Las credenciales del kubeconfig caducaron hace %1$d día.</item>
+        <item quantity="other">Las credenciales del kubeconfig caducaron hace %1$d días.</item>
+    </plurals>
+    <plurals name="monitor_kubeconfig_expires">
+        <item quantity="one">Las credenciales del kubeconfig caducan en %1$d día. Importa un nuevo kubeconfig.</item>
+        <item quantity="other">Las credenciales del kubeconfig caducan en %1$d días. Importa un nuevo kubeconfig.</item>
+    </plurals>
 
     <!-- Updates -->
     <string name="update_section">Actualizaciones</string>
@@ -2928,6 +2937,11 @@
     <string name="kube_home_version">Kubernetes %1$s</string>
     <string name="kube_home_nodes_forbidden">Estas credenciales no pueden listar los nodos. Las demás pantallas de Kubernetes funcionan, dentro de lo que permiten.</string>
     <string name="kube_home_no_nodes">Sin nodos.</string>
+    <string name="kube_home_edit_title">Personalizar el inicio</string>
+    <string name="kube_home_card_tools">Pantallas de Kubernetes</string>
+    <string name="kube_home_card_desc_summary">Servidor de API, versión de Kubernetes, nodos listos y quién son las credenciales</string>
+    <string name="kube_home_card_desc_nodes">Cada nodo tal como Kubernetes lo lista, con acordonamientos y presión</string>
+    <string name="kube_home_card_desc_tools">Botones a las pantallas de Kubernetes que estas credenciales pueden usar</string>
     <string name="kube_node_cordoned">Acordonado</string>
     <string name="kube_node_pool_karpenter">Pool de Karpenter %1$s</string>
     <string name="kube_node_pool_eks">Grupo de nodos EKS %1$s</string>

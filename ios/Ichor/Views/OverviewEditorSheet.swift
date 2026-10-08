@@ -56,22 +56,38 @@ extension OverviewCard {
     }
 }
 
-/// Arranges the overview (Android's OverviewEditor): which toolbar actions are icons and which
-/// are in the ⋯ menu, and the sections' order, hidden ones shown again at the end. Every change
-/// is saved at once, for every cluster. Sections the cluster lacks (`absent`: no Argo CD, no
-/// Flux...) are not offered.
-struct OverviewEditorSheet: View {
-    var absent: Set<OverviewCard> = []
-    @AppStorage(OverviewLayout.storageKey) private var layoutText = ""
-    @AppStorage(OverviewBar.storageKey) private var barText = ""
+/// How a home's sections are named in the editor: a title and one line on what the section shows.
+protocol CardLook {
+    var title: Text { get }
+    var detail: Text { get }
+}
+
+extension OverviewCard: CardLook {}
+
+/// Arranges a home screen (Android's HomeEditor), the Talos overview's or the Kubernetes home's:
+/// which toolbar actions are icons and which are in the ⋯ menu, and the sections' order, hidden
+/// ones shown again at the end. Every change is saved at once, for every cluster. Sections the
+/// cluster lacks (`absent`: no Argo CD, no Flux...) are not offered.
+struct HomeEditorSheet<Card: HomeCard & CardLook, Action: BarAction & BarActionLook>: View {
+    let title: LocalizedStringKey
+    var absent: Set<Card> = []
+    @AppStorage private var layoutText: String
+    @AppStorage private var barText: String
     @Environment(\.dismiss) private var dismiss
 
-    private var layout: OverviewLayout { .parse(layoutText) }
+    init(_ card: Card.Type, _ action: Action.Type, title: LocalizedStringKey, absent: Set<Card> = []) {
+        self.title = title
+        self.absent = absent
+        _layoutText = AppStorage(wrappedValue: "", CardLayout<Card>.storageKey)
+        _barText = AppStorage(wrappedValue: "", ActionBar<Action>.storageKey)
+    }
+
+    private var layout: CardLayout<Card> { .parse(layoutText) }
 
     var body: some View {
         NavigationStack {
             List {
-                ActionBarSection<OverviewAction>(text: $barText)
+                ActionBarSection<Action>(text: $barText)
                 cardsSection
                 if !layout.hiddenCards(absent: absent).isEmpty {
                     Section("Hidden cards") {
@@ -89,12 +105,12 @@ struct OverviewEditorSheet: View {
                     }
                 }
                 if !layout.isDefault {
-                    Section { Button("Reset to default") { save(OverviewLayout()) } }
+                    Section { Button("Reset to default") { save(CardLayout<Card>()) } }
                 }
             }
             // Always arranging: the handles are what this sheet is for.
             .environment(\.editMode, .constant(.active))
-            .navigationTitle("Customize overview")
+            .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
@@ -123,13 +139,16 @@ struct OverviewEditorSheet: View {
         }
     }
 
-    private func save(_ layout: OverviewLayout) {
+    private func save(_ layout: CardLayout<Card>) {
         withAnimation { layoutText = layout.encoded }
     }
 }
 
-private struct CardName: View {
-    let card: OverviewCard
+/// The Talos overview's editor.
+typealias OverviewEditorSheet = HomeEditorSheet<OverviewCard, OverviewAction>
+
+private struct CardName<Card: HomeCard & CardLook>: View {
+    let card: Card
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {

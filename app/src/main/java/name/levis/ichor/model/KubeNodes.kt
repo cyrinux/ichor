@@ -51,3 +51,6 @@ val KubeNodeInfo.address: String get() = internalIP.ifEmpty { externalIP }
 val KubeNodeInfo.healthy: Boolean get() = ready && pressure.isEmpty()
 
 val KubeNodesOverview.readyCount: Int get() = nodes.count { it.ready }
+
+/** The names of the nodes that are not ready: the likely cause of a data service's problems. */
+fun KubeNodesOverview.notReadyNames(): Set<String> = nodes.filter { !it.ready }.map { it.name }.toSet()

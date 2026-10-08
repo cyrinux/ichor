@@ -466,6 +466,15 @@
         <item quantity="one">Das Client-Zertifikat läuft in %1$d Tag ab. Erstelle eine neue talosconfig.</item>
         <item quantity="other">Das Client-Zertifikat läuft in %1$d Tagen ab. Erstelle eine neue talosconfig.</item>
     </plurals>
+    <string name="monitor_kubeconfig_title">kubeconfig-Anmeldedaten</string>
+    <plurals name="monitor_kubeconfig_expired">
+        <item quantity="one">Die kubeconfig-Anmeldedaten sind vor %1$d Tag abgelaufen.</item>
+        <item quantity="other">Die kubeconfig-Anmeldedaten sind vor %1$d Tagen abgelaufen.</item>
+    </plurals>
+    <plurals name="monitor_kubeconfig_expires">
+        <item quantity="one">Die kubeconfig-Anmeldedaten laufen in %1$d Tag ab. Importiere eine neue kubeconfig.</item>
+        <item quantity="other">Die kubeconfig-Anmeldedaten laufen in %1$d Tagen ab. Importiere eine neue kubeconfig.</item>
+    </plurals>
 
     <!-- Updates -->
     <string name="update_section">Updates</string>
@@ -2920,6 +2929,11 @@
     <string name="kube_home_version">Kubernetes %1$s</string>
     <string name="kube_home_nodes_forbidden">Diese Zugangsdaten dürfen keine Nodes auflisten. Die anderen Kubernetes-Ansichten funktionieren im Rahmen ihrer Rechte.</string>
     <string name="kube_home_no_nodes">Keine Nodes.</string>
+    <string name="kube_home_edit_title">Startseite anpassen</string>
+    <string name="kube_home_card_tools">Kubernetes-Bildschirme</string>
+    <string name="kube_home_card_desc_summary">API-Server, Kubernetes-Version, bereite Knoten und wer die Anmeldedaten sind</string>
+    <string name="kube_home_card_desc_nodes">Jeder Knoten, wie Kubernetes ihn auflistet, mit Cordons und Druck</string>
+    <string name="kube_home_card_desc_tools">Schaltflächen zu den Kubernetes-Bildschirmen, die diese Anmeldedaten nutzen können</string>
     <string name="kube_node_cordoned">Abgeriegelt</string>
     <string name="kube_node_pool_karpenter">Karpenter-Pool %1$s</string>
     <string name="kube_node_pool_eks">EKS-Knotengruppe %1$s</string>

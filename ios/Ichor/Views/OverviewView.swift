@@ -170,7 +170,7 @@ struct OverviewView: View {
                 .accessibilityLabel(Text("More"))
             }
         }
-        .sheet(isPresented: $customizing) { OverviewEditorSheet(absent: absentCards) }
+        .sheet(isPresented: $customizing) { OverviewEditorSheet(OverviewCard.self, OverviewAction.self, title: "Customize overview", absent: absentCards) }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
         // Live CPU and memory while the overview is on screen, the app active, the setting on

@@ -40,8 +40,29 @@ public enum KubernetesAction: String, BarAction {
     public static let defaultIcons = 3
 }
 
+/// The screens the Kubernetes home's toolbar leads to (a cluster added from a kubeconfig): the
+/// Kubernetes screens that work with its credentials alone, no Talos one. Raw values are
+/// Android's `KubeHomeAction` names.
+public enum KubeHomeAction: String, BarAction {
+    case workloads = "WORKLOADS"
+    case resources = "RESOURCES"
+    case metrics = "METRICS"
+    case helm = "HELM"
+    case dataServices = "DATA_SERVICES"
+    case checkup = "CHECKUP"
+    case apiHealth = "API_HEALTH"
+    case networkPolicies = "NETWORK_POLICIES"
+    case settings = "SETTINGS"
+
+    public var id: String { rawValue }
+    public static let barStorageKey = "kubeHome.bar"
+    public static let defaultIcons = 3
+}
+
 /// The overview's toolbar; one bar for every cluster.
 public typealias OverviewBar = ActionBar<OverviewAction>
+/// The Kubernetes home's toolbar; one bar for every cluster added from a kubeconfig.
+public typealias KubeHomeBar = ActionBar<KubeHomeAction>
 public typealias OverviewBarSlot = ActionBarSlot<OverviewAction>
 public typealias KubernetesBar = ActionBar<KubernetesAction>
 
