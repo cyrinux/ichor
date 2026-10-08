@@ -44,6 +44,7 @@ import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.monitor.canPostNotifications
 import name.levis.ichor.monitor.syncMonitoring
 import name.levis.ichor.security.AppLock
+import name.levis.ichor.security.SecurityKeyPrompts
 import name.levis.ichor.security.PrefsLockSettings
 import name.levis.ichor.update.UpdateManager
 import name.levis.ichor.update.createStoreUpdater
@@ -87,11 +88,23 @@ import kotlinx.coroutines.launch
 
 /** Holds app-wide singletons (manual DI; the app is small). */
 class TalosApp : Application() {
-    val configRepository by lazy { ConfigRepository(this, guard = ::holdBackOffVpn, kubeAccess = { kubeAccess.links.value }) }
+    val configRepository by lazy { ConfigRepository(this, guard = ::holdBackOffVpn, kubeAccess = { kubeAccess.links.value }, dekHolder = appLock) }
 
     /** The sign-ins of kubeconfig clusters (tokens, keys typed), sealed like the configs; the Go core reads and writes it. */
     val kubeAuthStore by lazy {
-        KubeAuthStore(SecureStoreValue(java.io.File(filesDir, KubeAuthStore.FILE), KubeAuthStore.KEY_ALIAS, hasStrongBox(packageManager)))
+        KubeAuthStore(SecureStoreValue(java.io.File(filesDir, KubeAuthStore.FILE), KubeAuthStore.KEY_ALIAS, hasStrongBox(packageManager), appLock))
+    }
+
+    /** The "tap your security key" prompts the app lock shows (see SecurityKeyPrompts). */
+    val keyPrompts by lazy { SecurityKeyPrompts() }
+
+    /**
+     * Seals or unseals the credential files (configs, kubeconfig sign-ins) after the security-key
+     * requirement changed; the data key must be held while this runs (see AppLock.provideDek).
+     */
+    suspend fun resealCredentialStores() {
+        configRepository.reseal()
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { kubeAuthStore.reseal() }
     }
     val kubeAuthRepository by lazy { KubeAuthRepository(configRepository) }
     val talosRepository by lazy { TalosRepository(configRepository, kubeServers, offlineCache) }

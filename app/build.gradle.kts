@@ -161,6 +161,11 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
     implementation(libs.aboutlibraries.compose.m3)
+    // Security keys (YubiKey…) over NFC and USB for the app lock: Yubico's SDK talks CTAP2 to
+    // the key itself, no Play Services. It logs through SLF4J; the no-op binding keeps it quiet.
+    implementation(libs.yubikit.android)
+    implementation(libs.yubikit.fido)
+    implementation(libs.slf4j.nop)
     // Feature funding and in-app updates, Play build only (see sourceSets above).
     "playImplementation"(libs.billing)
     "playImplementation"(libs.play.app.update)

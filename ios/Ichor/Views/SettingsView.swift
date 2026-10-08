@@ -30,7 +30,7 @@ struct SettingsView: View {
             LiveStatsSection()
             Section {
                 Toggle("App lock", isOn: Binding(get: { model.lock.enabled }, set: { setLock($0) }))
-                    .disabled(lockRequired && model.lock.enabled)
+                    .disabled(model.lock.enabled && (lockRequired || model.requiresKey))
                 if let lockError { Text(lockError).font(.footnote).foregroundStyle(.statusBad) }
             } header: {
                 Text("Security")
@@ -38,8 +38,11 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Face ID / Touch ID, or the device passcode, to open the app and before reboot or shutdown. Also hides the app in the app switcher.")
                     if lockRequired && model.lock.enabled { Text("Always on while a cluster is imported.") }
+                    else if model.requiresKey && model.lock.enabled { Text("Always on while a security key is required.") }
                 }
             }
+            // A YubiKey (or any FIDO2 key) tapped on the iPhone as another way in, see IchorCore/SecurityKeys.swift.
+            if model.lock.enabled { SecurityKeysSection() }
             PrivacySection()
             AppIconsSection()
             MonitoringSection()

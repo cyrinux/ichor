@@ -72,6 +72,8 @@ struct RootView: View {
                 // Keeps cluster data out of the app-switcher snapshot.
                 PrivacyCover()
             }
+            // The "tap your security key" prompt, over the lock screen or whatever asked for a check.
+            SecurityKeyPromptHost()
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {

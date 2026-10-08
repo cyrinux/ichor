@@ -7,6 +7,8 @@ import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.ImportChoice
 import name.levis.ichor.model.ImportConflict
 import name.levis.ichor.model.isKube
+import name.levis.ichor.security.DekHolder
+import name.levis.ichor.security.SecurityKeyRequiredException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,23 +22,37 @@ import kotlinx.serialization.builtins.ListSerializer
 import java.io.File
 
 /** A config is stored but could not be read: the Keystore is busy or lost its key, or the file is damaged. */
-class ConfigUnreadableException(cause: Throwable) : Exception("Stored config could not be read", cause)
+class ConfigUnreadableException(cause: Throwable) : Exception("Stored config could not be read", cause) {
+    /** Sealed with a security key none of which was tapped this run (background work waits for the next unlock). */
+    val keyRequired: Boolean get() = cause is SecurityKeyRequiredException
+}
 
 /**
  * [guard] may hold back a call to the cluster on screen by throwing, e.g. off its VPN.
  * [kubeAccess] gives the Talos clusters' Kubernetes access (see [KubeAccess]), set on their summaries.
+ * [dekHolder] seals both files with a security key when one is required (see SecurityKeys.kt).
  */
 class ConfigRepository(
     context: Context,
     private val guard: (StoredConfig) -> Unit = {},
     private val kubeAccess: () -> Map<String, String> = { emptyMap() },
+    dekHolder: DekHolder? = null,
 ) {
 
     private val strongBox = hasStrongBox(context.packageManager)
-    private val store = SecureStore(File(context.filesDir, "talosconfig.enc"), strongBoxAvailable = strongBox)
+    private val store = SecureStore(File(context.filesDir, "talosconfig.enc"), strongBoxAvailable = strongBox, outer = dekHolder)
 
     /** Clusters added from a kubeconfig: a second sealed file with a key of its own, protected alike. */
-    private val kubeStore = SecureStore(File(context.filesDir, "kubeconfig.enc"), keyAlias = "kubeconfig", strongBoxAvailable = strongBox)
+    private val kubeStore = SecureStore(File(context.filesDir, "kubeconfig.enc"), keyAlias = "kubeconfig", strongBoxAvailable = strongBox, outer = dekHolder)
+
+    /**
+     * Seals both files with the security-key DEK, or unseals them, for the mode just set (see
+     * SecureStore.reseal); the stored configs stay as they are.
+     */
+    suspend fun reseal() = writing {
+        store.reseal()
+        kubeStore.reseal()
+    }
 
     /** Where the key protecting the stored config lives (null before the first import). */
     fun keyProtection(): KeyProtection? = runCatching { store.protection() ?: kubeStore.protection() }.getOrNull()
@@ -62,7 +78,8 @@ class ConfigRepository(
         // Already loaded by another caller (the monitor, the widget) while this one waited.
         _config.value?.let { return@writing it }
         val stored = try {
-            retrying { readStored() }
+            // A file sealed with a security key reads only after a tap: no point in waiting.
+            retrying(retryOn = { it !is SecurityKeyRequiredException }) { readStored() }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

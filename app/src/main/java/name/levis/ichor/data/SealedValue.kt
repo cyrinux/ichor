@@ -7,6 +7,9 @@ interface SealedValue {
     fun read(): String?
     fun write(value: String)
     fun delete()
+
+    /** Writes the value again for the current protection (see SecureStore.reseal); nothing by default. */
+    fun reseal() {}
 }
 
 /** [SealedValue] in a [SecureStore] file: AES-GCM with a Keystore key that never leaves the device. */

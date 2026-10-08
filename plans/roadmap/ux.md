@@ -114,7 +114,8 @@ text or as a PNG card (rendered in-app). Button on the Insights recorder and the
 
 ## U10. Onboarding: partial (S)
 
-**Today:** QR import (one QR, ≈ 2.9 KB, README), demo, lock onboarding, what's new.
+**Today:** QR import (one QR, ≈ 2.9 KB, README), demo, lock onboarding, security keys for the lock
+([security-key-unlock](../security-key-unlock/README.md)), what's new.
 
 **Plan:**
 1. **Multi-QR import**: a tiny format `ichor:1/3:<base64 gzip chunk>`; a helper `just qr

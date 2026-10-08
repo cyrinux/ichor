@@ -11,6 +11,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.suspendCancellableCoroutine
+import name.levis.ichor.TalosApp
 import kotlin.coroutines.resume
 
 sealed interface AuthResult {
@@ -28,7 +29,20 @@ private fun allowedAuthenticators(): Int =
 fun canAuthenticate(context: Context): Boolean =
     BiometricManager.from(context).canAuthenticate(allowedAuthenticators()) == BiometricManager.BIOMETRIC_SUCCESS
 
-suspend fun authenticate(activity: FragmentActivity, title: String, subtitle: String? = null): AuthResult =
+/**
+ * Verifies the user: with a security key enrolled (SecurityKeys.kt) the "tap your key" prompt,
+ * which also offers the fingerprint unless the key is required; otherwise the fingerprint /
+ * device-credential prompt. Every check in the app (unlock, reboot, export…) goes through here.
+ */
+suspend fun authenticate(activity: FragmentActivity, title: String, subtitle: String? = null): AuthResult {
+    val app = activity.application as? TalosApp
+    val enrolment = app?.appLock?.securityKeys?.value
+    if (app == null || enrolment == null) return biometricPrompt(activity, title, subtitle)
+    return app.keyPrompts.request(title, subtitle, allowBiometric = !enrolment.required && canAuthenticate(activity))
+}
+
+/** The system prompt: fingerprint/face, falling back to the device PIN, pattern or password. */
+suspend fun biometricPrompt(activity: FragmentActivity, title: String, subtitle: String? = null): AuthResult =
     suspendCancellableCoroutine { cont ->
         val prompt = BiometricPrompt(
             activity,

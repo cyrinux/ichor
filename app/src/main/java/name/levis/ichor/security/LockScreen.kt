@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,13 +42,16 @@ import kotlinx.coroutines.launch
 /**
  * Full-screen lock. Prompts automatically; if the device lost its screen lock the user can
  * only wipe the stored config, so removing the screen lock never bypasses the app lock.
+ * With [securityKeys] enrolled the prompt asks for a tap (see SecurityKeys.kt); with one
+ * required, losing every key leaves wiping as the only way out too.
  */
 @Composable
-fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit) {
+fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit, securityKeys: SecurityKeyEnrolment? = null) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var error by remember { mutableStateOf<String?>(null) }
-    val available = remember { canAuthenticate(context) }
+    var confirmLost by remember { mutableStateOf(false) }
+    val available = remember(securityKeys) { canAuthenticate(context) || securityKeys != null }
 
     fun prompt() {
         val activity = context.findFragmentActivity() ?: return
@@ -72,6 +77,14 @@ fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit) {
             Spacer(Modifier.height(16.dp))
             if (available) {
                 Text(stringResource(R.string.lock_locked), style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
+                securityKeys?.let { keys ->
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        stringResource(if (keys.required) R.string.lock_security_key_required_hint else R.string.lock_security_key_hint),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
                 error?.let {
                     Spacer(Modifier.height(8.dp))
                     Text(
@@ -83,6 +96,9 @@ fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit) {
                 }
                 Spacer(Modifier.height(16.dp))
                 Button(onClick = ::prompt) { Text(stringResource(R.string.lock_unlock)) }
+                if (securityKeys?.required == true) {
+                    TextButton(onClick = { confirmLost = true }) { Text(stringResource(R.string.lock_lost_keys)) }
+                }
             } else {
                 Text(
                     stringResource(R.string.lock_no_auth),
@@ -92,5 +108,20 @@ fun LockScreen(onUnlocked: () -> Unit, onWipe: () -> Unit) {
                 OutlinedButton(onClick = onWipe) { Text(stringResource(R.string.lock_delete_config)) }
             }
         }
+    }
+
+    if (confirmLost) {
+        AlertDialog(
+            onDismissRequest = { confirmLost = false },
+            title = { Text(stringResource(R.string.lock_lost_keys_title)) },
+            text = { Text(stringResource(R.string.lock_lost_keys_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmLost = false
+                    onWipe()
+                }) { Text(stringResource(R.string.lock_delete_config), color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { confirmLost = false }) { Text(stringResource(R.string.common_cancel)) } },
+        )
     }
 }

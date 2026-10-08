@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import name.levis.ichor.TalosApp
 import name.levis.ichor.data.ThemeMode
 import name.levis.ichor.data.UiPreferences
 import name.levis.ichor.security.AppLock
@@ -135,6 +136,8 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
     val scope = rememberCoroutineScope()
     val enabled by appLock.enabled.collectAsStateWithLifecycle()
     val allowScreenshots by prefs.allowScreenshots.collectAsStateWithLifecycle()
+    val securityKeys by appLock.securityKeys.collectAsStateWithLifecycle()
+    val keyRequired = securityKeys?.required == true
     var error by remember { mutableStateOf<String?>(null) }
 
     /** Runs [action] after a fingerprint/PIN check. */
@@ -165,9 +168,9 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_app_lock), style = MaterialTheme.typography.titleMedium)
                 MutedText(stringResource(R.string.settings_app_lock_desc))
-                if (required && enabled) {
+                if (enabled && (required || keyRequired)) {
                     Text(
-                        stringResource(R.string.settings_app_lock_required),
+                        stringResource(if (required) R.string.settings_app_lock_required else R.string.security_key_lock_required_by_key),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -176,7 +179,7 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
             Switch(
                 checked = enabled,
                 onCheckedChange = ::toggle,
-                enabled = !(required && enabled),
+                enabled = !(enabled && (required || keyRequired)),
                 modifier = Modifier.padding(start = 12.dp),
             )
         }
@@ -195,6 +198,8 @@ fun SecuritySection(appLock: AppLock, prefs: UiPreferences, required: Boolean) {
                     modifier = Modifier.padding(start = 12.dp),
                 )
             }
+            // A YubiKey (or any FIDO2 key) tapped on the phone as another way in, see SecurityKeys.kt.
+            SecurityKeysRows(context.applicationContext as TalosApp, authThen = ::authThen, onError = { error = it })
         }
     }
     error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) }

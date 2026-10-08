@@ -21,6 +21,11 @@ packages:
   SwiftTerm:
     url: https://github.com/migueldeicaza/SwiftTerm
     from: 1.20.0
+  # Security keys (YubiKey…) over NFC, Lightning and USB-C for the app lock: Yubico's Swift SDK
+  # talks CTAP2 to the key itself (Apache-2.0).
+  YubiKit:
+    url: https://github.com/Yubico/yubikit-swift
+    from: 1.4.0
 targets:
   Ichor:
     type: application
@@ -37,6 +42,7 @@ targets:
     dependencies:
       - package: IchorCore
       - package: SwiftTerm
+      - package: YubiKit
       # Built by gomobile (scripts/ios-build.sh); a static framework, so it is linked, not embedded.
       - framework: Frameworks/Ichorgo.xcframework
         embed: false
@@ -52,6 +58,9 @@ targets:
       path: Ichor/Ichor.entitlements
       properties:
         com.apple.security.application-groups: [group.name.levis.ichor]
+        # Security keys: NFC tag reading, and USB-C smart cards (iOS 16+).
+        com.apple.developer.nfc.readersession.formats: [TAG]
+        com.apple.security.smartcard: true
     info:
       path: Ichor/Info.plist
       properties:
@@ -75,6 +84,10 @@ targets:
         ITSAppUsesNonExemptEncryption: true
         NSCameraUsageDescription: Scan a talosconfig QR code to import it.
         NSFaceIDUsageDescription: Unlock Ichor and confirm reboot or shutdown.
+        # Security keys (YubiKey…) tapped on the phone: the FIDO applet over NFC, and the 5Ci over Lightning.
+        NFCReaderUsageDescription: Read your security key to unlock Ichor.
+        com.apple.developer.nfc.readersession.iso7816.select-identifiers: [A0000006472F0001]
+        UISupportedExternalAccessoryProtocols: [com.yubico.ylp]
         # Reaching nodes on the Wi-Fi network, searching it for them, and Wake-on-LAN.
         NSLocalNetworkUsageDescription: Reach your clusters' nodes on this network, search it for them, and wake them with Wake-on-LAN.
         UIBackgroundModes: [fetch]

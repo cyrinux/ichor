@@ -51,6 +51,10 @@ final class AppModel {
     private(set) var unreadable: [StoredConfigKind] = []
     private(set) var loaded = false
     private(set) var lock: AppLockState
+    /// The enrolled security keys (SecurityKeyStore), nil when none; see IchorCore/SecurityKeys.swift.
+    private(set) var securityKeys: SecurityKeyEnrolment? = SecurityKeyStore.current
+    /// Whether a tap of a security key is needed to read the stored configs (Face ID alone is refused).
+    var requiresKey: Bool { securityKeys?.required == true }
 
     var activeContext = "" {
         didSet {
@@ -604,10 +608,19 @@ final class AppModel {
         QuickActions.update(summary: nil, labels: labels)
     }
 
-    /// Callers must have authenticated the user first.
+    /// Callers must have authenticated the user first; the lock off drops the enrolled keys too.
     func setLockEnabled(_ enabled: Bool) {
         lock.setEnabled(enabled)
         UserDefaults.standard.set(enabled, forKey: Keys.lock)
+        if !enabled { setSecurityKeys(nil) }
+    }
+
+    /// Callers must have authenticated the user first. No key left forgets the data key too.
+    func setSecurityKeys(_ enrolment: SecurityKeyEnrolment?) {
+        let value = enrolment.flatMap { $0.keys.isEmpty ? nil : $0 }
+        SecurityKeyStore.current = value
+        securityKeys = value
+        if value == nil { SecurityKeySession.shared.clear() }
     }
 
     /// Off: everything kept so far is deleted, with its key.

@@ -1,13 +1,15 @@
 package name.levis.ichor.security
 
 import name.levis.ichor.model.ContextSummary
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AppLockTest {
 
-    private class MemoryStore(override var lockEnabled: Boolean = false) : LockSettings
+    private class MemoryStore(override var lockEnabled: Boolean = false, override var securityKeys: SecurityKeyEnrolment? = null) : LockSettings
 
     private var now = 0L
     private fun lock(enabled: Boolean) = AppLock(MemoryStore(enabled), clock = { now }, graceMillis = 30_000)
@@ -90,6 +92,42 @@ class AppLockTest {
         lock.setEnabled(false)
         assertFalse(store.lockEnabled)
         assertFalse(lock.locked.value)
+    }
+
+    @Test
+    fun securityKeysArePersistedAndRequireOnlyWithKeys() {
+        val store = MemoryStore(lockEnabled = true)
+        val lock = AppLock(store, clock = { now })
+        assertFalse(lock.requiresKey)
+        assertFalse(lock.sealing())
+
+        val key = EnrolledKey(credentialId = "AQID", publicKey = "AAAA", label = "Security key", enrolledAt = 1)
+        lock.setSecurityKeys(SecurityKeyEnrolment.create().withKey(key))
+        assertEquals(1, store.securityKeys?.keys?.size)
+        assertFalse("UNLOCK mode: fingerprint still opens the app", lock.requiresKey)
+
+        lock.setSecurityKeys(store.securityKeys!!.copy(mode = SecurityKeyMode.REQUIRED))
+        assertTrue(lock.requiresKey)
+        assertTrue(lock.sealing())
+        assertNull("no key tapped yet", lock.dek())
+        lock.provideDek(ByteArray(32) { 7 })
+        assertEquals(7.toByte(), lock.dek()?.first())
+
+        // Removing the last key drops the requirement and the data key with it.
+        lock.setSecurityKeys(store.securityKeys!!.without(key.credentialId))
+        assertNull(store.securityKeys)
+        assertFalse(lock.requiresKey)
+        assertNull(lock.dek())
+    }
+
+    @Test
+    fun turningTheLockOffForgetsTheKeys() {
+        val store = MemoryStore(lockEnabled = true, securityKeys = SecurityKeyEnrolment.create().withKey(EnrolledKey("AQID", "AAAA", "Security key", 1)))
+        val lock = AppLock(store, clock = { now })
+        assertEquals(1, lock.securityKeys.value?.keys?.size)
+        lock.setEnabled(false)
+        assertNull(store.securityKeys)
+        assertNull(lock.securityKeys.value)
     }
 
     @Test

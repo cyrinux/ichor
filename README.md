@@ -104,7 +104,8 @@ sit alongside your real clusters and be removed from **Manage clusters**.
 - **Background:** alerts and a home-screen widget.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).
-- **Protection:** optional fingerprint/PIN lock.
+- **Protection:** fingerprint/PIN lock, or a tap of a security key (YubiKey or any FIDO2 key,
+  over NFC or USB), which can also seal the stored configs so that nothing reads them without it.
 - **AI diagnosis:** optional, off by default: ask Claude or an OpenAI model what is wrong and
   how to fix it, or hand the question to an assistant app (see [AI diagnosis](#ai-diagnosis-optional)).
 
@@ -509,13 +510,33 @@ a fresh install. Backups move between Android and iOS.
   Every option goes through the same confirmation:
   1. You type the node's hostname to confirm.
   2. Control-plane nodes get an etcd-quorum warning.
-  3. With the app lock on, you also authenticate with fingerprint or PIN.
+  3. With the app lock on, you also authenticate with fingerprint or PIN, or a security key.
 - **App lock (Settings → Security):**
-  - **Methods:** fingerprint, with the device PIN, pattern or password as fallback.
+  - **Methods:** fingerprint, with the device PIN, pattern or password as fallback; or a
+    **security key** (below).
   - **When it asks:** at launch, after 30 s in the background, and before reboot, shutdown and kubeconfig export.
   - **Privacy:** it hides the app in recent apps and blocks screenshots, unless you turn on
     "Allow screenshots", which also requires authenticating.
   - **Changing it:** turning it on or off requires authenticating.
+- **Security keys (Settings → Security → Security keys):** a YubiKey or any FIDO2 key, tapped on
+  the back of the phone (NFC) or plugged in (USB), opens the app and confirms the risky actions
+  instead of the fingerprint. Up to two keys (one worn, a spare). Ichor makes a FIDO2 credential
+  on the key (user presence only: a touch, never the key's PIN) and checks its signature over a
+  fresh challenge each time; it talks to the key itself with Yubico's SDK, no Play Services and no
+  account. The PIN that the app lock falls back to is the **device** PIN: a forgotten device PIN
+  locks the phone itself, and no app can offer a key as a way around that.
+  - **Require the key:** the stored configs (talosconfig, kubeconfig, the kubeconfig sign-ins) are
+    sealed a second time with a data key that only the hmac-secret output of one of the enrolled
+    keys unwraps, on top of the Keystore encryption. Fingerprint or PIN alone no longer opens the
+    app, and a cold start reads nothing until a key is tapped. The data key is held in memory
+    while the app process lives, so **background alerts and the widget pause once Android has
+    closed the app, until you unlock it again**. Losing every enrolled key means deleting the
+    stored configs and importing them again ("I lost my security keys" on the lock screen).
+  - **Adding a key** needs a tap (and, once, the key's FIDO PIN if the key insists on it for new
+    credentials); with the requirement on, a second tap of the same key. Turning the requirement
+    on asks for a tap of every enrolled key; turning it off asks for one tap. A key set to always
+    verify the user (fingerprint or PIN on the key itself) computes another secret, so changing
+    that setting after enrolment needs the requirement turned off and on again.
 - **Notifications:** with the app lock on, alerts show only a generic text on the lock screen.
   The widget shows counts only, no hostnames.
 - **Kubeconfig export:** the kubeconfig is written only to the file you choose. kubenav has no
@@ -718,7 +739,8 @@ models, formatting, lock state and power-request rules.
 - the debug shell (SwiftTerm terminal);
 - kubeconfig export;
 - background alerts and a home-screen widget;
-- Face ID / passcode lock, themes, and role-based actions.
+- Face ID / passcode lock, security keys (NFC and the Lightning 5Ci; USB-C YubiKeys on iPhone
+  are best effort), themes, and role-based actions.
 
 **What iOS does differently:**
 
@@ -727,7 +749,8 @@ models, formatting, lock state and power-request rules.
 - **Screenshots:** iOS does not let apps block them. The app-switcher privacy cover hides the
   content instead.
 - **Background alerts:** best effort. iOS decides when background checks run, and skips them
-  while the device is locked, because the config cannot be decrypted then.
+  while the device is locked, because the config cannot be decrypted then; with a security key
+  required, also after iOS closed the app, until it is unlocked again.
 - **Leftover data:** Keychain items survive uninstalling the app. Use Settings → Delete to
   remove the config.
 - **Widget:** shares the last check with the app through an App Group, which a free Apple ID

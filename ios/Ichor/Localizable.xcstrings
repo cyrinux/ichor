@@ -91976,6 +91976,1721 @@
         }
       }
     },
+    "A security key is required: alerts and the widget pause when iOS has closed Ichor, until you unlock it again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Sicherheitsschlüssel ist erforderlich: Warnungen und das Widget pausieren, wenn iOS Ichor geschlossen hat, bis du es wieder entsperrst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se exige una llave de seguridad: las alertas y el widget se pausan cuando iOS ha cerrado Ichor, hasta que lo desbloquees de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une clé de sécurité est exigée : les alertes et le widget s'arrêtent quand iOS a fermé Ichor, jusqu'à ce que vous le déverrouilliez à nouveau."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "È richiesta una chiave di sicurezza: avvisi e widget si fermano quando iOS ha chiuso Ichor, finché non lo sblocchi di nuovo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вимагається ключ безпеки: сповіщення та віджет призупиняються, коли iOS закрив Ichor, доки ви не розблокуєте його знову."
+          }
+        }
+      }
+    },
+    "Add a security key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherheitsschlüssel hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir una llave de seguridad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter une clé de sécurité"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi una chiave di sicurezza"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати ключ безпеки"
+          }
+        }
+      }
+    },
+    "Add a spare key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersatzschlüssel hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir una llave de repuesto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter une clé de secours"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi una chiave di riserva"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати запасний ключ"
+          }
+        }
+      }
+    },
+    "Added on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hinzugefügt am %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadida el %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoutée le %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunta il %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додано %@"
+          }
+        }
+      }
+    },
+    "Always on while a security key is required." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Immer aktiv, solange ein Sicherheitsschlüssel erforderlich ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siempre activo mientras se exija una llave de seguridad."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toujours actif tant qu'une clé de sécurité est exigée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sempre attivo finché è richiesta una chiave di sicurezza."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завжди ввімкнено, поки вимагається ключ безпеки."
+          }
+        }
+      }
+    },
+    "Cancelled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abgebrochen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annulé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annullato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасовано"
+          }
+        }
+      }
+    },
+    "Could not talk to the security key (%@). Tap it again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Verbindung zum Sicherheitsschlüssel (%@). Tippe erneut an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo comunicar con la llave de seguridad (%@). Acércala de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de communiquer avec la clé de sécurité (%@). Approchez-la à nouveau."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile comunicare con la chiave di sicurezza (%@). Avvicinala di nuovo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося зв'язатися з ключем безпеки (%@). Торкніться ним ще раз."
+          }
+        }
+      }
+    },
+    "Done." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fertig."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fatto."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово."
+          }
+        }
+      }
+    },
+    "FIDO PIN" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FIDO-PIN"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PIN FIDO"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code FIDO"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PIN FIDO"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FIDO PIN"
+          }
+        }
+      }
+    },
+    "Hold %@ near the top of the iPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halte %@ an die Oberseite des iPhone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén %@ cerca de la parte superior del iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintenez %@ près du haut de l’iPhone"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni %@ vicino alla parte superiore dell’iPhone"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Притримайте %@ біля верхньої частини iPhone"
+          }
+        }
+      }
+    },
+    "Hold the key to add near the top of the iPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halte den hinzuzufügenden Schlüssel an die Oberseite des iPhone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén la llave que quieres añadir cerca de la parte superior del iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintenez la clé à ajouter près du haut de l’iPhone"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni la chiave da aggiungere vicino alla parte superiore dell’iPhone"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Притримайте ключ, який додаєте, біля верхньої частини iPhone"
+          }
+        }
+      }
+    },
+    "Hold the same key near the top of the iPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halte denselben Schlüssel an die Oberseite des iPhone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén la misma llave cerca de la parte superior del iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintenez la même clé près du haut de l’iPhone"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni la stessa chiave vicino alla parte superiore dell’iPhone"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Притримайте той самий ключ біля верхньої частини iPhone"
+          }
+        }
+      }
+    },
+    "Hold your security key near the top of the iPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halte deinen Sicherheitsschlüssel an die Oberseite des iPhone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén tu llave de seguridad cerca de la parte superior del iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintenez votre clé de sécurité près du haut de l’iPhone"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni la tua chiave di sicurezza vicino alla parte superiore dell’iPhone"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Притримайте ключ безпеки біля верхньої частини iPhone"
+          }
+        }
+      }
+    },
+    "Hold your security key near the top of the iPhone, or plug it in." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halte deinen Sicherheitsschlüssel an die Oberseite des iPhone, oder stecke ihn ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén tu llave de seguridad cerca de la parte superior del iPhone, o conéctala."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintenez votre clé de sécurité près du haut de l’iPhone, ou branchez-la."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tieni la tua chiave di sicurezza vicino alla parte superiore dell’iPhone, oppure collegala."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Притримайте ключ безпеки біля верхньої частини iPhone або підключіть його."
+          }
+        }
+      }
+    },
+    "I lost my security keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ich habe meine Sicherheitsschlüssel verloren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "He perdido mis llaves de seguridad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "J'ai perdu mes clés de sécurité"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ho perso le mie chiavi di sicurezza"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Я втратив свої ключі безпеки"
+          }
+        }
+      }
+    },
+    "Lost your security keys?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherheitsschlüssel verloren?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Has perdido tus llaves de seguridad?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clés de sécurité perdues ?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hai perso le chiavi di sicurezza?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Втратили ключі безпеки?"
+          }
+        }
+      }
+    },
+    "Plug your security key in: this device cannot read NFC." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stecke deinen Sicherheitsschlüssel ein: Dieses Gerät kann kein NFC lesen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conecta tu llave de seguridad: este dispositivo no puede leer NFC."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Branchez votre clé de sécurité : cet appareil ne lit pas le NFC."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collega la tua chiave di sicurezza: questo dispositivo non legge NFC."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підключіть ключ безпеки: цей пристрій не читає NFC."
+          }
+        }
+      }
+    },
+    "Require the key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel erforderlich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exigir la llave"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exiger la clé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richiedi la chiave"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вимагати ключ"
+          }
+        }
+      }
+    },
+    "Sealing the stored configs…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versiegele die gespeicherten Konfigurationen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sellando las configuraciones guardadas…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scellement des configurations enregistrées…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sigillatura delle configurazioni salvate…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запечатування збережених конфігурацій…"
+          }
+        }
+      }
+    },
+    "Security key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherheitsschlüssel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Llave de seguridad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clé de sécurité"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiave di sicurezza"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключ безпеки"
+          }
+        }
+      }
+    },
+    "Security keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherheitsschlüssel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Llaves de seguridad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clés de sécurité"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiavi di sicurezza"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключі безпеки"
+          }
+        }
+      }
+    },
+    "Spare key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersatzschlüssel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Llave de repuesto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clé de secours"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiave di riserva"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запасний ключ"
+          }
+        }
+      }
+    },
+    "Tap a YubiKey or another FIDO2 key on the iPhone, or plug it in, to open Ichor without Face ID. Up to two keys." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe mit einem YubiKey oder einem anderen FIDO2-Schlüssel an das iPhone oder stecke ihn ein, um Ichor ohne Face ID zu öffnen. Bis zu zwei Schlüssel."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca una YubiKey u otra llave FIDO2 al iPhone, o conéctala, para abrir Ichor sin Face ID. Hasta dos llaves."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approchez une YubiKey ou une autre clé FIDO2 de l’iPhone, ou branchez-la, pour ouvrir Ichor sans Face ID. Jusqu’à deux clés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvicina una YubiKey o un’altra chiave FIDO2 all’iPhone, oppure collegala, per aprire Ichor senza Face ID. Fino a due chiavi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Торкніться YubiKey або іншим ключем FIDO2 iPhone чи підключіть його, щоб відкривати Ichor без Face ID. До двох ключів."
+          }
+        }
+      }
+    },
+    "Tap key %lld of %lld: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe mit Schlüssel %lld von %lld an: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca la llave %lld de %lld: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approchez la clé %lld sur %lld : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvicina la chiave %lld di %lld: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Торкніться ключем %lld з %lld: %@"
+          }
+        }
+      }
+    },
+    "Tap the key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel antippen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acercar la llave"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approcher la clé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvicina la chiave"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Торкнутися ключем"
+          }
+        }
+      }
+    },
+    "Tap the key to add, or plug it in." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe mit dem hinzuzufügenden Schlüssel an, oder stecke ihn ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca la llave que quieres añadir, o conéctala."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approchez la clé à ajouter, ou branchez-la."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvicina la chiave da aggiungere, oppure collegala."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Торкніться ключем, який додаєте, або підключіть його."
+          }
+        }
+      }
+    },
+    "Tap your security key to open Ichor." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe mit deinem Sicherheitsschlüssel an, um Ichor zu öffnen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca tu llave de seguridad para abrir Ichor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approchez votre clé de sécurité pour ouvrir Ichor."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvicina la tua chiave di sicurezza per aprire Ichor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Торкніться ключем безпеки, щоб відкрити Ichor."
+          }
+        }
+      }
+    },
+    "Tap your security key, or use Face ID or the passcode." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe mit deinem Sicherheitsschlüssel an, oder nutze Face ID oder den Code."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca tu llave de seguridad, o usa Face ID o el código."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Approchez votre clé de sécurité, ou utilisez Face ID ou le code."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvicina la tua chiave di sicurezza, oppure usa Face ID o il codice."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Торкніться ключем безпеки або скористайтеся Face ID чи код-паролем."
+          }
+        }
+      }
+    },
+    "That was %@. Tap %@." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das war %@. Tippe mit %@ an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esa era %@. Acerca %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C'était %@. Approchez %@."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quella era %@. Avvicina %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це був %@. Торкніться %@."
+          }
+        }
+      }
+    },
+    "The key was not touched in time." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Schlüssel wurde nicht rechtzeitig berührt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se tocó la llave a tiempo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La clé n'a pas été touchée à temps."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La chiave non è stata toccata in tempo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключ не торкнулися вчасно."
+          }
+        }
+      }
+    },
+    "The key's PIN is blocked." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die PIN des Schlüssels ist gesperrt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El PIN de la llave está bloqueado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le code de la clé est bloqué."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il PIN della chiave è bloccato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PIN ключа заблоковано."
+          }
+        }
+      }
+    },
+    "The stored config is sealed with a security key: tap it first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die gespeicherte Konfiguration ist mit einem Sicherheitsschlüssel versiegelt: Tippe zuerst mit ihm an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuración guardada está sellada con una llave de seguridad: acércala primero."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configuration enregistrée est scellée par une clé de sécurité : approchez-la d’abord."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La configurazione salvata è sigillata con una chiave di sicurezza: avvicinala prima."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережену конфігурацію запечатано ключем безпеки: спершу торкніться ним."
+          }
+        }
+      }
+    },
+    "The stored configs are sealed so that only a tap of one of these keys can read them: Face ID or the passcode alone no longer opens Ichor. Background alerts and the widget pause when iOS has closed the app, until you unlock it again. Lose every key and you must import your configs again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die gespeicherten Konfigurationen werden so versiegelt, dass nur ein Antippen mit einem dieser Schlüssel sie lesen kann: Face ID oder der Code allein öffnen Ichor nicht mehr. Hintergrundwarnungen und das Widget pausieren, wenn iOS die App geschlossen hat, bis du sie wieder entsperrst. Verlierst du alle Schlüssel, musst du deine Konfigurationen erneut importieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las configuraciones guardadas se sellan de modo que solo acercar una de estas llaves permite leerlas: Face ID o el código por sí solos ya no abren Ichor. Las alertas en segundo plano y el widget se pausan cuando iOS ha cerrado la app, hasta que la desbloquees de nuevo. Si pierdes todas las llaves, tendrás que importar tus configuraciones otra vez."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les configurations enregistrées sont scellées de sorte que seule l’une de ces clés, approchée, permet de les lire : Face ID ou le code seuls n’ouvrent plus Ichor. Les alertes en arrière-plan et le widget s’arrêtent quand iOS a fermé l’application, jusqu’à ce que vous la déverrouilliez à nouveau. Si vous perdez toutes les clés, vous devrez réimporter vos configurations."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le configurazioni salvate vengono sigillate in modo che solo il tocco di una di queste chiavi possa leggerle: Face ID o il codice da soli non aprono più Ichor. Gli avvisi in background e il widget si fermano quando iOS ha chiuso l’app, finché non la sblocchi di nuovo. Se perdi tutte le chiavi dovrai importare di nuovo le configurazioni."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережені конфігурації запечатуються так, що прочитати їх можна лише торкнувшись одним із цих ключів: самого Face ID чи код-пароля уже недостатньо, щоб відкрити Ichor. Фонові сповіщення та віджет призупиняються, коли iOS закрила застосунок, доки ви не розблокуєте його знову. Якщо втратите всі ключі, доведеться імпортувати конфігурації ще раз."
+          }
+        }
+      }
+    },
+    "This device cannot read NFC. Plug the key in instead." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Gerät kann kein NFC lesen. Stecke den Schlüssel stattdessen ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este dispositivo no puede leer NFC. Conecta la llave en su lugar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cet appareil ne lit pas le NFC. Branchez plutôt la clé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo dispositivo non legge NFC. Collega invece la chiave."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей пристрій не читає NFC. Натомість підключіть ключ."
+          }
+        }
+      }
+    },
+    "This key asks for its FIDO PIN, which Ichor does not use to unlock." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Schlüssel verlangt seine FIDO-PIN, die Ichor zum Entsperren nicht verwendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta llave pide su PIN FIDO, que Ichor no usa para desbloquear."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette clé demande son code FIDO, qu'Ichor n'utilise pas pour déverrouiller."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa chiave chiede il suo PIN FIDO, che Ichor non usa per sbloccare."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей ключ запитує свій FIDO PIN, який Ichor не використовує для розблокування."
+          }
+        }
+      }
+    },
+    "This key cannot seal the configs: it lacks the hmac-secret extension." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Schlüssel kann die Konfigurationen nicht versiegeln: Ihm fehlt die hmac-secret-Erweiterung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta llave no puede sellar las configuraciones: le falta la extensión hmac-secret."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette clé ne peut pas sceller les configurations : il lui manque l'extension hmac-secret."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa chiave non può sigillare le configurazioni: le manca l'estensione hmac-secret."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей ключ не може запечатати конфігурації: у нього немає розширення hmac-secret."
+          }
+        }
+      }
+    },
+    "This key is already enrolled." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Schlüssel ist bereits registriert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta llave ya está registrada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette clé est déjà enregistrée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa chiave è già registrata."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей ключ уже зареєстровано."
+          }
+        }
+      }
+    },
+    "This key made a credential Ichor cannot verify." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Schlüssel hat Anmeldedaten erstellt, die Ichor nicht prüfen kann."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta llave creó una credencial que Ichor no puede verificar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette clé a créé un identifiant qu’Ichor ne peut pas vérifier."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa chiave ha creato una credenziale che Ichor non può verificare."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей ключ створив облікові дані, які Ichor не може перевірити."
+          }
+        }
+      }
+    },
+    "This key only makes new credentials with its FIDO PIN. It is used once here; unlocking never asks for it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Schlüssel erstellt neue Anmeldedaten nur mit seiner FIDO-PIN. Sie wird hier einmal verwendet; das Entsperren fragt nie danach."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta llave solo crea credenciales nuevas con su PIN FIDO. Se usa una vez aquí; el desbloqueo nunca lo pide."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette clé ne crée de nouveaux identifiants qu'avec son code FIDO. Il sert une fois ici ; le déverrouillage ne le demande jamais."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa chiave crea nuove credenziali solo con il suo PIN FIDO. Si usa una volta qui; lo sblocco non lo chiede mai."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей ключ створює нові облікові дані лише зі своїм FIDO PIN. Він використовується тут один раз; розблокування його ніколи не запитує."
+          }
+        }
+      }
+    },
+    "This key was added before the key requirement. Tap another enrolled key." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Schlüssel wurde vor der Schlüsselpflicht hinzugefügt. Tippe mit einem anderen registrierten Schlüssel an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta llave se añadió antes de exigir la llave. Acerca otra llave registrada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette clé a été ajoutée avant l'exigence de clé. Approchez une autre clé enregistrée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa chiave è stata aggiunta prima dell'obbligo della chiave. Avvicina un'altra chiave registrata."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей ключ додано до ввімкнення вимоги ключа. Торкніться іншим зареєстрованим ключем."
+          }
+        }
+      }
+    },
+    "This key's PIN or fingerprint setting changed since it was set up, so it computes another secret. Turn the key requirement off with another key, then on again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die PIN- oder Fingerabdruck-Einstellung dieses Schlüssels hat sich seit der Einrichtung geändert, daher berechnet er ein anderes Geheimnis. Schalte die Schlüsselpflicht mit einem anderen Schlüssel aus und dann wieder ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El ajuste de PIN o huella de esta llave cambió desde que se configuró, así que calcula otro secreto. Desactiva la exigencia de llave con otra llave y vuelve a activarla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le réglage de code ou d'empreinte de cette clé a changé depuis sa configuration, elle calcule donc un autre secret. Désactivez l'exigence de clé avec une autre clé, puis réactivez-la."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'impostazione PIN o impronta di questa chiave è cambiata da quando è stata configurata, quindi calcola un altro segreto. Disattiva l'obbligo della chiave con un'altra chiave, poi riattivalo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налаштування PIN або відбитка цього ключа змінилося після налаштування, тому він обчислює інший секрет. Вимкніть вимогу ключа іншим ключем, а потім увімкніть знову."
+          }
+        }
+      }
+    },
+    "This security key cannot unlock the stored config." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Sicherheitsschlüssel kann die gespeicherte Konfiguration nicht entsperren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta llave de seguridad no puede desbloquear la configuración guardada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette clé de sécurité ne peut pas déverrouiller la configuration enregistrée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa chiave di sicurezza non può sbloccare la configurazione salvata."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей ключ безпеки не може розблокувати збережену конфігурацію."
+          }
+        }
+      }
+    },
+    "This security key is not enrolled." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Sicherheitsschlüssel ist nicht registriert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta llave de seguridad no está registrada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette clé de sécurité n'est pas enregistrée."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa chiave di sicurezza non è registrata."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей ключ безпеки не зареєстровано."
+          }
+        }
+      }
+    },
+    "Touch the same key again to set it up for the sealed configs." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berühre denselben Schlüssel noch einmal, um ihn für die versiegelten Konfigurationen einzurichten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca la misma llave otra vez para prepararla para las configuraciones selladas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez à nouveau la même clé pour la préparer aux configurations scellées."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tocca di nuovo la stessa chiave per prepararla alle configurazioni sigillate."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Торкніться тим самим ключем ще раз, щоб налаштувати його для запечатаних конфігурацій."
+          }
+        }
+      }
+    },
+    "Turn off “Require the key” before removing the last key." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schalte „Schlüssel erforderlich“ aus, bevor du den letzten Schlüssel entfernst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactiva «Exigir la llave» antes de quitar la última llave."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactivez « Exiger la clé » avant de retirer la dernière clé."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disattiva «Richiedi la chiave» prima di rimuovere l'ultima chiave."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вимкніть «Вимагати ключ», перш ніж вилучати останній ключ."
+          }
+        }
+      }
+    },
+    "Use Face ID or passcode instead" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stattdessen Face ID oder Code verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar Face ID o el código en su lugar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser plutôt Face ID ou le code"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa invece Face ID o il codice"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Натомість скористатися Face ID або код-паролем"
+          }
+        }
+      }
+    },
+    "Use a plugged-in key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eingesteckten Schlüssel verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar una llave conectada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser une clé branchée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa una chiave collegata"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скористатися підключеним ключем"
+          }
+        }
+      }
+    },
+    "Without one of them the stored configs cannot be read. Delete them to start over and import your talosconfig again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohne einen davon lassen sich die gespeicherten Konfigurationen nicht lesen. Lösche sie, um neu zu beginnen und deine talosconfig erneut zu importieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin una de ellas no se pueden leer las configuraciones guardadas. Elimínalas para empezar de nuevo e importar tu talosconfig otra vez."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sans l'une d'elles, les configurations enregistrées ne peuvent pas être lues. Supprimez-les pour repartir de zéro et réimporter votre talosconfig."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senza una di esse le configurazioni salvate non possono essere lette. Eliminale per ricominciare e importare di nuovo il tuo talosconfig."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без одного з них збережені конфігурації неможливо прочитати. Видаліть їх, щоб почати заново й імпортувати talosconfig знову."
+          }
+        }
+      }
+    },
+    "Wrong PIN, %lld tries left." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falsche PIN, noch %lld Versuche."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PIN incorrecto, quedan %lld intentos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code incorrect, %lld essais restants."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PIN errato, %lld tentativi rimasti."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неправильний PIN, залишилося спроб: %lld."
+          }
+        }
+      }
+    },
     "Panel assistant" : {
       "extractionState" : "manual",
       "localizations" : {
