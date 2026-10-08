@@ -1,0 +1,2 @@
+• CAST AI workload recommendations on Android
+• Image scan pod no longer tolerates every taint
