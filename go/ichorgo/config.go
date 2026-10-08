@@ -97,7 +97,7 @@ func loadConfig(configYAML string) (*clientconfig.Config, error) {
 
 // parseTalosconfig is clientconfig.FromString, safe on malformed input: the library
 // dereferences null contexts (`contexts: {a: ~}`) while upgrading them, and the internals
-// assume every context is set.
+// assume every context is set. A context named twice is made unique first (dedupeContexts).
 func parseTalosconfig(configYAML string) (cfg *clientconfig.Config, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -105,7 +105,7 @@ func parseTalosconfig(configYAML string) (cfg *clientconfig.Config, err error) {
 		}
 	}()
 
-	cfg, err = clientconfig.FromString(configYAML)
+	cfg, err = clientconfig.FromString(dedupeContexts(configYAML))
 	if err != nil {
 		return nil, err
 	}
