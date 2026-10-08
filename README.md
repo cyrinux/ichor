@@ -59,9 +59,11 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   Like Argo CD, Ichor writes the annotations and `spec.suspend` the `flux` CLI does, with the
   admin kubeconfig: nothing to install in the cluster.
 - **Network policies:** every NetworkPolicy and, with Cilium, CiliumNetworkPolicy and
-  CiliumClusterwideNetworkPolicy, in plain words: the pods each one selects, whether they are
-  isolated in each direction, and what each rule lets in or out (pods, namespaces, CIDRs, entities,
-  FQDNs, ports, HTTP/DNS rules), with each namespace's share of isolated pods.
+  CiliumClusterwideNetworkPolicy, with Calico its NetworkPolicy and GlobalNetworkPolicy
+  (selectors in Calico's own language, Allow/Deny/Pass/Log rules, read from its CRDs or its
+  API server), in plain words: the pods each one selects, whether they are isolated in each
+  direction, and what each rule lets in or out (pods, namespaces, CIDRs, entities, FQDNs,
+  ports, HTTP/DNS rules), with each namespace's share of isolated pods.
 - **API server health and pressure:** the Kubernetes API server's readyz and livez checks, and
   what loads it right now: Ichor reads its `/metrics` twice a few seconds apart and shows the
   request rate, 5xx and 429 answers, which clients send the requests (API Priority and Fairness
@@ -399,6 +401,14 @@ every context with how it signs in, and why one cannot be added (a file path to 
 `kubectl config view --flatten --minify`, a proxy, plain HTTP…). These clusters get a
 Kubernetes home (nodes, API server version, who you are signed in as) and every Kubernetes
 screen; the Talos ones are hidden. What they may do is up to their RBAC.
+
+Each node on that home also says where the cloud put it, read from its labels: the
+autoscaler pool it came from (a Karpenter NodePool — open source or EKS Auto Mode — an EKS
+managed node group, a GKE custom compute class or node pool, an AKS agent pool), its
+machine type (`node.kubernetes.io/instance-type`) and whether it is spot, on-demand or
+reserved capacity (`karpenter.sh/capacity-type`, `eks.amazonaws.com/capacityType`,
+`cloud.google.com/gke-spot`, `kubernetes.azure.com/scalesetpriority`). Nothing is shown
+when no such label is set, as on bare metal.
 
 | Kubeconfig user | What the app does |
 |---|---|

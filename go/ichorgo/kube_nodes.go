@@ -32,9 +32,19 @@ type kubeNodeInfo struct {
 	Kernel     string   `json:"kernel,omitempty"`
 	Runtime    string   `json:"runtime,omitempty"`
 	Arch       string   `json:"arch,omitempty"`
-	CPU        float64  `json:"cpu"`
-	Memory     float64  `json:"memory"`
-	PodLimit   int      `json:"podLimit"`
+	// Pool is the autoscaler pool the node came from, PoolKind which autoscaler names it:
+	// "karpenter" (a NodePool, EKS Auto Mode included), "eks" (a managed node group),
+	// "gke-class" (a custom compute class), "gke" (a node pool) or "aks" (an agent pool).
+	// Both "" when no such label is set.
+	Pool     string `json:"pool,omitempty"`
+	PoolKind string `json:"poolKind,omitempty"`
+	// InstanceType is the cloud machine type (node.kubernetes.io/instance-type).
+	InstanceType string `json:"instanceType,omitempty"`
+	// Capacity is "spot", "on-demand" or "reserved" when the cloud labels say which.
+	Capacity string  `json:"capacity,omitempty"`
+	CPU      float64 `json:"cpu"`
+	Memory   float64 `json:"memory"`
+	PodLimit int     `json:"podLimit"`
 	// Pressure lists the problem conditions that are on (MemoryPressure, DiskPressure,
 	// PIDPressure, NetworkUnavailable).
 	Pressure []string `json:"pressure"`
@@ -124,6 +134,10 @@ func mapKubeNode(obj kubeNodeObject) kubeNodeInfo {
 		Pressure: []string{},
 		Created:  obj.Metadata.CreationTimestamp.Unix(),
 	}
+
+	n.Pool, n.PoolKind = nodePool(obj.Metadata.Labels)
+	n.InstanceType = firstLabel(obj.Metadata.Labels, instanceTypeLabel, legacyInstanceTypeLabel)
+	n.Capacity = nodeCapacity(obj.Metadata.Labels, n.PoolKind)
 
 	for _, a := range obj.Status.Addresses {
 		switch {

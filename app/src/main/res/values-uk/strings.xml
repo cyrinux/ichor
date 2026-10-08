@@ -2301,6 +2301,10 @@
     <string name="netpol_not_restricted_but">Не обмежено, крім того, що забороняють правила нижче.</string>
     <string name="netpol_allow">Дозволити</string>
     <string name="netpol_deny">Заборонити</string>
+    <string name="netpol_pass">Передати</string>
+    <string name="netpol_log">Лише журналювати</string>
+    <string name="netpol_tier">Рівень %1$s</string>
+    <string name="netpol_order">Порядок %1$s</string>
     <string name="netpol_from">Від</string>
     <string name="netpol_to">До</string>
     <string name="netpol_any_peer">Будь-хто</string>
@@ -3096,6 +3100,14 @@
     <string name="kube_home_no_nodes">Немає вузлів.</string>
     <string name="kube_home_more_nodes">+%1$d ще</string>
     <string name="kube_node_cordoned">Ізольовано (cordon)</string>
+    <string name="kube_node_pool_karpenter">Пул Karpenter %1$s</string>
+    <string name="kube_node_pool_eks">Група вузлів EKS %1$s</string>
+    <string name="kube_node_pool_gke_class">Клас обчислень GKE %1$s</string>
+    <string name="kube_node_pool_gke">Пул вузлів GKE %1$s</string>
+    <string name="kube_node_pool_aks">Пул агентів AKS %1$s</string>
+    <string name="kube_node_capacity_spot">Spot</string>
+    <string name="kube_node_capacity_on_demand">On-demand</string>
+    <string name="kube_node_capacity_reserved">Зарезервовано</string>
     <!-- kube sign-in -->
     <string name="kube_signin_method_oidc">OIDC</string>
     <string name="kube_signin_method_eks">AWS EKS</string>

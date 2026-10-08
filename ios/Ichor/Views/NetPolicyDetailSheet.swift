@@ -53,6 +53,14 @@ struct NetPolicyDetailSheet: View {
             } else {
                 Text(verbatim: policy.namespace).font(.subheadline.monospaced()).foregroundStyle(.secondary)
             }
+            if !policy.tier.isEmpty || policy.orderText != nil {
+                HStack(spacing: 6) {
+                    if !policy.tier.isEmpty { Text("Tier \(policy.tier)") }
+                    if let order = policy.orderText { Text("Order \(order)") }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
             if !policy.description.isEmpty {
                 Text(verbatim: policy.description).font(.callout)
             }
@@ -123,7 +131,7 @@ private struct NetRuleRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            InfoChip(text: rule.deny ? String(localized: "Deny") : String(localized: "Allow"), color: rule.deny ? .red : .green)
+            InfoChip(text: rule.action.label, color: rule.action.color)
             Text(direction == .ingress ? LocalizedStringKey("From") : LocalizedStringKey("To")).font(.caption).foregroundStyle(.secondary)
             ChipFlow {
                 if rule.peers.isEmpty {

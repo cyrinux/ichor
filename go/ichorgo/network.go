@@ -52,7 +52,7 @@ type routeInfo struct {
 }
 
 // virtualLinkPrefixes name the CNI/pod links that clutter a node's link list.
-var virtualLinkPrefixes = []string{"lxc", "cilium_", "flannel", "cni", "kube-ipvs", "vxlan", "genev_sys"}
+var virtualLinkPrefixes = []string{"lxc", "cilium_", "cali", "tunl", "wireguard.cali", "flannel", "cni", "kube-ipvs", "vxlan", "genev_sys"}
 
 // NodeNetwork returns node's links, addresses, main-table routes, DNS resolvers and time
 // servers, like `talosctl get links/addresses/routes/resolvers/timeservers` (os:reader).

@@ -10,7 +10,29 @@ extension NetPolicyKind {
         case .networkPolicy: .blue
         case .cilium: .purple
         case .ciliumClusterwide: .indigo
+        case .calico: .orange
+        case .calicoGlobal: .brown
         case .unknown: .secondary
+        }
+    }
+}
+
+extension NetRuleAction {
+    var label: String {
+        switch self {
+        case .allow: String(localized: "Allow")
+        case .deny: String(localized: "Deny")
+        case .pass: String(localized: "Pass")
+        case .log: String(localized: "Log only")
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .allow: .green
+        case .deny: .red
+        case .pass: attentionColor
+        case .log: .secondary
         }
     }
 }

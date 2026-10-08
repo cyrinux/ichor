@@ -187,6 +187,31 @@ func TestReadSupportedIntegrations(t *testing.T) {
 	}
 }
 
+// Calico is found by either of its groups: the API server alone (the etcd datastore) counts.
+func TestReadSupportedIntegrationsAnyGroup(t *testing.T) {
+	f := newFakeKubeAPI(t, map[string]string{
+		"GET /apis":            `{"groups":[{"name":"projectcalico.org","preferredVersion":{"version":"v3"}}]}`,
+		"GET /api/v1/pods":     `{"items":[]}`,
+		"GET /api/v1/services": `{"items":[]}`,
+	})
+
+	k, err := openKubeClient(context.Background(), f.kubeconfigFor(f.URL), nil, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := readSupportedIntegrations(context.Background(), k, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, it := range res.Items {
+		if it.Detected != (it.ID == "calico") || it.ID == "calico" && (it.Via != detectedByAPI || it.Version != "v3") {
+			t.Errorf("%s: %+v", it.ID, it)
+		}
+	}
+}
+
 func TestReadSupportedIntegrationsPodsForbidden(t *testing.T) {
 	// Only /apis answers: the pods cannot be listed, the inventory's hint stands in.
 	f := newFakeKubeAPI(t, map[string]string{"GET /apis": `{"groups":[]}`})

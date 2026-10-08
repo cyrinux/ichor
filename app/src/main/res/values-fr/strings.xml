@@ -2131,6 +2131,10 @@
     <string name="netpol_not_restricted_but">Non restreint, sauf ce que refusent les règles ci-dessous.</string>
     <string name="netpol_allow">Autoriser</string>
     <string name="netpol_deny">Refuser</string>
+    <string name="netpol_pass">Passer</string>
+    <string name="netpol_log">Journaliser seulement</string>
+    <string name="netpol_tier">Niveau %1$s</string>
+    <string name="netpol_order">Ordre %1$s</string>
     <string name="netpol_from">Depuis</string>
     <string name="netpol_to">Vers</string>
     <string name="netpol_any_peer">N’importe qui</string>
@@ -2902,6 +2906,14 @@
     <string name="kube_home_no_nodes">Aucun nœud.</string>
     <string name="kube_home_more_nodes">+%1$d de plus</string>
     <string name="kube_node_cordoned">Cordonné</string>
+    <string name="kube_node_pool_karpenter">Pool Karpenter %1$s</string>
+    <string name="kube_node_pool_eks">Groupe de nœuds EKS %1$s</string>
+    <string name="kube_node_pool_gke_class">Classe de calcul GKE %1$s</string>
+    <string name="kube_node_pool_gke">Pool de nœuds GKE %1$s</string>
+    <string name="kube_node_pool_aks">Pool d\'agents AKS %1$s</string>
+    <string name="kube_node_capacity_spot">Spot</string>
+    <string name="kube_node_capacity_on_demand">À la demande</string>
+    <string name="kube_node_capacity_reserved">Réservé</string>
     <!-- kube sign-in -->
     <string name="kube_signin_method_oidc">OIDC</string>
     <string name="kube_signin_method_eks">AWS EKS</string>

@@ -108,10 +108,11 @@ private fun KubeStatusPill(nodes: KubeNodesOverview) {
 }
 
 /**
- * The nodes as Kubernetes sees them: roles, readiness, cordon, address, kubelet version and
- * pressure. A tap opens [onNode]'s actions (cordon, drain): there is no node detail screen,
- * it reads the node through Talos. Credentials that may not list nodes get a note instead;
- * the rest of the home still works.
+ * The nodes as Kubernetes sees them: roles, readiness, cordon, address, kubelet version,
+ * pressure, and where the cloud put them (autoscaler pool, machine type, spot). A tap opens
+ * [onNode]'s actions (cordon, drain): there is no node detail screen, it reads the node
+ * through Talos. Credentials that may not list nodes get a note instead; the rest of the
+ * home still works.
  */
 @Composable
 internal fun KubeNodesCard(overview: KubeNodesOverview, onNode: (KubeNodeInfo) -> Unit) {
@@ -149,6 +150,8 @@ private fun KubeNodeRow(node: KubeNodeInfo, onClick: () -> Unit) {
         }
         val details = listOf(node.roles.joinToString(", "), node.address, node.kubelet).filter { it.isNotEmpty() }
         if (details.isNotEmpty()) MutedText(details.joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        val provenance = listOfNotNull(nodePoolLabel(node), node.instanceType.ifEmpty { null }, nodeCapacityLabel(node))
+        if (provenance.isNotEmpty()) MutedText(provenance.joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (node.cordoned || node.pressure.isNotEmpty()) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (node.cordoned) StatusPill(stringResource(R.string.kube_node_cordoned), colors.warn)
@@ -157,6 +160,27 @@ private fun KubeNodeRow(node: KubeNodeInfo, onClick: () -> Unit) {
             }
         }
     }
+}
+
+/** "Karpenter pool general", "GKE node pool default-pool"…; the bare name for a kind this does not know, null for none. */
+@Composable
+private fun nodePoolLabel(node: KubeNodeInfo): String? = when {
+    node.pool.isEmpty() -> null
+    node.poolKind == "karpenter" -> stringResource(R.string.kube_node_pool_karpenter, node.pool)
+    node.poolKind == "eks" -> stringResource(R.string.kube_node_pool_eks, node.pool)
+    node.poolKind == "gke-class" -> stringResource(R.string.kube_node_pool_gke_class, node.pool)
+    node.poolKind == "gke" -> stringResource(R.string.kube_node_pool_gke, node.pool)
+    node.poolKind == "aks" -> stringResource(R.string.kube_node_pool_aks, node.pool)
+    else -> node.pool
+}
+
+/** Spot, on-demand or reserved capacity; null when the cloud did not say. */
+@Composable
+private fun nodeCapacityLabel(node: KubeNodeInfo): String? = when (node.capacity) {
+    "spot" -> stringResource(R.string.kube_node_capacity_spot)
+    "on-demand" -> stringResource(R.string.kube_node_capacity_on_demand)
+    "reserved" -> stringResource(R.string.kube_node_capacity_reserved)
+    else -> null
 }
 
 /** The Kubernetes screens that work with these credentials alone. */

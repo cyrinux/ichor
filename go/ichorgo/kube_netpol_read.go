@@ -11,6 +11,10 @@ import (
 
 const (
 	groupCilium = "cilium.io"
+	// groupCalicoCRD stores Calico's objects with the Kubernetes datastore: always served
+	// then, API server or not. groupCalico is the Calico API server (projectcalico.org/v3).
+	groupCalicoCRD = "crd.projectcalico.org"
+	groupCalico    = "projectcalico.org"
 	// runningPods are the pods policies apply to: neither Succeeded nor Failed.
 	runningPods = "status.phase!=Succeeded,status.phase!=Failed"
 )
@@ -18,6 +22,7 @@ const (
 // netPolicyReport is every network policy of the cluster, and how isolated each namespace is.
 type netPolicyReport struct {
 	Cilium     bool             `json:"cilium"` // the Cilium policy CRDs are served
+	Calico     bool             `json:"calico"` // Calico's policy API is served
 	Policies   []netPolicy      `json:"policies"`
 	Namespaces []netPolicyNSRow `json:"namespaces"`
 	Error      string           `json:"error,omitempty"` // a kind that could not be read
@@ -58,7 +63,8 @@ type npNamespace struct {
 
 // KubeNetworkPolicies lists the cluster's network policies through the Kubernetes API
 // (os:admin): Kubernetes NetworkPolicies and, with Cilium, CiliumNetworkPolicies and
-// CiliumClusterwideNetworkPolicies, as {"cilium","policies","namespaces","error"} (see
+// CiliumClusterwideNetworkPolicies, with Calico its NetworkPolicies and
+// GlobalNetworkPolicies, as {"cilium","calico","policies","namespaces","error"} (see
 // netPolicyReport). kubeServer: see KubePods.
 func KubeNetworkPolicies(configYAML, contextName, kubeServer string) (out string, err error) {
 	defer maskResult(&out, &err)
@@ -71,7 +77,7 @@ func KubeNetworkPolicies(configYAML, contextName, kubeServer string) (out string
 func readNetPolicyReport(ctx context.Context, k *kubeClient) (netPolicyReport, error) {
 	var (
 		policies   []netPolicy
-		cilium     bool
+		cni        policyCNIs
 		policyErr  error
 		pods       kubeList[npPod]
 		namespaces kubeList[npNamespace]
@@ -79,7 +85,7 @@ func readNetPolicyReport(ctx context.Context, k *kubeClient) (netPolicyReport, e
 		wg         sync.WaitGroup
 	)
 
-	wg.Go(func() { policies, cilium, policyErr = readNetPolicies(ctx, k) })
+	wg.Go(func() { policies, cni, policyErr = readNetPolicies(ctx, k) })
 	// Finished pods are left out below anyway: the server drops them before sending.
 	wg.Go(func() { errs[0] = getList(ctx, k, "/api/v1/pods?fieldSelector="+url.QueryEscape(runningPods), &pods) })
 	wg.Go(func() { errs[1] = getList(ctx, k, "/api/v1/namespaces", &namespaces) })
@@ -95,7 +101,7 @@ func readNetPolicyReport(ctx context.Context, k *kubeClient) (netPolicyReport, e
 		}
 	}
 
-	report := netPolicyReport{Cilium: cilium, Policies: policies}
+	report := netPolicyReport{Cilium: cni.cilium, Calico: cni.calico, Policies: policies}
 	if policyErr != nil {
 		report.Error = sectionError(policyErr)
 	}
@@ -105,43 +111,78 @@ func readNetPolicyReport(ctx context.Context, k *kubeClient) (netPolicyReport, e
 	return report, nil
 }
 
-// readNetPolicies reads the policies of every kind the cluster serves. A Cilium kind that
+// policyCNIs tells which CNI's policy API the cluster serves.
+type policyCNIs struct {
+	cilium, calico bool
+}
+
+// readNetPolicies reads the policies of every kind the cluster serves. A CNI's kind that
 // fails is returned with the error; the Kubernetes one failing fails the call.
-func readNetPolicies(ctx context.Context, k *kubeClient) ([]netPolicy, bool, error) {
+func readNetPolicies(ctx context.Context, k *kubeClient) ([]netPolicy, policyCNIs, error) {
 	groups, err := readAPIGroups(ctx, k)
 	if err != nil {
-		return nil, false, err
+		return nil, policyCNIs{}, err
 	}
 
-	version, cilium := groups[groupCilium]
-
 	var (
-		nps       kubeList[npObject]
-		cnps      kubeList[cnpObject]
-		ccnps     kubeList[cnpObject]
-		errs      = make([]error, 3)
-		wg        sync.WaitGroup
-		ciliumAPI = "/apis/" + groupCilium + "/" + version
+		nps            kubeList[npObject]
+		cilium, calico []netPolicy
+		errs           = make([]error, 3)
+		wg             sync.WaitGroup
+		cni            policyCNIs
 	)
+
+	ciliumVersion, ok := groups[groupCilium]
+	cni.cilium = ok
+	calicoAPI, ok := calicoPolicyAPI(groups)
+	cni.calico = ok
 
 	wg.Go(func() { errs[0] = getList(ctx, k, "/apis/networking.k8s.io/v1/networkpolicies", &nps) })
 
-	if cilium {
-		wg.Go(func() { errs[1] = getList(ctx, k, ciliumAPI+"/ciliumnetworkpolicies", &cnps) })
-		wg.Go(func() { errs[2] = getList(ctx, k, ciliumAPI+"/ciliumclusterwidenetworkpolicies", &ccnps) })
+	if cni.cilium {
+		wg.Go(func() { cilium, errs[1] = readCiliumPolicies(ctx, k, "/apis/"+groupCilium+"/"+ciliumVersion) })
+	}
+
+	if cni.calico {
+		wg.Go(func() { calico, errs[2] = readCalicoPolicies(ctx, k, calicoAPI) })
 	}
 
 	wg.Wait()
 
 	if errs[0] != nil {
-		return nil, cilium, errs[0]
+		return nil, cni, errs[0]
 	}
 
-	out := make([]netPolicy, 0, len(nps.Items)+len(cnps.Items)+len(ccnps.Items))
+	out := make([]netPolicy, 0, len(nps.Items)+len(cilium)+len(calico))
 
 	for _, o := range nps.Items {
 		out = append(out, mapNetworkPolicy(o))
 	}
+
+	out = append(out, cilium...)
+	out = append(out, calico...)
+
+	slices.SortFunc(out, func(a, b netPolicy) int {
+		return cmp.Or(cmp.Compare(a.Namespace, b.Namespace), cmp.Compare(a.Name, b.Name), cmp.Compare(a.Kind, b.Kind))
+	})
+
+	return out, cni, cmp.Or(errs[1], errs[2])
+}
+
+// readCiliumPolicies reads the CiliumNetworkPolicies and CiliumClusterwideNetworkPolicies
+// api serves; a kind the server does not know is skipped.
+func readCiliumPolicies(ctx context.Context, k *kubeClient, api string) ([]netPolicy, error) {
+	var (
+		cnps, ccnps kubeList[cnpObject]
+		errs        = make([]error, 2)
+		wg          sync.WaitGroup
+	)
+
+	wg.Go(func() { errs[0] = ignoreNotFound(getList(ctx, k, api+"/ciliumnetworkpolicies", &cnps)) })
+	wg.Go(func() { errs[1] = ignoreNotFound(getList(ctx, k, api+"/ciliumclusterwidenetworkpolicies", &ccnps)) })
+	wg.Wait()
+
+	out := make([]netPolicy, 0, len(cnps.Items)+len(ccnps.Items))
 
 	for _, o := range cnps.Items {
 		out = append(out, mapCiliumPolicy(o, false))
@@ -151,18 +192,51 @@ func readNetPolicies(ctx context.Context, k *kubeClient) ([]netPolicy, bool, err
 		out = append(out, mapCiliumPolicy(o, true))
 	}
 
-	slices.SortFunc(out, func(a, b netPolicy) int {
-		return cmp.Or(cmp.Compare(a.Namespace, b.Namespace), cmp.Compare(a.Name, b.Name), cmp.Compare(a.Kind, b.Kind))
-	})
+	return out, cmp.Or(errs[0], errs[1])
+}
 
-	var cerr error
-	if errs[1] != nil && !isNotFound(errs[1]) {
-		cerr = errs[1]
-	} else if errs[2] != nil && !isNotFound(errs[2]) {
-		cerr = errs[2]
+// calicoPolicyAPI is where to read Calico's policies: its CRDs when served (the Kubernetes
+// datastore), else the Calico API server; "" and false without Calico.
+func calicoPolicyAPI(groups map[string]string) (string, bool) {
+	if version, ok := groups[groupCalicoCRD]; ok {
+		return "/apis/" + groupCalicoCRD + "/" + version, true
 	}
 
-	return out, cilium, cerr
+	if version, ok := groups[groupCalico]; ok {
+		return "/apis/" + groupCalico + "/" + version, true
+	}
+
+	return "", false
+}
+
+// readCalicoPolicies reads Calico's NetworkPolicies and GlobalNetworkPolicies from api. The
+// API server also lists the Kubernetes policies it mirrors, which are read apart.
+func readCalicoPolicies(ctx context.Context, k *kubeClient, api string) ([]netPolicy, error) {
+	var (
+		nps, gnps kubeList[calicoPolicyObject]
+		errs      = make([]error, 2)
+		wg        sync.WaitGroup
+	)
+
+	wg.Go(func() { errs[0] = ignoreNotFound(getList(ctx, k, api+"/networkpolicies", &nps)) })
+	wg.Go(func() { errs[1] = ignoreNotFound(getList(ctx, k, api+"/globalnetworkpolicies", &gnps)) })
+	wg.Wait()
+
+	out := make([]netPolicy, 0, len(nps.Items)+len(gnps.Items))
+
+	for _, o := range nps.Items {
+		if calicoPolicyName(o.Metadata.Name) {
+			out = append(out, mapCalicoPolicy(o, false))
+		}
+	}
+
+	for _, o := range gnps.Items {
+		if calicoPolicyName(o.Metadata.Name) {
+			out = append(out, mapCalicoPolicy(o, true))
+		}
+	}
+
+	return out, cmp.Or(errs[0], errs[1])
 }
 
 // attachPolicyPods fills each policy's Pods and returns the namespace rows. Pods on the

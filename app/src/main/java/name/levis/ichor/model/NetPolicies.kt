@@ -8,6 +8,10 @@ const val NETPOL_KIND_K8S = "NetworkPolicy"
 const val NETPOL_KIND_CILIUM = "CiliumNetworkPolicy"
 const val NETPOL_KIND_CILIUM_CLUSTER = "CiliumClusterwideNetworkPolicy"
 
+/** Calico's own NetworkPolicy (projectcalico.org), named apart from the Kubernetes one. */
+const val NETPOL_KIND_CALICO = "NetworkPolicy.projectcalico.org"
+const val NETPOL_KIND_CALICO_GLOBAL = "GlobalNetworkPolicy"
+
 const val NETPEER_PODS = "pods"
 const val NETPEER_NAMESPACES = "namespaces"
 const val NETPEER_CIDR = "cidr"
@@ -19,14 +23,22 @@ const val NETPEER_NODES = "nodes"
 /** The rule matches no peer: Cilium's empty rule `{}`, a deny-all. */
 const val NETPEER_NONE = "none"
 
-/** A peer the app does not describe; its value is the Cilium field (toGroups, cidrGroupSelector…). */
+/** A peer the app does not describe; its value is the Cilium field (toGroups, cidrGroupSelector…) or a Calico negation. */
 const val NETPEER_OTHER = "other"
+
+/** A Calico rule that hands the traffic to the next tier or the profiles, which allow it. */
+const val NETRULE_PASS = "pass"
+
+/** A Calico rule that only logs the traffic. */
+const val NETRULE_LOG = "log"
 
 /** Every network policy of the cluster, and how isolated each namespace is. */
 @Serializable
 data class NetPolicyReport(
     /** The Cilium policy CRDs are served. */
     val cilium: Boolean = false,
+    /** Calico's policy API is served. */
+    val calico: Boolean = false,
     val policies: List<NetPolicy> = emptyList(),
     val namespaces: List<NetPolicyNamespace> = emptyList(),
     /** A kind that could not be read. */
@@ -59,6 +71,9 @@ data class NetPolicy(
     /** A Cilium host policy: [subject] selects nodes. */
     val nodes: Boolean = false,
     val description: String = "",
+    /** A Calico policy's tier and order: lower orders apply first, in the tier's turn. */
+    val tier: String = "",
+    val order: Double? = null,
     /** The selected pods are isolated for ingress: only what [ingressRules] allow passes. */
     val ingress: Boolean = false,
     val egress: Boolean = false,
@@ -71,22 +86,40 @@ data class NetPolicy(
     val key: String get() = "$kind/$namespace/$name"
     val clusterWide: Boolean get() = namespace.isEmpty()
 
-    /** NP, CNP or CCNP. */
+    /** NP, CNP, CCNP, Calico NP or GNP. */
     val kindShort: String
         get() = when (kind) {
             NETPOL_KIND_K8S -> "NP"
             NETPOL_KIND_CILIUM -> "CNP"
             NETPOL_KIND_CILIUM_CLUSTER -> "CCNP"
+            NETPOL_KIND_CALICO -> "Calico NP"
+            NETPOL_KIND_CALICO_GLOBAL -> "GNP"
             else -> kind
         }
+
+    /** Whose policy it is: Kubernetes, Cilium or Calico, for the search. */
+    val family: String
+        get() = when (kind) {
+            NETPOL_KIND_CILIUM, NETPOL_KIND_CILIUM_CLUSTER -> "Cilium"
+            NETPOL_KIND_CALICO, NETPOL_KIND_CALICO_GLOBAL -> "Calico"
+            else -> "Kubernetes"
+        }
+
+    /** "100", "100.5": the order without a needless fraction; null without one. */
+    val orderText: String?
+        get() = order?.let { if (it == Math.floor(it)) it.toLong().toString() else it.toString() }
 
     fun matches(ref: PolicyRef): Boolean = kind == ref.kind && namespace == ref.namespace && name == ref.name
 }
 
-/** Traffic from/to any of [peers] on any of [ports] passes, or is denied when [deny]. */
+/**
+ * Traffic from/to any of [peers] on any of [ports] passes, or is denied when [deny]; a Calico
+ * rule may instead pass it on ([NETRULE_PASS]) or only log it ([NETRULE_LOG]), see [action].
+ */
 @Serializable
 data class NetRule(
     val deny: Boolean = false,
+    val action: String = "",
     /** Empty: any peer. */
     val peers: List<NetPeer> = emptyList(),
     /** Empty: any port. */
@@ -145,7 +178,7 @@ fun NetPolicyReport.grouped(namespace: String?, query: String): List<Pair<String
     val q = query.trim()
     return policies
         .filter { namespace == null || it.namespace == namespace || (it.clusterWide && it.subjectNamespace == namespace) }
-        .filter { q.isEmpty() || listOf(it.name, it.subject, it.kind, it.description).any { f -> f.contains(q, ignoreCase = true) } }
+        .filter { q.isEmpty() || listOf(it.name, it.subject, it.kind, it.kindShort, it.family, it.description).any { f -> f.contains(q, ignoreCase = true) } }
         .groupBy { it.namespace }
         .toList()
         .sortedWith(compareBy({ it.first.isEmpty() }, { it.first }))

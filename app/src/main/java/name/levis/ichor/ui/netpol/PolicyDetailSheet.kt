@@ -39,7 +39,14 @@ fun PolicyDetailSheet(policy: NetPolicy, onDismiss: () -> Unit) {
                 KindBadge(policy)
                 Text(policy.name, style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace)
             }
-            MutedText(listOf(policy.kind, policy.namespace.ifEmpty { stringResource(R.string.netpol_cluster_wide) }).joinToString("  ·  "))
+            MutedText(
+                listOfNotNull(
+                    policy.kind,
+                    policy.namespace.ifEmpty { stringResource(R.string.netpol_cluster_wide) },
+                    policy.tier.takeIf { it.isNotEmpty() }?.let { stringResource(R.string.netpol_tier, it) },
+                    policy.orderText?.let { stringResource(R.string.netpol_order, it) },
+                ).joinToString("  ·  "),
+            )
             if (policy.description.isNotEmpty()) {
                 Text(policy.description, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
             }

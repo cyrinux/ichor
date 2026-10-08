@@ -26,7 +26,7 @@ class CiliumRepository(private val configs: ConfigRepository, private val kubeSe
         TalosJson.decodeFromString(CiliumStatus.serializer(), Ichorgo.kubeCilium(target.yaml, target.context, target.server))
     }
 
-    /** Kubernetes NetworkPolicies and, with Cilium, its own policies. */
+    /** Kubernetes NetworkPolicies and, with Cilium or Calico, their own policies. */
     suspend fun policies(): NetPolicyReport = withContext(Dispatchers.IO) {
         val target = target()
         TalosJson.decodeFromString(NetPolicyReport.serializer(), Ichorgo.kubeNetworkPolicies(target.yaml, target.context, target.server))

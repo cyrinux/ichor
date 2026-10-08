@@ -136,4 +136,46 @@ final class NetPoliciesTests: XCTestCase {
         XCTAssertEqual(report.error, "CiliumNetworkPolicy: forbidden")
         XCTAssertTrue(try decode("{}").policies.isEmpty)
     }
+
+    // KubeNetworkPolicies on a Calico cluster (go/ichorgo/kube_netpol_calico.go).
+    func testDecodesCalicoPolicies() throws {
+        let report = try decode(#"""
+        {"calico":true,"policies":[
+         {"kind":"NetworkPolicy.projectcalico.org","namespace":"shop","name":"default.api-egress","subject":"app == 'api'","tier":"default","order":100,"ingress":false,"egress":true,"ingressRules":[],
+          "egressRules":[{"peers":[{"kind":"pods","selector":"app == 'db'"}],"ports":[{"protocol":"TCP","port":"5432"}]},
+                         {"deny":true,"peers":[{"kind":"cidr","value":"0.0.0.0/0"},{"kind":"other","value":"not 10.0.0.0/8"}],"ports":[{"protocol":"TCP","port":"8000","endPort":8100}]},
+                         {"action":"pass","peers":[{"kind":"service","value":"shop/frontend"}],"ports":[]},
+                         {"action":"log","peers":[],"ports":[]}],"pods":["shop/api-1"],"podCount":1},
+         {"kind":"GlobalNetworkPolicy","name":"default.team-a","subject":"all()","subjectNamespace":"team-a-web","order":10.5,"ingress":true,"egress":false,
+          "ingressRules":[{"peers":[{"kind":"pods","namespace":"team-a-web"}],"ports":[]}],"egressRules":[],"pods":["team-a-web/web-1"],"podCount":1}
+        ],"namespaces":[{"namespace":"shop","pods":3,"ingressIsolated":0,"egressIsolated":1,"policies":1}]}
+        """#)
+        XCTAssertTrue(report.calico)
+        XCTAssertFalse(report.cilium)
+
+        let api = try XCTUnwrap(report.policies.first { $0.name == "default.api-egress" })
+        XCTAssertEqual(api.kind, .calico)
+        XCTAssertEqual(api.kind.short, "Calico NP")
+        XCTAssertEqual(api.subjectScope, .selector("app == 'api'"))
+        XCTAssertEqual(api.egressRules.map(\.action), [.allow, .deny, .pass, .log])
+        XCTAssertEqual(api.egressRules[1].peers[1].kind, .unknown, "a negation the app only words")
+        XCTAssertEqual(api.egressRules[1].peers[1].value, "not 10.0.0.0/8")
+        XCTAssertEqual(api.tier, "default")
+        XCTAssertEqual(api.orderText, "100")
+        XCTAssertEqual(api.egressRules[1].ports.first?.label, "TCP 8000–8100")
+        XCTAssertEqual(api.effect(.egress), .isolated)
+
+        let team = try XCTUnwrap(report.policies.first { $0.name == "default.team-a" })
+        XCTAssertEqual(team.kind, .calicoGlobal)
+        XCTAssertEqual(team.kind.short, "GNP")
+        XCTAssertTrue(team.clusterWide)
+        XCTAssertEqual(team.subjectNamespace, "team-a-web")
+        XCTAssertEqual(team.subjectScope, .selector("all()"))
+        XCTAssertEqual(team.ingressRules[0].peers[0].scope(clusterWide: true), .named("team-a-web"))
+        XCTAssertEqual(team.orderText, "10.5")
+        XCTAssertEqual(report.kindCounts.map(\.kind), [.calico, .calicoGlobal])
+        // "calico" finds both of Calico's kinds, "gnp" the global ones.
+        XCTAssertEqual(report.sections(namespace: nil, query: "calico").flatMap(\.policies).map(\.name), ["default.api-egress", "default.team-a"])
+        XCTAssertEqual(report.sections(namespace: nil, query: "gnp").flatMap(\.policies).map(\.name), ["default.team-a"])
+    }
 }

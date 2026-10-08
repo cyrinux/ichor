@@ -201,9 +201,9 @@ struct KubeHomeView: View {
     }
 }
 
-/// A node as Kubernetes sees it: ready or not, cordoned, roles, address, kubelet and the
-/// pressure conditions that are on. No node screen (it reads Talos): a tap offers the cordon
-/// and the drain.
+/// A node as Kubernetes sees it: ready or not, cordoned, roles, address, kubelet, the
+/// pressure conditions that are on, and where the cloud put it (autoscaler pool, machine
+/// type, spot). No node screen (it reads Talos): a tap offers the cordon and the drain.
 private struct KubeNodeRow: View {
     let node: KubeNodeInfo
 
@@ -216,6 +216,7 @@ private struct KubeNodeRow: View {
                 Text(statusLabel).font(.caption).foregroundStyle(statusColor)
             }
             Text(verbatim: details).font(.caption).foregroundStyle(.secondary)
+            if let provenance { Text(verbatim: provenance).font(.caption).foregroundStyle(.secondary) }
             if !node.pressure.isEmpty {
                 Text(verbatim: node.pressure.joined(separator: ", ")).font(.caption).foregroundStyle(.statusWarn)
             }
@@ -246,6 +247,37 @@ private struct KubeNodeRow: View {
 
     private func formatCores(_ cores: Double) -> String {
         cores == cores.rounded() ? String(Int(cores)) : String(format: "%.1f", cores)
+    }
+
+    /// Pool, machine type, spot or on-demand: where the cloud put the node, when it says.
+    private var provenance: String? {
+        var parts: [String] = []
+        if let pool = poolLabel { parts.append(pool) }
+        if let type = node.instanceType, !type.isEmpty { parts.append(type) }
+        if let capacity = capacityLabel { parts.append(capacity) }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    /// "Karpenter pool general", "GKE node pool default-pool"…; the bare name for a kind this does not know.
+    private var poolLabel: String? {
+        guard let pool = node.pool, !pool.isEmpty else { return nil }
+        switch node.poolKind {
+        case "karpenter": return String(localized: "Karpenter pool \(pool)")
+        case "eks": return String(localized: "EKS node group \(pool)")
+        case "gke-class": return String(localized: "GKE compute class \(pool)")
+        case "gke": return String(localized: "GKE node pool \(pool)")
+        case "aks": return String(localized: "AKS agent pool \(pool)")
+        default: return pool
+        }
+    }
+
+    private var capacityLabel: String? {
+        switch node.capacity {
+        case "spot": return String(localized: "Spot")
+        case "on-demand": return String(localized: "On-demand")
+        case "reserved": return String(localized: "Reserved")
+        default: return nil
+        }
     }
 }
 
