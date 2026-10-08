@@ -6,18 +6,20 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"strings"
 
+	"github.com/cosi-project/runtime/api/v1alpha1"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
+	"go.yaml.in/yaml/v4"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/encoding/protowire"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Omni's own API, next to the Talos proxy on the same endpoint: Omni routes the methods of
@@ -114,40 +116,20 @@ func omniAuthChanged(authKey string) {
 	})
 }
 
-// rawCodec sends and receives messages already encoded (*[]byte).
-type rawCodec struct{}
-
-func (rawCodec) Marshal(v any) ([]byte, error) {
-	b, ok := v.(*[]byte)
-	if !ok {
-		return nil, fmt.Errorf("raw codec: %T", v)
-	}
-
-	return *b, nil
-}
-
-func (rawCodec) Unmarshal(data []byte, v any) error {
-	b, ok := v.(*[]byte)
-	if !ok {
-		return fmt.Errorf("raw codec: %T", v)
-	}
-
-	*b = append([]byte(nil), data...)
-
-	return nil
-}
-
-func (rawCodec) Name() string { return "proto" }
-
-var _ encoding.Codec = rawCodec{}
-
+// omniInvoke calls method with req, a message encoded by hand, and returns the answer's
+// bytes. They ride as the unknown fields of an Empty: the standard proto codec sends them as
+// they are, under the plain application/grpc content type Omni routes to its API (a forced
+// codec named "proto" makes grpc-go send application/grpc+proto, which Omni's router does
+// not take for gRPC and hands to its web server).
 func omniInvoke(ctx context.Context, cc *grpc.ClientConn, method string, req []byte) ([]byte, error) {
-	var resp []byte
-	if err := cc.Invoke(ctx, method, &req, &resp, grpc.ForceCodec(rawCodec{})); err != nil {
+	in, out := &emptypb.Empty{}, &emptypb.Empty{}
+	in.ProtoReflect().SetUnknown(req)
+
+	if err := cc.Invoke(ctx, method, in, out); err != nil {
 		return nil, err
 	}
 
-	return resp, nil
+	return out.ProtoReflect().GetUnknown(), nil
 }
 
 // protoFields returns the length-delimited values of field num in msg, in order.
@@ -203,47 +185,61 @@ type omniCluster struct {
 }
 
 // omniListClusters lists the clusters the identity may see (Omni's Reader role, or an
-// access policy on all clusters: Omni refuses the list otherwise).
+// access policy on all clusters: Omni refuses the list otherwise), through Omni's COSI state
+// API as omnictl does (Omni's ResourceService is its web UI's, behind its HTTP gateway).
 func omniListClusters(ctx context.Context, cc *grpc.ClientConn) ([]omniCluster, error) {
-	ctx = metadata.AppendToOutgoingContext(ctx, "runtime", "Omni")
-
-	var req []byte
-	req = protowire.AppendTag(req, 1, protowire.BytesType)
-	req = protowire.AppendString(req, "default")
-	req = protowire.AppendTag(req, 2, protowire.BytesType)
-	req = protowire.AppendString(req, "Clusters.omni.sidero.dev")
-
-	resp, err := omniInvoke(ctx, cc, "/omni.resources.ResourceService/List", req)
+	stream, err := v1alpha1.NewStateClient(cc).List(ctx, &v1alpha1.ListRequest{
+		Namespace: "default",
+		Type:      "Clusters.omni.sidero.dev",
+		Options:   &v1alpha1.ListOptions{},
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	items, err := protoFields(resp, 1)
-	if err != nil {
-		return nil, fmt.Errorf("read Omni's cluster list: %w", err)
-	}
+	var clusters []omniCluster
 
-	clusters := make([]omniCluster, 0, len(items))
-
-	for _, item := range items {
-		var res struct {
-			Metadata struct {
-				ID string `json:"id"`
-			} `json:"metadata"`
-			Spec struct {
-				TalosVersion      string `json:"talos_version"`
-				KubernetesVersion string `json:"kubernetes_version"`
-			} `json:"spec"`
+	for {
+		resp, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			return clusters, nil
 		}
 
-		if err := json.Unmarshal(item, &res); err != nil || res.Metadata.ID == "" {
+		if err != nil {
+			return nil, err
+		}
+
+		res := resp.GetResource()
+		if id := res.GetMetadata().GetId(); id != "" {
+			talos, kube := omniClusterVersions(res.GetSpec().GetYamlSpec())
+			clusters = append(clusters, omniCluster{Name: id, TalosVersion: talos, KubernetesVersion: kube})
+		}
+	}
+}
+
+// omniClusterVersions reads the Talos and Kubernetes versions of a cluster's YAML spec, ""
+// when it does not say.
+func omniClusterVersions(yamlSpec string) (talos, kube string) {
+	var spec map[string]any
+	if yaml.Unmarshal([]byte(yamlSpec), &spec) != nil {
+		return "", ""
+	}
+
+	for key, value := range spec {
+		s, ok := value.(string)
+		if !ok {
 			continue
 		}
 
-		clusters = append(clusters, omniCluster{Name: res.Metadata.ID, TalosVersion: res.Spec.TalosVersion, KubernetesVersion: res.Spec.KubernetesVersion})
+		switch strings.ReplaceAll(strings.ToLower(key), "_", "") {
+		case "talosversion":
+			talos = s
+		case "kubernetesversion":
+			kube = s
+		}
 	}
 
-	return clusters, nil
+	return talos, kube
 }
 
 // omniTalosconfig is Omni's talosconfig of cluster for the identity: one context, its

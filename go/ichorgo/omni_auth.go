@@ -15,6 +15,8 @@ import (
 	"github.com/siderolabs/go-api-signature/pkg/serviceaccount"
 	"github.com/siderolabs/talos/pkg/machinery/client"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // An Omni context signs in like a kubeconfig cluster (kube_auth.go), through the same
@@ -245,6 +247,16 @@ func TalosSetCredentials(storedYAML, contextName, secretsJSON string) (err error
 // checkOmniSigner makes one signed call through Omni with signer. A cluster with no machine
 // yet still proves the key.
 func checkOmniSigner(ctx context.Context, cfgCtx *clientconfig.Context, signer omniSigner) error {
+	// No cluster to reach through the Talos proxy (Omni's talosconfig of the whole account):
+	// Omni's own API proves the key, whether or not its role lists the clusters.
+	if cfgCtx.Cluster == "" {
+		if _, err := listOmniClusters(ctx, cfgCtx, signer); err != nil && status.Code(err) != codes.PermissionDenied {
+			return omniAPIError(err)
+		}
+
+		return nil
+	}
+
 	opts, _ := omniClientOptionsFor(cfgCtx, signer, nil)
 
 	c, err := client.New(ctx, opts...)
@@ -376,7 +388,24 @@ func confirmOmniKey(ctx context.Context, cfgCtx *clientconfig.Context, identity 
 
 	open(loginURL)
 
-	if err := authClient.AwaitPublicKeyConfirmation(ctx, key.Fingerprint()); err != nil {
+	return awaitOmniConfirmation(ctx, func(ctx context.Context) error {
+		return authClient.AwaitPublicKeyConfirmation(ctx, key.Fingerprint())
+	})
+}
+
+// omniAwaitRetry is the pause before waiting again when the wait was cut.
+var omniAwaitRetry = time.Second
+
+// awaitOmniConfirmation waits until await reports the key confirmed. The wait is one long
+// call: a proxy in front of Omni cuts it when it stays idle (an EOF, Unavailable), so it is
+// made again, until ctx ends; a key confirmed meanwhile answers at once.
+func awaitOmniConfirmation(ctx context.Context, await func(context.Context) error) error {
+	for {
+		err := await(ctx)
+		if err == nil {
+			return nil
+		}
+
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 			return errors.New("the key was not confirmed in Omni in time: sign in again")
 		}
@@ -385,10 +414,18 @@ func confirmOmniKey(ctx context.Context, cfgCtx *clientconfig.Context, identity 
 			return ctx.Err()
 		}
 
-		return fmt.Errorf("confirm the key: %s", friendlyError(err))
-	}
+		code := status.Code(err)
+		cut := code == codes.Unavailable || code == codes.DeadlineExceeded || code == codes.Internal || strings.Contains(err.Error(), "EOF")
 
-	return nil
+		if !cut {
+			return fmt.Errorf("confirm the key: %s", friendlyError(err))
+		}
+
+		select {
+		case <-ctx.Done():
+		case <-time.After(omniAwaitRetry):
+		}
+	}
 }
 
 // TalosSignOut forgets the sign-in of the named stored Omni context.
