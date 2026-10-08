@@ -25,6 +25,10 @@ type hubbleFlow struct {
 	Source      hubblePeer  `json:"source"`
 	Destination hubblePeer  `json:"destination"`
 	DeniedBy    []policyRef `json:"deniedBy,omitempty"`
+	// Isolating is what put the endpoint in default-deny when the flow itself tells (Calico's
+	// policy trace); Packets is how many packets an aggregated (Calico) flow stood for.
+	Isolating []policyRef `json:"isolating,omitempty"`
+	Packets   uint64      `json:"packets,omitempty"`
 }
 
 type hubblePeer struct {

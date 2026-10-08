@@ -52179,6 +52179,146 @@
         }
       }
     },
+    "Whisker is not installed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisker ist nicht installiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisker no está instalado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisker n’est pas installé"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisker non è installato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whisker не встановлено"
+          }
+        }
+      }
+    },
+    "Calico 3.30+ records flows with Goldmane and serves them through Whisker. Create the Goldmane and Whisker resources (operator.tigera.io/v1, part of the custom-resources.yaml of your Calico release), wait for the whisker pod in calico-system, then open this screen again." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calico 3.30+ zeichnet Flows mit Goldmane auf und liefert sie über Whisker aus. Legen Sie die Ressourcen Goldmane und Whisker an (operator.tigera.io/v1, Teil der custom-resources.yaml Ihrer Calico-Version), warten Sie auf den whisker-Pod in calico-system und öffnen Sie diesen Bildschirm erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calico 3.30+ registra los flujos con Goldmane y los sirve a través de Whisker. Cree los recursos Goldmane y Whisker (operator.tigera.io/v1, incluidos en el custom-resources.yaml de su versión de Calico), espere al pod whisker en calico-system y vuelva a abrir esta pantalla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calico 3.30+ enregistre les flux avec Goldmane et les sert via Whisker. Créez les ressources Goldmane et Whisker (operator.tigera.io/v1, présentes dans le custom-resources.yaml de votre version de Calico), attendez le pod whisker dans calico-system, puis rouvrez cet écran."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calico 3.30+ registra i flussi con Goldmane e li serve tramite Whisker. Crea le risorse Goldmane e Whisker (operator.tigera.io/v1, incluse nel custom-resources.yaml della tua versione di Calico), attendi il pod whisker in calico-system, poi riapri questa schermata."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calico 3.30+ записує потоки через Goldmane і віддає їх через Whisker. Створіть ресурси Goldmane і Whisker (operator.tigera.io/v1, вони є в custom-resources.yaml вашого випуску Calico), дочекайтеся пода whisker у calico-system і відкрийте цей екран знову."
+          }
+        }
+      }
+    },
+    "Connecting to Whisker…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung zu Whisker…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conectando con Whisker…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connexion à Whisker…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connessione a Whisker…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З’єднання з Whisker…"
+          }
+        }
+      }
+    },
+    "History only goes back as far as Goldmane still keeps; flows are 15-second aggregates, not single packets." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Verlauf reicht nur so weit zurück, wie Goldmane noch vorhält; Flows sind 15-Sekunden-Aggregate, keine einzelnen Pakete."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El historial solo llega hasta donde Goldmane aún conserva; los flujos son agregados de 15 segundos, no paquetes sueltos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’historique ne remonte que jusqu’à ce que Goldmane conserve encore ; les flux sont des agrégats de 15 secondes, pas des paquets isolés."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La cronologia risale solo fino a quanto Goldmane conserva ancora; i flussi sono aggregati di 15 secondi, non singoli pacchetti."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Історія сягає лише того, що Goldmane ще зберігає; потоки — це агрегати за 15 секунд, а не окремі пакети."
+          }
+        }
+      }
+    },
     "Deny" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -2147,7 +2147,10 @@
     <string name="flows_title">Flujos en directo</string>
     <string name="flows_drops_only">Solo descartes</string>
     <string name="flows_clear_pod">Quitar el filtro de pod</string>
-    <string name="flows_not_installed">No se encontró Cilium en este clúster: los flujos en directo vienen de su Hubble.</string>
+    <string name="flows_not_installed">No se encontró ninguna fuente de flujos en este clúster: los flujos en directo vienen del Hubble de Cilium o del Whisker de Calico (Calico 3.30+).</string>
+    <string name="flows_whisker_off_title">Whisker no está instalado</string>
+    <string name="flows_whisker_off">Calico 3.30+ registra los flujos con Goldmane y los sirve a través de Whisker. Cree los recursos Goldmane y Whisker (operator.tigera.io/v1, incluidos en el custom-resources.yaml de su versión de Calico), espere al pod whisker en calico-system y vuelva a abrir esta pantalla.</string>
+    <string name="flows_history_note_goldmane">El historial solo llega hasta donde Goldmane aún conserva; los flujos son agregados de 15 segundos, no paquetes sueltos.</string>
     <string name="flows_hubble_off_title">Hubble está desactivado</string>
     <string name="flows_hubble_off">Los flujos en directo vienen de Hubble, que se ejecuta dentro de cada agente de Cilium. Actívalo en los valores Helm de Cilium (hubble.enabled: true) y reinicia los agentes; no hacen falta Hubble Relay ni la UI.</string>
     <string name="flows_agent_live">en directo</string>

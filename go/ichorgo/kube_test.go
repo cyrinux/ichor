@@ -29,7 +29,20 @@ type fakeKubeAPI struct {
 
 	mu       sync.Mutex
 	answers  map[string]string // "GET /path" -> body
+	statuses map[string]int    // "GET /path" -> HTTP status, 200 when unset
 	requests []fakeKubeRequest
+}
+
+// answerWith makes f answer key ("GET /path") with status and body.
+func (f *fakeKubeAPI) answerWith(key string, status int, body string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	if f.statuses == nil {
+		f.statuses = map[string]int{}
+	}
+
+	f.answers[key], f.statuses[key] = body, status
 }
 
 type fakeKubeRequest struct {
@@ -46,6 +59,7 @@ func newFakeKubeAPI(t *testing.T, answers map[string]string) *fakeKubeAPI {
 		f.mu.Lock()
 		f.requests = append(f.requests, fakeKubeRequest{r.Method, r.URL.Path, r.Header.Get("Content-Type"), r.Header.Get("Authorization"), string(body), r.URL.RawQuery})
 		answer, ok := f.answers[r.Method+" "+r.URL.Path]
+		status := f.statuses[r.Method+" "+r.URL.Path]
 		f.mu.Unlock()
 
 		if r.URL.Path == "/version" && !ok {
@@ -57,6 +71,10 @@ func newFakeKubeAPI(t *testing.T, answers map[string]string) *fakeKubeAPI {
 			_, _ = io.WriteString(w, `{"kind":"Status","reason":"NotFound","message":"`+r.URL.Path+` not found"}`)
 
 			return
+		}
+
+		if status != 0 {
+			w.WriteHeader(status)
 		}
 
 		_, _ = io.WriteString(w, answer)

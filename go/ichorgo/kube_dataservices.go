@@ -225,6 +225,17 @@ type dsPod struct {
 	} `json:"status"`
 }
 
+// hasContainer tells whether the pod has a container named container.
+func (p dsPod) hasContainer(container string) bool {
+	for _, c := range p.Spec.Containers {
+		if c.Name == container {
+			return true
+		}
+	}
+
+	return false
+}
+
 // containerReady reports whether the pod runs with container ready ("" for every container).
 func (p dsPod) containerReady(container string) bool {
 	if p.Status.Phase != "Running" {

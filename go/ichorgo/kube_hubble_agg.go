@@ -23,7 +23,8 @@ const (
 
 // hubbleSnapshot is what a live flow view shows, sent to the app as JSON.
 type hubbleSnapshot struct {
-	Namespace     string            `json:"namespace"` // Cilium's
+	CNI           string            `json:"cni,omitempty"` // flowCNICilium or flowCNICalico
+	Namespace     string            `json:"namespace"`     // the flow source's
 	Version       string            `json:"version"`
 	Buffer        int               `json:"buffer"`
 	Nodes         []hubbleNodeState `json:"nodes"`
@@ -58,7 +59,7 @@ type dropGroup struct {
 	LastSeen    int64       `json:"lastSeen"`
 	Nodes       []string    `json:"nodes"`
 	DeniedBy    []policyRef `json:"deniedBy"`  // what the flow names: explicit deny rules
-	Isolating   []policyRef `json:"isolating"` // what put the endpoint in default-deny
+	Isolating   []policyRef `json:"isolating"` // what put the endpoint in default-deny: the flow's own word, else found in the policies
 	Sample      hubbleFlow  `json:"sample"`
 	sourceLabel labelSet
 	destLabel   labelSet
@@ -224,6 +225,12 @@ func (a *hubbleAgg) addDrop(f hubbleFlow) {
 			g.DeniedBy = append(g.DeniedBy, ref)
 		}
 	}
+
+	for _, ref := range f.Isolating {
+		if !slices.Contains(g.Isolating, ref) {
+			g.Isolating = append(g.Isolating, ref)
+		}
+	}
 }
 
 func (a *hubbleAgg) evictOldestGroup() {
@@ -280,7 +287,7 @@ func (a *hubbleAgg) snapshot(force bool) (hubbleSnapshot, bool) {
 	a.dirty = false
 
 	s := hubbleSnapshot{
-		Namespace: a.status.Namespace, Version: a.status.Version, Buffer: a.status.Buffer,
+		CNI: a.status.CNI, Namespace: a.status.Namespace, Version: a.status.Version, Buffer: a.status.Buffer,
 		Nodes: make([]hubbleNodeState, 0, len(a.nodes)), Flows: make([]hubbleFlow, 0, len(a.flows)),
 		Drops: make([]dropGroup, 0, len(a.groups)), Seen: a.seen, Dropped: a.dropped, Lost: a.lost, PoliciesError: a.polErr,
 	}
@@ -300,7 +307,11 @@ func (a *hubbleAgg) snapshot(force bool) (hubbleSnapshot, bool) {
 		out := *g
 		out.Nodes = slices.Clone(g.Nodes)
 		out.DeniedBy = append([]policyRef{}, g.DeniedBy...)
-		out.Isolating = a.isolatingLocked(g)
+		// What the flows themselves named wins over the search through the policies.
+		out.Isolating = append([]policyRef{}, g.Isolating...)
+		if len(out.Isolating) == 0 {
+			out.Isolating = a.isolatingLocked(g)
+		}
 		s.Drops = append(s.Drops, out)
 	}
 
@@ -324,7 +335,8 @@ func (a *hubbleAgg) isolatingLocked(g *dropGroup) []policyRef {
 		peer, labels = g.Source, g.sourceLabel
 	}
 
-	if peer.Pod == "" {
+	// Only a pod (or a Calico aggregate of pods, named by its workload) has policies.
+	if peer.Pod == "" && peer.Workload == "" || peer.Namespace == "" {
 		return out
 	}
 

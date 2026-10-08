@@ -4,20 +4,32 @@ import Foundation
 // the live flow view (recent flows, drops grouped with the policies behind them, agent states),
 // with the pure logic the Live flows screen words them with.
 
-/// Cilium in the cluster (os:admin).
+/// Flows come from Cilium's Hubble, or from Calico's Whisker (Calico 3.30+).
+public enum FlowCNI {
+    public static let cilium = "cilium"
+    public static let calico = "calico"
+}
+
+/// The CNI the app follows flows from (Cilium, else Calico), in the cluster (os:admin).
 public struct CiliumStatus: Decodable, Equatable, Sendable {
     public let installed: Bool
+    /// FlowCNI.cilium or FlowCNI.calico.
+    public let cni: String
     public let namespace: String
     /// The agents' image tag.
     public let version: String
+    /// Flows are recorded: Hubble is on, or Whisker runs.
     public let hubble: Bool
-    /// Flows each agent keeps.
+    /// Flows each Cilium agent keeps; 0 with Calico.
     public let buffer: Int
     public let agents: [CiliumAgent]
 
-    public init(installed: Bool = false, namespace: String = "", version: String = "", hubble: Bool = false,
+    public var isCalico: Bool { cni == FlowCNI.calico }
+
+    public init(installed: Bool = false, cni: String = "", namespace: String = "", version: String = "", hubble: Bool = false,
                 buffer: Int = 0, agents: [CiliumAgent] = []) {
         self.installed = installed
+        self.cni = cni
         self.namespace = namespace
         self.version = version
         self.hubble = hubble
@@ -28,6 +40,7 @@ public struct CiliumStatus: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         installed = try c.field(.installed, false)
+        cni = try c.field(.cni, "")
         namespace = try c.field(.namespace, "")
         version = try c.field(.version, "")
         hubble = try c.field(.hubble, false)
@@ -35,7 +48,7 @@ public struct CiliumStatus: Decodable, Equatable, Sendable {
         agents = try c.field(.agents, [])
     }
 
-    private enum CodingKeys: String, CodingKey { case installed, namespace, version, hubble, buffer, agents }
+    private enum CodingKeys: String, CodingKey { case installed, cni, namespace, version, hubble, buffer, agents }
 }
 
 public struct CiliumAgent: Decodable, Equatable, Sendable {
@@ -55,6 +68,8 @@ public struct CiliumAgent: Decodable, Equatable, Sendable {
 
 /// The live view, at most once a second while it changes.
 public struct HubbleSnapshot: Decodable, Equatable, Sendable {
+    /// FlowCNI.cilium or FlowCNI.calico.
+    public let cni: String
     public let namespace: String
     public let version: String
     public let buffer: Int
@@ -72,6 +87,7 @@ public struct HubbleSnapshot: Decodable, Equatable, Sendable {
 
     public init(seen: Int64 = 0, dropped: Int64 = 0, lost: Int64 = 0, nodes: [HubbleAgentState] = [],
                 flows: [HubbleFlow] = [], drops: [HubbleDropGroup] = []) {
+        cni = ""
         namespace = ""
         version = ""
         buffer = 0
@@ -86,6 +102,7 @@ public struct HubbleSnapshot: Decodable, Equatable, Sendable {
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        cni = try c.field(.cni, "")
         namespace = try c.field(.namespace, "")
         version = try c.field(.version, "")
         buffer = try c.field(.buffer, 0)
@@ -99,8 +116,10 @@ public struct HubbleSnapshot: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, version, buffer, seen, dropped, lost, policiesError, nodes, flows, drops
+        case cni, namespace, version, buffer, seen, dropped, lost, policiesError, nodes, flows, drops
     }
+
+    public var isCalico: Bool { cni == FlowCNI.calico }
 }
 
 public enum HubbleAgentPhase: String, Sendable {
@@ -231,9 +250,11 @@ public struct HubblePeer: Codable, Equatable, Hashable, Sendable {
         try c.encodeIfPresent(reserved.nonEmpty, forKey: .reserved)
     }
 
-    /// "namespace/pod", else a DNS name, the IP, the reserved identity ("world").
+    /// "namespace/pod", else the workload (a Calico aggregate: "curl-*"), a DNS name, the IP,
+    /// the reserved identity ("world").
     public var label: String {
         if !pod.isEmpty { return namespace.isEmpty ? pod : "\(namespace)/\(pod)" }
+        if !workload.isEmpty { return namespace.isEmpty ? workload : "\(namespace)/\(workload)" }
         return names.first ?? ip.or(reserved.or(namespace.or("?")))
     }
 

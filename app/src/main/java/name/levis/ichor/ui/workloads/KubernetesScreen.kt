@@ -58,7 +58,7 @@ private val KUBE_TABS = listOf(0, 1, 2, 3)
  * actions shown as icons or kept in its menu are the user's choice. The top bar sets the API address to use instead of the
  * kubeconfig's, for a cluster the phone reaches another way (not in screenshot mode: the
  * dialog would show the real address). It also opens the API server health, the network
- * policies and, with Cilium,
+ * policies and, with Cilium or Calico,
  * the live flows ([onFlows] with the namespace and pod to narrow them to, or nulls), and from
  * its menu the browser of every kind ([onResources]) and the Helm releases ([onHelm]).
  * [focus] (a share link) opens a tab, scoped to and searched for one item, whose sheet opens
@@ -96,7 +96,7 @@ fun KubernetesScreen(
     val ciliumState by cilium.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (ciliumState == UiState.Loading) cilium.refresh() }
     // Unknown until read, or unreadable: no entry rather than one that fails.
-    val hasCilium = (ciliumState as? UiState.Loaded)?.data?.installed == true
+    val hasFlows = (ciliumState as? UiState.Loaded)?.data?.installed == true
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val servers by app.kubeServers.servers.collectAsStateWithLifecycle()
     val mask by app.uiPreferences.privacyMask.collectAsStateWithLifecycle()
@@ -154,7 +154,7 @@ fun KubernetesScreen(
                         offered = { action ->
                             when (action) {
                                 KubernetesAction.SHARE -> tab < ShareTarget.KUBE_TABS.size
-                                KubernetesAction.FLOWS -> hasCilium
+                                KubernetesAction.FLOWS -> hasFlows
                                 KubernetesAction.API_ADDRESS -> fingerprint != null
                                 else -> true
                             }
@@ -182,7 +182,7 @@ fun KubernetesScreen(
                         scope,
                         query,
                         onQuery = { query = it },
-                        onFlows = if (hasCilium) ({ pod -> onFlows(pod.namespace, pod.name) }) else null,
+                        onFlows = if (hasFlows) ({ pod -> onFlows(pod.namespace, pod.name) }) else null,
                         vm = pods,
                         focusKey = focusKey(page),
                         onFocused = onFocused,

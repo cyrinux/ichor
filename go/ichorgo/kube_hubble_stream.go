@@ -19,8 +19,9 @@ const (
 )
 
 var (
-	errCiliumMissing = errors.New("Cilium is not running in this cluster: no cilium-agent pods (label k8s-app=cilium)")
-	errHubbleOff     = errors.New("Hubble is disabled in Cilium: set hubble.enabled=true in its Helm values (enable-hubble in the cilium-config ConfigMap)")
+	errFlowSourceMissing = errors.New("no flow source found: neither Cilium (cilium-agent pods, label k8s-app=cilium) nor Calico (calico-node pods, label k8s-app=calico-node) runs in this cluster")
+	errHubbleOff         = errors.New("Hubble is disabled in Cilium: set hubble.enabled=true in its Helm values (enable-hubble in the cilium-config ConfigMap)")
+	errWhiskerOff        = errors.New("Whisker is not installed: Calico 3.30+ records flows with Goldmane and serves them through Whisker. Create the Goldmane and Whisker resources (operator.tigera.io/v1, in the custom-resources.yaml of your Calico release), wait for the whisker pod in calico-system, then open this screen again")
 )
 
 // HubbleListener follows a live flow view (implemented in Kotlin/Swift).
@@ -64,6 +65,24 @@ func (f hubbleFilter) args() []string {
 	return out
 }
 
+// keeps applies f's namespace/pod/verdict filter the way Hubble would, to a flow another
+// source sent, or the demo. A pod matches an aggregate name too (Whisker's "curl-*").
+func (f hubbleFilter) keeps(flow hubbleFlow) bool {
+	if f.dropsOnly && flow.Verdict != "DROPPED" && flow.Verdict != "AUDIT" {
+		return false
+	}
+
+	on := func(p hubblePeer) bool {
+		if f.pod != "" {
+			return p.Namespace == f.namespace && (p.Pod == f.pod || p.Pod == "" && p.Workload != "" && podBaseName(f.pod) == p.Workload)
+		}
+
+		return f.namespace == "" || p.Namespace == f.namespace
+	}
+
+	return on(flow.Source) || on(flow.Destination)
+}
+
 func (f hubbleFilter) validate() error {
 	switch {
 	case f.pod != "":
@@ -90,11 +109,12 @@ func hubbleCommand(f hubbleFilter, since int64) []string {
 }
 
 // StartHubbleFlows follows the cluster's network flows live, like Hubble UI, when Cilium
-// runs with Hubble (os:admin). It runs `hubble observe --follow` in every cilium-agent pod
-// (read-only, the CLI ships in the agent image) and merges their flows. namespace and pod
-// narrow it (pod needs namespace); dropsOnly keeps dropped and audited flows only. Each
-// drop group names the policies that denied it, or that put its pod in default-deny.
-// kubeServer: see KubePods.
+// runs with Hubble, or like Whisker when Calico 3.30+ runs with it (os:admin). With Cilium
+// it runs `hubble observe --follow` in every cilium-agent pod (read-only, the CLI ships in
+// the agent image) and merges their flows; with Calico it streams Whisker's flows through
+// the API server's Service proxy. namespace and pod narrow it (pod needs namespace);
+// dropsOnly keeps dropped and audited flows only. Each drop group names the policies that
+// denied it, or that put its pod in default-deny. kubeServer: see KubePods.
 func StartHubbleFlows(configYAML, contextName, kubeServer, namespace, pod string, dropsOnly bool, listener HubbleListener) *HubbleRun {
 	contextName = unmaskContext(configYAML, contextName)
 
@@ -138,21 +158,27 @@ func StartHubbleFlows(configYAML, contextName, kubeServer, namespace, pod string
 	return &HubbleRun{cancel: cancel}
 }
 
-// startHubble checks that Cilium records flows, then follows them until ctx ends. The
+// startHubble checks that the CNI records flows, then follows them until ctx ends. The
 // checks answer outside withKube: a cluster without Hubble keeps its working client.
 func startHubble(ctx context.Context, target kubeTarget, filter hubbleFilter, emit func(hubbleSnapshot)) error {
-	status, err := withKube(target, readCiliumStatus)
+	status, err := withKube(target, readFlowSource)
 
 	switch {
 	case err != nil:
 		return err
 	case !status.Installed:
-		return errCiliumMissing
+		return errFlowSourceMissing
+	case status.CNI == flowCNICalico && status.Whisker == nil:
+		return errWhiskerOff
 	case !status.Hubble:
 		return errHubbleOff
 	}
 
 	_, err = withKubeContext(ctx, target, func(ctx context.Context, k *kubeClient) (struct{}, error) {
+		if status.CNI == flowCNICalico {
+			return struct{}{}, followWhisker(ctx, k, status, filter, emit)
+		}
+
 		return struct{}{}, followHubble(ctx, k, status, filter, emit)
 	})
 

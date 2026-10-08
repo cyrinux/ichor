@@ -2139,7 +2139,10 @@
     <string name="flows_title">Live-Flows</string>
     <string name="flows_drops_only">Nur verworfene</string>
     <string name="flows_clear_pod">Pod-Filter entfernen</string>
-    <string name="flows_not_installed">Cilium wurde in diesem Cluster nicht gefunden: Live-Flows kommen von dessen Hubble.</string>
+    <string name="flows_not_installed">Keine Flow-Quelle in diesem Cluster gefunden: Live-Flows kommen von Ciliums Hubble oder von Calicos Whisker (Calico 3.30+).</string>
+    <string name="flows_whisker_off_title">Whisker ist nicht installiert</string>
+    <string name="flows_whisker_off">Calico 3.30+ zeichnet Flows mit Goldmane auf und liefert sie über Whisker aus. Legen Sie die Ressourcen Goldmane und Whisker an (operator.tigera.io/v1, Teil der custom-resources.yaml Ihrer Calico-Version), warten Sie auf den whisker-Pod in calico-system und öffnen Sie diesen Bildschirm erneut.</string>
+    <string name="flows_history_note_goldmane">Der Verlauf reicht nur so weit zurück, wie Goldmane noch vorhält; Flows sind 15-Sekunden-Aggregate, keine einzelnen Pakete.</string>
     <string name="flows_hubble_off_title">Hubble ist aus</string>
     <string name="flows_hubble_off">Live-Flows kommen von Hubble, das in jedem Cilium-Agenten läuft. Aktiviere es in den Helm-Werten von Cilium (hubble.enabled: true) und starte die Agenten neu; Hubble Relay und UI sind nicht nötig.</string>
     <string name="flows_agent_live">live</string>

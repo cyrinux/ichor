@@ -50,6 +50,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.model.CiliumStatus
+import name.levis.ichor.model.FLOW_CNI_CALICO
 import name.levis.ichor.model.HUBBLE_NODE_ERROR
 import name.levis.ichor.model.HUBBLE_NODE_LIVE
 import name.levis.ichor.model.HubbleFilter
@@ -142,15 +143,18 @@ fun FlowsScreen(
     }
 }
 
-/** Cilium runs without Hubble: what to turn on. */
+/** The CNI runs without what records flows (Hubble, or Whisker with Calico): what to turn on. */
 @Composable
 private fun HubbleOff(status: CiliumStatus, modifier: Modifier) {
     Box(modifier.fillMaxSize().padding(16.dp)) {
         OutlinedCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.flows_hubble_off_title), style = MaterialTheme.typography.titleMedium)
-                Text(stringResource(R.string.flows_hubble_off), style = MaterialTheme.typography.bodyMedium)
-                if (status.version.isNotEmpty()) MutedText("Cilium ${status.version}")
+                Text(
+                    stringResource(if (status.calico) R.string.flows_whisker_off_title else R.string.flows_hubble_off_title),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(stringResource(if (status.calico) R.string.flows_whisker_off else R.string.flows_hubble_off), style = MaterialTheme.typography.bodyMedium)
+                if (status.version.isNotEmpty()) MutedText("${if (status.calico) "Calico" else "Cilium"} ${status.version}")
             }
         }
     }
@@ -276,7 +280,10 @@ private fun StreamStatus(snapshot: HubbleSnapshot?) {
             ).joinToString("  ·  "),
             style = MaterialTheme.typography.bodyMedium,
         )
-        if (snapshot.buffer > 0) MutedText(stringResource(R.string.flows_history_note, snapshot.buffer))
+        when {
+            snapshot.buffer > 0 -> MutedText(stringResource(R.string.flows_history_note, snapshot.buffer))
+            snapshot.cni == FLOW_CNI_CALICO -> MutedText(stringResource(R.string.flows_history_note_goldmane))
+        }
         if (snapshot.policiesError.isNotEmpty()) InlineError(stringResource(R.string.flows_policies_error, snapshot.policiesError))
     }
 }

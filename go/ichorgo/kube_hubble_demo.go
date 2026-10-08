@@ -11,7 +11,7 @@ import (
 const demoFlowTick = 700 * time.Millisecond
 
 func demoCiliumStatus() ciliumStatus {
-	out := ciliumStatus{Installed: true, Namespace: "kube-system", Version: "v1.18.2", Hubble: true, Buffer: hubbleDefaultBuffer, Agents: []ciliumAgent{}}
+	out := ciliumStatus{Installed: true, CNI: flowCNICilium, Namespace: "kube-system", Version: "v1.18.2", Hubble: true, Buffer: hubbleDefaultBuffer, Agents: []ciliumAgent{}}
 
 	for i, n := range demoNodes() {
 		out.Agents = append(out.Agents, ciliumAgent{Node: n.Hostname, Pod: fmt.Sprintf("cilium-%c%c2kd", 'a'+i, 'h'+i), Ready: true})
@@ -165,21 +165,4 @@ func demoPeer(namespace, pod, reserved, ip, name string) hubblePeer {
 		IP:     fmt.Sprintf("10.244.%d.%d", len(namespace)%8, 10+len(pod)*3%200),
 		Labels: []string{"k8s:app=" + base, "k8s:" + ciliumNamespaceLabel + "=" + namespace},
 	}
-}
-
-// keeps applies f's namespace/pod/verdict filter the way Hubble would.
-func (filter hubbleFilter) keeps(f hubbleFlow) bool {
-	if filter.dropsOnly && f.Verdict != "DROPPED" && f.Verdict != "AUDIT" {
-		return false
-	}
-
-	on := func(p hubblePeer) bool {
-		if filter.pod != "" {
-			return p.Namespace == filter.namespace && p.Pod == filter.pod
-		}
-
-		return filter.namespace == "" || p.Namespace == filter.namespace
-	}
-
-	return on(f.Source) || on(f.Destination)
 }
