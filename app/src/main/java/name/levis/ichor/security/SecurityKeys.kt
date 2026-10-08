@@ -269,3 +269,18 @@ object AssertionVerifier {
 
     fun publicKey(spki: ByteArray): PublicKey = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(spki))
 }
+
+/**
+ * A key's FIDO PIN as CTAP2 defines it: any Unicode text (letters too, not only digits), at
+ * least 4 code points and at most 63 bytes of UTF-8.
+ */
+object FidoPin {
+    private const val MIN_CODE_POINTS = 4
+    private const val MAX_UTF8_BYTES = 63
+
+    fun valid(pin: String): Boolean =
+        pin.codePointCount(0, pin.length) >= MIN_CODE_POINTS && pin.toByteArray(Charsets.UTF_8).size <= MAX_UTF8_BYTES
+
+    /** [input] without line breaks, which a pasted PIN often ends with and none is typed with. */
+    fun clean(input: String): String = input.filterNot { it == '\n' || it == '\r' }
+}
