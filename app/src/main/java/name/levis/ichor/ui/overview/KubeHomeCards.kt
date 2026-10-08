@@ -48,19 +48,37 @@ import name.levis.ichor.ui.kubeauth.SignInAction
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.daysUntil
 import name.levis.ichor.util.formatBytes
+import name.levis.ichor.ui.components.Destination
+import name.levis.ichor.model.status
 import java.util.Locale
 
 /** The credentials expire within [CERT_WARN_DAYS] days (or did): a new kubeconfig replaces them. */
 @Composable
 internal fun KubeCredentialsBanner(cluster: ContextSummary) {
     if (cluster.certNotAfter <= 0 || daysUntil(cluster.certNotAfter) > CERT_WARN_DAYS) return
-    val color = if (daysUntil(cluster.certNotAfter) < 0) LocalStatusColors.current.bad else LocalStatusColors.current.warn
-    Card(Modifier.fillMaxWidth()) {
+    ExpiryBanner(
+        text = "${stringResource(R.string.import_kube_expires)}: ${certExpiry(cluster.certNotAfter)}",
+        hint = stringResource(R.string.kube_home_renew),
+        expired = daysUntil(cluster.certNotAfter) < 0,
+    )
+}
+
+/**
+ * A credential about to expire, or [expired]: [text] says when, [hint] what to do about it, and
+ * a tap is [onClick] when something can be done right here. The Talos certificate and the
+ * kubeconfig credentials share it.
+ */
+@Composable
+internal fun ExpiryBanner(text: String, hint: String, expired: Boolean, onClick: (() -> Unit)? = null) {
+    val color = if (expired) LocalStatusColors.current.bad else LocalStatusColors.current.warn
+    val content: @Composable () -> Unit = {
         Column(Modifier.padding(16.dp)) {
-            Text("${stringResource(R.string.import_kube_expires)}: ${certExpiry(cluster.certNotAfter)}", style = MaterialTheme.typography.bodyMedium, color = color)
-            MutedText(stringResource(R.string.kube_home_renew))
+            Text(text, style = MaterialTheme.typography.bodyMedium, color = color)
+            MutedText(hint)
         }
     }
+    if (onClick != null) Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) { content() }
+    else Card(Modifier.fillMaxWidth()) { content() }
 }
 
 /** The API server did not answer, or refused the credentials: why, and try again. */
@@ -92,7 +110,7 @@ internal fun KubeSummaryCard(name: String, cluster: ContextSummary, nodes: KubeN
                     val version = nodes?.serverVersion?.takeIf { it.isNotEmpty() }
                     MutedText(version?.let { stringResource(R.string.kube_home_version, it) } ?: stringResource(R.string.common_kind_kubernetes))
                 }
-                nodes?.takeIf { !it.forbidden && it.nodes.isNotEmpty() }?.let { KubeStatusPill(it) }
+                nodes?.takeIf { !it.forbidden && it.nodes.isNotEmpty() }?.let { ClusterStatusPill(it.status) }
             }
             HorizontalDivider(Modifier.padding(vertical = 12.dp))
             InfoRow(stringResource(R.string.import_kube_server), cluster.endpoints.joinToString("\n"), mono = true)
@@ -108,16 +126,6 @@ internal fun KubeSummaryCard(name: String, cluster: ContextSummary, nodes: KubeN
             if (cluster.namespace.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_namespace), cluster.namespace)
             if (cluster.certNotAfter > 0) InfoRow(stringResource(R.string.import_kube_expires), certExpiry(cluster.certNotAfter))
         }
-    }
-}
-
-@Composable
-private fun KubeStatusPill(nodes: KubeNodesOverview) {
-    val colors = LocalStatusColors.current
-    when (nodes.readyCount) {
-        nodes.nodes.size -> StatusPill(stringResource(R.string.overview_status_healthy), colors.ok)
-        0 -> StatusPill(stringResource(R.string.overview_status_down), colors.bad)
-        else -> StatusPill(stringResource(R.string.overview_status_degraded), colors.warn)
     }
 }
 
@@ -228,17 +236,21 @@ internal fun KubeToolsCard(nav: KubeHomeNavigation) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.common_kind_kubernetes), style = MaterialTheme.typography.titleMedium)
+            // The same labels as the app bar's actions (Destination), plus the apps.
+            val tools: List<Pair<Destination, () -> Unit>> = listOf(
+                Destination.WORKLOADS to nav.onWorkloads,
+                Destination.EVENTS to nav.onEvents,
+                Destination.RESOURCES to nav.onResources,
+                Destination.HELM to nav.onHelm,
+                Destination.METRICS to nav.onMetrics,
+                Destination.DATA_SERVICES to { nav.onDataServices(null) },
+                Destination.CHECKUP to nav.onCheckup,
+                Destination.API_HEALTH to nav.onApiHealth,
+                Destination.NETWORK_POLICIES to nav.onNetworkPolicies,
+            )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = nav.onWorkloads) { Text(stringResource(R.string.overview_action_workloads)) }
                 OutlinedButton(onClick = { nav.onApps(false) }) { Text(stringResource(R.string.apps_title)) }
-                OutlinedButton(onClick = nav.onEvents) { Text(stringResource(R.string.events_title)) }
-                OutlinedButton(onClick = nav.onResources) { Text(stringResource(R.string.kb_title)) }
-                OutlinedButton(onClick = nav.onHelm) { Text(stringResource(R.string.kb_helm_title)) }
-                OutlinedButton(onClick = nav.onMetrics) { Text(stringResource(R.string.metrics_title)) }
-                OutlinedButton(onClick = { nav.onDataServices(null) }) { Text(stringResource(R.string.data_services_title)) }
-                OutlinedButton(onClick = nav.onCheckup) { Text(stringResource(R.string.checkup_title)) }
-                OutlinedButton(onClick = nav.onApiHealth) { Text(stringResource(R.string.apihealth_title)) }
-                OutlinedButton(onClick = nav.onNetworkPolicies) { Text(stringResource(R.string.netpol_title)) }
+                tools.forEach { (destination, open) -> OutlinedButton(onClick = open) { Text(stringResource(destination.label)) } }
             }
         }
     }

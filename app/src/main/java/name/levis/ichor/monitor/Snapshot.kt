@@ -91,15 +91,6 @@ fun snapshotOf(
     checkupWatched: Boolean = false,
     checkupIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
-    checkupWatched = checkupWatched,
-    checkupChecked = checkupWatched && checkupIssues != null,
-    checkupIssues = checkupIssues?.takeIf { checkupWatched }.orEmpty(),
-    gitopsWatched = gitopsWatched,
-    gitopsChecked = gitopsWatched && gitopsIssues != null,
-    gitopsIssues = gitopsIssues?.takeIf { gitopsWatched }.orEmpty(),
-    dataWatched = dataWatched,
-    dataChecked = dataWatched && dataServices != null,
-    dataIssues = dataServices?.takeIf { dataWatched }?.let(::dataIssuesOf).orEmpty(),
     context = overview.context,
     fingerprint = fingerprint,
     takenAt = takenAt,
@@ -111,6 +102,29 @@ fun snapshotOf(
     // A failed alarm list is "not checked", never an all-clear.
     etcdChecked = etcd != null && etcd.error == null && etcd.alarmsError == null,
     certNotAfter = certNotAfter,
+).withTracks(dataWatched, dataServices, gitopsWatched, gitopsIssues, checkupWatched, checkupIssues)
+
+/**
+ * The opt-in tracks of a fresh snapshot, the same whatever the cluster's kind: whether each was
+ * watched, whether it could be read, and the issues seen (none when not watched).
+ */
+private fun ClusterSnapshot.withTracks(
+    dataWatched: Boolean,
+    dataServices: DataServices?,
+    gitopsWatched: Boolean,
+    gitopsIssues: Map<String, String>?,
+    checkupWatched: Boolean,
+    checkupIssues: Map<String, String>?,
+): ClusterSnapshot = copy(
+    dataWatched = dataWatched,
+    dataChecked = dataWatched && dataServices != null,
+    dataIssues = dataServices?.takeIf { dataWatched }?.let(::dataIssuesOf).orEmpty(),
+    gitopsWatched = gitopsWatched,
+    gitopsChecked = gitopsWatched && gitopsIssues != null,
+    gitopsIssues = gitopsIssues?.takeIf { gitopsWatched }.orEmpty(),
+    checkupWatched = checkupWatched,
+    checkupChecked = checkupWatched && checkupIssues != null,
+    checkupIssues = checkupIssues?.takeIf { checkupWatched }.orEmpty(),
 )
 
 /**
@@ -133,15 +147,6 @@ fun kubeSnapshotOf(
     checkupIssues: Map<String, String>? = null,
 ): ClusterSnapshot = ClusterSnapshot(
     kube = true,
-    checkupWatched = checkupWatched,
-    checkupChecked = checkupWatched && checkupIssues != null,
-    checkupIssues = checkupIssues?.takeIf { checkupWatched }.orEmpty(),
-    gitopsWatched = gitopsWatched,
-    gitopsChecked = gitopsWatched && gitopsIssues != null,
-    gitopsIssues = gitopsIssues?.takeIf { gitopsWatched }.orEmpty(),
-    dataWatched = dataWatched,
-    dataChecked = dataWatched && dataServices != null,
-    dataIssues = dataServices?.takeIf { dataWatched }?.let(::dataIssuesOf).orEmpty(),
     context = context,
     fingerprint = fingerprint,
     takenAt = takenAt,
@@ -149,4 +154,4 @@ fun kubeSnapshotOf(
         n.name to NodeState(n.name, if (n.ready) NodeHealth.READY else NodeHealth.NOT_READY, n.pressure.joinToString("; "))
     },
     certNotAfter = certNotAfter,
-)
+).withTracks(dataWatched, dataServices, gitopsWatched, gitopsIssues, checkupWatched, checkupIssues)

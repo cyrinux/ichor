@@ -1,56 +1,31 @@
 package name.levis.ichor.ui.overview
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Category
-import androidx.compose.material.icons.outlined.HealthAndSafety
-import androidx.compose.material.icons.outlined.Inventory2
-import androidx.compose.material.icons.outlined.MonitorHeart
-import androidx.compose.material.icons.outlined.Policy
-import androidx.compose.material.icons.outlined.QueryStats
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Storage
-import androidx.compose.material.icons.outlined.Timeline
-import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
 import name.levis.ichor.model.KubeHomeAction
 import name.levis.ichor.model.KubeHomeBar
 import name.levis.ichor.ui.components.ActionBarActions
 import name.levis.ichor.ui.components.ActionLook
+import name.levis.ichor.ui.components.Destination
 
-private fun kubeHomeActionIcon(action: KubeHomeAction): ImageVector = when (action) {
-    KubeHomeAction.WORKLOADS -> Icons.Outlined.Widgets
-    KubeHomeAction.RESOURCES -> Icons.Outlined.Category
-    KubeHomeAction.METRICS -> Icons.Outlined.QueryStats
-    KubeHomeAction.HELM -> Icons.Outlined.Inventory2
-    KubeHomeAction.DATA_SERVICES -> Icons.Outlined.Storage
-    KubeHomeAction.CHECKUP -> Icons.Outlined.HealthAndSafety
-    KubeHomeAction.API_HEALTH -> Icons.Outlined.MonitorHeart
-    KubeHomeAction.NETWORK_POLICIES -> Icons.Outlined.Policy
-    KubeHomeAction.EVENTS -> Icons.Outlined.Timeline
-    KubeHomeAction.SETTINGS -> Icons.Outlined.Settings
-}
-
-@Composable
-fun kubeHomeActionLabel(action: KubeHomeAction): String = stringResource(
-    when (action) {
-        KubeHomeAction.WORKLOADS -> R.string.overview_action_workloads
-        KubeHomeAction.RESOURCES -> R.string.kb_title
-        KubeHomeAction.METRICS -> R.string.metrics_title
-        KubeHomeAction.HELM -> R.string.kb_helm_title
-        KubeHomeAction.DATA_SERVICES -> R.string.data_services_title
-        KubeHomeAction.CHECKUP -> R.string.checkup_title
-        KubeHomeAction.API_HEALTH -> R.string.apihealth_title
-        KubeHomeAction.NETWORK_POLICIES -> R.string.netpol_title
-        KubeHomeAction.EVENTS -> R.string.overview_action_events
-        KubeHomeAction.SETTINGS -> R.string.overview_action_settings
-    },
-)
+/** The screen each of the Kubernetes home's actions leads to. */
+val KubeHomeAction.destination: Destination
+    get() = when (this) {
+        KubeHomeAction.WORKLOADS -> Destination.WORKLOADS
+        KubeHomeAction.RESOURCES -> Destination.RESOURCES
+        KubeHomeAction.METRICS -> Destination.METRICS
+        KubeHomeAction.HELM -> Destination.HELM
+        KubeHomeAction.DATA_SERVICES -> Destination.DATA_SERVICES
+        KubeHomeAction.CHECKUP -> Destination.CHECKUP
+        KubeHomeAction.API_HEALTH -> Destination.API_HEALTH
+        KubeHomeAction.NETWORK_POLICIES -> Destination.NETWORK_POLICIES
+        KubeHomeAction.EVENTS -> Destination.EVENTS
+        KubeHomeAction.SETTINGS -> Destination.SETTINGS
+    }
 
 /** How the Kubernetes home's actions look, in its bar and its editor. */
-val kubeHomeActionLook = ActionLook<KubeHomeAction>(::kubeHomeActionIcon) { kubeHomeActionLabel(it) }
+val kubeHomeActionLook = ActionLook<KubeHomeAction>({ it.destination.icon }) { stringResource(it.destination.label) }
 
 /** Where the Kubernetes home's app-bar actions lead. */
 fun KubeHomeNavigation.open(action: KubeHomeAction): () -> Unit = when (action) {

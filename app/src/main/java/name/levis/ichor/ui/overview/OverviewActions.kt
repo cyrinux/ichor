@@ -3,11 +3,7 @@ package name.levis.ichor.ui.overview
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Hub
-import androidx.compose.material.icons.outlined.QueryStats
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
-import androidx.compose.material.icons.outlined.Timeline
-import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -18,6 +14,7 @@ import name.levis.ichor.model.TalosFeature
 import name.levis.ichor.model.clusterSupport
 import name.levis.ichor.ui.components.ActionBarActions
 import name.levis.ichor.ui.components.ActionLook
+import name.levis.ichor.ui.components.Destination
 import name.levis.ichor.ui.components.rememberClusterFeatures
 
 /** Where the overview's app-bar actions lead. */
@@ -41,25 +38,27 @@ class OverviewNavigation(
     }
 }
 
-fun overviewActionIcon(action: OverviewAction): ImageVector = when (action) {
+/** The screen an action shares with the other bars (Destination), null for the Talos-only ones. */
+private val OverviewAction.destination: Destination?
+    get() = when (this) {
+        OverviewAction.EVENTS -> Destination.EVENTS
+        OverviewAction.WORKLOADS -> Destination.WORKLOADS
+        OverviewAction.METRICS -> Destination.METRICS
+        OverviewAction.SETTINGS -> Destination.SETTINGS
+        OverviewAction.HEALTH, OverviewAction.KUBESPAN, OverviewAction.ETCD -> null
+    }
+
+fun overviewActionIcon(action: OverviewAction): ImageVector = action.destination?.icon ?: when (action) {
     OverviewAction.HEALTH -> Icons.Outlined.Favorite
-    OverviewAction.EVENTS -> Icons.Outlined.Timeline
-    OverviewAction.WORKLOADS -> Icons.Outlined.Widgets
-    OverviewAction.METRICS -> Icons.Outlined.QueryStats
     OverviewAction.KUBESPAN -> Icons.Outlined.Hub
-    OverviewAction.ETCD -> Icons.Outlined.Storage
-    OverviewAction.SETTINGS -> Icons.Outlined.Settings
+    else -> Icons.Outlined.Storage // etcd
 }
 
 @Composable
-fun overviewActionLabel(action: OverviewAction): String = when (action) {
+fun overviewActionLabel(action: OverviewAction): String = action.destination?.let { stringResource(it.label) } ?: when (action) {
     OverviewAction.HEALTH -> stringResource(R.string.overview_action_health)
-    OverviewAction.EVENTS -> stringResource(R.string.overview_action_events)
-    OverviewAction.WORKLOADS -> stringResource(R.string.overview_action_workloads)
-    OverviewAction.METRICS -> stringResource(R.string.metrics_title)
     OverviewAction.KUBESPAN -> "KubeSpan"
-    OverviewAction.ETCD -> "etcd"
-    OverviewAction.SETTINGS -> stringResource(R.string.overview_action_settings)
+    else -> "etcd"
 }
 
 /** How the overview's actions look, in its bar and its editor. */

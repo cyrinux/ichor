@@ -109,8 +109,9 @@ private fun headline(summary: ClusterSummary): String {
         .joinToString("  ·  ")
 }
 
+/** Healthy, degraded or down, in the status colours: the pill of both homes' summary cards. */
 @Composable
-private fun ClusterStatusPill(status: ClusterStatus) {
+internal fun ClusterStatusPill(status: ClusterStatus) {
     val colors = LocalStatusColors.current
     when (status) {
         ClusterStatus.HEALTHY -> StatusPill(stringResource(R.string.overview_status_healthy), colors.ok)

@@ -46,8 +46,9 @@ data class HealthCounts(val ready: Int = 0, val attention: Int = 0, val notReady
     }
 }
 
-fun List<NodeOverview>.healthCounts(): HealthCounts {
-    val byStatus = groupingBy { it.status }.eachCount()
+/** How many of these nodes are in each [NodeStatus], by [status]: Talos and Kubernetes nodes alike. */
+fun <T> List<T>.healthCounts(status: (T) -> NodeStatus): HealthCounts {
+    val byStatus = groupingBy(status).eachCount()
     return HealthCounts(
         ready = byStatus[NodeStatus.READY] ?: 0,
         attention = byStatus[NodeStatus.ATTENTION] ?: 0,
@@ -56,17 +57,23 @@ fun List<NodeOverview>.healthCounts(): HealthCounts {
     )
 }
 
+fun List<NodeOverview>.healthCounts(): HealthCounts = healthCounts { it.status }
+
 /** The problem nodes the dense card shows in full ([shown]), and how many more there are ([more]). */
-data class ProblemNodes(val shown: List<NodeOverview>, val more: Int)
+data class ProblemNodes<T>(val shown: List<T>, val more: Int)
 
 /**
- * The nodes [needsAttention], worst first (unreachable, not ready, then ready but reporting a
- * problem), in their given order otherwise; at most [max] of them, the rest counted.
+ * The nodes [needsAttention], worst first by [severity] (the lowest first) and in their given
+ * order otherwise; at most [max] of them, the rest counted.
  */
-fun List<NodeOverview>.problemNodes(max: Int = DENSE_MAX_PROBLEMS): ProblemNodes {
-    val problems = filter { it.needsAttention }.sortedBy { severity(it.health) }
+fun <T> List<T>.problemNodes(max: Int, needsAttention: (T) -> Boolean, severity: (T) -> Int): ProblemNodes<T> {
+    val problems = filter(needsAttention).sortedBy(severity)
     return ProblemNodes(problems.take(max), (problems.size - max).coerceAtLeast(0))
 }
+
+/** Worst first: unreachable, not ready, then ready but reporting a problem. */
+fun List<NodeOverview>.problemNodes(max: Int = DENSE_MAX_PROBLEMS): ProblemNodes<NodeOverview> =
+    problemNodes(max, { it.needsAttention }, { severity(it.health) })
 
 private fun severity(health: NodeHealth) = when (health) {
     NodeHealth.UNREACHABLE -> 0

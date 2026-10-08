@@ -68,17 +68,27 @@ internal fun KubePreviewCard(
         if (rows.none { it.importable }) {
             Text(stringResource(R.string.import_kube_none_importable), color = LocalStatusColors.current.warn, style = MaterialTheme.typography.bodyMedium)
         }
-        if (adding) Text(stringResource(R.string.import_adds_cluster), style = MaterialTheme.typography.bodyMedium)
-        preview.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
-        MutedText(stringResource(R.string.import_stored_encrypted))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
-            Button(onClick = onConfirm, enabled = preview.canImport, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.import_import))
-            }
-        }
-        Box(Modifier.height(8.dp))
+        ImportPreviewFooter(adding, preview.error, preview.canImport, onConfirm, onCancel)
     }
+}
+
+/**
+ * The end of an import preview, a talosconfig's or a kubeconfig's: what the import does to the
+ * clusters already stored ([adding]), the [error], how the config is kept, and the buttons.
+ */
+@Composable
+internal fun ImportPreviewFooter(adding: Boolean, error: String?, canImport: Boolean, onConfirm: () -> Unit, onCancel: () -> Unit) {
+    // The clusters already imported stay: say what this import does to them.
+    if (adding) Text(stringResource(R.string.import_adds_cluster), style = MaterialTheme.typography.bodyMedium)
+    error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
+    MutedText(stringResource(R.string.import_stored_encrypted))
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
+        Button(onClick = onConfirm, enabled = canImport, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.import_import))
+        }
+    }
+    Box(Modifier.height(8.dp))
 }
 
 @Composable

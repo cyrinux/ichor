@@ -52,6 +52,14 @@ val KubeNodeInfo.healthy: Boolean get() = ready && pressure.isEmpty()
 
 val KubeNodesOverview.readyCount: Int get() = nodes.count { it.ready }
 
+/** The cluster at a glance, as the Talos overview grades it: every node ready, none, or some. */
+val KubeNodesOverview.status: ClusterStatus
+    get() = when (readyCount) {
+        nodes.size -> ClusterStatus.HEALTHY
+        0 -> ClusterStatus.DOWN
+        else -> ClusterStatus.DEGRADED
+    }
+
 /** The names of the nodes that are not ready: the likely cause of a data service's problems. */
 fun KubeNodesOverview.notReadyNames(): Set<String> = nodes.filter { !it.ready }.map { it.name }.toSet()
 

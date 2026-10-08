@@ -18,14 +18,7 @@ val KubeNodeInfo.status: NodeStatus
 /** Not ready, cordoned or under pressure: listed first, tinted. */
 val KubeNodeInfo.needsAttention: Boolean get() = status != NodeStatus.READY
 
-fun List<KubeNodeInfo>.kubeHealthCounts(): HealthCounts {
-    val byStatus = groupingBy { it.status }.eachCount()
-    return HealthCounts(
-        ready = byStatus[NodeStatus.READY] ?: 0,
-        attention = byStatus[NodeStatus.ATTENTION] ?: 0,
-        notReady = byStatus[NodeStatus.NOT_READY] ?: 0,
-    )
-}
+fun List<KubeNodeInfo>.kubeHealthCounts(): HealthCounts = healthCounts { it.status }
 
 /** The order the dense card and the nodes screen group by: the worst first. */
 val KUBE_STATUS_ORDER = listOf(NodeStatus.NOT_READY, NodeStatus.ATTENTION, NodeStatus.READY)
@@ -39,17 +32,9 @@ fun List<KubeNodeInfo>.byStatus(): List<KubeStatusGroup> {
     return KUBE_STATUS_ORDER.mapNotNull { status -> groups[status]?.let { KubeStatusGroup(status, it) } }
 }
 
-/** The problem nodes the dense card shows in full ([shown]), and how many more there are ([more]). */
-data class KubeProblemNodes(val shown: List<KubeNodeInfo>, val more: Int)
-
-/**
- * The nodes [needsAttention], worst first (not ready, then cordoned or under pressure), in
- * their given order otherwise; at most [max] of them, the rest counted.
- */
-fun List<KubeNodeInfo>.kubeProblemNodes(max: Int = DENSE_MAX_PROBLEMS): KubeProblemNodes {
-    val problems = byStatus().filter { it.status != NodeStatus.READY }.flatMap { it.nodes }
-    return KubeProblemNodes(problems.take(max), (problems.size - max).coerceAtLeast(0))
-}
+/** Worst first: not ready, then cordoned or under pressure ([KUBE_STATUS_ORDER]). */
+fun List<KubeNodeInfo>.kubeProblemNodes(max: Int = DENSE_MAX_PROBLEMS): ProblemNodes<KubeNodeInfo> =
+    problemNodes(max, { it.needsAttention }, { KUBE_STATUS_ORDER.indexOf(it.status) })
 
 /** The filters the Kubernetes nodes screen offers: no node is unreachable to Kubernetes. */
 val KUBE_NODE_FILTERS = listOf(NodeFilter.ATTENTION, NodeFilter.READY, NodeFilter.NOT_READY)

@@ -80,7 +80,7 @@ class NodeDensityTest {
         val nodes = cluster(25).mapIndexed { i, node -> if (i == 24) node.copy(reachable = false) else node }
 
         assertEquals(ProblemNodes(listOf(nodes[24]), 0), nodes.problemNodes())
-        assertEquals(ProblemNodes(emptyList(), 0), cluster(3).problemNodes())
+        assertEquals(ProblemNodes(emptyList<NodeOverview>(), 0), cluster(3).problemNodes())
     }
 
     @Test

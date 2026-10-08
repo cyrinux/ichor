@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -118,7 +116,7 @@ fun NodesScreen(
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(healthSummary(counts), style = MaterialTheme.typography.labelLarge)
                     SearchField(query, { query = it }, stringResource(R.string.nodes_search), Modifier.fillMaxWidth())
-                    FilterChips(filter) { filter = it }
+                    NodeFilterChips(filter, NodeFilter.entries) { filter = it }
                     // A site filter only says something with more than one.
                     if (groups.size > 1) SiteChips(groups, site) { site = it }
                 }
@@ -127,7 +125,9 @@ fun NodesScreen(
                     if (shown.isEmpty()) {
                         EmptyText(emptyOrNoMatch(query, R.string.nodes_none, R.string.nodes_no_match))
                     } else {
-                        NodeList(shown, sites = groups.size > 1) { node ->
+                        // In the map's order, site by site, as on home; one site needs no header.
+                        val header: (@Composable (NodeGroup) -> String)? = if (groups.size > 1) ({ siteLabel(it) }) else null
+                        GroupedNodeList(shown, groupKey = { it.key }, header = header, nodes = { it.nodes }, nodeKey = { it.node }) { node ->
                             SwipeableNodeRow(
                                 node,
                                 publicIps,
@@ -143,46 +143,6 @@ fun NodesScreen(
             }
         }
     }
-}
-
-@Composable
-private fun NodeList(groups: List<NodeGroup>, sites: Boolean, row: @Composable (NodeOverview) -> Unit) {
-    LazyColumn(Modifier.fillMaxSize()) {
-        groups.forEach { group ->
-            if (sites) item(key = "site:${group.key}") {
-                Text(
-                    siteLabel(group),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
-                )
-            }
-            items(group.nodes, key = { "node:${it.node}" }) { node ->
-                row(node)
-                HorizontalDivider()
-            }
-        }
-    }
-}
-
-/** All, needing attention, or one health. */
-@Composable
-private fun FilterChips(current: NodeFilter?, onSelect: (NodeFilter?) -> Unit) {
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(selected = current == null, onClick = { onSelect(null) }, label = { Text(stringResource(R.string.nodes_filter_all)) })
-        NodeFilter.entries.forEach { filter ->
-            FilterChip(selected = current == filter, onClick = { onSelect(filter) }, label = { Text(stringResource(filterLabel(filter))) })
-        }
-    }
-}
-
-private fun filterLabel(filter: NodeFilter) = when (filter) {
-    NodeFilter.ATTENTION -> R.string.nodes_filter_attention
-    NodeFilter.READY -> R.string.common_status_ready
-    NodeFilter.NOT_READY -> R.string.common_status_not_ready
-    NodeFilter.UNREACHABLE -> R.string.common_status_unreachable
 }
 
 /** All sites, or one ([NodeGroup.key]). */

@@ -1,7 +1,6 @@
 package name.levis.ichor.ui.importconfig
 
 import name.levis.ichor.ui.components.BackButton
-import name.levis.ichor.ui.components.MutedText
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import name.levis.ichor.R
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,7 +23,6 @@ import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.ui.platform.LocalContext
 import name.levis.ichor.TalosApp
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -203,17 +200,7 @@ private fun PreviewCard(
                 }
             }
         }
-        // The clusters already imported stay: say what this import does to them.
-        if (adding) Text(stringResource(R.string.import_adds_cluster), style = MaterialTheme.typography.bodyMedium)
-        preview.error?.let { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodyMedium) }
-        MutedText(stringResource(R.string.import_stored_encrypted))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.common_cancel)) }
-            Button(onClick = onConfirm, enabled = preview.canImport, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.import_import))
-            }
-        }
-        Box(Modifier.height(8.dp))
+        ImportPreviewFooter(adding, preview.error, preview.canImport, onConfirm, onCancel)
     }
 }
 

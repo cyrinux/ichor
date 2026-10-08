@@ -66,7 +66,7 @@ class KubeNodeDensityTest {
         // The two not-ready ones first, then the cordoned, cut at five.
         assertEquals(listOf("ip-10-0-0-7", "ip-10-0-0-8", "ip-10-0-0-1", "ip-10-0-0-2", "ip-10-0-0-3"), problems.shown.map { it.name })
         assertEquals(3, problems.more)
-        assertEquals(KubeProblemNodes(emptyList(), 0), cluster(3).kubeProblemNodes())
+        assertEquals(ProblemNodes(emptyList<KubeNodeInfo>(), 0), cluster(3).kubeProblemNodes())
     }
 
     @Test

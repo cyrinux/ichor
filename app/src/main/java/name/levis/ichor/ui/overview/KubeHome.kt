@@ -18,8 +18,6 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -143,7 +141,6 @@ fun KubeHomeScreen(
     val clusterColors by app.clusterColors.colors.collectAsStateWithLifecycle()
     val clusterLabels = rememberClusterLabels()
     var showClusters by remember { mutableStateOf(false) }
-    var clusterMenu by remember { mutableStateOf(false) }
     var signingIn by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     val ai by app.aiPreferences.settings.collectAsStateWithLifecycle()
@@ -197,29 +194,18 @@ fun KubeHomeScreen(
             }
         },
         topBar = {
-            if (customizing) TopAppBar(
-                title = { Text(stringResource(R.string.kube_home_edit_title)) },
-                actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
-            ) else TopAppBar(
-                modifier = Modifier.clusterSwipe(config, app::selectCluster),
-                title = {
-                    Box {
-                        ClusterTitle(config, clusterColors, clusterLabels, onOpen = { clusterMenu = true }) { ScreenshotModeIcon() }
-                        config?.let { stored ->
-                            ClusterMenu(
-                                expanded = clusterMenu,
-                                config = stored,
-                                colors = clusterColors,
-                                labels = clusterLabels,
-                                onSelect = app::selectCluster,
-                                onManage = { showClusters = true },
-                                onDismiss = { clusterMenu = false },
-                            )
-                        }
-                    }
-                },
-                actions = { KubeHomeActions(bar, nav, onCustomize = { customizing = true }) },
-            )
+            HomeTopBar(
+                customizing = customizing,
+                editTitle = stringResource(R.string.kube_home_edit_title),
+                onDone = { customizing = false },
+                config = config,
+                colors = clusterColors,
+                labels = clusterLabels,
+                onSelect = app::selectCluster,
+                onManage = { showClusters = true },
+            ) {
+                KubeHomeActions(bar, nav, onCustomize = { customizing = true })
+            }
         },
     ) { padding ->
         config?.takeIf { showClusters }?.let { stored ->

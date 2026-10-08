@@ -36,7 +36,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -213,7 +212,6 @@ fun OverviewScreen(
     val clusterLabels = rememberClusterLabels()
     val scope = rememberCoroutineScope()
     var showClusters by remember { mutableStateOf(false) }
-    var clusterMenu by remember { mutableStateOf(false) }
     // The cluster whose endpoints are being edited, and the network search for clusters' nodes.
     var editingEndpoints by remember { mutableStateOf<String?>(null) }
     var scanningEndpoints by remember { mutableStateOf(false) }
@@ -351,39 +349,25 @@ fun OverviewScreen(
             }
         },
         topBar = {
-            if (customizing) TopAppBar(
-                title = { Text(stringResource(R.string.overview_edit_title)) },
-                actions = { TextButton(onClick = { customizing = false }) { Text(stringResource(R.string.overview_edit_done)) } },
-            ) else TopAppBar(
-                // Swipe the bar sideways for the previous/next cluster, tap the title for the menu.
-                modifier = Modifier.clusterSwipe(config, app::selectCluster),
-                title = {
-                    Box {
-                        ClusterTitle(config, clusterColors, clusterLabels, onOpen = { clusterMenu = true }) { ScreenshotModeIcon() }
-                        config?.let { stored ->
-                            ClusterMenu(
-                                expanded = clusterMenu,
-                                config = stored,
-                                colors = clusterColors,
-                                labels = clusterLabels,
-                                onSelect = app::selectCluster,
-                                onManage = { showClusters = true },
-                                onDismiss = { clusterMenu = false },
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    OverviewActions(
-                        bar = bar,
-                        nav = OverviewNavigation(onHealth, onEvents, onWorkloads, onMetrics, onKubeSpan, onEtcd, onSettings),
-                        reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node },
-                        health = config?.activeSummary?.allows(Feature.HEALTH) == true,
-                        workloads = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
-                        onCustomize = { customizing = true },
-                    )
-                },
-            )
+            HomeTopBar(
+                customizing = customizing,
+                editTitle = stringResource(R.string.overview_edit_title),
+                onDone = { customizing = false },
+                config = config,
+                colors = clusterColors,
+                labels = clusterLabels,
+                onSelect = app::selectCluster,
+                onManage = { showClusters = true },
+            ) {
+                OverviewActions(
+                    bar = bar,
+                    nav = OverviewNavigation(onHealth, onEvents, onWorkloads, onMetrics, onKubeSpan, onEtcd, onSettings),
+                    reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node },
+                    health = config?.activeSummary?.allows(Feature.HEALTH) == true,
+                    workloads = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
+                    onCustomize = { customizing = true },
+                )
+            }
         },
     ) { padding ->
         config?.takeIf { showClusters }?.let { stored ->
@@ -695,15 +679,12 @@ private fun CertificateBanner(summary: ContextSummary, onIssueConfig: () -> Unit
     } else {
         pluralStringResource(R.plurals.overview_cert_expires, count, count)
     }
-    val color = if (days < 0) LocalStatusColors.current.bad else LocalStatusColors.current.warn
-    val content: @Composable () -> Unit = {
-        Column(Modifier.padding(16.dp)) {
-            Text(text, style = MaterialTheme.typography.bodyMedium, color = color)
-            MutedText(stringResource(if (canRenew) R.string.overview_cert_renew else R.string.overview_cert_ask_admin))
-        }
-    }
-    if (canRenew) Card(onClick = onIssueConfig, modifier = Modifier.fillMaxWidth()) { content() }
-    else Card(Modifier.fillMaxWidth()) { content() }
+    ExpiryBanner(
+        text = text,
+        hint = stringResource(if (canRenew) R.string.overview_cert_renew else R.string.overview_cert_ask_admin),
+        expired = days < 0,
+        onClick = onIssueConfig.takeIf { canRenew },
+    )
 }
 
 /**
