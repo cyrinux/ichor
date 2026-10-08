@@ -67,6 +67,18 @@ type aiRequest struct {
 	baseURL  string // empty = the provider's own API; no trailing slash
 	system   string
 	user     string
+	// messages, when set, is the whole conversation sent instead of the single user turn
+	// (system stays apart); the last one is the user's.
+	messages []chatMessage
+}
+
+// turns is what the model gets after the system prompt.
+func (r aiRequest) turns() []chatMessage {
+	if len(r.messages) > 0 {
+		return r.messages
+	}
+
+	return []chatMessage{{Role: "user", Content: r.user}}
 }
 
 // scrub removes the API key from text a server sent back (some echo the credential).

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -369,5 +370,49 @@ func TestPromDemo(t *testing.T) {
 		if err := json.Unmarshal([]byte(out), &res); err != nil || len(res.Series) == 0 || len(res.Series[0].Values) != len(res.Times) || res.Series[0].Values[0] == nil {
 			t.Fatalf("%s: %s", p.ID, out)
 		}
+	}
+}
+
+// Only an error about the query itself is one the author (or a model) can fix.
+func TestPromQueryErrorKind(t *testing.T) {
+	grid := promGrid{start: 1, step: 1, n: 1}
+
+	for _, tc := range []struct {
+		name   string
+		status int
+		body   string
+		query  bool
+	}{
+		{"parse error", 400, `{"status":"error","errorType":"bad_data","error":"parse error at char 4"}`, true},
+		{"execution error", 422, `{"status":"error","errorType":"execution","error":"many-to-many matching"}`, true},
+		{"bad_data whatever the status", 200, `{"status":"error","errorType":"bad_data","error":"x"}`, true},
+		{"string result", 200, `{"status":"success","data":{"resultType":"string","result":[1,"x"]}}`, true},
+		{"timeout", 503, `{"status":"error","errorType":"timeout","error":"query timed out"}`, false},
+		{"internal", 500, `{"status":"error","errorType":"internal","error":"boom"}`, false},
+		{"refused", 401, `no org id`, false},
+		{"not found", 404, `404 page not found`, false},
+	} {
+		_, err := parsePromAnswer(tc.status, []byte(tc.body), grid)
+		if err == nil {
+			t.Errorf("%s: no error", tc.name)
+
+			continue
+		}
+
+		if got := isPromQueryError(err); got != tc.query {
+			t.Errorf("%s: isPromQueryError = %v, want %v (%v)", tc.name, got, tc.query, err)
+		}
+	}
+
+	// The kind survives promQuery's wrapping, and its own checks are about the query too.
+	src := `{"mode":"url","url":"https://p.invalid"}`
+	for _, q := range []string{"  ", strings.Repeat("x", promMaxQuery+1), "up\x00"} {
+		if _, err := promQuery(kubeTarget{"cfg", "ctx", ""}, src, "/api/v1/query_range", q, url.Values{}, grid); !isPromQueryError(err) {
+			t.Errorf("query %.20q: %v is not a query error", q, err)
+		}
+	}
+
+	if _, err := promQuery(kubeTarget{"cfg", "ctx", ""}, src, "/api/v1/query_range", "up", url.Values{}, grid); err == nil || isPromQueryError(err) {
+		t.Errorf("unreachable source: %v taken as a query error", err)
 	}
 }

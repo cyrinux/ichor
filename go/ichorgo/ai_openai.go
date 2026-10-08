@@ -60,7 +60,7 @@ func streamOpenAI(ctx context.Context, req aiRequest, emit func(string)) error {
 	raw, err := json.Marshal(openAIRequest{
 		Model:    req.model,
 		Stream:   true,
-		Messages: []chatMessage{{Role: "system", Content: req.system}, {Role: "user", Content: req.user}},
+		Messages: append([]chatMessage{{Role: "system", Content: req.system}}, req.turns()...),
 	})
 	if err != nil {
 		return err

@@ -470,3 +470,40 @@ func TestAIModels(t *testing.T) {
 		t.Fatal("a missing key must be reported before any request")
 	}
 }
+
+// A conversation is sent as it is, the system prompt apart (Anthropic has a field for it,
+// OpenAI puts it first).
+func TestStreamMultiTurn(t *testing.T) {
+	turns := []chatMessage{{Role: "user", Content: "cpu by pod"}, {Role: "assistant", Content: "here"}, {Role: "user", Content: "it failed"}}
+	wantTurns := []any{
+		map[string]any{"role": "user", "content": "cpu by pod"},
+		map[string]any{"role": "assistant", "content": "here"},
+		map[string]any{"role": "user", "content": "it failed"},
+	}
+
+	srv, call := fakeProvider(t, http.StatusOK, "text/event-stream", anthropicStream("end_turn", "ok"))
+
+	req := mustRequest(t, "anthropic", "", srv.URL)
+	req.messages = turns
+
+	if _, err := collect(t, req); err != nil {
+		t.Fatal(err)
+	}
+
+	if call.body["system"] != "be brief" || !equalJSON(t, call.body["messages"], wantTurns) {
+		t.Fatalf("anthropic body: %v", call.body)
+	}
+
+	srv, call = fakeProvider(t, http.StatusOK, "text/event-stream", openAIStream("stop", "ok"))
+
+	req = mustRequest(t, "openai", "", srv.URL)
+	req.messages = turns
+
+	if _, err := collect(t, req); err != nil {
+		t.Fatal(err)
+	}
+
+	if !equalJSON(t, call.body["messages"], append([]any{map[string]any{"role": "system", "content": "be brief"}}, wantTurns...)) {
+		t.Fatalf("openai body: %v", call.body)
+	}
+}

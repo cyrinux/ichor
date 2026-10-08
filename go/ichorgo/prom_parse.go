@@ -84,6 +84,20 @@ func (p *promPair) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// promQueryError is the query API turning the query itself down (a parse error, an unknown
+// function, a result that cannot be charted): whoever wrote the query can fix it, unlike a
+// source that is unreachable, refuses the credentials or times out.
+type promQueryError struct{ error }
+
+func (e promQueryError) Unwrap() error { return e.error }
+
+// isPromQueryError tells whether err is about the query rather than the source.
+func isPromQueryError(err error) bool {
+	var qe promQueryError
+
+	return errors.As(err, &qe)
+}
+
 // parsePromAnswer reads a query API answer of any HTTP status: Prometheus reports a bad
 // query (400, 422) and a failed one (503) in the same JSON envelope.
 func parsePromAnswer(status int, body []byte, grid promGrid) (promResult, error) {
@@ -102,7 +116,15 @@ func parsePromAnswer(status int, body []byte, grid promGrid) (promResult, error)
 			msg = env.ErrorType + ": " + msg
 		}
 
-		return promResult{}, errors.New(clipUTF8(msg, 500))
+		err := errors.New(clipUTF8(msg, 500))
+
+		// bad_data is a query Prometheus could not parse, execution one it could not run
+		// (and 400 or 422 what other servers answer for the same).
+		if status == http.StatusBadRequest || status == http.StatusUnprocessableEntity || env.ErrorType == "bad_data" || env.ErrorType == "execution" {
+			return promResult{}, promQueryError{err}
+		}
+
+		return promResult{}, err
 	}
 
 	var data promData
@@ -123,7 +145,7 @@ func parsePromAnswer(status int, body []byte, grid promGrid) (promResult, error)
 	case "scalar":
 		items = []json.RawMessage{[]byte(`{"metric":{},"value":` + string(data.Result) + `}`)}
 	default:
-		return promResult{}, fmt.Errorf("a %s result cannot be charted", data.ResultType)
+		return promResult{}, promQueryError{fmt.Errorf("a %s result cannot be charted", data.ResultType)}
 	}
 
 	res.Total = len(items)
