@@ -51,21 +51,25 @@ fun KubeEventsList(namespace: String, kind: String, name: String, modifier: Modi
         value = uiStateOf { talos.kubeEvents(namespace, kind, name) }
     }
     val now = remember(state) { System.currentTimeMillis() }
-    var all by rememberSaveable(namespace, kind, name) { mutableStateOf(false) }
 
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         when (val s = state) {
             UiState.Loading -> LinearProgressIndicator(Modifier.fillMaxWidth())
             is UiState.Failed -> InlineError(s.message.asString())
-            is UiState.Loaded -> {
-                if (s.data.isEmpty()) MutedText(stringResource(R.string.kube_events_empty))
-                (if (all) s.data else s.data.take(EVENTS_PREVIEW)).forEach { EventRow(it, now, showObject = kind.isEmpty()) }
-                if (s.data.size > EVENTS_PREVIEW) {
-                    TextButton(onClick = { all = !all }) {
-                        Text(if (all) stringResource(R.string.checkup_show_less) else stringResource(R.string.checkup_show_all, s.data.size.toString()))
-                    }
-                }
-            }
+            is UiState.Loaded -> KubeEventRows(s.data, showObject = kind.isEmpty(), now = now, key = "$namespace/$kind/$name")
+        }
+    }
+}
+
+/** [events] as read already, the first few then "Show all"; [key] keeps that choice per object. */
+@Composable
+fun KubeEventRows(events: List<KubeEvent>, showObject: Boolean, now: Long, key: String) {
+    var all by rememberSaveable(key) { mutableStateOf(false) }
+    if (events.isEmpty()) MutedText(stringResource(R.string.kube_events_empty))
+    (if (all) events else events.take(EVENTS_PREVIEW)).forEach { EventRow(it, now, showObject) }
+    if (events.size > EVENTS_PREVIEW) {
+        TextButton(onClick = { all = !all }) {
+            Text(if (all) stringResource(R.string.checkup_show_less) else stringResource(R.string.checkup_show_all, events.size.toString()))
         }
     }
 }

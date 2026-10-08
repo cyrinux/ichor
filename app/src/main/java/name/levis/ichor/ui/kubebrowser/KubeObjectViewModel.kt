@@ -15,6 +15,7 @@ import name.levis.ichor.R
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.model.KubeEditPreview
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.KubeObjectSummary
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.cancellableCatching
@@ -35,13 +36,17 @@ data class ObjectEdit(
 }
 
 /**
- * One object of the browser as YAML ([ref]), never cached (a Secret's values when revealed),
- * and its edit: draft, dry-run diff, then a save at the resourceVersion it was read at, so a
- * concurrent change is refused rather than overwritten.
+ * One object of the browser ([ref]): its summary (conditions, owners, events), its YAML,
+ * never cached (a Secret's values when revealed), and its edit: draft, dry-run diff, then a
+ * save at the resourceVersion it was read at, so a concurrent change is refused rather than
+ * overwritten.
  */
 class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: KubeObjectRef) : ViewModel() {
     private val _yaml = MutableStateFlow<UiState<String>>(UiState.Loading)
     val yaml: StateFlow<UiState<String>> = _yaml.asStateFlow()
+
+    private val _summary = MutableStateFlow<UiState<KubeObjectSummary>>(UiState.Loading)
+    val summary: StateFlow<UiState<KubeObjectSummary>> = _summary.asStateFlow()
 
     private val _revealed = MutableStateFlow(false)
     /** A Secret's values are shown (asked with the app lock's authentication). */
@@ -55,7 +60,24 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
     val messages: Flow<UiText> = _messages.receiveAsFlow()
 
     private var load: Job? = null
+    private var summaryLoad: Job? = null
     private var review: Job? = null
+
+    /** Reads the summary and the YAML again. */
+    fun refreshAll() {
+        refreshSummary()
+        refresh()
+    }
+
+    fun refreshSummary() {
+        summaryLoad?.cancel()
+        val previous = _summary.value
+        _summary.value = if (previous is UiState.Loaded) previous.copy(refreshing = true) else UiState.Loading
+        summaryLoad = viewModelScope.launch {
+            _summary.value = cancellableCatching { browser.objectSummary(ref) }
+                .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+        }
+    }
 
     fun refresh() {
         if (_edit.value != null) return
@@ -125,7 +147,7 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
             if (outcome.isSuccess) {
                 _edit.value = null
                 _messages.send(UiText.Res(R.string.kb_saved))
-                refresh()
+                refreshAll()
             } else {
                 _edit.update { it?.copy(saving = false, saveError = outcome.exceptionOrNull()?.uiText()) }
             }
