@@ -2127,6 +2127,10 @@
     <string name="netpol_not_restricted_but">Not restricted, except what the rules below deny.</string>
     <string name="netpol_allow">Allow</string>
     <string name="netpol_deny">Deny</string>
+    <string name="netpol_pass">Pass</string>
+    <string name="netpol_log">Log only</string>
+    <string name="netpol_tier">Tier %1$s</string>
+    <string name="netpol_order">Order %1$s</string>
     <string name="netpol_from">From</string>
     <string name="netpol_to">To</string>
     <string name="netpol_any_peer">Anyone</string>

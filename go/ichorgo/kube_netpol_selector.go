@@ -54,10 +54,10 @@ func flowLabels(labels []string) labelSet {
 	return out
 }
 
-// podLabelSet is a pod's labels plus what Cilium adds: its namespace, its namespace's
-// labels and its service account.
+// podLabelSet is a pod's labels plus what the CNI adds: its namespace, its namespace's
+// labels and its service account, under the keys Cilium and Calico selectors use.
 func podLabelSet(labels map[string]string, namespace, serviceAccount string, nsLabels map[string]string) labelSet {
-	out := make(labelSet, len(labels)+len(nsLabels)+2)
+	out := make(labelSet, len(labels)+len(nsLabels)+5)
 	for k, v := range labels {
 		out[k] = v
 	}
@@ -67,9 +67,12 @@ func podLabelSet(labels map[string]string, namespace, serviceAccount string, nsL
 	}
 
 	out[ciliumNamespaceLabel] = namespace
+	out[calicoNamespaceLabel] = namespace
+	out[calicoOrchestratorLabel] = "k8s"
 
 	if serviceAccount != "" {
 		out[ciliumServiceAccountLabel] = serviceAccount
+		out[calicoServiceAccountLabel] = serviceAccount
 	}
 
 	return out

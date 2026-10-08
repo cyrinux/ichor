@@ -1,23 +1,37 @@
 import Foundation
 
-// Mirrors go/ichorgo/kube_netpol*.go: the cluster's network policies, Kubernetes and Cilium
-// ones alike, as the app shows them (who they apply to, whether they isolate it, what each rule
+// Mirrors go/ichorgo/kube_netpol*.go: the cluster's network policies, Kubernetes, Cilium and
+// Calico ones alike, as the app shows them (who they apply to, whether they isolate it, what each rule
 // lets through), and the pure logic the Network policies screen lists and words them with.
 
 public enum NetPolicyKind: String, Sendable, CaseIterable, WireEnum {
     case networkPolicy = "NetworkPolicy"
     case cilium = "CiliumNetworkPolicy"
     case ciliumClusterwide = "CiliumClusterwideNetworkPolicy"
+    /// Calico's own NetworkPolicy (projectcalico.org), named apart from the Kubernetes one.
+    case calico = "NetworkPolicy.projectcalico.org"
+    case calicoGlobal = "GlobalNetworkPolicy"
     case unknown = ""
 
     public static let wireFallback: Self = .unknown
 
-    /// The badge: NP, CNP, CCNP.
+    /// Whose policy it is: Kubernetes, Cilium or Calico, for the search.
+    public var family: String {
+        switch self {
+        case .cilium, .ciliumClusterwide: "Cilium"
+        case .calico, .calicoGlobal: "Calico"
+        case .networkPolicy, .unknown: "Kubernetes"
+        }
+    }
+
+    /// The badge: NP, CNP, CCNP, Calico NP, GNP.
     public var short: String {
         switch self {
         case .networkPolicy: "NP"
         case .cilium: "CNP"
         case .ciliumClusterwide: "CCNP"
+        case .calico: "Calico NP"
+        case .calicoGlobal: "GNP"
         case .unknown: "?"
         }
     }
@@ -33,13 +47,16 @@ public enum NetDirection: String, Sendable, CaseIterable {
 public struct NetPolicyReport: Decodable, Equatable, Sendable {
     /// The Cilium policy CRDs are served.
     public let cilium: Bool
+    /// Calico's policy API is served.
+    public let calico: Bool
     public let policies: [NetPolicy]
     public let namespaces: [NetPolicyNamespace]
     /// A kind that could not be read, "" otherwise.
     public let error: String
 
-    public init(cilium: Bool = false, policies: [NetPolicy] = [], namespaces: [NetPolicyNamespace] = [], error: String = "") {
+    public init(cilium: Bool = false, calico: Bool = false, policies: [NetPolicy] = [], namespaces: [NetPolicyNamespace] = [], error: String = "") {
         self.cilium = cilium
+        self.calico = calico
         self.policies = policies
         self.namespaces = namespaces
         self.error = error
@@ -48,12 +65,13 @@ public struct NetPolicyReport: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         cilium = try c.field(.cilium, false)
+        calico = try c.field(.calico, false)
         policies = try c.field(.policies, [])
         namespaces = try c.field(.namespaces, [])
         error = try c.field(.error, "")
     }
 
-    private enum CodingKeys: String, CodingKey { case cilium, policies, namespaces, error }
+    private enum CodingKeys: String, CodingKey { case cilium, calico, policies, namespaces, error }
 }
 
 /// Isolation of a namespace's pods in one direction.
@@ -149,6 +167,9 @@ public struct NetPolicy: Decodable, Equatable, Identifiable, Sendable {
     /// A Cilium host policy: the subject selects nodes.
     public let nodes: Bool
     public let description: String
+    /// A Calico policy's tier and order: lower orders apply first, in the tier's turn.
+    public let tier: String
+    public let order: Double?
     /// The selected pods are isolated in that direction: only what the rules allow passes.
     public let ingress: Bool
     public let egress: Bool
@@ -163,7 +184,7 @@ public struct NetPolicy: Decodable, Equatable, Identifiable, Sendable {
     public var clusterWide: Bool { namespace.isEmpty }
 
     public init(kind: NetPolicyKind, namespace: String = "", name: String, created: Int64 = 0, subject: String = "",
-                subjectNamespace: String = "", nodes: Bool = false, description: String = "",
+                subjectNamespace: String = "", nodes: Bool = false, description: String = "", tier: String = "", order: Double? = nil,
                 ingress: Bool = false, egress: Bool = false, ingressRules: [NetRule] = [], egressRules: [NetRule] = [],
                 pods: [String] = [], podCount: Int = 0) {
         self.kind = kind
@@ -175,6 +196,8 @@ public struct NetPolicy: Decodable, Equatable, Identifiable, Sendable {
         self.subjectNamespace = subjectNamespace
         self.nodes = nodes
         self.description = description
+        self.tier = tier
+        self.order = order
         self.ingress = ingress
         self.egress = egress
         self.ingressRules = ingressRules
@@ -194,12 +217,20 @@ public struct NetPolicy: Decodable, Equatable, Identifiable, Sendable {
         subjectNamespace = try c.field(.subjectNamespace, "")
         nodes = try c.field(.nodes, false)
         description = try c.field(.description, "")
+        tier = try c.field(.tier, "")
+        order = try c.decodeIfPresent(Double.self, forKey: .order)
         ingress = try c.field(.ingress, false)
         egress = try c.field(.egress, false)
         ingressRules = try c.field(.ingressRules, [])
         egressRules = try c.field(.egressRules, [])
         pods = try c.field(.pods, [])
         podCount = try c.field(.podCount, 0)
+    }
+
+    /// "100", "100.5": the order without a needless fraction; nil without one.
+    public var orderText: String? {
+        guard let order else { return nil }
+        return order == order.rounded(.down) ? String(Int64(order)) : String(order)
     }
 
     public func isolates(_ direction: NetDirection) -> Bool { direction == .ingress ? ingress : egress }
@@ -221,7 +252,7 @@ public struct NetPolicy: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case kind, namespace, name, created, subject, subjectNamespace, nodes, description
+        case kind, namespace, name, created, subject, subjectNamespace, nodes, description, tier, order
         case ingress, egress, ingressRules, egressRules, pods, podCount
     }
 }
@@ -248,9 +279,23 @@ public enum NetPolicyEffect: Sendable {
     case open
 }
 
+/// What a rule does to the traffic it matches.
+public enum NetRuleAction: String, Sendable, CaseIterable, WireEnum {
+    case allow = ""
+    case deny
+    /// Calico: hands the traffic to the next tier or the profiles, which allow it.
+    case pass
+    /// Calico: only logs it.
+    case log
+
+    public static let wireFallback: Self = .allow
+}
+
 /// One rule: traffic from/to any of its peers on any of its ports passes, or is denied.
 public struct NetRule: Decodable, Equatable, Sendable {
     public let deny: Bool
+    /// What the rule does: deny when `deny`, else pass or log for a Calico rule, else allow.
+    public let action: NetRuleAction
     /// None: any peer.
     public let peers: [NetPeer]
     /// None: any port.
@@ -258,8 +303,9 @@ public struct NetRule: Decodable, Equatable, Sendable {
     /// "HTTP GET /api", "DNS *".
     public let l7: [String]
 
-    public init(deny: Bool = false, peers: [NetPeer] = [], ports: [NetPort] = [], l7: [String] = []) {
+    public init(deny: Bool = false, action: NetRuleAction = .allow, peers: [NetPeer] = [], ports: [NetPort] = [], l7: [String] = []) {
         self.deny = deny
+        self.action = deny ? .deny : action
         self.peers = peers
         self.ports = ports
         self.l7 = l7
@@ -268,12 +314,13 @@ public struct NetRule: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         deny = try c.field(.deny, false)
+        action = deny ? .deny : NetRuleAction(wire: try c.field(.action, ""))
         peers = try c.field(.peers, [])
         ports = try c.field(.ports, [])
         l7 = try c.field(.l7, [])
     }
 
-    private enum CodingKeys: String, CodingKey { case deny, peers, ports, l7 }
+    private enum CodingKeys: String, CodingKey { case deny, action, peers, ports, l7 }
 }
 
 public enum NetPeerKind: String, Sendable, CaseIterable, WireEnum {
@@ -413,7 +460,7 @@ public extension NetPolicyReport {
         let q = query.trimmingCharacters(in: .whitespaces)
         let kept = policies.filter { p in
             (namespace == nil || p.namespace == namespace || p.clusterWide)
-                && (q.isEmpty || [p.name, p.subject, p.namespace, p.description, p.kind.short]
+                && (q.isEmpty || [p.name, p.subject, p.namespace, p.description, p.kindName, p.kind.short, p.kind.family]
                     .contains { $0.localizedCaseInsensitiveContains(q) })
         }
         let grouped = Dictionary(grouping: kept) { $0.namespace }

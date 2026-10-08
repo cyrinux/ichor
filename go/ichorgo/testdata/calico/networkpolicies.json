@@ -1,0 +1,20 @@
+{"items":[
+ {"metadata":{"name":"default.db-allow-api","namespace":"shop","creationTimestamp":"2026-09-01T10:00:00Z","annotations":{"description":"Only the API may talk to the database"}},
+  "spec":{"tier":"default","order":100,"selector":"app == 'db'","types":["Ingress"],
+   "ingress":[{"action":"Allow","protocol":"TCP","source":{"selector":"app == 'api'"},"destination":{"ports":[5432]}}]}},
+ {"metadata":{"name":"default.api-egress","namespace":"shop","creationTimestamp":"2026-09-02T10:00:00Z"},
+  "spec":{"selector":"app == 'api'",
+   "egress":[
+    {"action":"Allow","protocol":"TCP","destination":{"selector":"app == 'db'","ports":[5432]}},
+    {"action":"Allow","protocol":"UDP","destination":{"namespaceSelector":"projectcalico.org/name == 'kube-system'","selector":"k8s-app == 'kube-dns'","ports":[53]}},
+    {"action":"Deny","protocol":"TCP","destination":{"nets":["0.0.0.0/0"],"notNets":["10.0.0.0/8"],"ports":["25","8000:8100"]}},
+    {"action":"Pass","destination":{"services":{"name":"frontend","namespace":"shop"}}}
+   ]}},
+ {"metadata":{"name":"default.audit-only","namespace":"shop","creationTimestamp":"2026-09-03T10:00:00Z"},
+  "spec":{"selector":"all()","types":["Ingress"],
+   "ingress":[{"action":"Log","protocol":"TCP","source":{"nets":["192.168.0.0/16"]},"destination":{"selector":"tier == 'backend'","ports":[8080]}}]}},
+ {"metadata":{"name":"default.ping","namespace":"jobs","creationTimestamp":"2026-09-04T10:00:00Z"},
+  "spec":{"selector":"app in {'batch', 'cron'}","types":["Ingress"],
+   "ingress":[{"action":"Allow","protocol":"ICMP","icmp":{"type":8,"code":0},"source":{"serviceAccounts":{"names":["monitoring"]},"namespaceSelector":"team == 'ops'"}}]}},
+ {"metadata":{"name":"knp.default.mirrored","namespace":"shop"},"spec":{"selector":"projectcalico.org/orchestrator == 'k8s' && app == 'db'","types":["Ingress"]}}
+]}

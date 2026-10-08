@@ -12,6 +12,9 @@ const (
 	kindNetworkPolicy       = "NetworkPolicy"
 	kindCiliumPolicy        = "CiliumNetworkPolicy"
 	kindCiliumClusterPolicy = "CiliumClusterwideNetworkPolicy"
+	// Calico's own NetworkPolicy shares its name with the Kubernetes one: its group tells them apart.
+	kindCalicoPolicy       = "NetworkPolicy.projectcalico.org"
+	kindCalicoGlobalPolicy = "GlobalNetworkPolicy"
 )
 
 // netPolicy is a network policy as the app shows it, whatever its kind: who it applies to
@@ -27,6 +30,9 @@ type netPolicy struct {
 	SubjectNS   string `json:"subjectNamespace,omitempty"` // a cluster-wide policy pinned to a namespace
 	Nodes       bool   `json:"nodes,omitempty"`
 	Description string `json:"description,omitempty"`
+	// Tier and Order rank a Calico policy: lower orders apply first, in the tier's turn.
+	Tier  string   `json:"tier,omitempty"`
+	Order *float64 `json:"order,omitempty"`
 	// Ingress / Egress isolate the selected pods when true: only what the rules allow passes.
 	Ingress      bool      `json:"ingress"`
 	Egress       bool      `json:"egress"`
@@ -42,18 +48,27 @@ type netPolicy struct {
 // policySubject is one selector of a policy and the directions it isolates: the specs of a
 // Cilium policy each have their own.
 type policySubject struct {
-	selector        *labelSelector
+	selector        endpointMatcher
 	ingress, egress bool
+}
+
+// endpointMatcher tells whether a policy's selector picks an endpoint with these labels: a
+// Kubernetes or Cilium LabelSelector, or a Calico selector expression.
+type endpointMatcher interface {
+	matches(labelSet) bool
 }
 
 // netRule is one rule of a direction: traffic from/to any of Peers on any of Ports passes
 // (or is denied when Deny). No peers means any peer, no ports any port; a "none" peer
-// means the rule matches nothing (Cilium's empty rule, a deny-all).
+// means the rule matches nothing (Cilium's empty rule, a deny-all). Action is set for a
+// Calico rule that neither allows nor denies: "pass" hands the traffic to the next tier or
+// the profiles (which allow it), "log" only logs it.
 type netRule struct {
-	Deny  bool      `json:"deny,omitempty"`
-	Peers []netPeer `json:"peers"`
-	Ports []netPort `json:"ports"`
-	L7    []string  `json:"l7,omitempty"` // "HTTP GET /api", "DNS *.example.org"
+	Deny   bool      `json:"deny,omitempty"`
+	Action string    `json:"action,omitempty"`
+	Peers  []netPeer `json:"peers"`
+	Ports  []netPort `json:"ports"`
+	L7     []string  `json:"l7,omitempty"` // "HTTP GET /api", "DNS *.example.org"
 }
 
 // netPeer is one side of a rule. Kind is one of:

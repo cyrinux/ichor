@@ -15,7 +15,7 @@ extension TalosClient {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeCilium(config, context, kubeServer, $0) }
     }
 
-    /// Every NetworkPolicy, CiliumNetworkPolicy and CiliumClusterwideNetworkPolicy, with the pods
+    /// Every NetworkPolicy, Cilium and Calico policy, with the pods
     /// each selects and how isolated each namespace is.
     func networkPolicies() async throws -> NetPolicyReport {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in IchorgoKubeNetworkPolicies(config, context, kubeServer, $0) }

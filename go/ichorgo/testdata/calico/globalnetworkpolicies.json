@@ -1,0 +1,15 @@
+{"items":[
+ {"metadata":{"name":"default.allow-dns","creationTimestamp":"2026-08-01T10:00:00Z"},
+  "spec":{"order":10,"selector":"","namespaceSelector":"has(projectcalico.org/name)",
+   "egress":[{"action":"Allow","protocol":"UDP","destination":{"selector":"k8s-app == 'kube-dns'","namespaceSelector":"projectcalico.org/name == 'kube-system'","ports":[53]}}],
+   "types":["Egress"]}},
+ {"metadata":{"name":"default.team-a-isolation","creationTimestamp":"2026-08-02T10:00:00Z"},
+  "spec":{"namespaceSelector":"projectcalico.org/name == 'team-a-web'","selector":"all()",
+   "ingress":[{"action":"Allow","source":{"namespaceSelector":"projectcalico.org/name == 'team-a-web'"}}],
+   "egress":[{"action":"Allow","destination":{"notSelector":"has(secret)"}}]}},
+ {"metadata":{"name":"default.host-fw","creationTimestamp":"2026-08-03T10:00:00Z"},
+  "spec":{"selector":"has(host-endpoint)","applyOnForward":true,
+   "ingress":[{"action":"Allow","protocol":"TCP","source":{"namespaceSelector":"global()","selector":"role == 'bastion'"},"destination":{"ports":[22]}},
+              {"action":"Allow","protocol":"TCP","http":{"methods":["GET"],"paths":[{"prefix":"/api/"},{"exact":"/health"}]},"destination":{"ports":[80]}}]}},
+ {"metadata":{"name":"staged:default.later"},"spec":{"selector":"all()"}}
+]}
