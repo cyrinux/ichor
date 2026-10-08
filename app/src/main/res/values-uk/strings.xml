@@ -2543,6 +2543,7 @@
     <string name="node_menu_maintenance">Обслуговування…</string>
     <string name="node_menu_cordon">Ізолювати (cordon)</string>
     <string name="node_menu_uncordon">Зняти ізоляцію</string>
+    <string name="node_menu_drain">Звільнити…</string>
     <string name="node_menu_group_inspect">Огляд</string>
     <string name="node_menu_group_troubleshoot">Діагностика</string>
     <string name="node_menu_group_operate">Керування</string>
@@ -2578,6 +2579,7 @@
     <string name="maintenance_other_running">Обслуговування %1$s уже триває.</string>
     <string name="maintenance_auth_title">Обслуговування %1$s</string>
     <string name="maintenance_confirm_title">%1$s: обслуговування %2$s?</string>
+    <string name="drain_confirm_title">Звільнити %1$s?</string>
     <string name="maintenance_confirm_body">%1$s буде ізольовано, потім його поди буде виселено (PodDisruptionBudget дотримуються: звільнення на них чекає).</string>
     <string name="maintenance_pdb">PDB %1$s: дозволено %2$d</string>
     <string name="maintenance_empty_dir">Втрачає локальні дані</string>

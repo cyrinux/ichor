@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.automirrored.outlined.ListAlt
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Power
 import androidx.compose.material.icons.outlined.PowerSettingsNew
 import androidx.compose.material.icons.outlined.SettingsEthernet
@@ -51,7 +52,7 @@ import name.levis.ichor.ui.components.text
 import name.levis.ichor.ui.theme.LocalStatusColors
 
 /** What a node row can lead to; destructive ones only ever open their confirmation. */
-enum class NodeAction { LIVE, SERVICES, KERNEL_LOG, REBOOT, SHUTDOWN, SHELL }
+enum class NodeAction { LIVE, SERVICES, KERNEL_LOG, REBOOT, SHUTDOWN, SHELL, DRAIN }
 
 /**
  * Swipe right: the node's live graphs. Swipe left (or long-press the card): the action sheet.
@@ -110,7 +111,8 @@ data class WolActions(
 
 /**
  * Per-node actions, filtered by reachability and the config's role. Wake-on-LAN needs no
- * role: the phone sends the packet itself, the Talos API is not involved.
+ * role: the phone sends the packet itself, the Talos API is not involved. [canDrain]: the
+ * drain goes through the Kubernetes API (os:admin).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,6 +121,7 @@ fun NodeActionsSheet(
     canPower: Boolean,
     canShell: Boolean,
     wol: WolActions?,
+    canDrain: Boolean = false,
     onAction: (NodeAction) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -141,6 +144,9 @@ fun NodeActionsSheet(
                 Item(Icons.Outlined.Terminal, stringResource(R.string.overview_action_kernel_log)) { pick(NodeAction.KERNEL_LOG) }
                 if (canShell) {
                     Item(Icons.Outlined.Terminal, stringResource(R.string.overview_action_debug_shell), disabled = shell?.text()) { pick(NodeAction.SHELL) }
+                }
+                if (canDrain) {
+                    Item(Icons.AutoMirrored.Outlined.Logout, stringResource(R.string.node_menu_drain)) { pick(NodeAction.DRAIN) }
                 }
                 if (canPower) {
                     Item(Icons.Outlined.PowerSettingsNew, stringResource(R.string.overview_action_reboot), danger = true) { pick(NodeAction.REBOOT) }

@@ -91,6 +91,7 @@ fun NodesScreen(
             canPower = summary?.allows(Feature.POWER) == true,
             canShell = summary?.allows(Feature.DEBUG_SHELL) == true,
             wol = wakeOnLan(node),
+            canDrain = summary?.allows(Feature.WORKLOADS) == true,
             onAction = { onNodeAction(node, it) },
             onDismiss = { sheetFor = null },
         )

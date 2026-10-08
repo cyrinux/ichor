@@ -11,6 +11,9 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -18,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,6 +38,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ArgoStatus
 import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.FluxStatus
+import name.levis.ichor.model.KubeNodeInfo
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.monitor.freezeReminderHook
 import name.levis.ichor.ui.LoadingViewModel
@@ -50,6 +55,8 @@ import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.flux.FluxViewModel
 import name.levis.ichor.ui.kubeauth.SignInBanner
 import name.levis.ichor.ui.kubeauth.SignInSheet
+import name.levis.ichor.ui.node.CordonDialog
+import kotlinx.coroutines.launch
 import name.levis.ichor.model.KubeSignInInfo
 import name.levis.ichor.model.SignInNeeded
 import name.levis.ichor.model.signInNeeded
@@ -79,12 +86,15 @@ class KubeHomeNavigation(
     val onChangelog: () -> Unit,
     val onResources: () -> Unit,
     val onHelm: () -> Unit,
+    /** The drain of a node, by its Kubernetes name. */
+    val onDrain: (node: String) -> Unit,
 )
 
 /**
  * The home of a cluster added from a kubeconfig, in place of the Talos overview: the API
  * server and who the credentials are, the nodes as Kubernetes lists them, the Kubernetes
- * screens, and Argo CD and Flux when installed. No Talos card or action: there is no Talos API.
+ * screens, and Argo CD and Flux when installed. No Talos card or action: there is no Talos API;
+ * a node can still be cordoned and drained through Kubernetes.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,6 +114,11 @@ fun KubeHomeScreen(
     var showClusters by remember { mutableStateOf(false) }
     var clusterMenu by remember { mutableStateOf(false) }
     var signingIn by remember { mutableStateOf(false) }
+    var nodeMenu by remember { mutableStateOf<KubeNodeInfo?>(null) }
+    var cordoning by remember { mutableStateOf<KubeNodeInfo?>(null) }
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     // How the cluster signs in, read again after each sign-in (invalidations): null for static credentials.
     val signIn by produceState<KubeSignInInfo?>(null, config?.activeContext, invalidations) {
         value = config?.activeSummary?.takeIf { it.signIn.isNotEmpty() }?.let { cluster ->
@@ -123,6 +138,7 @@ fun KubeHomeScreen(
     val flux by fluxVm.state.collectAsStateWithLifecycle()
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = { DataFreshness(state) },
         topBar = {
             TopAppBar(
@@ -187,10 +203,40 @@ fun KubeHomeScreen(
                     onRetry = vm::refresh,
                     argo = argo.takeIf { (it as? UiState.Loaded)?.data?.installed == true },
                     flux = flux.takeIf { (it as? UiState.Loaded)?.data?.installed == true },
+                    onNode = { nodeMenu = it },
                     nav = nav,
                 )
             }
         }
+    }
+    nodeMenu?.let { node ->
+        KubeNodeMenuSheet(
+            node = node,
+            onCordon = {
+                nodeMenu = null
+                cordoning = node
+            },
+            onDrain = {
+                nodeMenu = null
+                nav.onDrain(node.name)
+            },
+            onDismiss = { nodeMenu = null },
+        )
+    }
+    cordoning?.let { node ->
+        CordonDialog(
+            hostname = node.name,
+            cordoned = node.cordoned,
+            onConfirm = { on ->
+                cordoning = null
+                scope.launch {
+                    val message = cordonKubeNode(app.maintenanceManager, context, node.name, on)
+                    vm.refresh()
+                    snackbar.showSnackbar(message, withDismissAction = true, duration = SnackbarDuration.Long)
+                }
+            },
+            onDismiss = { cordoning = null },
+        )
     }
 }
 
@@ -205,6 +251,7 @@ private fun KubeHomeList(
     onRetry: () -> Unit,
     argo: UiState<ArgoStatus>?,
     flux: UiState<FluxStatus>?,
+    onNode: (KubeNodeInfo) -> Unit,
     nav: KubeHomeNavigation,
 ) {
     LazyColumn(
@@ -219,7 +266,7 @@ private fun KubeHomeList(
         // The banner says it all when the call failed for want of a sign-in.
         failure?.takeIf { signIn?.needed == null }?.let { item(key = "failure") { KubeUnreachableCard(it, onRetry) } }
         cluster?.let { item(key = "summary") { KubeSummaryCard(name ?: it.name, it, nodes) } }
-        if (nodes != null) item(key = "nodes") { KubeNodesCard(nodes) }
+        if (nodes != null) item(key = "nodes") { KubeNodesCard(nodes, onNode) }
         item(key = "tools") { KubeToolsCard(nav) }
         argo?.let { item(key = "argocd") { ArgoCard(it, argoTile = null, downNodes = emptySet(), onOpen = nav.onArgoCD) } }
         flux?.let { item(key = "flux") { FluxCard(it, fluxTile = null, onOpen = nav.onFlux) } }

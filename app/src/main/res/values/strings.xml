@@ -2359,6 +2359,7 @@
     <string name="node_menu_maintenance">Maintenance…</string>
     <string name="node_menu_cordon">Cordon</string>
     <string name="node_menu_uncordon">Uncordon</string>
+    <string name="node_menu_drain">Drain…</string>
     <string name="node_menu_group_inspect">Inspect</string>
     <string name="node_menu_group_troubleshoot">Troubleshoot</string>
     <string name="node_menu_group_operate">Operate</string>
@@ -2394,6 +2395,7 @@
     <string name="maintenance_other_running">A maintenance of %1$s is already running.</string>
     <string name="maintenance_auth_title">Maintenance of %1$s</string>
     <string name="maintenance_confirm_title">%1$s: maintenance of %2$s?</string>
+    <string name="drain_confirm_title">Drain %1$s?</string>
     <string name="maintenance_confirm_body">%1$s is cordoned, then its pods are evicted (PodDisruptionBudgets are respected: the drain waits for them).</string>
     <string name="maintenance_pdb">PDB %1$s: %2$d allowed</string>
     <string name="maintenance_empty_dir">Loses local data</string>

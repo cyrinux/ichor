@@ -2363,6 +2363,7 @@
     <string name="node_menu_maintenance">Manutenzione…</string>
     <string name="node_menu_cordon">Isola (cordon)</string>
     <string name="node_menu_uncordon">Rimuovi isolamento</string>
+    <string name="node_menu_drain">Svuota…</string>
     <string name="node_menu_group_inspect">Ispeziona</string>
     <string name="node_menu_group_troubleshoot">Diagnostica</string>
     <string name="node_menu_group_operate">Gestisci</string>
@@ -2398,6 +2399,7 @@
     <string name="maintenance_other_running">Una manutenzione di %1$s è già in corso.</string>
     <string name="maintenance_auth_title">Manutenzione di %1$s</string>
     <string name="maintenance_confirm_title">%1$s: manutenzione di %2$s?</string>
+    <string name="drain_confirm_title">Svuotare %1$s?</string>
     <string name="maintenance_confirm_body">%1$s viene isolato, poi i suoi pod vengono espulsi (i PodDisruptionBudget sono rispettati: lo svuotamento li attende).</string>
     <string name="maintenance_pdb">PDB %1$s: %2$d consentite</string>
     <string name="maintenance_empty_dir">Perde i dati locali</string>

@@ -277,7 +277,10 @@ fun NodeDetailScreen(
                             // One upgrade at a time in the app.
                             busy = buildSet {
                                 if (upgradeBusyElsewhere || maintenanceRunning) add(NodeMenuEntry.UPGRADE)
-                                if (upgrading?.running == true || (maintenanceRunning && maintenance?.node != node)) add(NodeMenuEntry.MAINTENANCE)
+                                if (upgrading?.running == true || (maintenanceRunning && maintenance?.node != node)) {
+                                    add(NodeMenuEntry.MAINTENANCE)
+                                    add(NodeMenuEntry.DRAIN)
+                                }
                                 if (cordonBusy || (maintenanceRunning && maintenance?.node == node)) add(NodeMenuEntry.CORDON)
                             },
                             cordoned = cordoned[node],

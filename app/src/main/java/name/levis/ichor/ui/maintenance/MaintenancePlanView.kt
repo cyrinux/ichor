@@ -54,11 +54,13 @@ data class MaintenanceChoice(val action: MaintenanceAction, val includeBare: Boo
 /**
  * The maintenance plan: what follows the drain, the pods it evicts or leaves, and the checks
  * of a reboot or shutdown. [busyWith] names what already runs in the app (start disabled).
+ * [drainOnly]: a drain alone (no action to pick, no reboot checks), the only one on a
+ * cluster without Talos.
  */
 @Composable
-fun MaintenancePlanView(plan: MaintenancePlan, demo: Boolean, busyWith: String?, onStart: (MaintenanceChoice) -> Unit) {
+fun MaintenancePlanView(plan: MaintenancePlan, demo: Boolean, busyWith: String?, drainOnly: Boolean = false, onStart: (MaintenanceChoice) -> Unit) {
     val colors = LocalStatusColors.current
-    var action by rememberSaveable { mutableStateOf(MaintenanceAction.REBOOT) }
+    var action by rememberSaveable(drainOnly) { mutableStateOf(if (drainOnly) MaintenanceAction.NONE else MaintenanceAction.REBOOT) }
     var includeBare by rememberSaveable { mutableStateOf(false) }
     var ticked by rememberSaveable(plan.acknowledge) { mutableStateOf(setOf<Int>()) }
     val groups = remember(plan.pods) { plan.drainGroups() }
@@ -76,8 +78,12 @@ fun MaintenancePlanView(plan: MaintenancePlan, demo: Boolean, busyWith: String?,
             }
         }
 
-        SectionTitle(stringResource(R.string.maintenance_action))
-        ActionPicker(action) { action = it }
+        if (drainOnly) {
+            MutedText(stringResource(R.string.maintenance_action_none_desc))
+        } else {
+            SectionTitle(stringResource(R.string.maintenance_action))
+            ActionPicker(action) { action = it }
+        }
 
         PodGroup(stringResource(R.string.maintenance_pods_evict, groups.evict.size), groups.evict, stringResource(R.string.maintenance_no_pods))
         if (groups.bare.isNotEmpty()) {
@@ -91,13 +97,13 @@ fun MaintenancePlanView(plan: MaintenancePlan, demo: Boolean, busyWith: String?,
         }
         if (groups.leftAlone.isNotEmpty()) LeftAlone(groups.leftAlone)
 
-        Checks(plan, action, ticked) { i, on -> ticked = if (on) ticked + i else ticked - i }
+        if (!drainOnly) Checks(plan, action, ticked) { i, on -> ticked = if (on) ticked + i else ticked - i }
         if (busyWith != null) Text(busyWith, color = colors.warn, style = MaterialTheme.typography.bodySmall)
         Button(
             onClick = { onStart(MaintenanceChoice(action, includeBare, maintenanceAcknowledged(plan, action, ticked.size))) },
             enabled = maintenanceCanStart(plan, action, ticked.size, busyWith != null),
             modifier = Modifier.fillMaxWidth(),
-        ) { Text(stringResource(R.string.maintenance_start)) }
+        ) { Text(stringResource(if (drainOnly) R.string.maintenance_phase_drain else R.string.maintenance_start)) }
     }
 }
 

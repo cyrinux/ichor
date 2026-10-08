@@ -2355,6 +2355,7 @@
     <string name="node_menu_maintenance">Wartung…</string>
     <string name="node_menu_cordon">Absperren (cordon)</string>
     <string name="node_menu_uncordon">Freigeben (uncordon)</string>
+    <string name="node_menu_drain">Leeren…</string>
     <string name="node_menu_group_inspect">Untersuchen</string>
     <string name="node_menu_group_troubleshoot">Fehlersuche</string>
     <string name="node_menu_group_operate">Verwalten</string>
@@ -2390,6 +2391,7 @@
     <string name="maintenance_other_running">Eine Wartung von %1$s läuft bereits.</string>
     <string name="maintenance_auth_title">Wartung von %1$s</string>
     <string name="maintenance_confirm_title">%1$s: Wartung von %2$s?</string>
+    <string name="drain_confirm_title">%1$s leeren?</string>
     <string name="maintenance_confirm_body">%1$s wird abgesperrt, dann werden seine Pods verdrängt (PodDisruptionBudgets werden eingehalten: das Leeren wartet auf sie).</string>
     <string name="maintenance_pdb">PDB %1$s: %2$d erlaubt</string>
     <string name="maintenance_empty_dir">Verliert lokale Daten</string>

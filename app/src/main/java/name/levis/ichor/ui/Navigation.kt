@@ -180,9 +180,11 @@ private object Routes {
     const val CAPTURES = "captures"
     const val CAPTURE_FILE = "capturefile?name={name}"
     const val UPGRADE = "upgrade?addr={addr}&host={host}&version={version}"
-    const val MAINTENANCE = "maintenance?addr={addr}&host={host}"
+    const val MAINTENANCE = "maintenance?addr={addr}&host={host}&drain={drain}"
 
-    fun maintenance(addr: String, host: String) = "maintenance?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
+    /** [drain]: a drain only, without the reboot or shutdown that a maintenance can add. */
+    fun maintenance(addr: String, host: String, drain: Boolean = false) =
+        "maintenance?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&drain=$drain"
 
     fun capture(addr: String, host: String) = "capture?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}"
 
@@ -409,6 +411,7 @@ fun Navigation(
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
+                onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
             )
             // After an update: what changed since the build that ran before.
             WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
@@ -467,6 +470,7 @@ fun Navigation(
                             NodeMenuEntry.MACHINE_CONFIG -> Routes.machineConfig(addr, host)
                             NodeMenuEntry.UPGRADE -> Routes.upgrade(addr, host)
                             NodeMenuEntry.MAINTENANCE -> Routes.maintenance(addr, host)
+                            NodeMenuEntry.DRAIN -> Routes.maintenance(addr, host, drain = true)
                             // Handled on the node screen (a confirmation, no screen of its own).
                             NodeMenuEntry.CORDON -> null
                         }?.let { nav.navigate(it) }
@@ -523,9 +527,17 @@ fun Navigation(
                 onBack = { nav.popBackStack() },
             )
         }
-        composable(Routes.MAINTENANCE, arguments = nodeArguments()) { entry ->
+        composable(
+            Routes.MAINTENANCE,
+            arguments = nodeArguments() + navArgument("drain") { type = NavType.BoolType; defaultValue = false },
+        ) { entry ->
             val addr = entry.arguments?.getString("addr").orEmpty()
-            MaintenanceScreen(node = addr, hostname = entry.arguments?.getString("host") ?: addr, onBack = { nav.popBackStack() })
+            MaintenanceScreen(
+                node = addr,
+                hostname = entry.arguments?.getString("host") ?: addr,
+                drainOnly = entry.arguments?.getBoolean("drain") ?: false,
+                onBack = { nav.popBackStack() },
+            )
         }
         composable(Routes.ISSUE_CONFIG) { IssueConfigScreen(onBack = { nav.popBackStack() }) }
         composable(
@@ -861,6 +873,7 @@ private fun NavHostController.openNodeAction(n: NodeOverview, action: NodeAction
         NodeAction.SERVICES -> navigate(Routes.node(n.node, n.hostname, n.role))
         NodeAction.KERNEL_LOG -> navigate(Routes.logs(n.node, n.hostname, null))
         NodeAction.SHELL -> navigate(Routes.debug(n.node, n.hostname))
+        NodeAction.DRAIN -> navigate(Routes.maintenance(n.node, n.hostname, drain = true))
         NodeAction.REBOOT -> navigate(Routes.node(n.node, n.hostname, n.role, action = "reboot"))
         NodeAction.SHUTDOWN -> navigate(Routes.node(n.node, n.hostname, n.role, action = "shutdown"))
     }

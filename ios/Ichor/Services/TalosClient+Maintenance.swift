@@ -28,6 +28,38 @@ extension TalosClient {
     /// `acknowledged`: the user confirmed the plan's risks.
     func startMaintenance(node: String, action: MaintenanceAction, includeBare: Bool,
                           acknowledged: Bool) -> (events: AsyncStream<MaintenanceEvent>, stop: @Sendable () -> Void) {
+        Self.followMaintenance { [config, context, kubeServer] bridge in
+            IchorgoStartNodeMaintenance(config, context, kubeServer, node, action.rawValue, includeBare, acknowledged, bridge)
+        }
+    }
+
+    /// A cluster without Talos (kubeconfig): the drain plan of the Kubernetes node `kubeNode`,
+    /// without the reboot checks.
+    func kubeDrainPlan(kubeNode: String) async throws -> MaintenancePlan {
+        try await Self.json { [config = kubeConfig, context = kubeContext, kubeServer = kubeAPIServer] in
+            IchorgoKubeDrainPlan(config, context, kubeServer, kubeNode, $0)
+        }
+    }
+
+    /// A cluster without Talos: `kubectl cordon` (on) or `uncordon` of the Kubernetes node `kubeNode`.
+    func kubeNodeCordon(kubeNode: String, on: Bool) async throws {
+        try await Self.run { [config = kubeConfig, context = kubeContext, kubeServer = kubeAPIServer] error -> Void in
+            _ = IchorgoKubeNodeCordon(config, context, kubeServer, kubeNode, on, error)
+        }
+    }
+
+    /// A cluster without Talos: cordons and drains the Kubernetes node `kubeNode`, which stays
+    /// cordoned. Reports like startMaintenance (phases cordon and drain).
+    func startKubeDrain(kubeNode: String, includeBare: Bool) -> (events: AsyncStream<MaintenanceEvent>, stop: @Sendable () -> Void) {
+        Self.followMaintenance { [config = kubeConfig, context = kubeContext, kubeServer = kubeAPIServer] bridge in
+            IchorgoStartKubeDrain(config, context, kubeServer, kubeNode, includeBare, bridge)
+        }
+    }
+
+    /// The events of the run `start` begins with a listener.
+    private static func followMaintenance(
+        _ start: (MaintenanceBridge) -> IchorgoMaintenanceRun?
+    ) -> (events: AsyncStream<MaintenanceEvent>, stop: @Sendable () -> Void) {
         let (stream, continuation) = AsyncStream.makeStream(of: MaintenanceEvent.self)
         let bridge = MaintenanceBridge(
             progress: { continuation.yield(.progress($0)) },
@@ -36,7 +68,7 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartNodeMaintenance(config, context, kubeServer, node, action.rawValue, includeBare, acknowledged, bridge)
+        let run = start(bridge)
         continuation.onTermination = { _ in
             run?.cancel()
             _ = bridge // keep the listener alive for the whole run

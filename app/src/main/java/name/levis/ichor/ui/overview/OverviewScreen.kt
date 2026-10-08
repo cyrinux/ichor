@@ -158,6 +158,7 @@ fun OverviewScreen(
     onNetworkPolicies: () -> Unit,
     onResources: () -> Unit,
     onHelm: () -> Unit,
+    onDrain: (node: String) -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
     timeVm: ClusterTimeViewModel = viewModel(factory = factory { ClusterTimeViewModel(app.talosRepository) }),
     liveVm: ClusterLiveViewModel = viewModel(factory = factory { ClusterLiveViewModel(app.talosRepository) }),
@@ -187,6 +188,7 @@ fun OverviewScreen(
                 onChangelog = onChangelog,
                 onResources = onResources,
                 onHelm = onHelm,
+                onDrain = onDrain,
             ),
         )
         return
@@ -481,6 +483,7 @@ fun OverviewScreen(
                     onNodeAction = onNodeAction,
                     canPower = config?.activeSummary?.allows(Feature.POWER) == true,
                     canShell = config?.activeSummary?.allows(Feature.DEBUG_SHELL) == true,
+                    canDrain = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
                     canUpgrade = config?.activeSummary?.allows(Feature.UPGRADE) == true,
                     onUpgrade = onUpgrade,
                     skippedTalosUpdate = config?.activeSummary?.fingerprint?.let(skippedTalosUpdates::get),
@@ -528,6 +531,7 @@ private fun NodeList(
     onNodeAction: (NodeOverview, NodeAction) -> Unit,
     canPower: Boolean,
     canShell: Boolean,
+    canDrain: Boolean,
     canUpgrade: Boolean,
     onUpgrade: (NodeOverview, String) -> Unit,
     skippedTalosUpdate: String?,
@@ -553,6 +557,7 @@ private fun NodeList(
             canPower = canPower,
             canShell = canShell,
             wol = wakeOnLan(node),
+            canDrain = canDrain,
             onAction = { onNodeAction(node, it) },
             onDismiss = { sheetFor = null },
         )

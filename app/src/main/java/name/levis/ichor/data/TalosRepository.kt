@@ -688,17 +688,34 @@ class TalosRepository(
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
     suspend fun deletePod(pod: KubePod) = kubeCall { cfg, ctx, server -> Ichorgo.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
 
-    /** What a maintenance of [node] would do: pods to evict, budgets, reboot checks (os:admin). Never cached. */
-    suspend fun maintenancePlan(node: String): MaintenancePlan = talosKubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(MaintenancePlan.serializer(), Ichorgo.nodeMaintenancePlan(cfg, ctx, server, node))
+    /**
+     * What a maintenance of [node] would do: pods to evict, budgets, reboot checks (os:admin).
+     * On a kubeconfig cluster [node] is the Kubernetes node name, and the plan is a drain's
+     * (no Talos checks). Never cached.
+     */
+    suspend fun maintenancePlan(node: String): MaintenancePlan {
+        val json = if (configs.forCall().activeIsKube) {
+            kubeCall { cfg, ctx, server -> Ichorgo.kubeDrainPlan(cfg, ctx, server, node) }
+        } else {
+            talosKubeCall { cfg, ctx, server -> Ichorgo.nodeMaintenancePlan(cfg, ctx, server, node) }
+        }
+        return TalosJson.decodeFromString(MaintenancePlan.serializer(), json)
     }
 
-    /** `kubectl cordon` ([on]) or `uncordon` of [node] (os:admin). */
-    suspend fun cordon(node: String, on: Boolean) = kubeCall { cfg, ctx, server -> Ichorgo.kubeCordon(cfg, ctx, server, node, on) }
+    /**
+     * `kubectl cordon` ([on]) or `uncordon` of [node] (os:admin): its Talos address, or its
+     * Kubernetes name on a kubeconfig cluster. The Talos one resolves the node through Talos.
+     */
+    suspend fun cordon(node: String, on: Boolean) = if (configs.forCall().activeIsKube) {
+        kubeCall { cfg, ctx, server -> Ichorgo.kubeNodeCordon(cfg, ctx, server, node, on) }
+    } else {
+        talosKubeCall { cfg, ctx, server -> Ichorgo.kubeCordon(cfg, ctx, server, node, on) }
+    }
 
     /**
      * Starts the maintenance of [node] (cordon, drain, then [action]); returns at once, the
      * run reports to [listener]. The core refuses blockers, and acknowledgments unless [acknowledged].
+     * A kubeconfig cluster only drains ([node]: the Kubernetes node name).
      */
     fun startMaintenance(
         node: String,
@@ -708,6 +725,11 @@ class TalosRepository(
         listener: MaintenanceListener,
     ): MaintenanceRun {
         val stored = configs.forCall()
+        if (stored.activeIsKube) {
+            require(action == MaintenanceAction.NONE) { "a cluster without Talos can only be drained" }
+            val target = kubeServers.targetFor(stored)
+            return Ichorgo.startKubeDrain(target.yaml, target.context, target.server, node, includeBare, listener)
+        }
         val server = kubeServers.serverFor(stored)
         return Ichorgo.startNodeMaintenance(stored.yaml, stored.activeContext, server, node, action.wire, includeBare, acknowledged, listener)
     }

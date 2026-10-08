@@ -18,6 +18,8 @@ final class MaintenanceJob {
         let action: MaintenanceAction
         /// Cordoned before the run: a reboot leaves it cordoned.
         let wasCordoned: Bool
+        /// A cluster without Talos: `node` is the Kubernetes node name, and the run a drain only.
+        var kube = false
     }
 
     enum Outcome: Equatable {
@@ -64,8 +66,10 @@ final class MaintenanceJob {
         }
         // For the reminder posted when the app leaves the screen.
         Task { _ = await BackgroundMonitor.requestPermission() }
-        let run = client.startMaintenance(node: target.node, action: target.action, includeBare: includeBare,
-                                          acknowledged: acknowledged)
+        let run = target.kube
+            ? client.startKubeDrain(kubeNode: target.node, includeBare: includeBare)
+            : client.startMaintenance(node: target.node, action: target.action, includeBare: includeBare,
+                                      acknowledged: acknowledged)
         stop = run.stop
         task = Task {
             var result = Outcome.failed(String(localized: "The maintenance ended without a result."))

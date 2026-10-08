@@ -164,6 +164,9 @@ enum Route: Hashable {
     /// The imported clusters: switch, color, remove, add.
     case clusters
     case debugShell(node: String, hostname: String)
+    /// The drain of a node (the maintenance screen, drain only); on a cluster without Talos,
+    /// node and hostname are its Kubernetes name.
+    case drain(node: String, hostname: String)
     /// Events timeline for one node, or all of them (node nil); hostnames by address.
     case events(node: String?, hostnames: [String: String])
     /// The apps running in the cluster; hostnames by address, for the nodes pods run on;
@@ -240,6 +243,7 @@ struct MainNavigation: View {
                     case .importConfig: ImportView { path.removeAll() }
                     case .clusters: ClustersView()
                     case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)
+                    case .drain(let node, let hostname): MaintenanceView(node: node, hostname: hostname, drainOnly: true)
                     case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
                     case .apps(let hostnames, let filter): AppsView(hostnames: hostnames, filter: filter)
                     case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)

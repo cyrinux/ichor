@@ -3,13 +3,17 @@ import IchorCore
 
 /// The home of a cluster added from a kubeconfig, in place of the Talos overview: the API
 /// server and who the app is to it, its nodes as Kubernetes sees them (KubeNodes), and the
-/// Kubernetes screens. No Talos section or action: the cluster has no Talos API.
+/// Kubernetes screens. No Talos section or action: the cluster has no Talos API; a node can
+/// still be cordoned and drained through Kubernetes.
 struct KubeHomeView: View {
     /// The navigation path, shared with the Talos overview.
     @Binding var path: [Route]
 
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<KubeNodesOverview> = .loading
+    /// The node whose cordon to change, after a confirmation.
+    @State private var cordoning: KubeNodeInfo?
+    @State private var cordonMessage: String?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -50,6 +54,21 @@ struct KubeHomeView: View {
             .themedBackground()
         }
         .navigationTitle(model.activeLabel)
+        .confirmationDialog(String(localized: "Kubernetes scheduling on \(cordoning?.name ?? "")"),
+                            isPresented: Binding(get: { cordoning != nil }, set: { if !$0 { cordoning = nil } }),
+                            titleVisibility: .visible, presenting: cordoning) { node in
+            if node.cordoned {
+                Button("Uncordon") { Task { await cordon(node, on: false) } }
+            } else {
+                Button("Cordon", role: .destructive) { Task { await cordon(node, on: true) } }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("A cordoned node gets no new pods; the pods it runs stay. Uncordon it to schedule pods on it again.")
+        }
+        .alert(cordonMessage ?? "", isPresented: Binding(get: { cordonMessage != nil }, set: { if !$0 { cordonMessage = nil } })) {
+            Button("OK", role: .cancel) {}
+        }
         .toolbarTitleMenu {
             if (model.summary?.contexts.count ?? 0) > 1 {
                 Menu {
@@ -128,7 +147,17 @@ struct KubeHomeView: View {
             } else {
                 // Those needing attention first, then in the core's order (control planes first).
                 ForEach(overview.nodes.filter(\.needsAttention) + overview.nodes.filter { !$0.needsAttention }) { node in
-                    KubeNodeRow(node: node)
+                    Menu {
+                        Button(node.cordoned ? String(localized: "Uncordon") : String(localized: "Cordon"), systemImage: "nosign") {
+                            cordoning = node
+                        }
+                        Button("Drain…", systemImage: "rectangle.portrait.and.arrow.right") {
+                            path.append(.drain(node: node.name, hostname: node.name))
+                        }
+                    } label: {
+                        KubeNodeRow(node: node)
+                    }
+                    .tint(.primary)
                 }
             }
         } header: {
@@ -138,6 +167,24 @@ struct KubeHomeView: View {
                 if !overview.forbidden { Text(verbatim: "\(overview.nodes.count)") }
             }
         }
+    }
+
+    /// `kubectl cordon` / `uncordon`, after the app lock when it is on, then the nodes again.
+    private func cordon(_ node: KubeNodeInfo, on: Bool) async {
+        guard let client = model.client else { return }
+        let title = on ? String(localized: "Cordon \(node.name)") : String(localized: "Uncordon \(node.name)")
+        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: title) {
+            cordonMessage = failure
+            return
+        }
+        do {
+            try await client.kubeNodeCordon(kubeNode: node.name, on: on)
+            cordonMessage = on ? String(localized: "\(node.name) is cordoned: no new pods are scheduled on it.")
+                : String(localized: "\(node.name) is uncordoned: pods can be scheduled on it again.")
+        } catch {
+            cordonMessage = error.localizedDescription
+        }
+        await load()
     }
 
     /// What the loaded nodes belong to: the context and the screenshot mode generation.
@@ -156,7 +203,7 @@ struct KubeHomeView: View {
 
 /// A node as Kubernetes sees it: ready or not, cordoned, roles, address, kubelet, the
 /// pressure conditions that are on, and where the cloud put it (autoscaler pool, machine
-/// type, spot). No node screen: that one reads Talos.
+/// type, spot). No node screen (it reads Talos): a tap offers the cordon and the drain.
 private struct KubeNodeRow: View {
     let node: KubeNodeInfo
 

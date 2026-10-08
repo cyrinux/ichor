@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.overview
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -108,12 +109,13 @@ private fun KubeStatusPill(nodes: KubeNodesOverview) {
 
 /**
  * The nodes as Kubernetes sees them: roles, readiness, cordon, address, kubelet version,
- * pressure, and where the cloud put them (autoscaler pool, machine type, spot). Not tappable:
- * a node's detail screens read it through Talos. Credentials that may not list nodes get a
- * note instead; the rest of the home still works.
+ * pressure, and where the cloud put them (autoscaler pool, machine type, spot). A tap opens
+ * [onNode]'s actions (cordon, drain): there is no node detail screen, it reads the node
+ * through Talos. Credentials that may not list nodes get a note instead; the rest of the
+ * home still works.
  */
 @Composable
-internal fun KubeNodesCard(overview: KubeNodesOverview) {
+internal fun KubeNodesCard(overview: KubeNodesOverview, onNode: (KubeNodeInfo) -> Unit) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(stringResource(R.string.common_label_nodes), style = MaterialTheme.typography.titleMedium)
@@ -123,7 +125,7 @@ internal fun KubeNodesCard(overview: KubeNodesOverview) {
                 else -> {
                     overview.nodes.take(MAX_HOME_NODES).forEachIndexed { i, node ->
                         if (i > 0) HorizontalDivider()
-                        KubeNodeRow(node)
+                        KubeNodeRow(node, onClick = { onNode(node) })
                     }
                     val more = overview.nodes.size - MAX_HOME_NODES
                     if (more > 0) MutedText(stringResource(R.string.kube_home_more_nodes, more))
@@ -135,9 +137,9 @@ internal fun KubeNodesCard(overview: KubeNodesOverview) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun KubeNodeRow(node: KubeNodeInfo) {
+private fun KubeNodeRow(node: KubeNodeInfo, onClick: () -> Unit) {
     val colors = LocalStatusColors.current
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(Modifier.fillMaxWidth().clickable(onClick = onClick), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(node.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (node.ready) {
