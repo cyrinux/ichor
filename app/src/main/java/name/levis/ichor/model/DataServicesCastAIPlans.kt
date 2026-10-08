@@ -27,6 +27,10 @@ data class CastAIPlan(
     val achievedMonthly: Double? = null,
     val clusterMonthly: Double = 0.0,
     val clusterNodes: Int = 0,
+    /** A failed plan's monthly saving lost: the cost of the nodes it did not remove. */
+    val missedMonthly: Double = 0.0,
+    /** [missedMonthly] is the planned saving shared out by nodes left: a node could not be priced. */
+    val missedEstimated: Boolean = false,
     val failureReason: String = "",
     /** Creation or Deletion. */
     val failurePhase: String = "",
@@ -120,7 +124,11 @@ enum class CastAINodeStatus(val wire: String) {
 data class CastAIPlanSummary(
     val currency: String,
     val savedMonthly: Double,
+    /** Some of [savedMonthly] is planned, not measured by CAST AI. */
+    val savedEstimated: Boolean,
+    /** What failed plans did not save: only the nodes they left. */
     val missedMonthly: Double,
+    val missedEstimated: Boolean,
     val done: Int,
     val failed: Int,
     val running: Int,
@@ -135,10 +143,14 @@ fun CastAIStatus.planSummary(now: Long, windowMillis: Long = CASTAI_SUMMARY_WIND
     val recent = plans.filter { it.createdAt >= now - windowMillis }
     val states = recent.groupingBy { it.planState }.eachCount()
     val newest = plans.firstOrNull()
+    val done = recent.filter { it.planState == CastAIPlanState.DONE }
+    val failed = recent.filter { it.planState == CastAIPlanState.FAILED }
     return CastAIPlanSummary(
         currency = plans.firstOrNull { it.currency.isNotEmpty() }?.currency ?: "",
-        savedMonthly = recent.sumOf { it.savedMonthly ?: 0.0 },
-        missedMonthly = recent.filter { it.planState == CastAIPlanState.FAILED }.sumOf { it.plannedMonthly },
+        savedMonthly = done.sumOf { it.savedMonthly ?: 0.0 },
+        savedEstimated = done.any { it.achievedMonthly == null && it.plannedMonthly > 0 },
+        missedMonthly = failed.sumOf { it.missedMonthly },
+        missedEstimated = failed.any { it.missedEstimated },
         done = states[CastAIPlanState.DONE] ?: 0,
         failed = states[CastAIPlanState.FAILED] ?: 0,
         running = (states[CastAIPlanState.RUNNING] ?: 0) + (states[CastAIPlanState.PENDING] ?: 0),

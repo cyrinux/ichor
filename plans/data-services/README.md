@@ -185,6 +185,10 @@ Android only for now; the Swift model ignores the section.
       "currency": "USD", "beforeMonthly": 318.35, "afterMonthly": 177.54, "savingsPercent": 44.23,
       "achievedMonthly": 51.83,                  // status.achievedOutcome.diff.priceMonthly, absent when unmeasured
       "clusterMonthly": 4841, "clusterNodes": 38,
+      // a failed plan's lost saving: the nodes it left × 730 h, priced from status.savings.blueNodes
+      // (by node name, through the NodeClaim, or by the instance type in the claim name), capped at
+      // the planned saving; else the planned saving × nodes left / nodes listed, "missedEstimated"
+      "missedMonthly": 140.81, "missedEstimated": false,
       "failureReason": "Timeout", "failurePhase": "Deletion", "message": "rebalance timed out after 1h0m0s…",
       "warnings": [],
       "removing": [{ "name": "edge-aaaa",        // status.nodesDeletion, plus spec.nodeClaimsToDelete not reached

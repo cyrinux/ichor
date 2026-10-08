@@ -2,7 +2,9 @@ package name.levis.ichor.model
 
 import name.levis.ichor.data.TalosJson
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CastAIPlansTest {
@@ -17,7 +19,7 @@ class CastAIPlansTest {
            "beforeMonthly":60,"afterMonthly":0,"savingsPercent":100,"clusterMonthly":4800,"clusterNodes":38,
            "removing":[{"name":"edge-aaaa","status":"inProgress","events":[{"at":${now - hour / 10},"status":"InProgress","description":"Starting deletion process"}]}]},
           {"name":"p3","createdAt":${now - 2 * hour},"endedAt":${now - hour},"mode":"full","state":"Failed","execute":true,"currency":"USD",
-           "beforeMonthly":318.35,"afterMonthly":177.54,"failureReason":"Timeout","failurePhase":"Deletion","message":"timed out",
+           "beforeMonthly":318.35,"afterMonthly":177.54,"missedMonthly":98.0,"failureReason":"Timeout","failurePhase":"Deletion","message":"timed out",
            "removing":[{"name":"edge-aaaa","status":"failed"},{"name":"edge-bbbb","status":"success"}],
            "adding":[{"name":"cast-0","status":"success","instanceType":"c7g.2xlarge","spot":true,"priceHourly":0.1608}],
            "budgets":[{"nodePool":"edge","allowed":1,"disrupting":0,"nodes":5}]},
@@ -56,7 +58,11 @@ class CastAIPlansTest {
         val s = status.planSummary(now)
         // p0 is older than a day; the waiting plan counts as other.
         assertEquals(101.83, s.savedMonthly, 0.001)
-        assertEquals(140.81, s.missedMonthly, 0.001)
+        // p1 was not measured: the saved total is partly planned.
+        assertTrue(s.savedEstimated)
+        // Only the nodes the failed plan left, not its whole planned saving.
+        assertEquals(98.0, s.missedMonthly, 0.001)
+        assertFalse(s.missedEstimated)
         assertEquals(listOf(2, 1, 1, 1), listOf(s.done, s.failed, s.running, s.other))
         assertEquals("USD", s.currency)
         assertEquals(38, s.clusterNodes)

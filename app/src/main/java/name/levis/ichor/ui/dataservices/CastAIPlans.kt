@@ -97,11 +97,11 @@ private fun PlansSummary(status: CastAIStatus) {
             Text(stringResource(R.string.castai_plans_last_day), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 MetricTile(
-                    stringResource(R.string.castai_plans_saved), formatMoney(s.savedMonthly, s.currency),
+                    stringResource(R.string.castai_plans_saved), approx(formatMoney(s.savedMonthly, s.currency), s.savedEstimated),
                     stringResource(R.string.castai_per_month_done, s.done.toString()), colors.ok, Modifier.weight(1f),
                 )
                 MetricTile(
-                    stringResource(R.string.castai_plans_missed), formatMoney(s.missedMonthly, s.currency),
+                    stringResource(R.string.castai_plans_missed), approx(formatMoney(s.missedMonthly, s.currency), s.missedEstimated),
                     stringResource(R.string.castai_per_month_failed, s.failed.toString()),
                     if (s.failed > 0) colors.bad else MaterialTheme.colorScheme.onSurfaceVariant, Modifier.weight(1f),
                 )
@@ -168,7 +168,10 @@ fun ModeChip(mode: CastAIPlanMode) {
     }
 }
 
-/** "−$53/mo" saved, "$141 planned", or "$0 of $141" for a failed plan. */
+/** "≈ $120" for an estimated amount. */
+fun approx(amount: String, estimated: Boolean): String = if (estimated) "≈ $amount" else amount
+
+/** "−$53/mo" saved, "$141 planned", or "$98 missed" for a failed plan (the nodes it left). */
 @Composable
 private fun savingText(plan: CastAIPlan): String {
     val planned = formatMoney(plan.plannedMonthly, plan.currency)
@@ -179,7 +182,7 @@ private fun savingText(plan: CastAIPlan): String {
             if (saved < 0) stringResource(R.string.castai_cost_up_per_month, formatMoney(-saved, plan.currency))
             else stringResource(R.string.castai_saved_per_month, formatMoney(saved, plan.currency))
         }
-        CastAIPlanState.FAILED -> stringResource(R.string.castai_saving_missed, planned)
+        CastAIPlanState.FAILED -> stringResource(R.string.castai_saving_missed, approx(formatMoney(plan.missedMonthly, plan.currency), plan.missedEstimated))
         else -> stringResource(R.string.castai_saving_planned, planned)
     }
 }

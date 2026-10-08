@@ -3,8 +3,10 @@ package ichorgo
 import (
 	"cmp"
 	"context"
+	"math"
 	"slices"
 	"strconv"
+	"strings"
 )
 
 // castAIPlansVersion serves RebalancePlan, the record CAST AI's Karpenter controller (kentroller)
@@ -44,8 +46,12 @@ type castAIPlan struct {
 	AchievedMonthly *float64 `json:"achievedMonthly,omitempty"`
 	ClusterMonthly  float64  `json:"clusterMonthly"`
 	ClusterNodes    int      `json:"clusterNodes"`
-	FailureReason   string   `json:"failureReason"` // e.g. Timeout
-	FailurePhase    string   `json:"failurePhase"`  // Creation|Deletion
+	// A failed plan's monthly saving lost: the cost of the nodes it did not remove. Estimated
+	// (the planned saving times the share of nodes left) when a node left cannot be priced.
+	MissedMonthly   float64 `json:"missedMonthly"`
+	MissedEstimated bool    `json:"missedEstimated"`
+	FailureReason   string  `json:"failureReason"` // e.g. Timeout
+	FailurePhase    string  `json:"failurePhase"`  // Creation|Deletion
 	// The failure or skip message, in CAST AI's words.
 	Message  string             `json:"message"`
 	Warnings []string           `json:"warnings"`
@@ -118,6 +124,7 @@ type castAIPlanObject struct {
 			CurrentClusterMonthlyCost string            `json:"currentClusterMonthlyCost"`
 			CurrentClusterNodes       int               `json:"currentClusterNodes"`
 			GreenNodes                []castAIPlanVMRaw `json:"greenNodes"`
+			BlueNodes                 []castAIPlanVMRaw `json:"blueNodes"` // the nodes it removes, by node name
 		} `json:"savings"`
 		AchievedOutcome *struct {
 			Nodes []castAIPlanVMRaw `json:"nodes"`
@@ -164,20 +171,56 @@ type castAIPlanVMRaw struct {
 	PriceHourly  string `json:"priceHourly"`
 }
 
+// castAIHoursPerMonth turns an hourly price into CAST AI's monthly one (its estimates use 730).
+const castAIHoursPerMonth = 730
+
 // readCastAIPlans lists the RebalancePlans; a cluster without them (no Karpenter controller) has none.
+// With a failed plan it also reads the Karpenter NodeClaims, to price the nodes it left behind.
 func readCastAIPlans(ctx context.Context, k *kubeClient) ([]castAIPlan, error) {
 	var list kubeList[castAIPlanObject]
 
 	err := ignoreNotFound(getList(ctx, k, "/apis/"+groupCastAI+"/"+castAIPlansVersion+"/rebalanceplans", &list))
 
-	return mapCastAIPlans(list.Items), err
+	var nodeOf map[string]string
+	if slices.ContainsFunc(list.Items, func(o castAIPlanObject) bool { return o.Status.State == "Failed" }) {
+		nodeOf = readNodeClaimNodes(ctx, k)
+	}
+
+	return mapCastAIPlans(list.Items, nodeOf), err
 }
 
-// mapCastAIPlans maps the newest castAIMaxPlans plans, newest first.
-func mapCastAIPlans(objects []castAIPlanObject) []castAIPlan {
+// readNodeClaimNodes maps each Karpenter NodeClaim to its node's name; empty when unreadable
+// (the missed savings are then estimated).
+func readNodeClaimNodes(ctx context.Context, k *kubeClient) map[string]string {
+	var list kubeList[struct {
+		Metadata struct {
+			Name string `json:"name"`
+		} `json:"metadata"`
+		Status struct {
+			NodeName string `json:"nodeName"`
+		} `json:"status"`
+	}]
+
+	out := map[string]string{}
+	if getList(ctx, k, "/apis/karpenter.sh/v1/nodeclaims", &list) != nil {
+		return out
+	}
+
+	for _, c := range list.Items {
+		if c.Status.NodeName != "" {
+			out[c.Metadata.Name] = c.Status.NodeName
+		}
+	}
+
+	return out
+}
+
+// mapCastAIPlans maps the newest castAIMaxPlans plans, newest first; nodeOf maps a NodeClaim to
+// its node (nil when not read).
+func mapCastAIPlans(objects []castAIPlanObject, nodeOf map[string]string) []castAIPlan {
 	plans := make([]castAIPlan, 0, len(objects))
 	for _, obj := range objects {
-		plans = append(plans, mapCastAIPlan(obj))
+		plans = append(plans, mapCastAIPlan(obj, nodeOf))
 	}
 
 	slices.SortFunc(plans, func(a, b castAIPlan) int {
@@ -187,7 +230,7 @@ func mapCastAIPlans(objects []castAIPlanObject) []castAIPlan {
 	return plans[:min(len(plans), castAIMaxPlans)]
 }
 
-func mapCastAIPlan(obj castAIPlanObject) castAIPlan {
+func mapCastAIPlan(obj castAIPlanObject, nodeOf map[string]string) castAIPlan {
 	st := obj.Status
 	plan := castAIPlan{
 		Name: obj.Metadata.Name, CreatedAt: unixMilli(obj.Metadata.CreationTimestamp),
@@ -220,10 +263,110 @@ func mapCastAIPlan(obj castAIPlanObject) castAIPlan {
 		plan.Budgets = append(plan.Budgets, castAINodeBudget{NodePool: b.NodePoolName, Allowed: b.AllowedDisruptions, Disrupting: b.DisruptingCount, Nodes: b.TotalNodes})
 	}
 
-	plan.Removing = castAIRemoving(obj, st.State == "Failed", plan.EndedAt > 0 || st.State == "Done")
+	plan.Removing = castAIPriceRemoving(castAIRemoving(obj, st.State == "Failed", plan.EndedAt > 0 || st.State == "Done"), st.Savings.BlueNodes, nodeOf)
 	plan.Adding = castAIAdding(obj)
 
+	if st.State == "Failed" {
+		plan.MissedMonthly, plan.MissedEstimated = castAIMissed(plan)
+	}
+
 	return plan
+}
+
+// castAIPriceRemoving prices the nodes a plan removes from its cost estimate, which names them by
+// node: a deletion keyed by node name matches directly, one keyed by NodeClaim through nodeOf.
+func castAIPriceRemoving(nodes []castAIPlanNode, blue []castAIPlanVMRaw, nodeOf map[string]string) []castAIPlanNode {
+	byNode := map[string]castAIPlanVMRaw{}
+	for _, b := range blue {
+		byNode[b.Name] = b
+	}
+
+	out := make([]castAIPlanNode, 0, len(nodes))
+	taken := map[string]bool{}
+
+	for _, n := range nodes {
+		name := n.Name
+		if _, ok := byNode[name]; !ok {
+			name = nodeOf[n.Name]
+		}
+
+		if b, ok := byNode[name]; ok {
+			n.InstanceType, n.Spot, n.PriceHourly = b.InstanceType, b.IsSpot, castMoney(b.PriceHourly)
+			taken[b.Name] = true
+		}
+
+		out = append(out, n)
+	}
+
+	// A node already gone has no NodeClaim to follow; CAST AI's claim names carry the instance
+	// type ("…-c8gn-xlarge-…", "…-m7g-m-…" cut short): a single unpriced match prices it.
+	for i, n := range out {
+		if n.PriceHourly > 0 {
+			continue
+		}
+
+		var match []castAIPlanVMRaw
+		for _, b := range blue {
+			if !taken[b.Name] && castAIClaimHasType(n.Name, b.InstanceType) {
+				match = append(match, b)
+			}
+		}
+
+		if len(match) == 1 {
+			out[i].InstanceType, out[i].Spot, out[i].PriceHourly = match[0].InstanceType, match[0].IsSpot, castMoney(match[0].PriceHourly)
+			taken[match[0].Name] = true
+		}
+	}
+
+	return out
+}
+
+// castAIClaimHasType: claim names the instance type as "-<family>-<size or its start>-".
+func castAIClaimHasType(claim, instanceType string) bool {
+	family, size, ok := strings.Cut(instanceType, ".")
+	if !ok || family == "" || size == "" {
+		return false
+	}
+
+	_, rest, found := strings.Cut(claim, "-"+family+"-")
+	if !found {
+		return false
+	}
+
+	token, _, _ := strings.Cut(rest, "-")
+
+	return token != "" && strings.HasPrefix(size, token)
+}
+
+// castAIMissed is what a failed plan did not save: the monthly cost of the nodes it left. When one
+// of them has no price, the planned saving shared out by the number of nodes left (an estimate).
+func castAIMissed(plan castAIPlan) (float64, bool) {
+	planned := max(plan.BeforeMonthly-plan.AfterMonthly, 0)
+	if len(plan.Removing) == 0 {
+		return planned, true
+	}
+
+	var (
+		left   int
+		priced float64
+		all    = true
+	)
+
+	for _, n := range plan.Removing {
+		if n.Status == castAINodeSuccess {
+			continue
+		}
+
+		left++
+		priced += n.PriceHourly * castAIHoursPerMonth
+		all = all && n.PriceHourly > 0
+	}
+
+	if all {
+		return math.Round(min(priced, planned)*100) / 100, false
+	}
+
+	return math.Round(planned*float64(left)/float64(len(plan.Removing))*100) / 100, true
 }
 
 // castAIRemoving: the nodes the plan deletes, with their events; one it never reached is pending.

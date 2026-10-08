@@ -60,7 +60,7 @@ func castAIPlansFromFixture(t *testing.T) []castAIPlan {
 		t.Fatal(err)
 	}
 
-	return mapCastAIPlans(list.Items)
+	return mapCastAIPlans(list.Items, nil)
 }
 
 func TestMapCastAIPlans(t *testing.T) {
@@ -149,6 +149,58 @@ func TestCastAIStuckNodes(t *testing.T) {
 	}
 }
 
+func TestCastAIMissedCountsOnlyNodesLeft(t *testing.T) {
+	removing := []castAIPlanNode{
+		{Name: "claim-a", Status: castAINodeFailed},
+		{Name: "claim-b", Status: castAINodeSuccess},
+		{Name: "ip-c", Status: castAINodeSuccess},
+	}
+	blue := []castAIPlanVMRaw{
+		{Name: "ip-a", InstanceType: "m7g.metal", IsSpot: true, PriceHourly: "0.802700"},
+		{Name: "ip-b", PriceHourly: "0.094100"},
+		{Name: "ip-c", PriceHourly: "0.078900"},
+	}
+
+	// Priced through its NodeClaim: only the node left counts, 0.8027 × 730.
+	plan := castAIPlan{BeforeMonthly: 841.84, Removing: castAIPriceRemoving(removing, blue, map[string]string{"claim-a": "ip-a"})}
+	if missed, est := castAIMissed(plan); missed != 585.97 || est {
+		t.Fatalf("priced: %v %v", missed, est)
+	}
+
+	if n := plan.Removing[0]; n.InstanceType != "m7g.metal" || !n.Spot || n.PriceHourly != 0.8027 {
+		t.Fatalf("priced node: %+v", n)
+	}
+
+	// Without the NodeClaims: a third of the planned saving, flagged as an estimate.
+	plan.Removing = castAIPriceRemoving(removing, blue, nil)
+	if missed, est := castAIMissed(plan); missed != 280.61 || !est {
+		t.Fatalf("estimated: %v %v", missed, est)
+	}
+
+	// A node already gone is priced from the instance type in its claim name, when one matches.
+	gone := []castAIPlanNode{{Name: "cast-spot-1791209079-0-m7g-m-ab75", Status: castAINodeFailed}}
+	plan.Removing = castAIPriceRemoving(gone, blue, nil)
+	if missed, est := castAIMissed(plan); missed != 585.97 || est {
+		t.Fatalf("by type: %v %v", missed, est)
+	}
+}
+
+func TestCastAIClaimHasType(t *testing.T) {
+	for _, c := range []struct {
+		claim, typ string
+		want       bool
+	}{
+		{"cast-gateway-1791462078-0-c8gn-xlarge-eu-w-23c0", "c8gn.xlarge", true},
+		{"cast-default-spot-arm64-1791209079-0-m7g-m-ab75", "m7g.metal", true},
+		{"cast-default-spot-arm64-1791209079-0-m7g-m-ab75", "m7g.xlarge", false},
+		{"default-spot-arm64-5vqtm", "c7g.xlarge", false},
+	} {
+		if got := castAIClaimHasType(c.claim, c.typ); got != c.want {
+			t.Errorf("%s %s: %v", c.claim, c.typ, got)
+		}
+	}
+}
+
 func TestCastAIStuckNodeClearsOnceRemoved(t *testing.T) {
 	plans := []castAIPlan{
 		{State: "Done", Removing: []castAIPlanNode{{Name: "x", Status: castAINodeSuccess}}},
@@ -209,7 +261,7 @@ func TestCastAIPlansCapped(t *testing.T) {
 		objects[i].Metadata.Name = "p"
 	}
 
-	if got := len(mapCastAIPlans(objects)); got != castAIMaxPlans {
+	if got := len(mapCastAIPlans(objects, nil)); got != castAIMaxPlans {
 		t.Fatalf("plans: %d", got)
 	}
 }

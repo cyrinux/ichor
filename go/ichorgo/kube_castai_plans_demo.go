@@ -26,11 +26,11 @@ func demoCastAIPlans(now time.Time) []castAIPlan {
 		{
 			Name: "consolidation-demo-3", CreatedAt: ms(65 * time.Minute), EndedAt: ms(5 * time.Minute), Mode: "full", State: "Failed", Execute: true,
 			Currency: "USD", BeforeMonthly: 238.44, AfterMonthly: 117.53, SavingsPercent: 50.71, ClusterMonthly: 1550, ClusterNodes: 10,
-			FailureReason: "Timeout", FailurePhase: "Deletion",
+			FailureReason: "Timeout", FailurePhase: "Deletion", MissedMonthly: 59.86,
 			Message:  "rebalance timed out after 1h0m0s during Deletion phase, waiting for: edge-gw-7k2pq(InProgress)",
 			Warnings: []string{},
 			Removing: []castAIPlanNode{
-				{Name: "edge-gw-7k2pq", Status: castAINodeFailed, Events: []castAIPlanEvent{
+				{Name: "edge-gw-7k2pq", Status: castAINodeFailed, InstanceType: "c8gn.xlarge", Spot: true, PriceHourly: 0.082, Events: []castAIPlanEvent{
 					ev(64*time.Minute, "NodeCordoned", "Node cordoned ahead of deletion"),
 					ev(64*time.Minute, "Blocked", "NodePool disruption budget exhausted, waiting for budget to free up"),
 					ev(52*time.Minute, "InProgress", "Starting deletion process"),
