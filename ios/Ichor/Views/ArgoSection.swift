@@ -12,7 +12,7 @@ struct ArgoSection: View {
     let downNodes: Set<String>
 
     var body: some View {
-        GitOpsOverviewSection(title: "GitOps", route: .argoCD(downNodes: downNodes), app: app, state: state,
+        GitOpsOverviewSection(title: "GitOps", route: .argoCD(downNodes: downNodes), app: app ?? argoCDTile, state: state,
                               installed: { $0.installed && !$0.apps.isEmpty }) {
             ArgoHealthBar(counts: [(health: .healthy, count: 1)])
             Text(verbatim: "GitOps apps healthy").font(.caption)
@@ -21,7 +21,7 @@ struct ArgoSection: View {
 
     private func content(_ status: ArgoStatus) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            GitOpsSectionHeader(app: app, title: "GitOps", count: status.apps.count)
+            GitOpsSectionHeader(app: app ?? argoCDTile, title: "GitOps", count: status.apps.count)
             ArgoHealthBar(counts: status.healthCounts)
             if let next = status.activeFreezes.first {
                 Label(status.activeFreezes.count == 1
