@@ -55,6 +55,7 @@ type dataServices struct {
 	CertManager *certManagerStatus `json:"certManager,omitempty"`
 	Velero      *veleroStatus      `json:"velero,omitempty"`
 	Ceph        *cephStatus        `json:"ceph,omitempty"`
+	CastAI      *castAIStatus      `json:"castai,omitempty"`
 }
 
 // KubeDataServices reports the health of the storage and database operators the cluster
@@ -164,6 +165,10 @@ func readDataServices(ctx context.Context, k *kubeClient, run execFunc, hints hi
 
 	if v, ok := groups[groupCeph]; ok {
 		wg.Go(func() { out.Ceph = readCeph(ctx, k, v) })
+	}
+
+	if _, ok := groups[groupCastAI]; ok {
+		wg.Go(func() { out.CastAI = readCastAI(ctx, k) })
 	}
 
 	if hints.wants("garage") {

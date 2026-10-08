@@ -61,6 +61,7 @@
 {"id":"seaweedfs","name":"SeaweedFS","cat":"storage","icon":"sh:seaweedfs"},
 {"id":"garage","name":"Garage","cat":"storage","images":["dxflrs/garage","dxflrs/amd64_garage","dxflrs/arm64_garage"]},
 {"id":"velero","name":"Velero","cat":"storage","prefixes":["velero/","docker.io/velero/"]},
+{"id":"castai","name":"CAST AI","cat":"devops","icon":"","match":["castai-agent","castai-cluster-controller","castai-workload-autoscaler","castai-evictor","castai-spot-handler"],"prefixes":["castai/","docker.io/castai/","us-docker.pkg.dev/castai-hub/"]},
 {"id":"volsync","name":"VolSync","cat":"storage","icon":"","prefixes":["quay.io/backube/"]},
 {"id":"k8up","name":"K8up","cat":"storage","icon":""},
 {"id":"syncthing","name":"Syncthing","cat":"storage"},

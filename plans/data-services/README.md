@@ -149,6 +149,35 @@ and CNPG; pods selected with `app.kubernetes.io/name=dragonfly`, instance from `
 Alerts (phase 4 rules): `noReady`/`noMaster` → critical; `pods`/`masters` → warning; a rolling
 update (`notReady`) doesn't alert.
 
+CAST AI (Workload Autoscaler, `autoscaling.cast.ai/v1`, detected by its API group; one
+`Recommendation` per managed workload, listed across namespaces; the requests before CAST AI
+come from the `autoscaling.cast.ai/first-seen-container-resources` annotation, the apply mode
+from `autoscaling.cast.ai/recommendation-apply-mode`). Android only for now; the Swift model
+ignores the section.
+
+```jsonc
+  "castai": {
+    "version": "v1", "error": "",
+    "cpuDeltaMilli": -430, "memoryDeltaBytes": -268435456, // recommended minus original, summed
+    "compared": 2,                                         // workloads whose originals are known
+    "recommendations": [{
+      "namespace": "shop", "name": "api-deployment",
+      "kind": "Deployment", "workload": "api",   // spec.targetRef
+      "mode": "deferred",                        // immediate|deferred|""
+      "readOnly": false,                         // spec.applyPolicy.readonly
+      "health": "ok",                            // critical: vpa; warning: hpa/readOnly
+      "reasons": [],                             // vpa|hpa|readOnly
+      "message": "",                             // the failing condition's message or the read-only reason
+      "containers": [{ "name": "api", "cpu": "120m", "memory": "640Mi", "cpuLimit": "1", "memoryLimit": "1Gi",
+                       "originalCpu": "500m", "originalMemory": "1Gi" }],
+      "cpuDeltaMilli": -380, "memoryDeltaBytes": -402653184
+    }]
+  }
+```
+
+Alerts: `vpa` (the recommendation cannot be applied) → critical; `hpa` and `readOnly` are
+shown, not alerted.
+
 MariaDB (operator `k8s.mariadb.com/v1alpha1`, detected by its API group; `mariadbs`, `backups`
 and `physicalbackups` when served; pods selected with `app.kubernetes.io/name=mariadb`, cluster
 from `app.kubernetes.io/instance`, StatefulSet pods `<cluster>-<n>` only; role from

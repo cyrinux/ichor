@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.SettingsBackupRestore
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.TableChart
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
@@ -45,6 +46,7 @@ import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.LikelyCause
 import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.model.ServiceHealth
+import name.levis.ichor.model.formatMilliCores
 import name.levis.ichor.model.health
 import name.levis.ichor.model.summary
 import name.levis.ichor.model.title
@@ -71,6 +73,7 @@ private val DataServiceKind.fallbackIcon: ImageVector
         DataServiceKind.CERT_MANAGER -> Icons.Outlined.VerifiedUser
         DataServiceKind.VELERO -> Icons.Outlined.SettingsBackupRestore
         DataServiceKind.CEPH -> Icons.Outlined.Storage
+        DataServiceKind.CASTAI -> Icons.Outlined.Tune
     }
 
 /** Hostnames of the nodes Talos reports not ready or unreachable: candidates for a likely cause. */
@@ -144,6 +147,11 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
         DataServiceKind.CERT_MANAGER -> pluralStringResource(R.plurals.certmanager_certificates, summary.total, summary.total)
         DataServiceKind.VELERO -> pluralStringResource(R.plurals.velero_schedules, summary.total, summary.total)
         DataServiceKind.CEPH -> pluralStringResource(R.plurals.ceph_clusters, summary.total, summary.total)
+        DataServiceKind.CASTAI -> {
+            val saving = services.castai?.takeIf { it.compared > 0 && it.cpuDeltaMilli != 0L }
+                ?.let { stringResource(R.string.castai_cpu_delta, formatMilliCores(it.cpuDeltaMilli, signed = true)) }
+            return listOfNotNull(pluralStringResource(R.plurals.castai_workloads, summary.total, summary.total), saving, attention).joinToString(" · ")
+        }
         DataServiceKind.GARAGE -> {
             val single = services.garage?.instances?.singleOrNull()
             if (single != null) {

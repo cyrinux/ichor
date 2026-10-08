@@ -39,6 +39,7 @@ var integrationSpecs = []integrationSpec{
 	{ID: "garage", Name: "Garage", Website: "https://garagehq.deuxfleurs.fr"},
 	{ID: "velero", Name: "Velero", Website: "https://velero.io", Groups: []string{groupVelero}},
 	{ID: "cert-manager", Name: "cert-manager", Website: "https://cert-manager.io", Groups: []string{groupCertManager, groupACME}},
+	{ID: "castai", Name: "CAST AI", Website: "https://cast.ai", Groups: []string{groupCastAI}},
 	{ID: "cilium", Name: "Cilium", Website: "https://cilium.io", Groups: []string{groupCilium}},
 	// Calico's CRDs come with the Kubernetes datastore; with the etcd one only its API server tells.
 	{ID: "calico", Name: "Calico", Website: "https://docs.tigera.io/calico/latest/about/", Groups: []string{groupCalicoCRD, groupCalico}, AnyGroup: true},
@@ -309,6 +310,7 @@ func demoSupportedIntegrations() supportedIntegrations {
 		"rook":           ds.Ceph != nil,
 		"velero":         ds.Velero != nil,
 		"cert-manager":   ds.CertManager != nil,
+		"castai":         ds.CastAI != nil,
 		"cilium":         demoCiliumStatus().Installed,
 		"gateway-api":    true,
 	}
