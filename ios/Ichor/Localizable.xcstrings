@@ -91690,6 +91690,291 @@
           }
         }
       }
+    },
+    "kubeconfig credentials" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identifiants du kubeconfig"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credenciales del kubeconfig"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Облікові дані kubeconfig"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kubeconfig-Anmeldedaten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credenziali del kubeconfig"
+          }
+        }
+      }
+    },
+    "The kubeconfig credentials expired %lld days ago." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The kubeconfig credentials expired %lld day ago."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The kubeconfig credentials expired %lld days ago."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Les identifiants du kubeconfig ont expiré il y a %lld jour."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Les identifiants du kubeconfig ont expiré il y a %lld jours."
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Las credenciales del kubeconfig caducaron hace %lld día."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Las credenciales del kubeconfig caducaron hace %lld días."
+                }
+              }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Термін дії облікових даних kubeconfig закінчився %lld день тому."
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Термін дії облікових даних kubeconfig закінчився %lld дні тому."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Термін дії облікових даних kubeconfig закінчився %lld днів тому."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Термін дії облікових даних kubeconfig закінчився %lld дня тому."
+                }
+              }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Die kubeconfig-Anmeldedaten sind vor %lld Tag abgelaufen."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Die kubeconfig-Anmeldedaten sind vor %lld Tagen abgelaufen."
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Le credenziali del kubeconfig sono scadute %lld giorno fa."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Le credenziali del kubeconfig sono scadute %lld giorni fa."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "The kubeconfig credentials expire in %lld days. Import a new kubeconfig." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The kubeconfig credentials expire in %lld day. Import a new kubeconfig."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The kubeconfig credentials expire in %lld days. Import a new kubeconfig."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Les identifiants du kubeconfig expirent dans %lld jour. Importez un nouveau kubeconfig."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Les identifiants du kubeconfig expirent dans %lld jours. Importez un nouveau kubeconfig."
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Las credenciales del kubeconfig caducan en %lld día. Importa un nuevo kubeconfig."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Las credenciales del kubeconfig caducan en %lld días. Importa un nuevo kubeconfig."
+                }
+              }
+            }
+          }
+        },
+        "uk" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Термін дії облікових даних kubeconfig закінчується через %lld день. Імпортуйте новий kubeconfig."
+                }
+              },
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Термін дії облікових даних kubeconfig закінчується через %lld дні. Імпортуйте новий kubeconfig."
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Термін дії облікових даних kubeconfig закінчується через %lld днів. Імпортуйте новий kubeconfig."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Термін дії облікових даних kubeconfig закінчується через %lld дня. Імпортуйте новий kubeconfig."
+                }
+              }
+            }
+          }
+        },
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Die kubeconfig-Anmeldedaten laufen in %lld Tag ab. Importiere eine neue kubeconfig."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Die kubeconfig-Anmeldedaten laufen in %lld Tagen ab. Importiere eine neue kubeconfig."
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Le credenziali del kubeconfig scadono tra %lld giorno. Importa un nuovo kubeconfig."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Le credenziali del kubeconfig scadono tra %lld giorni. Importa un nuovo kubeconfig."
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

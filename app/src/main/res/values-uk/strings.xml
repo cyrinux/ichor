@@ -524,6 +524,19 @@
         <item quantity="many">Термін дії клієнтського сертифіката закінчується через %1$d днів. Згенеруйте новий talosconfig.</item>
         <item quantity="other">Термін дії клієнтського сертифіката закінчується через %1$d дня. Згенеруйте новий talosconfig.</item>
     </plurals>
+    <string name="monitor_kubeconfig_title">Облікові дані kubeconfig</string>
+    <plurals name="monitor_kubeconfig_expired">
+        <item quantity="one">Термін дії облікових даних kubeconfig закінчився %1$d день тому.</item>
+        <item quantity="few">Термін дії облікових даних kubeconfig закінчився %1$d дні тому.</item>
+        <item quantity="many">Термін дії облікових даних kubeconfig закінчився %1$d днів тому.</item>
+        <item quantity="other">Термін дії облікових даних kubeconfig закінчився %1$d дня тому.</item>
+    </plurals>
+    <plurals name="monitor_kubeconfig_expires">
+        <item quantity="one">Термін дії облікових даних kubeconfig закінчується через %1$d день. Імпортуйте новий kubeconfig.</item>
+        <item quantity="few">Термін дії облікових даних kubeconfig закінчується через %1$d дні. Імпортуйте новий kubeconfig.</item>
+        <item quantity="many">Термін дії облікових даних kubeconfig закінчується через %1$d днів. Імпортуйте новий kubeconfig.</item>
+        <item quantity="other">Термін дії облікових даних kubeconfig закінчується через %1$d дня. Імпортуйте новий kubeconfig.</item>
+    </plurals>
 
     <!-- Updates -->
     <string name="update_section">Оновлення</string>

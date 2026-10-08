@@ -31,6 +31,9 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
     /// Checkup findings ("section|kind|subject" → severity, see CheckupReport.alertIssues), kept like dataIssues.
     public var checkupIssues: [String: String]
     public var checkupPending: [String]
+    /// The cluster was added from a kubeconfig: its nodes come from the Kubernetes API (ready or
+    /// not, never unreachable), there is no etcd, and `certNotAfter` is the kubeconfig's credentials.
+    public var kube: Bool
 
     public init(context: String, takenAt: Date, nodes: [String: NodeState], etcdAlarms: [String] = [],
                 etcdChecked: Bool = false, certNotAfter: Int64 = 0, lastCertWarnDay: Int64 = -1,
@@ -38,7 +41,7 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
                 gitopsWatched: Bool = false, gitopsChecked: Bool = false, gitopsIssues: [String: String] = [:],
                 gitopsPending: [String] = [],
                 checkupWatched: Bool = false, checkupChecked: Bool = false, checkupIssues: [String: String] = [:],
-                checkupPending: [String] = []) {
+                checkupPending: [String] = [], kube: Bool = false) {
         self.context = context
         self.takenAt = takenAt
         self.nodes = nodes
@@ -58,9 +61,10 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         self.checkupChecked = checkupChecked
         self.checkupIssues = checkupIssues
         self.checkupPending = checkupPending
+        self.kube = kube
     }
 
-    /// Snapshots saved by older versions lack the data-service, GitOps and checkup fields.
+    /// Snapshots saved by older versions lack the data-service, GitOps, checkup and kube fields.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         context = try c.decode(String.self, forKey: .context)
@@ -82,6 +86,7 @@ public struct ClusterSnapshot: Codable, Equatable, Sendable {
         checkupChecked = try c.field(.checkupChecked, false)
         checkupIssues = try c.field(.checkupIssues, [:])
         checkupPending = try c.field(.checkupPending, [])
+        kube = try c.field(.kube, false)
     }
 
     var dataTrack: IssueTrack {
@@ -150,6 +155,36 @@ public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNot
         checkupWatched: checkupWatched,
         checkupChecked: checkupWatched && checkupIssues != nil,
         checkupIssues: checkupWatched ? checkupIssues ?? [:] : [:]
+    )
+}
+
+/// The snapshot of a cluster added from a kubeconfig, from the nodes as the Kubernetes API lists
+/// them: a node is ready or not (Kubernetes reports a lost kubelet as not ready), its pressure
+/// conditions are the reason. No etcd. Credentials that may not list nodes give no node at all,
+/// so the opt-in tracks still alert. The other parameters are `snapshotOf`'s.
+public func kubeSnapshotOf(_ overview: KubeNodesOverview, context: String, certNotAfter: Int64, takenAt: Date,
+                           dataWatched: Bool = false, dataServices: DataServices? = nil,
+                           gitopsWatched: Bool = false, gitopsIssues: [String: String]? = nil,
+                           checkupWatched: Bool = false, checkupIssues: [String: String]? = nil) -> ClusterSnapshot {
+    var nodes: [String: NodeState] = [:]
+    for n in overview.nodes {
+        nodes[n.name] = NodeState(hostname: n.name, health: n.ready ? .ready : .notReady, reason: n.pressure.joined(separator: "; "))
+    }
+    return ClusterSnapshot(
+        context: context,
+        takenAt: takenAt,
+        nodes: nodes,
+        certNotAfter: certNotAfter,
+        dataWatched: dataWatched,
+        dataChecked: dataWatched && dataServices != nil,
+        dataIssues: dataWatched ? dataServices.map(dataIssuesOf) ?? [:] : [:],
+        gitopsWatched: gitopsWatched,
+        gitopsChecked: gitopsWatched && gitopsIssues != nil,
+        gitopsIssues: gitopsWatched ? gitopsIssues ?? [:] : [:],
+        checkupWatched: checkupWatched,
+        checkupChecked: checkupWatched && checkupIssues != nil,
+        checkupIssues: checkupWatched ? checkupIssues ?? [:] : [:],
+        kube: true
     )
 }
 
@@ -378,9 +413,18 @@ public func evaluate(previous: ClusterSnapshot?, current: ClusterSnapshot, now: 
     if current.certNotAfter > 0 && lastWarn != today {
         let days = daysUntil(current.certNotAfter, now: now)
         if days <= certWarnDays {
-            let text = days < 0 ? "The client certificate expired \(-days) days ago."
-                : "The client certificate expires in \(days) days. Generate a new talosconfig."
-            alerts.append(Alert(key: "cert", title: "talosconfig certificate", text: text, problem: true))
+            let text: String
+            let title: String
+            if current.kube {
+                title = "kubeconfig credentials"
+                text = days < 0 ? "The kubeconfig credentials expired \(-days) days ago."
+                    : "The kubeconfig credentials expire in \(days) days. Import a new kubeconfig."
+            } else {
+                title = "talosconfig certificate"
+                text = days < 0 ? "The client certificate expired \(-days) days ago."
+                    : "The client certificate expires in \(days) days. Generate a new talosconfig."
+            }
+            alerts.append(Alert(key: "cert", title: title, text: text, problem: true))
             next.lastCertWarnDay = today
         }
     }

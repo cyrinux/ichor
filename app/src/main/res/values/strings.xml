@@ -468,6 +468,15 @@
         <item quantity="one">The client certificate expires in %1$d day. Generate a new talosconfig.</item>
         <item quantity="other">The client certificate expires in %1$d days. Generate a new talosconfig.</item>
     </plurals>
+    <string name="monitor_kubeconfig_title">kubeconfig credentials</string>
+    <plurals name="monitor_kubeconfig_expired">
+        <item quantity="one">The kubeconfig credentials expired %1$d day ago.</item>
+        <item quantity="other">The kubeconfig credentials expired %1$d days ago.</item>
+    </plurals>
+    <plurals name="monitor_kubeconfig_expires">
+        <item quantity="one">The kubeconfig credentials expire in %1$d day. Import a new kubeconfig.</item>
+        <item quantity="other">The kubeconfig credentials expire in %1$d days. Import a new kubeconfig.</item>
+    </plurals>
 
     <!-- Updates -->
     <string name="update_section">Updates</string>

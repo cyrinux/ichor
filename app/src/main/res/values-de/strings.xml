@@ -466,6 +466,15 @@
         <item quantity="one">Das Client-Zertifikat läuft in %1$d Tag ab. Erstelle eine neue talosconfig.</item>
         <item quantity="other">Das Client-Zertifikat läuft in %1$d Tagen ab. Erstelle eine neue talosconfig.</item>
     </plurals>
+    <string name="monitor_kubeconfig_title">kubeconfig-Anmeldedaten</string>
+    <plurals name="monitor_kubeconfig_expired">
+        <item quantity="one">Die kubeconfig-Anmeldedaten sind vor %1$d Tag abgelaufen.</item>
+        <item quantity="other">Die kubeconfig-Anmeldedaten sind vor %1$d Tagen abgelaufen.</item>
+    </plurals>
+    <plurals name="monitor_kubeconfig_expires">
+        <item quantity="one">Die kubeconfig-Anmeldedaten laufen in %1$d Tag ab. Importiere eine neue kubeconfig.</item>
+        <item quantity="other">Die kubeconfig-Anmeldedaten laufen in %1$d Tagen ab. Importiere eine neue kubeconfig.</item>
+    </plurals>
 
     <!-- Updates -->
     <string name="update_section">Updates</string>

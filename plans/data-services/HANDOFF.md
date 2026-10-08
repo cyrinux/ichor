@@ -162,3 +162,7 @@ Append a line per session: date, phase, what was done, what's next.
   Kubernetes node list. The Kubernetes home's cards and app bar are arranged like the overview's
   (`KubeHomeCard`/`KubeHomeAction`, `HomeEditor` on Android, `HomeEditorSheet` on iOS), in a
   layout of their own. Alerts still skip kube-only clusters.
+- 2026-10-08: background alerts on clusters added from a kubeconfig, both platforms: the snapshot
+  comes from the Kubernetes node list (`kubeSnapshotOf`, ready/not ready, no etcd), the opt-in
+  data-service, GitOps and checkup tracks run unchanged, and the expiry alert names the kubeconfig
+  credentials (`KUBECONFIG_EXPIRING`/`EXPIRED`). The widget shows such a cluster too.

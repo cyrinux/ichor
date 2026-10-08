@@ -13,9 +13,9 @@ import name.levis.ichor.model.needsEndpoint
 import name.levis.ichor.widget.ClusterWidget
 
 /**
- * Periodic check: overview + etcd, diffed against the previous snapshot. If the cluster is
- * unreachable as a whole (e.g. off VPN) the previous snapshot is kept (see [evaluate]), so
- * you are not spammed.
+ * Periodic check: overview + etcd (a cluster added from a kubeconfig: its Kubernetes node list),
+ * diffed against the previous snapshot. If the cluster is unreachable as a whole (e.g. off VPN)
+ * the previous snapshot is kept (see [evaluate]), so you are not spammed.
  */
 class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
@@ -32,18 +32,24 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
             return Result.success()
         }
 
-        // The checks start from the Talos overview: a cluster added from a kubeconfig has none,
-        // so it is not checked, and the widget shows no other cluster's nodes for it. Nor has a
-        // Talos cluster without an endpoint yet.
-        if (stored.activeIsKube || stored.activeSummary?.needsEndpoint == true) {
+        // A Talos cluster without an endpoint yet cannot be checked: the widget shows no other
+        // cluster's nodes for it.
+        if (stored.activeSummary?.needsEndpoint == true) {
             store.clearSnapshot()
             ClusterWidget().updateAll(applicationContext)
             return Result.success()
         }
-        val overview = runCatching { app.talosRepository.overview() }.getOrNull() ?: return Result.success()
-        val etcd = runCatching { app.talosRepository.etcd() }.getOrNull()
         val active = stored.summary.contexts.firstOrNull { it.name == stored.activeContext }
         val certNotAfter = active?.certNotAfter ?: 0
+        val kube = stored.activeIsKube
+        // The checks start from the Talos overview, or from the Kubernetes node list of a cluster
+        // added from a kubeconfig. Unreadable (off VPN, a sign-in needed): nothing to compare, the
+        // previous snapshot stays.
+        val overview = if (kube) null else runCatching { app.talosRepository.overview() }.getOrNull()
+        val kubeNodes = if (kube) runCatching { app.talosRepository.kubeNodes() }.getOrNull() else null
+        if (overview == null && kubeNodes == null) return Result.success()
+        val etcd = if (kube) null else runCatching { app.talosRepository.etcd() }.getOrNull()
+        val context = stored.activeContext
 
         // Opt-in, and only for roles that may use the Kubernetes API: each check then lists custom
         // resources and runs the Garage CLI in a pod.
@@ -57,7 +63,7 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val gitopsIssues = if (watchGitops) {
             val argo = runCatching { app.talosRepository.argoCD() }.getOrNull()
             val flux = runCatching { app.talosRepository.flux() }.getOrNull()
-            gitopsIssuesWithGaps(argo, flux, known = knownGitOpsIssues(store.snapshot(), overview.context))
+            gitopsIssuesWithGaps(argo, flux, known = knownGitOpsIssues(store.snapshot(), context))
         } else {
             null
         }
@@ -67,19 +73,29 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         val watchCheckup = store.checkupWatched.value && active?.allows(Feature.WORKLOADS) == true
         val checkupIssues = if (watchCheckup) {
             runCatching { app.talosRepository.checkup() }.getOrNull()
-                ?.let { checkupIssuesWithGaps(it, known = knownCheckupIssues(store.snapshot(), overview.context)) }
+                ?.let { checkupIssuesWithGaps(it, known = knownCheckupIssues(store.snapshot(), context)) }
         } else {
             null
         }
 
         val now = System.currentTimeMillis()
-        val current = snapshotOf(
-            overview, etcd, certNotAfter, now, active?.fingerprint.orEmpty(), watchData, dataServices,
-            gitopsWatched = watchGitops,
-            gitopsIssues = gitopsIssues,
-            checkupWatched = watchCheckup,
-            checkupIssues = checkupIssues,
-        )
+        val current = if (kubeNodes != null) {
+            kubeSnapshotOf(
+                kubeNodes, context, certNotAfter, now, active?.fingerprint.orEmpty(), watchData, dataServices,
+                gitopsWatched = watchGitops,
+                gitopsIssues = gitopsIssues,
+                checkupWatched = watchCheckup,
+                checkupIssues = checkupIssues,
+            )
+        } else {
+            snapshotOf(
+                checkNotNull(overview), etcd, certNotAfter, now, active?.fingerprint.orEmpty(), watchData, dataServices,
+                gitopsWatched = watchGitops,
+                gitopsIssues = gitopsIssues,
+                checkupWatched = watchCheckup,
+                checkupIssues = checkupIssues,
+            )
+        }
         val evaluation = evaluate(store.snapshot(), current, now)
         store.saveSnapshot(evaluation.next)
         scheduleWidgetStaleRefresh(applicationContext, evaluation.next, now)

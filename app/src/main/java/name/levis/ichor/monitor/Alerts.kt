@@ -4,7 +4,12 @@ import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.util.daysUntil
 
 /** What an alert is about; Notifications.kt turns it into translated text. */
-enum class AlertKind { NODE_READY, NODE_NOT_READY, NODE_UNREACHABLE, ETCD_ALARM, CERT_EXPIRING, CERT_EXPIRED, DATA_PROBLEM, DATA_OK, GITOPS_PROBLEM, GITOPS_OK, CHECKUP_PROBLEM, CHECKUP_OK }
+enum class AlertKind {
+    NODE_READY, NODE_NOT_READY, NODE_UNREACHABLE, ETCD_ALARM, CERT_EXPIRING, CERT_EXPIRED,
+    /** The kubeconfig's credentials (a cluster added from a kubeconfig): a new kubeconfig replaces them. */
+    KUBECONFIG_EXPIRING, KUBECONFIG_EXPIRED,
+    DATA_PROBLEM, DATA_OK, GITOPS_PROBLEM, GITOPS_OK, CHECKUP_PROBLEM, CHECKUP_OK,
+}
 
 /**
  * [key] identifies the subject, so a newer alert replaces the older notification.
@@ -65,7 +70,10 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
     if (cur.certNotAfter > 0 && lastWarn != today) {
         val days = daysUntil(cur.certNotAfter, nowMillis)
         if (days <= CERT_WARN_DAYS) {
-            val kind = if (days < 0) AlertKind.CERT_EXPIRED else AlertKind.CERT_EXPIRING
+            val kind = when {
+                cur.kube -> if (days < 0) AlertKind.KUBECONFIG_EXPIRED else AlertKind.KUBECONFIG_EXPIRING
+                else -> if (days < 0) AlertKind.CERT_EXPIRED else AlertKind.CERT_EXPIRING
+            }
             alerts += Alert("cert", kind, problem = true, days = kotlin.math.abs(days).toInt())
             warnedDay = today
         }

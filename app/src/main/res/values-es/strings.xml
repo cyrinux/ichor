@@ -473,6 +473,15 @@
         <item quantity="one">El certificado de cliente caduca en %1$d día. Genera un nuevo talosconfig.</item>
         <item quantity="other">El certificado de cliente caduca en %1$d días. Genera un nuevo talosconfig.</item>
     </plurals>
+    <string name="monitor_kubeconfig_title">Credenciales del kubeconfig</string>
+    <plurals name="monitor_kubeconfig_expired">
+        <item quantity="one">Las credenciales del kubeconfig caducaron hace %1$d día.</item>
+        <item quantity="other">Las credenciales del kubeconfig caducaron hace %1$d días.</item>
+    </plurals>
+    <plurals name="monitor_kubeconfig_expires">
+        <item quantity="one">Las credenciales del kubeconfig caducan en %1$d día. Importa un nuevo kubeconfig.</item>
+        <item quantity="other">Las credenciales del kubeconfig caducan en %1$d días. Importa un nuevo kubeconfig.</item>
+    </plurals>
 
     <!-- Updates -->
     <string name="update_section">Actualizaciones</string>

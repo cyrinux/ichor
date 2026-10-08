@@ -473,6 +473,15 @@
         <item quantity="one">Il certificato client scade tra %1$d giorno. Genera un nuovo talosconfig.</item>
         <item quantity="other">Il certificato client scade tra %1$d giorni. Genera un nuovo talosconfig.</item>
     </plurals>
+    <string name="monitor_kubeconfig_title">Credenziali del kubeconfig</string>
+    <plurals name="monitor_kubeconfig_expired">
+        <item quantity="one">Le credenziali del kubeconfig sono scadute %1$d giorno fa.</item>
+        <item quantity="other">Le credenziali del kubeconfig sono scadute %1$d giorni fa.</item>
+    </plurals>
+    <plurals name="monitor_kubeconfig_expires">
+        <item quantity="one">Le credenziali del kubeconfig scadono tra %1$d giorno. Importa un nuovo kubeconfig.</item>
+        <item quantity="other">Le credenziali del kubeconfig scadono tra %1$d giorni. Importa un nuovo kubeconfig.</item>
+    </plurals>
 
     <!-- Updates -->
     <string name="update_section">Aggiornamenti</string>

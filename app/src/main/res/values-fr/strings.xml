@@ -473,6 +473,15 @@
         <item quantity="one">Le certificat client expire dans %1$d jour. Générez un nouveau talosconfig.</item>
         <item quantity="other">Le certificat client expire dans %1$d jours. Générez un nouveau talosconfig.</item>
     </plurals>
+    <string name="monitor_kubeconfig_title">Identifiants du kubeconfig</string>
+    <plurals name="monitor_kubeconfig_expired">
+        <item quantity="one">Les identifiants du kubeconfig ont expiré il y a %1$d jour.</item>
+        <item quantity="other">Les identifiants du kubeconfig ont expiré il y a %1$d jours.</item>
+    </plurals>
+    <plurals name="monitor_kubeconfig_expires">
+        <item quantity="one">Les identifiants du kubeconfig expirent dans %1$d jour. Importez un nouveau kubeconfig.</item>
+        <item quantity="other">Les identifiants du kubeconfig expirent dans %1$d jours. Importez un nouveau kubeconfig.</item>
+    </plurals>
 
     <!-- Updates -->
     <string name="update_section">Mises à jour</string>
