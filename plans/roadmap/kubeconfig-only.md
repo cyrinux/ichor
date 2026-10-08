@@ -1,6 +1,13 @@
 # Study: kubeconfig-only clusters (no Talos)
 
 Status: **implemented** (2026-10-07): K1 #201/#202, Go core for KN and K2–K9 #203, apps #204.
+Parity pass (2026-10-08): every feature that needs only the Kubernetes API is on these clusters
+too, on both apps — a node screen (details, the pods it runs, its events, its YAML, cordon,
+drain, share link), the apps catalog from the pod list (`KubeInventory`), cluster-wide events
+(`KubeClusterEvents`), an API-only AI diagnosis, capacity on the summary, Argo CD/Flux down-node
+hints, share links to nodes; the audit log (read through Talos) says so instead of failing.
+On the way, the Go core got one Kubernetes node reader and one drain plan for both cluster
+kinds, and the apps share their home chrome, node lists, status helpers and banners.
 The study below is kept as written; see the PRs for what differs in detail.
 
 Goal: add a cluster from a kubeconfig alone, with no talosconfig, and use every Kubernetes feature

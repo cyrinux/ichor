@@ -402,8 +402,17 @@ A cluster can also be added from a kubeconfig alone, the same ways as a taloscon
 paste, QR, or "Open with" / the share sheet); the app tells the two apart. The preview lists
 every context with how it signs in, and why one cannot be added (a file path to inline with
 `kubectl config view --flatten --minify`, a proxy, plain HTTP…). These clusters get a
-Kubernetes home (nodes, API server version, who you are signed in as) and every Kubernetes
-screen; the Talos ones are hidden. What they may do is up to their RBAC.
+Kubernetes home (API server version, capacity, who you are signed in as, the apps, the nodes)
+and every screen that needs only the Kubernetes API: workloads, pods and CronJobs, the
+resource browser, Helm releases, metrics, the checkup, API server health, network policies
+and flows, Argo CD, Flux, the data services, the apps catalog (built from the pod list) with
+each app's routes, workloads and image scan, the cluster's Kubernetes events, the AI
+diagnosis (from the Kubernetes API alone), background alerts, the widget and share links.
+Each node has its own screen (status, roles, software, capacity, the pods it runs, its events,
+its YAML) and can be cordoned and drained. What stays hidden needs the Talos API: etcd, the
+health check, the node OS screens (logs, services, processes, hardware, network, storage,
+images), reboot and shutdown, Talos upgrades, the machine config, KubeSpan, machined events,
+the audit log, the support bundle and cluster insights. What they may do is up to their RBAC.
 
 Each node on that home also says where the cloud put it, read from its labels: the
 autoscaler pool it came from (a Karpenter NodePool — open source or EKS Auto Mode — an EKS
@@ -436,10 +445,13 @@ in again.
 ### Share links
 
 **Share link** sends a link to the screen on show, for a teammate whose Ichor holds a
-talosconfig for the same cluster: an Argo CD or Flux app, a node (on its tab), a workload, pod
-or CronJob, etcd, the health check, the Argo CD and Flux lists, the Kubernetes tabs or the
-cluster overview. It is in the top bar, the node and cluster menus, the workload sheet, the
-pod's log sheet (link icon), a CronJob's card (Android) or a pod or CronJob's context menu (iOS).
+talosconfig or a kubeconfig for the same cluster: an Argo CD or Flux app, a node (on its tab),
+a workload, pod or CronJob, etcd, the health check, the Argo CD and Flux lists, the Kubernetes
+tabs or the cluster overview. A node link opens the Talos node on a phone holding a
+talosconfig and the Kubernetes node on one holding a kubeconfig (etcd and the health check
+need Talos: that phone opens the cluster's home instead). It is in the top bar, the node and
+cluster menus, the workload sheet, the pod's log sheet (link icon), a CronJob's card (Android)
+or a pod or CronJob's context menu (iOS).
 
 - The link is `https://cyrinux.github.io/ichor/open/#…`. That page hands it to the app as
   `ichor://open?…` (Android also offers to open the https link in Ichor directly). What follows

@@ -166,3 +166,8 @@ Append a line per session: date, phase, what was done, what's next.
   comes from the Kubernetes node list (`kubeSnapshotOf`, ready/not ready, no etcd), the opt-in
   data-service, GitOps and checkup tracks run unchanged, and the expiry alert names the kubeconfig
   credentials (`KUBECONFIG_EXPIRING`/`EXPIRED`). The widget shows such a cluster too.
+- 2026-10-08: parity pass for clusters added from a kubeconfig (plans/roadmap/kubeconfig-only.md,
+  status line): node screen, apps catalog from the pod list, cluster-wide Kubernetes events,
+  API-only AI diagnosis, share links to nodes, down-node hints on the GitOps screens, on both
+  apps; the Go core reads Kubernetes nodes through one `kubeNodeObject` and builds both drain
+  plans with `drainPlanFor`. Data services unchanged.
