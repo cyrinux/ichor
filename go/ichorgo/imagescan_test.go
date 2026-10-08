@@ -321,6 +321,24 @@ func TestImageScanPodSpec(t *testing.T) {
 	}
 }
 
+// A scheduled pod tolerating every taint lands on cordoned and unreachable nodes, where it
+// never starts; a pod pinned to a node keeps the toleration to run on tainted ones.
+func TestRunPodSpecTolerations(t *testing.T) {
+	scheduled := imageScanPodSpec("n", testTargets(), imageScanOptions{}, "")["spec"].(map[string]any)
+	if _, ok := scheduled["tolerations"]; ok {
+		t.Fatalf("scheduled pod tolerations %v", scheduled["tolerations"])
+	}
+
+	if _, ok := scheduled["nodeName"]; ok {
+		t.Fatalf("scheduled pod nodeName %v", scheduled["nodeName"])
+	}
+
+	pinned := runPodSpec(runPodImage{app: "a", image: "i", container: "c"}, "p", "node-1", false, time.Minute)["spec"].(map[string]any)
+	if js, _ := json.Marshal(pinned["tolerations"]); string(js) != `[{"operator":"Exists"}]` || pinned["nodeName"] != "node-1" {
+		t.Fatalf("pinned pod tolerations %s nodeName %v", js, pinned["nodeName"])
+	}
+}
+
 func TestDecodeImageScanOptions(t *testing.T) {
 	if o, err := decodeImageScanOptions(""); err != nil || o != (imageScanOptions{}) {
 		t.Fatalf("%+v %v", o, err)

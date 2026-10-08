@@ -229,6 +229,31 @@ func runPodSpec(img runPodImage, name, node string, hostNetwork bool, deadline t
 		container["resources"] = img.resources
 	}
 
+	spec := map[string]any{
+		"hostNetwork":                   hostNetwork,
+		"restartPolicy":                 "Never",
+		"activeDeadlineSeconds":         int(deadline.Seconds()),
+		"terminationGracePeriodSeconds": 1,
+		"automountServiceAccountToken":  false,
+		"enableServiceLinks":            false,
+		"securityContext": map[string]any{
+			"runAsNonRoot":   true,
+			"runAsUser":      65534,
+			"runAsGroup":     65534,
+			"fsGroup":        65534,
+			"seccompProfile": map[string]string{"type": "RuntimeDefault"},
+		},
+		"containers": []map[string]any{container},
+		"volumes":    append([]map[string]any{{"name": "tmp", "emptyDir": map[string]string{"sizeLimit": "16Mi"}}}, img.volumes...),
+	}
+
+	// A pod pinned to a node tolerates its taints (a control plane, a dedicated node); one
+	// left to the scheduler does not, or it lands on cordoned and unreachable nodes too.
+	if node != "" {
+		spec["nodeName"] = node
+		spec["tolerations"] = []map[string]string{{"operator": "Exists"}}
+	}
+
 	return map[string]any{
 		"apiVersion": "v1",
 		"kind":       "Pod",
@@ -236,25 +261,7 @@ func runPodSpec(img runPodImage, name, node string, hostNetwork bool, deadline t
 			"name":   name,
 			"labels": map[string]string{"app.kubernetes.io/name": img.app, "app.kubernetes.io/managed-by": "ichor"},
 		},
-		"spec": map[string]any{
-			"nodeName":                      node,
-			"hostNetwork":                   hostNetwork,
-			"restartPolicy":                 "Never",
-			"activeDeadlineSeconds":         int(deadline.Seconds()),
-			"terminationGracePeriodSeconds": 1,
-			"automountServiceAccountToken":  false,
-			"enableServiceLinks":            false,
-			"tolerations":                   []map[string]string{{"operator": "Exists"}},
-			"securityContext": map[string]any{
-				"runAsNonRoot":   true,
-				"runAsUser":      65534,
-				"runAsGroup":     65534,
-				"fsGroup":        65534,
-				"seccompProfile": map[string]string{"type": "RuntimeDefault"},
-			},
-			"containers": []map[string]any{container},
-			"volumes":    append([]map[string]any{{"name": "tmp", "emptyDir": map[string]string{"sizeLimit": "16Mi"}}}, img.volumes...),
-		},
+		"spec": spec,
 	}
 }
 
