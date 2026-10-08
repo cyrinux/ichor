@@ -42,6 +42,13 @@ public struct KubeNodeInfo: Decodable, Equatable, Identifiable, Sendable {
     public let kernel: String?
     public let runtime: String?
     public let arch: String?
+    /// The autoscaler pool the node came from; poolKind is "karpenter", "eks", "gke-class", "gke" or "aks".
+    public let pool: String?
+    public let poolKind: String?
+    /// The cloud machine type (node.kubernetes.io/instance-type).
+    public let instanceType: String?
+    /// "spot", "on-demand" or "reserved" when the cloud labels say which.
+    public let capacity: String?
     public let cpu: Double
     public let memory: Double
     public let podLimit: Int
@@ -54,8 +61,9 @@ public struct KubeNodeInfo: Decodable, Equatable, Identifiable, Sendable {
 
     public init(name: String, roles: [String] = [], ready: Bool = false, cordoned: Bool = false,
                 internalIP: String? = nil, externalIP: String? = nil, kubelet: String? = nil, osImage: String? = nil,
-                kernel: String? = nil, runtime: String? = nil, arch: String? = nil, cpu: Double = 0, memory: Double = 0,
-                podLimit: Int = 0, pressure: [String] = [], created: Int64 = 0) {
+                kernel: String? = nil, runtime: String? = nil, arch: String? = nil, pool: String? = nil,
+                poolKind: String? = nil, instanceType: String? = nil, capacity: String? = nil, cpu: Double = 0,
+                memory: Double = 0, podLimit: Int = 0, pressure: [String] = [], created: Int64 = 0) {
         self.name = name
         self.roles = roles
         self.ready = ready
@@ -67,6 +75,10 @@ public struct KubeNodeInfo: Decodable, Equatable, Identifiable, Sendable {
         self.kernel = kernel
         self.runtime = runtime
         self.arch = arch
+        self.pool = pool
+        self.poolKind = poolKind
+        self.instanceType = instanceType
+        self.capacity = capacity
         self.cpu = cpu
         self.memory = memory
         self.podLimit = podLimit
@@ -76,7 +88,7 @@ public struct KubeNodeInfo: Decodable, Equatable, Identifiable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case name, roles, ready, cordoned, internalIP, externalIP, kubelet, osImage, kernel, runtime, arch
-        case cpu, memory, podLimit, pressure, created
+        case pool, poolKind, instanceType, capacity, cpu, memory, podLimit, pressure, created
     }
 
     // Go encodes empty (nil) slices as null and leaves the unknown strings out.
@@ -93,6 +105,10 @@ public struct KubeNodeInfo: Decodable, Equatable, Identifiable, Sendable {
         kernel = try c.decodeIfPresent(String.self, forKey: .kernel)
         runtime = try c.decodeIfPresent(String.self, forKey: .runtime)
         arch = try c.decodeIfPresent(String.self, forKey: .arch)
+        pool = try c.decodeIfPresent(String.self, forKey: .pool)
+        poolKind = try c.decodeIfPresent(String.self, forKey: .poolKind)
+        instanceType = try c.decodeIfPresent(String.self, forKey: .instanceType)
+        capacity = try c.decodeIfPresent(String.self, forKey: .capacity)
         cpu = try c.field(.cpu, 0)
         memory = try c.field(.memory, 0)
         podLimit = try c.field(.podLimit, 0)

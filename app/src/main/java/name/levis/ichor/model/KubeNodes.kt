@@ -29,6 +29,13 @@ data class KubeNodeInfo(
     val kernel: String = "",
     val runtime: String = "",
     val arch: String = "",
+    /** The autoscaler pool the node came from; [poolKind] is "karpenter", "eks", "gke" or "aks". */
+    val pool: String = "",
+    val poolKind: String = "",
+    /** The cloud machine type (node.kubernetes.io/instance-type). */
+    val instanceType: String = "",
+    /** "spot", "on-demand" or "reserved" when the cloud labels say which. */
+    val capacity: String = "",
     val cpu: Double = 0.0,
     val memory: Double = 0.0,
     val podLimit: Int = 0,

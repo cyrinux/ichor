@@ -2900,6 +2900,14 @@
     <string name="kube_home_no_nodes">Sin nodos.</string>
     <string name="kube_home_more_nodes">+%1$d más</string>
     <string name="kube_node_cordoned">Acordonado</string>
+    <string name="kube_node_pool_karpenter">Pool de Karpenter %1$s</string>
+    <string name="kube_node_pool_eks">Grupo de nodos EKS %1$s</string>
+    <string name="kube_node_pool_gke_class">Clase de cómputo GKE %1$s</string>
+    <string name="kube_node_pool_gke">Pool de nodos GKE %1$s</string>
+    <string name="kube_node_pool_aks">Pool de agentes AKS %1$s</string>
+    <string name="kube_node_capacity_spot">Spot</string>
+    <string name="kube_node_capacity_on_demand">Bajo demanda</string>
+    <string name="kube_node_capacity_reserved">Reservado</string>
     <!-- kube sign-in -->
     <string name="kube_signin_method_oidc">OIDC</string>
     <string name="kube_signin_method_eks">AWS EKS</string>
