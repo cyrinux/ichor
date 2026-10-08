@@ -1,0 +1,4 @@
+• Compact Kubernetes nodes grouped by status on large clusters
+• Live flows on Calico through Goldmane and Whisker
+• KubeNodeInfo is Hashable, the nodes route carries it
+• Import a talosconfig that names a context twice
