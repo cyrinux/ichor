@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Tune
@@ -66,18 +67,24 @@ private const val AUTO_REFRESH_MS = 60_000L
  * PromQL panels of the cluster on screen, from its Prometheus, Mimir, Thanos or
  * VictoriaMetrics: found in the cluster (service proxy) or at a URL set by the user.
  */
+/** The panel assistant is open, about [current] (the editor's draft) or a new panel (null). */
+private data class ChatContext(val current: PromPanel?)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MetricsScreen(onBack: () -> Unit) {
+fun MetricsScreen(onBack: () -> Unit, onSettings: () -> Unit) {
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
+    val aiSettings by app.aiPreferences.settings.collectAsStateWithLifecycle()
     val fingerprint = config?.activeSummary?.fingerprint ?: return
     val key = "metrics-$fingerprint-$invalidations"
     val noSource = stringResource(R.string.metrics_none_found)
     val vm: MetricsViewModel = viewModel(key = key, factory = factory { MetricsViewModel(app.talosRepository, app.metricsStore, fingerprint, noSource) })
     val state by vm.state.collectAsStateWithLifecycle()
+    /** The editor's draft while it is open. */
     var editing by remember { mutableStateOf<PromPanel?>(null) }
+    var chat by remember { mutableStateOf<ChatContext?>(null) }
     var sourceOpen by remember { mutableStateOf(false) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
@@ -98,6 +105,9 @@ fun MetricsScreen(onBack: () -> Unit) {
                 title = { Text(stringResource(R.string.metrics_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = {
+                    if (aiSettings.enabled && state.config.source != null) {
+                        TooltipIconButton(Icons.Outlined.AutoAwesome, stringResource(R.string.metrics_ai_open), onClick = { chat = ChatContext(null) })
+                    }
                     TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() })
                     TooltipIconButton(Icons.Outlined.Tune, stringResource(R.string.metrics_source), onClick = { sourceOpen = true })
                 },
@@ -144,12 +154,28 @@ fun MetricsScreen(onBack: () -> Unit) {
 
     editing?.let { panel ->
         PanelEditorDialog(
-            initial = panel,
+            panel = panel,
+            onChange = { editing = it },
             presets = state.presets,
             onPreview = vm::preview,
             onSave = { vm.savePanel(it); editing = null },
             onDismiss = { editing = null },
+            onAskAi = if (aiSettings.enabled) ({ chat = ChatContext(panel) }) else null,
         )
+    }
+    // After the editor, so it is on top of it; a proposed panel becomes the draft (its id kept).
+    val source = state.config.source
+    chat?.let { ctx ->
+        if (source != null) {
+            PanelChatDialog(
+                fingerprint = fingerprint,
+                source = source,
+                current = ctx.current,
+                onUse = { editing = it.toPanel(editing?.id.orEmpty()); chat = null },
+                onSettings = { chat = null; onSettings() },
+                onDismiss = { chat = null },
+            )
+        }
     }
     if (sourceOpen) {
         SourceDialog(

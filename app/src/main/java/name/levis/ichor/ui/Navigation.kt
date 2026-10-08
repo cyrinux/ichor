@@ -365,7 +365,9 @@ fun Navigation(
     NavHost(navController = nav, startDestination = if (startWithImport) Routes.IMPORT else Routes.OVERVIEW) {
         with(KubeBrowserRoutes) { kubeBrowserScreens(nav, kubeLinks) }
         composable(Routes.INSIGHTS) { name.levis.ichor.ui.insights.InsightsScreen(onBack = { nav.popBackStack() }) }
-        composable(Routes.METRICS) { name.levis.ichor.ui.metrics.MetricsScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.METRICS) {
+            name.levis.ichor.ui.metrics.MetricsScreen(onBack = { nav.popBackStack() }, onSettings = { nav.navigate(Routes.SETTINGS) })
+        }
         composable(Routes.IMPORT) {
             ImportScreen(
                 incoming = incomingConfig,

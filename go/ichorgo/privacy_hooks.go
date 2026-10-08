@@ -106,6 +106,16 @@ func (l maskedDiagnosisListener) OnDone(errMessage string) {
 	l.DiagnosisListener.OnDone(privacy.maskPlain(errMessage))
 }
 
+type maskedPromChatListener struct{ PromChatListener }
+
+func (l maskedPromChatListener) OnAnswer(text string) {
+	l.PromChatListener.OnAnswer(privacy.maskPlain(text))
+}
+
+func (l maskedPromChatListener) OnDone(panelJSON, errMessage string) {
+	l.PromChatListener.OnDone(privacy.mask(panelJSON), privacy.maskPlain(errMessage))
+}
+
 // maskedSnapshotListener masks only the error: the path is the app's own file and the
 // snapshot bytes are written unmasked (it is a backup).
 type maskedSnapshotListener struct{ SnapshotListener }

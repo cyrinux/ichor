@@ -3,6 +3,7 @@ package ichorgo
 import (
 	"hash/fnv"
 	"math"
+	"slices"
 	"strings"
 )
 
@@ -60,4 +61,41 @@ func demoPromResult(query string, grid promGrid) promResult {
 	}
 
 	return res
+}
+
+// demoPromMetricNames is what the demo cluster's Prometheus would list: enough for every
+// preset and the usual questions (node-exporter, cAdvisor, kube-state-metrics, the API
+// server, etcd, CoreDNS).
+func demoPromMetricNames() []string {
+	names := []string{
+		"apiserver_request_duration_seconds_bucket", "apiserver_request_total", "apiserver_current_inflight_requests",
+		"container_cpu_usage_seconds_total", "container_memory_working_set_bytes", "container_memory_rss",
+		"container_network_receive_bytes_total", "container_network_transmit_bytes_total",
+		"container_fs_reads_bytes_total", "container_fs_writes_bytes_total", "container_oom_events_total",
+		"coredns_dns_requests_total", "coredns_dns_responses_total", "coredns_dns_request_duration_seconds_bucket",
+		"etcd_disk_backend_commit_duration_seconds_bucket", "etcd_disk_wal_fsync_duration_seconds_bucket",
+		"etcd_server_leader_changes_seen_total", "etcd_server_has_leader", "etcd_mvcc_db_total_size_in_bytes",
+		"etcd_network_peer_round_trip_time_seconds_bucket", "etcd_server_proposals_failed_total",
+		"kube_deployment_status_replicas_available", "kube_deployment_spec_replicas", "kube_daemonset_status_number_unavailable",
+		"kube_node_status_condition", "kube_node_status_allocatable", "kube_node_status_capacity",
+		"kube_pod_container_resource_requests", "kube_pod_container_resource_limits",
+		"kube_pod_container_status_restarts_total", "kube_pod_container_status_waiting_reason",
+		"kube_pod_status_phase", "kube_pod_info", "kube_persistentvolumeclaim_status_phase",
+		"kubelet_volume_stats_used_bytes", "kubelet_volume_stats_capacity_bytes", "kubelet_running_pods",
+		"kubelet_pleg_relist_duration_seconds_bucket",
+		"node_boot_time_seconds", "node_cpu_seconds_total", "node_disk_io_time_seconds_total",
+		"node_disk_read_bytes_total", "node_disk_written_bytes_total",
+		"node_filesystem_avail_bytes", "node_filesystem_size_bytes", "node_filesystem_free_bytes",
+		"node_load1", "node_load5", "node_load15",
+		"node_memory_MemAvailable_bytes", "node_memory_MemTotal_bytes", "node_memory_MemFree_bytes",
+		"node_memory_Cached_bytes", "node_memory_Buffers_bytes", "node_memory_SwapFree_bytes",
+		"node_network_receive_bytes_total", "node_network_transmit_bytes_total",
+		"node_network_receive_errs_total", "node_network_transmit_errs_total",
+		"node_nf_conntrack_entries", "node_nf_conntrack_entries_limit", "node_timex_offset_seconds",
+		"node_vmstat_pgmajfault", "up",
+	}
+
+	slices.Sort(names)
+
+	return names
 }

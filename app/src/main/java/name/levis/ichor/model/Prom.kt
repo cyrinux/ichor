@@ -85,6 +85,31 @@ data class PromPanel(
     val legend: String = "",
 )
 
+/** A panel for Go without its id ({title,query,unit,legend}): what the panel assistant is told the user edits. */
+fun PromPanel.toGoPanelJson(): String =
+    GoJson.encodeToString(PanelSuggestion.serializer(), PanelSuggestion(title = title, query = query, unit = unit, legend = legend))
+
+/**
+ * A panel the assistant proposed, as the Go core checked it against the source
+ * (prom_chat.go promSuggestion): [verified] when the source accepted the query, [empty] when it
+ * answered no series, [attempts] how many answers it took, [notice] why it was not checked or
+ * the last error when the fixes ran out.
+ */
+@Serializable
+data class PanelSuggestion(
+    val title: String = "",
+    val query: String = "",
+    val unit: String = "",
+    val legend: String = "",
+    val verified: Boolean = false,
+    val empty: Boolean = false,
+    val attempts: Int = 1,
+    val notice: String = "",
+) {
+    /** The panel to edit or save, under [id] ("" for a new one). */
+    fun toPanel(id: String): PromPanel = PromPanel(id = id, title = title, query = query, unit = unit, legend = legend)
+}
+
 /** A cluster's metrics setup; [source] null until one is chosen. */
 @Serializable
 data class MetricsConfig(
