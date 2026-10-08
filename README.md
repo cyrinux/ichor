@@ -554,6 +554,13 @@ and never contacts a model provider.
   the Claude, ChatGPT or Gemini app (or any app taking text) through the system share sheet.
 - **Check the answer:** a model can be wrong. Read a command before running it, especially one
   that resets a node or changes etcd membership.
+- **Panel assistant:** on the Metrics screen, the sparkle button (or *Ask AI* in the panel
+  editor) opens a chat with the same model to write a PromQL panel from a description, or to
+  change the one being edited. The model gets the metric names your source knows and the
+  built-in panels as examples; every query it proposes is run against your source before it is
+  shown, and a query the source turns down goes back to the model, which gets two more tries.
+  *Use this panel* fills the editor. What is sent: your messages, the source's metric names and
+  the panel being edited, as they are (not anonymized); never the cluster's names or addresses.
 
 From a workstation, the same code runs against a real cluster:
 
@@ -563,6 +570,10 @@ go run ./cmd/probe diagnose-report        # the anonymized report; nothing is se
 # These two send the report with the real names (not anonymized) and print the answer:
 ANTHROPIC_API_KEY=... go run ./cmd/probe diagnose anthropic
 OPENAI_API_KEY=... go run ./cmd/probe diagnose openai gpt-6-astra
+# The panel assistant: the metric names (nothing is sent), then one question with its checked panel
+SRC='{"mode":"proxy","namespace":"monitoring","service":"prometheus-operated","port":9090}'
+go run ./cmd/probe prom-metrics "$SRC"
+ANTHROPIC_API_KEY=... go run ./cmd/probe prom-chat "$SRC" anthropic "memory by namespace, top ten"
 ```
 
 ## Cluster insights

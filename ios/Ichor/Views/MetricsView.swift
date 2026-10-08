@@ -26,6 +26,7 @@ extension MetricsRange {
 /// open it looks for a query API and, when it finds one, starts with the built-in panels.
 struct MetricsView: View {
     @Environment(AppModel.self) private var model
+    @Environment(AISettings.self) private var ai
     @State private var config = MetricsConfig()
     @State private var loaded = false
     @State private var presets: [PromPanel] = []
@@ -37,6 +38,11 @@ struct MetricsView: View {
     @State private var editing: PromPanel?
     @State private var sourceOpen = false
     @State private var saveError: String?
+    /// The panel assistant (AI on): one conversation per screen, from the toolbar or the editor.
+    @State private var chat = PanelChatModel()
+    @State private var chatOpen = false
+    /// What the assistant proposed, taken into the editor once its sheet is gone.
+    @State private var picked: PanelSuggestion?
 
     private var fingerprint: String { model.activeSummary?.fingerprint ?? "" }
 
@@ -57,6 +63,10 @@ struct MetricsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
+                if ai.enabled, let source = config.source, let client = model.client {
+                    Button { chat.open(client: client, source: source, current: nil); chatOpen = true } label: { Image(systemName: "sparkles") }
+                        .accessibilityLabel(Text("Ask AI for a panel"))
+                }
                 if config.source != nil {
                     Button { editing = PromPanel() } label: { Image(systemName: "plus") }
                         .accessibilityLabel(Text("Add panel"))
@@ -74,9 +84,19 @@ struct MetricsView: View {
             }
         }
         .sheet(item: $editing) { panel in
-            PanelEditorSheet(initial: panel, presets: presets, preview: preview) { saved in
+            PanelEditorSheet(initial: panel, presets: presets, preview: preview, chat: ai.enabled ? chat : nil, sourceLabel: config.source?.label ?? "",
+                             openChat: { draft in
+                                 if let client = model.client, let source = config.source { chat.open(client: client, source: source, current: draft) }
+                             }) { saved in
                 let stored = saved.id.isEmpty ? PromPanel(id: UUID().uuidString, title: saved.title, query: saved.query, unit: saved.unit, legend: saved.legend) : saved
                 save(config.saving(stored))
+            }
+        }
+        // The editor opens with the proposed panel once the chat sheet is gone (one sheet at a time).
+        .sheet(isPresented: $chatOpen, onDismiss: { if let picked { editing = picked.panel(id: ""); self.picked = nil } }) {
+            PanelChatSheet(model: chat, sourceLabel: config.source?.label ?? "") { proposed in
+                picked = proposed
+                chatOpen = false
             }
         }
         .sheet(isPresented: $sourceOpen) {

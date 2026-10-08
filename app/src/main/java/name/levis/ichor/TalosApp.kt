@@ -19,6 +19,7 @@ import name.levis.ichor.data.PublicIpRepository
 import name.levis.ichor.data.ChangelogRepository
 import name.levis.ichor.data.ClusterColors
 import name.levis.ichor.data.DiagnosisRepository
+import name.levis.ichor.data.MetricsChatRepository
 import name.levis.ichor.data.SecureStore
 import name.levis.ichor.data.KeystoreSealer
 import name.levis.ichor.data.KeystoreValue
@@ -181,6 +182,8 @@ class TalosApp : Application() {
 
     /** The optional AI diagnosis: off until enabled in Settings. API keys get their own Keystore keys. */
     val diagnosisRepository by lazy { DiagnosisRepository(configRepository, kubeServers) }
+    /** The panel assistant of the Metrics screen, with the same providers and keys. */
+    val metricsChatRepository by lazy { MetricsChatRepository(configRepository, kubeServers) }
     val aiPreferences by lazy {
         AiPreferences(
             getSharedPreferences(AiPreferences.FILE, Context.MODE_PRIVATE),

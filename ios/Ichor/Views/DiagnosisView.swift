@@ -133,9 +133,6 @@ struct DiagnosisView: View {
     }
 }
 
-/// The language the app is shown in ("fr"): the model answers in it.
-private var appLanguage: String { Bundle.main.preferredLocalizations.first ?? "en" }
-
 /// Hands the whole question to the app the user picks in the share sheet (Claude, ChatGPT,
 /// Gemini…). A view of its own, so the prompt is only rebuilt when the note changes, not
 /// with every piece of a streamed answer.
