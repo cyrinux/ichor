@@ -99,6 +99,8 @@ final class KubeSignInFlow {
         }
         guard let url = URL(string: prompt.url) else {
             phase = .failed(String(localized: "The sign-in page address is not valid."))
+            // A stop of ours: Go reports it as a success, which finish must not believe.
+            cancelled = true
             cancelRun?()
             return
         }
@@ -128,9 +130,12 @@ final class KubeSignInFlow {
         completeRun = nil
         if let error {
             phase = .failed(error)
+        } else if wasCancelled {
+            // Go reports a cancelled sign-in as a success too: the phase stays what the stop
+            // left (idle, or the failure that stopped it).
+            if isRunning { phase = .idle }
         } else {
-            // Go reports a cancelled sign-in as a success too.
-            phase = wasCancelled ? .idle : .signedIn
+            phase = .signedIn
         }
     }
 }

@@ -368,3 +368,37 @@ func startTLSServer(t *testing.T, register func(*grpc.Server), opts ...grpc.Serv
 
 	return lis.Addr().String(), base64.StdEncoding.EncodeToString(certPEM)
 }
+
+// A service account key Omni refuses is a refused key, not a sign-in request: the apps would
+// go on in the browser, which a service account never does.
+func TestTalosSetCredentialsRefusedKey(t *testing.T) {
+	useMemAuthStore(t)
+
+	_, serverKey := testServiceAccountKey(t, time.Hour)
+	encoded, _ := testServiceAccountKey(t, time.Hour)
+
+	// Omni checks the signature of every call before routing it.
+	refuse := func(_ any, stream grpc.ServerStream) error {
+		method, _ := grpc.MethodFromServerStream(stream)
+		md, _ := metadata.FromIncomingContext(stream.Context())
+
+		if err := message.NewGRPC(md, method).VerifySignature(serverKey); err != nil {
+			return status.Error(codes.Unauthenticated, err.Error())
+		}
+
+		return status.Error(codes.Unimplemented, method)
+	}
+
+	endpoint, caB64 := startTLSServer(t, func(*grpc.Server) {}, grpc.UnknownServiceHandler(refuse))
+	cfg := omniTalosconfigYAML(testSAIdentity, endpoint, caB64)
+
+	err := TalosSetCredentials(cfg, "acme-demo", fmt.Sprintf(`{"serviceAccountKey":%q}`, encoded))
+	if !errors.Is(err, errOmniRefusedKey) || strings.HasPrefix(fmt.Sprint(err), KubeSignInRequired) {
+		t.Fatalf("err = %v, want the refused key", err)
+	}
+
+	_, ctx, _ := resolveContext(cfg, "")
+	if kubeAuth.load(omniAuthKey(ctx)).Method != "" {
+		t.Fatal("a refused key must not be stored")
+	}
+}

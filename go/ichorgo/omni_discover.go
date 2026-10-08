@@ -78,7 +78,7 @@ func SetOmniServiceAccount(endpoint, serviceAccountKey string) (out string, err 
 	// A key Omni authenticates is good, whether or not its role lists clusters.
 	if _, err := listOmniClusters(ctx, cfgCtx, signer); err != nil && status.Code(err) != codes.PermissionDenied {
 		if needSignIn := (*errSignInRequired)(nil); errors.As(err, &needSignIn) {
-			return "", errors.New("omni refused this service account key")
+			return "", errOmniRefusedKey
 		}
 
 		return "", omniAPIError(err)

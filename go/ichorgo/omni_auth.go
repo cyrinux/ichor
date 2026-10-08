@@ -230,6 +230,10 @@ func TalosSetCredentials(storedYAML, contextName, secretsJSON string) (err error
 	defer cancel()
 
 	if err := checkOmniSigner(ctx, sc.ctx, signer); err != nil {
+		if needSignIn := (*errSignInRequired)(nil); errors.As(err, &needSignIn) {
+			return errOmniRefusedKey
+		}
+
 		return err
 	}
 

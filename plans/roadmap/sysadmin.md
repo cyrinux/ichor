@@ -130,10 +130,10 @@ to the support bundle and the incident summary (U9) when the user chooses.
 Optional later: write a Kubernetes Event on the target object (`reason: IchorAction`) so teammates
 see it with `kubectl get events`.
 
-## S10. Omni: missing (XL)
+## S10. Omni: exists
 
-Omni-managed clusters expose the Talos API through Omni with an Omni service account
-(`omnictl`) instead of a talosconfig with client certs. Plan a spike: (1) import an Omni service
-account key, (2) list clusters through the Omni API, (3) open the Talos API through Omni's proxy
-with the machinery client (the `client.WithGRPCDialOptions` + Omni auth interceptor used by
-omnictl), (4) check which Ichor features still work (most read APIs should). Decide after the spike.
+Shipped (`go/ichorgo/omni*.go`, the Omni card of the add screen on both apps): an Omni
+service account key or an account signed in through the browser (a PGP key Omni confirms, 4 h),
+the clusters listed through Omni's COSI state API, each one's talosconfig from Omni, the Talos
+API through Omni's proxy signed with the stored key, and Kubernetes through Omni's proxy with an
+OIDC token the app mints itself. Issuing a talosconfig stays Omni's. Nothing left to plan.
