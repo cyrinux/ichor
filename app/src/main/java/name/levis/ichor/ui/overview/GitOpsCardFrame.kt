@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.ui.UiState
-import name.levis.ichor.ui.apps.AppIconPlaceholder
 import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.MutedText
@@ -41,7 +40,7 @@ import name.levis.ichor.ui.dataservices.color
  */
 @Composable
 internal fun <T> GitOpsCardFrame(
-    tile: InventoryApp?,
+    tile: InventoryApp,
     @StringRes title: Int,
     state: UiState<T>,
     appCount: (T) -> Int,
@@ -61,9 +60,9 @@ internal fun <T> GitOpsCardFrame(
 }
 
 @Composable
-private fun Header(tile: InventoryApp?, @StringRes title: Int, apps: Int?) {
+private fun Header(tile: InventoryApp, @StringRes title: Int, apps: Int?) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        if (tile != null) AppIconTile(tile, size = 28.dp) else AppIconPlaceholder(size = 28.dp)
+        AppIconTile(tile, size = 28.dp)
         Spacer(Modifier.size(12.dp))
         Text(stringResource(title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
         if (apps != null) {

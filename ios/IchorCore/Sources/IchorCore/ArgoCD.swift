@@ -7,6 +7,10 @@ import Foundation
 /// The catalog id of Argo CD in the inventory: only clusters running it are asked (KubeArgoCD).
 public let argoCDCatalogID = "argo-cd"
 
+/// Argo CD's tile when the inventory has none to offer (a kubeconfig context, or the Talos
+/// overview while its inventory still loads). Its icon is bundled (appicons/argo-cd.webp).
+public let argoCDTile = InventoryApp(id: argoCDCatalogID, name: "Argo CD", category: .devops, icon: "argo-cd", known: true)
+
 /// The Argo CD Applications of every namespace, read through their custom resources (os:admin).
 public struct ArgoStatus: Decodable, Equatable, Sendable {
     /// False when the cluster serves no argoproj.io Applications.

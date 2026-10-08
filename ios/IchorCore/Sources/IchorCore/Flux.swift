@@ -6,6 +6,10 @@ import Foundation
 /// The catalog id of Flux in the inventory: only clusters running it are asked (KubeFlux).
 public let fluxCatalogID = "flux"
 
+/// Flux's tile when the inventory has none to offer (a kubeconfig context, or the Talos
+/// overview while its inventory still loads). Its icon is bundled (appicons/flux.webp).
+public let fluxTile = InventoryApp(id: fluxCatalogID, name: "Flux", category: .devops, icon: "flux", known: true)
+
 /// The Flux Kustomizations, HelmReleases and sources of every namespace, read through their
 /// custom resources (os:admin).
 public struct FluxStatus: Decodable, Equatable, Sendable {
