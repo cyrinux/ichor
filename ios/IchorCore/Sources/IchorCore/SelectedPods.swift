@@ -26,13 +26,18 @@ public enum PodPhaseFilter: String, CaseIterable, Hashable, Sendable {
 public enum PodSelection: Hashable, Sendable {
     /// The pods scheduled on the Talos node at this address, in every namespace.
     case node(String)
+    /// The pods scheduled on the Kubernetes node of this name, in every namespace: the node
+    /// screen of a cluster added from a kubeconfig, which knows the name already (no Talos lookup).
+    case kubeNode(String)
     /// The pods a Deployment, StatefulSet or DaemonSet's selector matches.
     case workload(kind: String, namespace: String, name: String)
 
     /// Its rows come from several namespaces: each row says which.
     public var showsNamespace: Bool {
-        if case .node = self { return true }
-        return false
+        switch self {
+        case .node, .kubeNode: true
+        case .workload: false
+        }
     }
 
     /// Its rows run on several nodes: each row says which.

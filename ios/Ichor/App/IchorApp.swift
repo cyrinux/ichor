@@ -125,6 +125,10 @@ enum Route: Hashable {
     case nodes(filter: NodeFilter?, nodes: [NodeOverview])
     /// Every node of a large cluster added from a kubeconfig, as its home loaded them; filter preselects one.
     case kubeNodes(filter: NodeFilter?, nodes: [KubeNodeInfo])
+    /// A node of a cluster added from a kubeconfig, as its home loaded it, on a tab (a share link's).
+    case kubeNode(KubeNodeInfo, tab: KubeNodeDetailView.Tab = .details)
+    /// The cluster checkup (from a checkup alert).
+    case checkup
     case logs(node: String, hostname: String, service: String?)
     /// Log of one Kubernetes container (from the Pods tab).
     case containerLogs(node: String, hostname: String, container: LogContainer)
@@ -219,6 +223,8 @@ struct MainNavigation: View {
                     case .nodeTab(let ref, let tab): NodeDetailView(ref: ref, initialTab: tab)
                     case .nodes(let filter, let nodes): NodesView(nodes: nodes, filter: filter, path: $path)
                     case .kubeNodes(let filter, let nodes): KubeNodesView(nodes: nodes, filter: filter, path: $path)
+                    case .kubeNode(let node, let tab): KubeNodeDetailView(node: node, initialTab: tab)
+                    case .checkup: CheckupView()
                     case .logs(let node, let hostname, let service):
                         LogsView(node: node, hostname: hostname, service: service)
                     case .containerLogs(let node, let hostname, let container):
@@ -278,12 +284,16 @@ struct MainNavigation: View {
         .onChange(of: NotificationRouter.shared.pendingGitOps) { _, pending in
             if pending != nil { openGitOps() }
         }
+        .onChange(of: NotificationRouter.shared.pendingCheckup) { _, pending in
+            if pending { openCheckup() }
+        }
         .onAppear {
             if NotificationRouter.shared.pendingRenewal { openRenewal() }
             if NotificationRouter.shared.pendingCluster != nil { openCluster() }
             if NotificationRouter.shared.pendingArgoWindows { openArgoWindows() }
             if NotificationRouter.shared.pendingShareLink != nil { openShareLink() }
             if NotificationRouter.shared.pendingGitOps != nil { openGitOps() }
+            if NotificationRouter.shared.pendingCheckup { openCheckup() }
             openImport()
         }
         .messageAlert($freezeMessage)
@@ -367,6 +377,14 @@ struct MainNavigation: View {
         case .flux: .flux(downNodes: [])
         }
         if path.last != route { path.append(route) }
+    }
+
+    /// From a checkup alert: the checkup of the cluster on screen, when this config may use the
+    /// Kubernetes API.
+    private func openCheckup() {
+        NotificationRouter.shared.pendingCheckup = false
+        guard model.allows(.workloads) else { return }
+        if path.last != .checkup { path.append(.checkup) }
     }
 
     /// From the certificate-expiry alert: the renewal screen, or the settings (which show the

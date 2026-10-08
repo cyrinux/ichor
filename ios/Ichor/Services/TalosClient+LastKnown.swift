@@ -13,12 +13,13 @@ extension TalosClient {
     /// The Go call behind each domain, as the plain methods make it.
     private func rawJSON(_ domain: LastKnownDomain) async throws -> String {
         // Kubernetes domains through the cluster's Kubernetes access (kubeConfig), Talos ones as is.
-        try await Self.run { [config, context, kubeConfig = self.kubeConfig, kubeContext = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+        try await Self.run { [config, context, isKube, kubeConfig = self.kubeConfig, kubeContext = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
             switch domain {
             case .overview: return IchorgoClusterOverview(config, context, error)
             case .etcd: return IchorgoEtcdStatus(config, context, error)
             case .kubespan: return IchorgoKubeSpanStatus(config, context, error)
-            case .inventory: return IchorgoClusterInventory(config, context, error)
+            // A cluster added from a kubeconfig has no node containers to list: its pods instead.
+            case .inventory: return isKube ? IchorgoKubeInventory(kubeConfig, kubeContext, kubeServer, error) : IchorgoClusterInventory(config, context, error)
             case .workloads: return IchorgoKubeWorkloads(kubeConfig, kubeContext, kubeServer, error)
             case .pods: return IchorgoKubePods(kubeConfig, kubeContext, kubeServer, error)
             case .cronJobs: return IchorgoKubeCronJobs(kubeConfig, kubeContext, kubeServer, error)

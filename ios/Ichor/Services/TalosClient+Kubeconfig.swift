@@ -47,9 +47,10 @@ extension TalosClient {
         try await run { IchorgoRemoveKubeContext(stored, context, $0) }
     }
 
-    /// `context` alone as a kubeconfig, for the user to save: a credential.
-    static func exportKubeContext(stored: String, context: String) async throws -> String {
-        try await run { IchorgoExportKubeContext(stored, context, $0) }
+    /// `context` alone as a kubeconfig, for the user to save: a credential. With `kubeServer`
+    /// (the API address set for the cluster, "" for the kubeconfig's), the export points there.
+    static func exportKubeContext(stored: String, context: String, kubeServer: String = "") async throws -> String {
+        try await run { IchorgoExportKubeContextFor(stored, context, kubeServer, $0) }
     }
 
     /// The contexts of the talosconfig `added` named like a stored cluster, of the talosconfig

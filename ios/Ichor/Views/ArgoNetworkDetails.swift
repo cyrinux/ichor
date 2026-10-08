@@ -8,9 +8,12 @@ struct ArgoNetDetails: View {
     let node: ArgoNetNode
     /// The Talos node a Node box stands for, nil when unknown or unreachable.
     let nodeRef: NodeRef?
+    /// The Kubernetes node a Node box stands for on a cluster added from a kubeconfig, nil when unknown.
+    let kubeNode: KubeNodeInfo?
     /// The pod a Pod box stands for.
     let pod: KubePod?
     let openNode: (NodeRef) -> Void
+    let openKubeNode: (KubeNodeInfo) -> Void
     /// Deletes the pod: nil once done, else why not.
     let delete: (KubePod) async -> String?
 
@@ -69,6 +72,10 @@ struct ArgoNetDetails: View {
         }
         if let nodeRef {
             Button { openNode(nodeRef) } label: { Label("Open node", systemImage: "cpu") }
+                .buttonStyle(.borderedProminent)
+        }
+        if let kubeNode {
+            Button { openKubeNode(kubeNode) } label: { Label("Open node", systemImage: "cpu") }
                 .buttonStyle(.borderedProminent)
         }
         if pod != nil {

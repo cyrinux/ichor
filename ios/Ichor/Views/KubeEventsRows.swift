@@ -55,11 +55,14 @@ struct KubeEventsRows: View {
     }
 }
 
-/// One event: its reason (amber for a Warning), when it was last seen, how often, and its message.
-private struct KubeEventRow: View {
+/// One event: its reason (amber for a Warning), when it was last seen, how often, and its
+/// message; with `showObject` the object it is about, with `showNamespace` its namespace too
+/// (a list across namespaces).
+struct KubeEventRow: View {
     let event: KubeEvent
     let now: Int64
     let showObject: Bool
+    var showNamespace = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -70,11 +73,16 @@ private struct KubeEventRow: View {
                 Text(verbatim: CheckupText.kubeEventsAgo(checkupAge(event.last, now: now))).font(.caption).foregroundStyle(.secondary)
             }
             if showObject {
-                Text(verbatim: "\(event.kind) \(event.name)").font(.caption2.monospaced()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                Text(verbatim: "\(event.kind) \(object)").font(.caption2.monospaced()).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
             }
             Text(verbatim: event.message).font(.caption).lineLimit(6)
         }
         .padding(.vertical, 2)
+    }
+
+    /// "ns/name" across namespaces, the bare name within one (or for a Node).
+    private var object: String {
+        showNamespace && !event.namespace.isEmpty ? "\(event.namespace)/\(event.name)" : event.name
     }
 }
 

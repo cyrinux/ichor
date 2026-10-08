@@ -21,6 +21,9 @@ final class NotificationRouter {
     /// A GitOps app alert was tapped: open the Argo CD or Flux screen.
     var pendingGitOps: GitOpsDestination?
 
+    /// A checkup alert was tapped: open the cluster checkup.
+    var pendingCheckup = false
+
     /// "+1 h" on a freeze reminder: extend that freeze once the app is open.
     var pendingFreezeExtend: FreezeExtendRequest?
 
@@ -70,6 +73,11 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         // Alert keys are the request identifiers (BackgroundMonitor.post); "cert" is the expiry alert.
         if let destination = GitOpsDestination(alertKey: response.notification.request.identifier) {
             await MainActor.run { NotificationRouter.shared.pendingGitOps = destination }
+            return
+        }
+        // Checkup findings are keyed "checkup:section|kind|subject" (checkupAlerts).
+        if response.notification.request.identifier.hasPrefix("checkup:") {
+            await MainActor.run { NotificationRouter.shared.pendingCheckup = true }
             return
         }
         guard response.notification.request.identifier == "cert" else { return }

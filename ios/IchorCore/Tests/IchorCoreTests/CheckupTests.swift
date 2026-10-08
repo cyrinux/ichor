@@ -99,7 +99,11 @@ final class CheckupTests: XCTestCase {
     }
 
     func testEventsDecode() throws {
+        let forbidden = try TalosJSON.decode(KubeEventList.self, from: #"{"events":null,"forbidden":true}"#)
+        XCTAssertTrue(forbidden.forbidden)
+        XCTAssertTrue(forbidden.events.isEmpty)
         let list = try TalosJSON.decode(KubeEventList.self, from: #"{"events":[{"type":"Warning","reason":"BackOff","message":"m","kind":"Pod","name":"p","count":4,"last":5},{"type":"Normal","reason":"Pulled"}]}"#)
+        XCTAssertFalse(list.forbidden)
         XCTAssertEqual(list.events.map(\.isWarning), [true, false])
         XCTAssertEqual(list.events[1].count, 1)
     }

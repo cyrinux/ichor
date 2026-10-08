@@ -28,8 +28,10 @@ struct ArgoAppView: View {
     @State private var message: String?
     @State private var succeeded = 0
     @State private var network = ArgoNetworkModel()
-    /// The node a box of the network graph opens.
+    /// The node a box of the network graph opens: a Talos node, or a Kubernetes one on a
+    /// cluster added from a kubeconfig.
     @State private var openNode: NodeRef?
+    @State private var openKubeNode: KubeNodeInfo?
     @State private var freezeSheet = false
     @State private var confirmUnfreeze = false
 
@@ -57,6 +59,7 @@ struct ArgoAppView: View {
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
         .navigationDestination(item: $openNode) { NodeDetailView(ref: $0) }
+        .navigationDestination(item: $openKubeNode) { KubeNodeDetailView(node: $0) }
         .navigationDestination(for: ArgoWindowsRoute.self) { _ in ArgoWindowsView() }
     }
 
@@ -80,7 +83,8 @@ struct ArgoAppView: View {
             ArgoConditionsSection(app: app, downNodes: downNodes)
             if let op = app.operation { ArgoOperationSection(operation: op, canTerminate: app.canTerminate) { confirmTerminate = true } }
             ArgoNetworkSection(model: network, downNodes: downNodes, pods: app.unhealthyPods,
-                               openNode: { openNode = $0 }, changed: { Task { await load() } })
+                               openNode: { openNode = $0 }, openKubeNode: { openKubeNode = $0 },
+                               changed: { Task { await load() } })
             if !app.resources.isEmpty { timeline(app) }
             if !app.unhealthyPods.isEmpty { ArgoPodsSection(pods: app.unhealthyPods, downNodes: downNodes) }
             if !app.history.isEmpty { ArgoHistorySection(app: app) { confirmRollback = $0 } }
@@ -181,8 +185,8 @@ struct ArgoAppView: View {
         guard let client = model.client else { return }
         let key = model.argoKey
         // The network graph is read alongside, so the two refresh together.
-        let graph = self.network, appNamespace = self.namespace, appName = self.name
-        async let traffic: Void = graph.load(with: client, key: key, namespace: appNamespace, name: appName)
+        let graph = self.network, appNamespace = self.namespace, appName = self.name, kube = model.activeIsKube
+        async let traffic: Void = graph.load(with: client, key: key, namespace: appNamespace, name: appName, kube: kube)
         let cluster = model.activeSummary, store = self.store
         await store.refresh($state, key: key, currentKey: { model.argoKey }) {
             try await store.load(with: client, key: key, cluster: cluster)

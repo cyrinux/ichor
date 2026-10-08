@@ -2,27 +2,32 @@ import SwiftUI
 import IchorCore
 
 /// The network view of the app on screen, kept by ArgoAppView so it survives scrolling, read
-/// again with the app. With nodes in it, the Talos nodes too, until once succeeds: a node box
-/// opens its screen. Reads may overlap (a poll, a pull, the reload after a delete): only the
-/// answer of the latest one started is kept.
+/// again with the app. With nodes in it, the cluster's nodes too (Talos, or Kubernetes on a
+/// cluster added from a kubeconfig), until once succeeds: a node box opens its screen. Reads
+/// may overlap (a poll, a pull, the reload after a delete): only the answer of the latest one
+/// started is kept.
 @Observable
 @MainActor
 final class ArgoNetworkModel {
     private(set) var state: LoadState<ArgoNetwork> = .loading
     /// Reachable Talos nodes by hostname, which Kubernetes names them by.
     private(set) var nodeRefs: [String: NodeRef] = [:]
+    /// The nodes of a cluster added from a kubeconfig, by name: there is no Talos node to open.
+    private(set) var kubeNodes: [String: KubeNodeInfo] = [:]
     private var key = ""
-    /// The Talos nodes were read for key.
+    /// The nodes were read for key.
     private var knowsNodes = false
     private var readingNodes = false
     /// Counts the reads started, so an older answer never replaces a newer one.
     private var started = 0
 
-    func load(with client: TalosClient, key: String, namespace: String, name: String) async {
+    /// `kube`: the cluster was added from a kubeconfig, its nodes come from the Kubernetes API.
+    func load(with client: TalosClient, key: String, namespace: String, name: String, kube: Bool = false) async {
         if key != self.key {
             self.key = key
             state = .loading
             nodeRefs = [:]
+            kubeNodes = [:]
             knowsNodes = false
         }
         started += 1
@@ -31,19 +36,25 @@ final class ArgoNetworkModel {
         guard key == self.key, ticket == started else { return }
         state = state.refreshed(with: loaded)
         if case .loaded(let network, _, _) = state, network.nodes.contains(where: { $0.kind == .node }) {
-            await loadNodes(with: client, key: key)
+            await loadNodes(with: client, key: key, kube: kube)
         }
     }
 
-    /// The reachable Talos nodes by hostname; on failure, tried again with the next read.
-    private func loadNodes(with client: TalosClient, key: String) async {
+    /// The reachable Talos nodes by hostname, or the Kubernetes nodes by name; on failure, tried
+    /// again with the next read.
+    private func loadNodes(with client: TalosClient, key: String, kube: Bool) async {
         guard !knowsNodes, !readingNodes else { return }
         readingNodes = true
         defer { readingNodes = false }
-        guard let overview = try? await client.overview(), key == self.key else { return }
-        let refs = overview.nodes.filter { $0.reachable && !$0.hostname.isEmpty }
-            .map { ($0.hostname, NodeRef(address: $0.node, hostname: $0.hostname, role: $0.role)) }
-        nodeRefs = Dictionary(refs) { first, _ in first }
+        if kube {
+            guard let overview = try? await client.kubeNodes(), key == self.key else { return }
+            kubeNodes = Dictionary(overview.nodes.map { ($0.name, $0) }) { first, _ in first }
+        } else {
+            guard let overview = try? await client.overview(), key == self.key else { return }
+            let refs = overview.nodes.filter { $0.reachable && !$0.hostname.isEmpty }
+                .map { ($0.hostname, NodeRef(address: $0.node, hostname: $0.hostname, role: $0.role)) }
+            nodeRefs = Dictionary(refs) { first, _ in first }
+        }
         knowsNodes = true
     }
 }
@@ -58,6 +69,8 @@ struct ArgoNetworkSection: View {
     /// The app's pods that are not ready, for the owner a deletion names.
     let pods: [KubePod]
     let openNode: (NodeRef) -> Void
+    /// The same for a node of a cluster added from a kubeconfig.
+    let openKubeNode: (KubeNodeInfo) -> Void
     /// Something changed (a pod deleted): read again.
     let changed: () -> Void
 
@@ -102,10 +115,15 @@ struct ArgoNetworkSection: View {
         ArgoNetworkGraph(network: network, selected: selected, presented: $presented, expanded: $expanded,
                          tap: tap, clear: clear) { node in
             ArgoNetDetails(node: node, nodeRef: node.kind == .node ? model.nodeRefs[node.name] : nil,
+                           kubeNode: node.kind == .node ? model.kubeNodes[node.name] : nil,
                            pod: node.kind == .pod ? pod(node) : nil,
                            openNode: { ref in
                                presented = nil
                                openNode(ref)
+                           },
+                           openKubeNode: { node in
+                               presented = nil
+                               openKubeNode(node)
                            },
                            delete: delete)
         }

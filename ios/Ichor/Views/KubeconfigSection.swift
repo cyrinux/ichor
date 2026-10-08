@@ -49,7 +49,7 @@ struct KubeconfigSection: View {
         do {
             // A cluster added from a kubeconfig: its own context, from the stored kubeconfig.
             if model.activeIsKube {
-                document = YAMLDocument(text: try await TalosClient.exportKubeContext(stored: client.config, context: client.context))
+                document = YAMLDocument(text: try await TalosClient.exportKubeContext(stored: client.config, context: client.context, kubeServer: client.kubeAPIServer))
             } else {
                 document = YAMLDocument(text: try await client.kubeconfig())
             }

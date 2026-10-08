@@ -20,6 +20,15 @@ extension TalosClient {
         return list.events
     }
 
+    /// The events of every namespace and of the nodes, newest first (`kubectl get events -A`),
+    /// the Warning ones only with `warningsOnly`; `forbidden` when the credentials may not list
+    /// them cluster-wide. Kubernetes keeps events for an hour.
+    func kubeClusterEvents(warningsOnly: Bool) async throws -> KubeEventList {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeClusterEvents(config, context, kubeServer, warningsOnly, 0, $0)
+        }
+    }
+
     /// `talosctl rollback`: the node reboots into the Talos it ran before its last upgrade (os:admin).
     func rollback(node: String) async throws {
         try await Self.run { [config, context] error -> Void in

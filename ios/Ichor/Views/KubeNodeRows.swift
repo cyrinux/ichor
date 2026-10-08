@@ -2,33 +2,41 @@ import SwiftUI
 import IchorCore
 
 /// A node of a cluster without Talos, on the Kubernetes home and its nodes screen: the row,
-/// with the cordon and the drain on a tap (`KubeNodeActionRow`), and the cordon's confirmation
-/// and outcome (`kubeCordonDialogs`), which both screens share.
+/// opening the node screen on a tap with the cordon and the drain on a long press
+/// (`KubeNodeActionRow`), and the cordon's confirmation and outcome (`kubeCordonDialogs`),
+/// which the screens share.
 
-/// `KubeNodeRow` behind a menu: the cordon (asking `cordoning` for a confirmation) and the
-/// drain (the maintenance screen). No node screen: it reads Talos.
+/// `KubeNodeRow` as a link to the node screen (KubeNodeDetailView), with the cordon (asking
+/// `cordoning` for a confirmation) and the drain (the maintenance screen) in its context menu.
 struct KubeNodeActionRow: View {
     let node: KubeNodeInfo
     @Binding var path: [Route]
     @Binding var cordoning: KubeNodeInfo?
 
     var body: some View {
-        Menu {
-            KubeNodeMenu(node: node, path: $path, cordoning: $cordoning)
-        } label: {
+        NavigationLink(value: Route.kubeNode(node)) {
             KubeNodeRow(node: node)
         }
-        .tint(.primary)
+        .contextMenu {
+            KubeNodeMenu(node: node, path: $path, cordoning: $cordoning, details: false)
+        }
     }
 }
 
-/// The cordon (or uncordon) and the drain of `node`: the menu's items.
+/// The node screen (unless `details` is off: the row itself opens it), the cordon (or
+/// uncordon) and the drain of `node`: the menu's items.
 struct KubeNodeMenu: View {
     let node: KubeNodeInfo
     @Binding var path: [Route]
     @Binding var cordoning: KubeNodeInfo?
+    var details = true
 
     var body: some View {
+        if details {
+            Button("Details", systemImage: "info.circle") {
+                path.append(.kubeNode(node))
+            }
+        }
         Button(node.cordoned ? String(localized: "Uncordon") : String(localized: "Cordon"), systemImage: "nosign") {
             cordoning = node
         }
@@ -77,23 +85,26 @@ struct KubeNodeRow: View {
         return parts.joined(separator: " · ")
     }
 
-    private func formatCores(_ cores: Double) -> String {
-        cores == cores.rounded() ? String(Int(cores)) : String(format: "%.1f", cores)
-    }
-
     /// Pool, machine type, spot or on-demand: where the cloud put the node, when it says.
     private var provenance: String? {
         var parts: [String] = []
-        if let pool = poolLabel { parts.append(pool) }
+        if let pool = node.localizedPoolLabel { parts.append(pool) }
         if let type = node.instanceType, !type.isEmpty { parts.append(type) }
-        if let capacity = capacityLabel { parts.append(capacity) }
+        if let capacity = node.localizedCapacityLabel { parts.append(capacity) }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
+}
 
+/// Cores as Kubernetes counts them: whole, or with one decimal ("1.5").
+func formatCores(_ cores: Double) -> String {
+    cores == cores.rounded() ? String(Int(cores)) : String(format: "%.1f", cores)
+}
+
+extension KubeNodeInfo {
     /// "Karpenter pool general", "GKE node pool default-pool"…; the bare name for a kind this does not know.
-    private var poolLabel: String? {
-        guard let pool = node.pool, !pool.isEmpty else { return nil }
-        switch node.poolKind {
+    var localizedPoolLabel: String? {
+        guard let pool, !pool.isEmpty else { return nil }
+        switch poolKind {
         case "karpenter": return String(localized: "Karpenter pool \(pool)")
         case "eks": return String(localized: "EKS node group \(pool)")
         case "gke-class": return String(localized: "GKE compute class \(pool)")
@@ -103,8 +114,9 @@ struct KubeNodeRow: View {
         }
     }
 
-    private var capacityLabel: String? {
-        switch node.capacity {
+    /// Spot, on-demand or reserved, when the cloud labels say which.
+    var localizedCapacityLabel: String? {
+        switch capacity {
         case "spot": return String(localized: "Spot")
         case "on-demand": return String(localized: "On-demand")
         case "reserved": return String(localized: "Reserved")

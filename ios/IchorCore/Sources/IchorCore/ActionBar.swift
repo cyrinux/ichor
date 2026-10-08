@@ -52,6 +52,8 @@ public enum KubeHomeAction: String, BarAction {
     case checkup = "CHECKUP"
     case apiHealth = "API_HEALTH"
     case networkPolicies = "NETWORK_POLICIES"
+    /// The cluster's Kubernetes events (the Talos home's Events are the machines').
+    case events = "EVENTS"
     case settings = "SETTINGS"
 
     public var id: String { rawValue }

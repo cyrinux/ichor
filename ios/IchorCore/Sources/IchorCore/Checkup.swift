@@ -294,13 +294,22 @@ public struct KubeEvent: Decodable, Equatable, Sendable {
 
 public struct KubeEventList: Decodable, Equatable, Sendable {
     public let events: [KubeEvent]
+    /// The credentials may not list the events asked for (a cluster-wide list with a namespaced
+    /// ServiceAccount): no event, and not an error.
+    public let forbidden: Bool
+
+    public init(events: [KubeEvent] = [], forbidden: Bool = false) {
+        self.events = events
+        self.forbidden = forbidden
+    }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         events = try c.field(.events, [])
+        forbidden = try c.field(.forbidden, false)
     }
 
-    private enum CodingKeys: String, CodingKey { case events }
+    private enum CodingKeys: String, CodingKey { case events, forbidden }
 }
 
 // MARK: - Background alerts

@@ -31,10 +31,12 @@ public enum OverviewCard: String, HomeCard {
 }
 
 /// The sections of the Kubernetes home (a cluster added from a kubeconfig): the API server and
-/// the credentials, the nodes as Kubernetes lists them, the Kubernetes screens, and the operators
-/// found on the cluster. Raw values are Android's `KubeHomeCard` names.
+/// the credentials, the apps (from the pod list), the nodes as Kubernetes lists them, the
+/// Kubernetes screens, and the operators found on the cluster. Raw values are Android's
+/// `KubeHomeCard` names.
 public enum KubeHomeCard: String, HomeCard {
     case summary = "SUMMARY"
+    case apps = "APPS"
     case nodes = "NODES"
     case tools = "TOOLS"
     case dataServices = "DATA_SERVICES"

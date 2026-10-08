@@ -15,9 +15,15 @@ struct ApiHealthView: View {
             List {
                 ApiVerdictSection(report: report)
                 // The metrics group clients; the audit log names them, and what they do wrong.
+                // It is read through the Talos API: a cluster added from a kubeconfig has none.
                 Section {
-                    NavigationLink { AuditView() } label: {
-                        Label("Find who loads it (audit log)", systemImage: "person.fill.questionmark")
+                    if model.activeIsKube {
+                        Text("The audit log is read through the Talos API: this cluster was added from a kubeconfig.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    } else {
+                        NavigationLink { AuditView() } label: {
+                            Label("Find who loads it (audit log)", systemImage: "person.fill.questionmark")
+                        }
                     }
                 }
                 if !report.metricsError.isEmpty {

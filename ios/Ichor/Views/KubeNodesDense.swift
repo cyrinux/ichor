@@ -4,8 +4,7 @@ import IchorCore
 /// The Kubernetes home's nodes on a cluster too large for a row per node (see isDenseCluster),
 /// as the overview's DenseNodes: the status counts, a dot per node grouped by status (the worst
 /// first), then the problem nodes as full rows, capped, with "N more" opening the Kubernetes
-/// nodes screen on them. A tap on a dot offers the node's actions: there is no node screen
-/// without Talos.
+/// nodes screen on them. A tap on a dot offers the node's screen and actions.
 struct DenseKubeNodes: View {
     let nodes: [KubeNodeInfo]
     @Binding var path: [Route]
@@ -32,7 +31,7 @@ struct DenseKubeNodes: View {
 }
 
 /// A dot per node, coloured by its status, in the given order (grouped by status: the problem
-/// dots lead); a tap offers the node's actions.
+/// dots lead); a tap offers the node's screen and actions.
 private struct KubeNodeDots: View {
     let nodes: [KubeNodeInfo]
     @Binding var path: [Route]

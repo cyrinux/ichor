@@ -9,9 +9,12 @@ final class SelectedPodsTests: XCTestCase {
 
     func testANodeListsEveryNamespaceAWorkloadEveryNode() {
         let node = PodSelection.node("192.0.2.20")
+        let kubeNode = PodSelection.kubeNode("worker-1")
         let workload = PodSelection.workload(kind: "Deployment", namespace: "demo", name: "web")
         XCTAssertTrue(node.showsNamespace)
         XCTAssertFalse(node.showsNode)
+        XCTAssertTrue(kubeNode.showsNamespace)
+        XCTAssertFalse(kubeNode.showsNode)
         XCTAssertFalse(workload.showsNamespace)
         XCTAssertTrue(workload.showsNode)
     }

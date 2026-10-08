@@ -51,6 +51,9 @@ struct TalosClient: Sendable {
     /// A Talos cluster whose Kubernetes calls go through a stored kubeconfig context (K5), nil
     /// for the admin kubeconfig Talos issues. See kubeConfig.
     var kubeLink: KubeLink?
+    /// The cluster was added from a kubeconfig: no Talos API. The calls that read both (the
+    /// app inventory) take their Kubernetes path.
+    var isKube = false
 
     static func parse(_ yaml: String) async throws -> ConfigSummary {
         try await json { IchorgoParseConfig(yaml, $0) }
@@ -416,8 +419,15 @@ struct TalosClient: Sendable {
 
     /// The apps running in the cluster, from every node's containers (os:reader). One container
     /// listing per node: called when a screen opens or refreshes, not on a poll.
+    /// The apps running in the cluster: from every node's containers (Talos), or from the pod
+    /// list on a cluster added from a kubeconfig.
     func inventory() async throws -> ClusterInventory {
-        try await Self.json { [config, context] in IchorgoClusterInventory(config, context, $0) }
+        if isKube {
+            return try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+                IchorgoKubeInventory(config, context, kubeServer, $0)
+            }
+        }
+        return try await Self.json { [config, context] in IchorgoClusterInventory(config, context, $0) }
     }
 
     func etcd() async throws -> EtcdOverview {

@@ -28,15 +28,25 @@ extension ShareTarget {
     /// The screen the link opens over the overview; nil for the overview itself. A node only
     /// when it is one of the cluster's (with its role, for the control-plane warnings): a link
     /// cannot point the app's Talos calls at another address. On a cluster added from a
-    /// kubeconfig (`kube`) the Talos screens have nothing to show: its home opens instead.
+    /// kubeconfig (`kube`) a node link opens the node as Kubernetes lists it, by the name or
+    /// the address the link carries; the Talos screens (etcd, health) have nothing to show, so
+    /// its home opens instead.
     func route(client: TalosClient?, kube: Bool = false) async -> Route? {
-        if kube, [Target.node, .etcd, .health].contains(target) { return nil }
+        if kube, [Target.etcd, .health].contains(target) { return nil }
+        if target == .node, kube {
+            guard let nodes = try? await client?.kubeNodes().nodes,
+                  let node = nodes.first(where: { !host.isEmpty && $0.name == host || !addr.isEmpty && ($0.internalIP == addr || $0.externalIP == addr) })
+            else { return nil }
+            return .kubeNode(node, tab: tab == "kube-pods" || tab == "pods" ? .pods : .details)
+        }
         if target == .node {
             guard let nodes = try? await client?.overview().nodes,
                   let node = nodes.first(where: { !addr.isEmpty && $0.node == addr || !host.isEmpty && $0.hostname == host })
             else { return nil }
+            // "kube-pods", the Pods tab of a node without Talos, is this node's Pods tab.
+            let wanted = tab == "kube-pods" ? "pods" : tab
             return .nodeTab(NodeRef(address: node.node, hostname: node.hostname, role: node.role),
-                            tab: NodeDetailView.Tab.allCases.first { $0.rawValue.lowercased() == tab } ?? .services)
+                            tab: NodeDetailView.Tab.allCases.first { $0.rawValue.lowercased() == wanted } ?? .services)
         }
         return switch target {
         case .cluster: nil

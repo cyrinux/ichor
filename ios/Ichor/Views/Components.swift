@@ -143,16 +143,27 @@ extension UsageLevel {
     }
 }
 
+/// Why a Talos screen is not available: the talosconfig's role is short of it, or the cluster
+/// was added from a kubeconfig and has no Talos API at all (Android's TalosOnlyNotice).
 struct RoleNotice: View {
     let feature: Feature
     let roles: [String]
 
+    @Environment(AppModel.self) private var model
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("\(feature.localizedLabel) needs \(feature.minimumRole)").font(.headline)
-            Text("This talosconfig has \(roleList). Import a talosconfig created with --roles \(feature.minimumRole) to use it.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            if model.activeIsKube {
+                Text(verbatim: feature.localizedLabel).font(.headline)
+                Text("Not available for this cluster: it was added from a kubeconfig, so the app reaches its Kubernetes API only, not Talos.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("\(feature.localizedLabel) needs \(feature.minimumRole)").font(.headline)
+                Text("This talosconfig has \(roleList). Import a talosconfig created with --roles \(feature.minimumRole) to use it.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)

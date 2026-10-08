@@ -91,6 +91,8 @@ struct SelectedPodsView: View {
             case .node(let address):
                 let name = try await kubeNode.resolve { try await client.kubeNodeName(node: address) }
                 return try await client.nodePodsPage(kubeNode: name, phase: phase, token: token, table: !token.isEmpty)
+            case .kubeNode(let name):
+                return try await client.nodePodsPage(kubeNode: name, phase: phase, token: token, table: !token.isEmpty)
             case .workload(let kind, let namespace, let name):
                 return try await client.workloadPodsPage(kind: kind, namespace: namespace, name: name, phase: phase,
                                                          token: token, table: !token.isEmpty)

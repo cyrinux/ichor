@@ -57,7 +57,9 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
     }
 
     /// The node screen's tabs as links name them; the Android-only Kubernetes pods tab opens Services here.
-    public static let nodeTabs = ["services", "resources", "live", "processes", "pods", "cgroups"]
+    /// The node screen's tabs a link may name; "kube-pods" is the Kubernetes pods of the node
+    /// (the Pods tab of a node without Talos).
+    public static let nodeTabs = ["services", "resources", "live", "processes", "pods", "cgroups", "kube-pods"]
 
     public static func screen(_ target: Target) -> ShareTarget { ShareTarget(target: target) }
 

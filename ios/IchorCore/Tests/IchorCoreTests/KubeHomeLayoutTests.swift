@@ -4,7 +4,7 @@ import XCTest
 final class KubeHomeLayoutTests: XCTestCase {
     func testDefaultShowsEverySectionInOrder() {
         let layout = KubeHomeLayout()
-        XCTAssertEqual(layout.visible, [.summary, .nodes, .tools, .dataServices, .argoCD, .flux])
+        XCTAssertEqual(layout.visible, [.summary, .apps, .nodes, .tools, .dataServices, .argoCD, .flux])
         XCTAssertTrue(layout.hiddenCards.isEmpty)
         XCTAssertTrue(layout.isDefault)
         XCTAssertEqual(KubeHomeLayout.storageKey, "kubeHome.layout")
@@ -12,8 +12,8 @@ final class KubeHomeLayoutTests: XCTestCase {
     }
 
     func testEncodeRoundTripsInAndroidForm() {
-        let layout = KubeHomeLayout().move(from: 2, to: 0).hiding(.nodes)
-        XCTAssertEqual(layout.encoded, "TOOLS,SUMMARY,-NODES,DATA_SERVICES,ARGO_CD,FLUX")
+        let layout = KubeHomeLayout().move(from: 3, to: 0).hiding(.nodes)
+        XCTAssertEqual(layout.encoded, "TOOLS,SUMMARY,APPS,-NODES,DATA_SERVICES,ARGO_CD,FLUX")
         XCTAssertEqual(KubeHomeLayout.parse(layout.encoded), layout)
         XCTAssertFalse(layout.isDefault)
     }
@@ -23,21 +23,21 @@ final class KubeHomeLayoutTests: XCTestCase {
         XCTAssertEqual(KubeHomeLayout.parse(""), KubeHomeLayout())
         // A layout saved by the Talos overview: its own sections are unknown here, the shared names kept.
         let layout = KubeHomeLayout.parse("TALOS_UPDATE,-APPS,NODES,-DATA_SERVICES,TIME_DRIFT")
-        XCTAssertEqual(layout.order, [.nodes, .dataServices, .summary, .tools, .argoCD, .flux])
-        XCTAssertEqual(layout.hidden, [.dataServices])
+        XCTAssertEqual(layout.order, [.apps, .nodes, .dataServices, .summary, .tools, .argoCD, .flux])
+        XCTAssertEqual(layout.hidden, [.apps, .dataServices])
     }
 
     func testAbsentSectionsAreLeftOutAndKeepTheirPlace() {
         let absent: Set<KubeHomeCard> = [.argoCD, .flux]
         let layout = KubeHomeLayout().hiding(.dataServices)
-        XCTAssertEqual(layout.visible(absent: absent), [.summary, .nodes, .tools])
+        XCTAssertEqual(layout.visible(absent: absent), [.summary, .apps, .nodes, .tools])
         XCTAssertEqual(layout.hiddenCards(absent: absent), [.dataServices])
-        XCTAssertEqual(layout.moving(fromOffsets: [2], toOffset: 0, absent: absent).visible, [.tools, .summary, .nodes, .argoCD, .flux])
+        XCTAssertEqual(layout.moving(fromOffsets: [2], toOffset: 0, absent: absent).visible, [.nodes, .summary, .apps, .tools, .argoCD, .flux])
     }
 
     func testShowingPutsTheSectionLast() {
         let shown = KubeHomeLayout().hiding(.summary).hiding(.tools).showing(.summary)
-        XCTAssertEqual(shown.visible, [.nodes, .dataServices, .argoCD, .flux, .summary])
+        XCTAssertEqual(shown.visible, [.apps, .nodes, .dataServices, .argoCD, .flux, .summary])
         XCTAssertEqual(shown.hiddenCards, [.tools])
     }
 
