@@ -2317,7 +2317,10 @@
     <string name="flows_title">Потоки наживо</string>
     <string name="flows_drops_only">Лише відкинуті</string>
     <string name="flows_clear_pod">Прибрати фільтр пода</string>
-    <string name="flows_not_installed">Cilium не знайдено в цьому кластері: потоки наживо надходять від його Hubble.</string>
+    <string name="flows_not_installed">У цьому кластері не знайдено джерела потоків: потоки наживо надходять від Hubble у Cilium або від Whisker у Calico (Calico 3.30+).</string>
+    <string name="flows_whisker_off_title">Whisker не встановлено</string>
+    <string name="flows_whisker_off">Calico 3.30+ записує потоки через Goldmane і віддає їх через Whisker. Створіть ресурси Goldmane і Whisker (operator.tigera.io/v1, вони є в custom-resources.yaml вашого випуску Calico), дочекайтеся пода whisker у calico-system і відкрийте цей екран знову.</string>
+    <string name="flows_history_note_goldmane">Історія сягає лише того, що Goldmane ще зберігає; потоки — це агрегати за 15 секунд, а не окремі пакети.</string>
     <string name="flows_hubble_off_title">Hubble вимкнено</string>
     <string name="flows_hubble_off">Потоки наживо надходять від Hubble, що працює в кожному агенті Cilium. Увімкніть його в значеннях Helm для Cilium (hubble.enabled: true) і перезапустіть агенти; Hubble Relay та UI не потрібні.</string>
     <string name="flows_agent_live">наживо</string>

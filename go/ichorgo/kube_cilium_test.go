@@ -28,7 +28,7 @@ func TestReadCiliumStatus(t *testing.T) {
 	}
 
 	want := ciliumStatus{
-		Installed: true, Namespace: "net", Version: "v1.19.5", Hubble: true, Buffer: 8191,
+		Installed: true, CNI: flowCNICilium, Namespace: "net", Version: "v1.19.5", Hubble: true, Buffer: 8191,
 		Agents: []ciliumAgent{{Node: "worker-1", Pod: "cilium-ab4cd"}, {Node: "worker-2", Pod: "cilium-zz9k2", Ready: true}},
 	}
 	if !reflect.DeepEqual(got, want) {

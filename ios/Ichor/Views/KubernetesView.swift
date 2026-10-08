@@ -54,7 +54,7 @@ struct KubernetesView: View {
     @State private var serverError: String?
     /// Kept across tabs: only leaving the screen stops a running network test.
     @State private var netPerf = NetPerfSession()
-    /// Read once on open: Live flows needs Cilium.
+    /// Read once on open: Live flows needs Cilium, or Calico with Whisker.
     @State private var cilium: CiliumStatus?
     @State private var netScreen: NetScreen?
     /// The namespace a share link scoped the lists to, not kept, until another is picked.

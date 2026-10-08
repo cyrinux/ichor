@@ -107,4 +107,31 @@ class HubbleTest {
         assertEquals("Unsupported L3 protocol", humanizeReason("UNSUPPORTED_L3_PROTOCOL"))
         assertEquals("", humanizeReason(""))
     }
+
+    // KubeCilium on a Calico cluster with Whisker (go/ichorgo/kube_calico.go).
+    @Test
+    fun decodesACalicoStatus() {
+        val status = TalosJson.decodeFromString(
+            CiliumStatus.serializer(),
+            """{"installed":true,"cni":"calico","namespace":"calico-system","version":"v3.33.0","hubble":true,
+                "agents":[{"node":"minikube","pod":"calico-node-b68qd","ready":true}],
+                "whisker":{"namespace":"calico-system","pod":"whisker-58dd87647c-zxzcq","port":8443,"tls":true}}""",
+        )
+        assertTrue(status.installed)
+        assertTrue(status.calico)
+        assertTrue(status.hubble)
+        assertEquals(0, status.buffer)
+        assertEquals("v3.33.0", status.version)
+
+        val snapshot = TalosJson.decodeFromString(
+            HubbleSnapshot.serializer(),
+            """{"cni":"calico","namespace":"calico-system","version":"v3.33.0","buffer":0,"nodes":[{"node":"whisker","pod":"whisker-1","state":"live","flows":15}],
+                "flows":[{"time":1791446895000,"node":"whisker","verdict":"DROPPED","reason":"POLICY_DENIED","direction":"INGRESS","protocol":"TCP","port":80,"type":"L3_L4",
+                          "source":{"namespace":"flows","workload":"curl"},"destination":{"namespace":"flows","workload":"nginx"},"isolating":[{"kind":"NetworkPolicy","namespace":"flows","name":"nginx-ingress"}],"packets":6}],
+                "drops":[],"seen":15,"dropped":6,"lost":0}""",
+        )
+        assertEquals(FLOW_CNI_CALICO, snapshot.cni)
+        // A Calico peer is an aggregate without a pod: named by its workload.
+        assertEquals("flows/curl", snapshot.flows.single().source.label)
+    }
 }

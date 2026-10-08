@@ -2147,7 +2147,10 @@
     <string name="flows_title">Flussi in tempo reale</string>
     <string name="flows_drops_only">Solo scarti</string>
     <string name="flows_clear_pod">Rimuovi il filtro del pod</string>
-    <string name="flows_not_installed">Cilium non trovato su questo cluster: i flussi in tempo reale arrivano dal suo Hubble.</string>
+    <string name="flows_not_installed">Nessuna sorgente di flussi trovata su questo cluster: i flussi in tempo reale arrivano dall’Hubble di Cilium o dal Whisker di Calico (Calico 3.30+).</string>
+    <string name="flows_whisker_off_title">Whisker non è installato</string>
+    <string name="flows_whisker_off">Calico 3.30+ registra i flussi con Goldmane e li serve tramite Whisker. Crea le risorse Goldmane e Whisker (operator.tigera.io/v1, incluse nel custom-resources.yaml della tua versione di Calico), attendi il pod whisker in calico-system, poi riapri questa schermata.</string>
+    <string name="flows_history_note_goldmane">La cronologia risale solo fino a quanto Goldmane conserva ancora; i flussi sono aggregati di 15 secondi, non singoli pacchetti.</string>
     <string name="flows_hubble_off_title">Hubble è disattivato</string>
     <string name="flows_hubble_off">I flussi in tempo reale arrivano da Hubble, che gira in ogni agente Cilium. Attivalo nei valori Helm di Cilium (hubble.enabled: true) e riavvia gli agenti; Hubble Relay e la UI non servono.</string>
     <string name="flows_agent_live">attivo</string>

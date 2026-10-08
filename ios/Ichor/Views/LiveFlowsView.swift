@@ -31,8 +31,8 @@ final class HubbleFollower {
     }
 }
 
-/// Cilium's flows live, like Hubble UI (os:admin): `hubble observe --follow` in every agent,
-/// merged. Drops come grouped with the policies behind them; a filter change restarts the
+/// The cluster's flows live, like Hubble UI (os:admin): `hubble observe --follow` in every
+/// Cilium agent, merged, or Whisker's stream with Calico 3.30+. Drops come grouped with the policies behind them; a filter change restarts the
 /// stream, leaving the screen stops it.
 struct LiveFlowsView: View {
     let cilium: CiliumStatus
@@ -62,6 +62,13 @@ struct LiveFlowsView: View {
             if cilium.hubble {
                 flowList
                     .safeAreaInset(edge: .top) { tabBar }
+            } else if cilium.isCalico {
+                ContentUnavailableView {
+                    Label("Whisker is not installed", systemImage: "eye.slash")
+                } description: {
+                    Text("Calico 3.30+ records flows with Goldmane and serves them through Whisker. Create the Goldmane and Whisker resources (operator.tigera.io/v1, part of the custom-resources.yaml of your Calico release), wait for the whisker pod in calico-system, then open this screen again.")
+                }
+                .themedBackground()
             } else {
                 ContentUnavailableView {
                     Label("Hubble is disabled", systemImage: "eye.slash")
@@ -96,7 +103,7 @@ struct LiveFlowsView: View {
     private var flowList: some View {
         List {
             filterSection
-            HubbleStatusSection(snapshot: follower.snapshot, buffer: cilium.buffer, error: follower.error,
+            HubbleStatusSection(snapshot: follower.snapshot, buffer: cilium.buffer, calico: cilium.isCalico, error: follower.error,
                                 connecting: follower.active && follower.snapshot == nil) { attempt += 1 }
             if let snapshot = follower.snapshot {
                 switch tab {
@@ -164,6 +171,7 @@ struct LiveFlowsView: View {
 private struct HubbleStatusSection: View {
     let snapshot: HubbleSnapshot?
     let buffer: Int
+    let calico: Bool
     let error: String?
     let connecting: Bool
     let retry: () -> Void
@@ -176,7 +184,7 @@ private struct HubbleStatusSection: View {
             } else if connecting {
                 HStack(spacing: 8) {
                     ProgressView()
-                    Text("Connecting to the Cilium agents…").foregroundStyle(.secondary)
+                    Text(calico ? "Connecting to Whisker…" : "Connecting to the Cilium agents…").foregroundStyle(.secondary)
                 }
             }
             if let snapshot {
@@ -197,6 +205,8 @@ private struct HubbleStatusSection: View {
         } footer: {
             if buffer > 0 {
                 Text("History only goes back as far as the agents still keep: up to \(buffer) flows per node.")
+            } else if calico {
+                Text("History only goes back as far as Goldmane still keeps; flows are 15-second aggregates, not single packets.")
             } else {
                 Text("History only goes back as far as the agents still keep.")
             }

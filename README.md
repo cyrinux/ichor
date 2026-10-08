@@ -92,12 +92,15 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   notify in the background (Settings → Alerts). A pod's log sheet and a workload's sheet show
   the object's Kubernetes events, like the end of `kubectl describe`. See
   [Cluster checkup](#cluster-checkup).
-- **Live flows (Cilium + Hubble):** follow the cluster's traffic like Hubble UI, or only what is
-  dropped, for a namespace or a pod. Ichor runs `hubble observe --follow` in each cilium-agent pod
-  (the CLI ships in the agent image, so nothing is installed and Hubble Relay is not needed), groups
-  repeated drops, explains the drop reason and names the policy behind it: the deny rule that
-  matched, or, for the usual default-deny, the policies that isolate the pod. History is what the
-  agents still hold in their flow buffer.
+- **Live flows (Cilium + Hubble, or Calico 3.30+ + Whisker):** follow the cluster's traffic like
+  Hubble UI, or only what is dropped, for a namespace or a pod. With Cilium, Ichor runs
+  `hubble observe --follow` in each cilium-agent pod (the CLI ships in the agent image, so nothing
+  is installed and Hubble Relay is not needed); with Calico it streams Goldmane's flows through the
+  whisker Service (via the API server proxy, nothing to expose), 15-second aggregates with the
+  policy trace that decided them. Either way it groups repeated drops, explains the drop reason and
+  names the policy behind it: the deny rule that matched, or, for the usual default-deny, the
+  policies that isolate the pod. History is what the agents still hold in their flow buffer, or
+  what Goldmane still keeps.
 - **Background:** alerts and a home-screen widget.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).

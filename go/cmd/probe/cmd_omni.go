@@ -115,6 +115,10 @@ func omniEndpoint(cfg, contextName string) (string, error) {
 // omniSignIn signs an Omni context in before a command: with the service account key from
 // the environment, or in the browser when asked. A certificate context is left alone.
 func omniSignIn(cfg, contextName string, browser bool) error {
+	if ichorgo.IsKubeconfig(cfg) {
+		return nil
+	}
+
 	info, err := ichorgo.TalosSignInInfo(cfg, contextName)
 	if err != nil || info == "" {
 		return err

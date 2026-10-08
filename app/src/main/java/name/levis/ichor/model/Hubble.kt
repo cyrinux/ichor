@@ -17,18 +17,27 @@ const val HUBBLE_NODE_CONNECTING = "connecting"
 const val HUBBLE_NODE_LIVE = "live"
 const val HUBBLE_NODE_ERROR = "error"
 
-/** Whether Cilium runs on the cluster, and with Hubble. */
+/** Flows come from Cilium's Hubble, or from Calico's Whisker (Calico 3.30+). */
+const val FLOW_CNI_CILIUM = "cilium"
+const val FLOW_CNI_CALICO = "calico"
+
+/** Whether a CNI the app follows flows from runs on the cluster (Cilium, else Calico), and records them. */
 @Serializable
 data class CiliumStatus(
     val installed: Boolean = false,
+    /** [FLOW_CNI_CILIUM] or [FLOW_CNI_CALICO]. */
+    val cni: String = "",
     val namespace: String = "",
     /** The agents' image tag. */
     val version: String = "",
+    /** Flows are recorded: Hubble is on, or Whisker runs. */
     val hubble: Boolean = false,
-    /** Flows each agent keeps. */
+    /** Flows each Cilium agent keeps; 0 with Calico. */
     val buffer: Int = 0,
     val agents: List<CiliumAgent> = emptyList(),
-)
+) {
+    val calico: Boolean get() = cni == FLOW_CNI_CALICO
+}
 
 @Serializable
 data class CiliumAgent(val node: String = "", val pod: String = "", val ready: Boolean = false)
@@ -36,6 +45,8 @@ data class CiliumAgent(val node: String = "", val pod: String = "", val ready: B
 /** What the flow stream has seen so far; a new one at most every second. */
 @Serializable
 data class HubbleSnapshot(
+    /** [FLOW_CNI_CILIUM] or [FLOW_CNI_CALICO]. */
+    val cni: String = "",
     val namespace: String = "",
     val version: String = "",
     val buffer: Int = 0,
