@@ -141,6 +141,7 @@ val kubeHomeCardLook = CardLook<KubeHomeCard>(
         stringResource(
             when (it) {
                 KubeHomeCard.SUMMARY -> R.string.overview_card_summary
+                KubeHomeCard.APPS -> R.string.apps_title
                 KubeHomeCard.NODES -> R.string.overview_stat_nodes
                 KubeHomeCard.TOOLS -> R.string.kube_home_card_tools
                 KubeHomeCard.DATA_SERVICES -> R.string.data_services_title
@@ -153,6 +154,7 @@ val kubeHomeCardLook = CardLook<KubeHomeCard>(
         stringResource(
             when (it) {
                 KubeHomeCard.SUMMARY -> R.string.kube_home_card_desc_summary
+                KubeHomeCard.APPS -> R.string.overview_card_desc_apps
                 KubeHomeCard.NODES -> R.string.kube_home_card_desc_nodes
                 KubeHomeCard.TOOLS -> R.string.kube_home_card_desc_tools
                 KubeHomeCard.DATA_SERVICES -> R.string.overview_card_desc_data_services

@@ -15,8 +15,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -49,7 +47,6 @@ import name.levis.ichor.ui.components.SearchField
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.overview.KubeHomeViewModel
-import name.levis.ichor.ui.overview.KubeNodeActionSheets
 import name.levis.ichor.ui.overview.KubeNodeRow
 import name.levis.ichor.ui.overview.healthSummary
 import name.levis.ichor.ui.overview.statusLabel
@@ -57,8 +54,8 @@ import name.levis.ichor.ui.overview.statusLabel
 /**
  * Every node of a large cluster added from a kubeconfig, where the dense home card only
  * shows dots: search by name or address, filter by status, the nodes grouped by status (the
- * worst first), the same rows and actions as home. [vm] is the Kubernetes home's, so both
- * show the same load and a pull here refreshes home too.
+ * worst first), the same rows as home; a row opens the node's screen. [vm] is the Kubernetes
+ * home's, so both show the same load and a pull here refreshes home too.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,17 +63,13 @@ fun KubeNodesScreen(
     initialFilter: NodeFilter?,
     vm: KubeHomeViewModel,
     onBack: () -> Unit,
-    onDrain: (name: String) -> Unit,
+    onNode: (name: String) -> Unit,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf(initialFilter) }
-    var sheetFor by remember { mutableStateOf<KubeNodeInfo?>(null) }
-    val snackbar = remember { SnackbarHostState() }
-    KubeNodeActionSheets(sheetFor, snackbar, onClose = { sheetFor = null }, onDrain = onDrain, onCordoned = vm::refresh)
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = { DataFreshness(state) },
         topBar = {
             TopAppBar(
@@ -103,7 +96,7 @@ fun KubeNodesScreen(
                         EmptyText(emptyOrNoMatch(query, R.string.nodes_none, R.string.nodes_no_match))
                     } else {
                         NodeList(groups) { node ->
-                            KubeNodeRow(node, onClick = { sheetFor = node }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
+                            KubeNodeRow(node, onClick = { onNode(node.name) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
                         }
                     }
                 }

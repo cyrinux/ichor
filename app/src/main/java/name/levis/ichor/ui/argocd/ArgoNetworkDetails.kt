@@ -44,6 +44,8 @@ data class ArgoNetActions(
     val node: NodeOverview? = null,
     /** Opens [node]'s detail screen on [tab]. */
     val onNode: ((NodeOverview, Int) -> Unit)? = null,
+    /** Opens a node's screen by its Kubernetes name, on a cluster added from a kubeconfig (no Talos node to match). */
+    val onKubeNode: ((String) -> Unit)? = null,
     /** Asks to delete the pod; null while a deletion runs or for anything but a pod. */
     val onDeletePod: (() -> Unit)? = null,
 )
@@ -107,6 +109,10 @@ private fun DetailActions(node: ArgoNetNode, actions: ArgoNetActions) {
         }
         if (node.kind == ArgoNetNode.NODE && target != null && onNode != null) {
             Action(Icons.Outlined.Computer, stringResource(R.string.argo_net_open_node)) { onNode(target, 0) }
+        }
+        val onKubeNode = actions.onKubeNode
+        if (node.kind == ArgoNetNode.NODE && target == null && onKubeNode != null) {
+            Action(Icons.Outlined.Computer, stringResource(R.string.argo_net_open_node)) { onKubeNode(node.name) }
         }
         if (node.kind == ArgoNetNode.POD) {
             OutlinedButton(onClick = { actions.onDeletePod?.invoke() }, enabled = actions.onDeletePod != null) {

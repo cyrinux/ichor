@@ -76,6 +76,7 @@ class SelectedPodsViewModel(talos: TalosRepository, metered: () -> Boolean, priv
         val phase = _phase.value
         return when (selection) {
             is PodSelection.OnNode -> talos.nodePodsPage(kubeNode(selection.node), phase, token, table)
+            is PodSelection.OnKubeNode -> talos.nodePodsPage(selection.name, phase, token, table)
             is PodSelection.OfWorkload -> talos.workloadPodsPage(selection, phase, token, table)
         }
     }

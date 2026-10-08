@@ -29,8 +29,8 @@ class NetPerfHandle(val events: ReceiveChannel<NetPerfEvent>, val stop: () -> Un
 class NetPerfRepository(private val configs: ConfigRepository, private val kubeServers: KubeServers) {
     /** The Kubernetes nodes a test can run between, by name. */
     suspend fun nodes(): List<NetPerfNode> = withContext(Dispatchers.IO) {
-        val (stored, server) = target()
-        TalosJson.decodeFromString(NetPerfNodeList.serializer(), Ichorgo.netPerfNodes(stored.yaml, stored.activeContext, server)).nodes
+        val target = target()
+        TalosJson.decodeFromString(NetPerfNodeList.serializer(), Ichorgo.netPerfNodes(target.yaml, target.context, target.server)).nodes
     }
 
     /**
@@ -40,12 +40,12 @@ class NetPerfRepository(private val configs: ConfigRepository, private val kubeS
      * background), so the caller holds the handle before anything can cancel it.
      */
     fun start(setup: NetPerfSetup): NetPerfHandle {
-        val (stored, server) = target()
+        val target = target()
         val events = Channel<NetPerfEvent>(Channel.UNLIMITED) // never drop the final Done
         val run = Ichorgo.startNetPerf(
-            stored.yaml,
-            stored.activeContext,
-            server,
+            target.yaml,
+            target.context,
+            target.server,
             setup.server,
             setup.client,
             setup.hostNetwork,
@@ -66,9 +66,6 @@ class NetPerfRepository(private val configs: ConfigRepository, private val kubeS
         return NetPerfHandle(events, run::cancel)
     }
 
-    /** The config to call with and the Kubernetes API address the user set ("" for the kubeconfig's). */
-    private fun target(): Pair<StoredConfig, String> {
-        val stored = configs.forCall()
-        return stored to kubeServers.serverFor(stored)
-    }
+    /** The config to call with and the API address, through the cluster's Kubernetes access when set (K5). */
+    private fun target(): KubeTarget = kubeServers.targetFor(configs.forCall())
 }

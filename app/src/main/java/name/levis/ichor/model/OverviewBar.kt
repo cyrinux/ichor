@@ -15,7 +15,7 @@ typealias OverviewBar = ActionBar<OverviewAction>
  * The screens the Kubernetes home's app bar leads to (a cluster added from a kubeconfig): the
  * Kubernetes screens that work with its credentials alone, no Talos one.
  */
-enum class KubeHomeAction { WORKLOADS, RESOURCES, METRICS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, SETTINGS;
+enum class KubeHomeAction { WORKLOADS, RESOURCES, METRICS, HELM, DATA_SERVICES, CHECKUP, API_HEALTH, NETWORK_POLICIES, EVENTS, SETTINGS;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 3)

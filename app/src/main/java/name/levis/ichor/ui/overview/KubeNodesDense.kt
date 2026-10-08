@@ -27,7 +27,7 @@ import name.levis.ichor.model.status
  * isDenseCluster), as the Talos home's DenseNodes: the status counts, a dot per node grouped
  * by status (the worst first), then the problem nodes as full rows, capped, with "N more"
  * opening the Kubernetes nodes screen on them ([onAllNodes]). A tap on a dot or a row opens
- * the node's actions ([onNode]): there is no node screen without Talos.
+ * the node's screen ([onNode]).
  */
 @Composable
 internal fun DenseKubeNodes(nodes: List<KubeNodeInfo>, onNode: (KubeNodeInfo) -> Unit, onAllNodes: (NodeFilter?) -> Unit) {

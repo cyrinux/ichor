@@ -59,7 +59,7 @@ fun KubeEventsList(namespace: String, kind: String, name: String, modifier: Modi
             is UiState.Failed -> InlineError(s.message.asString())
             is UiState.Loaded -> {
                 if (s.data.isEmpty()) MutedText(stringResource(R.string.kube_events_empty))
-                (if (all) s.data else s.data.take(EVENTS_PREVIEW)).forEach { EventRow(it, now, showObject = kind.isEmpty()) }
+                (if (all) s.data else s.data.take(EVENTS_PREVIEW)).forEach { KubeEventRow(it, now, showObject = kind.isEmpty()) }
                 if (s.data.size > EVENTS_PREVIEW) {
                     TextButton(onClick = { all = !all }) {
                         Text(if (all) stringResource(R.string.checkup_show_less) else stringResource(R.string.checkup_show_all, s.data.size.toString()))
@@ -70,9 +70,12 @@ fun KubeEventsList(namespace: String, kind: String, name: String, modifier: Modi
     }
 }
 
-/** One event: its reason (amber for a Warning), when it was last seen, how often, and its message. */
+/**
+ * One event: its reason (amber for a Warning), when it was last seen, how often, and its
+ * message; [showObject] names what it is about, with its namespace when [showNamespace].
+ */
 @Composable
-private fun EventRow(e: KubeEvent, now: Long, showObject: Boolean) {
+internal fun KubeEventRow(e: KubeEvent, now: Long, showObject: Boolean, showNamespace: Boolean = false) {
     val colors = LocalStatusColors.current
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -82,7 +85,8 @@ private fun EventRow(e: KubeEvent, now: Long, showObject: Boolean) {
             if (e.source.isNotEmpty()) MutedText(e.source, maxLines = 1)
         }
         if (showObject) {
-            Text("${e.kind} ${e.name}", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            val qualified = if (showNamespace && e.namespace.isNotEmpty()) "${e.namespace}/${e.name}" else e.name
+            Text("${e.kind} $qualified", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Text(e.message, style = MaterialTheme.typography.bodySmall, maxLines = 6, overflow = TextOverflow.Ellipsis)
     }

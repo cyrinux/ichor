@@ -53,8 +53,8 @@ class ImageScanRepository(private val configs: ConfigRepository, private val kub
 
     /** The Trivy Operator's reports on [pods]' images; available false without it. */
     suspend fun operatorReports(pods: List<RoutePod>): OperatorReports = withContext(Dispatchers.IO) {
-        val (stored, server) = target()
-        val json = Ichorgo.imageScanOperatorReports(stored.yaml, stored.activeContext, server, podsJson(pods))
+        val target = target()
+        val json = Ichorgo.imageScanOperatorReports(target.yaml, target.context, target.server, podsJson(pods))
         TalosJson.decodeFromString(OperatorReports.serializer(), json)
     }
 
@@ -64,14 +64,14 @@ class ImageScanRepository(private val configs: ConfigRepository, private val kub
      */
     fun start(appId: String, pods: List<RoutePod>) {
         if (_session.value?.running == true) return
-        val (stored, server) = try {
+        val target = try {
             target()
         } catch (e: Exception) {
             _session.value = ImageScanSession(configs.config.value?.activeContext.orEmpty(), appId, running = false, error = e.message)
             return
         }
-        _session.value = ImageScanSession(stored.activeContext, appId)
-        run = Ichorgo.startImageScan(stored.yaml, stored.activeContext, server, podsJson(pods), "", listener())
+        _session.value = ImageScanSession(target.context, appId)
+        run = Ichorgo.startImageScan(target.yaml, target.context, target.server, podsJson(pods), "", listener())
     }
 
     /** Stops the running scan; the session ends once the core deleted its Job. */
@@ -112,9 +112,6 @@ class ImageScanRepository(private val configs: ConfigRepository, private val kub
 
     private fun podsJson(pods: List<RoutePod>) = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
 
-    /** The config to call with and the Kubernetes API address the user set ("" for the kubeconfig's). */
-    private fun target(): Pair<StoredConfig, String> {
-        val stored = configs.forCall()
-        return stored to kubeServers.serverFor(stored)
-    }
+    /** The config to call with and the API address, through the cluster's Kubernetes access when set (K5). */
+    private fun target(): KubeTarget = kubeServers.targetFor(configs.forCall())
 }

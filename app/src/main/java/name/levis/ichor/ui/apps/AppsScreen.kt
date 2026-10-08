@@ -27,6 +27,7 @@ import name.levis.ichor.R
 import name.levis.ichor.monitor.freezeReminderHook
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.OVERVIEW
+import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.Feature
@@ -79,6 +80,8 @@ fun AppsScreen(
     onBack: () -> Unit,
     attention: Boolean = false,
     onNode: (addr: String, host: String, role: String) -> Unit,
+    /** A node of a cluster added from a kubeconfig, by its Kubernetes name (the inventory's node). */
+    onKubeNode: (name: String) -> Unit,
     onArgoCD: () -> Unit,
     onArgoApp: (namespace: String, name: String) -> Unit,
     onFlux: () -> Unit,
@@ -104,6 +107,8 @@ fun AppsScreen(
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     // Rollout restarts and routes go through the Kubernetes API: only for a role that can reach it.
     val canRestart = config?.activeSummary?.allows(Feature.WORKLOADS) == true
+    // Without Talos the inventory names a pod's node by its Kubernetes name, which has its own screen.
+    val kube = config?.activeIsKube == true
     val workloads by workloadsVm.state.collectAsStateWithLifecycle()
     val routes by routesVm.state.collectAsStateWithLifecycle()
     val restarting by workloadsVm.restarts.restarting.collectAsStateWithLifecycle()
@@ -212,7 +217,7 @@ fun AppsScreen(
                     } else {
                         null
                     },
-                    onPodNode = { addr -> nodes.openNode(addr, onNode) },
+                    onPodNode = { addr -> if (kube) onKubeNode(addr) else nodes.openNode(addr, onNode) },
                     onDismiss = { selected = null },
                 )
                 podsOf?.let { WorkloadPodsSheet(it, onDismiss = { podsOf = null }) }

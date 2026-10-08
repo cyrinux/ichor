@@ -3168,4 +3168,27 @@
     <string name="omni_field_url">Omni-URL (https://…omni.siderolabs.io)</string>
     <string name="omni_field_email">E-Mail des Kontos</string>
     <string name="omni_mode_account">Konto</string>
+    <string name="kube_node_tab_details">Details</string>
+    <string name="kube_node_yaml">YAML</string>
+    <string name="kube_node_gone">Dieser Node wird nicht mehr aufgeführt.</string>
+    <string name="kube_node_roles">Rollen</string>
+    <string name="kube_node_no_role">Kein Rollen-Label</string>
+    <string name="kube_node_internal_ip">Interne IP</string>
+    <string name="kube_node_external_ip">Externe IP</string>
+    <string name="kube_node_created">Erstellt</string>
+    <string name="kube_node_software">Software</string>
+    <string name="kube_node_kubelet">Kubelet</string>
+    <string name="kube_node_os_image">OS-Image</string>
+    <string name="kube_node_kernel">Kernel</string>
+    <string name="kube_node_runtime">Container-Runtime</string>
+    <string name="kube_node_arch">Architektur</string>
+    <string name="kube_node_capacity">Kapazität</string>
+    <string name="kube_node_pod_limit">Pod-Limit</string>
+    <string name="kube_node_cloud">Cloud</string>
+    <string name="kube_node_pool">Node-Pool</string>
+    <string name="kube_node_instance_type">Maschinentyp</string>
+    <string name="kube_node_capacity_type">Kapazitätstyp</string>
+    <string name="audit_talos_only">Das Audit-Log wird über die Talos-API gelesen: dieser Cluster wurde aus einer kubeconfig hinzugefügt.</string>
+    <string name="kube_events_warnings_only">Nur Warnungen</string>
+    <string name="kube_events_forbidden">Diese Zugangsdaten können die Events des gesamten Clusters nicht auflisten.</string>
 </resources>

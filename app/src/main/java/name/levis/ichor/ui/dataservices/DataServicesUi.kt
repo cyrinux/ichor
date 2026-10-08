@@ -38,13 +38,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
-import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.GarageState
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.LikelyCause
-import name.levis.ichor.model.NodeHealth
 import name.levis.ichor.model.ServiceHealth
 import name.levis.ichor.model.formatMilliCores
 import name.levis.ichor.model.health
@@ -75,10 +73,6 @@ private val DataServiceKind.fallbackIcon: ImageVector
         DataServiceKind.CEPH -> Icons.Outlined.Storage
         DataServiceKind.CASTAI -> Icons.Outlined.Tune
     }
-
-/** Hostnames of the nodes Talos reports not ready or unreachable: candidates for a likely cause. */
-fun ClusterOverview.downHostnames(): Set<String> =
-    nodes.filter { it.health != NodeHealth.READY }.map { it.hostname }.filter { it.isNotEmpty() }.toSet()
 
 @Composable
 fun ServiceHealth.color(): Color {

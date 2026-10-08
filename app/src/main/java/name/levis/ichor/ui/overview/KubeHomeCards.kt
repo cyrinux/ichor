@@ -47,6 +47,8 @@ import name.levis.ichor.ui.importconfig.certExpiry
 import name.levis.ichor.ui.kubeauth.SignInAction
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.daysUntil
+import name.levis.ichor.util.formatBytes
+import java.util.Locale
 
 /** The credentials expire within [CERT_WARN_DAYS] days (or did): a new kubeconfig replaces them. */
 @Composable
@@ -96,6 +98,11 @@ internal fun KubeSummaryCard(name: String, cluster: ContextSummary, nodes: KubeN
             InfoRow(stringResource(R.string.import_kube_server), cluster.endpoints.joinToString("\n"), mono = true)
             if (nodes != null && !nodes.forbidden) {
                 InfoRow(stringResource(R.string.overview_stat_nodes), "${nodes.readyCount}/${nodes.nodes.size}")
+                // What the nodes offer in all: allocatable CPU and memory, as the Talos overview counts them.
+                if (nodes.nodes.isNotEmpty()) {
+                    InfoRow(stringResource(R.string.overview_stat_cpu), coresLabel(nodes.nodes.sumOf { it.cpu }))
+                    InfoRow(stringResource(R.string.overview_stat_memory), formatBytes(nodes.nodes.sumOf { it.memory }.toLong()))
+                }
             }
             if (cluster.user.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_user), cluster.user)
             if (cluster.namespace.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_namespace), cluster.namespace)
@@ -114,11 +121,15 @@ private fun KubeStatusPill(nodes: KubeNodesOverview) {
     }
 }
 
+/** "4" for whole cores, "3.5" otherwise: allocatable CPU is often a fraction. */
+internal fun coresLabel(cores: Double): String =
+    if (cores == cores.toLong().toDouble()) cores.toLong().toString() else String.format(Locale.ROOT, "%.1f", cores)
+
 /**
  * The nodes as Kubernetes sees them: roles, readiness, cordon, address, kubelet version,
  * pressure, and where the cloud put them (autoscaler pool, machine type, spot), those needing
- * attention first. A tap opens [onNode]'s actions (cordon, drain): there is no node detail
- * screen, it reads the node through Talos. Past NODE_DENSE_THRESHOLD nodes the card turns
+ * attention first. A tap opens the node's screen ([onNode]: details, pods, events, cordon and
+ * drain). Past NODE_DENSE_THRESHOLD nodes the card turns
  * dense (see DenseKubeNodes) and the title opens the Kubernetes nodes screen ([onAllNodes]):
  * a card holding hundreds of rows defeats the home. Credentials that may not list nodes get a
  * note instead; the rest of the home still works.
@@ -191,7 +202,7 @@ internal fun KubeNodeRow(node: KubeNodeInfo, onClick: () -> Unit, modifier: Modi
 
 /** "Karpenter pool general", "GKE node pool default-pool"…; the bare name for a kind this does not know, null for none. */
 @Composable
-private fun nodePoolLabel(node: KubeNodeInfo): String? = when {
+internal fun nodePoolLabel(node: KubeNodeInfo): String? = when {
     node.pool.isEmpty() -> null
     node.poolKind == "karpenter" -> stringResource(R.string.kube_node_pool_karpenter, node.pool)
     node.poolKind == "eks" -> stringResource(R.string.kube_node_pool_eks, node.pool)
@@ -203,7 +214,7 @@ private fun nodePoolLabel(node: KubeNodeInfo): String? = when {
 
 /** Spot, on-demand or reserved capacity; null when the cloud did not say. */
 @Composable
-private fun nodeCapacityLabel(node: KubeNodeInfo): String? = when (node.capacity) {
+internal fun nodeCapacityLabel(node: KubeNodeInfo): String? = when (node.capacity) {
     "spot" -> stringResource(R.string.kube_node_capacity_spot)
     "on-demand" -> stringResource(R.string.kube_node_capacity_on_demand)
     "reserved" -> stringResource(R.string.kube_node_capacity_reserved)
@@ -219,6 +230,8 @@ internal fun KubeToolsCard(nav: KubeHomeNavigation) {
             Text(stringResource(R.string.common_kind_kubernetes), style = MaterialTheme.typography.titleMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = nav.onWorkloads) { Text(stringResource(R.string.overview_action_workloads)) }
+                OutlinedButton(onClick = { nav.onApps(false) }) { Text(stringResource(R.string.apps_title)) }
+                OutlinedButton(onClick = nav.onEvents) { Text(stringResource(R.string.events_title)) }
                 OutlinedButton(onClick = nav.onResources) { Text(stringResource(R.string.kb_title)) }
                 OutlinedButton(onClick = nav.onHelm) { Text(stringResource(R.string.kb_helm_title)) }
                 OutlinedButton(onClick = nav.onMetrics) { Text(stringResource(R.string.metrics_title)) }

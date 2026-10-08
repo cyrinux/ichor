@@ -32,6 +32,13 @@ sealed interface PodSelection {
         override fun key(phase: PodPhaseFilter) = "nodepods|$node|${phase.query}"
     }
 
+    /** The pods scheduled on the Kubernetes node [name] (a cluster added from a kubeconfig), in every namespace. */
+    data class OnKubeNode(val name: String) : PodSelection {
+        override val showsNamespace get() = true
+        override val showsNode get() = false
+        override fun key(phase: PodPhaseFilter) = "kubenodepods|$name|${phase.query}"
+    }
+
     /** The pods a Deployment, StatefulSet or DaemonSet's selector matches. */
     data class OfWorkload(val kind: String, val namespace: String, val name: String) : PodSelection {
         override val showsNamespace get() = false

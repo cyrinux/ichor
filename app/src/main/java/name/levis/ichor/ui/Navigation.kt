@@ -96,6 +96,10 @@ import name.levis.ichor.ui.share.parseShareLink
 import name.levis.ichor.ui.storage.StorageScreen
 import name.levis.ichor.ui.support.SupportBundleScreen
 import name.levis.ichor.ui.upgrade.UpgradeScreen
+import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.ui.events.KubeEventsScreen
+import name.levis.ichor.ui.kubenodes.KUBE_NODE_PODS_TAB
+import name.levis.ichor.ui.kubenodes.KubeNodeDetailScreen
 
 private object Routes {
     const val IMPORT = "import"
@@ -142,6 +146,11 @@ private object Routes {
     /** The Nodes screen of a large cluster; [filter] preselects one (null: all). */
     fun nodes(filter: NodeFilter?) = "nodes?filter=${filter?.name.orEmpty()}"
     const val KUBE_NODES = "kube-nodes?filter={filter}"
+    const val KUBE_NODE = "kube-node?name={name}&tab={tab}"
+    const val KUBE_EVENTS = "kube-events"
+
+    /** The screen of a node of a cluster added from a kubeconfig, by its Kubernetes name; [tab]: see KubeNodeDetailScreen. */
+    fun kubeNode(name: String, tab: Int = 0) = "kube-node?name=${Uri.encode(name)}&tab=$tab"
 
     /** The Kubernetes nodes screen of a large cluster added from a kubeconfig; [filter] preselects one (null: all). */
     fun kubeNodes(filter: NodeFilter?) = "kube-nodes?filter=${filter?.name.orEmpty()}"
@@ -413,6 +422,8 @@ fun Navigation(
                 onChangelog = { nav.navigate(Routes.CHANGELOG) },
                 onAllNodes = { nav.navigate(Routes.nodes(it)) },
                 onKubeNodes = { nav.navigate(Routes.kubeNodes(it)) },
+                onKubeNode = { nav.navigate(Routes.kubeNode(it)) },
+                onKubeEvents = { nav.navigate(Routes.KUBE_EVENTS) },
                 onCheckup = { nav.navigate(Routes.CHECKUP) },
                 onApiHealth = { nav.navigate(Routes.API_HEALTH) },
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
@@ -430,9 +441,26 @@ fun Navigation(
                 initialFilter = NodeFilter.entries.firstOrNull { it.name == entry.arguments?.getString("filter") },
                 vm = viewModel(viewModelStoreOwner = home, factory = factory { KubeHomeViewModel(app.talosRepository) }),
                 onBack = { nav.popBackStack() },
-                onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
+                onNode = { nav.navigate(Routes.kubeNode(it)) },
             )
         }
+        composable(
+            Routes.KUBE_NODE,
+            arguments = listOf(navArgument("name") { type = NavType.StringType }, navArgument("tab") { type = NavType.IntType; defaultValue = 0 }),
+        ) { entry ->
+            // The Kubernetes home's data and refresh: the home is always below on the stack.
+            val home = remember(entry) { nav.getBackStackEntry(Routes.OVERVIEW) }
+            KubeNodeDetailScreen(
+                name = entry.arguments?.getString("name").orEmpty(),
+                initialTab = entry.arguments?.getInt("tab") ?: 0,
+                vm = viewModel(viewModelStoreOwner = home, factory = factory { KubeHomeViewModel(app.talosRepository) }),
+                onBack = { nav.popBackStack() },
+                onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
+                // The Node object in the resource browser: its YAML, to read and edit.
+                onYaml = { nav.navigate(KubeBrowserRoutes.obj(KubeObjectRef("", "v1", "nodes", "Node", "", it, editable = true))) },
+            )
+        }
+        composable(Routes.KUBE_EVENTS) { KubeEventsScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.NODES, arguments = listOf(navArgument("filter") { type = NavType.StringType; defaultValue = "" })) { entry ->
             // The overview's data and refresh: only ever opened from it, so it is below on the stack.
             val home = remember(entry) { nav.getBackStackEntry(Routes.OVERVIEW) }
@@ -679,6 +707,7 @@ fun Navigation(
                 onBack = { nav.popBackStack() },
                 // A pod's node, on its Pods tab.
                 onNode = { addr, host, role -> nav.navigate(Routes.node(addr, host, role, tab = 4)) },
+                onKubeNode = { nav.navigate(Routes.kubeNode(it, tab = KUBE_NODE_PODS_TAB)) },
                 onArgoCD = { nav.navigate(Routes.ARGO_CD) },
                 onArgoApp = { ns, name -> nav.navigate(Routes.argoApp(ns, name)) },
                 onFlux = { nav.navigate(Routes.FLUX) },
@@ -720,7 +749,11 @@ fun Navigation(
             }
         }
         composable(Routes.NETWORK_POLICIES) { NetworkPoliciesScreen(onBack = { nav.popBackStack() }) }
-        composable(Routes.API_HEALTH) { ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = { nav.navigate(Routes.AUDIT) }) }
+        composable(Routes.API_HEALTH) {
+            // The audit log is read through the Talos API: not on a cluster added from a kubeconfig.
+            val kube = app.configRepository.config.value?.activeIsKube == true
+            ApiHealthScreen(onBack = { nav.popBackStack() }, onAudit = if (kube) null else ({ nav.navigate(Routes.AUDIT) }))
+        }
         composable(Routes.AUDIT) { AuditScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.CHECKUP) { CheckupScreen(onBack = { nav.popBackStack() }, onOpenRelease = { ns, name -> nav.navigate(KubeBrowserRoutes.helmRelease(ns, name)) }) }
         composable(
@@ -765,6 +798,8 @@ fun Navigation(
                 name = entry.arguments?.getString("name").orEmpty(),
                 onBack = { nav.popBackStack() },
                 onNode = { n, tab -> nav.navigate(Routes.node(n.node, n.hostname, n.role, tab)) },
+                // Without Talos the graph's nodes open the Kubernetes node's screen.
+                onKubeNode = if (app.configRepository.config.value?.activeIsKube == true) ({ nav.navigate(Routes.kubeNode(it)) }) else null,
                 onWindows = { nav.navigate(Routes.ARGO_WINDOWS) },
             )
         }
@@ -899,17 +934,24 @@ private fun NavHostController.openNodeAction(n: NodeOverview, action: NodeAction
 /**
  * The route a share link opens over the overview; null for the overview itself. A node only
  * when it is one of the cluster's (with its role, for the control-plane warnings): a link
- * cannot point the app's Talos calls at another address. A Talos screen on a cluster added
- * from a kubeconfig (another phone's context of the same name) stays on its home.
+ * cannot point the app's Talos calls at another address. On a cluster added from a kubeconfig
+ * (another phone's context of the same cluster) a node opens its Kubernetes screen, by the
+ * name or the address the link carries, and a Talos screen stays on its home.
  */
 private suspend fun ShareTarget.route(app: TalosApp): String? = when (target) {
     ShareTarget.ETCD -> Routes.ETCD.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.HEALTH -> Routes.HEALTH.takeUnless { app.configRepository.config.value?.activeIsKube == true }
     ShareTarget.ARGO_CD -> Routes.ARGO_CD
     ShareTarget.FLUX -> Routes.FLUX
-    ShareTarget.NODE -> runCatching { app.talosRepository.overview() }.getOrNull()?.nodes
-        ?.firstOrNull { n -> addr.isNotEmpty() && n.node == addr || host.isNotEmpty() && n.hostname == host }
-        ?.let { n -> Routes.node(n.node, n.hostname, n.role, nodeTab) }
+    ShareTarget.NODE -> if (app.configRepository.config.value?.activeIsKube == true) {
+        runCatching { app.talosRepository.kubeNodes() }.getOrNull()?.nodes
+            ?.firstOrNull { n -> host.isNotEmpty() && n.name == host || addr.isNotEmpty() && n.internalIP == addr }
+            ?.let { n -> Routes.kubeNode(n.name, if (tab == "kube-pods" || tab == "pods") KUBE_NODE_PODS_TAB else 0) }
+    } else {
+        runCatching { app.talosRepository.overview() }.getOrNull()?.nodes
+            ?.firstOrNull { n -> addr.isNotEmpty() && n.node == addr || host.isNotEmpty() && n.hostname == host }
+            ?.let { n -> Routes.node(n.node, n.hostname, n.role, nodeTab) }
+    }
     ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name)
     ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name)
     else -> kubeFocus?.let { Routes.workloads(it) }

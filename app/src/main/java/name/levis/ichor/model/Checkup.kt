@@ -212,6 +212,10 @@ data class KubeEvent(
 )
 
 @Serializable
-data class KubeEventList(val events: List<KubeEvent> = emptyList())
+data class KubeEventList(
+    val events: List<KubeEvent> = emptyList(),
+    /** The credentials may not list events cluster-wide (a namespaced ServiceAccount). */
+    val forbidden: Boolean = false,
+)
 
 val KubeEvent.isWarning: Boolean get() = type != "Normal"

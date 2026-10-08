@@ -55,6 +55,8 @@ import name.levis.ichor.model.KubeCronJobPage
 import name.levis.ichor.model.KubeWorkloadPage
 import name.levis.ichor.model.KubeNamespaces
 import name.levis.ichor.model.KubeNodesOverview
+import name.levis.ichor.model.downHostnames
+import name.levis.ichor.model.notReadyNames
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.KUBE_PAGE_SIZE
 import name.levis.ichor.model.KubeRoute
@@ -381,9 +383,21 @@ class TalosRepository(
      */
     suspend fun kubeconfig(): String {
         val stored = configs.forCall()
-        if (stored.activeIsKube) return withContext(Dispatchers.IO) { Ichorgo.exportKubeContext(stored.kubeYaml, stored.activeContext) }
+        if (stored.activeIsKube) {
+            val server = kubeServers.serverFor(stored)
+            return withContext(Dispatchers.IO) { Ichorgo.exportKubeContextFor(stored.kubeYaml, stored.activeContext, server) }
+        }
         return talosKubeCall { cfg, ctx, server -> Ichorgo.kubeconfig(cfg, ctx, server) }
     }
+
+    /**
+     * The nodes the home last saw down, by the name the Kubernetes screens show: the Talos
+     * overview's hostnames, or on a cluster added from a kubeconfig the Kubernetes node names.
+     * The likely cause of an app's or a data service's problems; empty before the home loaded.
+     */
+    fun downNodeNames(): Set<String> =
+        if (configs.config.value?.activeIsKube == true) cached<KubeNodesOverview>(KUBE_NODES)?.value?.notReadyNames().orEmpty()
+        else cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
 
     /** The cluster's nodes as Kubernetes lists them: the home of a cluster added from a kubeconfig. */
     suspend fun kubeNodes(): KubeNodesOverview = remember(KUBE_NODES) {
@@ -609,6 +623,15 @@ class TalosRepository(
     }
 
     /**
+     * The events of every namespace and of the nodes, newest first (os:admin), the Warning ones
+     * only with [warningsOnly]: the Kubernetes counterpart of the Talos events. Credentials that
+     * may not list them cluster-wide get [KubeEventList.forbidden] rather than an error.
+     */
+    suspend fun kubeClusterEvents(warningsOnly: Boolean): KubeEventList = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeEventList.serializer(), Ichorgo.kubeClusterEvents(cfg, ctx, server, warningsOnly, 0))
+    }
+
+    /**
      * Who loads the Kubernetes API server over the last [minutes], from the control planes'
      * audit logs read through the Talos API (os:admin): tens of MB, never cached.
      */
@@ -772,9 +795,16 @@ class TalosRepository(
         call { cfg, ctx -> TalosJson.decodeFromString(ListSerializer(ImageInfo.serializer()), Ichorgo.nodeImages(cfg, ctx, node)) }
     }
 
-    /** The apps running in the cluster. One container listing per node: on demand, never polled. */
+    /**
+     * The apps running in the cluster. One container listing per Talos node, or on a cluster
+     * added from a kubeconfig the Kubernetes pod list: on demand, never polled.
+     */
     suspend fun inventory(): Inventory = remember(INVENTORY) {
-        call { cfg, ctx -> TalosJson.decodeFromString(Inventory.serializer(), Ichorgo.clusterInventory(cfg, ctx)) }
+        if (configs.forCall().activeIsKube) {
+            kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(Inventory.serializer(), Ichorgo.kubeInventory(cfg, ctx, server)) }
+        } else {
+            call { cfg, ctx -> TalosJson.decodeFromString(Inventory.serializer(), Ichorgo.clusterInventory(cfg, ctx)) }
+        }
     }
 
     /**

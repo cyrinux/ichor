@@ -37,6 +37,7 @@ enum class OverviewCard : HomeCard {
  */
 enum class KubeHomeCard : HomeCard {
     SUMMARY,
+    APPS,
     NODES,
     TOOLS,
     DATA_SERVICES,

@@ -3378,4 +3378,27 @@
     <string name="omni_field_url">URL Omni (https://…omni.siderolabs.io)</string>
     <string name="omni_field_email">Email облікового запису</string>
     <string name="omni_mode_account">Обліковий запис</string>
+    <string name="kube_node_tab_details">Деталі</string>
+    <string name="kube_node_yaml">YAML</string>
+    <string name="kube_node_gone">Цей вузол більше не вказано.</string>
+    <string name="kube_node_roles">Ролі</string>
+    <string name="kube_node_no_role">Без мітки ролі</string>
+    <string name="kube_node_internal_ip">Внутрішня IP-адреса</string>
+    <string name="kube_node_external_ip">Зовнішня IP-адреса</string>
+    <string name="kube_node_created">Створено</string>
+    <string name="kube_node_software">Програмне забезпечення</string>
+    <string name="kube_node_kubelet">Kubelet</string>
+    <string name="kube_node_os_image">Образ ОС</string>
+    <string name="kube_node_kernel">Ядро</string>
+    <string name="kube_node_runtime">Середовище виконання контейнерів</string>
+    <string name="kube_node_arch">Архітектура</string>
+    <string name="kube_node_capacity">Ресурси</string>
+    <string name="kube_node_pod_limit">Ліміт подів</string>
+    <string name="kube_node_cloud">Хмара</string>
+    <string name="kube_node_pool">Пул вузлів</string>
+    <string name="kube_node_instance_type">Тип машини</string>
+    <string name="kube_node_capacity_type">Тип потужності</string>
+    <string name="audit_talos_only">Журнал аудиту читається через Talos API: цей кластер додано з kubeconfig.</string>
+    <string name="kube_events_warnings_only">Лише попередження</string>
+    <string name="kube_events_forbidden">Ці облікові дані не можуть переглядати події всього кластера.</string>
 </resources>

@@ -61,7 +61,8 @@ class ApiHealthViewModel(private val talos: TalosRepository) : LoadingViewModel<
 @Composable
 fun ApiHealthScreen(
     onBack: () -> Unit,
-    onAudit: () -> Unit,
+    /** The audit screen; null on a cluster added from a kubeconfig, whose audit log Talos would read. */
+    onAudit: (() -> Unit)?,
     vm: ApiHealthViewModel = viewModel(factory = factory { ApiHealthViewModel(app.talosRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -85,14 +86,18 @@ fun ApiHealthScreen(
 }
 
 @Composable
-private fun ApiHealthList(report: ApiHealthReport, onAudit: () -> Unit) {
+private fun ApiHealthList(report: ApiHealthReport, onAudit: (() -> Unit)?) {
     LazyColumn(Modifier.fillMaxSize()) {
         item(key = "verdict") { VerdictHeader(report) }
         // The metrics group clients; the audit log names them, and what they do wrong.
         item(key = "audit") {
-            OutlinedButton(onClick = onAudit, modifier = Modifier.padding(horizontal = 16.dp)) {
-                Icon(Icons.Outlined.PersonSearch, contentDescription = null)
-                Text(stringResource(R.string.audit_open), Modifier.padding(start = 8.dp))
+            if (onAudit != null) {
+                OutlinedButton(onClick = onAudit, modifier = Modifier.padding(horizontal = 16.dp)) {
+                    Icon(Icons.Outlined.PersonSearch, contentDescription = null)
+                    Text(stringResource(R.string.audit_open), Modifier.padding(start = 8.dp))
+                }
+            } else {
+                MutedText(stringResource(R.string.audit_talos_only), modifier = Modifier.padding(horizontal = 16.dp))
             }
         }
         if (report.metricsError.isNotEmpty()) {

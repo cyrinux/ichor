@@ -58,6 +58,8 @@ fun ArgoNetworkSection(
     downNodes: Set<String>,
     talosNodes: List<NodeOverview>,
     onNode: ((NodeOverview, Int) -> Unit)?,
+    /** A node's screen by its Kubernetes name, on a cluster added from a kubeconfig; null elsewhere. */
+    onKubeNode: ((String) -> Unit)? = null,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: ArgoNetworkViewModel = viewModel(key = "argo-network/${app.key}", factory = factory { ArgoNetworkViewModel(talos.talosRepository) })
@@ -72,7 +74,7 @@ fun ArgoNetworkSection(
             is UiState.Failed -> MutedText(stringResource(R.string.argo_net_failed, s.message.asString()))
             is UiState.Loaded -> {
                 val network = remember(s.data, downNodes) { s.data.withDownNodes(downNodes) }
-                NetworkBody(app, network, talosNodes, onNode, vm)
+                NetworkBody(app, network, talosNodes, onNode, onKubeNode, vm)
             }
         }
     }
@@ -84,6 +86,7 @@ private fun NetworkBody(
     network: ArgoNetwork,
     talosNodes: List<NodeOverview>,
     onNode: ((NodeOverview, Int) -> Unit)?,
+    onKubeNode: ((String) -> Unit)?,
     vm: ArgoNetworkViewModel,
 ) {
     if (network.takesNoTraffic) {
@@ -106,6 +109,7 @@ private fun NetworkBody(
         val actions = ArgoNetActions(
             node = hostname?.let { h -> talosNodes.firstOrNull { it.hostname == h } },
             onNode = onNode,
+            onKubeNode = onKubeNode,
             onDeletePod = if (shown.canDelete && "${shown.namespace}/${shown.name}" !in inFlight) ({ deleting = shown }) else null,
         )
         ArgoNetDetails(shown, podNode, actions, onClose = { selected = null })

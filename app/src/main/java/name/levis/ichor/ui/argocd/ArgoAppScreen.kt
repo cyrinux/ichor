@@ -68,7 +68,6 @@ import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
@@ -87,6 +86,8 @@ fun ArgoAppScreen(
     name: String,
     onBack: () -> Unit,
     onNode: ((NodeOverview, Int) -> Unit)? = null,
+    /** A node's screen by its Kubernetes name (a cluster added from a kubeconfig); null elsewhere. */
+    onKubeNode: ((String) -> Unit)? = null,
     onWindows: (() -> Unit)? = null,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
@@ -128,8 +129,9 @@ fun ArgoAppScreen(
                         EmptyText(stringResource(R.string.argo_app_gone, name))
                     } else {
                         val overview = remember(s.data) { talos.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value }
-                        val downNodes = remember(overview) { overview?.downHostnames().orEmpty() }
-                        val network = NetworkContext(s.fetchedAt, downNodes, overview?.nodes.orEmpty(), onNode)
+                        // The nodes the home last saw down, Talos or Kubernetes: the likely cause.
+                        val downNodes = remember(s.data) { talos.talosRepository.downNodeNames() }
+                        val network = NetworkContext(s.fetchedAt, downNodes, overview?.nodes.orEmpty(), onNode, onKubeNode)
                         val project = s.data.projectOf(app)
                         val freeze = FreezeContext(s.data, project, vm.freezeBusy(busy, project), onWindows)
                         AppDetail(app, downNodes, app.key in busy, vm, network, freeze)
@@ -250,7 +252,7 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
         if (app.conditions.isNotEmpty()) item(key = "conditions") { ConditionBanners(app.conditions) }
         app.operation?.let { op -> item(key = "operation") { ArgoOperationCard(app, op, busy) { terminate = true } } }
         item(key = "network") {
-            ArgoNetworkSection(app, network.fetchedAt, network.downNodes, network.talosNodes, network.onNode)
+            ArgoNetworkSection(app, network.fetchedAt, network.downNodes, network.talosNodes, network.onNode, network.onKubeNode)
         }
         if (app.unhealthyPods.isNotEmpty()) {
             item(key = "pods-title") { SectionTitle(stringResource(R.string.argo_unhealthy_pods)) }
@@ -291,6 +293,7 @@ private data class NetworkContext(
     val downNodes: Set<String>,
     val talosNodes: List<NodeOverview>,
     val onNode: ((NodeOverview, Int) -> Unit)?,
+    val onKubeNode: ((String) -> Unit)?,
 )
 
 private fun LazyListScope.history(app: ArgoApp, onRollback: (ArgoHistory) -> Unit) {

@@ -115,7 +115,7 @@ import name.levis.ichor.ui.flux.FluxViewModel
 import name.levis.ichor.model.inventoryBadges
 import name.levis.ichor.ui.argocd.ArgoViewModel
 import name.levis.ichor.ui.dataservices.DataServicesViewModel
-import name.levis.ichor.ui.dataservices.downHostnames
+import name.levis.ichor.model.downHostnames
 import name.levis.ichor.ui.components.pageContent
 
 class OverviewViewModel(
@@ -155,6 +155,10 @@ fun OverviewScreen(
     onAllNodes: (NodeFilter?) -> Unit,
     /** The Kubernetes nodes screen of a cluster added from a kubeconfig, on one filter (null: all). */
     onKubeNodes: (NodeFilter?) -> Unit,
+    /** A node of a cluster added from a kubeconfig, by its Kubernetes name. */
+    onKubeNode: (name: String) -> Unit,
+    /** The Kubernetes events of a cluster added from a kubeconfig. */
+    onKubeEvents: () -> Unit,
     onCheckup: () -> Unit,
     onApiHealth: () -> Unit,
     onNetworkPolicies: () -> Unit,
@@ -193,6 +197,10 @@ fun OverviewScreen(
                 onHelm = onHelm,
                 onDrain = onDrain,
                 onAllNodes = onKubeNodes,
+                onNode = onKubeNode,
+                onEvents = onKubeEvents,
+                onApps = onApps,
+                onDiagnose = onDiagnose,
             ),
         )
         return

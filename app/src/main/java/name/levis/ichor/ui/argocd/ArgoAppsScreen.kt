@@ -46,12 +46,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.monitor.freezeReminderHook
 import name.levis.ichor.TalosApp
-import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoFreezeAction
 import name.levis.ichor.model.ArgoStatus
-import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.FreezeScope
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.BackButton
@@ -61,7 +59,6 @@ import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.components.pageContent
 
@@ -159,9 +156,8 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
             UiState.Loading -> LoadingBox(modifier)
             is UiState.Failed -> ErrorBox(s.message, vm::refresh, modifier)
             is UiState.Loaded -> {
-                val downNodes = remember(s.data) {
-                    app.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value?.downHostnames().orEmpty()
-                }
+                // The nodes the home last saw down, Talos or Kubernetes: the likely cause.
+                val downNodes = remember(s.data) { app.talosRepository.downNodeNames() }
                 Column(modifier.fillMaxSize()) {
                     if (!s.data.installed && s.data.apps.isEmpty()) {
                         EmptyText(stringResource(R.string.argo_not_installed))

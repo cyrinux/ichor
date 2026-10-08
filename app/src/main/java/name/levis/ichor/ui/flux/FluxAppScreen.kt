@@ -47,7 +47,6 @@ import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.ui.dataservices.downHostnames
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.workloads.RestartConfirmDialog
 import name.levis.ichor.ui.workloads.RestartResultToasts
@@ -104,17 +103,26 @@ fun FluxAppScreen(
                 EmptyText(stringResource(R.string.flux_app_gone, name))
             } else {
                 val overview = remember(data) { talos.talosRepository.cached<ClusterOverview>(OVERVIEW)?.value }
-                AppDetail(app, app.key in busy, vm, overview, onNode, onDiff)
+                // The nodes the home last saw down, Talos or Kubernetes: the likely cause.
+                val downNodes = remember(data) { talos.talosRepository.downNodeNames() }
+                AppDetail(app, app.key in busy, vm, overview, downNodes, onNode, onDiff)
             }
         }
     }
 }
 
 @Composable
-private fun AppDetail(app: FluxApp, busy: Boolean, vm: FluxViewModel, overview: ClusterOverview?, onNode: ((NodeOverview, Int) -> Unit)?, onDiff: (() -> Unit)?) {
+private fun AppDetail(
+    app: FluxApp,
+    busy: Boolean,
+    vm: FluxViewModel,
+    overview: ClusterOverview?,
+    downNodes: Set<String>,
+    onNode: ((NodeOverview, Int) -> Unit)?,
+    onDiff: (() -> Unit)?,
+) {
     var confirm by remember { mutableStateOf<FluxConfirm?>(null) }
     var restart by remember { mutableStateOf<KubeWorkload?>(null) }
-    val downNodes = remember(overview) { overview?.downHostnames().orEmpty() }
     val nodesByName = remember(overview) { overview?.nodes.orEmpty().associateBy { it.hostname } }
 
     confirm?.let { c ->

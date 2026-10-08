@@ -8,9 +8,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -41,18 +45,21 @@ import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.DataServices
 import name.levis.ichor.model.FluxStatus
+import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.KubeHomeCard
 import name.levis.ichor.model.KubeHomeLayout
 import name.levis.ichor.model.KubeNodeInfo
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.NodeFilter
 import name.levis.ichor.model.detected
+import name.levis.ichor.model.inventoryBadges
 import name.levis.ichor.model.notReadyNames
 import name.levis.ichor.monitor.freezeReminderHook
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.apps.AppsViewModel
 import name.levis.ichor.ui.argocd.ArgoViewModel
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.LoadingBox
@@ -99,21 +106,31 @@ class KubeHomeNavigation(
     val onDrain: (node: String) -> Unit,
     /** The Kubernetes nodes screen of a large cluster, on one filter (null: all). */
     val onAllNodes: (NodeFilter?) -> Unit,
+    /** A node's screen, by its Kubernetes name. */
+    val onNode: (name: String) -> Unit,
+    /** The cluster's Kubernetes events. */
+    val onEvents: () -> Unit,
+    /** The apps running in the cluster, from its pods; [attention] opens the "needs attention" chip. */
+    val onApps: (attention: Boolean) -> Unit,
+    /** The AI diagnosis (optional, see the settings). */
+    val onDiagnose: () -> Unit,
 )
 
 /**
  * The home of a cluster added from a kubeconfig, in place of the Talos overview: the API
- * server and who the credentials are, the nodes as Kubernetes lists them, the Kubernetes
- * screens, and Argo CD, Flux and the data services (Longhorn, CloudNativePG...) when installed.
- * No Talos card or action: there is no Talos API; a node can still be cordoned and drained
- * through Kubernetes. The cards and the app bar are arranged like the overview's (a long press
- * on a card, or the menu), in a layout of their own.
+ * server and who the credentials are, the apps from the pod list, the nodes as Kubernetes
+ * lists them (each with a screen of its own), the Kubernetes screens, and Argo CD, Flux and
+ * the data services (Longhorn, CloudNativePG...) when installed. No Talos card or action:
+ * there is no Talos API; a node can still be cordoned and drained through Kubernetes. The
+ * cards and the app bar are arranged like the overview's (a long press on a card, or the
+ * menu), in a layout of their own.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KubeHomeScreen(
     nav: KubeHomeNavigation,
     vm: KubeHomeViewModel = viewModel(factory = factory { KubeHomeViewModel(app.talosRepository) }),
+    appsVm: AppsViewModel = viewModel(key = "overview-apps", factory = factory { AppsViewModel(app.talosRepository) }),
     argoVm: ArgoViewModel = viewModel(key = "overview-argocd", factory = factory { ArgoViewModel(app.talosRepository, freezeReminderHook(app)) }),
     fluxVm: FluxViewModel = viewModel(key = "overview-flux", factory = factory { FluxViewModel(app.talosRepository) }),
     dataVm: DataServicesViewModel = viewModel(key = "overview-data-services", factory = factory { DataServicesViewModel(app.talosRepository) }),
@@ -128,8 +145,8 @@ fun KubeHomeScreen(
     var showClusters by remember { mutableStateOf(false) }
     var clusterMenu by remember { mutableStateOf(false) }
     var signingIn by remember { mutableStateOf(false) }
-    var nodeMenu by remember { mutableStateOf<KubeNodeInfo?>(null) }
     val snackbar = remember { SnackbarHostState() }
+    val ai by app.aiPreferences.settings.collectAsStateWithLifecycle()
     // Long-press a card to arrange them: order, hide, show again; the app bar's actions too.
     val layout by app.uiPreferences.kubeHomeLayout.collectAsStateWithLifecycle()
     val bar by app.uiPreferences.kubeHomeBar.collectAsStateWithLifecycle()
@@ -149,10 +166,12 @@ fun KubeHomeScreen(
     // which has none, from a listing of the pods).
     val gitopsKey = listOf(config?.activeContext, generation, invalidations)
     LaunchedEffect(gitopsKey) {
+        appsVm.load(gitopsKey)
         argoVm.load(gitopsKey)
         fluxVm.load(gitopsKey)
         dataVm.load(gitopsKey, hints = "")
     }
+    val apps by appsVm.state.collectAsStateWithLifecycle()
     val argo by argoVm.state.collectAsStateWithLifecycle()
     val flux by fluxVm.state.collectAsStateWithLifecycle()
     val dataServices by dataVm.state.collectAsStateWithLifecycle()
@@ -169,6 +188,14 @@ fun KubeHomeScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = { DataFreshness(state) },
+        // The AI diagnosis is optional: no trace of it unless it was turned on in Settings.
+        floatingActionButton = {
+            if (ai.enabled && !customizing) {
+                SmallFloatingActionButton(onClick = nav.onDiagnose) {
+                    Icon(Icons.Outlined.AutoAwesome, stringResource(R.string.ai_title))
+                }
+            }
+        },
         topBar = {
             if (customizing) TopAppBar(
                 title = { Text(stringResource(R.string.kube_home_edit_title)) },
@@ -207,6 +234,7 @@ fun KubeHomeScreen(
         }
         val refresh = {
             vm.refresh()
+            appsVm.refresh()
             argoVm.refresh()
             fluxVm.refresh()
             dataVm.refresh()
@@ -241,10 +269,11 @@ fun KubeHomeScreen(
                     signIn = kubeSignInBanner(signIn, (s as? UiState.Failed)?.message ?: (s as? UiState.Loaded)?.error),
                     onSignIn = { signingIn = true },
                     onRetry = vm::refresh,
+                    apps = apps,
                     argo = argoShown,
                     flux = fluxShown,
                     dataServices = dataShown,
-                    onNode = { nodeMenu = it },
+                    onNode = { nav.onNode(it.name) },
                     nav = nav,
                     layout = layout,
                     onCustomize = customize,
@@ -252,7 +281,6 @@ fun KubeHomeScreen(
             }
         }
     }
-    KubeNodeActionSheets(nodeMenu, snackbar, onClose = { nodeMenu = null }, onDrain = nav.onDrain, onCordoned = vm::refresh)
 }
 
 @Composable
@@ -264,6 +292,7 @@ private fun KubeHomeList(
     signIn: KubeSignInBanner?,
     onSignIn: () -> Unit,
     onRetry: () -> Unit,
+    apps: UiState<Inventory>,
     argo: UiState<ArgoStatus>?,
     flux: UiState<FluxStatus>?,
     dataServices: UiState<DataServices>?,
@@ -290,6 +319,13 @@ private fun KubeHomeList(
             when (card) {
                 KubeHomeCard.SUMMARY -> if (cluster != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) { KubeSummaryCard(name ?: cluster.name, cluster, nodes) }
+                }
+                KubeHomeCard.APPS -> item(key = card.name) {
+                    // Argo CD's badges on the tiles, once both answered.
+                    val argoData = (argo as? UiState.Loaded)?.data
+                    val inventory = (apps as? UiState.Loaded)?.data
+                    val badges = remember(argoData, inventory) { if (argoData != null && inventory != null) argoData.inventoryBadges(inventory.apps) else emptyMap() }
+                    Box(Modifier.longPressToCustomize(onCustomize)) { AppsCard(apps, onOpen = { nav.onApps(false) }, argoBadges = badges, onAttention = { nav.onApps(true) }) }
                 }
                 KubeHomeCard.NODES -> if (nodes != null) item(key = card.name) {
                     Box(Modifier.longPressToCustomize(onCustomize)) { KubeNodesCard(nodes, onNode, nav.onAllNodes) }

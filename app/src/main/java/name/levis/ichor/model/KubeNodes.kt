@@ -54,3 +54,7 @@ val KubeNodesOverview.readyCount: Int get() = nodes.count { it.ready }
 
 /** The names of the nodes that are not ready: the likely cause of a data service's problems. */
 fun KubeNodesOverview.notReadyNames(): Set<String> = nodes.filter { !it.ready }.map { it.name }.toSet()
+
+/** Hostnames of the nodes Talos reports not ready or unreachable: candidates for a likely cause. */
+fun ClusterOverview.downHostnames(): Set<String> =
+    nodes.filter { it.health != NodeHealth.READY }.map { it.hostname }.filter { it.isNotEmpty() }.toSet()

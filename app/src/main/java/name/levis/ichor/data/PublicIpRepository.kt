@@ -47,10 +47,11 @@ class PublicIpRepository(
     suspend fun detect(): PublicIpReport = withContext(Dispatchers.IO) {
         val stored = configs.forCall()
         val fingerprint = stored.activeSummary?.fingerprint.orEmpty()
-        val server = kubeServers.servers.value[fingerprint].orEmpty()
+        // Through the cluster's Kubernetes access when set (K5).
+        val target = kubeServers.targetFor(stored)
         _running.update { it + fingerprint }
         try {
-            val json = Ichorgo.detectPublicIPs(stored.yaml, stored.activeContext, server)
+            val json = Ichorgo.detectPublicIPs(target.yaml, target.context, target.server)
             TalosJson.decodeFromString(PublicIpReport.serializer(), json).also { report ->
                 if (fingerprint.isNotBlank() && !masked()) store { it + (fingerprint to report) }
             }
