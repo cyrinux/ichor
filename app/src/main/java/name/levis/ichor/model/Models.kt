@@ -30,6 +30,8 @@ data class ContextSummary(
     val omni: Boolean = false,
     val identity: String = "",
     val cluster: String = "",
+    /** Where an Omni context's sign-in is kept (shared by an identity's clusters on one instance). */
+    val authKey: String = "",
     /** [KIND_TALOS] (a talosconfig context) or [KIND_KUBE] (added from a kubeconfig, no Talos API). */
     val kind: String = KIND_TALOS,
     // Kubeconfig contexts only (ParseKubeconfig): what the import preview and the home show.
@@ -120,13 +122,13 @@ private val KUBE_FEATURES = setOf(Feature.WORKLOADS, Feature.KUBECONFIG)
 fun ContextSummary.allows(feature: Feature): Boolean = when {
     isKube -> feature in KUBE_FEATURES
     feature == Feature.WORKLOADS && kubeAccess.isNotEmpty() -> true
-    // Omni applies the user's own role to every call; it never lets Talos issue credentials.
+    // Omni applies the user's own role to every call; Kubernetes goes through its kube proxy.
     omni -> feature !in OMNI_UNAVAILABLE
     else -> roles.any { it in feature.roles }
 }
 
-/** What a cluster reached through Omni cannot do: Omni issues its talosconfigs and kubeconfigs. */
-private val OMNI_UNAVAILABLE = setOf(Feature.ISSUE_CONFIG, Feature.KUBECONFIG, Feature.WORKLOADS)
+/** What a cluster reached through Omni cannot do: Omni issues its talosconfigs, not Talos. */
+private val OMNI_UNAVAILABLE = setOf(Feature.ISSUE_CONFIG)
 
 /** Short access level for the UI: "admin", "operator" or "read-only"; "Kubernetes" for a kubeconfig cluster. */
 val ContextSummary.accessLabel: Int

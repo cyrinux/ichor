@@ -243,7 +243,15 @@ public func keepKubeAccess(_ links: [String: String], talos: [String], kube: [St
 /// The clusters whose states the auth store keeps (keyed by fingerprint): every cluster added
 /// from a kubeconfig, and the Talos clusters reached through Omni (their keys).
 public func authStoreFingerprints(talos: [ContextSummary], kube: [ContextSummary]) -> [String] {
-    kube.map(\.fingerprint) + talos.filter { $0.omni && !$0.isKube }.map(\.fingerprint)
+    var keys = kube.map(\.fingerprint)
+    // An Omni sign-in is kept per identity and instance (authKey); older cores kept it under
+    // the context's fingerprint, which the core moves to the auth key on first use.
+    for context in talos where context.omni && !context.isKube {
+        keys.append(context.fingerprint)
+        if let authKey = context.authKey { keys.append(authKey) }
+    }
+    var seen = Set<String>()
+    return keys.filter { !$0.isEmpty && seen.insert($0).inserted }
 }
 
 public extension ContextSummary {

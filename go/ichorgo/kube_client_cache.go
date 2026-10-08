@@ -117,6 +117,19 @@ func (c *kubeClientCache) forget(target kubeTarget, k *kubeClient) {
 	}
 }
 
+// forgetWhere drops every client whose target matches.
+func (c *kubeClientCache) forgetWhere(match func(kubeTarget) bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for key, entry := range c.entries {
+		if match(entry.target) {
+			delete(c.entries, key)
+			entry.client.close()
+		}
+	}
+}
+
 // forgetConfig drops every client of the context (any API server address): its credentials
 // changed (signed in or out).
 func (c *kubeClientCache) forgetConfig(config, context string) {
@@ -139,15 +152,26 @@ func openKubeClientForContext(target kubeTarget) (*kubeClient, error) {
 		return openStoredKubeClient(target)
 	}
 
-	var endpoints []string
+	var (
+		endpoints []string
+		omni      *kubeClient
+	)
 
 	kubeconfig, err := withSession(target.config, target.context, callTimeout, func(ctx context.Context, s *session) (string, error) {
+		// Through Omni: its kube proxy, with an Omni sign-in (no Talos admin kubeconfig).
+		if s.signing != nil {
+			k, err := omniKubeClient(ctx, s)
+			omni = k
+
+			return "", err
+		}
+
 		endpoints = s.context.Endpoints
 
 		return fetchKubeconfig(ctx, s)
 	})
-	if err != nil {
-		return nil, err
+	if omni != nil || err != nil {
+		return omni, err
 	}
 
 	return openKubeClient(context.Background(), kubeconfig, endpoints, target.server)

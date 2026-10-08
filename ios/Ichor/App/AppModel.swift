@@ -687,7 +687,8 @@ final class AppModel {
         // Sign-ins and Kubernetes access links go with their clusters.
         let kubeFingerprints = newKubeSummary?.contexts.map(\.fingerprint) ?? []
         storeKubeAccess(keepKubeAccess(kubeAccess, talos: newTalosSummary?.contexts.map(\.fingerprint) ?? [], kube: kubeFingerprints))
-        // Omni clusters' keys too: they are kept under their Talos context's fingerprint.
+        // Omni clusters' sign-ins too: under their identity's auth key (and, from older cores,
+        // their Talos context's fingerprint).
         KubeAuthStore.shared.keep(fingerprints: authStoreFingerprints(talos: newTalosSummary?.contexts ?? [],
                                                                       kube: newKubeSummary?.contexts ?? []))
         WakeOnLanStore.shared.keep(fingerprints: newSummary.contexts.map(\.fingerprint))

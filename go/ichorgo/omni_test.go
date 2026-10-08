@@ -31,8 +31,8 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-// omniTalosconfig is a talosconfig like omnictl's, for an invented instance.
-func omniTalosconfig(identity, endpoint, ca string) string {
+// omniTalosconfigYAML is a talosconfig like omnictl's, for an invented instance.
+func omniTalosconfigYAML(identity, endpoint, ca string) string {
 	caLine := ""
 	if ca != "" {
 		caLine = "\n        ca: " + ca
@@ -79,7 +79,7 @@ func testServiceAccountKey(t *testing.T, lifetime time.Duration) (string, *pgp.K
 }
 
 func TestParseConfigOmniContext(t *testing.T) {
-	out, err := ParseConfig(omniTalosconfig(testSAIdentity, testOmniEndpoint, ""))
+	out, err := ParseConfig(omniTalosconfigYAML(testSAIdentity, testOmniEndpoint, ""))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +96,7 @@ func TestParseConfigOmniContext(t *testing.T) {
 }
 
 func TestOmniContextTargetsNoEndpoint(t *testing.T) {
-	_, ctx, err := resolveContext(omniTalosconfig(testUserIdentity, testOmniEndpoint, ""), "")
+	_, ctx, err := resolveContext(omniTalosconfigYAML(testUserIdentity, testOmniEndpoint, ""), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,9 +107,9 @@ func TestOmniContextTargetsNoEndpoint(t *testing.T) {
 }
 
 func TestOmniClusterIdentity(t *testing.T) {
-	_, a, _ := resolveContext(omniTalosconfig(testUserIdentity, testOmniEndpoint, ""), "")
-	_, b, _ := resolveContext(omniTalosconfig(testSAIdentity, testOmniEndpoint, ""), "")
-	_, other, _ := resolveContext(strings.Replace(omniTalosconfig(testUserIdentity, testOmniEndpoint, ""), "cluster: demo", "cluster: prod", 1), "")
+	_, a, _ := resolveContext(omniTalosconfigYAML(testUserIdentity, testOmniEndpoint, ""), "")
+	_, b, _ := resolveContext(omniTalosconfigYAML(testSAIdentity, testOmniEndpoint, ""), "")
+	_, other, _ := resolveContext(strings.Replace(omniTalosconfigYAML(testUserIdentity, testOmniEndpoint, ""), "cluster: demo", "cluster: prod", 1), "")
 
 	if !sameCluster(a, b) || clusterID(a) != clusterID(b) {
 		t.Fatal("two identities on the same Omni cluster are the same cluster")
@@ -129,7 +129,7 @@ func TestTalosSignInInfo(t *testing.T) {
 		{testSAIdentity, "credentials", omniServiceAccountMethod},
 		{testUserIdentity, "browser", omniUserMethod},
 	} {
-		out, err := TalosSignInInfo(omniTalosconfig(tc.identity, testOmniEndpoint, ""), "acme-demo")
+		out, err := TalosSignInInfo(omniTalosconfigYAML(tc.identity, testOmniEndpoint, ""), "acme-demo")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -172,7 +172,7 @@ func TestDecodeServiceAccount(t *testing.T) {
 func TestOmniSessionNeedsSignIn(t *testing.T) {
 	useMemAuthStore(t)
 
-	_, err := openSession(omniTalosconfig(testSAIdentity, testOmniEndpoint, ""), "")
+	_, err := openSession(omniTalosconfigYAML(testSAIdentity, testOmniEndpoint, ""), "")
 
 	var signIn *errSignInRequired
 	if !errors.As(err, &signIn) || !strings.HasPrefix(err.Error(), KubeSignInRequired) {
@@ -183,8 +183,8 @@ func TestOmniSessionNeedsSignIn(t *testing.T) {
 func TestOmniExpiredUserKeyNeedsSignIn(t *testing.T) {
 	useMemAuthStore(t)
 
-	cfg := omniTalosconfig(testUserIdentity, testOmniEndpoint, "")
-	name, ctx, _ := resolveContext(cfg, "")
+	cfg := omniTalosconfigYAML(testUserIdentity, testOmniEndpoint, "")
+	_, ctx, _ := resolveContext(cfg, "")
 
 	key, err := pgp.GenerateKey("ichor", "test", testUserIdentity, time.Second)
 	if err != nil {
@@ -192,11 +192,11 @@ func TestOmniExpiredUserKeyNeedsSignIn(t *testing.T) {
 	}
 
 	armored, _ := key.Armor()
-	kubeAuth.save(contextFingerprint(name, ctx), kubeAuthState{Method: omniUserMethod, Session: map[string]string{omniKeySession: armored}})
+	kubeAuth.save(omniAuthKey(ctx), kubeAuthState{Method: omniUserMethod, Session: map[string]string{omniKeySession: armored}})
 
 	time.Sleep(2 * time.Second)
 
-	if _, err := loadOmniSigner(contextFingerprint(name, ctx), ctx); !strings.HasPrefix(fmt.Sprint(err), KubeSignInRequired) {
+	if _, err := loadOmniSigner(omniAuthKey(ctx), ctx); !strings.HasPrefix(fmt.Sprint(err), KubeSignInRequired) {
 		t.Fatalf("err = %v, want a sign-in request", err)
 	}
 }
@@ -227,10 +227,10 @@ func TestOmniSessionSignsCalls(t *testing.T) {
 
 	encoded, key := testServiceAccountKey(t, time.Hour)
 	endpoint, caB64 := startFakeOmni(t, &fakeOmni{key: key})
-	cfg := omniTalosconfig(testSAIdentity, endpoint, caB64)
+	cfg := omniTalosconfigYAML(testSAIdentity, endpoint, caB64)
 
-	name, ctx, _ := resolveContext(cfg, "")
-	kubeAuth.save(contextFingerprint(name, ctx), kubeAuthState{Method: omniServiceAccountMethod, Secrets: map[string]string{omniServiceAccountField: encoded}})
+	_, ctx, _ := resolveContext(cfg, "")
+	kubeAuth.save(omniAuthKey(ctx), kubeAuthState{Method: omniServiceAccountMethod, Secrets: map[string]string{omniServiceAccountField: encoded}})
 
 	s, err := openSession(cfg, "")
 	if err != nil {
@@ -258,10 +258,10 @@ func TestOmniWrongKeyNeedsSignIn(t *testing.T) {
 	_, serverKey := testServiceAccountKey(t, time.Hour)
 	encoded, _ := testServiceAccountKey(t, time.Hour)
 	endpoint, caB64 := startFakeOmni(t, &fakeOmni{key: serverKey})
-	cfg := omniTalosconfig(testSAIdentity, endpoint, caB64)
+	cfg := omniTalosconfigYAML(testSAIdentity, endpoint, caB64)
 
-	name, ctx, _ := resolveContext(cfg, "")
-	kubeAuth.save(contextFingerprint(name, ctx), kubeAuthState{Method: omniServiceAccountMethod, Secrets: map[string]string{omniServiceAccountField: encoded}})
+	_, ctx, _ := resolveContext(cfg, "")
+	kubeAuth.save(omniAuthKey(ctx), kubeAuthState{Method: omniServiceAccountMethod, Secrets: map[string]string{omniServiceAccountField: encoded}})
 
 	s, err := openSession(cfg, "")
 	if err != nil {
@@ -311,6 +311,14 @@ func TestForgetAuthDropsSessions(t *testing.T) {
 func startFakeOmni(t *testing.T, srv machineapi.MachineServiceServer) (endpoint, caB64 string) {
 	t.Helper()
 
+	return startTLSServer(t, func(s *grpc.Server) { machineapi.RegisterMachineServiceServer(s, srv) })
+}
+
+// startTLSServer serves a gRPC server over TLS on loopback (a certificate for 127.0.0.1);
+// it returns the endpoint and the base64 CA.
+func startTLSServer(t *testing.T, register func(*grpc.Server), opts ...grpc.ServerOption) (endpoint, caB64 string) {
+	t.Helper()
+
 	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		t.Fatal(err)
@@ -350,8 +358,9 @@ func startFakeOmni(t *testing.T, srv machineapi.MachineServiceServer) (endpoint,
 		t.Fatal(err)
 	}
 
-	server := grpc.NewServer(grpc.Creds(credentials.NewTLS(&tls.Config{Certificates: []tls.Certificate{pair}, MinVersion: tls.VersionTLS12})))
-	machineapi.RegisterMachineServiceServer(server, srv)
+	opts = append(opts, grpc.Creds(credentials.NewTLS(&tls.Config{Certificates: []tls.Certificate{pair}, MinVersion: tls.VersionTLS12})))
+	server := grpc.NewServer(opts...)
+	register(server)
 
 	go server.Serve(lis) //nolint:errcheck
 

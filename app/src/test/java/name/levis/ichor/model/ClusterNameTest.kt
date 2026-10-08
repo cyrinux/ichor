@@ -127,7 +127,7 @@ class ClusterNameTest {
     @Test
     fun discoveryProvidersShowTheirCloudLogo() {
         assertEquals(
-            listOf("aws", "google-cloud", "azure", "digital-ocean", "rancher"),
+            listOf("aws", "google-cloud", "azure", "digital-ocean", "rancher", "talos"),
             DiscoveryProvider.entries.map { discoveryLogo(it.id) },
         )
         assertEquals("kubernetes", discoveryLogo("other"))

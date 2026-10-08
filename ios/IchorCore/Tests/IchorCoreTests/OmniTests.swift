@@ -25,14 +25,24 @@ final class OmniTests: XCTestCase {
         XCTAssertNil(ctx.identity)
     }
 
-    func testOmniAllowsAllButIssuingCredentials() {
+    func testOmniAllowsAllButIssuingATalosconfig() {
         let omni = ContextSummary(name: "acme", omni: true)
         XCTAssertTrue(omni.allows(.power))
         XCTAssertTrue(omni.allows(.upgrade))
+        XCTAssertTrue(omni.allows(.kubeconfig))
+        XCTAssertTrue(omni.allows(.workloads))
         XCTAssertFalse(omni.allows(.issueConfig))
-        XCTAssertFalse(omni.allows(.kubeconfig))
-        XCTAssertFalse(omni.allows(.workloads))
-        XCTAssertTrue(omni.allows(.workloads, kubeLinked: true))
+    }
+
+    func testOmniClustersKeepTheirSharedSignIn() {
+        let contexts = [
+            ContextSummary(name: "lab", fingerprint: "t1"),
+            ContextSummary(name: "acme-demo", fingerprint: "o1", omni: true, authKey: "omnikey"),
+            ContextSummary(name: "acme-prod", fingerprint: "o2", omni: true, authKey: "omnikey"),
+            ContextSummary(name: "oidc", kind: ContextKind.kube, fingerprint: "k1"),
+        ]
+        XCTAssertEqual(authStoreFingerprints(talos: contexts.filter { !$0.isKube }, kube: contexts.filter(\.isKube)),
+                       ["k1", "o1", "omnikey", "o2"])
     }
 
     func testServiceAccountKeyIsSecret() {

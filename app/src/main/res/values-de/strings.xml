@@ -3124,4 +3124,9 @@
     <string name="import_form_pick_file">Datei wählen</string>
     <string name="import_form_omni_url">Omni-URL</string>
     <string name="import_form_omni_identity_hint">Die E-Mail deines Omni-Kontos oder die Identität eines Dienstkontos (name@serviceaccount.omni.sidero.dev)</string>
+    <string name="omni_add_title">Cluster aus Sidero Omni hinzufügen</string>
+    <string name="omni_add_body">Melde dich bei deiner Omni-Instanz an: ihre Cluster erscheinen in der Vorschau, bereits angemeldet, Kubernetes inklusive.</string>
+    <string name="omni_field_url">Omni-URL (https://…omni.siderolabs.io)</string>
+    <string name="omni_field_email">E-Mail des Kontos</string>
+    <string name="omni_mode_account">Konto</string>
 </resources>

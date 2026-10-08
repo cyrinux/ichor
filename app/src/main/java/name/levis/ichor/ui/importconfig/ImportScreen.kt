@@ -66,7 +66,7 @@ fun ImportScreen(
     autoStartDemo: Boolean = false,
     incoming: String? = null,
     onIncomingTaken: () -> Unit = {},
-    vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository, app.kubeAuthRepository) }),
+    vm: ImportViewModel = viewModel(factory = factory { ImportViewModel(app.configRepository, app.kubeAuthRepository, onBrowserDone = app::bringToFront) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     // Keep the demo entry visible on first launch; config help is available in the toolbar.
@@ -136,6 +136,7 @@ fun ImportScreen(
                     onCancel = vm::reset,
                 )
                 is ImportState.Discover -> DiscoverCard(s, onDiscover = vm::discover, onCancel = vm::reset)
+                is ImportState.Omni -> OmniCard(s, onAccount = vm::omniAccount, onServiceAccount = vm::omniServiceAccount, onCancel = vm::reset)
                 ImportState.Validating, ImportState.Saved -> Box(Modifier.fillMaxSize(), Alignment.Center) {
                     CircularProgressIndicator()
                 }

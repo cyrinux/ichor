@@ -3128,4 +3128,9 @@
     <string name="import_form_pick_file">Pick file</string>
     <string name="import_form_omni_url">Omni URL</string>
     <string name="import_form_omni_identity_hint">Your Omni account email, or a service account\'s identity (name@serviceaccount.omni.sidero.dev)</string>
+    <string name="omni_add_title">Add clusters from Sidero Omni</string>
+    <string name="omni_add_body">Sign in to your Omni instance: its clusters show in the preview, already signed in, Kubernetes included.</string>
+    <string name="omni_field_url">Omni URL (https://…omni.siderolabs.io)</string>
+    <string name="omni_field_email">Account email</string>
+    <string name="omni_mode_account">Account</string>
 </resources>

@@ -1,6 +1,9 @@
 // Command probe exercises the ichorgo API against a real cluster from the desktop.
 //
-//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] COMMAND [ARGS]
+//	go run ./cmd/probe [-config ~/.talos/config] [-context name] [-kube-server URL] [-mask [-mask-words a,b]] [-omni-browser] COMMAND [ARGS]
+//
+// An Omni context signs in with OMNI_SERVICE_ACCOUNT_KEY from the environment, or in the
+// browser with -omni-browser.
 //
 // Without a command it lists them all (see commands.go and the cmd_*.go files).
 package main
@@ -80,6 +83,7 @@ func main() {
 	mask := flag.Bool("mask", false, "screenshot mode: mask IPs, hostnames, domains and context names")
 	maskWords := flag.String("mask-words", "", "with -mask: comma-separated extra words to hide")
 	ageRecipient := flag.String("age-recipient", "", "snapshot-probe: encrypt for this age or SSH public key")
+	omniBrowser := flag.Bool("omni-browser", false, "an Omni account context: confirm a new key in the browser first (a service account reads OMNI_SERVICE_ACCOUNT_KEY)")
 	flag.Parse()
 
 	if flag.NArg() == 0 {
@@ -92,6 +96,10 @@ func main() {
 	}
 
 	cfg := string(raw)
+
+	if err := omniSignIn(cfg, *contextName, *omniBrowser); err != nil {
+		fail(fmt.Errorf("omni sign-in: %w", err))
+	}
 
 	if *mask {
 		ichorgo.SetPrivacyMask(true, *maskWords)
