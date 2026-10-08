@@ -88,6 +88,9 @@ func (m *azureSPNMethod) fieldSets() [][]string {
 	return [][]string{{azureFieldClientID, azureFieldClientSecret}}
 }
 
+// rememberedFields: the client ID is shown again when the secret was rotated; the secret is not.
+func (m *azureSPNMethod) rememberedFields() []string { return []string{azureFieldClientID} }
+
 func (m *azureSPNMethod) fromSecrets(s map[string]string) (kubeAuthState, error) {
 	if s[azureFieldClientSecret] == "" || cmpOr(s[azureFieldClientID], m.clientID) == "" {
 		return kubeAuthState{}, errors.New("enter the service principal's client ID and secret")

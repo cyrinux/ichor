@@ -244,8 +244,13 @@ func TestAzureServicePrincipal(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := KubeSetCredentials(stored, "admin@test", `{"azureClientSecret":"s3cret"}`); err != nil {
+	if err := KubeSetCredentials(stored, "admin@test", `{"azureClientId":"app-1","azureClientSecret":"s3cret"}`); err != nil {
 		t.Fatal(err)
+	}
+
+	// The client ID comes back to fill the form after a rotated secret; the secret never does.
+	if info, _ := KubeSignInInfo(stored, "admin@test"); !strings.Contains(info, `"values":{"azureClientId":"app-1"}`) || strings.Contains(info, "s3cret") {
+		t.Fatalf("info %s", info)
 	}
 
 	if _, err := KubeNodes(stored, "admin@test", ""); err != nil {
