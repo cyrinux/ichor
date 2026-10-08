@@ -25,6 +25,10 @@ type inventory struct {
 	Nodes    int            `json:"nodes"`    // nodes of the context
 	Answered int            `json:"answered"` // nodes whose containers are counted
 	Apps     []inventoryApp `json:"apps"`
+	// Truncated: the Kubernetes pod list was cut (inventoryPodPages), the apps are not all there.
+	Truncated bool `json:"truncated,omitempty"`
+	// Forbidden: the credentials may not list pods cluster-wide, so there is no inventory.
+	Forbidden bool `json:"forbidden,omitempty"`
 }
 
 type inventoryApp struct {
@@ -79,6 +83,8 @@ type nodeContainers struct {
 // ClusterInventory lists the applications running in the cluster: every node's Kubernetes
 // containers, identified from their image (and pod, and namespace) against the bundled catalog
 // (os:reader). Nodes that do not answer in time are left out rather than failing the inventory.
+// A cluster added from a kubeconfig has no Talos API: its inventory comes from the Kubernetes
+// pod list (KubeInventory, with the kubeconfig's own server).
 func ClusterInventory(configYAML, contextName string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -86,6 +92,10 @@ func ClusterInventory(configYAML, contextName string) (out string, err error) {
 
 	if isDemoContext(configYAML, contextName) {
 		return demoRead("ClusterInventory", configYAML, contextName, "")
+	}
+
+	if isKubeconfig(configYAML) {
+		return kubeInventory(kubeTarget{configYAML, contextName, ""})
 	}
 
 	return withSession(configYAML, contextName, inventoryTimeout, func(ctx context.Context, s *session) (string, error) {

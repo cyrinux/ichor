@@ -47,6 +47,9 @@ type diagnosisData struct {
 	EventsNote string
 	// GitOps: Argo CD and Flux, nil without os:admin or when neither runs.
 	GitOps *gitopsState
+	// Kube is the report of a cluster added from a kubeconfig (no Talos API): then the
+	// sections above but GitOps stay empty.
+	Kube *kubeDiagnosis
 
 	// What a mask has to learn to hide the cluster's names in the report.
 	hosts   []hostEntry
@@ -161,6 +164,10 @@ func learnDiagnosisHosts(mask *privacyMask, data diagnosisData) {
 		for _, m := range data.Etcd.Members {
 			mask.learnHost(m.Hostname, "controlplane")
 		}
+	}
+
+	if data.Kube != nil {
+		mask.learnHosts(kubeDiagnosisHosts(data.Kube.Nodes))
 	}
 }
 

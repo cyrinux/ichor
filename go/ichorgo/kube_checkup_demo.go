@@ -136,20 +136,9 @@ func demoCheckupNode(name, role, arch string, cores, memory, cpuRequests, memory
 // demoEvents are the demo cluster's events for an object: the crash-looping worker tells
 // its story, anything else is quiet.
 func demoEvents(namespace, kind, name string, now time.Time) kubeEventList {
-	ago := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
-
-	const pod = "worker-6f4b8-uvwxy"
-
-	all := []kubeEvent{
-		{Type: "Warning", Reason: "BackOff", Message: "Back-off restarting failed container worker in pod " + pod, Kind: "Pod", Namespace: "demo", Name: pod, Count: 212, First: ago(72 * time.Hour), Last: ago(time.Minute), Source: "kubelet"},
-		{Type: "Normal", Reason: "Pulled", Message: `Container image "busybox:1.37" already present on machine`, Kind: "Pod", Namespace: "demo", Name: pod, Count: 15, First: ago(72 * time.Hour), Last: ago(6 * time.Minute), Source: "kubelet"},
-		{Type: "Normal", Reason: "Created", Message: "Created container: worker", Kind: "Pod", Namespace: "demo", Name: pod, Count: 15, First: ago(72 * time.Hour), Last: ago(6 * time.Minute), Source: "kubelet"},
-		{Type: "Normal", Reason: "ScalingReplicaSet", Message: "Scaled up replica set worker-6f4b8 from 0 to 2", Kind: "Deployment", Namespace: "demo", Name: "worker", Count: 1, First: ago(72 * time.Hour), Last: ago(72 * time.Hour), Source: "deployment-controller"},
-	}
-
 	events := []kubeEvent{}
 
-	for _, e := range all {
+	for _, e := range demoEventList(now) {
 		switch {
 		case e.Namespace != namespace:
 		case kind != "" && (e.Kind != kind || e.Name != name):
@@ -160,4 +149,34 @@ func demoEvents(namespace, kind, name string, now time.Time) kubeEventList {
 	}
 
 	return kubeEventList{Events: events}
+}
+
+// demoEventList is every event of the demo cluster: the crash-looping worker's, a pod the
+// cordoned node keeps waiting, and the node's own cordon.
+func demoEventList(now time.Time) []kubeEvent {
+	ago := func(d time.Duration) int64 { return now.Add(-d).UnixMilli() }
+
+	const pod = "worker-6f4b8-uvwxy"
+
+	return []kubeEvent{
+		{Type: "Warning", Reason: "BackOff", Message: "Back-off restarting failed container worker in pod " + pod, Kind: "Pod", Namespace: "demo", Name: pod, Count: 212, First: ago(72 * time.Hour), Last: ago(time.Minute), Source: "kubelet"},
+		{Type: "Normal", Reason: "Pulled", Message: `Container image "busybox:1.37" already present on machine`, Kind: "Pod", Namespace: "demo", Name: pod, Count: 15, First: ago(72 * time.Hour), Last: ago(6 * time.Minute), Source: "kubelet"},
+		{Type: "Normal", Reason: "Created", Message: "Created container: worker", Kind: "Pod", Namespace: "demo", Name: pod, Count: 15, First: ago(72 * time.Hour), Last: ago(6 * time.Minute), Source: "kubelet"},
+		{Type: "Normal", Reason: "ScalingReplicaSet", Message: "Scaled up replica set worker-6f4b8 from 0 to 2", Kind: "Deployment", Namespace: "demo", Name: "worker", Count: 1, First: ago(72 * time.Hour), Last: ago(72 * time.Hour), Source: "deployment-controller"},
+		{Type: "Warning", Reason: "FailedScheduling", Message: "0/5 nodes are available: 1 node(s) were unschedulable, 4 node(s) didn't match Pod's node affinity/selector. preemption: 0/5 nodes are available: 5 Preemption is not helpful for scheduling.", Kind: "Pod", Namespace: "demo", Name: "cache-1", Count: 9, First: ago(40 * time.Minute), Last: ago(3 * time.Minute), Source: "default-scheduler"},
+		{Type: "Normal", Reason: "NodeNotSchedulable", Message: "Node demo-worker-2 status is now: NodeNotSchedulable", Kind: "Node", Namespace: "", Name: "demo-worker-2", Count: 1, First: ago(41 * time.Minute), Last: ago(41 * time.Minute), Source: "kubelet"},
+	}
+}
+
+// demoClusterEvents is demoEventList as KubeClusterEvents shows it.
+func demoClusterEvents(warningsOnly bool, limit int, now time.Time) kubeEventList {
+	events := []kubeEvent{}
+
+	for _, e := range demoEventList(now) {
+		if !warningsOnly || e.Type != "Normal" {
+			events = append(events, e)
+		}
+	}
+
+	return kubeEventList{Events: newestEvents(events, limit)}
 }

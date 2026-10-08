@@ -18,6 +18,10 @@ const (
 )
 
 func renderDiagnosis(d diagnosisData) string {
+	if d.Kube != nil {
+		return finishReport(renderKubeDiagnosis(d))
+	}
+
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "Talos cluster report, collected %s through the Talos API", d.At.UTC().Format("2006-01-02 15:04 MST"))
@@ -39,10 +43,15 @@ func renderDiagnosis(d diagnosisData) string {
 	renderGitOps(&b, d.GitOps)
 	renderEvents(&b, d)
 
-	// Log lines are raw bytes from the nodes: the report must be text all the way to the UI
-	// (an invalid string does not cross to Swift at all).
-	// The tags are neutralized here rather than when sending: what is shown is what is sent.
-	report := neutralizeTags(strings.ToValidUTF8(strings.TrimRight(b.String(), "\n"), "\uFFFD"))
+	return finishReport(b.String())
+}
+
+// finishReport makes text the report the user reads and the model gets. Log lines and event
+// messages are raw bytes from the cluster: the report must be text all the way to the UI (an
+// invalid string does not cross to Swift at all). The tags are neutralized here rather than
+// when sending: what is shown is what is sent.
+func finishReport(text string) string {
+	report := neutralizeTags(strings.ToValidUTF8(strings.TrimRight(text, "\n"), "\uFFFD"))
 	if len(report) > maxReportBytes {
 		report = clipUTF8(report, maxReportBytes) + "\n[The report was cut here: it is too large to send whole.]"
 	}

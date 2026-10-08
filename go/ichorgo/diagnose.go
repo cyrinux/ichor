@@ -45,6 +45,9 @@ type Diagnosis struct {
 	// wrong names (real ones in screenshot mode, or fakes nobody can map back).
 	screenshotMode   bool
 	screenshotResets int
+	// kube: the cluster was added from a kubeconfig, the report comes from the Kubernetes
+	// API alone and the model is told so.
+	kube bool
 }
 
 // CollectDiagnosis reads the state of the cluster (os:reader calls only) into a report.
@@ -54,6 +57,8 @@ type Diagnosis struct {
 //
 // kubeServer is the cluster's Kubernetes API address the user set ("" for the kubeconfig's):
 // with os:admin, the Argo CD and Flux apps that are not fine are added (see collectGitOps).
+// A cluster added from a kubeconfig has no Talos API: its report is what the Kubernetes API
+// says (collectKubeDiagnosis).
 func CollectDiagnosis(configYAML, contextName, kubeServer string, anonymize bool) (d *Diagnosis, err error) {
 	defer maskErr(&err)
 
@@ -62,9 +67,17 @@ func CollectDiagnosis(configYAML, contextName, kubeServer string, anonymize bool
 	d = &Diagnosis{}
 	d.screenshotMode, d.screenshotResets = privacy.state()
 
-	data, err := withSession(configYAML, contextName, diagnosisCollectTimeout, func(ctx context.Context, s *session) (diagnosisData, error) {
-		return collectDiagnosis(ctx, s, kubeTarget{configYAML, contextName, kubeServer}), nil
-	})
+	var data diagnosisData
+
+	if isKubeconfig(configYAML) {
+		d.kube = true
+		data, err = collectKubeDiagnosis(kubeTarget{configYAML, contextName, kubeServer})
+	} else {
+		data, err = withSession(configYAML, contextName, diagnosisCollectTimeout, func(ctx context.Context, s *session) (diagnosisData, error) {
+			return collectDiagnosis(ctx, s, kubeTarget{configYAML, contextName, kubeServer}), nil
+		})
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +118,7 @@ func (d *Diagnosis) Prompt(language, note string) string {
 		return ""
 	}
 
-	return diagnosisSystemPrompt(language, d.mask != nil) + "\n\n" + diagnosisUserMessage(d.report, d.maskNote(note))
+	return diagnosisSystemPrompt(language, d.mask != nil, d.kube) + "\n\n" + diagnosisUserMessage(d.report, d.maskNote(note))
 }
 
 // Ask sends the report and the user's optional note to the model and streams its answer
@@ -136,7 +149,7 @@ func (d *Diagnosis) ask(ctx context.Context, provider, apiKey, model, baseURL, l
 		return err.Error()
 	}
 
-	req.system = diagnosisSystemPrompt(language, d.mask != nil)
+	req.system = diagnosisSystemPrompt(language, d.mask != nil, d.kube)
 	req.user = diagnosisUserMessage(d.report, d.maskNote(note))
 
 	ctx, stop := context.WithCancel(ctx)

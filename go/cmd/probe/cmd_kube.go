@@ -95,16 +95,37 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
-	{name: "kube-events", args: "NAMESPACE [KIND] [NAME]", run: func(e env) (out string, err error) {
-		// kube-events NAMESPACE [KIND] NAME: an object's events; without KIND, NAME's and what it owns.
-		kind, name := flag.Arg(2), flag.Arg(3)
+	{name: "kube-events", args: "NAMESPACE|- [KIND] [NAME]", run: func(e env) (out string, err error) {
+		// kube-events NAMESPACE [KIND] NAME: an object's events; without KIND, NAME's and what it
+		// owns. A cluster-scoped object (Node) takes - for the namespace.
+		namespace, kind, name := flag.Arg(1), flag.Arg(2), flag.Arg(3)
 		if name == "" {
 			kind, name = "", kind
 		}
 
-		out, err = ichorgo.KubeEvents(e.cfg, e.context, e.kubeServer, flag.Arg(1), kind, name)
+		if namespace == "-" {
+			namespace = ""
+		}
+
+		out, err = ichorgo.KubeEvents(e.cfg, e.context, e.kubeServer, namespace, kind, name)
 
 		return out, err
+	}},
+	{name: "kube-cluster-events", args: "[warnings] [LIMIT]", run: func(e env) (out string, err error) {
+		// Every namespace's events, newest first; "warnings" leaves out the Normal ones.
+		warnings, limitArg := flag.Arg(1) == "warnings", flag.Arg(2)
+		if !warnings {
+			limitArg = flag.Arg(1)
+		}
+
+		limit := 0
+		if limitArg != "" {
+			if limit, err = strconv.Atoi(limitArg); err != nil {
+				return "", fmt.Errorf("limit %q is not a number", limitArg)
+			}
+		}
+
+		return ichorgo.KubeClusterEvents(e.cfg, e.context, e.kubeServer, warnings, limit)
 	}},
 	{name: "helm-rollback-plan", args: "NAMESPACE NAME [REVISION]", run: func(e env) (out string, err error) {
 		// helm-rollback-plan NAMESPACE NAME [REVISION]: what a rollback would change, dry-run only.

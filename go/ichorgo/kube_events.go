@@ -41,6 +41,8 @@ type kubeEvent struct {
 
 type kubeEventList struct {
 	Events []kubeEvent `json:"events"`
+	// Forbidden: the credentials may not list events cluster-wide (KubeClusterEvents).
+	Forbidden bool `json:"forbidden,omitempty"`
 }
 
 type eventObject struct {
@@ -110,7 +112,8 @@ func mapEvent(e eventObject) kubeEvent {
 // describe` (os:admin): {"events":[{type,reason,message,kind,namespace,name,count,first,
 // last,source}]}. With a kind ("Pod", "Deployment") it is that object's; with kind "" it is
 // name's and those of what it owns by name (a Deployment's ReplicaSets and pods), and with
-// name "" too every event of the namespace. kubeServer: see KubePods.
+// name "" too every event of the namespace. A cluster-scoped object (kind "Node") takes
+// namespace "" with its kind and name. kubeServer: see KubePods.
 func KubeEvents(configYAML, contextName, kubeServer, namespace, kind, name string) (out string, err error) {
 	defer maskResult(&out, &err)
 
@@ -130,14 +133,17 @@ func KubeEvents(configYAML, contextName, kubeServer, namespace, kind, name strin
 }
 
 // validateEventTarget refuses what cannot name a namespace, a kind or an object: they go
-// into a path and a field selector.
+// into a path and a field selector. No namespace is only for a cluster-scoped object, named
+// by its kind and name.
 func validateEventTarget(namespace, kind, name string) error {
-	if namespace == "" {
-		return errors.New("events need a namespace")
+	if namespace == "" && (kind == "" || name == "") {
+		return errors.New("events need a namespace, or the kind and name of a cluster-scoped object")
 	}
 
-	if err := validateNamespace(namespace); err != nil {
-		return err
+	if namespace != "" {
+		if err := validateNamespace(namespace); err != nil {
+			return err
+		}
 	}
 
 	if strings.ContainsFunc(kind, func(r rune) bool { return !unicode.IsLetter(r) }) {
@@ -152,7 +158,7 @@ func validateEventTarget(namespace, kind, name string) error {
 }
 
 func readEvents(ctx context.Context, k *kubeClient, namespace, kind, name string) (kubeEventList, error) {
-	path := "/api/v1/namespaces/" + url.PathEscape(namespace) + "/events"
+	path := scopedPath("/api/v1", namespace, "events")
 
 	if kind != "" && name != "" {
 		path += "?fieldSelector=" + url.QueryEscape("involvedObject.kind="+kind+",involvedObject.name="+name)
@@ -174,13 +180,84 @@ func readEvents(ctx context.Context, k *kubeClient, namespace, kind, name string
 		events = append(events, e)
 	}
 
-	slices.SortStableFunc(events, func(a, b kubeEvent) int { return cmp.Compare(b.Last, a.Last) })
+	return kubeEventList{Events: newestEvents(events, kubeEventsMax)}, nil
+}
 
-	if len(events) > kubeEventsMax {
-		events = events[:kubeEventsMax]
+// KubeClusterEvents lists the events of every namespace and of the cluster-scoped objects
+// (nodes), newest first, as KubeEvents' JSON (os:admin): the Kubernetes counterpart of the
+// Talos events. warningsOnly leaves out the Normal ones; limit caps the list (0, or more than
+// kubeEventsMax, is kubeEventsMax). Credentials that may not list events cluster-wide get
+// forbidden instead of an error. kubeServer: see KubePods.
+func KubeClusterEvents(configYAML, contextName, kubeServer string, warningsOnly bool, limit int) (out string, err error) {
+	defer maskResult(&out, &err)
+
+	contextName = unmaskContext(configYAML, contextName)
+	limit = clampEventLimit(limit)
+
+	return kubeReadJSON(kubeTarget{configYAML, contextName, kubeServer},
+		func() kubeEventList { return demoClusterEvents(warningsOnly, limit, time.Now()) },
+		func(ctx context.Context, k *kubeClient) (kubeEventList, error) {
+			list, err := readClusterEvents(ctx, k, warningsOnly, limit)
+			learnEventNames(list.Events)
+
+			return list, err
+		})
+}
+
+func clampEventLimit(limit int) int {
+	if limit <= 0 || limit > kubeEventsMax {
+		return kubeEventsMax
 	}
 
-	return kubeEventList{Events: events}, nil
+	return limit
+}
+
+func readClusterEvents(ctx context.Context, k *kubeClient, warningsOnly bool, limit int) (kubeEventList, error) {
+	path := "/api/v1/events"
+	if warningsOnly {
+		path += "?fieldSelector=" + url.QueryEscape("type!=Normal")
+	}
+
+	objs, err := listObjects[eventObject](ctx, k, path)
+	if isForbidden(err) {
+		return kubeEventList{Events: []kubeEvent{}, Forbidden: true}, nil
+	}
+
+	if err != nil {
+		return kubeEventList{}, err
+	}
+
+	events := make([]kubeEvent, 0, len(objs))
+	for _, obj := range objs {
+		events = append(events, mapEvent(obj))
+	}
+
+	return kubeEventList{Events: newestEvents(events, limit)}, nil
+}
+
+// newestEvents sorts events newest first and keeps limit of them.
+func newestEvents(events []kubeEvent, limit int) []kubeEvent {
+	slices.SortStableFunc(events, func(a, b kubeEvent) int { return cmp.Compare(b.Last, a.Last) })
+
+	if len(events) > limit {
+		events = events[:limit]
+	}
+
+	return events
+}
+
+// eventsSince keeps the events last seen at since (Unix ms) or after.
+func eventsSince(events []kubeEvent, since int64) []kubeEvent {
+	return slices.DeleteFunc(slices.Clone(events), func(e kubeEvent) bool { return e.Last < since })
+}
+
+// learnEventNames teaches the mask the namespaces and object names events talk about, which
+// the app may not have seen yet.
+func learnEventNames(events []kubeEvent) {
+	notEmpty := func(names []string) []string { return slices.DeleteFunc(names, func(s string) bool { return s == "" }) }
+
+	privacy.learnNamespaces(notEmpty(namespacesOf(events, func(e kubeEvent) string { return e.Namespace })))
+	privacy.learnNames(notEmpty(namespacesOf(events, func(e kubeEvent) string { return e.Name })))
 }
 
 // checkupEvents groups the Warning events of the last hour by object and reason, the most

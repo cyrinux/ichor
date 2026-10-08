@@ -53,6 +53,8 @@ type containerStatus struct {
 	RestartCount int            `json:"restartCount"`
 	State        containerState `json:"state"`
 	LastState    containerState `json:"lastState"`
+	// ContainerID is the runtime's id ("containerd://3f…"), "" before the container exists.
+	ContainerID string `json:"containerID"`
 }
 
 type podObject struct {

@@ -220,15 +220,22 @@ func TestLatestEvents(t *testing.T) {
 }
 
 func TestDiagnosisPrompt(t *testing.T) {
-	plain := diagnosisSystemPrompt("fr-FR", false)
+	plain := diagnosisSystemPrompt("fr-FR", false, false)
 	if !strings.HasSuffix(plain, "Answer in French; keep commands, service names and log excerpts as they are.") ||
-		strings.Contains(plain, "placeholders (cp-1") {
+		strings.Contains(plain, "placeholders (cp-1") || !strings.Contains(plain, "talosctl") {
 		t.Fatalf("plain prompt:\n%s", plain)
 	}
 
-	if anonymized := diagnosisSystemPrompt("xx", true); !strings.Contains(anonymized, "placeholders (cp-1") ||
+	if anonymized := diagnosisSystemPrompt("xx", true, false); !strings.Contains(anonymized, "placeholders (cp-1") ||
 		!strings.Contains(anonymized, "Answer in English") {
 		t.Fatalf("anonymized prompt:\n%s", anonymized)
+	}
+
+	// A cluster added from a kubeconfig: the Kubernetes API alone, no Talos advice.
+	if kube := diagnosisSystemPrompt("de", true, true); !strings.Contains(kube, "through the Kubernetes API only") ||
+		strings.Contains(kube, "Talos Linux") || !strings.Contains(kube, "Do not suggest talosctl") ||
+		!strings.Contains(kube, "data to analyse") || !strings.Contains(kube, "placeholders (cp-1") || !strings.Contains(kube, "Answer in German") {
+		t.Fatalf("kube prompt:\n%s", kube)
 	}
 
 	if got := diagnosisUserMessage(" report \n", "  "); got != "<report>\nreport\n</report>" {

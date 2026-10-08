@@ -35,12 +35,18 @@ type gitopsState struct {
 	FluxError string `json:"fluxError,omitempty"`
 }
 
-// collectGitOps reads Argo CD and Flux, when the roles allow the Kubernetes API.
+// collectGitOps reads Argo CD and Flux, when the Talos roles allow the Kubernetes API.
 func collectGitOps(ctx context.Context, target kubeTarget, roles []string) *gitopsState {
 	if !slices.Contains(roles, adminRole) {
 		return nil
 	}
 
+	return gitopsStateOf(ctx, target)
+}
+
+// gitopsStateOf reads Argo CD and Flux through the Kubernetes API: nil when neither runs, a
+// Note when they could not be read.
+func gitopsStateOf(ctx context.Context, target kubeTarget) *gitopsState {
 	if isDemoContext(target.config, target.context) {
 		argo, flux := demoArgoCD(time.Now()), demoFlux(time.Now())
 

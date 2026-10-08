@@ -125,6 +125,10 @@ var dataCommands = []command{
 
 		return out, err
 	}},
+	{name: "kube-inventory", args: "", run: func(e env) (out string, err error) {
+		// The apps from the Kubernetes pod list, as a cluster added from a kubeconfig gets them.
+		return ichorgo.KubeInventory(e.cfg, e.context, e.kubeServer)
+	}},
 	{name: "inventory", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.ClusterInventory(e.cfg, e.context)
 
