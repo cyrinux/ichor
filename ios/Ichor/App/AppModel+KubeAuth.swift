@@ -22,6 +22,12 @@ extension AppModel {
     /// The stored clusters added from a kubeconfig.
     var kubeContexts: [ContextSummary] { summary?.contexts.filter(\.isKube) ?? [] }
 
+    /// The clusters whose sign-ins the auth store holds: kubeconfig and Omni clusters.
+    var signInFingerprints: [String] {
+        let contexts = summary?.contexts ?? []
+        return authStoreFingerprints(talos: contexts.filter { !$0.isKube }, kube: contexts.filter(\.isKube))
+    }
+
     /// The stored kubeconfig context the Kubernetes calls of `context` (a Talos cluster) go
     /// through, nil when they use the admin kubeconfig Talos issues.
     func kubeLink(for context: ContextSummary?) -> KubeLink? {
