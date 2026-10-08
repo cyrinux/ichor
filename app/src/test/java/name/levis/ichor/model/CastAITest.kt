@@ -25,10 +25,11 @@ class CastAITest {
     """.trimIndent()
 
     private val services = TalosJson.decodeFromString(DataServices.serializer(), json)
+    private val castai = services.castai!!
 
     @Test
     fun decodesRecommendations() {
-        val c = services.castai!!
+        val c = castai
         assertEquals(3, c.recommendations.size)
         assertEquals(-430L, c.cpuDeltaMilli)
         val api = c.recommendations.last()
@@ -63,6 +64,66 @@ class CastAITest {
         assertEquals("+2", formatMilliCores(2000, signed = true))
         assertEquals("250m", formatMilliCores(250))
         assertEquals("0", formatMilliCores(0, signed = true))
+    }
+
+    @Test
+    fun classifiesChanges() {
+        val (worker, report, api) = castai.recommendations
+        assertEquals(CastAIChange.UNKNOWN, worker.change)
+        // Less CPU but more memory: it grows.
+        assertEquals(CastAIChange.GROW, report.change)
+        assertEquals(CastAIChange.SHRINK, api.change)
+        assertEquals(CastAIChangeCounts(shrink = 1, grow = 1, same = 0, unknown = 1), castai.changeCounts())
+        assertEquals(CastAIMode.DEFERRED to 2, castai.commonMode())
+    }
+
+    @Test
+    fun overviewPutsProblemsThenGrowthThenSavings() {
+        val sections = castai.sections(CastAIView.OVERVIEW)
+        assertEquals(
+            listOf(CastAISectionKind.ATTENTION, CastAISectionKind.GROWS, CastAISectionKind.REDUCTIONS, CastAISectionKind.OTHER),
+            sections.map { it.kind },
+        )
+        assertEquals(listOf("shop/report", "shop/worker"), sections[0].rows.map { it.label })
+        assertEquals(listOf("shop/report"), sections[1].rows.map { it.label })
+        assertEquals(listOf("shop/api"), sections[2].rows.map { it.label })
+        // The filter narrows every section; one left empty is dropped.
+        assertEquals(listOf(CastAISectionKind.REDUCTIONS), castai.sections(CastAIView.OVERVIEW, "API").map { it.kind })
+    }
+
+    @Test
+    fun overviewShowsTheFirstGrowersOnly() {
+        val grower = { i: Int ->
+            CastAIRecommendation(
+                namespace = "ns", name = "w$i", workload = "w$i", cpuDeltaMilli = 100L * i,
+                containers = listOf(CastAIContainer(name = "c", cpu = "1", originalCpu = "500m")),
+            )
+        }
+        val status = CastAIStatus(recommendations = (1..8).map(grower))
+        val grows = status.sections(CastAIView.OVERVIEW).single { it.kind == CastAISectionKind.GROWS }
+        assertEquals(CASTAI_GROWS_PREVIEW, grows.rows.size)
+        assertEquals(3, grows.hidden)
+        // Biggest first.
+        assertEquals("ns/w8", grows.rows.first().label)
+        assertEquals(8, status.sections(CastAIView.GROWS).single().rows.size)
+    }
+
+    @Test
+    fun namespacesCarryTheirTotals() {
+        val two = castai.copy(
+            recommendations = castai.recommendations + CastAIRecommendation(namespace = "ads", name = "x", workload = "x", cpuDeltaMilli = -10),
+        )
+        val sections = two.sections(CastAIView.NAMESPACES)
+        assertEquals(listOf("ads", "shop"), sections.map { it.namespace })
+        assertEquals(-430L, sections[1].cpuDeltaMilli)
+    }
+
+    @Test
+    fun flagsARequestNearItsMemoryLimit() {
+        val near = CastAIRecommendation(containers = listOf(CastAIContainer(memoryLimitPercent = 40), CastAIContainer(memoryLimitPercent = 88)))
+        assertTrue(near.nearMemoryLimit)
+        assertEquals(88, near.memoryLimitPercent)
+        assertTrue(!CastAIRecommendation(containers = listOf(CastAIContainer(memoryLimitPercent = 60))).nearMemoryLimit)
     }
 
     @Test

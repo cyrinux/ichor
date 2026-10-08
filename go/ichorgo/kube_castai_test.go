@@ -62,7 +62,19 @@ func TestMapCastAI(t *testing.T) {
 		t.Fatalf("api deltas: %d %d", api.CPUDeltaMilli, api.MemoryDeltaBytes)
 	}
 
+	if api.CPUMilli != 120 || api.OriginalCPUMilli != 500 || api.MemoryBytes != 640<<20 || api.OriginalMemoryBytes != 1<<30 {
+		t.Fatalf("api totals: %+v", api)
+	}
+
+	if c := api.Containers[0]; c.CPULimitPercent != 12 || c.MemoryLimitPercent != 63 {
+		t.Fatalf("api limit shares: %+v", c)
+	}
+
 	worker := out.Recommendations[0]
+	if worker.CPUMilli != 2000 || worker.OriginalCPUMilli != 2000 || worker.Containers[0].MemoryLimitPercent != 0 {
+		t.Fatalf("worker without original or limit: %+v", worker)
+	}
+
 	if worker.Containers[0].CPU != "2" || worker.Containers[0].OriginalCPU != "" || worker.CPUDeltaMilli != 0 {
 		t.Fatalf("worker (bare number, no original): %+v", worker.Containers[0])
 	}
