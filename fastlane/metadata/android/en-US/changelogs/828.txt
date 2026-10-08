@@ -1,0 +1,5 @@
+• CAST AI node consolidations and a redesigned workloads view
+• Count only the nodes a failed CAST AI plan left as missed savings
+• Pin SwiftTerm to 1.20.0, 1.99.0 breaks the iOS build
+• Security key PIN takes any text, no ANR after a cancelled tap
+• GitOps cards always draw the Flux and Argo CD logos
