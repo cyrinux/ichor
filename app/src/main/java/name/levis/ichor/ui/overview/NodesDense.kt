@@ -181,9 +181,28 @@ private fun NodeDots(
 /** Tap opens the node, a long press its actions; read as "hostname, status". */
 @Composable
 private fun NodeDot(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> Unit, onLive: (() -> Unit)?) {
-    val description = "${node.hostname}, ${statusLabel(node.status)}"
     val liveLabel = stringResource(R.string.overview_action_live_graphs)
-    val color = statusColor(node.status)
+    StatusDot(
+        description = "${node.hostname}, ${statusLabel(node.status)}",
+        color = statusColor(node.status),
+        onClick = onClick,
+        onLongClick = onLongClick,
+        actions = listOfNotNull(onLive?.let { CustomAccessibilityAction(liveLabel) { it(); true } }),
+    )
+}
+
+/**
+ * A node's dot: [color] for its status, read as [description]; a tap and a long press (the
+ * node's actions), plus [actions] for TalkBack.
+ */
+@Composable
+internal fun StatusDot(
+    description: String,
+    color: Color,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    actions: List<CustomAccessibilityAction> = emptyList(),
+) {
     Box(
         Modifier.size(DOT_TARGET).combinedClickable(
             role = Role.Button,
@@ -192,7 +211,7 @@ private fun NodeDot(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> 
             onLongClickLabel = stringResource(R.string.overview_node_actions),
         ).semantics {
             contentDescription = description
-            customActions = listOfNotNull(onLive?.let { CustomAccessibilityAction(liveLabel) { it(); true } })
+            customActions = actions
         },
         contentAlignment = Alignment.Center,
     ) {
@@ -202,7 +221,7 @@ private fun NodeDot(node: NodeOverview, onClick: () -> Unit, onLongClick: () -> 
 
 /** The problem nodes past the cap: opens the Nodes screen on them. */
 @Composable
-private fun MoreProblems(count: Int, onClick: () -> Unit) {
+internal fun MoreProblems(count: Int, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick).padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -3101,7 +3101,6 @@
     <string name="kube_home_version">Kubernetes %1$s</string>
     <string name="kube_home_nodes_forbidden">Ці облікові дані не можуть переглядати список вузлів. Інші екрани Kubernetes працюють у межах їхніх дозволів.</string>
     <string name="kube_home_no_nodes">Немає вузлів.</string>
-    <string name="kube_home_more_nodes">+%1$d ще</string>
     <string name="kube_node_cordoned">Ізольовано (cordon)</string>
     <string name="kube_node_pool_karpenter">Пул Karpenter %1$s</string>
     <string name="kube_node_pool_eks">Група вузлів EKS %1$s</string>

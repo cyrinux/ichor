@@ -153,6 +153,8 @@ fun OverviewScreen(
     onClustersCleared: () -> Unit,
     onChangelog: () -> Unit,
     onAllNodes: (NodeFilter?) -> Unit,
+    /** The Kubernetes nodes screen of a cluster added from a kubeconfig, on one filter (null: all). */
+    onKubeNodes: (NodeFilter?) -> Unit,
     onCheckup: () -> Unit,
     onApiHealth: () -> Unit,
     onNetworkPolicies: () -> Unit,
@@ -189,6 +191,7 @@ fun OverviewScreen(
                 onResources = onResources,
                 onHelm = onHelm,
                 onDrain = onDrain,
+                onAllNodes = onKubeNodes,
             ),
         )
         return

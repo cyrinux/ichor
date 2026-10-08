@@ -13,7 +13,6 @@ struct KubeHomeView: View {
     @State private var state: LoadState<KubeNodesOverview> = .loading
     /// The node whose cordon to change, after a confirmation.
     @State private var cordoning: KubeNodeInfo?
-    @State private var cordonMessage: String?
 
     var body: some View {
         LoadStateView(state: state, retry: load) { overview in
@@ -54,21 +53,7 @@ struct KubeHomeView: View {
             .themedBackground()
         }
         .navigationTitle(model.activeLabel)
-        .confirmationDialog(String(localized: "Kubernetes scheduling on \(cordoning?.name ?? "")"),
-                            isPresented: Binding(get: { cordoning != nil }, set: { if !$0 { cordoning = nil } }),
-                            titleVisibility: .visible, presenting: cordoning) { node in
-            if node.cordoned {
-                Button("Uncordon") { Task { await cordon(node, on: false) } }
-            } else {
-                Button("Cordon", role: .destructive) { Task { await cordon(node, on: true) } }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: { _ in
-            Text("A cordoned node gets no new pods; the pods it runs stay. Uncordon it to schedule pods on it again.")
-        }
-        .alert(cordonMessage ?? "", isPresented: Binding(get: { cordonMessage != nil }, set: { if !$0 { cordonMessage = nil } })) {
-            Button("OK", role: .cancel) {}
-        }
+        .kubeCordonDialogs(cordoning: $cordoning, reload: load)
         .toolbarTitleMenu {
             if (model.summary?.contexts.count ?? 0) > 1 {
                 Menu {
@@ -139,25 +124,20 @@ struct KubeHomeView: View {
         }
     }
 
+    /// The nodes grouped by status, the worst first; past nodeDenseThreshold a dot per node
+    /// (DenseKubeNodes) and the header opens the Kubernetes nodes screen: a section holding
+    /// hundreds of rows defeats the home.
     private func nodesSection(_ overview: KubeNodesOverview) -> some View {
-        Section {
+        let dense = isDenseCluster(overview.nodes.count)
+        return Section {
             if overview.forbidden {
                 Text("These credentials may not list the nodes. The other screens show what they may read.")
                     .font(.callout).foregroundStyle(.secondary)
+            } else if dense {
+                DenseKubeNodes(nodes: overview.nodes, path: $path, cordoning: $cordoning)
             } else {
-                // Those needing attention first, then in the core's order (control planes first).
-                ForEach(overview.nodes.filter(\.needsAttention) + overview.nodes.filter { !$0.needsAttention }) { node in
-                    Menu {
-                        Button(node.cordoned ? String(localized: "Uncordon") : String(localized: "Cordon"), systemImage: "nosign") {
-                            cordoning = node
-                        }
-                        Button("Drain…", systemImage: "rectangle.portrait.and.arrow.right") {
-                            path.append(.drain(node: node.name, hostname: node.name))
-                        }
-                    } label: {
-                        KubeNodeRow(node: node)
-                    }
-                    .tint(.primary)
+                ForEach(overview.nodes.byStatus.flatMap(\.nodes)) { node in
+                    KubeNodeActionRow(node: node, path: $path, cordoning: $cordoning)
                 }
             }
         } header: {
@@ -165,26 +145,14 @@ struct KubeHomeView: View {
                 Text("Nodes")
                 Spacer()
                 if !overview.forbidden { Text(verbatim: "\(overview.nodes.count)") }
+                if dense {
+                    Button { path.append(.kubeNodes(filter: nil, nodes: overview.nodes)) } label: {
+                        Image(systemName: "chevron.right")
+                    }
+                    .accessibilityLabel(Text("Show all nodes"))
+                }
             }
         }
-    }
-
-    /// `kubectl cordon` / `uncordon`, after the app lock when it is on, then the nodes again.
-    private func cordon(_ node: KubeNodeInfo, on: Bool) async {
-        guard let client = model.client else { return }
-        let title = on ? String(localized: "Cordon \(node.name)") : String(localized: "Uncordon \(node.name)")
-        if model.lock.enabled, let failure = await Authenticator.authenticate(reason: title) {
-            cordonMessage = failure
-            return
-        }
-        do {
-            try await client.kubeNodeCordon(kubeNode: node.name, on: on)
-            cordonMessage = on ? String(localized: "\(node.name) is cordoned: no new pods are scheduled on it.")
-                : String(localized: "\(node.name) is uncordoned: pods can be scheduled on it again.")
-        } catch {
-            cordonMessage = error.localizedDescription
-        }
-        await load()
     }
 
     /// What the loaded nodes belong to: the context and the screenshot mode generation.
@@ -198,86 +166,6 @@ struct KubeHomeView: View {
         let fetched: LoadState<KubeNodesOverview> = await .from { try await client.kubeNodes() }
         guard id == loadID else { return }
         state = state.refreshed(with: fetched)
-    }
-}
-
-/// A node as Kubernetes sees it: ready or not, cordoned, roles, address, kubelet, the
-/// pressure conditions that are on, and where the cloud put it (autoscaler pool, machine
-/// type, spot). No node screen (it reads Talos): a tap offers the cordon and the drain.
-private struct KubeNodeRow: View {
-    let node: KubeNodeInfo
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 8) {
-                Circle().fill(statusColor).frame(width: 8, height: 8).accessibilityHidden(true)
-                Text(verbatim: node.name).font(.body.weight(.medium)).lineLimit(1)
-                Spacer()
-                Text(statusLabel).font(.caption).foregroundStyle(statusColor)
-            }
-            Text(verbatim: details).font(.caption).foregroundStyle(.secondary)
-            if let provenance { Text(verbatim: provenance).font(.caption).foregroundStyle(.secondary) }
-            if !node.pressure.isEmpty {
-                Text(verbatim: node.pressure.joined(separator: ", ")).font(.caption).foregroundStyle(.statusWarn)
-            }
-        }
-        .accessibilityElement(children: .combine)
-    }
-
-    private var statusColor: Color {
-        if !node.ready { return .statusBad }
-        return node.cordoned || !node.pressure.isEmpty ? .statusWarn : .statusOK
-    }
-
-    private var statusLabel: String {
-        if !node.ready { return String(localized: "Not ready") }
-        return node.cordoned ? String(localized: "Cordoned") : String(localized: "Ready")
-    }
-
-    /// Roles, address, kubelet version, capacity: what is known, in one line.
-    private var details: String {
-        var parts: [String] = []
-        if !node.roles.isEmpty { parts.append(node.roles.joined(separator: ", ")) }
-        if let address = node.address { parts.append(address) }
-        if let kubelet = node.kubelet, !kubelet.isEmpty { parts.append(kubelet) }
-        if node.cpu > 0 { parts.append(String(localized: "\(formatCores(node.cpu)) CPU")) }
-        if node.memory > 0 { parts.append(formatBytes(Int64(node.memory))) }
-        return parts.joined(separator: " · ")
-    }
-
-    private func formatCores(_ cores: Double) -> String {
-        cores == cores.rounded() ? String(Int(cores)) : String(format: "%.1f", cores)
-    }
-
-    /// Pool, machine type, spot or on-demand: where the cloud put the node, when it says.
-    private var provenance: String? {
-        var parts: [String] = []
-        if let pool = poolLabel { parts.append(pool) }
-        if let type = node.instanceType, !type.isEmpty { parts.append(type) }
-        if let capacity = capacityLabel { parts.append(capacity) }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
-    }
-
-    /// "Karpenter pool general", "GKE node pool default-pool"…; the bare name for a kind this does not know.
-    private var poolLabel: String? {
-        guard let pool = node.pool, !pool.isEmpty else { return nil }
-        switch node.poolKind {
-        case "karpenter": return String(localized: "Karpenter pool \(pool)")
-        case "eks": return String(localized: "EKS node group \(pool)")
-        case "gke-class": return String(localized: "GKE compute class \(pool)")
-        case "gke": return String(localized: "GKE node pool \(pool)")
-        case "aks": return String(localized: "AKS agent pool \(pool)")
-        default: return pool
-        }
-    }
-
-    private var capacityLabel: String? {
-        switch node.capacity {
-        case "spot": return String(localized: "Spot")
-        case "on-demand": return String(localized: "On-demand")
-        case "reserved": return String(localized: "Reserved")
-        default: return nil
-        }
     }
 }
 

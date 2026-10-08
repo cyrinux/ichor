@@ -2907,7 +2907,6 @@
     <string name="kube_home_version">Kubernetes %1$s</string>
     <string name="kube_home_nodes_forbidden">Ces identifiants ne peuvent pas lister les nœuds. Les autres écrans Kubernetes fonctionnent, dans la limite de ce qu’ils autorisent.</string>
     <string name="kube_home_no_nodes">Aucun nœud.</string>
-    <string name="kube_home_more_nodes">+%1$d de plus</string>
     <string name="kube_node_cordoned">Cordonné</string>
     <string name="kube_node_pool_karpenter">Pool Karpenter %1$s</string>
     <string name="kube_node_pool_eks">Groupe de nœuds EKS %1$s</string>

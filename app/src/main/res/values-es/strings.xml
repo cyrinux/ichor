@@ -2907,7 +2907,6 @@
     <string name="kube_home_version">Kubernetes %1$s</string>
     <string name="kube_home_nodes_forbidden">Estas credenciales no pueden listar los nodos. Las demás pantallas de Kubernetes funcionan, dentro de lo que permiten.</string>
     <string name="kube_home_no_nodes">Sin nodos.</string>
-    <string name="kube_home_more_nodes">+%1$d más</string>
     <string name="kube_node_cordoned">Acordonado</string>
     <string name="kube_node_pool_karpenter">Pool de Karpenter %1$s</string>
     <string name="kube_node_pool_eks">Grupo de nodos EKS %1$s</string>

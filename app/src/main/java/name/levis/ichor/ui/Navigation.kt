@@ -70,6 +70,7 @@ import name.levis.ichor.ui.issueconfig.IssueConfigScreen
 import name.levis.ichor.ui.kubebrowser.KubeBrowserRoutes
 import name.levis.ichor.ui.kubebrowser.KubeLinks
 import name.levis.ichor.ui.kubebrowser.LocalKubeLinks
+import name.levis.ichor.ui.kubenodes.KubeNodesScreen
 import name.levis.ichor.ui.kubespan.KubeSpanScreen
 import name.levis.ichor.ui.logs.LogsScreen
 import name.levis.ichor.ui.machineconfig.MachineConfigScreen
@@ -80,6 +81,7 @@ import name.levis.ichor.ui.node.NodeDetailScreen
 import name.levis.ichor.ui.node.NodeMenuEntry
 import name.levis.ichor.ui.node.PowerAction
 import name.levis.ichor.ui.nodes.NodesScreen
+import name.levis.ichor.ui.overview.KubeHomeViewModel
 import name.levis.ichor.ui.overview.NodeAction
 import name.levis.ichor.ui.overview.OverviewScreen
 import name.levis.ichor.ui.overview.OverviewViewModel
@@ -139,6 +141,10 @@ private object Routes {
 
     /** The Nodes screen of a large cluster; [filter] preselects one (null: all). */
     fun nodes(filter: NodeFilter?) = "nodes?filter=${filter?.name.orEmpty()}"
+    const val KUBE_NODES = "kube-nodes?filter={filter}"
+
+    /** The Kubernetes nodes screen of a large cluster added from a kubeconfig; [filter] preselects one (null: all). */
+    fun kubeNodes(filter: NodeFilter?) = "kube-nodes?filter=${filter?.name.orEmpty()}"
     const val WORKLOADS = "workloads?tab={tab}&key={key}&ns={ns}&name={name}"
 
     /** The Kubernetes screen; [focus] opens a tab and shows one of its items (a share link). */
@@ -406,6 +412,7 @@ fun Navigation(
                 onClustersCleared = { nav.resetTo(Routes.IMPORT) },
                 onChangelog = { nav.navigate(Routes.CHANGELOG) },
                 onAllNodes = { nav.navigate(Routes.nodes(it)) },
+                onKubeNodes = { nav.navigate(Routes.kubeNodes(it)) },
                 onCheckup = { nav.navigate(Routes.CHECKUP) },
                 onApiHealth = { nav.navigate(Routes.API_HEALTH) },
                 onNetworkPolicies = { nav.navigate(Routes.NETWORK_POLICIES) },
@@ -415,6 +422,16 @@ fun Navigation(
             )
             // After an update: what changed since the build that ran before.
             WhatsNewHost(onFullChangelog = { nav.navigate(Routes.CHANGELOG) })
+        }
+        composable(Routes.KUBE_NODES, arguments = listOf(navArgument("filter") { type = NavType.StringType; defaultValue = "" })) { entry ->
+            // The Kubernetes home's data and refresh: only ever opened from it, so it is below on the stack.
+            val home = remember(entry) { nav.getBackStackEntry(Routes.OVERVIEW) }
+            KubeNodesScreen(
+                initialFilter = NodeFilter.entries.firstOrNull { it.name == entry.arguments?.getString("filter") },
+                vm = viewModel(viewModelStoreOwner = home, factory = factory { KubeHomeViewModel(app.talosRepository) }),
+                onBack = { nav.popBackStack() },
+                onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
+            )
         }
         composable(Routes.NODES, arguments = listOf(navArgument("filter") { type = NavType.StringType; defaultValue = "" })) { entry ->
             // The overview's data and refresh: only ever opened from it, so it is below on the stack.
