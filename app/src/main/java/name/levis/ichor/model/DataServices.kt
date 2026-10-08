@@ -128,11 +128,16 @@ fun DataServices.summary(kind: DataServiceKind): ServiceSummary? = when (kind) {
     DataServiceKind.CASTAI -> castai?.summary()
 }
 
-/** Recommendations are the items; one the autoscaler cannot apply or is told not to needs a look. */
+/**
+ * Recommendations are the items; one the autoscaler cannot apply or is told not to needs a look.
+ * A node the consolidation keeps failing to remove is no recommendation: it only makes the
+ * system a warning (the card names the stuck nodes).
+ */
 fun CastAIStatus.summary(): ServiceSummary {
-    if (error.isNotEmpty() && recommendations.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
+    if (error.isNotEmpty() && recommendations.isEmpty() && plans.isEmpty()) return ServiceSummary(0, 0, ServiceHealth.UNKNOWN, error)
     val healths = recommendations.map { it.serviceHealth }
-    return ServiceSummary(recommendations.size, healths.count { it.needsAttention }, ServiceHealth.worst(healths), error)
+    val health = ServiceHealth.worst(healths + listOfNotNull(ServiceHealth.WARNING.takeIf { stuck.isNotEmpty() }))
+    return ServiceSummary(recommendations.size, healths.count { it.needsAttention }, health, error)
 }
 
 /** Ceph clusters are the items; a pool that is not ready needs a look as much as a cluster. */

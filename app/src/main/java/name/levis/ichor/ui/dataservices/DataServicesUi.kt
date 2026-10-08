@@ -150,7 +150,8 @@ fun summaryText(kind: DataServiceKind, services: DataServices): String {
         DataServiceKind.CASTAI -> {
             val saving = services.castai?.takeIf { it.compared > 0 && it.cpuDeltaMilli != 0L }
                 ?.let { stringResource(R.string.castai_cpu_delta, formatMilliCores(it.cpuDeltaMilli, signed = true)) }
-            return listOfNotNull(pluralStringResource(R.plurals.castai_workloads, summary.total, summary.total), saving, attention).joinToString(" · ")
+            val stuck = services.castai?.stuck?.size?.takeIf { it > 0 }?.let { stringResource(R.string.castai_stuck_nodes, it.toString()) }
+            return listOfNotNull(pluralStringResource(R.plurals.castai_workloads, summary.total, summary.total), saving, attention, stuck).joinToString(" · ")
         }
         DataServiceKind.GARAGE -> {
             val single = services.garage?.instances?.singleOrNull()

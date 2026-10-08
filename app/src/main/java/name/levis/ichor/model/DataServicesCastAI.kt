@@ -16,6 +16,12 @@ data class CastAIStatus(
     val memoryDeltaBytes: Long = 0,
     /** Workloads whose original requests are known. */
     val compared: Int = 0,
+    /** Node consolidations (RebalancePlan), newest first; see DataServicesCastAIPlans.kt. */
+    val plans: List<CastAIPlan> = emptyList(),
+    /** Nodes a plan failed to remove that a later plan tried again. */
+    val stuck: List<CastAIStuckNode> = emptyList(),
+    /** Why the plans could not be read; [error] is the recommendations' only. */
+    val plansError: String = "",
 )
 
 @Serializable
@@ -36,12 +42,43 @@ data class CastAIRecommendation(
     val containers: List<CastAIContainer> = emptyList(),
     val cpuDeltaMilli: Long = 0,
     val memoryDeltaBytes: Long = 0,
+    /** A pod's requests as recommended and before CAST AI (an unknown original counts as recommended). */
+    val cpuMilli: Long = 0,
+    val memoryBytes: Long = 0,
+    val originalCpuMilli: Long = 0,
+    val originalMemoryBytes: Long = 0,
 ) {
     val serviceHealth: ServiceHealth get() = ServiceHealth.from(health)
     val label: String get() = "$namespace/$workload"
     val reasonList: List<CastAIReason> get() = reasons.mapNotNull(CastAIReason::from)
     val applyMode: CastAIMode get() = CastAIMode.from(mode)
+
+    /** Whether the requests grow or shrink; [CastAIChange.UNKNOWN] without the originals. */
+    val change: CastAIChange
+        get() = when {
+            containers.none { it.originalCpu.isNotEmpty() || it.originalMemory.isNotEmpty() } -> CastAIChange.UNKNOWN
+            cpuDeltaMilli > 0 || memoryDeltaBytes > 0 -> CastAIChange.GROW
+            cpuDeltaMilli < 0 || memoryDeltaBytes < 0 -> CastAIChange.SHRINK
+            else -> CastAIChange.SAME
+        }
+
+    /** The highest memory request as a share of its limit, 0 without limits. */
+    val memoryLimitPercent: Int get() = containers.maxOfOrNull { it.memoryLimitPercent } ?: 0
+
+    val nearMemoryLimit: Boolean get() = containers.any { it.nearMemoryLimit }
+
+    /** How much the recommendation moves, one core weighing as much as [GIB_PER_CORE] GiB (cloud pricing). */
+    val weight: Double
+        get() = kotlin.math.abs(cpuDeltaMilli) / 1000.0 + kotlin.math.abs(memoryDeltaBytes) / GIB / GIB_PER_CORE
+
+    private companion object {
+        const val GIB = 1024.0 * 1024 * 1024
+        const val GIB_PER_CORE = 4.0
+    }
 }
+
+/** Which way a recommendation moves a workload's requests. */
+enum class CastAIChange { SHRINK, GROW, SAME, UNKNOWN }
 
 /** One container's recommended requests and limits, with the requests CAST AI first saw ("" unknown). */
 @Serializable
@@ -53,7 +90,15 @@ data class CastAIContainer(
     val memoryLimit: String = "",
     val originalCpu: String = "",
     val originalMemory: String = "",
-)
+    /** The recommended request as a share of its limit, 0 without a limit. */
+    val cpuLimitPercent: Int = 0,
+    val memoryLimitPercent: Int = 0,
+) {
+    /** CAST AI keeps limits, so a request this close to its memory limit risks an OOM kill. */
+    val nearMemoryLimit: Boolean get() = memoryLimitPercent >= CASTAI_NEAR_LIMIT_PERCENT
+}
+
+const val CASTAI_NEAR_LIMIT_PERCENT = 85
 
 /** Why a recommendation needs a look, as the Go core names it. */
 enum class CastAIReason(val wire: String) {

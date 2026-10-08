@@ -152,8 +152,10 @@ update (`notReady`) doesn't alert.
 CAST AI (Workload Autoscaler, `autoscaling.cast.ai/v1`, detected by its API group; one
 `Recommendation` per managed workload, listed across namespaces; the requests before CAST AI
 come from the `autoscaling.cast.ai/first-seen-container-resources` annotation, the apply mode
-from `autoscaling.cast.ai/recommendation-apply-mode`). Android only for now; the Swift model
-ignores the section.
+from `autoscaling.cast.ai/recommendation-apply-mode`). Where CAST AI drives Karpenter, its
+controller (kentroller) also writes a cluster-scoped `RebalancePlan` (`autoscaling.cast.ai/v1alpha`)
+per node consolidation; a cluster without them answers 404, read as none. The newest 30 are sent.
+Android only for now; the Swift model ignores the section.
 
 ```jsonc
   "castai": {
@@ -169,14 +171,40 @@ ignores the section.
       "reasons": [],                             // vpa|hpa|readOnly
       "message": "",                             // the failing condition's message or the read-only reason
       "containers": [{ "name": "api", "cpu": "120m", "memory": "640Mi", "cpuLimit": "1", "memoryLimit": "1Gi",
-                       "originalCpu": "500m", "originalMemory": "1Gi" }],
-      "cpuDeltaMilli": -380, "memoryDeltaBytes": -402653184
-    }]
+                       "originalCpu": "500m", "originalMemory": "1Gi",
+                       "cpuLimitPercent": 12, "memoryLimitPercent": 63 }], // request over limit, 0 without one
+      "cpuDeltaMilli": -380, "memoryDeltaBytes": -402653184,
+      // a pod's requests after and before (an unknown original counts at the recommended value)
+      "cpuMilli": 120, "memoryBytes": 671088640, "originalCpuMilli": 500, "originalMemoryBytes": 1073741824
+    }],
+    "plans": [{                                  // newest first
+      "name": "consolidation-20260101100000", "createdAt": 1767261600000, "endedAt": 1767265200000,
+      "mode": "full",                            // label rebalancer.cast.ai/consolidation-mode: full|delete-empty|drain-only
+      "state": "Failed",                         // Pending|Created|Running|Done|Failed|Skipped|Canceled|Expired
+      "execute": true,                           // spec.execute: false waits for an approval
+      "currency": "USD", "beforeMonthly": 318.35, "afterMonthly": 177.54, "savingsPercent": 44.23,
+      "achievedMonthly": 51.83,                  // status.achievedOutcome.diff.priceMonthly, absent when unmeasured
+      "clusterMonthly": 4841, "clusterNodes": 38,
+      // a failed plan's lost saving: the nodes it left × 730 h, priced from status.savings.blueNodes
+      // (by node name, through the NodeClaim, or by the instance type in the claim name), capped at
+      // the planned saving; else the planned saving × nodes left / nodes listed, "missedEstimated"
+      "missedMonthly": 140.81, "missedEstimated": false,
+      "failureReason": "Timeout", "failurePhase": "Deletion", "message": "rebalance timed out after 1h0m0s…",
+      "warnings": [],
+      "removing": [{ "name": "edge-aaaa",        // status.nodesDeletion, plus spec.nodeClaimsToDelete not reached
+                     "status": "failed",         // pending|inProgress|blocked|success|failed (uncordoned in a failed plan)
+                     "events": [{ "at": 1767261630000, "status": "Blocked", "description": "NodePool disruption budget exhausted…" }] }],
+      "adding": [{ "name": "cast-edge-0", "status": "success", "instanceType": "c7g.2xlarge", "spot": true,
+                   "zone": "eu-west-1a", "priceHourly": 0.1608, "events": [] }],
+      "budgets": [{ "nodePool": "edge", "allowed": 1, "disrupting": 0, "nodes": 5 }]
+    }],
+    "stuck": [{ "node": "edge-aaaa", "failures": 1, "retrying": true }], // failed to remove, listed again by a later plan
+    "plansError": ""                             // the plans' read error; "error" is the recommendations' only
   }
 ```
 
 Alerts: `vpa` (the recommendation cannot be applied) → critical; `hpa` and `readOnly` are
-shown, not alerted.
+shown, not alerted. A stuck node counts as needing a look in the summary, not alerted.
 
 MariaDB (operator `k8s.mariadb.com/v1alpha1`, detected by its API group; `mariadbs`, `backups`
 and `physicalbackups` when served; pods selected with `app.kubernetes.io/name=mariadb`, cluster

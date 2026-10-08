@@ -31,6 +31,11 @@ type castAIStatus struct {
 	MemoryDeltaBytes int64 `json:"memoryDeltaBytes"`
 	// Workloads whose original requests are known (the deltas count them only).
 	Compared int `json:"compared"`
+	// Node consolidations (RebalancePlan), newest first, and the nodes they keep failing to remove.
+	Plans []castAIPlan      `json:"plans"`
+	Stuck []castAIStuckNode `json:"stuck"`
+	// Why the plans could not be read; Error is the recommendations' only.
+	PlansError string `json:"plansError"`
 }
 
 type castAIRecommendation struct {
@@ -51,6 +56,12 @@ type castAIRecommendation struct {
 	// Deltas as on castAIStatus, for this workload (0 when the original requests are unknown).
 	CPUDeltaMilli    int64 `json:"cpuDeltaMilli"`
 	MemoryDeltaBytes int64 `json:"memoryDeltaBytes"`
+	// A pod's requests as recommended, and before CAST AI (a container whose original is unknown
+	// counts at its recommended value, so recommended minus original is the delta).
+	CPUMilli            int64 `json:"cpuMilli"`
+	MemoryBytes         int64 `json:"memoryBytes"`
+	OriginalCPUMilli    int64 `json:"originalCpuMilli"`
+	OriginalMemoryBytes int64 `json:"originalMemoryBytes"`
 }
 
 // castAIContainer is one container's requests and limits as CAST AI recommends them, with
@@ -63,6 +74,10 @@ type castAIContainer struct {
 	MemoryLimit    string `json:"memoryLimit"`
 	OriginalCPU    string `json:"originalCpu"`
 	OriginalMemory string `json:"originalMemory"`
+	// The recommended request as a share of the limit, 0 without a limit: CAST AI keeps limits,
+	// so a request close to its memory limit leaves little room before an OOM kill.
+	CPULimitPercent    int `json:"cpuLimitPercent"`
+	MemoryLimitPercent int `json:"memoryLimitPercent"`
 }
 
 // Reasons a recommendation needs a look, for the app to word.
@@ -129,20 +144,23 @@ func (q *castQuantity) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// readCastAI lists the Recommendations of every namespace.
+// readCastAI lists the Recommendations of every namespace and the rebalance plans. Each kind
+// may be missing (a cluster with only one of the two CAST AI components): read as none.
 func readCastAI(ctx context.Context, k *kubeClient) *castAIStatus {
 	var list kubeList[castAIObject]
 
-	err := getList(ctx, k, "/apis/"+groupCastAI+"/"+castAIVersion+"/recommendations", &list)
+	err := ignoreNotFound(getList(ctx, k, "/apis/"+groupCastAI+"/"+castAIVersion+"/recommendations", &list))
+	plans, plansErr := readCastAIPlans(ctx, k)
 
 	out := mapCastAI(list.Items)
-	out.Error = sectionError(err)
+	out.Plans, out.Stuck = plans, castAIStuckNodes(plans)
+	out.Error, out.PlansError = sectionError(err), sectionError(plansErr)
 
 	return out
 }
 
 func mapCastAI(objects []castAIObject) *castAIStatus {
-	out := &castAIStatus{Version: castAIVersion, Recommendations: []castAIRecommendation{}}
+	out := &castAIStatus{Version: castAIVersion, Recommendations: []castAIRecommendation{}, Plans: []castAIPlan{}, Stuck: []castAIStuckNode{}}
 
 	for _, obj := range objects {
 		rec := mapCastAIRecommendation(obj)
@@ -179,14 +197,13 @@ func mapCastAIRecommendation(obj castAIObject) castAIRecommendation {
 
 		if orig, ok := firstSeen[adj.ContainerName]; ok {
 			c.OriginalCPU, c.OriginalMemory = orig.CPU, orig.Memory
-			rec.CPUDeltaMilli += milliDelta(c.OriginalCPU, c.CPU)
-			rec.MemoryDeltaBytes += bytesDelta(c.OriginalMemory, c.Memory)
 		}
 
 		rec.Containers = append(rec.Containers, c)
 	}
 
 	slices.SortFunc(rec.Containers, func(a, b castAIContainer) int { return strings.Compare(a.Name, b.Name) })
+	rec = withCastAITotals(rec)
 
 	rec.Health, rec.Reasons, rec.Message = castAIHealth(obj)
 	rec.ReadOnly = obj.Spec.ApplyPolicy != nil && obj.Spec.ApplyPolicy.Readonly
@@ -218,6 +235,57 @@ func parseCastAIFirstSeen(annotation string) map[string]castAIOriginal {
 	}
 
 	return out
+}
+
+// withCastAITotals fills what follows from the containers: each one's share of its limits, the
+// pod's requests before and after, and the deltas over the containers whose originals are known.
+func withCastAITotals(rec castAIRecommendation) castAIRecommendation {
+	out := rec
+	out.Containers = make([]castAIContainer, 0, len(rec.Containers))
+	out.CPUDeltaMilli, out.MemoryDeltaBytes = 0, 0
+	out.CPUMilli, out.MemoryBytes, out.OriginalCPUMilli, out.OriginalMemoryBytes = 0, 0, 0, 0
+
+	for _, c := range rec.Containers {
+		c.CPULimitPercent, c.MemoryLimitPercent = limitPercent(c.CPU, c.CPULimit), limitPercent(c.Memory, c.MemoryLimit)
+		dCPU, dMem := milliDelta(c.OriginalCPU, c.CPU), bytesDelta(c.OriginalMemory, c.Memory)
+		cpu, mem := int64(math.Round(parseQuantity(c.CPU)*1000)), int64(math.Round(parseQuantity(c.Memory)))
+		// The original when known, else the recommended value (no change to count); a resource
+		// CAST AI recommends nothing for keeps its original request.
+		origCPU, origMem := cpu, mem
+		if c.OriginalCPU != "" {
+			origCPU = int64(math.Round(parseQuantity(c.OriginalCPU) * 1000))
+			if c.CPU == "" {
+				cpu = origCPU
+			}
+		}
+
+		if c.OriginalMemory != "" {
+			origMem = int64(math.Round(parseQuantity(c.OriginalMemory)))
+			if c.Memory == "" {
+				mem = origMem
+			}
+		}
+
+		out.CPUDeltaMilli += dCPU
+		out.MemoryDeltaBytes += dMem
+		out.CPUMilli += cpu
+		out.MemoryBytes += mem
+		out.OriginalCPUMilli += origCPU
+		out.OriginalMemoryBytes += origMem
+		out.Containers = append(out.Containers, c)
+	}
+
+	return out
+}
+
+// limitPercent is request over limit in percent, 0 when either is unknown.
+func limitPercent(request, limit string) int {
+	l := parseQuantity(limit)
+	if request == "" || l <= 0 {
+		return 0
+	}
+
+	return int(math.Round(parseQuantity(request) / l * 100))
 }
 
 // milliDelta is to minus from in millicores, 0 when either is unknown.
