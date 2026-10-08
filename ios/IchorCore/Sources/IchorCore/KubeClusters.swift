@@ -30,7 +30,7 @@ public struct KubeNodesOverview: Decodable, Equatable, Sendable {
 }
 
 /// A node for the Kubernetes home. CPU in cores, memory in bytes.
-public struct KubeNodeInfo: Decodable, Equatable, Identifiable, Sendable {
+public struct KubeNodeInfo: Decodable, Hashable, Identifiable, Sendable {
     public let name: String
     public let roles: [String]
     public let ready: Bool
