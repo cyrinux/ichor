@@ -8,6 +8,9 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import android.security.keystore.StrongBoxUnavailableException
+import name.levis.ichor.security.DekHolder
+import name.levis.ichor.security.SealedFile
+import name.levis.ichor.security.SecurityKeyRequiredException
 import java.io.File
 import java.security.KeyStore
 import javax.crypto.Cipher
@@ -27,17 +30,29 @@ enum class KeyProtection(@StringRes val label: Int) {
  * the Android Keystore and never leaves it: in the StrongBox secure element when the device
  * has one (Android's counterpart of the Secure Enclave), otherwise in the TEE.
  * File layout: [12-byte IV][ciphertext+tag].
+ *
+ * With a security key required ([outer], see SecurityKeys.kt) that payload is sealed once more
+ * with the data key only a tap of the key unwraps ([SealedFile]): the file then reads only
+ * after a key was tapped this run, and [read] throws [SecurityKeyRequiredException] before.
  */
 class SecureStore(
     private val file: File,
     private val keyAlias: String = "talosconfig",
     private val strongBoxAvailable: Boolean = false,
+    private val outer: DekHolder? = null,
 ) {
 
     fun write(plaintext: ByteArray) {
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(Cipher.ENCRYPT_MODE, key())
-        val payload = cipher.iv + cipher.doFinal(plaintext)
+        val inner = cipher.iv + cipher.doFinal(plaintext)
+        val holder = outer
+        val payload = if (holder != null && holder.sealing()) {
+            // Never written unsealed while the key is required: a missing DEK is a bug upstream.
+            SealedFile.seal(inner, holder.dek() ?: throw SecurityKeyRequiredException())
+        } else {
+            inner
+        }
         val tmp = File(file.parentFile, "${file.name}.tmp")
         tmp.writeBytes(payload)
         if (!tmp.renameTo(file)) {
@@ -48,7 +63,7 @@ class SecureStore(
 
     fun read(): ByteArray? {
         if (!file.exists()) return null
-        val payload = file.readBytes()
+        val payload = unseal(file.readBytes())
         require(payload.size > IV_SIZE) { "Stored config is corrupted" }
         // Never a new key here: it could not decrypt the file, and would replace the one that can.
         val key = checkNotNull(existingKey()) { "The key of the stored config is missing" }
@@ -59,6 +74,37 @@ class SecureStore(
             GCMParameterSpec(TAG_BITS, payload, 0, IV_SIZE),
         )
         return cipher.doFinal(payload, IV_SIZE, payload.size - IV_SIZE)
+    }
+
+    /**
+     * The Keystore payload of a stored file: opened with the DEK when sealed. A sealed file with
+     * no DEK this run is unreadable while the key is required; a payload that only starts like a
+     * sealed one (a Keystore IV can) is taken as is when opening it fails.
+     */
+    private fun unseal(payload: ByteArray): ByteArray {
+        if (!SealedFile.isSealed(payload)) return payload
+        val dek = outer?.dek()
+        if (dek != null) {
+            try {
+                return SealedFile.open(payload, dek)
+            } catch (_: javax.crypto.AEADBadTagException) {
+                // Not sealed with this DEK: a Keystore IV that happens to start with the magic.
+            }
+        } else if (outer?.sealing() == true) {
+            throw SecurityKeyRequiredException()
+        }
+        return payload
+    }
+
+    /** Whether the stored file is sealed with the security-key DEK (false when none is stored). */
+    fun isSealed(): Boolean = file.exists() && SealedFile.isSealed(file.readBytes())
+
+    /**
+     * Writes the stored value again as the current mode asks: sealed once the key is required,
+     * Keystore-only once it no longer is (the DEK must still be held then). Nothing stored: no-op.
+     */
+    fun reseal() {
+        read()?.let { write(it) }
     }
 
     fun clear() {

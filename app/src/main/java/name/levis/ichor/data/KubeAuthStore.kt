@@ -2,6 +2,7 @@ package name.levis.ichor.data
 
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
+import name.levis.ichor.security.DekHolder
 import name.levis.ichorgo.AuthStore
 import java.io.File
 
@@ -55,6 +56,12 @@ class KubeAuthStore(private val file: SealedValue) : AuthStore {
         states = emptyMap()
     }
 
+    /** Seals or unseals the file for the security-key mode just set (see SecureStore.reseal). */
+    @Synchronized
+    fun reseal() {
+        file.reseal()
+    }
+
     private fun read(): Map<String, String>? {
         states?.let { return it }
         return runCatching { decodeAuthStates(file.read()) }.getOrNull()?.also { states = it }
@@ -74,12 +81,13 @@ class KubeAuthStore(private val file: SealedValue) : AuthStore {
 }
 
 /** [SealedValue] in a [SecureStore] file whose read failures are reported, not taken for "nothing stored". */
-class SecureStoreValue(file: File, keyAlias: String, strongBox: Boolean) : SealedValue {
-    private val store = SecureStore(file, keyAlias, strongBox)
+class SecureStoreValue(file: File, keyAlias: String, strongBox: Boolean, outer: DekHolder? = null) : SealedValue {
+    private val store = SecureStore(file, keyAlias, strongBox, outer)
 
     override fun read(): String? = store.read()?.decodeToString()
     override fun write(value: String) = store.write(value.encodeToByteArray())
     override fun delete() = store.clear()
+    override fun reseal() = store.reseal()
 }
 
 private val STATES = MapSerializer(String.serializer(), String.serializer())

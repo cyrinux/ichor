@@ -31,6 +31,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.security.LockOnboarding
 import name.levis.ichor.security.LockScreen
+import name.levis.ichor.security.SecurityKeyPromptHost
 import name.levis.ichor.security.lockRequired
 import name.levis.ichor.data.ConfigUnreadableException
 import name.levis.ichor.data.StoredConfig
@@ -219,6 +220,7 @@ private fun Intent.deepLink(): DeepLink? {
 private fun LockGate(app: TalosApp, targets: LaunchTargets, onWiped: () -> Unit) {
     val locked by app.appLock.locked.collectAsStateWithLifecycle()
     val everUnlocked by app.appLock.everUnlocked.collectAsStateWithLifecycle()
+    val securityKeys by app.appLock.securityKeys.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     Box {
@@ -229,12 +231,17 @@ private fun LockGate(app: TalosApp, targets: LaunchTargets, onWiped: () -> Unit)
                 onWipe = {
                     scope.launch {
                         app.configRepository.clear()
+                        // Sealed with the lost keys too: unreadable for good.
+                        app.kubeAuthStore.clear()
                         app.appLock.setEnabled(false)
                         onWiped()
                     }
                 },
+                securityKeys = securityKeys,
             )
         }
+        // The "tap your security key" dialog, over the lock screen or whatever asked for a check.
+        SecurityKeyPromptHost(app)
     }
 }
 

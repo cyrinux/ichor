@@ -1,5 +1,11 @@
 import Foundation
+import IchorCore
 import Security
+
+/// A stored item is sealed with a security key and none was tapped yet this run.
+struct SecurityKeyRequiredError: LocalizedError {
+    var errorDescription: String? { String(localized: "The stored config is sealed with a security key: tap it first.") }
+}
 
 enum ConfigProtection: String {
     case secureEnclave = "Secure Enclave"
@@ -18,6 +24,10 @@ enum ConfigProtection: String {
 /// leaves it, so decrypting needs this device's Enclave. Only the ciphertexts are stored, in
 /// the Keychain (this device only, never synced or backed up). Falls back to a Keychain key
 /// where there is no Secure Enclave (e.g. the simulator).
+///
+/// With a security key required (SecurityKeyStore, see IchorCore/SecurityKeys.swift) each
+/// ciphertext is sealed once more with the data key only a tap of the key unwraps
+/// (SecurityKeyCrypto.seal): the items then read only after a key was tapped this run.
 enum SecureConfigStore {
     /// The sealed items, under the same key: the two configs, and the sign-ins of the
     /// kubeconfig clusters (KubeAuthStore).
@@ -43,13 +53,40 @@ enum SecureConfigStore {
         guard let sealed = SecKeyCreateEncryptedData(publicKey, algorithm, plaintext as CFData, &error) as Data? else {
             throw cfError(error)
         }
-        try Keychain.write(sealed, account: item.account)
+        let stored: Data
+        if SecurityKeyStore.required {
+            // Never written unsealed while the key is required: a missing DEK is a bug upstream.
+            guard let dek = SecurityKeySession.shared.currentDek else { throw SecurityKeyRequiredError() }
+            stored = try SecurityKeyCrypto.seal(sealed, dek: dek)
+        } else {
+            stored = sealed
+        }
+        try Keychain.write(stored, account: item.account)
     }
 
     static func load(_ item: Item = .talosconfig) -> Data? {
-        guard let sealed = Keychain.read(item.account), let key = try? privateKey(create: false) else { return nil }
+        guard let stored = Keychain.read(item.account), let key = try? privateKey(create: false), let sealed = unseal(stored) else { return nil }
         var error: Unmanaged<CFError>?
         return SecKeyCreateDecryptedData(key, algorithm, sealed as CFData, &error) as Data?
+    }
+
+    /// The Enclave ciphertext of a stored item: opened with the DEK when sealed. A sealed item with
+    /// no DEK this run is unreadable while the key is required; one that only starts like a sealed
+    /// item (an Enclave ciphertext can) is taken as is when opening it fails.
+    private static func unseal(_ stored: Data) -> Data? {
+        guard SealedBlob.isSealed(stored) else { return stored }
+        if let dek = SecurityKeySession.shared.currentDek { return SecurityKeyCrypto.open(stored, dek: dek) ?? stored }
+        return SecurityKeyStore.required ? nil : stored
+    }
+
+    /// Writes every stored item again as the current mode asks: sealed once the key is required,
+    /// Enclave-only once it no longer is (the DEK must still be held then).
+    static func reseal() throws {
+        for item in Item.allCases {
+            guard Keychain.read(item.account) != nil else { continue }
+            guard let plaintext = load(item) else { throw SecurityKeyRequiredError() }
+            try save(plaintext, item: item)
+        }
     }
 
     /// The stored text of `item`, nil when there is none (or it cannot be read, e.g. locked).

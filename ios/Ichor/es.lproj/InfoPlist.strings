@@ -2,3 +2,4 @@
 "NSCameraUsageDescription" = "Escanea el código QR de un talosconfig para importarlo.";
 "NSFaceIDUsageDescription" = "Desbloquear Ichor y confirmar el reinicio o el apagado.";
 "NSLocalNetworkUsageDescription" = "Llegar a los nodos de tus clústeres en esta red, buscarlos en ella y despertarlos con Wake-on-LAN.";
+"NFCReaderUsageDescription" = "Leer tu llave de seguridad para desbloquear Ichor.";

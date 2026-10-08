@@ -651,6 +651,52 @@
     <string name="lock_onboarding_delete">Delete the imported config instead</string>
     <string name="lock_onboarding_delete_title">Delete talosconfig?</string>
     <string name="lock_onboarding_delete_body">The config of every cluster, with their client keys, will be removed from this device.</string>
+    <string name="lock_security_key_hint">Tap your security key, or use your fingerprint or PIN.</string>
+    <string name="lock_security_key_required_hint">Tap your security key to open Ichor.</string>
+    <string name="lock_lost_keys">I lost my security keys</string>
+    <string name="lock_lost_keys_title">Lost your security keys?</string>
+    <string name="lock_lost_keys_body">Without one of them the stored configs cannot be read. Delete them to start over and import your talosconfig again.</string>
+
+    <!-- Security keys (YubiKey or any FIDO2 key, over NFC or USB) -->
+    <string name="security_key_section_title">Security keys</string>
+    <string name="security_key_section_desc">Tap a YubiKey or another FIDO2 key on the back of the phone, or plug it in, to open Ichor without the fingerprint. Up to two keys.</string>
+    <string name="security_key_label">Security key</string>
+    <string name="security_key_label_spare">Spare key</string>
+    <string name="security_key_add">Add a security key</string>
+    <string name="security_key_add_spare">Add a spare key</string>
+    <string name="security_key_remove">Remove %1$s</string>
+    <string name="security_key_enrolled_on">Added on %1$s</string>
+    <string name="security_key_require">Require the key</string>
+    <string name="security_key_require_desc">The stored configs are sealed so that only a tap of one of these keys can read them: fingerprint or PIN alone no longer opens Ichor. Background alerts and the widget pause when Android has closed the app, until you unlock it again. Lose every key and you must import your configs again.</string>
+    <string name="security_key_remove_last_required">Turn off \"Require the key\" before removing the last key.</string>
+    <string name="security_key_lock_required_by_key">Always on while a security key is required.</string>
+    <string name="security_key_already_enrolled">This key is already enrolled.</string>
+    <string name="security_key_cancelled">Cancelled</string>
+    <string name="security_key_prompt_hint_nfc">Hold your security key against the back of the phone, or plug it in.</string>
+    <string name="security_key_prompt_hint_nfc_off">NFC is off. Turn it on in the quick settings, or plug the key in.</string>
+    <string name="security_key_prompt_hint_no_nfc">Plug your security key in: this phone has no NFC.</string>
+    <string name="security_key_touch">Touch the key if it blinks…</string>
+    <string name="security_key_use_biometric">Use fingerprint or PIN instead</string>
+    <string name="security_key_error_not_enrolled">This security key is not enrolled.</string>
+    <string name="security_key_error_no_secret">This key cannot seal the configs: it lacks the hmac-secret extension.</string>
+    <string name="security_key_error_not_wrapped">This key was added before the key requirement. Tap another enrolled key.</string>
+    <string name="security_key_error_uv_changed">This key\'s PIN or fingerprint setting changed since it was set up, so it computes another secret. Turn the key requirement off with another key, then on again.</string>
+    <string name="security_key_error_wrong_key">This security key cannot unlock the stored config.</string>
+    <string name="security_key_error_pin_required">This key asks for its FIDO PIN, which Ichor does not use to unlock.</string>
+    <string name="security_key_error_timeout">The key was not touched in time.</string>
+    <string name="security_key_error_io">Could not talk to the security key (%1$s). Tap it again.</string>
+    <string name="security_key_flow_enrol_title">Add a security key</string>
+    <string name="security_key_flow_require_title">Require the key</string>
+    <string name="security_key_flow_tap_new">Tap the key to add, or plug it in.</string>
+    <string name="security_key_flow_tap_again">Touch the same key again to set it up for the sealed configs.</string>
+    <string name="security_key_flow_tap_nth">Tap key %1$d of %2$d: %3$s</string>
+    <string name="security_key_flow_wrong_key">That was %1$s. Tap %2$s.</string>
+    <string name="security_key_flow_pin_desc">This key only makes new credentials with its FIDO PIN. It is used once here; unlocking never asks for it.</string>
+    <string name="security_key_flow_pin_label">FIDO PIN</string>
+    <string name="security_key_flow_pin_wrong">Wrong PIN, %1$d tries left.</string>
+    <string name="security_key_flow_done">Done.</string>
+    <string name="security_key_flow_sealing">Sealing the stored configs…</string>
+    <string name="monitor_security_key_note">A security key is required: alerts and the widget pause when Android has closed Ichor, until you unlock it again.</string>
 
     <!-- Home-screen widget -->
     <string name="widget_description">Cluster status from the last background check</string>

@@ -61,7 +61,11 @@ struct MonitoringSection: View {
         } header: {
             Text("Monitoring")
         } footer: {
-            Text("Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within \(certWarnDays) days. iOS decides when background checks run, so alerts can be delayed. The home-screen widget shows the last check.")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within \(certWarnDays) days. iOS decides when background checks run, so alerts can be delayed. The home-screen widget shows the last check.")
+                // The sealed configs cannot be read in the background after iOS closed the app.
+                if model.requiresKey { Text("A security key is required: alerts and the widget pause when iOS has closed Ichor, until you unlock it again.") }
+            }
         }
     }
 

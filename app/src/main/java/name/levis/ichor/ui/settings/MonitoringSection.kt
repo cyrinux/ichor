@@ -34,6 +34,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.monitor.canPostNotifications
+import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
@@ -48,6 +49,7 @@ fun MonitoringSection(app: TalosApp) {
     val gitopsWatched by store.gitopsWatched.collectAsStateWithLifecycle()
     val checkupWatched by store.checkupWatched.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
+    val securityKeys by app.appLock.securityKeys.collectAsStateWithLifecycle()
     var error by remember { mutableStateOf<String?>(null) }
 
     fun apply(on: Boolean) {
@@ -82,6 +84,8 @@ fun MonitoringSection(app: TalosApp) {
                 }
                 Switch(checked = enabled, onCheckedChange = ::toggle, modifier = Modifier.padding(start = 12.dp))
             }
+            // The sealed configs cannot be read in the background after Android closed the app.
+            if (securityKeys?.required == true) InfoNotice(stringResource(R.string.monitor_security_key_note))
             // Opt-in on top of the alerts: Kubernetes API calls and a Garage CLI run at every check.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
