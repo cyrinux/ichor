@@ -1,0 +1,6 @@
+• Security keys (YubiKey over NFC/USB) for the app lock
+• Panel assistant on the Metrics screen, Android and iOS
+• Panel assistant in the Go core, a chat that writes and checks PromQL
+• Background alerts on clusters added from a kubeconfig
+• Data services and an arrangeable home on kubeconfig clusters
+• Omni review: refused key, shared sign-in on removal, iOS flow
