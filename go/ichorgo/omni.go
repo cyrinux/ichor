@@ -118,6 +118,9 @@ var (
 	errOmniNoCluster = errors.New("this Omni context names no cluster: add the account's clusters from Omni, or download a cluster's talosconfig")
 	// errOmniNotProbed: an Omni context has no endpoint on the local network to look for.
 	errOmniNotProbed = errors.New("an Omni cluster is reached through Omni, not probed")
+	// errOmniRefusedKey: a pasted service account key Omni does not authenticate. Not a sign-in
+	// request: the apps would go on in the browser, which a service account never does.
+	errOmniRefusedKey = errors.New("omni refused this service account key")
 )
 
 // omniClientOptions are the client options of the Omni context stored under key, signed

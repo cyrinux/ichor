@@ -168,6 +168,8 @@ Notes:
 - **Roles combine:** an `os:operator` config can do everything an `os:reader` one can.
 - **Kubernetes access:** see [Kubernetes clusters without Talos](#kubernetes-clusters-without-talos)
   to use your own kubeconfig identity instead of the admin kubeconfig (no `os:admin` needed).
+- **Omni:** a cluster managed by Omni has no talosconfig roles; Omni's own role for the identity
+  applies, see [Omni clusters](#omni-clusters).
 - **Kubernetes workloads:** the app asks Talos for an admin kubeconfig and keeps it in memory
   only, for 30 minutes; it is never written to disk. The phone must reach the Kubernetes API
   (port 6443): when the kubeconfig's address (often a VIP or an internal name) does not answer,
@@ -432,6 +434,30 @@ admin kubeconfig, which also works with an `os:reader` talosconfig.
 Sign-in tokens and entered keys are sealed on the device like the configs. Backups keep the
 keys you entered but not the tokens of a sign-in: after a restore, those clusters ask to sign
 in again.
+
+### Omni clusters
+
+A cluster managed by [Sidero Omni](https://omni.siderolabs.com/) is reached through Omni, which
+proxies the Talos API to its machines and signs every call with a PGP key, as `talosctl` and
+`omnictl` do. Add one in any of three ways:
+
+- **Add from Sidero Omni** (on the add screen): the instance URL, then an account email or a
+  service account key (`OMNI_SERVICE_ACCOUNT_KEY`, as `omnictl serviceaccount create` prints it).
+  Omni lists the clusters the identity may see and the preview adds the ones you pick.
+- **Import Omni's talosconfig** of a cluster (downloaded from Omni, or `omnictl talosconfig`),
+  like any other talosconfig. It has no certificate: the app asks for the sign-in on first use.
+- **Enter details** (the form): the instance URL, the cluster name in Omni and who signs in.
+
+An account signs in by confirming a key in the browser, as `omnictl` does: the key lasts 4 hours,
+then the app asks again. A service account key is long-lived and is entered once. One sign-in
+serves every cluster of the same identity on the same instance; removing one cluster keeps the
+others signed in. Backups keep service account keys but not account sign-ins.
+
+What the app may do is Omni's role for the identity: the Reader role reads the Talos API through
+Omni and lists the clusters; Kubernetes goes through Omni's own proxy, signed in with the same
+key, and needs an access policy on the cluster (or the Operator role), as `omnictl kubeconfig`
+does. Issuing a talosconfig for a teammate is not available for Omni clusters: download one from
+Omni instead.
 
 ### Share links
 

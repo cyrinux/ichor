@@ -230,7 +230,8 @@ struct ClustersView: View {
         if !model.labels.masked && !context.fingerprint.isEmpty {
             Button { startRenaming(context) } label: { Label("Rename", systemImage: "pencil") }
         }
-        if !context.isKube && !context.demo && !context.fingerprint.isEmpty && !model.kubeContexts.isEmpty {
+        // An Omni cluster's Kubernetes goes through Omni, with its sign-in: no link.
+        if !context.isKube && !context.demo && !context.omni && !context.fingerprint.isEmpty && !model.kubeContexts.isEmpty {
             kubeAccessPicker(context)
         }
         if context.isKube || context.omni, let target = model.signInTarget(for: context) {

@@ -37,6 +37,7 @@ struct OmniDiscoveryView: View {
                 } footer: {
                     Text("Sign in to your Omni instance: its clusters show in the preview, already signed in, Kubernetes included.")
                 }
+                .disabled(working)
                 Section {
                     TextField("Omni URL (https://…omni.siderolabs.io)", text: $url)
                         .keyboardType(.URL)
@@ -86,6 +87,11 @@ struct OmniDiscoveryView: View {
             }
         }
         .interactiveDismissDisabled(working)
+        // Gone whichever way: no wait for the confirmation in Omni (up to 10 minutes) goes on.
+        .onDisappear {
+            flow.cancel()
+            work?.cancel()
+        }
         .onChange(of: flow.phase) { _, phase in
             switch phase {
             case .signedIn:
@@ -134,6 +140,8 @@ struct OmniDiscoveryView: View {
             onFound(talosconfig)
         } catch {
             self.error = error.localizedDescription
+            // The key expired or went: the next try signs in again rather than listing again.
+            if isKubeSignInRequired(error.localizedDescription) { signedIn = nil }
         }
     }
 }

@@ -27,9 +27,12 @@ class KubeAccess(prefs: SharedPreferences) {
     }
 }
 
-/** The links of [links] from a Talos cluster of [summary] to a kubeconfig cluster of [summary]. */
+/**
+ * The links of [links] from a Talos cluster of [summary] to a kubeconfig cluster of [summary].
+ * An Omni cluster's Kubernetes goes through Omni, with its sign-in: no link applies to it.
+ */
 internal fun validKubeAccess(links: Map<String, String>, summary: ConfigSummary): Map<String, String> {
-    val talos = summary.contexts.filter { !it.isKube && !it.demo }.map { it.fingerprint }.toSet()
+    val talos = summary.contexts.filter { !it.isKube && !it.demo && !it.omni }.map { it.fingerprint }.toSet()
     val kube = summary.contexts.filter { it.isKube }.map { it.fingerprint }.toSet()
     return links.filter { (from, to) -> from in talos && to in kube }
 }

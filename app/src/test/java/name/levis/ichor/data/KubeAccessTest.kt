@@ -31,6 +31,16 @@ class KubeAccessTest {
     }
 
     @Test
+    fun omniClusterTakesNoLink() {
+        val withOmni = mergeSummaries(
+            ConfigSummary("acme", listOf(ContextSummary("acme-demo", fingerprint = "o1", omni = true, authKey = "omnikey", signIn = "omni"))),
+            ConfigSummary("oidc", listOf(ContextSummary("oidc", fingerprint = "k1", kind = KIND_KUBE))),
+        )
+        // Its Kubernetes goes through Omni: a link set earlier (or restored) is dropped.
+        assertEquals(emptyMap<String, String>(), validKubeAccess(mapOf("o1" to "k1"), withOmni))
+    }
+
+    @Test
     fun linkedSummarySetsTheKubeAccess() {
         val linked = withKubeAccess(summary, mapOf("t1" to "k1", "t2" to "gone"))
 

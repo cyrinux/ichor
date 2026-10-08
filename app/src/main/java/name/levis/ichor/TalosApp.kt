@@ -70,6 +70,7 @@ import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.heldBackForVpn
 import name.levis.ichor.model.signInKeys
+import name.levis.ichor.model.signsOutOnRemoval
 import name.levis.ichor.model.ClusterLabels
 import name.levis.ichor.shortcuts.ClusterShortcuts
 import name.levis.ichor.shortcuts.ShortcutSpec
@@ -315,8 +316,9 @@ class TalosApp : Application() {
 
     suspend fun removeCluster(name: String): Boolean {
         val stored = configRepository.config.value
-        // Its sign-in goes with it, the token the core holds in memory too.
-        if (stored?.summary?.contexts?.any { it.name == name && it.signIn.isNotEmpty() } == true) {
+        // Its sign-in goes with it, the token the core holds in memory too (unless another
+        // Omni cluster of the same identity still uses it).
+        if (stored != null && signsOutOnRemoval(stored.summary.contexts, name)) {
             runCatching { kubeAuthRepository.signOut(name) }
         }
         val wasShown = name == stored?.activeContext

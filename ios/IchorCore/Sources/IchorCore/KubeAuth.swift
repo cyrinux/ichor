@@ -238,7 +238,8 @@ public enum KubeAuthMap {
 /// the admin kubeconfig Talos issues: a Talos cluster linked (`links`: Talos fingerprint → kube
 /// fingerprint) to a kube cluster still stored (`kubeContexts`).
 public func kubeAccessContext(of talos: ContextSummary?, links: [String: String], kubeContexts: [ContextSummary]) -> String? {
-    guard let talos, !talos.isKube, !talos.demo, !talos.fingerprint.isEmpty,
+    // An Omni cluster's Kubernetes goes through Omni, with its sign-in: no link applies.
+    guard let talos, !talos.isKube, !talos.demo, !talos.omni, !talos.fingerprint.isEmpty,
           let target = links[talos.fingerprint], !target.isEmpty else { return nil }
     return kubeContexts.first { $0.isKube && $0.fingerprint == target }?.name
 }

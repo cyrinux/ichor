@@ -141,6 +141,9 @@ final class KubeAuthTests: XCTestCase {
         XCTAssertNil(kubeAccessContext(of: kube, links: ["k1": "k1"], kubeContexts: [kube]))
         let demo = ContextSummary(name: "demo", fingerprint: "t1", demo: true)
         XCTAssertNil(kubeAccessContext(of: demo, links: links, kubeContexts: [kube]))
+        // An Omni cluster's Kubernetes goes through Omni: a link set earlier does not apply.
+        let omni = ContextSummary(name: "acme-demo", fingerprint: "t1", signIn: "omni", omni: true, authKey: "omnikey")
+        XCTAssertNil(kubeAccessContext(of: omni, links: links, kubeContexts: [kube]))
         XCTAssertNil(kubeAccessContext(of: nil, links: links, kubeContexts: [kube]))
 
         XCTAssertEqual(keepKubeAccess(["t1": "k1", "t2": "k1", "t1x": "gone"], talos: ["t1", "t1x"], kube: ["k1"]), ["t1": "k1"])
