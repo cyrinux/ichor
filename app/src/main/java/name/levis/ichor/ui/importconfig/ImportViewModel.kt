@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.KubeAuthRepository
+import name.levis.ichor.data.SignInEvent
+import name.levis.ichor.model.SignInPrompt
 import name.levis.ichor.model.TalosForm
 import name.levis.ichor.model.DiscoveryProvider
 import name.levis.ichor.model.discoveryFields
@@ -16,7 +18,9 @@ import name.levis.ichor.model.initialKubeChoices
 import name.levis.ichor.model.takenNameChoices
 import name.levis.ichor.ui.userMessage
 import name.levis.ichorgo.Ichorgo
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +29,12 @@ import kotlinx.coroutines.withContext
 
 sealed interface ImportState {
     data object Idle : ImportState
+
+    /**
+     * Adding the clusters of a Sidero Omni account: [running] while signing in or listing,
+     * [prompt] the page to open while Omni waits for the user's confirmation.
+     */
+    data class Omni(val running: Boolean = false, val prompt: SignInPrompt? = null, val error: String? = null) : ImportState
     data object Validating : ImportState
 
     /**
@@ -79,7 +89,14 @@ sealed interface ImportState {
     data object Saved : ImportState
 }
 
-class ImportViewModel(private val configs: ConfigRepository, private val auth: KubeAuthRepository) : ViewModel() {
+class ImportViewModel(
+    private val configs: ConfigRepository,
+    private val auth: KubeAuthRepository,
+    /** The Omni sign-in worked: the user is still in the browser, bring the app back. */
+    private val onBrowserDone: () -> Unit = {},
+) : ViewModel() {
+    private var omniRun: Job? = null
+
     private val _state = MutableStateFlow<ImportState>(ImportState.Idle)
     val state: StateFlow<ImportState> = _state.asStateFlow()
 
@@ -147,6 +164,10 @@ class ImportViewModel(private val configs: ConfigRepository, private val auth: K
 
     /** Shows the cloud providers whose clusters can be added from an account. */
     fun startDiscovery(provider: DiscoveryProvider? = null) {
+        if (provider == DiscoveryProvider.OMNI) {
+            _state.value = ImportState.Omni()
+            return
+        }
         _state.value = ImportState.Validating
         viewModelScope.launch {
             _state.value = runCatching { ImportState.Discover(discoveryFields(auth.discoveryFields()), initial = provider) }
@@ -168,6 +189,57 @@ class ImportViewModel(private val configs: ConfigRepository, private val auth: K
                 ImportState.KubePreview(yaml, configs.validateKube(yaml), configs.kubeImportConflicts(yaml), discovery = secrets)
             }.getOrElse { discover.copy(running = false, error = it.userMessage()) }
         }
+    }
+
+    /** Signs [email] in to Omni at [endpoint] in the browser, then previews the account's clusters. */
+    fun omniAccount(endpoint: String, email: String) {
+        val omni = _state.value as? ImportState.Omni ?: return
+        if (omni.running) return
+        _state.value = omni.copy(running = true, error = null)
+        omniRun = viewModelScope.launch {
+            try {
+                var failure: String? = null
+                auth.omniSignIn(endpoint, email).collect { event ->
+                    when (event) {
+                        is SignInEvent.Prompt -> _state.value = ImportState.Omni(running = true, prompt = event.prompt)
+                        is SignInEvent.Done -> failure = event.error
+                    }
+                }
+                val error = failure
+                if (error != null) {
+                    _state.value = ImportState.Omni(error = error)
+                    return@launch
+                }
+                onBrowserDone()
+                _state.value = ImportState.Omni(running = true)
+                omniPreview(endpoint, email)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.value = ImportState.Omni(error = e.userMessage())
+            }
+        }
+    }
+
+    /** Checks the service account [key] against Omni at [endpoint], then previews its clusters. */
+    fun omniServiceAccount(endpoint: String, key: String) {
+        val omni = _state.value as? ImportState.Omni ?: return
+        if (omni.running) return
+        _state.value = omni.copy(running = true, error = null)
+        omniRun = viewModelScope.launch {
+            try {
+                omniPreview(endpoint, auth.omniServiceAccount(endpoint, key))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.value = ImportState.Omni(error = e.userMessage())
+            }
+        }
+    }
+
+    private suspend fun omniPreview(endpoint: String, identity: String) {
+        val yaml = auth.discoverOmni(endpoint, identity)
+        _state.value = ImportState.Preview(yaml, configs.validate(yaml), configs.importConflicts(yaml))
     }
 
     fun confirm() {
@@ -203,6 +275,8 @@ class ImportViewModel(private val configs: ConfigRepository, private val auth: K
     }
 
     fun reset() {
+        omniRun?.cancel()
+        omniRun = null
         _state.value = ImportState.Idle
     }
 

@@ -76,15 +76,14 @@ class KubeAccessTest {
     }
 
     @Test
-    fun omniClusterAllowsAllButIssuingCredentials() {
+    fun omniClusterAllowsAllButIssuingATalosconfig() {
         val omni = ContextSummary("acme", omni = true)
 
         assertTrue(omni.allows(Feature.POWER))
         assertTrue(omni.allows(Feature.UPGRADE))
+        assertTrue(omni.allows(Feature.KUBECONFIG))
+        assertTrue(omni.allows(Feature.WORKLOADS))
         assertFalse(omni.allows(Feature.ISSUE_CONFIG))
-        assertFalse(omni.allows(Feature.KUBECONFIG))
-        assertFalse(omni.allows(Feature.WORKLOADS))
-        assertTrue(omni.copy(kubeAccess = "k1").allows(Feature.WORKLOADS))
     }
 
     @Test

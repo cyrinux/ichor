@@ -65,10 +65,31 @@ extension TalosClient {
         try await run { IchorgoDiscoverClusters(provider, secrets, $0) }
     }
 
-    /// Starts the browser or device-code sign-in of `context`. The stream finishes after
-    /// `done`; `complete` hands over a callback URL the app received, `cancel` stops waiting.
-    static func startSignIn(kube: String, context: String, talos: Bool = false)
-        -> (events: AsyncStream<KubeSignInEvent>, complete: @Sendable (String) -> Void, cancel: @Sendable () -> Void) {
+    /// A running interactive sign-in: its events (finished after `done`), `complete` hands
+    /// over a callback URL the app received, `cancel` stops waiting.
+    typealias SignInRun = (events: AsyncStream<KubeSignInEvent>, complete: @Sendable (String) -> Void, cancel: @Sendable () -> Void)
+
+    /// Starts the browser or device-code sign-in of `context`.
+    static func startSignIn(kube: String, context: String, talos: Bool = false) -> SignInRun {
+        signInRun { bridge in talos ? IchorgoStartTalosSignIn(kube, context, bridge) : IchorgoStartKubeSignIn(kube, context, bridge) }
+    }
+
+    /// Signs the account `email` in to the Omni instance at `endpoint` in the browser.
+    static func startOmniSignIn(endpoint: String, email: String) -> SignInRun {
+        signInRun { bridge in IchorgoStartOmniAccountSignIn(endpoint, email, bridge) }
+    }
+
+    /// Checks and stores an Omni service account key; the identity it signs as.
+    static func omniServiceAccount(endpoint: String, key: String) async throws -> String {
+        try await run { IchorgoSetOmniServiceAccount(endpoint, key, $0) }
+    }
+
+    /// A talosconfig of the clusters `identity` sees on the Omni instance, for the preview.
+    static func discoverOmni(endpoint: String, identity: String) async throws -> String {
+        try await run { IchorgoDiscoverOmniClusters(endpoint, identity, $0) }
+    }
+
+    private static func signInRun(_ start: (SignInBridge) -> IchorgoSignInRun?) -> SignInRun {
         let (stream, continuation) = AsyncStream.makeStream(of: KubeSignInEvent.self)
         let bridge = SignInBridge(
             prompt: { continuation.yield(.prompt($0)) },
@@ -77,7 +98,7 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = talos ? IchorgoStartTalosSignIn(kube, context, bridge) : IchorgoStartKubeSignIn(kube, context, bridge)
+        let run = start(bridge)
         continuation.onTermination = { _ in
             run?.cancel()
             _ = bridge // keep the listener alive for the whole sign-in

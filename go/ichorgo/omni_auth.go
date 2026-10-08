@@ -145,7 +145,24 @@ func loadOmniSignInContext(storedYAML, contextName string) (omniSignInContext, e
 		return omniSignInContext{}, errors.New("the Omni context has no identity (auth.siderov1.identity)")
 	}
 
-	return omniSignInContext{key: contextFingerprint(name, ctx), ctx: ctx}, nil
+	return omniSignInContext{key: migrateOmniAuth(name, ctx), ctx: ctx}, nil
+}
+
+// migrateOmniAuth returns the auth key of the Omni context name, moving there a sign-in
+// that v1.14 kept under the context's fingerprint (one per context, not per identity).
+func migrateOmniAuth(name string, ctx *clientconfig.Context) string {
+	key := omniAuthKey(ctx)
+	if kubeAuth.load(key).Method != "" {
+		return key
+	}
+
+	legacy := contextFingerprint(name, ctx)
+	if state := kubeAuth.load(legacy); state.Method != "" {
+		kubeAuth.save(key, state)
+		kubeAuth.forget(legacy)
+	}
+
+	return key
 }
 
 // TalosSignInInfo describes how the named stored talosconfig context signs in, as a JSON
@@ -220,8 +237,7 @@ func TalosSetCredentials(storedYAML, contextName, secretsJSON string) (err error
 		Secrets: map[string]string{omniServiceAccountField: value},
 		User:    signer.identity,
 	})
-	sessions.forgetAuth(sc.key)
-	kubeClients.forgetConfig(storedYAML, contextName)
+	omniAuthChanged(sc.key)
 
 	return nil
 }
@@ -286,7 +302,24 @@ func runOmniSignIn(ctx context.Context, storedYAML, contextName string, listener
 		return errors.New("this cluster does not sign in in a browser")
 	}
 
-	identity := omniIdentity(sc.ctx)
+	if err := signInOmniUser(ctx, sc.ctx, listener); err != nil {
+		return err
+	}
+
+	kubeClients.forgetConfig(storedYAML, contextName)
+
+	return nil
+}
+
+// signInOmniUser has the identity of cfgCtx confirm a new key in the browser, then stores
+// it for every context of that identity on the instance (see omniAuthKey).
+func signInOmniUser(ctx context.Context, cfgCtx *clientconfig.Context, listener SignInListener) error {
+	identity := omniIdentity(cfgCtx)
+	if identity == "" || isOmniServiceAccount(identity) {
+		return errors.New("sign in to Omni with an account email")
+	}
+
+	authKey := omniAuthKey(cfgCtx)
 
 	// The key lives from now, not from its confirmation.
 	expires := time.Now().Add(omniKeyLifetime)
@@ -296,7 +329,7 @@ func runOmniSignIn(ctx context.Context, storedYAML, contextName string, listener
 		return fmt.Errorf("generate a key: %w", err)
 	}
 
-	if err := confirmOmniKey(ctx, sc.ctx, identity, key, func(loginURL string) {
+	if err := confirmOmniKey(ctx, cfgCtx, identity, key, func(loginURL string) {
 		emitJSON(signInPrompt{Kind: "browser", URL: loginURL, ExpiresIn: int(omniConfirmTimeout / time.Second)}, listener.OnPrompt)
 	}); err != nil {
 		return err
@@ -307,15 +340,14 @@ func runOmniSignIn(ctx context.Context, storedYAML, contextName string, listener
 		return fmt.Errorf("store the key: %w", err)
 	}
 
-	kubeAuth.forget(sc.key)
-	kubeAuth.save(sc.key, kubeAuthState{
+	kubeAuth.forget(authKey)
+	kubeAuth.save(authKey, kubeAuthState{
 		Method:         omniUserMethod,
 		Session:        map[string]string{omniKeySession: armored},
 		User:           identity,
 		SessionExpires: expires.Unix(),
 	})
-	sessions.forgetAuth(sc.key)
-	kubeClients.forgetConfig(storedYAML, contextName)
+	omniAuthChanged(authKey)
 
 	return nil
 }
@@ -328,17 +360,14 @@ func confirmOmniKey(ctx context.Context, cfgCtx *clientconfig.Context, identity 
 		return fmt.Errorf("export the key: %w", err)
 	}
 
-	unsigned := *cfgCtx
-	unsigned.Auth.SideroV1 = nil
-
-	c, err := client.New(ctx, client.WithConfigContext(&unsigned))
+	cc, err := omniDial(cfgCtx, nil)
 	if err != nil {
-		return fmt.Errorf("create Talos client: %w", err)
+		return fmt.Errorf("connect to Omni: %w", err)
 	}
 
-	defer c.Close() //nolint:errcheck
+	defer cc.Close() //nolint:errcheck
 
-	authClient := auth.NewClient(c.Conn())
+	authClient := auth.NewClient(cc)
 
 	loginURL, err := authClient.RegisterPGPPublicKey(ctx, identity, []byte(public))
 	if err != nil {
@@ -374,8 +403,7 @@ func TalosSignOut(storedYAML, contextName string) (err error) {
 	}
 
 	kubeAuth.forget(sc.key)
-	sessions.forgetAuth(sc.key)
-	kubeClients.forgetConfig(storedYAML, contextName)
+	omniAuthChanged(sc.key)
 
 	return nil
 }

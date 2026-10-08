@@ -2,6 +2,7 @@ package ichorgo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/siderolabs/talos/pkg/machinery/client"
 )
@@ -16,11 +17,16 @@ func Kubeconfig(configYAML, contextName, kubeServer string) (out string, err err
 
 	contextName = unmaskContext(configYAML, contextName)
 
+	omni := false
+
 	kubeconfig, err := withSession(configYAML, contextName, callTimeout, func(ctx context.Context, s *session) (string, error) {
+		omni = s.signing != nil
+
 		return fetchKubeconfig(ctx, s)
 	})
-	if err != nil {
-		return "", err
+	if err != nil || omni {
+		// Omni's kubeconfig names its kube proxy: an address set for the cluster does not apply.
+		return kubeconfig, err
 	}
 
 	return withKubeServer(kubeconfig, kubeServer)
@@ -29,6 +35,23 @@ func Kubeconfig(configYAML, contextName, kubeServer string) (out string, err err
 // fetchKubeconfig asks a control-plane node for an admin kubeconfig. Talos signs a new
 // client certificate on every call.
 func fetchKubeconfig(ctx context.Context, s *session) (string, error) {
+	// Through Omni: Omni's kubeconfig of the cluster, which signs in with kubelogin.
+	if s.signing != nil {
+		cc, err := omniDial(s.context, &omniSigning{method: omniMethodName(s.context), signer: s.signing.current()})
+		if err != nil {
+			return "", fmt.Errorf("connect to Omni: %w", err)
+		}
+
+		defer cc.Close() //nolint:errcheck
+
+		data, err := omniKubeconfig(ctx, cc, s.context.Cluster)
+		if err != nil {
+			return "", omniAPIError(err)
+		}
+
+		return string(data), nil
+	}
+
 	cps, err := s.controlPlanes(ctx)
 	if err != nil {
 		return "", err

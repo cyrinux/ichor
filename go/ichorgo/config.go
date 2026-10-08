@@ -41,6 +41,9 @@ type contextSummary struct {
 	// SignIn is the method an Omni context signs in with, like a kubeconfig context's (see
 	// TalosSignInInfo); "" for a certificate.
 	SignIn string `json:"signIn,omitempty"`
+	// AuthKey is where the AuthStore keeps an Omni context's sign-in (shared by the contexts
+	// of one identity on one instance): the apps keep it, and back it up, with the cluster.
+	AuthKey string `json:"authKey,omitempty"`
 }
 
 // ParseConfig validates a talosconfig YAML and returns a JSON configSummary.

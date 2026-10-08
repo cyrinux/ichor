@@ -56,6 +56,7 @@ enum KubeAuthWording {
         case "aks": "Azure AKS"
         case "digitalocean": "DigitalOcean"
         case "rancher": "Rancher"
+        case "omni": "Sidero Omni"
         default: provider
         }
     }

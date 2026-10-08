@@ -3328,4 +3328,9 @@
     <string name="import_form_pick_file">Вибрати файл</string>
     <string name="import_form_omni_url">URL Omni</string>
     <string name="import_form_omni_identity_hint">Ел. пошта вашого облікового запису Omni або ідентичність сервісного облікового запису (ім\'я@serviceaccount.omni.sidero.dev)</string>
+    <string name="omni_add_title">Додати кластери з Sidero Omni</string>
+    <string name="omni_add_body">Увійдіть у свій екземпляр Omni: його кластери з\'являться в попередньому перегляді, вже з входом, разом із Kubernetes.</string>
+    <string name="omni_field_url">URL Omni (https://…omni.siderolabs.io)</string>
+    <string name="omni_field_email">Email облікового запису</string>
+    <string name="omni_mode_account">Обліковий запис</string>
 </resources>

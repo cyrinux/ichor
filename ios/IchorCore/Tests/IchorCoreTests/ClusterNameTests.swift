@@ -110,5 +110,6 @@ final class ClusterNameTests: XCTestCase {
     func testDiscoveryProvidersShowTheirCloudLogo() {
         XCTAssertEqual(kubeDiscoverProviders.map(discoveryLogo), ["aws", "google-cloud", "azure", "digital-ocean", "rancher"])
         XCTAssertEqual(discoveryLogo("other"), "kubernetes")
+        XCTAssertEqual(discoveryLogo("omni"), "talos")
     }
 }

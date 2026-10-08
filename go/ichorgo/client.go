@@ -59,7 +59,7 @@ func openSession(configYAML, contextName string) (*session, error) {
 	var signing *omniSigning
 
 	if isOmni(cfgCtx) {
-		authKey = contextFingerprint(name, cfgCtx)
+		authKey = migrateOmniAuth(name, cfgCtx)
 
 		if opts, signing, err = omniClientOptions(authKey, cfgCtx); err != nil {
 			return nil, err
