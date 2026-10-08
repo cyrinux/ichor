@@ -143,6 +143,23 @@ extension UsageLevel {
     }
 }
 
+/// A credential that expires within certWarnDays, or has: `text` says which and what to do,
+/// for the days left (negative once expired). Orange, red once expired.
+struct ExpiryBanner: View {
+    let notAfter: Int64
+    let text: (_ days: Int) -> String
+
+    var body: some View {
+        let days = daysUntil(notAfter)
+        Label {
+            Text(verbatim: text(days))
+        } icon: {
+            Image(systemName: "exclamationmark.triangle.fill")
+        }
+        .foregroundStyle(days < 0 ? Color.red : Color.orange)
+    }
+}
+
 /// Why a Talos screen is not available: the talosconfig's role is short of it, or the cluster
 /// was added from a kubeconfig and has no Talos API at all (Android's TalosOnlyNotice).
 struct RoleNotice: View {

@@ -47,7 +47,7 @@ final class KubeNodeDensityTests: XCTestCase {
         // The two not-ready ones first, then the cordoned, cut at five.
         XCTAssertEqual(problems.shown.map(\.name), ["ip-10-0-0-7", "ip-10-0-0-8", "ip-10-0-0-1", "ip-10-0-0-2", "ip-10-0-0-3"])
         XCTAssertEqual(problems.more, 3)
-        XCTAssertEqual(cluster(3).problemNodes(), KubeProblemNodes(shown: [], more: 0))
+        XCTAssertEqual(cluster(3).problemNodes(), ProblemNodes(shown: [KubeNodeInfo](), more: 0))
     }
 
     func testFiltersByStatusAndQuery() {

@@ -1,32 +1,6 @@
 import SwiftUI
 import IchorCore
 
-extension OverviewAction: BarActionLook {
-    var systemImage: String {
-        switch self {
-        case .health: "heart.text.square"
-        case .events: "list.bullet.rectangle"
-        case .workloads: "square.stack.3d.up"
-        case .metrics: "chart.xyaxis.line"
-        case .kubespan: "point.3.connected.trianglepath.dotted"
-        case .etcd: "cylinder.split.1x2"
-        case .settings: "gearshape"
-        }
-    }
-
-    var title: Text {
-        switch self {
-        case .health: Text("Cluster health")
-        case .events: Text("Events")
-        case .workloads: Text("Kubernetes workloads")
-        case .metrics: Text("Metrics")
-        case .kubespan: Text(verbatim: "KubeSpan")
-        case .etcd: Text(verbatim: "etcd")
-        case .settings: Text("Settings")
-        }
-    }
-}
-
 extension OverviewCard {
     var title: Text {
         switch self {

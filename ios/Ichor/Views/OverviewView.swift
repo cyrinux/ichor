@@ -7,7 +7,6 @@ struct OverviewView: View {
 
     @Environment(AppModel.self) private var model
     @Environment(SupportPrompt.self) private var support
-    @Environment(AISettings.self) private var ai
     @State private var state: LoadState<ClusterOverview> = .loading
     @State private var update: TalosUpdateInfo?
     /// Release notes to present after an app update.
@@ -83,11 +82,7 @@ struct OverviewView: View {
                             ForEach(layout.visible) { card in section(card, overview: overview) }
                             // The Talos update section alone, with no release to offer, leaves the list as empty.
                             if layout.visible.allSatisfy({ $0 == .talosUpdate && !offersTalosUpdate }) {
-                                Section {
-                                    Button { customizing = true } label: {
-                                        Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
-                                    }
-                                }
+                                AllHiddenRow { customizing = true }
                             }
                         }
                         .refreshable {
@@ -102,74 +97,9 @@ struct OverviewView: View {
                 }
             }
         }
-        .navigationTitle(model.activeLabel)
-        // Shown by the title once it is inline (scrolled); the bar below is always there.
-        .toolbarTitleMenu {
-            // A submenu: with many clusters, the actions below stay in reach without a scroll.
-            if (model.summary?.contexts.count ?? 0) > 1 {
-                Menu {
-                    ForEach(model.summary?.contexts ?? []) { context in
-                        Button { model.activeContext = context.name } label: {
-                            if context.name == model.activeContext {
-                                Label(model.labels.of(context), systemImage: "checkmark")
-                            } else {
-                                Text(model.labels.of(context))
-                            }
-                        }
-                    }
-                } label: {
-                    Label("Switch cluster", systemImage: "arrow.left.arrow.right")
-                }
-            }
-            Button { path.append(.clusters) } label: { Label("Manage clusters…", systemImage: "square.stack.3d.up") }
-            ShareLinkButton(target: .screen(.cluster))
-        }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            if (model.summary?.contexts.count ?? 0) > 1 {
-                ClusterBar { path.append(.clusters) }
-            }
-        }
-        .toolbar {
-            if model.privacyMask {
-                ToolbarItem(placement: .topBarLeading) {
-                    // A small icon rather than a label, so it stays out of the way in screenshots.
-                    Image(systemName: "eye.slash")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .accessibilityLabel(Text("Screenshot mode"))
-                }
-            }
-            ToolbarItemGroup(placement: .primaryAction) {
-                // Buttons with labels, not NavigationLinks with images: on a phone the ones that
-                // don't fit fold into the system's "…" menu, where a link does nothing and an image
-                // shows no title.
-                // Optional: only once turned on in the settings.
-                if ai.enabled {
-                    Button { path.append(Route.diagnosis(note: "")) } label: { Label("AI diagnosis", systemImage: "sparkles") }
-                }
-                // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
-                ForEach(bar.icons.filter(offered)) { action in
-                    Button { path.append(route(action)) } label: {
-                        Label { action.title } icon: { Image(systemName: action.systemImage) }
-                    }
-                    .disabled(!enabled(action))
-                }
-                Menu {
-                    let menu = bar.menu.filter(offered)
-                    ForEach(menu) { action in
-                        Button { path.append(route(action)) } label: {
-                            Label { action.title } icon: { Image(systemName: action.systemImage) }
-                        }
-                        .disabled(!enabled(action))
-                    }
-                    if !menu.isEmpty { Divider() }
-                    Button { customizing = true } label: { Label("Customize overview", systemImage: "pencil") }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
-                .accessibilityLabel(Text("More"))
-            }
-        }
+        // The cluster's title and menu, the cluster bar and the toolbar as arranged (HomeChrome).
+        .homeChrome(path: $path, icons: bar.icons.filter(offered), menu: bar.menu.filter(offered), enabled: enabled,
+                    customizeTitle: "Customize overview", customizing: $customizing) { path.append(route($0)) }
         .sheet(isPresented: $customizing) { OverviewEditorSheet(OverviewCard.self, OverviewAction.self, title: "Customize overview", absent: absentCards) }
         // Reloads with the screenshot mode too, dropping what was loaded with the old names.
         .task(id: loadID) { await load() }
@@ -589,16 +519,12 @@ private struct CertExpiryBanner: View {
     let notAfter: Int64
 
     var body: some View {
-        let days = daysUntil(notAfter)
         NavigationLink(value: Route.issueConfig(renew: true)) {
-            Label {
-                Text(days < 0
-                     ? String(localized: "The client certificate expired \(-days) days ago.")
-                     : String(localized: "The client certificate expires in \(days) days. Generate a new talosconfig."))
-            } icon: {
-                Image(systemName: "exclamationmark.triangle.fill")
+            ExpiryBanner(notAfter: notAfter) { days in
+                days < 0
+                    ? String(localized: "The client certificate expired \(-days) days ago.")
+                    : String(localized: "The client certificate expires in \(days) days. Generate a new talosconfig.")
             }
-            .foregroundStyle(days < 0 ? Color.red : Color.orange)
         }
     }
 }

@@ -418,30 +418,3 @@ private struct WorkloadRow: View {
     }
 }
 
-extension KubernetesAction: BarActionLook {
-    var systemImage: String {
-        switch self {
-        case .checkup: "stethoscope"
-        case .networkPolicies: "shield.lefthalf.filled"
-        case .share: "link"
-        case .apiHealth: "heart.text.square"
-        case .flows: "point.3.filled.connected.trianglepath.dotted"
-        case .resources: "square.grid.3x3"
-        case .helm: "shippingbox"
-        case .apiAddress: "server.rack"
-        }
-    }
-
-    var title: Text {
-        switch self {
-        case .checkup: Text(CheckupText.checkupTitle)
-        case .networkPolicies: Text("Network policies")
-        case .share: Text("Share link")
-        case .apiHealth: Text("API server")
-        case .flows: Text("Live flows")
-        case .resources: Text("Resources")
-        case .helm: Text("Helm releases")
-        case .apiAddress: Text("Kubernetes API address")
-        }
-    }
-}

@@ -1,38 +1,6 @@
 import SwiftUI
 import IchorCore
 
-extension KubeHomeAction: BarActionLook {
-    var systemImage: String {
-        switch self {
-        case .workloads: "square.stack.3d.up"
-        case .resources: "square.grid.3x3"
-        case .metrics: "chart.xyaxis.line"
-        case .helm: "shippingbox"
-        case .dataServices: "externaldrive.connected.to.line.below"
-        case .checkup: "stethoscope"
-        case .apiHealth: "heart.text.square"
-        case .networkPolicies: "shield.lefthalf.filled"
-        case .events: "list.bullet.rectangle"
-        case .settings: "gearshape"
-        }
-    }
-
-    var title: Text {
-        switch self {
-        case .workloads: Text("Kubernetes workloads")
-        case .resources: Text("Resources")
-        case .metrics: Text("Metrics")
-        case .helm: Text("Helm releases")
-        case .dataServices: Text("Data services")
-        case .checkup: Text(CheckupText.checkupTitle)
-        case .apiHealth: Text("API server")
-        case .networkPolicies: Text("Network policies")
-        case .events: Text("Events")
-        case .settings: Text("Settings")
-        }
-    }
-}
-
 extension KubeHomeCard: CardLook {
     var title: Text {
         switch self {
@@ -83,7 +51,6 @@ struct KubeHomeView: View {
 
     @Environment(AppModel.self) private var model
     @Environment(SupportPrompt.self) private var support
-    @Environment(AISettings.self) private var ai
     @State private var state: LoadState<KubeNodesOverview> = .loading
     /// The apps card's data (KubeInventory, from the pod list), loaded with the nodes.
     @State private var inventory: LoadState<ClusterInventory> = .loading
@@ -114,76 +81,14 @@ struct KubeHomeView: View {
                 if support.visible { Section { SupportCard(prompt: support) } }
                 // The sections as arranged (Customize home, in the ⋯ menu).
                 ForEach(layout.visible) { card in section(card, overview: overview) }
-                if layout.visible.isEmpty {
-                    Section {
-                        Button { customizing = true } label: {
-                            Text("Every card is hidden. Tap to choose the ones to show.").foregroundStyle(.secondary)
-                        }
-                    }
-                }
+                if layout.visible.isEmpty { AllHiddenRow { customizing = true } }
             }
             .refreshable { await load() }
             .themedBackground()
         }
-        .navigationTitle(model.activeLabel)
         .kubeCordonDialogs(cordoning: $cordoning, reload: load)
-        .toolbarTitleMenu {
-            if (model.summary?.contexts.count ?? 0) > 1 {
-                Menu {
-                    ForEach(model.summary?.contexts ?? []) { context in
-                        Button { model.activeContext = context.name } label: {
-                            if context.name == model.activeContext {
-                                Label(model.labels.of(context), systemImage: "checkmark")
-                            } else {
-                                Text(model.labels.of(context))
-                            }
-                        }
-                    }
-                } label: {
-                    Label("Switch cluster", systemImage: "arrow.left.arrow.right")
-                }
-            }
-            Button { path.append(.clusters) } label: { Label("Manage clusters…", systemImage: "square.stack.3d.up") }
-            ShareLinkButton(target: .screen(.cluster))
-        }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            if (model.summary?.contexts.count ?? 0) > 1 {
-                ClusterBar { path.append(.clusters) }
-            }
-        }
-        .toolbar {
-            if model.privacyMask {
-                ToolbarItem(placement: .topBarLeading) {
-                    Image(systemName: "eye.slash")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .accessibilityLabel(Text("Screenshot mode"))
-                }
-            }
-            ToolbarItemGroup(placement: .primaryAction) {
-                if ai.enabled {
-                    Button { path.append(Route.diagnosis(note: "")) } label: { Label("AI diagnosis", systemImage: "sparkles") }
-                }
-                // As arranged: the bar's icons, the rest behind ⋯ (with the arrangement itself).
-                ForEach(bar.icons) { action in
-                    Button { open(action) } label: {
-                        Label { action.title } icon: { Image(systemName: action.systemImage) }
-                    }
-                }
-                Menu {
-                    ForEach(bar.menu) { action in
-                        Button { open(action) } label: {
-                            Label { action.title } icon: { Image(systemName: action.systemImage) }
-                        }
-                    }
-                    if !bar.menu.isEmpty { Divider() }
-                    Button { customizing = true } label: { Label("Customize home", systemImage: "pencil") }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
-                .accessibilityLabel(Text("More"))
-            }
-        }
+        // The cluster's title and menu, the cluster bar and the toolbar as arranged (HomeChrome).
+        .homeChrome(path: $path, icons: bar.icons, menu: bar.menu, customizeTitle: "Customize home", customizing: $customizing, open: open)
         .sheet(isPresented: $customizing) {
             HomeEditorSheet(KubeHomeCard.self, KubeHomeAction.self, title: "Customize home", absent: absentCards)
         }
@@ -466,14 +371,10 @@ private struct KubeExpiryBanner: View {
     let notAfter: Int64
 
     var body: some View {
-        let days = daysUntil(notAfter)
-        Label {
-            Text(days < 0
-                 ? String(localized: "The kubeconfig credentials have expired. Import a new kubeconfig.")
-                 : String(localized: "The kubeconfig credentials expire \(localizedCertExpiry(notAfter)). Import a new kubeconfig before then."))
-        } icon: {
-            Image(systemName: "exclamationmark.triangle.fill")
+        ExpiryBanner(notAfter: notAfter) { days in
+            days < 0
+                ? String(localized: "The kubeconfig credentials have expired. Import a new kubeconfig.")
+                : String(localized: "The kubeconfig credentials expire \(localizedCertExpiry(notAfter)). Import a new kubeconfig before then.")
         }
-        .foregroundStyle(days < 0 ? Color.red : Color.orange)
     }
 }

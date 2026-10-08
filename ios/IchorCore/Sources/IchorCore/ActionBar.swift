@@ -178,3 +178,59 @@ public struct ActionBar<Action: BarAction>: Equatable, Sendable {
         return copy
     }
 }
+
+/// The screens the homes' and the Kubernetes screen's toolbars lead to: one entry per screen,
+/// whichever bar offers it, so each has one icon and one name in the app (Android's
+/// `Destination`). The Talos home's Events are the machines', the Kubernetes home's the
+/// cluster's: the same screen name, one entry.
+public enum HomeDestination: Sendable {
+    case health, events, workloads, metrics, kubespan, etcd, settings
+    case resources, helm, dataServices, checkup, apiHealth, networkPolicies
+    case share, flows, apiAddress
+}
+
+public extension OverviewAction {
+    var destination: HomeDestination {
+        switch self {
+        case .health: .health
+        case .events: .events
+        case .workloads: .workloads
+        case .metrics: .metrics
+        case .kubespan: .kubespan
+        case .etcd: .etcd
+        case .settings: .settings
+        }
+    }
+}
+
+public extension KubeHomeAction {
+    var destination: HomeDestination {
+        switch self {
+        case .workloads: .workloads
+        case .resources: .resources
+        case .metrics: .metrics
+        case .helm: .helm
+        case .dataServices: .dataServices
+        case .checkup: .checkup
+        case .apiHealth: .apiHealth
+        case .networkPolicies: .networkPolicies
+        case .events: .events
+        case .settings: .settings
+        }
+    }
+}
+
+public extension KubernetesAction {
+    var destination: HomeDestination {
+        switch self {
+        case .checkup: .checkup
+        case .networkPolicies: .networkPolicies
+        case .share: .share
+        case .apiHealth: .apiHealth
+        case .flows: .flows
+        case .resources: .resources
+        case .helm: .helm
+        case .apiAddress: .apiAddress
+        }
+    }
+}

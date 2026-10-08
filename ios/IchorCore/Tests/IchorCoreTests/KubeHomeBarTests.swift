@@ -17,6 +17,13 @@ final class KubeHomeBarTests: XCTestCase {
         XCTAssertFalse(bar.isDefault)
     }
 
+    func testTheSharedScreensShareTheirDestination() {
+        XCTAssertEqual(KubeHomeAction.events.destination, OverviewAction.events.destination)
+        XCTAssertEqual(KubeHomeAction.checkup.destination, KubernetesAction.checkup.destination)
+        XCTAssertEqual(KubeHomeAction.workloads.destination, OverviewAction.workloads.destination)
+        XCTAssertNotEqual(KubeHomeAction.resources.destination, OverviewAction.settings.destination)
+    }
+
     func testTheOverviewsNamesAreNotTaken() {
         let bar = KubeHomeBar.parse("HEALTH,ETCD|KUBESPAN")
         XCTAssertTrue(bar.icons.isEmpty)

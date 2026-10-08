@@ -59,7 +59,7 @@ final class NodeDensityTests: XCTestCase {
         var nodes = cluster(25)
         nodes[24] = node(25, reachable: false)
         XCTAssertEqual(nodes.problemNodes(), ProblemNodes(shown: [nodes[24]], more: 0))
-        XCTAssertEqual(cluster(3).problemNodes(), ProblemNodes(shown: [], more: 0))
+        XCTAssertEqual(cluster(3).problemNodes(), ProblemNodes(shown: [NodeOverview](), more: 0))
     }
 
     func testOverviewOrderPutsControlPlanesFirst() {

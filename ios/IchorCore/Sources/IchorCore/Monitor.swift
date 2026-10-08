@@ -145,17 +145,10 @@ public func snapshotOf(_ overview: ClusterOverview, etcd: EtcdOverview?, certNot
         etcdAlarms: (etcd?.alarms.map { "\($0.memberId):\($0.alarm)" } ?? []).sorted(),
         // A failed alarm list is "not checked", never an all-clear.
         etcdChecked: etcd != nil && etcd?.error == nil && etcd?.alarmsError == nil,
-        certNotAfter: certNotAfter,
-        dataWatched: dataWatched,
-        dataChecked: dataWatched && dataServices != nil,
-        dataIssues: dataWatched ? dataServices.map(dataIssuesOf) ?? [:] : [:],
-        gitopsWatched: gitopsWatched,
-        gitopsChecked: gitopsWatched && gitopsIssues != nil,
-        gitopsIssues: gitopsWatched ? gitopsIssues ?? [:] : [:],
-        checkupWatched: checkupWatched,
-        checkupChecked: checkupWatched && checkupIssues != nil,
-        checkupIssues: checkupWatched ? checkupIssues ?? [:] : [:]
+        certNotAfter: certNotAfter
     )
+    .withTracks(dataWatched: dataWatched, dataServices: dataServices, gitopsWatched: gitopsWatched,
+                gitopsIssues: gitopsIssues, checkupWatched: checkupWatched, checkupIssues: checkupIssues)
 }
 
 /// The snapshot of a cluster added from a kubeconfig, from the nodes as the Kubernetes API lists
@@ -170,22 +163,30 @@ public func kubeSnapshotOf(_ overview: KubeNodesOverview, context: String, certN
     for n in overview.nodes {
         nodes[n.name] = NodeState(hostname: n.name, health: n.ready ? .ready : .notReady, reason: n.pressure.joined(separator: "; "))
     }
-    return ClusterSnapshot(
-        context: context,
-        takenAt: takenAt,
-        nodes: nodes,
-        certNotAfter: certNotAfter,
-        dataWatched: dataWatched,
-        dataChecked: dataWatched && dataServices != nil,
-        dataIssues: dataWatched ? dataServices.map(dataIssuesOf) ?? [:] : [:],
-        gitopsWatched: gitopsWatched,
-        gitopsChecked: gitopsWatched && gitopsIssues != nil,
-        gitopsIssues: gitopsWatched ? gitopsIssues ?? [:] : [:],
-        checkupWatched: checkupWatched,
-        checkupChecked: checkupWatched && checkupIssues != nil,
-        checkupIssues: checkupWatched ? checkupIssues ?? [:] : [:],
-        kube: true
-    )
+    return ClusterSnapshot(context: context, takenAt: takenAt, nodes: nodes, certNotAfter: certNotAfter, kube: true)
+        .withTracks(dataWatched: dataWatched, dataServices: dataServices, gitopsWatched: gitopsWatched,
+                    gitopsIssues: gitopsIssues, checkupWatched: checkupWatched, checkupIssues: checkupIssues)
+}
+
+public extension ClusterSnapshot {
+    /// The snapshot with its opt-in tracks (data services, GitOps apps, the checkup) as a fresh
+    /// check read them: watched or not, read this time (nil issues: unreadable, which is "not
+    /// checked", never an all-clear), and the issues found. Both snapshot kinds end here.
+    func withTracks(dataWatched: Bool, dataServices: DataServices?,
+                    gitopsWatched: Bool, gitopsIssues: [String: String]?,
+                    checkupWatched: Bool, checkupIssues: [String: String]?) -> ClusterSnapshot {
+        var next = self
+        next.dataWatched = dataWatched
+        next.dataChecked = dataWatched && dataServices != nil
+        next.dataIssues = dataWatched ? dataServices.map(dataIssuesOf) ?? [:] : [:]
+        next.gitopsWatched = gitopsWatched
+        next.gitopsChecked = gitopsWatched && gitopsIssues != nil
+        next.gitopsIssues = gitopsWatched ? gitopsIssues ?? [:] : [:]
+        next.checkupWatched = checkupWatched
+        next.checkupChecked = checkupWatched && checkupIssues != nil
+        next.checkupIssues = checkupWatched ? checkupIssues ?? [:] : [:]
+        return next
+    }
 }
 
 /// Severities of a data-service issue in a snapshot.

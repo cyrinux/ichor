@@ -27,6 +27,18 @@ public enum NodeStatus: String, CaseIterable, Sendable {
     case ready, attention, notReady, unreachable
 }
 
+/// What the dense home sections and the nodes screens need of a node, Talos (`NodeOverview`)
+/// or Kubernetes (`KubeNodeInfo`): the counts, the problem list, the grouping and the filters
+/// below serve both. Same as Android's NodeDensity.
+public protocol NodeStatusProviding {
+    /// The dot's status: ready, ready but needing attention, not ready, unreachable.
+    var status: NodeStatus { get }
+    /// Ready as the cluster reports it; a ready node may still need attention.
+    var isReady: Bool { get }
+    /// Its name or an address contains `query`, case-insensitively.
+    func matches(query: String) -> Bool
+}
+
 public extension NodeOverview {
     var status: NodeStatus {
         switch health {
@@ -34,6 +46,17 @@ public extension NodeOverview {
         case .notReady: .notReady
         case .ready: needsAttention ? .attention : .ready
         }
+    }
+}
+
+extension NodeOverview: NodeStatusProviding {
+    public var isReady: Bool { health == .ready }
+
+    /// The hostname, or an address (talosconfig or public).
+    public func matches(query: String) -> Bool {
+        hostname.localizedCaseInsensitiveContains(query)
+            || node.localizedCaseInsensitiveContains(query)
+            || publicIPs.contains { $0.localizedCaseInsensitiveContains(query) }
     }
 }
 
@@ -63,9 +86,20 @@ public struct HealthCounts: Equatable, Sendable {
     }
 }
 
+/// The order the dense sections and the nodes screens group by: the worst first.
+public let nodeStatusOrder: [NodeStatus] = [.unreachable, .notReady, .attention, .ready]
+
+/// The nodes of one status, in their given order (the core's: control planes first, then by name).
+public struct StatusGroup<Node: Equatable & Sendable>: Equatable, Identifiable, Sendable {
+    public let status: NodeStatus
+    public let nodes: [Node]
+
+    public var id: NodeStatus { status }
+}
+
 /// The problem nodes the dense section shows in full (`shown`), and how many more there are.
-public struct ProblemNodes: Equatable, Sendable {
-    public let shown: [NodeOverview]
+public struct ProblemNodes<Node: Equatable & Sendable>: Equatable, Sendable {
+    public let shown: [Node]
     public let more: Int
 }
 
@@ -74,22 +108,17 @@ public enum NodeFilter: String, CaseIterable, Hashable, Sendable {
     /// Down, not ready, or reporting a problem: the dense section's "N more".
     case attention, ready, notReady, unreachable
 
-    public func matches(_ node: NodeOverview) -> Bool {
+    public func matches<Node: NodeStatusProviding>(_ node: Node) -> Bool {
         switch self {
-        case .attention: node.needsAttention
-        case .ready: node.health == .ready
-        case .notReady: node.health == .notReady
-        case .unreachable: node.health == .unreachable
+        case .attention: node.status != .ready
+        case .ready: node.isReady
+        case .notReady: node.status == .notReady
+        case .unreachable: node.status == .unreachable
         }
     }
 }
 
-public extension Array where Element == NodeOverview {
-    /// As the overview lists them: control-plane nodes first, then by hostname.
-    var overviewOrder: [NodeOverview] {
-        sorted { (overviewRank($0), $0.hostname) < (overviewRank($1), $1.hostname) }
-    }
-
+public extension Array where Element: NodeStatusProviding & Equatable & Sendable {
     var healthCounts: HealthCounts {
         HealthCounts(
             ready: filter { $0.status == .ready }.count,
@@ -99,23 +128,35 @@ public extension Array where Element == NodeOverview {
         )
     }
 
+    /// Grouped by status, the worst group first (`nodeStatusOrder`), each in the given order;
+    /// empty groups left out.
+    var byStatus: [StatusGroup<Element>] {
+        nodeStatusOrder.compactMap { status in
+            let nodes = filter { $0.status == status }
+            return nodes.isEmpty ? nil : StatusGroup(status: status, nodes: nodes)
+        }
+    }
+
     /// The nodes needing attention, worst first (unreachable, not ready, then ready but reporting
     /// a problem), in their given order otherwise; at most `max` of them, the rest counted.
-    func problemNodes(max: Int = denseMaxProblems) -> ProblemNodes {
-        let problems = enumerated()
-            .filter { $0.element.needsAttention }
-            .sorted { (severity($0.element.health), $0.offset) < (severity($1.element.health), $1.offset) }
-            .map(\.element)
+    func problemNodes(max: Int = denseMaxProblems) -> ProblemNodes<Element> {
+        let problems = byStatus.filter { $0.status != .ready }.flatMap(\.nodes)
         return ProblemNodes(shown: Array(problems.prefix(Swift.max(max, 0))), more: Swift.max(problems.count - max, 0))
     }
 
-    /// The nodes whose hostname or address (talosconfig or public) contains `query`, matching
-    /// `filter` (nil: any).
-    func filtered(query: String, filter: NodeFilter?) -> [NodeOverview] {
+    /// The nodes whose name or an address contains `query`, matching `filter` (nil: any).
+    func filtered(query: String, filter: NodeFilter?) -> [Element] {
         let q = query.trimmingCharacters(in: .whitespaces)
         return self.filter { node in
             (filter?.matches(node) ?? true) && (q.isEmpty || node.matches(query: q))
         }
+    }
+}
+
+public extension Array where Element == NodeOverview {
+    /// As the overview lists them: control-plane nodes first, then by hostname.
+    var overviewOrder: [NodeOverview] {
+        sorted { (overviewRank($0), $0.hostname) < (overviewRank($1), $1.hostname) }
     }
 }
 
@@ -132,20 +173,4 @@ public extension Array where Element == NodeGroup {
 
 private func overviewRank(_ node: NodeOverview) -> Int {
     node.role == "controlplane" ? 0 : 1
-}
-
-private func severity(_ health: NodeHealth) -> Int {
-    switch health {
-    case .unreachable: 0
-    case .notReady: 1
-    case .ready: 2
-    }
-}
-
-private extension NodeOverview {
-    func matches(query: String) -> Bool {
-        hostname.localizedCaseInsensitiveContains(query)
-            || node.localizedCaseInsensitiveContains(query)
-            || publicIPs.contains { $0.localizedCaseInsensitiveContains(query) }
-    }
 }

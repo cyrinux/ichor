@@ -405,12 +405,25 @@ private struct PreviewList: View {
                         .font(.footnote)
                 }
             }
-            Section {
-                Text("Stored in the Keychain on this device only, never synced or backed up.")
-                    .font(.footnote).foregroundStyle(.secondary)
-                Button("Import", action: onImport).disabled(busy)
-                Button("Cancel", role: .cancel, action: onCancel)
-            }
+            ImportFooterSection(busy: busy, onImport: onImport, onCancel: onCancel)
+        }
+    }
+}
+
+/// The end of an import preview: where the config is kept, Import and Cancel.
+private struct ImportFooterSection: View {
+    let busy: Bool
+    /// Something is selected to import.
+    var canImport = true
+    let onImport: () -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        Section {
+            Text("Stored in the Keychain on this device only, never synced or backed up.")
+                .font(.footnote).foregroundStyle(.secondary)
+            Button("Import", action: onImport).disabled(busy || !canImport)
+            Button("Cancel", role: .cancel, action: onCancel)
         }
     }
 }
@@ -450,15 +463,9 @@ private struct KubePreviewList: View {
                     row(ctx, index: index)
                 }
             }
-            Section {
-                Text("Stored in the Keychain on this device only, never synced or backed up.")
-                    .font(.footnote).foregroundStyle(.secondary)
-                Button("Import") {
-                    onImport(kubeImportChoices(count: summary.contexts.count, selected: selected, replacing: replacing))
-                }
-                .disabled(busy || selected.isEmpty)
-                Button("Cancel", role: .cancel, action: onCancel)
-            }
+            ImportFooterSection(busy: busy, canImport: !selected.isEmpty, onImport: {
+                onImport(kubeImportChoices(count: summary.contexts.count, selected: selected, replacing: replacing))
+            }, onCancel: onCancel)
         }
     }
 
