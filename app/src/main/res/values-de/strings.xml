@@ -3305,6 +3305,20 @@
     <string name="omni_field_url">Omni-URL (https://…omni.siderolabs.io)</string>
     <string name="omni_field_email">E-Mail des Kontos</string>
     <string name="omni_mode_account">Konto</string>
+    <string name="activity_title">Aktivität</string>
+    <string name="activity_empty">Noch keine Aktion aufgezeichnet. Jede Änderung, die Ichor an einem Cluster vornimmt, steht hier 90 Tage lang, nur auf diesem Gerät.</string>
+    <string name="activity_empty_filtered">Keine Aktion entspricht diesen Filtern.</string>
+    <string name="activity_filter_all">Alle</string>
+    <string name="activity_filter_failed">Fehlgeschlagen</string>
+    <string name="activity_share">Aktivität teilen</string>
+    <string name="activity_clear">Löschen</string>
+    <string name="activity_clear_title">Aktivitätsprotokoll löschen?</string>
+    <string name="activity_clear_body">Die aufgezeichneten Aktionen werden von diesem Gerät gelöscht. Das lässt sich nicht rückgängig machen.</string>
+    <string name="activity_demo">Demo</string>
+    <string name="activity_settings_desc">Jede Änderung, die Ichor an Ihren Clustern vorgenommen hat (Neustarts, Skalierungen, Syncs, Rollbacks…), 90 Tage auf diesem Gerät gespeichert.</string>
+    <string name="activity_open">Aktivitätsprotokoll</string>
+    <string name="clusters_menu_activity">Aktivität</string>
+||||||| b9b4f161
     <string name="kb_tab_summary">Übersicht</string>
     <string name="kb_summary_conditions">Bedingungen</string>
     <string name="kb_summary_no_conditions">Diese Art meldet keine Bedingungen.</string>

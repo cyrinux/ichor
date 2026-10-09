@@ -22,6 +22,8 @@ func Reboot(configYAML, contextName, node, mode string) (err error) {
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: "reboot", Node: node, Params: "mode=" + mode})
+
 	m, err := parseRebootMode(mode)
 	if err != nil {
 		return err
@@ -38,6 +40,8 @@ func Shutdown(configYAML, contextName, node string, force bool) (err error) {
 	defer maskErr(&err)
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
+
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: "shutdown", Node: node, Params: fmt.Sprintf("force=%t", force)})
 
 	return nodeAction(configYAML, contextName, node, callTimeout, func(ctx context.Context, c *client.Client) error {
 		return c.Shutdown(ctx, client.WithShutdownForce(force))

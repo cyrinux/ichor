@@ -37,6 +37,8 @@ func KubeScale(configYAML, contextName, kubeServer, kind, namespace, name string
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: "scale", Namespace: namespace, Object: kind + "/" + name, Params: fmt.Sprintf("replicas=%d", replicas)})
+
 	wk, err := findWorkloadKind(kind)
 	if err != nil {
 		return "", err
@@ -116,6 +118,8 @@ func KubeSuspendCronJob(configYAML, contextName, kubeServer, namespace, name str
 
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
+
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: auditVerb(suspend, "suspend-cronjob", "resume-cronjob"), Namespace: namespace, Object: "CronJob/" + name})
 
 	if err := validateKubeName("CronJob", namespace, name); err != nil {
 		return err
@@ -267,6 +271,8 @@ func KubeRollbackDeployment(configYAML, contextName, kubeServer, namespace, name
 
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
+
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: "rollback-deployment", Namespace: namespace, Object: "Deployment/" + name, Params: fmt.Sprintf("revision=%d", revision)})
 
 	if err := validateKubeName("Deployment", namespace, name); err != nil {
 		return err

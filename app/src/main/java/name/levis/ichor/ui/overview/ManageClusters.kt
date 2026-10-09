@@ -23,7 +23,7 @@ import name.levis.ichor.ui.userMessage
 
 /**
  * The cluster sheet as both homes (Talos overview, Kubernetes home) open it: pick, rename,
- * color, VPN only, sign-in or Kubernetes access, remove, add. [onEndpoints] edits a Talos
+ * color, VPN only, sign-in or Kubernetes access, activity, remove, add. [onEndpoints] edits a Talos
  * cluster's endpoints, when offered.
  */
 @Composable
@@ -35,6 +35,7 @@ fun ManageClustersSheet(
     onAddCluster: () -> Unit,
     onClustersCleared: () -> Unit,
     onEndpoints: ((ContextSummary) -> Unit)? = null,
+    onActivity: ((ContextSummary) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
@@ -87,6 +88,12 @@ fun ManageClustersSheet(
         },
         signInNeeded = signInNeeded,
         onAccount = { account = it },
+        onActivity = onActivity?.let { open ->
+            { cluster ->
+                onClose()
+                open(cluster)
+            }
+        },
         removingNames = removingNames,
     )
 

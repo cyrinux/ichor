@@ -59,6 +59,8 @@ func KubeLonghornAction(configYAML, contextName, kubeServer, namespace, name, ac
 	contextName = unmaskContext(configYAML, contextName)
 	namespace, name = privacy.reveal(strings.TrimSpace(namespace)), privacy.reveal(strings.TrimSpace(name))
 
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: "longhorn-" + action, Namespace: namespace, Object: name, Params: longhornAuditParams(action, value)})
+
 	if !slices.Contains(lhVolumeActions, action) && !slices.Contains(lhNodeActions, action) {
 		return fmt.Errorf("unsupported Longhorn action %q", action)
 	}
@@ -74,6 +76,15 @@ func KubeLonghornAction(configYAML, contextName, kubeServer, namespace, name, ac
 	return kubeMutate(kubeTarget{configYAML, contextName, kubeServer}, func(ctx context.Context, k *kubeClient) error {
 		return longhornAction(ctx, k, namespace, name, action, value)
 	})
+}
+
+// longhornAuditParams is the value an action was given, for the audit log.
+func longhornAuditParams(action string, value int) string {
+	if action != lhActionReplicas {
+		return ""
+	}
+
+	return fmt.Sprintf("replicas=%d", value)
 }
 
 func longhornAction(ctx context.Context, k *kubeClient, namespace, name, action string, value int) error {
