@@ -186,6 +186,17 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "scan-history", args: "[CLUSTER]", run: func(e env) (out string, err error) {
+		// scan-history [CLUSTER]: the kept scan reports (needs -data-dir), every cluster when omitted.
+		out, err = ichorgo.ImageScanHistory(flag.Arg(1))
+
+		return out, err
+	}},
+	{name: "scan-saved", args: "ID", run: func(e env) (out string, err error) {
+		out, err = ichorgo.ImageScanSaved(flag.Arg(1))
+
+		return out, err
+	}},
 	{name: "netperf-cleanup", args: "NAMESPACE", run: func(e env) (out string, err error) {
 		// netperf-cleanup NAMESPACE: deletes an ichor-netperf-* namespace a test left behind.
 		if err = ichorgo.NetPerfDeleteNamespace(e.cfg, e.context, e.kubeServer, flag.Arg(1)); err == nil {

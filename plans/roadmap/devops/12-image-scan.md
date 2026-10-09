@@ -55,6 +55,16 @@ Dojo, Dependency-Track or a colleague.
   other images. `StartImageScan` takes them as `options.images` (refs with no pod, validated
   against a strict ref pattern, pulled without credentials) with `pods=[]`. Probe:
   `system-images NODE`, `image-scan REF...`.
+- Kept reports (`imagescan_store.go`): every completed scan with at least one image scanned
+  is kept in the data directory (`SetDataDir`; nothing is kept without one), sealed like the
+  audit log: an index `image-scans.json` and one `scans/<id>.json` per report, 90 days, at
+  most 30 reports. Each image scanned without error is compared with the newest kept scan of
+  the same digest: findings not in it (by id, package, installed version, target) get
+  `new: true` and count in the image's `new` summary (`previousScannedAt` says when); a first
+  scan has nothing new. The operator's reports are compared too, not kept.
+  `ImageScanHistory(cluster)`, `ImageScanSaved(id)` (the report as OnDone gave it),
+  `ImageScanForget(id)`, `ImageScanClear(cluster)`; `options.app` names what a report is of.
+  Probe: `-data-dir DIR`, `scan-history [CLUSTER]`, `scan-saved ID`.
 
 ## Android (done)
 
@@ -79,5 +89,5 @@ shown in the system share sheet). Models and their logic in `IchorCore/ImageScan
 ## Later
 
 - Talos system images in the apps (Node → Images: "Scan system images"); the Go core is done.
-- Cache reports per digest on the phone; "new since last scan".
+- Kept reports in the apps: a saved reports list and "N new since last scan"; the Go core is done.
 - Grype as a second opinion (same pod pattern, `grype -o json`).
