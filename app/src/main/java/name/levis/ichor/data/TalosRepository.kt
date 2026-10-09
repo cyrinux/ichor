@@ -1,6 +1,5 @@
 package name.levis.ichor.data
 
-import name.levis.ichor.data.realFingerprint
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.LocalizedException
 import name.levis.ichor.R
@@ -8,7 +7,6 @@ import name.levis.ichorgo.ConfigTryListener
 import name.levis.ichorgo.MaintenanceListener
 import name.levis.ichorgo.MaintenanceRun
 import name.levis.ichorgo.Ichorgo
-import name.levis.ichor.model.ApiHealthReport
 import name.levis.ichor.model.ConfigEdit
 import name.levis.ichor.model.ConfigPreview
 import name.levis.ichor.model.ConfigSchemaStatus
@@ -16,65 +14,18 @@ import name.levis.ichor.model.ConfigTree
 import name.levis.ichor.model.ConfigTryCommand
 import name.levis.ichor.model.ConfigTryEvent
 import name.levis.ichor.model.ConfigTryProgress
-import name.levis.ichor.model.CheckupReport
-import name.levis.ichor.model.KubeEvent
-import name.levis.ichor.model.KubeEventList
 import name.levis.ichor.model.AuditReport
-import name.levis.ichor.model.ArgoAction
-import name.levis.ichor.model.SupportedIntegrations
-import name.levis.ichor.model.ArgoApp
-import name.levis.ichor.model.ArgoFreezeAction
-import name.levis.ichor.model.ArgoFreezeOptions
-import name.levis.ichor.model.ArgoNetwork
-import name.levis.ichor.model.ArgoStatus
-import name.levis.ichor.model.ArgoSyncOptions
-import name.levis.ichor.model.CertDetails
-import name.levis.ichor.model.FluxAction
-import name.levis.ichor.model.FluxDiff
-import name.levis.ichor.model.FluxStatus
 import name.levis.ichor.model.CgroupReport
 import name.levis.ichor.model.ClusterOverview
-import name.levis.ichor.model.DataServices
-import name.levis.ichor.model.GarageBlockReport
-import name.levis.ichor.model.GarageInstance
-import name.levis.ichor.model.GarageRepairResult
-import name.levis.ichor.model.LonghornAction
 import name.levis.ichor.model.MaintenanceAction
 import name.levis.ichor.model.MaintenancePlan
 import name.levis.ichor.model.EtcdOverview
 import name.levis.ichor.model.ClusterTopology
 import name.levis.ichor.model.KubeSpanOverview
-import name.levis.ichor.model.KubePod
-import name.levis.ichor.model.KubeCronJob
-import name.levis.ichor.model.KubeCronJobList
-import name.levis.ichor.model.KubePodPage
-import name.levis.ichor.model.PodPhaseFilter
-import name.levis.ichor.model.PodSelection
-import name.levis.ichor.model.SELECTED_PODS_PAGE
-import name.levis.ichor.model.KubeCronJobPage
-import name.levis.ichor.model.KubeWorkloadPage
-import name.levis.ichor.model.KubeNamespaces
-import name.levis.ichor.model.KubeNodesOverview
-import name.levis.ichor.model.KubePage
-import name.levis.ichor.model.KUBE_PAGE_SIZE
-import name.levis.ichor.model.KubeRoute
-import name.levis.ichor.model.KubeRouteList
-import name.levis.ichor.model.RoutePod
-import name.levis.ichor.model.WorkloadRef
-import name.levis.ichor.model.KubeRolloutStatus
-import name.levis.ichor.model.KubeRevision
-import name.levis.ichor.model.KubeRevisionList
-import name.levis.ichor.model.KubeWorkload
-import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.LogEntry
 import name.levis.ichor.model.LogTail
 import name.levis.ichor.model.decodeLogTail
 import name.levis.ichor.model.NodeStats
-import name.levis.ichor.model.PromDiscovery
-import name.levis.ichor.model.PromPanel
-import name.levis.ichor.model.PromResult
-import name.levis.ichor.model.PromSource
-import name.levis.ichor.model.toGoJson
 import name.levis.ichor.model.ClusterStatsSample
 import name.levis.ichor.model.NodeResources
 import name.levis.ichor.model.ServiceInfo
@@ -85,7 +36,6 @@ import name.levis.ichor.model.TalosEvent
 import name.levis.ichor.model.ClusterTime
 import name.levis.ichor.model.ConnectionInfo
 import name.levis.ichor.model.ImageInfo
-import name.levis.ichor.model.IntegrationReport
 import name.levis.ichor.model.Inventory
 import name.levis.ichor.model.NodeHardware
 import name.levis.ichor.model.NodeNetwork
@@ -117,11 +67,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.CancellationException
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.withLastKnown
 import name.levis.ichor.model.outage
@@ -129,36 +76,21 @@ import name.levis.ichor.model.outage
 class NoConfigException : LocalizedException(UiText.Res(R.string.common_no_config))
 
 /**
- * Read-only access to the Talos API through the Go core. All calls are blocking in Go, so run on IO.
- * [offline] keeps some results on disk, only when the user turned it on.
+ * The Talos API through the Go core, and the results cache every repository shares (see
+ * [GoCall]): Kubernetes calls live in [KubeRepository], Argo CD and Flux in [GitOpsRepository],
+ * data services in [DataServicesRepository].
  */
-class TalosRepository(
-    private val configs: ConfigRepository,
-    private val kubeServers: KubeServers,
-    private val offline: OfflineCache? = null,
-) {
+class TalosRepository(go: GoCall) : GoRepository(go) {
 
+    private val configs = go.configs
+    private val kubeServers = go.kubeServers
+    private val results = go.results
     private val streams = TalosStreams(configs)
-    private val results = ResultCache(
-        offline,
-        scope = { "${configs.generation.value}|${configs.config.value?.activeContext}|" },
-        // Never the demo's: its results stay in memory.
-        cluster = { configs.config.value?.realFingerprint },
-    )
 
     /** A cached result and when it was fetched (epoch millis). */
     data class Timed<T>(val value: T, val at: Long)
 
-    /** The last result of [key]: fetched in this process, or else the last known one kept offline. */
-    fun <T> cached(key: String): Timed<T>? = results.cached(key)
-
-    /** Bumped once [restoreOffline] read what was kept offline (see [ResultCache.restores]). */
-    val restores: StateFlow<Int> get() = results.restores
-
     suspend fun restoreOffline() = results.restoreOffline()
-
-    /** Bumped by [invalidate]; screens showing cluster data reload when it changes. */
-    val invalidations: StateFlow<Int> get() = results.invalidations
 
     fun invalidate() = results.invalidate()
 
@@ -166,9 +98,7 @@ class TalosRepository(
         key: String,
         persistable: (T) -> Boolean = { true },
         block: suspend (last: () -> Timed<T>?) -> T,
-    ): T = results.remember(key, persistable, block)
-
-    fun keeper(key: String): suspend (Any) -> Unit = results.keeper(key)
+    ): T = go.remember(key, persistable, block)
 
     suspend fun kubespan(): KubeSpanOverview = remember(KUBESPAN) {
         call { cfg, ctx -> TalosJson.decodeFromString(KubeSpanOverview.serializer(), Ichorgo.kubeSpanStatus(cfg, ctx)) }
@@ -385,228 +315,8 @@ class TalosRepository(
         return talosKubeCall { cfg, ctx, server -> Ichorgo.kubeconfig(cfg, ctx, server) }
     }
 
-    /** The cluster's nodes as Kubernetes lists them: the home of a cluster added from a kubeconfig. */
-    suspend fun kubeNodes(): KubeNodesOverview = remember(KUBE_NODES) {
-        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubeNodesOverview.serializer(), Ichorgo.kubeNodes(cfg, ctx, server)) }
-    }
-
-    /**
-     * The Deployments, StatefulSets and DaemonSets running [pods] (an app's), through their
-     * owners (os:admin): only those pods and owners are read, never a cluster-wide list.
-     */
-    suspend fun appWorkloads(pods: List<RoutePod>): List<KubeWorkload> = kubeCall { cfg, ctx, server ->
-        val json = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
-        TalosJson.decodeFromString(KubeWorkloadList.serializer(), Ichorgo.kubeAppWorkloads(cfg, ctx, server, json)).workloads
-    }
-
-    /** [workloads] as they are now (os:admin); one deleted since is left out. */
-    suspend fun workloadsNamed(workloads: List<WorkloadRef>): List<KubeWorkload> = kubeCall { cfg, ctx, server ->
-        val json = TalosJson.encodeToString(ListSerializer(WorkloadRef.serializer()), workloads)
-        TalosJson.decodeFromString(KubeWorkloadList.serializer(), Ichorgo.kubeWorkloadsNamed(cfg, ctx, server, json)).workloads
-    }
-
-    /** `kubectl rollout restart KIND/NAME -n NAMESPACE` (os:admin). */
-    suspend fun rolloutRestart(workload: KubeWorkload) = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubeRolloutRestart(cfg, ctx, server, workload.kind, workload.namespace, workload.name)
-    }
-
-    /** `kubectl rollout status KIND/NAME -n NAMESPACE` with the pods (os:admin). Never cached: polled. */
-    suspend fun rolloutStatus(workload: KubeWorkload): KubeRolloutStatus = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(KubeRolloutStatus.serializer(), Ichorgo.kubeRolloutStatus(cfg, ctx, server, workload.kind, workload.namespace, workload.name))
-    }
-
-    /**
-     * `kubectl scale KIND/NAME --replicas=N -n NAMESPACE` (os:admin): a warning ("" when none)
-     * when a HorizontalPodAutoscaler manages the replicas and will change them again.
-     */
-    suspend fun scale(workload: KubeWorkload, replicas: Int): String = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubeScale(cfg, ctx, server, workload.kind, workload.namespace, workload.name, replicas.toLong())
-    }
-
-    /** `kubectl rollout history deployment/NAME -n NAMESPACE`, newest first (os:admin). Never cached. */
-    suspend fun deploymentRevisions(workload: KubeWorkload): List<KubeRevision> = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(KubeRevisionList.serializer(), Ichorgo.kubeDeploymentRevisions(cfg, ctx, server, workload.namespace, workload.name)).revisions
-    }
-
-    /** `kubectl rollout undo deployment/NAME --to-revision=N -n NAMESPACE` (os:admin). */
-    suspend fun rollbackDeployment(workload: KubeWorkload, revision: Int) = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubeRollbackDeployment(cfg, ctx, server, workload.namespace, workload.name, revision.toLong())
-    }
-
-    /** CronJobs with their recent runs through the Kubernetes API (os:admin). */
-    suspend fun cronJobs(): List<KubeCronJob> = remember(CRON_JOBS) {
-        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubeCronJobList.serializer(), Ichorgo.kubeCronJobs(cfg, ctx, server)).cronJobs }
-    }
-
-    /** `kubectl create job --from=cronjob/NAME -n NAMESPACE` (os:admin): the new Job's name. */
-    suspend fun triggerCronJob(cronJob: KubeCronJob): String = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubeTriggerCronJob(cfg, ctx, server, cronJob.namespace, cronJob.name)
-    }
-
-    /** Suspends (no new runs) or resumes [cronJob] (os:admin). */
-    suspend fun suspendCronJob(cronJob: KubeCronJob, suspend: Boolean) = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubeSuspendCronJob(cfg, ctx, server, cronJob.namespace, cronJob.name, suspend)
-    }
-
-    /** The Ingress and HTTPRoute URLs serving [pods] (os:admin). */
-    suspend fun appRoutes(pods: List<RoutePod>): List<KubeRoute> = kubeCall { cfg, ctx, server ->
-        val json = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
-        TalosJson.decodeFromString(KubeRouteList.serializer(), Ichorgo.kubeAppRoutes(cfg, ctx, server, json)).routes
-    }
-
-    /**
-     * `kubectl logs POD [-c CONTAINER] [--previous] --tail=N` through the Kubernetes API
-     * (os:admin): [previous] reads the container's last terminated run. [container] "" for a
-     * pod with one container.
-     */
-    suspend fun podLogs(pod: KubePod, container: String, previous: Boolean, tailLines: Int): String = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubePodLogs(cfg, ctx, server, pod.namespace, pod.name, container, previous, tailLines.toLong())
-    }
-
-    /** The cluster's namespaces, to pick the scope of the Kubernetes lists (os:admin). */
-    suspend fun namespaces(): KubeNamespaces = remember(NAMESPACES) {
-        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(KubeNamespaces.serializer(), Ichorgo.kubeNamespaces(cfg, ctx, server)) }
-    }
-
-    /**
-     * One page of the pods of [namespace] (null for every one), in the API server's order
-     * (os:admin). [table]: the server's Table rows, without images nor containers ([pod]
-     * reads those). [token]: the previous page's, "" for the first.
-     */
-    suspend fun podsPage(namespace: String?, token: String, table: Boolean, limit: Int = KUBE_PAGE_SIZE): KubePage<KubePod> = kubeCall { cfg, ctx, server ->
-        val json = Ichorgo.kubePodsPage(cfg, ctx, server, namespace.orEmpty(), token, limit.toLong(), table)
-        TalosJson.decodeFromString(KubePodPage.serializer(), json).toPage(detailed = !table)
-    }
-
     /** The Kubernetes name of the Talos node [node] (its address), as its kubelet registered it. */
     suspend fun kubeNodeName(node: String): String = call { cfg, ctx -> Ichorgo.kubeNodeName(cfg, ctx, node) }
-
-    /**
-     * One page of the pods scheduled on the Kubernetes node [kubeNode] ([kubeNodeName]), in
-     * every namespace, narrowed to [phase]; as [podsPage] otherwise (os:admin).
-     */
-    suspend fun nodePodsPage(kubeNode: String, phase: PodPhaseFilter, token: String, table: Boolean, limit: Int = SELECTED_PODS_PAGE): KubePage<KubePod> =
-        kubeCall { cfg, ctx, server ->
-            val json = Ichorgo.kubeNodePodsPage(cfg, ctx, server, kubeNode, phase.query, token, limit.toLong(), table)
-            TalosJson.decodeFromString(KubePodPage.serializer(), json).toPage(detailed = !table)
-        }
-
-    /** One page of the pods [workload]'s selector matches, narrowed to [phase]; as [podsPage] otherwise (os:admin). */
-    suspend fun workloadPodsPage(workload: PodSelection.OfWorkload, phase: PodPhaseFilter, token: String, table: Boolean, limit: Int = SELECTED_PODS_PAGE): KubePage<KubePod> =
-        kubeCall { cfg, ctx, server ->
-            val json = Ichorgo.kubeWorkloadPodsPage(cfg, ctx, server, workload.kind, workload.namespace, workload.name, phase.query, token, limit.toLong(), table)
-            TalosJson.decodeFromString(KubePodPage.serializer(), json).toPage(detailed = !table)
-        }
-
-    /** One pod in full (images, containers, last termination), for a row read from a Table (os:admin). */
-    suspend fun pod(namespace: String, name: String): KubePod = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(KubePod.serializer(), Ichorgo.kubePod(cfg, ctx, server, namespace, name))
-    }
-
-    /** One page of the workloads of [kind] in [namespace] (null for every one), as [podsPage] (os:admin). */
-    suspend fun workloadsPage(kind: String, namespace: String?, token: String, limit: Int = KUBE_PAGE_SIZE): KubePage<KubeWorkload> = kubeCall { cfg, ctx, server ->
-        val json = Ichorgo.kubeWorkloadsPage(cfg, ctx, server, kind, namespace.orEmpty(), token, limit.toLong())
-        TalosJson.decodeFromString(KubeWorkloadPage.serializer(), json).toPage()
-    }
-
-    /** One workload as it is now (os:admin): its replicas, for a restart asked outside the Workloads list. */
-    suspend fun workload(kind: String, namespace: String, name: String): KubeWorkload = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(KubeWorkload.serializer(), Ichorgo.kubeWorkload(cfg, ctx, server, kind, namespace, name))
-    }
-
-    /**
-     * The workload from a list already loaded: of its namespace or of every namespace; null
-     * when none holds it.
-     */
-    fun cachedWorkload(kind: String, namespace: String, name: String): KubeWorkload? =
-        listOf(workloadsKey(namespace), workloadsKey(null)).firstNotNullOfOrNull { key ->
-            cached<List<KubeWorkload>>(key)?.value?.firstOrNull { it.kind == kind && it.namespace == namespace && it.name == name }
-        }
-
-    /** One page of the CronJobs of [namespace] (null for every one) with their runs, as [podsPage] (os:admin). */
-    suspend fun cronJobsPage(namespace: String?, token: String, limit: Int = KUBE_PAGE_SIZE): KubePage<KubeCronJob> = kubeCall { cfg, ctx, server ->
-        val json = Ichorgo.kubeCronJobsPage(cfg, ctx, server, namespace.orEmpty(), token, limit.toLong())
-        TalosJson.decodeFromString(KubeCronJobPage.serializer(), json).toPage()
-    }
-
-    /**
-     * Health of Longhorn, Garage and CloudNativePG (os:admin). [hints]: their catalog ids seen in
-     * the inventory (see [name.levis.ichor.model.dataServiceHints]); "" checks everything.
-     */
-    suspend fun dataServices(hints: String): DataServices = remember(DATA_SERVICES) {
-        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(DataServices.serializer(), Ichorgo.kubeDataServices(cfg, ctx, server, hints)) }
-    }
-
-    /**
-     * The projects the app integrates with and whether the cluster runs each one, from one API
-     * discovery (os:admin). [hints]: see [Inventory.supportedIntegrationHints]. Never cached.
-     */
-    suspend fun supportedIntegrations(hints: String): SupportedIntegrations = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(SupportedIntegrations.serializer(), Ichorgo.kubeSupportedIntegrations(cfg, ctx, server, hints))
-    }
-
-    /** What the blocks failing to resync in a Garage cluster are, run in its ready pod (os:admin). Never cached. */
-    suspend fun garageBlockErrors(instance: GarageInstance): GarageBlockReport = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(GarageBlockReport.serializer(), Ichorgo.kubeGarageBlockErrors(cfg, ctx, server, instance.namespace, instance.pod))
-    }
-
-    /** Launches the safe repairs for those blocks (os:admin); Garage runs them in the background. */
-    suspend fun garageRepairBlocks(instance: GarageInstance): GarageRepairResult = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(GarageRepairResult.serializer(), Ichorgo.kubeGarageRepairBlocks(cfg, ctx, server, instance.namespace, instance.pod))
-    }
-
-    /** Sets a node's resync tranquility (os:admin); [nodeId] is a Garage node ID, or "*" for every node. */
-    suspend fun garageSetTranquility(instance: GarageInstance, nodeId: String, value: Long) = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubeGarageSetTranquility(cfg, ctx, server, instance.namespace, instance.pod, nodeId, value)
-    }
-
-    /**
-     * What explains the state of the cert-manager certificate [namespace]/[name] (os:admin): its
-     * requests, ACME orders and challenges, their events and controller log lines. Never cached.
-     */
-    suspend fun certificateDetails(namespace: String, name: String): CertDetails = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(CertDetails.serializer(), Ichorgo.kubeCertManagerDetails(cfg, ctx, server, namespace, name))
-    }
-
-    /**
-     * Issues the cert-manager certificate [namespace]/[name] again now, like `cmctl renew`
-     * (os:admin). Throws when refused, also while it is already being issued.
-     */
-    suspend fun renewCertificate(namespace: String, name: String) = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubeCertManagerRenew(cfg, ctx, server, namespace, name)
-    }
-
-    /**
-     * Starts a backup of the CloudNativePG cluster [namespace]/[name] now, like `kubectl cnpg backup`
-     * (os:admin): the new Backup's name. Throws when refused (hibernated, no backup method, one running).
-     */
-    suspend fun cnpgBackup(namespace: String, name: String): String = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubeCNPGBackup(cfg, ctx, server, namespace, name)
-    }
-
-    /**
-     * The Kubernetes API server's health and what loads it (os:admin): readyz and livez, then
-     * two /metrics scrapes a few seconds apart for the live rates. Live figures: never cached.
-     */
-    suspend fun apiHealth(): ApiHealthReport = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(ApiHealthReport.serializer(), Ichorgo.kubeAPIHealth(cfg, ctx, server))
-    }
-
-    /**
-     * The cluster checkup (os:admin): what no other screen shows, section by section. It lists the
-     * cluster's pods and asks every kubelet for its volumes: on demand, never cached.
-     */
-    suspend fun checkup(): CheckupReport = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(CheckupReport.serializer(), Ichorgo.kubeCheckup(cfg, ctx, server))
-    }
-
-    /**
-     * The Kubernetes events of the [kind] named [name] in [namespace], newest first (os:admin); with
-     * an empty [kind], those of [name] and of what it owns by name (ReplicaSets, pods).
-     */
-    suspend fun kubeEvents(namespace: String, kind: String, name: String): List<KubeEvent> = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(KubeEventList.serializer(), Ichorgo.kubeEvents(cfg, ctx, server, namespace, kind, name)).events
-    }
 
     /**
      * Who loads the Kubernetes API server over the last [minutes], from the control planes'
@@ -615,87 +325,6 @@ class TalosRepository(
     suspend fun auditAnalysis(minutes: Int): AuditReport = call { cfg, ctx ->
         TalosJson.decodeFromString(AuditReport.serializer(), Ichorgo.kubeAuditAnalysis(cfg, ctx, minutes.toLong()))
     }
-
-    /**
-     * Runs [action] on the Longhorn volume or node [namespace]/[name] (os:admin); [value] is the
-     * replica count of [LonghornAction.REPLICAS]. Throws when refused.
-     */
-    suspend fun longhornAction(namespace: String, name: String, action: LonghornAction, value: Int = 0) = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubeLonghornAction(cfg, ctx, server, namespace, name, action.wire, value.toLong())
-    }
-
-    /**
-     * The API groups the cluster serves that Ichor does not read yet, by operator, with their
-     * kinds (os:admin): what an integration request can name. Never cached.
-     */
-    suspend fun integrations(): IntegrationReport = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(IntegrationReport.serializer(), Ichorgo.kubeIntegrations(cfg, ctx, server))
-    }
-
-    /**
-     * Argo CD Applications, ApplicationSets and projects through their custom resources
-     * (os:admin); `installed` is false without Argo CD.
-     */
-    suspend fun argoCD(): ArgoStatus = remember(ARGO_CD) {
-        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(ArgoStatus.serializer(), Ichorgo.kubeArgoCD(cfg, ctx, server)) }
-    }
-
-    /** Runs [action] on [app] (os:admin); [options] for a sync or a rollback. Throws when refused. */
-    suspend fun argoAction(app: ArgoApp, action: ArgoAction, options: ArgoSyncOptions? = null) = kubeCall { cfg, ctx, server ->
-        val json = options?.let { TalosJson.encodeToString(ArgoSyncOptions.serializer(), it) }.orEmpty()
-        Ichorgo.kubeArgoAction(cfg, ctx, server, app.namespace, app.name, action.wire, json)
-    }
-
-    /**
-     * Changes the sync windows of the AppProject [namespace]/[project] (os:admin): freezes apps
-     * for a while, extends or ends a freeze, removes a window, clears ended freezes. Throws when
-     * refused.
-     */
-    suspend fun argoFreeze(namespace: String, project: String, action: ArgoFreezeAction, options: ArgoFreezeOptions = ArgoFreezeOptions()) =
-        kubeCall { cfg, ctx, server ->
-            Ichorgo.kubeArgoFreeze(cfg, ctx, server, namespace, project, action.wire, TalosJson.encodeToString(ArgoFreezeOptions.serializer(), options))
-        }
-
-    /**
-     * How traffic reaches [app] (os:admin): hosts, Gateways, routes, Services, pods and nodes.
-     * Never cached: the app detail asks again whenever it reloads the app.
-     */
-    suspend fun argoNetwork(app: ArgoApp): ArgoNetwork = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(ArgoNetwork.serializer(), Ichorgo.kubeArgoNetwork(cfg, ctx, server, app.namespace, app.name))
-    }
-
-    /**
-     * Flux Kustomizations, HelmReleases and sources through their custom resources (os:admin);
-     * `installed` is false without Flux.
-     */
-    suspend fun flux(): FluxStatus = remember(FLUX) {
-        kubeCall { cfg, ctx, server -> TalosJson.decodeFromString(FluxStatus.serializer(), Ichorgo.kubeFlux(cfg, ctx, server)) }
-    }
-
-    /** Runs [action] on the Flux object [kind] [namespace]/[name] (os:admin). Throws when refused. */
-    suspend fun fluxAction(kind: String, namespace: String, name: String, action: FluxAction) = kubeCall { cfg, ctx, server ->
-        Ichorgo.kubeFluxAction(cfg, ctx, server, kind, namespace, name, action.wire)
-    }
-
-    /**
-     * What reconciling the Flux object [kind] [namespace]/[name] now would change, object by
-     * object (os:admin, read only: server-side apply dry runs). Not cached: always fresh.
-     */
-    suspend fun fluxDiff(kind: String, namespace: String, name: String): FluxDiff = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(FluxDiff.serializer(), Ichorgo.kubeFluxDiff(cfg, ctx, server, kind, namespace, name))
-    }
-
-    /**
-     * What syncing the Argo CD Application [namespace]/[name] now would change, object by
-     * object (os:admin, read only): what the application controller compared last, read from
-     * Argo CD's Redis through a port-forward. Not cached on the phone: always fresh.
-     */
-    suspend fun argoDiff(namespace: String, name: String): FluxDiff = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(FluxDiff.serializer(), Ichorgo.kubeArgoDiff(cfg, ctx, server, namespace, name))
-    }
-
-    /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
-    suspend fun deletePod(pod: KubePod) = kubeCall { cfg, ctx, server -> Ichorgo.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
 
     /**
      * What a maintenance of [node] would do: pods to evict, budgets, reboot checks (os:admin).
@@ -904,30 +533,6 @@ class TalosRepository(
         TalosJson.decodeFromString(ResourceDetail.serializer(), Ichorgo.resourceGet(cfg, ctx, node, namespace, type, id)).yaml
     }
 
-    /** Prometheus-compatible query APIs among the cluster's Services, the likeliest first. */
-    suspend fun promDiscover(): List<PromSource> = kubeCall { cfg, ctx, server ->
-        TalosJson.decodeFromString(PromDiscovery.serializer(), Ichorgo.promDiscover(cfg, ctx, server)).sources
-    }
-
-    /** [query] from [start] to [end] (unix seconds) against [source], about 250 points. */
-    suspend fun promRange(source: PromSource, query: String, start: Long, end: Long): PromResult = kubeCall { cfg, ctx, server ->
-        val json = Ichorgo.promQueryRange(cfg, ctx, server, source.toGoJson(), query, start, end, 0)
-        TalosJson.decodeFromString(PromResult.serializer(), json)
-    }
-
-    /** The built-in panels. */
-    suspend fun promPresets(): List<PromPanel> = withContext(Dispatchers.IO) {
-        TalosJson.decodeFromString(ListSerializer(PromPanel.serializer()), Ichorgo.promPresets())
-    }
-
-    /** [source] checked and cleaned up by Go, its secret kept. */
-    suspend fun normalizePromSource(source: PromSource): PromSource = withContext(Dispatchers.IO) {
-        val json = Ichorgo.normalizePromSource(source.toGoJson())
-        val checked = TalosJson.decodeFromString(PromSource.serializer(), json)
-        // Go never returns the secret; without authentication there is none to keep.
-        checked.copy(secret = if (checked.auth == PromSource.AUTH_NONE) "" else source.secret.trim())
-    }
-
     suspend fun driftSnapshot(): String = call { cfg, ctx -> Ichorgo.clusterDriftSnapshot(cfg, ctx) }
     suspend fun observation(): String = call { cfg, ctx -> Ichorgo.clusterObservation(cfg, ctx) }
     suspend fun bottlenecks(previous: NodeStats, current: NodeStats): name.levis.ichor.model.Bottlenecks = withContext(Dispatchers.IO) {
@@ -936,24 +541,9 @@ class TalosRepository(
         ))
     }
 
-    private suspend fun <T> call(block: (config: String, context: String) -> T): T {
-        val stored = configs.forCall()
-        return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext) }
-    }
+    private suspend fun <T> call(block: (config: String, context: String) -> T): T = go.talos(block)
 
-    /**
-     * A Kubernetes call with the Kubernetes API address the user set for the cluster ("" for the
-     * kubeconfig's), through the cluster's Kubernetes access when set (K5, see [kubeTarget]).
-     */
-    private suspend fun <T> kubeCall(block: (config: String, context: String, kubeServer: String) -> T): T {
-        val target = kubeServers.targetFor(configs.forCall())
-        return withContext(Dispatchers.IO) { block(target.yaml, target.context, target.server) }
-    }
+    private suspend fun <T> kubeCall(block: (config: String, context: String, kubeServer: String) -> T): T = go.kube(block)
 
-    /** A call that needs both Talos and Kubernetes (maintenance, the admin kubeconfig): always the Talos path. */
-    private suspend fun <T> talosKubeCall(block: (config: String, context: String, kubeServer: String) -> T): T {
-        val stored = configs.forCall()
-        val server = kubeServers.serverFor(stored)
-        return withContext(Dispatchers.IO) { block(stored.yaml, stored.activeContext, server) }
-    }
+    private suspend fun <T> talosKubeCall(block: (config: String, context: String, kubeServer: String) -> T): T = go.talosKube(block)
 }

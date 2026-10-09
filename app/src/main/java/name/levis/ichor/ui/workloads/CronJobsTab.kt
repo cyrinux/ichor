@@ -38,7 +38,8 @@ import name.levis.ichor.ui.argocd.ArgoSelfHealer
 import name.levis.ichor.ui.argocd.argoSelfHealer
 import name.levis.ichor.ui.argocd.freezeForHandChange
 import name.levis.ichor.data.cronJobsKey
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.GitOpsRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.KubeCronJob
 import name.levis.ichor.model.cronNamespaces
 import name.levis.ichor.model.filteredCronJobs
@@ -56,9 +57,10 @@ import name.levis.ichor.ui.uiText
 /** Outcome of a manual run, shown once: the new Job's name, or why it failed. */
 data class CronRunResult(val cronJob: KubeCronJob, val job: String, val error: UiText?)
 
-class CronJobsViewModel(talos: TalosRepository, metered: () -> Boolean) : PagedListViewModel<KubeCronJob>(talos, metered) {
+class CronJobsViewModel(kube: KubeRepository, private val gitOps: GitOpsRepository, metered: () -> Boolean) :
+    PagedListViewModel<KubeCronJob>(kube, metered) {
     override fun key(namespace: String?) = cronJobsKey(namespace)
-    override suspend fun page(namespace: String?, token: String) = talos.cronJobsPage(namespace, token)
+    override suspend fun page(namespace: String?, token: String) = kube.cronJobsPage(namespace, token)
 
     private val _triggering = MutableStateFlow<Set<String>>(emptySet())
     /** Keys of the CronJobs whose run request is in flight. */
@@ -72,7 +74,7 @@ class CronJobsViewModel(talos: TalosRepository, metered: () -> Boolean) : PagedL
         if (cronJob.key in _triggering.value) return
         _triggering.update { it + cronJob.key }
         viewModelScope.launch {
-            val outcome = runCatching { talos.triggerCronJob(cronJob) }
+            val outcome = runCatching { kube.triggerCronJob(cronJob) }
             _triggering.update { it - cronJob.key }
             _results.send(CronRunResult(cronJob, outcome.getOrDefault(""), outcome.exceptionOrNull()?.uiText()))
             // The new Job shows as running at once.
@@ -89,7 +91,7 @@ class CronJobsViewModel(talos: TalosRepository, metered: () -> Boolean) : PagedL
     val suspendFailures: Flow<UiText> = _suspendFailures.receiveAsFlow()
 
     /** The Argo CD app that would undo a suspend or resume of [cronJob], from the status already loaded. */
-    fun argoHealer(cronJob: KubeCronJob): ArgoSelfHealer? = talos.argoSelfHealer("CronJob", cronJob.namespace, cronJob.name)
+    fun argoHealer(cronJob: KubeCronJob): ArgoSelfHealer? = gitOps.argoSelfHealer("CronJob", cronJob.namespace, cronJob.name)
 
     /**
      * Suspends (no new runs) or resumes [cronJob], like `kubectl patch` of spec.suspend; with
@@ -100,13 +102,13 @@ class CronJobsViewModel(talos: TalosRepository, metered: () -> Boolean) : PagedL
         _suspending.update { it + cronJob.key }
         viewModelScope.launch {
             freezeFirst?.let { healer ->
-                cancellableCatching { talos.freezeForHandChange(healer, reason) }.exceptionOrNull()?.let {
+                cancellableCatching { gitOps.freezeForHandChange(healer, reason) }.exceptionOrNull()?.let {
                     _suspending.update { it - cronJob.key }
                     _suspendFailures.send(UiText.Res(R.string.argo_freeze_failed_nothing_changed, healer.app.name, it.uiText()))
                     return@launch
                 }
             }
-            val outcome = cancellableCatching { talos.suspendCronJob(cronJob, suspend) }
+            val outcome = cancellableCatching { kube.suspendCronJob(cronJob, suspend) }
             _suspending.update { it - cronJob.key }
             outcome.exceptionOrNull()?.let {
                 val action = if (suspend) R.string.cronjobs_suspend_failed else R.string.cronjobs_resume_failed

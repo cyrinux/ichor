@@ -35,7 +35,7 @@ import kotlinx.coroutines.CancellationException
 import name.levis.ichor.R
 import name.levis.ichor.data.ConfigRepository
 import name.levis.ichor.data.INVENTORY
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.SUPPORTED_INTEGRATION_VIA_API
@@ -69,7 +69,7 @@ private data class SupportedIntegrationsView(val list: SupportedIntegrations, va
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SupportedIntegrationsScreen(configs: ConfigRepository, talos: TalosRepository, onBack: () -> Unit) {
+fun SupportedIntegrationsScreen(configs: ConfigRepository, kube: KubeRepository, onBack: () -> Unit) {
     val config by configs.config.collectAsStateWithLifecycle()
     val canAsk = config?.activeSummary?.allows(Feature.WORKLOADS) == true
     val static = remember { staticSupportedIntegrations() }
@@ -79,9 +79,9 @@ fun SupportedIntegrationsScreen(configs: ConfigRepository, talos: TalosRepositor
             value = SupportedIntegrationsView(static, UiText.Res(R.string.supported_integrations_needs_admin))
             return@produceState
         }
-        val hints = talos.cached<Inventory>(INVENTORY)?.value?.supportedIntegrationHints().orEmpty()
+        val hints = kube.cached<Inventory>(INVENTORY)?.value?.supportedIntegrationHints().orEmpty()
         value = try {
-            SupportedIntegrationsView(talos.supportedIntegrations(hints))
+            SupportedIntegrationsView(kube.supportedIntegrations(hints))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

@@ -83,10 +83,10 @@ fun AppsScreen(
     onArgoApp: (namespace: String, name: String) -> Unit,
     onFlux: () -> Unit,
     vm: AppsViewModel = viewModel(factory = factory { AppsViewModel(app.talosRepository) }),
-    workloadsVm: AppWorkloadsViewModel = viewModel(factory = factory { AppWorkloadsViewModel(app.talosRepository) }),
-    routesVm: AppRoutesViewModel = viewModel(factory = factory { AppRoutesViewModel(app.talosRepository) }),
-    argoVm: ArgoViewModel = viewModel(key = "apps-argocd", factory = factory { ArgoViewModel(app.talosRepository, freezeReminderHook(app)) }),
-    fluxVm: FluxViewModel = viewModel(key = "apps-flux", factory = factory { FluxViewModel(app.talosRepository) }),
+    workloadsVm: AppWorkloadsViewModel = viewModel(factory = factory { AppWorkloadsViewModel(app.kubeRepository) }),
+    routesVm: AppRoutesViewModel = viewModel(factory = factory { AppRoutesViewModel(app.kubeRepository) }),
+    argoVm: ArgoViewModel = viewModel(key = "apps-argocd", factory = factory { ArgoViewModel(app.gitOpsRepository, app.kubeRepository, freezeReminderHook(app)) }),
+    fluxVm: FluxViewModel = viewModel(key = "apps-flux", factory = factory { FluxViewModel(app.gitOpsRepository, app.kubeRepository) }),
     scanVm: ImageScanViewModel = viewModel(factory = factory { ImageScanViewModel(app.imageScanRepository) }),
 ) {
     val application = LocalContext.current.applicationContext as TalosApp

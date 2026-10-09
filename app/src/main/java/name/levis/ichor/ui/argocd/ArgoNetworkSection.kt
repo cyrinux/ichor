@@ -60,7 +60,7 @@ fun ArgoNetworkSection(
     onNode: ((NodeOverview, Int) -> Unit)?,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
-    val vm: ArgoNetworkViewModel = viewModel(key = "argo-network/${app.key}", factory = factory { ArgoNetworkViewModel(talos.talosRepository) })
+    val vm: ArgoNetworkViewModel = viewModel(key = "argo-network/${app.key}", factory = factory { ArgoNetworkViewModel(talos.gitOpsRepository, talos.kubeRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(app.key, fetchedAt) { vm.load(app, app.key to fetchedAt) }
     DeleteToasts(vm)

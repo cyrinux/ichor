@@ -71,7 +71,7 @@ fun FluxAppScreen(
     onDiff: (() -> Unit)? = null,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
-    val vm: FluxViewModel = viewModel(factory = factory { FluxViewModel(talos.talosRepository) })
+    val vm: FluxViewModel = viewModel(factory = factory { FluxViewModel(talos.gitOpsRepository, talos.kubeRepository) })
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val config by talos.configRepository.config.collectAsStateWithLifecycle()

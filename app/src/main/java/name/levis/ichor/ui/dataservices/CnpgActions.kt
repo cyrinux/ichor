@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.model.CnpgCluster
 import name.levis.ichor.ui.KeyedActions
 import name.levis.ichor.ui.UiText
@@ -25,7 +25,7 @@ data class CnpgBackupResult(val label: String, val backup: String, val error: Ui
  */
 class CnpgActions(
     private val scope: CoroutineScope,
-    private val talos: TalosRepository,
+    private val dataServices: DataServicesRepository,
     private val onChanged: () -> Unit,
 ) {
     private val actions = KeyedActions<CnpgBackupResult>(scope)
@@ -36,7 +36,7 @@ class CnpgActions(
 
     fun backup(cluster: CnpgCluster) {
         val key = cluster.label
-        actions.launch(key, { talos.cnpgBackup(cluster.namespace, cluster.name) }, {
+        actions.launch(key, { dataServices.cnpgBackup(cluster.namespace, cluster.name) }, {
             CnpgBackupResult(key, it.getOrNull().orEmpty(), it.exceptionOrNull()?.uiText())
         }, onChanged)
     }

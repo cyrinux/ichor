@@ -433,7 +433,7 @@ fun Navigation(
             val home = remember(entry) { nav.getBackStackEntry(Routes.OVERVIEW) }
             KubeNodesScreen(
                 initialFilter = NodeFilter.entries.firstOrNull { it.name == entry.arguments?.getString("filter") },
-                vm = viewModel(viewModelStoreOwner = home, factory = factory { KubeHomeViewModel(app.talosRepository) }),
+                vm = viewModel(viewModelStoreOwner = home, factory = factory { KubeHomeViewModel(app.kubeRepository) }),
                 onBack = { nav.popBackStack() },
                 onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
             )
@@ -627,7 +627,7 @@ fun Navigation(
         composable(Routes.CHANGELOG) { ChangelogScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.LICENSES) { LicensesScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.SUPPORTED_INTEGRATIONS) {
-            SupportedIntegrationsScreen(configs = app.configRepository, talos = app.talosRepository, onBack = { nav.popBackStack() })
+            SupportedIntegrationsScreen(configs = app.configRepository, kube = app.kubeRepository, onBack = { nav.popBackStack() })
         }
         composable(Routes.FUNDING) { FundingScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.SUPPORT_BUNDLE) { SupportBundleScreen(onBack = { nav.popBackStack() }) }

@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.model.CertDetails
 import name.levis.ichor.model.Certificate
 import name.levis.ichor.ui.KeyedActions
@@ -40,7 +40,7 @@ data class CertificateRenewResult(val label: String, val error: UiText?)
  */
 class CertificateActions(
     private val scope: CoroutineScope,
-    private val talos: TalosRepository,
+    private val dataServices: DataServicesRepository,
     private val onChanged: () -> Unit,
 ) {
     private val actions = KeyedActions<CertificateRenewResult>(scope)
@@ -56,7 +56,7 @@ class CertificateActions(
 
     fun renew(cert: Certificate) {
         val key = cert.label
-        actions.launch(key, { talos.renewCertificate(cert.namespace, cert.name) }, { CertificateRenewResult(key, it.exceptionOrNull()?.uiText()) }) {
+        actions.launch(key, { dataServices.renewCertificate(cert.namespace, cert.name) }, { CertificateRenewResult(key, it.exceptionOrNull()?.uiText()) }) {
             onChanged()
             if (_sheet.value?.cert?.label == key) reload()
         }
@@ -79,7 +79,7 @@ class CertificateActions(
         _sheet.update { it?.copy(loading = true, error = null) }
         loadJob = scope.launch {
             try {
-                val details = talos.certificateDetails(cert.namespace, cert.name)
+                val details = dataServices.certificateDetails(cert.namespace, cert.name)
                 _sheet.update { it?.copy(details = details, loading = false) }
             } catch (e: CancellationException) {
                 throw e

@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.DataServicesRepository
 import name.levis.ichor.model.GARAGE_TRANQUILITY_FULL
 import name.levis.ichor.model.GarageBlockReport
 import name.levis.ichor.model.GarageInstance
@@ -52,7 +52,7 @@ sealed interface GarageActionResult {
  */
 class GarageActions(
     private val scope: CoroutineScope,
-    private val talos: TalosRepository,
+    private val dataServices: DataServicesRepository,
     private val onChanged: () -> Unit,
 ) {
     private val actions = KeyedActions<GarageActionResult>(scope)
@@ -67,7 +67,7 @@ class GarageActions(
     val results: Flow<GarageActionResult> get() = actions.results
 
     fun setTranquility(instance: GarageInstance, node: GarageNode, value: Long) {
-        actions.launch(tuningKey(instance, node), { talos.garageSetTranquility(instance, node.id, value) }, {
+        actions.launch(tuningKey(instance, node), { dataServices.garageSetTranquility(instance, node.id, value) }, {
             GarageActionResult.Tranquility(node.label, value, it.exceptionOrNull()?.uiText())
         }, onChanged)
     }
@@ -89,7 +89,7 @@ class GarageActions(
         _sheet.update { it?.copy(loading = true, error = null) }
         loadJob = scope.launch {
             try {
-                val report = talos.garageBlockErrors(instance)
+                val report = dataServices.garageBlockErrors(instance)
                 _sheet.update { it?.copy(report = report, loading = false) }
             } catch (e: CancellationException) {
                 throw e
@@ -106,7 +106,7 @@ class GarageActions(
         actions.launch(REPAIR_KEY + current.instance.label, {
             _sheet.update { it?.copy(repairing = true) }
             try {
-                talos.garageRepairBlocks(current.instance)
+                dataServices.garageRepairBlocks(current.instance)
             } finally {
                 _sheet.update { it?.copy(repairing = false) }
             }

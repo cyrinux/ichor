@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.CheckupReport
 import name.levis.ichor.model.CheckupSection
 import name.levis.ichor.model.CheckupSectionId
@@ -66,8 +66,8 @@ import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.components.pageContent
 
 /** A checkup lists the cluster's pods and asks every kubelet: loaded on demand, never polled. */
-class CheckupViewModel(private val talos: TalosRepository) : LoadingViewModel<CheckupReport>() {
-    override suspend fun fetch() = talos.checkup()
+class CheckupViewModel(private val kube: KubeRepository) : LoadingViewModel<CheckupReport>() {
+    override suspend fun fetch() = kube.checkup()
 }
 
 /**
@@ -80,7 +80,7 @@ class CheckupViewModel(private val talos: TalosRepository) : LoadingViewModel<Ch
 fun CheckupScreen(
     onBack: () -> Unit,
     onOpenRelease: (namespace: String, name: String) -> Unit,
-    vm: CheckupViewModel = viewModel(factory = factory { CheckupViewModel(app.talosRepository) }),
+    vm: CheckupViewModel = viewModel(factory = factory { CheckupViewModel(app.kubeRepository) }),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }

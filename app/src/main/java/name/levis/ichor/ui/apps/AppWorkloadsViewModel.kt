@@ -1,7 +1,7 @@
 package name.levis.ichor.ui.apps
 
 import androidx.lifecycle.viewModelScope
-import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.KubeRepository
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.ref
@@ -14,7 +14,7 @@ import name.levis.ichor.ui.workloads.WorkloadRestarts
  * restart them from there. Asks the Kubernetes API (os:admin) for its pods' owners: only
  * those pods and workloads are read, never a cluster-wide list.
  */
-class AppWorkloadsViewModel(private val talos: TalosRepository) : LoadingViewModel<List<KubeWorkload>>() {
+class AppWorkloadsViewModel(private val kube: KubeRepository) : LoadingViewModel<List<KubeWorkload>>() {
     private var app: InventoryApp? = null
 
     /**
@@ -25,14 +25,14 @@ class AppWorkloadsViewModel(private val talos: TalosRepository) : LoadingViewMod
 
     override suspend fun fetch(): List<KubeWorkload> {
         // One deleted since drops out.
-        found?.let { known -> return talos.workloadsNamed(known.map { it.ref }) }
+        found?.let { known -> return kube.workloadsNamed(known.map { it.ref }) }
         val pods = app?.routePods.orEmpty()
         if (pods.isEmpty()) return emptyList()
-        return talos.appWorkloads(pods).also { found = it }
+        return kube.appWorkloads(pods).also { found = it }
     }
 
     // Show the rollout starting: the controller already bumped the generation.
-    val restarts = WorkloadRestarts(viewModelScope, talos) { refresh() }
+    val restarts = WorkloadRestarts(viewModelScope, kube) { refresh() }
 
     /** Loads the workloads of [app] unless they are already loaded for it (the same pods too). */
     fun load(app: InventoryApp) {

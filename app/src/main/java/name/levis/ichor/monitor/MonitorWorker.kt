@@ -46,7 +46,7 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         // added from a kubeconfig. Unreadable (off VPN, a sign-in needed): nothing to compare, the
         // previous snapshot stays.
         val overview = if (kube) null else runCatching { app.talosRepository.overview() }.getOrNull()
-        val kubeNodes = if (kube) runCatching { app.talosRepository.kubeNodes() }.getOrNull() else null
+        val kubeNodes = if (kube) runCatching { app.kubeRepository.kubeNodes() }.getOrNull() else null
         if (overview == null && kubeNodes == null) return Result.success()
         val etcd = if (kube) null else runCatching { app.talosRepository.etcd() }.getOrNull()
         val context = stored.activeContext
@@ -54,15 +54,15 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         // Opt-in, and only for roles that may use the Kubernetes API: each check then lists custom
         // resources and runs the Garage CLI in a pod.
         val watchData = store.dataServicesWatched.value && active?.allows(Feature.WORKLOADS) == true
-        val dataServices = if (watchData) runCatching { app.talosRepository.dataServices(hints = "") }.getOrNull() else null
+        val dataServices = if (watchData) runCatching { app.dataServicesRepository.dataServices(hints = "") }.getOrNull() else null
 
         // Same for Argo CD and Flux apps: each call answers installed=false quickly when absent. A
         // part that could not be read keeps its known issues, so they neither clear falsely nor
         // hold the other part's alerts back.
         val watchGitops = store.gitopsWatched.value && active?.allows(Feature.WORKLOADS) == true
         val gitopsIssues = if (watchGitops) {
-            val argo = runCatching { app.talosRepository.argoCD() }.getOrNull()
-            val flux = runCatching { app.talosRepository.flux() }.getOrNull()
+            val argo = runCatching { app.gitOpsRepository.argoCD() }.getOrNull()
+            val flux = runCatching { app.gitOpsRepository.flux() }.getOrNull()
             gitopsIssuesWithGaps(argo, flux, known = knownGitOpsIssues(store.snapshot(), context))
         } else {
             null
@@ -72,7 +72,7 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         // could not be read keeps its known findings.
         val watchCheckup = store.checkupWatched.value && active?.allows(Feature.WORKLOADS) == true
         val checkupIssues = if (watchCheckup) {
-            runCatching { app.talosRepository.checkup() }.getOrNull()
+            runCatching { app.kubeRepository.checkup() }.getOrNull()
                 ?.let { checkupIssuesWithGaps(it, known = knownCheckupIssues(store.snapshot(), context)) }
         } else {
             null
