@@ -8,7 +8,7 @@ import (
 	"github.com/cyrinux/ichor/go/ichorgo"
 )
 
-// watchProbeFor is how long node-pods-watch and change-watch print events before they stop.
+// watchProbeFor is how long the *-watch commands print events before they stop.
 const watchProbeFor = 30 * time.Second
 
 // watchProbe prints a Kubernetes watch's events as they come.
@@ -20,8 +20,24 @@ func (p *watchProbe) OnDone(errMessage string) { p.done <- fmt.Sprintf("done err
 
 // nodePodsWatchRun follows the pods of a Kubernetes node for watchProbeFor, then cancels.
 func nodePodsWatchRun(cfg, contextName, kubeServer, node, phase string) string {
+	return watchProbeRun(func(p *watchProbe) *ichorgo.KubeWatchRun {
+		return ichorgo.StartKubeNodePodsWatch(cfg, contextName, kubeServer, node, phase, p)
+	})
+}
+
+// resourceWatchRun follows one resource (Table rows but for pods) for watchProbeFor, then
+// cancels; namespace "" is every one.
+func resourceWatchRun(cfg, contextName, kubeServer, group, version, resource, namespace string) string {
+	return watchProbeRun(func(p *watchProbe) *ichorgo.KubeWatchRun {
+		return ichorgo.StartKubeWatch(cfg, contextName, kubeServer, group, version, resource, namespace, "", "", p)
+	})
+}
+
+// watchProbeRun prints the events of the watch start makes until it ends or watchProbeFor
+// passed, and how it ended.
+func watchProbeRun(start func(*watchProbe) *ichorgo.KubeWatchRun) string {
 	p := &watchProbe{done: make(chan string, 1)}
-	run := ichorgo.StartKubeNodePodsWatch(cfg, contextName, kubeServer, node, phase, p)
+	run := start(p)
 
 	select {
 	case out := <-p.done:

@@ -30,12 +30,7 @@ func NodeImages(configYAML, contextName, node string) (out string, err error) {
 	}
 
 	return withNodeSession(configYAML, contextName, node, callTimeout, func(ctx context.Context, s *session) (string, error) {
-		msgs, err := listImagesLegacy(ctx, s.client)
-		if isUnavailableAPI(err) {
-			// MachineService.ImageList is deprecated for the ImageService (Talos 1.13+) and will go.
-			msgs, err = listImagesService(ctx, s.client)
-		}
-
+		msgs, err := listImages(ctx, s.client, common.ContainerdNamespace_NS_CRI)
 		if err != nil {
 			return "", s.friendlyErr(node, err)
 		}
@@ -44,9 +39,20 @@ func NodeImages(configYAML, contextName, node string) (out string, err error) {
 	})
 }
 
-func listImagesLegacy(ctx context.Context, c *client.Client) ([]*machineapi.ImageListResponse, error) {
+// listImages lists the images of one containerd namespace of the node.
+func listImages(ctx context.Context, c *client.Client, ns common.ContainerdNamespace) ([]*machineapi.ImageListResponse, error) {
+	msgs, err := listImagesLegacy(ctx, c, ns)
+	if isUnavailableAPI(err) {
+		// MachineService.ImageList is deprecated for the ImageService (Talos 1.13+) and will go.
+		msgs, err = listImagesService(ctx, c, ns)
+	}
+
+	return msgs, err
+}
+
+func listImagesLegacy(ctx context.Context, c *client.Client, ns common.ContainerdNamespace) ([]*machineapi.ImageListResponse, error) {
 	//lint:ignore SA1019 the ImageService replacement is not in every supported Talos version
-	stream, err := c.ImageList(ctx, common.ContainerdNamespace_NS_CRI)
+	stream, err := c.ImageList(ctx, ns)
 	if err != nil {
 		return nil, err
 	}
@@ -72,9 +78,14 @@ func listImagesLegacy(ctx context.Context, c *client.Client) ([]*machineapi.Imag
 	}
 }
 
-func listImagesService(ctx context.Context, c *client.Client) ([]*machineapi.ImageListResponse, error) {
+func listImagesService(ctx context.Context, c *client.Client, ns common.ContainerdNamespace) ([]*machineapi.ImageListResponse, error) {
+	driver := common.ContainerDriver_CONTAINERD
+	if ns == common.ContainerdNamespace_NS_CRI {
+		driver = common.ContainerDriver_CRI
+	}
+
 	stream, err := c.ImageClient.List(ctx, &machineapi.ImageServiceListRequest{
-		Containerd: &common.ContainerdInstance{Driver: common.ContainerDriver_CRI, Namespace: common.ContainerdNamespace_NS_CRI},
+		Containerd: &common.ContainerdInstance{Driver: driver, Namespace: ns},
 	})
 	if err != nil {
 		return nil, err

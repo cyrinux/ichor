@@ -1,5 +1,6 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.model.KubeJobs
 import name.levis.ichor.model.KubeServices
 import name.levis.ichor.model.KubeStorage
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,10 @@ import name.levis.ichor.model.KubeObjectScale
 import name.levis.ichor.model.KubeObjectSummary
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.ResourcePageJson
+import name.levis.ichor.model.KubeWatchEvent
 import name.levis.ichor.model.ResourceRow
+import name.levis.ichor.model.ResourceRowJson
+import name.levis.ichor.model.ResourceWatchRows
 import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.LogListener
@@ -58,6 +62,22 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
             val json = Ichorgo.kubeResourcePage(cfg, ctx, server, group, version, resource, namespace.orEmpty(), token, limit.toLong())
             TalosJson.decodeFromString(ResourcePageJson.serializer(), json).toPage()
         }
+
+    /**
+     * [resourcePage]'s list kept live: every object of [resource] in [namespace] (null for every
+     * one, or a cluster-scoped kind) at the start, then each change, until the collector cancels
+     * or the watch ends ([StreamItem.Done]).
+     */
+    fun resourceWatch(group: String, version: String, resource: String, namespace: String?): Flow<StreamItem<KubeWatchEvent<ResourceRow>>> {
+        val rows = ResourceWatchRows()
+        return kubeWatchFlow(
+            ::target,
+            { json -> rows.row(TalosJson.decodeFromString(ResourceRowJson.serializer(), json)) },
+            { json -> rows.page(TalosJson.decodeFromString(ResourcePageJson.serializer(), json)) },
+        ) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeWatch(cfg, ctx, server, group, version, resource, namespace.orEmpty(), "", "", listener)
+        }
+    }
 
     /** [ref] as YAML; a Secret's values only when [reveal]. Never cached: it may hold secrets. */
     suspend fun objectYaml(ref: KubeObjectRef, reveal: Boolean): String = kubeCall { cfg, ctx, server ->
@@ -138,6 +158,11 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     /** The Services of [namespace] (null for every one), with addresses, ready endpoints and routes. */
     suspend fun services(namespace: String?): KubeServices = kubeCall { cfg, ctx, server ->
         TalosJson.decodeFromString(KubeServices.serializer(), Ichorgo.kubeServices(cfg, ctx, server, namespace.orEmpty()))
+    }
+
+    /** The Jobs of [namespace] (null for every one), failures first. */
+    suspend fun jobs(namespace: String?): KubeJobs = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeJobs.serializer(), Ichorgo.kubeJobs(cfg, ctx, server, namespace.orEmpty()))
     }
 
     /** The latest revision of each Helm release of [namespace] (null for every one). */

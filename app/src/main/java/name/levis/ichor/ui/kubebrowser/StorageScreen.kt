@@ -149,7 +149,7 @@ fun StorageScreen(
     }
 }
 
-/** The colour of a row's status on the Kubernetes list screens (Storage, Services), by its level. */
+/** The colour of a row's status on the Kubernetes list screens (Storage, Services, Jobs), by its level. */
 @Composable
 internal fun StorageLevel.color(): Color = when (this) {
     StorageLevel.CRITICAL -> LocalStatusColors.current.bad

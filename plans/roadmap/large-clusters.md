@@ -120,8 +120,11 @@ Phases 1–5 are done.
   from its `resourceVersion` with bookmarks, the list again on `410`): a workload's pods, a
   node's pods, a workload's rollout and the object summary follow them while on screen and the
   app in the foreground (`StartKubeWatch`, `StartKubeWorkloadPodsWatch`,
-  `StartKubeNodePodsWatch`, `StartKubeRolloutWatch`, `StartKubeObjectWatch`). The workloads
-  and Argo CD lists, which merge kinds or derive a status, read again on a change signal
-  instead (`StartKubeChangeWatch`: Table-row watches counted in Go, at most one signal every
-  2 s, none for the first lists); every other list still polls or waits for pull-to-refresh.
+  `StartKubeNodePodsWatch`, `StartKubeRolloutWatch`, `StartKubeObjectWatch`). The browser's
+  lists of any kind follow `StartKubeWatch` as Table rows (columns from the `SYNC`, rows by
+  namespace/name), but only when a namespace is chosen or the loaded list is complete, so the
+  watch never lists more than was shown; `events` is never followed there. The workloads and
+  Argo CD lists, which merge kinds or derive a status, read again on a change signal instead
+  (`StartKubeChangeWatch`: Table-row watches counted in Go, at most one signal every 2 s, none
+  for the first lists). Every other list still polls or waits for pull-to-refresh.
 - Server-side text search (the API has none).
