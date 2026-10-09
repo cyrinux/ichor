@@ -6,8 +6,10 @@ import Foundation
 
 /// An app action KubeActionAccess answers for (its key in `actions`).
 public enum KubeAction: String, CaseIterable, Sendable {
-    case restartWorkload, scale, deletePod, execPod, suspendCronJob, triggerCronJob
-    case helmRollback, argoSync, fluxReconcile, cordonNode, drainNode
+    case restartWorkload, restartStatefulSet, restartDaemonSet, scale, scaleStatefulSet
+    case deletePod, execPod, suspendCronJob, triggerCronJob, helmRollback, argoSync
+    case fluxReconcile, fluxReconcileHelmRelease, fluxReconcileGitRepository, fluxReconcileOCIRepository
+    case fluxReconcileHelmRepository, fluxReconcileBucket, cordonNode, drainNode
 
     /// Asked in a namespace; the node actions are cluster-wide whatever the namespace.
     public var isNamespaced: Bool {
@@ -16,6 +18,59 @@ public enum KubeAction: String, CaseIterable, Sendable {
         default: true
         }
     }
+
+    // The action asked for an object of a kind, on that kind's own resource; nil for a kind the
+    // core does not ask about (offered).
+
+    /// A rollout restart (and a Deployment's rollback) of a `kind` workload.
+    public static func restart(kind: String) -> KubeAction? {
+        switch kind {
+        case "Deployment": .restartWorkload
+        case "StatefulSet": .restartStatefulSet
+        case "DaemonSet": .restartDaemonSet
+        default: nil
+        }
+    }
+
+    /// Setting the replicas of a `kind` workload.
+    public static func scale(kind: String) -> KubeAction? {
+        switch kind {
+        case "Deployment": .scale
+        case "StatefulSet": .scaleStatefulSet
+        default: nil
+        }
+    }
+
+    /// Reconciling, suspending or resuming a Flux object of `kind`.
+    public static func fluxReconcile(kind: String) -> KubeAction? {
+        switch kind {
+        case "Kustomization": .fluxReconcile
+        case "HelmRelease": .fluxReconcileHelmRelease
+        case "GitRepository": .fluxReconcileGitRepository
+        case "OCIRepository": .fluxReconcileOCIRepository
+        case "HelmRepository": .fluxReconcileHelmRepository
+        case "Bucket": .fluxReconcileBucket
+        default: nil
+        }
+    }
+}
+
+/// The distinct actions of `actions` in order, nil ones left out: the actions a list names.
+public func kubeDistinctActions(_ actions: [KubeAction?]) -> [KubeAction] {
+    var seen = Set<KubeAction>()
+    return actions.compactMap { $0 }.filter { seen.insert($0).inserted }
+}
+
+/// The refusal of `action` over objects of `namespaces` (a bulk action), given the access of
+/// each namespace loaded (`access`): the first distinct namespace that refuses it, nil when each
+/// allows it or is not known yet. A bulk action runs only where each of its objects may.
+public func kubeBulkDenial(for action: KubeAction?, across namespaces: [String], in access: [String: KubeActionAccess]) -> KubeAccess? {
+    guard let action else { return nil }
+    var seen = Set<String>()
+    for namespace in namespaces where seen.insert(namespace).inserted {
+        if let denial = access[namespace]?.denial(for: action, in: namespace) { return denial }
+    }
+    return nil
 }
 
 /// The answer for one action or permission: when refused, what was (verb, resource as
@@ -110,9 +165,9 @@ public func kubeSharedNamespace(_ namespaces: [String]) -> String {
 }
 
 public extension FluxRef {
-    /// The action whose access its reconcile and suspend follow: only a Kustomization's is
-    /// asked (patch of kustomizations); HelmReleases and sources stay offered.
-    var accessAction: KubeAction? { kind == "Kustomization" ? .fluxReconcile : nil }
+    /// The action whose access its reconcile and suspend follow: a patch of its own kind's
+    /// resource (kustomizations, helmreleases, gitrepositories...).
+    var accessAction: KubeAction? { KubeAction.fluxReconcile(kind: kind) }
 }
 
 /// Who the API server takes the credentials for (SelfSubjectReview, Kubernetes 1.28+).

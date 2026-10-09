@@ -50,6 +50,7 @@ import name.levis.ichor.TalosApp
 import name.levis.ichor.model.KubeObjectAction
 import name.levis.ichor.model.KubeObjectBar
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.KubePermission
 import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.SecureWhile
 import name.levis.ichor.security.authenticate
@@ -64,10 +65,12 @@ import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoBox
+import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SkeletonStyle
 import name.levis.ichor.ui.components.ToggleRow
+import name.levis.ichor.ui.components.rememberKubeCanDenial
 import name.levis.ichor.ui.components.shareText
 import name.levis.ichor.ui.diff.DiffLines
 import name.levis.ichor.ui.factory
@@ -194,11 +197,14 @@ fun KubeObjectScreen(
             ActionBarEditor(bar, kubeObjectActionLook, app.uiPreferences::setKubeObjectBar, Modifier.padding(padding))
             return@Scaffold
         }
+        // Asked while editing: an update the credentials cannot run cannot be saved.
+        val saveDenial = if (current != null) rememberKubeCanDenial("update", ref.group, ref.resource, ref.namespace, ref.name) else null
         Column(Modifier.padding(padding).fillMaxSize()) {
             when {
-                current?.review != null -> ReviewContent(current, onBack = vm::backToEditor, onSave = vm::save, onRetry = vm::review)
+                current?.review != null -> ReviewContent(current, saveDenial, onBack = vm::backToEditor, onSave = vm::save, onRetry = vm::review)
                 current != null -> {
                     MutedText(stringResource(R.string.kb_edit_hint), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                    KubeDenialNote(saveDenial, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
                     ConfigYamlEditor(current.draft, null, vm::changeDraft)
                 }
                 else -> {
@@ -280,9 +286,9 @@ private fun SecretReveal(revealed: Boolean, onToggle: (Boolean) -> Unit) {
     }
 }
 
-/** What saving would change, from the API server's dry run, and the save itself. */
+/** What saving would change, from the API server's dry run, and the save itself (disabled when [saveDenial] refuses it). */
 @Composable
-private fun ReviewContent(edit: ObjectEdit, onBack: () -> Unit, onSave: () -> Unit, onRetry: () -> Unit) {
+private fun ReviewContent(edit: ObjectEdit, saveDenial: KubePermission?, onBack: () -> Unit, onSave: () -> Unit, onRetry: () -> Unit) {
     when (val review = edit.review) {
         null, UiState.Loading -> Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator()
@@ -309,9 +315,10 @@ private fun ReviewContent(edit: ObjectEdit, onBack: () -> Unit, onSave: () -> Un
                 }
                 Column(Modifier.padding(16.dp).navigationBarsPadding(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     edit.saveError?.let { ErrorCard(it.asString()) }
+                    KubeDenialNote(saveDenial)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         OutlinedButton(onClick = onBack, enabled = !edit.saving) { Text(stringResource(R.string.kb_back_to_editor)) }
-                        Button(onClick = onSave, enabled = !edit.saving) { Text(stringResource(R.string.kb_save)) }
+                        Button(onClick = onSave, enabled = !edit.saving && saveDenial == null) { Text(stringResource(R.string.kb_save)) }
                         if (edit.saving) CircularProgressIndicator(Modifier.padding(start = 8.dp))
                     }
                 }

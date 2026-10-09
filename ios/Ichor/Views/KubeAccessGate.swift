@@ -10,11 +10,22 @@ private struct KubeActionAccessKey: EnvironmentKey {
     static let defaultValue: KubeActionAccess? = nil
 }
 
+private struct KubeNamespaceAccessKey: EnvironmentKey {
+    static let defaultValue: [String: KubeActionAccess] = [:]
+}
+
 extension EnvironmentValues {
     /// The access of the namespace on screen, nil until loaded (or when the load failed).
     var kubeActionAccess: KubeActionAccess? {
         get { self[KubeActionAccessKey.self] }
         set { self[KubeActionAccessKey.self] = newValue }
+    }
+
+    /// The access of each namespace a bulk action may span (`loadsKubeNamespaceAccess`); a
+    /// namespace is missing until loaded (or when its load failed).
+    var kubeNamespaceAccess: [String: KubeActionAccess] {
+        get { self[KubeNamespaceAccessKey.self] }
+        set { self[KubeNamespaceAccessKey.self] = newValue }
     }
 }
 
@@ -41,6 +52,82 @@ extension View {
     /// `KubeGatedMenuButton` in a menu. A nil action: never disabled.
     func kubeGated(_ action: KubeAction?, in namespace: String? = nil) -> some View {
         modifier(KubeGatedModifier(action: action, namespace: namespace))
+    }
+
+    /// Loads the access of each distinct namespace of `namespaces` (every object a bulk action
+    /// of this view may act on) and puts it in the environment of this view.
+    func loadsKubeNamespaceAccess(_ namespaces: [String]) -> some View {
+        modifier(KubeNamespaceAccessLoader(namespaces: Array(Set(namespaces)).sorted()))
+    }
+
+    /// Disables this bulk action unless `action` may run in each namespace of `namespaces` (its
+    /// objects'), as loaded by `loadsKubeNamespaceAccess`; a namespace not loaded never blocks.
+    /// Pair it with a `KubeBulkDeniedSection`.
+    func kubeGated(_ action: KubeAction?, across namespaces: [String]) -> some View {
+        modifier(KubeBulkGatedModifier(action: action, namespaces: namespaces))
+    }
+}
+
+private struct KubeNamespaceAccessLoader: ViewModifier {
+    /// Distinct and sorted.
+    let namespaces: [String]
+
+    @Environment(AppModel.self) private var model
+    @State private var loaded: (key: String, access: [String: KubeActionAccess])?
+
+    private var key: String {
+        "\(model.activeContext)#\(model.dataGeneration)#\(model.client?.kubeServer ?? "")#\(namespaces.joined(separator: ","))"
+    }
+
+    func body(content: Content) -> some View {
+        content
+            // Never another cluster's answers while the new ones load.
+            .environment(\.kubeNamespaceAccess, loaded?.key == key ? loaded?.access ?? [:] : [:])
+            .task(id: key) {
+                guard let client = model.client, !namespaces.isEmpty else { return }
+                let asked = key
+                var access: [String: KubeActionAccess] = [:]
+                // One at a time: the core keeps each answer, and there are few namespaces.
+                for namespace in namespaces {
+                    // A failure leaves that namespace out: its objects stay offered.
+                    if let answer = try? await client.kubeActionAccess(namespace: namespace) { access[namespace] = answer }
+                    if Task.isCancelled { return }
+                }
+                loaded = (asked, access)
+            }
+    }
+}
+
+private struct KubeBulkGatedModifier: ViewModifier {
+    let action: KubeAction?
+    let namespaces: [String]
+
+    @Environment(\.kubeNamespaceAccess) private var access
+
+    func body(content: Content) -> some View {
+        content.disabled(kubeBulkDenial(for: action, across: namespaces, in: access) != nil)
+    }
+}
+
+/// A List section holding the reason a bulk `action` over objects of `namespaces` is refused
+/// (the first namespace that refuses it); nothing when none does.
+struct KubeBulkDeniedSection: View {
+    let action: KubeAction?
+    let namespaces: [String]
+
+    @Environment(\.kubeNamespaceAccess) private var access
+
+    init(_ action: KubeAction?, across namespaces: [String]) {
+        self.action = action
+        self.namespaces = namespaces
+    }
+
+    var body: some View {
+        if let denial = kubeBulkDenial(for: action, across: namespaces, in: access) {
+            Section {
+                KubeDeniedLine(text: denial.deniedText)
+            }
+        }
     }
 }
 
@@ -134,7 +221,7 @@ struct KubeDeniedSection: View {
 }
 
 /// A refusal's reason: a lock and the line, as a caption.
-private struct KubeDeniedLine: View {
+struct KubeDeniedLine: View {
     let text: String
 
     var body: some View {

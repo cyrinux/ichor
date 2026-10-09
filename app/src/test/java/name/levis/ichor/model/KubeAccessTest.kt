@@ -56,11 +56,50 @@ class KubeAccessTest {
     fun wireNamesMatchTheCore() {
         assertEquals(
             listOf(
-                "restartWorkload", "scale", "deletePod", "execPod", "suspendCronJob", "triggerCronJob",
-                "helmRollback", "argoSync", "fluxReconcile", "cordonNode", "drainNode",
+                "restartWorkload", "restartStatefulSet", "restartDaemonSet", "scale", "scaleStatefulSet",
+                "deletePod", "execPod", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
+                "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
+                "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode",
             ),
             KubeAction.entries.map { it.wire },
         )
+    }
+
+    @Test
+    fun eachKindIsAskedOnItsOwnResource() {
+        assertEquals(KubeAction.RESTART_WORKLOAD, KubeAction.restart("Deployment"))
+        assertEquals(KubeAction.RESTART_STATEFUL_SET, KubeAction.restart("StatefulSet"))
+        assertEquals(KubeAction.RESTART_DAEMON_SET, KubeAction.restart("DaemonSet"))
+        assertNull(KubeAction.restart("Rollout"))
+        assertEquals(KubeAction.SCALE, KubeAction.scale("Deployment"))
+        assertEquals(KubeAction.SCALE_STATEFUL_SET, KubeAction.scale("StatefulSet"))
+        // A DaemonSet runs one pod per node: never scaled.
+        assertNull(KubeAction.scale("DaemonSet"))
+        assertEquals(KubeAction.FLUX_RECONCILE, KubeAction.fluxReconcile("Kustomization"))
+        assertEquals(KubeAction.FLUX_RECONCILE_HELM_RELEASE, KubeAction.fluxReconcile("HelmRelease"))
+        assertEquals(KubeAction.FLUX_RECONCILE_GIT_REPOSITORY, KubeAction.fluxReconcile("GitRepository"))
+        assertEquals(KubeAction.FLUX_RECONCILE_OCI_REPOSITORY, KubeAction.fluxReconcile("OCIRepository"))
+        assertEquals(KubeAction.FLUX_RECONCILE_HELM_REPOSITORY, KubeAction.fluxReconcile("HelmRepository"))
+        assertEquals(KubeAction.FLUX_RECONCILE_BUCKET, KubeAction.fluxReconcile("Bucket"))
+        assertNull(KubeAction.fluxReconcile("ImagePolicy"))
+        // No action asked: nothing refused.
+        assertNull(access.denial(null))
+    }
+
+    @Test
+    fun aBulkActionIsRefusedWhenOneNamespaceRefusesIt() {
+        val sync = "argoSync"
+        val byNamespace = mapOf(
+            "argocd" to KubeActionAccess("argocd", mapOf(sync to KubePermission(allowed = true))),
+            "team-a" to KubeActionAccess("team-a", mapOf(sync to KubePermission(allowed = false, verb = "patch", resource = "applications", namespace = "team-a"))),
+            "team-b" to KubeActionAccess("team-b", mapOf(sync to KubePermission(allowed = false, verb = "patch", resource = "applications", namespace = "team-b"))),
+        )
+        val checks = { namespaces: List<String> -> namespaces.map { KubeAction.ARGO_SYNC to it } }
+        assertNull(firstDenial(checks(listOf("argocd", "argocd")), byNamespace::get))
+        // The first refused namespace gives the reason.
+        assertEquals("team-a", firstDenial(checks(listOf("argocd", "team-a", "team-b")), byNamespace::get)?.namespace)
+        // A namespace not answered yet never blocks.
+        assertNull(firstDenial(checks(listOf("argocd", "elsewhere")), byNamespace::get))
     }
 
     @Test

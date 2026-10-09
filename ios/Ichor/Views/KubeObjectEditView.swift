@@ -10,9 +10,13 @@ struct KubeObjectEditView: View {
     let onSaved: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppModel.self) private var model
     @State private var draft: String
     @State private var reviewing = false
     @State private var confirmingDiscard = false
+    /// What refuses the update, once asked; nil while asking, when allowed or unknown (Save
+    /// then stays offered and the API server decides).
+    @State private var saveDenial: KubeAccess?
 
     init(target: KubeEditTarget, onSaved: @escaping () -> Void) {
         self.target = target
@@ -26,13 +30,16 @@ struct KubeObjectEditView: View {
         NavigationStack {
             ConfigYamlEditor(text: $draft, error: nil)
                 .safeAreaInset(edge: .top, spacing: 0) {
-                    Label("Nothing changes in the cluster until you review and save.", systemImage: "pencil")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-                        .padding(.vertical, 6)
-                        .background(.bar)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label("Nothing changes in the cluster until you review and save.", systemImage: "pencil")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        if let saveDenial { KubeDeniedLine(text: saveDenial.deniedText) }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .padding(.vertical, 6)
+                    .background(.bar)
                 }
                 .navigationTitle(Text(verbatim: target.name))
                 .navigationBarTitleDisplayMode(.inline)
@@ -48,11 +55,12 @@ struct KubeObjectEditView: View {
                     }
                 }
                 .navigationDestination(isPresented: $reviewing) {
-                    KubeEditReview(target: target, edited: draft) {
+                    KubeEditReview(target: target, edited: draft, saveDenial: saveDenial) {
                         onSaved()
                         dismiss()
                     }
                 }
+                .task(id: target.id) { await loadSaveAccess() }
                 .confirmationDialog("Discard your changes?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
                     Button("Discard changes", role: .destructive) { dismiss() }
                     Button("Keep editing", role: .cancel) {}
@@ -60,12 +68,25 @@ struct KubeObjectEditView: View {
         }
         .interactiveDismissDisabled(changed)
     }
+
+    /// Asks whether the credentials may update this object; a review that cannot be asked
+    /// leaves Save offered.
+    private func loadSaveAccess() async {
+        guard let client = model.client else { return }
+        let target = target
+        guard let access = try? await client.kubeCan(verb: "update", group: target.resource.group, resource: target.resource.resource,
+                                                     namespace: target.namespace, name: target.name),
+              !Task.isCancelled else { return }
+        saveDenial = access.isDenied ? access : nil
+    }
 }
 
 /// The dry run's diff of the stored object and the edited one, then Save.
 private struct KubeEditReview: View {
     let target: KubeEditTarget
     let edited: String
+    /// What refuses the update: Save is then disabled, with the reason.
+    let saveDenial: KubeAccess?
     let onSaved: () -> Void
 
     @Environment(AppModel.self) private var model
@@ -109,18 +130,21 @@ private struct KubeEditReview: View {
     }
 
     private var saveBar: some View {
-        Button {
-            Task { await save() }
-        } label: {
-            HStack {
-                if saving { ProgressView() }
-                Text("Save")
+        VStack(alignment: .leading, spacing: 8) {
+            if let saveDenial { KubeDeniedLine(text: saveDenial.deniedText) }
+            Button {
+                Task { await save() }
+            } label: {
+                HStack {
+                    if saving { ProgressView() }
+                    Text("Save")
+                }
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(saving || saveDenial != nil)
         }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .disabled(saving)
         .padding()
         .background(.bar)
     }

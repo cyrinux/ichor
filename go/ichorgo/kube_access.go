@@ -68,20 +68,30 @@ type kubeActionAccess struct {
 }
 
 // kubeActionChecks: each app action and the permissions it needs, all of them. namespaced
-// attributes take the namespace asked about; the others keep theirs ("" = everywhere).
+// attributes take the namespace asked about; the others keep theirs ("" = everywhere). An
+// action on several kinds is asked per kind, on that kind's own resource: restartWorkload and
+// scale are a Deployment's, fluxReconcile a Kustomization's (its suspend follows it), and
+// each other kind has its own name.
 var kubeActionChecks = map[string][]accessNeed{
-	// Also stands for StatefulSets and DaemonSets: the same verb on their resources.
-	"restartWorkload": {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "deployments"}, true}},
-	"scale":           {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "deployments", Subresource: "scale"}, true}},
-	"deletePod":       {{ssarAttributes{Verb: "delete", Resource: "pods"}, true}},
-	"execPod":         {{ssarAttributes{Verb: "create", Resource: "pods", Subresource: "exec"}, true}},
-	"suspendCronJob":  {{ssarAttributes{Verb: "patch", Group: "batch", Resource: "cronjobs"}, true}},
-	"triggerCronJob":  {{ssarAttributes{Verb: "create", Group: "batch", Resource: "jobs"}, true}},
+	"restartWorkload":    {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "deployments"}, true}},
+	"restartStatefulSet": {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "statefulsets"}, true}},
+	"restartDaemonSet":   {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "daemonsets"}, true}},
+	"scale":              {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "deployments", Subresource: "scale"}, true}},
+	"scaleStatefulSet":   {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "statefulsets", Subresource: "scale"}, true}},
+	"deletePod":          {{ssarAttributes{Verb: "delete", Resource: "pods"}, true}},
+	"execPod":            {{ssarAttributes{Verb: "create", Resource: "pods", Subresource: "exec"}, true}},
+	"suspendCronJob":     {{ssarAttributes{Verb: "patch", Group: "batch", Resource: "cronjobs"}, true}},
+	"triggerCronJob":     {{ssarAttributes{Verb: "create", Group: "batch", Resource: "jobs"}, true}},
 	// Helm keeps its releases in Secrets: a rollback writes a new one.
-	"helmRollback":  {{ssarAttributes{Verb: "create", Resource: "secrets"}, true}},
-	"argoSync":      {{ssarAttributes{Verb: "patch", Group: "argoproj.io", Resource: "applications"}, true}},
-	"fluxReconcile": {{ssarAttributes{Verb: "patch", Group: "kustomize.toolkit.fluxcd.io", Resource: "kustomizations"}, true}},
-	"cordonNode":    {{ssarAttributes{Verb: "patch", Resource: "nodes"}, false}},
+	"helmRollback":                {{ssarAttributes{Verb: "create", Resource: "secrets"}, true}},
+	"argoSync":                    {{ssarAttributes{Verb: "patch", Group: "argoproj.io", Resource: "applications"}, true}},
+	"fluxReconcile":               {{ssarAttributes{Verb: "patch", Group: groupFluxKustomize, Resource: "kustomizations"}, true}},
+	"fluxReconcileHelmRelease":    {{ssarAttributes{Verb: "patch", Group: groupFluxHelm, Resource: "helmreleases"}, true}},
+	"fluxReconcileGitRepository":  {{ssarAttributes{Verb: "patch", Group: groupFluxSource, Resource: "gitrepositories"}, true}},
+	"fluxReconcileOCIRepository":  {{ssarAttributes{Verb: "patch", Group: groupFluxSource, Resource: "ocirepositories"}, true}},
+	"fluxReconcileHelmRepository": {{ssarAttributes{Verb: "patch", Group: groupFluxSource, Resource: "helmrepositories"}, true}},
+	"fluxReconcileBucket":         {{ssarAttributes{Verb: "patch", Group: groupFluxSource, Resource: "buckets"}, true}},
+	"cordonNode":                  {{ssarAttributes{Verb: "patch", Resource: "nodes"}, false}},
 	// A drain cordons, then evicts the node's pods whatever their namespace.
 	"drainNode": {
 		{ssarAttributes{Verb: "patch", Resource: "nodes"}, false},
@@ -96,9 +106,12 @@ type accessNeed struct {
 
 // KubeActionAccess says which of the app's Kubernetes actions the credentials may run in
 // namespace ("" for cluster-wide): {"namespace", "actions": {name: {allowed, unknown, verb,
-// group, resource, namespace, reason}}}, names restartWorkload, scale, deletePod, execPod,
-// suspendCronJob, triggerCronJob, helmRollback, argoSync, fluxReconcile, cordonNode,
-// drainNode. Answers are cached a few minutes. kubeServer: see KubePods.
+// group, resource, namespace, reason}}}, names restartWorkload (restartStatefulSet,
+// restartDaemonSet), scale (scaleStatefulSet), deletePod, execPod, suspendCronJob,
+// triggerCronJob, helmRollback, argoSync, fluxReconcile (fluxReconcileHelmRelease,
+// fluxReconcileGitRepository, fluxReconcileOCIRepository, fluxReconcileHelmRepository,
+// fluxReconcileBucket), cordonNode, drainNode. Answers are cached a few minutes.
+// kubeServer: see KubePods.
 func KubeActionAccess(configYAML, contextName, kubeServer, namespace string) (out string, err error) {
 	defer maskResult(&out, &err)
 

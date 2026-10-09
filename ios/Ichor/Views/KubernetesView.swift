@@ -303,7 +303,8 @@ private struct WorkloadsList: View {
             // Sorted once complete: rows do not jump as pages arrive.
             let shown = filterWorkloads(load.items, namespace: selected, query: query, sorted: load.done)
             List {
-                KubeDeniedSection(actions: [.restartWorkload], namespace: selected ?? "")
+                // Each kind listed has its own restart permission.
+                KubeDeniedSection(actions: kubeDistinctActions(shown.map { KubeAction.restart(kind: $0.kind) }), namespace: selected ?? "")
                 Section {
                     ForEach(shown) { workload in
                         WorkloadRow(workload: workload, showNamespace: selected == nil,
@@ -368,7 +369,7 @@ private struct WorkloadRow: View {
                 }
                     .buttonStyle(.borderless)
                     .disabled(!workload.canRestart)
-                    .kubeGated(.restartWorkload, in: workload.namespace)
+                    .kubeGated(KubeAction.restart(kind: workload.kind), in: workload.namespace)
                     .accessibilityLabel(Text("Restart \(workload.name)"))
             }
         }

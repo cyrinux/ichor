@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberFirstKubeDenial
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.FluxAction
 import name.levis.ichor.model.FluxSource
@@ -52,8 +54,9 @@ import name.levis.ichor.util.timeAgo
 @Composable
 fun FluxSourcesTab(status: FluxStatus, busy: Set<String>, onAct: (FluxSource, FluxAction) -> Unit) {
     val sources = status.sortedSources
-    // Sources usually share Flux's namespace: its answer stands for the list.
-    val listDenial = rememberKubeDenial(KubeAction.FLUX_RECONCILE, sources.firstOrNull()?.namespace.orEmpty())
+    // Each kind has its own permission, in each namespace: the first one refused stands for the list.
+    val checks = remember(sources) { sources.map { KubeAction.fluxReconcile(it.kind) to it.namespace }.distinct() }
+    val listDenial = rememberFirstKubeDenial(checks)
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
         if (status.sourcesError.isNotEmpty()) item(key = "sources-error") {
             InlineError(stringResource(R.string.data_services_unreadable, status.sourcesError), Modifier.padding(16.dp))
@@ -113,7 +116,7 @@ private fun SourceRow(src: FluxSource, busy: Boolean, onAct: (FluxAction) -> Uni
         if (busy) {
             CircularProgressIndicator(Modifier.padding(horizontal = 14.dp).size(20.dp), strokeWidth = 2.dp)
         } else {
-            val allowed = rememberKubeDenial(KubeAction.FLUX_RECONCILE, src.namespace) == null
+            val allowed = rememberKubeDenial(KubeAction.fluxReconcile(src.kind), src.namespace) == null
             TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.flux_reconcile), onClick = { onAct(FluxAction.RECONCILE) }, enabled = !src.suspended && allowed)
             if (src.suspended) {
                 TooltipIconButton(Icons.Outlined.PlayArrow, stringResource(R.string.flux_resume), onClick = { onAct(FluxAction.RESUME) }, enabled = allowed)

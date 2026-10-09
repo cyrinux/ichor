@@ -93,6 +93,63 @@ func TestActionAccessFollowsRBAC(t *testing.T) {
 	}
 }
 
+func TestActionAccessAsksEachKindsOwnResource(t *testing.T) {
+	want := map[string]string{
+		"restartWorkload":             "patch deployments.apps",
+		"restartStatefulSet":          "patch statefulsets.apps",
+		"restartDaemonSet":            "patch daemonsets.apps",
+		"scale":                       "patch deployments.apps/scale",
+		"scaleStatefulSet":            "patch statefulsets.apps/scale",
+		"fluxReconcile":               "patch kustomizations.kustomize.toolkit.fluxcd.io",
+		"fluxReconcileHelmRelease":    "patch helmreleases.helm.toolkit.fluxcd.io",
+		"fluxReconcileGitRepository":  "patch gitrepositories.source.toolkit.fluxcd.io",
+		"fluxReconcileOCIRepository":  "patch ocirepositories.source.toolkit.fluxcd.io",
+		"fluxReconcileHelmRepository": "patch helmrepositories.source.toolkit.fluxcd.io",
+		"fluxReconcileBucket":         "patch buckets.source.toolkit.fluxcd.io",
+	}
+
+	for name, w := range want {
+		needs := kubeActionChecks[name]
+		if len(needs) != 1 || !needs[0].namespaced {
+			t.Errorf("%s: %+v; want one namespaced need", name, needs)
+
+			continue
+		}
+
+		a := needs[0].attrs
+		got := a.Verb + " " + a.Resource + "." + a.Group
+		if a.Subresource != "" {
+			got += "/" + a.Subresource
+		}
+
+		if got != w {
+			t.Errorf("%s asks %q, want %q", name, got, w)
+		}
+	}
+
+	// Every source kind Flux lists has its own check.
+	for _, sk := range fluxSourceKinds {
+		if _, ok := kubeActionChecks["fluxReconcile"+sk.kind]; !ok {
+			t.Errorf("no check for %s", sk.kind)
+		}
+	}
+}
+
+func TestActionAccessDeniesOneKindOnly(t *testing.T) {
+	// May restart Deployments, not StatefulSets.
+	k, _ := fakeAccessAPI(t, func(a ssarAttributes) bool { return a.Resource != "statefulsets" }, "")
+
+	access := readActionAccess(context.Background(), k, "web")
+
+	if !access.Actions["restartWorkload"].Allowed || !access.Actions["restartDaemonSet"].Allowed {
+		t.Error("Deployment or DaemonSet restart denied")
+	}
+
+	if sts := access.Actions["restartStatefulSet"]; sts.Allowed || sts.Resource != "statefulsets" || sts.Group != "apps" {
+		t.Errorf("restartStatefulSet = %+v; want denied on statefulsets.apps", sts)
+	}
+}
+
 func TestDrainNeedsCordonAndEvictionEverywhere(t *testing.T) {
 	// May cordon, not evict outside its namespace.
 	k, _ := fakeAccessAPI(t, func(a ssarAttributes) bool {
