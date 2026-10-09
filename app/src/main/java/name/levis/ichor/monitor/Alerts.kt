@@ -9,14 +9,17 @@ enum class AlertKind {
     /** The kubeconfig's credentials (a cluster added from a kubeconfig): a new kubeconfig replaces them. */
     KUBECONFIG_EXPIRING, KUBECONFIG_EXPIRED,
     DATA_PROBLEM, DATA_OK, GITOPS_PROBLEM, GITOPS_OK, CHECKUP_PROBLEM, CHECKUP_OK,
+    /** An Alertmanager alert firing, or no longer (resolved, silenced or inhibited since). */
+    AM_FIRING, AM_RESOLVED,
 }
 
 /**
  * [key] identifies the subject, so a newer alert replaces the older notification.
  * [subject]: hostname (node), alarm name (etcd), volume/cluster (data services) or
- * "namespace/name" (Argo CD) / "Kind namespace/name" (Flux), or what a checkup finding is about;
- * [detail]: node address/reason, etcd member, "system|severity" (data services) or
- * "tool|severity|reason" (GitOps apps), "section|kind|severity" (checkup);
+ * "namespace/name" (Argo CD) / "Kind namespace/name" (Flux), or what a checkup finding is about,
+ * or the alertname (Alertmanager); [detail]: node address/reason, etcd member, "system|severity"
+ * (data services) or "tool|severity|reason" (GitOps apps), "section|kind|severity" (checkup),
+ * "severity|alertname|where" (Alertmanager);
  * [days]: days until (or since) the certificate expiry.
  */
 data class Alert(
@@ -82,6 +85,7 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
     val data = if (blind) prev.dataTrack else evaluateTrack(prev?.dataTrack, cur.dataTrack, comparable, { it }, ::dataAlert, alerts)
     val gitops = if (blind) prev.gitopsTrack else evaluateTrack(prev?.gitopsTrack, cur.gitopsTrack, comparable, ::gitopsSeverity, ::gitopsAlert, alerts)
     val checkup = if (blind) prev.checkupTrack else evaluateTrack(prev?.checkupTrack, cur.checkupTrack, comparable, { it }, ::checkupAlert, alerts)
+    val am = if (blind) prev.amTrack else evaluateTrack(prev?.amTrack, cur.amTrack, comparable, ::amSeverity, ::amAlert, alerts)
 
     val next = if (blind) prev.copy(certNotAfter = cur.certNotAfter) else cur
     return Evaluation(
@@ -100,16 +104,21 @@ fun evaluate(prev: ClusterSnapshot?, cur: ClusterSnapshot, nowMillis: Long): Eva
             checkupChecked = checkup.checked,
             checkupIssues = checkup.issues,
             checkupPending = checkup.pending,
+            amWatched = am.watched,
+            amChecked = am.checked,
+            amIssues = am.issues,
+            amPending = am.pending,
         ),
     )
 }
 
-/** One opt-in track of issues (data services, GitOps apps), as a snapshot keeps it. */
+/** One opt-in track of issues (data services, GitOps apps, checkup, Alertmanager), as a snapshot keeps it. */
 private data class Track(val watched: Boolean, val checked: Boolean, val issues: Map<String, String>, val pending: List<String>)
 
 private val ClusterSnapshot.dataTrack: Track get() = Track(dataWatched, dataChecked, dataIssues, dataPending)
 private val ClusterSnapshot.gitopsTrack: Track get() = Track(gitopsWatched, gitopsChecked, gitopsIssues, gitopsPending)
 private val ClusterSnapshot.checkupTrack: Track get() = Track(checkupWatched, checkupChecked, checkupIssues, checkupPending)
+private val ClusterSnapshot.amTrack: Track get() = Track(amWatched, amChecked, amIssues, amPending)
 
 /**
  * Issues of one track (key → value, [severityOf] reading [DATA_CRITICAL] or [DATA_WARNING] from the
@@ -175,6 +184,15 @@ private fun checkupAlert(key: String, severity: String, problem: Boolean): Alert
         detail = listOf(parts[0], parts.getOrElse(1) { "" }, severity).joinToString("|"),
     )
 }
+
+/** [key] the alert's fingerprint, [value] "severity|alertname|where": the alertname is the subject. */
+private fun amAlert(key: String, value: String, problem: Boolean): Alert = Alert(
+    key = "am:$key",
+    kind = if (problem) AlertKind.AM_FIRING else AlertKind.AM_RESOLVED,
+    problem = problem,
+    subject = AmDetail.parse(value).alertname,
+    detail = value,
+)
 
 private fun dataAlert(key: String, severity: String, problem: Boolean): Alert = Alert(
     key = "data:$key",

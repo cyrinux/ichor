@@ -1,6 +1,7 @@
 package ichorgo
 
 import (
+	"bytes"
 	"context"
 	"crypto/x509"
 	"encoding/json"
@@ -141,22 +142,43 @@ func (g promGrid) end() int64 { return g.start + int64(g.n-1)*g.step }
 // failed query. An answer from the API server itself (no pod behind the Service) is an
 // error here.
 func promGet(target kubeTarget, src promSource, apiPath string, params url.Values) (int, []byte, error) {
+	// The server gives up first, with its own timeout error, rather than our deadline.
+	params.Set("timeout", promServerTimeout)
+
+	status, body, err := promSend(target, src, http.MethodGet, apiPath+"?"+params.Encode(), nil)
+	if errors.Is(err, errPromNoAnswer) {
+		return 0, nil, fmt.Errorf("%s: no answer within %s: narrow the query or shorten the range", src.label(), callTimeout)
+	}
+
+	return status, body, err
+}
+
+// errPromNoAnswer is a request to a source that got no answer within callTimeout.
+var errPromNoAnswer = errors.New("no answer")
+
+// promSend makes one request to the source (pathQuery: the API path and query, below the
+// path prefix) and returns the answer whatever its HTTP status, for the caller to read.
+// body is sent as JSON, nil for none. An answer from the API server itself (no pod behind
+// the Service) is an error here; a request left without an answer is errPromNoAnswer.
+func promSend(target kubeTarget, src promSource, method, pathQuery string, body []byte) (int, []byte, error) {
 	header := map[string]string{}
 	if src.Tenant != "" {
 		header["X-Scope-OrgID"] = src.Tenant
 	}
 
-	// The server gives up first, with its own timeout error, rather than our deadline.
-	params.Set("timeout", promServerTimeout)
-
 	if src.Mode == promModeURL {
 		ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
 		defer cancel()
 
-		return promHTTPGet(ctx, src, src.URL+apiPath+"?"+params.Encode(), header)
+		return promHTTPDo(ctx, src, method, src.URL+pathQuery, header, body)
 	}
 
-	path := serviceProxyPath(src.Namespace, fmt.Sprintf("%s:%d", url.PathEscape(src.Service), src.Port), src.PathPrefix+apiPath+"?"+params.Encode())
+	path := serviceProxyPath(src.Namespace, fmt.Sprintf("%s:%d", url.PathEscape(src.Service), src.Port), src.PathPrefix+pathQuery)
+
+	contentType := ""
+	if body != nil {
+		contentType = "application/json"
+	}
 
 	type answer struct {
 		status  int
@@ -166,21 +188,21 @@ func promGet(target kubeTarget, src promSource, apiPath string, params url.Value
 	}
 
 	a, err := withKube(target, func(ctx context.Context, k *kubeClient) (answer, error) {
-		status, _, body, err := k.getRaw(ctx, path, header)
+		resp, data, err := k.send(ctx, method, path, "application/json", contentType, body, header)
 
 		switch {
 		case errors.Is(err, context.DeadlineExceeded):
-			// A slow query, not a dead client: keep it cached.
+			// A slow backend, not a dead client: keep it cached.
 			return answer{timeout: true}, nil
 		case err != nil:
 			return answer{}, err
-		case status/100 == 2 || !isKubeStatus(body):
-			return answer{status: status, body: body}, nil
-		case status == http.StatusUnauthorized:
+		case resp.StatusCode/100 == 2 || !isKubeStatus(data):
+			return answer{status: resp.StatusCode, body: data}, nil
+		case resp.StatusCode == http.StatusUnauthorized:
 			// Expired credentials: the client is dropped as for any other call.
-			return answer{}, kubeStatusError(status, body)
+			return answer{}, kubeStatusError(resp.StatusCode, data)
 		default:
-			return answer{status: status, body: body, kube: true}, nil
+			return answer{status: resp.StatusCode, body: data, kube: true}, nil
 		}
 	})
 
@@ -188,7 +210,7 @@ func promGet(target kubeTarget, src promSource, apiPath string, params url.Value
 	case err != nil:
 		return 0, nil, err
 	case a.timeout:
-		return 0, nil, fmt.Errorf("%s: no answer within %s: narrow the query or shorten the range", src.label(), callTimeout)
+		return 0, nil, errPromNoAnswer
 	case a.kube:
 		return 0, nil, promProxyError(src, a.status, a.body)
 	case len(a.body) > promMaxBody:
@@ -218,16 +240,21 @@ func promProxyError(src promSource, status int, body []byte) error {
 	}
 }
 
-func promHTTPGet(ctx context.Context, src promSource, target string, header map[string]string) (int, []byte, error) {
+// promHTTPDo makes one request to a source in URL mode, body sent as JSON (nil for none).
+func promHTTPDo(ctx context.Context, src promSource, method, target string, header map[string]string, body []byte) (int, []byte, error) {
 	client, err := promHTTPClient(src)
 	if err != nil {
 		return 0, nil, err
 	}
 	defer client.CloseIdleConnections()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	req, err := http.NewRequestWithContext(ctx, method, target, bytes.NewReader(body))
 	if err != nil {
 		return 0, nil, err
+	}
+
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
 	}
 
 	for name, value := range header {
@@ -245,6 +272,10 @@ func promHTTPGet(ctx context.Context, src promSource, target string, header map[
 	}
 
 	resp, err := client.Do(req)
+	if errors.Is(err, context.DeadlineExceeded) {
+		return 0, nil, errPromNoAnswer
+	}
+
 	if err != nil {
 		return 0, nil, fmt.Errorf("%s: %s", src.URL, kubeTransportError(err))
 	}
@@ -255,16 +286,16 @@ func promHTTPGet(ctx context.Context, src promSource, target string, header map[
 		return 0, nil, fmt.Errorf("%s redirects to %q: set that address instead", src.URL, clipUTF8(resp.Header.Get("Location"), 200))
 	}
 
-	body, err := io.ReadAll(io.LimitReader(resp.Body, promMaxBody+1))
+	answer, err := io.ReadAll(io.LimitReader(resp.Body, promMaxBody+1))
 	if err != nil {
 		return 0, nil, fmt.Errorf("%s: %s", src.URL, kubeTransportError(err))
 	}
 
-	if len(body) > promMaxBody {
+	if len(answer) > promMaxBody {
 		return 0, nil, errPromTooLarge
 	}
 
-	return resp.StatusCode, body, nil
+	return resp.StatusCode, answer, nil
 }
 
 // promHTTPClient trusts the system authorities plus the source's own, refusing redirects.

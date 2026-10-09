@@ -16,6 +16,7 @@ import (
 // listed; the list also holds those that change a cluster another way (a background run,
 // a Talos session, a pod exec).
 var auditedEntryPoints = []string{
+	"AlertmanagerExpire", "AlertmanagerSilence",
 	"EtcdAlarmDisarm", "EtcdDefragment", "EtcdForfeitLeadership", "EtcdRemoveMember",
 	"KubeArgoAction", "KubeArgoFreeze", "KubeCNPGBackup", "KubeCertManagerRenew", "KubeCordon",
 	"KubeDeletePod", "KubeFluxAction", "KubeGarageRepairBlocks", "KubeGarageSetTranquility",

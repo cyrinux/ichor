@@ -34,6 +34,7 @@ data class ShareTarget(
         const val CRONJOB = "cronjob"
         const val DATA = "data"
         const val CHECKUP = "checkup"
+        const val ALERTS = "alerts"
 
         /** The node screen's tabs, by their index there. */
         val NODE_TABS = listOf("services", "resources", "live", "processes", "pods", "cgroups", "kube-pods")

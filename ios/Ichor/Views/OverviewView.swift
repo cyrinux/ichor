@@ -28,6 +28,9 @@ struct OverviewView: View {
     @State private var argo: LoadState<ArgoStatus>?
     /// Flux: likewise, only when the inventory shows it.
     @State private var flux: LoadState<FluxStatus>?
+    /// The Alertmanager's alerts: only asked when the role may use the Kubernetes API; nil until
+    /// one is found (none hides the section).
+    @State private var alerts: LoadState<AMAlerts>?
     /// Finding the public IPs Talos does not know (AppModel.detectPublicIPs).
     @State private var confirmDetectIPs = false
     @State private var detectIPsError: String?
@@ -223,6 +226,7 @@ struct OverviewView: View {
             dataServices = nil
             argo = nil
             flux = nil
+            alerts = nil
         }
         // The Talos update section shown again: its check was not made while hidden.
         .onChange(of: layout.hidden.contains(.talosUpdate)) { _, hidden in
@@ -237,6 +241,7 @@ struct OverviewView: View {
             dataServices = nil
             argo = nil
             flux = nil
+            alerts = nil
         }
         .sheet(isPresented: $showDiscovered) {
             let context = model.activeContext
@@ -304,6 +309,8 @@ struct OverviewView: View {
         case .timeDrift:
             // Re-checked with every overview refresh (the load time is the task id).
             TimeDriftSection(hostnames: hostnames, refreshID: loadedAt)
+        case .alerts:
+            if let alerts { AlertsSection(state: alerts) }
         }
     }
 
@@ -401,11 +408,12 @@ struct OverviewView: View {
 
     /// Only offered when the config's role can run it. Workloads and the PromQL panels reach the
     /// Kubernetes API with the admin kubeconfig Talos issues; GitOps only when the cluster runs
-    /// Argo CD or Flux (each asked only for such a cluster and role).
+    /// Argo CD or Flux (each asked only for such a cluster and role). Alerts like the metrics: its
+    /// screen sets a source up by hand when none is found.
     private func offered(_ action: OverviewAction) -> Bool {
         switch action {
         case .health: model.allows(.health)
-        case .workloads, .metrics: model.allows(.workloads)
+        case .workloads, .metrics, .alerts: model.allows(.workloads)
         case .gitOps: argo != nil || flux != nil
         default: true
         }
@@ -429,6 +437,7 @@ struct OverviewView: View {
         // Argo CD when the cluster has it, else Flux: the same screens as their sections.
         case .gitOps: argo != nil ? .argoCD(downNodes: loadedDownHostnames) : .flux(downNodes: loadedDownHostnames)
         case .metrics: .metrics
+        case .alerts: .alerts
         case .kubespan: .kubespan
         case .etcd: .etcd
         case .settings: .settings
@@ -462,6 +471,7 @@ struct OverviewView: View {
         if case .loaded(let overview, _, _) = loaded {
             // Alongside the rest: listing every node's containers takes a while.
             Task { await loadInventory(with: client, id: id) }
+            Task { await loadAlerts(with: client, id: id) }
             // The map that groups the nodes by site: once per cluster (see TopologyStore).
             if overview.outage == nil {
                 let key = model.topologyKey
@@ -567,12 +577,34 @@ struct OverviewView: View {
         dataServices = (dataServices ?? .loading).refreshed(with: loaded)
     }
 
+    /// Only for roles that may use the Kubernetes API, and clusters with an Alertmanager (searched
+    /// once per cluster, see AlertsStore). A failure shows on the card only once one was found.
+    private func loadAlerts(with client: TalosClient, id: String) async {
+        guard model.allows(.workloads) else {
+            alerts = nil
+            return
+        }
+        let key = model.alertsKey
+        let fingerprint = model.activeSummary?.fingerprint ?? ""
+        let loaded: LoadState<AMAlerts>?
+        do {
+            let read = try await AlertsStore.shared.load(with: client, key: key, fingerprint: fingerprint)
+            loaded = read.map { LoadState<AMAlerts>.loaded($0, at: Date()) }
+        } catch {
+            loaded = alerts == nil ? nil : .failed(error.localizedDescription)
+        }
+        guard id == loadID else { return }
+        alerts = loaded.map { (alerts ?? .loading).refreshed(with: $0) }
+    }
+
     /// Sections the cluster has nothing for (the same checks as their loading), left out of the
     /// editor too; all offered until the inventory is known.
     private var absentCards: Set<OverviewCard> {
-        guard case .loaded(let apps, _, _) = inventory else { return [] }
+        var alertsAbsent: Set<OverviewCard> = []
+        if !model.allows(.workloads) || AlertsStore.shared.absent(for: model.alertsKey) { alertsAbsent.insert(.alerts) }
+        guard case .loaded(let apps, _, _) = inventory else { return alertsAbsent }
         let kubernetes = model.allows(.workloads)
-        var absent: Set<OverviewCard> = []
+        var absent: Set<OverviewCard> = alertsAbsent
         if !kubernetes || dataServiceHints(apps).isEmpty { absent.insert(.dataServices) }
         if !kubernetes || !argoCDHinted(apps) { absent.insert(.argoCD) }
         if !kubernetes || !fluxHinted(apps) { absent.insert(.flux) }

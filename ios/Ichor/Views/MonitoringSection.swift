@@ -7,6 +7,7 @@ struct MonitoringSection: View {
     @State private var dataWatched = BackgroundMonitor.dataServicesWatched
     @State private var gitopsWatched = BackgroundMonitor.gitopsWatched
     @State private var checkupWatched = BackgroundMonitor.checkupWatched
+    @State private var alertmanagerWatched = BackgroundMonitor.alertmanagerWatched
     @State private var message: String?
 
     var body: some View {
@@ -46,6 +47,19 @@ struct MonitoringSection: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: CheckupText.monitorCheckup)
                     Text(verbatim: CheckupText.monitorCheckupDesc)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
+            // Opt-in too: asks the cluster's Alertmanager for its alerts at every check.
+            Toggle(isOn: Binding(get: { alertmanagerWatched }, set: { on in
+                BackgroundMonitor.alertmanagerWatched = on
+                alertmanagerWatched = on
+            })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Watch Alertmanager alerts")
+                    Text("Critical alerts at once, warnings seen on two checks in a row, and when they resolve; silenced, inhibited and info alerts never notify. Each check asks the cluster's Alertmanager through the Kubernetes API or its URL.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

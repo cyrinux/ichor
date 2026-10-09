@@ -457,7 +457,7 @@
     <string name="monitor_channel_nodes">Node alerts</string>
     <string name="monitor_channel_nodes_desc">A node goes down, stops answering or is ready again</string>
     <string name="monitor_channel_cluster">Cluster alerts</string>
-    <string name="monitor_channel_cluster_desc">etcd alarms and cluster checkup findings</string>
+    <string name="monitor_channel_cluster_desc">etcd alarms, cluster checkup findings and Alertmanager alerts</string>
     <string name="monitor_channel_data">Data service alerts</string>
     <string name="monitor_channel_data_desc">Longhorn, databases, object storage and backups that need attention</string>
     <string name="monitor_channel_gitops">GitOps alerts</string>
@@ -3183,7 +3183,6 @@
     <string name="kube_discover_find">Find clusters</string>
     <string name="kube_signin_required_error">Sign in to this cluster to continue (%1$s).</string>
     <string name="kube_signin_required_error_plain">Sign in to this cluster to continue.</string>
-||||||| a1506f3c
     <!-- kube browser -->
     <string name="kb_title">All resources</string>
     <string name="kb_search_kinds">Search kinds (pod, deploy, group…)</string>
@@ -3382,7 +3381,6 @@
     <string name="activity_settings_desc">Every change Ichor made to your clusters (reboots, scaling, syncs, rollbacks…), kept 90 days on this device.</string>
     <string name="activity_open">Activity log</string>
     <string name="clusters_menu_activity">Activity</string>
-||||||| b9b4f161
     <string name="kb_tab_summary">Summary</string>
     <string name="kb_summary_conditions">Conditions</string>
     <string name="kb_summary_no_conditions">This kind reports no conditions.</string>
@@ -3412,6 +3410,94 @@
     <string name="kube_whoami_user">Kubernetes user</string>
     <string name="mono_text_larger">Larger text</string>
     <string name="mono_text_smaller">Smaller text</string>
+    <!-- Alertmanager -->
+    <string name="alerts_title">Alerts</string>
+    <string name="alerts_unreadable">Could not read the alerts: %1$s</string>
+    <string name="alerts_loading">Reading the alerts…</string>
+    <string name="alerts_none_firing">Nothing is firing.</string>
+    <string name="alerts_severity_critical">Critical</string>
+    <string name="alerts_severity_warning">Warning</string>
+    <string name="alerts_severity_info">Info</string>
+    <string name="alerts_severity_other">Other</string>
+    <string name="alerts_state_firing">Firing</string>
+    <string name="alerts_state_silenced">Silenced</string>
+    <string name="alerts_state_inhibited">Inhibited</string>
+    <string name="alerts_state_silenced_inhibited">Silenced, inhibited</string>
+    <string name="alerts_silence_active">Active</string>
+    <string name="alerts_silence_pending">Pending</string>
+    <string name="alerts_silence_expired">Expired</string>
+    <string name="alerts_started">Started</string>
+    <string name="alerts_receivers">Receivers</string>
+    <string name="alerts_runbook">Runbook</string>
+    <string name="alerts_generator">Rule graph</string>
+    <string name="alerts_open_pod">Pod</string>
+    <string name="alerts_open_namespace">Namespace %1$s</string>
+    <string name="alerts_open_node">Node %1$s</string>
+    <string name="alerts_silence">Silence</string>
+    <string name="alerts_labels">Labels</string>
+    <string name="alerts_annotations">Annotations</string>
+    <string name="alerts_silence_title">Silence %1$s</string>
+    <string name="alerts_silence_matchers">Matching</string>
+    <string name="alerts_silence_remove_matcher">Remove %1$s</string>
+    <string name="alerts_silence_no_matchers">No matcher left: a silence needs at least one.</string>
+    <string name="alerts_silence_matchers_hint">Mutes exactly this alert. Remove a matcher to mute more alerts of its kind.</string>
+    <string name="alerts_silence_for">For</string>
+    <string name="alerts_silence_custom">Custom</string>
+    <string name="alerts_silence_hours">Hours</string>
+    <string name="alerts_silence_hours_hint">1 to 720 hours (30 days)</string>
+    <string name="alerts_silence_comment">Comment</string>
+    <string name="alerts_silence_comment_hint">Required: say why, for whoever sees the silence.</string>
+    <string name="alerts_expire_title">Expire this silence?</string>
+    <string name="alerts_expire_text">The alerts it mutes notify again: %1$s</string>
+    <string name="alerts_expire">Expire</string>
+    <string name="alerts_silences_show_expired">Show expired silences</string>
+    <string name="alerts_silences_none">No silence.</string>
+    <string name="alerts_silence_by">By %1$s</string>
+    <string name="alerts_silence_starts">Starts %1$s (%2$s)</string>
+    <string name="alerts_silence_ends">Ends %1$s (%2$s)</string>
+    <string name="alerts_silence_ended">Ended %1$s (%2$s)</string>
+    <string name="alerts_search">Search alerts and labels</string>
+    <string name="alerts_truncated">Showing the first 1000 of %1$d alerts.</string>
+    <string name="alerts_none">Alertmanager holds no alert.</string>
+    <string name="alerts_none_match">No alert matches the filters.</string>
+    <string name="alerts_source">Alertmanager</string>
+    <string name="alerts_source_line">From %1$s</string>
+    <string name="alerts_tab_alerts">Alerts</string>
+    <string name="alerts_tab_silences">Silences</string>
+    <string name="alerts_tab_silences_count">Silences (%1$d)</string>
+    <string name="alerts_none_found">No Alertmanager found in the cluster</string>
+    <string name="alerts_none_found_hint">Pick a Service by hand, or give the URL of an Alertmanager the phone reaches.</string>
+    <string name="alerts_searching">Looking for Alertmanager in the cluster…</string>
+    <string name="alerts_reachable">Alertmanager answers.</string>
+    <string name="alerts_expire_failed">Could not expire the silence: %1$s</string>
+    <string name="alerts_silence_failed">Could not silence: %1$s</string>
+    <string name="alerts_expired">Silence expired</string>
+    <string name="alerts_silenced">Silence created</string>
+    <string name="overview_card_desc_alerts">Alertmanager\'s firing alerts by severity, and the silenced ones</string>
+    <string name="monitor_alertmanager">Alertmanager alerts</string>
+    <string name="monitor_alertmanager_desc">Also notifies the cluster\'s Alertmanager alerts that are neither silenced nor inhibited: critical ones at once, others once seen on two checks in a row, info ones never. Each check reads them through the Kubernetes API (os:admin) or at the URL set on the Alerts screen.</string>
+    <string name="monitor_am_firing">Firing: %1$s</string>
+    <string name="monitor_am_resolved">Resolved: %1$s</string>
+    <plurals name="alerts_suppressed">
+        <item quantity="one">%1$d alert silenced or inhibited</item>
+        <item quantity="other">%1$d alerts silenced or inhibited</item>
+    </plurals>
+    <plurals name="alerts_hours">
+        <item quantity="one">%1$d hour</item>
+        <item quantity="other">%1$d hours</item>
+    </plurals>
+    <plurals name="alerts_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <plurals name="alerts_weeks">
+        <item quantity="one">%1$d week</item>
+        <item quantity="other">%1$d weeks</item>
+    </plurals>
+    <plurals name="alerts_group_count">
+        <item quantity="one">%1$d of %2$d firing</item>
+        <item quantity="other">%1$d of %2$d firing</item>
+    </plurals>
     <string name="kb_tab_data">Data</string>
     <string name="kb_data_type">Type: %1$s</string>
     <string name="kb_data_keys">Keys</string>
@@ -3429,7 +3515,6 @@
     <string name="kb_data_used_by_unknown">The pods of this namespace could not be listed.</string>
     <string name="kb_data_used_by_none">No pod of this namespace uses it.</string>
     <string name="kb_data_reveal_auth">Show %1$s of %2$s</string>
-||||||| 62d80f4f
     <string name="pod_debug_toggle">Debug container</string>
     <string name="pod_debug_note">For images without a shell (distroless): adds a temporary container that sees this pod\'s processes. Kubernetes keeps it in the pod until the pod is deleted.</string>
     <string name="storage_kube_search">Search PVCs, classes or pods</string>

@@ -114,6 +114,7 @@ fun overviewCardLabel(card: OverviewCard): String = stringResource(
         OverviewCard.FLUX -> R.string.flux_title
         OverviewCard.NODES -> R.string.overview_stat_nodes
         OverviewCard.TIME_DRIFT -> R.string.time_drift_title
+        OverviewCard.ALERTS -> R.string.alerts_title
     },
 )
 
@@ -129,6 +130,7 @@ fun overviewCardDescription(card: OverviewCard): String = stringResource(
         OverviewCard.FLUX -> R.string.overview_card_desc_flux
         OverviewCard.NODES -> R.string.overview_card_desc_nodes
         OverviewCard.TIME_DRIFT -> R.string.overview_card_desc_time_drift
+        OverviewCard.ALERTS -> R.string.overview_card_desc_alerts
     },
 )
 
@@ -146,6 +148,7 @@ val kubeHomeCardLook = CardLook<KubeHomeCard>(
                 KubeHomeCard.DATA_SERVICES -> R.string.data_services_title
                 KubeHomeCard.ARGO_CD -> R.string.argo_card_title
                 KubeHomeCard.FLUX -> R.string.flux_title
+                KubeHomeCard.ALERTS -> R.string.alerts_title
             },
         )
     },
@@ -158,6 +161,7 @@ val kubeHomeCardLook = CardLook<KubeHomeCard>(
                 KubeHomeCard.DATA_SERVICES -> R.string.overview_card_desc_data_services
                 KubeHomeCard.ARGO_CD -> R.string.overview_card_desc_argo_cd
                 KubeHomeCard.FLUX -> R.string.overview_card_desc_flux
+                KubeHomeCard.ALERTS -> R.string.overview_card_desc_alerts
             },
         )
     },

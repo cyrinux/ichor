@@ -71,6 +71,8 @@ import name.levis.ichor.data.hasStrongBox
 import name.levis.ichor.data.SkippedTalosUpdates
 import name.levis.ichor.data.SnapshotKeys
 import name.levis.ichor.data.MetricsStore
+import name.levis.ichor.data.AlertmanagerStore
+import name.levis.ichor.data.AlertmanagerRepository
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.data.VpnRequiredException
 import name.levis.ichor.data.activeSummary
@@ -118,6 +120,7 @@ class TalosApp : Application() {
     val kubeRepository by lazy { KubeRepository(goCall) }
     val gitOpsRepository by lazy { GitOpsRepository(goCall) }
     val dataServicesRepository by lazy { DataServicesRepository(goCall) }
+    val alertmanagerRepository by lazy { AlertmanagerRepository(goCall) }
 
     /** Last known cluster data on disk, only while "Keep last known state" is on (Settings → Privacy). */
     private val offlineCache by lazy {
@@ -179,6 +182,7 @@ class TalosApp : Application() {
     val snapshotKeys by lazy { SnapshotKeys(getSharedPreferences(SnapshotKeys.FILE, Context.MODE_PRIVATE)) }
     /** Each cluster's Prometheus/Mimir source and saved PromQL panels (Metrics screen). */
     val metricsStore by lazy { MetricsStore(this) }
+    val alertmanagerStore by lazy { AlertmanagerStore(this) }
     val vpn by lazy { VpnMonitor(this) }
     val appLock by lazy {
         AppLock(
@@ -473,10 +477,12 @@ class TalosApp : Application() {
                     skippedTalosUpdates.sync(it.summary)
                     val fingerprints = it.summary.contexts.map { c -> c.fingerprint }
                     launch(Dispatchers.IO) { metricsStore.sync(fingerprints) }
+                    launch(Dispatchers.IO) { alertmanagerStore.sync(fingerprints) }
                 }
-                // The deleted config takes the metrics setups (and their credentials) with it, and the sign-ins.
+                // The deleted config takes the metrics and Alertmanager setups (and their credentials) with it, and the sign-ins.
                 if (stored == null && configRepository.generation.value > 0) {
                     launch(Dispatchers.IO) { metricsStore.sync(emptyList()) }
+                    launch(Dispatchers.IO) { alertmanagerStore.sync(emptyList()) }
                     launch(Dispatchers.IO) {
                         kubeAuthStore.clear()
                         // Drops the tokens the core keeps in memory.

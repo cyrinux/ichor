@@ -3,6 +3,7 @@ package name.levis.ichor.ui.overview
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Hub
+import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
@@ -29,6 +30,7 @@ class OverviewNavigation(
     /** Argo CD when the cluster runs it, else Flux. */
     val onGitOps: () -> Unit,
     val onMetrics: () -> Unit,
+    val onAlerts: () -> Unit,
     val onKubeSpan: () -> Unit,
     val onEtcd: () -> Unit,
     val onSettings: () -> Unit,
@@ -39,6 +41,7 @@ class OverviewNavigation(
         OverviewAction.WORKLOADS -> onWorkloads
         OverviewAction.GITOPS -> onGitOps
         OverviewAction.METRICS -> onMetrics
+        OverviewAction.ALERTS -> onAlerts
         OverviewAction.KUBESPAN -> onKubeSpan
         OverviewAction.ETCD -> onEtcd
         OverviewAction.SETTINGS -> onSettings
@@ -51,6 +54,7 @@ fun overviewActionIcon(action: OverviewAction): ImageVector = when (action) {
     OverviewAction.WORKLOADS -> Icons.Outlined.Widgets
     OverviewAction.GITOPS -> Icons.Outlined.Sync
     OverviewAction.METRICS -> Icons.Outlined.QueryStats
+    OverviewAction.ALERTS -> Icons.Outlined.NotificationsActive
     OverviewAction.KUBESPAN -> Icons.Outlined.Hub
     OverviewAction.ETCD -> Icons.Outlined.Storage
     OverviewAction.SETTINGS -> Icons.Outlined.Settings
@@ -63,6 +67,7 @@ fun overviewActionLabel(action: OverviewAction): String = when (action) {
     OverviewAction.WORKLOADS -> stringResource(R.string.overview_action_workloads)
     OverviewAction.GITOPS -> "GitOps"
     OverviewAction.METRICS -> stringResource(R.string.metrics_title)
+    OverviewAction.ALERTS -> stringResource(R.string.alerts_title)
     OverviewAction.KUBESPAN -> "KubeSpan"
     OverviewAction.ETCD -> "etcd"
     OverviewAction.SETTINGS -> stringResource(R.string.overview_action_settings)
@@ -93,11 +98,11 @@ fun OverviewActions(
         OverviewAction.ETCD -> clusterSupport(features, TalosFeature.ETCD).supported
         else -> true
     }
-    // Only offered when the config's role can run it. Workloads and the PromQL panels reach the
+    // Only offered when the config's role can run it. Workloads, the PromQL panels and the alerts reach the
     // API with the admin kubeconfig Talos issues; GitOps only when the cluster runs Argo CD or Flux.
     fun offered(action: OverviewAction): Boolean = when (action) {
         OverviewAction.HEALTH -> health
-        OverviewAction.WORKLOADS, OverviewAction.METRICS -> workloads
+        OverviewAction.WORKLOADS, OverviewAction.METRICS, OverviewAction.ALERTS -> workloads
         OverviewAction.GITOPS -> gitOps
         else -> true
     }

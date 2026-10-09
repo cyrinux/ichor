@@ -1,5 +1,6 @@
 package name.levis.ichor.model
 
+import name.levis.ichor.model.KubeHomeCard.ALERTS
 import name.levis.ichor.model.KubeHomeCard.ARGO_CD
 import name.levis.ichor.model.KubeHomeCard.DATA_SERVICES
 import name.levis.ichor.model.KubeHomeCard.FLUX
@@ -16,7 +17,7 @@ class KubeHomeLayoutTest {
     @Test
     fun defaultShowsEveryCardInOrder() {
         val layout = KubeHomeCard.layout.default
-        assertEquals(listOf(SUMMARY, NODES, TOOLS, DATA_SERVICES, ARGO_CD, FLUX), layout.visible)
+        assertEquals(listOf(SUMMARY, NODES, TOOLS, DATA_SERVICES, ARGO_CD, FLUX, ALERTS), layout.visible)
         assertTrue(layout.hiddenCards.isEmpty())
         assertTrue(layout.isDefault)
     }
@@ -24,7 +25,7 @@ class KubeHomeLayoutTest {
     @Test
     fun encodeRoundTrips() {
         val layout = KubeHomeCard.layout.default.move(2, 0).hide(NODES)
-        assertEquals("TOOLS,SUMMARY,-NODES,DATA_SERVICES,ARGO_CD,FLUX", layout.encode())
+        assertEquals("TOOLS,SUMMARY,-NODES,DATA_SERVICES,ARGO_CD,FLUX,ALERTS", layout.encode())
         assertEquals(layout, KubeHomeCard.layout.parse(layout.encode()))
         assertFalse(layout.isDefault)
     }
@@ -35,7 +36,7 @@ class KubeHomeLayoutTest {
         assertEquals(KubeHomeCard.layout.default, KubeHomeCard.layout.parse(""))
         // A layout saved by the Talos overview: its own cards are unknown here, the shared names kept.
         val layout = KubeHomeCard.layout.parse("TALOS_UPDATE,-APPS,NODES,-DATA_SERVICES,TIME_DRIFT")
-        assertEquals(listOf(NODES, DATA_SERVICES, SUMMARY, TOOLS, ARGO_CD, FLUX), layout.order)
+        assertEquals(listOf(NODES, DATA_SERVICES, SUMMARY, TOOLS, ARGO_CD, FLUX, ALERTS), layout.order)
         assertEquals(setOf(DATA_SERVICES), layout.hidden)
     }
 
@@ -43,21 +44,21 @@ class KubeHomeLayoutTest {
     fun absentCardsAreLeftOutAndKeepTheirPlace() {
         val absent = setOf(ARGO_CD, FLUX)
         val layout = KubeHomeCard.layout.default.hide(DATA_SERVICES)
-        assertEquals(listOf(SUMMARY, NODES, TOOLS), layout.visible(absent))
+        assertEquals(listOf(SUMMARY, NODES, TOOLS, ALERTS), layout.visible(absent))
         assertEquals(listOf(DATA_SERVICES), layout.hiddenCards(absent))
-        assertEquals(listOf(TOOLS, SUMMARY, NODES, ARGO_CD, FLUX), layout.move(2, 0, absent).visible)
+        assertEquals(listOf(TOOLS, SUMMARY, NODES, ARGO_CD, FLUX, ALERTS), layout.move(2, 0, absent).visible)
     }
 
     @Test
     fun showPutsTheCardLast() {
         val shown = KubeHomeCard.layout.default.hide(SUMMARY).hide(TOOLS).show(SUMMARY)
-        assertEquals(listOf(NODES, DATA_SERVICES, ARGO_CD, FLUX, SUMMARY), shown.visible)
+        assertEquals(listOf(NODES, DATA_SERVICES, ARGO_CD, FLUX, ALERTS, SUMMARY), shown.visible)
         assertEquals(listOf(TOOLS), shown.hiddenCards)
     }
 
     @Test
     fun detectedCardsAndNoLeadingOne() {
-        assertEquals(setOf(DATA_SERVICES, ARGO_CD, FLUX), KubeHomeCard.entries.filter { it.whenDetected }.toSet())
+        assertEquals(setOf(DATA_SERVICES, ARGO_CD, FLUX, ALERTS), KubeHomeCard.entries.filter { it.whenDetected }.toSet())
         assertTrue(KubeHomeCard.entries.none { it.leadsWhenNew })
     }
 }

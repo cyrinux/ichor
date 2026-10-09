@@ -1,9 +1,50 @@
 import SwiftUI
 import IchorCore
 
-/// Picks where queries go: a query API found in the cluster, a Service typed in (both through
-/// the Kubernetes API), or a URL with its credentials. Go checks it before it is saved.
+/// What a source sheet sets up: the metrics' query API or the Alertmanager, which differ only in wording.
+enum SourceSheetKind {
+    case metrics, alertmanager
+
+    var title: String {
+        switch self {
+        case .metrics: String(localized: "Metrics source")
+        case .alertmanager: String(localized: "Alertmanager source")
+        }
+    }
+
+    var notFound: String {
+        switch self {
+        case .metrics: String(localized: "No Prometheus, Mimir, Thanos or VictoriaMetrics found in the cluster")
+        case .alertmanager: String(localized: "No Alertmanager found in the cluster")
+        }
+    }
+
+    var pathPrefixHint: String {
+        switch self {
+        case .metrics: String(localized: "Path prefix (Mimir: /prometheus)")
+        case .alertmanager: String(localized: "Path prefix (Mimir: /alertmanager)")
+        }
+    }
+
+    var urlHint: String {
+        switch self {
+        case .metrics: String(localized: "URL (e.g. https://mimir.example.com/prometheus)")
+        case .alertmanager: String(localized: "URL (e.g. https://alerts.example.com)")
+        }
+    }
+
+    var answers: String {
+        switch self {
+        case .metrics: String(localized: "The query API answers.")
+        case .alertmanager: String(localized: "The Alertmanager answers.")
+        }
+    }
+}
+
+/// Picks where queries go: a query API (or an Alertmanager) found in the cluster, a Service typed
+/// in (both through the Kubernetes API), or a URL with its credentials. Go checks it before it is saved.
 struct SourceSheet: View {
+    var kind = SourceSheetKind.metrics
     let current: PromSource?
     let discovered: [PromSource]?
     let discovering: Bool
@@ -42,7 +83,7 @@ struct SourceSheet: View {
                         TextField("Namespace", text: $source.namespace)
                         TextField("Service", text: $source.service)
                         TextField("Port", text: $port).keyboardType(.numberPad)
-                        TextField("Path prefix (Mimir: /prometheus)", text: $source.pathPrefix)
+                        TextField(kind.pathPrefixHint, text: $source.pathPrefix)
                     } footer: {
                         Text("Reached through the Kubernetes API service proxy with the cluster's admin kubeconfig: no extra credentials.")
                     }
@@ -56,14 +97,14 @@ struct SourceSheet: View {
                     ProgressView()
                 } else if let outcome {
                     switch outcome {
-                    case .success: Text("The query API answers.").foregroundStyle(.green)
+                    case .success: Text(kind.answers).foregroundStyle(.green)
                     case .failure(let error): Text(error.message).foregroundStyle(.red).font(.footnote)
                     }
                 }
             }
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
-            .navigationTitle("Metrics source")
+            .navigationTitle(kind.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
@@ -83,7 +124,7 @@ struct SourceSheet: View {
         Section {
             if discovering { ProgressView() }
             if let discoveryError { Text(discoveryError).foregroundStyle(.red).font(.footnote) }
-            if discovered?.isEmpty == true { Text("No Prometheus, Mimir, Thanos or VictoriaMetrics found in the cluster").foregroundStyle(.secondary) }
+            if discovered?.isEmpty == true { Text(kind.notFound).foregroundStyle(.secondary) }
             ForEach(discovered ?? [], id: \.self) { found in
                 Button {
                     var picked = found
@@ -109,7 +150,7 @@ struct SourceSheet: View {
 
     @ViewBuilder private var urlSection: some View {
         Section {
-            TextField("URL (e.g. https://mimir.example.com/prometheus)", text: $source.url).keyboardType(.URL)
+            TextField(kind.urlHint, text: $source.url).keyboardType(.URL)
             Picker("Authentication", selection: $source.auth) {
                 Text("None").tag(PromSource.authNone)
                 Text("Token").tag(PromSource.authBearer)

@@ -46,7 +46,8 @@ private sealed interface SourceOutcome {
 
 /**
  * Picks where queries go: a query API found in the cluster, a Service typed in (both through
- * the Kubernetes API), or a URL with its credentials. Go checks it before it is saved.
+ * the Kubernetes API), or a URL with its credentials. Go checks it before it is saved. Also
+ * picks the Alertmanager ([title], [noneFound] and [reachable] then say so).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +60,11 @@ fun SourceDialog(
     onTest: suspend (PromSource) -> String?,
     onSave: suspend (PromSource) -> String?,
     onDismiss: () -> Unit,
+    title: String = stringResource(R.string.metrics_source),
+    /** What the search says when it found nothing. */
+    noneFound: String = stringResource(R.string.metrics_none_found),
+    /** What Test says when the source answers. */
+    reachable: String = stringResource(R.string.metrics_reachable),
 ) {
     var source by remember { mutableStateOf(current ?: discovered?.firstOrNull() ?: PromSource()) }
     var portText by remember { mutableStateOf(source.port.takeIf { it > 0 }?.toString().orEmpty()) }
@@ -77,7 +83,7 @@ fun SourceDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.metrics_source)) },
+        title = { Text(title) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 val modes = listOf(PromSource.MODE_PROXY to R.string.metrics_mode_cluster, PromSource.MODE_URL to R.string.metrics_mode_url)
@@ -92,7 +98,7 @@ fun SourceDialog(
                     }
                 }
                 if (source.mode == PromSource.MODE_PROXY) {
-                    Discovered(discovered, discovering, discoveryError, edited, onDiscover) { found ->
+                    Discovered(discovered, discovering, discoveryError, noneFound, edited, onDiscover) { found ->
                         source = found.copy(tenant = source.tenant)
                         portText = found.port.toString()
                         outcome = null
@@ -109,7 +115,7 @@ fun SourceDialog(
                 Field(source.tenant, R.string.metrics_tenant) { source = source.copy(tenant = it) }
                 when (val o = outcome) {
                     SourceOutcome.Busy -> LinearProgressIndicator(Modifier.fillMaxWidth())
-                    SourceOutcome.Reachable -> Text(stringResource(R.string.metrics_reachable), color = MaterialTheme.colorScheme.primary)
+                    SourceOutcome.Reachable -> Text(reachable, color = MaterialTheme.colorScheme.primary)
                     is SourceOutcome.Failed -> Text(o.message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                     null -> Unit
                 }
@@ -130,6 +136,7 @@ private fun Discovered(
     discovered: List<PromSource>?,
     discovering: Boolean,
     error: String?,
+    noneFound: String,
     selected: PromSource,
     onDiscover: () -> Unit,
     onPick: (PromSource) -> Unit,
@@ -137,7 +144,7 @@ private fun Discovered(
     when {
         discovering -> LinearProgressIndicator(Modifier.fillMaxWidth())
         error != null -> Text(error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-        discovered?.isEmpty() == true -> MutedText(stringResource(R.string.metrics_none_found))
+        discovered?.isEmpty() == true -> MutedText(noneFound)
     }
     discovered.orEmpty().forEach { found ->
         val chosen = found.namespace == selected.namespace && found.service == selected.service &&
