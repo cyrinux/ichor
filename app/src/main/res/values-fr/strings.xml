@@ -3389,4 +3389,21 @@
     <string name="kube_whoami_user">Utilisateur Kubernetes</string>
     <string name="mono_text_larger">Texte plus grand</string>
     <string name="mono_text_smaller">Texte plus petit</string>
+    <string name="kb_tab_data">Données</string>
+    <string name="kb_data_type">Type : %1$s</string>
+    <string name="kb_data_keys">Clés</string>
+    <string name="kb_data_no_keys">Aucune clé.</string>
+    <string name="kb_data_hint_text">Texte</string>
+    <string name="kb_data_hint_binary">Binaire</string>
+    <string name="kb_data_show_value">Afficher la valeur</string>
+    <string name="kb_data_hide_value">Masquer la valeur</string>
+    <string name="kb_data_copy_value">Copier la valeur</string>
+    <string name="kb_data_base64">Valeur binaire, affichée en base64.</string>
+    <string name="kb_data_cert_chain">Certificats dans la chaîne : %1$d</string>
+    <string name="kb_data_registries">Registres</string>
+    <string name="kb_data_registry_user">Utilisateur : %1$s</string>
+    <string name="kb_data_used_by">Utilisé par</string>
+    <string name="kb_data_used_by_unknown">Impossible de lister les pods de ce namespace.</string>
+    <string name="kb_data_used_by_none">Aucun pod de ce namespace ne l\'utilise.</string>
+    <string name="kb_data_reveal_auth">Afficher %1$s de %2$s</string>
 </resources>

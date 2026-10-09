@@ -3389,4 +3389,21 @@
     <string name="kube_whoami_user">Kubernetes user</string>
     <string name="mono_text_larger">Larger text</string>
     <string name="mono_text_smaller">Smaller text</string>
+    <string name="kb_tab_data">Data</string>
+    <string name="kb_data_type">Type: %1$s</string>
+    <string name="kb_data_keys">Keys</string>
+    <string name="kb_data_no_keys">No keys.</string>
+    <string name="kb_data_hint_text">Text</string>
+    <string name="kb_data_hint_binary">Binary</string>
+    <string name="kb_data_show_value">Show value</string>
+    <string name="kb_data_hide_value">Hide value</string>
+    <string name="kb_data_copy_value">Copy value</string>
+    <string name="kb_data_base64">Binary value, shown as base64.</string>
+    <string name="kb_data_cert_chain">Certificates in the chain: %1$d</string>
+    <string name="kb_data_registries">Registries</string>
+    <string name="kb_data_registry_user">User: %1$s</string>
+    <string name="kb_data_used_by">Used by</string>
+    <string name="kb_data_used_by_unknown">The pods of this namespace could not be listed.</string>
+    <string name="kb_data_used_by_none">No pod of this namespace uses it.</string>
+    <string name="kb_data_reveal_auth">Show %1$s of %2$s</string>
 </resources>

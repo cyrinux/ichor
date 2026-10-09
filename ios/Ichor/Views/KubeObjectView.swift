@@ -3,8 +3,9 @@ import UniformTypeIdentifiers
 import IchorCore
 
 /// One object of any kind: first its summary (health, conditions, owners up the chain, events,
-/// metadata), then its YAML (numbered, searchable, copy and share) without managedFields, and
-/// Edit when the kind may be updated. A Secret's
+/// metadata), for a Secret or ConfigMap its data key by key (KubeConfigDataView), then its YAML
+/// (numbered, searchable, copy and share) without managedFields, and Edit when the kind may be
+/// updated. A Secret's
 /// values stay hidden until asked for, behind Face ID / the passcode when the app lock is on,
 /// and it cannot be edited while they are hidden. A pod also opens its logs and a port-forward.
 /// Delete confirms with what the deletion would touch, then goes back (`onDeleted` first).
@@ -24,7 +25,7 @@ struct KubeObjectView: View {
         self.onDeleted = onDeleted
     }
 
-    private enum Tab: Hashable { case summary, yaml }
+    private enum Tab: Hashable { case summary, data, yaml }
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
@@ -52,6 +53,8 @@ struct KubeObjectView: View {
                         .themedBackground()
                         .refreshable { await loadSummary() }
                 }
+            case .data:
+                KubeConfigDataView(resource: resource, namespace: namespace, name: name)
             case .yaml:
                 LoadStateView(state: state, retry: load) { yaml in
                     ConfigYamlLines(yaml: yaml, query: query, refresh: load)
@@ -98,6 +101,9 @@ struct KubeObjectView: View {
             .lineLimit(1)
             Picker(selection: $tab) {
                 Text(verbatim: SummaryText.tabSummary).tag(Tab.summary)
+                if resource.hasConfigData {
+                    Text("Data").tag(Tab.data)
+                }
                 Text(verbatim: "YAML").tag(Tab.yaml)
             } label: {
                 EmptyView()
