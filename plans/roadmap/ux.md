@@ -60,10 +60,11 @@ sampled every N minutes, from this phone only.
 
 ## U5. Favorites and runbooks: partial → pins and runbooks (M)
 
-**Today:** Android `OverviewLayout` (card order/hidden, `OverviewEditor.kt`); nothing on iOS.
+**Today:** the Overview layout editor (card order/hidden) on Android (`OverviewEditor.kt`) and iOS
+(`OverviewEditorSheet.swift`), and the top-bar action arrangement (`ActionBarEditor.swift`).
 
 **Plan:**
-1. iOS gets the Overview layout editor (parity).
+1. ~~iOS gets the Overview layout editor (parity).~~ Done.
 2. **Pins**: star any node, pod, workload, app, Argo/Flux app → a "Pinned" Overview card with live
    status chips. Stored per cluster in the layout preferences.
 3. **Runbooks** (later): a saved sequence of existing actions with waits and checks, for example
@@ -114,7 +115,8 @@ text or as a PNG card (rendered in-app). Button on the Insights recorder and the
 
 ## U10. Onboarding: partial (S)
 
-**Today:** QR import (one QR, ≈ 2.9 KB, README), demo, lock onboarding, security keys for the lock
+**Today:** QR import (one QR: plain up to ≈ 2.9 KB, or gzip in a binary QR, which fits most
+configs with an embedded certificate; README), demo, lock onboarding, security keys for the lock
 ([security-key-unlock](../security-key-unlock/README.md)), what's new.
 
 **Plan:**
