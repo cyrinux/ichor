@@ -18622,41 +18622,6 @@
         }
       }
     },
-    "Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within %lld days. iOS decides when background checks run, so alerts can be delayed. The home-screen widget shows the last check." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benachrichtigt, wenn ein Node ausfällt oder sich erholt, bei neuen etcd-Alarmen und täglich, wenn das Client-Zertifikat in weniger als %lld Tagen abläuft. iOS entscheidet, wann Hintergrundprüfungen laufen, daher können Warnungen verzögert sein. Das Widget auf dem Home-Bildschirm zeigt die letzte Prüfung."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Avisa cuando un nodo cae o se recupera, ante nuevas alarmas de etcd y a diario cuando el certificado del cliente caduca en menos de %lld días. iOS decide cuándo se ejecutan las comprobaciones en segundo plano, así que los avisos pueden retrasarse. El widget de la pantalla de inicio muestra la última comprobación."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notifie quand un nœud tombe ou revient, lors de nouvelles alarmes etcd, et chaque jour quand le certificat client expire dans moins de %lld jours. iOS décide quand les vérifications en arrière-plan s'exécutent, les alertes peuvent donc être retardées. Le widget de l'écran d'accueil montre la dernière vérification."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Avvisa quando un nodo cade o torna attivo, per nuovi allarmi etcd e ogni giorno quando il certificato client scade entro %lld giorni. iOS decide quando eseguire i controlli in background, quindi gli avvisi possono arrivare in ritardo. Il widget nella schermata Home mostra l'ultimo controllo."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сповіщає, коли вузол падає чи відновлюється, про нові сигнали тривоги etcd і щодня, коли сертифікат клієнта спливає менш ніж за %lld днів. iOS сама вирішує, коли запускати фонові перевірки, тож сповіщення можуть затримуватися. Віджет на початковому екрані показує останню перевірку."
-          }
-        }
-      }
-    },
     "Off" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -98137,6 +98102,286 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Користувач Kubernetes"
+          }
+        }
+      }
+    },
+    "Updates" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mises à jour"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizaciones"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamenti"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення"
+          }
+        }
+      }
+    },
+    "This build gets its updates from the App Store, or from TestFlight for a beta." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette version reçoit ses mises à jour de l'App Store, ou de TestFlight pour une bêta."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta versión recibe sus actualizaciones de la App Store, o de TestFlight si es una beta."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Build erhält seine Updates über den App Store, bei einer Beta über TestFlight."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa build riceve gli aggiornamenti dall'App Store, o da TestFlight se è una beta."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця збірка отримує оновлення з App Store, а бета-версія — з TestFlight."
+          }
+        }
+      }
+    },
+    "This build cannot update itself: install each new release from GitHub again, with Sideloadly or AltStore." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette version ne peut pas se mettre à jour elle-même : installez chaque nouvelle release depuis GitHub, avec Sideloadly ou AltStore."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta versión no puede actualizarse sola: instala cada nueva versión desde GitHub con Sideloadly o AltStore."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Build kann sich nicht selbst aktualisieren: Installiere jedes neue Release von GitHub erneut, mit Sideloadly oder AltStore."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa build non può aggiornarsi da sola: installa di nuovo ogni nuova release da GitHub, con Sideloadly o AltStore."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця збірка не може оновлюватися сама: встановлюйте кожен новий реліз із GitHub заново через Sideloadly чи AltStore."
+          }
+        }
+      }
+    },
+    "Add a cluster imports a talosconfig or a kubeconfig. The clusters already stored are kept." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« Ajouter un cluster » importe un talosconfig ou un kubeconfig. Les clusters déjà enregistrés sont conservés."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Añadir un clúster» importa un talosconfig o un kubeconfig. Los clústeres ya guardados se conservan."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Cluster hinzufügen“ importiert eine talosconfig oder eine kubeconfig. Die bereits gespeicherten Cluster bleiben erhalten."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Aggiungi un cluster» importa un talosconfig o un kubeconfig. I cluster già salvati restano."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Додати кластер» імпортує talosconfig або kubeconfig. Уже збережені кластери залишаються."
+          }
+        }
+      }
+    },
+    "Renew this context's client certificate, or issue a restricted talosconfig for another device." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renouvelez le certificat client de ce contexte, ou émettez un talosconfig restreint pour un autre appareil."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renueva el certificado de cliente de este contexto o emite un talosconfig restringido para otro dispositivo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneuere das Client-Zertifikat dieses Kontexts oder stelle eine eingeschränkte talosconfig für ein anderes Gerät aus."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rinnova il certificato client di questo contesto o emetti un talosconfig limitato per un altro dispositivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновіть клієнтський сертифікат цього контексту або видайте обмежений talosconfig для іншого пристрою."
+          }
+        }
+      }
+    },
+    "Configs are stored in the iOS Keychain, which keeps them after the app is uninstalled. Delete them here to remove them from this device." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les configurations sont stockées dans le trousseau iOS, qui les garde après la désinstallation de l'app. Supprimez-les ici pour les retirer de cet appareil."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las configuraciones se guardan en el llavero de iOS, que las conserva aunque desinstales la app. Elimínalas aquí para quitarlas de este dispositivo."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Konfigurationen liegen im iOS-Schlüsselbund, der sie auch nach dem Deinstallieren der App behält. Lösche sie hier, um sie von diesem Gerät zu entfernen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le configurazioni sono salvate nel portachiavi di iOS, che le conserva anche dopo la disinstallazione dell'app. Eliminale qui per rimuoverle da questo dispositivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конфігурації зберігаються в iOS Keychain, який зберігає їх і після видалення застосунку. Видаліть їх тут, щоб прибрати з цього пристрою."
+          }
+        }
+      }
+    },
+    "Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within %lld days. iOS schedules background checks itself, so there is no check interval to choose as on Android, and alerts can be delayed. The home-screen widget shows the last check." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifie quand un nœud tombe ou revient, lors de nouvelles alarmes etcd, et chaque jour quand le certificat client expire dans moins de %lld jours. iOS planifie lui-même les vérifications en arrière-plan : il n'y a donc pas d'intervalle à choisir comme sur Android, et les alertes peuvent être retardées. Le widget de l'écran d'accueil montre la dernière vérification."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avisa cuando un nodo cae o se recupera, ante nuevas alarmas de etcd y a diario cuando el certificado del cliente caduca en menos de %lld días. iOS programa por sí mismo las comprobaciones en segundo plano, así que no hay un intervalo que elegir como en Android, y los avisos pueden retrasarse. El widget de la pantalla de inicio muestra la última comprobación."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benachrichtigt, wenn ein Node ausfällt oder sich erholt, bei neuen etcd-Alarmen und täglich, wenn das Client-Zertifikat in weniger als %lld Tagen abläuft. iOS plant die Hintergrundprüfungen selbst, daher gibt es anders als bei Android kein Prüfintervall zum Einstellen, und Warnungen können verzögert sein. Das Widget auf dem Home-Bildschirm zeigt die letzte Prüfung."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvisa quando un nodo cade o torna attivo, per nuovi allarmi etcd e ogni giorno quando il certificato client scade entro %lld giorni. iOS pianifica da solo i controlli in background, quindi non c'è un intervallo da scegliere come su Android e gli avvisi possono arrivare in ritardo. Il widget nella schermata Home mostra l'ultimo controllo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сповіщає, коли вузол падає чи відновлюється, про нові сигнали тривоги etcd і щодня, коли сертифікат клієнта спливає менш ніж за %lld днів. iOS сама планує фонові перевірки, тож, на відміну від Android, інтервал перевірки не налаштовується, а сповіщення можуть затримуватися. Віджет на початковому екрані показує останню перевірку."
+          }
+        }
+      }
+    },
+    "The widget reads the last check through an App Group, which a free Apple ID may not allow when sideloading. In that case the widget stays empty." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le widget lit la dernière vérification via un App Group, ce qu'un identifiant Apple gratuit peut ne pas permettre en sideloading. Le widget reste alors vide."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El widget lee la última comprobación a través de un App Group, algo que un Apple ID gratuito puede no permitir al instalar por sideloading. En ese caso, el widget queda vacío."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Widget liest die letzte Prüfung über eine App Group, die eine kostenlose Apple-ID beim Sideloading eventuell nicht erlaubt. Dann bleibt das Widget leer."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il widget legge l'ultimo controllo tramite un App Group, che un Apple ID gratuito potrebbe non consentire con il sideloading. In tal caso il widget resta vuoto."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Віджет читає останню перевірку через App Group, яку безкоштовний Apple ID може не дозволяти під час sideloading. У такому разі віджет лишається порожнім."
           }
         }
       }

@@ -58,13 +58,24 @@ struct MonitoringSection: View {
                 }
             }
             if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
+            // Off: what was kept is deleted (AppModel.setKeepLastKnown).
+            Toggle(isOn: Binding(get: { model.keepLastKnown }, set: { model.setKeepLastKnown($0) })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Keep last known state")
+                    Text("Save the last data fetched from each cluster on this phone, encrypted, so it still shows when the cluster can't be reached. Kept for 24 hours and never backed up.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
         } header: {
             Text("Monitoring")
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within \(certWarnDays) days. iOS decides when background checks run, so alerts can be delayed. The home-screen widget shows the last check.")
+                Text("Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within \(certWarnDays) days. iOS schedules background checks itself, so there is no check interval to choose as on Android, and alerts can be delayed. The home-screen widget shows the last check.")
                 // The sealed configs cannot be read in the background after iOS closed the app.
                 if model.requiresKey { Text("A security key is required: alerts and the widget pause when iOS has closed Ichor, until you unlock it again.") }
+                // README "Widget": the App Group a sideloaded build may lack with a free Apple ID.
+                if !Distribution.appStore { Text("The widget reads the last check through an App Group, which a free Apple ID may not allow when sideloading. In that case the widget stays empty.") }
             }
         }
     }

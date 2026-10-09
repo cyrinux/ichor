@@ -3,7 +3,7 @@
 Prerequisite: phase 1 merged. This can run in parallel with phase 2. Mirror the Android
 behaviour and wording; keep the Android plan open next to this one.
 
-## 1. IchorCore model: `ios/IchorCore/Sources/IchorCore/DataServices.swift`
+## 1. IchorCore model: `ios/IchorCore/Sources/IchorCore/DataServices/` (one file per service)
 
 - `public struct ... : Decodable, Equatable, Sendable` per wire type, with tolerant
   decoding (`decodeIfPresent ?? default`). Pattern: `Workloads.swift`.

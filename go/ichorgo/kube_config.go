@@ -73,7 +73,7 @@ func parseKubeconfig(data string) (*kubeCredentials, error) {
 		}
 	}
 
-	creds := &kubeCredentials{tls: &tls.Config{MinVersion: tls.VersionTLS12}, namespace: ctx.Namespace}
+	creds := &kubeCredentials{tls: baseTLS(nil, false), namespace: ctx.Namespace}
 
 	found := false
 

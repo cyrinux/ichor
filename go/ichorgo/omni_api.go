@@ -83,7 +83,7 @@ func omniDial(cfgCtx *clientconfig.Context, signing *omniSigning) (*grpc.ClientC
 
 // omniTLS trusts the context's CA (a self-hosted Omni), else the system's roots.
 func omniTLS(cfgCtx *clientconfig.Context) (*tls.Config, error) {
-	tlsConfig := &tls.Config{MinVersion: tls.VersionTLS12, RootCAs: omniTestRoots}
+	tlsConfig := baseTLS(omniTestRoots, false)
 
 	if cfgCtx.CA != "" {
 		pem, err := base64.StdEncoding.DecodeString(cfgCtx.CA)

@@ -76,6 +76,7 @@ func (n *fakeConfigNode) apply(_ context.Context, data []byte, mode machineapi.A
 
 	result := configApplyResult{mode: machineapi.ApplyConfigurationRequest_NO_REBOOT}
 	if n.reboot {
+		//lint:ignore SA1019 the mode Talos answers when an AUTO apply needs a reboot
 		result.mode = machineapi.ApplyConfigurationRequest_REBOOT
 	}
 

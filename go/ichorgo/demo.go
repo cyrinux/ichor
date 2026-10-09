@@ -21,7 +21,7 @@ import (
 // operations the demo does not implement. No credentials for a real cluster exist.
 const demoEndpoint = "demo.ichor.invalid"
 
-var errDemoUnavailable = errors.New("This action is unavailable in the demo cluster")
+var errDemoUnavailable = errors.New("this action is unavailable in the demo cluster")
 
 // DemoConfig creates an ordinary, mergeable talosconfig for the built-in demo.
 // The public demo identity is deterministic so adding it again updates the same

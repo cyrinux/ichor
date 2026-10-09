@@ -247,7 +247,7 @@ func garageTargetOf(ctx context.Context, k *kubeClient, namespace, pod string) (
 
 	container := groups[0].container
 	if !p.containerReady(container) {
-		return garageTarget{}, fmt.Errorf("Garage is not ready in pod %s/%s: refresh and try again", namespace, pod)
+		return garageTarget{}, fmt.Errorf("pod %s/%s: Garage is not ready, refresh and try again", namespace, pod)
 	}
 
 	return garageTarget{namespace: namespace, pod: pod, container: container}, nil

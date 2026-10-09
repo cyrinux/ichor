@@ -381,7 +381,7 @@ func discoverRancherClusters(ctx context.Context, s map[string]string) (string, 
 	}
 
 	if err := cloudGet(ctx, base+"/v3/clusters", key, &list); err != nil {
-		return "", fmt.Errorf("Rancher clusters: %w", err)
+		return "", fmt.Errorf("list Rancher clusters: %w", err)
 	}
 
 	merged := ""
@@ -399,7 +399,7 @@ func discoverRancherClusters(ctx context.Context, s map[string]string) (string, 
 		}
 
 		if err := cloudJSON(req, &answer); err != nil {
-			return "", fmt.Errorf("Rancher cluster %s: %w", c.Name, err)
+			return "", fmt.Errorf("kubeconfig of Rancher cluster %s: %w", c.Name, err)
 		}
 
 		if merged, err = mergeDiscovered(merged, answer.Config); err != nil {

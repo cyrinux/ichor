@@ -33,12 +33,36 @@ import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.update.UpdateInfo
 import name.levis.ichor.update.UpdateManager
+import name.levis.ichor.update.UpdateSource
 import name.levis.ichor.update.UpdateState
+import name.levis.ichor.update.updateSource
 import name.levis.ichor.util.formatBytes
 import kotlinx.coroutines.launch
 
+/**
+ * Says where this build's updates come from: Google Play, GitHub releases through the
+ * self-updater (its controls follow), or whatever installed it. [updates] is only read for the
+ * self-updating builds.
+ */
 @Composable
-fun UpdateSection(updates: UpdateManager) {
+fun UpdatesSection(updates: () -> UpdateManager) {
+    when (updateSource()) {
+        UpdateSource.SELF -> SelfUpdateSection(updates())
+        UpdateSource.PLAY -> UpdateSourceCard(stringResource(R.string.update_source_play))
+        UpdateSource.INSTALLER -> UpdateSourceCard(stringResource(R.string.update_source_installer))
+    }
+}
+
+@Composable
+private fun UpdateSourceCard(text: String) {
+    SectionTitle(stringResource(R.string.update_section))
+    Card(Modifier.fillMaxWidth()) {
+        MutedText(text, Modifier.padding(16.dp))
+    }
+}
+
+@Composable
+private fun SelfUpdateSection(updates: UpdateManager) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val state by updates.state.collectAsStateWithLifecycle()
@@ -49,6 +73,7 @@ fun UpdateSection(updates: UpdateManager) {
     SectionTitle(stringResource(R.string.update_section))
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            MutedText(stringResource(R.string.update_source_github))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.update_auto_check), style = MaterialTheme.typography.titleMedium)

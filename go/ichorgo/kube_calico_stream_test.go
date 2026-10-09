@@ -90,7 +90,7 @@ func TestStreamWhiskerErrors(t *testing.T) {
 	f.answerWith("GET "+whiskerFlowsPathTest, http.StatusBadRequest, `{"error":"failed to decode filters"}`)
 
 	noAnswer, err = streamWhisker(context.Background(), k, w, hubbleFilter{}, agg)
-	if noAnswer || err == nil || err.Error() != "Whisker answered HTTP 400: failed to decode filters" {
+	if noAnswer || err == nil || err.Error() != "the Whisker API answered HTTP 400: failed to decode filters" {
 		t.Errorf("backend: %v %v", err, noAnswer)
 	}
 

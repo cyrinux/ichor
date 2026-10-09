@@ -3,6 +3,7 @@
 FROM --platform=linux/amd64 docker.io/library/eclipse-temurin:17-jdk-jammy
 
 ARG GO_VERSION=1.26.8
+ARG STATICCHECK_VERSION=2026.2.1
 ARG GRADLE_VERSION=9.8.0
 ARG CMDLINE_TOOLS=16111833
 ARG ANDROID_PLATFORM=android-37
@@ -21,6 +22,9 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" | tar -C /usr/local -xz
+
+# `./build.sh check` runs it; same version as go-tools in the Nix shell.
+RUN GOBIN=/usr/local/bin go install honnef.co/go/tools/cmd/staticcheck@${STATICCHECK_VERSION}
 
 RUN curl -fsSL -o /tmp/gradle.zip "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" \
  && unzip -q /tmp/gradle.zip -d /opt \

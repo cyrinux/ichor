@@ -22,5 +22,7 @@ for file in Tests/IchorCoreTests/*.swift; do
 done
 echo "XCTMain([$(IFS=,; echo "${cases[*]}")])" >>"$main"
 
-swiftc -o "$out/tests" Sources/IchorCore/*.swift "$out"/*.swift 2>&1 | grep -v "glibc not found" || true
+# Sources in subfolders too (DataServices/...), in a stable order.
+mapfile -t sources < <(find Sources/IchorCore -name "*.swift" | sort)
+swiftc -o "$out/tests" "${sources[@]}" "$out"/*.swift 2>&1 | grep -v "glibc not found" || true
 "$out/tests"

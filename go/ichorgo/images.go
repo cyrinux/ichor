@@ -45,7 +45,8 @@ func NodeImages(configYAML, contextName, node string) (out string, err error) {
 }
 
 func listImagesLegacy(ctx context.Context, c *client.Client) ([]*machineapi.ImageListResponse, error) {
-	stream, err := c.ImageList(ctx, common.ContainerdNamespace_NS_CRI) //nolint:staticcheck // the ImageService replacement is not in every supported Talos version
+	//lint:ignore SA1019 the ImageService replacement is not in every supported Talos version
+	stream, err := c.ImageList(ctx, common.ContainerdNamespace_NS_CRI)
 	if err != nil {
 		return nil, err
 	}

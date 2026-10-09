@@ -494,6 +494,9 @@
 
     <!-- Updates -->
     <string name="update_section">Aggiornamenti</string>
+    <string name="update_source_github">Questa build cerca da sola gli aggiornamenti nelle release su GitHub. Se l\'hai installata con Obtainium o un altro store di app, anche quell\'app può aggiornarla.</string>
+    <string name="update_source_play">Questa build riceve gli aggiornamenti da Google Play.</string>
+    <string name="update_source_installer">Questa build non si aggiorna da sola: gli aggiornamenti arrivano da dove l\'hai installata, ad esempio uno store di app o Obtainium.</string>
     <string name="update_auto_check">Cerca aggiornamenti ogni giorno</string>
     <string name="update_auto_check_desc">Dalle release su GitHub (%1$s). Il checksum e la chiave di firma dell\'APK vengono verificati e Android ti chiede di confermare l\'installazione.</string>
     <string name="update_checking">Verifica in corso…</string>

@@ -549,6 +549,9 @@
 
     <!-- Updates -->
     <string name="update_section">Оновлення</string>
+    <string name="update_source_github">Ця збірка сама перевіряє оновлення в релізах на GitHub. Якщо ви встановили її через Obtainium чи інший магазин застосунків, він теж може її оновлювати.</string>
+    <string name="update_source_play">Ця збірка отримує оновлення з Google Play.</string>
+    <string name="update_source_installer">Ця збірка не оновлюється сама: оновлення надходять звідти, звідки ви її встановили, наприклад з магазину застосунків чи Obtainium.</string>
     <string name="update_auto_check">Щодня перевіряти оновлення</string>
     <string name="update_auto_check_desc">З релізів на GitHub (%1$s). Контрольну суму й ключ підпису APK буде перевірено, а Android попросить вас підтвердити встановлення.</string>
     <string name="update_checking">Перевірка…</string>

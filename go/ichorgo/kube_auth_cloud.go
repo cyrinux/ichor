@@ -30,7 +30,7 @@ const (
 
 var (
 	doAPIEndpoint  = "https://api.digitalocean.com"
-	cloudHTTP      = func() *http.Client { return &http.Client{Timeout: oidcHTTPTimeout} }
+	cloudHTTP      = func() *http.Client { return newHTTPClient(httpClientOpts{timeout: oidcHTTPTimeout}) }
 	gcpTokenTarget = func(serviceAccountTokenURI string) string { return serviceAccountTokenURI }
 )
 
@@ -176,7 +176,7 @@ func (gkeMethod) mint(ctx context.Context, state kubeAuthState) (string, time.Ti
 			return "", time.Time{}, state, signInRequired(authGKE, err.Error())
 		}
 
-		return "", time.Time{}, state, fmt.Errorf("Google token: %w", err)
+		return "", time.Time{}, state, fmt.Errorf("get a Google token: %w", err)
 	}
 
 	state.User = sa.ClientEmail
