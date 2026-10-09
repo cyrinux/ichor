@@ -47,6 +47,8 @@ type fakeTalos struct {
 	rebootErr        error
 	disarmErr        error
 	failLogs         string // the service whose logs cannot be read
+	// systemImages are the images of the system containerd namespace (the CRI one has pause).
+	systemImages []*machineapi.ImageServiceListResponse
 }
 
 func newFakeTalos() *fakeTalos {
@@ -426,9 +428,24 @@ func (i fakeTalosImage) Pull(_ *machineapi.ImageServicePullRequest, stream grpc.
 
 // List is the ImageService listing (MachineService.ImageList stays Unimplemented, like a
 // Talos without the deprecated API).
-func (i fakeTalosImage) List(_ *machineapi.ImageServiceListRequest, stream grpc.ServerStreamingServer[machineapi.ImageServiceListResponse]) error {
+// The system namespace holds systemImages.
+func (i fakeTalosImage) List(req *machineapi.ImageServiceListRequest, stream grpc.ServerStreamingServer[machineapi.ImageServiceListResponse]) error {
 	if _, err := i.f.enter(stream.Context(), "ImageList"); err != nil {
 		return err
+	}
+
+	if req.GetContainerd().GetNamespace() == common.ContainerdNamespace_NS_SYSTEM {
+		i.f.mu.Lock()
+		images := slices.Clone(i.f.systemImages)
+		i.f.mu.Unlock()
+
+		for _, img := range images {
+			if err := stream.Send(img); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
 
 	return stream.Send(&machineapi.ImageServiceListResponse{Name: "registry.k8s.io/pause:3.10", Digest: "sha256:abc", Size: 320 << 10})
