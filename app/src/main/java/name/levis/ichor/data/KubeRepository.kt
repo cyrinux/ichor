@@ -59,7 +59,15 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(KubeTopNodes.serializer(), Ichorgo.kubeTopNodes(cfg, ctx, server))
     }
 
-    /** CPU and memory the pods of [namespace] (null: all) use, with their requests and limits. */
+    /** CPU and memory one pod uses, with its requests and limits: two small reads. */
+    suspend fun topPod(namespace: String, name: String): KubeTopPods = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeTopPods.serializer(), Ichorgo.kubeTopPod(cfg, ctx, server, namespace, name))
+    }
+
+    /**
+     * CPU and memory the pods of [namespace] (null: all) use; with their requests and limits for
+     * one namespace only (see [KubeTopPods.boundsRead]).
+     */
     suspend fun topPods(namespace: String?, selector: String = ""): KubeTopPods = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(KubeTopPods.serializer(), Ichorgo.kubeTopPods(cfg, ctx, server, namespace.orEmpty(), selector))
     }
