@@ -317,6 +317,9 @@ struct KubeHomeView: View {
             NavigationLink { KubeStorageView() } label: {
                 Label("Storage", systemImage: "externaldrive")
             }
+            NavigationLink { KubeServicesView() } label: {
+                Label("Services", systemImage: "network")
+            }
             NavigationLink(value: Route.metrics) {
                 Label("Metrics", systemImage: "chart.xyaxis.line")
             }

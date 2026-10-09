@@ -3,6 +3,8 @@ package name.levis.ichor.ui.kubebrowser
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,8 +30,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,13 +41,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.KubeBrowserRepository
-import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.KubeObjectRef
-import name.levis.ichor.model.KubeStorage
-import name.levis.ichor.model.StorageClaim
-import name.levis.ichor.model.StorageLevel
-import name.levis.ichor.model.filteredClaims
-import name.levis.ichor.model.title
+import name.levis.ichor.model.KubeServices
+import name.levis.ichor.model.LbController
+import name.levis.ichor.model.ServiceRow
+import name.levis.ichor.model.filteredServices
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
@@ -55,19 +55,16 @@ import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.TooltipIconButton
-import name.levis.ichor.ui.components.UsageBar
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.components.pageContent
 import name.levis.ichor.ui.factory
-import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.ui.workloads.KubeFilters
 import name.levis.ichor.ui.workloads.NamespacesViewModel
 import name.levis.ichor.ui.workloads.rememberKubeScope
 import name.levis.ichor.ui.workloads.scopeError
-import name.levis.ichor.util.formatBytes
 
-/** The claims of a namespace (null for every one), with their volume, pods and fill. */
-class StorageViewModel(private val browser: KubeBrowserRepository) : LoadingViewModel<KubeStorage>() {
+/** The Services of a namespace (null for every one), with their addresses, endpoints and routes. */
+class ServicesViewModel(private val browser: KubeBrowserRepository) : LoadingViewModel<KubeServices>() {
     private var namespace: String? = null
     private var started = false
 
@@ -78,22 +75,20 @@ class StorageViewModel(private val browser: KubeBrowserRepository) : LoadingView
         refresh(reset = true)
     }
 
-    override suspend fun fetch() = browser.storage(namespace)
+    override suspend fun fetch() = browser.services(namespace)
 }
 
 /**
- * The PersistentVolumeClaims of the namespace the Kubernetes screens list, problems first:
- * lost and nearly full ones, then pending, terminating and filling ones. A tap opens the
- * claim's summary ([onClaim]); a claim of Longhorn, Rook Ceph or CloudNativePG links to that
- * data service ([onDataService]).
+ * The Services of the namespace the Kubernetes screens list, problems first: load balancers
+ * without an address (with a hint on the pool to check), then Services with no ready
+ * endpoint. A tap opens the Service's summary ([onService]); a route opens its URL.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StorageScreen(
+fun ServicesScreen(
     onBack: () -> Unit,
-    onClaim: (KubeObjectRef) -> Unit,
-    onDataService: (DataServiceKind) -> Unit,
-    vm: StorageViewModel = viewModel(factory = factory { StorageViewModel(app.kubeBrowser) }),
+    onService: (KubeObjectRef) -> Unit,
+    vm: ServicesViewModel = viewModel(factory = factory { ServicesViewModel(app.kubeBrowser) }),
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
     val state by vm.state.collectAsStateWithLifecycle()
@@ -106,7 +101,7 @@ fun StorageScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.storage_title)) },
+                title = { Text(stringResource(R.string.kube_services_title)) },
                 navigationIcon = { BackButton(onBack) },
                 actions = { TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.common_refresh), onClick = { vm.refresh() }) },
             )
@@ -114,11 +109,11 @@ fun StorageScreen(
     ) { padding ->
         Column(Modifier.pageContent(padding).fillMaxSize()) {
             val loaded = (state as? UiState.Loaded)?.data
-            val listed = remember(loaded) { loaded?.claims.orEmpty().map { it.namespace }.distinct().sorted() }
-            KubeFilters(control, listed, query, { query = it }, R.string.storage_kube_search)
-            if (loaded?.partialAccess == true) {
-                MutedText(stringResource(R.string.storage_kube_partial), modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-            }
+            val listed = remember(loaded) { loaded?.services.orEmpty().map { it.namespace }.distinct().sorted() }
+            KubeFilters(control, listed, query, { query = it }, R.string.kube_services_search)
+            val notes = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            if (loaded?.partialAccess == true) MutedText(stringResource(R.string.kube_services_partial), modifier = notes)
+            if (loaded?.anyPending == true) MutedText(stringResource(lbHint(loaded.lbController)), modifier = notes)
             HorizontalDivider()
             val rest = Modifier.weight(1f)
             val s = state
@@ -126,17 +121,16 @@ fun StorageScreen(
                 !control.ready -> EmptyText(stringResource(R.string.kube_scope_type_prompt), rest)
                 s is UiState.Failed -> ErrorBox(scopeError(s.message, control.scope), { vm.refresh() }, rest)
                 s is UiState.Loaded -> PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = { vm.refresh() }, modifier = rest) {
-                    val rows = remember(s.data, query) { s.data.claims.filteredClaims(query) }
+                    val rows = remember(s.data, query) { s.data.services.filteredServices(query) }
                     if (rows.isEmpty()) {
-                        EmptyText(emptyOrNoMatch(query, R.string.storage_kube_empty, R.string.storage_kube_no_match))
+                        EmptyText(emptyOrNoMatch(query, R.string.kube_services_empty, R.string.kube_services_no_match))
                     } else {
                         LazyColumn(Modifier.fillMaxSize()) {
-                            items(rows, key = { it.key }) { c ->
-                                ClaimRow(
-                                    c,
+                            items(rows, key = { it.key }) { svc ->
+                                ServiceRowItem(
+                                    svc,
                                     showNamespace = control.scope.namespace == null,
-                                    onClick = { onClaim(KubeObjectRef.pvc(c.namespace, c.name)) },
-                                    onDataService = onDataService,
+                                    onClick = { onService(KubeObjectRef.service(svc.namespace, svc.name)) },
                                 )
                                 HorizontalDivider()
                             }
@@ -149,60 +143,60 @@ fun StorageScreen(
     }
 }
 
-/** The colour of a row's status on the Kubernetes list screens (Storage, Services), by its level. */
-@Composable
-internal fun StorageLevel.color(): Color = when (this) {
-    StorageLevel.CRITICAL -> LocalStatusColors.current.bad
-    StorageLevel.WARNING -> LocalStatusColors.current.warn
-    StorageLevel.OK -> MaterialTheme.colorScheme.onSurfaceVariant
+/** What to check when a load balancer has no address, by the controller found. */
+private fun lbHint(controller: String): Int = when (LbController.of(controller)) {
+    LbController.METALLB -> R.string.kube_services_hint_metallb
+    LbController.CILIUM -> R.string.kube_services_hint_cilium
+    null -> R.string.kube_services_hint_none
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ClaimRow(c: StorageClaim, showNamespace: Boolean, onClick: () -> Unit, onDataService: (DataServiceKind) -> Unit) {
-    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+private fun ServiceRowItem(svc: ServiceRow, showNamespace: Boolean, onClick: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
     Column(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                if (showNamespace) c.key else c.name,
+                if (showNamespace) svc.key else svc.name,
                 style = MaterialTheme.typography.bodyMedium,
                 fontFamily = FontFamily.Monospace,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
-            Text(
-                if (c.terminating) "Terminating" else c.phase,
+            Text(svc.type, style = MaterialTheme.typography.labelMedium, color = svc.level.color())
+        }
+        val inside = listOfNotNull(
+            stringResource(R.string.kube_services_headless).takeIf { svc.headless } ?: svc.clusterIP.takeIf { it.isNotEmpty() },
+            svc.externalName.takeIf { it.isNotEmpty() }?.let { "→ $it" },
+            svc.ports.joinToString(", ").takeIf { it.isNotEmpty() },
+        )
+        if (inside.isNotEmpty()) MutedText(inside.joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        when {
+            svc.pending -> Text(
+                stringResource(R.string.kube_services_no_address),
                 style = MaterialTheme.typography.labelMedium,
-                color = c.level.color(),
+                color = svc.level.color(),
+            )
+            svc.addresses.isNotEmpty() -> Text(
+                svc.addresses.joinToString(", "),
+                style = MaterialTheme.typography.labelMedium,
+                fontFamily = FontFamily.Monospace,
             )
         }
-        if (c.measured) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                UsageBar(c.usedFraction, Modifier.weight(1f), warnAt = 0.85f)
-                Text(
-                    "${formatBytes(c.used.toLong())} / ${formatBytes(c.capacity.toLong())}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = muted,
-                )
+        svc.readyText?.let { MutedText(stringResource(R.string.kube_services_ready, it)) }
+        if (svc.routes.isNotEmpty()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                svc.routes.forEach { route ->
+                    AssistChip(
+                        onClick = { runCatching { uriHandler.openUri(route.url) } },
+                        label = { Text(route.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    )
+                }
             }
-        } else {
-            MutedText(
-                listOfNotNull(
-                    formatBytes(c.capacity.toLong()).takeIf { c.capacity > 0 },
-                    stringResource(R.string.storage_kube_not_measured),
-                ).joinToString("  ·  "),
-            )
-        }
-        val details = listOf(c.storageClass, c.volume, c.accessModes.joinToString(",")).filter { it.isNotEmpty() }
-        if (details.isNotEmpty()) MutedText(details.joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (c.pods.isNotEmpty()) {
-            MutedText(stringResource(R.string.storage_kube_pods, c.pods.joinToString(", ")), maxLines = 2, overflow = TextOverflow.Ellipsis)
-        }
-        c.managedKind?.let { kind ->
-            AssistChip(onClick = { onDataService(kind) }, label = { Text(stringResource(R.string.storage_kube_open, kind.title)) })
         }
     }
 }
