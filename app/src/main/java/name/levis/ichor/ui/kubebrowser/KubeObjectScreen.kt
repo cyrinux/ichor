@@ -56,6 +56,7 @@ import name.levis.ichor.security.AuthResult
 import name.levis.ichor.security.SecureWhile
 import name.levis.ichor.security.authenticate
 import name.levis.ichor.security.findFragmentActivity
+import name.levis.ichor.ui.PollWhileStarted
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.asString
@@ -113,6 +114,7 @@ fun KubeObjectScreen(
         if (state == UiState.Loading) vm.refresh()
         if (summary == UiState.Loading) vm.refreshSummary()
     }
+    PollWhileStarted { vm.followSummary() }
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
     var tab by rememberSaveable { mutableIntStateOf(0) }

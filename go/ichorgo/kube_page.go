@@ -46,16 +46,21 @@ type kubePage struct {
 	// remaining is how many items the next pages hold, -1 when the server does not say
 	// (it never does with a selector).
 	remaining int64
+	// resourceVersion is the list's, where a watch of it starts (see watchList).
+	resourceVersion string
 }
 
 // kubeTable is the part of a metav1.Table the app reads.
 type kubeTable struct {
-	Columns []struct {
-		Name     string `json:"name"`
-		Type     string `json:"type"`
-		Priority int    `json:"priority"`
-	} `json:"columnDefinitions"`
-	Rows []kubeTableRow `json:"rows"`
+	Columns []kubeTableColumn `json:"columnDefinitions"`
+	Rows    []kubeTableRow    `json:"rows"`
+}
+
+// kubeTableColumn is one column of a Table; a watch sends them with its first event only.
+type kubeTableColumn struct {
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Priority int    `json:"priority"`
 }
 
 type kubeTableRow struct {
@@ -177,6 +182,7 @@ func decodePage(data []byte) (kubePage, error) {
 		Metadata struct {
 			Continue           string `json:"continue"`
 			RemainingItemCount *int64 `json:"remainingItemCount"`
+			ResourceVersion    string `json:"resourceVersion"`
 		} `json:"metadata"`
 		Items []json.RawMessage `json:"items"`
 	}
@@ -185,7 +191,7 @@ func decodePage(data []byte) (kubePage, error) {
 		return kubePage{}, fmt.Errorf("decode Kubernetes API answer: %w", err)
 	}
 
-	page := kubePage{continueToken: body.Metadata.Continue, remaining: -1, items: body.Items}
+	page := kubePage{continueToken: body.Metadata.Continue, remaining: -1, items: body.Items, resourceVersion: body.Metadata.ResourceVersion}
 	if body.Metadata.RemainingItemCount != nil {
 		page.remaining = *body.Metadata.RemainingItemCount
 	}

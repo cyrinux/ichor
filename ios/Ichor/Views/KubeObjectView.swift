@@ -29,6 +29,7 @@ struct KubeObjectView: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     @State private var tab = Tab.summary
     @State private var state: LoadState<String> = .loading
     @State private var summary: LoadState<KubeObjectSummary> = .loading
@@ -98,6 +99,7 @@ struct KubeObjectView: View {
         .messageAlert($message)
         .task(id: "\(kubeNamespacesKey(model))|\(reveal)") { await load() }
         .task(id: kubeNamespacesKey(model)) { await loadSummary() }
+        .task(id: "\(kubeNamespacesKey(model))|\(scenePhase == .active)") { await followSummary() }
         .task(id: kubeNamespacesKey(model)) { await loadDeleteAccess() }
         .task(id: kubeNamespacesKey(model)) { await loadScaleAccess() }
     }
@@ -207,6 +209,20 @@ struct KubeObjectView: View {
             try await client.objectSummary(resource, namespace: namespace, name: name)
         }
         summary = summary.refreshed(with: result)
+    }
+
+    /// Keeps the summary live while the app is active: the Go core reads it again whenever the
+    /// object or its events change. A watch that ends is followed again after a while; one
+    /// refused leaves the one-shot read on screen.
+    private func followSummary() async {
+        guard scenePhase == .active else { return }
+        while !Task.isCancelled {
+            guard let client = model.client else { return }
+            for await event in client.objectSummaryWatch(resource, namespace: namespace, name: name) {
+                if case .update(let latest) = event { summary = .loaded(latest, at: Date()) }
+            }
+            try? await Task.sleep(for: .seconds(kubeWatchRetrySeconds))
+        }
     }
 
     /// Asks whether the credentials may delete this object; an answer that cannot be had

@@ -72,6 +72,25 @@ func (l maskedHubbleListener) OnDone(errMessage string) {
 	l.HubbleListener.OnDone(privacy.maskPlain(errMessage))
 }
 
+type maskedKubeWatchListener struct{ KubeWatchListener }
+
+func (l maskedKubeWatchListener) OnEvent(eventType, json string) {
+	l.KubeWatchListener.OnEvent(eventType, privacy.mask(json))
+}
+
+func (l maskedKubeWatchListener) OnDone(errMessage string) {
+	l.KubeWatchListener.OnDone(privacy.maskPlain(errMessage))
+}
+
+type maskedKubeLiveListener struct{ KubeLiveListener }
+
+func (l maskedKubeLiveListener) OnUpdate(json string) {
+	l.KubeLiveListener.OnUpdate(privacy.mask(json))
+}
+func (l maskedKubeLiveListener) OnDone(errMessage string) {
+	l.KubeLiveListener.OnDone(privacy.maskPlain(errMessage))
+}
+
 type maskedEventListener struct{ EventListener }
 
 func (l maskedEventListener) OnEvent(json string) { l.EventListener.OnEvent(privacy.mask(json)) }
