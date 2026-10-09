@@ -35,10 +35,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.delay
 import java.text.NumberFormat
 import name.levis.ichor.R
 import name.levis.ichor.data.StreamItem
+import name.levis.ichor.data.watchForever
 import name.levis.ichor.model.KubeRolloutPod
 import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeWorkload
@@ -71,21 +71,18 @@ fun RolloutStatusSheet(restarts: WorkloadRestarts) {
     // Followed while the sheet is visible; a watch that ends is followed again after a moment.
     LaunchedEffect(workload.key, lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            while (true) {
-                restarts.rolloutWatch(workload).collect { item ->
-                    when (item) {
-                        is StreamItem.Item -> {
-                            status = item.value
-                            error = null
-                            if (item.value.done && !ended) {
-                                ended = true
-                                restarts.rolloutEnded()
-                            }
+            watchForever(WATCH_RETRY_MILLIS, start = { restarts.rolloutWatch(workload) }) { item ->
+                when (item) {
+                    is StreamItem.Item -> {
+                        status = item.value
+                        error = null
+                        if (item.value.done && !ended) {
+                            ended = true
+                            restarts.rolloutEnded()
                         }
-                        is StreamItem.Done -> item.error?.let { error = UiText.Raw(it) }
                     }
+                    is StreamItem.Done -> item.error?.let { error = UiText.Raw(it) }
                 }
-                delay(WATCH_RETRY_MILLIS)
             }
         }
     }

@@ -21,10 +21,17 @@ const (
 	// watchTimeoutSeconds asks the server to end each watch request after this long: the next
 	// one starts from the last resourceVersion seen, no event lost.
 	watchTimeoutSeconds = 300
+	// watchStreamGrace is how much longer than its own timeout a watch request may last
+	// before the client gives it up as stalled (a connection that died without a word).
+	watchStreamGrace = 30 * time.Second
 	// watchRetryMin and watchRetryMax bound the wait before a failed request is tried again.
 	watchRetryMin = time.Second
 	watchRetryMax = 30 * time.Second
 )
+
+// watchPollInterval is how often the list is read again when the role may list but not
+// watch (a 403 on the watch alone): the same events, later. A variable for the tests.
+var watchPollInterval = 5 * time.Second
 
 // Event types, as the API server names them, and watchSync for the list itself.
 const (
@@ -95,6 +102,9 @@ func watchList(ctx context.Context, k *kubeClient, spec watchSpec, handle func(w
 			return ctx.Err()
 		case isKubeExpired(err):
 			relist = true
+		case isForbidden(err):
+			// The list was allowed, the watch is not: the list again, every so often.
+			return w.poll(ctx)
 		case err != nil:
 			if err := w.pause(ctx, err); err != nil {
 				return err
@@ -150,9 +160,41 @@ func mergePages(into, page kubePage) kubePage {
 	return into
 }
 
+// poll reads the list again every watchPollInterval, for a role that may not watch, until
+// ctx ends; a list that fails is tried again as a watch would be.
+func (w *watcher) poll(ctx context.Context) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(watchPollInterval):
+		}
+
+		if err := w.list(ctx); err != nil {
+			if err := w.pause(ctx, err); err != nil {
+				return err
+			}
+		}
+	}
+}
+
 // stream follows one watch request until the server ends it (nil), the version expired
-// (a 410 kubeAPIError), or it failed.
+// (a 410 kubeAPIError), or it failed. A request outliving the server's timeout by
+// watchStreamGrace is stalled: given up like one the server ended.
 func (w *watcher) stream(ctx context.Context) error {
+	streamCtx, cancel := context.WithTimeout(ctx, watchTimeoutSeconds*time.Second+watchStreamGrace)
+	defer cancel()
+
+	err := w.streamOnce(streamCtx)
+	if ctx.Err() == nil && errors.Is(streamCtx.Err(), context.DeadlineExceeded) {
+		return nil
+	}
+
+	return err
+}
+
+// streamOnce is stream's request, read until ctx ends or the server does.
+func (w *watcher) streamOnce(ctx context.Context) error {
 	query := url.Values{}
 	query.Set("watch", "1")
 	query.Set("resourceVersion", w.resourceVersion)
@@ -198,6 +240,7 @@ func (w *watcher) stream(ctx context.Context) error {
 // the version on, an ERROR ends the request with the status it carries.
 func (w *watcher) apply(ev rawWatchEvent) error {
 	var obj struct {
+		Kind     string `json:"kind"`
 		Code     int    `json:"code"`
 		Reason   string `json:"reason"`
 		Message  string `json:"message"`
@@ -230,7 +273,8 @@ func (w *watcher) apply(ev rawWatchEvent) error {
 
 	page := kubePage{remaining: -1}
 
-	if w.spec.table {
+	// A server that ignores the Table ask sends the object itself, as decodePage allows.
+	if w.spec.table && obj.Kind == "Table" {
 		var t kubeTable
 		if err := json.Unmarshal(ev.Object, &t); err != nil {
 			return err

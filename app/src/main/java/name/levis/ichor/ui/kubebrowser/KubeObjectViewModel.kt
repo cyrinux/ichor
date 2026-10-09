@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +15,7 @@ import name.levis.ichor.R
 import name.levis.ichor.data.KUBE_WATCH_RETRY_MILLIS
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.data.StreamItem
+import name.levis.ichor.data.watchForever
 import name.levis.ichor.model.DeletePropagation
 import name.levis.ichor.model.KubeDeletePreview
 import name.levis.ichor.model.KubeEditPreview
@@ -110,14 +110,11 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
      * [KUBE_WATCH_RETRY_MILLIS]; one refused leaves the one-shot read on screen.
      */
     suspend fun followSummary() {
-        while (true) {
-            browser.objectSummaryWatch(ref).collect { item ->
-                when (item) {
-                    is StreamItem.Item -> _summary.value = UiState.Loaded(item.value)
-                    is StreamItem.Done -> if (_summary.value is UiState.Loading) item.error?.let { _summary.value = UiState.Failed(UiText.Raw(it)) }
-                }
+        watchForever(start = { browser.objectSummaryWatch(ref) }) { item ->
+            when (item) {
+                is StreamItem.Item -> _summary.value = UiState.Loaded(item.value)
+                is StreamItem.Done -> if (_summary.value is UiState.Loading) item.error?.let { _summary.value = UiState.Failed(UiText.Raw(it)) }
             }
-            delay(KUBE_WATCH_RETRY_MILLIS)
         }
     }
 

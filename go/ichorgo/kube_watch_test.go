@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -209,15 +210,9 @@ func TestWatchListStartsOverOnErrorEvent(t *testing.T) {
 	}
 }
 
-// A refusal ends the watch at once, with the server's reason; a cut stream is tried again.
+// A list refused ends the watch at once, with the server's reason.
 func TestWatchListEndsOnRefusal(t *testing.T) {
-	f := newWatchKubeAPI(t, func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Query().Get("watch") == "" {
-			_, _ = io.WriteString(w, `{"metadata":{"resourceVersion":"1"},"items":[]}`)
-
-			return
-		}
-
+	f := newWatchKubeAPI(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		_, _ = io.WriteString(w, `{"kind":"Status","reason":"Forbidden","message":"pods is forbidden"}`)
 	})
@@ -231,6 +226,117 @@ func TestWatchListEndsOnRefusal(t *testing.T) {
 
 	if time.Since(start) > watchRetryMin {
 		t.Error("a refusal waited before ending")
+	}
+}
+
+// A role that may list but not watch gets the list again every watchPollInterval instead.
+func TestWatchListPollsWhenTheWatchIsRefused(t *testing.T) {
+	watchPollInterval = 20 * time.Millisecond
+	t.Cleanup(func() { watchPollInterval = 5 * time.Second })
+
+	var watches atomic.Int32
+
+	f := newWatchKubeAPI(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("watch") == "" {
+			_, _ = io.WriteString(w, `{"metadata":{"resourceVersion":"1"},"items":[`+jsonPod("shop", "a", "nginx")+`]}`)
+
+			return
+		}
+
+		watches.Add(1)
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = io.WriteString(w, `{"kind":"Status","reason":"Forbidden","message":"cannot watch pods"}`)
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	syncs := 0
+
+	err := watchList(ctx, watchClient(t, f), watchSpec{path: "/api/v1/pods"}, func(ev watchEvent) error {
+		if ev.Type == watchSync {
+			syncs++
+		}
+
+		if syncs == 3 {
+			cancel()
+		}
+
+		return nil
+	})
+
+	if !errors.Is(err, context.Canceled) || syncs != 3 || watches.Load() != 1 {
+		t.Fatalf("ended with %v after %d lists and %d watch requests", err, syncs, watches.Load())
+	}
+}
+
+// A stream the server stopped answering is given up once its timeout has passed, and
+// followed again from the last version seen.
+func TestWatchListGivesUpAStalledStream(t *testing.T) {
+	var watches atomic.Int32
+
+	f := newWatchKubeAPI(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("watch") == "" {
+			_, _ = io.WriteString(w, `{"metadata":{"resourceVersion":"1"},"items":[]}`)
+
+			return
+		}
+
+		watches.Add(1)
+		holdOpen(w, r)
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	w := &watcher{k: watchClient(t, f), spec: watchSpec{path: "/api/v1/pods"}, handle: func(watchEvent) error { return nil }, wait: watchRetryMin}
+	if err := w.list(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	stalled, stop := context.WithTimeout(ctx, 50*time.Millisecond)
+	defer stop()
+
+	if err := w.streamOnce(stalled); ctx.Err() != nil || !errors.Is(stalled.Err(), context.DeadlineExceeded) || err == nil {
+		t.Fatalf("a stalled stream ended with %v", err)
+	}
+}
+
+// A Table watch on a server that sends the objects themselves still carries each change.
+func TestWatchListTableFallsBackToObjects(t *testing.T) {
+	f := newWatchKubeAPI(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("watch") == "" {
+			_, _ = io.WriteString(w, `{"metadata":{"resourceVersion":"1"},"items":[{"metadata":{"name":"web","namespace":"shop"}}]}`)
+
+			return
+		}
+
+		streamEvents(w, `{"type":"MODIFIED","object":{"kind":"Deployment","metadata":{"name":"web","namespace":"shop","resourceVersion":"2"}}}`)
+		holdOpen(w, r)
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var rows []string
+
+	spec := watchSpec{path: "/apis/apps/v1/namespaces/shop/deployments", table: true}
+
+	err := watchList(ctx, watchClient(t, f), spec, func(ev watchEvent) error {
+		js, err := rowWatchItems(ev)
+		if err != nil {
+			return err
+		}
+
+		rows = append(rows, ev.Type+" "+js)
+		if ev.Type == watchModified {
+			cancel()
+		}
+
+		return nil
+	})
+	if !errors.Is(err, context.Canceled) || len(rows) != 2 || !strings.Contains(rows[1], `"name":"web"`) {
+		t.Fatalf("ended with %v after %q", err, rows)
 	}
 }
 
