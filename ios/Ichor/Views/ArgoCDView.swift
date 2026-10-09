@@ -32,6 +32,7 @@ struct ArgoCDView: View {
     enum Tab: Hashable { case apps, sets }
 
     @Environment(AppModel.self) private var model
+    @Environment(\.scenePhase) private var scenePhase
     @State private var covered = false
     @State private var state: LoadState<ArgoStatus> = .loading
     @State private var tab = Tab.apps
@@ -78,6 +79,8 @@ struct ArgoCDView: View {
         .searchable(text: $query, prompt: Text("Name, project, namespace or repo"))
         // An app pushed on top polls for itself.
         .gitOpsPolling(key: model.argoKey, paused: { covered }, shouldPoll: { store.shouldPoll(for: model.argoKey) }, load: { await load() })
+        // An Application that changes reads the status again at once, without waiting for a poll.
+        .task(id: "\(model.argoKey)|\(scenePhase == .active && !covered)") { await followChanges() }
         // A new API address (set on the Kubernetes screen): read again through it.
         .id(model.client?.kubeServer)
         .navigationTitle(Text(verbatim: "Argo CD"))
@@ -201,6 +204,20 @@ struct ArgoCDView: View {
                     .kubeGated(.argoSync, across: chosen.map(\.namespace))
                 }
             }
+        }
+    }
+
+    /// Reads the status again each time an Application changes, while on screen and the app
+    /// active: the Go core signals at most every 2 s, never for the list it reads at the start.
+    /// A watch that ends (no Argo CD, a refusal) is followed again after a while.
+    private func followChanges() async {
+        guard scenePhase == .active, !covered else { return }
+        while !Task.isCancelled {
+            guard let client = model.client else { return }
+            for await event in client.changeWatch(namespace: nil, kinds: KubeChange.argoKinds) {
+                if case .update = event { await load() }
+            }
+            try? await Task.sleep(for: .seconds(kubeWatchRetrySeconds))
         }
     }
 

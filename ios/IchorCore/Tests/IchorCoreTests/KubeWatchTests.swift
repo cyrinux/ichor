@@ -25,6 +25,13 @@ final class KubeWatchTests: XCTestCase {
         XCTAssertEqual(changed.items, ["a:1", "b:1"])
     }
 
+    func testDecodesAChangeSignal() throws {
+        let change = try TalosJSON.decode(KubeChange.self, from: #"{"changed":3,"at":"2026-10-09T21:00:00Z"}"#)
+        XCTAssertEqual(change, KubeChange(changed: 3, at: "2026-10-09T21:00:00Z"))
+        XCTAssertEqual(try TalosJSON.decode(KubeChange.self, from: "{}"), KubeChange())
+        XCTAssertEqual(KubeChange.workloadKinds.count, 3)
+    }
+
     func testDecodesWhatTheListenerGot() {
         let list: (String) throws -> [String] = { try TalosJSON.decode([String].self, from: $0) }
         XCTAssertEqual(KubeWatchEvent<String>.decode("SYNC", json: #"["a","b"]"#, list: list), .sync(["a", "b"]))

@@ -48,6 +48,7 @@ import name.levis.ichor.model.ArgoSync
 import name.levis.ichor.model.InventoryApp
 import name.levis.ichor.ui.apps.AppIconTile
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.PollWhileStarted
 
 /** Argo CD's own palette for its states: green healthy, blue progressing, red degraded. */
 @Composable
@@ -195,10 +196,14 @@ fun waveProgress(app: ArgoApp): String {
 
 /**
  * While the screen is started, polls every 2 s when [ArgoViewModel.shouldPoll] says a sync is
- * running or an action was just requested; nothing otherwise.
+ * running or an action was just requested, and reads again when an Application changes.
  */
 @Composable
-fun ArgoPolling(vm: ArgoViewModel) = GitOpsPolling(vm, { vm.shouldPoll }, vm::poll)
+fun ArgoPolling(vm: ArgoViewModel) {
+    GitOpsPolling(vm, { vm.shouldPoll }, vm::poll)
+    // A change of an Application reads the status again at once, busy or not.
+    PollWhileStarted { vm.follow() }
+}
 
 /** While the screen is started, calls [poll] every 2 s when [shouldPoll] says so; [key] restarts it. */
 @Composable

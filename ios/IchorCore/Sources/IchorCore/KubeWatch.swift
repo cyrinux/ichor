@@ -85,3 +85,28 @@ public struct KubeResourceWatchEvent: Equatable, Sendable {
         return KubeResourceWatchEvent(change: .sync(page.rows), columns: page.columns)
     }
 }
+
+/// A change signal (Go StartKubeChangeWatch): `changed` objects of the watched kinds changed
+/// since the last one, at `at` (RFC 3339). Only counts: the screen reads its list again.
+public struct KubeChange: Decodable, Equatable, Sendable {
+    public let changed: Int
+    public let at: String
+
+    public init(changed: Int = 0, at: String = "") {
+        self.changed = changed
+        self.at = at
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        changed = try c.field(.changed, 0)
+        at = try c.field(.at, "")
+    }
+
+    private enum CodingKeys: String, CodingKey { case changed, at }
+
+    /// The kinds the Workloads list merges, as StartKubeChangeWatch takes them.
+    public static let workloadKinds = ["apps/v1/deployments", "apps/v1/statefulsets", "apps/v1/daemonsets"]
+    /// The Argo CD Applications, whose status the Argo CD screen derives.
+    public static let argoKinds = ["argoproj.io/v1alpha1/applications"]
+}

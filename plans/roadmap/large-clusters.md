@@ -123,6 +123,8 @@ Phases 1–5 are done.
   `StartKubeNodePodsWatch`, `StartKubeRolloutWatch`, `StartKubeObjectWatch`). The browser's
   lists of any kind follow `StartKubeWatch` as Table rows (columns from the `SYNC`, rows by
   namespace/name), but only when a namespace is chosen or the loaded list is complete, so the
-  watch never lists more than was shown; `events` is never followed there. Every other list
-  still polls or waits for pull-to-refresh.
+  watch never lists more than was shown; `events` is never followed there. The workloads and
+  Argo CD lists, which merge kinds or derive a status, read again on a change signal instead
+  (`StartKubeChangeWatch`: Table-row watches counted in Go, at most one signal every 2 s, none
+  for the first lists). Every other list still polls or waits for pull-to-refresh.
 - Server-side text search (the API has none).
