@@ -3450,4 +3450,10 @@
     <string name="kube_services_hint_none">Un répartiteur de charge n’a pas d’adresse et aucun contrôleur n’a été trouvé pour lui en donner une : installez MetalLB, activez le LB IPAM de Cilium ou utilisez le répartiteur d’un cloud.</string>
     <string name="kube_services_ready">Endpoints prêts : %1$s</string>
     <string name="kube_services_headless">headless</string>
+    <string name="imagescan_system_title">Images système</string>
+    <string name="imagescan_system_loading">Lecture des images système du nœud…</string>
+    <string name="imagescan_system_unavailable">Les images système nécessitent le rôle os:admin : %1$s</string>
+    <string name="imagescan_system_hint">Recherche les vulnérabilités connues des images que Talos exécute sur ce nœud (kubelet, etcd, le plan de contrôle), par digest, avec Trivy. L\'analyse tourne comme Job dans le namespace %1$s, qui se supprime ensuite.</string>
+    <string name="imagescan_system_scan">Analyser les images système</string>
+    <string name="images_kubernetes_title">Images Kubernetes</string>
 </resources>

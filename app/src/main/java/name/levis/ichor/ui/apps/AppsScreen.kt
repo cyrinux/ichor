@@ -217,7 +217,7 @@ fun AppsScreen(
                 )
                 podsOf?.let { WorkloadPodsSheet(it, onDismiss = { podsOf = null }) }
                 reportOpen?.let { (report, json) ->
-                    ImageScanReportOpen(report, json, detail.name, scanVm, onDismiss = { reportOpen = null })
+                    ImageScanReportOpen(report, json, detail.name, scanVm::export, onDismiss = { reportOpen = null })
                 }
             }
             

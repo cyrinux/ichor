@@ -22,6 +22,43 @@ public let imageScanTimedOut = "image scan timed out"
 /// The namespace the scan Job runs in.
 public let imageScanNamespace = "ichor-imagescan"
 
+/// The scan id of a node's system images (an app's scan uses the app's id).
+public func systemImagesScanID(node: String) -> String { "talos:\(node)" }
+
+/// The options of a scan of image refs with no pod behind them ("" when there are none).
+public func imageScanOptions(images: [String]) throws -> String {
+    images.isEmpty ? "" : try TalosJSON.encode(["images": images])
+}
+
+/// An image Talos runs on a node outside of any app (TalosSystemImages): kubelet, etcd…
+public struct SystemImage: Decodable, Equatable, Identifiable, Sendable {
+    /// installer, kubelet, etcd, apiServer, controllerManager, scheduler, coreDNS, proxy or system.
+    public let role: String
+    public let image: String
+    /// What a scan pulls: repo@digest when the node has it, else `image`.
+    public let ref: String
+    public let digest: String
+
+    public var id: String { ref }
+
+    public init(role: String, image: String, ref: String, digest: String = "") {
+        self.role = role
+        self.image = image
+        self.ref = ref
+        self.digest = digest
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        role = try c.field(.role, "")
+        image = try c.field(.image, "")
+        ref = try c.field(.ref, "")
+        digest = try c.field(.digest, "")
+    }
+
+    private enum CodingKeys: String, CodingKey { case role, image, ref, digest }
+}
+
 /// Trivy's severities, most severe first.
 public enum VulnSeverity: String, CaseIterable, Codable, Sendable, WireEnum {
     case critical = "CRITICAL", high = "HIGH", medium = "MEDIUM", low = "LOW", unknown = "UNKNOWN"

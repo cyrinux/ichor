@@ -3450,4 +3450,10 @@
     <string name="kube_services_hint_none">A load balancer has no address and no controller was found to give one: install MetalLB, turn on Cilium’s LB IPAM, or use a cloud’s load balancer.</string>
     <string name="kube_services_ready">Ready endpoints: %1$s</string>
     <string name="kube_services_headless">headless</string>
+    <string name="imagescan_system_title">System images</string>
+    <string name="imagescan_system_loading">Reading the node\'s system images…</string>
+    <string name="imagescan_system_unavailable">System images need the os:admin role: %1$s</string>
+    <string name="imagescan_system_hint">Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with Trivy. It runs as a Job in the %1$s namespace, which deletes itself afterwards.</string>
+    <string name="imagescan_system_scan">Scan system images</string>
+    <string name="images_kubernetes_title">Kubernetes images</string>
 </resources>

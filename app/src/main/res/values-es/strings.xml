@@ -3450,4 +3450,10 @@
     <string name="kube_services_hint_none">Un balanceador de carga no tiene dirección y no se encontró ningún controlador que le dé una: instala MetalLB, activa el LB IPAM de Cilium o usa el balanceador de una nube.</string>
     <string name="kube_services_ready">Endpoints listos: %1$s</string>
     <string name="kube_services_headless">headless</string>
+    <string name="imagescan_system_title">Imágenes del sistema</string>
+    <string name="imagescan_system_loading">Leyendo las imágenes del sistema del nodo…</string>
+    <string name="imagescan_system_unavailable">Las imágenes del sistema requieren el rol os:admin: %1$s</string>
+    <string name="imagescan_system_hint">Comprueba con Trivy, por digest, las vulnerabilidades conocidas de las imágenes que Talos ejecuta en este nodo (kubelet, etcd, el plano de control). Se ejecuta como un Job en el namespace %1$s, que se elimina después.</string>
+    <string name="imagescan_system_scan">Analizar las imágenes del sistema</string>
+    <string name="images_kubernetes_title">Imágenes de Kubernetes</string>
 </resources>
