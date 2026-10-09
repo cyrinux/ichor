@@ -3175,7 +3175,6 @@
     <string name="kube_discover_find">Cluster suchen</string>
     <string name="kube_signin_required_error">Melde dich bei diesem Cluster an, um fortzufahren (%1$s).</string>
     <string name="kube_signin_required_error_plain">Melde dich bei diesem Cluster an, um fortzufahren.</string>
-||||||| a1506f3c
     <!-- kube browser -->
     <string name="kb_title">Alle Ressourcen</string>
     <string name="kb_search_kinds">Typen suchen (pod, deploy, Gruppe…)</string>
@@ -3374,7 +3373,6 @@
     <string name="activity_settings_desc">Jede Änderung, die Ichor an Ihren Clustern vorgenommen hat (Neustarts, Skalierungen, Syncs, Rollbacks…), 90 Tage auf diesem Gerät gespeichert.</string>
     <string name="activity_open">Aktivitätsprotokoll</string>
     <string name="clusters_menu_activity">Aktivität</string>
-||||||| b9b4f161
     <string name="kb_tab_summary">Übersicht</string>
     <string name="kb_summary_conditions">Bedingungen</string>
     <string name="kb_summary_no_conditions">Diese Art meldet keine Bedingungen.</string>
@@ -3492,8 +3490,6 @@
         <item quantity="one">%1$d von %2$d aktiv</item>
         <item quantity="other">%1$d von %2$d aktiv</item>
     </plurals>
-||||||| 4aca83af
-||||||| original
     <string name="kb_tab_data">Daten</string>
     <string name="kb_data_type">Typ: %1$s</string>
     <string name="kb_data_keys">Schlüssel</string>
@@ -3511,7 +3507,6 @@
     <string name="kb_data_used_by_unknown">Die Pods dieses Namespace konnten nicht aufgelistet werden.</string>
     <string name="kb_data_used_by_none">Kein Pod dieses Namespace verwendet es.</string>
     <string name="kb_data_reveal_auth">%1$s von %2$s anzeigen</string>
-||||||| 62d80f4f
     <string name="pod_debug_toggle">Debug-Container</string>
     <string name="pod_debug_note">Für Images ohne Shell (distroless): fügt einen temporären Container hinzu, der die Prozesse dieses Pods sieht. Kubernetes behält ihn im Pod, bis der Pod gelöscht wird.</string>
     <string name="storage_kube_search">PVCs, Klassen oder Pods suchen</string>
