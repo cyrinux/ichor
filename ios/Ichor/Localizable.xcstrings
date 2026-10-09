@@ -98496,6 +98496,47 @@
           }
         }
       }
+    },
+    "NFC keys and the Lightning YubiKey 5Ci work reliably. A USB-C key plugged into an iPhone is best effort: if it is not seen, tap it over NFC instead." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC keys and the Lightning YubiKey 5Ci work reliably. A USB-C key plugged into an iPhone is best effort: if it is not seen, tap it over NFC instead."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les clés NFC et la YubiKey 5Ci Lightning fonctionnent de façon fiable. Une clé USB-C branchée sur un iPhone fonctionne au mieux : si elle n’est pas détectée, approchez-la plutôt en NFC."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las llaves NFC y la YubiKey 5Ci Lightning funcionan de forma fiable. Una llave USB-C conectada a un iPhone funciona como se pueda: si no se detecta, acércala por NFC."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC-Schlüssel und der Lightning-YubiKey 5Ci funktionieren zuverlässig. Ein an ein iPhone angeschlossener USB-C-Schlüssel funktioniert nur eingeschränkt: Wird er nicht erkannt, tippe ihn stattdessen per NFC an."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le chiavi NFC e la YubiKey 5Ci Lightning funzionano in modo affidabile. Una chiave USB-C collegata a un iPhone funziona al meglio delle possibilità: se non viene rilevata, avvicinala via NFC."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключі NFC і YubiKey 5Ci з Lightning працюють надійно. Ключ USB-C, підключений до iPhone, працює без гарантій: якщо його не видно, торкніться ним через NFC."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
