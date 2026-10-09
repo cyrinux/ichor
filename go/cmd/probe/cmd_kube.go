@@ -206,6 +206,13 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "resource-watch", args: "GROUP VERSION RESOURCE [NAMESPACE]", run: func(e env) (out string, err error) {
+		// resource-watch GROUP VERSION RESOURCE [NAMESPACE]: prints the Table rows' events for
+		// 30 s ("" GROUP for the core API).
+		out = resourceWatchRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
+
+		return out, err
+	}},
 	{name: "delete-pod", args: "NAMESPACE NAME", run: func(e env) (out string, err error) {
 		// delete-pod NAMESPACE NAME
 		if err = ichorgo.KubeDeletePod(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2)); err == nil {
