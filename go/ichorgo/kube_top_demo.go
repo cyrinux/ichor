@@ -38,7 +38,7 @@ var demoPodUsage = map[string]kubeTopPod{
 
 func demoTopPods(namespace string) func() kubeTopPods {
 	return func() kubeTopPods {
-		out := kubeTopPods{Available: true, Pods: []kubeTopPod{}}
+		out := kubeTopPods{Available: true, BoundsRead: namespace != "", Pods: []kubeTopPod{}}
 
 		for _, p := range inNamespace(demoPods(), namespace, func(p kubePod) string { return p.Namespace }) {
 			t, ok := demoPodUsage[p.Name]
@@ -47,7 +47,27 @@ func demoTopPods(namespace string) func() kubeTopPods {
 			}
 
 			t.Namespace, t.Name, t.Node = p.Namespace, p.Name, p.Node
+			if !out.BoundsRead {
+				// As the cluster answers for every namespace: the usage only.
+				t = kubeTopPod{Namespace: t.Namespace, Name: t.Name, CPU: t.CPU, Memory: t.Memory}
+			}
+
 			out.Pods = append(out.Pods, t)
+		}
+
+		return out
+	}
+}
+
+// demoTopPod is one demo pod's usage and bounds; none for a pod the demo does not have.
+func demoTopPod(namespace, name string) func() kubeTopPods {
+	return func() kubeTopPods {
+		out := kubeTopPods{Available: true, BoundsRead: true, Pods: []kubeTopPod{}}
+
+		for _, p := range demoTopPods(namespace)().Pods {
+			if p.Name == name {
+				out.Pods = append(out.Pods, p)
+			}
 		}
 
 		return out
