@@ -509,7 +509,7 @@
     <string name="monitor_channel_nodes">Сповіщення про вузли</string>
     <string name="monitor_channel_nodes_desc">Вузол падає, перестає відповідати або знову готовий</string>
     <string name="monitor_channel_cluster">Сповіщення кластера</string>
-    <string name="monitor_channel_cluster_desc">Тривоги etcd, знахідки перевірки кластера і сповіщення Alertmanager</string>
+    <string name="monitor_channel_cluster_desc">Тривоги etcd, знахідки перевірки кластера, сповіщення Alertmanager і недоступні кластери</string>
     <string name="monitor_channel_data">Сповіщення сервісів даних</string>
     <string name="monitor_channel_data_desc">Longhorn, бази даних, об’єктне сховище та резервні копії, що потребують уваги</string>
     <string name="monitor_channel_gitops">Сповіщення GitOps</string>
@@ -3682,6 +3682,17 @@
     <string name="monitor_alertmanager_desc">Також повідомляє про сповіщення Alertmanager кластера, які не заглушені й не пригнічені: критичні одразу, інші після двох перевірок поспіль, інформаційні ніколи. Кожна перевірка читає їх через Kubernetes API (os:admin) або за URL, вибраним на екрані «Сповіщення».</string>
     <string name="monitor_am_firing">Спрацьовує: %1$s</string>
     <string name="monitor_am_resolved">Вирішено: %1$s</string>
+    <string name="monitor_cluster_unreachable">Кластер недоступний</string>
+    <string name="monitor_cluster_unreachable_text">Немає відповіді вже %1$s перевірок поспіль</string>
+    <string name="monitor_cluster_reachable">Кластер знову доступний</string>
+    <string name="monitor_cluster_reachable_text">Він знову відповідає на фонові перевірки</string>
+    <string name="monitor_unreachable">Недоступні кластери</string>
+    <string name="monitor_unreachable_desc">Сповіщає один раз, коли кластер не відповів на кілька перевірок поспіль (жоден вузол, жоден API або надто повільно), і один раз, коли він знову відповідає. Тим часом сповіщення про вузли мовчать.</string>
+    <string name="monitor_unreachable_runs">Після %1$s перевірок поспіль</string>
+    <string name="clusters_watch">Стежити у фоні</string>
+    <string name="widget_config_title">Кластер, який показує віджет</string>
+    <string name="widget_config_active">Кластер на екрані</string>
+    <string name="widget_config_active_desc">Іде за кластером, відкритим у застосунку</string>
     <plurals name="alerts_suppressed">
         <item quantity="one">%1$d сповіщення заглушене або пригнічене</item>
         <item quantity="few">%1$d сповіщення заглушені або пригнічені</item>

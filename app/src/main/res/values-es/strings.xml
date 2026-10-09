@@ -462,7 +462,7 @@
     <string name="monitor_channel_nodes">Alertas de nodos</string>
     <string name="monitor_channel_nodes_desc">Un nodo cae, deja de responder o vuelve a estar listo</string>
     <string name="monitor_channel_cluster">Alertas del clúster</string>
-    <string name="monitor_channel_cluster_desc">Alarmas de etcd, hallazgos del chequeo del clúster y alertas de Alertmanager</string>
+    <string name="monitor_channel_cluster_desc">Alarmas de etcd, hallazgos del chequeo del clúster, alertas de Alertmanager y clústeres inaccesibles</string>
     <string name="monitor_channel_data">Alertas de servicios de datos</string>
     <string name="monitor_channel_data_desc">Longhorn, bases de datos, almacenamiento de objetos y copias de seguridad que requieren atención</string>
     <string name="monitor_channel_gitops">Alertas GitOps</string>
@@ -3482,6 +3482,17 @@
     <string name="monitor_alertmanager_desc">Notifica también las alertas del Alertmanager del clúster que no están silenciadas ni inhibidas: las críticas al momento, las demás tras verse en dos comprobaciones seguidas, las informativas nunca. Cada comprobación las lee a través de la API de Kubernetes (os:admin) o en la URL elegida en la pantalla Alertas.</string>
     <string name="monitor_am_firing">Disparada: %1$s</string>
     <string name="monitor_am_resolved">Resuelta: %1$s</string>
+    <string name="monitor_cluster_unreachable">Clúster inaccesible</string>
+    <string name="monitor_cluster_unreachable_text">Sin respuesta en %1$s comprobaciones seguidas</string>
+    <string name="monitor_cluster_reachable">Clúster accesible de nuevo</string>
+    <string name="monitor_cluster_reachable_text">Vuelve a responder a las comprobaciones en segundo plano</string>
+    <string name="monitor_unreachable">Clústeres inaccesibles</string>
+    <string name="monitor_unreachable_desc">Avisa una vez cuando un clúster no ha respondido en varias comprobaciones seguidas (ningún nodo, ninguna API o demasiado lento), y una vez cuando vuelve a responder. Mientras tanto, las alertas de nodos callan.</string>
+    <string name="monitor_unreachable_runs">Tras %1$s comprobaciones seguidas</string>
+    <string name="clusters_watch">Vigilar en segundo plano</string>
+    <string name="widget_config_title">Clúster que muestra el widget</string>
+    <string name="widget_config_active">Clúster en pantalla</string>
+    <string name="widget_config_active_desc">Sigue el clúster abierto en la app</string>
     <plurals name="alerts_suppressed">
         <item quantity="one">%1$d alerta silenciada o inhibida</item>
         <item quantity="other">%1$d alertas silenciadas o inhibidas</item>

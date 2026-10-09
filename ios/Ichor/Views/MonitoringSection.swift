@@ -8,6 +8,8 @@ struct MonitoringSection: View {
     @State private var gitopsWatched = BackgroundMonitor.gitopsWatched
     @State private var checkupWatched = BackgroundMonitor.checkupWatched
     @State private var alertmanagerWatched = BackgroundMonitor.alertmanagerWatched
+    @State private var unreachableWatched = BackgroundMonitor.unreachableWatched
+    @State private var unreachableRuns = BackgroundMonitor.unreachableRuns
     @State private var message: String?
 
     var body: some View {
@@ -65,6 +67,28 @@ struct MonitoringSection: View {
                 }
             }
             .disabled(!enabled)
+            // Opt-in too: no extra call, only the runs a cluster did not answer in a row.
+            Toggle(isOn: Binding(get: { unreachableWatched }, set: { on in
+                BackgroundMonitor.unreachableWatched = on
+                unreachableWatched = on
+            })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Alert when a cluster is unreachable")
+                    Text("When a cluster does not answer several checks in a row (off its network, its API down), and once it answers again. Its node alerts stay silent meanwhile.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .disabled(!enabled)
+            if unreachableWatched {
+                Stepper(value: Binding(get: { unreachableRuns }, set: { runs in
+                    BackgroundMonitor.unreachableRuns = runs
+                    unreachableRuns = runs
+                }), in: unreachableRunsRange) {
+                    Text("After \(unreachableRuns) checks in a row")
+                }
+                .disabled(!enabled)
+            }
             Button("Check now") {
                 Task {
                     await BackgroundMonitor.check()
@@ -86,6 +110,7 @@ struct MonitoringSection: View {
         } footer: {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Notifies when a node goes down or recovers, on new etcd alarms, and daily when the client certificate expires within \(certWarnDays) days. iOS schedules background checks itself, so there is no check interval to choose as on Android, and alerts can be delayed. The home-screen widget shows the last check.")
+                Text("Each check covers every cluster. To leave one out, turn off Watch in the background in its menu under Clusters.")
                 // The sealed configs cannot be read in the background after iOS closed the app.
                 if model.requiresKey { Text("A security key is required: alerts and the widget pause when iOS has closed Ichor, until you unlock it again.") }
                 // README "Widget": the App Group a sideloaded build may lack with a free Apple ID.

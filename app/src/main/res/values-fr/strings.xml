@@ -462,7 +462,7 @@
     <string name="monitor_channel_nodes">Alertes des nœuds</string>
     <string name="monitor_channel_nodes_desc">Un nœud tombe, ne répond plus ou est de nouveau prêt</string>
     <string name="monitor_channel_cluster">Alertes du cluster</string>
-    <string name="monitor_channel_cluster_desc">Alarmes etcd, constats du bilan du cluster et alertes d\'Alertmanager</string>
+    <string name="monitor_channel_cluster_desc">Alarmes etcd, constats du bilan du cluster, alertes d\'Alertmanager et clusters injoignables</string>
     <string name="monitor_channel_data">Alertes des services de données</string>
     <string name="monitor_channel_data_desc">Longhorn, bases de données, stockage objet et sauvegardes à surveiller</string>
     <string name="monitor_channel_gitops">Alertes GitOps</string>
@@ -3482,6 +3482,17 @@
     <string name="monitor_alertmanager_desc">Notifie aussi les alertes de l\'Alertmanager du cluster qui ne sont ni en silence ni inhibées : les critiques tout de suite, les autres une fois vues sur deux vérifications de suite, les infos jamais. Chaque vérification les lit via l\'API Kubernetes (os:admin) ou à l\'URL choisie sur l\'écran Alertes.</string>
     <string name="monitor_am_firing">Déclenchée : %1$s</string>
     <string name="monitor_am_resolved">Résolue : %1$s</string>
+    <string name="monitor_cluster_unreachable">Cluster injoignable</string>
+    <string name="monitor_cluster_unreachable_text">Aucune réponse depuis %1$s vérifications de suite</string>
+    <string name="monitor_cluster_reachable">Cluster de nouveau joignable</string>
+    <string name="monitor_cluster_reachable_text">Il répond de nouveau aux vérifications en arrière-plan</string>
+    <string name="monitor_unreachable">Clusters injoignables</string>
+    <string name="monitor_unreachable_desc">Prévient une fois quand un cluster n\'a pas répondu à plusieurs vérifications de suite (aucun nœud, aucune API, ou trop lent), et une fois quand il répond de nouveau. Les alertes de nœuds restent muettes entre-temps.</string>
+    <string name="monitor_unreachable_runs">Après %1$s vérifications de suite</string>
+    <string name="clusters_watch">Surveiller en arrière-plan</string>
+    <string name="widget_config_title">Cluster affiché par le widget</string>
+    <string name="widget_config_active">Cluster à l\'écran</string>
+    <string name="widget_config_active_desc">Suit le cluster ouvert dans l\'app</string>
     <plurals name="alerts_suppressed">
         <item quantity="one">%1$d alerte en silence ou inhibée</item>
         <item quantity="other">%1$d alertes en silence ou inhibées</item>

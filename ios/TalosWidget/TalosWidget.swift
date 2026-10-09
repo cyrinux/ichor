@@ -1,32 +1,82 @@
+import AppIntents
 import SwiftUI
 import IchorCore
 import WidgetKit
 
-/// Home-screen summary of the last background check. Counts only, no hostnames: it stays
-/// visible when the app lock is on. Looks like the Android widget and the website's mockup.
+/// Home-screen summary of the last background check of one cluster. Counts only, no hostnames:
+/// it stays visible when the app lock is on. Looks like the Android widget and the website's mockup.
 struct Entry: TimelineEntry {
     let date: Date
     let snapshot: ClusterSnapshot?
+    /// How the app names the cluster; nil before the app said (the snapshot's context then).
+    var name: String?
+    /// What a tap opens: that cluster's screen for a widget set to a cluster; nil (the app as it
+    /// was left) for one showing the active cluster.
+    var link: URL?
 }
 
-struct Provider: TimelineProvider {
-    private var snapshot: ClusterSnapshot? {
-        SharedSnapshot.load(from: UserDefaults(suiteName: SharedSnapshot.suite))
+/// A cluster the widget can show, from the list the app keeps in the App Group (WidgetCluster).
+struct ClusterEntity: AppEntity {
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Cluster"
+    static var defaultQuery = ClusterQuery()
+
+    /// Its monitor key (monitorClusterKey): what its snapshot is kept under.
+    let id: String
+    let name: String
+
+    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)") }
+}
+
+struct ClusterQuery: EntityQuery {
+    private var clusters: [ClusterEntity] {
+        SharedSnapshot.clusters(from: UserDefaults(suiteName: SharedSnapshot.suite)).map { ClusterEntity(id: $0.id, name: $0.name) }
+    }
+
+    func entities(for identifiers: [ClusterEntity.ID]) async throws -> [ClusterEntity] {
+        clusters.filter { identifiers.contains($0.id) }
+    }
+
+    func suggestedEntities() async throws -> [ClusterEntity] { clusters }
+}
+
+/// The widget's settings: which cluster it shows; none chosen (existing widgets too), the one
+/// open in the app.
+struct ClusterWidgetIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Cluster"
+    static var description = IntentDescription("The cluster this widget shows. None chosen: the one open in the app.")
+
+    @Parameter(title: "Cluster")
+    var cluster: ClusterEntity?
+}
+
+struct Provider: AppIntentTimelineProvider {
+    private func entry(_ intent: ClusterWidgetIntent, at date: Date) -> Entry {
+        let defaults = UserDefaults(suiteName: SharedSnapshot.suite)
+        let id = intent.cluster?.id ?? SharedSnapshot.activeCluster(from: defaults)
+        // The name as the app calls it now (renamed since the widget was set up, too).
+        let cluster = id.flatMap { id in SharedSnapshot.clusters(from: defaults).first { $0.id == id } }
+        let link = intent.cluster == nil ? nil : cluster?.link.flatMap(URL.init(string:))
+        return Entry(date: date, snapshot: SharedSnapshot.load(from: defaults, cluster: id), name: cluster?.name ?? intent.cluster?.name,
+                     link: link)
     }
 
     func placeholder(in context: Context) -> Entry { Entry(date: .now, snapshot: nil) }
-    func getSnapshot(in context: Context, completion: @escaping (Entry) -> Void) { completion(Entry(date: .now, snapshot: snapshot)) }
-    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
+
+    func snapshot(for configuration: ClusterWidgetIntent, in context: Context) async -> Entry {
+        entry(configuration, at: .now)
+    }
+
+    func timeline(for configuration: ClusterWidgetIntent, in context: Context) async -> Timeline<Entry> {
         let now = Date.now
-        let current = snapshot
-        var entries = [Entry(date: now, snapshot: current)]
+        let current = entry(configuration, at: now)
+        var entries = [current]
         // A second entry dims the widget when the snapshot turns stale, without waiting for a reload.
-        if let current {
-            let staleAt = current.takenAt.addingTimeInterval(glanceStaleAfter + 1)
-            if staleAt > now { entries.append(Entry(date: staleAt, snapshot: current)) }
+        if let snapshot = current.snapshot {
+            let staleAt = snapshot.takenAt.addingTimeInterval(glanceStaleAfter + 1)
+            if staleAt > now { entries.append(Entry(date: staleAt, snapshot: snapshot, name: current.name, link: current.link)) }
         }
         // The app reloads timelines after each check; this is just a fallback refresh.
-        completion(Timeline(entries: entries, policy: .after(now.addingTimeInterval(30 * 60))))
+        return Timeline(entries: entries, policy: .after(now.addingTimeInterval(30 * 60)))
     }
 }
 
@@ -87,11 +137,12 @@ struct ClusterWidgetView: View {
         }
         // The lock screen draws its own material; the home screen gets the dark card.
         .containerBackground(for: .widget) { family == .accessoryRectangular ? Color.clear : Glance.background }
+        .widgetURL(entry.link)
     }
 
     private var card: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(verbatim: entry.snapshot?.context ?? "Talos")
+            Text(verbatim: entry.name ?? entry.snapshot?.context ?? "Talos")
                 .font(.system(size: 12))
                 .foregroundStyle(Glance.secondary)
                 .lineLimit(1)
@@ -112,7 +163,7 @@ struct ClusterWidgetView: View {
 
     private var lockScreen: some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text(verbatim: entry.snapshot?.context ?? "Talos").font(.caption).lineLimit(1)
+            Text(verbatim: entry.name ?? entry.snapshot?.context ?? "Talos").font(.caption).lineLimit(1)
             count.font(.headline).lineLimit(1)
             if let s = entry.snapshot, !stale(s), let first = glanceItems(s).first {
                 GlanceItemView(item: first).font(.caption)
@@ -156,7 +207,7 @@ struct ClusterWidgetView: View {
 @main
 struct TalosWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "TalosClusterWidget", provider: Provider()) { entry in
+        AppIntentConfiguration(kind: "TalosClusterWidget", intent: ClusterWidgetIntent.self, provider: Provider()) { entry in
             ClusterWidgetView(entry: entry)
         }
         .configurationDisplayName("Cluster status")

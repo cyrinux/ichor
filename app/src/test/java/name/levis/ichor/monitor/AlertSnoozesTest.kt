@@ -68,4 +68,18 @@ class AlertSnoozesTest {
         assertEquals(listOf(back), snoozes.unsnoozed(listOf(back), "fp", now = 5_000))
         assertEquals(listOf(down, argo), snoozes.unsnoozed(listOf(down, argo), "other", now = 1_000))
     }
+
+    @Test
+    fun aRemovedClusterTakesItsSnoozesWithIt() {
+        val prefs = MemoryPrefs()
+        val snoozes = AlertSnoozes(prefs).apply {
+            snooze("fp", down.key, until = 5_000)
+            snooze("gone", down.key, until = 5_000)
+            snooze("gone", argo.key, until = 5_000)
+        }
+        snoozes.retain(listOf("fp"))
+        assertEquals(1, prefs.all.size)
+        assertTrue(snoozes.isSnoozed("fp", down.key, now = 1_000))
+        assertFalse(snoozes.isSnoozed("gone", down.key, now = 1_000))
+    }
 }

@@ -43,11 +43,13 @@ import name.levis.ichor.data.PrivacyMask
 import name.levis.ichor.data.UiPreferences
 import androidx.glance.appwidget.updateAll
 import name.levis.ichor.widget.ClusterWidget
+import name.levis.ichor.widget.WidgetClusters
 import name.levis.ichor.ui.apps.AppIconLoader
 import name.levis.ichor.i18n.AppLocale
 import name.levis.ichor.monitor.AlertActionToken
 import name.levis.ichor.monitor.AlertSnoozes
 import name.levis.ichor.monitor.MonitorStore
+import name.levis.ichor.monitor.clusterFingerprints
 import name.levis.ichor.monitor.canPostNotifications
 import name.levis.ichor.monitor.syncMonitoring
 import name.levis.ichor.security.AppLock
@@ -62,6 +64,7 @@ import name.levis.ichor.data.ClusterNames
 import name.levis.ichor.data.WakeOnLanStore
 import name.levis.ichor.data.StoredConfig
 import name.levis.ichor.data.VpnMonitor
+import name.levis.ichor.data.UnwatchedClusters
 import name.levis.ichor.data.VpnOnlyClusters
 import name.levis.ichor.data.KubeScopes
 import name.levis.ichor.data.KubeServers
@@ -78,6 +81,7 @@ import name.levis.ichor.data.AlertmanagerRepository
 import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.data.VpnRequiredException
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.ContextSummary
 import name.levis.ichor.model.EndpointMatch
 import name.levis.ichor.model.heldBackForVpn
 import name.levis.ichor.model.signInKeys
@@ -175,6 +179,10 @@ class TalosApp : Application() {
         WakeOnLanStore(sealed)
     }
     val vpnOnly by lazy { VpnOnlyClusters(getSharedPreferences(VpnOnlyClusters.FILE, Context.MODE_PRIVATE)) }
+    /** The clusters the background monitor leaves out (all are watched by default). */
+    val unwatchedClusters by lazy { UnwatchedClusters(getSharedPreferences(UnwatchedClusters.FILE, Context.MODE_PRIVATE)) }
+    /** The cluster each home-screen widget shows. */
+    val widgetClusters by lazy { WidgetClusters(getSharedPreferences(WidgetClusters.FILE, Context.MODE_PRIVATE)) }
     val kubeServers by lazy { KubeServers(getSharedPreferences(KubeServers.FILE, Context.MODE_PRIVATE)) }
     /** The kubeconfig cluster each Talos cluster's Kubernetes calls go through, when not the Talos admin kubeconfig. */
     val kubeAccess by lazy { KubeAccess(getSharedPreferences(KubeAccess.FILE, Context.MODE_PRIVATE)) }
@@ -269,6 +277,16 @@ class TalosApp : Application() {
     fun setVpnOnly(fingerprint: String, vpnOnly: Boolean) {
         this.vpnOnly.set(fingerprint, vpnOnly)
         if (fingerprint == configRepository.config.value?.activeSummary?.fingerprint) talosRepository.invalidate()
+    }
+
+    /**
+     * Sets whether the background monitor checks the cluster of [context] (all its contexts):
+     * a cluster left out drops its snapshot and alerts at the next check.
+     */
+    fun setWatched(context: ContextSummary, watched: Boolean) {
+        val summary = configRepository.config.value?.summary ?: return
+        clusterFingerprints(summary, context).forEach { unwatchedClusters.set(it, !watched) }
+        launchSync(runNow = true)
     }
 
     /**
@@ -368,12 +386,10 @@ class TalosApp : Application() {
     }
 
     /**
-     * Another cluster is on screen: the widget drops the previous one's nodes right away
-     * (the next check may not reach the new cluster, and would then keep them) and a check
-     * of the new one runs.
+     * Another cluster is on screen: the widgets that follow it show its own snapshot (each
+     * cluster keeps one), and a check runs.
      */
     private fun forgetShownCluster() {
-        monitorStore.clearSnapshot()
         ProcessLifecycleOwner.get().lifecycleScope.launch {
             ClusterWidget().updateAll(this@TalosApp)
             syncMonitoring(this@TalosApp, runNow = true)
@@ -390,7 +406,7 @@ class TalosApp : Application() {
         uiPreferences.setPrivacyMask(mask)
         applyPrivacyMask(mask)
         // Keys differ masked vs unmasked: diffing across the switch would alert on every node.
-        monitorStore.clearSnapshot()
+        monitorStore.clearSnapshots()
         ProcessLifecycleOwner.get().lifecycleScope.launch {
             // The config summary (context names, endpoints) is masked too, and the Go side
             // forgets its previous mapping: re-read it, then reload with the new names.
@@ -476,6 +492,10 @@ class TalosApp : Application() {
                     // Rewrites a sealed file (a Keystore call): off the main thread, its store is locked.
                     launch(Dispatchers.IO) { publicIps.sync(it.summary) }
                     vpnOnly.sync(it.summary)
+                    unwatchedClusters.sync(it.summary)
+                    widgetClusters.sync(it.summary)
+                    // A removed cluster's snoozes go with it (its snapshot at the next check).
+                    alertSnoozes.retain(it.summary.contexts.map { c -> c.fingerprint })
                     kubeServers.sync(it.summary)
                     kubeAccess.sync(it.summary)
                     // Omni sign-ins are kept under their own key, not a fingerprint.
