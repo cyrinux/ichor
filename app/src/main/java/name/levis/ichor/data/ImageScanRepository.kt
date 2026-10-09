@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.ImageScanFormat
+import name.levis.ichor.model.ImageScanOptions
 import name.levis.ichor.model.ImageScanProgress
 import name.levis.ichor.model.ImageScanReport
 import name.levis.ichor.model.OperatorReports
@@ -59,10 +60,11 @@ class ImageScanRepository(private val configs: ConfigRepository, private val kub
     }
 
     /**
-     * Scans [pods]' images, replacing the last scan. Ignored while one runs. It returns at once:
-     * the core runs the scan in the background and [session] follows it.
+     * Scans [pods]' images and the [images] refs (no pod behind them: a node's system images),
+     * replacing the last scan. Ignored while one runs. It returns at once: the core runs the
+     * scan in the background and [session] follows it.
      */
-    fun start(appId: String, pods: List<RoutePod>) {
+    fun start(appId: String, pods: List<RoutePod>, images: List<String> = emptyList()) {
         if (_session.value?.running == true) return
         val (stored, server) = try {
             target()
@@ -71,7 +73,7 @@ class ImageScanRepository(private val configs: ConfigRepository, private val kub
             return
         }
         _session.value = ImageScanSession(stored.activeContext, appId)
-        run = Ichorgo.startImageScan(stored.yaml, stored.activeContext, server, podsJson(pods), "", listener())
+        run = Ichorgo.startImageScan(stored.yaml, stored.activeContext, server, podsJson(pods), optionsJson(images), listener())
     }
 
     /** Stops the running scan; the session ends once the core deleted its Job. */
@@ -111,6 +113,9 @@ class ImageScanRepository(private val configs: ConfigRepository, private val kub
     }
 
     private fun podsJson(pods: List<RoutePod>) = TalosJson.encodeToString(ListSerializer(RoutePod.serializer()), pods)
+
+    private fun optionsJson(images: List<String>) =
+        if (images.isEmpty()) "" else TalosJson.encodeToString(ImageScanOptions.serializer(), ImageScanOptions(images))
 
     /** The config to call with and the Kubernetes API address the user set ("" for the kubeconfig's). */
     private fun target(): Pair<StoredConfig, String> {

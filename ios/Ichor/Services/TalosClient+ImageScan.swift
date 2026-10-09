@@ -21,10 +21,12 @@ extension TalosClient {
         }
     }
 
-    /// Starts a scan of the pods' images. The stream finishes after `done`; `stop` ends it early,
-    /// and `done` follows once Go deleted the scan Job.
-    func imageScan(pods: [RoutePod]) throws -> (events: AsyncStream<ImageScanEvent>, stop: @Sendable () -> Void) {
+    /// Starts a scan of the pods' images and of `images`, refs with no pod behind them (a node's
+    /// system images). The stream finishes after `done`; `stop` ends it early, and `done` follows
+    /// once Go deleted the scan Job.
+    func imageScan(pods: [RoutePod], images: [String] = []) throws -> (events: AsyncStream<ImageScanEvent>, stop: @Sendable () -> Void) {
         let encoded = try TalosJSON.encode(pods)
+        let options = try imageScanOptions(images: images)
         let (stream, continuation) = AsyncStream.makeStream(of: ImageScanEvent.self)
         let bridge = ImageScanBridge(
             progress: { continuation.yield(.progress($0)) },
@@ -33,7 +35,7 @@ extension TalosClient {
                 continuation.finish()
             }
         )
-        let run = IchorgoStartImageScan(kubeConfig, kubeContext, kubeAPIServer, encoded, "", bridge)
+        let run = IchorgoStartImageScan(kubeConfig, kubeContext, kubeAPIServer, encoded, options, bridge)
         continuation.onTermination = { _ in
             run?.cancel()
             _ = bridge // keep the listener alive for the whole scan

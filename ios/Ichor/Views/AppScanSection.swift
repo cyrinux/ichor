@@ -73,7 +73,7 @@ struct AppScanSection: View {
 }
 
 /// The running scan's phase, a progress bar (by image while scanning) and Stop.
-private struct ScanProgressLines: View {
+struct ScanProgressLines: View {
     let scan: ImageScanState
     let onStop: () -> Void
 

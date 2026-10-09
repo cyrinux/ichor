@@ -3456,4 +3456,10 @@
     <string name="kube_jobs_no_match">Aucun job ne correspond.</string>
     <string name="kube_jobs_completions">Complétions : %1$s</string>
     <string name="kube_jobs_owner">CronJob %1$s</string>
+    <string name="imagescan_system_title">Images système</string>
+    <string name="imagescan_system_loading">Lecture des images système du nœud…</string>
+    <string name="imagescan_system_unavailable">Les images système nécessitent le rôle os:admin : %1$s</string>
+    <string name="imagescan_system_hint">Recherche les vulnérabilités connues des images que Talos exécute sur ce nœud (kubelet, etcd, le plan de contrôle), par digest, avec Trivy. L\'analyse tourne comme Job dans le namespace %1$s, qui se supprime ensuite.</string>
+    <string name="imagescan_system_scan">Analyser les images système</string>
+    <string name="images_kubernetes_title">Images Kubernetes</string>
 </resources>

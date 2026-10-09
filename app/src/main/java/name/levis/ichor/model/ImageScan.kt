@@ -27,6 +27,24 @@ enum class ImageScanFormat(val id: String, val extension: String, val mime: Stri
     JSON("json", "json", "application/json"),
 }
 
+/** An image Talos runs on a node outside of any app (TalosSystemImages): kubelet, etcd… */
+@Serializable
+data class SystemImage(
+    /** installer, kubelet, etcd, apiServer, controllerManager, scheduler, coreDNS, proxy or system. */
+    val role: String = "",
+    val image: String = "",
+    /** What a scan pulls: repo@digest when the node has it, else [image]. */
+    val ref: String = "",
+    val digest: String = "",
+)
+
+/** The scan id of [node]'s system images (an app's scan uses the app's id). */
+fun systemImagesScanId(node: String) = "talos:$node"
+
+/** The images options of a scan of refs with no pod ("" when none). */
+@Serializable
+data class ImageScanOptions(val images: List<String> = emptyList())
+
 @Serializable
 data class ImageScanProgress(
     val phase: String = "",
