@@ -67,12 +67,9 @@ func omniHTTPClient(cfgCtx *clientconfig.Context) (*http.Client, error) {
 		return nil, err
 	}
 
-	return &http.Client{
-		Timeout:   oidcHTTPTimeout,
-		Transport: &http.Transport{TLSClientConfig: tlsConfig, ForceAttemptHTTP2: true},
-		// The authorization request answers with a redirect to Omni's login page: read it.
-		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
-	}, nil
+	// The authorization request answers with a redirect to Omni's login page: the client
+	// returns it instead of following it.
+	return newHTTPClient(httpClientOpts{tls: tlsConfig, timeout: oidcHTTPTimeout}), nil
 }
 
 // omniOIDCToken is an ID token for cluster's Kubernetes proxy and its expiry.

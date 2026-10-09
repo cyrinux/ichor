@@ -19,15 +19,12 @@ const (
 
 var (
 	// aiHTTPClient is replaced in tests by a TLS test server's own client.
-	aiHTTPClient = &http.Client{CheckRedirect: refuseRedirect}
+	// Provider APIs do not redirect, and following one would carry the API key to wherever it
+	// points: a redirect is an error for aiDo. The context bounds the streamed answer.
+	aiHTTPClient = newHTTPClient(httpClientOpts{})
 	// A busy provider (429, 5xx) gets one more try after this long.
 	aiRetryDelay = 2 * time.Second
 )
-
-// refuseRedirect makes a redirect the final answer (an error for aiDo). These APIs do not
-// redirect, and following one would carry the API key to wherever it points, even over
-// plain http.
-func refuseRedirect(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
 
 // aiDo sends one request to a provider and returns its 200 response, whose body the caller
 // closes. Anything else is an error already worded for the UI.

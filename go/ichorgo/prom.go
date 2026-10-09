@@ -2,7 +2,6 @@ package ichorgo
 
 import (
 	"context"
-	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"errors"
@@ -270,8 +269,7 @@ func promHTTPGet(ctx context.Context, src promSource, target string, header map[
 
 // promHTTPClient trusts the system authorities plus the source's own, refusing redirects.
 func promHTTPClient(src promSource) (*http.Client, error) {
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS12, InsecureSkipVerify: src.InsecureSkipVerify} //nolint:gosec // the user's explicit choice
+	var roots *x509.CertPool
 
 	if src.CA != "" {
 		pool, err := x509.SystemCertPool()
@@ -283,8 +281,8 @@ func promHTTPClient(src promSource) (*http.Client, error) {
 			return nil, errors.New("the certificate authority is not a PEM certificate")
 		}
 
-		transport.TLSClientConfig.RootCAs = pool
+		roots = pool
 	}
 
-	return &http.Client{Transport: transport, CheckRedirect: refuseRedirect}, nil
+	return newHTTPClient(httpClientOpts{tls: baseTLS(roots, src.InsecureSkipVerify)}), nil
 }

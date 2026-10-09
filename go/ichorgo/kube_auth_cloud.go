@@ -30,7 +30,7 @@ const (
 
 var (
 	doAPIEndpoint  = "https://api.digitalocean.com"
-	cloudHTTP      = func() *http.Client { return &http.Client{Timeout: oidcHTTPTimeout} }
+	cloudHTTP      = func() *http.Client { return newHTTPClient(httpClientOpts{timeout: oidcHTTPTimeout}) }
 	gcpTokenTarget = func(serviceAccountTokenURI string) string { return serviceAccountTokenURI }
 )
 

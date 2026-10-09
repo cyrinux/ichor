@@ -27,7 +27,7 @@ var azureLoginHosts = map[string]string{
 }
 
 // azureTLS is the TLS setup for Entra ID, overridable in tests.
-var azureTLS = func() *tls.Config { return &tls.Config{MinVersion: tls.VersionTLS12} }
+var azureTLS = func() *tls.Config { return baseTLS(nil, false) }
 
 // azureAuthority is overridable in tests.
 var azureAuthority = func(environment, tenant string) string {
