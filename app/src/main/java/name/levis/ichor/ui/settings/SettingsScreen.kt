@@ -149,7 +149,8 @@ fun SettingsScreen(
                 Text(stringResource(R.string.settings_report_bug))
             }
             AboutSection(onChangelog, onLicenses, onSupportedIntegrations, onFunding)
-            if (BuildConfig.SELF_UPDATE) UpdateSection((LocalContext.current.applicationContext as TalosApp).updateManager)
+            val app = LocalContext.current.applicationContext as TalosApp
+            UpdatesSection { app.updateManager }
         }
     }
 

@@ -47,11 +47,10 @@ struct SettingsView: View {
             // A YubiKey (or any FIDO2 key) tapped on the iPhone as another way in, see IchorCore/SecurityKeys.swift.
             if model.lock.enabled { SecurityKeysSection() }
             PrivacySection()
-            AppIconsSection()
             MonitoringSection()
             AISection()
             if model.allows(.kubeconfig) { KubeconfigSection() }
-            Section("Config") {
+            Section {
                 if let protection = SecureConfigStore.protection {
                     LabeledContent("Encryption key", value: protection.label)
                 }
@@ -64,10 +63,22 @@ struct SettingsView: View {
                 Button(model.kubeYAML == nil ? LocalizedStringKey("Delete stored talosconfig") : "Delete all clusters", role: .destructive) {
                     confirmDelete = true
                 }
+            } header: {
+                Text("Config")
+            } footer: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Add a cluster imports a talosconfig or a kubeconfig. The clusters already stored are kept.")
+                    if model.allows(.issueConfig) {
+                        Text("Renew this context's client certificate, or issue a restricted talosconfig for another device.")
+                    }
+                    // README "Leftover data": the Keychain outlives the app.
+                    Text("Configs are stored in the iOS Keychain, which keeps them after the app is uninstalled. Delete them here to remove them from this device.")
+                }
             }
             BackupSection(requested: $backupRequested)
             SupportSection()
             AboutSection()
+            UpdatesSection()
         }
         .themedBackground()
         .navigationTitle("Settings")
@@ -166,34 +177,27 @@ private struct SupportSection: View {
     }
 }
 
-/// Icons of the Apps inventory: off, only the bundled ones are shown (a third-party request).
-private struct AppIconsSection: View {
-    @AppStorage(AppIconSettings.remoteKey) private var remoteIcons = false
-
-    var body: some View {
-        Section {
-            Toggle("Download missing app icons", isOn: $remoteIcons)
-        } header: {
-            Text("Apps")
-        } footer: {
-            Text("About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details. Icons an Argo CD app links in its ichor.levis.name/icon annotation are downloaded too.")
-        }
-    }
-}
-
 /// Screenshot mode: Go masks IPs, node and context names, plus the extra words. The words
 /// apply when the field is submitted or the screen closes, not on every keystroke. And the
-/// last known state, kept on the phone only when turned on.
+/// icons of the Apps inventory: off, only the bundled ones are shown (a third-party request).
 private struct PrivacySection: View {
     @Environment(AppModel.self) private var model
+    @AppStorage(AppIconSettings.remoteKey) private var remoteIcons = false
     @State private var words = ""
     @FocusState private var editingWords: Bool
 
     var body: some View {
         Section {
-            Toggle("Screenshot mode", isOn: Binding(get: { model.privacyMask }, set: { on in
+            Toggle(isOn: Binding(get: { model.privacyMask }, set: { on in
                 Task { await model.setPrivacyMask(on, words: normalizedMaskWords(words)) }
-            }))
+            })) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Screenshot mode")
+                    Text("Hide IP addresses, node names and app logos, e.g. for screenshots or screen sharing")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
             if model.privacyMask {
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("Also hide these words", text: $words)
@@ -204,17 +208,16 @@ private struct PrivacySection: View {
                     Text("Comma-separated, e.g. a domain or a customer name").font(.caption).foregroundStyle(.secondary)
                 }
             }
-            // Off: what was kept is deleted (AppModel.setKeepLastKnown).
-            VStack(alignment: .leading, spacing: 4) {
-                Toggle("Keep last known state", isOn: Binding(get: { model.keepLastKnown }, set: { model.setKeepLastKnown($0) }))
-                Text("Save the last data fetched from each cluster on this phone, encrypted, so it still shows when the cluster can't be reached. Kept for 24 hours and never backed up.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            Toggle(isOn: $remoteIcons) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Download missing app icons")
+                    Text("About 250 common apps have bundled icons. When on, icons for other recognised apps are downloaded from jsDelivr (Dashboard Icons). Only the public icon name is sent, never your image names or cluster details. Icons an Argo CD app links in its ichor.levis.name/icon annotation are downloaded too.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         } header: {
             Text("Privacy")
-        } footer: {
-            Text("Hide IP addresses, node names and app logos, e.g. for screenshots or screen sharing")
         }
         .onAppear { words = model.privacyWords }
         .onChange(of: editingWords) { _, editing in if !editing { commit() } }
