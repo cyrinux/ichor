@@ -16,7 +16,7 @@ public struct KubeRouteList: Decodable, Equatable, Sendable {
 }
 
 /// A URL an app is served at: a host of an Ingress or HTTPRoute whose backend selects its pods.
-public struct KubeRoute: Decodable, Equatable, Identifiable, Sendable {
+public struct KubeRoute: Decodable, Hashable, Identifiable, Sendable {
     /// Ingress or HTTPRoute.
     public let kind: String
     public let namespace: String
