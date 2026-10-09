@@ -38,6 +38,9 @@ struct KubeObjectView: View {
     @State private var logsPod: KubePod?
     @State private var forwarding = false
     @State private var confirmingDelete = false
+    @State private var scaling = false
+    /// What refuses the scale, once asked; nil while asking, when allowed, unknown or not scalable.
+    @State private var scaleDenial: KubeAccess?
     @State private var deleted = false
     /// What refuses the delete, once asked; nil while asking, when allowed or unknown.
     @State private var deleteDenial: KubeAccess?
@@ -78,6 +81,14 @@ struct KubeObjectView: View {
                 deleted = true
             }
         }
+        .sheet(isPresented: $scaling) {
+            KubeObjectScaleSheet(resource: resource, namespace: namespace, name: name, denial: scaleDenial) {
+                Task {
+                    await load()
+                    await loadSummary()
+                }
+            }
+        }
         .navigationDestination(isPresented: $forwarding) {
             PortForwardView(namespace: namespace, pod: name)
         }
@@ -85,6 +96,7 @@ struct KubeObjectView: View {
         .task(id: "\(kubeNamespacesKey(model))|\(reveal)") { await load() }
         .task(id: kubeNamespacesKey(model)) { await loadSummary() }
         .task(id: kubeNamespacesKey(model)) { await loadDeleteAccess() }
+        .task(id: kubeNamespacesKey(model)) { await loadScaleAccess() }
     }
 
     @ViewBuilder private var header: some View {
@@ -141,6 +153,19 @@ struct KubeObjectView: View {
                         Label("Port forward", systemImage: "arrow.left.arrow.right.circle")
                     }
                 }
+                if resource.scalable {
+                    if let scaleDenial {
+                        Button {} label: {
+                            Text("Scale")
+                            Text(verbatim: scaleDenial.deniedText)
+                        }
+                        .disabled(true)
+                    } else {
+                        Button { scaling = true } label: {
+                            Label("Scale", systemImage: "arrow.up.and.down")
+                        }
+                    }
+                }
                 Divider()
                 if let deleteDenial {
                     Button(role: .destructive) {} label: {
@@ -186,6 +211,16 @@ struct KubeObjectView: View {
                                                      namespace: namespace, name: name),
               !Task.isCancelled else { return }
         deleteDenial = access.isDenied ? access : nil
+    }
+
+    /// Asks whether the credentials may scale this object (a scalable kind only); an answer
+    /// that cannot be had leaves Scale offered.
+    private func loadScaleAccess() async {
+        guard resource.scalable, let client = model.client else { return }
+        guard let access = try? await client.kubeCan(verb: "patch", group: resource.group, resource: resource.scaleResource,
+                                                     namespace: namespace, name: name),
+              !Task.isCancelled else { return }
+        scaleDenial = access.isDenied ? access : nil
     }
 
     /// Once the delete sheet closed after a deletion: tells the list, then goes back to it.

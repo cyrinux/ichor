@@ -83,6 +83,23 @@ extension TalosClient {
         }
     }
 
+    /// How many pods the object wants and runs (a Job: its parallelism).
+    func objectScale(_ resource: KubeAPIResource, namespace: String, name: String) async throws -> KubeObjectScale {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeObjectScale(config, context, kubeServer, resource.group, resource.version, resource.resource,
+                                   namespace, name, $0)
+        }
+    }
+
+    /// `kubectl scale` for any scalable object (a Job: its parallelism): returns a warning when a
+    /// HorizontalPodAutoscaler manages the count ("" when none).
+    func scaleObject(_ resource: KubeAPIResource, namespace: String, name: String, replicas: Int) async throws -> String {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> String in
+            IchorgoKubeScaleObject(config, context, kubeServer, resource.group, resource.version, resource.resource, resource.kind,
+                                   namespace, name, replicas, error)
+        }
+    }
+
     /// The latest revision of each Helm release; `namespace` nil for every namespace.
     func helmReleases(namespace: String?) async throws -> HelmReleaseList {
         let ns = namespace ?? ""

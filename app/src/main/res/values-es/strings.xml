@@ -3205,6 +3205,9 @@
     <string name="kb_discard_confirm">Descartar</string>
     <string name="kb_delete">Eliminar</string>
     <string name="kb_delete_title">¿Eliminar %1$s?</string>
+    <string name="kb_scale_title">Escalar %1$s</string>
+    <string name="kb_scale_running">En ejecución: %1$s</string>
+    <string name="kb_scale_job_hint">Un Job ejecuta tantos pods a la vez; 0 lo pausa.</string>
     <string name="kb_delete_loading">Leyendo lo que afectaría la eliminación…</string>
     <string name="kb_delete_protected">Protegido: %1$s</string>
     <string name="kb_delete_pending">Su eliminación ya está pendiente: la retienen los finalizadores de abajo.</string>

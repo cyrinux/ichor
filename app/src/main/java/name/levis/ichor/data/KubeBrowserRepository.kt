@@ -16,6 +16,7 @@ import name.levis.ichor.model.KUBE_PAGE_SIZE
 import name.levis.ichor.model.KubeDeletePreview
 import name.levis.ichor.model.KubeEditPreview
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.KubeObjectScale
 import name.levis.ichor.model.KubeObjectSummary
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.ResourcePageJson
@@ -73,6 +74,17 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     /** Saves [edited] as [ref]; refused when the object changed since it was read. */
     suspend fun update(ref: KubeObjectRef, edited: String) = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeObjectUpdate(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, edited)
+    }
+
+    /** How many pods [ref] wants and runs (a Job: its parallelism). */
+    suspend fun objectScale(ref: KubeObjectRef): KubeObjectScale = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeObjectScale(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name)
+        TalosJson.decodeFromString(KubeObjectScale.serializer(), json)
+    }
+
+    /** Sets [ref]'s replicas (a Job's parallelism); returns the autoscaler warning, "" when none. */
+    suspend fun scale(ref: KubeObjectRef, replicas: Int): String = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeScaleObject(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.kind, ref.namespace, ref.name, replicas.toLong())
     }
 
     /** What deleting [ref] would do: protection, finalizers, the objects it owns. Read-only. */

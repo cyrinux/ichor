@@ -3405,6 +3405,9 @@
     <string name="kb_discard_confirm">Скасувати</string>
     <string name="kb_delete">Видалити</string>
     <string name="kb_delete_title">Видалити %1$s?</string>
+    <string name="kb_scale_title">Масштабувати %1$s</string>
+    <string name="kb_scale_running">Працює зараз: %1$s</string>
+    <string name="kb_scale_job_hint">Job запускає стільки подів одночасно; 0 призупиняє його.</string>
     <string name="kb_delete_loading">Читаємо, чого торкнеться видалення…</string>
     <string name="kb_delete_protected">Захищено: %1$s</string>
     <string name="kb_delete_pending">Його видалення вже очікує: його тримають фіналізатори нижче.</string>

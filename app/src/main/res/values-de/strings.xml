@@ -3197,6 +3197,9 @@
     <string name="kb_discard_confirm">Verwerfen</string>
     <string name="kb_delete">Löschen</string>
     <string name="kb_delete_title">%1$s löschen?</string>
+    <string name="kb_scale_title">%1$s skalieren</string>
+    <string name="kb_scale_running">Laufen jetzt: %1$s</string>
+    <string name="kb_scale_job_hint">Ein Job führt so viele Pods gleichzeitig aus; 0 pausiert ihn.</string>
     <string name="kb_delete_loading">Lese, was das Löschen betreffen würde …</string>
     <string name="kb_delete_protected">Geschützt: %1$s</string>
     <string name="kb_delete_pending">Das Löschen steht schon an: Die Finalizer unten halten es auf.</string>
