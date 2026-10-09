@@ -100,7 +100,7 @@ fun WorkloadSheet(
                 ShareLinkButton(ShareTarget.workload(workload.kind, workload.namespace, workload.name))
             }
             val access = rememberKubeActionAccess(workload.namespace)
-            val restartDenial = access?.denial(KubeAction.RESTART_WORKLOAD)
+            val restartDenial = access?.denial(KubeAction.restart(workload.kind))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onRestart, enabled = workload.canRestart && restartDenial == null) {
                     Icon(Icons.Outlined.RestartAlt, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
@@ -118,7 +118,7 @@ fun WorkloadSheet(
             KubeDenialNote(restartDenial)
             if (workload.canScale) {
                 HorizontalDivider()
-                ScaleSection(workload, actions, workload.key in busy, access?.denial(KubeAction.SCALE))
+                ScaleSection(workload, actions, workload.key in busy, access?.denial(KubeAction.scale(workload.kind)))
             }
             if (workload.hasHistory) {
                 HorizontalDivider()

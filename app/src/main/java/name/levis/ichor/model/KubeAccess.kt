@@ -7,7 +7,10 @@ import kotlinx.serialization.Serializable
 /** The app's Kubernetes actions whose permissions the core asks before the tap ([wire]: its name there). */
 enum class KubeAction(val wire: String) {
     RESTART_WORKLOAD("restartWorkload"),
+    RESTART_STATEFUL_SET("restartStatefulSet"),
+    RESTART_DAEMON_SET("restartDaemonSet"),
     SCALE("scale"),
+    SCALE_STATEFUL_SET("scaleStatefulSet"),
     DELETE_POD("deletePod"),
     EXEC_POD("execPod"),
     SUSPEND_CRON_JOB("suspendCronJob"),
@@ -15,8 +18,43 @@ enum class KubeAction(val wire: String) {
     HELM_ROLLBACK("helmRollback"),
     ARGO_SYNC("argoSync"),
     FLUX_RECONCILE("fluxReconcile"),
+    FLUX_RECONCILE_HELM_RELEASE("fluxReconcileHelmRelease"),
+    FLUX_RECONCILE_GIT_REPOSITORY("fluxReconcileGitRepository"),
+    FLUX_RECONCILE_OCI_REPOSITORY("fluxReconcileOCIRepository"),
+    FLUX_RECONCILE_HELM_REPOSITORY("fluxReconcileHelmRepository"),
+    FLUX_RECONCILE_BUCKET("fluxReconcileBucket"),
     CORDON_NODE("cordonNode"),
     DRAIN_NODE("drainNode"),
+    ;
+
+    /** The action asked for an object of a kind, on that kind's own resource; null for a kind the core does not ask about (offered). */
+    companion object {
+        /** A rollout restart (and a Deployment's rollback) of a [kind] workload. */
+        fun restart(kind: String): KubeAction? = when (kind) {
+            "Deployment" -> RESTART_WORKLOAD
+            "StatefulSet" -> RESTART_STATEFUL_SET
+            "DaemonSet" -> RESTART_DAEMON_SET
+            else -> null
+        }
+
+        /** Setting the replicas of a [kind] workload. */
+        fun scale(kind: String): KubeAction? = when (kind) {
+            "Deployment" -> SCALE
+            "StatefulSet" -> SCALE_STATEFUL_SET
+            else -> null
+        }
+
+        /** Reconciling, suspending or resuming a Flux object of [kind]. */
+        fun fluxReconcile(kind: String): KubeAction? = when (kind) {
+            "Kustomization" -> FLUX_RECONCILE
+            "HelmRelease" -> FLUX_RECONCILE_HELM_RELEASE
+            "GitRepository" -> FLUX_RECONCILE_GIT_REPOSITORY
+            "OCIRepository" -> FLUX_RECONCILE_OCI_REPOSITORY
+            "HelmRepository" -> FLUX_RECONCILE_HELM_REPOSITORY
+            "Bucket" -> FLUX_RECONCILE_BUCKET
+            else -> null
+        }
+    }
 }
 
 /**
@@ -46,8 +84,8 @@ data class KubeActionAccess(
     val namespace: String = "",
     val actions: Map<String, KubePermission> = emptyMap(),
 ) {
-    /** What refuses [action], or null when it is allowed, unknown or not asked. */
-    fun denial(action: KubeAction): KubePermission? = actions[action.wire]?.takeIf { it.denied }
+    /** What refuses [action], or null when it is allowed, unknown, not asked or null (none). */
+    fun denial(action: KubeAction?): KubePermission? = action?.let { actions[it.wire] }?.takeIf { it.denied }
 
     /** Whether some action is refused here. */
     val anyDenied: Boolean get() = actions.values.any { it.denied }
@@ -63,6 +101,14 @@ fun effectiveAccess(wide: KubeActionAccess, local: KubeActionAccess?): KubeActio
     !wide.anyDenied -> wide
     else -> local ?: KubeActionAccess(namespace = wide.namespace)
 }
+
+/**
+ * What refuses an action over several objects ([checks]: each one's action and namespace), given
+ * each namespace's access ([accessOf], null while unknown): the first refused, null when none is
+ * for sure. A bulk action runs only where each of its objects may.
+ */
+fun firstDenial(checks: List<Pair<KubeAction?, String>>, accessOf: (String) -> KubeActionAccess?): KubePermission? =
+    checks.distinct().firstNotNullOfOrNull { (action, namespace) -> accessOf(namespace)?.denial(action) }
 
 /** Who the API server takes the credentials for; [unknown] when it cannot say (before Kubernetes 1.28). */
 @Serializable

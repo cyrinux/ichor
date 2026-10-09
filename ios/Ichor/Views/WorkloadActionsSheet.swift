@@ -126,13 +126,13 @@ struct WorkloadActionsSheet: View {
                     if argoOwner != nil { askArgo = true } else { confirmScaleNow() }
                 }
                 .disabled(replicas == current || scaling)
-                .kubeGated(.scale)
+                .kubeGated(KubeAction.scale(kind: workload.kind))
                 if scaling {
                     Spacer()
                     ProgressView()
                 }
             }
-            KubeDeniedNote(.scale)
+            KubeDeniedNote(KubeAction.scale(kind: workload.kind))
         } header: {
             Text("Scale")
         } footer: {

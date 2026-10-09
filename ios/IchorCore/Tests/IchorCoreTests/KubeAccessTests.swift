@@ -54,8 +54,41 @@ final class KubeAccessTests: XCTestCase {
 
     func testFluxAccessAction() {
         XCTAssertEqual(FluxRef(kind: "Kustomization", namespace: "flux-system", name: "apps").accessAction, .fluxReconcile)
-        XCTAssertNil(FluxRef(kind: "HelmRelease", namespace: "flux-system", name: "web").accessAction)
-        XCTAssertNil(FluxRef(kind: "GitRepository", namespace: "flux-system", name: "repo").accessAction)
+        XCTAssertEqual(FluxRef(kind: "HelmRelease", namespace: "flux-system", name: "web").accessAction, .fluxReconcileHelmRelease)
+        XCTAssertEqual(FluxRef(kind: "GitRepository", namespace: "flux-system", name: "repo").accessAction, .fluxReconcileGitRepository)
+        XCTAssertEqual(KubeAction.fluxReconcile(kind: "OCIRepository"), .fluxReconcileOCIRepository)
+        XCTAssertEqual(KubeAction.fluxReconcile(kind: "HelmRepository"), .fluxReconcileHelmRepository)
+        XCTAssertEqual(KubeAction.fluxReconcile(kind: "Bucket"), .fluxReconcileBucket)
+        XCTAssertNil(FluxRef(kind: "ImagePolicy", namespace: "flux-system", name: "web").accessAction)
+    }
+
+    func testWorkloadActionsFollowTheKind() {
+        XCTAssertEqual(KubeAction.restart(kind: "Deployment"), .restartWorkload)
+        XCTAssertEqual(KubeAction.restart(kind: "StatefulSet"), .restartStatefulSet)
+        XCTAssertEqual(KubeAction.restart(kind: "DaemonSet"), .restartDaemonSet)
+        XCTAssertNil(KubeAction.restart(kind: "Rollout"))
+        XCTAssertEqual(KubeAction.scale(kind: "Deployment"), .scale)
+        XCTAssertEqual(KubeAction.scale(kind: "StatefulSet"), .scaleStatefulSet)
+        XCTAssertNil(KubeAction.scale(kind: "DaemonSet"), "one pod per node: never scaled")
+        XCTAssertEqual(kubeDistinctActions([.restartWorkload, nil, .restartDaemonSet, .restartWorkload]), [.restartWorkload, .restartDaemonSet])
+    }
+
+    func testBulkDenialAcrossNamespaces() {
+        let refused = { (namespace: String) in
+            KubeActionAccess(namespace: namespace, actions: [
+                "argoSync": KubeAccess(allowed: false, verb: "patch", group: "argoproj.io", resource: "applications", namespace: namespace),
+            ])
+        }
+        let access: [String: KubeActionAccess] = [
+            "argocd": KubeActionAccess(namespace: "argocd", actions: ["argoSync": KubeAccess(allowed: true)]),
+            "team-a": refused("team-a"),
+            "team-b": refused("team-b"),
+        ]
+        XCTAssertNil(kubeBulkDenial(for: .argoSync, across: ["argocd", "argocd"], in: access))
+        XCTAssertEqual(kubeBulkDenial(for: .argoSync, across: ["argocd", "team-a", "team-b"], in: access)?.namespace, "team-a",
+                       "the first refused namespace gives the reason")
+        XCTAssertNil(kubeBulkDenial(for: .argoSync, across: ["argocd", "elsewhere"], in: access), "not loaded never blocks")
+        XCTAssertNil(kubeBulkDenial(for: nil, across: ["team-a"], in: access))
     }
 
     func testSharedNamespace() {
@@ -73,8 +106,10 @@ final class KubeAccessTests: XCTestCase {
 
     func testEveryActionHasItsCoreName() {
         XCTAssertEqual(KubeAction.allCases.map(\.rawValue), [
-            "restartWorkload", "scale", "deletePod", "execPod", "suspendCronJob", "triggerCronJob",
-            "helmRollback", "argoSync", "fluxReconcile", "cordonNode", "drainNode",
+            "restartWorkload", "restartStatefulSet", "restartDaemonSet", "scale", "scaleStatefulSet",
+            "deletePod", "execPod", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
+            "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
+            "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode",
         ])
         XCTAssertFalse(KubeAction.cordonNode.isNamespaced)
         XCTAssertFalse(KubeAction.drainNode.isNamespaced)

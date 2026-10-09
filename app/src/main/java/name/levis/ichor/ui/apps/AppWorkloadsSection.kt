@@ -65,7 +65,7 @@ fun LazyListScope.appWorkloadsSection(restart: AppRestartUi) {
 private fun WorkloadRestartRow(workload: KubeWorkload, restarting: Boolean, onPods: (() -> Unit)?, onRestart: () -> Unit) {
     val open = onPods?.let { Modifier.clickable(onClickLabel = stringResource(R.string.pods_title), onClick = it) } ?: Modifier
     Row(Modifier.fillMaxWidth().then(open).padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-        val denial = rememberKubeDenial(KubeAction.RESTART_WORKLOAD, workload.namespace)
+        val denial = rememberKubeDenial(KubeAction.restart(workload.kind), workload.namespace)
         Column(Modifier.weight(1f)) {
             Text(
                 workload.name,
