@@ -47,17 +47,20 @@ public struct KubeTopNode: Decodable, Hashable, Sendable {
 public struct KubeTopPods: Decodable, Sendable {
     public let available: Bool
     public let forbidden: Bool
+    /// The requests and limits were read: one namespace or one pod. False for every namespace (usage only).
+    public let boundsRead: Bool
     public let pods: [KubeTopPod]
 
     /// By `KubeTopPod.id` ("namespace/name"), the id pod rows use.
     public var byKey: [String: KubeTopPod] { Dictionary(pods.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a }) }
 
-    private enum CodingKeys: String, CodingKey { case available, forbidden, pods }
+    private enum CodingKeys: String, CodingKey { case available, forbidden, boundsRead, pods }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         available = try c.field(.available, false)
         forbidden = try c.field(.forbidden, false)
+        boundsRead = try c.field(.boundsRead, false)
         pods = try c.field(.pods, [])
     }
 }

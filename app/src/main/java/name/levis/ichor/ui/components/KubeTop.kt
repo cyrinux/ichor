@@ -58,6 +58,17 @@ fun rememberKubeTopPods(namespace: String?, key: Any?): KubeTopPods? {
     return top
 }
 
+/** One pod's usage and bounds, read again when [key] changes; null as in [rememberKubeTopNodes]. */
+@Composable
+fun rememberKubeTopPod(namespace: String, name: String, key: Any? = null): KubeTopPod? {
+    if (LocalInspectionMode.current) return null
+    val app = LocalContext.current.applicationContext as? TalosApp ?: return null
+    val top by produceState<KubeTopPod?>(null, namespace, name, key) {
+        value = quietly { app.kubeRepository.topPod(namespace, name) }?.takeIf { it.available }?.pods?.firstOrNull()
+    }
+    return top
+}
+
 private suspend fun <T> quietly(block: suspend () -> T): T? = try {
     block()
 } catch (e: CancellationException) {

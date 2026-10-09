@@ -61,8 +61,8 @@ struct PodLogsSheet: View {
             }
             .themedBackground()
             .task(id: pod.id) {
-                let top = try? await model.client?.topPods(namespace: pod.namespace)
-                usage = top?.available == true ? top?.byKey[pod.id] : nil
+                let top = try? await model.client?.topPod(namespace: pod.namespace, name: pod.name)
+                usage = top?.available == true ? top?.pods.first : nil
             }
             .navigationTitle(Text(verbatim: pod.name))
             .navigationBarTitleDisplayMode(.inline)

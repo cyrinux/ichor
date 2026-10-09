@@ -19,9 +19,12 @@ import name.levis.ichor.data.watchForever
 import name.levis.ichor.model.DeletePropagation
 import name.levis.ichor.model.KubeDeletePreview
 import name.levis.ichor.model.KubeEditPreview
+import name.levis.ichor.model.KubeExplain
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubeObjectScale
 import name.levis.ichor.model.KubeObjectSummary
+import name.levis.ichor.model.YamlCursor
+import name.levis.ichor.model.yamlCursorAt
 import name.levis.ichor.model.clampReplicas
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
@@ -40,6 +43,23 @@ data class ObjectEdit(
     val saveError: UiText? = null,
 ) {
     val changed: Boolean get() = draft != original
+}
+
+/** What the schema help sheet does: describe the field at the cursor, or list the fields to add there. */
+enum class SchemaHelpMode { EXPLAIN, ADD }
+
+/**
+ * The schema help sheet: [mode] for the [cursor] read at [offset] of the draft, and the
+ * schema of the path it asks about once read.
+ */
+data class SchemaHelp(
+    val mode: SchemaHelpMode,
+    val cursor: YamlCursor,
+    val offset: Int,
+    val state: UiState<KubeExplain> = UiState.Loading,
+) {
+    /** The path asked about: the field at the cursor, or the map a field is added to. */
+    val path: String get() = if (mode == SchemaHelpMode.EXPLAIN) cursor.fieldPath else cursor.addPath
 }
 
 /**
@@ -96,11 +116,16 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
     /** Once the object is deleted: the screen leaves. */
     val deleted: Flow<Unit> = _deleted.receiveAsFlow()
 
+    private val _help = MutableStateFlow<SchemaHelp?>(null)
+    /** The schema help sheet, null when closed. */
+    val help: StateFlow<SchemaHelp?> = _help.asStateFlow()
+
+    private var load: Job? = null
+    private var helpLoad: Job? = null
     private val _scale = MutableStateFlow<ObjectScale?>(null)
     /** The scale being chosen, null when none is. */
     val scale: StateFlow<ObjectScale?> = _scale.asStateFlow()
 
-    private var load: Job? = null
     private var scaleLoad: Job? = null
     private var deletePreview: Job? = null
     private var summaryLoad: Job? = null
@@ -173,6 +198,7 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
     /** Leaves the editor, dropping the draft. */
     fun cancelEdit() {
         review?.cancel()
+        closeHelp()
         _edit.value = null
     }
 
@@ -186,6 +212,33 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
                 .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
             _edit.update { it?.copy(review = result) }
         }
+    }
+
+    /** Opens the schema help for the cursor at [offset] of [text] (the editor's own, ahead of the draft). */
+    fun openHelp(text: String, offset: Int, mode: SchemaHelpMode) {
+        val help = SchemaHelp(mode, yamlCursorAt(text, offset), offset)
+        _help.value = help
+        loadHelp(help)
+    }
+
+    fun retryHelp() {
+        val help = _help.value ?: return
+        _help.value = help.copy(state = UiState.Loading)
+        loadHelp(help)
+    }
+
+    private fun loadHelp(help: SchemaHelp) {
+        helpLoad?.cancel()
+        helpLoad = viewModelScope.launch {
+            val result = cancellableCatching { browser.explain(ref, help.path) }
+                .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+            _help.update { if (it?.path == help.path && it.mode == help.mode) it.copy(state = result) else it }
+        }
+    }
+
+    fun closeHelp() {
+        helpLoad?.cancel()
+        _help.value = null
     }
 
     /** Back from the diff to the draft. */
