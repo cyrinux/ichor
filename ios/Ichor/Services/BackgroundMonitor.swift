@@ -157,7 +157,8 @@ enum BackgroundMonitor {
         guard alertsEnabled else { return }
         let hide = UserDefaults.standard.bool(forKey: "appLockEnabled")
         for alert in result.alerts {
-            await post(alert, localized: localized(alert, snapshot: result.next, now: now), hideDetails: hide)
+            let link = alertLink(alert, snapshot: result.next, cluster: context?.clusterID ?? "")
+            await post(alert, localized: localized(alert, snapshot: result.next, now: now), link: link, hideDetails: hide)
         }
     }
 
@@ -257,23 +258,53 @@ enum BackgroundMonitor {
         (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])) ?? false
     }
 
+    /// The share link a tapped alert opens, on the cluster checked (its `clusterID`); nil without
+    /// one, or for an alert about no screen (the Talos certificate alert opens the renewal).
+    private static func alertLink(_ alert: Alert, snapshot: ClusterSnapshot, cluster: String) -> URL? {
+        guard !cluster.isEmpty, var target = ShareTarget.forAlert(key: alert.key, snapshot: snapshot) else { return nil }
+        target.cluster = cluster
+        return TalosClient.shareLink(for: target)
+    }
+
+    /// The alert kinds, one notification category each ("alert.node"…), so iOS can group and
+    /// summarize them per kind.
+    static let alertKinds = ["node", "etcd", "cert", "data", "gitops", "checkup"]
+
+    /// The category of an alert: its kind's, "….private" with details hidden; "private" for a kind
+    /// this version does not know.
+    static func category(alertKey: String, hideDetails: Bool) -> String {
+        let kind = String(alertKey.split(separator: ":", maxSplits: 1).first ?? "")
+        guard alertKinds.contains(kind) else { return hideDetails ? "private" : "" }
+        return hideDetails ? "alert.\(kind).private" : "alert.\(kind)"
+    }
+
     /// With the app lock on, details are hidden on the lock screen (iOS shows "Notification").
-    private static func post(_ alert: Alert, localized: (title: String, text: String), hideDetails: Bool) async {
+    /// `link` (userInfo "link") is the share link the tap opens.
+    private static func post(_ alert: Alert, localized: (title: String, text: String), link: URL?, hideDetails: Bool) async {
         let content = UNMutableNotificationContent()
         content.title = localized.title
         content.body = localized.text
         content.sound = alert.problem ? .default : nil
-        if hideDetails { content.categoryIdentifier = "private" }
+        content.categoryIdentifier = category(alertKey: alert.key, hideDetails: hideDetails)
+        if let link { content.userInfo = ["link": link.absoluteString] }
         let request = UNNotificationRequest(identifier: alert.key, content: content, trigger: nil)
         try? await UNUserNotificationCenter.current().add(request)
     }
 
-    /// Registers the "private" category: its previews stay hidden until the device is unlocked.
-    /// The title is hidden with the body (no `.hiddenPreviewsShowTitle`): it names the node.
+    /// Registers a category per alert kind, plain and ".private": the private ones keep their
+    /// previews hidden until the device is unlocked. The title is hidden with the body (no
+    /// `.hiddenPreviewsShowTitle`): it names the node. "private" stays for the notifications
+    /// an older version delivered.
     static func registerCategories() {
-        let category = UNNotificationCategory(identifier: "private", actions: [], intentIdentifiers: [],
-                                              hiddenPreviewsBodyPlaceholder: String(localized: "Talos cluster alert"),
-                                              options: [])
-        UNUserNotificationCenter.current().setNotificationCategories([category, FreezeReminders.notificationCategory])
+        let placeholder = String(localized: "Talos cluster alert")
+        func make(_ id: String, hidden: Bool) -> UNNotificationCategory {
+            hidden
+                ? UNNotificationCategory(identifier: id, actions: [], intentIdentifiers: [],
+                                         hiddenPreviewsBodyPlaceholder: placeholder, options: [])
+                : UNNotificationCategory(identifier: id, actions: [], intentIdentifiers: [], options: [])
+        }
+        let alerts = alertKinds.flatMap { [make("alert.\($0)", hidden: false), make("alert.\($0).private", hidden: true)] }
+        let categories = Set(alerts + [make("private", hidden: true), FreezeReminders.notificationCategory])
+        UNUserNotificationCenter.current().setNotificationCategories(categories)
     }
 }

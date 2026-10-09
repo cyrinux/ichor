@@ -7,6 +7,8 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
     public enum Target: String, Codable, Sendable {
         case cluster, etcd, health, argoCD = "argocd", flux, node, workloads
         case argoApp = "argo-app", fluxApp = "flux-app", workload, pod, cronJob = "cronjob"
+        /// The data services screen, on the tab `kind` names (a catalog id); the cluster checkup.
+        case data, checkup
     }
 
     public var cluster: String
@@ -89,6 +91,40 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         ShareTarget(target: .cronJob, namespace: namespace, name: name)
     }
 
+    /// The data services screen on `kind`'s tab; nil: the first one.
+    public static func data(_ kind: DataServiceKind?) -> ShareTarget {
+        ShareTarget(target: .data, kind: kind?.catalogID ?? "")
+    }
+
+    /// The data services tab a `data` link opens; nil for the first one (a system this app does not know).
+    public var dataServiceKind: DataServiceKind? {
+        target == .data ? DataServiceKind(rawValue: kind) : nil
+    }
+
+    /// The screen a background alert is about (see evaluate for its keys), a node's hostname read
+    /// from `snapshot`; nil when there is none: the Talos certificate alert opens the renewal.
+    public static func forAlert(key: String, snapshot: ClusterSnapshot) -> ShareTarget? {
+        let parts = key.split(separator: ":", maxSplits: 1).map(String.init)
+        let subject = parts.count > 1 ? parts[1] : ""
+        switch parts.first ?? "" {
+        case "node":
+            guard !subject.isEmpty else { return nil }
+            return .node(address: subject, hostname: snapshot.nodes[subject]?.hostname ?? "", tab: "")
+        case "etcd": return .screen(.etcd)
+        case "cert": return snapshot.kube ? .screen(.cluster) : nil
+        case "data": return .data(DataServiceKind(alertKey: subject))
+        case "gitops":
+            let app = GitOpsSubject(key: subject)
+            switch app.tool {
+            case "argocd": return .argoApp(namespace: app.namespace, name: app.name)
+            case "flux": return .fluxApp(kind: app.kind, namespace: app.namespace, name: app.name)
+            default: return nil
+            }
+        case "checkup": return .screen(.checkup)
+        default: return nil
+        }
+    }
+
     /// What the Kubernetes screen opens for the link; nil for a target not on that screen.
     public var kubeFocus: KubeFocus? {
         switch target {
@@ -97,6 +133,20 @@ public struct ShareTarget: Codable, Equatable, Hashable, Sendable {
         case .pod: KubeFocus(tab: .pods, id: "\(namespace)/\(name)", namespace: namespace, name: name)
         case .cronJob: KubeFocus(tab: .cronJobs, id: "\(namespace)/\(name)", namespace: namespace, name: name)
         default: nil
+        }
+    }
+}
+
+extension DataServiceKind {
+    /// The system of a data alert key ("system|label", see dataIssuesOf); nil for one it does not name.
+    public init?(alertKey: String) {
+        let system = alertKey.split(separator: "|", maxSplits: 1).first.map(String.init) ?? ""
+        switch system {
+        case "cnpg": self = .cnpg
+        case "percona": self = .percona
+        case "certmanager": self = .certManager
+        case "ceph": self = .ceph
+        default: self.init(rawValue: system)
         }
     }
 }

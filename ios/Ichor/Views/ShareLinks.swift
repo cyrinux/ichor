@@ -48,6 +48,8 @@ extension ShareTarget {
         case .argoApp: .argoApp(namespace: namespace, name: name)
         case .fluxApp: .fluxApp(kind: kind, namespace: namespace, name: name)
         case .workloads, .workload, .pod, .cronJob: kubeFocus.map { Route.kubernetes($0) }
+        case .data: .dataServices(hints: "", downNodes: [], kind: dataServiceKind)
+        case .checkup: .checkup
         }
     }
 }

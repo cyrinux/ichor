@@ -185,18 +185,18 @@ private fun notificationId(data: Data): String =
 private fun clock(millis: Long): String = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(millis))
 
 /**
- * A freeze notice on the alerts channel; a tap opens the sync windows (of the active cluster:
+ * A freeze notice on the GitOps alerts channel; a tap opens the sync windows (of the active cluster:
  * switching clusters from a notification would race the deep link).
  */
 private fun postFreezeNotice(context: Context, key: String, title: String, text: String, extra: NotificationCompat.Builder.() -> Unit = {}) {
     if (!canPostNotifications(context)) return
-    ensureAlertChannel(context)
+    ensureAlertChannels(context)
     val app = context.applicationContext as TalosApp
     val intent = Intent(context, MainActivity::class.java)
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         .putExtra(MainActivity.EXTRA_OPEN, DeepLink.ARGO_WINDOWS.name)
     val open = PendingIntent.getActivity(context, key.hashCode(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-    val builder = alertNotification(context, title, text, open, hideOnLockScreen = app.appLock.enabled.value).apply(extra)
+    val builder = alertNotification(context, AlertChannel.GITOPS, title, text, open, hideOnLockScreen = app.appLock.enabled.value).apply(extra)
     try {
         NotificationManagerCompat.from(context).notify(key.hashCode(), builder.build())
     } catch (_: SecurityException) {

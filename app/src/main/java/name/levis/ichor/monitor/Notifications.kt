@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -18,44 +19,63 @@ import name.levis.ichor.model.dataServiceKindOf
 import name.levis.ichor.model.title
 import name.levis.ichor.ui.DeepLink
 import name.levis.ichor.ui.checkup.sectionLook
+import name.levis.ichor.ui.share.shareLinkFor
 
-private const val CHANNEL_ID = "cluster-alerts"
+/** The single channel every alert used before [AlertChannel]: its settings carry over once. */
+private const val LEGACY_CHANNEL_ID = "cluster-alerts"
 
-/** (Re)creating the channel also updates its name and description to the current language. */
-fun ensureAlertChannel(context: Context) {
+/**
+ * (Re)creating the channels also updates their names and descriptions to the current language;
+ * the system keeps the importance the user chose. The first time, a legacy channel the user
+ * turned down or off passes that on to every new one, then goes.
+ */
+fun ensureAlertChannels(context: Context) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
     val res = AppLocale.wrap(context)
-    val name = res.getString(R.string.monitor_channel_name)
-    val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT).apply {
-        description = res.getString(R.string.monitor_channel_desc)
+    val manager = context.getSystemService(NotificationManager::class.java)
+    val legacy = manager.getNotificationChannel(LEGACY_CHANNEL_ID)?.importance
+    val channels = AlertChannel.entries.map { kind ->
+        val importance = legacy?.let { minOf(it, kind.importance) } ?: kind.importance
+        NotificationChannel(kind.id, res.getString(kind.title), importance).apply {
+            description = res.getString(kind.description)
+        }
     }
-    context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    manager.createNotificationChannels(channels)
+    if (legacy != null) manager.deleteNotificationChannel(LEGACY_CHANNEL_ID)
 }
 
 fun canPostNotifications(context: Context): Boolean =
     Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 
-/** With [hideOnLockScreen] (app lock on), the lock screen only shows a generic text. */
-fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean) {
+/**
+ * With [hideOnLockScreen] (app lock on), the lock screen only shows a generic text. [clusterId]:
+ * the cluster the alert is about (see [name.levis.ichor.model.ContextSummary.clusterId]), whose
+ * screen of the alert's subject a tap opens like a share link; null opens the app only.
+ */
+fun postAlert(context: Context, alert: Alert, hideOnLockScreen: Boolean, clusterId: String?) {
     if (!canPostNotifications(context)) return
-    ensureAlertChannel(context)
+    ensureAlertChannels(context)
     val res = AppLocale.wrap(context)
     val title = alertTitle(res, alert)
     val text = alertText(res, alert)
 
     val intent = Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-    // A certificate alert opens the renewal screen (which explains when the role cannot renew), a
-    // GitOps one the Argo CD or Flux screen (of the active cluster, like the freeze notices).
-    val destination = alertDestination(alert)
-    destination?.let { intent.putExtra(MainActivity.EXTRA_OPEN, it.name) }
+    val link = clusterId?.let { id -> alert.shareTarget()?.let { shareLinkFor(it, id) } }
+    if (link != null) {
+        // Opened like a share link: on that cluster, once unlocked.
+        intent.setAction(Intent.ACTION_VIEW).setData(Uri.parse(link))
+    } else {
+        // The certificate alert opens the renewal screen (which explains when the role cannot renew).
+        alertDestination(alert)?.let { intent.putExtra(MainActivity.EXTRA_OPEN, it.name) }
+    }
     val open = PendingIntent.getActivity(
         context,
-        destination?.let { it.ordinal + 1 } ?: 0, // distinct request codes: the extras differ
+        alert.key.hashCode(), // distinct request codes: the links and extras differ
         intent,
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
-    val builder = alertNotification(context, title, text, open, hideOnLockScreen)
+    val builder = alertNotification(context, alert.channel, title, text, open, hideOnLockScreen)
 
     try {
         NotificationManagerCompat.from(context).notify(alert.key.hashCode(), builder.build())
@@ -73,12 +93,19 @@ private fun alertDestination(alert: Alert): DeepLink? = when (alert.kind) {
 }
 
 /**
- * A notification on the alerts channel opening [open]; with [hideOnLockScreen] (app lock on),
+ * A notification on the alerts [channel] opening [open]; with [hideOnLockScreen] (app lock on),
  * the lock screen only shows a generic text.
  */
-fun alertNotification(context: Context, title: String, text: String, open: PendingIntent, hideOnLockScreen: Boolean): NotificationCompat.Builder {
+fun alertNotification(
+    context: Context,
+    channel: AlertChannel,
+    title: String,
+    text: String,
+    open: PendingIntent,
+    hideOnLockScreen: Boolean,
+): NotificationCompat.Builder {
     val res = AppLocale.wrap(context)
-    val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+    val builder = NotificationCompat.Builder(context, channel.id)
         .setSmallIcon(R.drawable.ic_stat_ichor)
         .setContentTitle(title)
         .setContentText(text)
@@ -89,7 +116,7 @@ fun alertNotification(context: Context, title: String, text: String, open: Pendi
 
     if (hideOnLockScreen) {
         builder.setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setPublicVersion(
-            NotificationCompat.Builder(context, CHANNEL_ID)
+            NotificationCompat.Builder(context, channel.id)
                 .setSmallIcon(R.drawable.ic_stat_ichor)
                 .setContentTitle(res.getString(R.string.monitor_public_title))
                 .build(),

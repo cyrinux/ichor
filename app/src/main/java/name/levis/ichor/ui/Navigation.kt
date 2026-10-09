@@ -18,6 +18,7 @@ import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.activeIsKube
+import name.levis.ichor.model.DataServiceKind
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.model.allows
@@ -270,5 +271,7 @@ private suspend fun ShareTarget.route(app: TalosApp): String? = when (target) {
         ?.let { n -> Routes.node(n.node, n.hostname, n.role, nodeTab) }
     ShareTarget.ARGO_APP -> Routes.argoApp(namespace, name)
     ShareTarget.FLUX_APP -> Routes.fluxApp(kind, namespace, name)
+    ShareTarget.DATA -> Routes.dataServices(DataServiceKind.entries.firstOrNull { it.catalogId == kind })
+    ShareTarget.CHECKUP -> Routes.CHECKUP
     else -> kubeFocus?.let { Routes.workloads(it) }
 }

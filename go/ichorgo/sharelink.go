@@ -55,6 +55,9 @@ var shareTargets = map[string]shareFields{
 	"workload":  {kind: true, namespaced: true},
 	"pod":       {namespaced: true},
 	"cronjob":   {namespaced: true},
+	// The data services screen, on one system's tab when Kind names it (its catalog id).
+	"data":    {kind: true},
+	"checkup": {},
 }
 
 var (
@@ -212,7 +215,7 @@ func (t shareTarget) validated() (shareTarget, error) {
 		out.Tab = t.Tab
 	}
 
-	if fields.kind {
+	if fields.kind && (t.Kind != "" || t.Target != "data") {
 		if !validShareKind(t.Target, t.Kind) {
 			return shareTarget{}, errShareLink
 		}
@@ -233,8 +236,12 @@ func (t shareTarget) validated() (shareTarget, error) {
 }
 
 func validShareKind(target, kind string) bool {
-	if target == "workload" {
+	switch target {
+	case "workload":
 		return slices.Contains(shareWorkloadKinds, kind)
+	case "data":
+		// A catalog id: an app that does not know it opens the first tab.
+		return len(kind) <= 63 && dns1123Label.MatchString(kind)
 	}
 
 	_, ok := fluxKinds[kind]
