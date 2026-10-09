@@ -320,6 +320,9 @@ struct KubeHomeView: View {
             NavigationLink { KubeServicesView() } label: {
                 Label("Services", systemImage: "network")
             }
+            NavigationLink { KubeJobsView() } label: {
+                Label("Jobs", systemImage: "checklist")
+            }
             NavigationLink(value: Route.metrics) {
                 Label("Metrics", systemImage: "chart.xyaxis.line")
             }

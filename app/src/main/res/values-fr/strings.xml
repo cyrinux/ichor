@@ -3450,6 +3450,12 @@
     <string name="kube_services_hint_none">Un répartiteur de charge n’a pas d’adresse et aucun contrôleur n’a été trouvé pour lui en donner une : installez MetalLB, activez le LB IPAM de Cilium ou utilisez le répartiteur d’un cloud.</string>
     <string name="kube_services_ready">Endpoints prêts : %1$s</string>
     <string name="kube_services_headless">headless</string>
+    <string name="kube_jobs_title">Jobs</string>
+    <string name="kube_jobs_search">Rechercher des jobs, CronJobs ou raisons</string>
+    <string name="kube_jobs_empty">Aucun job.</string>
+    <string name="kube_jobs_no_match">Aucun job ne correspond.</string>
+    <string name="kube_jobs_completions">Complétions : %1$s</string>
+    <string name="kube_jobs_owner">CronJob %1$s</string>
     <string name="imagescan_system_title">Images système</string>
     <string name="imagescan_system_loading">Lecture des images système du nœud…</string>
     <string name="imagescan_system_unavailable">Les images système nécessitent le rôle os:admin : %1$s</string>

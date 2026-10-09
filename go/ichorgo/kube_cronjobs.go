@@ -150,9 +150,11 @@ type jobObject struct {
 	Status   struct {
 		StartTime      *time.Time `json:"startTime"`
 		CompletionTime *time.Time `json:"completionTime"`
+		Succeeded      int32      `json:"succeeded"` // pods, read by the Jobs screen
 		Conditions     []struct {
 			Type               string    `json:"type"`
 			Status             string    `json:"status"`
+			Reason             string    `json:"reason"`
 			LastTransitionTime time.Time `json:"lastTransitionTime"`
 		} `json:"conditions"`
 	} `json:"status"`
