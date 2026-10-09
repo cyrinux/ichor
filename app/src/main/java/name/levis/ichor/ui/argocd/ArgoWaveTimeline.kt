@@ -46,6 +46,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.ArgoHealth
 import name.levis.ichor.model.ArgoResource
 import name.levis.ichor.model.ArgoSync
@@ -102,7 +104,9 @@ private fun StepRow(
                 Text(stateLabel(step.state), style = MaterialTheme.typography.labelMedium, color = color)
             }
             step.resources.forEach { r ->
-                ResourceRow(r, selecting, r.key in selected, { onToggle(r) }, onRestart?.takeIf { r.restartable }?.let { { it(r) } })
+                // A restart the credentials cannot run is not offered.
+                val canRestart = r.restartable && rememberKubeDenial(KubeAction.RESTART_WORKLOAD, r.namespace) == null
+                ResourceRow(r, selecting, r.key in selected, { onToggle(r) }, onRestart?.takeIf { canRestart }?.let { { it(r) } })
             }
         }
     }

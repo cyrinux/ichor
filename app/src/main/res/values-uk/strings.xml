@@ -3551,4 +3551,7 @@
     <string name="kb_summary_node">Вузол</string>
     <string name="kb_summary_suspended">Призупинено</string>
     <string name="kb_summary_schedule">Розклад</string>
+    <string name="kube_access_denied">Ваш обліковий запис не може виконати %1$s для %2$s у %3$s</string>
+    <string name="kube_access_denied_cluster">Ваш обліковий запис не може виконати %1$s для %2$s у всьому кластері</string>
+    <string name="kube_whoami_user">Користувач Kubernetes</string>
 </resources>

@@ -3349,4 +3349,7 @@
     <string name="kb_summary_node">Node</string>
     <string name="kb_summary_suspended">Suspended</string>
     <string name="kb_summary_schedule">Schedule</string>
+    <string name="kube_access_denied">Your account cannot %1$s %2$s in %3$s</string>
+    <string name="kube_access_denied_cluster">Your account cannot %1$s %2$s across the cluster</string>
+    <string name="kube_whoami_user">Kubernetes user</string>
 </resources>

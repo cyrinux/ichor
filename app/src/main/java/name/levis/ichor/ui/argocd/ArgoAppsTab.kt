@@ -39,6 +39,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoFilter
@@ -78,15 +81,20 @@ fun ArgoAppsTab(
     val counts = remember(apps) { apps.filterCounts() }
     val groups = remember(apps, filter, query, groupBy) { apps.filtered(filter, query).grouped(groupBy) }
     val selecting = selection.isNotEmpty()
+    // Applications usually share Argo CD's namespace: its answer stands for the list.
+    val listDenial = rememberKubeDenial(KubeAction.ARGO_SYNC, apps.firstOrNull()?.namespace.orEmpty())
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
         item(key = "controls") {
             Controls(query, { query = it }, filter, { filter = it }, counts, groupBy, { groupBy = it })
         }
+        if (listDenial != null) item(key = "denied") {
+            KubeDenialNote(listDenial, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+        }
         if (filter == ArgoFilter.OUT_OF_SYNC) {
             val candidates = apps.filtered(filter, query).syncAllCandidates()
             if (candidates.isNotEmpty()) item(key = "syncall") {
-                FilledTonalButton(onClick = { onSyncAll(candidates) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                FilledTonalButton(onClick = { onSyncAll(candidates) }, enabled = listDenial == null, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                     Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
                     Text(stringResource(R.string.argo_sync_all, candidates.size), modifier = Modifier.padding(start = 8.dp))
                 }
@@ -116,7 +124,8 @@ fun ArgoAppsTab(
             }
             items(list, key = { it.key }) { app ->
                 val toggle = { onSelection(if (app.key in selection) selection - app.key else selection + app.key) }
-                val swipeEnabled = !selecting && app.key !in busy && !app.isRunning
+                val denied = rememberKubeDenial(KubeAction.ARGO_SYNC, app.namespace) != null
+                val swipeEnabled = !selecting && app.key !in busy && !app.isRunning && !denied
                 val sync = { onAct(app, ArgoAction.SYNC) }
                 val refresh = { onAct(app, ArgoAction.REFRESH) }
                 SwipeableArgoRow(swipeEnabled = swipeEnabled, onSync = sync, onRefresh = refresh) {

@@ -37,6 +37,13 @@ struct AppArgoSection: View {
             }
             .messageAlert($message)
             .sensoryFeedback(.success, trigger: succeeded)
+            .loadsKubeActionAccess(namespace: appsNamespace)
+    }
+
+    /// The namespace of the Applications shown when they share one.
+    private var appsNamespace: String {
+        guard case .loaded(let status, _, _) = state, app.id != argoCDCatalogID else { return "" }
+        return kubeSharedNamespace(argoApps(for: app, in: status).map(\.namespace))
     }
 
     @ViewBuilder private var content: some View {
@@ -144,6 +151,8 @@ struct AppArgoSection: View {
                 if busy.contains(argo.id) { ProgressView() }
             }
             .controlSize(.small)
+            .kubeGated(.argoSync, in: argo.namespace)
+            KubeDeniedNote(.argoSync, in: argo.namespace)
         }
         .padding(.vertical, 2)
     }

@@ -3351,4 +3351,7 @@
     <string name="kb_summary_node">Nœud</string>
     <string name="kb_summary_suspended">Suspendu</string>
     <string name="kb_summary_schedule">Planification</string>
+    <string name="kube_access_denied">Votre compte ne peut pas faire %1$s sur %2$s dans %3$s</string>
+    <string name="kube_access_denied_cluster">Votre compte ne peut pas faire %1$s sur %2$s dans tout le cluster</string>
+    <string name="kube_whoami_user">Utilisateur Kubernetes</string>
 </resources>

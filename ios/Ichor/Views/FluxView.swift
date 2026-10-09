@@ -93,6 +93,13 @@ struct FluxView: View {
         }
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
+        .loadsKubeActionAccess(namespace: kustomizationsNamespace)
+    }
+
+    /// The namespace of the Kustomizations when they share one (flux-system, usually).
+    private var kustomizationsNamespace: String {
+        guard case .loaded(let status, _, _) = state else { return "" }
+        return kubeSharedNamespace(status.apps.filter(\.isKustomization).map(\.namespace))
     }
 
     private func topBar(_ status: FluxStatus) -> some View {

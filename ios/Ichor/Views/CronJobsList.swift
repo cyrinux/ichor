@@ -26,6 +26,7 @@ struct CronJobsList: View {
             let selected = control.scope.namespace
             let shown = filterCronJobs(load.items, namespace: selected, query: query, sorted: load.done)
             List {
+                KubeDeniedSection(actions: [.triggerCronJob, .suspendCronJob], namespace: selected ?? "")
                 ForEach(shown) { cronJob in
                     Section {
                         CronJobRow(cronJob: cronJob, showNamespace: selected == nil,
@@ -253,6 +254,7 @@ private struct CronJobRow: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
+            .kubeGated(.suspendCronJob, in: cronJob.namespace)
             .accessibilityLabel(cronJob.suspended ? Text("Resume \(cronJob.displayName)") : Text("Suspend \(cronJob.displayName)"))
         }
     }
@@ -268,6 +270,7 @@ private struct CronJobRow: View {
             .buttonStyle(.borderedProminent)
             .buttonBorderShape(.capsule)
             .controlSize(.small)
+            .kubeGated(.triggerCronJob, in: cronJob.namespace)
         } else {
             Label("Schedule only", systemImage: "lock")
                 .font(.caption)

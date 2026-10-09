@@ -80,8 +80,8 @@ struct PodLogsSheet: View {
                         Button { forwarding = true } label: {
                             Label("Port forward", systemImage: "arrow.left.arrow.right.circle")
                         }
-                        Button { shelling = true } label: {
-                            Label("Shell", systemImage: "terminal")
+                        KubeGatedMenuButton(String(localized: "Shell"), systemImage: "terminal", action: .execPod, in: pod.namespace) {
+                            shelling = true
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
@@ -105,6 +105,8 @@ struct PodLogsSheet: View {
                 PodShellView(namespace: pod.namespace, pod: pod.name, container: container)
             }
             .messageAlert($message)
+            // Outermost: the toolbar's menu reads it too.
+            .loadsKubeActionAccess(namespace: pod.namespace)
         }
     }
 

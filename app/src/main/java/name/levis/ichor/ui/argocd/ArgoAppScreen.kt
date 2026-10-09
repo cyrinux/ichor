@@ -40,6 +40,9 @@ import name.levis.ichor.R
 import name.levis.ichor.monitor.freezeReminderHook
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.OVERVIEW
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoFreezeAction
@@ -154,6 +157,9 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
     var restart by remember { mutableStateOf<KubeWorkload?>(null) }
     val chosen = app.resources.filter { it.key in selected }
     val act = { action: ArgoAction, options: ArgoSyncOptions? -> vm.act(listOf(app), action, options) }
+    // Sync, refresh, auto-sync and rollback all patch the Application.
+    val argoDenial = rememberKubeDenial(KubeAction.ARGO_SYNC, app.namespace)
+    val denied = argoDenial != null
 
     if (sheet) {
         ArgoSyncSheet(
@@ -221,16 +227,19 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item(key = "hero") {
-            ArgoAppHero(app, autoSyncBusy = busy) { on -> act(if (on) ArgoAction.AUTO_SYNC_ON else ArgoAction.AUTO_SYNC_OFF, null) }
+            ArgoAppHero(app, autoSyncBusy = busy || denied) { on -> act(if (on) ArgoAction.AUTO_SYNC_ON else ArgoAction.AUTO_SYNC_OFF, null) }
         }
         item(key = "actions") {
-            ArgoActionButtons(
-                busy = busy,
-                running = app.isRunning,
-                onSync = { sheet = true },
-                onRefresh = { act(ArgoAction.REFRESH, null) },
-                onHardRefresh = { act(ArgoAction.HARD_REFRESH, null) },
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                ArgoActionButtons(
+                    busy = busy || denied,
+                    running = app.isRunning,
+                    onSync = { sheet = true },
+                    onRefresh = { act(ArgoAction.REFRESH, null) },
+                    onHardRefresh = { act(ArgoAction.HARD_REFRESH, null) },
+                )
+                KubeDenialNote(argoDenial)
+            }
         }
         if (onDiff != null) {
             item(key = "diff") { ArgoDiffButton(app, onDiff) }
@@ -252,7 +261,7 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
             )
         }
         if (app.conditions.isNotEmpty()) item(key = "conditions") { ConditionBanners(app.conditions) }
-        app.operation?.let { op -> item(key = "operation") { ArgoOperationCard(app, op, busy) { terminate = true } } }
+        app.operation?.let { op -> item(key = "operation") { ArgoOperationCard(app, op, busy || denied) { terminate = true } } }
         item(key = "network") {
             ArgoNetworkSection(app, network.fetchedAt, network.downNodes, network.talosNodes, network.onNode)
         }
@@ -267,7 +276,7 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
                     count = chosen.size,
                     onSelecting = { selecting = it; if (!it) selected = emptySet() },
                     onSyncSelected = { sheet = true },
-                    enabled = !busy && !app.isRunning,
+                    enabled = !busy && !denied && !app.isRunning,
                 )
             }
             item(key = "waves") {
@@ -280,7 +289,7 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
                 )
             }
         }
-        history(app) { rollback = it }
+        history(app, enabled = !denied) { rollback = it }
     }
 }
 
@@ -297,14 +306,14 @@ private data class NetworkContext(
     val onNode: ((NodeOverview, Int) -> Unit)?,
 )
 
-private fun LazyListScope.history(app: ArgoApp, onRollback: (ArgoHistory) -> Unit) {
+private fun LazyListScope.history(app: ArgoApp, enabled: Boolean, onRollback: (ArgoHistory) -> Unit) {
     if (app.history.isEmpty()) return
     item(key = "history-title") { SectionTitle(stringResource(R.string.argo_history)) }
     item(key = "history") {
         Column {
             app.history.forEachIndexed { i, h ->
                 // The newest entry is what runs: rolling back to it would change nothing.
-                HistoryRow(h, current = i == 0, last = i == app.history.lastIndex, onRollback = if (i > 0 && app.canRollback) ({ onRollback(h) }) else null)
+                HistoryRow(h, current = i == 0, last = i == app.history.lastIndex, onRollback = if (i > 0 && app.canRollback && enabled) ({ onRollback(h) }) else null)
             }
             // Why rolling back is not offered; nothing to say while a sync runs.
             val rollbackHint = when {

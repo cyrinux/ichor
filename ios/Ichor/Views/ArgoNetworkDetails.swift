@@ -60,6 +60,8 @@ struct ArgoNetDetails: View {
                 Text("It is removed from \(node.namespace) after its grace period; its controller, if any, starts a new one.")
             }
         }
+        // The pod's own namespace, asked only for a pod box.
+        .loadsKubeActionAccess(namespace: pod?.namespace)
     }
 
     @ViewBuilder private var actions: some View {
@@ -80,6 +82,8 @@ struct ArgoNetDetails: View {
             }
             .buttonStyle(.bordered)
             .disabled(deleting || node.detail.hasPrefix("Terminating"))
+            .kubeGated(.deletePod)
+            KubeDeniedNote(.deletePod)
         }
     }
 

@@ -1,5 +1,7 @@
 package name.levis.ichor.ui.argocd
 
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.foundation.layout.Column
@@ -144,6 +146,7 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
             if (selection.isNotEmpty()) {
                 SelectionBar(
                     count = selectedApps.size,
+                    enabled = rememberKubeDenial(KubeAction.ARGO_SYNC, selectedApps.firstOrNull()?.namespace.orEmpty()) == null,
                     onClear = { selection = emptySet() },
                     onSync = { confirmSync = selectedApps.filterNot { it.isRunning }.takeIf { it.isNotEmpty() } },
                     onRefresh = {
@@ -208,7 +211,7 @@ private fun Subtitle(status: ArgoStatus) {
 }
 
 @Composable
-private fun SelectionBar(count: Int, onClear: () -> Unit, onSync: () -> Unit, onRefresh: () -> Unit) {
+private fun SelectionBar(count: Int, enabled: Boolean, onClear: () -> Unit, onSync: () -> Unit, onRefresh: () -> Unit) {
     BottomAppBar(
         actions = {
             IconButton(onClick = onClear) { Icon(Icons.Outlined.Close, stringResource(R.string.argo_clear_selection)) }
@@ -216,11 +219,11 @@ private fun SelectionBar(count: Int, onClear: () -> Unit, onSync: () -> Unit, on
         },
         floatingActionButton = {
             Row {
-                OutlinedButton(onClick = onRefresh, enabled = count > 0) {
+                OutlinedButton(onClick = onRefresh, enabled = count > 0 && enabled) {
                     Icon(Icons.Outlined.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                     Text(stringResource(R.string.argo_refresh), modifier = Modifier.padding(start = 6.dp))
                 }
-                FilledTonalButton(onClick = onSync, enabled = count > 0, modifier = Modifier.padding(start = 8.dp)) {
+                FilledTonalButton(onClick = onSync, enabled = count > 0 && enabled, modifier = Modifier.padding(start = 8.dp)) {
                     Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
                     Text(stringResource(R.string.argo_sync), modifier = Modifier.padding(start = 6.dp))
                 }

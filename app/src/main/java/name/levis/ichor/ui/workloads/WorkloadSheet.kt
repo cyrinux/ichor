@@ -45,6 +45,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.R
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.model.KubePermission
 import name.levis.ichor.model.KubeRevision
 import name.levis.ichor.ui.argocd.ArgoRevertDialog
 import name.levis.ichor.model.KubeWorkload
@@ -58,6 +60,8 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.InlineError
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeActionAccess
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.components.StatusPill
@@ -95,8 +99,10 @@ fun WorkloadSheet(
                 }
                 ShareLinkButton(ShareTarget.workload(workload.kind, workload.namespace, workload.name))
             }
+            val access = rememberKubeActionAccess(workload.namespace)
+            val restartDenial = access?.denial(KubeAction.RESTART_WORKLOAD)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onRestart, enabled = workload.canRestart) {
+                OutlinedButton(onClick = onRestart, enabled = workload.canRestart && restartDenial == null) {
                     Icon(Icons.Outlined.RestartAlt, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
                     Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                     Text(stringResource(R.string.workloads_restart_confirm))
@@ -109,13 +115,14 @@ fun WorkloadSheet(
                     }
                 }
             }
+            KubeDenialNote(restartDenial)
             if (workload.canScale) {
                 HorizontalDivider()
-                ScaleSection(workload, actions, workload.key in busy)
+                ScaleSection(workload, actions, workload.key in busy, access?.denial(KubeAction.SCALE))
             }
             if (workload.hasHistory) {
                 HorizontalDivider()
-                HistorySection(workload, actions, workload.key in busy, onRollback)
+                HistorySection(workload, actions, workload.key in busy, restartDenial, onRollback)
             }
             HorizontalDivider()
             Text(stringResource(R.string.kube_events_title), style = MaterialTheme.typography.titleSmall)
@@ -125,7 +132,7 @@ fun WorkloadSheet(
 }
 
 @Composable
-private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy: Boolean) {
+private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy: Boolean, denial: KubePermission?) {
     val colors = LocalStatusColors.current
     val outcome by actions.lastScale.collectAsStateWithLifecycle()
     // Starts again from the live count once a refresh brings it.
@@ -170,10 +177,11 @@ private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy:
         } else {
             Button(
                 onClick = { if (argoOwner != null) askArgo = true else proceed() },
-                enabled = target != workload.desired,
+                enabled = target != workload.desired && denial == null,
             ) { Text(stringResource(R.string.workloads_scale_apply)) }
         }
     }
+    KubeDenialNote(denial)
     outcome?.takeIf { it.workloadKey == workload.key }?.let { o ->
         o.error?.let { InlineError(it.asString()) }
         if (o.warning.isNotEmpty()) Text(o.warning, color = colors.warn, style = MaterialTheme.typography.bodySmall)
@@ -220,18 +228,19 @@ private fun ScaleSection(workload: KubeWorkload, actions: WorkloadActions, busy:
 }
 
 @Composable
-private fun HistorySection(workload: KubeWorkload, actions: WorkloadActions, busy: Boolean, onRollback: (KubeRevision) -> Unit) {
+private fun HistorySection(workload: KubeWorkload, actions: WorkloadActions, busy: Boolean, denial: KubePermission?, onRollback: (KubeRevision) -> Unit) {
     // Read again when the Deployment rolls out a new template.
     val revisions by produceState<UiState<List<KubeRevision>>>(UiState.Loading, workload.key, workload.updated, workload.desired) {
         value = uiStateOf { actions.revisions(workload) }
     }
     SectionTitle(stringResource(R.string.workloads_history))
+    KubeDenialNote(denial)
     when (val s = revisions) {
         UiState.Loading -> CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
         is UiState.Failed -> InlineError(s.message.asString())
         is UiState.Loaded -> {
             if (s.data.isEmpty()) MutedText(stringResource(R.string.workloads_history_empty))
-            s.data.forEach { RevisionRow(it, enabled = !busy, onRollback = { onRollback(it) }) }
+            s.data.forEach { RevisionRow(it, enabled = !busy && denial == null, onRollback = { onRollback(it) }) }
         }
     }
 }

@@ -85,6 +85,8 @@ struct KubeHomeView: View {
     @State private var argo: LoadState<ArgoStatus>?
     @State private var flux: LoadState<FluxStatus>?
     @State private var dataServices: LoadState<DataServices>?
+    /// Who the API server takes the credentials for; nil until known (or when it cannot say).
+    @State private var whoAmI: KubeWhoAmI?
     /// The sections' order and those hidden, the toolbar's icons and menu: one arrangement for
     /// every cluster added from a kubeconfig, changed in HomeEditorSheet (same saved form as Android).
     @AppStorage(KubeHomeLayout.storageKey) private var layoutText = ""
@@ -113,6 +115,8 @@ struct KubeHomeView: View {
         }
         .navigationTitle(model.activeLabel)
         .kubeCordonDialogs(cordoning: $cordoning, reload: load)
+        // The node menus' cordon and drain are cluster-wide.
+        .loadsKubeActionAccess(namespace: "")
         .toolbarTitleMenu {
             if (model.summary?.contexts.count ?? 0) > 1 {
                 Menu {
@@ -187,6 +191,7 @@ struct KubeHomeView: View {
             argo = nil
             flux = nil
             dataServices = nil
+            whoAmI = nil
         }
         // A new network (VPN connected, back on Wi-Fi) is the likely fix: try again at once.
         .task {
@@ -232,11 +237,27 @@ struct KubeHomeView: View {
                 }
                 LabeledContent("Sign-in", value: ctx.localizedAuthLabel)
                 if let user = ctx.user, !user.isEmpty { LabeledContent("Signed in as", value: user) }
+                if let whoAmI, whoAmI.isKnown { whoAmIRow(whoAmI) }
                 if let namespace = ctx.namespace, !namespace.isEmpty { LabeledContent("Namespace", value: namespace) }
                 if ctx.certNotAfter > 0 { LabeledContent("Expires", value: localizedCertExpiry(ctx.certNotAfter)) }
             }
         } header: {
             Text("Cluster")
+        }
+    }
+
+    /// The user and groups the API server takes the credentials for (what RBAC decides on).
+    private func whoAmIRow(_ me: KubeWhoAmI) -> some View {
+        LabeledContent {
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(verbatim: me.user).textSelection(.enabled)
+                if !me.groupsLine.isEmpty {
+                    Text(verbatim: me.groupsLine).font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .multilineTextAlignment(.trailing)
+        } label: {
+            Text("Kubernetes user")
         }
     }
 
@@ -341,6 +362,9 @@ struct KubeHomeView: View {
         let fetched: LoadState<KubeNodesOverview> = await .from { try await client.kubeNodes() }
         guard id == loadID else { return }
         state = state.refreshed(with: fetched)
+        // Kept on a failed refresh; hidden when the API server cannot say (before 1.28).
+        if let me = try? await client.kubeWhoAmI(), id == loadID { whoAmI = me }
+        guard id == loadID else { return }
         // Argo CD, Flux and the data services answer "not installed" quickly when absent; a
         // tool not installed stays out (nil), the rest keeps what was shown on a failed refresh.
         let argoNext = await loadArgo(with: client)

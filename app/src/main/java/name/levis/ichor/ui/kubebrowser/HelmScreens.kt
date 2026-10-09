@@ -51,6 +51,10 @@ import name.levis.ichor.data.KubeBrowserRepository
 import name.levis.ichor.model.HelmRelease
 import name.levis.ichor.model.HelmReleaseDetail
 import name.levis.ichor.model.HelmRevision
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.model.KubePermission
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.filteredReleases
 import name.levis.ichor.model.helmStatusTone
 import name.levis.ichor.ui.LoadingViewModel
@@ -203,6 +207,7 @@ fun HelmReleaseScreen(
     val context = LocalContext.current
     val state by vm.state.collectAsStateWithLifecycle()
     val rollback by vm.rollback.state.collectAsStateWithLifecycle()
+    val rollbackDenial = rememberKubeDenial(KubeAction.HELM_ROLLBACK, namespace)
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     HelmRollbackHost(vm.rollback, rollback)
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -243,7 +248,7 @@ fun HelmReleaseScreen(
                 UiState.Loading -> LoadingBox(style = SkeletonStyle.TEXT)
                 is UiState.Failed -> ErrorBox(s.message, { vm.refresh() })
                 is UiState.Loaded -> when (shown) {
-                    ReleaseTab.SUMMARY -> ReleaseSummary(s.data, onRollback = vm.rollback::open)
+                    ReleaseTab.SUMMARY -> ReleaseSummary(s.data, rollbackDenial, onRollback = vm.rollback::open)
                     ReleaseTab.NOTES -> if (s.data.notes.isBlank()) EmptyText(stringResource(R.string.kb_helm_no_notes)) else PlainText(s.data.notes)
                     ReleaseTab.VALUES -> if (s.data.values.isBlank()) EmptyText(stringResource(R.string.kb_helm_no_values)) else YamlLines(s.data.values, Modifier.weight(1f))
                     ReleaseTab.MANIFEST -> YamlLines(s.data.manifest, Modifier.weight(1f))
@@ -266,7 +271,7 @@ private fun PlainText(text: String) {
 }
 
 @Composable
-private fun ReleaseSummary(d: HelmReleaseDetail, onRollback: (revision: Int) -> Unit) {
+private fun ReleaseSummary(d: HelmReleaseDetail, rollbackDenial: KubePermission?, onRollback: (revision: Int) -> Unit) {
     val now = remember(d) { System.currentTimeMillis() }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -277,21 +282,22 @@ private fun ReleaseSummary(d: HelmReleaseDetail, onRollback: (revision: Int) -> 
         if (d.appVersion.isNotEmpty()) InfoRow(stringResource(R.string.kb_helm_app), d.appVersion, mono = true)
         if (d.description.isNotEmpty()) MutedText(d.description)
         Text(stringResource(R.string.kb_helm_history), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp))
+        KubeDenialNote(rollbackDenial)
         // The current revision is what runs: rolling back to it would change nothing.
-        d.history.forEach { r -> RevisionRow(r, now, onRollback = if (r.revision != d.revision) ({ onRollback(r.revision) }) else null) }
+        d.history.forEach { r -> RevisionRow(r, now, enabled = rollbackDenial == null, onRollback = if (r.revision != d.revision) ({ onRollback(r.revision) }) else null) }
         MutedText(stringResource(R.string.helm_rollback_footer), Modifier.padding(top = 8.dp))
     }
 }
 
 @Composable
-private fun RevisionRow(r: HelmRevision, now: Long, onRollback: (() -> Unit)?) {
+private fun RevisionRow(r: HelmRevision, now: Long, enabled: Boolean, onRollback: (() -> Unit)?) {
     Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("#${r.revision}", style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace)
             ToneLabel(r.status, statusColor(r.status))
             MutedText(stringResource(R.string.kube_events_ago, ageSince(r.updated * 1000, now)), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (onRollback != null) {
-                TextButton(onClick = onRollback, contentPadding = PaddingValues(horizontal = 8.dp), modifier = Modifier.heightIn(min = 32.dp)) {
+                TextButton(onClick = onRollback, enabled = enabled, contentPadding = PaddingValues(horizontal = 8.dp), modifier = Modifier.heightIn(min = 32.dp)) {
                     Text(stringResource(R.string.helm_rollback_action), style = MaterialTheme.typography.labelMedium)
                 }
             }
