@@ -2,7 +2,9 @@ package name.levis.ichor.ui.argocd
 
 import androidx.activity.compose.BackHandler
 import name.levis.ichor.model.KubeAction
-import name.levis.ichor.ui.components.rememberKubeDenial
+import name.levis.ichor.model.KubePermission
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeDenialAcross
 import name.levis.ichor.model.ShareTarget
 import name.levis.ichor.ui.share.ShareLinkButton
 import androidx.compose.foundation.layout.Column
@@ -156,7 +158,8 @@ fun ArgoAppsScreen(onBack: () -> Unit, onApp: (namespace: String, name: String) 
             if (selecting) {
                 SelectionBar(
                     count = selectedApps.size,
-                    enabled = rememberKubeDenial(KubeAction.ARGO_SYNC, selectedApps.firstOrNull()?.namespace.orEmpty()) == null,
+                    // Allowed only when allowed in every namespace of the selection.
+                    denial = rememberKubeDenialAcross(KubeAction.ARGO_SYNC, selectedApps.map { it.namespace }.distinct()),
                     onClear = endSelection,
                     onSync = { confirmSync = selectedApps.filterNot { it.isRunning }.takeIf { it.isNotEmpty() } },
                     onRefresh = {
@@ -223,11 +226,15 @@ private fun Subtitle(status: ArgoStatus) {
 }
 
 @Composable
-private fun SelectionBar(count: Int, enabled: Boolean, onClear: () -> Unit, onSync: () -> Unit, onRefresh: () -> Unit) {
+private fun SelectionBar(count: Int, denial: KubePermission?, onClear: () -> Unit, onSync: () -> Unit, onRefresh: () -> Unit) {
+    val enabled = denial == null
     BottomAppBar(
         actions = {
             IconButton(onClick = onClear) { Icon(Icons.Outlined.Close, stringResource(R.string.argo_clear_selection)) }
-            Text(pluralStringResource(R.plurals.argo_selected, count, count), style = MaterialTheme.typography.titleSmall)
+            Column {
+                Text(pluralStringResource(R.plurals.argo_selected, count, count), style = MaterialTheme.typography.titleSmall)
+                KubeDenialNote(denial)
+            }
         },
         floatingActionButton = {
             Row {

@@ -90,7 +90,7 @@ fun FluxResourceGroup(kind: String, resources: List<FluxResource>, onRestart: ((
                     if (r.namespace.isNotEmpty()) Text(r.namespace, style = MaterialTheme.typography.labelSmall, color = muted)
                 }
                 if (onRestart != null && r.restartable) {
-                    IconButton(onClick = { onRestart(r) }, enabled = rememberKubeDenial(KubeAction.RESTART_WORKLOAD, r.namespace) == null) {
+                    IconButton(onClick = { onRestart(r) }, enabled = rememberKubeDenial(KubeAction.restart(r.kind), r.namespace) == null) {
                         Icon(Icons.Outlined.RestartAlt, contentDescription = stringResource(R.string.workloads_restart_confirm), tint = muted, modifier = Modifier.size(18.dp))
                     }
                 }

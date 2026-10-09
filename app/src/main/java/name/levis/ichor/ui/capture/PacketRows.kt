@@ -1,7 +1,6 @@
 package name.levis.ichor.ui.capture
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,7 +43,10 @@ import name.levis.ichor.model.relativeTime
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.theme.LocalChartColors
 import name.levis.ichor.ui.theme.LocalStatusColors
-import name.levis.ichor.ui.theme.monoSmall
+import name.levis.ichor.ui.components.MonoScreen
+import name.levis.ichor.ui.components.ScalableMonoText
+import name.levis.ichor.ui.components.monoTextStyle
+import name.levis.ichor.ui.components.monoTextActions
 
 
 /** Colours of packet rows, resolved once per theme (same spirit as the log rows). */
@@ -93,10 +95,11 @@ private fun PacketRow(p: PacketSummary, start: Long, palette: PacketPalette, onC
     val text = remember(p, start, palette) { packetRowText(p, start, palette) }
     Text(
         text,
-        style = MaterialTheme.typography.monoSmall,
+        style = monoTextStyle(),
         modifier = Modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .monoTextActions()
             .padding(vertical = 2.dp),
     )
 }
@@ -129,7 +132,7 @@ fun PacketList(
     }
     LaunchedEffect(packets.size, live) { if (live && stickToEnd) listState.scrollToItem(packets.lastIndex) }
 
-    Box(modifier.fillMaxSize()) {
+    ScalableMonoText(MonoScreen.CAPTURE, modifier.fillMaxSize()) {
         LazyColumn(
             state = listState,
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),

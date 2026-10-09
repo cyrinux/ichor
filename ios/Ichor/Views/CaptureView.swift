@@ -233,10 +233,12 @@ private struct CaptureLiveView: View {
                 List(session.packets) { packet in
                     Button { if !session.isRunning { selected = packet } } label: { PacketRow(packet: packet) }
                         .buttonStyle(.plain)
+                        .monoFont()
                         .id(packet.n)
                         .onAppear { if packet.n == session.packets.last?.n { follow = true } }
                 }
                 .listStyle(.plain)
+                .scalableMonoText(.capture)
                 .simultaneousGesture(DragGesture().onChanged { _ in follow = false })
                 .overlay {
                     if session.packets.isEmpty && session.isRunning {
@@ -332,7 +334,6 @@ struct PacketRow: View {
                 Text(verbatim: packet.info).foregroundStyle(.secondary).lineLimit(2)
             }
         }
-        .font(.caption.monospaced())
     }
 }
 

@@ -296,3 +296,50 @@ func TestAuditClear(t *testing.T) {
 		t.Errorf("after clearing all: %+v", got)
 	}
 }
+
+// A background run that panics is recorded as a failure, then still reported to its listener.
+func TestRecordedRunRecordsAPanicThenRaisesIt(t *testing.T) {
+	withDataDir(t)
+	withAuditClock(t, time.Now())
+
+	var reported string
+
+	func() {
+		defer onPanic(func(msg string) { reported = msg })
+
+		_ = recordedRun("", "prod", func() auditAction { return auditAction{Action: "drain", Node: "w1"} }, func() error {
+			panic("boom")
+		})
+	}()
+
+	if reported != "internal error: boom" {
+		t.Errorf("listener got %q", reported)
+	}
+
+	got := readAudit(t, "prod", "drain")
+	if len(got) != 1 || got[0].Outcome != auditFailed || got[0].Error != "internal error: boom" || got[0].Node != "w1" {
+		t.Errorf("entries = %+v", got)
+	}
+}
+
+// The action is built once the work ended, so it can say how it ended.
+func TestRecordedRunRecordsTheOutcome(t *testing.T) {
+	withDataDir(t)
+	withAuditClock(t, time.Now())
+
+	outcome := ""
+	err := recordedRun("", "prod", func() auditAction { return auditAction{Action: "config-try", Params: "outcome=" + outcome} }, func() error {
+		outcome = "rolled-back"
+
+		return errors.New("not healthy")
+	})
+
+	if err == nil || err.Error() != "not healthy" {
+		t.Fatalf("err = %v", err)
+	}
+
+	got := readAudit(t, "prod", "config-try")
+	if len(got) != 1 || got[0].Outcome != auditFailed || got[0].Params != "outcome=rolled-back" {
+		t.Errorf("entries = %+v", got)
+	}
+}

@@ -39,7 +39,10 @@ import name.levis.ichor.model.PacketSummary
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.theme.LocalStatusColors
-import name.levis.ichor.ui.theme.monoSmall
+import name.levis.ichor.ui.components.MonoScreen
+import name.levis.ichor.ui.components.ScalableMonoText
+import name.levis.ichor.ui.components.monoTextStyle
+import name.levis.ichor.ui.components.monoTextActions
 import name.levis.ichor.ui.uiStateOf
 import java.io.File
 import name.levis.ichor.ui.components.expandable
@@ -72,7 +75,7 @@ fun PacketDetailSheet(captures: CaptureRepository, file: File, packet: PacketSum
                 color = LocalStatusColors.current.bad,
                 modifier = Modifier.padding(16.dp),
             )
-            is UiState.Loaded -> DetailContent(s.data)
+            is UiState.Loaded -> ScalableMonoText(MonoScreen.CAPTURE) { DetailContent(s.data) }
         }
     }
 }
@@ -95,10 +98,11 @@ private fun DetailContent(detail: PacketDetail) {
                     SelectionContainer {
                         Text(
                             detail.hex,
-                            style = MaterialTheme.typography.monoSmall,
+                            style = monoTextStyle(),
                             softWrap = false,
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .monoTextActions()
                                 .padding(top = 4.dp)
                                 .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(4.dp))
                                 .horizontalScroll(rememberScrollState())
@@ -128,11 +132,11 @@ private fun LayerSection(layer: PacketLayer, expanded: Boolean, onToggle: () -> 
                         Row {
                             Text(
                                 f.k,
-                                style = MaterialTheme.typography.monoSmall,
+                                style = monoTextStyle(),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.weight(0.4f),
                             )
-                            Text(f.v, style = MaterialTheme.typography.monoSmall, modifier = Modifier.weight(0.6f))
+                            Text(f.v, style = monoTextStyle(), modifier = Modifier.weight(0.6f))
                         }
                     }
                 }

@@ -3358,7 +3358,9 @@
     <string name="kb_summary_node">Knoten</string>
     <string name="kb_summary_suspended">Angehalten</string>
     <string name="kb_summary_schedule">Zeitplan</string>
-    <string name="kube_access_denied">Ihr Konto darf %1$s auf %2$s in %3$s nicht ausführen</string>
-    <string name="kube_access_denied_cluster">Ihr Konto darf %1$s auf %2$s nicht clusterweit ausführen</string>
+    <string name="kube_access_denied">Dein Konto darf %1$s auf %2$s in %3$s nicht ausführen</string>
+    <string name="kube_access_denied_cluster">Dein Konto darf %1$s auf %2$s nicht clusterweit ausführen</string>
     <string name="kube_whoami_user">Kubernetes-Benutzer</string>
+    <string name="mono_text_larger">Größerer Text</string>
+    <string name="mono_text_smaller">Kleinerer Text</string>
 </resources>

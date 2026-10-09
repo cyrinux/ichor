@@ -109,12 +109,14 @@ struct CaptureFileView: View {
                     ForEach(page.packets) { packet in
                         Button { selected = packet } label: { PacketRow(packet: packet) }
                             .buttonStyle(.plain)
+                            .monoFont()
                     }
                 } header: {
                     pager(total: page.total)
                 }
             }
             .listStyle(.plain)
+            .scalableMonoText(.capture)
         }
         .navigationTitle(url.lastPathComponent)
         .navigationBarTitleDisplayMode(.inline)
@@ -161,7 +163,7 @@ struct PacketDetailView: View {
                     DisclosureGroup {
                         ForEach(layer.fields.indices, id: \.self) { i in
                             LabeledContent {
-                                Text(verbatim: layer.fields[i].v).font(.caption.monospaced()).textSelection(.enabled)
+                                Text(verbatim: layer.fields[i].v).monoFont().textSelection(.enabled)
                             } label: {
                                 Text(verbatim: layer.fields[i].k).font(.caption)
                             }
@@ -174,7 +176,7 @@ struct PacketDetailView: View {
                     Section("Bytes") {
                         ScrollView(.horizontal) {
                             Text(verbatim: detail.hex)
-                                .font(.caption2.monospaced())
+                                .monoFont()
                                 .textSelection(.enabled)
                                 .fixedSize()
                                 .padding(.vertical, 4)
@@ -183,6 +185,7 @@ struct PacketDetailView: View {
                 }
             }
         }
+        .scalableMonoText(.capture)
         .navigationTitle(String(localized: "Packet \(packet.number)"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

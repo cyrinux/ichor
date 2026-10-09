@@ -24,13 +24,14 @@ struct ArgoAppsList: View {
         let shown = filterArgoApps(status.apps, filter: filter, query: query)
         let candidates = syncAllCandidates(shown)
         List(selection: $selection) {
-            KubeDeniedSection(actions: [.argoSync], namespace: kubeSharedNamespace(status.apps.map(\.namespace)))
+            // Asked in each namespace of the Applications: the first refusal stands for the list.
+            KubeBulkDeniedSection(.argoSync, across: status.apps.map(\.namespace))
             if filter == .outOfSync && !candidates.isEmpty {
                 Section {
                     Button { onSyncAll(candidates) } label: {
                         Label(String(localized: "Sync all out of sync (\(candidates.count))"), systemImage: "arrow.triangle.2.circlepath")
                     }
-                    .kubeGated(.argoSync, in: kubeSharedNamespace(candidates.map(\.namespace)))
+                    .kubeGated(.argoSync, across: candidates.map(\.namespace))
                 }
             }
             ForEach(groupArgoApps(shown, by: grouping)) { group in

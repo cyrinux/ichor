@@ -31,7 +31,7 @@ struct AppWorkloadsSection: View {
                 } else {
                     ForEach(workloads) { workload in
                         AppWorkloadLine(workload: workload, restarting: restarting.contains(workload.id)) { confirm = workload }
-                        KubeDeniedNote(.restartWorkload, in: workload.namespace)
+                        KubeDeniedNote(KubeAction.restart(kind: workload.kind), in: workload.namespace)
                         // A row of its own, not a link around the line: a List row that is a link
                         // takes every tap, Restart's included. The sheet is a NavigationStack.
                         if let selection = workload.podSelection {
@@ -115,7 +115,7 @@ private struct AppWorkloadLine: View {
                 Button("Restart", systemImage: "arrow.clockwise", action: onRestart)
                     .buttonStyle(.bordered)
                     .disabled(!workload.canRestart)
-                    .kubeGated(.restartWorkload, in: workload.namespace)
+                    .kubeGated(KubeAction.restart(kind: workload.kind), in: workload.namespace)
             }
         }
     }

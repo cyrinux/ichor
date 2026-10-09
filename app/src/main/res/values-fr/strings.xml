@@ -3369,4 +3369,6 @@
     <string name="kube_access_denied">Votre compte ne peut pas faire %1$s sur %2$s dans %3$s</string>
     <string name="kube_access_denied_cluster">Votre compte ne peut pas faire %1$s sur %2$s dans tout le cluster</string>
     <string name="kube_whoami_user">Utilisateur Kubernetes</string>
+    <string name="mono_text_larger">Texte plus grand</string>
+    <string name="mono_text_smaller">Texte plus petit</string>
 </resources>

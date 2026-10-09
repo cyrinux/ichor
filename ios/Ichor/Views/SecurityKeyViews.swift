@@ -125,7 +125,11 @@ struct SecurityKeysSection: View {
         } header: {
             Text("Security keys")
         } footer: {
-            Text("Tap a YubiKey or another FIDO2 key on the iPhone, or plug it in, to open Ichor without Face ID. Up to two keys.")
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Tap a YubiKey or another FIDO2 key on the iPhone, or plug it in, to open Ichor without Face ID. Up to two keys.")
+                // README "What iOS does differently": USB-C keys on iPhone are best effort.
+                Text("NFC keys and the Lightning YubiKey 5Ci work reliably. A USB-C key plugged into an iPhone is best effort: if it is not seen, tap it over NFC instead.")
+            }
         }
         .sheet(item: $flow) { flow in
             SecurityKeyFlowView(flow: flow)

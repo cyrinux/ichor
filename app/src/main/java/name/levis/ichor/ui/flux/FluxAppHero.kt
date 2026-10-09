@@ -104,7 +104,7 @@ fun FluxAppHero(app: FluxApp) {
 @Composable
 fun FluxActionButtons(app: FluxApp, busy: Boolean, onDiff: (() -> Unit)? = null, onAction: (FluxAction) -> Unit) {
     // Every action patches the object; the diff only reads.
-    val denial = rememberKubeDenial(KubeAction.FLUX_RECONCILE, app.namespace)
+    val denial = rememberKubeDenial(KubeAction.fluxReconcile(app.kind), app.namespace)
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         FluxActionRow(app, busy || denial != null, onDiff, onAction)
         KubeDenialNote(denial)

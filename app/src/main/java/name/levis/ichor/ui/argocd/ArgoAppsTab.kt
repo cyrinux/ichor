@@ -43,6 +43,7 @@ import name.levis.ichor.R
 import name.levis.ichor.model.KubeAction
 import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.rememberKubeDenial
+import name.levis.ichor.ui.components.rememberKubeDenialAcross
 import name.levis.ichor.model.ArgoAction
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoFilter
@@ -84,8 +85,8 @@ fun ArgoAppsTab(
     val apps = remember(status) { status.sortedApps }
     val counts = remember(apps) { apps.filterCounts() }
     val groups = remember(apps, filter, query, groupBy) { apps.filtered(filter, query).grouped(groupBy) }
-    // Applications usually share Argo CD's namespace: its answer stands for the list.
-    val listDenial = rememberKubeDenial(KubeAction.ARGO_SYNC, apps.firstOrNull()?.namespace.orEmpty())
+    // Asked in each namespace of the Applications (usually Argo CD's own, one): the first refusal stands for the list.
+    val listDenial = rememberKubeDenialAcross(KubeAction.ARGO_SYNC, remember(apps) { apps.map { it.namespace }.distinct() })
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
         item(key = "controls") {
@@ -99,7 +100,9 @@ fun ArgoAppsTab(
         if (filter == ArgoFilter.OUT_OF_SYNC) {
             val candidates = apps.filtered(filter, query).syncAllCandidates()
             if (candidates.isNotEmpty()) item(key = "syncall") {
-                FilledTonalButton(onClick = { onSyncAll(candidates) }, enabled = listDenial == null, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+                // Allowed only when allowed in every namespace of the apps it syncs.
+                val denial = rememberKubeDenialAcross(KubeAction.ARGO_SYNC, candidates.map { it.namespace }.distinct())
+                FilledTonalButton(onClick = { onSyncAll(candidates) }, enabled = denial == null, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                     Icon(Icons.Outlined.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
                     Text(stringResource(R.string.argo_sync_all, candidates.size), modifier = Modifier.padding(start = 8.dp))
                 }

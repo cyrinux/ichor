@@ -1,0 +1,7 @@
+• Put the one-tap actions where they are found
+• Readable dense text and an accessibility check on both platforms
+• Same settings layout on Android and iOS, with where updates come from
+• Alerts open the screen of what they are about, one Android channel per kind
+• Typed confirmation to delete every cluster and to roll back an Argo CD app
+• Disable Kubernetes actions the account cannot run, with the reason
+• Ask the API server which Kubernetes actions the credentials may run

@@ -56,6 +56,7 @@ import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberFirstKubeDenial
 import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
@@ -162,7 +163,9 @@ fun WorkloadsTab(
         val selected = control.scope.namespace
         val rows = remember(load, selected, query) { load.items.filtered(selected, query, sorted = load.done) }
         PagedProgress(progress)
-        KubeDenialNote(rememberKubeDenial(KubeAction.RESTART_WORKLOAD, selected.orEmpty()), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+        // Each kind listed has its own restart permission: the first one refused stands for the list.
+        val restarts = remember(rows, selected) { rows.map { KubeAction.restart(it.kind) to selected.orEmpty() }.distinct() }
+        KubeDenialNote(rememberFirstKubeDenial(restarts), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         IncompleteNotice(load, searching = query.isNotBlank(), onLoadMore = vm::loadMore, onLoadAll = vm::loadAll)
         PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
             if (rows.isEmpty()) {
@@ -220,7 +223,7 @@ private fun WorkloadRow(workload: KubeWorkload, showNamespace: Boolean, restarti
         if (restarting) {
             CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
         } else {
-            val denied = rememberKubeDenial(KubeAction.RESTART_WORKLOAD, workload.namespace) != null
+            val denied = rememberKubeDenial(KubeAction.restart(workload.kind), workload.namespace) != null
             IconButton(onClick = onRestart, enabled = workload.canRestart && !denied) {
                 Icon(Icons.Outlined.RestartAlt, stringResource(R.string.workloads_restart, workload.name))
             }

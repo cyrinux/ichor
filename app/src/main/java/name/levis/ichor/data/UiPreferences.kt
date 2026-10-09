@@ -176,6 +176,13 @@ class UiPreferences(private val prefs: SharedPreferences) {
         _kubeObjectBar.value = bar
     }
 
+    /** How much [screen] scales its dense monospace text (logs, packets): 1 is the theme size. */
+    fun monoTextScale(screen: String): Float = prefs.getFloat(KEY_MONO_TEXT_SCALE + screen, 1f)
+
+    fun setMonoTextScale(screen: String, factor: Float) {
+        prefs.edit().putFloat(KEY_MONO_TEXT_SCALE + screen, factor).apply()
+    }
+
     fun setThemeMode(mode: ThemeMode) {
         prefs.edit().putString(KEY_THEME, mode.name).apply()
         _themeMode.value = mode
@@ -204,6 +211,7 @@ class UiPreferences(private val prefs: SharedPreferences) {
         private const val KEY_KUBE_HOME_BAR = "kube_home_bar"
         private const val KEY_KUBERNETES_BAR = "kubernetes_bar"
         private const val KEY_KUBE_OBJECT_BAR = "kube_object_bar"
+        private const val KEY_MONO_TEXT_SCALE = "mono_text_scale_"
 
         /** Reads the language without the app singletons (usable from attachBaseContext). */
         fun storedLanguage(context: Context): String =

@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Larger text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Größerer Text"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto más grande"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texte plus grand"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testo più grande"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Більший текст"
+          }
+        }
+      }
+    },
+    "Smaller text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kleinerer Text"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto más pequeño"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texte plus petit"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testo più piccolo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Менший текст"
+          }
+        }
+      }
+    },
     "Back up first" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -98013,7 +98083,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ihr Konto darf %1$@ auf %2$@ in %3$@ nicht ausführen"
+            "value" : "Dein Konto darf %1$@ auf %2$@ in %3$@ nicht ausführen"
           }
         },
         "it" : {
@@ -98054,7 +98124,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ihr Konto darf %1$@ auf %2$@ nicht clusterweit ausführen"
+            "value" : "Dein Konto darf %1$@ auf %2$@ nicht clusterweit ausführen"
           }
         },
         "it" : {
@@ -98423,6 +98493,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "У цьому кластері не працює жодна із систем, які Ichor уміє читати. Перегляньте підтримувані або попросіть ту, якою користуєтеся."
+          }
+        }
+      }
+    },
+    "NFC keys and the Lightning YubiKey 5Ci work reliably. A USB-C key plugged into an iPhone is best effort: if it is not seen, tap it over NFC instead." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC keys and the Lightning YubiKey 5Ci work reliably. A USB-C key plugged into an iPhone is best effort: if it is not seen, tap it over NFC instead."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les clés NFC et la YubiKey 5Ci Lightning fonctionnent de façon fiable. Une clé USB-C branchée sur un iPhone fonctionne au mieux : si elle n’est pas détectée, approchez-la plutôt en NFC."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las llaves NFC y la YubiKey 5Ci Lightning funcionan de forma fiable. Una llave USB-C conectada a un iPhone funciona como se pueda: si no se detecta, acércala por NFC."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NFC-Schlüssel und der Lightning-YubiKey 5Ci funktionieren zuverlässig. Ein an ein iPhone angeschlossener USB-C-Schlüssel funktioniert nur eingeschränkt: Wird er nicht erkannt, tippe ihn stattdessen per NFC an."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le chiavi NFC e la YubiKey 5Ci Lightning funzionano in modo affidabile. Una chiave USB-C collegata a un iPhone funziona al meglio delle possibilità: se non viene rilevata, avvicinala via NFC."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключі NFC і YubiKey 5Ci з Lightning працюють надійно. Ключ USB-C, підключений до iPhone, працює без гарантій: якщо його не видно, торкніться ним через NFC."
           }
         }
       }

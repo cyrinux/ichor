@@ -105,7 +105,7 @@ private fun StepRow(
             }
             step.resources.forEach { r ->
                 // A restart the credentials cannot run is not offered.
-                val canRestart = r.restartable && rememberKubeDenial(KubeAction.RESTART_WORKLOAD, r.namespace) == null
+                val canRestart = r.restartable && rememberKubeDenial(KubeAction.restart(r.kind), r.namespace) == null
                 ResourceRow(r, selecting, r.key in selected, { onToggle(r) }, onRestart?.takeIf { canRestart }?.let { { it(r) } })
             }
         }

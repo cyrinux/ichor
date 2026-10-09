@@ -15,8 +15,11 @@ struct FluxAppsList: View {
 
     var body: some View {
         let shown = filterFluxApps(status.apps, filter: filter, query: query)
+        // The namespace FluxView asks about; each kind in it has its own permission.
+        let accessNamespace = kubeSharedNamespace(status.apps.filter(\.isKustomization).map(\.namespace))
         List {
-            KubeDeniedSection(actions: [.fluxReconcile], namespace: kubeSharedNamespace(status.apps.filter(\.isKustomization).map(\.namespace)))
+            KubeDeniedSection(actions: kubeDistinctActions(status.apps.filter { $0.namespace == accessNamespace }.map(\.target.accessAction)),
+                              namespace: accessNamespace)
             if !status.helmError.isEmpty { Section { ErrorLine(error: status.helmError) } }
             ForEach(shown) { app in
                 NavigationLink(value: FluxAppRoute(kind: app.kind, namespace: app.namespace, name: app.name, downNodes: downNodes)) {
@@ -135,15 +138,22 @@ struct FluxSourcesList: View {
 
     var body: some View {
         let shown = filterFluxSources(status.sources, query: query)
+        // The namespace FluxView asks about (the Kustomizations', where sources usually are).
+        let accessNamespace = kubeSharedNamespace(status.apps.filter(\.isKustomization).map(\.namespace))
         List {
+            KubeDeniedSection(actions: kubeDistinctActions(status.sources.filter { $0.namespace == accessNamespace }.map(\.target.accessAction)),
+                              namespace: accessNamespace)
             if !status.sourcesError.isEmpty { Section { ErrorLine(error: status.sourcesError) } }
             ForEach(shown) { source in
                 // A tap opens the actions too: sources have no screen, and the row looked
                 // tappable while only a long press did anything.
                 Menu {
-                    Button { act(.reconcile, source.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
-                        .disabled(!source.canReconcile)
-                    fluxSuspendButton(suspended: source.suspended) { act($0, source.target) }
+                    Group {
+                        Button { act(.reconcile, source.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
+                            .disabled(!source.canReconcile)
+                        fluxSuspendButton(suspended: source.suspended) { act($0, source.target) }
+                    }
+                    .kubeGated(source.target.accessAction, in: source.namespace)
                 } label: {
                     FluxSourceRow(source: source, busy: busy.contains(source.target))
                         .foregroundStyle(.primary)
@@ -153,9 +163,11 @@ struct FluxSourcesList: View {
                     Button { act(.reconcile, source.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
                         .tint(.blue)
                         .disabled(!source.canReconcile)
+                        .kubeGated(source.target.accessAction, in: source.namespace)
                 }
                 .swipeActions(edge: .trailing) {
                     fluxSuspendButton(suspended: source.suspended) { act($0, source.target) }
+                        .kubeGated(source.target.accessAction, in: source.namespace)
                 }
             }
         }
