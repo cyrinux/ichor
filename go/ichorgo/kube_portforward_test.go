@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -31,8 +32,13 @@ func fakePortForwardAPI(t *testing.T) (*httptest.Server, chan string) {
 
 	paths := make(chan string, 4)
 	ws := websocket.Server{
+		// Like the API server: only the channel protocol is accepted, anything else is a 400.
 		Handshake: func(cfg *websocket.Config, _ *http.Request) error {
-			cfg.Protocol = []string{kubePortForwardProtocol}
+			if !slices.Contains(cfg.Protocol, "v4.channel.k8s.io") {
+				return fmt.Errorf("requested protocol(s) are not supported: %v", cfg.Protocol)
+			}
+
+			cfg.Protocol = []string{"v4.channel.k8s.io"}
 
 			return nil
 		},

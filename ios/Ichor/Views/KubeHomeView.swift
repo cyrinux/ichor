@@ -95,6 +95,8 @@ struct KubeHomeView: View {
     @State private var alerts: LoadState<AMAlerts>?
     /// Who the API server takes the credentials for; nil until known (or when it cannot say).
     @State private var whoAmI: KubeWhoAmI?
+    /// Node usage from metrics-server, by node name; empty without it (no bars then).
+    @State private var top: [String: KubeTopNode] = [:]
     /// The sections' order and those hidden, the toolbar's icons and menu: one arrangement for
     /// every cluster added from a kubeconfig, changed in HomeEditorSheet (same saved form as Android).
     @AppStorage(KubeHomeLayout.storageKey) private var layoutText = ""
@@ -291,7 +293,7 @@ struct KubeHomeView: View {
                 DenseKubeNodes(nodes: overview.nodes, path: $path, cordoning: $cordoning)
             } else {
                 ForEach(overview.nodes.byStatus.flatMap(\.nodes)) { node in
-                    KubeNodeActionRow(node: node, path: $path, cordoning: $cordoning)
+                    KubeNodeActionRow(node: node, path: $path, cordoning: $cordoning, usage: top[node.name])
                 }
             }
         } header: {
@@ -400,6 +402,10 @@ struct KubeHomeView: View {
         // Kept on a failed refresh; hidden when the API server cannot say (before 1.28).
         if let me = try? await client.kubeWhoAmI(), id == loadID { whoAmI = me }
         guard id == loadID else { return }
+        // Usage is live: replaced on each load, dropped when metrics-server is gone.
+        let usage = try? await client.topNodes()
+        guard id == loadID else { return }
+        top = usage?.available == true ? usage?.byName ?? [:] : [:]
         // Argo CD, Flux and the data services answer "not installed" quickly when absent; a
         // tool not installed stays out (nil), the rest keeps what was shown on a failed refresh.
         let argoNext = await loadArgo(with: client)

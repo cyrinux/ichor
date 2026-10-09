@@ -3203,6 +3203,22 @@
     <string name="kb_discard_title">Discard your changes?</string>
     <string name="kb_discard_text">The edited YAML is not saved.</string>
     <string name="kb_discard_confirm">Discard</string>
+    <string name="kb_delete">Delete</string>
+    <string name="kb_delete_title">Delete %1$s?</string>
+    <string name="kb_delete_loading">Reading what the deletion would touch…</string>
+    <string name="kb_delete_protected">Protected: %1$s</string>
+    <string name="kb_delete_pending">Its deletion is already pending: the finalizers below hold it.</string>
+    <string name="kb_delete_finalizers">Finalizers: the object stays until their controllers remove them.</string>
+    <string name="kb_delete_dependents">Objects it owns: %1$d</string>
+    <string name="kb_delete_more">and %1$d more</string>
+    <string name="kb_delete_propagation">What it owns</string>
+    <string name="kb_delete_background">Delete in the background</string>
+    <string name="kb_delete_background_desc">The object goes now; what it owns is deleted afterwards.</string>
+    <string name="kb_delete_foreground">Delete it first</string>
+    <string name="kb_delete_foreground_desc">What it owns is deleted first; the object waits for it.</string>
+    <string name="kb_delete_orphan">Keep it</string>
+    <string name="kb_delete_orphan_desc">What it owns stays, without an owner.</string>
+    <string name="kb_delete_anyway">Delete anyway</string>
     <string name="kb_reveal">Show secret values</string>
     <string name="kb_reveal_desc">Hidden by default; needed to edit the Secret.</string>
     <string name="kb_reveal_auth">Show the values of %1$s</string>
@@ -3373,7 +3389,7 @@
     <string name="kube_whoami_user">Kubernetes user</string>
     <string name="mono_text_larger">Larger text</string>
     <string name="mono_text_smaller">Smaller text</string>
-    <!-- Alertmanager (CYR-34) -->
+    <!-- Alertmanager -->
     <string name="alerts_title">Alerts</string>
     <string name="alerts_unreadable">Could not read the alerts: %1$s</string>
     <string name="alerts_loading">Reading the alerts…</string>
@@ -3461,4 +3477,7 @@
         <item quantity="one">%1$d of %2$d firing</item>
         <item quantity="other">%1$d of %2$d firing</item>
     </plurals>
+||||||| 949e768d
+    <string name="pod_debug_toggle">Debug container</string>
+    <string name="pod_debug_note">For images without a shell (distroless): adds a temporary container that sees this pod\'s processes. Kubernetes keeps it in the pod until the pod is deleted.</string>
 </resources>

@@ -3195,6 +3195,22 @@
     <string name="kb_discard_title">Änderungen verwerfen?</string>
     <string name="kb_discard_text">Das bearbeitete YAML ist nicht gespeichert.</string>
     <string name="kb_discard_confirm">Verwerfen</string>
+    <string name="kb_delete">Löschen</string>
+    <string name="kb_delete_title">%1$s löschen?</string>
+    <string name="kb_delete_loading">Lese, was das Löschen betreffen würde …</string>
+    <string name="kb_delete_protected">Geschützt: %1$s</string>
+    <string name="kb_delete_pending">Das Löschen steht schon an: Die Finalizer unten halten es auf.</string>
+    <string name="kb_delete_finalizers">Finalizer: Das Objekt bleibt, bis ihre Controller sie entfernen.</string>
+    <string name="kb_delete_dependents">Objekte, die ihm gehören: %1$d</string>
+    <string name="kb_delete_more">und %1$d weitere</string>
+    <string name="kb_delete_propagation">Was ihm gehört</string>
+    <string name="kb_delete_background">Im Hintergrund löschen</string>
+    <string name="kb_delete_background_desc">Das Objekt geht sofort; was ihm gehört, wird danach gelöscht.</string>
+    <string name="kb_delete_foreground">Zuerst löschen</string>
+    <string name="kb_delete_foreground_desc">Was ihm gehört, wird zuerst gelöscht; das Objekt wartet darauf.</string>
+    <string name="kb_delete_orphan">Behalten</string>
+    <string name="kb_delete_orphan_desc">Was ihm gehört, bleibt, ohne Besitzer.</string>
+    <string name="kb_delete_anyway">Trotzdem löschen</string>
     <string name="kb_reveal">Secret-Werte anzeigen</string>
     <string name="kb_reveal_desc">Standardmäßig verborgen; zum Bearbeiten des Secrets nötig.</string>
     <string name="kb_reveal_auth">Werte von %1$s anzeigen</string>
@@ -3365,7 +3381,7 @@
     <string name="kube_whoami_user">Kubernetes-Benutzer</string>
     <string name="mono_text_larger">Größerer Text</string>
     <string name="mono_text_smaller">Kleinerer Text</string>
-    <!-- Alertmanager (CYR-34) -->
+    <!-- Alertmanager -->
     <string name="alerts_title">Alarme</string>
     <string name="alerts_unreadable">Alarme nicht lesbar: %1$s</string>
     <string name="alerts_loading">Alarme werden gelesen…</string>
@@ -3453,4 +3469,7 @@
         <item quantity="one">%1$d von %2$d aktiv</item>
         <item quantity="other">%1$d von %2$d aktiv</item>
     </plurals>
+||||||| 949e768d
+    <string name="pod_debug_toggle">Debug-Container</string>
+    <string name="pod_debug_note">Für Images ohne Shell (distroless): fügt einen temporären Container hinzu, der die Prozesse dieses Pods sieht. Kubernetes behält ihn im Pod, bis der Pod gelöscht wird.</string>
 </resources>

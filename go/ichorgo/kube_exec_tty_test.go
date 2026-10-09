@@ -135,7 +135,7 @@ func TestPodShellRoundTrip(t *testing.T) {
 		go d.forwardExecInput(ctx, ws)
 
 		time.AfterFunc(200*time.Millisecond, func() { d.Write([]byte("exit\r")) })
-		d.receiveExec(ctx, ws)
+		d.receiveExec(ctx, ws, false)
 	}()
 
 	l.wait(t)
@@ -179,7 +179,7 @@ func TestPodShellClose(t *testing.T) {
 		stop := context.AfterFunc(ctx, func() { _ = ws.Close() })
 		defer stop()
 
-		d.receiveExec(ctx, ws)
+		d.receiveExec(ctx, ws, false)
 	}()
 
 	time.Sleep(100 * time.Millisecond)
@@ -280,7 +280,7 @@ func TestPodShellDroppedConnection(t *testing.T) {
 	}
 	defer ws.Close() //nolint:errcheck
 
-	d.receiveExec(ctx, ws)
+	d.receiveExec(ctx, ws, false)
 	l.wait(t)
 
 	if l.code != -1 || l.message != "connection closed" {

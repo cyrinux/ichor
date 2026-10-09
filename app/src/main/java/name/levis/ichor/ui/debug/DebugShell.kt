@@ -78,7 +78,11 @@ class DebugShell internal constructor(
         },
     )
 
-    /** [image] is ignored for a pod: the command runs in its container. */
+    /**
+     * A node: [image] is the debug pod's. A pod: an empty [image] runs [args] in its container
+     * (`kubectl exec`); a non-empty one adds a debug container from it, sharing the container's
+     * processes (`kubectl debug`, for images without a shell).
+     */
     fun start(image: String, args: String) {
         val stored = configs.config.value ?: return
         stop()
@@ -104,9 +108,15 @@ class DebugShell internal constructor(
         session = if (key.isPod) {
             // The pod's cluster, which may no longer be the one on screen.
             val target = kubeServers.targetFor(stored.copy(activeContext = key.context))
-            Ichorgo.startPodShell(
-                target.yaml, target.context, target.server, key.namespace, key.pod, key.container, args, cols, rows, listener,
-            )
+            if (image.isNotBlank()) {
+                Ichorgo.startPodDebug(
+                    target.yaml, target.context, target.server, key.namespace, key.pod, key.container, image, cols, rows, listener,
+                )
+            } else {
+                Ichorgo.startPodShell(
+                    target.yaml, target.context, target.server, key.namespace, key.pod, key.container, args, cols, rows, listener,
+                )
+            }
         } else {
             Ichorgo.startDebugShell(stored.yamlFor(key.context), key.context, key.node, image, args, cols, rows, listener)
         }

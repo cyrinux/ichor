@@ -3203,6 +3203,22 @@
     <string name="kb_discard_title">Annullare le modifiche?</string>
     <string name="kb_discard_text">Lo YAML modificato non è salvato.</string>
     <string name="kb_discard_confirm">Annulla modifiche</string>
+    <string name="kb_delete">Elimina</string>
+    <string name="kb_delete_title">Eliminare %1$s?</string>
+    <string name="kb_delete_loading">Lettura di ciò che l\'eliminazione toccherebbe…</string>
+    <string name="kb_delete_protected">Protetto: %1$s</string>
+    <string name="kb_delete_pending">La sua eliminazione è già in attesa: la trattengono i finalizzatori qui sotto.</string>
+    <string name="kb_delete_finalizers">Finalizzatori: l\'oggetto resta finché i loro controller non li rimuovono.</string>
+    <string name="kb_delete_dependents">Oggetti che possiede: %1$d</string>
+    <string name="kb_delete_more">e altri %1$d</string>
+    <string name="kb_delete_propagation">Ciò che possiede</string>
+    <string name="kb_delete_background">Elimina in background</string>
+    <string name="kb_delete_background_desc">L\'oggetto se ne va subito; ciò che possiede viene eliminato dopo.</string>
+    <string name="kb_delete_foreground">Eliminalo prima</string>
+    <string name="kb_delete_foreground_desc">Ciò che possiede viene eliminato prima; l\'oggetto lo aspetta.</string>
+    <string name="kb_delete_orphan">Tienilo</string>
+    <string name="kb_delete_orphan_desc">Ciò che possiede resta, senza proprietario.</string>
+    <string name="kb_delete_anyway">Elimina comunque</string>
     <string name="kb_reveal">Mostra valori segreti</string>
     <string name="kb_reveal_desc">Nascosti per impostazione predefinita; necessari per modificare il secret.</string>
     <string name="kb_reveal_auth">Mostra i valori di %1$s</string>
@@ -3373,7 +3389,7 @@
     <string name="kube_whoami_user">Utente Kubernetes</string>
     <string name="mono_text_larger">Testo più grande</string>
     <string name="mono_text_smaller">Testo più piccolo</string>
-    <!-- Alertmanager (CYR-34) -->
+    <!-- Alertmanager -->
     <string name="alerts_title">Avvisi</string>
     <string name="alerts_unreadable">Impossibile leggere gli avvisi: %1$s</string>
     <string name="alerts_loading">Lettura degli avvisi…</string>
@@ -3461,4 +3477,7 @@
         <item quantity="one">%1$d di %2$d attivo</item>
         <item quantity="other">%1$d di %2$d attivi</item>
     </plurals>
+||||||| 949e768d
+    <string name="pod_debug_toggle">Container di debug</string>
+    <string name="pod_debug_note">Per immagini senza shell (distroless): aggiunge un container temporaneo che vede i processi di questo pod. Kubernetes lo mantiene nel pod finché il pod non viene eliminato.</string>
 </resources>

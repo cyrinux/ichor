@@ -1,5 +1,13 @@
 package name.levis.ichor.ui.workloads
 
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableIntStateOf
+import name.levis.ichor.ui.components.rememberKubeTopPods
+import name.levis.ichor.ui.components.TopSortChips
+import name.levis.ichor.ui.components.PodUsage
+import name.levis.ichor.model.sortedByUsage
+import name.levis.ichor.model.TopSort
+import name.levis.ichor.model.KubeTopPod
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -169,6 +177,8 @@ fun PodsTab(
     LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
     val actions = remember { PodActionState() }
     PodActionDialogs(actions, vm.deletions)
+    var sort by rememberSaveable { mutableStateOf(TopSort.NAME) }
+    var topGeneration by remember { mutableIntStateOf(0) }
     val listed = (state as? UiState.Loaded)?.data?.items
     LaunchedEffect(focusKey, listed) {
         listed.orEmpty().firstOrNull { it.key == focusKey }?.let {
@@ -181,11 +191,20 @@ fun PodsTab(
         val load = s.data
         val selected = control.scope.namespace
         // Sorted once complete; image search only when every row carries its images.
-        val rows = remember(load, selected, query) { load.items.filteredPods(selected, query, sorted = load.done, searchImages = load.detailed) }
+        val filtered = remember(load, selected, query) { load.items.filteredPods(selected, query, sorted = load.done, searchImages = load.detailed) }
+        // Usage from metrics-server, read again on each pull to refresh; no bars without it.
+        val top = rememberKubeTopPods(selected, topGeneration)
+        val usage = remember(top) { top?.byKey.orEmpty() }
+        val rows = remember(filtered, sort, usage) { filtered.sortedByUsage(sort) { usage[it.key] } }
         PagedProgress(progress)
         KubeDenialNote(rememberKubeDenial(KubeAction.DELETE_POD, selected.orEmpty()), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         IncompleteNotice(load, searching = query.isNotBlank(), onLoadMore = vm::loadMore, onLoadAll = vm::loadAll)
-        PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
+        if (top != null) TopSortChips(sort, { sort = it })
+        val refresh: () -> Unit = {
+            vm.refresh()
+            topGeneration++
+        }
+        PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = refresh, modifier = Modifier.weight(1f)) {
             if (rows.isEmpty()) {
                 EmptyText(emptyOrNoMatch(query, R.string.pods_empty, R.string.pods_no_match))
             } else {
@@ -200,6 +219,7 @@ fun PodsTab(
                             onDelete = { actions.confirm = pod },
                             onLogs = { actions.logs = pod },
                             onFlows = onFlows?.let { open -> { open(pod) } },
+                            usage = usage[pod.key],
                         )
                         HorizontalDivider()
                     }
@@ -210,7 +230,10 @@ fun PodsTab(
     }
 }
 
-/** A pod: name, namespace and node (when asked), status, readiness, restarts; logs, flows and delete actions. */
+/**
+ * A pod: name, namespace and node (when asked), status, readiness, restarts, CPU and memory in
+ * use ([usage], from metrics-server); logs, flows and delete actions.
+ */
 @Composable
 internal fun PodRow(
     pod: KubePod,
@@ -220,6 +243,7 @@ internal fun PodRow(
     onLogs: () -> Unit,
     onFlows: (() -> Unit)? = null,
     showNode: Boolean = true,
+    usage: KubeTopPod? = null,
 ) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -243,6 +267,7 @@ internal fun PodRow(
                     )
                 }
             }
+            usage?.let { PodUsage(it, Modifier.padding(top = 2.dp, end = 8.dp)) }
         }
         IconButton(onClick = onLogs) {
             Icon(Icons.AutoMirrored.Outlined.Article, stringResource(R.string.pod_logs_open, pod.name))

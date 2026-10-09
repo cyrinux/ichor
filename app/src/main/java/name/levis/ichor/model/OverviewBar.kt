@@ -40,8 +40,11 @@ enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOW
 
 typealias KubernetesBar = ActionBar<KubernetesAction>
 
-/** What a Kubernetes object's app bar offers (the resource browser's object screen). */
-enum class KubeObjectAction { EDIT, REFRESH, COPY, SHARE, PORT_FORWARD;
+/**
+ * What a Kubernetes object's app bar offers (the resource browser's object screen). Delete
+ * comes last: in the menu, away from a stray tap.
+ */
+enum class KubeObjectAction { EDIT, REFRESH, COPY, SHARE, PORT_FORWARD, DELETE;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 3)

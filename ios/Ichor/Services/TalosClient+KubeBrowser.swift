@@ -65,6 +65,24 @@ extension TalosClient {
         }
     }
 
+    /// What deleting the object would do: protection, finalizers, the objects it owns. Read-only.
+    func objectDeletePreview(_ resource: KubeAPIResource, namespace: String, name: String) async throws -> KubeDeletePreview {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeObjectDeletePreview(config, context, kubeServer, resource.group, resource.version, resource.resource,
+                                           namespace, name, $0)
+        }
+    }
+
+    /// Deletes the object with `propagation`; refused when it changed since `resourceVersion`
+    /// (the preview's) was read, and for a protected object unless `force`.
+    func deleteObject(_ resource: KubeAPIResource, namespace: String, name: String, propagation: KubeDeletePropagation,
+                      resourceVersion: String, force: Bool) async throws {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoKubeObjectDelete(config, context, kubeServer, resource.group, resource.version, resource.resource,
+                                        namespace, name, propagation.rawValue, resourceVersion, -1, force, error)
+        }
+    }
+
     /// The latest revision of each Helm release; `namespace` nil for every namespace.
     func helmReleases(namespace: String?) async throws -> HelmReleaseList {
         let ns = namespace ?? ""
@@ -113,6 +131,13 @@ extension TalosClient {
     func startPodShell(namespace: String, pod: String, container: String, command: String, cols: Int, rows: Int,
                        listener: IchorgoDebugListenerProtocol) -> IchorgoDebugSession? {
         IchorgoStartPodShell(kubeConfig, kubeContext, kubeAPIServer, namespace, pod, container, command, cols, rows, listener)
+    }
+
+    /// `kubectl debug -it`: adds a debug container from `image` sharing `targetContainer`'s
+    /// processes ("" for none), then a terminal on it. It stays in the pod until the pod is deleted.
+    func startPodDebug(namespace: String, pod: String, targetContainer: String, image: String, cols: Int, rows: Int,
+                       listener: IchorgoDebugListenerProtocol) -> IchorgoDebugSession? {
+        IchorgoStartPodDebug(kubeConfig, kubeContext, kubeAPIServer, namespace, pod, targetContainer, image, cols, rows, listener)
     }
 
     /// Forwards a port of the phone's loopback address to `remotePort` of the pod until the

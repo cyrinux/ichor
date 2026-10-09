@@ -66,6 +66,7 @@ import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.ErrorBox
 import name.levis.ichor.ui.components.InfoBox
 import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.denialText
 import name.levis.ichor.ui.components.LoadingBox
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SkeletonStyle
@@ -81,8 +82,9 @@ import name.levis.ichor.ui.machineconfig.ConfigYamlEditor
  * through [onOwner] or [onHelmRelease], events, metadata), then its YAML, with copy and share,
  * a Secret's values behind the app lock, and, when the kind can be updated, an editor whose
  * change is reviewed as a diff (the API server's dry run) before it is saved. A pod also opens
- * a port-forward ([onPortForward]). Its top bar is arranged like the overview's: the actions
- * shown as icons or kept in its menu are the user's choice.
+ * a port-forward ([onPortForward]). Delete confirms with what the deletion would touch, then
+ * leaves ([onDeleted]). Its top bar is arranged like the overview's: the actions shown as icons
+ * or kept in its menu are the user's choice.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,6 +94,7 @@ fun KubeObjectScreen(
     onPortForward: (() -> Unit)?,
     onOwner: (KubeObjectRef) -> Unit,
     onHelmRelease: (namespace: String, name: String) -> Unit,
+    onDeleted: () -> Unit,
     vm: KubeObjectViewModel = viewModel(
         key = "kube-object-${ref.group}/${ref.resource}/${ref.namespace}/${ref.name}",
         factory = factory { KubeObjectViewModel(app.kubeBrowser, ref) },
@@ -103,6 +106,7 @@ fun KubeObjectScreen(
     val summary by vm.summary.collectAsStateWithLifecycle()
     val revealed by vm.revealed.collectAsStateWithLifecycle()
     val edit by vm.edit.collectAsStateWithLifecycle()
+    val deletion by vm.delete.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         if (state == UiState.Loading) vm.refresh()
         if (summary == UiState.Loading) vm.refreshSummary()
@@ -116,6 +120,20 @@ fun KubeObjectScreen(
     SecureWhile(revealed)
     LaunchedEffect(vm) {
         vm.messages.collectLatest { snackbar.showSnackbar(it.resolve(context), withDismissAction = true, duration = SnackbarDuration.Long) }
+    }
+    LaunchedEffect(vm) { vm.deleted.collect { onDeleted() } }
+    // Asked when the screen opens: a refused delete shows disabled, with the reason, in the menu.
+    val deleteDenial = rememberKubeCanDenial("delete", ref.group, ref.resource, ref.namespace, ref.name)
+    deletion?.let { d ->
+        KubeObjectDeleteDialog(
+            ref,
+            d,
+            deleteDenial,
+            onPropagation = vm::choosePropagation,
+            onConfirm = vm::confirmDelete,
+            onRetry = vm::loadDeletePreview,
+            onDismiss = vm::cancelDelete,
+        )
     }
 
     // With the app lock on, showing a Secret's values needs a fresh fingerprint/PIN.
@@ -183,7 +201,9 @@ fun KubeObjectScreen(
                             revealed,
                             bar,
                             onPortForward,
+                            deleteRefusal = deleteDenial?.denialText()?.asString(),
                             onEdit = vm::startEdit,
+                            onDelete = vm::startDelete,
                             onRefresh = vm::refreshAll,
                             onCustomize = { customizing = true },
                         )
@@ -246,7 +266,9 @@ private fun ViewActions(
     revealed: Boolean,
     bar: KubeObjectBar,
     onPortForward: (() -> Unit)?,
+    deleteRefusal: String?,
     onEdit: () -> Unit,
+    onDelete: () -> Unit,
     onRefresh: () -> Unit,
     onCustomize: () -> Unit,
 ) {
@@ -261,6 +283,7 @@ private fun ViewActions(
                 KubeObjectAction.COPY -> copyWithToast(context, ref.name, yaml.orEmpty(), sensitive = ref.isSecret && revealed)
                 KubeObjectAction.SHARE -> shareText(context, yaml.orEmpty(), context.getString(R.string.kb_share))
                 KubeObjectAction.PORT_FORWARD -> onPortForward?.invoke()
+                KubeObjectAction.DELETE -> onDelete()
             }
         },
         customizeLabel = stringResource(R.string.bar_edit_title),
@@ -274,6 +297,7 @@ private fun ViewActions(
         },
         // Nothing to copy, share or edit before the YAML is read.
         enabled = { action -> action == KubeObjectAction.REFRESH || action == KubeObjectAction.PORT_FORWARD || yaml != null },
+        refusal = { action -> deleteRefusal.takeIf { action == KubeObjectAction.DELETE } },
     )
 }
 

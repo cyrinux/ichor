@@ -361,3 +361,93 @@ public func hasHiddenSecretValues(_ yaml: String) -> Bool {
 public func isKubeEditConflict(_ message: String) -> Bool {
     message.contains("the object changed since it was opened")
 }
+
+// MARK: - Delete
+
+/// What a deletion does with what the object owns (DeleteOptions.propagationPolicy).
+public enum KubeDeletePropagation: String, CaseIterable, Identifiable, Sendable {
+    /// The object goes now; the garbage collector deletes what it owned afterwards.
+    case background = "Background"
+    /// What the object owns is deleted first; the object waits for it.
+    case foreground = "Foreground"
+    /// What the object owns is kept, without an owner.
+    case orphan = "Orphan"
+
+    public var id: String { rawValue }
+}
+
+/// An object the deleted one owns: the propagation decides about it.
+public struct KubeDeleteDependent: Decodable, Equatable, Hashable, Sendable {
+    public let kind: String
+    public let namespace: String
+    public let name: String
+
+    public init(kind: String, namespace: String = "", name: String) {
+        self.kind = kind
+        self.namespace = namespace
+        self.name = name
+    }
+
+    private enum CodingKeys: String, CodingKey { case kind, namespace, name }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try c.field(.kind, "")
+        namespace = try c.field(.namespace, "")
+        name = try c.field(.name, "")
+    }
+}
+
+/// What deleting an object would do (KubeObjectDeletePreview).
+public struct KubeDeletePreview: Decodable, Equatable, Sendable {
+    /// Deleting it breaks the cluster or more than the object: only "Delete anyway" (force).
+    public let isProtected: Bool
+    /// Why it is protected.
+    public let reason: String
+    public let clusterScoped: Bool
+    public let finalizers: [String]
+    public let dependents: [KubeDeleteDependent]
+    /// Dependents beyond those listed.
+    public let moreDependents: Int
+    /// The version read: the delete is refused if the object changed since.
+    public let resourceVersion: String
+    /// A deletion is already pending, held by the finalizers.
+    public let deleting: Bool
+
+    public init(isProtected: Bool = false, reason: String = "", clusterScoped: Bool = false, finalizers: [String] = [],
+                dependents: [KubeDeleteDependent] = [], moreDependents: Int = 0, resourceVersion: String = "", deleting: Bool = false) {
+        self.isProtected = isProtected
+        self.reason = reason
+        self.clusterScoped = clusterScoped
+        self.finalizers = finalizers
+        self.dependents = dependents
+        self.moreDependents = moreDependents
+        self.resourceVersion = resourceVersion
+        self.deleting = deleting
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case isProtected = "protected", reason, clusterScoped, finalizers, dependents, moreDependents, resourceVersion, deleting
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        isProtected = try c.field(.isProtected, false)
+        reason = try c.field(.reason, "")
+        clusterScoped = try c.field(.clusterScoped, false)
+        finalizers = try c.field(.finalizers, [])
+        dependents = try c.field(.dependents, [])
+        moreDependents = try c.field(.moreDependents, 0)
+        resourceVersion = try c.field(.resourceVersion, "")
+        deleting = try c.field(.deleting, false)
+    }
+
+    /// A cluster-scoped or protected object is deleted only once its name is typed.
+    public var needsTypedName: Bool { isProtected || clusterScoped }
+}
+
+/// Whether a delete failed because the object changed since its preview (409 Conflict,
+/// kube_delete.go deleteError): look again before deleting.
+public func isKubeDeleteConflict(_ message: String) -> Bool {
+    message.contains("the object changed since you looked at it")
+}
