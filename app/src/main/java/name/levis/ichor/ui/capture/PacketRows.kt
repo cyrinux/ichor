@@ -32,11 +32,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.PacketSummary
@@ -46,9 +44,8 @@ import name.levis.ichor.model.relativeTime
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.theme.LocalChartColors
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.theme.monoSmall
 
-private val PacketFontSize = 11.sp
-private val PacketLineHeight = 14.sp
 
 /** Colours of packet rows, resolved once per theme (same spirit as the log rows). */
 @Immutable
@@ -96,9 +93,7 @@ private fun PacketRow(p: PacketSummary, start: Long, palette: PacketPalette, onC
     val text = remember(p, start, palette) { packetRowText(p, start, palette) }
     Text(
         text,
-        fontFamily = FontFamily.Monospace,
-        fontSize = PacketFontSize,
-        lineHeight = PacketLineHeight,
+        style = MaterialTheme.typography.monoSmall,
         modifier = Modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
