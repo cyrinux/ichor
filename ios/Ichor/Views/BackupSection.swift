@@ -9,11 +9,18 @@ extension UTType {
 
 /// Settings: back up the clusters and settings to a passphrase-sealed file, or restore one over them.
 struct BackupSection: View {
+    /// Set from elsewhere in Settings (the delete confirmation's "Back up first") to start a backup.
+    @Binding var requested: Bool
     @Environment(AppModel.self) private var model
     @State private var askingPassphrase = false
     @State private var document: BackupDocument?
     @State private var exporting = false
     @State private var message: String?
+
+    // Explicit: the private @State makes the memberwise init private.
+    init(requested: Binding<Bool> = .constant(false)) {
+        _requested = requested
+    }
 
     var body: some View {
         Section {
@@ -35,6 +42,11 @@ struct BackupSection: View {
             Text("Backup")
         } footer: {
             Text("Save your clusters and settings to a file encrypted with a passphrase, to restore them on a new phone (iOS or Android). Without the passphrase the file cannot be opened.")
+        }
+        .onChange(of: requested) { _, now in
+            guard now else { return }
+            requested = false
+            Task { await startBackup() }
         }
         // The exporter opens once the sheet is gone: one modal cannot present over another.
         .sheet(isPresented: $askingPassphrase, onDismiss: { exporting = document != nil }) {

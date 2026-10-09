@@ -478,6 +478,7 @@
     <string name="settings_delete_config">Видалити збережений talosconfig</string>
     <string name="settings_delete_title">Видалити talosconfig?</string>
     <string name="settings_delete_body">Зашифровану конфігурацію всіх кластерів разом із їхніми клієнтськими ключами буде вилучено з цього пристрою.</string>
+    <string name="settings_delete_backup_first">Спершу створити резервну копію</string>
 
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Моніторинг</string>

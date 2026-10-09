@@ -431,6 +431,7 @@
     <string name="settings_delete_config">Eliminar el talosconfig guardado</string>
     <string name="settings_delete_title">¿Eliminar el talosconfig?</string>
     <string name="settings_delete_body">La configuración cifrada de todos los clústeres, con sus claves de cliente, se eliminará de este dispositivo.</string>
+    <string name="settings_delete_backup_first">Hacer una copia primero</string>
 
     <!-- Monitoring and notifications -->
     <string name="monitor_section">Supervisión</string>

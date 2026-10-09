@@ -61,6 +61,7 @@ import name.levis.ichor.model.waveSteps
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.BackButton
 import name.levis.ichor.ui.components.ConfirmDialog
+import name.levis.ichor.ui.node.HostnameConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
 import name.levis.ichor.ui.components.ErrorBox
@@ -201,14 +202,17 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
             onDismiss = { terminate = false },
         )
     }
+    // The running revision changes for the whole app: typed, like a scale to zero.
     rollback?.let { h ->
-        ConfirmDialog(
+        HostnameConfirmDialog(
             title = stringResource(R.string.argo_rollback_title, shortRevision(h.revision)),
-            text = stringResource(R.string.argo_rollback_text, app.name, shortRevision(h.revision)),
-            confirm = stringResource(R.string.argo_rollback_confirm),
+            hostname = app.name,
+            confirmLabel = stringResource(R.string.argo_rollback_confirm),
             onConfirm = { rollback = null; act(ArgoAction.ROLLBACK, ArgoSyncOptions(historyId = h.id)) },
             onDismiss = { rollback = null },
-        )
+        ) {
+            Text(stringResource(R.string.argo_rollback_text, app.name, shortRevision(h.revision)))
+        }
     }
     restart?.let { w ->
         // The replicas decide the downtime warning: read them fresh, unless dismissed meanwhile.

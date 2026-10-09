@@ -10,6 +10,8 @@ struct HostnameConfirmationSheet: View {
     let actionTitle: String
     /// Risks the user confirms one by one (none by default).
     let acknowledgments: [String]
+    /// A safer way out shown under the action (e.g. "Back up first"); it dismisses the sheet first.
+    let alternative: (title: String, action: () -> Void)?
     let onConfirm: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -18,12 +20,13 @@ struct HostnameConfirmationSheet: View {
 
     // Explicit: the private @State makes the memberwise init private.
     init(title: String, message: String, hostname: String, actionTitle: String, acknowledgments: [String] = [],
-         onConfirm: @escaping () -> Void) {
+         alternative: (title: String, action: () -> Void)? = nil, onConfirm: @escaping () -> Void) {
         self.title = title
         self.message = message
         self.hostname = hostname
         self.actionTitle = actionTitle
         self.acknowledgments = acknowledgments
+        self.alternative = alternative
         self.onConfirm = onConfirm
     }
 
@@ -62,6 +65,12 @@ struct HostnameConfirmationSheet: View {
                 Section {
                     Button(role: .destructive) { onConfirm() } label: { Text(actionTitle) }
                         .disabled(!matches || !allAcknowledged)
+                    if let alternative {
+                        Button {
+                            dismiss()
+                            alternative.action()
+                        } label: { Text(verbatim: alternative.title) }
+                    }
                 }
             }
             .navigationTitle(title)

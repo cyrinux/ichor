@@ -11,6 +11,19 @@ an issue first so we can agree on the approach before you spend time on it.
   (GPL, AGPL, LGPL for statically linked code); ask in the issue first if unsure.
 - Never commit keystores, credentials, cluster configs or other secrets.
 
+## Confirming risky actions
+
+Do the same on Android and iOS:
+
+- **Typed confirmation** for anything irreversible or cluster-wide: the user types the
+  hostname or object name (`HostnameConfirmDialog` on Android, `HostnameConfirmationSheet`
+  on iOS). Examples: reboot, shutdown, etcd member removal, upgrade, drain, scale to zero,
+  Argo CD rollback, deleting every cluster (type `DELETE`).
+- **Plain confirmation** for a reversible action on one object, with the target in the title
+  ("Restart kubelet on cp-1?"). Examples: service start/stop/restart, Argo CD terminate,
+  rollout restart.
+- When a safer way out exists (a backup before deleting), offer it in the dialog.
+
 ## Code ownership
 
 [@cyrinux](https://github.com/cyrinux) is the default owner for all repository files;
