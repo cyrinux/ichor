@@ -29,7 +29,7 @@ const val KUBE_PAGE_SIZE = 500
 fun eagerCap(metered: Boolean): Int = if (metered) 5_000 else 10_000
 
 /**
- * A Kubernetes list loaded page by page (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists", L7, L8, L13):
+ * A Kubernetes list loaded page by page:
  * [items] in the API server's order (namespace, then name), all of them once [done]. A load
  * that reached its cap stops [capped]; further pages then come on scroll ([loadMore]).
  */

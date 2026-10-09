@@ -11,11 +11,11 @@ import (
 	"time"
 )
 
-// A list kept live with a watch (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists"): the list once, then the API
-// server's ADDED/MODIFIED/DELETED events from its resourceVersion, bookmarks kept so a new
-// request starts where the last one ended, and the list again when the server has let the
-// version go (410 Gone). A watch outlives the server's own timeout and a cut connection; a
-// refusal (401, 403, 404, a bad selector) ends it.
+// A list kept live with a watch: the list once, then the API server's ADDED/MODIFIED/DELETED
+// events from its resourceVersion, bookmarks kept so a new request starts where the last one
+// ended, and the list again when the server has let the version go (410 Gone). A watch
+// outlives the server's own timeout and a cut connection; a refusal (401, 403, 404, a bad
+// selector) ends it.
 
 const (
 	// watchTimeoutSeconds asks the server to end each watch request after this long: the next

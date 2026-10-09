@@ -1,7 +1,6 @@
 import Foundation
 
-// Kubernetes lists loaded page by page (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists", L7, L8, L12, L13).
-// Same rules as Android's model/PagedLoad.kt.
+// Kubernetes lists loaded page by page. Same rules as Android's model/PagedLoad.kt.
 
 /// One page of a Kubernetes list from a Go page function (KubePodsPage...): `continueToken`
 /// asks for the next one, `remaining` is how many items the next pages hold (-1 when the API

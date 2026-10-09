@@ -14,8 +14,7 @@ import (
 )
 
 // Small kubectl actions: scale, suspend/resume a CronJob, roll a Deployment back to a
-// revision, and pod logs through the Kubernetes API (the previous container's too). See
-// the Linear plan document "D2. Small kubectl actions".
+// revision, and pod logs through the Kubernetes API (the previous container's too).
 
 const (
 	// maxScaleReplicas bounds a scale typed on a phone.

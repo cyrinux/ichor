@@ -12,8 +12,7 @@ import (
 
 // Drain like `kubectl drain --ignore-daemonsets --delete-emptydir-data`, but never forced:
 // pods leave through the Eviction API, so PodDisruptionBudgets are honoured, and a budget
-// that allows no disruption makes the drain wait (it never deletes around it). See
-// the Linear plan document "D1. Node maintenance: cordon → drain → reboot → wait Ready → uncordon" (M1, M2).
+// that allows no disruption makes the drain wait (it never deletes around it).
 
 const (
 	mirrorPodAnnotation = "kubernetes.io/config.mirror"

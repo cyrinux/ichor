@@ -2712,7 +2712,7 @@
     <string name="overview_card_talos_update">Talos update</string>
     <string name="overview_card_desc_talos_update">A newer Talos release than the nodes run, when there is one</string>
 
-    <!-- Argo CD freeze (sync windows), the Linear plan document "D9. Argo CD freeze: hotfix live without being reverted" -->
+    <!-- Argo CD freeze (sync windows) -->
     <string name="argo_freeze_title">Freeze Argo CD</string>
     <string name="argo_freeze_button">Freeze auto-sync…</string>
     <string name="argo_freeze_confirm">Freeze</string>
@@ -2794,7 +2794,7 @@
         <item quantity="other">%1$d freezes · next ends %2$s</item>
     </plurals>
 
-    <!-- Argo CD freeze (sync windows), the Linear plan document "D9. Argo CD freeze: hotfix live without being reverted" -->
+    <!-- Argo CD freeze (sync windows) -->
     <string name="argo_revert_title">Argo CD will revert this</string>
     <string name="argo_revert_anyway">Scale anyway</string>
     <string name="argo_freeze_reason_scale">scale to %1$d</string>

@@ -1,7 +1,7 @@
 import Foundation
 
 // What the freeze screens derive from ArgoStatus: who a freeze would stop, the windows screen's
-// sections, the reminders to schedule. The design is in the Linear plan document "D9. Argo CD freeze: hotfix live without being reverted".
+// sections, the reminders to schedule.
 
 /// How much of its project a freeze around an app covers.
 public enum FreezeScope: String, Sendable, CaseIterable, Hashable, Identifiable {

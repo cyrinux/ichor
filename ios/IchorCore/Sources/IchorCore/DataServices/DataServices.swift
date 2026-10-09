@@ -1,7 +1,6 @@
 import Foundation
 
-// Mirrors go/ichorgo/kube_dataservices.go, kube_longhorn.go, kube_garage.go, kube_cnpg.go and kube_certmanager.go
-// (the wire format is documented in the Linear plan document "Data services: Longhorn, Garage and CloudNativePG health").
+// Mirrors go/ichorgo/kube_dataservices.go, kube_longhorn.go, kube_garage.go, kube_cnpg.go and kube_certmanager.go.
 // One file per service in DataServices/; this one keeps the envelope and what they share.
 
 /// Health of the storage and database operators a cluster runs; a nil section is not installed.

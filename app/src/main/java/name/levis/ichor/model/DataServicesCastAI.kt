@@ -2,8 +2,7 @@ package name.levis.ichor.model
 
 import kotlinx.serialization.Serializable
 
-// Mirrors go/ichorgo/kube_castai.go (see DataServices.kt); the wire format is documented in
-// the Linear plan document "Data services: Longhorn, Garage and CloudNativePG health".
+// Mirrors go/ichorgo/kube_castai.go (see DataServices.kt).
 
 /** CAST AI's Workload Autoscaler: one recommendation per workload it manages. */
 @Serializable

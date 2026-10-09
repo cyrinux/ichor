@@ -1,6 +1,6 @@
 import Foundation
 
-// Mirrors go/ichorgo/kube_mariadb.go (the wire format is documented in the Linear plan document "Data services: Longhorn, Garage and CloudNativePG health").
+// Mirrors go/ichorgo/kube_mariadb.go.
 
 public struct MariaDbStatus: Decodable, Equatable, Sendable {
     public let version: String

@@ -15,7 +15,7 @@ public func etcdSnapshotFilename(context: String, hostname: String, date: Date,
     return encrypted ? name + ".age" : name
 }
 
-/// How a snapshot is protected (the Linear plan document "Encrypted etcd snapshots"): age public keys (one per line:
+/// How a snapshot is protected: age public keys (one per line:
 /// age, SSH or YubiKey age1tag1 keys), an age passphrase, or nothing.
 public enum SnapshotEncryption: Sendable, CustomStringConvertible {
     case keys(String)

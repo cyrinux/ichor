@@ -16,7 +16,7 @@ import (
 )
 
 // The Argo CD diff: what syncing an Application now would change, like the Diff tab of the
-// Argo CD UI, without an Argo CD token (the Linear plan document "D5. Argo CD diff and commit links", phase 2).
+// Argo CD UI, without an Argo CD token.
 // The application controller already computes it on every reconciliation and keeps it in
 // Argo CD's Redis: per resource, the live object as Argo CD normalises it and the object as
 // it would be after a sync (ignoreDifferences and Argo CD's own normalisation applied, Secret

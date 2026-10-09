@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/kube_browser.go and kube_edit.go: any kind the API server serves, listed
-// with the columns of its server-side Table, and one object as YAML (the Linear plan document "Study: kubeconfig-only clusters (no Talos)" §7).
+// with the columns of its server-side Table, and one object as YAML.
 
 /** A listable resource, as `kubectl api-resources` shows it. [group] "" for the core one. */
 @Serializable

@@ -7,8 +7,7 @@ import (
 )
 
 // Browsable links for what Argo CD deploys: the repository page and the commit a revision
-// names (the Linear plan document "D5. Argo CD diff and commit links", phase 1). Built on the phone from the
-// source's repoURL and the revision; nothing is fetched.
+// names. Built on the phone from the source's repoURL and the revision; nothing is fetched.
 
 var (
 	// gitCommitSHA is a full or abbreviated Git object name.

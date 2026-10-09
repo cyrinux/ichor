@@ -1,7 +1,7 @@
 import Foundation
 
 // Mirrors go/ichorgo/kube_diff.go and kube_flux_diff.go: what a GitOps tool would change in the
-// cluster, object by object (the Linear plan document "D6. Flux", phase 5).
+// cluster, object by object.
 
 /// What reconciling a Flux object now would change.
 public struct FluxDiff: Decodable, Equatable, Sendable {

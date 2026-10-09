@@ -3,8 +3,7 @@ package name.levis.ichor.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-// Mirrors go/ichorgo/kube_dataservices.go, kube_longhorn.go, kube_garage.go and kube_cnpg.go
-// (the wire format is documented in the Linear plan document "Data services: Longhorn, Garage and CloudNativePG health").
+// Mirrors go/ichorgo/kube_dataservices.go, kube_longhorn.go, kube_garage.go and kube_cnpg.go.
 
 /** Health of the storage and database operators a cluster runs; a null section is not installed. */
 @Serializable

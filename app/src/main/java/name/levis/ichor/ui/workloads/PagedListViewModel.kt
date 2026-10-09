@@ -20,7 +20,7 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.uiText
 
 /**
- * A Kubernetes list of the screen's [scope], loaded page by page (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists"):
+ * A Kubernetes list of the screen's [scope], loaded page by page:
  * eagerly up to [eagerLimit] rows (fewer when [metered]), rows shown as they arrive until the
  * first load completes, then further pages on demand ([loadMore], [loadAll]) in the server's
  * order. A refresh keeps the rows on screen until the new load completes; an expired list

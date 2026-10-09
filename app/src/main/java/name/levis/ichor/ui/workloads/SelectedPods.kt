@@ -65,8 +65,7 @@ import name.levis.ichor.ui.factory
 
 /**
  * The Kubernetes pods of one node or workload ([selection]), page by page in the API server's
- * order: the first page at once, the next ones on scroll (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists",
- * Phase 5). Kept in memory only, per phase.
+ * order: the first page at once, the next ones on scroll. Kept in memory only, per phase.
  */
 class SelectedPodsViewModel(
     private val talos: TalosRepository,
