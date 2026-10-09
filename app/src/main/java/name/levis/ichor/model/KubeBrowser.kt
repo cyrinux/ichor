@@ -18,6 +18,8 @@ data class ApiResource(
     val verbs: List<String> = emptyList(),
     val shortNames: List<String> = emptyList(),
     val categories: List<String> = emptyList(),
+    /** It serves /scale (any CRD declaring it), or is a Job (its parallelism). */
+    val scalable: Boolean = false,
 ) {
     val groupVersion: String get() = if (group.isEmpty()) version else "$group/$version"
     val key: String get() = "$group/$resource"
@@ -80,10 +82,23 @@ data class ResourcePageJson(
     val remaining: Long = -1,
 ) {
     /** Each row carries the page's columns (one shared list) so it can show itself. */
-    fun toPage(): KubePage<ResourceRow> {
-        val rows = rows.map { ResourceRow(it.name, it.namespace, it.cells, it.created, it.deleting, columns) }
-        return KubePage(rows, continueToken, remaining, complete = continueToken.isEmpty())
+    fun toPage(): KubePage<ResourceRow> =
+        KubePage(rows.map { it.toRow(columns) }, continueToken, remaining, complete = continueToken.isEmpty())
+}
+
+/**
+ * The rows of one Table watch (StartKubeWatch): a SYNC page sets the columns, and each row
+ * after it gets them, since the watch sends them with the list only. One per watch.
+ */
+class ResourceWatchRows {
+    private var columns: List<ResourceColumn> = emptyList()
+
+    fun page(page: ResourcePageJson): List<ResourceRow> {
+        columns = page.columns
+        return page.toPage().items
     }
+
+    fun row(row: ResourceRowJson): ResourceRow = row.toRow(columns)
 }
 
 @Serializable
@@ -94,7 +109,9 @@ data class ResourceRowJson(
     /** Unix seconds. */
     val created: Long = 0,
     val deleting: Boolean = false,
-)
+) {
+    fun toRow(columns: List<ResourceColumn>) = ResourceRow(name, namespace, cells, created, deleting, columns)
+}
 
 /** One object of a resource list, with the Table's [columns] its [cells] follow. */
 data class ResourceRow(
@@ -230,13 +247,40 @@ data class KubeObjectRef(
     val namespace: String,
     val name: String,
     val editable: Boolean,
+    /** The object screen offers Scale: see [ApiResource.scalable]. */
+    val scalable: Boolean = false,
 ) {
     val isSecret: Boolean get() = group.isEmpty() && resource == "secrets"
     val isPod: Boolean get() = group.isEmpty() && resource == "pods"
+    val isJob: Boolean get() = group == "batch" && resource == "jobs"
+
+    /** The resource a scale patches, as KubeCan takes it: a Job itself, the /scale subresource otherwise. */
+    val scaleResource: String get() = if (isJob) resource else "$resource/scale"
 
     companion object {
         fun pod(namespace: String, name: String) = KubeObjectRef("", "v1", "pods", "Pod", namespace, name, editable = true)
+
+        fun pvc(namespace: String, name: String) =
+            KubeObjectRef("", "v1", "persistentvolumeclaims", "PersistentVolumeClaim", namespace, name, editable = true)
+
+        fun service(namespace: String, name: String) = KubeObjectRef("", "v1", "services", "Service", namespace, name, editable = true)
+
+        /** A Job scales its parallelism, as the browser offers it. */
+        fun job(namespace: String, name: String) =
+            KubeObjectRef("batch", "v1", "jobs", "Job", namespace, name, editable = true, scalable = true)
+
+        fun cronJob(namespace: String, name: String) = KubeObjectRef("batch", "v1", "cronjobs", "CronJob", namespace, name, editable = true)
     }
+}
+
+/**
+ * How many pods an object wants ([replicas]) and runs ([current]) (KubeObjectScale). A Job's
+ * count is its parallelism ([field] "parallelism"): how many of its pods run at once.
+ */
+@Serializable
+data class KubeObjectScale(val replicas: Int = 0, val current: Int = 0, val field: String = "replicas") {
+    // `this.`: a bare `field` in a getter is the backing field.
+    val isParallelism: Boolean get() = this.field == "parallelism"
 }
 
 /** A container port of a pod's YAML: [name] "" when unnamed. */

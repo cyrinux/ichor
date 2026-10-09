@@ -12,12 +12,20 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
+import name.levis.ichor.data.KUBE_WATCH_RETRY_MILLIS
 import name.levis.ichor.data.KubeBrowserRepository
+import name.levis.ichor.data.StreamItem
+import name.levis.ichor.data.watchForever
 import name.levis.ichor.model.DeletePropagation
 import name.levis.ichor.model.KubeDeletePreview
 import name.levis.ichor.model.KubeEditPreview
+import name.levis.ichor.model.KubeExplain
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.KubeObjectScale
 import name.levis.ichor.model.KubeObjectSummary
+import name.levis.ichor.model.YamlCursor
+import name.levis.ichor.model.yamlCursorAt
+import name.levis.ichor.model.clampReplicas
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.cancellableCatching
@@ -37,6 +45,23 @@ data class ObjectEdit(
     val changed: Boolean get() = draft != original
 }
 
+/** What the schema help sheet does: describe the field at the cursor, or list the fields to add there. */
+enum class SchemaHelpMode { EXPLAIN, ADD }
+
+/**
+ * The schema help sheet: [mode] for the [cursor] read at [offset] of the draft, and the
+ * schema of the path it asks about once read.
+ */
+data class SchemaHelp(
+    val mode: SchemaHelpMode,
+    val cursor: YamlCursor,
+    val offset: Int,
+    val state: UiState<KubeExplain> = UiState.Loading,
+) {
+    /** The path asked about: the field at the cursor, or the map a field is added to. */
+    val path: String get() = if (mode == SchemaHelpMode.EXPLAIN) cursor.fieldPath else cursor.addPath
+}
+
 /**
  * A deletion being confirmed: what it would do ([preview]), the [propagation] chosen, then
  * [deleting] while it runs and [error] when it was refused.
@@ -45,6 +70,17 @@ data class ObjectDelete(
     val preview: UiState<KubeDeletePreview> = UiState.Loading,
     val propagation: DeletePropagation = DeletePropagation.BACKGROUND,
     val deleting: Boolean = false,
+    val error: UiText? = null,
+)
+
+/**
+ * A scale being chosen: the object's count ([scale], read when the dialog opens), the
+ * [target] picked, then [applying] while it runs and [error] when it was refused.
+ */
+data class ObjectScale(
+    val scale: UiState<KubeObjectScale> = UiState.Loading,
+    val target: Int = 0,
+    val applying: Boolean = false,
     val error: UiText? = null,
 )
 
@@ -80,7 +116,17 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
     /** Once the object is deleted: the screen leaves. */
     val deleted: Flow<Unit> = _deleted.receiveAsFlow()
 
+    private val _help = MutableStateFlow<SchemaHelp?>(null)
+    /** The schema help sheet, null when closed. */
+    val help: StateFlow<SchemaHelp?> = _help.asStateFlow()
+
     private var load: Job? = null
+    private var helpLoad: Job? = null
+    private val _scale = MutableStateFlow<ObjectScale?>(null)
+    /** The scale being chosen, null when none is. */
+    val scale: StateFlow<ObjectScale?> = _scale.asStateFlow()
+
+    private var scaleLoad: Job? = null
     private var deletePreview: Job? = null
     private var summaryLoad: Job? = null
     private var review: Job? = null
@@ -98,6 +144,20 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
         summaryLoad = viewModelScope.launch {
             _summary.value = cancellableCatching { browser.objectSummary(ref) }
                 .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+        }
+    }
+
+    /**
+     * Keeps the summary live while called (the screen is visible): the Go core reads it again
+     * whenever the object or its events change. A watch that ends is followed again after
+     * [KUBE_WATCH_RETRY_MILLIS]; one refused leaves the one-shot read on screen.
+     */
+    suspend fun followSummary() {
+        watchForever(start = { browser.objectSummaryWatch(ref) }) { item ->
+            when (item) {
+                is StreamItem.Item -> _summary.value = UiState.Loaded(item.value)
+                is StreamItem.Done -> if (_summary.value is UiState.Loading) item.error?.let { _summary.value = UiState.Failed(UiText.Raw(it)) }
+            }
         }
     }
 
@@ -138,6 +198,7 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
     /** Leaves the editor, dropping the draft. */
     fun cancelEdit() {
         review?.cancel()
+        closeHelp()
         _edit.value = null
     }
 
@@ -151,6 +212,33 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
                 .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
             _edit.update { it?.copy(review = result) }
         }
+    }
+
+    /** Opens the schema help for the cursor at [offset] of [text] (the editor's own, ahead of the draft). */
+    fun openHelp(text: String, offset: Int, mode: SchemaHelpMode) {
+        val help = SchemaHelp(mode, yamlCursorAt(text, offset), offset)
+        _help.value = help
+        loadHelp(help)
+    }
+
+    fun retryHelp() {
+        val help = _help.value ?: return
+        _help.value = help.copy(state = UiState.Loading)
+        loadHelp(help)
+    }
+
+    private fun loadHelp(help: SchemaHelp) {
+        helpLoad?.cancel()
+        helpLoad = viewModelScope.launch {
+            val result = cancellableCatching { browser.explain(ref, help.path) }
+                .fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) })
+            _help.update { if (it?.path == help.path && it.mode == help.mode) it.copy(state = result) else it }
+        }
+    }
+
+    fun closeHelp() {
+        helpLoad?.cancel()
+        _help.value = null
     }
 
     /** Back from the diff to the draft. */
@@ -216,6 +304,53 @@ class KubeObjectViewModel(private val browser: KubeBrowserRepository, val ref: K
                 _deleted.send(Unit)
             } else {
                 _delete.update { it?.copy(deleting = false, error = outcome.exceptionOrNull()?.uiText()) }
+            }
+        }
+    }
+
+    /** Opens the scale dialog and reads the object's count. */
+    fun startScale() {
+        if (_scale.value != null || !ref.scalable) return
+        _scale.value = ObjectScale()
+        loadScale()
+    }
+
+    fun loadScale() {
+        scaleLoad?.cancel()
+        _scale.update { it?.copy(scale = UiState.Loading, error = null) }
+        scaleLoad = viewModelScope.launch {
+            val result = cancellableCatching { browser.objectScale(ref) }
+            _scale.update { current ->
+                current?.copy(
+                    scale = result.fold(onSuccess = { UiState.Loaded(it) }, onFailure = { UiState.Failed(it.uiText()) }),
+                    target = result.getOrNull()?.replicas ?: current.target,
+                )
+            }
+        }
+    }
+
+    fun chooseScale(target: Int) = _scale.update { it?.copy(target = clampReplicas(target), error = null) }
+
+    fun cancelScale() {
+        scaleLoad?.cancel()
+        _scale.value = null
+    }
+
+    /** Applies the target; on success closes the dialog, says so (and which autoscaler will undo it), and reads the object again. */
+    fun applyScale() {
+        val current = _scale.value ?: return
+        if (current.applying || current.scale !is UiState.Loaded) return
+        val target = current.target
+        _scale.value = current.copy(applying = true, error = null)
+        viewModelScope.launch {
+            val outcome = cancellableCatching { browser.scale(ref, target) }
+            outcome.onSuccess { warning ->
+                _scale.value = null
+                _messages.send(UiText.Res(R.string.workloads_scale_done, ref.name, target))
+                if (warning.isNotEmpty()) _messages.send(UiText.Raw(warning))
+                refreshAll()
+            }.onFailure { e ->
+                _scale.update { it?.copy(applying = false, error = e.uiText()) }
             }
         }
     }

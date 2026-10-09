@@ -18,7 +18,7 @@ import (
 var unmaskedResults = []string{"Kubeconfig", "GenerateTalosconfig", "BuildTalosconfig", "ReplaceContextCredentials", "MergeConfig", "RemoveContext", "MergeKubeconfig", "RemoveKubeContext", "ExportKubeContext", "MergeTalosconfig", "DecodeImportText", "QRCodeText", "KubeAuthForBackup", "DiscoverClusters", "AddContextNodes", "SetContextEndpoints", "AddContextEndpoint", "DemoConfig", "DemoKubeconfig", "DecryptBackup", "NormalizeKubeServer", "NormalizePromSource", "DebugSnippets", "IntegrationIssueURL", "IntegrationSearchURL", "BuildShareLink", "DiscoverOmniClusters", "SetOmniServiceAccount"}
 
 // The shells wrap their listener in newDebugSession: status and exit masked, not the terminal.
-var unmaskedListeners = []string{"StartDebugShell", "StartPodShell"}
+var unmaskedListeners = []string{"StartDebugShell", "StartNodeDebug", "StartPodDebug", "StartPodShell"}
 
 // TestExportedFuncsUsePrivacyHooks checks every exported function of the package: masked
 // context names and nodes coming from the app are unmasked on entry, and results, errors

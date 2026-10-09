@@ -1,5 +1,8 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.model.KubeJobs
+import name.levis.ichor.model.KubeServices
+import name.levis.ichor.model.KubeStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -14,13 +17,20 @@ import name.levis.ichor.model.HelmRollbackPlan
 import name.levis.ichor.model.DeletePropagation
 import name.levis.ichor.model.KUBE_PAGE_SIZE
 import name.levis.ichor.model.KubeApplyResult
+import name.levis.ichor.model.KubeConfigData
 import name.levis.ichor.model.KubeDeletePreview
+import name.levis.ichor.model.configDataKind
 import name.levis.ichor.model.KubeEditPreview
+import name.levis.ichor.model.KubeExplain
 import name.levis.ichor.model.KubeObjectRef
+import name.levis.ichor.model.KubeObjectScale
 import name.levis.ichor.model.KubeObjectSummary
 import name.levis.ichor.model.KubePage
 import name.levis.ichor.model.ResourcePageJson
+import name.levis.ichor.model.KubeWatchEvent
 import name.levis.ichor.model.ResourceRow
+import name.levis.ichor.model.ResourceRowJson
+import name.levis.ichor.model.ResourceWatchRows
 import name.levis.ichor.ui.goErrorText
 import name.levis.ichorgo.Ichorgo
 import name.levis.ichorgo.LogListener
@@ -54,9 +64,34 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
             TalosJson.decodeFromString(ResourcePageJson.serializer(), json).toPage()
         }
 
+    /**
+     * [resourcePage]'s list kept live: every object of [resource] in [namespace] (null for every
+     * one, or a cluster-scoped kind) at the start, then each change, until the collector cancels
+     * or the watch ends ([StreamItem.Done]).
+     */
+    fun resourceWatch(group: String, version: String, resource: String, namespace: String?): Flow<StreamItem<KubeWatchEvent<ResourceRow>>> {
+        val rows = ResourceWatchRows()
+        return kubeWatchFlow(
+            ::target,
+            { json -> rows.row(TalosJson.decodeFromString(ResourceRowJson.serializer(), json)) },
+            { json -> rows.page(TalosJson.decodeFromString(ResourcePageJson.serializer(), json)) },
+        ) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeWatch(cfg, ctx, server, group, version, resource, namespace.orEmpty(), "", "", listener)
+        }
+    }
+
     /** [ref] as YAML; a Secret's values only when [reveal]. Never cached: it may hold secrets. */
     suspend fun objectYaml(ref: KubeObjectRef, reveal: Boolean): String = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeObjectYAML(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, reveal)
+    }
+
+    /**
+     * A Secret or ConfigMap ([ref]) key by key, with the pods using it. A Secret's value comes
+     * only for [revealKey] ("" for none; refused in screenshot mode). Never cached.
+     */
+    suspend fun configData(ref: KubeObjectRef, revealKey: String = ""): KubeConfigData = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeConfigData(cfg, ctx, server, ref.configDataKind, ref.namespace, ref.name, revealKey)
+        TalosJson.decodeFromString(KubeConfigData.serializer(), json)
     }
 
     /** [ref] summed up: conditions, owners and managers, metadata, spec highlights and events. */
@@ -64,6 +99,15 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
         val json = Ichorgo.kubeObjectSummary(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name)
         TalosJson.decodeFromString(KubeObjectSummary.serializer(), json)
     }
+
+    /**
+     * [objectSummary] kept live: the summary at the start, then again each time the object or
+     * its events change, until the collector cancels or the watch ends ([StreamItem.Done]).
+     */
+    fun objectSummaryWatch(ref: KubeObjectRef): Flow<StreamItem<KubeObjectSummary>> =
+        kubeLiveFlow(::target, KubeObjectSummary.serializer()) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeObjectWatch(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, listener)
+        }
 
     /** What saving [edited] as [ref] would store, from a dry run. */
     suspend fun updatePreview(ref: KubeObjectRef, edited: String): KubeEditPreview = kubeCall { cfg, ctx, server ->
@@ -94,6 +138,23 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
         Ichorgo.kubeObjectUpdate(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, edited)
     }
 
+    /** The schema help for [fieldPath] ("spec.template", "" for the kind) of [ref]'s kind, from OpenAPI v3. */
+    suspend fun explain(ref: KubeObjectRef, fieldPath: String): KubeExplain = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeExplain(cfg, ctx, server, ref.group, ref.version, ref.kind, fieldPath)
+        TalosJson.decodeFromString(KubeExplain.serializer(), json)
+    }
+
+    /** How many pods [ref] wants and runs (a Job: its parallelism). */
+    suspend fun objectScale(ref: KubeObjectRef): KubeObjectScale = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeObjectScale(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name)
+        TalosJson.decodeFromString(KubeObjectScale.serializer(), json)
+    }
+
+    /** Sets [ref]'s replicas (a Job's parallelism); returns the autoscaler warning, "" when none. */
+    suspend fun scale(ref: KubeObjectRef, replicas: Int): String = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeScaleObject(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.kind, ref.namespace, ref.name, replicas.toLong())
+    }
+
     /** What deleting [ref] would do: protection, finalizers, the objects it owns. Read-only. */
     suspend fun deletePreview(ref: KubeObjectRef): KubeDeletePreview = kubeCall { cfg, ctx, server ->
         val json = Ichorgo.kubeObjectDeletePreview(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name)
@@ -106,6 +167,21 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
      */
     suspend fun delete(ref: KubeObjectRef, propagation: DeletePropagation, resourceVersion: String, force: Boolean) = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeObjectDelete(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, propagation.api, resourceVersion, -1L, force)
+    }
+
+    /** The PersistentVolumeClaims of [namespace] (null for every one), with volume, pods and fill. */
+    suspend fun storage(namespace: String?): KubeStorage = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeStorage.serializer(), Ichorgo.kubeStorage(cfg, ctx, server, namespace.orEmpty()))
+    }
+
+    /** The Services of [namespace] (null for every one), with addresses, ready endpoints and routes. */
+    suspend fun services(namespace: String?): KubeServices = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeServices.serializer(), Ichorgo.kubeServices(cfg, ctx, server, namespace.orEmpty()))
+    }
+
+    /** The Jobs of [namespace] (null for every one), failures first. */
+    suspend fun jobs(namespace: String?): KubeJobs = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeJobs.serializer(), Ichorgo.kubeJobs(cfg, ctx, server, namespace.orEmpty()))
     }
 
     /** The latest revision of each Helm release of [namespace] (null for every one). */

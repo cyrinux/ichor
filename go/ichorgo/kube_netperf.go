@@ -34,7 +34,14 @@ const (
 	netPerfStaleAge = 30 * time.Minute
 	// netPerfCleanupTimeout bounds the namespace deletion, which runs even after a cancel.
 	netPerfCleanupTimeout = 30 * time.Second
+	// netPerfCleanupAttempts is how many times the namespace DELETE is tried.
+	netPerfCleanupAttempts = 3
+	// netPerfManagedBy is the managed-by label value of the namespaces Ichor creates.
+	netPerfManagedBy = "ichor"
 )
+
+// netPerfCleanupRetry is the pause between two namespace DELETE attempts (shorter in tests).
+var netPerfCleanupRetry = 2 * time.Second
 
 // Network test phases reported through NetPerfListener.OnProgress.
 const (
@@ -113,6 +120,8 @@ type netPerfReport struct {
 	Started     int64           `json:"started"`
 	Finished    int64           `json:"finished"`
 	Results     []netPerfResult `json:"results"`
+	// Cleanup says the test namespace could not be deleted, empty when it was.
+	Cleanup string `json:"cleanup,omitempty"`
 }
 
 type netPerfProgress struct {
@@ -272,8 +281,8 @@ func (o netPerfOptions) validate() error {
 
 // runNetPerf runs a test with k. Every measurement is attempted: one that fails (a firewall
 // on the host network) is reported with its error, the others still run.
-func runNetPerf(ctx context.Context, k *kubeClient, opts netPerfOptions, emit func(netPerfProgress)) (netPerfReport, error) {
-	report := netPerfReport{
+func runNetPerf(ctx context.Context, k *kubeClient, opts netPerfOptions, emit func(netPerfProgress)) (report netPerfReport, err error) {
+	report = netPerfReport{
 		Server: opts.server, Client: opts.client, HostNetwork: opts.hostNetwork, Seconds: opts.seconds,
 		Image: netPerfImage, Started: time.Now().UnixMilli(), Results: []netPerfResult{},
 	}
@@ -300,9 +309,14 @@ func runNetPerf(ctx context.Context, k *kubeClient, opts netPerfOptions, emit fu
 		return report, fmt.Errorf("create the test namespace: %w", err)
 	}
 
+	// The report is a named result so the cleanup outcome reaches it after a return.
 	defer func() {
 		progress(netPerfProgress{Phase: netPerfPhaseCleaning})
-		deleteNetPerfNamespace(ctx, k, ns)
+
+		if cleanupErr := deleteNetPerfNamespace(ctx, k, ns); cleanupErr != nil {
+			report.Cleanup = fmt.Sprintf("namespace %s could not be deleted: %v", ns, cleanupErr)
+			progress(netPerfProgress{Phase: netPerfPhaseCleaning, Message: report.Cleanup})
+		}
 	}()
 
 	progress(netPerfProgress{Phase: netPerfPhaseStarting, Message: opts.server})

@@ -467,6 +467,8 @@
     <string name="settings_kube_export">Експортувати kubeconfig…</string>
     <string name="settings_kube_saved">Збережено. У kubenav додайте кластер із цього файлу.</string>
     <string name="settings_kube_open_kubenav">Відкрити kubenav</string>
+    <string name="settings_node_debug_shell">Налагоджувальна оболонка вузла</string>
+    <string name="settings_node_debug_shell_desc">На кластерах без Talos додає «Налагоджувальна оболонка…» до меню вузла: привілейований под у просторах імен вузла дає root-оболонку на вузлі. Под видаляється, коли оболонку закрито. Вимкнено за замовчуванням.</string>
     <string name="settings_kube_open_failed">Не вдалося відкрити вибраний файл</string>
     <string name="settings_section_config">Конфігурація</string>
     <string name="settings_encryption_key">Ключ шифрування</string>
@@ -667,6 +669,9 @@
 
     <!-- Debug shell -->
     <string name="debug_title">Налагоджувальна оболонка</string>
+    <string name="node_debug_title">Root-оболонка</string>
+    <string name="node_debug_auth">Root-оболонка на %1$s</string>
+    <string name="node_debug_intro">Привілейований под запускається на %1$s у просторі імен %2$s, у власних просторах імен вузла, і nsenter відкриває root-оболонку на вузлі. Под видаляється, коли оболонка завершується. Простір імен має допускати привілейовані поди.</string>
     <string name="debug_stop">Зупинити</string>
     <string name="debug_auth">Налагоджувальна оболонка на %1$s</string>
     <string name="debug_intro">Запускає образ як привілейований контейнер на %1$s з доступом до хоста й відкриває в ньому термінал. Якщо образу немає на вузлі, Talos спочатку завантажить його.</string>
@@ -2212,6 +2217,7 @@
     <string name="netperf_stop">Зупинити</string>
     <string name="netperf_stopping">Зупинка: видалення namespace тесту…</string>
     <string name="netperf_stopped">Тест зупинено.</string>
+    <string name="netperf_cleanup_failed">Не вдалося прибрати: %1$s</string>
     <string name="netperf_failed">Тест не вдався: %1$s</string>
     <string name="netperf_again">Новий тест</string>
     <string name="netperf_history">Попередні тести</string>
@@ -2737,6 +2743,7 @@
     <string name="node_menu_cordon">Ізолювати (cordon)</string>
     <string name="node_menu_uncordon">Зняти ізоляцію</string>
     <string name="node_menu_drain">Звільнити…</string>
+    <string name="node_menu_kube_debug_shell">Налагоджувальна оболонка…</string>
     <string name="node_menu_group_inspect">Огляд</string>
     <string name="node_menu_group_troubleshoot">Діагностика</string>
     <string name="node_menu_group_operate">Керування</string>
@@ -3111,7 +3118,7 @@
     <string name="audit_unauthorized">Відмовлено %1$d разів (401): його облікові дані недійсні</string>
     <string name="audit_unauthorized_fix">Його токен чи сертифікат прострочений або видалений (видалений обліковий запис служби, старий kubeconfig): дайте йому нові облікові дані або зупиніть його. Журнал знає лише його адресу.</string>
     <string name="checkup_title">Перевірка кластера</string>
-    <string name="checkup_intro">Те, чого не показують інші екрани, прочитане з API Kubernetes. Нічого не змінюється.</string>
+    <string name="checkup_intro">Те, чого не показують інші екрани, прочитане з API Kubernetes. Нічого не змінюється, доки ви не торкнетеся дії.</string>
     <string name="checkup_verdict_critical">Потребує уваги</string>
     <string name="checkup_verdict_warning">Попередження</string>
     <string name="checkup_verdict_ok">Усе гаразд</string>
@@ -3192,6 +3199,10 @@
     <string name="checkup_lbPoolExhausted">Адрес не лишилося (пул із %1$s)</string>
     <string name="checkup_lbPoolConflict">Перетинається з іншим пулом</string>
     <string name="checkup_terminating">Видаляється вже %1$s</string>
+    <string name="checkup_netperfLeftover">Залишений мережевим тестом %1$s тому</string>
+    <string name="checkup_netperfLeftover_fix">Застосунок закрили до того, як тест прибрав за собою. Більше нічого в цьому namespace немає; видаляти його безпечно.</string>
+    <string name="checkup_delete_namespace_title">Видалити namespace %1$s?</string>
+    <string name="checkup_delete_namespace_text">Поди мережевого тесту в ньому видаляються разом із ним.</string>
     <string name="checkup_csrPending">Запитів сертифікатів, що чекають схвалення: %1$s (%2$s)</string>
     <string name="checkup_csrDenied">Відхилених запитів сертифікатів: %1$s (%2$s)</string>
     <string name="checkup_externalSecretFailed">Не синхронізується зі сховища %1$s</string>
@@ -3416,6 +3427,15 @@
     <string name="kb_edit_hint">Збережіть metadata.resourceVersion: зміну, зроблену тим часом, буде відхилено, а не перезаписано.</string>
     <string name="kb_edit_reveal_first">Спершу покажіть значення секрету: приховані значення буде збережено як є.</string>
     <string name="kb_review">Переглянути</string>
+    <string name="kb_explain_field">Пояснити поле</string>
+    <string name="kb_add_field">Додати поле</string>
+    <string name="kb_schema_add_title">Додати до %1$s</string>
+    <string name="kb_schema_required">обовʼязкове</string>
+    <string name="kb_schema_values">Допустимі значення</string>
+    <string name="kb_schema_fields">Поля</string>
+    <string name="kb_schema_no_fields">Тут нічого додавати: це поле містить значення, а не інші поля.</string>
+    <string name="kb_schema_add_hint">Торкніться поля, щоб додати його в позиції курсора, спершу обовʼязкові.</string>
+    <string name="kb_schema_unavailable">Довідка схеми недоступна</string>
     <string name="kb_review_loading">Запит до API-сервера, що зміниться…</string>
     <string name="kb_no_changes">Немає змін для збереження.</string>
     <string name="kb_back_to_editor">Назад до редактора</string>
@@ -3426,6 +3446,9 @@
     <string name="kb_discard_confirm">Скасувати</string>
     <string name="kb_delete">Видалити</string>
     <string name="kb_delete_title">Видалити %1$s?</string>
+    <string name="kb_scale_title">Масштабувати %1$s</string>
+    <string name="kb_scale_running">Працює зараз: %1$s</string>
+    <string name="kb_scale_job_hint">Job запускає стільки подів одночасно; 0 призупиняє його.</string>
     <string name="kb_delete_loading">Читаємо, чого торкнеться видалення…</string>
     <string name="kb_delete_protected">Захищено: %1$s</string>
     <string name="kb_delete_pending">Його видалення вже очікує: його тримають фіналізатори нижче.</string>
@@ -3610,4 +3633,48 @@
     <string name="kube_whoami_user">Користувач Kubernetes</string>
     <string name="mono_text_larger">Більший текст</string>
     <string name="mono_text_smaller">Менший текст</string>
+    <string name="kb_tab_data">Дані</string>
+    <string name="kb_data_type">Тип: %1$s</string>
+    <string name="kb_data_keys">Ключі</string>
+    <string name="kb_data_no_keys">Немає ключів.</string>
+    <string name="kb_data_hint_text">Текст</string>
+    <string name="kb_data_hint_binary">Двійкові дані</string>
+    <string name="kb_data_show_value">Показати значення</string>
+    <string name="kb_data_hide_value">Приховати значення</string>
+    <string name="kb_data_copy_value">Копіювати значення</string>
+    <string name="kb_data_base64">Двійкове значення, показане в base64.</string>
+    <string name="kb_data_cert_chain">Сертифікатів у ланцюжку: %1$d</string>
+    <string name="kb_data_registries">Реєстри</string>
+    <string name="kb_data_registry_user">Користувач: %1$s</string>
+    <string name="kb_data_used_by">Використовується</string>
+    <string name="kb_data_used_by_unknown">Не вдалося отримати список подів цього простору імен.</string>
+    <string name="kb_data_used_by_none">Жоден под цього простору імен його не використовує.</string>
+    <string name="kb_data_reveal_auth">Показати %1$s з %2$s</string>
+||||||| 62d80f4f
+    <string name="pod_debug_toggle">Контейнер налагодження</string>
+    <string name="pod_debug_note">Для образів без оболонки (distroless): додає тимчасовий контейнер, який бачить процеси цього пода. Kubernetes зберігає його в поді, доки под не буде видалено.</string>
+    <string name="storage_kube_search">Пошук PVC, класів або подів</string>
+    <string name="storage_kube_empty">Немає PVC.</string>
+    <string name="storage_kube_no_match">Жоден PVC не відповідає.</string>
+    <string name="storage_kube_partial">Ці облікові дані не можуть читати томи, класи або вузли: деяких відомостей бракує.</string>
+    <string name="storage_kube_not_measured">заповненість не виміряно</string>
+    <string name="storage_kube_pods">Використовують: %1$s</string>
+    <string name="storage_kube_open">Відкрити в %1$s</string>
+    <string name="kube_services_title">Сервіси</string>
+    <string name="kube_services_search">Шукати сервіси, адреси або маршрути</string>
+    <string name="kube_services_empty">Немає сервісів.</string>
+    <string name="kube_services_no_match">Жоден сервіс не відповідає.</string>
+    <string name="kube_services_partial">Ці облікові дані не можуть читати ендпоінти або маршрути: деяких відомостей бракує.</string>
+    <string name="kube_services_no_address">Немає адреси</string>
+    <string name="kube_services_hint_metallb">Балансувальник не має адреси: перевірте IPAddressPool у MetalLB і L2Advertisement або BGPAdvertisement, що його оголошує.</string>
+    <string name="kube_services_hint_cilium">Балансувальник не має адреси: перевірте CiliumLoadBalancerIPPool (вільні адреси, його селектор сервісів) і чи ввімкнено LB IPAM у Cilium.</string>
+    <string name="kube_services_hint_none">Балансувальник не має адреси, і не знайдено контролера, який би її видав: встановіть MetalLB, увімкніть LB IPAM у Cilium або використайте балансувальник хмари.</string>
+    <string name="kube_services_ready">Готові ендпоінти: %1$s</string>
+    <string name="kube_services_headless">headless</string>
+    <string name="kube_jobs_title">Завдання</string>
+    <string name="kube_jobs_search">Шукати завдання, CronJob або причини</string>
+    <string name="kube_jobs_empty">Немає завдань.</string>
+    <string name="kube_jobs_no_match">Жодне завдання не відповідає.</string>
+    <string name="kube_jobs_completions">Завершено: %1$s</string>
+    <string name="kube_jobs_owner">CronJob %1$s</string>
 </resources>

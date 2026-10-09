@@ -3,7 +3,8 @@ import Ichorgo
 
 /// `kubectl exec -it -n NAMESPACE POD -c CONTAINER -- COMMAND`: a terminal in a running
 /// container, through the Kubernetes API. An empty command runs bash, or sh when the image
-/// lacks it. The shell ends when the view goes, like the node's debug shell.
+/// lacks it. Or `kubectl debug -it`: a debug container from an image, for images with no shell
+/// at all. The shell ends when the view goes, like the node's debug shell.
 struct PodShellView: View {
     let namespace: String
     let pod: String
@@ -12,6 +13,8 @@ struct PodShellView: View {
 
     @Environment(AppModel.self) private var model
     @AppStorage("debug.podCommand") private var command = ""
+    @AppStorage("debug.podImage") private var debugImage = "busybox:1.37"
+    @State private var debug = false
     @State private var shell = DebugShell()
     @State private var error: String?
 
@@ -24,12 +27,28 @@ struct PodShellView: View {
                         Text("Opens a terminal in the running container of \(pod), like kubectl exec -it. Leave the command empty to run bash, or sh when the image has no bash.")
                             .font(.callout)
                     }
-                    Section("Command") {
-                        TextField("bash, or sh", text: $command).font(.body.monospaced())
-                            .autocorrectionDisabled().textInputAutocapitalization(.never)
+                    Section {
+                        Toggle("Debug container", isOn: $debug).kubeGated(.debugPod, in: namespace)
+                        KubeDeniedNote(.debugPod, in: namespace)
+                    }
+                    if debug {
+                        Section {
+                            TextField("Image", text: $debugImage).font(.body.monospaced())
+                                .autocorrectionDisabled().textInputAutocapitalization(.never)
+                        } header: {
+                            Text("Image")
+                        } footer: {
+                            Text("For images without a shell (distroless): adds a temporary container that sees this pod's processes. Kubernetes keeps it in the pod until the pod is deleted.")
+                        }
+                    } else {
+                        Section("Command") {
+                            TextField("bash, or sh", text: $command).font(.body.monospaced())
+                                .autocorrectionDisabled().textInputAutocapitalization(.never)
+                        }
                     }
                     if let error { Text(error).foregroundStyle(.statusBad) }
                     Button("Start shell") { Task { await start() } }
+                        .disabled(debug && debugImage.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             default:
                 VStack(spacing: 0) {
@@ -54,6 +73,7 @@ struct PodShellView: View {
                 ToolbarItem(placement: .primaryAction) { Button("Stop") { shell.stop() } }
             }
         }
+        .loadsKubeActionAccess(namespace: namespace)
         .onDisappear { shell.stop() }
     }
 
@@ -66,9 +86,15 @@ struct PodShellView: View {
         }
         error = nil
         let (namespace, pod, container, command) = (namespace, pod, container, command)
+        let image = debug ? debugImage.trimmingCharacters(in: .whitespaces) : ""
         shell.start { listener, cols, rows in
-            client.startPodShell(namespace: namespace, pod: pod, container: container, command: command,
-                                 cols: cols, rows: rows, listener: listener)
+            if image.isEmpty {
+                client.startPodShell(namespace: namespace, pod: pod, container: container, command: command,
+                                     cols: cols, rows: rows, listener: listener)
+            } else {
+                client.startPodDebug(namespace: namespace, pod: pod, targetContainer: container, image: image,
+                                     cols: cols, rows: rows, listener: listener)
+            }
         }
     }
 }

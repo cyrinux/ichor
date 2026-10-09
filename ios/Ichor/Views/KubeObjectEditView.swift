@@ -17,6 +17,9 @@ struct KubeObjectEditView: View {
     /// What refuses the update, once asked; nil while asking, when allowed or unknown (Save
     /// then stays offered and the API server decides).
     @State private var saveDenial: KubeAccess?
+    /// The caret in the draft (UTF-16), for the schema help.
+    @State private var cursor = 0
+    @State private var help: KubeSchemaHelpRequest?
 
     init(target: KubeEditTarget, onSaved: @escaping () -> Void) {
         self.target = target
@@ -28,13 +31,23 @@ struct KubeObjectEditView: View {
 
     var body: some View {
         NavigationStack {
-            ConfigYamlEditor(text: $draft, error: nil)
+            ConfigYamlEditor(text: $draft, error: nil, cursor: $cursor)
                 .safeAreaInset(edge: .top, spacing: 0) {
                     VStack(alignment: .leading, spacing: 4) {
                         Label("Nothing changes in the cluster until you review and save.", systemImage: "pencil")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                         if let saveDenial { KubeDeniedLine(text: saveDenial.deniedText) }
+                        HStack(spacing: 16) {
+                            Button { openHelp(.explain) } label: {
+                                Label("Explain field", systemImage: "questionmark.circle")
+                            }
+                            Button { openHelp(.add) } label: {
+                                Label("Add field", systemImage: "plus.circle")
+                            }
+                        }
+                        .font(.footnote)
+                        .buttonStyle(.borderless)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
@@ -60,6 +73,13 @@ struct KubeObjectEditView: View {
                         dismiss()
                     }
                 }
+                .sheet(item: $help) { request in
+                    KubeSchemaHelpSheet(resource: target.resource, request: request) { child, listItem in
+                        let inserted = insertYamlField(draft, utf16Offset: request.offset, name: child.name, listItem: listItem)
+                        cursor = inserted.cursor
+                        draft = inserted.text
+                    }
+                }
                 .task(id: target.id) { await loadSaveAccess() }
                 .confirmationDialog("Discard your changes?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
                     Button("Discard changes", role: .destructive) { dismiss() }
@@ -67,6 +87,11 @@ struct KubeObjectEditView: View {
                 }
         }
         .interactiveDismissDisabled(changed)
+    }
+
+    /// Opens the schema help for the field at the caret.
+    private func openHelp(_ mode: KubeSchemaHelpRequest.Mode) {
+        help = KubeSchemaHelpRequest(mode: mode, cursor: yamlCursorAt(draft, utf16Offset: cursor), offset: cursor)
     }
 
     /// Asks whether the credentials may update this object; a review that cannot be asked

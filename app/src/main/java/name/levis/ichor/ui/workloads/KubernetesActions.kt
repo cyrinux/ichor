@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.workloads
 
+import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Lan
+import androidx.compose.material.icons.outlined.TaskAlt
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Dns
@@ -23,6 +26,9 @@ private fun kubernetesActionIcon(action: KubernetesAction): ImageVector = when (
     KubernetesAction.FLOWS -> Icons.Outlined.Stream
     KubernetesAction.RESOURCES -> Icons.Outlined.Category
     KubernetesAction.HELM -> Icons.Outlined.Inventory2
+    KubernetesAction.STORAGE -> Icons.Outlined.Storage
+    KubernetesAction.SERVICES -> Icons.Outlined.Lan
+    KubernetesAction.JOBS -> Icons.Outlined.TaskAlt
     KubernetesAction.API_ADDRESS -> Icons.Outlined.Dns
 }
 
@@ -37,6 +43,9 @@ val kubernetesActionLook = ActionLook<KubernetesAction>(::kubernetesActionIcon) 
             KubernetesAction.FLOWS -> R.string.flows_title
             KubernetesAction.RESOURCES -> R.string.kb_title
             KubernetesAction.HELM -> R.string.kb_helm_title
+            KubernetesAction.STORAGE -> R.string.storage_title
+            KubernetesAction.SERVICES -> R.string.kube_services_title
+            KubernetesAction.JOBS -> R.string.kube_jobs_title
             KubernetesAction.API_ADDRESS -> R.string.kube_server_title
         },
     )

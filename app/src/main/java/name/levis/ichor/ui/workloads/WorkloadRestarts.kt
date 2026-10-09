@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.KubeRepository
+import name.levis.ichor.data.StreamItem
 import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.ui.UiText
@@ -72,6 +73,9 @@ class WorkloadRestarts(
     }
 
     suspend fun rolloutStatus(workload: KubeWorkload): KubeRolloutStatus = kube.rolloutStatus(workload)
+
+    /** [rolloutStatus] kept live: again each time the workload or one of its pods changes. */
+    fun rolloutWatch(workload: KubeWorkload): Flow<StreamItem<KubeRolloutStatus>> = kube.rolloutWatch(workload)
 
     /** Follows [workload]'s rollout live, e.g. after a rollback. */
     fun follow(workload: KubeWorkload) {

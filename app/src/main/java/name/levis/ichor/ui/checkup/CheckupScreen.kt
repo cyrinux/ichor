@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.checkup
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,13 +34,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.KubeRepository
+import name.levis.ichor.model.CheckupKind
 import name.levis.ichor.model.CheckupReport
 import name.levis.ichor.model.CheckupSection
 import name.levis.ichor.model.CheckupSectionId
@@ -52,8 +60,11 @@ import name.levis.ichor.model.state
 import name.levis.ichor.model.verdict
 import name.levis.ichor.ui.LoadingViewModel
 import name.levis.ichor.ui.UiState
+import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
+import name.levis.ichor.ui.cancellableCatching
 import name.levis.ichor.ui.components.BackButton
+import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.InlineError
 import name.levis.ichor.ui.components.Loaded
 import name.levis.ichor.ui.components.MutedText
@@ -63,11 +74,27 @@ import name.levis.ichor.ui.components.expandable
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.netpol.TagBadge
 import name.levis.ichor.ui.theme.LocalStatusColors
+import name.levis.ichor.ui.uiText
 import name.levis.ichor.ui.components.pageContent
 
 /** A checkup lists the cluster's pods and asks every kubelet: loaded on demand, never polled. */
 class CheckupViewModel(private val kube: KubeRepository) : LoadingViewModel<CheckupReport>() {
     override suspend fun fetch() = kube.checkup()
+
+    /** A namespace deletion's outcome, shown once: the namespace, and the error if it failed. */
+    data class Deleted(val namespace: String, val error: UiText?)
+
+    private val _deleted = Channel<Deleted>(Channel.BUFFERED)
+    val deleted: Flow<Deleted> = _deleted.receiveAsFlow()
+
+    /** Deletes a namespace a network test left behind, then reads the checkup again. */
+    fun deleteLeftover(namespace: String) {
+        viewModelScope.launch {
+            val outcome = cancellableCatching { kube.deleteNetPerfNamespace(namespace) }
+            _deleted.send(Deleted(namespace, outcome.exceptionOrNull()?.uiText()))
+            if (outcome.isSuccess) refresh()
+        }
+    }
 }
 
 /**
@@ -84,6 +111,29 @@ fun CheckupScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
+    var confirmDelete by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
+    LaunchedEffect(vm) {
+        vm.deleted.collect { d ->
+            val text = d.error?.resolve(context)?.let { context.getString(R.string.pods_delete_failed, d.namespace, it) }
+                ?: context.getString(R.string.pods_delete_done, d.namespace)
+            Toast.makeText(context, text, if (d.error == null) Toast.LENGTH_SHORT else Toast.LENGTH_LONG).show()
+        }
+    }
+    confirmDelete?.let { ns ->
+        ConfirmDialog(
+            title = stringResource(R.string.checkup_delete_namespace_title, ns),
+            text = stringResource(R.string.checkup_delete_namespace_text),
+            confirm = stringResource(R.string.common_delete),
+            onConfirm = {
+                confirmDelete = null
+                vm.deleteLeftover(ns)
+            },
+            onDismiss = { confirmDelete = null },
+            destructive = true,
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -94,12 +144,18 @@ fun CheckupScreen(
             )
         },
     ) { padding ->
-        Loaded(state, vm::refresh, Modifier.pageContent(padding)) { report -> CheckupList(report, onOpenRelease) }
+        Loaded(state, vm::refresh, Modifier.pageContent(padding)) { report ->
+            CheckupList(report, onOpenRelease, onDeleteLeftover = { confirmDelete = it })
+        }
     }
 }
 
 @Composable
-private fun CheckupList(report: CheckupReport, onOpenRelease: (namespace: String, name: String) -> Unit) {
+private fun CheckupList(
+    report: CheckupReport,
+    onOpenRelease: (namespace: String, name: String) -> Unit,
+    onDeleteLeftover: (namespace: String) -> Unit,
+) {
     // Fixed while the report is on screen: the ages must not drift between recompositions.
     val now = remember(report) { System.currentTimeMillis() }
     val sections = report.shownSections
@@ -117,7 +173,7 @@ private fun CheckupList(report: CheckupReport, onOpenRelease: (namespace: String
         items(sections, key = { it.id }) { section ->
             val expanded = section.id in open
             SectionCard(section, expanded, onToggle = { open = if (expanded) open - section.id else open + section.id }) {
-                SectionBody(section, report, now, onOpenRelease)
+                SectionBody(section, report, now, onOpenRelease, onDeleteLeftover)
             }
         }
     }
@@ -214,12 +270,20 @@ private fun SectionBadges(section: CheckupSection) {
 
 /** A section's findings, then what it measured: node requests, volume levels, taints, releases. */
 @Composable
-private fun SectionBody(section: CheckupSection, report: CheckupReport, now: Long, onOpenRelease: (namespace: String, name: String) -> Unit) {
+private fun SectionBody(
+    section: CheckupSection,
+    report: CheckupReport,
+    now: Long,
+    onOpenRelease: (namespace: String, name: String) -> Unit,
+    onDeleteLeftover: (namespace: String) -> Unit,
+) {
     if (section.error.isNotEmpty()) InlineError(stringResource(R.string.checkup_section_error, section.error))
     if (section.findings.isEmpty() && section.error.isEmpty()) {
         MutedText(stringResource(R.string.checkup_nothing_in, section.checked.toString()))
     }
-    section.findings.forEach { FindingCard(it, now) }
+    section.findings.forEach { f ->
+        FindingCard(f, now, onDelete = if (f.kind == CheckupKind.NETPERF_LEFTOVER) ({ onDeleteLeftover(f.name) }) else null)
+    }
     if (section.truncated > 0) MutedText(stringResource(R.string.checkup_truncated, section.truncated.toString()))
     when (section.id) {
         CheckupSectionId.CAPACITY -> NodeRequests(report.nodes)

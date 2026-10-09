@@ -75,6 +75,9 @@ fun KubernetesScreen(
     onFlows: (namespace: String?, pod: String?) -> Unit,
     onResources: () -> Unit,
     onHelm: () -> Unit,
+    onStorage: () -> Unit,
+    onServices: () -> Unit,
+    onJobs: () -> Unit,
     focus: KubeFocus = KubeFocus(0),
 ) {
     var tab by rememberSaveable { mutableIntStateOf(focus.tab) }
@@ -146,6 +149,9 @@ fun KubernetesScreen(
                                 KubernetesAction.FLOWS -> onFlows(scope.scope.namespace, null)
                                 KubernetesAction.RESOURCES -> onResources()
                                 KubernetesAction.HELM -> onHelm()
+                                KubernetesAction.STORAGE -> onStorage()
+                                KubernetesAction.SERVICES -> onServices()
+                                KubernetesAction.JOBS -> onJobs()
                                 KubernetesAction.API_ADDRESS -> editing = true
                             }
                         },

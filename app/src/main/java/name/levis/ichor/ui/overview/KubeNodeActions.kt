@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
@@ -46,12 +48,13 @@ import name.levis.ichor.ui.node.CordonDialog
 import name.levis.ichor.ui.uiText
 
 /**
- * What a node of a cluster without Talos offers: a cordon or uncordon, and a drain (the
- * maintenance screen, drain only). The caller closes the sheet on a pick.
+ * What a node of a cluster without Talos offers: a cordon or uncordon, a drain (the
+ * maintenance screen, drain only), and a root shell when [onDebug] is set (the setting is on).
+ * The caller closes the sheet on a pick.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun KubeNodeMenuSheet(node: KubeNodeInfo, onCordon: () -> Unit, onDrain: () -> Unit, onDismiss: () -> Unit) {
+internal fun KubeNodeMenuSheet(node: KubeNodeInfo, onCordon: () -> Unit, onDrain: () -> Unit, onDebug: (() -> Unit)?, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp).navigationBarsPadding()) {
             Text(node.name, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -64,6 +67,11 @@ internal fun KubeNodeMenuSheet(node: KubeNodeInfo, onCordon: () -> Unit, onDrain
                 onCordon,
             )
             KubeNodeMenuRow(stringResource(R.string.node_menu_drain), Icons.AutoMirrored.Outlined.Logout, access?.denial(KubeAction.DRAIN_NODE), onDrain)
+            if (onDebug != null) {
+                // The debug pod lives in "default": asked there, not cluster-wide.
+                val podAccess = rememberKubeActionAccess(NODE_DEBUG_NAMESPACE)
+                KubeNodeMenuRow(stringResource(R.string.node_menu_kube_debug_shell), Icons.Outlined.Terminal, podAccess?.denial(KubeAction.DEBUG_NODE), onDebug)
+            }
         }
     }
 }
@@ -92,10 +100,13 @@ private fun KubeNodeMenuRow(label: String, icon: ImageVector, denial: KubePermis
 // Material's disabled content alpha.
 private const val DISABLED_ALPHA = 0.38f
 
+/** Where the node debug pod is created. */
+private const val NODE_DEBUG_NAMESPACE = "default"
+
 /**
  * The sheets behind a tap on a Kubernetes node: its menu ([node], null for none), then the
  * cordon confirmation. The cordon runs here and tells [snackbar] how it went, then
- * [onCordoned] reloads the nodes; the drain leaves to [onDrain]. [onClose] clears [node].
+ * [onCordoned] reloads the nodes; the drain leaves to [onDrain], the root shell to [onDebug]. [onClose] clears [node].
  */
 @Composable
 internal fun KubeNodeActionSheets(
@@ -104,8 +115,10 @@ internal fun KubeNodeActionSheets(
     onClose: () -> Unit,
     onDrain: (name: String) -> Unit,
     onCordoned: () -> Unit,
+    onDebug: ((name: String) -> Unit)? = null,
 ) {
     val app = LocalContext.current.applicationContext as TalosApp
+    val debugShell by app.uiPreferences.nodeDebugShell.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var cordoning by remember { mutableStateOf<KubeNodeInfo?>(null) }
@@ -120,6 +133,12 @@ internal fun KubeNodeActionSheets(
                 onClose()
                 onDrain(it.name)
             },
+            onDebug = if (debugShell && onDebug != null) {
+                {
+                    onClose()
+                    onDebug(it.name)
+                }
+            } else null,
             onDismiss = onClose,
         )
     }

@@ -16,11 +16,13 @@ public struct KubeAPIResource: Decodable, Equatable, Hashable, Identifiable, Sen
     public let verbs: [String]
     public let shortNames: [String]
     public let categories: [String]
+    /// It serves /scale (any CRD declaring it), or is a Job (its parallelism).
+    public let scalable: Bool
 
     public var id: String { "\(group)/\(resource)" }
 
     public init(group: String = "", version: String = "v1", resource: String, kind: String, namespaced: Bool = true,
-                verbs: [String] = ["get", "list"], shortNames: [String] = [], categories: [String] = []) {
+                verbs: [String] = ["get", "list"], shortNames: [String] = [], categories: [String] = [], scalable: Bool = false) {
         self.group = group
         self.version = version
         self.resource = resource
@@ -29,9 +31,10 @@ public struct KubeAPIResource: Decodable, Equatable, Hashable, Identifiable, Sen
         self.verbs = verbs
         self.shortNames = shortNames
         self.categories = categories
+        self.scalable = scalable
     }
 
-    private enum CodingKeys: String, CodingKey { case group, version, resource, kind, namespaced, verbs, shortNames, categories }
+    private enum CodingKeys: String, CodingKey { case group, version, resource, kind, namespaced, verbs, shortNames, categories, scalable }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -43,6 +46,7 @@ public struct KubeAPIResource: Decodable, Equatable, Hashable, Identifiable, Sen
         verbs = try c.field(.verbs, [])
         shortNames = try c.field(.shortNames, [])
         categories = try c.field(.categories, [])
+        scalable = try c.field(.scalable, false)
     }
 
     /// "apps/v1", "v1" for the core group.
@@ -55,6 +59,36 @@ public struct KubeAPIResource: Decodable, Equatable, Hashable, Identifiable, Sen
     public var isSecret: Bool { group.isEmpty && resource == "secrets" }
 
     public var isPod: Bool { group.isEmpty && resource == "pods" }
+
+    public var isJob: Bool { group == "batch" && resource == "jobs" }
+
+    /// The resource a scale patches, as KubeCan takes it: a Job itself, the /scale subresource otherwise.
+    public var scaleResource: String { isJob ? resource : "\(resource)/scale" }
+}
+
+/// How many pods an object wants (`replicas`) and runs (`current`) (KubeObjectScale). A Job's
+/// count is its parallelism (`field` "parallelism"): how many of its pods run at once.
+public struct KubeObjectScale: Decodable, Equatable, Sendable {
+    public let replicas: Int
+    public let current: Int
+    public let field: String
+
+    public var isParallelism: Bool { field == "parallelism" }
+
+    public init(replicas: Int = 0, current: Int = 0, field: String = "replicas") {
+        self.replicas = replicas
+        self.current = current
+        self.field = field
+    }
+
+    private enum CodingKeys: String, CodingKey { case replicas, current, field }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        replicas = try c.field(.replicas, 0)
+        current = try c.field(.current, 0)
+        field = try c.field(.field, "replicas")
+    }
 }
 
 /// What KubeAPIResources answers: the resources, and the group versions that could not be read.

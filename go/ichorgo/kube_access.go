@@ -80,8 +80,21 @@ var kubeActionChecks = map[string][]accessNeed{
 	"scaleStatefulSet":   {{ssarAttributes{Verb: "patch", Group: "apps", Resource: "statefulsets", Subresource: "scale"}, true}},
 	"deletePod":          {{ssarAttributes{Verb: "delete", Resource: "pods"}, true}},
 	"execPod":            {{ssarAttributes{Verb: "create", Resource: "pods", Subresource: "exec"}, true}},
-	"suspendCronJob":     {{ssarAttributes{Verb: "patch", Group: "batch", Resource: "cronjobs"}, true}},
-	"triggerCronJob":     {{ssarAttributes{Verb: "create", Group: "batch", Resource: "jobs"}, true}},
+	// kubectl debug: add the ephemeral container, then attach to it.
+	"debugPod": {
+		{ssarAttributes{Verb: "patch", Resource: "pods", Subresource: "ephemeralcontainers"}, true},
+		{ssarAttributes{Verb: "create", Resource: "pods", Subresource: "attach"}, true},
+	},
+	// kubectl debug node/: create a privileged pod on the node, exec into it, delete it.
+	// SelfSubjectAccessReview cannot see Pod Security Admission: a namespace that refuses
+	// privileged pods only says so when the pod is created.
+	"debugNode": {
+		{ssarAttributes{Verb: "create", Resource: "pods"}, true},
+		{ssarAttributes{Verb: "create", Resource: "pods", Subresource: "exec"}, true},
+		{ssarAttributes{Verb: "delete", Resource: "pods"}, true},
+	},
+	"suspendCronJob": {{ssarAttributes{Verb: "patch", Group: "batch", Resource: "cronjobs"}, true}},
+	"triggerCronJob": {{ssarAttributes{Verb: "create", Group: "batch", Resource: "jobs"}, true}},
 	// Helm keeps its releases in Secrets: a rollback writes a new one.
 	"helmRollback":                {{ssarAttributes{Verb: "create", Resource: "secrets"}, true}},
 	"argoSync":                    {{ssarAttributes{Verb: "patch", Group: "argoproj.io", Resource: "applications"}, true}},
@@ -107,7 +120,7 @@ type accessNeed struct {
 // KubeActionAccess says which of the app's Kubernetes actions the credentials may run in
 // namespace ("" for cluster-wide): {"namespace", "actions": {name: {allowed, unknown, verb,
 // group, resource, namespace, reason}}}, names restartWorkload (restartStatefulSet,
-// restartDaemonSet), scale (scaleStatefulSet), deletePod, execPod, suspendCronJob,
+// restartDaemonSet), scale (scaleStatefulSet), deletePod, execPod, debugPod, debugNode, suspendCronJob,
 // triggerCronJob, helmRollback, argoSync, fluxReconcile (fluxReconcileHelmRelease,
 // fluxReconcileGitRepository, fluxReconcileOCIRepository, fluxReconcileHelmRepository,
 // fluxReconcileBucket), cordonNode, drainNode. Answers are cached a few minutes.

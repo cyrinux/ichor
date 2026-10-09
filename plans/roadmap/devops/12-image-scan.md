@@ -48,6 +48,13 @@ Dojo, Dependency-Track or a colleague.
   package count for the "bump the base image" hint), vulnerabilities sorted by severity,
   fixable first, score.
 - Demo mode: a canned report.
+- Talos system images: `TalosSystemImages(config, context, node)` (os:admin, reads the
+  machine config) lists the installer, kubelet and, on a control plane node, etcd,
+  kube-apiserver, controller-manager, scheduler, CoreDNS and kube-proxy images, with the
+  digest the node pulled (system or CRI containerd namespace), then the system namespace's
+  other images. `StartImageScan` takes them as `options.images` (refs with no pod, validated
+  against a strict ref pattern, pulled without credentials) with `pods=[]`. Probe:
+  `system-images NODE`, `image-scan REF...`.
 
 ## Android (done)
 
@@ -71,6 +78,6 @@ shown in the system share sheet). Models and their logic in `IchorCore/ImageScan
 
 ## Later
 
-- Talos system images (`NodeImages`), which are not pods: scan by ref.
+- Talos system images in the apps (Node → Images: "Scan system images"); the Go core is done.
 - Cache reports per digest on the phone; "new since last scan".
 - Grype as a second opinion (same pod pattern, `grype -o json`).

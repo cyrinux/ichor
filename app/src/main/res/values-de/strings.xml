@@ -413,6 +413,8 @@
     <string name="settings_kube_export">kubeconfig exportieren…</string>
     <string name="settings_kube_saved">Gespeichert. Füge in kubenav einen Cluster aus dieser Datei hinzu.</string>
     <string name="settings_kube_open_kubenav">kubenav öffnen</string>
+    <string name="settings_node_debug_shell">Debug-Shell für Knoten</string>
+    <string name="settings_node_debug_shell_desc">Auf Clustern ohne Talos fügt dies „Debug-Shell…“ zum Menü eines Knotens hinzu: Ein privilegierter Pod in den Namespaces des Knotens gibt eine Root-Shell auf dem Knoten. Der Pod wird beim Schließen der Shell gelöscht. Standardmäßig aus.</string>
     <string name="settings_kube_open_failed">Die ausgewählte Datei konnte nicht geöffnet werden</string>
     <string name="settings_section_config">Konfiguration</string>
     <string name="settings_encryption_key">Verschlüsselungsschlüssel</string>
@@ -605,6 +607,9 @@
 
     <!-- Debug shell -->
     <string name="debug_title">Debug-Shell</string>
+    <string name="node_debug_title">Root-Shell</string>
+    <string name="node_debug_auth">Root-Shell auf %1$s</string>
+    <string name="node_debug_intro">Ein privilegierter Pod läuft auf %1$s im Namespace %2$s, in den eigenen Namespaces des Knotens, und nsenter öffnet eine Root-Shell auf dem Knoten. Der Pod wird gelöscht, wenn die Shell endet. Der Namespace muss privilegierte Pods zulassen.</string>
     <string name="debug_stop">Beenden</string>
     <string name="debug_auth">Debug-Shell auf %1$s</string>
     <string name="debug_intro">Führt das Image als privilegierten Container mit Host-Zugriff auf %1$s aus und öffnet darin ein Terminal. Talos lädt das Image zuerst herunter, falls der Knoten es nicht hat.</string>
@@ -2042,6 +2047,7 @@
     <string name="netperf_stop">Stoppen</string>
     <string name="netperf_stopping">Wird gestoppt: Test-Namespace wird gelöscht…</string>
     <string name="netperf_stopped">Test gestoppt.</string>
+    <string name="netperf_cleanup_failed">Aufräumen fehlgeschlagen: %1$s</string>
     <string name="netperf_failed">Test fehlgeschlagen: %1$s</string>
     <string name="netperf_again">Neuer Test</string>
     <string name="netperf_history">Frühere Tests</string>
@@ -2543,6 +2549,7 @@
     <string name="node_menu_cordon">Absperren (cordon)</string>
     <string name="node_menu_uncordon">Freigeben (uncordon)</string>
     <string name="node_menu_drain">Leeren…</string>
+    <string name="node_menu_kube_debug_shell">Debug-Shell…</string>
     <string name="node_menu_group_inspect">Untersuchen</string>
     <string name="node_menu_group_troubleshoot">Fehlersuche</string>
     <string name="node_menu_group_operate">Verwalten</string>
@@ -2903,7 +2910,7 @@
     <string name="audit_unauthorized">%1$d-mal abgelehnt (401): seine Anmeldedaten sind ungültig</string>
     <string name="audit_unauthorized_fix">Sein Token oder Zertifikat ist abgelaufen oder gelöscht (ein entfernter Service-Account, eine alte Kubeconfig): geben Sie ihm neue Anmeldedaten oder stoppen Sie ihn. Das Log kennt nur seine Adresse.</string>
     <string name="checkup_title">Cluster-Check</string>
-    <string name="checkup_intro">Was die anderen Ansichten nicht zeigen, aus der Kubernetes-API gelesen. Nichts wird verändert.</string>
+    <string name="checkup_intro">Was die anderen Ansichten nicht zeigen, aus der Kubernetes-API gelesen. Nichts wird verändert, außer Sie tippen auf eine Aktion.</string>
     <string name="checkup_verdict_critical">Handlungsbedarf</string>
     <string name="checkup_verdict_warning">Warnungen</string>
     <string name="checkup_verdict_ok">Alles in Ordnung</string>
@@ -2984,6 +2991,10 @@
     <string name="checkup_lbPoolExhausted">Keine Adresse mehr frei (Pool mit %1$s)</string>
     <string name="checkup_lbPoolConflict">Überschneidet sich mit einem anderen Pool</string>
     <string name="checkup_terminating">Wird seit %1$s gelöscht</string>
+    <string name="checkup_netperfLeftover">Von einem Netzwerktest vor %1$s zurückgelassen</string>
+    <string name="checkup_netperfLeftover_fix">Die App wurde geschlossen, bevor der Test aufräumen konnte. Sonst liegt nichts in diesem Namespace; ihn zu löschen ist sicher.</string>
+    <string name="checkup_delete_namespace_title">Namespace %1$s löschen?</string>
+    <string name="checkup_delete_namespace_text">Die Pods des Netzwerktests darin werden mit ihm gelöscht.</string>
     <string name="checkup_csrPending">%1$s Zertifikatsanfragen warten auf Genehmigung (%2$s)</string>
     <string name="checkup_csrDenied">%1$s Zertifikatsanfragen wurden abgelehnt (%2$s)</string>
     <string name="checkup_externalSecretFailed">Wird nicht aus dem Store %1$s synchronisiert</string>
@@ -3204,6 +3215,15 @@
     <string name="kb_edit_hint">metadata.resourceVersion behalten: Eine zwischenzeitliche Änderung wird abgelehnt, nicht überschrieben.</string>
     <string name="kb_edit_reveal_first">Zuerst die Secret-Werte anzeigen: Verborgene Werte würden so gespeichert, wie sie dastehen.</string>
     <string name="kb_review">Prüfen</string>
+    <string name="kb_explain_field">Feld erklären</string>
+    <string name="kb_add_field">Feld hinzufügen</string>
+    <string name="kb_schema_add_title">Zu %1$s hinzufügen</string>
+    <string name="kb_schema_required">erforderlich</string>
+    <string name="kb_schema_values">Erlaubte Werte</string>
+    <string name="kb_schema_fields">Felder</string>
+    <string name="kb_schema_no_fields">Hier gibt es nichts hinzuzufügen: Dieses Feld enthält einen Wert, keine weiteren Felder.</string>
+    <string name="kb_schema_add_hint">Tippe auf ein Feld, um es am Cursor einzufügen, erforderliche zuerst.</string>
+    <string name="kb_schema_unavailable">Schema-Hilfe nicht verfügbar</string>
     <string name="kb_review_loading">Der API-Server wird gefragt, was sich ändern würde…</string>
     <string name="kb_no_changes">Keine Änderungen zu speichern.</string>
     <string name="kb_back_to_editor">Zurück zum Editor</string>
@@ -3214,6 +3234,9 @@
     <string name="kb_discard_confirm">Verwerfen</string>
     <string name="kb_delete">Löschen</string>
     <string name="kb_delete_title">%1$s löschen?</string>
+    <string name="kb_scale_title">%1$s skalieren</string>
+    <string name="kb_scale_running">Laufen jetzt: %1$s</string>
+    <string name="kb_scale_job_hint">Ein Job führt so viele Pods gleichzeitig aus; 0 pausiert ihn.</string>
     <string name="kb_delete_loading">Lese, was das Löschen betreffen würde …</string>
     <string name="kb_delete_protected">Geschützt: %1$s</string>
     <string name="kb_delete_pending">Das Löschen steht schon an: Die Finalizer unten halten es auf.</string>
@@ -3398,4 +3421,48 @@
     <string name="kube_whoami_user">Kubernetes-Benutzer</string>
     <string name="mono_text_larger">Größerer Text</string>
     <string name="mono_text_smaller">Kleinerer Text</string>
+    <string name="kb_tab_data">Daten</string>
+    <string name="kb_data_type">Typ: %1$s</string>
+    <string name="kb_data_keys">Schlüssel</string>
+    <string name="kb_data_no_keys">Keine Schlüssel.</string>
+    <string name="kb_data_hint_text">Text</string>
+    <string name="kb_data_hint_binary">Binär</string>
+    <string name="kb_data_show_value">Wert anzeigen</string>
+    <string name="kb_data_hide_value">Wert ausblenden</string>
+    <string name="kb_data_copy_value">Wert kopieren</string>
+    <string name="kb_data_base64">Binärer Wert, als Base64 angezeigt.</string>
+    <string name="kb_data_cert_chain">Zertifikate in der Kette: %1$d</string>
+    <string name="kb_data_registries">Registries</string>
+    <string name="kb_data_registry_user">Benutzer: %1$s</string>
+    <string name="kb_data_used_by">Verwendet von</string>
+    <string name="kb_data_used_by_unknown">Die Pods dieses Namespace konnten nicht aufgelistet werden.</string>
+    <string name="kb_data_used_by_none">Kein Pod dieses Namespace verwendet es.</string>
+    <string name="kb_data_reveal_auth">%1$s von %2$s anzeigen</string>
+||||||| 62d80f4f
+    <string name="pod_debug_toggle">Debug-Container</string>
+    <string name="pod_debug_note">Für Images ohne Shell (distroless): fügt einen temporären Container hinzu, der die Prozesse dieses Pods sieht. Kubernetes behält ihn im Pod, bis der Pod gelöscht wird.</string>
+    <string name="storage_kube_search">PVCs, Klassen oder Pods suchen</string>
+    <string name="storage_kube_empty">Keine PVCs.</string>
+    <string name="storage_kube_no_match">Kein PVC passt.</string>
+    <string name="storage_kube_partial">Diese Zugangsdaten dürfen Volumes, Klassen oder Nodes nicht lesen: einige Angaben fehlen.</string>
+    <string name="storage_kube_not_measured">Füllstand nicht gemessen</string>
+    <string name="storage_kube_pods">Verwendet von %1$s</string>
+    <string name="storage_kube_open">In %1$s öffnen</string>
+    <string name="kube_services_title">Services</string>
+    <string name="kube_services_search">Services, Adressen oder Routen suchen</string>
+    <string name="kube_services_empty">Keine Services.</string>
+    <string name="kube_services_no_match">Kein Service passt.</string>
+    <string name="kube_services_partial">Diese Zugangsdaten dürfen Endpoints oder Routen nicht lesen: einige Angaben fehlen.</string>
+    <string name="kube_services_no_address">Keine Adresse</string>
+    <string name="kube_services_hint_metallb">Ein Load Balancer hat keine Adresse: prüfen Sie den IPAddressPool von MetalLB und eine L2Advertisement oder BGPAdvertisement, die ihn ankündigt.</string>
+    <string name="kube_services_hint_cilium">Ein Load Balancer hat keine Adresse: prüfen Sie den CiliumLoadBalancerIPPool (freie Adressen, sein Service-Selektor) und ob Ciliums LB-IPAM aktiv ist.</string>
+    <string name="kube_services_hint_none">Ein Load Balancer hat keine Adresse und es wurde kein Controller gefunden, der eine vergibt: installieren Sie MetalLB, aktivieren Sie Ciliums LB-IPAM oder nutzen Sie den Load Balancer einer Cloud.</string>
+    <string name="kube_services_ready">Bereite Endpoints: %1$s</string>
+    <string name="kube_services_headless">headless</string>
+    <string name="kube_jobs_title">Jobs</string>
+    <string name="kube_jobs_search">Jobs, CronJobs oder Gründe suchen</string>
+    <string name="kube_jobs_empty">Keine Jobs.</string>
+    <string name="kube_jobs_no_match">Kein Job passt.</string>
+    <string name="kube_jobs_completions">Abschlüsse: %1$s</string>
+    <string name="kube_jobs_owner">CronJob %1$s</string>
 </resources>

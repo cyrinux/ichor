@@ -113,6 +113,9 @@ func TestReadCheckup(t *testing.T) {
 		  {"type":"cilium.io/IPsAvailable","status":"Unknown","message":"0"},{"type":"cilium.io/IPsTotal","status":"Unknown","message":"4"}]}}]}`,
 		"GET /api/v1/namespaces": `{"items":[
 		  {"metadata":{"name":"shop"},"status":{"phase":"Active"}},
+		  {"metadata":{"name":"ichor-netperf-abcde","creationTimestamp":"2020-01-01T00:00:00Z","labels":{"app.kubernetes.io/managed-by":"ichor"}},"status":{"phase":"Active"}},
+		  {"metadata":{"name":"ichor-netperf-zzzzz","creationTimestamp":"2020-01-01T00:00:00Z"},"status":{"phase":"Active"}},
+		  {"metadata":{"name":"ichor-netperf-fresh","creationTimestamp":"2026-10-06T11:50:00Z","labels":{"app.kubernetes.io/managed-by":"ichor"}},"status":{"phase":"Active"}},
 		  {"metadata":{"name":"old","deletionTimestamp":"2026-10-01T00:00:00Z"},"status":{"phase":"Terminating","conditions":[
 		    {"type":"NamespaceContentRemaining","status":"True","message":"Some resources are remaining."},{"type":"NamespaceDeletionContentFailure","status":"False","message":"ignored"}]}}]}`,
 		"GET /apis/certificates.k8s.io/v1/certificatesigningrequests": `{"items":[
@@ -150,7 +153,7 @@ func TestReadCheckup(t *testing.T) {
 		checkCapacity:      {"nodeRequestsHigh:warning:n1", "quotaNearLimit:warning:compute"},
 		checkNodes:         {"nodePressure:warning:n1", "nodeCordoned:warning:n2", "nodeVersionSkew:warning:n2"},
 		checkLoadBalancers: {"lbPending:critical:public", "lbPoolExhausted:critical:pool"},
-		checkTerminating:   {"namespaceTerminating:warning:old", "podTerminating:warning:gone-1", "pvcTerminating:warning:old"},
+		checkTerminating:   {"netperfLeftover:warning:ichor-netperf-abcde", "namespaceTerminating:warning:old", "podTerminating:warning:gone-1", "pvcTerminating:warning:old"},
 		checkCertificates:  {"csrPending:warning:system:node:n1"},
 		checkSecrets:       {"secretStoreNotReady:critical:vault", "externalSecretFailed:warning:db"},
 		checkHelm:          {"helmFailed:warning:shop", "helmPending:warning:mon"},

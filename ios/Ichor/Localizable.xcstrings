@@ -1,6 +1,986 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Jobs" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jobs"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jobs"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jobs"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Job"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завдання"
+          }
+        }
+      }
+    },
+    "Search jobs, CronJobs or reasons" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jobs, CronJobs oder Gründe suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar jobs, CronJobs o motivos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher des jobs, CronJobs ou raisons"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca job, CronJob o motivi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукати завдання, CronJob або причини"
+          }
+        }
+      }
+    },
+    "No jobs." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Jobs."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay jobs."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun job."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun job."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає завдань."
+          }
+        }
+      }
+    },
+    "No job matches." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Job passt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún job coincide."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun job ne correspond."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun job corrisponde."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жодне завдання не відповідає."
+          }
+        }
+      }
+    },
+    "Completions: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abschlüsse: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completados: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complétions : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completamenti: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершено: %@"
+          }
+        }
+      }
+    },
+    "CronJob %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CronJob %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CronJob %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CronJob %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CronJob %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CronJob %@"
+          }
+        }
+      }
+    },
+    "Search services, addresses or routes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Services, Adressen oder Routen suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar servicios, direcciones o rutas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher des services, adresses ou routes"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca servizi, indirizzi o route"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукати сервіси, адреси або маршрути"
+          }
+        }
+      }
+    },
+    "No services." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Services."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay servicios."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun service."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun servizio."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає сервісів."
+          }
+        }
+      }
+    },
+    "No service matches." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Service passt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún servicio coincide."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun service ne correspond."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun servizio corrisponde."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жоден сервіс не відповідає."
+          }
+        }
+      }
+    },
+    "These credentials may not read endpoints or routes: some details are missing." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Zugangsdaten dürfen Endpoints oder Routen nicht lesen: einige Angaben fehlen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estas credenciales no pueden leer endpoints o rutas: faltan algunos detalles."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces identifiants ne peuvent pas lire les endpoints ou les routes : certains détails manquent."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queste credenziali non possono leggere endpoint o route: mancano alcuni dettagli."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ці облікові дані не можуть читати ендпоінти або маршрути: деяких відомостей бракує."
+          }
+        }
+      }
+    },
+    "No address" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Adresse"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin dirección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas d’adresse"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun indirizzo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає адреси"
+          }
+        }
+      }
+    },
+    "A load balancer has no address: check MetalLB’s IPAddressPool, and an L2Advertisement or BGPAdvertisement that announces it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Load Balancer hat keine Adresse: prüfen Sie den IPAddressPool von MetalLB und eine L2Advertisement oder BGPAdvertisement, die ihn ankündigt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un balanceador de carga no tiene dirección: revisa el IPAddressPool de MetalLB y un L2Advertisement o BGPAdvertisement que lo anuncie."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un répartiteur de charge n’a pas d’adresse : vérifiez l’IPAddressPool de MetalLB et une L2Advertisement ou BGPAdvertisement qui l’annonce."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un bilanciatore non ha indirizzo: controlla l’IPAddressPool di MetalLB e una L2Advertisement o BGPAdvertisement che lo annunci."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Балансувальник не має адреси: перевірте IPAddressPool у MetalLB і L2Advertisement або BGPAdvertisement, що його оголошує."
+          }
+        }
+      }
+    },
+    "A load balancer has no address: check the CiliumLoadBalancerIPPool (addresses left, its service selector) and that Cilium’s LB IPAM is on." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Load Balancer hat keine Adresse: prüfen Sie den CiliumLoadBalancerIPPool (freie Adressen, sein Service-Selektor) und ob Ciliums LB-IPAM aktiv ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un balanceador de carga no tiene dirección: revisa el CiliumLoadBalancerIPPool (direcciones libres, su selector de servicios) y que el LB IPAM de Cilium esté activo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un répartiteur de charge n’a pas d’adresse : vérifiez le CiliumLoadBalancerIPPool (adresses restantes, son sélecteur de services) et que le LB IPAM de Cilium est actif."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un bilanciatore non ha indirizzo: controlla il CiliumLoadBalancerIPPool (indirizzi liberi, il suo selettore di servizi) e che il LB IPAM di Cilium sia attivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Балансувальник не має адреси: перевірте CiliumLoadBalancerIPPool (вільні адреси, його селектор сервісів) і чи ввімкнено LB IPAM у Cilium."
+          }
+        }
+      }
+    },
+    "A load balancer has no address and no controller was found to give one: install MetalLB, turn on Cilium’s LB IPAM, or use a cloud’s load balancer." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Load Balancer hat keine Adresse und es wurde kein Controller gefunden, der eine vergibt: installieren Sie MetalLB, aktivieren Sie Ciliums LB-IPAM oder nutzen Sie den Load Balancer einer Cloud."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un balanceador de carga no tiene dirección y no se encontró ningún controlador que le dé una: instala MetalLB, activa el LB IPAM de Cilium o usa el balanceador de una nube."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un répartiteur de charge n’a pas d’adresse et aucun contrôleur n’a été trouvé pour lui en donner une : installez MetalLB, activez le LB IPAM de Cilium ou utilisez le répartiteur d’un cloud."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un bilanciatore non ha indirizzo e non è stato trovato alcun controller che gliene dia uno: installa MetalLB, attiva il LB IPAM di Cilium o usa il bilanciatore di un cloud."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Балансувальник не має адреси, і не знайдено контролера, який би її видав: встановіть MetalLB, увімкніть LB IPAM у Cilium або використайте балансувальник хмари."
+          }
+        }
+      }
+    },
+    "Ready endpoints: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereite Endpoints: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoints listos: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoints prêts : %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoint pronti: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готові ендпоінти: %@"
+          }
+        }
+      }
+    },
+    "headless" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "headless"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "headless"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "headless"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "headless"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "headless"
+          }
+        }
+      }
+    },
+    "Search PVCs, classes or pods" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PVCs, Klassen oder Pods suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar PVC, clases o pods"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher des PVC, classes ou pods"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca PVC, classi o pod"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пошук PVC, класів або подів"
+          }
+        }
+      }
+    },
+    "No PVCs." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine PVCs."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay PVC."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun PVC."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun PVC."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає PVC."
+          }
+        }
+      }
+    },
+    "No PVC matches." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein PVC passt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún PVC coincide."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun PVC ne correspond."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun PVC corrisponde."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жоден PVC не відповідає."
+          }
+        }
+      }
+    },
+    "These credentials may not read volumes, classes or nodes: some details are missing." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Zugangsdaten dürfen Volumes, Klassen oder Nodes nicht lesen: einige Angaben fehlen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estas credenciales no pueden leer volúmenes, clases o nodos: faltan algunos detalles."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces identifiants ne peuvent pas lire les volumes, classes ou nœuds : certains détails manquent."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queste credenziali non possono leggere volumi, classi o nodi: mancano alcuni dettagli."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ці облікові дані не можуть читати томи, класи або вузли: деяких відомостей бракує."
+          }
+        }
+      }
+    },
+    "fill not measured" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füllstand nicht gemessen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ocupación no medida"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "remplissage non mesuré"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "riempimento non misurato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "заповненість не виміряно"
+          }
+        }
+      }
+    },
+    "Used by %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwendet von %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usado por %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilisé par %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usato da %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовують: %@"
+          }
+        }
+      }
+    },
+    "Open in %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In %@ öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir en %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir dans %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri in %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити в %@"
+          }
+        }
+      }
+    },
+    "Running now: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En cours : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En ejecución: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laufen jetzt: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In esecuzione: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Працює зараз: %@"
+          }
+        }
+      }
+    },
+    "A Job runs this many pods at once; 0 pauses it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un Job lance autant de pods à la fois ; 0 le met en pause."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un Job ejecuta tantos pods a la vez; 0 lo pausa."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Job führt so viele Pods gleichzeitig aus; 0 pausiert ihn."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un Job esegue questi pod contemporaneamente; 0 lo mette in pausa."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Job запускає стільки подів одночасно; 0 призупиняє його."
+          }
+        }
+      }
+    },
+    "Pods that stop: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pods arrêtés : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pods que se detienen: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pods, die stoppen: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pod che si fermano: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подів зупиниться: %@"
+          }
+        }
+      }
+    },
+    "Debug container" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug-Container"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenedor de depuración"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conteneur de débogage"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Container di debug"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контейнер налагодження"
+          }
+        }
+      }
+    },
+    "For images without a shell (distroless): adds a temporary container that sees this pod's processes. Kubernetes keeps it in the pod until the pod is deleted." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für Images ohne Shell (distroless): fügt einen temporären Container hinzu, der die Prozesse dieses Pods sieht. Kubernetes behält ihn im Pod, bis der Pod gelöscht wird."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para imágenes sin shell (distroless): añade un contenedor temporal que ve los procesos de este pod. Kubernetes lo mantiene en el pod hasta que se elimina el pod."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour les images sans shell (distroless) : ajoute un conteneur temporaire qui voit les processus de ce pod. Kubernetes le garde dans le pod jusqu’à la suppression du pod."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per immagini senza shell (distroless): aggiunge un container temporaneo che vede i processi di questo pod. Kubernetes lo mantiene nel pod finché il pod non viene eliminato."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для образів без оболонки (distroless): додає тимчасовий контейнер, який бачить процеси цього пода. Kubernetes зберігає його в поді, доки под не буде видалено."
+          }
+        }
+      }
+    },
     "Larger text" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -78141,41 +79121,6 @@
         }
       }
     },
-    "What the other screens do not show, read from the Kubernetes API. Nothing is changed." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce que les autres écrans ne montrent pas, lu depuis l’API Kubernetes. Rien n’est modifié."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lo que las demás pantallas no muestran, leído de la API de Kubernetes. No se cambia nada."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Was die anderen Ansichten nicht zeigen, aus der Kubernetes-API gelesen. Nichts wird verändert."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ciò che le altre schermate non mostrano, letto dall’API Kubernetes. Nulla viene modificato."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Те, чого не показують інші екрани, прочитане з API Kubernetes. Нічого не змінюється."
-          }
-        }
-      }
-    },
     "Needs attention" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -99444,6 +100389,1243 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Те, чим він володіє, лишається без власника."
+          }
+        }
+      }
+    },
+    "Data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Données"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datos"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dati"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дані"
+          }
+        }
+      }
+    },
+    "Type: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Typ: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тип: %@"
+          }
+        }
+      }
+    },
+    "Keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clés"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claves"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chiavi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключі"
+          }
+        }
+      }
+    },
+    "No keys." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune clé."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin claves."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Schlüssel."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna chiave."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає ключів."
+          }
+        }
+      }
+    },
+    "Binary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binaire"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binario"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binär"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binario"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Двійкові дані"
+          }
+        }
+      }
+    },
+    "Show value" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher la valeur"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar el valor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wert anzeigen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra il valore"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати значення"
+          }
+        }
+      }
+    },
+    "Hide value" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masquer la valeur"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar el valor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wert ausblenden"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nascondi il valore"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приховати значення"
+          }
+        }
+      }
+    },
+    "Copy value" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier la valeur"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar el valor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wert kopieren"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia il valore"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати значення"
+          }
+        }
+      }
+    },
+    "Binary value, shown as base64." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valeur binaire, affichée en base64."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valor binario, mostrado en base64."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Binärer Wert, als Base64 angezeigt."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valore binario, mostrato in base64."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Двійкове значення, показане в base64."
+          }
+        }
+      }
+    },
+    "Certificates in the chain: %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificats dans la chaîne : %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificados en la cadena: %lld"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zertifikate in der Kette: %lld"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certificati nella catena: %lld"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сертифікатів у ланцюжку: %lld"
+          }
+        }
+      }
+    },
+    "Registries" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registres"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registros"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registries"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registri"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Реєстри"
+          }
+        }
+      }
+    },
+    "User: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilisateur : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuario: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utente: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Користувач: %@"
+          }
+        }
+      }
+    },
+    "Used by" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilisé par"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usado por"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwendet von"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usato da"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовується"
+          }
+        }
+      }
+    },
+    "The pods of this namespace could not be listed." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de lister les pods de ce namespace."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudieron listar los pods de este namespace."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Pods dieses Namespace konnten nicht aufgelistet werden."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile elencare i pod di questo namespace."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося отримати список подів цього простору імен."
+          }
+        }
+      }
+    },
+    "No pod of this namespace uses it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun pod de ce namespace ne l'utilise."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ningún pod de este namespace lo usa."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Pod dieses Namespace verwendet es."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun pod di questo namespace lo usa."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жоден под цього простору імен його не використовує."
+          }
+        }
+      }
+    },
+    "Show %@ of %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show %1$@ of %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher %1$@ de %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar %1$@ de %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ von %2$@ anzeigen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra %1$@ di %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати %1$@ з %2$@"
+          }
+        }
+      }
+    },
+    "What the other screens do not show, read from the Kubernetes API. Nothing is changed unless you tap an action." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce que les autres écrans ne montrent pas, lu depuis l’API Kubernetes. Rien n’est modifié sauf si vous touchez une action."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo que las demás pantallas no muestran, leído de la API de Kubernetes. No se cambia nada salvo que toques una acción."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Те, чого не показують інші екрани, прочитане з API Kubernetes. Нічого не змінюється, доки ви не торкнетеся дії."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was die anderen Ansichten nicht zeigen, aus der Kubernetes-API gelesen. Nichts wird verändert, außer Sie tippen auf eine Aktion."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciò che le altre schermate non mostrano, letto dall’API Kubernetes. Nulla viene modificato a meno che tu non tocchi un’azione."
+          }
+        }
+      }
+    },
+    "Left by a network test %@ ago" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laissé par un test réseau il y a %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dejado por una prueba de red hace %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Залишений мережевим тестом %@ тому"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von einem Netzwerktest vor %@ zurückgelassen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lasciato da un test di rete %@ fa"
+          }
+        }
+      }
+    },
+    "The app was closed before the test cleaned up. Nothing else lives in this namespace; deleting it is safe." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’app a été fermée avant que le test ne fasse le ménage. Rien d’autre ne vit dans ce namespace : le supprimer est sans risque."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La app se cerró antes de que la prueba limpiara. No hay nada más en este namespace; borrarlo es seguro."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застосунок закрили до того, як тест прибрав за собою. Більше нічого в цьому namespace немає; видаляти його безпечно."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die App wurde geschlossen, bevor der Test aufräumen konnte. Sonst liegt nichts in diesem Namespace; ihn zu löschen ist sicher."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’app è stata chiusa prima che il test facesse pulizia. In questo namespace non c’è altro; eliminarlo è sicuro."
+          }
+        }
+      }
+    },
+    "Delete namespace %@?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer le namespace %@ ?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Borrar el namespace %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити namespace %@?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namespace %@ löschen?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminare il namespace %@?"
+          }
+        }
+      }
+    },
+    "The network test pods in it are deleted with it." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les pods du test réseau qu’il contient sont supprimés avec lui."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los pods de la prueba de red que contiene se borran con él."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поди мережевого тесту в ньому видаляються разом із ним."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Pods des Netzwerktests darin werden mit ihm gelöscht."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I pod del test di rete al suo interno vengono eliminati con esso."
+          }
+        }
+      }
+    },
+    "Cleanup failed: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec du nettoyage : %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falló la limpieza: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося прибрати: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufräumen fehlgeschlagen: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pulizia non riuscita: %@"
+          }
+        }
+      }
+    },
+    "Explain field" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expliquer le champ"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explicar campo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feld erklären"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spiega campo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пояснити поле"
+          }
+        }
+      }
+    },
+    "Add to %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter à %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir a %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu %@ hinzufügen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi a %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати до %@"
+          }
+        }
+      }
+    },
+    "Schema help unavailable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aide du schéma indisponible"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayuda del esquema no disponible"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema-Hilfe nicht verfügbar"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aiuto dello schema non disponibile"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Довідка схеми недоступна"
+          }
+        }
+      }
+    },
+    "Allowed values" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valeurs possibles"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valores posibles"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaubte Werte"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valori ammessi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Допустимі значення"
+          }
+        }
+      }
+    },
+    "Nothing to add here: this field holds a value, not other fields." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien à ajouter ici : ce champ contient une valeur, pas d'autres champs."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada que añadir aquí: este campo contiene un valor, no otros campos."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hier gibt es nichts hinzuzufügen: Dieses Feld enthält einen Wert, keine weiteren Felder."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niente da aggiungere qui: questo campo contiene un valore, non altri campi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тут нічого додавати: це поле містить значення, а не інші поля."
+          }
+        }
+      }
+    },
+    "Tap a field to add it at the cursor, required ones first." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez un champ pour l'ajouter au curseur, les obligatoires d'abord."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca un campo para añadirlo en el cursor, los obligatorios primero."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe auf ein Feld, um es am Cursor einzufügen, erforderliche zuerst."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tocca un campo per aggiungerlo al cursore, prima quelli obbligatori."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Торкніться поля, щоб додати його в позиції курсора, спершу обовʼязкові."
+          }
+        }
+      }
+    },
+    "Adds this field at the cursor" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoute ce champ au curseur"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade este campo en el cursor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fügt dieses Feld am Cursor ein"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunge questo campo al cursore"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додає це поле в позиції курсора"
+          }
+        }
+      }
+    },
+    "required" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "obligatoire"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "obligatorio"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "erforderlich"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "obbligatorio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "обовʼязкове"
+          }
+        }
+      }
+    },
+    "Node debug shell" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell de débogage des nœuds"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell de depuración de nodos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налагоджувальна оболонка вузла"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug-Shell für Knoten"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell di debug dei nodi"
+          }
+        }
+      }
+    },
+    "On clusters without Talos, adds “Debug shell…” to a node’s menu: a privileged pod in the node’s namespaces gives a root shell on the node. The pod is deleted when the shell closes. Off by default." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur les clusters sans Talos, ajoute « Shell de débogage… » au menu d’un nœud : un pod privilégié dans les namespaces du nœud donne un shell root sur le nœud. Le pod est supprimé à la fermeture du shell. Désactivé par défaut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En clústeres sin Talos, añade «Shell de depuración…» al menú de un nodo: un pod privilegiado en los namespaces del nodo da una shell root en el nodo. El pod se borra al cerrar la shell. Desactivado por defecto."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На кластерах без Talos додає «Налагоджувальна оболонка…» до меню вузла: привілейований под у просторах імен вузла дає root-оболонку на вузлі. Под видаляється, коли оболонку закрито. Вимкнено за замовчуванням."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Clustern ohne Talos fügt dies „Debug-Shell…“ zum Menü eines Knotens hinzu: Ein privilegierter Pod in den Namespaces des Knotens gibt eine Root-Shell auf dem Knoten. Der Pod wird beim Schließen der Shell gelöscht. Standardmäßig aus."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sui cluster senza Talos, aggiunge «Shell di debug…» al menu di un nodo: un pod privilegiato nei namespace del nodo dà una shell root sul nodo. Il pod viene eliminato alla chiusura della shell. Disattivato per impostazione predefinita."
+          }
+        }
+      }
+    },
+    "Debug shell…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell de débogage…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell de depuración…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налагоджувальна оболонка…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug-Shell…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell di debug…"
+          }
+        }
+      }
+    },
+    "Root shell on %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell root sur %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell root en %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root-оболонка на %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Root-Shell auf %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shell root su %@"
+          }
+        }
+      }
+    },
+    "A privileged pod runs on %@ in namespace %@, in the node’s own namespaces, and nsenter opens a root shell on the node. The pod is deleted when the shell ends. The namespace must admit privileged pods." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A privileged pod runs on %1$@ in namespace %2$@, in the node’s own namespaces, and nsenter opens a root shell on the node. The pod is deleted when the shell ends. The namespace must admit privileged pods."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un pod privilégié s’exécute sur %1$@ dans le namespace %2$@, dans les namespaces du nœud lui-même, et nsenter ouvre un shell root sur le nœud. Le pod est supprimé à la fin du shell. Le namespace doit admettre les pods privilégiés."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un pod privilegiado se ejecuta en %1$@ en el namespace %2$@, en los namespaces del propio nodo, y nsenter abre una shell root en el nodo. El pod se borra al terminar la shell. El namespace debe admitir pods privilegiados."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привілейований под запускається на %1$@ у просторі імен %2$@, у власних просторах імен вузла, і nsenter відкриває root-оболонку на вузлі. Под видаляється, коли оболонка завершується. Простір імен має допускати привілейовані поди."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein privilegierter Pod läuft auf %1$@ im Namespace %2$@, in den eigenen Namespaces des Knotens, und nsenter öffnet eine Root-Shell auf dem Knoten. Der Pod wird gelöscht, wenn die Shell endet. Der Namespace muss privilegierte Pods zulassen."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un pod privilegiato gira su %1$@ nel namespace %2$@, nei namespace del nodo stesso, e nsenter apre una shell root sul nodo. Il pod viene eliminato quando la shell termina. Il namespace deve ammettere pod privilegiati."
           }
         }
       }

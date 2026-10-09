@@ -54,6 +54,8 @@ object CheckupKind {
     const val NAMESPACE_TERMINATING = "namespaceTerminating"
     const val POD_TERMINATING = "podTerminating"
     const val PVC_TERMINATING = "pvcTerminating"
+    /** A network test namespace the app could not delete (it was closed mid-run). */
+    const val NETPERF_LEFTOVER = "netperfLeftover"
     const val CSR_PENDING = "csrPending"
     const val CSR_DENIED = "csrDenied"
     const val EXTERNAL_SECRET_FAILED = "externalSecretFailed"

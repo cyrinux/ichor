@@ -272,6 +272,13 @@ struct TalosClient: Sendable {
         }
     }
 
+    /// Deletes an `ichor-netperf-*` namespace a network test left behind (os:admin); the core refuses any other.
+    func deleteNetPerfNamespace(_ name: String) async throws {
+        try await Self.run { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] error -> Void in
+            _ = IchorgoNetPerfDeleteNamespace(config, context, kubeServer, name, error)
+        }
+    }
+
     /// Starts `talosctl debug` on node; events go to the listener (from Go threads).
     func startDebugShell(node: String, image: String, args: String, cols: Int, rows: Int,
                          listener: IchorgoDebugListenerProtocol) -> IchorgoDebugSession? {

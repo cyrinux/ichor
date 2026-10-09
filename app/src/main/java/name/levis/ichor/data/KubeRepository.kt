@@ -1,6 +1,7 @@
 package name.levis.ichor.data
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.builtins.ListSerializer
 import name.levis.ichor.model.ApiHealthReport
@@ -25,6 +26,7 @@ import name.levis.ichor.model.KubeRevisionList
 import name.levis.ichor.model.KubeRolloutStatus
 import name.levis.ichor.model.KubeRoute
 import name.levis.ichor.model.KubeRouteList
+import name.levis.ichor.model.KubeWatchEvent
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.KubeWorkloadList
 import name.levis.ichor.model.KubeWorkloadPage
@@ -57,7 +59,15 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
         TalosJson.decodeFromString(KubeTopNodes.serializer(), Ichorgo.kubeTopNodes(cfg, ctx, server))
     }
 
-    /** CPU and memory the pods of [namespace] (null: all) use, with their requests and limits. */
+    /** CPU and memory one pod uses, with its requests and limits: two small reads. */
+    suspend fun topPod(namespace: String, name: String): KubeTopPods = go.kube { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeTopPods.serializer(), Ichorgo.kubeTopPod(cfg, ctx, server, namespace, name))
+    }
+
+    /**
+     * CPU and memory the pods of [namespace] (null: all) use; with their requests and limits for
+     * one namespace only (see [KubeTopPods.boundsRead]).
+     */
     suspend fun topPods(namespace: String?, selector: String = ""): KubeTopPods = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(KubeTopPods.serializer(), Ichorgo.kubeTopPods(cfg, ctx, server, namespace.orEmpty(), selector))
     }
@@ -86,6 +96,34 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
     suspend fun rolloutStatus(workload: KubeWorkload): KubeRolloutStatus = go.kube { cfg, ctx, server ->
         TalosJson.decodeFromString(KubeRolloutStatus.serializer(), Ichorgo.kubeRolloutStatus(cfg, ctx, server, workload.kind, workload.namespace, workload.name))
     }
+
+    /**
+     * [rolloutStatus] kept live (os:admin): the status at the start, then again each time the
+     * workload or one of its pods changes, until the collector cancels or the watch ends.
+     */
+    fun rolloutWatch(workload: KubeWorkload): Flow<StreamItem<KubeRolloutStatus>> =
+        kubeLiveFlow(go::kubeTarget, KubeRolloutStatus.serializer()) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeRolloutWatch(cfg, ctx, server, workload.kind, workload.namespace, workload.name, listener)
+        }
+
+    /**
+     * The pods of [selection] narrowed to [phase] kept live (os:admin): the whole list first,
+     * then each pod added, changed or gone as the API server reports it, until the collector
+     * cancels or the watch ends. Full objects, like the first page of [workloadPodsPage].
+     */
+    fun workloadPodsWatch(selection: PodSelection.OfWorkload, phase: PodPhaseFilter): Flow<StreamItem<KubeWatchEvent<KubePod>>> =
+        kubeWatchFlow(go::kubeTarget, KubePod.serializer(), { TalosJson.decodeFromString(KubePodPage.serializer(), it).pods }) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeWorkloadPodsWatch(cfg, ctx, server, selection.kind, selection.namespace, selection.name, phase.query, listener)
+        }
+
+    /**
+     * The pods of the Kubernetes node [kubeNode] (every namespace) narrowed to [phase] kept live
+     * (os:admin), like [workloadPodsWatch]: the whole list first, then each change.
+     */
+    fun nodePodsWatch(kubeNode: String, phase: PodPhaseFilter): Flow<StreamItem<KubeWatchEvent<KubePod>>> =
+        kubeWatchFlow(go::kubeTarget, KubePod.serializer(), { TalosJson.decodeFromString(KubePodPage.serializer(), it).pods }) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeNodePodsWatch(cfg, ctx, server, kubeNode, phase.query, listener)
+        }
 
     /**
      * `kubectl scale KIND/NAME --replicas=N -n NAMESPACE` (os:admin): a warning ("" when none)
@@ -240,6 +278,9 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
 
     /** `kubectl delete pod NAME -n NAMESPACE` (os:admin): its controller starts a new one. */
     suspend fun deletePod(pod: KubePod) = go.kube { cfg, ctx, server -> Ichorgo.kubeDeletePod(cfg, ctx, server, pod.namespace, pod.name) }
+
+    /** Deletes an `ichor-netperf-*` namespace a network test left behind (os:admin); the core refuses any other. */
+    suspend fun deleteNetPerfNamespace(name: String) = go.kube { cfg, ctx, server -> Ichorgo.netPerfDeleteNamespace(cfg, ctx, server, name) }
 
     /** Prometheus-compatible query APIs among the cluster's Services, the likeliest first. */
     suspend fun promDiscover(): List<PromSource> = go.kube { cfg, ctx, server ->

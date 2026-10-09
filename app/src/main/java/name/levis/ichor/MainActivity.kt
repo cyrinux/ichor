@@ -161,6 +161,7 @@ class MainActivity : FragmentActivity() {
         const val EXTRA_SHELL_NAMESPACE = "name.levis.ichor.SHELL_NAMESPACE"
         const val EXTRA_SHELL_POD = "name.levis.ichor.SHELL_POD"
         const val EXTRA_SHELL_CONTAINER = "name.levis.ichor.SHELL_CONTAINER"
+        const val EXTRA_SHELL_KUBE_NODE = "name.levis.ichor.SHELL_KUBE_NODE"
     }
 }
 

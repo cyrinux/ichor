@@ -28,6 +28,8 @@ type kubeBrowserResource struct {
 	Verbs      []string `json:"verbs"`
 	ShortNames []string `json:"shortNames"`
 	Categories []string `json:"categories"`
+	// Scalable: the kind serves /scale (any CRD declaring it), or is a Job (its parallelism).
+	Scalable bool `json:"scalable,omitempty"`
 }
 
 type kubeBrowserResourceList struct {
@@ -37,15 +39,17 @@ type kubeBrowserResourceList struct {
 }
 
 type discoveryResourceList struct {
-	GroupVersion string `json:"groupVersion"`
-	Resources    []struct {
-		Name       string   `json:"name"`
-		Kind       string   `json:"kind"`
-		Namespaced bool     `json:"namespaced"`
-		Verbs      []string `json:"verbs"`
-		ShortNames []string `json:"shortNames"`
-		Categories []string `json:"categories"`
-	} `json:"resources"`
+	GroupVersion string              `json:"groupVersion"`
+	Resources    []discoveryResource `json:"resources"`
+}
+
+type discoveryResource struct {
+	Name       string   `json:"name"`
+	Kind       string   `json:"kind"`
+	Namespaced bool     `json:"namespaced"`
+	Verbs      []string `json:"verbs"`
+	ShortNames []string `json:"shortNames"`
+	Categories []string `json:"categories"`
 }
 
 type discoveryGroupList struct {
@@ -128,11 +132,20 @@ func discoverResources(ctx context.Context, k *kubeClient) (kubeBrowserResourceL
 	return out, nil
 }
 
-// listableResources keeps the resources that can be listed, without subresources.
+// listableResources keeps the resources that can be listed, without subresources, marking
+// the ones that scale.
 func listableResources(list discoveryResourceList) []kubeBrowserResource {
 	group, version, found := strings.Cut(list.GroupVersion, "/")
 	if !found {
 		group, version = "", list.GroupVersion
+	}
+
+	scales := map[string]bool{}
+
+	for _, r := range list.Resources {
+		if parent, ok := strings.CutSuffix(r.Name, "/scale"); ok {
+			scales[parent] = true
+		}
 	}
 
 	out := []kubeBrowserResource{}
@@ -145,6 +158,7 @@ func listableResources(list discoveryResourceList) []kubeBrowserResource {
 		out = append(out, kubeBrowserResource{
 			Group: group, Version: version, Resource: r.Name, Kind: r.Kind, Namespaced: r.Namespaced,
 			Verbs: nonNil(r.Verbs), ShortNames: nonNil(r.ShortNames), Categories: nonNil(r.Categories),
+			Scalable: scales[r.Name] || isJobResource(group, r.Name),
 		})
 	}
 
@@ -375,10 +389,13 @@ func demoAPIResources() kubeBrowserResourceList {
 		}
 	}
 
+	deployments := r("apps", "v1", "deployments", "Deployment", true, "deploy")
+	deployments.Scalable = true
+
 	return kubeBrowserResourceList{Resources: []kubeBrowserResource{
 		r("argoproj.io", "v1alpha1", "applications", "Application", true, "app"),
 		r("", "v1", "configmaps", "ConfigMap", true, "cm"),
-		r("apps", "v1", "deployments", "Deployment", true, "deploy"),
+		deployments,
 		r("", "v1", "namespaces", "Namespace", false, "ns"),
 		r("", "v1", "nodes", "Node", false, "no"),
 		r("", "v1", "pods", "Pod", true, "po"),

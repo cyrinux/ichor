@@ -9,6 +9,7 @@ struct SelectedPodsView: View {
     let selection: PodSelection
 
     @Environment(AppModel.self) private var model
+    @Environment(\.scenePhase) private var scenePhase
     @State private var phase = PodPhaseFilter.all
     /// The phase `list` loads.
     @State private var listed = PodPhaseFilter.all
@@ -23,6 +24,18 @@ struct SelectedPodsView: View {
         let context: String
         let server: String?
         let generation: Int
+    }
+
+    /// What decides whether the rows are followed live: the rows, the loads of them that
+    /// settled (the watch starts over after each), and the app being active.
+    private struct LiveTrigger: Hashable {
+        let rows: Trigger
+        let settles: Int
+        let active: Bool
+    }
+
+    private var trigger: Trigger {
+        Trigger(phase: phase, context: model.activeContext, server: model.client?.kubeServer, generation: model.dataGeneration)
     }
 
     init(selection: PodSelection) {
@@ -48,16 +61,43 @@ struct SelectedPodsView: View {
                 }
             }
         }
-        .task(id: Trigger(phase: phase, context: model.activeContext, server: model.client?.kubeServer,
-                          generation: model.dataGeneration)) {
+        .task(id: trigger) {
             if listed != phase {
                 list = Self.makeList(selection, phase: phase, kubeNode: kubeNode)
                 listed = phase
             }
             await list.show(KubeScope(), model: model)
         }
+        .task(id: LiveTrigger(rows: trigger, settles: list.settles, active: scenePhase == .active)) { await follow() }
         .podActions(actions) { await list.refresh(model: model) }
         .loadsKubeActionAccess(namespace: accessNamespace)
+    }
+
+    /// Keeps the pods live while on screen and the app active, a workload's or a node's: the Go
+    /// core's watch replaces the list, then adds, updates and removes rows as the API server
+    /// reports them. It starts once a load settled, and over again after each one (a refresh, a
+    /// phase change): the list the watch sends then is newer than the load's, so no change seen
+    /// meanwhile is lost. A watch that ends (a refusal, the network) is followed again after a
+    /// while; pull-to-refresh stays. A node whose Kubernetes name cannot be found is not followed.
+    private func follow() async {
+        guard scenePhase == .active, list.settles > 0 else { return }
+        while !Task.isCancelled {
+            guard let client = model.client else { return }
+            let events: AsyncStream<KubeWatchStreamEvent<KubePod>>
+            switch selection {
+            case .workload(let kind, let namespace, let name):
+                events = client.workloadPodsWatch(kind: kind, namespace: namespace, name: name, phase: phase)
+            case .node(let address):
+                guard let name = try? await kubeNode.resolve({ try await client.kubeNodeName(node: address) }) else { return }
+                events = client.nodePodsWatch(kubeNode: name, phase: phase)
+            }
+            for await event in events {
+                if case .change(let change) = event {
+                    list.apply { $0.applying(change, key: \.id) }
+                }
+            }
+            try? await Task.sleep(for: .seconds(kubeWatchRetrySeconds))
+        }
     }
 
     /// The workload's namespace; "" for a node's pods (every namespace).

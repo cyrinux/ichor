@@ -26,7 +26,8 @@ val ShellState.isLive: Boolean get() = this is ShellState.Starting || this is Sh
 
 /**
  * One shell per node of a cluster (its talosconfig context), or per container of a pod
- * ([pod] set, [node] empty, `kubectl exec -it`): reopening it finds it again.
+ * ([pod] set, [node] empty, `kubectl exec -it`), or per Kubernetes node of a cluster without
+ * Talos ([kubeNode], a privileged pod in [namespace]): reopening it finds it again.
  */
 data class ShellKey(
     val context: String,
@@ -34,6 +35,7 @@ data class ShellKey(
     val namespace: String = "",
     val pod: String = "",
     val container: String = "",
+    val kubeNode: Boolean = false,
 ) {
     val isPod: Boolean get() = pod.isNotEmpty()
 
@@ -78,7 +80,11 @@ class DebugShell internal constructor(
         },
     )
 
-    /** [image] is ignored for a pod: the command runs in its container. */
+    /**
+     * A node: [image] is the debug pod's. A pod: an empty [image] runs [args] in its container
+     * (`kubectl exec`); a non-empty one adds a debug container from it, sharing the container's
+     * processes (`kubectl debug`, for images without a shell).
+     */
     fun start(image: String, args: String) {
         val stored = configs.config.value ?: return
         stop()
@@ -101,12 +107,22 @@ class DebugShell internal constructor(
                 if (current == generation) setState(ShellState.Exited(code, errMessage))
             }
         }
-        session = if (key.isPod) {
+        session = if (key.kubeNode) {
+            // A root shell on the node through a privileged pod (`kubectl debug node/`).
+            val target = kubeServers.targetFor(stored.copy(activeContext = key.context))
+            Ichorgo.startNodeDebug(target.yaml, target.context, target.server, key.node, key.namespace, image, cols, rows, listener)
+        } else if (key.isPod) {
             // The pod's cluster, which may no longer be the one on screen.
             val target = kubeServers.targetFor(stored.copy(activeContext = key.context))
-            Ichorgo.startPodShell(
-                target.yaml, target.context, target.server, key.namespace, key.pod, key.container, args, cols, rows, listener,
-            )
+            if (image.isNotBlank()) {
+                Ichorgo.startPodDebug(
+                    target.yaml, target.context, target.server, key.namespace, key.pod, key.container, image, cols, rows, listener,
+                )
+            } else {
+                Ichorgo.startPodShell(
+                    target.yaml, target.context, target.server, key.namespace, key.pod, key.container, args, cols, rows, listener,
+                )
+            }
         } else {
             Ichorgo.startDebugShell(stored.yamlFor(key.context), key.context, key.node, image, args, cols, rows, listener)
         }

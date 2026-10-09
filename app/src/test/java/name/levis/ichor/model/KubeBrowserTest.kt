@@ -214,4 +214,24 @@ class KubeBrowserTest {
         assertTrue(plain.copy(clusterScoped = true).needsTypedName)
         assertEquals(listOf("Background", "Foreground", "Orphan"), DeletePropagation.entries.map { it.api })
     }
+
+    @Test
+    fun scaleDecodesAndPatchesTheRightResource() {
+        val list = TalosJson.decodeFromString(
+            ApiResourceList.serializer(),
+            """{"resources":[{"group":"argoproj.io","version":"v1alpha1","resource":"rollouts","kind":"Rollout","scalable":true},
+              {"group":"","version":"v1","resource":"pods","kind":"Pod"}]}""",
+        )
+        assertTrue(list.resources[0].scalable)
+        assertFalse(list.resources[1].scalable)
+
+        val rollout = KubeObjectRef("argoproj.io", "v1alpha1", "rollouts", "Rollout", "shop", "web", editable = true, scalable = true)
+        assertEquals("rollouts/scale", rollout.scaleResource)
+        assertEquals("jobs", KubeObjectRef("batch", "v1", "jobs", "Job", "shop", "import", editable = true, scalable = true).scaleResource)
+
+        val job = TalosJson.decodeFromString(KubeObjectScale.serializer(), """{"replicas":4,"current":1,"field":"parallelism"}""")
+        assertEquals(KubeObjectScale(4, 1, "parallelism"), job)
+        assertTrue(job.isParallelism)
+        assertFalse(TalosJson.decodeFromString(KubeObjectScale.serializer(), "{}").isParallelism)
+    }
 }

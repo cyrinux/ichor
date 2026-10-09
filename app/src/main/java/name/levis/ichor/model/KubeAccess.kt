@@ -13,6 +13,8 @@ enum class KubeAction(val wire: String) {
     SCALE_STATEFUL_SET("scaleStatefulSet"),
     DELETE_POD("deletePod"),
     EXEC_POD("execPod"),
+    DEBUG_POD("debugPod"),
+    DEBUG_NODE("debugNode"),
     SUSPEND_CRON_JOB("suspendCronJob"),
     TRIGGER_CRON_JOB("triggerCronJob"),
     HELM_ROLLBACK("helmRollback"),

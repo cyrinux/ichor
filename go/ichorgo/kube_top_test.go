@@ -77,7 +77,7 @@ func TestTopPodsJoinsUsageWithRequestsAndLimits(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !top.Available || len(top.Pods) != 2 {
+	if !top.Available || !top.BoundsRead || len(top.Pods) != 2 {
 		t.Fatalf("unexpected %+v", top)
 	}
 
@@ -179,5 +179,107 @@ func TestKubeTopDemo(t *testing.T) {
 		if p.Namespace != "demo" || p.CPU <= 0 {
 			t.Errorf("demo pod %+v", p)
 		}
+	}
+}
+
+func TestTopPodsOfEveryNamespaceReadMetricsOnly(t *testing.T) {
+	f := newFakeKubeAPI(t, map[string]string{"GET /apis/metrics.k8s.io/v1beta1/pods": topPodMetricsBody})
+
+	top, err := readTopPods(context.Background(), openFakeKube(t, f), "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !top.Available || top.BoundsRead || len(top.Pods) != 2 {
+		t.Fatalf("unexpected %+v", top)
+	}
+
+	if api := top.Pods[0]; !near(api.CPU, 0.125) || api.CPURequest != 0 || api.MemoryLimit != 0 {
+		t.Errorf("api %+v", api)
+	}
+
+	for _, r := range f.recorded() {
+		if r.path == "/api/v1/pods" {
+			t.Error("every pod of the cluster was listed")
+		}
+	}
+}
+
+func TestTopPodReadsOnlyThatPod(t *testing.T) {
+	f := newFakeKubeAPI(t, map[string]string{
+		"GET /apis/metrics.k8s.io/v1beta1/namespaces/web/pods/api": `{"metadata":{"name":"api","namespace":"web"},"containers":[
+			{"name":"app","usage":{"cpu":"120m","memory":"200Mi"}},{"name":"proxy","usage":{"cpu":"5m","memory":"20Mi"}}]}`,
+		"GET /api/v1/namespaces/web/pods/api": `{"metadata":{"name":"api","namespace":"web"},"spec":{"nodeName":"w1","containers":[
+			{"name":"app","resources":{"requests":{"cpu":"250m"},"limits":{"cpu":"1","memory":"512Mi"}}},
+			{"name":"proxy","resources":{"requests":{"cpu":"50m"},"limits":{"cpu":"100m","memory":"128Mi"}}}]}}`,
+	})
+
+	top, err := readTopPod(context.Background(), openFakeKube(t, f), "web", "api")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !top.Available || !top.BoundsRead || len(top.Pods) != 1 {
+		t.Fatalf("unexpected %+v", top)
+	}
+
+	if p := top.Pods[0]; p.Node != "w1" || !near(p.CPU, 0.125) || !near(p.CPULimit, 1.1) || p.MemoryLimit != 640<<20 {
+		t.Errorf("pod %+v", p)
+	}
+
+	calls := 0
+
+	for _, r := range f.recorded() {
+		if r.path != "/version" {
+			calls++
+		}
+	}
+
+	if calls != 2 {
+		t.Errorf("%d requests, want the pod's metrics and the pod", calls)
+	}
+}
+
+func TestTopPodWithoutMetrics(t *testing.T) {
+	f := newFakeKubeAPI(t, map[string]string{})
+	f.answerWith("GET /apis/metrics.k8s.io/v1beta1/namespaces/web/pods/api", http.StatusForbidden, `{"kind":"Status","code":403}`)
+
+	top, err := readTopPod(context.Background(), openFakeKube(t, f), "web", "api")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if top.Available || !top.Forbidden || len(top.Pods) != 0 {
+		t.Errorf("got %+v", top)
+	}
+}
+
+func TestKubeTopPodDemo(t *testing.T) {
+	cfg, err := DemoConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := KubeTopPod(cfg, "", "", "demo", "postgres-0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var top kubeTopPods
+	if err := json.Unmarshal([]byte(out), &top); err != nil || len(top.Pods) != 1 || top.Pods[0].MemoryLimit == 0 || !top.BoundsRead {
+		t.Fatalf("demo pod: %v %s", err, out)
+	}
+
+	out, err = KubeTopPods(cfg, "", "", "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := json.Unmarshal([]byte(out), &top); err != nil || top.BoundsRead || top.Pods[0].CPURequest != 0 {
+		t.Fatalf("demo of every namespace: %v %s", err, out)
+	}
+
+	if _, err := KubeTopPod(cfg, "", "", "demo", "Bad Name"); err == nil {
+		t.Error("a bad pod name was accepted")
 	}
 }

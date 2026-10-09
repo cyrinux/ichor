@@ -25,6 +25,11 @@ func netPerfRun(cfg, contextName, kubeServer, server, client, host, seconds stri
 	p := &netPerfProbe{done: make(chan string, 1)}
 	run := ichorgo.StartNetPerf(cfg, contextName, kubeServer, server, client, host == "host", secs, p)
 
+	return p.wait(run.Cancel)
+}
+
+// wait returns the run's report; Ctrl-C calls cancel first.
+func (p *netPerfProbe) wait(cancel func()) string {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
@@ -34,7 +39,7 @@ func netPerfRun(cfg, contextName, kubeServer, server, client, host, seconds stri
 	case out := <-p.done:
 		return out
 	case <-interrupt:
-		run.Cancel()
+		cancel()
 
 		return <-p.done
 	}

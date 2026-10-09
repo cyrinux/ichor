@@ -420,6 +420,8 @@
     <string name="settings_kube_export">Exportar kubeconfig…</string>
     <string name="settings_kube_saved">Guardado. En kubenav, añade un clúster desde ese archivo.</string>
     <string name="settings_kube_open_kubenav">Abrir kubenav</string>
+    <string name="settings_node_debug_shell">Shell de depuración de nodos</string>
+    <string name="settings_node_debug_shell_desc">En clústeres sin Talos, añade «Shell de depuración…» al menú de un nodo: un pod privilegiado en los namespaces del nodo da una shell root en el nodo. El pod se borra al cerrar la shell. Desactivado por defecto.</string>
     <string name="settings_kube_open_failed">No se ha podido abrir el archivo elegido</string>
     <string name="settings_section_config">Configuración</string>
     <string name="settings_encryption_key">Clave de cifrado</string>
@@ -612,6 +614,9 @@
 
     <!-- Debug shell -->
     <string name="debug_title">Shell de depuración</string>
+    <string name="node_debug_title">Shell root</string>
+    <string name="node_debug_auth">Shell root en %1$s</string>
+    <string name="node_debug_intro">Un pod privilegiado se ejecuta en %1$s en el namespace %2$s, en los namespaces del propio nodo, y nsenter abre una shell root en el nodo. El pod se borra al terminar la shell. El namespace debe admitir pods privilegiados.</string>
     <string name="debug_stop">Detener</string>
     <string name="debug_auth">Shell de depuración en %1$s</string>
     <string name="debug_intro">Ejecuta la imagen como contenedor privilegiado en %1$s, con acceso al host, y abre un terminal en él. Talos descarga primero la imagen si el nodo no la tiene.</string>
@@ -2050,6 +2055,7 @@
     <string name="netperf_stop">Detener</string>
     <string name="netperf_stopping">Deteniendo: eliminando el namespace de prueba…</string>
     <string name="netperf_stopped">Prueba detenida.</string>
+    <string name="netperf_cleanup_failed">Falló la limpieza: %1$s</string>
     <string name="netperf_failed">La prueba falló: %1$s</string>
     <string name="netperf_again">Nueva prueba</string>
     <string name="netperf_history">Pruebas anteriores</string>
@@ -2551,6 +2557,7 @@
     <string name="node_menu_cordon">Acordonar</string>
     <string name="node_menu_uncordon">Desacordonar</string>
     <string name="node_menu_drain">Drenar…</string>
+    <string name="node_menu_kube_debug_shell">Shell de depuración…</string>
     <string name="node_menu_group_inspect">Inspeccionar</string>
     <string name="node_menu_group_troubleshoot">Diagnosticar</string>
     <string name="node_menu_group_operate">Administrar</string>
@@ -2911,7 +2918,7 @@
     <string name="audit_unauthorized">Rechazado %1$d veces (401): sus credenciales no son válidas</string>
     <string name="audit_unauthorized_fix">Su token o certificado caducó o se borró (una cuenta de servicio eliminada, un kubeconfig antiguo): dele credenciales nuevas o deténgalo. El registro solo conoce su dirección.</string>
     <string name="checkup_title">Chequeo del clúster</string>
-    <string name="checkup_intro">Lo que las demás pantallas no muestran, leído de la API de Kubernetes. No se cambia nada.</string>
+    <string name="checkup_intro">Lo que las demás pantallas no muestran, leído de la API de Kubernetes. No se cambia nada salvo que toques una acción.</string>
     <string name="checkup_verdict_critical">Requiere atención</string>
     <string name="checkup_verdict_warning">Advertencias</string>
     <string name="checkup_verdict_ok">Todo en orden</string>
@@ -2992,6 +2999,10 @@
     <string name="checkup_lbPoolExhausted">No quedan direcciones (pool de %1$s)</string>
     <string name="checkup_lbPoolConflict">Se solapa con otro pool</string>
     <string name="checkup_terminating">Eliminándose desde hace %1$s</string>
+    <string name="checkup_netperfLeftover">Dejado por una prueba de red hace %1$s</string>
+    <string name="checkup_netperfLeftover_fix">La app se cerró antes de que la prueba limpiara. No hay nada más en este namespace; borrarlo es seguro.</string>
+    <string name="checkup_delete_namespace_title">¿Borrar el namespace %1$s?</string>
+    <string name="checkup_delete_namespace_text">Los pods de la prueba de red que contiene se borran con él.</string>
     <string name="checkup_csrPending">%1$s solicitudes de certificado esperan aprobación (%2$s)</string>
     <string name="checkup_csrDenied">%1$s solicitudes de certificado fueron denegadas (%2$s)</string>
     <string name="checkup_externalSecretFailed">No se sincroniza desde el store %1$s</string>
@@ -3212,6 +3223,15 @@
     <string name="kb_edit_hint">Conserva metadata.resourceVersion: un cambio hecho mientras tanto se rechaza, no se sobrescribe.</string>
     <string name="kb_edit_reveal_first">Muestra primero los valores del secreto: los valores ocultos se guardarían tal cual.</string>
     <string name="kb_review">Revisar</string>
+    <string name="kb_explain_field">Explicar campo</string>
+    <string name="kb_add_field">Añadir campo</string>
+    <string name="kb_schema_add_title">Añadir a %1$s</string>
+    <string name="kb_schema_required">obligatorio</string>
+    <string name="kb_schema_values">Valores posibles</string>
+    <string name="kb_schema_fields">Campos</string>
+    <string name="kb_schema_no_fields">Nada que añadir aquí: este campo contiene un valor, no otros campos.</string>
+    <string name="kb_schema_add_hint">Toca un campo para añadirlo en el cursor, los obligatorios primero.</string>
+    <string name="kb_schema_unavailable">Ayuda del esquema no disponible</string>
     <string name="kb_review_loading">Preguntando al servidor de API qué cambiaría…</string>
     <string name="kb_no_changes">No hay cambios que guardar.</string>
     <string name="kb_back_to_editor">Volver al editor</string>
@@ -3222,6 +3242,9 @@
     <string name="kb_discard_confirm">Descartar</string>
     <string name="kb_delete">Eliminar</string>
     <string name="kb_delete_title">¿Eliminar %1$s?</string>
+    <string name="kb_scale_title">Escalar %1$s</string>
+    <string name="kb_scale_running">En ejecución: %1$s</string>
+    <string name="kb_scale_job_hint">Un Job ejecuta tantos pods a la vez; 0 lo pausa.</string>
     <string name="kb_delete_loading">Leyendo lo que afectaría la eliminación…</string>
     <string name="kb_delete_protected">Protegido: %1$s</string>
     <string name="kb_delete_pending">Su eliminación ya está pendiente: la retienen los finalizadores de abajo.</string>
@@ -3406,4 +3429,48 @@
     <string name="kube_whoami_user">Usuario de Kubernetes</string>
     <string name="mono_text_larger">Texto más grande</string>
     <string name="mono_text_smaller">Texto más pequeño</string>
+    <string name="kb_tab_data">Datos</string>
+    <string name="kb_data_type">Tipo: %1$s</string>
+    <string name="kb_data_keys">Claves</string>
+    <string name="kb_data_no_keys">Sin claves.</string>
+    <string name="kb_data_hint_text">Texto</string>
+    <string name="kb_data_hint_binary">Binario</string>
+    <string name="kb_data_show_value">Mostrar el valor</string>
+    <string name="kb_data_hide_value">Ocultar el valor</string>
+    <string name="kb_data_copy_value">Copiar el valor</string>
+    <string name="kb_data_base64">Valor binario, mostrado en base64.</string>
+    <string name="kb_data_cert_chain">Certificados en la cadena: %1$d</string>
+    <string name="kb_data_registries">Registros</string>
+    <string name="kb_data_registry_user">Usuario: %1$s</string>
+    <string name="kb_data_used_by">Usado por</string>
+    <string name="kb_data_used_by_unknown">No se pudieron listar los pods de este namespace.</string>
+    <string name="kb_data_used_by_none">Ningún pod de este namespace lo usa.</string>
+    <string name="kb_data_reveal_auth">Mostrar %1$s de %2$s</string>
+||||||| 62d80f4f
+    <string name="pod_debug_toggle">Contenedor de depuración</string>
+    <string name="pod_debug_note">Para imágenes sin shell (distroless): añade un contenedor temporal que ve los procesos de este pod. Kubernetes lo mantiene en el pod hasta que se elimina el pod.</string>
+    <string name="storage_kube_search">Buscar PVC, clases o pods</string>
+    <string name="storage_kube_empty">No hay PVC.</string>
+    <string name="storage_kube_no_match">Ningún PVC coincide.</string>
+    <string name="storage_kube_partial">Estas credenciales no pueden leer volúmenes, clases o nodos: faltan algunos detalles.</string>
+    <string name="storage_kube_not_measured">ocupación no medida</string>
+    <string name="storage_kube_pods">Usado por %1$s</string>
+    <string name="storage_kube_open">Abrir en %1$s</string>
+    <string name="kube_services_title">Servicios</string>
+    <string name="kube_services_search">Buscar servicios, direcciones o rutas</string>
+    <string name="kube_services_empty">No hay servicios.</string>
+    <string name="kube_services_no_match">Ningún servicio coincide.</string>
+    <string name="kube_services_partial">Estas credenciales no pueden leer endpoints o rutas: faltan algunos detalles.</string>
+    <string name="kube_services_no_address">Sin dirección</string>
+    <string name="kube_services_hint_metallb">Un balanceador de carga no tiene dirección: revisa el IPAddressPool de MetalLB y un L2Advertisement o BGPAdvertisement que lo anuncie.</string>
+    <string name="kube_services_hint_cilium">Un balanceador de carga no tiene dirección: revisa el CiliumLoadBalancerIPPool (direcciones libres, su selector de servicios) y que el LB IPAM de Cilium esté activo.</string>
+    <string name="kube_services_hint_none">Un balanceador de carga no tiene dirección y no se encontró ningún controlador que le dé una: instala MetalLB, activa el LB IPAM de Cilium o usa el balanceador de una nube.</string>
+    <string name="kube_services_ready">Endpoints listos: %1$s</string>
+    <string name="kube_services_headless">headless</string>
+    <string name="kube_jobs_title">Jobs</string>
+    <string name="kube_jobs_search">Buscar jobs, CronJobs o motivos</string>
+    <string name="kube_jobs_empty">No hay jobs.</string>
+    <string name="kube_jobs_no_match">Ningún job coincide.</string>
+    <string name="kube_jobs_completions">Completados: %1$s</string>
+    <string name="kube_jobs_owner">CronJob %1$s</string>
 </resources>

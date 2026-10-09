@@ -37,6 +37,9 @@ struct ConfigYamlLines: View {
 struct ConfigYamlEditor: View {
     @Binding var text: String
     let error: ConfigSyntaxError?
+    /// The caret as a UTF-16 offset, when the caller needs it; set it with the text to move
+    /// the caret after a change made elsewhere.
+    var cursor: Binding<Int>? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -46,7 +49,7 @@ struct ConfigYamlEditor: View {
                     .padding(.horizontal)
                     .padding(.vertical, 6)
             }
-            PlainTextEditor(text: $text)
+            PlainTextEditor(text: $text, cursor: cursor)
         }
         .themedBackground()
     }
@@ -75,8 +78,9 @@ func configSyntaxText(_ error: ConfigSyntaxError) -> String {
 /// off smart quotes and dashes, which break YAML.
 private struct PlainTextEditor: UIViewRepresentable {
     @Binding var text: String
+    var cursor: Binding<Int>?
 
-    func makeCoordinator() -> Coordinator { Coordinator(text: $text) }
+    func makeCoordinator() -> Coordinator { Coordinator(text: $text, cursor: cursor) }
 
     func makeUIView(context: Context) -> UITextView {
         let view = UITextView()
@@ -100,17 +104,38 @@ private struct PlainTextEditor: UIViewRepresentable {
 
     func updateUIView(_ view: UITextView, context: Context) {
         context.coordinator.text = $text
+        context.coordinator.cursor = cursor
         // Only a change made elsewhere (a field edit) replaces the text: the caret stays put while typing.
-        if view.text != text { view.text = text }
+        if view.text != text {
+            context.coordinator.replacing = true
+            view.text = text
+            if let cursor {
+                view.selectedRange = NSRange(location: min(max(cursor.wrappedValue, 0), view.text.utf16.count), length: 0)
+            }
+            context.coordinator.replacing = false
+        }
     }
 
     final class Coordinator: NSObject, UITextViewDelegate {
         var text: Binding<String>
+        var cursor: Binding<Int>?
+        /// The text is being replaced from SwiftUI: the caret it moves is not the user's.
+        var replacing = false
 
-        init(text: Binding<String>) { self.text = text }
+        init(text: Binding<String>, cursor: Binding<Int>?) {
+            self.text = text
+            self.cursor = cursor
+        }
 
         func textViewDidChange(_ textView: UITextView) {
             text.wrappedValue = textView.text
+        }
+
+        func textViewDidChangeSelection(_ textView: UITextView) {
+            guard !replacing, let cursor else { return }
+            let location = textView.selectedRange.location
+            // Reported after the view update, not during it.
+            DispatchQueue.main.async { cursor.wrappedValue = location }
         }
     }
 }

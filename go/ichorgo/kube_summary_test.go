@@ -42,7 +42,8 @@ func TestKubeObjectSummaryPod(t *testing.T) {
 		"GET /api/v1/namespaces/shop/pods/web-7d9c5-abcde": strings.Replace(summaryPod, "%s", strings.Repeat("x", 300), 1),
 		"GET /api/v1/namespaces/shop/events": `{"items":[{"metadata":{"creationTimestamp":"2026-01-02T00:00:00Z"},
 		  "involvedObject":{"kind":"Pod","namespace":"shop","name":"web-7d9c5-abcde"},"type":"Warning","reason":"BackOff","message":"restarting","count":3}]}`,
-		"GET /apis/apps/v1":     `{"groupVersion":"apps/v1","resources":[{"name":"replicasets","kind":"ReplicaSet","namespaced":true,"verbs":["get","list","update"]}]}`,
+		"GET /apis/apps/v1": `{"groupVersion":"apps/v1","resources":[{"name":"replicasets","kind":"ReplicaSet","namespaced":true,"verbs":["get","list","update"]},
+		  {"name":"replicasets/scale","kind":"Scale","namespaced":true,"verbs":["get","patch"]}]}`,
 		"GET /api/v1":           `{"groupVersion":"v1","resources":[{"name":"nodes","kind":"Node","namespaced":false,"verbs":["get","list"]}]}`,
 		"GET /apis/argoproj.io": `{"name":"argoproj.io","preferredVersion":{"groupVersion":"argoproj.io/v1alpha1","version":"v1alpha1"}}`,
 		"GET /apis/argoproj.io/v1alpha1": `{"groupVersion":"argoproj.io/v1alpha1","resources":[
@@ -67,7 +68,7 @@ func TestKubeObjectSummaryPod(t *testing.T) {
 	}
 
 	rs, node, app := s.Owners[0], s.Owners[1], s.Owners[2]
-	if !rs.Controller || rs.Resource != "replicasets" || rs.Group != "apps" || rs.Namespace != "shop" || !slices.Contains(rs.Verbs, "update") {
+	if !rs.Controller || rs.Resource != "replicasets" || rs.Group != "apps" || rs.Namespace != "shop" || !slices.Contains(rs.Verbs, "update") || !rs.Scalable {
 		t.Errorf("replica set %+v", rs)
 	}
 

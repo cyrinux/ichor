@@ -174,4 +174,20 @@ final class KubeBrowserTests: XCTestCase {
         XCTAssertEqual(KubeDeletePropagation.allCases.map(\.rawValue), ["Background", "Foreground", "Orphan"])
         XCTAssertTrue(isKubeDeleteConflict("the object changed since you looked at it: review it again before deleting"))
     }
+
+    func testDecodesScale() throws {
+        let list = try TalosJSON.decode(KubeAPIResourceList.self, from: """
+        {"resources":[{"group":"argoproj.io","version":"v1alpha1","resource":"rollouts","kind":"Rollout","scalable":true},
+          {"group":"","version":"v1","resource":"pods","kind":"Pod"}]}
+        """)
+        XCTAssertTrue(list.resources[0].scalable)
+        XCTAssertFalse(list.resources[1].scalable)
+        XCTAssertEqual(list.resources[0].scaleResource, "rollouts/scale")
+        XCTAssertEqual(KubeAPIResource(group: "batch", resource: "jobs", kind: "Job", scalable: true).scaleResource, "jobs")
+
+        let job = try TalosJSON.decode(KubeObjectScale.self, from: #"{"replicas":4,"current":1,"field":"parallelism"}"#)
+        XCTAssertEqual(job, KubeObjectScale(replicas: 4, current: 1, field: "parallelism"))
+        XCTAssertTrue(job.isParallelism)
+        XCTAssertFalse(try TalosJSON.decode(KubeObjectScale.self, from: "{}").isParallelism)
+    }
 }

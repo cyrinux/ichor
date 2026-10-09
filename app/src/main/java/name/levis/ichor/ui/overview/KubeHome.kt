@@ -97,8 +97,16 @@ class KubeHomeNavigation(
     val onChangelog: () -> Unit,
     val onResources: () -> Unit,
     val onHelm: () -> Unit,
+    /** The PersistentVolumeClaims with their volume, pods and fill. */
+    val onStorage: () -> Unit,
+    /** The Services with their addresses, ready endpoints and routes. */
+    val onServices: () -> Unit,
+    /** The Jobs, failures first. */
+    val onJobs: () -> Unit,
     /** The drain of a node, by its Kubernetes name. */
     val onDrain: (node: String) -> Unit,
+    /** A root shell on a node through a privileged pod, by its Kubernetes name. */
+    val onNodeDebug: (node: String) -> Unit,
     /** The Kubernetes nodes screen of a large cluster, on one filter (null: all). */
     val onAllNodes: (NodeFilter?) -> Unit,
     /** The action audit log of a cluster, by its context name. */
@@ -259,7 +267,7 @@ fun KubeHomeScreen(
             }
         }
     }
-    KubeNodeActionSheets(nodeMenu, snackbar, onClose = { nodeMenu = null }, onDrain = nav.onDrain, onCordoned = vm::refresh)
+    KubeNodeActionSheets(nodeMenu, snackbar, onClose = { nodeMenu = null }, onDrain = nav.onDrain, onDebug = nav.onNodeDebug, onCordoned = vm::refresh)
 }
 
 @Composable

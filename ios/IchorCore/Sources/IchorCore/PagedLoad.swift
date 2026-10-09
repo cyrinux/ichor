@@ -81,6 +81,13 @@ public struct PagedLoad<T> {
     /// More pages to load: the load stopped at its cap.
     public var hasMore: Bool { pages > 0 && !done }
 
+    /// This load with `items` in place of its rows (a change seen live); the pages stay as they are.
+    public func replacing(items: [T]) -> PagedLoad<T> {
+        var load = self
+        load.items = items
+        return load
+    }
+
     /// Loaded plus remaining rows; nil while the server does not say.
     public var estimatedTotal: Int64? {
         if done { return Int64(items.count) }
