@@ -3176,6 +3176,23 @@
     <!-- kube browser -->
     <string name="kb_title">All resources</string>
     <string name="kb_search_kinds">Search kinds (pod, deploy, group…)</string>
+    <string name="kb_apply_title">Apply YAML</string>
+    <string name="kb_apply_hint">Paste one or more Kubernetes objects (YAML, separated by ---). Preview shows what each would become in the cluster before anything is applied.</string>
+    <string name="kb_apply_manifests">Manifests</string>
+    <string name="kb_apply_paste">Paste</string>
+    <string name="kb_apply_namespace">Namespace if none</string>
+    <string name="kb_apply_preview">Preview</string>
+    <string name="kb_apply_apply">Apply</string>
+    <string name="kb_apply_in_sync">Nothing would change: the cluster already matches.</string>
+    <string name="kb_apply_footnote">Server-side apply as “ichor”, like kubectl apply --server-side. A field another manager owns (a GitOps controller, an autoscaler) is refused with its name, never taken over.</string>
+    <plurals name="kb_apply_done">
+        <item quantity="one">%1$d object applied</item>
+        <item quantity="other">%1$d objects applied</item>
+    </plurals>
+    <plurals name="kb_apply_refused">
+        <item quantity="one">%1$d object refused</item>
+        <item quantity="other">%1$d objects refused</item>
+    </plurals>
     <string name="kb_failed_groups">Some API groups could not be read: %1$s</string>
     <string name="kb_no_kinds">No resource types.</string>
     <string name="kb_no_kind_match">No type matches “%1$s”.</string>

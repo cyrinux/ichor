@@ -124,6 +124,18 @@ final class KubeBrowserTests: XCTestCase {
         XCTAssertEqual(preview.counts.added, 2)
         XCTAssertEqual(preview.counts.removed, 1)
         XCTAssertEqual(try TalosJSON.decode(KubeEditPreview.self, from: "{}"), KubeEditPreview())
+
+        let apply = try TalosJSON.decode(KubeApplyResult.self, from: """
+            {"resources":[{"group":"apps","version":"v1","kind":"Deployment","namespace":"web","name":"web","change":"changed","diff":"--- live\\n+++ wanted\\n"},
+                          {"kind":"Namespace","name":"web","change":"unchanged"},{"kind":"ConfigMap","namespace":"web","name":"x","change":"error","error":"refused"}],
+             "warnings":[],"applied":0,"failed":1}
+            """)
+        XCTAssertEqual(apply.resources.count, 3)
+        XCTAssertTrue(apply.hasChanges)
+        XCTAssertEqual(apply.failed, 1)
+        XCTAssertEqual(apply.counts.map(\.change), [.error, .changed, .unchanged])
+        XCTAssertEqual(try TalosJSON.decode(KubeApplyResult.self, from: "{}"), KubeApplyResult())
+        XCTAssertFalse(KubeApplyResult().hasChanges)
         XCTAssertTrue(KubeEditPreview().lines.isEmpty)
     }
 

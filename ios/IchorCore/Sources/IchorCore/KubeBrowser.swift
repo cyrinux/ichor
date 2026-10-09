@@ -314,6 +314,46 @@ public func kubeCellTone(column: String, value: String) -> KubeTone {
     }
 }
 
+// MARK: - Apply
+
+/// What applying pasted manifests did, or would do (KubeApplyPreview, KubeApply): one row per
+/// object, sorted by the Go core (what needs a look first); `applied` and `failed` count after a
+/// real apply (`failed` counts refused dry runs too).
+public struct KubeApplyResult: Decodable, Equatable, Sendable {
+    public let resources: [KubeDiffResource]
+    public let warnings: [String]
+    public let applied: Int
+    public let failed: Int
+
+    public init(resources: [KubeDiffResource] = [], warnings: [String] = [], applied: Int = 0, failed: Int = 0) {
+        self.resources = resources
+        self.warnings = warnings
+        self.applied = applied
+        self.failed = failed
+    }
+
+    private enum CodingKeys: String, CodingKey { case resources, warnings, applied, failed }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        resources = try c.field(.resources, [])
+        warnings = try c.field(.warnings, [])
+        applied = try c.field(.applied, 0)
+        failed = try c.field(.failed, 0)
+    }
+
+    /// Counts by change, in `DiffChange` order, the empty ones left out.
+    public var counts: [DiffCount] {
+        DiffChange.allCases.compactMap { change in
+            let n = resources.filter { $0.change == change }.count
+            return n > 0 ? DiffCount(change: change, count: n) : nil
+        }
+    }
+
+    /// At least one object would be created or changed.
+    public var hasChanges: Bool { resources.contains { $0.change.isChange } }
+}
+
 // MARK: - Edit
 
 /// What saving an edited object would change (KubeObjectUpdatePreview): a unified diff of the

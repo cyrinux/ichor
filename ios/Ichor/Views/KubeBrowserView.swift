@@ -9,6 +9,7 @@ struct KubeBrowserView: View {
     @Environment(AppModel.self) private var model
     @State private var state: LoadState<KubeAPIResourceList> = .loading
     @State private var query = ""
+    @State private var applying = false
 
     var body: some View {
         LoadStateView(state: state, retry: load) { list in
@@ -59,6 +60,12 @@ struct KubeBrowserView: View {
         .textInputAutocapitalization(.never)
         .navigationTitle(Text("Resources"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button { applying = true } label: { Label("Apply YAML", systemImage: "doc.on.clipboard") }
+            }
+        }
+        .sheet(isPresented: $applying) { KubeApplyView() }
         .task(id: kubeNamespacesKey(model)) { await load() }
     }
 
