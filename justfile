@@ -21,8 +21,8 @@ next-version:
 
 # Tag a release. The APK's versionName/versionCode derive from the tag and the
 # commit count, so this is the only step a release needs. The tree must be
-# clean and HEAD must be origin/main, the tag is annotated with the changelog, and
-# nothing is pushed for you: push main and the tag together with `--atomic`.
+# clean and HEAD must be origin/main, the tag is annotated with the changelog (tracker
+# references such as CYR-123 dropped), and nothing is pushed for you: push main and the tag together with `--atomic`.
 # `auto` picks the version from the commits since the last tag (scripts/next-version.py:
 # breaking -> major, feat -> minor, fix/perf -> patch), as the daily auto-release does.
 # --yes accepts the drafted Google Play notes as is: no editor, terminal or not.
@@ -93,7 +93,8 @@ release-tag version *flags:
     {
         echo "Ichor v${version}"
         echo
-        git log --no-merges --format='- %s' "$range"
+        # Tracker references (CYR-123) are private: the tag is public.
+        git log --no-merges --format=%s "$range" | scripts/changelog.py --scrub | sed 's/^/- /'
     } | git tag "$sign" "v${version}" -F -
     echo "Tagged v${version}$( [[ -n "$previous" ]] && echo " (changes since ${previous})" )."
     # --atomic: if main moved meanwhile, neither the notes commit nor the tag lands.
