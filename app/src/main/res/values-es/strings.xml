@@ -1642,6 +1642,7 @@
     <string name="data_services_search">Filtrar por namespace o nombre</string>
     <string name="data_services_no_match">Nada coincide con «%1$s».</string>
     <string name="data_services_none">No se encontraron servicios de datos.</string>
+    <string name="data_services_none_hint">Ninguno de los sistemas que Ichor sabe leer se ejecuta en este clúster. Consulta los compatibles o pide el que usas.</string>
     <string name="data_services_all_fine">Nada requiere atención.</string>
     <string name="data_services_on_node">en %1$s</string>
     <string name="data_services_health_ok">correcto</string>

@@ -86,7 +86,8 @@ fun LiveStatsTab(
         modifier = Modifier.fillMaxSize(),
     ) {
         state.error?.let { item { Text(it, color = LocalStatusColors.current.bad, style = MaterialTheme.typography.bodySmall) } }
-        if (points.isEmpty()) {
+        // An error says why nothing comes: "collecting" would claim otherwise.
+        if (points.isEmpty() && state.error == null) {
             item { Text(stringResource(R.string.node_live_collecting, POLL_SECONDS.toInt()), color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
         item {
