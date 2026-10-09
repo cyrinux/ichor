@@ -3592,4 +3592,6 @@
     <string name="kube_whoami_user">Користувач Kubernetes</string>
     <string name="mono_text_larger">Більший текст</string>
     <string name="mono_text_smaller">Менший текст</string>
+    <string name="pod_debug_toggle">Контейнер налагодження</string>
+    <string name="pod_debug_note">Для образів без оболонки (distroless): додає тимчасовий контейнер, який бачить процеси цього пода. Kubernetes зберігає його в поді, доки под не буде видалено.</string>
 </resources>

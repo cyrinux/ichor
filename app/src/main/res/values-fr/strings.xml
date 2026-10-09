@@ -3392,4 +3392,6 @@
     <string name="kube_whoami_user">Utilisateur Kubernetes</string>
     <string name="mono_text_larger">Texte plus grand</string>
     <string name="mono_text_smaller">Texte plus petit</string>
+    <string name="pod_debug_toggle">Conteneur de débogage</string>
+    <string name="pod_debug_note">Pour les images sans shell (distroless) : ajoute un conteneur temporaire qui voit les processus de ce pod. Kubernetes le garde dans le pod jusqu’à la suppression du pod.</string>
 </resources>
