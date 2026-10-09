@@ -7,22 +7,27 @@ import IchorCore
 /// Edit when the kind may be updated. A Secret's
 /// values stay hidden until asked for, behind Face ID / the passcode when the app lock is on,
 /// and it cannot be edited while they are hidden. A pod also opens its logs and a port-forward.
+/// Delete confirms with what the deletion would touch, then goes back (`onDeleted` first).
 struct KubeObjectView: View {
     let resource: KubeAPIResource
     /// "" for a cluster-scoped object.
     let namespace: String
     let name: String
+    /// Called once the object is deleted, before the view goes back (a list reads itself again).
+    let onDeleted: (() -> Void)?
 
     // Explicit: the private @State makes the memberwise init private.
-    init(resource: KubeAPIResource, namespace: String, name: String) {
+    init(resource: KubeAPIResource, namespace: String, name: String, onDeleted: (() -> Void)? = nil) {
         self.resource = resource
         self.namespace = namespace
         self.name = name
+        self.onDeleted = onDeleted
     }
 
     private enum Tab: Hashable { case summary, yaml }
 
     @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
     @State private var tab = Tab.summary
     @State private var state: LoadState<String> = .loading
     @State private var summary: LoadState<KubeObjectSummary> = .loading
@@ -32,6 +37,10 @@ struct KubeObjectView: View {
     @State private var editing: KubeEditTarget?
     @State private var logsPod: KubePod?
     @State private var forwarding = false
+    @State private var confirmingDelete = false
+    @State private var deleted = false
+    /// What refuses the delete, once asked; nil while asking, when allowed or unknown.
+    @State private var deleteDenial: KubeAccess?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -64,12 +73,18 @@ struct KubeObjectView: View {
             }
         }
         .sheet(item: $logsPod) { PodLogsSheet(pod: $0) }
+        .sheet(isPresented: $confirmingDelete, onDismiss: leaveIfDeleted) {
+            KubeObjectDeleteSheet(resource: resource, namespace: namespace, name: name, denial: deleteDenial) {
+                deleted = true
+            }
+        }
         .navigationDestination(isPresented: $forwarding) {
             PortForwardView(namespace: namespace, pod: name)
         }
         .messageAlert($message)
         .task(id: "\(kubeNamespacesKey(model))|\(reveal)") { await load() }
         .task(id: kubeNamespacesKey(model)) { await loadSummary() }
+        .task(id: kubeNamespacesKey(model)) { await loadDeleteAccess() }
     }
 
     @ViewBuilder private var header: some View {
@@ -126,6 +141,18 @@ struct KubeObjectView: View {
                         Label("Port forward", systemImage: "arrow.left.arrow.right.circle")
                     }
                 }
+                Divider()
+                if let deleteDenial {
+                    Button(role: .destructive) {} label: {
+                        Text("Delete")
+                        Text(verbatim: deleteDenial.deniedText)
+                    }
+                    .disabled(true)
+                } else {
+                    Button(role: .destructive) { confirmingDelete = true } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
             } label: {
                 Image(systemName: "ellipsis.circle").accessibilityLabel(Text("More actions"))
             }
@@ -149,6 +176,23 @@ struct KubeObjectView: View {
             try await client.objectSummary(resource, namespace: namespace, name: name)
         }
         summary = summary.refreshed(with: result)
+    }
+
+    /// Asks whether the credentials may delete this object; an answer that cannot be had
+    /// leaves Delete offered (the API server still decides).
+    private func loadDeleteAccess() async {
+        guard let client = model.client else { return }
+        guard let access = try? await client.kubeCan(verb: "delete", group: resource.group, resource: resource.resource,
+                                                     namespace: namespace, name: name),
+              !Task.isCancelled else { return }
+        deleteDenial = access.isDenied ? access : nil
+    }
+
+    /// Once the delete sheet closed after a deletion: tells the list, then goes back to it.
+    private func leaveIfDeleted() {
+        guard deleted else { return }
+        onDeleted?()
+        dismiss()
     }
 
     /// Showing a Secret's values needs a fresh Face ID / passcode when the app lock is on;

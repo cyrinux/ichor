@@ -11,7 +11,9 @@ import name.levis.ichor.model.ApiResourceList
 import name.levis.ichor.model.HelmReleaseDetail
 import name.levis.ichor.model.HelmReleaseList
 import name.levis.ichor.model.HelmRollbackPlan
+import name.levis.ichor.model.DeletePropagation
 import name.levis.ichor.model.KUBE_PAGE_SIZE
+import name.levis.ichor.model.KubeDeletePreview
 import name.levis.ichor.model.KubeEditPreview
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubeObjectSummary
@@ -71,6 +73,20 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
     /** Saves [edited] as [ref]; refused when the object changed since it was read. */
     suspend fun update(ref: KubeObjectRef, edited: String) = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeObjectUpdate(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, edited)
+    }
+
+    /** What deleting [ref] would do: protection, finalizers, the objects it owns. Read-only. */
+    suspend fun deletePreview(ref: KubeObjectRef): KubeDeletePreview = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeObjectDeletePreview(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name)
+        TalosJson.decodeFromString(KubeDeletePreview.serializer(), json)
+    }
+
+    /**
+     * Deletes [ref] with [propagation]; refused when it changed since [resourceVersion] (the
+     * preview's) was read, and for a protected object unless [force].
+     */
+    suspend fun delete(ref: KubeObjectRef, propagation: DeletePropagation, resourceVersion: String, force: Boolean) = kubeCall { cfg, ctx, server ->
+        Ichorgo.kubeObjectDelete(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, propagation.api, resourceVersion, -1L, force)
     }
 
     /** The latest revision of each Helm release of [namespace] (null for every one). */
