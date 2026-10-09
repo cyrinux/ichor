@@ -3656,4 +3656,10 @@
     <string name="kube_jobs_no_match">Жодне завдання не відповідає.</string>
     <string name="kube_jobs_completions">Завершено: %1$s</string>
     <string name="kube_jobs_owner">CronJob %1$s</string>
+    <string name="imagescan_system_title">Системні образи</string>
+    <string name="imagescan_system_loading">Читання системних образів вузла…</string>
+    <string name="imagescan_system_unavailable">Системні образи потребують ролі os:admin: %1$s</string>
+    <string name="imagescan_system_hint">Перевіряє за digest образи, які Talos запускає на цьому вузлі (kubelet, etcd, площина керування), на відомі вразливості за допомогою Trivy. Працює як Job у просторі імен %1$s, який потім видаляє себе.</string>
+    <string name="imagescan_system_scan">Перевірити системні образи</string>
+    <string name="images_kubernetes_title">Образи Kubernetes</string>
 </resources>

@@ -31,11 +31,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
 import name.levis.ichor.R
+import name.levis.ichor.TalosApp
 import name.levis.ichor.data.TalosRepository
+import name.levis.ichor.data.activeSummary
 import name.levis.ichor.data.imagesKey
+import name.levis.ichor.model.Feature
+import name.levis.ichor.model.allows
 import name.levis.ichor.model.ImageInfo
+import name.levis.ichor.model.ImageScanReport
 import name.levis.ichor.model.ImageSort
+import name.levis.ichor.model.systemImagesScanId
+import name.levis.ichor.ui.components.SectionTitle
+import name.levis.ichor.ui.imagescan.ImageScanReportOpen
 import name.levis.ichor.model.filteredSorted
 import name.levis.ichor.model.shortDigest
 import name.levis.ichor.model.totalSize
@@ -61,7 +70,7 @@ class ImagesViewModel(private val talos: TalosRepository, private val node: Stri
     override suspend fun fetch() = talos.images(node)
 }
 
-/** Container images in the node's CRI namespace, like `talosctl image list`. */
+/** The node's Talos system images (and their scan), then its CRI namespace's, like `talosctl image list`. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImagesScreen(
@@ -69,11 +78,20 @@ fun ImagesScreen(
     hostname: String,
     onBack: () -> Unit,
     vm: ImagesViewModel = viewModel(key = "images-$node", factory = factory { ImagesViewModel(app.talosRepository, node) }),
+    systemVm: SystemImagesViewModel = viewModel(
+        key = "system-images-$node",
+        factory = factory { SystemImagesViewModel(app.talosRepository, app.imageScanRepository, node) },
+    ),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
     var query by rememberSaveable { mutableStateOf("") }
     var sort by rememberSaveable { mutableStateOf(ImageSort.NAME) }
+    var reportOpen by remember { mutableStateOf<Pair<ImageScanReport, String>?>(null) }
+    val system = systemImagesUi(node, systemVm) { report, json -> reportOpen = report to json }
+    reportOpen?.let { (report, json) ->
+        ImageScanReportOpen(report, json, "$hostname-system", systemVm::export, onDismiss = { reportOpen = null })
+    }
 
     Scaffold(
         bottomBar = { DataFreshness(state) },
@@ -95,6 +113,8 @@ fun ImagesScreen(
             Modifier.pageContent(padding),
             header = { images ->
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    SystemImagesSection(system)
+                    SectionTitle(stringResource(R.string.images_kubernetes_title))
                     MutedText(pluralStringResource(R.plurals.images_summary, images.size, images.size, formatBytes(images.totalSize)))
                     SearchField(query, { query = it }, stringResource(R.string.images_search), Modifier.fillMaxWidth())
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -120,6 +140,27 @@ fun ImagesScreen(
             }
         }
     }
+}
+
+/** The system images section's state: loaded once, the scan offered to a role with the Kubernetes API. */
+@Composable
+private fun systemImagesUi(node: String, vm: SystemImagesViewModel, onOpen: (ImageScanReport, String) -> Unit): SystemImagesUi {
+    val application = LocalContext.current.applicationContext as TalosApp
+    val config by application.configRepository.config.collectAsStateWithLifecycle()
+    val state by vm.state.collectAsStateWithLifecycle()
+    val session by vm.session.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { if (state == UiState.Loading) vm.refresh() }
+    val context = config?.activeContext
+    val id = systemImagesScanId(node)
+    return SystemImagesUi(
+        state = state,
+        session = session?.takeIf { it.appId == id && it.context == context },
+        busyElsewhere = session?.let { it.running && (it.appId != id || it.context != context) } == true,
+        canScan = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
+        onScan = vm::scan,
+        onStop = vm::stop,
+        onOpen = onOpen,
+    )
 }
 
 @Composable

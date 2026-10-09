@@ -78,6 +78,10 @@ Dojo, Dependency-Track or a colleague.
   place (description, CVSS, advisory link).
 - Export menu: HTML, SARIF, CycloneDX, CSV, JSON, written by the core and shared as a file
   (`cache/scans`, one at a time, removed when the report closes).
+- Node → Images → "System images" (`SystemImagesSection`): the node's Talos system images with
+  their digests (os:admin; a one-line hint otherwise), and for a role that reaches the
+  Kubernetes API "Scan system images": the same scan session (id `talos:<node>`), progress
+  lines, report sheet and exports as an app's.
 
 ## iOS (done)
 
@@ -85,9 +89,9 @@ Same as Android: `AppScanSection` in the app sheet, the scan kept app-wide by
 `ImageScanJob.shared`, `ImageScanReportView` pushed from the sheet with its filters and
 expandable findings, and an Export menu (core-written file in `tmp/scans`, kept an hour,
 shown in the system share sheet). Models and their logic in `IchorCore/ImageScan.swift`.
+The node's system images: `SystemImagesSection` at the top of `ImagesView`, as on Android.
 
 ## Later
 
-- Talos system images in the apps (Node → Images: "Scan system images"); the Go core is done.
 - Kept reports in the apps: a saved reports list and "N new since last scan"; the Go core is done.
 - Grype as a second opinion (same pod pattern, `grype -o json`).

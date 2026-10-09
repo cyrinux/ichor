@@ -3448,4 +3448,10 @@
     <string name="kube_jobs_no_match">Kein Job passt.</string>
     <string name="kube_jobs_completions">Abschlüsse: %1$s</string>
     <string name="kube_jobs_owner">CronJob %1$s</string>
+    <string name="imagescan_system_title">System-Images</string>
+    <string name="imagescan_system_loading">System-Images des Knotens werden gelesen…</string>
+    <string name="imagescan_system_unavailable">System-Images erfordern die Rolle os:admin: %1$s</string>
+    <string name="imagescan_system_hint">Prüft die Images, die Talos auf diesem Knoten ausführt (kubelet, etcd, die Control Plane), per Digest mit Trivy auf bekannte Schwachstellen. Läuft als Job im Namespace %1$s, der sich danach selbst löscht.</string>
+    <string name="imagescan_system_scan">System-Images prüfen</string>
+    <string name="images_kubernetes_title">Kubernetes-Images</string>
 </resources>

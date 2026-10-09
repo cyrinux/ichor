@@ -32,6 +32,26 @@ class KubeWatchTest {
     }
 
     @Test
+    fun tableRowsTakeTheColumnsOfTheLastSync() {
+        val rows = ResourceWatchRows()
+        val ready = listOf(ResourceColumn("Name"), ResourceColumn("Ready"))
+        val synced = rows.page(ResourcePageJson(ready, listOf(ResourceRowJson("web", "shop", listOf("web", "1/2")))))
+        assertEquals(ready, synced.single().columns)
+        // A watch event carries the row alone: it takes the SYNC's columns.
+        val changed = rows.row(ResourceRowJson("web", "shop", listOf("web", "2/2")))
+        assertEquals(ready, changed.columns)
+        val load = PagedLoad.complete(synced).applying(KubeWatchEvent.Modified(changed)) { it.key }
+        assertEquals(listOf("web", "2/2"), load.items.single().cells)
+        // Same name in another namespace is another row.
+        val other = rows.row(ResourceRowJson("web", "lab", listOf("web", "0/1")))
+        assertEquals(listOf("shop/web", "lab/web"), load.applying(KubeWatchEvent.Added(other)) { it.key }.items.map { it.key })
+        // A SYNC after a relist replaces the columns, even an empty one.
+        val age = listOf(ResourceColumn("Name"), ResourceColumn("Age"))
+        assertTrue(rows.page(ResourcePageJson(age)).isEmpty())
+        assertEquals(age, rows.row(ResourceRowJson("db", "shop")).columns)
+    }
+
+    @Test
     fun decodesWhatTheListenerGot() {
         val item: (String) -> String = { json -> json.trim('"').also { require(it.isNotEmpty()) } }
         val list: (String) -> List<String> = { json -> json.trim('[', ']').split(',').map { it.trim('"') } }
