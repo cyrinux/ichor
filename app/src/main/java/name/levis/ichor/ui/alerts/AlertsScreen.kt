@@ -37,6 +37,7 @@ import name.levis.ichor.data.KUBE_NODES
 import name.levis.ichor.data.OVERVIEW
 import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.data.activeSummary
+import name.levis.ichor.model.AM_SILENCE_PRESETS
 import name.levis.ichor.model.AmAlert
 import name.levis.ichor.model.AmSilenceState
 import name.levis.ichor.model.AmSilences
@@ -44,6 +45,7 @@ import name.levis.ichor.model.ClusterOverview
 import name.levis.ichor.model.KubeNodesOverview
 import name.levis.ichor.model.KubePermission
 import name.levis.ichor.model.PromSource
+import name.levis.ichor.monitor.SILENCE_ACTION_MINUTES
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.components.AppTab
 import name.levis.ichor.ui.components.BackButton
@@ -61,11 +63,12 @@ import name.levis.ichor.ui.metrics.SourceDialog
 /**
  * The alerts of the cluster's Alertmanager (found in the cluster through the service proxy,
  * or at a URL set by the user), and its silences. An alert opens its sheet, where it can be
- * silenced; a silence can be expired. Opened on the Alerts tab by default.
+ * silenced; a silence can be expired. Opened on the Alerts tab by default. [silenceFingerprint]:
+ * the alert whose silence form opens once read (a notification's Silence 1 h), with a comment saying so.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks) {
+fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks, silenceFingerprint: String = "") {
     val app = LocalContext.current.applicationContext as TalosApp
     val config by app.configRepository.config.collectAsStateWithLifecycle()
     val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
@@ -83,6 +86,14 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks) {
     var silencing by remember { mutableStateOf<AmAlert?>(null) }
     LaunchedEffect(key) { vm.load() }
     ActionToasts(vm)
+    // Asked from a notification: once the alerts are read, if it still fires (not again on rotation).
+    var silenceAsked by rememberSaveable { mutableStateOf(silenceFingerprint.isEmpty()) }
+    val firing = (state.alerts as? UiState.Loaded)?.data?.groups
+    LaunchedEffect(firing) {
+        if (silenceAsked || firing == null) return@LaunchedEffect
+        silenceAsked = true
+        silencing = firing.flatMap { it.alerts }.firstOrNull { it.fingerprint == silenceFingerprint }
+    }
 
     // The nodes an alert's `node` or `instance` label may name: the home's last list.
     val kube = config?.activeIsKube == true
@@ -145,6 +156,7 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks) {
         )
     }
     silencing?.let { alert ->
+        val asked = alert.fingerprint == silenceFingerprint
         SilenceSheet(
             alert = alert,
             matchersFor = vm::matchersFor,
@@ -154,6 +166,8 @@ fun AlertsScreen(onBack: () -> Unit, links: AlertObjectLinks) {
                 vm.silence(matchers, minutes, comment)
             },
             onDismiss = { silencing = null },
+            initialMinutes = if (asked) SILENCE_ACTION_MINUTES else AM_SILENCE_PRESETS.first(),
+            initialComment = if (asked) stringResource(R.string.alert_action_silence_comment) else "",
         )
     }
     if (sourceOpen) {

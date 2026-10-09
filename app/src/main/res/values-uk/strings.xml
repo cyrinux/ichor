@@ -3761,4 +3761,8 @@
     <string name="imagescan_system_hint">Перевіряє за digest образи, які Talos запускає на цьому вузлі (kubelet, etcd, площина керування), на відомі вразливості за допомогою Trivy. Працює як Job у просторі імен %1$s, який потім видаляє себе.</string>
     <string name="imagescan_system_scan">Перевірити системні образи</string>
     <string name="images_kubernetes_title">Образи Kubernetes</string>
+    <string name="alert_action_wake">Розбудити</string>
+    <string name="alert_action_silence_hour">Заглушити на 1 год</string>
+    <string name="alert_action_snooze">Відкласти на 8 год</string>
+    <string name="alert_action_silence_comment">Заглушено зі сповіщення</string>
 </resources>

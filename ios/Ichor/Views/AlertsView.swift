@@ -32,6 +32,8 @@ struct AlertsView: View {
     /// The cluster's Talos nodes, for an alert's node link (none on a cluster without Talos).
     @State private var nodes: [NodeOverview] = []
     @State private var selected: AMAlert?
+    /// Silence 1 h chosen on the selected alert's notification: the comment its form starts with.
+    @State private var silenceComment: String?
     /// Where a link of the alert sheet goes, once the sheet is gone.
     @State private var pendingRoute: Route?
     @State private var expiring: AMSilence?
@@ -82,6 +84,7 @@ struct AlertsView: View {
         .sheet(item: $selected, onDismiss: {
             if let pendingRoute { path.append(pendingRoute) }
             pendingRoute = nil
+            silenceComment = nil
         }) { alert in
             AlertDetailSheet(alert: alert, node: alertNode(alert.labels, in: nodes),
                              canOpenKube: model.allows(.workloads), silence: silence,
@@ -94,7 +97,8 @@ struct AlertsView: View {
                                  succeeded += 1
                                  announce(String(localized: "Silenced"))
                                  Task { await reload() }
-                             })
+                             },
+                             silenceComment: silenceComment)
         }
         .sheet(isPresented: $sourceOpen) {
             SourceSheet(kind: .alertmanager, current: source, discovered: discovered, discovering: discovering,
@@ -114,6 +118,21 @@ struct AlertsView: View {
         // Outermost, so the alert sheet reads it too: silence and expire go through the service
         // proxy of the Alertmanager's namespace; a URL source asks nothing (never gated).
         .loadsKubeActionAccess(namespace: proxyNamespace)
+        .onChange(of: NotificationRouter.shared.alertActionRequest) { _, _ in takeAlertAction() }
+    }
+
+    /// Silence 1 h chosen on an alert's notification: that alert's silence form, set to 1 h, once
+    /// the alerts are read; said so when it no longer fires.
+    private func takeAlertAction() {
+        guard let request = NotificationRouter.shared.alertActionRequest, let fingerprint = request.silenceFingerprint,
+              case .loaded(let alerts, _, _) = state else { return }
+        NotificationRouter.shared.alertActionRequest = nil
+        guard let alert = alerts.alerts.first(where: { $0.fingerprint == fingerprint }) else {
+            message = String(localized: "This alert no longer fires.")
+            return
+        }
+        silenceComment = String(localized: "Silenced from a notification")
+        selected = alert
     }
 
     /// The namespace of a source reached through the service proxy, nil for a URL source.
@@ -339,6 +358,7 @@ struct AlertsView: View {
         silences = silences.refreshed(with: list)
         // Every state shown: what the home card counts too.
         if case .loaded(let read, _, _) = alerts, filter == AMStateFilter() { AlertsStore.shared.remember(read, key: key) }
+        takeAlertAction()
     }
 
     // MARK: - Actions

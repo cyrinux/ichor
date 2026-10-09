@@ -349,6 +349,10 @@ struct MainNavigation: View {
     private func openShareLink() {
         guard !model.lock.locked, let url = NotificationRouter.shared.pendingShareLink else { return }
         NotificationRouter.shared.pendingShareLink = nil
+        // An alert's Reboot, Sync…: its screen asks for it (none for a plain tap or link).
+        let action = NotificationRouter.shared.pendingAlertAction
+        NotificationRouter.shared.pendingAlertAction = nil
+        NotificationRouter.shared.alertActionRequest = nil
         Task {
             guard let target = try? await TalosClient.parseShareLink(url) else {
                 linkMessage = String(localized: "Not a valid Ichor link")
@@ -360,8 +364,17 @@ struct MainNavigation: View {
                 return
             }
             path = []
-            if let route = await target.route(client: model.client, kube: model.activeIsKube) { path = [route] }
+            guard let route = await target.route(client: model.client, kube: model.activeIsKube) else { return }
+            path = [actionRoute(route, for: action)]
+            if action?.action != .reboot { NotificationRouter.shared.alertActionRequest = action }
         }
+    }
+
+    /// The node screen with its reboot confirmation for an alert's Reboot (when this config may
+    /// power nodes); `route` otherwise.
+    private func actionRoute(_ route: Route, for action: AlertActionRequest?) -> Route {
+        guard let action, case .nodeTab(let ref, _) = route, action.isReboot(node: ref.address), model.allows(.power) else { return route }
+        return .nodePower(ref, .reboot)
     }
 
     /// From a config file opened with Ichor: the import screen, which previews it (and takes

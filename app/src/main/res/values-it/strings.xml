@@ -3551,4 +3551,8 @@
     <string name="imagescan_system_hint">Controlla con Trivy, per digest, le vulnerabilità note delle immagini che Talos esegue su questo nodo (kubelet, etcd, il control plane). Viene eseguito come Job nel namespace %1$s, che poi si elimina.</string>
     <string name="imagescan_system_scan">Analizza le immagini di sistema</string>
     <string name="images_kubernetes_title">Immagini Kubernetes</string>
+    <string name="alert_action_wake">Risveglia</string>
+    <string name="alert_action_silence_hour">Silenzia 1 h</string>
+    <string name="alert_action_snooze">Posticipa 8 h</string>
+    <string name="alert_action_silence_comment">Silenziato da una notifica</string>
 </resources>

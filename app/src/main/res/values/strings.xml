@@ -3551,4 +3551,8 @@
     <string name="imagescan_system_hint">Checks the images Talos runs on this node (kubelet, etcd, the control plane), by digest, for known vulnerabilities with Trivy. It runs as a Job in the %1$s namespace, which deletes itself afterwards.</string>
     <string name="imagescan_system_scan">Scan system images</string>
     <string name="images_kubernetes_title">Kubernetes images</string>
+    <string name="alert_action_wake">Wake</string>
+    <string name="alert_action_silence_hour">Silence 1 h</string>
+    <string name="alert_action_snooze">Snooze 8 h</string>
+    <string name="alert_action_silence_comment">Silenced from a notification</string>
 </resources>

@@ -229,16 +229,20 @@ fun rememberWakeOnLan(fingerprint: String?): (NodeOverview) -> WolActions? {
 
 private suspend fun wake(context: Context, node: NodeOverview, targets: List<WolTarget>) {
     if (targets.isEmpty()) return
+    Toast.makeText(context, sendWake(context, node.hostname, targets), Toast.LENGTH_LONG).show()
+}
+
+/** Sends the magic packets to [targets] for [hostname]: what was sent, or why it failed. */
+suspend fun sendWake(context: Context, hostname: String, targets: List<WolTarget>): String {
     val sender = WakeOnLanSender(context)
-    val message = try {
+    return try {
         val destinations = targets.map { sender.send(it) }.distinct()
-        context.getString(R.string.wol_sent, node.hostname, destinations.joinToString(", "))
+        context.getString(R.string.wol_sent, hostname, destinations.joinToString(", "))
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
         context.getString(R.string.wol_failed, e.userMessage())
     }
-    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
 }
 
 /**
