@@ -1,5 +1,7 @@
 package name.levis.ichor.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * One change of a list the Go core keeps live (StartKubeWatch, KubeWatchListener): the whole
  * list at the start and whenever the watch started over, else one item to merge into it.
@@ -51,3 +53,16 @@ fun <T> PagedLoad<T>.applying(event: KubeWatchEvent<T>, key: (T) -> String): Pag
     is KubeWatchEvent.Sync -> PagedLoad.complete(event.items)
     else -> copy(items = items.applying(event, key))
 }
+
+/**
+ * A change signal (StartKubeChangeWatch): [changed] objects of the watched kinds changed since
+ * the last one, at [at] (RFC 3339). Only counts: the screen reads its list again.
+ */
+@Serializable
+data class KubeChange(val changed: Int = 0, val at: String = "")
+
+/** The kinds the Workloads list merges, as StartKubeChangeWatch takes them. */
+val WORKLOAD_WATCH_KINDS = listOf("apps/v1/deployments", "apps/v1/statefulsets", "apps/v1/daemonsets")
+
+/** The Argo CD Applications, whose status the Argo CD screen derives. */
+val ARGO_WATCH_KINDS = listOf("argoproj.io/v1alpha1/applications")

@@ -111,7 +111,11 @@ func startLive(target kubeTarget, err error, listener KubeLiveListener, demo fun
 		case isDemoContext(target.config, target.context):
 			var js string
 			if js, err = demo(); err == nil {
-				listener.OnUpdate(js)
+				// "" is a view with nothing to send in the demo (a change signal).
+				if js != "" {
+					listener.OnUpdate(js)
+				}
+
 				<-ctx.Done()
 			}
 		default:

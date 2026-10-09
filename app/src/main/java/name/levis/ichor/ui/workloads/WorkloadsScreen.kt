@@ -62,6 +62,13 @@ import name.levis.ichor.ui.components.emptyOrNoMatch
 import name.levis.ichor.ui.factory
 import name.levis.ichor.ui.theme.LocalStatusColors
 import name.levis.ichor.util.timeAgo
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
+import name.levis.ichor.data.KUBE_WATCH_RETRY_MILLIS
+import name.levis.ichor.data.StreamItem
+import name.levis.ichor.data.watchForever
+import name.levis.ichor.model.WORKLOAD_WATCH_KINDS
+import name.levis.ichor.ui.PollWhileStarted
 
 class WorkloadsViewModel(kube: KubeRepository, gitOps: GitOpsRepository, metered: () -> Boolean) :
     PagedListViewModel<KubeWorkload>(kube, metered) {
@@ -75,6 +82,23 @@ class WorkloadsViewModel(kube: KubeRepository, gitOps: GitOpsRepository, metered
     val restarts = WorkloadRestarts(viewModelScope, kube) { refresh() }
 
     val actions = WorkloadActions(viewModelScope, kube, gitOps, restarts) { refresh() }
+
+    /**
+     * Reads the list again while called (the screen is visible) each time a workload of the
+     * scope changes, instead of waiting for pull-to-refresh: the Go core signals at most every
+     * 2 s, never for the lists it reads at the start. Restarted after each load (a refresh, a
+     * scope change), skipped while one runs; a watch that ends is followed again after
+     * [KUBE_WATCH_RETRY_MILLIS].
+     */
+    suspend fun follow() {
+        settled.filter { it > 0 }.collectLatest {
+            val namespace = scope.namespace
+            watchForever(start = { kube.changeWatch(namespace, WORKLOAD_WATCH_KINDS) }) { item ->
+                val refreshing = (state.value as? UiState.Loaded)?.refreshing == true
+                if (item is StreamItem.Item && !refreshing) refresh()
+            }
+        }
+    }
 }
 
 /**
@@ -97,6 +121,7 @@ fun WorkloadsTab(
     val progress by vm.progress.collectAsStateWithLifecycle()
     val restarting by vm.restarts.restarting.collectAsStateWithLifecycle()
     LaunchedEffect(control.scope, control.ready) { if (control.ready) vm.setScope(control.scope) }
+    PollWhileStarted { vm.follow() }
     var confirm by remember { mutableStateOf<KubeWorkload?>(null) }
     var opened by remember { mutableStateOf<String?>(null) }
     var rollback by remember { mutableStateOf<Pair<KubeWorkload, KubeRevision>?>(null) }
