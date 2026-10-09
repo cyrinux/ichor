@@ -6,6 +6,7 @@ import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.Timeline
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.runtime.Composable
@@ -25,6 +26,8 @@ class OverviewNavigation(
     val onHealth: () -> Unit,
     val onEvents: () -> Unit,
     val onWorkloads: () -> Unit,
+    /** Argo CD when the cluster runs it, else Flux. */
+    val onGitOps: () -> Unit,
     val onMetrics: () -> Unit,
     val onKubeSpan: () -> Unit,
     val onEtcd: () -> Unit,
@@ -34,6 +37,7 @@ class OverviewNavigation(
         OverviewAction.HEALTH -> onHealth
         OverviewAction.EVENTS -> onEvents
         OverviewAction.WORKLOADS -> onWorkloads
+        OverviewAction.GITOPS -> onGitOps
         OverviewAction.METRICS -> onMetrics
         OverviewAction.KUBESPAN -> onKubeSpan
         OverviewAction.ETCD -> onEtcd
@@ -45,6 +49,7 @@ fun overviewActionIcon(action: OverviewAction): ImageVector = when (action) {
     OverviewAction.HEALTH -> Icons.Outlined.Favorite
     OverviewAction.EVENTS -> Icons.Outlined.Timeline
     OverviewAction.WORKLOADS -> Icons.Outlined.Widgets
+    OverviewAction.GITOPS -> Icons.Outlined.Sync
     OverviewAction.METRICS -> Icons.Outlined.QueryStats
     OverviewAction.KUBESPAN -> Icons.Outlined.Hub
     OverviewAction.ETCD -> Icons.Outlined.Storage
@@ -56,6 +61,7 @@ fun overviewActionLabel(action: OverviewAction): String = when (action) {
     OverviewAction.HEALTH -> stringResource(R.string.overview_action_health)
     OverviewAction.EVENTS -> stringResource(R.string.overview_action_events)
     OverviewAction.WORKLOADS -> stringResource(R.string.overview_action_workloads)
+    OverviewAction.GITOPS -> "GitOps"
     OverviewAction.METRICS -> stringResource(R.string.metrics_title)
     OverviewAction.KUBESPAN -> "KubeSpan"
     OverviewAction.ETCD -> "etcd"
@@ -76,6 +82,7 @@ fun OverviewActions(
     reachable: List<String>?,
     health: Boolean,
     workloads: Boolean,
+    gitOps: Boolean,
     onCustomize: () -> Unit,
 ) {
     // Cluster-wide screens: only disabled when no reachable node's Talos has them.
@@ -87,10 +94,11 @@ fun OverviewActions(
         else -> true
     }
     // Only offered when the config's role can run it. Workloads and the PromQL panels reach the
-    // API with the admin kubeconfig Talos issues.
+    // API with the admin kubeconfig Talos issues; GitOps only when the cluster runs Argo CD or Flux.
     fun offered(action: OverviewAction): Boolean = when (action) {
         OverviewAction.HEALTH -> health
         OverviewAction.WORKLOADS, OverviewAction.METRICS -> workloads
+        OverviewAction.GITOPS -> gitOps
         else -> true
     }
     ActionBarActions(

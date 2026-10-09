@@ -371,10 +371,20 @@ fun OverviewScreen(
                 actions = {
                     OverviewActions(
                         bar = bar,
-                        nav = OverviewNavigation(onHealth, onEvents, onWorkloads, onMetrics, onKubeSpan, onEtcd, onSettings),
+                        nav = OverviewNavigation(
+                            onHealth = onHealth,
+                            onEvents = onEvents,
+                            onWorkloads = onWorkloads,
+                            onGitOps = if (argoHinted) onArgoCD else onFlux,
+                            onMetrics = onMetrics,
+                            onKubeSpan = onKubeSpan,
+                            onEtcd = onEtcd,
+                            onSettings = onSettings,
+                        ),
                         reachable = (state as? UiState.Loaded)?.data?.nodes?.filter { it.reachable }?.map { it.node },
                         health = config?.activeSummary?.allows(Feature.HEALTH) == true,
                         workloads = config?.activeSummary?.allows(Feature.WORKLOADS) == true,
+                        gitOps = argoHinted || fluxHinted,
                         onCustomize = { customizing = true },
                     )
                 },

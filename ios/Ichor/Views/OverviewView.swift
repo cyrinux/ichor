@@ -400,11 +400,13 @@ struct OverviewView: View {
     private var bar: OverviewBar { .parse(barText) }
 
     /// Only offered when the config's role can run it. Workloads and the PromQL panels reach the
-    /// Kubernetes API with the admin kubeconfig Talos issues.
+    /// Kubernetes API with the admin kubeconfig Talos issues; GitOps only when the cluster runs
+    /// Argo CD or Flux (each asked only for such a cluster and role).
     private func offered(_ action: OverviewAction) -> Bool {
         switch action {
         case .health: model.allows(.health)
         case .workloads, .metrics: model.allows(.workloads)
+        case .gitOps: argo != nil || flux != nil
         default: true
         }
     }
@@ -424,11 +426,19 @@ struct OverviewView: View {
         case .health: .health
         case .events: .events(node: nil, hostnames: hostnames)
         case .workloads: .workloads
+        // Argo CD when the cluster has it, else Flux: the same screens as their sections.
+        case .gitOps: argo != nil ? .argoCD(downNodes: loadedDownHostnames) : .flux(downNodes: loadedDownHostnames)
         case .metrics: .metrics
         case .kubespan: .kubespan
         case .etcd: .etcd
         case .settings: .settings
         }
+    }
+
+    /// The hostnames of the nodes not answering in the overview on screen.
+    private var loadedDownHostnames: Set<String> {
+        guard case .loaded(let overview, _, _) = state else { return [] }
+        return overview.downHostnames
     }
 
     /// The Argo CD status the Argo CD section loaded, for the Apps card's badges.

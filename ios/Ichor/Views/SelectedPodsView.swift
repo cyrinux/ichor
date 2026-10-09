@@ -76,6 +76,7 @@ struct SelectedPodsView: View {
                            deleting: actions.deleting.contains(pod.id), onLogs: { actions.logsPod = pod }) {
                         actions.confirm = pod
                     }
+                    .podLogsSwipe { actions.logsPod = pod }
                     .contextMenu {
                         Button { actions.logsPod = pod } label: { Label("Logs", systemImage: "doc.text") }
                     }

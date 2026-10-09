@@ -7,6 +7,7 @@ extension OverviewAction: BarActionLook {
         case .health: "heart.text.square"
         case .events: "list.bullet.rectangle"
         case .workloads: "square.stack.3d.up"
+        case .gitOps: "arrow.triangle.2.circlepath"
         case .metrics: "chart.xyaxis.line"
         case .kubespan: "point.3.connected.trianglepath.dotted"
         case .etcd: "cylinder.split.1x2"
@@ -19,6 +20,7 @@ extension OverviewAction: BarActionLook {
         case .health: Text("Cluster health")
         case .events: Text("Events")
         case .workloads: Text("Kubernetes workloads")
+        case .gitOps: Text(verbatim: "GitOps")
         case .metrics: Text("Metrics")
         case .kubespan: Text(verbatim: "KubeSpan")
         case .etcd: Text(verbatim: "etcd")

@@ -8,19 +8,23 @@ public protocol BarAction: RawRepresentable, CaseIterable, Sendable, Hashable, I
     static var defaultIcons: Int { get }
 }
 
-/// The screens the overview's toolbar leads to. Raw values are Android's `OverviewAction` names.
+/// The screens the overview's toolbar leads to, in their default order: GitOps (Argo CD, else
+/// Flux) and etcd one tap away when the cluster has them. Raw values are Android's
+/// `OverviewAction` names, the saved form: a bar arranged before keeps its order, an action it
+/// lacks goes last in its menu.
 public enum OverviewAction: String, BarAction {
     case health = "HEALTH"
-    case events = "EVENTS"
     case workloads = "WORKLOADS"
+    case gitOps = "GITOPS"
+    case etcd = "ETCD"
+    case events = "EVENTS"
     case metrics = "METRICS"
     case kubespan = "KUBESPAN"
-    case etcd = "ETCD"
     case settings = "SETTINGS"
 
     public var id: String { rawValue }
     public static let barStorageKey = "overview.bar"
-    public static let defaultIcons = 3
+    public static let defaultIcons = 4
 }
 
 /// What the Kubernetes screen's toolbar offers: the screens it leads to, its share link and the
@@ -41,11 +45,12 @@ public enum KubernetesAction: String, BarAction {
 }
 
 /// The screens the Kubernetes home's toolbar leads to (a cluster added from a kubeconfig): the
-/// Kubernetes screens that work with its credentials alone, no Talos one. Raw values are
-/// Android's `KubeHomeAction` names.
+/// Kubernetes screens that work with its credentials alone, no Talos one. GitOps (Argo CD, else
+/// Flux) is one tap away when the cluster has it. Raw values are Android's `KubeHomeAction` names.
 public enum KubeHomeAction: String, BarAction {
     case workloads = "WORKLOADS"
     case resources = "RESOURCES"
+    case gitOps = "GITOPS"
     case metrics = "METRICS"
     case helm = "HELM"
     case dataServices = "DATA_SERVICES"
@@ -56,7 +61,7 @@ public enum KubeHomeAction: String, BarAction {
 
     public var id: String { rawValue }
     public static let barStorageKey = "kubeHome.bar"
-    public static let defaultIcons = 3
+    public static let defaultIcons = 4
 }
 
 /// The overview's toolbar; one bar for every cluster.

@@ -152,7 +152,7 @@ private fun CheckupVerdict(report: CheckupReport, sections: Int) {
                 ),
                 verdict.color(),
             )
-            if (report.kubeVersion.isNotEmpty()) MutedText("Kubernetes ${report.kubeVersion}")
+            if (report.kubeVersion.isNotEmpty()) MutedText(stringResource(R.string.checkup_kube_version, report.kubeVersion))
         }
         Text(
             if (critical + warnings == 0) {
