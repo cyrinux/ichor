@@ -56,6 +56,26 @@ extension TalosClient {
         }
     }
 
+    /// `resourcePage`'s list kept live: every object of `resource` in `namespace` (nil for every
+    /// one, or a cluster-scoped kind) with the Table's columns first, then each row added,
+    /// changed or gone.
+    func resourceWatch(_ resource: KubeAPIResource, namespace: String?) -> AsyncStream<KubeLiveEvent<KubeResourceWatchEvent>> {
+        TalosClient.bridged { continuation in
+            let bridge = KubeWatchBridge(
+                event: { eventType, json in
+                    if let event = KubeResourceWatchEvent.decode(eventType, json: json) { continuation.yield(.update(event)) }
+                },
+                done: {
+                    continuation.yield(.done(error: $0))
+                    continuation.finish()
+                }
+            )
+            let run = IchorgoStartKubeWatch(kubeConfig, kubeContext, kubeAPIServer, resource.group, resource.version, resource.resource,
+                                            namespace ?? "", "", "", bridge)
+            return BridgedRun(bridge) { run?.cancel() }
+        }
+    }
+
     /// `rolloutStatus` kept live: the status at the start, then again each time the workload or
     /// one of its pods changes.
     func rolloutWatch(_ workload: KubeWorkload) -> AsyncStream<KubeLiveEvent<KubeRolloutStatus>> {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -76,7 +77,18 @@ type imageScanOptions struct {
 	// repositories), for a cluster that cannot reach mirror.gcr.io and ghcr.io.
 	DBRepository     string `json:"dbRepository,omitempty"`
 	JavaDBRepository string `json:"javaDBRepository,omitempty"`
+	// Images are image refs scanned with no pod behind them (Talos system images), by tag or
+	// repo@sha256:digest, pulled without credentials.
+	Images []string `json:"images,omitempty"`
 }
+
+// imageRefRe is what an Images entry may be: a repository (a registry host with an optional
+// port, then path segments), an optional tag and an optional sha256 digest. It never starts
+// with "-", so Trivy cannot take it for a flag.
+var imageRefRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*(:[0-9]{1,5})?(/[A-Za-z0-9._-]+)*(:[A-Za-z0-9._-]+)?(@sha256:[0-9a-f]{64})?$`)
+
+// imageRefMaxLen bounds an image ref.
+const imageRefMaxLen = 255
 
 func decodeImageScanOptions(s string) (imageScanOptions, error) {
 	var o imageScanOptions
@@ -95,12 +107,30 @@ func decodeImageScanOptions(s string) (imageScanOptions, error) {
 		}
 	}
 
+	var images []string
+
+	for _, ref := range o.Images {
+		ref = strings.TrimSpace(ref)
+		if len(ref) > imageRefMaxLen || !imageRefRe.MatchString(ref) {
+			return o, fmt.Errorf("invalid image %q", ref)
+		}
+
+		images = appendNew(images, ref)
+	}
+
+	if len(images) > imageScanMaxImages {
+		return o, fmt.Errorf("%d images, more than the %d one scan takes", len(images), imageScanMaxImages)
+	}
+
+	o.Images = images
+
 	return o, nil
 }
 
 // StartImageScan scans the images of the given pods for known vulnerabilities with Trivy
-// (os:admin): pods [{namespace,pod}] as KubeAppWorkloads, options {"dbRepository",
-// "javaDBRepository"} or "". It reads the pods' images by digest and their pull secrets,
+// (os:admin): pods [{namespace,pod}] as KubeAppWorkloads ([] when options has images),
+// options {"dbRepository","javaDBRepository","images"} or "", images being refs scanned with no
+// pod behind them (TalosSystemImages' refs). It reads the pods' images by digest and their pull secrets,
 // creates a namespace, runs one Trivy pod there that downloads the database then scans each
 // image in turn, and deletes the namespace at the end, also on failure or Cancel. The pull
 // secrets are copied into that namespace for the run. kubeServer: see KubePods.

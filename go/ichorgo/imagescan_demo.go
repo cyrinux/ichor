@@ -2,8 +2,35 @@ package ichorgo
 
 import (
 	"context"
+	"strings"
 	"time"
 )
+
+// demoSystemImages are a demo node's Talos system images, the control plane's on a control
+// plane node.
+func demoSystemImages(controlPlane bool) []systemImage {
+	pulled := func(role, repo, tag, digest string) systemImage {
+		d := "sha256:" + strings.Repeat(digest, 32)
+
+		return systemImage{Role: role, Image: repo + ":" + tag, Ref: repo + "@" + d, Digest: d}
+	}
+
+	installer := "ghcr.io/siderolabs/installer:" + demoTalosVersion
+	out := []systemImage{
+		{Role: systemImageInstaller, Image: installer, Ref: installer},
+		pulled(systemImageKubelet, "ghcr.io/siderolabs/kubelet", "v1.34.1", "a1"),
+	}
+
+	if controlPlane {
+		out = append(out,
+			pulled(systemImageEtcd, "registry.k8s.io/etcd", "3.6.5-0", "b2"),
+			pulled(systemImageAPIServer, "registry.k8s.io/kube-apiserver", "v1.34.1", "c3"),
+			pulled(systemImageCoreDNS, "registry.k8s.io/coredns/coredns", "v1.12.0", "d4"),
+		)
+	}
+
+	return out
+}
 
 // imageScanDemoStep is how long each demo scan step takes.
 var imageScanDemoStep = 700 * time.Millisecond

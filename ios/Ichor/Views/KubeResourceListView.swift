@@ -20,6 +20,7 @@ struct KubeResourceListView: View {
     let resource: KubeAPIResource
 
     @Environment(AppModel.self) private var model
+    @Environment(\.scenePhase) private var scenePhase
     @State private var list: PagedList<KubeResourceRow>
     @State private var columns: KubeResourceColumns
     @State private var scope = KubeBrowserScope()
@@ -59,6 +60,35 @@ struct KubeResourceListView: View {
         }
         .task(id: kubeNamespacesKey(model)) {
             if resource.namespaced { await scope.loadNamespaces(model: model) }
+        }
+        .task(id: LiveTrigger(source: kubeNamespacesKey(model), settles: list.settles, active: scenePhase == .active)) { await follow() }
+    }
+
+    private struct LiveTrigger: Hashable {
+        let source: String
+        let settles: Int
+        let active: Bool
+    }
+
+    /// Keeps the list live while on screen and the app active, as SelectedPodsView does: the
+    /// Go core's watch replaces the rows and the columns on SYNC, then adds, updates and removes
+    /// rows by namespace/name. It starts once a load settled, and over again after each one.
+    /// Followed only when a namespace is chosen or the load holds every object, so the watch
+    /// never lists more than what was already shown; events never (their own stream).
+    private func follow() async {
+        guard scenePhase == .active, list.settles > 0, resource.resource != "events",
+              case .loaded(let load, _, _) = list.state, let shown = list.scope else { return }
+        let namespace = resource.namespaced ? shown.namespace : nil
+        guard namespace != nil || !load.hasMore else { return }
+        while !Task.isCancelled {
+            guard let client = model.client else { return }
+            for await event in client.resourceWatch(resource, namespace: namespace) {
+                if case .update(let watched) = event {
+                    if let changed = watched.columns { columns.update(changed) }
+                    list.apply { $0.applying(watched.change, key: \.id) }
+                }
+            }
+            try? await Task.sleep(for: .seconds(kubeWatchRetrySeconds))
         }
     }
 

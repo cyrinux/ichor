@@ -106,6 +106,48 @@ func readScanTargets(ctx context.Context, k *kubeClient, refs []routePod) ([]sca
 	return targets, nil
 }
 
+// scanTargets are the pods' images, then the image refs (images) not among them. A pod gone
+// since is skipped; nothing left to scan is a refusal.
+func scanTargets(ctx context.Context, k *kubeClient, refs []routePod, images []string) ([]scanTarget, error) {
+	var targets []scanTarget
+
+	if len(refs) > 0 {
+		var err error
+
+		targets, err = readScanTargets(ctx, k, refs)
+
+		var refusal *netPerfRefusal
+		if err != nil && (len(images) == 0 || !errors.As(err, &refusal)) {
+			return nil, err
+		}
+	}
+
+	for _, t := range refScanTargets(images) {
+		if !slices.ContainsFunc(targets, func(o scanTarget) bool { return o.ref == t.ref }) {
+			targets = append(targets, t)
+		}
+	}
+
+	if len(targets) == 0 {
+		return nil, netPerfRefused("nothing to scan: no pod and no image given")
+	}
+
+	return targets, nil
+}
+
+// refScanTargets are image refs scanned as named, with no pod, pull secret or owner.
+func refScanTargets(images []string) []scanTarget {
+	out := make([]scanTarget, 0, len(images))
+
+	for _, ref := range images {
+		t := scanTarget{image: ref, ref: ref}
+		_, t.digest, _ = strings.Cut(ref, "@")
+		out = append(out, t)
+	}
+
+	return out
+}
+
 func appendNew(list []string, s string) []string {
 	if slices.Contains(list, s) {
 		return list

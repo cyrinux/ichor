@@ -246,6 +246,7 @@ fun Navigation(
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
                 onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
                 onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
+                onJobs = { nav.navigate(KubeBrowserRoutes.JOBS) },
                 onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
                 onNodeDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
                 onActivity = { nav.navigate(Routes.activity(it)) },

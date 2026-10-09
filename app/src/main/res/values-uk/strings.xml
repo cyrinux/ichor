@@ -3750,4 +3750,10 @@
     <string name="kube_services_hint_none">Балансувальник не має адреси, і не знайдено контролера, який би її видав: встановіть MetalLB, увімкніть LB IPAM у Cilium або використайте балансувальник хмари.</string>
     <string name="kube_services_ready">Готові ендпоінти: %1$s</string>
     <string name="kube_services_headless">headless</string>
+    <string name="kube_jobs_title">Завдання</string>
+    <string name="kube_jobs_search">Шукати завдання, CronJob або причини</string>
+    <string name="kube_jobs_empty">Немає завдань.</string>
+    <string name="kube_jobs_no_match">Жодне завдання не відповідає.</string>
+    <string name="kube_jobs_completions">Завершено: %1$s</string>
+    <string name="kube_jobs_owner">CronJob %1$s</string>
 </resources>
