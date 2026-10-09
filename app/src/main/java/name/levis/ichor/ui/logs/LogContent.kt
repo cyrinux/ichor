@@ -32,9 +32,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.model.LogLevelCounts
@@ -46,6 +44,7 @@ import name.levis.ichor.model.logRows
 import name.levis.ichor.model.matchingText
 import java.time.ZoneId
 import name.levis.ichor.ui.components.EmptyText
+import name.levis.ichor.ui.theme.monoSmall
 
 /** How the log is shown: text [filter], [level] filter, or the [raw] lines as received. */
 data class LogView(val filter: String, val level: LogLevelFilter, val raw: Boolean, val onLevel: (LogLevelFilter) -> Unit)
@@ -56,7 +55,7 @@ fun LogContent(entries: List<SeqLogEntry>, truncated: Boolean, view: LogView, li
     if (view.raw) {
         val lines = remember(matched) { matched.map { it.entry.text } }
         LogBody(lines.size, truncated && view.filter.isBlank(), lines, view, live) {
-            items(lines) { line -> Text(line, fontFamily = FontFamily.Monospace, fontSize = 11.sp, lineHeight = 14.sp) }
+            items(lines) { line -> Text(line, style = MaterialTheme.typography.monoSmall) }
         }
         return
     }

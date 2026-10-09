@@ -178,11 +178,15 @@ struct AppArgoSection: View {
 
 /// The Apps grid's mark on a tile whose Argo CD Application is broken or drifting.
 struct ArgoTileBadge: View {
+    // Grows with Dynamic Type, like the caption it sits next to.
+    @ScaledMetric(relativeTo: .caption2) private var diameter: CGFloat = 18
+
     var body: some View {
         Image(systemName: "arrow.triangle.branch")
-            .font(.system(size: 9, weight: .bold))
+            .font(.caption2.weight(.bold))
+            .imageScale(.small)
             .foregroundStyle(.white)
-            .frame(width: 18, height: 18)
+            .frame(width: diameter, height: diameter)
             .background(Circle().fill(attentionColor))
             .overlay { Circle().stroke(Color(.secondarySystemGroupedBackground), lineWidth: 2) }
             .accessibilityLabel(Text("Argo CD app needs a look"))
