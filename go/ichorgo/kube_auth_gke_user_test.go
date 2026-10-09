@@ -17,7 +17,9 @@ type fakeGoogle struct {
 	// refresh is the refresh token accepted; rotate, when set, is sent back as the new one.
 	refresh, rotate string
 	// email goes in an ID token; "" sends none, so userinfo is asked.
-	email  string
+	email string
+	// jwt also answers a service account's JWT bearer grant.
+	jwt    bool
 	grants []map[string]string
 }
 
@@ -45,6 +47,12 @@ func (g *fakeGoogle) handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	g.grants = append(g.grants, form)
+
+	if g.jwt && form["grant_type"] == "urn:ietf:params:oauth:grant-type:jwt-bearer" {
+		_, _ = io.WriteString(w, `{"access_token":"ya29.user","expires_in":3599}`)
+
+		return
+	}
 
 	if form["grant_type"] != "refresh_token" || form["refresh_token"] != g.refresh || form["client_id"] != "gcloud-client.apps.example.com" || form["client_secret"] != "gcloud-secret" {
 		w.WriteHeader(http.StatusBadRequest)

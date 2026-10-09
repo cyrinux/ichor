@@ -108,6 +108,7 @@ private val FIELDS = listOf(
     CredentialField("awsRegion", R.string.kube_field_aws_region, FieldKind.TEXT),
     CredentialField("gcpServiceAccountJson", R.string.kube_field_gcp_service_account, FieldKind.JSON),
     CredentialField(GCP_USER_CREDENTIALS, R.string.kube_field_gcp_user_credentials, FieldKind.JSON),
+    CredentialField(GCP_PROJECTS, R.string.kube_field_gcp_projects, FieldKind.TEXT, optional = true),
     CredentialField("azureTenantId", R.string.kube_field_azure_tenant, FieldKind.TEXT),
     CredentialField("azureSubscriptionId", R.string.kube_field_azure_subscription, FieldKind.TEXT),
     CredentialField("azureClientId", R.string.kube_field_azure_client_id, FieldKind.TEXT),
@@ -133,6 +134,9 @@ fun credentialsFor(fields: List<String>, values: Map<String, String>): Map<Strin
 
 /** GKE's field for the application_default_credentials.json gcloud writes for a Google account. */
 const val GCP_USER_CREDENTIALS = "gcpUserCredentialsJson"
+
+/** GKE discovery's optional project IDs, for a Google account in a large organisation. */
+const val GCP_PROJECTS = "gcpProjects"
 
 /**
  * The label of an alternative field set: EKS asks for IAM Identity Center or access keys, GKE
@@ -161,6 +165,13 @@ enum class DiscoveryProvider(val id: String, @StringRes val label: Int) {
 /** The fields each provider asks for (KubeDiscoverFields), only for the providers the app shows. */
 fun discoveryFields(byProvider: Map<String, List<String>>): Map<DiscoveryProvider, List<String>> =
     DiscoveryProvider.entries.mapNotNull { p -> byProvider[p.id]?.takeIf { it.isNotEmpty() }?.let { p to it } }.toMap()
+
+/**
+ * The credentials each provider of [fields] takes, as field sets: those KubeDiscoverOptions
+ * lists ([byProvider]; GKE: a service account key or gcloud user credentials), else its one set.
+ */
+fun discoveryOptions(byProvider: Map<String, List<List<String>>>, fields: Map<DiscoveryProvider, List<String>>): Map<DiscoveryProvider, List<List<String>>> =
+    fields.mapValues { (p, set) -> byProvider[p.id]?.filter { it.isNotEmpty() }?.takeIf { it.isNotEmpty() } ?: listOf(set) }
 
 /**
  * The stored names of the contexts an import added: names that were not stored [before] and

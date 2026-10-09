@@ -446,7 +446,9 @@ when no such label is set, as on bare metal.
 
 **Add from a cloud account** (on the add screen) lists the clusters of an AWS, Google Cloud,
 Azure, DigitalOcean or Rancher account and adds the ones you pick, signed in with the same
-credentials. A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
+credentials. For Google Cloud that is a service account key, or the gcloud user credentials of
+your own account: the app then looks through every project you can see (or the project IDs you
+enter). A Talos cluster can also use one of these kubeconfig clusters for its Kubernetes
 screens (cluster menu → **Kubernetes access**): your own identity and RBAC instead of the
 admin kubeconfig, which also works with an `os:reader` talosconfig.
 

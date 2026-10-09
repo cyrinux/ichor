@@ -3133,6 +3133,8 @@
     <string name="kube_field_aws_region">Région AWS</string>
     <string name="kube_field_gcp_service_account">Clé de compte de service (JSON)</string>
     <string name="kube_field_gcp_user_credentials">Identifiants utilisateur gcloud (application_default_credentials.json)</string>
+    <string name="kube_field_gcp_projects">ID de projet</string>
+    <string name="kube_discover_gcp_projects_hint">Laissez vide pour chercher dans tous les projets visibles par votre compte ; indiquez des ID de projet pour aller plus vite dans une grande organisation.</string>
     <string name="kube_signin_option_gcp_service_account">Clé de compte de service</string>
     <string name="kube_signin_option_gcp_user">Identifiants utilisateur gcloud</string>
     <string name="kube_signin_gcp_user_hint">Reprenez votre session gcloud : sur votre ordinateur, lancez gcloud auth application-default login, puis importez ~/.config/gcloud/application_default_credentials.json. Quand Google met fin à la session, relancez la commande et importez le nouveau fichier.</string>

@@ -151,7 +151,7 @@ public func kubeFieldInput(_ field: String) -> KubeFieldInput {
 
 /// Fields that may be left empty.
 public func kubeFieldOptional(_ field: String) -> Bool {
-    field == "awsSessionToken"
+    field == "awsSessionToken" || field == "gcpProjects"
 }
 
 /// The JSON object of `values` for `fields` (trimmed, empty ones left out), as KubeSetCredentials
@@ -177,6 +177,19 @@ public let kubeDiscoverProviders = ["eks", "gke", "aks", "digitalocean", "ranche
 /// KubeDiscoverFields' answer: the fields per provider.
 public func decodeKubeDiscoverFields(_ json: String) throws -> [String: [String]] {
     try TalosJSON.decode([String: [String]].self, from: json)
+}
+
+/// KubeDiscoverOptions' answer: the field sets of the providers that take one of several
+/// credentials (GKE: a service account key, or gcloud user credentials).
+public func decodeKubeDiscoverOptions(_ json: String) throws -> [String: [[String]]] {
+    try TalosJSON.decode([String: [[String]]].self, from: json)
+}
+
+/// The credentials `provider` takes, as field sets: its options, else its one set of fields.
+public func kubeDiscoverOptionSets(provider: String, fields: [String: [String]], options: [String: [[String]]]) -> [[String]] {
+    let sets = (options[provider] ?? []).filter { !$0.isEmpty }
+    if !sets.isEmpty { return sets }
+    return fields[provider].map { [$0] } ?? []
 }
 
 /// The stored names of the contexts an import added that sign in through a method (`signIn`):

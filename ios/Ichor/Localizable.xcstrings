@@ -1,6 +1,76 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Project IDs (optional)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID de projet (facultatif)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID de proyecto (opcional)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt-IDs (optional)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID dei progetti (facoltativo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID проєктів (необовʼязково)"
+          }
+        }
+      }
+    },
+    "Leave empty to search every project your account can see; list project IDs to go faster in a large organisation." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laissez vide pour chercher dans tous les projets visibles par votre compte ; indiquez des ID de projet pour aller plus vite dans une grande organisation."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déjalo vacío para buscar en todos los proyectos que ve tu cuenta; indica ID de proyecto para ir más rápido en una organización grande."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leer lassen, um alle Projekte zu durchsuchen, die dein Konto sieht; gib Projekt-IDs an, um in einer großen Organisation schneller zu sein."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lascia vuoto per cercare in tutti i progetti visibili al tuo account; elenca gli ID dei progetti per fare prima in una grande organizzazione."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Залиште порожнім, щоб шукати в усіх проєктах, які бачить ваш обліковий запис; укажіть ID проєктів, щоб швидше працювати у великій організації."
+          }
+        }
+      }
+    },
     "gcloud user credentials (application_default_credentials.json)" : {
       "extractionState" : "manual",
       "localizations" : {
