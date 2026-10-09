@@ -1,5 +1,8 @@
 package name.levis.ichor.ui.overview
 
+import name.levis.ichor.ui.components.rememberKubeTopNodes
+import name.levis.ichor.ui.components.NodeUsage
+import name.levis.ichor.model.KubeTopNode
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -155,9 +158,12 @@ internal fun KubeNodesCard(overview: KubeNodesOverview, onNode: (KubeNodeInfo) -
             dense -> DenseKubeNodes(overview.nodes, onNode, onAllNodes)
             else -> {
                 val nodes = remember(overview) { overview.nodes.byStatus().flatMap { it.nodes } }
+                // Read again with every refresh of the list; no bars without metrics-server.
+                val top = rememberKubeTopNodes(overview)
+                val usage = remember(top) { top?.byName.orEmpty() }
                 nodes.forEachIndexed { i, node ->
                     if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                    KubeNodeRow(node, onClick = { onNode(node) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp))
+                    KubeNodeRow(node, onClick = { onNode(node) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp), usage = usage[node.name])
                 }
             }
         }
@@ -165,10 +171,13 @@ internal fun KubeNodesCard(overview: KubeNodesOverview, onNode: (KubeNodeInfo) -
     }
 }
 
-/** A node's row: name and status, then its details, provenance and problem pills; a tap is [onClick]. */
+/**
+ * A node's row: name and status, then its details, provenance, CPU and memory in use ([usage],
+ * from metrics-server, when there is one) and problem pills; a tap is [onClick].
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun KubeNodeRow(node: KubeNodeInfo, onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun KubeNodeRow(node: KubeNodeInfo, onClick: () -> Unit, modifier: Modifier = Modifier, usage: KubeTopNode? = null) {
     val colors = LocalStatusColors.current
     Column(Modifier.fillMaxWidth().clickable(onClick = onClick).then(modifier), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -183,6 +192,7 @@ internal fun KubeNodeRow(node: KubeNodeInfo, onClick: () -> Unit, modifier: Modi
         if (details.isNotEmpty()) MutedText(details.joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
         val provenance = listOfNotNull(nodePoolLabel(node), node.instanceType.ifEmpty { null }, nodeCapacityLabel(node))
         if (provenance.isNotEmpty()) MutedText(provenance.joinToString("  ·  "), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        usage?.let { NodeUsage(it) }
         if (node.cordoned || node.pressure.isNotEmpty()) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (node.cordoned) StatusPill(stringResource(R.string.kube_node_cordoned), colors.warn)

@@ -19,10 +19,12 @@ import (
 // WebSocket to the pod's port through the API server. Nothing listens on the network the
 // phone is on.
 
-// kubePortForwardProtocol is the API server's WebSocket port-forward protocol: per port,
-// channel 0 carries the data and channel 1 the errors, every frame starts with its channel,
-// and the first frame of each channel is the port number (2 bytes, little endian).
-const kubePortForwardProtocol = "portforward.k8s.io"
+// kubePortForwardProtocol is the WebSocket subprotocol of the API server's port-forward:
+// the binary channel protocol, where every frame starts with its channel (per port, channel
+// 0 carries the data and channel 1 the errors) and the first frame of each channel is the
+// port number (2 bytes, little endian). "portforward.k8s.io" names the SPDY protocol, not a
+// WebSocket one: asking for it fails the handshake (400) on every API server.
+const kubePortForwardProtocol = "v4.channel.k8s.io"
 
 // PortForwardListener follows a forward (implemented in Kotlin/Swift).
 type PortForwardListener interface {
