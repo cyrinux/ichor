@@ -21,7 +21,9 @@ enum class AlertChannel(val id: String, val importance: Int, val title: Int, val
 val Alert.channel: AlertChannel
     get() = when (kind) {
         AlertKind.NODE_READY, AlertKind.NODE_NOT_READY, AlertKind.NODE_UNREACHABLE -> AlertChannel.NODES
-        AlertKind.ETCD_ALARM, AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK, AlertKind.AM_FIRING, AlertKind.AM_RESOLVED -> AlertChannel.CLUSTER
+        AlertKind.ETCD_ALARM, AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK, AlertKind.AM_FIRING, AlertKind.AM_RESOLVED,
+        AlertKind.CLUSTER_UNREACHABLE, AlertKind.CLUSTER_REACHABLE,
+        -> AlertChannel.CLUSTER
         AlertKind.DATA_PROBLEM, AlertKind.DATA_OK -> AlertChannel.DATA
         AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> AlertChannel.GITOPS
         AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED, AlertKind.KUBECONFIG_EXPIRING, AlertKind.KUBECONFIG_EXPIRED -> AlertChannel.CERTS
@@ -36,7 +38,8 @@ fun Alert.shareTarget(): ShareTarget? = when (kind) {
         ShareTarget(target = ShareTarget.NODE, addr = key.substringAfter(':'), host = subject)
     AlertKind.ETCD_ALARM -> ShareTarget.screen(ShareTarget.ETCD)
     AlertKind.CERT_EXPIRING, AlertKind.CERT_EXPIRED -> null
-    AlertKind.KUBECONFIG_EXPIRING, AlertKind.KUBECONFIG_EXPIRED -> ShareTarget.screen(ShareTarget.CLUSTER)
+    AlertKind.KUBECONFIG_EXPIRING, AlertKind.KUBECONFIG_EXPIRED, AlertKind.CLUSTER_UNREACHABLE, AlertKind.CLUSTER_REACHABLE ->
+        ShareTarget.screen(ShareTarget.CLUSTER)
     AlertKind.DATA_PROBLEM, AlertKind.DATA_OK -> {
         val system = detail.substringBefore('|')
         ShareTarget.dataServices(DataServiceKind.entries.firstOrNull { it.alertSystem == system }?.catalogId.orEmpty())

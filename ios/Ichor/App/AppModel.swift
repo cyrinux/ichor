@@ -63,6 +63,7 @@ final class AppModel {
             if let index = summary?.contexts.firstIndex(where: { $0.name == activeContext }) {
                 UserDefaults.standard.set(index, forKey: Keys.contextIndex)
             }
+            if activeContext != oldValue { publishWidgetClusters() }
         }
     }
 
@@ -95,6 +96,10 @@ final class AppModel {
     /// The clusters reached over a VPN only, by context fingerprint: without a VPN up the app
     /// does not try them (screens say to connect it, background checks wait). Only on this device.
     private(set) var vpnOnly: Set<String>
+
+    /// The clusters turned off with "Watch in the background", by context fingerprint: the
+    /// background checks skip them (on by default). Only on this device.
+    private(set) var monitorUnwatched: Set<String>
 
     var theme: ThemeMode {
         didSet { UserDefaults.standard.set(theme.rawValue, forKey: Keys.theme) }
@@ -134,6 +139,7 @@ final class AppModel {
         snapshotKeys = UserDefaults.standard.dictionary(forKey: Keys.snapshotKeys) as? [String: String] ?? [:]
         skippedTalosUpdates = UserDefaults.standard.dictionary(forKey: Keys.skippedTalosUpdates) as? [String: String] ?? [:]
         vpnOnly = Set(UserDefaults.standard.stringArray(forKey: Keys.vpnOnly) ?? [])
+        monitorUnwatched = Set(UserDefaults.standard.stringArray(forKey: BackgroundMonitor.unwatchedKey) ?? [])
         VpnMonitor.shared.onConnect = { [weak self] in self?.reloadIfHeldBack() }
     }
 
@@ -248,6 +254,7 @@ final class AppModel {
         clusterNames = names
         UserDefaults.standard.set(names, forKey: Keys.clusterNames)
         QuickActions.update(summary: summary, labels: labels)
+        publishWidgetClusters()
     }
 
     /// Shows the cluster a quick action stands for; false when it is no longer imported.
@@ -418,7 +425,7 @@ final class AppModel {
             try? write(previous.kube, item: .kubeconfig)
             throw error
         }
-        SharedStore.save(nil) // the widget stops showing the previous config's cluster
+        SharedStore.clear() // the widget stops showing the previous config's clusters
         apply(talos: newTalos, talosSummary: parsedTalos, kube: newKube, kubeSummary: parsedKube,
               preferred: all.selectedContext(index: activeIndex, name: nil))
         dataGeneration += 1
@@ -471,7 +478,6 @@ final class AppModel {
             var parsed: ConfigSummary?
             if let remaining { parsed = try await TalosClient.parseKubeconfig(remaining) }
             try write(remaining, item: .kubeconfig)
-            if active == removed { SharedStore.save(nil) } // the widget stops showing the removed cluster
             applyIndex(talos: yaml, talosSummary: talosSummary, kube: remaining, kubeSummary: parsed, index: index)
         } else {
             guard let current = yaml else { return }
@@ -484,7 +490,6 @@ final class AppModel {
                 parsed = try await TalosClient.parse(left)
             }
             try write(remaining, item: .talosconfig)
-            if active == removed { SharedStore.save(nil) } // the widget stops showing the removed cluster
             applyIndex(talos: remaining, talosSummary: parsed, kube: kubeYAML, kubeSummary: kubeSummary, index: index)
         }
     }
@@ -580,6 +585,37 @@ final class AppModel {
         UserDefaults.standard.set(fingerprints.sorted(), forKey: Keys.vpnOnly)
     }
 
+    /// Whether the background checks watch `context`'s cluster (off on any of its contexts: not).
+    func watchesInBackground(_ context: ContextSummary) -> Bool {
+        watchedInBackground(context, contexts: summary?.contexts ?? [], unwatched: monitorUnwatched)
+    }
+
+    /// Turns the background checks of `context`'s cluster on or off.
+    func setWatchInBackground(_ on: Bool, for context: ContextSummary) {
+        storeMonitorUnwatched(settingWatched(on, for: context, contexts: summary?.contexts ?? [], unwatched: monitorUnwatched))
+    }
+
+    private func storeMonitorUnwatched(_ fingerprints: Set<String>) {
+        guard fingerprints != monitorUnwatched else { return }
+        monitorUnwatched = fingerprints
+        UserDefaults.standard.set(fingerprints.sorted(), forKey: BackgroundMonitor.unwatchedKey)
+    }
+
+    /// Tells the widget which clusters it can show, named as on screen, and which one is active
+    /// (what a widget with no cluster chosen shows).
+    private func publishWidgetClusters() {
+        // A widget set to a cluster opens that cluster's screen (a share link, routed after unlock).
+        let clusters = summary.map { summary in
+            widgetClusters(summary.contexts, active: activeContext, labels: labels) { context in
+                guard !context.clusterID.isEmpty else { return nil }
+                var target = ShareTarget.screen(.cluster)
+                target.cluster = context.clusterID
+                return TalosClient.shareLink(for: target).flatMap { appShareLink(web: $0.absoluteString) }
+            }
+        } ?? []
+        SharedStore.publish(clusters: clusters, active: activeSummary.map(monitorClusterKey))
+    }
+
     /// The VPN came up: a VPN-only cluster on screen reloads.
     private func reloadIfHeldBack() {
         if let shown = activeSummary?.fingerprint, vpnOnly.contains(shown) { dataGeneration += 1 }
@@ -604,9 +640,11 @@ final class AppModel {
         WakeOnLanStore.shared.wipe()
         KubeAuthStore.shared.wipe() // its sealed item went with the others
         storeVpnOnly([])
+        storeMonitorUnwatched([])
+        AlertSnoozeStore.keep(clusters: [])
         storeKubeAccess([:])
         publicIPReports = [:]
-        SharedStore.save(nil) // the widget stops showing the old cluster
+        SharedStore.clear() // the widget stops showing the old clusters
         forgetFeatures()
         yaml = nil
         kubeYAML = nil
@@ -615,6 +653,7 @@ final class AppModel {
         unreadable = []
         summary = nil
         QuickActions.update(summary: nil, labels: labels)
+        publishWidgetClusters()
     }
 
     /// Callers must have authenticated the user first; the lock off drops the enrolled keys too.
@@ -652,7 +691,7 @@ final class AppModel {
         TalosClient.setPrivacyMask(enabled: enabled, extraWords: words)
         guard affectsData else { return }
         // Also resets the alert diff, which would otherwise see every node renamed.
-        SharedStore.save(nil)
+        SharedStore.clear()
         // Stored with the old names.
         LastKnownStore.wipe()
         forgetFeatures()
@@ -717,11 +756,16 @@ final class AppModel {
         LastKnownStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         MetricsStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
         AlertmanagerStore.keep(fingerprints: newSummary.contexts.map(\.fingerprint))
+        // A removed cluster's background state goes too: its snapshot, unreachable count and snoozes.
+        storeMonitorUnwatched(keepVpnOnly(saved: monitorUnwatched, fingerprints: newSummary.contexts.map(\.fingerprint)))
+        SharedStore.keep(clusters: newSummary.contexts.map(monitorClusterKey))
+        AlertSnoozeStore.keep(clusters: newSummary.contexts.map(\.fingerprint))
         let kept = publicIPReports.filter { report in newSummary.contexts.contains { $0.fingerprint == report.key } }
         if kept.count != publicIPReports.count {
             publicIPReports = kept
             try? PublicIPStore.save(kept)
         }
         QuickActions.update(summary: newSummary, labels: labels)
+        publishWidgetClusters()
     }
 }

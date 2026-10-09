@@ -23,7 +23,7 @@ import name.levis.ichor.ui.userMessage
 
 /**
  * The cluster sheet as both homes (Talos overview, Kubernetes home) open it: pick, rename,
- * color, VPN only, sign-in or Kubernetes access, activity, remove, add. [onEndpoints] edits a Talos
+ * color, VPN only, background watch, sign-in or Kubernetes access, activity, remove, add. [onEndpoints] edits a Talos
  * cluster's endpoints, when offered.
  */
 @Composable
@@ -40,6 +40,7 @@ fun ManageClustersSheet(
     val context = LocalContext.current
     val app = context.applicationContext as TalosApp
     val vpnOnly by app.vpnOnly.fingerprints.collectAsStateWithLifecycle()
+    val unwatched by app.unwatchedClusters.fingerprints.collectAsStateWithLifecycle()
     val invalidations by app.talosRepository.invalidations.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var account by remember { mutableStateOf<ContextSummary?>(null) }
@@ -95,6 +96,8 @@ fun ManageClustersSheet(
             }
         },
         removingNames = removingNames,
+        unwatched = unwatched,
+        onWatch = app::setWatched,
     )
 
     account?.let { cluster ->

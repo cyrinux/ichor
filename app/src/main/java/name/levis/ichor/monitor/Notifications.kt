@@ -53,6 +53,7 @@ fun canPostNotifications(context: Context): Boolean =
  * the cluster the alert is about (see [name.levis.ichor.model.ContextSummary.clusterId]), whose
  * screen of the alert's subject a tap opens like a share link; null opens the app only.
  * [actions]: its buttons (see [Alert.actions]), for the cluster of fingerprint [fingerprint].
+ * [cluster]: the cluster's name as the app shows it, in the notification's header.
  */
 fun postAlert(
     context: Context,
@@ -61,6 +62,7 @@ fun postAlert(
     clusterId: String?,
     actions: List<AlertAction> = emptyList(),
     fingerprint: String = "",
+    cluster: String? = null,
 ) {
     if (!canPostNotifications(context)) return
     ensureAlertChannels(context)
@@ -79,15 +81,17 @@ fun postAlert(
     }
     val open = PendingIntent.getActivity(
         context,
-        alertNotificationId(alert.key), // distinct request codes: the links and extras differ
+        alertNotificationId(fingerprint, alert.key), // distinct request codes: the links and extras differ
         intent,
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
     val builder = alertNotification(context, alert.channel, title, text, open, hideOnLockScreen)
+    // Every watched cluster alerts: which one this is about, next to the app's name.
+    cluster?.takeIf { it.isNotBlank() }?.let(builder::setSubText)
     actions.mapNotNull { alertActionButton(context, alert, it, fingerprint, link) }.forEach(builder::addAction)
 
     try {
-        NotificationManagerCompat.from(context).notify(alertNotificationId(alert.key), builder.build())
+        NotificationManagerCompat.from(context).notify(alertNotificationId(fingerprint, alert.key), builder.build())
     } catch (_: SecurityException) {
         // Permission revoked between the check and the post; nothing to do.
     }
@@ -148,6 +152,8 @@ private fun alertTitle(context: Context, alert: Alert): String = when (alert.kin
     AlertKind.CHECKUP_OK -> context.getString(R.string.monitor_checkup_ok, alert.subject)
     AlertKind.AM_FIRING -> context.getString(R.string.monitor_am_firing, alert.subject)
     AlertKind.AM_RESOLVED -> context.getString(R.string.monitor_am_resolved, alert.subject)
+    AlertKind.CLUSTER_UNREACHABLE -> context.getString(R.string.monitor_cluster_unreachable)
+    AlertKind.CLUSTER_REACHABLE -> context.getString(R.string.monitor_cluster_reachable)
 }
 
 /** "demo/worker-6f4b8 · critical": what the alert is about, and how bad while it fires. */
@@ -237,4 +243,6 @@ private fun alertText(context: Context, alert: Alert): String = when (alert.kind
     AlertKind.GITOPS_PROBLEM, AlertKind.GITOPS_OK -> gitopsAlertText(context, alert)
     AlertKind.CHECKUP_PROBLEM, AlertKind.CHECKUP_OK -> checkupAlertText(context, alert)
     AlertKind.AM_FIRING, AlertKind.AM_RESOLVED -> amAlertText(context, alert)
+    AlertKind.CLUSTER_UNREACHABLE -> context.getString(R.string.monitor_cluster_unreachable_text, alert.detail)
+    AlertKind.CLUSTER_REACHABLE -> context.getString(R.string.monitor_cluster_reachable_text)
 }

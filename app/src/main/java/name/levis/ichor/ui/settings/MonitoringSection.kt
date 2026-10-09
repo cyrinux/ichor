@@ -18,6 +18,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,16 +29,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import name.levis.ichor.TalosApp
 import name.levis.ichor.monitor.CERT_WARN_DAYS
 import name.levis.ichor.monitor.MonitorStore
+import name.levis.ichor.monitor.UNREACHABLE_RUNS
 import name.levis.ichor.monitor.canPostNotifications
 import name.levis.ichor.ui.components.InfoNotice
 import name.levis.ichor.ui.components.MutedText
 import name.levis.ichor.ui.components.SectionTitle
 import name.levis.ichor.ui.theme.LocalStatusColors
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +54,8 @@ fun MonitoringSection(app: TalosApp) {
     val gitopsWatched by store.gitopsWatched.collectAsStateWithLifecycle()
     val checkupWatched by store.checkupWatched.collectAsStateWithLifecycle()
     val alertmanagerWatched by store.alertmanagerWatched.collectAsStateWithLifecycle()
+    val unreachable by store.unreachableAlerts.collectAsStateWithLifecycle()
+    val unreachableRuns by store.unreachableRuns.collectAsStateWithLifecycle()
     val interval by store.intervalMinutes.collectAsStateWithLifecycle()
     val securityKeys by app.appLock.securityKeys.collectAsStateWithLifecycle()
     var error by remember { mutableStateOf<String?>(null) }
@@ -137,6 +144,31 @@ fun MonitoringSection(app: TalosApp) {
                     onCheckedChange = { store.setAlertmanagerWatched(it) },
                     enabled = enabled,
                     modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            // And for a cluster that stops answering: once, after that many checks in a row.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.monitor_unreachable), style = MaterialTheme.typography.titleSmall)
+                    MutedText(stringResource(R.string.monitor_unreachable_desc))
+                }
+                Switch(
+                    checked = unreachable,
+                    onCheckedChange = { store.setUnreachableAlerts(it) },
+                    enabled = enabled,
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            if (unreachable) {
+                val runsLabel = stringResource(R.string.monitor_unreachable_runs, unreachableRuns.toString())
+                Text(runsLabel, style = MaterialTheme.typography.bodyMedium)
+                Slider(
+                    value = unreachableRuns.toFloat(),
+                    onValueChange = { store.setUnreachableRuns(it.roundToInt()) },
+                    valueRange = UNREACHABLE_RUNS.first.toFloat()..UNREACHABLE_RUNS.last.toFloat(),
+                    steps = UNREACHABLE_RUNS.last - UNREACHABLE_RUNS.first - 1,
+                    enabled = enabled,
+                    modifier = Modifier.semantics { contentDescription = runsLabel },
                 )
             }
             Text(stringResource(R.string.monitor_check_every), style = MaterialTheme.typography.labelLarge)

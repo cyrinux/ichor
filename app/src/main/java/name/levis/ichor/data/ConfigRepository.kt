@@ -290,6 +290,16 @@ class ConfigRepository(
      */
     fun forCall(): StoredConfig = (_config.value ?: throw NoConfigException()).also(guard)
 
+    /**
+     * The same for a call to the cluster of [context] whichever is on screen (the background
+     * monitor): the stored config with [context] as its active one, guarded alike.
+     */
+    fun forCall(context: String): StoredConfig {
+        val stored = _config.value ?: throw NoConfigException()
+        if (stored.summary.contexts.none { it.name == context }) throw NoConfigException()
+        return stored.copy(activeContext = context).also(guard)
+    }
+
     fun selectContext(name: String) {
         val current = _config.value ?: return
         if (current.summary.contexts.none { it.name == name }) return

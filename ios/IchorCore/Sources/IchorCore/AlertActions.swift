@@ -30,9 +30,27 @@ public func alertActions(key: String, problem: Bool, canWake: Bool) -> [AlertAct
         default: return [.snooze]
         }
     case "am": return [.silence, .snooze]
-    case "etcd", "data", "checkup", "cert": return [.snooze]
+    case "etcd", "data", "checkup", "cert", "unreachable": return [.snooze]
     default: return []
     }
+}
+
+/// The kind of an alert, which names its notification category: its key's prefix, but
+/// "alertmanager" for the Alertmanager's ("am:…") and "cluster" for "unreachable".
+public func alertKind(key: String) -> String {
+    let prefix = String(key.split(separator: ":", maxSplits: 1).first ?? "")
+    switch prefix {
+    case "am": return "alertmanager"
+    case "unreachable": return "cluster"
+    default: return prefix
+    }
+}
+
+/// The identifier of an alert's notification: its key on `cluster` (its monitor key, see
+/// monitorClusterKey), so the same alert on two clusters ("node:10.0.0.2") does not replace the
+/// other's. The bare key without a cluster, as older versions posted it.
+public func alertNotificationID(cluster: String, alertKey: String) -> String {
+    cluster.isEmpty ? alertKey : "\(cluster)|\(alertKey)"
 }
 
 /// The notification category of an alert kind ("node", "alertmanager"…) with `actions`:
@@ -139,6 +157,12 @@ public struct AlertSnoozes: Codable, Equatable, Sendable {
     public func pruned(now: Date) -> AlertSnoozes {
         let ms = now.epochMillis
         return AlertSnoozes(until: until.mapValues { $0.filter { $0.value > ms } }.filter { !$0.value.isEmpty })
+    }
+
+    /// Only the snoozes of `clusters` (fingerprints): a removed cluster's go with it.
+    public func keeping(clusters: [String]) -> AlertSnoozes {
+        let kept = Set(clusters)
+        return AlertSnoozes(until: until.filter { kept.contains($0.key) })
     }
 
     /// The `alerts` of `cluster` to post at `now`: the snoozed ones left out.

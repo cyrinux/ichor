@@ -30,6 +30,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Router
 import androidx.compose.material.icons.outlined.UnfoldMore
@@ -226,7 +227,8 @@ private fun ClusterPosition(contexts: List<ContextSummary>, active: Int, colors:
 
 /**
  * The imported clusters: pick the one to show, rename it, change its color, set it to be
- * reached over a VPN only ([vpnOnly], by fingerprint), remove it, or add one. Removing asks first; [onRemove] then drops the cluster's credentials from the device.
+ * reached over a VPN only ([vpnOnly], by fingerprint) or watched in the background (unless
+ * [unwatched]), remove it, or add one. Removing asks first; [onRemove] then drops the cluster's credentials from the device.
  * The clusters in [removingNames] are on their way out: a spinner instead of their menu.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -248,6 +250,8 @@ fun ClusterSheet(
     onAccount: ((ContextSummary) -> Unit)? = null,
     removingNames: Set<String> = emptySet(),
     onActivity: ((ContextSummary) -> Unit)? = null,
+    unwatched: Set<String> = emptySet(),
+    onWatch: ((ContextSummary, Boolean) -> Unit)? = null,
 ) {
     var removing by remember { mutableStateOf<ContextSummary?>(null) }
     var renaming by remember { mutableStateOf<ContextSummary?>(null) }
@@ -279,6 +283,8 @@ fun ClusterSheet(
                     onColor = { coloring = context },
                     vpnOnly = context.fingerprint in vpnOnly,
                     onVpnOnly = { on: Boolean -> onVpnOnly(context, on) }.takeIf { context.fingerprint.isNotBlank() },
+                    watched = context.fingerprint !in unwatched,
+                    onWatch = onWatch?.let { set -> { on: Boolean -> set(context, on) } }?.takeIf { context.fingerprint.isNotBlank() && !context.demo },
                     onRemove = { removing = context },
                     // Not in screenshot mode (the endpoints shown are fake), nor for the demo, nor for a
                     // cluster added from a kubeconfig (its server is no Talos endpoint).
@@ -363,6 +369,8 @@ private fun ClusterRow(
     onColor: () -> Unit,
     vpnOnly: Boolean,
     onVpnOnly: ((Boolean) -> Unit)?,
+    watched: Boolean,
+    onWatch: ((Boolean) -> Unit)?,
     onRemove: () -> Unit,
     onEndpoints: (() -> Unit)?,
     signInNeeded: Boolean,
@@ -415,6 +423,8 @@ private fun ClusterRow(
                 onColor = onColor,
                 vpnOnly = vpnOnly,
                 onVpnOnly = onVpnOnly,
+                watched = watched,
+                onWatch = onWatch,
                 onEndpoints = onEndpoints,
                 account = account,
                 onActivity = onActivity,
@@ -440,6 +450,8 @@ private fun ClusterRowMenu(
     onColor: () -> Unit,
     vpnOnly: Boolean,
     onVpnOnly: ((Boolean) -> Unit)?,
+    watched: Boolean,
+    onWatch: ((Boolean) -> Unit)?,
     onEndpoints: (() -> Unit)?,
     account: Pair<Int, () -> Unit>?,
     onActivity: (() -> Unit)?,
@@ -475,6 +487,15 @@ private fun ClusterRowMenu(
                     leadingIcon = { Icon(Icons.Outlined.VpnLock, contentDescription = null) },
                     trailingIcon = { Checkbox(checked = vpnOnly, onCheckedChange = null) },
                     onClick = { toggle(!vpnOnly) },
+                )
+            }
+            onWatch?.let { toggle ->
+                // On by default: the background checks (alerts, widget) read this cluster too.
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.clusters_watch)) },
+                    leadingIcon = { Icon(Icons.Outlined.NotificationsActive, contentDescription = null) },
+                    trailingIcon = { Checkbox(checked = watched, onCheckedChange = null) },
+                    onClick = { toggle(!watched) },
                 )
             }
             onEndpoints?.let {
