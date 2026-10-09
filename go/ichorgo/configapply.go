@@ -354,16 +354,22 @@ func StartConfigTry(configYAML, contextName, node, baseYAML, draftYAML string, t
 		defer cancel()
 		defer onPanic(func(msg string) { listener.OnDone("", msg) })
 
-		outcome, err := startConfigTry(ctx, configYAML, contextName, node, configTry{base: baseYAML, draft: draftYAML, timeoutSec: timeoutSec, commands: run.commands, after: time.After, emit: func(phase, message string, deadline time.Time) {
-			p := configTryProgress{Phase: phase, Message: message, At: time.Now().UnixMilli()}
-			if !deadline.IsZero() {
-				p.Deadline = deadline.UnixMilli()
-			}
+		var outcome string
 
-			emitJSON(p, listener.OnProgress)
-		}})
+		err := recordedRun(configYAML, contextName, func() auditAction {
+			return auditAction{Action: "config-try", Node: node, Params: configTryAuditParams(timeoutSec, outcome)}
+		}, func() (err error) {
+			outcome, err = startConfigTry(ctx, configYAML, contextName, node, configTry{base: baseYAML, draft: draftYAML, timeoutSec: timeoutSec, commands: run.commands, after: time.After, emit: func(phase, message string, deadline time.Time) {
+				p := configTryProgress{Phase: phase, Message: message, At: time.Now().UnixMilli()}
+				if !deadline.IsZero() {
+					p.Deadline = deadline.UnixMilli()
+				}
 
-		recordOutcome(configYAML, contextName, auditAction{Action: "config-try", Node: node, Params: configTryAuditParams(timeoutSec, outcome)}, err)
+				emitJSON(p, listener.OnProgress)
+			}})
+
+			return err
+		})
 
 		listener.OnDone(outcome, errText(err))
 	}()

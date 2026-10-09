@@ -88,9 +88,11 @@ func StartKubeDrain(configYAML, contextName, kubeServer, kubeNode string, includ
 		defer cancel()
 		defer onPanic(listener.OnDone)
 
-		err := runKubeDrain(ctx, kubeTarget{configYAML, contextName, kubeServer}, kubeNode, includeBare, listener)
-
-		recordOutcome(configYAML, contextName, auditAction{Action: "drain", Node: kubeNode, Params: fmt.Sprintf("include-bare=%t", includeBare)}, err)
+		err := recordedRun(configYAML, contextName, func() auditAction {
+			return auditAction{Action: "drain", Node: kubeNode, Params: fmt.Sprintf("include-bare=%t", includeBare)}
+		}, func() error {
+			return runKubeDrain(ctx, kubeTarget{configYAML, contextName, kubeServer}, kubeNode, includeBare, listener)
+		})
 
 		listener.OnDone(errText(err))
 	}()

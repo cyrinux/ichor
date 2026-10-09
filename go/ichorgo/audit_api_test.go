@@ -30,7 +30,7 @@ var mutationPrimitives = []string{"kubeMutate", "kubeMutationError", "nodeAction
 
 // TestMutatingEntryPointsRecordThemselves checks every exported function that changes a
 // cluster records an audit entry: a deferred recordAction after maskErr/maskResult (so it
-// sees the unmasked error), or recordOutcome in a background run. A new mutating function
+// sees the unmasked error), or recordedRun in a background run. A new mutating function
 // fails here until it does.
 func TestMutatingEntryPointsRecordThemselves(t *testing.T) {
 	fset := token.NewFileSet()
@@ -94,11 +94,15 @@ func auditProblem(fn *ast.FuncDecl, calls []string) string {
 		return ""
 	}
 
-	if slices.Contains(calls, "recordOutcome") {
+	if slices.Contains(calls, "recordedRun") {
 		return ""
 	}
 
-	return "changes a cluster but records no audit entry (defer recordAction or recordOutcome)"
+	if slices.Contains(calls, "recordOutcome") {
+		return "a background run records through recordedRun, so a panic is recorded too"
+	}
+
+	return "changes a cluster but records no audit entry (defer recordAction or recordedRun)"
 }
 
 // calledNames lists the functions called anywhere in body, closures included.
