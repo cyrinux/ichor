@@ -108,6 +108,7 @@ fun KubeObjectScreen(
     val revealed by vm.revealed.collectAsStateWithLifecycle()
     val edit by vm.edit.collectAsStateWithLifecycle()
     val deletion by vm.delete.collectAsStateWithLifecycle()
+    val scaling by vm.scale.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         if (state == UiState.Loading) vm.refresh()
         if (summary == UiState.Loading) vm.refreshSummary()
@@ -149,6 +150,12 @@ fun KubeObjectScreen(
             onRetry = vm::loadDeletePreview,
             onDismiss = vm::cancelDelete,
         )
+    }
+
+    // Asked only for a kind that scales: a refused scale shows disabled, with the reason.
+    val scaleDenial = if (ref.scalable) rememberKubeCanDenial("patch", ref.group, ref.scaleResource, ref.namespace, ref.name) else null
+    scaling?.let { s ->
+        KubeObjectScaleDialog(ref, s, scaleDenial, onTarget = vm::chooseScale, onApply = vm::applyScale, onRetry = vm::loadScale, onDismiss = vm::cancelScale)
     }
 
     // With the app lock on, showing a Secret's values needs a fresh fingerprint/PIN.
@@ -230,7 +237,9 @@ fun KubeObjectScreen(
                             bar,
                             onPortForward,
                             deleteRefusal = deleteDenial?.denialText()?.asString(),
+                            scaleRefusal = scaleDenial?.denialText()?.asString(),
                             onEdit = vm::startEdit,
+                            onScale = vm::startScale,
                             onDelete = vm::startDelete,
                             onRefresh = {
                                 vm.refreshAll()
@@ -314,7 +323,9 @@ private fun ViewActions(
     bar: KubeObjectBar,
     onPortForward: (() -> Unit)?,
     deleteRefusal: String?,
+    scaleRefusal: String?,
     onEdit: () -> Unit,
+    onScale: () -> Unit,
     onDelete: () -> Unit,
     onRefresh: () -> Unit,
     onCustomize: () -> Unit,
@@ -330,6 +341,7 @@ private fun ViewActions(
                 KubeObjectAction.COPY -> copyWithToast(context, ref.name, yaml.orEmpty(), sensitive = ref.isSecret && revealed)
                 KubeObjectAction.SHARE -> shareText(context, yaml.orEmpty(), context.getString(R.string.kb_share))
                 KubeObjectAction.PORT_FORWARD -> onPortForward?.invoke()
+                KubeObjectAction.SCALE -> onScale()
                 KubeObjectAction.DELETE -> onDelete()
             }
         },
@@ -339,12 +351,19 @@ private fun ViewActions(
             when (action) {
                 KubeObjectAction.EDIT -> ref.editable
                 KubeObjectAction.PORT_FORWARD -> onPortForward != null && ref.isPod
+                KubeObjectAction.SCALE -> ref.scalable
                 else -> true
             }
         },
         // Nothing to copy, share or edit before the YAML is read.
-        enabled = { action -> action == KubeObjectAction.REFRESH || action == KubeObjectAction.PORT_FORWARD || yaml != null },
-        refusal = { action -> deleteRefusal.takeIf { action == KubeObjectAction.DELETE } },
+        enabled = { action -> action == KubeObjectAction.REFRESH || action == KubeObjectAction.PORT_FORWARD || action == KubeObjectAction.SCALE || yaml != null },
+        refusal = { action ->
+            when (action) {
+                KubeObjectAction.DELETE -> deleteRefusal
+                KubeObjectAction.SCALE -> scaleRefusal
+                else -> null
+            }
+        },
     )
 }
 

@@ -3205,6 +3205,9 @@
     <string name="kb_discard_confirm">Annulla modifiche</string>
     <string name="kb_delete">Elimina</string>
     <string name="kb_delete_title">Eliminare %1$s?</string>
+    <string name="kb_scale_title">Scala %1$s</string>
+    <string name="kb_scale_running">In esecuzione: %1$s</string>
+    <string name="kb_scale_job_hint">Un Job esegue questi pod contemporaneamente; 0 lo mette in pausa.</string>
     <string name="kb_delete_loading">Lettura di ciò che l\'eliminazione toccherebbe…</string>
     <string name="kb_delete_protected">Protetto: %1$s</string>
     <string name="kb_delete_pending">La sua eliminazione è già in attesa: la trattengono i finalizzatori qui sotto.</string>
