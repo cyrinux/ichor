@@ -362,6 +362,8 @@ func StartConfigTry(configYAML, contextName, node, baseYAML, draftYAML string, t
 			emitJSON(p, listener.OnProgress)
 		}})
 
+		recordOutcome(configYAML, contextName, auditAction{Action: "config-try", Node: node, Params: configTryAuditParams(timeoutSec, outcome)}, err)
+
 		listener.OnDone(outcome, errText(err))
 	}()
 
@@ -375,6 +377,16 @@ type configTry struct {
 	commands    <-chan string
 	after       func(time.Duration) <-chan time.Time
 	emit        func(phase, message string, deadline time.Time)
+}
+
+// configTryAuditParams sums a try up for the audit log: never the config, it holds secrets.
+func configTryAuditParams(timeoutSec int, outcome string) string {
+	params := fmt.Sprintf("timeout=%ds", timeoutSec)
+	if outcome != "" {
+		params += " outcome=" + outcome
+	}
+
+	return params
 }
 
 func startConfigTry(ctx context.Context, configYAML, contextName, node string, t configTry) (string, error) {

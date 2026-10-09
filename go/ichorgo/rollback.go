@@ -14,6 +14,8 @@ func Rollback(configYAML, contextName, node string) (err error) {
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: "talos-rollback", Node: node})
+
 	return nodeAction(configYAML, contextName, node, callTimeout, func(ctx context.Context, c *client.Client) error {
 		return c.Rollback(ctx)
 	})

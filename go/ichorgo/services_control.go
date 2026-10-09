@@ -15,6 +15,8 @@ func ServiceAction(configYAML, contextName, node, service, action string) (err e
 
 	contextName, node = unmaskTarget(configYAML, contextName, node)
 
+	defer recordAction(&err, configYAML, contextName, auditAction{Action: "service-" + strings.ToLower(strings.TrimSpace(action)), Node: node, Object: "Service/" + service})
+
 	action = strings.ToLower(strings.TrimSpace(action))
 	if err := validateServiceAction(service, action); err != nil {
 		return err
