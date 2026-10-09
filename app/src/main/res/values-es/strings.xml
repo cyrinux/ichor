@@ -3183,7 +3183,6 @@
     <string name="kube_discover_find">Buscar clústeres</string>
     <string name="kube_signin_required_error">Inicia sesión en este clúster para continuar (%1$s).</string>
     <string name="kube_signin_required_error_plain">Inicia sesión en este clúster para continuar.</string>
-||||||| a1506f3c
     <!-- kube browser -->
     <string name="kb_title">Todos los recursos</string>
     <string name="kb_search_kinds">Buscar tipos (pod, deploy, grupo…)</string>
@@ -3382,7 +3381,6 @@
     <string name="activity_settings_desc">Cada cambio que Ichor hizo en tus clústeres (reinicios, escalados, sincronizaciones, reversiones…), guardado 90 días en este dispositivo.</string>
     <string name="activity_open">Registro de actividad</string>
     <string name="clusters_menu_activity">Actividad</string>
-||||||| b9b4f161
     <string name="kb_tab_summary">Resumen</string>
     <string name="kb_summary_conditions">Condiciones</string>
     <string name="kb_summary_no_conditions">Este tipo no informa condiciones.</string>
@@ -3429,7 +3427,6 @@
     <string name="kb_data_used_by_unknown">No se pudieron listar los pods de este namespace.</string>
     <string name="kb_data_used_by_none">Ningún pod de este namespace lo usa.</string>
     <string name="kb_data_reveal_auth">Mostrar %1$s de %2$s</string>
-||||||| 62d80f4f
     <string name="pod_debug_toggle">Contenedor de depuración</string>
     <string name="pod_debug_note">Para imágenes sin shell (distroless): añade un contenedor temporal que ve los procesos de este pod. Kubernetes lo mantiene en el pod hasta que se elimina el pod.</string>
     <string name="storage_kube_search">Buscar PVC, clases o pods</string>

@@ -3383,7 +3383,6 @@
     <string name="kube_discover_find">Знайти кластери</string>
     <string name="kube_signin_required_error">Увійдіть у цей кластер, щоб продовжити (%1$s).</string>
     <string name="kube_signin_required_error_plain">Увійдіть у цей кластер, щоб продовжити.</string>
-||||||| a1506f3c
     <!-- kube browser -->
     <string name="kb_title">Усі ресурси</string>
     <string name="kb_search_kinds">Пошук типів (pod, deploy, група…)</string>
@@ -3582,7 +3581,6 @@
     <string name="activity_settings_desc">Кожна зміна, яку Ichor вніс у ваші кластери (перезавантаження, масштабування, синхронізації, відкати…), зберігається 90 днів на цьому пристрої.</string>
     <string name="activity_open">Журнал активності</string>
     <string name="clusters_menu_activity">Активність</string>
-||||||| b9b4f161
     <string name="kb_tab_summary">Огляд</string>
     <string name="kb_summary_conditions">Умови</string>
     <string name="kb_summary_no_conditions">Цей тип не повідомляє умов.</string>
@@ -3629,7 +3627,6 @@
     <string name="kb_data_used_by_unknown">Не вдалося отримати список подів цього простору імен.</string>
     <string name="kb_data_used_by_none">Жоден под цього простору імен його не використовує.</string>
     <string name="kb_data_reveal_auth">Показати %1$s з %2$s</string>
-||||||| 62d80f4f
     <string name="pod_debug_toggle">Контейнер налагодження</string>
     <string name="pod_debug_note">Для образів без оболонки (distroless): додає тимчасовий контейнер, який бачить процеси цього пода. Kubernetes зберігає його в поді, доки под не буде видалено.</string>
     <string name="storage_kube_search">Пошук PVC, класів або подів</string>

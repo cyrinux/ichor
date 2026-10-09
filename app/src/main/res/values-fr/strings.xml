@@ -3183,7 +3183,6 @@
     <string name="kube_discover_find">Trouver les clusters</string>
     <string name="kube_signin_required_error">Connectez-vous à ce cluster pour continuer (%1$s).</string>
     <string name="kube_signin_required_error_plain">Connectez-vous à ce cluster pour continuer.</string>
-||||||| a1506f3c
     <!-- kube browser -->
     <string name="kb_title">Toutes les ressources</string>
     <string name="kb_search_kinds">Rechercher un type (pod, deploy, groupe…)</string>
@@ -3382,7 +3381,6 @@
     <string name="activity_settings_desc">Chaque modification faite par Ichor sur vos clusters (redémarrages, mises à l\'échelle, synchronisations, retours arrière…), conservée 90 jours sur cet appareil.</string>
     <string name="activity_open">Journal d\'activité</string>
     <string name="clusters_menu_activity">Activité</string>
-||||||| b9b4f161
     <string name="kb_tab_summary">Résumé</string>
     <string name="kb_summary_conditions">Conditions</string>
     <string name="kb_summary_no_conditions">Ce type ne publie aucune condition.</string>
@@ -3429,7 +3427,6 @@
     <string name="kb_data_used_by_unknown">Impossible de lister les pods de ce namespace.</string>
     <string name="kb_data_used_by_none">Aucun pod de ce namespace ne l\'utilise.</string>
     <string name="kb_data_reveal_auth">Afficher %1$s de %2$s</string>
-||||||| 62d80f4f
     <string name="pod_debug_toggle">Conteneur de débogage</string>
     <string name="pod_debug_note">Pour les images sans shell (distroless) : ajoute un conteneur temporaire qui voit les processus de ce pod. Kubernetes le garde dans le pod jusqu’à la suppression du pod.</string>
     <string name="storage_kube_search">Rechercher des PVC, classes ou pods</string>

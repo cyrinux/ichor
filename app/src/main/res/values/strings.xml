@@ -3183,7 +3183,6 @@
     <string name="kube_discover_find">Find clusters</string>
     <string name="kube_signin_required_error">Sign in to this cluster to continue (%1$s).</string>
     <string name="kube_signin_required_error_plain">Sign in to this cluster to continue.</string>
-||||||| a1506f3c
     <!-- kube browser -->
     <string name="kb_title">All resources</string>
     <string name="kb_search_kinds">Search kinds (pod, deploy, group…)</string>
@@ -3382,7 +3381,6 @@
     <string name="activity_settings_desc">Every change Ichor made to your clusters (reboots, scaling, syncs, rollbacks…), kept 90 days on this device.</string>
     <string name="activity_open">Activity log</string>
     <string name="clusters_menu_activity">Activity</string>
-||||||| b9b4f161
     <string name="kb_tab_summary">Summary</string>
     <string name="kb_summary_conditions">Conditions</string>
     <string name="kb_summary_no_conditions">This kind reports no conditions.</string>
@@ -3429,7 +3427,6 @@
     <string name="kb_data_used_by_unknown">The pods of this namespace could not be listed.</string>
     <string name="kb_data_used_by_none">No pod of this namespace uses it.</string>
     <string name="kb_data_reveal_auth">Show %1$s of %2$s</string>
-||||||| 62d80f4f
     <string name="pod_debug_toggle">Debug container</string>
     <string name="pod_debug_note">For images without a shell (distroless): adds a temporary container that sees this pod\'s processes. Kubernetes keeps it in the pod until the pod is deleted.</string>
     <string name="storage_kube_search">Search PVCs, classes or pods</string>
