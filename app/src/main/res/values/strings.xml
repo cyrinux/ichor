@@ -3200,6 +3200,15 @@
     <string name="kb_edit_hint">Keep metadata.resourceVersion: a change made meanwhile is refused, not overwritten.</string>
     <string name="kb_edit_reveal_first">Show the secret values first: hidden values would be saved as they read.</string>
     <string name="kb_review">Review</string>
+    <string name="kb_explain_field">Explain field</string>
+    <string name="kb_add_field">Add field</string>
+    <string name="kb_schema_add_title">Add to %1$s</string>
+    <string name="kb_schema_required">required</string>
+    <string name="kb_schema_values">Allowed values</string>
+    <string name="kb_schema_fields">Fields</string>
+    <string name="kb_schema_no_fields">Nothing to add here: this field holds a value, not other fields.</string>
+    <string name="kb_schema_add_hint">Tap a field to add it at the cursor, required ones first.</string>
+    <string name="kb_schema_unavailable">Schema help unavailable</string>
     <string name="kb_review_loading">Asking the API server what would change…</string>
     <string name="kb_no_changes">No changes to save.</string>
     <string name="kb_back_to_editor">Back to editor</string>

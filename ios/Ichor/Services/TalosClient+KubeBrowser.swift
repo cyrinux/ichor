@@ -73,6 +73,14 @@ extension TalosClient {
         }
     }
 
+    /// The schema help for `fieldPath` ("spec.template", "" for the kind itself) of the
+    /// resource's kind, from the API server's OpenAPI v3. Read-only.
+    func explain(_ resource: KubeAPIResource, fieldPath: String) async throws -> KubeExplain {
+        try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in
+            IchorgoKubeExplain(config, context, kubeServer, resource.group, resource.version, resource.kind, fieldPath, $0)
+        }
+    }
+
     /// What deleting the object would do: protection, finalizers, the objects it owns. Read-only.
     func objectDeletePreview(_ resource: KubeAPIResource, namespace: String, name: String) async throws -> KubeDeletePreview {
         try await Self.json { [config = self.kubeConfig, context = self.kubeContext, kubeServer = self.kubeAPIServer] in

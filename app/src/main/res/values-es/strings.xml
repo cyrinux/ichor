@@ -3200,6 +3200,15 @@
     <string name="kb_edit_hint">Conserva metadata.resourceVersion: un cambio hecho mientras tanto se rechaza, no se sobrescribe.</string>
     <string name="kb_edit_reveal_first">Muestra primero los valores del secreto: los valores ocultos se guardarían tal cual.</string>
     <string name="kb_review">Revisar</string>
+    <string name="kb_explain_field">Explicar campo</string>
+    <string name="kb_add_field">Añadir campo</string>
+    <string name="kb_schema_add_title">Añadir a %1$s</string>
+    <string name="kb_schema_required">obligatorio</string>
+    <string name="kb_schema_values">Valores posibles</string>
+    <string name="kb_schema_fields">Campos</string>
+    <string name="kb_schema_no_fields">Nada que añadir aquí: este campo contiene un valor, no otros campos.</string>
+    <string name="kb_schema_add_hint">Toca un campo para añadirlo en el cursor, los obligatorios primero.</string>
+    <string name="kb_schema_unavailable">Ayuda del esquema no disponible</string>
     <string name="kb_review_loading">Preguntando al servidor de API qué cambiaría…</string>
     <string name="kb_no_changes">No hay cambios que guardar.</string>
     <string name="kb_back_to_editor">Volver al editor</string>
