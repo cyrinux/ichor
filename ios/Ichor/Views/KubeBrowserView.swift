@@ -19,6 +19,9 @@ struct KubeBrowserView: View {
                         NavigationLink { HelmReleasesView() } label: {
                             Label("Helm releases", systemImage: "shippingbox")
                         }
+                        NavigationLink { KubeStorageView() } label: {
+                            Label("Storage", systemImage: "externaldrive")
+                        }
                     }
                 }
                 if !list.failed.isEmpty && query.isEmpty {

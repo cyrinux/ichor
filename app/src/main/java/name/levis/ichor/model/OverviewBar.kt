@@ -31,7 +31,7 @@ enum class KubeHomeAction { WORKLOADS, RESOURCES, GITOPS, METRICS, HELM, DATA_SE
 typealias KubeHomeBar = ActionBar<KubeHomeAction>
 
 /** What the Kubernetes screen's app bar offers: the screens it leads to, its share link and the API address. */
-enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOWS, RESOURCES, HELM, API_ADDRESS;
+enum class KubernetesAction { CHECKUP, NETWORK_POLICIES, SHARE, API_HEALTH, FLOWS, RESOURCES, HELM, STORAGE, API_ADDRESS;
 
     companion object {
         val bar = ActionBarKind(entries, defaultIcons = 3)

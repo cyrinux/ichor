@@ -3391,4 +3391,11 @@
     <string name="mono_text_smaller">Texte plus petit</string>
     <string name="pod_debug_toggle">Conteneur de débogage</string>
     <string name="pod_debug_note">Pour les images sans shell (distroless) : ajoute un conteneur temporaire qui voit les processus de ce pod. Kubernetes le garde dans le pod jusqu’à la suppression du pod.</string>
+    <string name="storage_kube_search">Rechercher des PVC, classes ou pods</string>
+    <string name="storage_kube_empty">Aucun PVC.</string>
+    <string name="storage_kube_no_match">Aucun PVC ne correspond.</string>
+    <string name="storage_kube_partial">Ces identifiants ne peuvent pas lire les volumes, classes ou nœuds : certains détails manquent.</string>
+    <string name="storage_kube_not_measured">remplissage non mesuré</string>
+    <string name="storage_kube_pods">Utilisé par %1$s</string>
+    <string name="storage_kube_open">Ouvrir dans %1$s</string>
 </resources>

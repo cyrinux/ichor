@@ -1,5 +1,6 @@
 package name.levis.ichor.ui.kubebrowser
 
+import name.levis.ichor.ui.nav.Routes
 import android.net.Uri
 import android.os.Bundle
 import androidx.compose.runtime.getValue
@@ -19,6 +20,7 @@ object KubeBrowserRoutes {
     private const val LIST = "kube-browser-list?g={g}&v={v}&r={r}&k={k}&namespaced={namespaced}&edit={edit}"
     private const val OBJECT = "kube-object?g={g}&v={v}&r={r}&k={k}&ns={ns}&name={name}&edit={edit}"
     const val HELM = "kube-helm"
+    const val STORAGE = "kube-storage"
     private const val HELM_RELEASE = "kube-helm-release?ns={ns}&name={name}"
     private const val FORWARD = "kube-forward?ns={ns}&pod={pod}"
 
@@ -76,6 +78,13 @@ object KubeBrowserRoutes {
                     nav.previousBackStackEntry?.savedStateHandle?.set(DELETED, System.currentTimeMillis())
                     nav.popBackStack()
                 },
+            )
+        }
+        composable(STORAGE) {
+            StorageScreen(
+                onBack = { nav.popBackStack() },
+                onClaim = links.onObject,
+                onDataService = { nav.navigate(Routes.dataServices(it)) },
             )
         }
         composable(HELM) {

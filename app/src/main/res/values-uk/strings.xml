@@ -3591,4 +3591,11 @@
     <string name="mono_text_smaller">Менший текст</string>
     <string name="pod_debug_toggle">Контейнер налагодження</string>
     <string name="pod_debug_note">Для образів без оболонки (distroless): додає тимчасовий контейнер, який бачить процеси цього пода. Kubernetes зберігає його в поді, доки под не буде видалено.</string>
+    <string name="storage_kube_search">Пошук PVC, класів або подів</string>
+    <string name="storage_kube_empty">Немає PVC.</string>
+    <string name="storage_kube_no_match">Жоден PVC не відповідає.</string>
+    <string name="storage_kube_partial">Ці облікові дані не можуть читати томи, класи або вузли: деяких відомостей бракує.</string>
+    <string name="storage_kube_not_measured">заповненість не виміряно</string>
+    <string name="storage_kube_pods">Використовують: %1$s</string>
+    <string name="storage_kube_open">Відкрити в %1$s</string>
 </resources>
