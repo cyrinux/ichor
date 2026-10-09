@@ -19,7 +19,7 @@ import (
 // context name, so every Kubernetes function works unchanged; the Talos ones refuse it with
 // errTalosUnavailable.
 
-var errTalosUnavailable = errors.New("This cluster was added from a kubeconfig: it has no Talos API")
+var errTalosUnavailable = errors.New("this cluster was added from a kubeconfig: it has no Talos API")
 
 // kubeconfigDoc is a kubeconfig as the app stores it: every context names a cluster and a
 // user of its own, all credentials inline. exec and auth-provider are kept as written for

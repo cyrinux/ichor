@@ -84,7 +84,7 @@ func omniOIDCToken(ctx context.Context, cfgCtx *clientconfig.Context, signer omn
 
 	var d oidcDiscovery
 	if err := omniGetJSON(ctx, httpc, strings.TrimSuffix(issuer, "/")+"/.well-known/openid-configuration", &d); err != nil || d.AuthorizationEndpoint == "" || d.TokenEndpoint == "" {
-		return "", time.Time{}, fmt.Errorf("Omni OIDC discovery: %w", errors.Join(err, errors.New("no endpoints")))
+		return "", time.Time{}, fmt.Errorf("discover Omni OIDC endpoints: %w", errors.Join(err, errors.New("no endpoints")))
 	}
 
 	verifier := randomToken() + randomToken()
@@ -143,7 +143,7 @@ func omniAuthRequest(ctx context.Context, httpc *http.Client, u string) (string,
 
 	resp, err := httpc.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("Omni OIDC authorization: %w", err)
+		return "", fmt.Errorf("authorize with Omni OIDC: %w", err)
 	}
 
 	resp.Body.Close() //nolint:errcheck,gosec
@@ -152,12 +152,12 @@ func omniAuthRequest(ctx context.Context, httpc *http.Client, u string) (string,
 	if err == nil {
 		// A refusal comes back to the redirect URI (opaque, urn:…?error=…) with its reason.
 		if q, _ := url.ParseQuery(login.RawQuery); q.Get("error") != "" {
-			return "", fmt.Errorf("Omni OIDC authorization: %s %s", q.Get("error"), q.Get("error_description"))
+			return "", fmt.Errorf("authorization refused by Omni OIDC: %s %s", q.Get("error"), q.Get("error_description"))
 		}
 	}
 
 	if err != nil || resp.StatusCode/100 != 3 || login.Path == "" {
-		return "", fmt.Errorf("Omni OIDC authorization answered %d", resp.StatusCode)
+		return "", fmt.Errorf("the Omni OIDC authorization answered %d", resp.StatusCode)
 	}
 
 	return path.Base(login.Path), nil
@@ -212,17 +212,17 @@ func omniExchange(ctx context.Context, httpc *http.Client, endpoint, code, verif
 
 	resp, err := httpc.Do(req)
 	if err != nil {
-		return "", time.Time{}, fmt.Errorf("Omni OIDC token: %w", err)
+		return "", time.Time{}, fmt.Errorf("get an Omni OIDC token: %w", err)
 	}
 	defer resp.Body.Close() //nolint:errcheck
 
 	var t oidcTokens
 	if err := json.NewDecoder(io.LimitReader(resp.Body, oidcMaxBody)).Decode(&t); err != nil {
-		return "", time.Time{}, fmt.Errorf("Omni OIDC token: %w", err)
+		return "", time.Time{}, fmt.Errorf("get an Omni OIDC token: %w", err)
 	}
 
 	if t.IDToken == "" {
-		return "", time.Time{}, fmt.Errorf("Omni OIDC token: %s %s", cmpOr(t.Error, resp.Status), t.Description)
+		return "", time.Time{}, fmt.Errorf("token refused by Omni OIDC: %s %s", cmpOr(t.Error, resp.Status), t.Description)
 	}
 
 	expiry := time.Now().Add(time.Duration(cmpOrInt(t.ExpiresIn, 3600)) * time.Second)
@@ -287,12 +287,12 @@ func omniClusterKubeconfig(ctx context.Context, cfgCtx *clientconfig.Context, si
 
 	doc, err := loadKubeconfigDoc(string(raw))
 	if err != nil {
-		return "", "", fmt.Errorf("Omni's kubeconfig: %w", err)
+		return "", "", fmt.Errorf("read Omni's kubeconfig: %w", err)
 	}
 
 	single, err := doc.single(doc.currentName())
 	if err != nil {
-		return "", "", fmt.Errorf("Omni's kubeconfig: %w", err)
+		return "", "", fmt.Errorf("read Omni's kubeconfig: %w", err)
 	}
 
 	if exec := single.Users[0].User.Exec; exec != nil {

@@ -56,6 +56,7 @@ func TestDrainStreamStopsOnEOFAndReportsErrors(t *testing.T) {
 
 func TestDrainStreamSurfacesNodeError(t *testing.T) {
 	recv := func() (*common.Data, error) {
+		//lint:ignore SA1019 the fake answer carries the per-node metadata a real multiplexed one does
 		return &common.Data{Metadata: &common.Metadata{Error: "service not found"}}, nil
 	}
 

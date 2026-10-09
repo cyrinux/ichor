@@ -266,7 +266,7 @@ func decodeHelmRelease(data string) (helmRelease, error) {
 
 	var rel helmRelease
 	if err := json.Unmarshal(raw, &rel); err != nil {
-		return helmRelease{}, fmt.Errorf("Helm release: %w", err)
+		return helmRelease{}, fmt.Errorf("decode Helm release: %w", err)
 	}
 
 	return rel, nil
@@ -276,26 +276,26 @@ func decodeHelmRelease(data string) (helmRelease, error) {
 func helmReleaseJSON(data string) ([]byte, error) {
 	outer, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-		return nil, fmt.Errorf("Helm release: %w", err)
+		return nil, fmt.Errorf("decode Helm release: %w", err)
 	}
 
 	inner, err := base64.StdEncoding.DecodeString(string(outer))
 	if err != nil {
-		return nil, fmt.Errorf("Helm release: %w", err)
+		return nil, fmt.Errorf("decode Helm release: %w", err)
 	}
 
 	if bytes.HasPrefix(inner, []byte{0x1f, 0x8b}) {
 		r, err := gzip.NewReader(bytes.NewReader(inner))
 		if err != nil {
-			return nil, fmt.Errorf("Helm release: %w", err)
+			return nil, fmt.Errorf("decode Helm release: %w", err)
 		}
 
 		if inner, err = io.ReadAll(io.LimitReader(r, helmReleaseMax+1)); err != nil {
-			return nil, fmt.Errorf("Helm release: %w", err)
+			return nil, fmt.Errorf("decode Helm release: %w", err)
 		}
 
 		if len(inner) > helmReleaseMax {
-			return nil, errors.New("Helm release is too large")
+			return nil, errors.New("decoded Helm release is too large")
 		}
 	}
 

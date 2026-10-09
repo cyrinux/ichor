@@ -114,7 +114,7 @@ build-release:
 build-play:
     ./build.sh play
 
-# Formatting, vet and every unit test (Go + Kotlin), without packaging an APK.
+# Formatting, vet, staticcheck and every unit test (Go + Kotlin), without packaging an APK.
 check:
     ./build.sh check
 

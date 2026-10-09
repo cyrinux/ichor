@@ -131,7 +131,7 @@ func systemContainerd() *common.ContainerdInstance {
 }
 
 func (t talosUpgrader) legacyUpgrade(ctx context.Context, image string, stage, force bool) error {
-	//nolint:staticcheck // deprecated for the LifecycleService, which requestUpgrade falls back to
+	//lint:ignore SA1019 deprecated for the LifecycleService, which requestUpgrade falls back to
 	_, err := t.c.UpgradeWithOptions(ctx,
 		client.WithUpgradeImage(image),
 		client.WithUpgradeRebootMode(machineapi.UpgradeRequest_DEFAULT),

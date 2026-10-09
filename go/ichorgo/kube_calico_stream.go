@@ -176,5 +176,5 @@ func whiskerBackendError(status int, body []byte) error {
 		msg = http.StatusText(status)
 	}
 
-	return fmt.Errorf("Whisker answered HTTP %d: %s", status, msg)
+	return fmt.Errorf("the Whisker API answered HTTP %d: %s", status, msg)
 }

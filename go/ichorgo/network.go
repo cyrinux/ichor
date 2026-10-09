@@ -302,6 +302,7 @@ func mapResolvers(in []*network.ResolverStatus) []string {
 			continue
 		}
 
+		//lint:ignore SA1019 Talos versions without NameServers only fill DNSServers
 		for _, a := range spec.DNSServers {
 			out = appendUnique(out, a.String())
 		}

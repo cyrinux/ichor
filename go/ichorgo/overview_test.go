@@ -13,6 +13,7 @@ import (
 func TestBuildNodeOverviewHealthy(t *testing.T) {
 	probe := nodeProbe{
 		version: &machineapi.Version{
+			//lint:ignore SA1019 the fake answer carries the per-node metadata a real multiplexed one does
 			Metadata: &common.Metadata{Hostname: "10.0.0.2"},
 			Version:  &machineapi.VersionInfo{Tag: "v1.14.1", Arch: "arm64"},
 			Platform: &machineapi.PlatformInfo{Name: "metal"},

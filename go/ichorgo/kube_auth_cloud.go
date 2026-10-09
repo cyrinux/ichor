@@ -176,7 +176,7 @@ func (gkeMethod) mint(ctx context.Context, state kubeAuthState) (string, time.Ti
 			return "", time.Time{}, state, signInRequired(authGKE, err.Error())
 		}
 
-		return "", time.Time{}, state, fmt.Errorf("Google token: %w", err)
+		return "", time.Time{}, state, fmt.Errorf("get a Google token: %w", err)
 	}
 
 	state.User = sa.ClientEmail

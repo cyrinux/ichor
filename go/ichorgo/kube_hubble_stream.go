@@ -20,8 +20,8 @@ const (
 
 var (
 	errFlowSourceMissing = errors.New("no flow source found: neither Cilium (cilium-agent pods, label k8s-app=cilium) nor Calico (calico-node pods, label k8s-app=calico-node) runs in this cluster")
-	errHubbleOff         = errors.New("Hubble is disabled in Cilium: set hubble.enabled=true in its Helm values (enable-hubble in the cilium-config ConfigMap)")
-	errWhiskerOff        = errors.New("Whisker is not installed: Calico 3.30+ records flows with Goldmane and serves them through Whisker. Create the Goldmane and Whisker resources (operator.tigera.io/v1, in the custom-resources.yaml of your Calico release), wait for the whisker pod in calico-system, then open this screen again")
+	errHubbleOff         = errors.New("flows need Hubble, which is disabled in Cilium: set hubble.enabled=true in its Helm values (enable-hubble in the cilium-config ConfigMap)")
+	errWhiskerOff        = errors.New("flows need Whisker, which is not installed: Calico 3.30+ records flows with Goldmane and serves them through Whisker. Create the Goldmane and Whisker resources (operator.tigera.io/v1, in the custom-resources.yaml of your Calico release), wait for the whisker pod in calico-system, then open this screen again")
 )
 
 // HubbleListener follows a live flow view (implemented in Kotlin/Swift).
