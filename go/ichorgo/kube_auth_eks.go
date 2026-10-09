@@ -39,7 +39,7 @@ var (
 	awsSSOPortalEndpoint = func(region string) string {
 		return "https://portal.sso." + region + ".amazonaws.com" + awsDomainSuffix(region)
 	}
-	awsHTTPClient = func() *http.Client { return &http.Client{Timeout: oidcHTTPTimeout} }
+	awsHTTPClient = func() *http.Client { return newHTTPClient(httpClientOpts{timeout: oidcHTTPTimeout}) }
 )
 
 // awsDomainSuffix completes the China partition's domain.

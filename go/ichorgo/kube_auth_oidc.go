@@ -51,7 +51,7 @@ func (m *oidcMethod) name() string { return m.method }
 
 // newOIDCMethod reads the OIDC settings of a kubelogin exec or an oidc auth-provider.
 func newOIDCMethod(user *kubeStoreUser) (*oidcMethod, error) {
-	m := &oidcMethod{method: authOIDC, redirectHost: "localhost", tls: &tls.Config{MinVersion: tls.VersionTLS12}}
+	m := &oidcMethod{method: authOIDC, redirectHost: "localhost", tls: baseTLS(nil, false)}
 
 	var caData string
 
@@ -132,10 +132,8 @@ func splitScopes(values []string) []string {
 }
 
 func (m *oidcMethod) httpClient() *http.Client {
-	return &http.Client{
-		Timeout:   oidcHTTPTimeout,
-		Transport: &http.Transport{TLSClientConfig: m.tls.Clone(), Proxy: nil, ForceAttemptHTTP2: true},
-	}
+	// An identity provider may redirect its discovery document; never to plain http.
+	return newHTTPClient(httpClientOpts{tls: m.tls, timeout: oidcHTTPTimeout, followRedirects: true})
 }
 
 // isGoogle: Google refuses offline_access and wants access_type=offline instead.

@@ -87,7 +87,7 @@ func newSchemaStore(dir func() string, url func(string) string, client *http.Cli
 	return &schemaStore{loaded: map[string]*configSchema{}, failed: map[string]schemaFailure{}, dir: dir, url: url, client: client}
 }
 
-var configSchemas = newSchemaStore(dataDir, func(version string) string { return fmt.Sprintf(configSchemaURL, version) }, http.DefaultClient)
+var configSchemas = newSchemaStore(dataDir, func(version string) string { return fmt.Sprintf(configSchemaURL, version) }, newHTTPClient(httpClientOpts{followRedirects: true}))
 
 type schemaStatus struct {
 	Version   string `json:"version"`

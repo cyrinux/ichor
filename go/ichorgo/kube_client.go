@@ -219,19 +219,10 @@ func kubeServerCandidates(server *url.URL, talosEndpoints []string) []*url.URL {
 }
 
 func newKubeClient(base *url.URL, creds *kubeCredentials) *kubeClient {
-	transport := &http.Transport{
-		TLSClientConfig:     creds.tls.Clone(),
-		DialContext:         (&net.Dialer{Timeout: kubeProbeTimeout}).DialContext,
-		TLSHandshakeTimeout: kubeProbeTimeout,
-		ForceAttemptHTTP2:   true,
-		IdleConnTimeout:     sessionIdle,
-	}
+	// The API server does not redirect: the client never sends the credentials anywhere else.
+	httpc := newHTTPClient(httpClientOpts{tls: creds.tls, dialTimeout: kubeProbeTimeout, idleTimeout: sessionIdle})
 
-	return &kubeClient{base: base, http: &http.Client{
-		Transport: transport,
-		// The API server does not redirect; never send the credentials anywhere else.
-		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
-	}, token: creds.token, tokens: creds.tokens, tls: creds.tls.Clone(), namespace: creds.namespace}
+	return &kubeClient{base: base, http: httpc, token: creds.token, tokens: creds.tokens, tls: creds.tls.Clone(), namespace: creds.namespace}
 }
 
 // bearer is the token to send, "" for none (a client certificate).
