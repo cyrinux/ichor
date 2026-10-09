@@ -176,6 +176,8 @@ enum Route: Hashable {
     /// The drain of a node (the maintenance screen, drain only); on a cluster without Talos,
     /// node and hostname are its Kubernetes name.
     case drain(node: String, hostname: String)
+    /// A root shell on a node of a cluster without Talos, by its Kubernetes name.
+    case kubeNodeDebug(node: String)
     /// Events timeline for one node, or all of them (node nil); hostnames by address.
     case events(node: String?, hostnames: [String: String])
     /// The apps running in the cluster; hostnames by address, for the nodes pods run on;
@@ -258,6 +260,7 @@ struct MainNavigation: View {
                     case .clusters: ClustersView()
                     case .debugShell(let node, let hostname): DebugShellView(node: node, hostname: hostname)
                     case .drain(let node, let hostname): MaintenanceView(node: node, hostname: hostname, drainOnly: true)
+                    case .kubeNodeDebug(let node): KubeNodeDebugView(node: node)
                     case .events(let node, let hostnames): EventsView(node: node, hostnames: hostnames)
                     case .apps(let hostnames, let filter): AppsView(hostnames: hostnames, filter: filter)
                     case .issueConfig(let renew): IssueConfigView(initialMode: renew ? .renew : .otherDevice)

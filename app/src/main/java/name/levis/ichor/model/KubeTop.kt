@@ -31,6 +31,8 @@ data class KubeTopNode(
 data class KubeTopPods(
     val available: Boolean = false,
     val forbidden: Boolean = false,
+    /** The requests and limits were read: one namespace or one pod. False for every namespace (usage only). */
+    val boundsRead: Boolean = false,
     val pods: List<KubeTopPod> = emptyList(),
 ) {
     /** By [KubeTopPod.key], the key pod rows use. */

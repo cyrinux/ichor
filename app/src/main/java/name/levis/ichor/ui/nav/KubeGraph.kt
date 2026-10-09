@@ -52,6 +52,19 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
             vm = viewModel(viewModelStoreOwner = home, factory = factory { KubeHomeViewModel(app.kubeRepository) }),
             onBack = { nav.popBackStack() },
             onDrain = { nav.navigate(Routes.maintenance(it, it, drain = true)) },
+            onDebug = { nav.navigate(Routes.kubeNodeDebug(app.configRepository.config.value?.activeContext.orEmpty(), it)) },
+        )
+    }
+    composable(
+        Routes.KUBE_NODE_DEBUG,
+        arguments = listOf("ctx", "node", "ns").map { navArgument(it) { type = NavType.StringType; defaultValue = "" } },
+    ) { entry ->
+        val a = entry.arguments
+        val node = a?.getString("node").orEmpty()
+        DebugShellScreen(
+            key = ShellKey(a?.getString("ctx").orEmpty(), node, a?.getString("ns").orEmpty().ifEmpty { "default" }, kubeNode = true),
+            hostname = node,
+            onBack = { nav.popBackStack() },
         )
     }
     composable(
@@ -105,6 +118,8 @@ internal fun NavGraphBuilder.kubeGraph(nav: NavHostController, app: TalosApp, ku
                 onFlows = { ns, pod -> nav.navigate(Routes.flows(ns, pod)) },
                 onResources = { nav.navigate(KubeBrowserRoutes.KINDS) },
                 onHelm = { nav.navigate(KubeBrowserRoutes.HELM) },
+                onStorage = { nav.navigate(KubeBrowserRoutes.STORAGE) },
+                onServices = { nav.navigate(KubeBrowserRoutes.SERVICES) },
             )
         }
     }

@@ -420,6 +420,8 @@
     <string name="settings_kube_export">Exporter le kubeconfig…</string>
     <string name="settings_kube_saved">Enregistré. Dans kubenav, ajoutez un cluster à partir de ce fichier.</string>
     <string name="settings_kube_open_kubenav">Ouvrir kubenav</string>
+    <string name="settings_node_debug_shell">Shell de débogage des nœuds</string>
+    <string name="settings_node_debug_shell_desc">Sur les clusters sans Talos, ajoute « Shell de débogage… » au menu d’un nœud : un pod privilégié dans les namespaces du nœud donne un shell root sur le nœud. Le pod est supprimé à la fermeture du shell. Désactivé par défaut.</string>
     <string name="settings_kube_open_failed">Impossible d\'ouvrir le fichier choisi</string>
     <string name="settings_section_config">Configuration</string>
     <string name="settings_encryption_key">Clé de chiffrement</string>
@@ -612,6 +614,9 @@
 
     <!-- Debug shell -->
     <string name="debug_title">Shell de débogage</string>
+    <string name="node_debug_title">Shell root</string>
+    <string name="node_debug_auth">Shell root sur %1$s</string>
+    <string name="node_debug_intro">Un pod privilégié s’exécute sur %1$s dans le namespace %2$s, dans les namespaces du nœud lui-même, et nsenter ouvre un shell root sur le nœud. Le pod est supprimé à la fin du shell. Le namespace doit admettre les pods privilégiés.</string>
     <string name="debug_stop">Arrêter</string>
     <string name="debug_auth">Shell de débogage sur %1$s</string>
     <string name="debug_intro">Exécute l\'image dans un conteneur privilégié sur %1$s, avec accès à l\'hôte, et y ouvre un terminal. Talos télécharge d\'abord l\'image si le nœud ne l\'a pas.</string>
@@ -2050,6 +2055,7 @@
     <string name="netperf_stop">Arrêter</string>
     <string name="netperf_stopping">Arrêt : suppression du namespace de test…</string>
     <string name="netperf_stopped">Test arrêté.</string>
+    <string name="netperf_cleanup_failed">Échec du nettoyage : %1$s</string>
     <string name="netperf_failed">Le test a échoué : %1$s</string>
     <string name="netperf_again">Nouveau test</string>
     <string name="netperf_history">Tests précédents</string>
@@ -2551,6 +2557,7 @@
     <string name="node_menu_cordon">Isoler (cordon)</string>
     <string name="node_menu_uncordon">Lever l\'isolement</string>
     <string name="node_menu_drain">Drainer…</string>
+    <string name="node_menu_kube_debug_shell">Shell de débogage…</string>
     <string name="node_menu_group_inspect">Inspecter</string>
     <string name="node_menu_group_troubleshoot">Dépanner</string>
     <string name="node_menu_group_operate">Administrer</string>
@@ -2911,7 +2918,7 @@
     <string name="audit_unauthorized">Refusé %1$d fois (401) : ses identifiants ne sont pas valides</string>
     <string name="audit_unauthorized_fix">Son jeton ou certificat a expiré ou a été supprimé (compte de service retiré, ancien kubeconfig) : donnez-lui de nouveaux identifiants, ou arrêtez-le. Le journal ne connaît que son adresse.</string>
     <string name="checkup_title">Bilan du cluster</string>
-    <string name="checkup_intro">Ce que les autres écrans ne montrent pas, lu depuis l’API Kubernetes. Rien n’est modifié.</string>
+    <string name="checkup_intro">Ce que les autres écrans ne montrent pas, lu depuis l’API Kubernetes. Rien n’est modifié sauf si vous touchez une action.</string>
     <string name="checkup_verdict_critical">À traiter</string>
     <string name="checkup_verdict_warning">Avertissements</string>
     <string name="checkup_verdict_ok">Rien à signaler</string>
@@ -2992,6 +2999,10 @@
     <string name="checkup_lbPoolExhausted">Plus aucune adresse (pool de %1$s)</string>
     <string name="checkup_lbPoolConflict">Chevauche un autre pool</string>
     <string name="checkup_terminating">En suppression depuis %1$s</string>
+    <string name="checkup_netperfLeftover">Laissé par un test réseau il y a %1$s</string>
+    <string name="checkup_netperfLeftover_fix">L’app a été fermée avant que le test ne fasse le ménage. Rien d’autre ne vit dans ce namespace : le supprimer est sans risque.</string>
+    <string name="checkup_delete_namespace_title">Supprimer le namespace %1$s ?</string>
+    <string name="checkup_delete_namespace_text">Les pods du test réseau qu’il contient sont supprimés avec lui.</string>
     <string name="checkup_csrPending">%1$s demandes de certificat attendent une approbation (%2$s)</string>
     <string name="checkup_csrDenied">%1$s demandes de certificat ont été refusées (%2$s)</string>
     <string name="checkup_externalSecretFailed">Ne se synchronise pas depuis le store %1$s</string>
@@ -3195,6 +3206,15 @@
     <string name="kb_edit_hint">Gardez metadata.resourceVersion : un changement fait entre-temps est refusé, pas écrasé.</string>
     <string name="kb_edit_reveal_first">Affichez d\'abord les valeurs du secret : des valeurs masquées seraient enregistrées telles quelles.</string>
     <string name="kb_review">Vérifier</string>
+    <string name="kb_explain_field">Expliquer le champ</string>
+    <string name="kb_add_field">Ajouter un champ</string>
+    <string name="kb_schema_add_title">Ajouter à %1$s</string>
+    <string name="kb_schema_required">obligatoire</string>
+    <string name="kb_schema_values">Valeurs possibles</string>
+    <string name="kb_schema_fields">Champs</string>
+    <string name="kb_schema_no_fields">Rien à ajouter ici : ce champ contient une valeur, pas d\'autres champs.</string>
+    <string name="kb_schema_add_hint">Touchez un champ pour l\'ajouter au curseur, les obligatoires d\'abord.</string>
+    <string name="kb_schema_unavailable">Aide du schéma indisponible</string>
     <string name="kb_review_loading">Demande au serveur d\'API ce qui changerait…</string>
     <string name="kb_no_changes">Aucun changement à enregistrer.</string>
     <string name="kb_back_to_editor">Retour à l\'éditeur</string>
@@ -3502,4 +3522,22 @@
 ||||||| 62d80f4f
     <string name="pod_debug_toggle">Conteneur de débogage</string>
     <string name="pod_debug_note">Pour les images sans shell (distroless) : ajoute un conteneur temporaire qui voit les processus de ce pod. Kubernetes le garde dans le pod jusqu’à la suppression du pod.</string>
+    <string name="storage_kube_search">Rechercher des PVC, classes ou pods</string>
+    <string name="storage_kube_empty">Aucun PVC.</string>
+    <string name="storage_kube_no_match">Aucun PVC ne correspond.</string>
+    <string name="storage_kube_partial">Ces identifiants ne peuvent pas lire les volumes, classes ou nœuds : certains détails manquent.</string>
+    <string name="storage_kube_not_measured">remplissage non mesuré</string>
+    <string name="storage_kube_pods">Utilisé par %1$s</string>
+    <string name="storage_kube_open">Ouvrir dans %1$s</string>
+    <string name="kube_services_title">Services</string>
+    <string name="kube_services_search">Rechercher des services, adresses ou routes</string>
+    <string name="kube_services_empty">Aucun service.</string>
+    <string name="kube_services_no_match">Aucun service ne correspond.</string>
+    <string name="kube_services_partial">Ces identifiants ne peuvent pas lire les endpoints ou les routes : certains détails manquent.</string>
+    <string name="kube_services_no_address">Pas d’adresse</string>
+    <string name="kube_services_hint_metallb">Un répartiteur de charge n’a pas d’adresse : vérifiez l’IPAddressPool de MetalLB et une L2Advertisement ou BGPAdvertisement qui l’annonce.</string>
+    <string name="kube_services_hint_cilium">Un répartiteur de charge n’a pas d’adresse : vérifiez le CiliumLoadBalancerIPPool (adresses restantes, son sélecteur de services) et que le LB IPAM de Cilium est actif.</string>
+    <string name="kube_services_hint_none">Un répartiteur de charge n’a pas d’adresse et aucun contrôleur n’a été trouvé pour lui en donner une : installez MetalLB, activez le LB IPAM de Cilium ou utilisez le répartiteur d’un cloud.</string>
+    <string name="kube_services_ready">Endpoints prêts : %1$s</string>
+    <string name="kube_services_headless">headless</string>
 </resources>

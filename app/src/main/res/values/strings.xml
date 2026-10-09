@@ -415,6 +415,8 @@
     <string name="settings_kube_export">Export kubeconfig…</string>
     <string name="settings_kube_saved">Saved. In kubenav, add a cluster from that file.</string>
     <string name="settings_kube_open_kubenav">Open kubenav</string>
+    <string name="settings_node_debug_shell">Node debug shell</string>
+    <string name="settings_node_debug_shell_desc">On clusters without Talos, adds “Debug shell…” to a node’s menu: a privileged pod in the node’s namespaces gives a root shell on the node. The pod is deleted when the shell closes. Off by default.</string>
     <string name="settings_kube_open_failed">Could not open the chosen file</string>
     <string name="settings_section_config">Config</string>
     <string name="settings_encryption_key">Encryption key</string>
@@ -607,6 +609,9 @@
 
     <!-- Debug shell -->
     <string name="debug_title">Debug shell</string>
+    <string name="node_debug_title">Root shell</string>
+    <string name="node_debug_auth">Root shell on %1$s</string>
+    <string name="node_debug_intro">A privileged pod runs on %1$s in namespace %2$s, in the node’s own namespaces, and nsenter opens a root shell on the node. The pod is deleted when the shell ends. The namespace must admit privileged pods.</string>
     <string name="debug_stop">Stop</string>
     <string name="debug_auth">Debug shell on %1$s</string>
     <string name="debug_intro">Runs the image as a privileged container on %1$s, with host access, and opens a terminal in it. Talos pulls the image first if the node does not have it.</string>
@@ -2048,6 +2053,7 @@
     <string name="netperf_stop">Stop</string>
     <string name="netperf_stopping">Stopping: deleting the test namespace…</string>
     <string name="netperf_stopped">Test stopped.</string>
+    <string name="netperf_cleanup_failed">Cleanup failed: %1$s</string>
     <string name="netperf_failed">The test failed: %1$s</string>
     <string name="netperf_again">New test</string>
     <string name="netperf_history">Previous tests</string>
@@ -2549,6 +2555,7 @@
     <string name="node_menu_cordon">Cordon</string>
     <string name="node_menu_uncordon">Uncordon</string>
     <string name="node_menu_drain">Drain…</string>
+    <string name="node_menu_kube_debug_shell">Debug shell…</string>
     <string name="node_menu_group_inspect">Inspect</string>
     <string name="node_menu_group_troubleshoot">Troubleshoot</string>
     <string name="node_menu_group_operate">Operate</string>
@@ -2911,7 +2918,7 @@
     <string name="checkup_title">Cluster checkup</string>
     <!-- A product name and a version number: the same in every language. -->
     <string name="checkup_kube_version" translatable="false">Kubernetes %1$s</string>
-    <string name="checkup_intro">What the other screens do not show, read from the Kubernetes API. Nothing is changed.</string>
+    <string name="checkup_intro">What the other screens do not show, read from the Kubernetes API. Nothing is changed unless you tap an action.</string>
     <string name="checkup_verdict_critical">Needs attention</string>
     <string name="checkup_verdict_warning">Warnings</string>
     <string name="checkup_verdict_ok">All clear</string>
@@ -2992,6 +2999,10 @@
     <string name="checkup_lbPoolExhausted">No address left (pool of %1$s)</string>
     <string name="checkup_lbPoolConflict">Overlaps another pool</string>
     <string name="checkup_terminating">Deleting for %1$s</string>
+    <string name="checkup_netperfLeftover">Left by a network test %1$s ago</string>
+    <string name="checkup_netperfLeftover_fix">The app was closed before the test cleaned up. Nothing else lives in this namespace; deleting it is safe.</string>
+    <string name="checkup_delete_namespace_title">Delete namespace %1$s?</string>
+    <string name="checkup_delete_namespace_text">The network test pods in it are deleted with it.</string>
     <string name="checkup_csrPending">%1$s certificate requests wait for approval (%2$s)</string>
     <string name="checkup_csrDenied">%1$s certificate requests were denied (%2$s)</string>
     <string name="checkup_externalSecretFailed">Does not sync from store %1$s</string>
@@ -3195,6 +3206,15 @@
     <string name="kb_edit_hint">Keep metadata.resourceVersion: a change made meanwhile is refused, not overwritten.</string>
     <string name="kb_edit_reveal_first">Show the secret values first: hidden values would be saved as they read.</string>
     <string name="kb_review">Review</string>
+    <string name="kb_explain_field">Explain field</string>
+    <string name="kb_add_field">Add field</string>
+    <string name="kb_schema_add_title">Add to %1$s</string>
+    <string name="kb_schema_required">required</string>
+    <string name="kb_schema_values">Allowed values</string>
+    <string name="kb_schema_fields">Fields</string>
+    <string name="kb_schema_no_fields">Nothing to add here: this field holds a value, not other fields.</string>
+    <string name="kb_schema_add_hint">Tap a field to add it at the cursor, required ones first.</string>
+    <string name="kb_schema_unavailable">Schema help unavailable</string>
     <string name="kb_review_loading">Asking the API server what would change…</string>
     <string name="kb_no_changes">No changes to save.</string>
     <string name="kb_back_to_editor">Back to editor</string>
@@ -3502,4 +3522,22 @@
 ||||||| 62d80f4f
     <string name="pod_debug_toggle">Debug container</string>
     <string name="pod_debug_note">For images without a shell (distroless): adds a temporary container that sees this pod\'s processes. Kubernetes keeps it in the pod until the pod is deleted.</string>
+    <string name="storage_kube_search">Search PVCs, classes or pods</string>
+    <string name="storage_kube_empty">No PVCs.</string>
+    <string name="storage_kube_no_match">No PVC matches.</string>
+    <string name="storage_kube_partial">These credentials may not read volumes, classes or nodes: some details are missing.</string>
+    <string name="storage_kube_not_measured">fill not measured</string>
+    <string name="storage_kube_pods">Used by %1$s</string>
+    <string name="storage_kube_open">Open in %1$s</string>
+    <string name="kube_services_title">Services</string>
+    <string name="kube_services_search">Search services, addresses or routes</string>
+    <string name="kube_services_empty">No services.</string>
+    <string name="kube_services_no_match">No service matches.</string>
+    <string name="kube_services_partial">These credentials may not read endpoints or routes: some details are missing.</string>
+    <string name="kube_services_no_address">No address</string>
+    <string name="kube_services_hint_metallb">A load balancer has no address: check MetalLB’s IPAddressPool, and an L2Advertisement or BGPAdvertisement that announces it.</string>
+    <string name="kube_services_hint_cilium">A load balancer has no address: check the CiliumLoadBalancerIPPool (addresses left, its service selector) and that Cilium’s LB IPAM is on.</string>
+    <string name="kube_services_hint_none">A load balancer has no address and no controller was found to give one: install MetalLB, turn on Cilium’s LB IPAM, or use a cloud’s load balancer.</string>
+    <string name="kube_services_ready">Ready endpoints: %1$s</string>
+    <string name="kube_services_headless">headless</string>
 </resources>

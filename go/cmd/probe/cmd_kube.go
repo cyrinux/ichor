@@ -25,6 +25,18 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "storage", args: "[NAMESPACE]", run: func(e env) (out string, err error) {
+		// storage [NAMESPACE]: every namespace when omitted.
+		out, err = ichorgo.KubeStorage(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+
+		return out, err
+	}},
+	{name: "kube-services", args: "[NAMESPACE]", run: func(e env) (out string, err error) {
+		// kube-services [NAMESPACE]: every namespace when omitted.
+		out, err = ichorgo.KubeServices(e.cfg, e.context, e.kubeServer, flag.Arg(1))
+
+		return out, err
+	}},
 	{name: "top-nodes", args: "", run: func(e env) (out string, err error) {
 		out, err = ichorgo.KubeTopNodes(e.cfg, e.context, e.kubeServer)
 
@@ -33,6 +45,11 @@ var kubeCommands = []command{
 	{name: "top-pods", args: "[NAMESPACE [SELECTOR]]", run: func(e env) (out string, err error) {
 		// top-pods [NAMESPACE [SELECTOR]]: every namespace and pod when omitted.
 		out, err = ichorgo.KubeTopPods(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+
+		return out, err
+	}},
+	{name: "top-pod", args: "NAMESPACE POD", run: func(e env) (out string, err error) {
+		out, err = ichorgo.KubeTopPod(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
 
 		return out, err
 	}},
@@ -154,6 +171,26 @@ var kubeCommands = []command{
 	{name: "netperf", args: "SERVER CLIENT [pod|host] [SECONDS]", run: func(e env) (out string, err error) {
 		// netperf SERVER CLIENT [pod|host] [SECONDS]: creates pods in a temporary namespace.
 		out = netPerfRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3), flag.Arg(4))
+
+		return out, err
+	}},
+	{name: "netperf-cleanup", args: "NAMESPACE", run: func(e env) (out string, err error) {
+		// netperf-cleanup NAMESPACE: deletes an ichor-netperf-* namespace a test left behind.
+		if err = ichorgo.NetPerfDeleteNamespace(e.cfg, e.context, e.kubeServer, flag.Arg(1)); err == nil {
+			out = "deleted"
+		}
+
+		return out, err
+	}},
+	{name: "node-debug-pod", args: "KUBENODE [NAMESPACE] [IMAGE]", run: func(e env) (out string, err error) {
+		// node-debug-pod KUBENODE [NAMESPACE] [IMAGE]: a privileged pod on the node, runs hostname, deleted.
+		out = nodeDebugRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2), flag.Arg(3))
+
+		return out, err
+	}},
+	{name: "node-pods-watch", args: "KUBENODE [PHASE]", run: func(e env) (out string, err error) {
+		// node-pods-watch KUBENODE [PHASE]: prints the node's pod events for 30 s.
+		out = nodePodsWatchRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
 
 		return out, err
 	}},

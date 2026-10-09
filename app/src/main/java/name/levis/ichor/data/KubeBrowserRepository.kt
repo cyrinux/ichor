@@ -1,5 +1,7 @@
 package name.levis.ichor.data
 
+import name.levis.ichor.model.KubeServices
+import name.levis.ichor.model.KubeStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
@@ -17,6 +19,7 @@ import name.levis.ichor.model.KubeConfigData
 import name.levis.ichor.model.KubeDeletePreview
 import name.levis.ichor.model.configDataKind
 import name.levis.ichor.model.KubeEditPreview
+import name.levis.ichor.model.KubeExplain
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubeObjectScale
 import name.levis.ichor.model.KubeObjectSummary
@@ -96,6 +99,12 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
         Ichorgo.kubeObjectUpdate(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, edited)
     }
 
+    /** The schema help for [fieldPath] ("spec.template", "" for the kind) of [ref]'s kind, from OpenAPI v3. */
+    suspend fun explain(ref: KubeObjectRef, fieldPath: String): KubeExplain = kubeCall { cfg, ctx, server ->
+        val json = Ichorgo.kubeExplain(cfg, ctx, server, ref.group, ref.version, ref.kind, fieldPath)
+        TalosJson.decodeFromString(KubeExplain.serializer(), json)
+    }
+
     /** How many pods [ref] wants and runs (a Job: its parallelism). */
     suspend fun objectScale(ref: KubeObjectRef): KubeObjectScale = kubeCall { cfg, ctx, server ->
         val json = Ichorgo.kubeObjectScale(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name)
@@ -119,6 +128,16 @@ class KubeBrowserRepository(private val configs: ConfigRepository, private val k
      */
     suspend fun delete(ref: KubeObjectRef, propagation: DeletePropagation, resourceVersion: String, force: Boolean) = kubeCall { cfg, ctx, server ->
         Ichorgo.kubeObjectDelete(cfg, ctx, server, ref.group, ref.version, ref.resource, ref.namespace, ref.name, propagation.api, resourceVersion, -1L, force)
+    }
+
+    /** The PersistentVolumeClaims of [namespace] (null for every one), with volume, pods and fill. */
+    suspend fun storage(namespace: String?): KubeStorage = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeStorage.serializer(), Ichorgo.kubeStorage(cfg, ctx, server, namespace.orEmpty()))
+    }
+
+    /** The Services of [namespace] (null for every one), with addresses, ready endpoints and routes. */
+    suspend fun services(namespace: String?): KubeServices = kubeCall { cfg, ctx, server ->
+        TalosJson.decodeFromString(KubeServices.serializer(), Ichorgo.kubeServices(cfg, ctx, server, namespace.orEmpty()))
     }
 
     /** The latest revision of each Helm release of [namespace] (null for every one). */

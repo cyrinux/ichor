@@ -6,7 +6,7 @@ import Foundation
 
 enum CheckupText {
     static var checkupTitle: String { String(localized: "Cluster checkup") }
-    static var checkupIntro: String { String(localized: "What the other screens do not show, read from the Kubernetes API. Nothing is changed.") }
+    static var checkupIntro: String { String(localized: "What the other screens do not show, read from the Kubernetes API. Nothing is changed unless you tap an action.") }
     static var checkupVerdictCritical: String { String(localized: "Needs attention") }
     static var checkupVerdictWarning: String { String(localized: "Warnings") }
     static var checkupVerdictOk: String { String(localized: "All clear") }
@@ -88,6 +88,9 @@ enum CheckupText {
     static func checkupLbPoolExhausted(_ a: String) -> String { String(localized: "No address left (pool of \(a))") }
     static var checkupLbPoolConflict: String { String(localized: "Overlaps another pool") }
     static func checkupTerminating(_ a: String) -> String { String(localized: "Deleting for \(a)") }
+    static func checkupNetperfLeftover(_ a: String) -> String { String(localized: "Left by a network test \(a) ago") }
+    static func checkupDeleteNamespaceTitle(_ a: String) -> String { String(localized: "Delete namespace \(a)?") }
+    static var checkupDeleteNamespaceText: String { String(localized: "The network test pods in it are deleted with it.") }
     static func checkupCsrPending(_ a: String, _ b: String) -> String { String(localized: "\(a) certificate requests wait for approval (\(b))") }
     static func checkupCsrDenied(_ a: String, _ b: String) -> String { String(localized: "\(a) certificate requests were denied (\(b))") }
     static func checkupExternalSecretFailed(_ a: String) -> String { String(localized: "Does not sync from store \(a)") }
@@ -124,6 +127,7 @@ enum CheckupText {
     static var checkupLbPoolConflictFix: String { String(localized: "Cilium disables a pool that conflicts with another. Fix the ranges so they no longer overlap.") }
     static var checkupNamespaceTerminatingFix: String { String(localized: "Something inside cannot be removed: usually a resource whose finalizer’s controller is gone, or an API that no longer answers. Remove what the message names; clearing finalizers by hand is the last resort.") }
     static var checkupPodTerminatingFix: String { String(localized: "Its node may be unreachable, or a finalizer holds it. If the node is gone for good, force the deletion with kubectl delete --force.") }
+    static var checkupNetperfLeftoverFix: String { String(localized: "The app was closed before the test cleaned up. Nothing else lives in this namespace; deleting it is safe.") }
     static var checkupPvcTerminatingFix: String { String(localized: "A pod still mounts it (pvc-protection): the claim goes once that pod is deleted.") }
     static var checkupCsrPendingFix: String { String(localized: "Nobody approves them: kubelet serving certificates need an approver (kubelet-serving-cert-approver) or kubectl certificate approve. Until then logs, exec and metrics from this node fail.") }
     static var checkupCsrDeniedFix: String { String(localized: "The approver refused them: its message says why.") }

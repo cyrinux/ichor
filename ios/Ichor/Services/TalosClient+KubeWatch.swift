@@ -22,7 +22,23 @@ extension TalosClient {
     /// first (full objects), then each pod added, changed or gone.
     func workloadPodsWatch(kind: String, namespace: String, name: String, phase: PodPhaseFilter) -> AsyncStream<KubeWatchStreamEvent<KubePod>> {
         let query = phase.query
-        return TalosClient.bridged { continuation in
+        return podsWatch { bridge in
+            IchorgoStartKubeWorkloadPodsWatch(kubeConfig, kubeContext, kubeAPIServer, kind, namespace, name, query, bridge)
+        }
+    }
+
+    /// The pods of the Kubernetes node `kubeNode` (every namespace), narrowed to `phase`, kept
+    /// live like `workloadPodsWatch`.
+    func nodePodsWatch(kubeNode: String, phase: PodPhaseFilter) -> AsyncStream<KubeWatchStreamEvent<KubePod>> {
+        let query = phase.query
+        return podsWatch { bridge in
+            IchorgoStartKubeNodePodsWatch(kubeConfig, kubeContext, kubeAPIServer, kubeNode, query, bridge)
+        }
+    }
+
+    /// A pod watch `start` opens: SYNC pages and single pods decoded, the end reported.
+    private func podsWatch(_ start: @escaping (KubeWatchBridge) -> IchorgoKubeWatchRun?) -> AsyncStream<KubeWatchStreamEvent<KubePod>> {
+        TalosClient.bridged { continuation in
             let bridge = KubeWatchBridge(
                 event: { eventType, json in
                     let list: (String) throws -> [KubePod] = { try TalosJSON.decode(KubePodPage.self, from: $0).pods }
@@ -35,7 +51,7 @@ extension TalosClient {
                     continuation.finish()
                 }
             )
-            let run = IchorgoStartKubeWorkloadPodsWatch(kubeConfig, kubeContext, kubeAPIServer, kind, namespace, name, query, bridge)
+            let run = start(bridge)
             return BridgedRun(bridge) { run?.cancel() }
         }
     }

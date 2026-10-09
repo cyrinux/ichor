@@ -223,6 +223,11 @@ data class KubeObjectRef(
 
     companion object {
         fun pod(namespace: String, name: String) = KubeObjectRef("", "v1", "pods", "Pod", namespace, name, editable = true)
+
+        fun pvc(namespace: String, name: String) =
+            KubeObjectRef("", "v1", "persistentvolumeclaims", "PersistentVolumeClaim", namespace, name, editable = true)
+
+        fun service(namespace: String, name: String) = KubeObjectRef("", "v1", "services", "Service", namespace, name, editable = true)
     }
 }
 

@@ -107,7 +107,7 @@ final class KubeAccessTests: XCTestCase {
     func testEveryActionHasItsCoreName() {
         XCTAssertEqual(KubeAction.allCases.map(\.rawValue), [
             "restartWorkload", "restartStatefulSet", "restartDaemonSet", "scale", "scaleStatefulSet",
-            "deletePod", "execPod", "debugPod", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
+            "deletePod", "execPod", "debugPod", "debugNode", "suspendCronJob", "triggerCronJob", "helmRollback", "argoSync",
             "fluxReconcile", "fluxReconcileHelmRelease", "fluxReconcileGitRepository", "fluxReconcileOCIRepository",
             "fluxReconcileHelmRepository", "fluxReconcileBucket", "cordonNode", "drainNode",
             "alertmanagerSilence", "alertmanagerExpire",
@@ -115,6 +115,7 @@ final class KubeAccessTests: XCTestCase {
         XCTAssertFalse(KubeAction.cordonNode.isNamespaced)
         XCTAssertFalse(KubeAction.drainNode.isNamespaced)
         XCTAssertTrue(KubeAction.argoSync.isNamespaced)
+        XCTAssertTrue(KubeAction.debugNode.isNamespaced) // the debug pod's namespace
     }
 
     func testOneAnswerDecodes() throws {

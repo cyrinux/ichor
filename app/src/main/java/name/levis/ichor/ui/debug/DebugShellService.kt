@@ -110,7 +110,11 @@ class DebugShellService : Service() {
             .putExtra(MainActivity.EXTRA_SHELL_HOST, shell.hostname)
         val exit = Intent(this, DebugShellService::class.java).setAction(ACTION_EXIT).putShell(shell.key)
         val flags = PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        val title = if (shell.key.isPod) R.string.pod_shell_on else R.string.debug_notification_title
+        val title = when {
+            shell.key.kubeNode -> R.string.node_debug_auth
+            shell.key.isPod -> R.string.pod_shell_on
+            else -> R.string.debug_notification_title
+        }
         val builder = baseNotification(res.getString(title, shell.hostname))
             .setContentText(res.getString(R.string.debug_notification_text))
             .setContentIntent(PendingIntent.getActivity(this, id, open, flags))
@@ -147,7 +151,7 @@ class DebugShellService : Service() {
 private fun Intent.putShell(key: ShellKey): Intent =
     putExtra(MainActivity.EXTRA_SHELL_CONTEXT, key.context).putExtra(MainActivity.EXTRA_SHELL_NODE, key.node)
         .putExtra(MainActivity.EXTRA_SHELL_NAMESPACE, key.namespace).putExtra(MainActivity.EXTRA_SHELL_POD, key.pod)
-        .putExtra(MainActivity.EXTRA_SHELL_CONTAINER, key.container)
+        .putExtra(MainActivity.EXTRA_SHELL_CONTAINER, key.container).putExtra(MainActivity.EXTRA_SHELL_KUBE_NODE, key.kubeNode)
 
 /** The shell a notification intent names, if it names one: a node's, or a pod's. */
 fun Intent.shellKey(): ShellKey? {
@@ -156,7 +160,10 @@ fun Intent.shellKey(): ShellKey? {
     val namespace = getStringExtra(MainActivity.EXTRA_SHELL_NAMESPACE).orEmpty()
     val pod = getStringExtra(MainActivity.EXTRA_SHELL_POD).orEmpty()
     if (node.isBlank() && (pod.isBlank() || namespace.isBlank())) return null
-    return ShellKey(context, node, namespace, pod, getStringExtra(MainActivity.EXTRA_SHELL_CONTAINER).orEmpty())
+    return ShellKey(
+        context, node, namespace, pod, getStringExtra(MainActivity.EXTRA_SHELL_CONTAINER).orEmpty(),
+        kubeNode = getBooleanExtra(MainActivity.EXTRA_SHELL_KUBE_NODE, false),
+    )
 }
 
 /** (Re)creating the channel also updates its name and description to the current language. */

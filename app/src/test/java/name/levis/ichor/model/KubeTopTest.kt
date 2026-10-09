@@ -15,6 +15,9 @@ class KubeTopTest {
             "cpuRequest":0.3,"cpuLimit":1.1,"memoryRequest":335544320,"memoryLimit":671088640}]}"""
         val top = TalosJson.decodeFromString(KubeTopPods.serializer(), json)
         assertTrue(top.available)
+        // An older core says nothing: not read, so no bar is drawn against bounds it never sent.
+        assertFalse(top.boundsRead)
+        assertTrue(TalosJson.decodeFromString(KubeTopPods.serializer(), """{"available":true,"boundsRead":true}""").boundsRead)
         assertEquals(0.125, top.pods.single().cpu, 1e-9)
         assertEquals("web/api", top.pods.single().key)
     }

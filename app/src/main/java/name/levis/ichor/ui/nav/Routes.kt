@@ -94,6 +94,7 @@ internal object Routes {
         "flux-diff?kind=${Uri.encode(kind)}&ns=${Uri.encode(namespace)}&name=${Uri.encode(name)}"
     const val DEBUG = "debug?addr={addr}&host={host}&ctx={ctx}"
     const val POD_SHELL = "pod-shell?ctx={ctx}&ns={ns}&pod={pod}&c={c}"
+    const val KUBE_NODE_DEBUG = "kube-node-debug?ctx={ctx}&node={node}&ns={ns}"
     const val MACHINE_CONFIG = "machineconfig?addr={addr}&host={host}"
     const val NETWORK = "network?addr={addr}&host={host}"
     const val HARDWARE = "hardware?addr={addr}&host={host}"
@@ -133,6 +134,10 @@ internal object Routes {
     /** [context]: the cluster (talosconfig context) of the node; blank for the one on screen. */
     fun debug(addr: String, host: String, context: String = "") =
         "debug?addr=${Uri.encode(addr)}&host=${Uri.encode(host)}&ctx=${Uri.encode(context)}"
+
+    /** A root shell on [node] of [context]'s cluster (no Talos) through a privileged pod in [namespace]. */
+    fun kubeNodeDebug(context: String, node: String, namespace: String = "default") =
+        "kube-node-debug?ctx=${Uri.encode(context)}&node=${Uri.encode(node)}&ns=${Uri.encode(namespace)}"
 
     /** `kubectl exec -it` in [container] ("" for the pod's only one) of a pod of [context]'s cluster. */
     fun podShell(context: String, namespace: String, pod: String, container: String) =

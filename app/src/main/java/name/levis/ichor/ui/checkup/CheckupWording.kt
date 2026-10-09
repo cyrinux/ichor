@@ -93,6 +93,7 @@ fun checkupTitle(f: CheckupFinding, now: Long): String {
         CheckupKind.LB_POOL_CONFLICT -> stringResource(R.string.checkup_lbPoolConflict)
         CheckupKind.NAMESPACE_TERMINATING, CheckupKind.POD_TERMINATING, CheckupKind.PVC_TERMINATING ->
             stringResource(R.string.checkup_terminating, age)
+        CheckupKind.NETPERF_LEFTOVER -> stringResource(R.string.checkup_netperfLeftover, age)
         CheckupKind.CSR_PENDING -> stringResource(R.string.checkup_csrPending, f.count.toString(), f.extra)
         CheckupKind.CSR_DENIED -> stringResource(R.string.checkup_csrDenied, f.count.toString(), f.extra)
         CheckupKind.EXTERNAL_SECRET_FAILED -> stringResource(R.string.checkup_externalSecretFailed, f.extra)
@@ -137,6 +138,7 @@ fun checkupFix(kind: String): Int = when (kind) {
     CheckupKind.NAMESPACE_TERMINATING -> R.string.checkup_namespaceTerminating_fix
     CheckupKind.POD_TERMINATING -> R.string.checkup_podTerminating_fix
     CheckupKind.PVC_TERMINATING -> R.string.checkup_pvcTerminating_fix
+    CheckupKind.NETPERF_LEFTOVER -> R.string.checkup_netperfLeftover_fix
     CheckupKind.CSR_PENDING -> R.string.checkup_csrPending_fix
     CheckupKind.CSR_DENIED -> R.string.checkup_csrDenied_fix
     CheckupKind.EXTERNAL_SECRET_FAILED -> R.string.checkup_externalSecretFailed_fix
