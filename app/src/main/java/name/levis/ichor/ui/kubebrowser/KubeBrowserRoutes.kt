@@ -60,7 +60,13 @@ object KubeBrowserRoutes {
         composable(OBJECT, arguments = strings("g", "v", "r", "k", "ns", "name") + flags("edit")) { entry ->
             val a = entry.arguments
             val ref = KubeObjectRef(a.str("g"), a.str("v"), a.str("r"), a.str("k"), a.str("ns"), a.str("name"), a?.getBoolean("edit") == true)
-            KubeObjectScreen(ref, onBack = { nav.popBackStack() }, onPortForward = { links.onPortForward(ref.namespace, ref.name) })
+            KubeObjectScreen(
+                ref,
+                onBack = { nav.popBackStack() },
+                onPortForward = { links.onPortForward(ref.namespace, ref.name) },
+                onOwner = links.onObject,
+                onHelmRelease = { ns, name -> nav.navigate(helmRelease(ns, name)) },
+            )
         }
         composable(HELM) {
             HelmReleasesScreen(onBack = { nav.popBackStack() }, onRelease = { nav.navigate(helmRelease(it.namespace, it.name)) })

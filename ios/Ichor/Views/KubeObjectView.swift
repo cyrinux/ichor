@@ -2,8 +2,9 @@ import SwiftUI
 import UniformTypeIdentifiers
 import IchorCore
 
-/// One object of any kind: its YAML (numbered, searchable, copy and share) without
-/// managedFields, its Kubernetes events, and Edit when the kind may be updated. A Secret's
+/// One object of any kind: first its summary (health, conditions, owners up the chain, events,
+/// metadata), then its YAML (numbered, searchable, copy and share) without managedFields, and
+/// Edit when the kind may be updated. A Secret's
 /// values stay hidden until asked for, behind Face ID / the passcode when the app lock is on,
 /// and it cannot be edited while they are hidden. A pod also opens its logs and a port-forward.
 struct KubeObjectView: View {
@@ -19,11 +20,12 @@ struct KubeObjectView: View {
         self.name = name
     }
 
-    private enum Tab: Hashable { case yaml, events }
+    private enum Tab: Hashable { case summary, yaml }
 
     @Environment(AppModel.self) private var model
-    @State private var tab = Tab.yaml
+    @State private var tab = Tab.summary
     @State private var state: LoadState<String> = .loading
+    @State private var summary: LoadState<KubeObjectSummary> = .loading
     @State private var reveal = false
     @State private var query = ""
     @State private var message: String?
@@ -35,15 +37,16 @@ struct KubeObjectView: View {
         VStack(spacing: 0) {
             header
             switch tab {
+            case .summary:
+                LoadStateView(state: summary, retry: loadSummary) { summary in
+                    List { KubeObjectSummarySections(summary: summary) }
+                        .themedBackground()
+                        .refreshable { await loadSummary() }
+                }
             case .yaml:
                 LoadStateView(state: state, retry: load) { yaml in
                     ConfigYamlLines(yaml: yaml, query: query, refresh: load)
                 }
-            case .events:
-                List {
-                    Section { KubeEventsRows(namespace: namespace, kind: resource.kind, name: name) }
-                }
-                .themedBackground()
             }
         }
         .searchable(text: $query, prompt: Text("Filter lines"))
@@ -54,7 +57,10 @@ struct KubeObjectView: View {
         .toolbar { toolbar }
         .sheet(item: $editing) { target in
             KubeObjectEditView(target: target) {
-                Task { await load() }
+                Task {
+                    await load()
+                    await loadSummary()
+                }
             }
         }
         .sheet(item: $logsPod) { PodLogsSheet(pod: $0) }
@@ -63,6 +69,7 @@ struct KubeObjectView: View {
         }
         .messageAlert($message)
         .task(id: "\(kubeNamespacesKey(model))|\(reveal)") { await load() }
+        .task(id: kubeNamespacesKey(model)) { await loadSummary() }
     }
 
     @ViewBuilder private var header: some View {
@@ -74,15 +81,13 @@ struct KubeObjectView: View {
                 }
             }
             .lineLimit(1)
-            if !namespace.isEmpty {
-                Picker(selection: $tab) {
-                    Text(verbatim: "YAML").tag(Tab.yaml)
-                    Text(verbatim: CheckupText.kubeEventsTitle).tag(Tab.events)
-                } label: {
-                    EmptyView()
-                }
-                .pickerStyle(.segmented)
+            Picker(selection: $tab) {
+                Text(verbatim: SummaryText.tabSummary).tag(Tab.summary)
+                Text(verbatim: "YAML").tag(Tab.yaml)
+            } label: {
+                EmptyView()
             }
+            .pickerStyle(.segmented)
             if resource.isSecret && reveal {
                 Label("Secret values are shown in clear. Don't share screenshots.", systemImage: "exclamationmark.triangle.fill")
                     .font(.footnote)
@@ -136,6 +141,14 @@ struct KubeObjectView: View {
         }
         guard wanted == reveal else { return }
         state = state.refreshed(with: result)
+    }
+
+    private func loadSummary() async {
+        guard let client = model.client else { return }
+        let result: LoadState<KubeObjectSummary> = await .from {
+            try await client.objectSummary(resource, namespace: namespace, name: name)
+        }
+        summary = summary.refreshed(with: result)
     }
 
     /// Showing a Secret's values needs a fresh Face ID / passcode when the app lock is on;

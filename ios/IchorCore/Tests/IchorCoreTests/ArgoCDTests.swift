@@ -17,7 +17,8 @@ final class ArgoCDTests: XCTestCase {
       "conditions":[],"resources":[
        {"group":"","kind":"ConfigMap","namespace":"demo","name":"worker-config","sync":"Synced","health":"","healthMessage":"","wave":0,"hook":false,"prune":false,"syncResult":"Synced"},
        {"group":"apps","kind":"Deployment","namespace":"demo","name":"worker","sync":"Synced","health":"Degraded","wave":0,"syncResult":"Synced"}],
-      "history":[{"id":12,"revision":"4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d","targetRevision":"main","chart":"","deployedAt":5000,"initiatedBy":"automated"}],
+      "revisionUrl":"https://github.com/org/gitops/commit/4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d",
+      "history":[{"id":12,"revision":"4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d","url":"https://github.com/org/gitops/commit/4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d","targetRevision":"main","chart":"","deployedAt":5000,"initiatedBy":"automated"}],
       "images":["busybox:1.37"],"externalURLs":[],"reconciledAt":9000,
       "unhealthyPods":[{"namespace":"demo","name":"worker-7f9c","status":"CrashLoopBackOff","healthy":false,"ready":0,"containers":1,"restarts":14,"node":"worker-2","owner":"ReplicaSet/worker-7f","created":1,"images":["busybox:1.37"]}]},
      {"namespace":"argocd","name":"grafana","project":"infra","owner":{"kind":"ApplicationSet","name":"infra"},"level":"critical","icon":"grafana",
@@ -187,6 +188,11 @@ final class ArgoCDTests: XCTestCase {
         XCTAssertEqual(try app("demo-worker").revisionLabel, "4be1d0c")
         XCTAssertEqual(try app("grafana").revisionLabel, "grafana@8.5.2")
         XCTAssertEqual(try app("demo-worker").history[0].label, "4be1d0c")
+        XCTAssertEqual(try app("demo-worker").revisionURL, "https://github.com/org/gitops/commit/4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d")
+        XCTAssertEqual(try app("demo-worker").history[0].url, try app("demo-worker").revisionURL)
+        XCTAssertEqual(try app("grafana").revisionURL, "")
+        XCTAssertEqual(try app("grafana").history[0].url, "")
+        XCTAssertEqual(shortRevisions("4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d, 8.6.0"), "4be1d0c, 8.6.0")
         XCTAssertEqual(try app("grafana").history[0].label, "grafana 8.5.2")
         XCTAssertEqual(try app("demo-worker").deployedAt, 5000)
         XCTAssertEqual(try app("cert-manager").pruneCandidates.map(\.name), ["cert-manager-legacy"])

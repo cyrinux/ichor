@@ -106,6 +106,8 @@ public struct ArgoApp: Decodable, Equatable, Identifiable, Sendable {
     public let sync: ArgoSyncState
     /// The revision synced: a commit, or a chart version.
     public let revision: String
+    /// The commit page of revision on its forge, "" when it cannot be linked.
+    public let revisionURL: String
     /// The pending refresh annotation: normal, hard or "".
     public let refreshing: String
     public let sources: [ArgoSource]
@@ -144,6 +146,7 @@ public struct ArgoApp: Decodable, Equatable, Identifiable, Sendable {
         healthMessage = try c.field(.healthMessage, "")
         sync = try c.wire(.sync)
         revision = try c.field(.revision, "")
+        revisionURL = try c.field(.revisionURL, "")
         refreshing = try c.field(.refreshing, "")
         sources = try c.field(.sources, [])
         destination = try c.field(.destination, ArgoDestination())
@@ -161,7 +164,8 @@ public struct ArgoApp: Decodable, Equatable, Identifiable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case namespace, name, project, owner, level, icon, remoteIcon, iconURL = "iconUrl", health, healthMessage, sync, revision, refreshing
+        case namespace, name, project, owner, level, icon, remoteIcon, iconURL = "iconUrl", health, healthMessage, sync, revision
+        case revisionURL = "revisionUrl", refreshing
         case sources, destination, autoSync, syncOptions, operation, conditions, resources, history, images, externalURLs
         case unhealthyPods, reconciledAt, freeze
     }
@@ -188,6 +192,8 @@ public struct ArgoOwner: Decodable, Equatable, Sendable {
 
 public struct ArgoSource: Decodable, Equatable, Sendable {
     public let repo: String
+    /// The browsable https page of repo, "" for an OCI registry or a local path.
+    public let repoURL: String
     /// "" for a Helm chart.
     public let path: String
     /// "" for a Git directory.
@@ -197,12 +203,13 @@ public struct ArgoSource: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         repo = try c.field(.repo, "")
+        repoURL = try c.field(.repoURL, "")
         path = try c.field(.path, "")
         chart = try c.field(.chart, "")
         targetRevision = try c.field(.targetRevision, "")
     }
 
-    private enum CodingKeys: String, CodingKey { case repo, path, chart, targetRevision }
+    private enum CodingKeys: String, CodingKey { case repo, repoURL = "repoUrl", path, chart, targetRevision }
 }
 
 public struct ArgoDestination: Decodable, Equatable, Sendable {
@@ -256,6 +263,8 @@ public struct ArgoOperation: Decodable, Equatable, Sendable {
     /// A user name, or "automated".
     public let initiatedBy: String
     public let revision: String
+    /// The commit page of revision, "" when it cannot be linked.
+    public let revisionURL: String
     public let retryCount: Int
     public let dryRun: Bool
     /// Resources synced so far, of total (hooks included once run).
@@ -275,6 +284,7 @@ public struct ArgoOperation: Decodable, Equatable, Sendable {
         finishedAt = try c.field(.finishedAt, 0)
         initiatedBy = try c.field(.initiatedBy, "")
         revision = try c.field(.revision, "")
+        revisionURL = try c.field(.revisionURL, "")
         retryCount = try c.field(.retryCount, 0)
         dryRun = try c.field(.dryRun, false)
         done = try c.field(.done, 0)
@@ -285,7 +295,7 @@ public struct ArgoOperation: Decodable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case phase, message, startedAt, finishedAt, initiatedBy, revision, retryCount, dryRun, done, total, wave, waves, failed
+        case phase, message, startedAt, finishedAt, initiatedBy, revision, revisionURL = "revisionUrl", retryCount, dryRun, done, total, wave, waves, failed
     }
 }
 
@@ -375,6 +385,8 @@ public struct ArgoResource: Decodable, Equatable, Identifiable, Sendable {
 public struct ArgoHistory: Decodable, Equatable, Identifiable, Sendable {
     public let id: Int64
     public let revision: String
+    /// The commit page of revision, "" for a chart version or an unknown repository.
+    public let url: String
     public let targetRevision: String
     /// "" for a Git source.
     public let chart: String
@@ -387,6 +399,7 @@ public struct ArgoHistory: Decodable, Equatable, Identifiable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.field(.id, 0)
         revision = try c.field(.revision, "")
+        url = try c.field(.url, "")
         targetRevision = try c.field(.targetRevision, "")
         chart = try c.field(.chart, "")
         deployedAt = try c.field(.deployedAt, 0)
@@ -396,7 +409,7 @@ public struct ArgoHistory: Decodable, Equatable, Identifiable, Sendable {
     /// "grafana 8.5.2" for a chart, the short commit ("4be1d0c") otherwise.
     public var label: String { chart.isEmpty ? shortRevision(revision) : "\(chart) \(revision)" }
 
-    private enum CodingKeys: String, CodingKey { case id, revision, targetRevision, chart, deployedAt, initiatedBy }
+    private enum CodingKeys: String, CodingKey { case id, revision, url, targetRevision, chart, deployedAt, initiatedBy }
 }
 
 public struct ArgoAppSet: Decodable, Equatable, Identifiable, Sendable {
@@ -676,4 +689,9 @@ public struct ArgoSyncOptions: Encodable, Equatable, Sendable {
 public func shortRevision(_ revision: String) -> String {
     let hex = revision.count >= 12 && revision.allSatisfy(\.isHexDigit)
     return hex ? String(revision.prefix(7)) : revision
+}
+
+/// shortRevision of each of a comma-separated list (a multi-source app's revisions).
+public func shortRevisions(_ revisions: String) -> String {
+    revisions.components(separatedBy: ", ").map(shortRevision).joined(separator: ", ")
 }

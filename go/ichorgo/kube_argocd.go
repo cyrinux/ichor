@@ -45,16 +45,18 @@ type argoApp struct {
 	Icon       string `json:"icon,omitempty"`
 	RemoteIcon string `json:"remoteIcon,omitempty"`
 	// IconURL is the https URL or data: URI the app names in its ichor.levis.name/icon annotation.
-	IconURL       string    `json:"iconUrl,omitempty"`
-	Health        string    `json:"health"` // Healthy|Progressing|Degraded|Suspended|Missing|Unknown
-	HealthMessage string    `json:"healthMessage"`
-	Sync          string    `json:"sync"` // Synced|OutOfSync|Unknown
-	Revision      string    `json:"revision"`
-	Refreshing    string    `json:"refreshing"` // the pending refresh annotation: normal|hard|""
-	Sources       []argoSrc `json:"sources"`
-	Destination   argoDest  `json:"destination"`
-	AutoSync      argoAuto  `json:"autoSync"`
-	SyncOptions   []string  `json:"syncOptions"`
+	IconURL       string `json:"iconUrl,omitempty"`
+	Health        string `json:"health"` // Healthy|Progressing|Degraded|Suspended|Missing|Unknown
+	HealthMessage string `json:"healthMessage"`
+	Sync          string `json:"sync"` // Synced|OutOfSync|Unknown
+	Revision      string `json:"revision"`
+	// RevisionURL is the commit page of Revision on its forge, "" when it cannot be linked.
+	RevisionURL string    `json:"revisionUrl"`
+	Refreshing  string    `json:"refreshing"` // the pending refresh annotation: normal|hard|""
+	Sources     []argoSrc `json:"sources"`
+	Destination argoDest  `json:"destination"`
+	AutoSync    argoAuto  `json:"autoSync"`
+	SyncOptions []string  `json:"syncOptions"`
 	// Operation is the running or last sync; nil when none ran since the app was created.
 	Operation     *argoOperation  `json:"operation"`
 	Conditions    []argoCondition `json:"conditions"`
@@ -74,7 +76,9 @@ type argoOwner struct {
 }
 
 type argoSrc struct {
-	Repo           string `json:"repo"`
+	Repo string `json:"repo"`
+	// RepoURL is the browsable https page of Repo, "" for an OCI registry or a local path.
+	RepoURL        string `json:"repoUrl"`
 	Path           string `json:"path"`
 	Chart          string `json:"chart"`
 	TargetRevision string `json:"targetRevision"`
@@ -99,6 +103,7 @@ type argoOperation struct {
 	FinishedAt  int64  `json:"finishedAt"`
 	InitiatedBy string `json:"initiatedBy"` // a user name, or "automated"
 	Revision    string `json:"revision"`
+	RevisionURL string `json:"revisionUrl"` // the commit page of Revision, "" when not linkable
 	RetryCount  int    `json:"retryCount"`
 	DryRun      bool   `json:"dryRun"`
 	Done        int    `json:"done"`  // resources synced so far
@@ -139,8 +144,10 @@ type argoResource struct {
 }
 
 type argoHistory struct {
-	ID             int64  `json:"id"`
-	Revision       string `json:"revision"`
+	ID       int64  `json:"id"`
+	Revision string `json:"revision"`
+	// URL is the commit page of Revision, "" for a chart version or an unknown repository.
+	URL            string `json:"url"`
 	TargetRevision string `json:"targetRevision"`
 	Chart          string `json:"chart"`
 	DeployedAt     int64  `json:"deployedAt"`

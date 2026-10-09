@@ -2144,6 +2144,11 @@
     <string name="argo_chart">Chart</string>
     <string name="argo_path">Path</string>
     <string name="argo_open_link">Open</string>
+    <string name="argo_show_diff">Show diff</string>
+    <string name="argo_diff_hint">What a sync would change now, compared in the cluster without changing anything.</string>
+    <string name="argo_diff_hint_out_of_sync">The app is out of sync: see what a sync would change before running it.</string>
+    <string name="argo_diff_dry_run">What Argo CD itself compared last: the live state and the state after a sync, read from Argo CD’s cache through a port-forward. Nothing ran in the cluster, nothing was changed. Secret values are hidden.</string>
+    <string name="argo_open_commit">Open commit</string>
     <string name="argo_auto_sync">Auto-sync</string>
     <string name="argo_owned">Managed by %1$s %2$s: change it in Git</string>
     <string name="argo_auto_prune">prune</string>
@@ -3319,4 +3324,29 @@
     <string name="activity_settings_desc">Every change Ichor made to your clusters (reboots, scaling, syncs, rollbacks…), kept 90 days on this device.</string>
     <string name="activity_open">Activity log</string>
     <string name="clusters_menu_activity">Activity</string>
+||||||| b9b4f161
+    <string name="kb_tab_summary">Summary</string>
+    <string name="kb_summary_conditions">Conditions</string>
+    <string name="kb_summary_no_conditions">This kind reports no conditions.</string>
+    <string name="kb_summary_owners">Owned and managed by</string>
+    <string name="kb_summary_controller">controller</string>
+    <string name="kb_summary_helm_release">Helm release</string>
+    <string name="kb_summary_metadata">Metadata</string>
+    <string name="kb_summary_labels">Labels</string>
+    <string name="kb_summary_annotations">Annotations</string>
+    <string name="kb_summary_finalizers">Finalizers</string>
+    <string name="kb_summary_created">Created %1$s ago</string>
+    <string name="kb_summary_deleting">Deletion requested %1$s ago</string>
+    <string name="kb_summary_events_error">Events could not be read: %1$s</string>
+    <string name="kb_summary_health_ok">Healthy</string>
+    <string name="kb_summary_health_warn">Needs a look</string>
+    <string name="kb_summary_health_bad">Unhealthy</string>
+    <string name="kb_summary_health_none">No health reported</string>
+    <string name="kb_summary_phase">Phase</string>
+    <string name="kb_summary_replicas">Replicas</string>
+    <string name="kb_summary_selector">Selector</string>
+    <string name="kb_summary_image">Image</string>
+    <string name="kb_summary_node">Node</string>
+    <string name="kb_summary_suspended">Suspended</string>
+    <string name="kb_summary_schedule">Schedule</string>
 </resources>

@@ -30,6 +30,10 @@ Usage:
   scripts/changelog.py              # the whole history, to stdout
   scripts/changelog.py --limit 20   # only the newest 20 releases
   scripts/changelog.py -o FILE      # write to FILE
+  scripts/changelog.py --scrub      # copy stdin to stdout without tracker references
+
+Issue tracker references (CYR-123) are private: they are dropped from every item, and
+`just release-tag` runs the tag's commit subjects through --scrub.
 """
 
 import argparse
@@ -46,6 +50,12 @@ SUBJECT = re.compile(r"^(?P<type>[a-z]+)(\([^)]*\))?(?P<breaking>!)?:\s*(?P<text
 KINDS = {"feat": "new", "fix": "fixed", "perf": "faster"}
 TITLES = {"breaking": "Breaking", "new": "New", "fixed": "Fixed", "faster": "Faster"}
 ORDER = ["breaking", "new", "fixed", "faster"]
+TRACKER_IDS = r"\bCYR-\d+\b(?:[\s,]+CYR-\d+\b)*"
+TRACKER_SCOPE = re.compile(rf"\(\s*{TRACKER_IDS}\s*\)(?=!?:)", re.IGNORECASE)
+TRACKER_REF = re.compile(
+    rf"\s*(?:\b(?:refs?|closes|fixes|resolves|see)\b\s*)?[\[(]?{TRACKER_IDS}[\])]?(?:\s*:)?",
+    re.IGNORECASE,
+)
 
 
 def git(*args):
@@ -61,9 +71,17 @@ def release_tags():
     return sorted(tags, key=lambda t: tuple(int(n) for n in TAG.match(t).groups()), reverse=True)
 
 
+def scrub(text):
+    """Drops issue tracker references (CYR-123), which point to a private tracker."""
+    cleaned = TRACKER_REF.sub("", TRACKER_SCOPE.sub("", text))
+    if cleaned == text:
+        return text
+    return re.sub(r"\s{2,}", " ", cleaned).strip(" ,;:-")
+
+
 def classify(subject, body):
     """Returns (kind, text) for a user-facing commit, else None."""
-    match = SUBJECT.match(subject)
+    match = SUBJECT.match(scrub(subject))
     if not match:
         return None
     kind = KINDS.get(match["type"])
@@ -115,7 +133,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("-o", "--output")
+    parser.add_argument("--scrub", action="store_true", help="filter stdin, see scrub()")
     args = parser.parse_args()
+
+    if args.scrub:
+        for line in sys.stdin:
+            print(scrub(line.rstrip("\n")))
+        return
 
     document = {
         "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),

@@ -69,6 +69,17 @@ struct ArgoAppView: View {
                      sync: { syncSheet = SyncRequest(resources: []) },
                      act: { action in Task { await run(action, on: app) } },
                      terminate: { confirmTerminate = true })
+            Section {
+                NavigationLink { FluxDiffView(argo: app.namespace, name: app.name) } label: {
+                    Label("Show diff", systemImage: "plus.forwardslash.minus")
+                }
+            } footer: {
+                if app.sync == .outOfSync {
+                    Text("The app is out of sync: see what a sync would change before running it.")
+                } else {
+                    Text("What a sync would change now, compared in the cluster without changing anything.")
+                }
+            }
             ArgoFreezeSection(app: app, windows: windows, busy: busy || project.map { store.busyProjects.contains($0.id) } == true,
                               freeze: { freezeSheet = true },
                               extend: {

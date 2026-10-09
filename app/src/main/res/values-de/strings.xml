@@ -2138,6 +2138,11 @@
     <string name="argo_chart">Chart</string>
     <string name="argo_path">Pfad</string>
     <string name="argo_open_link">Öffnen</string>
+    <string name="argo_show_diff">Diff anzeigen</string>
+    <string name="argo_diff_hint">Was ein Sync jetzt ändern würde, im Cluster verglichen, ohne etwas zu ändern.</string>
+    <string name="argo_diff_hint_out_of_sync">Die App ist nicht synchron: Sieh, was ein Sync ändern würde, bevor du ihn startest.</string>
+    <string name="argo_diff_dry_run">Was Argo CD selbst zuletzt verglichen hat: der Ist-Zustand und der Zustand nach einem Sync, per Port-Forward aus Argo CDs Cache gelesen. Im Cluster lief nichts, nichts wurde geändert. Secret-Werte sind verborgen.</string>
+    <string name="argo_open_commit">Commit öffnen</string>
     <string name="argo_auto_sync">Auto-Sync</string>
     <string name="argo_owned">Verwaltet von %1$s %2$s: in Git ändern</string>
     <string name="argo_auto_prune">Prune</string>
@@ -3313,4 +3318,29 @@
     <string name="activity_settings_desc">Jede Änderung, die Ichor an Ihren Clustern vorgenommen hat (Neustarts, Skalierungen, Syncs, Rollbacks…), 90 Tage auf diesem Gerät gespeichert.</string>
     <string name="activity_open">Aktivitätsprotokoll</string>
     <string name="clusters_menu_activity">Aktivität</string>
+||||||| b9b4f161
+    <string name="kb_tab_summary">Übersicht</string>
+    <string name="kb_summary_conditions">Bedingungen</string>
+    <string name="kb_summary_no_conditions">Diese Art meldet keine Bedingungen.</string>
+    <string name="kb_summary_owners">Gehört zu und verwaltet von</string>
+    <string name="kb_summary_controller">Controller</string>
+    <string name="kb_summary_helm_release">Helm-Release</string>
+    <string name="kb_summary_metadata">Metadaten</string>
+    <string name="kb_summary_labels">Labels</string>
+    <string name="kb_summary_annotations">Annotationen</string>
+    <string name="kb_summary_finalizers">Finalizer</string>
+    <string name="kb_summary_created">Vor %1$s erstellt</string>
+    <string name="kb_summary_deleting">Löschung vor %1$s angefordert</string>
+    <string name="kb_summary_events_error">Ereignisse nicht lesbar: %1$s</string>
+    <string name="kb_summary_health_ok">Gesund</string>
+    <string name="kb_summary_health_warn">Prüfen</string>
+    <string name="kb_summary_health_bad">Fehlerhaft</string>
+    <string name="kb_summary_health_none">Kein Zustand gemeldet</string>
+    <string name="kb_summary_phase">Phase</string>
+    <string name="kb_summary_replicas">Replikate</string>
+    <string name="kb_summary_selector">Selektor</string>
+    <string name="kb_summary_image">Image</string>
+    <string name="kb_summary_node">Knoten</string>
+    <string name="kb_summary_suspended">Angehalten</string>
+    <string name="kb_summary_schedule">Zeitplan</string>
 </resources>

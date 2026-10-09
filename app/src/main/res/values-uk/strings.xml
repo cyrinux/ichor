@@ -2308,6 +2308,11 @@
     <string name="argo_chart">Chart</string>
     <string name="argo_path">Шлях</string>
     <string name="argo_open_link">Відкрити</string>
+    <string name="argo_show_diff">Показати diff</string>
+    <string name="argo_diff_hint">Що змінила б синхронізація зараз, порівняно в кластері без жодних змін.</string>
+    <string name="argo_diff_hint_out_of_sync">Застосунок не синхронізований: подивіться, що змінить синхронізація, перш ніж запускати її.</string>
+    <string name="argo_diff_dry_run">Те, що Argo CD порівняв останнім: поточний стан і стан після синхронізації, прочитані з кешу Argo CD через port-forward. У кластері нічого не виконувалось, нічого не змінено. Значення Secret приховано.</string>
+    <string name="argo_open_commit">Відкрити коміт</string>
     <string name="argo_auto_sync">Auto-sync</string>
     <string name="argo_owned">Керується %1$s %2$s: змініть це в Git</string>
     <string name="argo_auto_prune">prune</string>
@@ -3521,4 +3526,29 @@
     <string name="activity_settings_desc">Кожна зміна, яку Ichor вніс у ваші кластери (перезавантаження, масштабування, синхронізації, відкати…), зберігається 90 днів на цьому пристрої.</string>
     <string name="activity_open">Журнал активності</string>
     <string name="clusters_menu_activity">Активність</string>
+||||||| b9b4f161
+    <string name="kb_tab_summary">Огляд</string>
+    <string name="kb_summary_conditions">Умови</string>
+    <string name="kb_summary_no_conditions">Цей тип не повідомляє умов.</string>
+    <string name="kb_summary_owners">Власник і менеджер</string>
+    <string name="kb_summary_controller">контролер</string>
+    <string name="kb_summary_helm_release">Реліз Helm</string>
+    <string name="kb_summary_metadata">Метадані</string>
+    <string name="kb_summary_labels">Мітки</string>
+    <string name="kb_summary_annotations">Анотації</string>
+    <string name="kb_summary_finalizers">Фіналізатори</string>
+    <string name="kb_summary_created">Створено %1$s тому</string>
+    <string name="kb_summary_deleting">Видалення запитано %1$s тому</string>
+    <string name="kb_summary_events_error">Не вдалося прочитати події: %1$s</string>
+    <string name="kb_summary_health_ok">Справний</string>
+    <string name="kb_summary_health_warn">Потребує уваги</string>
+    <string name="kb_summary_health_bad">Несправний</string>
+    <string name="kb_summary_health_none">Стан не повідомляється</string>
+    <string name="kb_summary_phase">Фаза</string>
+    <string name="kb_summary_replicas">Репліки</string>
+    <string name="kb_summary_selector">Селектор</string>
+    <string name="kb_summary_image">Образ</string>
+    <string name="kb_summary_node">Вузол</string>
+    <string name="kb_summary_suspended">Призупинено</string>
+    <string name="kb_summary_schedule">Розклад</string>
 </resources>

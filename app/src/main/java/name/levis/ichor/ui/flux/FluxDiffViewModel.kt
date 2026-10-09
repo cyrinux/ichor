@@ -14,12 +14,16 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.refreshFailed
 import name.levis.ichor.ui.uiText
 
+/** Which GitOps tool's diff a screen shows: the Go core computes both the same way. */
+enum class DiffTool { FLUX, ARGO }
+
 /**
- * The diff of one Flux object: computed when the screen opens (once per [load] key: the
- * context and config generation), again on refresh. The cluster builds it in a few seconds at
- * most; the result on screen stays while a refresh runs.
+ * The diff of one Flux or Argo CD object: computed when the screen opens (once per [load] key:
+ * the context and config generation), again on refresh. The cluster builds it in a few seconds
+ * (Argo CD may take longer: it renders in its own pod first); the result on screen stays while
+ * a refresh runs.
  */
-class FluxDiffViewModel(private val talos: TalosRepository) : ViewModel() {
+class FluxDiffViewModel(private val talos: TalosRepository, private val tool: DiffTool = DiffTool.FLUX) : ViewModel() {
     private val _state = MutableStateFlow<UiState<FluxDiff>>(UiState.Loading)
     val state: StateFlow<UiState<FluxDiff>> = _state.asStateFlow()
     private var job: Job? = null
@@ -38,7 +42,12 @@ class FluxDiffViewModel(private val talos: TalosRepository) : ViewModel() {
         (_state.value as? UiState.Loaded)?.let { _state.value = it.copy(refreshing = true) }
         job = viewModelScope.launch {
             _state.value = try {
-                UiState.Loaded(talos.fluxDiff(kind, namespace, name))
+                UiState.Loaded(
+                    when (tool) {
+                        DiffTool.FLUX -> talos.fluxDiff(kind, namespace, name)
+                        DiffTool.ARGO -> talos.argoDiff(namespace, name)
+                    },
+                )
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {

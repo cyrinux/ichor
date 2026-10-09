@@ -44,7 +44,12 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   follow a sync wave by wave, and sync (with prune, dry run, selected resources…), refresh,
   terminate a sync, pause or resume auto-sync, or roll back to an earlier deployment. Ichor
   patches the Application resources with the admin kubeconfig, like `argocd --core`, so no
-  Argo CD token is needed. An app an ApplicationSet or a parent app manages keeps its spec:
+  Argo CD token is needed. **Show diff** tells what a sync would change before running it,
+  like the Diff tab of the Argo CD UI: Ichor reads the comparison the application controller
+  already made (the live and the predicted state of each object, in Argo CD's Redis, through a
+  port-forward: nothing runs in the cluster, nothing is written) and renders it object by
+  object, Secret values hidden; the revision, each history entry and the running sync link to
+  their commit on GitHub, GitLab, Gitea, Forgejo, Codeberg or Bitbucket. An app an ApplicationSet or a parent app manages keeps its spec:
   only sync, refresh and terminate are offered there, since its owner would revert the rest.
   Each app also has a network view, like Argo CD's own but down to the nodes: host → Gateway →
   Ingress/HTTPRoute → Service → pods → node, every box coloured by health, traffic flowing along

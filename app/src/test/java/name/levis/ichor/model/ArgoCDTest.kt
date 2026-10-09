@@ -17,7 +17,8 @@ class ArgoCDTest {
            "destination":{"server":"https://kubernetes.default.svc","namespace":"demo"},"autoSync":{"enabled":true,"prune":false,"selfHeal":true},
            "syncOptions":["CreateNamespace=true"],"operation":{"phase":"Succeeded","done":3,"total":3,"wave":0,"waves":[0],"failed":[]},
            "conditions":null,"resources":[{"group":"apps","kind":"Deployment","namespace":"demo","name":"worker","sync":"Synced","health":"Degraded","wave":0,"syncResult":"Synced"}],
-           "history":[{"id":12,"revision":"4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d","targetRevision":"main","deployedAt":1000,"initiatedBy":"automated"}],
+           "revisionUrl":"https://github.com/org/gitops/commit/4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d",
+           "history":[{"id":12,"revision":"4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d","url":"https://github.com/org/gitops/commit/4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d","targetRevision":"main","deployedAt":1000,"initiatedBy":"automated"}],
            "unhealthyPods":[{"namespace":"demo","name":"worker-7d9","status":"CrashLoopBackOff","node":"worker-2"}]},
           {"namespace":"argocd","name":"grafana","project":"infra","owner":{"kind":"ApplicationSet","name":"infra"},"level":"critical","icon":"grafana",
            "health":"Healthy","sync":"OutOfSync","revision":"8.5.2","sources":[{"repo":"https://grafana.github.io/helm-charts","chart":"grafana","targetRevision":"8.6.0"}],
@@ -70,6 +71,12 @@ class ArgoCDTest {
         assertEquals("4be1d0c", app("demo-worker").versionLabel)
         assertEquals("v1.18.2", app("cert-manager").versionLabel)
         assertEquals("v1.18.2", shortRevision("v1.18.2"))
+        assertEquals("4be1d0c, 8.6.0", shortRevisions("4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d, 8.6.0"))
+        // Commit links come from the Go core; absent on the wire means none.
+        assertEquals("https://github.com/org/gitops/commit/4be1d0c9f2a7e3b18c6d5a0f9e8b7c6d5a4f3e2d", app("demo-worker").revisionUrl)
+        assertEquals(app("demo-worker").revisionUrl, app("demo-worker").history.first().url)
+        assertEquals("", app("grafana").revisionUrl)
+        assertEquals("", app("cert-manager").history.first().url)
         assertEquals(3000L, app("cert-manager").deployedAt)
         assertEquals(0L, app("cilium").deployedAt)
     }

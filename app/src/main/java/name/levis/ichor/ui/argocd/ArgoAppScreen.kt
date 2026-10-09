@@ -88,6 +88,7 @@ fun ArgoAppScreen(
     onBack: () -> Unit,
     onNode: ((NodeOverview, Int) -> Unit)? = null,
     onWindows: (() -> Unit)? = null,
+    onDiff: (() -> Unit)? = null,
 ) {
     val talos = LocalContext.current.applicationContext as TalosApp
     val vm: ArgoViewModel = viewModel(factory = factory { ArgoViewModel(talos.talosRepository, freezeReminderHook(talos)) })
@@ -132,7 +133,7 @@ fun ArgoAppScreen(
                         val network = NetworkContext(s.fetchedAt, downNodes, overview?.nodes.orEmpty(), onNode)
                         val project = s.data.projectOf(app)
                         val freeze = FreezeContext(s.data, project, vm.freezeBusy(busy, project), onWindows)
-                        AppDetail(app, downNodes, app.key in busy, vm, network, freeze)
+                        AppDetail(app, downNodes, app.key in busy, vm, network, freeze, onDiff)
                     }
                 }
                 DataFreshness(s, edgeToEdge = false)
@@ -142,7 +143,7 @@ fun ArgoAppScreen(
 }
 
 @Composable
-private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: ArgoViewModel, network: NetworkContext, freeze: FreezeContext) {
+private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: ArgoViewModel, network: NetworkContext, freeze: FreezeContext, onDiff: (() -> Unit)?) {
     var selecting by rememberSaveable { mutableStateOf(false) }
     var freezeSheet by remember { mutableStateOf(false) }
     var endFreeze by remember { mutableStateOf(false) }
@@ -230,6 +231,9 @@ private fun AppDetail(app: ArgoApp, downNodes: Set<String>, busy: Boolean, vm: A
                 onRefresh = { act(ArgoAction.REFRESH, null) },
                 onHardRefresh = { act(ArgoAction.HARD_REFRESH, null) },
             )
+        }
+        if (onDiff != null) {
+            item(key = "diff") { ArgoDiffButton(app, onDiff) }
         }
         item(key = "freeze") {
             ArgoFreezeCard(
