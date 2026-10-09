@@ -2,7 +2,7 @@ import SwiftUI
 import IchorCore
 
 // The freeze sheet and the freeze section of an app page. See
-// plans/roadmap/devops/09-argocd-freeze.md.
+// the Linear plan document "D9. Argo CD freeze: hotfix live without being reverted".
 
 /// The hour "until …" freezes to: the start of a working day.
 private let morningHour = 9

@@ -1,6 +1,6 @@
 import Foundation
 
-// The namespace the Kubernetes lists are loaded for (plans/roadmap/large-clusters.md, L5, L6).
+// The namespace the Kubernetes lists are loaded for (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists", L5, L6).
 // Mirrors go/ichorgo/kube_namespaces.go; same rules as Android's model/KubeScope.kt.
 
 /// The cluster's namespace names (KubeNamespaces).

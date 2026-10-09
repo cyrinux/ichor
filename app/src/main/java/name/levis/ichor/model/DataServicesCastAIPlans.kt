@@ -3,7 +3,7 @@ package name.levis.ichor.model
 import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/kube_castai_plans.go; the wire format is documented in
-// plans/data-services/README.md.
+// the Linear plan document "Data services: Longhorn, Garage and CloudNativePG health".
 
 /** One node consolidation CAST AI ran (a RebalancePlan): the nodes it removes and adds, and what it costs. */
 @Serializable

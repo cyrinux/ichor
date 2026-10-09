@@ -25,7 +25,7 @@ import name.levis.ichor.model.selfHealingOwner
 
 // A change made by hand (scale, suspend a CronJob) to a resource an Argo CD app self-heals is
 // undone within minutes: ask first, offering to freeze the app for an hour. See
-// plans/roadmap/devops/09-argocd-freeze.md (the D2 hook).
+// the Linear plan document "D9. Argo CD freeze: hotfix live without being reverted" (the D2 hook).
 
 /** An Argo CD app that self-heals a resource, with its project. */
 data class ArgoSelfHealer(val app: ArgoApp, val project: ArgoProject)

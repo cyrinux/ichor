@@ -19,7 +19,7 @@ import (
 // The Flux diff: what reconciling a Kustomization now would change, like `flux diff
 // kustomization`, without the flux CLI or a checkout. The source's artifact is read in the
 // cluster, built as kustomize-controller builds it, and each object goes to the API server
-// as a server-side apply dry run (plans/roadmap/devops/06-flux.md, phase 5). Read only.
+// as a server-side apply dry run (the Linear plan document "D6. Flux", phase 5). Read only.
 
 const (
 	fluxDiffTimeout    = 90 * time.Second

@@ -14,7 +14,7 @@ import (
 // active from each run of its cron schedule for its duration; an active deny window stops
 // automated syncs (self-heal included) of the apps it matches, and manual ones unless
 // manualSync. Ichor's freezes are one-shot deny windows (see kube_argocd_freeze.go) recorded
-// in the argoFreezesAnnotation. See plans/roadmap/devops/09-argocd-freeze.md.
+// in the argoFreezesAnnotation. See the Linear plan document "D9. Argo CD freeze: hotfix live without being reverted".
 
 // argoFreezesAnnotation lists the project's windows Ichor created: [{window, reason,
 // createdAt, expiresAt}], window being the argoWindowID of the window.

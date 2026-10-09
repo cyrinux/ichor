@@ -3,7 +3,7 @@ package name.levis.ichor.model
 import kotlinx.serialization.Serializable
 
 // Mirrors go/ichorgo/kube_flux.go and kube_flux_actions.go (the design is in
-// plans/flux/README.md). Flux terms (Kustomization, HelmRelease, Ready, Stalled...) are its own names.
+// the Linear plan document "D6. Flux"). Flux terms (Kustomization, HelmRelease, Ready, Stalled...) are its own names.
 
 /** The Flux Kustomizations, HelmReleases and sources of every namespace. */
 @Serializable

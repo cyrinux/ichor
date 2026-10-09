@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import IchorCore
 
-/// A Kubernetes list of one scope, loaded page by page (plans/roadmap/large-clusters.md; same
+/// A Kubernetes list of one scope, loaded page by page (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists"; same
 /// rules as Android's PagedListViewModel): eagerly up to eagerLimit rows (fewer on an expensive
 /// or constrained network), rows shown as they arrive while nothing else is on screen, then
 /// further pages on demand (`loadMore`) in the server's order. A refresh keeps the rows on

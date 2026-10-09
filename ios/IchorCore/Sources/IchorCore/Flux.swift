@@ -1,7 +1,7 @@
 import Foundation
 
 // Mirrors go/ichorgo/kube_flux.go and kube_flux_actions.go (the wire format and the UX are
-// described in plans/flux/README.md). The logic on top lives in FluxLogic.swift.
+// described in the Linear plan document "D6. Flux"). The logic on top lives in FluxLogic.swift.
 
 /// The catalog id of Flux in the inventory: only clusters running it are asked (KubeFlux).
 public let fluxCatalogID = "flux"

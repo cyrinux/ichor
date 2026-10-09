@@ -7,7 +7,7 @@ import (
 )
 
 // Browsable links for what Argo CD deploys: the repository page and the commit a revision
-// names (plans/roadmap/devops/05-argocd-diff.md, phase 1). Built on the phone from the
+// names (the Linear plan document "D5. Argo CD diff and commit links", phase 1). Built on the phone from the
 // source's repoURL and the revision; nothing is fetched.
 
 var (

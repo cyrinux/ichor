@@ -1,6 +1,6 @@
 package name.levis.ichor.model
 
-// Drill-down pod lists (plans/roadmap/large-clusters.md, Phase 5): the Kubernetes pods of one
+// Drill-down pod lists (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists", Phase 5): the Kubernetes pods of one
 // node (KubeNodePodsPage) or of one workload (KubeWorkloadPodsPage), page by page.
 
 /** Rows a drill-down page asks for: the first page eagerly, the next ones on scroll. */

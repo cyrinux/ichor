@@ -2,7 +2,7 @@ import SwiftUI
 import IchorCore
 
 /// The Kubernetes pods of one node or workload (`selection`, os:admin), page by page in the API
-/// server's order: the first page at once, the next ones on scroll (plans/roadmap/large-clusters.md,
+/// server's order: the first page at once, the next ones on scroll (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists",
 /// Phase 5), narrowed to a phase, with the Pods tab's rows: logs and delete. Never kept as the
 /// last known state.
 struct SelectedPodsView: View {

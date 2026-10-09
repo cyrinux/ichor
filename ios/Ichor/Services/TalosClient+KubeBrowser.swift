@@ -13,7 +13,7 @@ enum PortForwardEvent: Sendable {
 }
 
 /// The resource browser, YAML edit, Helm releases, pod log follow and port-forward
-/// (plans/roadmap/kubeconfig-only.md §7), through the Kubernetes API of the cluster: the
+/// (the Linear plan document "Study: kubeconfig-only clusters (no Talos)" §7), through the Kubernetes API of the cluster: the
 /// kubeconfig's for a kubeconfig cluster, the one Talos issues otherwise, with the API address
 /// the user set (see TalosClient for the conventions).
 extension TalosClient {

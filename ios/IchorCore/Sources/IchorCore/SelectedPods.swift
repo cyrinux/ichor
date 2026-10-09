@@ -1,6 +1,6 @@
 import Foundation
 
-// Drill-down pod lists (plans/roadmap/large-clusters.md, Phase 5): the Kubernetes pods of one
+// Drill-down pod lists (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists", Phase 5): the Kubernetes pods of one
 // node (KubeNodePodsPage) or of one workload (KubeWorkloadPodsPage), page by page. Same rules
 // as Android's model/SelectedPods.kt.
 

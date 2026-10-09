@@ -1,6 +1,6 @@
 import Foundation
 
-// The Kubernetes resource browser (plans/roadmap/kubeconfig-only.md §7, §7b): any kind the API
+// The Kubernetes resource browser (the Linear plan document "Study: kubeconfig-only clusters (no Talos)" §7, §7b): any kind the API
 // server serves, CRDs included, listed with the server's own Table columns. Mirrors
 // go/ichorgo/kube_browser.go and kube_edit.go; same rules as Android's model/KubeBrowser.kt.
 

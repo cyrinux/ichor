@@ -4,7 +4,7 @@ import UserNotifications
 
 /// A local notification 5 minutes before an Ichor freeze ends, with "+1 h". Scheduled from the
 /// freezes the app last read: Argo CD ends the freeze on its own, the reminder only says so. See
-/// plans/roadmap/devops/09-argocd-freeze.md.
+/// the Linear plan document "D9. Argo CD freeze: hotfix live without being reverted".
 @MainActor
 enum FreezeReminders {
     nonisolated static let category = "argo-freeze"

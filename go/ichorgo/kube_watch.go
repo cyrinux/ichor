@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// A list kept live with a watch (plans/roadmap/large-clusters.md): the list once, then the API
+// A list kept live with a watch (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists"): the list once, then the API
 // server's ADDED/MODIFIED/DELETED events from its resourceVersion, bookmarks kept so a new
 // request starts where the last one ended, and the list again when the server has let the
 // version go (410 Gone). A watch outlives the server's own timeout and a cut connection; a

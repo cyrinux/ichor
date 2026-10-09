@@ -23,7 +23,7 @@ import (
 // bucket, the one kustomize-controller builds from. It is read by exec in the source-controller
 // pod (cat of its storage file): the API server's service proxy is the fallback only, because
 // the NetworkPolicy `flux install` adds lets in nothing from outside flux-system, the API
-// server included once it runs on another node (plans/roadmap/devops/06-flux.md, spike).
+// server included once it runs on another node (the Linear plan document "D6. Flux", spike).
 
 const (
 	fluxArtifactMaxBytes    = 64 << 20  // the tarball

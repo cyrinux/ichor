@@ -5,7 +5,7 @@ import IchorCore
 /// issues (os:admin): workloads with rollout restart, pods, CronJobs with a manual run,
 /// and a network test between two nodes. The namespace listed (remembered per cluster, see
 /// KubeScopeStore) and the search carry over between the lists, each loaded page by page
-/// (plans/roadmap/large-clusters.md). The toolbar opens the API server's health,
+/// (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists"). The toolbar opens the API server's health,
 /// the network policies and, with Cilium, the live flows; it also sets the API address to use
 /// instead of the kubeconfig's, for a cluster the phone reaches another way (not in screenshot
 /// mode: the alert would show the real address). A share link's focus opens a tab, scoped to

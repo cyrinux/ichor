@@ -1,7 +1,7 @@
 import Foundation
 
 // Mirrors go/ichorgo/kube_castai.go (and the Android model/DataServicesCastAI.kt); the wire format
-// is documented in plans/data-services/README.md.
+// is documented in the Linear plan document "Data services: Longhorn, Garage and CloudNativePG health".
 
 /// CAST AI's Workload Autoscaler: one recommendation per workload it manages, and its node
 /// consolidations (see CastAIPlans.swift).

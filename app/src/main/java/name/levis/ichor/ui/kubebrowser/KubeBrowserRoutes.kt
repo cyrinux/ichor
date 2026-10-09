@@ -14,7 +14,7 @@ import androidx.navigation.navArgument
 import name.levis.ichor.model.ApiResource
 import name.levis.ichor.model.KubeObjectRef
 
-/** Routes of the resource browser, Helm and port-forward screens (plans/roadmap/kubeconfig-only.md §7). */
+/** Routes of the resource browser, Helm and port-forward screens (the Linear plan document "Study: kubeconfig-only clusters (no Talos)" §7). */
 object KubeBrowserRoutes {
     const val KINDS = "kube-browser"
     private const val LIST = "kube-browser-list?g={g}&v={v}&r={r}&k={k}&namespaced={namespaced}&edit={edit}"

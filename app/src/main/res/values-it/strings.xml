@@ -2714,7 +2714,7 @@
     <string name="overview_card_talos_update">Aggiornamento di Talos</string>
     <string name="overview_card_desc_talos_update">Una versione di Talos più recente di quella dei nodi, quando c’è</string>
 
-    <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
+    <!-- Argo CD freeze (sync windows), the Linear plan document "D9. Argo CD freeze: hotfix live without being reverted" -->
     <string name="argo_freeze_title">Congela Argo CD</string>
     <string name="argo_freeze_button">Congela l\'auto-sync…</string>
     <string name="argo_freeze_confirm">Congela</string>
@@ -2796,7 +2796,7 @@
         <item quantity="other">%1$d congelamenti · il prossimo finisce alle %2$s</item>
     </plurals>
 
-    <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
+    <!-- Argo CD freeze (sync windows), the Linear plan document "D9. Argo CD freeze: hotfix live without being reverted" -->
     <string name="argo_revert_title">Argo CD annullerà questa modifica</string>
     <string name="argo_revert_anyway">Scala comunque</string>
     <string name="argo_freeze_reason_scale">scala a %1$d</string>

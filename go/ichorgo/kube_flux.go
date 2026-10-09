@@ -12,7 +12,7 @@ import (
 // Flux v2 is read and driven through its custom resources, like Argo CD: Kustomizations and
 // HelmReleases (what Flux deploys) and their sources (Git, OCI and Helm repositories,
 // buckets), with the admin kubeconfig Talos issues. Actions are the annotations and the
-// spec.suspend field the flux CLI writes. See plans/flux/README.md.
+// spec.suspend field the flux CLI writes. See the Linear plan document "D6. Flux".
 
 const (
 	groupFluxKustomize = "kustomize.toolkit.fluxcd.io"

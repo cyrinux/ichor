@@ -2,7 +2,7 @@ import Foundation
 import Ichorgo
 import IchorCore
 
-/// Kubernetes lists page by page, namespace first (plans/roadmap/large-clusters.md; os:admin,
+/// Kubernetes lists page by page, namespace first (the Linear plan document "U11. Large clusters: home at scale, namespace-first paged lists"; os:admin,
 /// see TalosClient for the conventions). `namespace` nil is every namespace; `token` is the
 /// previous page's continue token, "" for the first page.
 extension TalosClient {

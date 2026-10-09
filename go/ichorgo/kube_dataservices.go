@@ -67,7 +67,7 @@ type dataServices struct {
 // ("longhorn,garage,cloudnative-pg"); "" checks everything. The operators are found by their
 // API groups (their CRDs) either way; Garage, which has no API of its own, is only
 // looked for (a listing of every pod) when hinted or when hints is "".
-// See plans/data-services/README.md for the JSON. kubeServer: see KubePods.
+// See the Linear plan document "Data services: Longhorn, Garage and CloudNativePG health" for the JSON. kubeServer: see KubePods.
 func KubeDataServices(configYAML, contextName, kubeServer, hints string) (out string, err error) {
 	defer maskResult(&out, &err)
 

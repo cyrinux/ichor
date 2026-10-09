@@ -5,7 +5,7 @@ import java.time.ZoneId
 
 // What the freeze screens derive from ArgoStatus: who a freeze would stop, the windows screen's
 // sections, the reminders to schedule. Pure, so it is unit-tested. The design is in
-// plans/roadmap/devops/09-argocd-freeze.md.
+// the Linear plan document "D9. Argo CD freeze: hotfix live without being reverted".
 
 /** How much of its project a freeze around an app covers. */
 enum class FreezeScope { APP, NAMESPACE, PROJECT }

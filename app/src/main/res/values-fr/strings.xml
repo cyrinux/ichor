@@ -2714,7 +2714,7 @@
     <string name="overview_card_talos_update">Mise à jour de Talos</string>
     <string name="overview_card_desc_talos_update">Une version de Talos plus récente que celle des nœuds, quand il y en a une</string>
 
-    <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
+    <!-- Argo CD freeze (sync windows), the Linear plan document "D9. Argo CD freeze: hotfix live without being reverted" -->
     <string name="argo_freeze_title">Geler Argo CD</string>
     <string name="argo_freeze_button">Geler l\'auto-sync…</string>
     <string name="argo_freeze_confirm">Geler</string>
@@ -2796,7 +2796,7 @@
         <item quantity="other">%1$d gels · prochaine fin à %2$s</item>
     </plurals>
 
-    <!-- Argo CD freeze (sync windows), plans/roadmap/devops/09-argocd-freeze.md -->
+    <!-- Argo CD freeze (sync windows), the Linear plan document "D9. Argo CD freeze: hotfix live without being reverted" -->
     <string name="argo_revert_title">Argo CD va annuler ceci</string>
     <string name="argo_revert_anyway">Scaler quand même</string>
     <string name="argo_freeze_reason_scale">scale à %1$d</string>
