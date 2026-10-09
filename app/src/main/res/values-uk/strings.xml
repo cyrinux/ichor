@@ -467,6 +467,8 @@
     <string name="settings_kube_export">Експортувати kubeconfig…</string>
     <string name="settings_kube_saved">Збережено. У kubenav додайте кластер із цього файлу.</string>
     <string name="settings_kube_open_kubenav">Відкрити kubenav</string>
+    <string name="settings_node_debug_shell">Налагоджувальна оболонка вузла</string>
+    <string name="settings_node_debug_shell_desc">На кластерах без Talos додає «Налагоджувальна оболонка…» до меню вузла: привілейований под у просторах імен вузла дає root-оболонку на вузлі. Под видаляється, коли оболонку закрито. Вимкнено за замовчуванням.</string>
     <string name="settings_kube_open_failed">Не вдалося відкрити вибраний файл</string>
     <string name="settings_section_config">Конфігурація</string>
     <string name="settings_encryption_key">Ключ шифрування</string>
@@ -667,6 +669,9 @@
 
     <!-- Debug shell -->
     <string name="debug_title">Налагоджувальна оболонка</string>
+    <string name="node_debug_title">Root-оболонка</string>
+    <string name="node_debug_auth">Root-оболонка на %1$s</string>
+    <string name="node_debug_intro">Привілейований под запускається на %1$s у просторі імен %2$s, у власних просторах імен вузла, і nsenter відкриває root-оболонку на вузлі. Под видаляється, коли оболонка завершується. Простір імен має допускати привілейовані поди.</string>
     <string name="debug_stop">Зупинити</string>
     <string name="debug_auth">Налагоджувальна оболонка на %1$s</string>
     <string name="debug_intro">Запускає образ як привілейований контейнер на %1$s з доступом до хоста й відкриває в ньому термінал. Якщо образу немає на вузлі, Talos спочатку завантажить його.</string>
@@ -2738,6 +2743,7 @@
     <string name="node_menu_cordon">Ізолювати (cordon)</string>
     <string name="node_menu_uncordon">Зняти ізоляцію</string>
     <string name="node_menu_drain">Звільнити…</string>
+    <string name="node_menu_kube_debug_shell">Налагоджувальна оболонка…</string>
     <string name="node_menu_group_inspect">Огляд</string>
     <string name="node_menu_group_troubleshoot">Діагностика</string>
     <string name="node_menu_group_operate">Керування</string>

@@ -67,13 +67,14 @@ fun KubeNodesScreen(
     vm: KubeHomeViewModel,
     onBack: () -> Unit,
     onDrain: (name: String) -> Unit,
+    onDebug: (name: String) -> Unit,
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf(initialFilter) }
     var sheetFor by remember { mutableStateOf<KubeNodeInfo?>(null) }
     val snackbar = remember { SnackbarHostState() }
-    KubeNodeActionSheets(sheetFor, snackbar, onClose = { sheetFor = null }, onDrain = onDrain, onCordoned = vm::refresh)
+    KubeNodeActionSheets(sheetFor, snackbar, onClose = { sheetFor = null }, onDrain = onDrain, onDebug = onDebug, onCordoned = vm::refresh)
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },

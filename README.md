@@ -112,6 +112,10 @@ sit alongside your real clusters and be removed from **Manage clusters**.
   names the policy behind it: the deny rule that matched, or, for the usual default-deny, the
   policies that isolate the pod. History is what the agents still hold in their flow buffer, or
   what Goldmane still keeps.
+- **Node shell without Talos:** on a cluster added from a kubeconfig, a node's menu can open a
+  root shell on the node, like `kubectl debug node/`: a privileged pod in the node's namespaces,
+  then `nsenter`. Off by default (Settings → Kubernetes → Node debug shell), behind the app lock,
+  recorded in the activity log, and the pod is deleted when the shell ends.
 - **Background:** alerts and a home-screen widget.
 - **Several clusters:** switch from the header, give each one a color and a name of your own, and
   open any of them straight from the app icon (long press: a shortcut / quick action per cluster).

@@ -164,6 +164,7 @@ fun OverviewScreen(
     onServices: () -> Unit,
     onJobs: () -> Unit,
     onDrain: (node: String) -> Unit,
+    onNodeDebug: (node: String) -> Unit,
     /** The action audit log of a cluster, by its context name. */
     onActivity: (cluster: String) -> Unit,
     vm: OverviewViewModel = viewModel(factory = factory { OverviewViewModel(app.talosRepository, app.configRepository) }),
@@ -200,6 +201,7 @@ fun OverviewScreen(
                 onServices = onServices,
                 onJobs = onJobs,
                 onDrain = onDrain,
+                onNodeDebug = onNodeDebug,
                 onAllNodes = onKubeNodes,
                 onActivity = onActivity,
             ),

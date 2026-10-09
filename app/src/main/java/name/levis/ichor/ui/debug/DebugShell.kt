@@ -26,7 +26,8 @@ val ShellState.isLive: Boolean get() = this is ShellState.Starting || this is Sh
 
 /**
  * One shell per node of a cluster (its talosconfig context), or per container of a pod
- * ([pod] set, [node] empty, `kubectl exec -it`): reopening it finds it again.
+ * ([pod] set, [node] empty, `kubectl exec -it`), or per Kubernetes node of a cluster without
+ * Talos ([kubeNode], a privileged pod in [namespace]): reopening it finds it again.
  */
 data class ShellKey(
     val context: String,
@@ -34,6 +35,7 @@ data class ShellKey(
     val namespace: String = "",
     val pod: String = "",
     val container: String = "",
+    val kubeNode: Boolean = false,
 ) {
     val isPod: Boolean get() = pod.isNotEmpty()
 
@@ -105,7 +107,11 @@ class DebugShell internal constructor(
                 if (current == generation) setState(ShellState.Exited(code, errMessage))
             }
         }
-        session = if (key.isPod) {
+        session = if (key.kubeNode) {
+            // A root shell on the node through a privileged pod (`kubectl debug node/`).
+            val target = kubeServers.targetFor(stored.copy(activeContext = key.context))
+            Ichorgo.startNodeDebug(target.yaml, target.context, target.server, key.node, key.namespace, image, cols, rows, listener)
+        } else if (key.isPod) {
             // The pod's cluster, which may no longer be the one on screen.
             val target = kubeServers.targetFor(stored.copy(activeContext = key.context))
             if (image.isNotBlank()) {

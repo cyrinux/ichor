@@ -31,6 +31,9 @@ type DebugSession struct {
 	send     chan shellInput
 	cancel   context.CancelFunc
 	exitOnce sync.Once
+	// beforeExit, set by the session's goroutine, runs once before OnExit: what the session
+	// created goes before the app is told it ended (and may let the process go).
+	beforeExit func()
 }
 
 // shellInput is typed bytes, or a terminal resize when data is nil.
@@ -97,7 +100,13 @@ func (d *DebugSession) enqueue(in shellInput) {
 }
 
 func (d *DebugSession) exit(code int, message string) {
-	d.exitOnce.Do(func() { d.listener.OnExit(code, message) })
+	d.exitOnce.Do(func() {
+		if d.beforeExit != nil {
+			d.beforeExit()
+		}
+
+		d.listener.OnExit(code, message)
+	})
 }
 
 func (d *DebugSession) run(ctx context.Context, configYAML, contextName, node, image string, args []string, cols, rows int) {
