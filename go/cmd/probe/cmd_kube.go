@@ -188,6 +188,12 @@ var kubeCommands = []command{
 
 		return out, err
 	}},
+	{name: "node-pods-watch", args: "KUBENODE [PHASE]", run: func(e env) (out string, err error) {
+		// node-pods-watch KUBENODE [PHASE]: prints the node's pod events for 30 s.
+		out = nodePodsWatchRun(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2))
+
+		return out, err
+	}},
 	{name: "delete-pod", args: "NAMESPACE NAME", run: func(e env) (out string, err error) {
 		// delete-pod NAMESPACE NAME
 		if err = ichorgo.KubeDeletePod(e.cfg, e.context, e.kubeServer, flag.Arg(1), flag.Arg(2)); err == nil {

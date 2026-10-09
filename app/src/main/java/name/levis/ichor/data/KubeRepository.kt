@@ -117,6 +117,15 @@ class KubeRepository(go: GoCall) : GoRepository(go) {
         }
 
     /**
+     * The pods of the Kubernetes node [kubeNode] (every namespace) narrowed to [phase] kept live
+     * (os:admin), like [workloadPodsWatch]: the whole list first, then each change.
+     */
+    fun nodePodsWatch(kubeNode: String, phase: PodPhaseFilter): Flow<StreamItem<KubeWatchEvent<KubePod>>> =
+        kubeWatchFlow(go::kubeTarget, KubePod.serializer(), { TalosJson.decodeFromString(KubePodPage.serializer(), it).pods }) { cfg, ctx, server, listener ->
+            Ichorgo.startKubeNodePodsWatch(cfg, ctx, server, kubeNode, phase.query, listener)
+        }
+
+    /**
      * `kubectl scale KIND/NAME --replicas=N -n NAMESPACE` (os:admin): a warning ("" when none)
      * when a HorizontalPodAutoscaler manages the replicas and will change them again.
      */
