@@ -47,6 +47,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeActionAccess
 import name.levis.ichor.model.JobRunState
 import name.levis.ichor.model.KubeCronJob
 import name.levis.ichor.model.KubeJobRun
@@ -84,15 +87,19 @@ internal fun CronJobCard(
                 Text(cronJob.description, style = MaterialTheme.typography.bodySmall, color = muted)
             }
             CronJobTiming(cronJob)
+            val access = rememberKubeActionAccess(cronJob.namespace)
+            val suspendDenial = access?.denial(KubeAction.SUSPEND_CRON_JOB)
+            val runDenial = access?.denial(KubeAction.TRIGGER_CRON_JOB)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     RunHistoryStrip(cronJob.runs)
                     LastRunText(cronJob.runs.firstOrNull())
                 }
                 ShareLinkButton(ShareTarget.cronJob(cronJob.namespace, cronJob.name), icon = Icons.Outlined.Link)
-                SuspendButton(cronJob, suspending, onSuspend)
-                RunNowButton(cronJob, triggering, onRun)
+                SuspendButton(cronJob, suspending, enabled = suspendDenial == null, onSuspend)
+                RunNowButton(cronJob, triggering, enabled = runDenial == null, onRun)
             }
+            listOfNotNull(suspendDenial, runDenial).forEach { KubeDenialNote(it) }
             AnimatedVisibility(expanded) { RunList(cronJob.runs) }
         }
     }
@@ -189,7 +196,7 @@ private fun LastRunText(run: KubeJobRun?) {
 
 /** Pauses the schedule, or resumes it when suspended. */
 @Composable
-private fun SuspendButton(cronJob: KubeCronJob, suspending: Boolean, onSuspend: () -> Unit) {
+private fun SuspendButton(cronJob: KubeCronJob, suspending: Boolean, enabled: Boolean, onSuspend: () -> Unit) {
     if (suspending) {
         CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
         return
@@ -198,14 +205,15 @@ private fun SuspendButton(cronJob: KubeCronJob, suspending: Boolean, onSuspend: 
         if (cronJob.suspended) Icons.Outlined.PlayCircle else Icons.Outlined.PauseCircle,
         stringResource(if (cronJob.suspended) R.string.cronjobs_resume else R.string.cronjobs_suspend),
         onClick = onSuspend,
+        enabled = enabled,
     )
 }
 
 @Composable
-private fun RunNowButton(cronJob: KubeCronJob, triggering: Boolean, onRun: () -> Unit) {
+private fun RunNowButton(cronJob: KubeCronJob, triggering: Boolean, enabled: Boolean, onRun: () -> Unit) {
     when {
         triggering -> CircularProgressIndicator(Modifier.padding(horizontal = 24.dp).size(24.dp), strokeWidth = 2.dp)
-        cronJob.triggerable -> FilledTonalButton(onClick = onRun, contentPadding = ButtonDefaults.ButtonWithIconContentPadding) {
+        cronJob.triggerable -> FilledTonalButton(onClick = onRun, enabled = enabled, contentPadding = ButtonDefaults.ButtonWithIconContentPadding) {
             Icon(Icons.Outlined.PlayArrow, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
             Text(stringResource(R.string.cronjobs_run_now))

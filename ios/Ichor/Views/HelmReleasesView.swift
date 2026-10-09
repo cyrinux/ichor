@@ -182,6 +182,7 @@ struct HelmReleaseView: View {
                               rolledBack: { rolledBackTo = revision.revision }, reload: load)
         }
         .task(id: kubeNamespacesKey(model)) { await load() }
+        .loadsKubeActionAccess(namespace: namespace)
     }
 
     @ViewBuilder private func content(_ detail: HelmReleaseDetail) -> some View {
@@ -231,6 +232,7 @@ struct HelmReleaseView: View {
                         HelmRevisionRow(revision: revision, current: current,
                                         rollBack: current ? nil : { rollingBack = revision })
                     }
+                    KubeDeniedNote(.helmRollback)
                 } header: {
                     Text("History")
                 }
@@ -294,6 +296,7 @@ private struct HelmRevisionRow: View {
                 Button("Roll back", action: rollBack)
                     .buttonStyle(.bordered)
                     .controlSize(.small)
+                    .kubeGated(.helmRollback)
             }
         }
     }

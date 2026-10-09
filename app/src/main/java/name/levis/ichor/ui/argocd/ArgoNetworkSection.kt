@@ -30,6 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import name.levis.ichor.R
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.TalosApp
 import name.levis.ichor.model.ArgoApp
 import name.levis.ichor.model.ArgoNetNode
@@ -101,14 +104,18 @@ private fun NetworkBody(
     ArgoNetLegend()
     AnimatedVisibility(node != null, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
         val shown = node ?: return@AnimatedVisibility
+        val deleteDenial = if (shown.canDelete) rememberKubeDenial(KubeAction.DELETE_POD, shown.namespace) else null
         val podNode = if (shown.kind == ArgoNetNode.POD) network.nodeOf(shown)?.name else null
         val hostname = if (shown.kind == ArgoNetNode.NODE) shown.name else podNode
         val actions = ArgoNetActions(
             node = hostname?.let { h -> talosNodes.firstOrNull { it.hostname == h } },
             onNode = onNode,
-            onDeletePod = if (shown.canDelete && "${shown.namespace}/${shown.name}" !in inFlight) ({ deleting = shown }) else null,
+            onDeletePod = if (shown.canDelete && "${shown.namespace}/${shown.name}" !in inFlight && deleteDenial == null) ({ deleting = shown }) else null,
         )
-        ArgoNetDetails(shown, podNode, actions, onClose = { selected = null })
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            ArgoNetDetails(shown, podNode, actions, onClose = { selected = null })
+            KubeDenialNote(deleteDenial)
+        }
     }
 
     deleting?.let { pod ->

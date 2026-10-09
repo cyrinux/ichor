@@ -31,6 +31,7 @@ struct AppWorkloadsSection: View {
                 } else {
                     ForEach(workloads) { workload in
                         AppWorkloadLine(workload: workload, restarting: restarting.contains(workload.id)) { confirm = workload }
+                        KubeDeniedNote(.restartWorkload, in: workload.namespace)
                         // A row of its own, not a link around the line: a List row that is a link
                         // takes every tap, Restart's included. The sheet is a NavigationStack.
                         if let selection = workload.podSelection {
@@ -42,6 +43,7 @@ struct AppWorkloadsSection: View {
                 }
             }
         }
+        .loadsKubeActionAccess(namespace: accessNamespace)
         .task(id: app) {
             found = nil
             state = .loading
@@ -50,6 +52,13 @@ struct AppWorkloadsSection: View {
         .restartConfirmation($confirm) { workload in Task { await restart(workload) } }
         .sheet(item: $following) { workload in RolloutStatusSheet(workload: workload) { await load() } }
         .messageAlert($resultMessage)
+    }
+
+    /// The namespace of the app's workloads when they share one, else "" (asked cluster-wide,
+    /// which then says nothing about a namespace: the restarts stay offered).
+    private var accessNamespace: String {
+        guard case .loaded(let workloads, _, _) = state else { return "" }
+        return kubeSharedNamespace(workloads.map(\.namespace))
     }
 
     private func load() async {
@@ -106,6 +115,7 @@ private struct AppWorkloadLine: View {
                 Button("Restart", systemImage: "arrow.clockwise", action: onRestart)
                     .buttonStyle(.bordered)
                     .disabled(!workload.canRestart)
+                    .kubeGated(.restartWorkload, in: workload.namespace)
             }
         }
     }

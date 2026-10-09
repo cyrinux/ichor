@@ -111,6 +111,14 @@ struct ArgoCDView: View {
         }
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
+        // Outermost: the toolbar's bottom bar reads it too.
+        .loadsKubeActionAccess(namespace: appsNamespace)
+    }
+
+    /// The namespace of the Applications when they share one (Argo CD's own, usually).
+    private var appsNamespace: String {
+        guard case .loaded(let status, _, _) = state else { return "" }
+        return kubeSharedNamespace(status.apps.map(\.namespace))
     }
 
     private func topBar(_ status: ArgoStatus) -> some View {
@@ -172,6 +180,7 @@ struct ArgoCDView: View {
                             .labelStyle(.titleAndIcon)
                     }
                     .disabled(syncable.isEmpty)
+                    .kubeGated(.argoSync, in: kubeSharedNamespace(chosen.map(\.namespace)))
                     Spacer()
                     Button {
                         Task {
@@ -182,6 +191,7 @@ struct ArgoCDView: View {
                         Label(String(localized: "Refresh (\(chosen.count))"), systemImage: "arrow.clockwise").labelStyle(.titleAndIcon)
                     }
                     .disabled(chosen.isEmpty)
+                    .kubeGated(.argoSync, in: kubeSharedNamespace(chosen.map(\.namespace)))
                 }
             }
         }

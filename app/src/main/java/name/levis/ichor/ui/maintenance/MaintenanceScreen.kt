@@ -31,6 +31,8 @@ import kotlinx.coroutines.withContext
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.MaintenanceManager
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.data.activeIsKube
 import name.levis.ichor.data.activeSummary
 import name.levis.ichor.model.MaintenancePlan
@@ -79,6 +81,8 @@ fun MaintenanceScreen(
     var confirming by remember { mutableStateOf<MaintenanceChoice?>(null) }
     val following = current?.takeIf { it.node == node }
     val draining = drainOnly || config?.activeIsKube == true
+    // A cluster without Talos drains with its own credentials; a Talos one with its admin kubeconfig.
+    val drainDenial = if (config?.activeIsKube == true) rememberKubeDenial(KubeAction.DRAIN_NODE, "") else null
     LaunchedEffect(Unit) { if (plan == UiState.Loading) planVm.refresh() }
 
     fun start(choice: MaintenanceChoice, name: String) {
@@ -149,6 +153,7 @@ fun MaintenanceScreen(
                             demo = config?.activeSummary?.isDemo == true,
                             busyWith = busyWith,
                             drainOnly = draining,
+                            denial = drainDenial,
                             onStart = { confirming = it },
                         )
                     }

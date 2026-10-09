@@ -8,6 +8,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import name.levis.ichor.data.KubePermissions
 import name.levis.ichor.data.BackupManager
 import name.levis.ichor.data.AiPreferences
 import name.levis.ichor.data.CaptureRepository
@@ -135,6 +136,8 @@ class TalosApp : Application() {
     val ciliumRepository by lazy { CiliumRepository(configRepository, kubeServers) }
     /** Any kind as YAML, Helm releases, followed pod logs and port-forwards (Kubernetes API only). */
     val kubeBrowser by lazy { KubeBrowserRepository(configRepository, kubeServers) }
+    /** Which Kubernetes actions the active cluster's credentials may run, and who they are. */
+    val kubePermissions by lazy { KubePermissions(configRepository, kubeServers) }
     val netPerfHistory by lazy { NetPerfHistory(java.io.File(noBackupFilesDir, "netperf")) }
     val publicIps by lazy {
         PublicIpRepository(

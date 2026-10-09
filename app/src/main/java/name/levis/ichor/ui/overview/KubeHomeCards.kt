@@ -42,6 +42,7 @@ import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.asString
 import name.levis.ichor.ui.components.InfoRow
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.rememberKubeWhoAmI
 import name.levis.ichor.ui.components.StatusPill
 import name.levis.ichor.ui.importconfig.certExpiry
 import name.levis.ichor.ui.kubeauth.SignInAction
@@ -98,6 +99,10 @@ internal fun KubeSummaryCard(name: String, cluster: ContextSummary, nodes: KubeN
                 InfoRow(stringResource(R.string.overview_stat_nodes), "${nodes.readyCount}/${nodes.nodes.size}")
             }
             if (cluster.user.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_user), cluster.user)
+            // Who the API server takes the credentials for (an OIDC or cloud identity); hidden when it cannot say.
+            rememberKubeWhoAmI(cluster.name)?.let { who ->
+                InfoRow(stringResource(R.string.kube_whoami_user), listOf(who.user, who.groups.joinToString(", ")).filter { it.isNotEmpty() }.joinToString("\n"), mono = true)
+            }
             if (cluster.namespace.isNotEmpty()) InfoRow(stringResource(R.string.import_kube_namespace), cluster.namespace)
             if (cluster.certNotAfter > 0) InfoRow(stringResource(R.string.import_kube_expires), certExpiry(cluster.certNotAfter))
         }

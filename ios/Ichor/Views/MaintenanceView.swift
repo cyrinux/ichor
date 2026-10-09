@@ -35,6 +35,8 @@ struct MaintenanceView: View {
             if draining { action = .none }
             await loadPlan()
         }
+        // A cluster without Talos drains through its kubeconfig's credentials: cluster-wide.
+        .loadsKubeActionAccess(namespace: "")
     }
 
     /// Another maintenance or an upgrade runs: the cluster lock would refuse this one anyway.
@@ -77,6 +79,8 @@ struct MaintenanceView: View {
             Section {
                 Button(role: .destructive) { Task { await requestStart() } } label: { Text(startTitle) }
                     .disabled(!canRequest(plan))
+                    .kubeGated(kube ? .drainNode : nil)
+                KubeDeniedNote(kube ? .drainNode : nil)
                 if let message { Text(message).font(.footnote).foregroundStyle(.statusBad) }
             } footer: {
                 Text("Stopping, or a failure, leaves the node cordoned. Keep Ichor open until the maintenance ends.")

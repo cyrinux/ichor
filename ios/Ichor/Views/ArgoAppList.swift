@@ -24,11 +24,13 @@ struct ArgoAppsList: View {
         let shown = filterArgoApps(status.apps, filter: filter, query: query)
         let candidates = syncAllCandidates(shown)
         List(selection: $selection) {
+            KubeDeniedSection(actions: [.argoSync], namespace: kubeSharedNamespace(status.apps.map(\.namespace)))
             if filter == .outOfSync && !candidates.isEmpty {
                 Section {
                     Button { onSyncAll(candidates) } label: {
                         Label(String(localized: "Sync all out of sync (\(candidates.count))"), systemImage: "arrow.triangle.2.circlepath")
                     }
+                    .kubeGated(.argoSync, in: kubeSharedNamespace(candidates.map(\.namespace)))
                 }
             }
             ForEach(groupArgoApps(shown, by: grouping)) { group in
@@ -41,10 +43,12 @@ struct ArgoAppsList: View {
                             Button { onSync(app) } label: { Label("Sync", systemImage: "arrow.triangle.2.circlepath") }
                                 .tint(.blue)
                                 .disabled(!app.canSync)
+                                .kubeGated(.argoSync, in: app.namespace)
                         }
                         .swipeActions(edge: .trailing) {
                             Button { onRefresh(app) } label: { Label("Refresh", systemImage: "arrow.clockwise") }
                                 .tint(.indigo)
+                                .kubeGated(.argoSync, in: app.namespace)
                         }
                     }
                 } header: {

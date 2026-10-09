@@ -54,6 +54,7 @@ import name.levis.ichor.R
 import name.levis.ichor.data.isMeteredNetwork
 import name.levis.ichor.data.podsKey
 import name.levis.ichor.data.KubeRepository
+import name.levis.ichor.model.KubeAction
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.filteredPods
 import name.levis.ichor.model.podNamespaces
@@ -61,6 +62,8 @@ import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.UiText
 import name.levis.ichor.ui.app
 import name.levis.ichor.ui.cancellableCatching
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.ui.components.ConfirmDialog
 import name.levis.ichor.ui.components.DataFreshness
 import name.levis.ichor.ui.components.EmptyText
@@ -180,6 +183,7 @@ fun PodsTab(
         // Sorted once complete; image search only when every row carries its images.
         val rows = remember(load, selected, query) { load.items.filteredPods(selected, query, sorted = load.done, searchImages = load.detailed) }
         PagedProgress(progress)
+        KubeDenialNote(rememberKubeDenial(KubeAction.DELETE_POD, selected.orEmpty()), Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         IncompleteNotice(load, searching = query.isNotBlank(), onLoadMore = vm::loadMore, onLoadAll = vm::loadAll)
         PullToRefreshBox(isRefreshing = s.refreshing, onRefresh = vm::refresh, modifier = Modifier.weight(1f)) {
             if (rows.isEmpty()) {
@@ -251,7 +255,8 @@ internal fun PodRow(
         if (deleting) {
             CircularProgressIndicator(Modifier.padding(12.dp).size(24.dp), strokeWidth = 2.dp)
         } else {
-            IconButton(onClick = onDelete, enabled = pod.status != "Terminating") {
+            val denied = rememberKubeDenial(KubeAction.DELETE_POD, pod.namespace) != null
+            IconButton(onClick = onDelete, enabled = pod.status != "Terminating" && !denied) {
                 Icon(Icons.Outlined.Delete, stringResource(R.string.pods_delete, pod.name))
             }
         }

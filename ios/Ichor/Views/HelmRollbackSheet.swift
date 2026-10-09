@@ -46,6 +46,7 @@ struct HelmRollbackSheet: View {
         }
         .interactiveDismissDisabled(running)
         .task { await load() }
+        .loadsKubeActionAccess(namespace: namespace)
     }
 
     private func content(_ plan: HelmRollbackPlan) -> some View {
@@ -89,6 +90,7 @@ struct HelmRollbackSheet: View {
                 if let failure {
                     Text(verbatim: failure).font(.callout).foregroundStyle(Color.statusBad)
                 }
+                KubeDeniedNote(.helmRollback)
                 confirmButton(plan)
             }
         }
@@ -127,6 +129,7 @@ struct HelmRollbackSheet: View {
         .tint(.red)
         .controlSize(.large)
         .disabled(!plan.canRun || running)
+        .kubeGated(.helmRollback)
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets())
     }

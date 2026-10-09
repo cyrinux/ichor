@@ -27,6 +27,8 @@ struct FluxHero: View {
                     if app.stalled { ArgoBadge(label: String(localized: "Stalled"), symbol: "exclamationmark.octagon", color: .red) }
                 }
                 actions
+                KubeDeniedNote(app.target.accessAction, in: app.namespace)
+                    .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
@@ -142,6 +144,8 @@ struct FluxHero: View {
             .disabled(busy)
         }
         .controlSize(.regular)
+        // Every Flux action is a patch of the object.
+        .kubeGated(app.target.accessAction, in: app.namespace)
         .overlay(alignment: .trailing) {
             if busy { ProgressView().offset(x: 30) }
         }

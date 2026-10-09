@@ -34,6 +34,9 @@ import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
 import name.levis.ichor.model.FluxAction
 import name.levis.ichor.model.FluxApp
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.shortFluxRevision
 import name.levis.ichor.ui.argocd.ArgoBadge
 import name.levis.ichor.ui.argocd.OwnerChip
@@ -100,6 +103,17 @@ fun FluxAppHero(app: FluxApp) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FluxActionButtons(app: FluxApp, busy: Boolean, onDiff: (() -> Unit)? = null, onAction: (FluxAction) -> Unit) {
+    // Every action patches the object; the diff only reads.
+    val denial = rememberKubeDenial(KubeAction.FLUX_RECONCILE, app.namespace)
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        FluxActionRow(app, busy || denial != null, onDiff, onAction)
+        KubeDenialNote(denial)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FluxActionRow(app: FluxApp, busy: Boolean, onDiff: (() -> Unit)?, onAction: (FluxAction) -> Unit) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Button(onClick = { onAction(FluxAction.RECONCILE) }, enabled = !busy && app.canReconcile) {
             ButtonContent(Icons.Outlined.Refresh, FluxAction.RECONCILE)

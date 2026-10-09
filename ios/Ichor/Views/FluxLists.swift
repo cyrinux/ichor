@@ -16,6 +16,7 @@ struct FluxAppsList: View {
     var body: some View {
         let shown = filterFluxApps(status.apps, filter: filter, query: query)
         List {
+            KubeDeniedSection(actions: [.fluxReconcile], namespace: kubeSharedNamespace(status.apps.filter(\.isKustomization).map(\.namespace)))
             if !status.helmError.isEmpty { Section { ErrorLine(error: status.helmError) } }
             ForEach(shown) { app in
                 NavigationLink(value: FluxAppRoute(kind: app.kind, namespace: app.namespace, name: app.name, downNodes: downNodes)) {
@@ -25,16 +26,23 @@ struct FluxAppsList: View {
                     Button { act(.reconcile, app.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
                         .tint(.blue)
                         .disabled(!app.canReconcile)
+                        .kubeGated(app.target.accessAction, in: app.namespace)
                 }
-                .swipeActions(edge: .trailing) { suspendButton(suspended: app.suspended, target: app.target) }
-                .contextMenu {
-                    Button { act(.reconcile, app.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
-                        .disabled(!app.canReconcile)
-                    Button { act(.reconcileWithSource, app.target) } label: {
-                        Label("Reconcile with source", systemImage: FluxAction.reconcileWithSource.symbol)
-                    }
-                    .disabled(!app.canReconcileWithSource)
+                .swipeActions(edge: .trailing) {
                     suspendButton(suspended: app.suspended, target: app.target)
+                        .kubeGated(app.target.accessAction, in: app.namespace)
+                }
+                .contextMenu {
+                    Group {
+                        Button { act(.reconcile, app.target) } label: { Label("Reconcile", systemImage: FluxAction.reconcile.symbol) }
+                            .disabled(!app.canReconcile)
+                        Button { act(.reconcileWithSource, app.target) } label: {
+                            Label("Reconcile with source", systemImage: FluxAction.reconcileWithSource.symbol)
+                        }
+                        .disabled(!app.canReconcileWithSource)
+                        suspendButton(suspended: app.suspended, target: app.target)
+                    }
+                    .kubeGated(app.target.accessAction, in: app.namespace)
                 }
             }
         }

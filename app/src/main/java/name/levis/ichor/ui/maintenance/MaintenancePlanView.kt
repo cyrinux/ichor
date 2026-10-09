@@ -33,6 +33,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.KubePermission
+import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.model.DrainPod
 import name.levis.ichor.model.MaintenanceAction
 import name.levis.ichor.model.MaintenancePlan
@@ -58,7 +60,15 @@ data class MaintenanceChoice(val action: MaintenanceAction, val includeBare: Boo
  * cluster without Talos.
  */
 @Composable
-fun MaintenancePlanView(plan: MaintenancePlan, demo: Boolean, busyWith: String?, drainOnly: Boolean = false, onStart: (MaintenanceChoice) -> Unit) {
+fun MaintenancePlanView(
+    plan: MaintenancePlan,
+    demo: Boolean,
+    busyWith: String?,
+    drainOnly: Boolean = false,
+    /** Why the credentials cannot drain (a cluster without Talos); null to offer it. */
+    denial: KubePermission? = null,
+    onStart: (MaintenanceChoice) -> Unit,
+) {
     val colors = LocalStatusColors.current
     var action by rememberSaveable(drainOnly) { mutableStateOf(if (drainOnly) MaintenanceAction.NONE else MaintenanceAction.REBOOT) }
     var includeBare by rememberSaveable { mutableStateOf(false) }
@@ -99,9 +109,10 @@ fun MaintenancePlanView(plan: MaintenancePlan, demo: Boolean, busyWith: String?,
 
         if (!drainOnly) Checks(plan, action, ticked) { i, on -> ticked = if (on) ticked + i else ticked - i }
         if (busyWith != null) Text(busyWith, color = colors.warn, style = MaterialTheme.typography.bodySmall)
+        KubeDenialNote(denial)
         Button(
             onClick = { onStart(MaintenanceChoice(action, includeBare, maintenanceAcknowledged(plan, action, ticked.size))) },
-            enabled = maintenanceCanStart(plan, action, ticked.size, busyWith != null),
+            enabled = maintenanceCanStart(plan, action, ticked.size, busyWith != null) && denial == null,
             modifier = Modifier.fillMaxWidth(),
         ) { Text(stringResource(if (drainOnly) R.string.maintenance_phase_drain else R.string.maintenance_start)) }
     }

@@ -50,6 +50,8 @@ struct KubeNodesView: View {
         .navigationTitle("Nodes")
         .navigationBarTitleDisplayMode(.inline)
         .themedBackground()
+        // Cordon and drain are cluster-wide.
+        .loadsKubeActionAccess(namespace: "")
     }
 
     /// All, needing attention, or one status, each with its count: Kubernetes never says unreachable.

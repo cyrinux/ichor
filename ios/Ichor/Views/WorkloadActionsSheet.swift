@@ -57,6 +57,7 @@ struct WorkloadActionsSheet: View {
                     Text(verbatim: CheckupText.kubeEventsTitle)
                 }
             }
+            .loadsKubeActionAccess(namespace: workload.namespace)
             .themedBackground()
             .navigationTitle(Text(verbatim: workload.name))
             .navigationBarTitleDisplayMode(.inline)
@@ -125,11 +126,13 @@ struct WorkloadActionsSheet: View {
                     if argoOwner != nil { askArgo = true } else { confirmScaleNow() }
                 }
                 .disabled(replicas == current || scaling)
+                .kubeGated(.scale)
                 if scaling {
                     Spacer()
                     ProgressView()
                 }
             }
+            KubeDeniedNote(.scale)
         } header: {
             Text("Scale")
         } footer: {
@@ -148,6 +151,7 @@ struct WorkloadActionsSheet: View {
                 if list.isEmpty {
                     Text("No revision kept.").note()
                 }
+                KubeDeniedNote(.restartWorkload)
                 ForEach(list) { revision in
                     RevisionRow(revision: revision, busy: rollingBack) { confirmRollback = revision }
                 }
@@ -243,6 +247,7 @@ private struct RevisionRow: View {
                 Button("Roll back", action: onRollback)
                     .buttonStyle(.bordered)
                     .disabled(busy)
+                    .kubeGated(.restartWorkload)
             }
         }
     }

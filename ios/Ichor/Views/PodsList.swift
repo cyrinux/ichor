@@ -23,6 +23,7 @@ struct PodsList: View {
             // Sorted once complete; image search only when every row carries its images.
             let shown = filterPods(load.items, namespace: selected, query: query, sorted: load.done, searchImages: load.detailed)
             List {
+                KubeDeniedSection(actions: [.deletePod], namespace: selected ?? "")
                 Section {
                     ForEach(shown) { pod in
                         PodRow(pod: pod, showNamespace: selected == nil, deleting: actions.deleting.contains(pod.id),
@@ -167,6 +168,7 @@ struct PodRow: View {
                 }
                     .buttonStyle(.borderless)
                     .disabled(pod.status == "Terminating")
+                    .kubeGated(.deletePod, in: pod.namespace)
                     .accessibilityLabel(Text("Delete \(pod.name)"))
             }
         }

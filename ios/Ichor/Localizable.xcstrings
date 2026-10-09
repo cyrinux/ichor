@@ -98023,6 +98023,123 @@
           }
         }
       }
+    },
+    "Your account cannot %@ %@ in %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account cannot %1$@ %2$@ in %3$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre compte ne peut pas faire %1$@ sur %2$@ dans %3$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu cuenta no puede hacer %1$@ sobre %2$@ en %3$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihr Konto darf %1$@ auf %2$@ in %3$@ nicht ausführen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo account non può eseguire %1$@ su %2$@ in %3$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш обліковий запис не може виконати %1$@ для %2$@ у %3$@"
+          }
+        }
+      }
+    },
+    "Your account cannot %@ %@ across the cluster" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account cannot %1$@ %2$@ across the cluster"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre compte ne peut pas faire %1$@ sur %2$@ dans tout le cluster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu cuenta no puede hacer %1$@ sobre %2$@ en todo el clúster"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihr Konto darf %1$@ auf %2$@ nicht clusterweit ausführen"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tuo account non può eseguire %1$@ su %2$@ in tutto il cluster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш обліковий запис не може виконати %1$@ для %2$@ у всьому кластері"
+          }
+        }
+      }
+    },
+    "Kubernetes user" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilisateur Kubernetes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuario de Kubernetes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kubernetes-Benutzer"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utente Kubernetes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Користувач Kubernetes"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

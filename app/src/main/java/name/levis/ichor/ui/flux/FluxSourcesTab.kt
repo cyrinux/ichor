@@ -34,6 +34,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.FluxAction
 import name.levis.ichor.model.FluxSource
 import name.levis.ichor.model.FluxState
@@ -49,10 +52,13 @@ import name.levis.ichor.util.timeAgo
 @Composable
 fun FluxSourcesTab(status: FluxStatus, busy: Set<String>, onAct: (FluxSource, FluxAction) -> Unit) {
     val sources = status.sortedSources
+    // Sources usually share Flux's namespace: its answer stands for the list.
+    val listDenial = rememberKubeDenial(KubeAction.FLUX_RECONCILE, sources.firstOrNull()?.namespace.orEmpty())
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
         if (status.sourcesError.isNotEmpty()) item(key = "sources-error") {
             InlineError(stringResource(R.string.data_services_unreadable, status.sourcesError), Modifier.padding(16.dp))
         }
+        if (listDenial != null) item(key = "denied") { KubeDenialNote(listDenial, Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
         if (sources.isEmpty() && status.sourcesError.isEmpty()) item(key = "sources-empty") { EmptyText(stringResource(R.string.flux_no_sources)) }
         items(sources, key = { it.key }) { src ->
             SourceRow(src, src.key in busy) { onAct(src, it) }
@@ -107,11 +113,12 @@ private fun SourceRow(src: FluxSource, busy: Boolean, onAct: (FluxAction) -> Uni
         if (busy) {
             CircularProgressIndicator(Modifier.padding(horizontal = 14.dp).size(20.dp), strokeWidth = 2.dp)
         } else {
-            TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.flux_reconcile), onClick = { onAct(FluxAction.RECONCILE) }, enabled = !src.suspended)
+            val allowed = rememberKubeDenial(KubeAction.FLUX_RECONCILE, src.namespace) == null
+            TooltipIconButton(Icons.Outlined.Refresh, stringResource(R.string.flux_reconcile), onClick = { onAct(FluxAction.RECONCILE) }, enabled = !src.suspended && allowed)
             if (src.suspended) {
-                TooltipIconButton(Icons.Outlined.PlayArrow, stringResource(R.string.flux_resume), onClick = { onAct(FluxAction.RESUME) })
+                TooltipIconButton(Icons.Outlined.PlayArrow, stringResource(R.string.flux_resume), onClick = { onAct(FluxAction.RESUME) }, enabled = allowed)
             } else {
-                TooltipIconButton(Icons.Outlined.Pause, stringResource(R.string.flux_suspend), onClick = { onAct(FluxAction.SUSPEND) })
+                TooltipIconButton(Icons.Outlined.Pause, stringResource(R.string.flux_suspend), onClick = { onAct(FluxAction.SUSPEND) }, enabled = allowed)
             }
         }
     }

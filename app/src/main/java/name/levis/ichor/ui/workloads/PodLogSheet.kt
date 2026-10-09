@@ -55,6 +55,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.data.KubeRepository
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.KubeObjectRef
 import name.levis.ichor.model.KubePod
 import name.levis.ichor.model.POD_LOG_TAIL
@@ -179,6 +182,7 @@ fun PodLogSheet(
     val containers by vm.containers.collectAsStateWithLifecycle()
     val detail by vm.detail.collectAsStateWithLifecycle()
     val lastTermination = detail?.lastTermination.orEmpty()
+    val shellDenial = rememberKubeDenial(KubeAction.EXEC_POD, pod.namespace)
     // The pod's events in place of its log: why it does not start, when there is no log yet.
     var events by rememberSaveable(pod.key) { mutableStateOf(false) }
     // New lines as they are written (`kubectl logs -f`), in place of the last ones read once.
@@ -272,11 +276,12 @@ fun PodLogSheet(
                             AssistChip(onClick = {
                                 onDismiss()
                                 links.onShell(pod.namespace, pod.name, query.container)
-                            }, label = { Text(stringResource(R.string.pod_shell_title)) })
+                            }, label = { Text(stringResource(R.string.pod_shell_title)) }, enabled = shellDenial == null)
                         }
                     }
                 }
             }
+            if (links != null) KubeDenialNote(shellDenial, Modifier.padding(horizontal = 16.dp))
             if (lastTermination.isNotEmpty()) {
                 Text(
                     stringResource(R.string.pod_logs_last_termination, lastTermination),

@@ -44,6 +44,7 @@ struct FluxAppView: View {
         .navigationBarTitleDisplayMode(.inline)
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
+        .loadsKubeActionAccess(namespace: namespace)
     }
 
     private func content(_ app: FluxApp, status: FluxStatus) -> some View {

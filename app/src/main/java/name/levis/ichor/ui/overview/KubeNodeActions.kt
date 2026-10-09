@@ -37,7 +37,11 @@ import kotlinx.coroutines.launch
 import name.levis.ichor.R
 import name.levis.ichor.TalosApp
 import name.levis.ichor.data.MaintenanceManager
+import name.levis.ichor.model.KubeAction
 import name.levis.ichor.model.KubeNodeInfo
+import name.levis.ichor.model.KubePermission
+import name.levis.ichor.ui.components.KubeDenialNote
+import name.levis.ichor.ui.components.rememberKubeActionAccess
 import name.levis.ichor.ui.node.CordonDialog
 import name.levis.ichor.ui.uiText
 
@@ -51,27 +55,42 @@ internal fun KubeNodeMenuSheet(node: KubeNodeInfo, onCordon: () -> Unit, onDrain
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp).navigationBarsPadding()) {
             Text(node.name, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            KubeNodeMenuRow(stringResource(if (node.cordoned) R.string.node_menu_uncordon else R.string.node_menu_cordon), Icons.Outlined.Block, onCordon)
-            KubeNodeMenuRow(stringResource(R.string.node_menu_drain), Icons.AutoMirrored.Outlined.Logout, onDrain)
+            // Nodes are cluster-scoped, and a drain evicts pods of every namespace.
+            val access = rememberKubeActionAccess("")
+            KubeNodeMenuRow(
+                stringResource(if (node.cordoned) R.string.node_menu_uncordon else R.string.node_menu_cordon),
+                Icons.Outlined.Block,
+                access?.denial(KubeAction.CORDON_NODE),
+                onCordon,
+            )
+            KubeNodeMenuRow(stringResource(R.string.node_menu_drain), Icons.AutoMirrored.Outlined.Logout, access?.denial(KubeAction.DRAIN_NODE), onDrain)
         }
     }
 }
 
 @Composable
-private fun KubeNodeMenuRow(label: String, icon: ImageVector, onClick: () -> Unit) {
+private fun KubeNodeMenuRow(label: String, icon: ImageVector, denial: KubePermission?, onClick: () -> Unit) {
+    val enabled = denial == null
+    val color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
     Row(
         Modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Icon(icon, contentDescription = null)
-        Text(label, style = MaterialTheme.typography.bodyLarge)
+        Icon(icon, contentDescription = null, tint = color)
+        Column {
+            Text(label, style = MaterialTheme.typography.bodyLarge, color = color)
+            KubeDenialNote(denial)
+        }
     }
 }
+
+// Material's disabled content alpha.
+private const val DISABLED_ALPHA = 0.38f
 
 /**
  * The sheets behind a tap on a Kubernetes node: its menu ([node], null for none), then the

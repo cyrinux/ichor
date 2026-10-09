@@ -57,10 +57,18 @@ struct SelectedPodsView: View {
             await list.show(KubeScope(), model: model)
         }
         .podActions(actions) { await list.refresh(model: model) }
+        .loadsKubeActionAccess(namespace: accessNamespace)
+    }
+
+    /// The workload's namespace; "" for a node's pods (every namespace).
+    private var accessNamespace: String {
+        if case .workload(_, let namespace, _) = selection { return namespace }
+        return ""
     }
 
     private func rows(_ load: PagedLoad<KubePod>) -> some View {
         List {
+            KubeDeniedSection(actions: [.deletePod], namespace: accessNamespace)
             Section {
                 // In the server's order: sorting would move rows as pages arrive.
                 ForEach(load.items) { pod in

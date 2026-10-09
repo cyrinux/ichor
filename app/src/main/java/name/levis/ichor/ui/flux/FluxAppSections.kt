@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.KubeAction
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.model.FluxCondition
 import name.levis.ichor.model.FluxHistory
 import name.levis.ichor.model.FluxResource
@@ -88,7 +90,7 @@ fun FluxResourceGroup(kind: String, resources: List<FluxResource>, onRestart: ((
                     if (r.namespace.isNotEmpty()) Text(r.namespace, style = MaterialTheme.typography.labelSmall, color = muted)
                 }
                 if (onRestart != null && r.restartable) {
-                    IconButton(onClick = { onRestart(r) }) {
+                    IconButton(onClick = { onRestart(r) }, enabled = rememberKubeDenial(KubeAction.RESTART_WORKLOAD, r.namespace) == null) {
                         Icon(Icons.Outlined.RestartAlt, contentDescription = stringResource(R.string.workloads_restart_confirm), tint = muted, modifier = Modifier.size(18.dp))
                     }
                 }

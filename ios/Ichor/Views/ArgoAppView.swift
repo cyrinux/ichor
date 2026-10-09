@@ -58,6 +58,7 @@ struct ArgoAppView: View {
         .sensoryFeedback(.success, trigger: succeeded)
         .navigationDestination(item: $openNode) { NodeDetailView(ref: $0) }
         .navigationDestination(for: ArgoWindowsRoute.self) { _ in ArgoWindowsView() }
+        .loadsKubeActionAccess(namespace: namespace)
     }
 
     private func content(_ app: ArgoApp, status: ArgoStatus) -> some View {
@@ -166,6 +167,7 @@ struct ArgoAppView: View {
                 .font(.caption.weight(.semibold))
                 .textCase(nil)
                 .disabled(!app.canSync && !selecting)
+                .kubeGated(.argoSync, in: app.namespace)
             }
         } footer: {
             if selecting { Text("Tick the resources to sync on their own.") }
@@ -184,6 +186,7 @@ struct ArgoAppView: View {
             }
             .buttonStyle(.borderedProminent)
             .disabled(chosen.isEmpty || !app.canSync)
+            .kubeGated(.argoSync, in: app.namespace)
         }
         .padding(.horizontal)
         .padding(.vertical, 10)

@@ -23,11 +23,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import name.levis.ichor.R
+import name.levis.ichor.model.KubeAction
 import name.levis.ichor.model.KubeWorkload
 import name.levis.ichor.model.podSelection
 import name.levis.ichor.ui.UiState
 import name.levis.ichor.ui.asString
+import name.levis.ichor.ui.components.KubeDenialNote
 import name.levis.ichor.ui.components.MutedText
+import name.levis.ichor.ui.components.rememberKubeDenial
 import name.levis.ichor.ui.components.SectionTitle
 
 /** What the app sheet needs to offer rollout restarts; null where the role cannot run them. */
@@ -62,6 +65,7 @@ fun LazyListScope.appWorkloadsSection(restart: AppRestartUi) {
 private fun WorkloadRestartRow(workload: KubeWorkload, restarting: Boolean, onPods: (() -> Unit)?, onRestart: () -> Unit) {
     val open = onPods?.let { Modifier.clickable(onClickLabel = stringResource(R.string.pods_title), onClick = it) } ?: Modifier
     Row(Modifier.fillMaxWidth().then(open).padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        val denial = rememberKubeDenial(KubeAction.RESTART_WORKLOAD, workload.namespace)
         Column(Modifier.weight(1f)) {
             Text(
                 workload.name,
@@ -71,11 +75,12 @@ private fun WorkloadRestartRow(workload: KubeWorkload, restarting: Boolean, onPo
                 overflow = TextOverflow.Ellipsis,
             )
             MutedText(workload.kind + " · " + stringResource(R.string.workloads_ready_count, workload.ready, workload.desired))
+            KubeDenialNote(denial)
         }
         if (restarting) {
             CircularProgressIndicator(Modifier.padding(horizontal = 24.dp).size(24.dp), strokeWidth = 2.dp)
         } else {
-            FilledTonalButton(onClick = onRestart, enabled = workload.canRestart, modifier = Modifier.padding(start = 12.dp)) {
+            FilledTonalButton(onClick = onRestart, enabled = workload.canRestart && denial == null, modifier = Modifier.padding(start = 12.dp)) {
                 Icon(Icons.Outlined.RestartAlt, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(R.string.workloads_restart_confirm), modifier = Modifier.padding(start = 6.dp))
             }

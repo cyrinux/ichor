@@ -29,10 +29,12 @@ struct KubeNodeMenu: View {
     @Binding var cordoning: KubeNodeInfo?
 
     var body: some View {
-        Button(node.cordoned ? String(localized: "Uncordon") : String(localized: "Cordon"), systemImage: "nosign") {
+        // Cluster-wide: the access the screen loaded for "" (see loadsKubeActionAccess).
+        KubeGatedMenuButton(node.cordoned ? String(localized: "Uncordon") : String(localized: "Cordon"), systemImage: "nosign",
+                            action: .cordonNode) {
             cordoning = node
         }
-        Button("Drain…", systemImage: "rectangle.portrait.and.arrow.right") {
+        KubeGatedMenuButton(String(localized: "Drain…"), systemImage: "rectangle.portrait.and.arrow.right", action: .drainNode) {
             path.append(.drain(node: node.name, hostname: node.name))
         }
     }

@@ -142,6 +142,9 @@ struct KubernetesView: View {
             case .network: NetPerfView(session: netPerf)
             }
         }
+        // What the credentials may do in the namespace listed; nothing asked for every namespace
+        // (a refusal everywhere says nothing of the namespace a row is in).
+        .loadsKubeActionAccess(namespace: scopeControl.scope.namespace)
         // A new address: the lists load again through it.
         .id(model.client?.kubeServer)
         .toolbar {
@@ -300,6 +303,7 @@ private struct WorkloadsList: View {
             // Sorted once complete: rows do not jump as pages arrive.
             let shown = filterWorkloads(load.items, namespace: selected, query: query, sorted: load.done)
             List {
+                KubeDeniedSection(actions: [.restartWorkload], namespace: selected ?? "")
                 Section {
                     ForEach(shown) { workload in
                         WorkloadRow(workload: workload, showNamespace: selected == nil,
@@ -364,6 +368,7 @@ private struct WorkloadRow: View {
                 }
                     .buttonStyle(.borderless)
                     .disabled(!workload.canRestart)
+                    .kubeGated(.restartWorkload, in: workload.namespace)
                     .accessibilityLabel(Text("Restart \(workload.name)"))
             }
         }

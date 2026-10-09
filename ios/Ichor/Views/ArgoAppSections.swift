@@ -27,6 +27,8 @@ struct ArgoHero: View {
                     ArgoBadge(label: app.sync.label, symbol: app.sync.symbol, color: app.sync.color)
                 }
                 actions
+                KubeDeniedNote(.argoSync, in: app.namespace)
+                    .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
@@ -71,6 +73,7 @@ struct ArgoHero: View {
                 }
             }
             .disabled(!app.canChangeSpec || busy)
+            .kubeGated(.argoSync, in: app.namespace)
         } footer: {
             if let notice = app.ownerNotice { Text(notice) }
         }
@@ -102,6 +105,8 @@ struct ArgoHero: View {
             .disabled(busy)
         }
         .controlSize(.regular)
+        // Every Argo CD action is a patch of the Application.
+        .kubeGated(.argoSync, in: app.namespace)
         .overlay(alignment: .trailing) {
             if busy { ProgressView().offset(x: 30) }
         }
@@ -297,6 +302,7 @@ struct ArgoHistorySection: View {
                         Button("Roll back to this") { rollback(entry) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
+                            .kubeGated(.argoSync, in: app.namespace)
                     }
                 }
             }

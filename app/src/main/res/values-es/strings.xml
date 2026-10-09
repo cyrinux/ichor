@@ -3352,4 +3352,7 @@
     <string name="kb_summary_node">Nodo</string>
     <string name="kb_summary_suspended">Suspendido</string>
     <string name="kb_summary_schedule">Programación</string>
+    <string name="kube_access_denied">Tu cuenta no puede hacer %1$s sobre %2$s en %3$s</string>
+    <string name="kube_access_denied_cluster">Tu cuenta no puede hacer %1$s sobre %2$s en todo el clúster</string>
+    <string name="kube_whoami_user">Usuario de Kubernetes</string>
 </resources>
