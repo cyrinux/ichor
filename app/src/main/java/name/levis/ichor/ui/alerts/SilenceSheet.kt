@@ -54,7 +54,8 @@ private const val MAX_COMMENT = 500
 /**
  * Silences [alert]: its matchers, prefilled to mute exactly it ([matchersFor]), shown as chips
  * that can be removed to widen the silence; how long (1 hour to 1 week, or a number of hours up
- * to 30 days); a required comment. [onSilence] gets them; the outcome is a toast.
+ * to 30 days); a required comment. [onSilence] gets them; the outcome is a toast. [initialMinutes]
+ * and [initialComment] prefill the form (a notification's Silence 1 h).
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -64,13 +65,15 @@ fun SilenceSheet(
     denial: KubePermission?,
     onSilence: (matchers: List<AmMatcher>, minutes: Long, comment: String) -> Unit,
     onDismiss: () -> Unit,
+    initialMinutes: Long = AM_SILENCE_PRESETS.first(),
+    initialComment: String = "",
 ) {
     var matchers by remember { mutableStateOf<List<AmMatcher>?>(null) }
     var matchersError by remember { mutableStateOf<String?>(null) }
-    var minutes by rememberSaveable { mutableStateOf(AM_SILENCE_PRESETS.first()) }
-    var custom by rememberSaveable { mutableStateOf(false) }
-    var hoursText by rememberSaveable { mutableStateOf("") }
-    var comment by rememberSaveable { mutableStateOf("") }
+    var minutes by rememberSaveable { mutableStateOf(initialMinutes) }
+    var custom by rememberSaveable { mutableStateOf(initialMinutes !in AM_SILENCE_PRESETS) }
+    var hoursText by rememberSaveable { mutableStateOf(if (custom) (initialMinutes / 60).toString() else "") }
+    var comment by rememberSaveable { mutableStateOf(initialComment) }
     LaunchedEffect(alert.fingerprint) {
         matchers = try {
             matchersFor(alert.labels)

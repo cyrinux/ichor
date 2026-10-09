@@ -3539,4 +3539,8 @@
     <string name="imagescan_system_hint">Prüft die Images, die Talos auf diesem Knoten ausführt (kubelet, etcd, die Control Plane), per Digest mit Trivy auf bekannte Schwachstellen. Läuft als Job im Namespace %1$s, der sich danach selbst löscht.</string>
     <string name="imagescan_system_scan">System-Images prüfen</string>
     <string name="images_kubernetes_title">Kubernetes-Images</string>
+    <string name="alert_action_wake">Wecken</string>
+    <string name="alert_action_silence_hour">1 Std. stummschalten</string>
+    <string name="alert_action_snooze">8 Std. pausieren</string>
+    <string name="alert_action_silence_comment">Aus einer Benachrichtigung stummgeschaltet</string>
 </resources>

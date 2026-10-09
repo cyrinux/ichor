@@ -45,6 +45,7 @@ struct FluxAppView: View {
         .messageAlert($message)
         .sensoryFeedback(.success, trigger: succeeded)
         .loadsKubeActionAccess(namespace: namespace)
+        .onChange(of: NotificationRouter.shared.alertActionRequest) { _, _ in takeAlertAction() }
     }
 
     private func content(_ app: FluxApp, status: FluxStatus) -> some View {
@@ -97,6 +98,17 @@ struct FluxAppView: View {
         await store.refresh($state, key: key, currentKey: { model.fluxKey }) {
             try await store.load(with: client, key: key)
         }
+        takeAlertAction()
+    }
+
+    /// Reconcile chosen on this object's alert: asked first here (the hero's button runs it at
+    /// once), once the object is read.
+    private func takeAlertAction() {
+        guard let request = NotificationRouter.shared.alertActionRequest,
+              request.isReconcile(kind: kind, namespace: namespace, name: name),
+              case .loaded(let status, _, _) = state else { return }
+        NotificationRouter.shared.alertActionRequest = nil
+        if status.app(kind: kind, namespace: namespace, name: name) != nil { confirm = .reconcile }
     }
 
     private func run(_ action: FluxAction, on app: FluxApp) async {

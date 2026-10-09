@@ -16,8 +16,25 @@ struct AlertDetailSheet: View {
     let open: (Route) -> Void
     /// The silence was created: the sheet closes.
     let silenced: () -> Void
+    /// Silence 1 h on the alert's notification: the silence form opens at once, set to 1 h with
+    /// this comment (both can be changed, nothing is sent before "Silence").
+    let silenceComment: String?
 
     @Environment(\.dismiss) private var dismiss
+    @State private var silencing: Bool
+
+    init(alert: AMAlert, node: NodeOverview?, canOpenKube: Bool,
+         silence: @escaping (_ matchers: [AMMatcher], _ minutes: Int, _ comment: String) async -> String?,
+         open: @escaping (Route) -> Void, silenced: @escaping () -> Void, silenceComment: String? = nil) {
+        self.alert = alert
+        self.node = node
+        self.canOpenKube = canOpenKube
+        self.silence = silence
+        self.open = open
+        self.silenced = silenced
+        self.silenceComment = silenceComment
+        _silencing = State(initialValue: silenceComment != nil)
+    }
 
     var body: some View {
         NavigationStack {
@@ -55,6 +72,9 @@ struct AlertDetailSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
+            }
+            .navigationDestination(isPresented: $silencing) {
+                SilenceForm(alert: alert, minutes: 60, comment: silenceComment ?? "", silence: silence, done: silenced)
             }
         }
     }
@@ -142,10 +162,20 @@ private struct SilenceForm: View {
     let done: () -> Void
 
     /// A preset duration in minutes, or 0 for the custom one.
-    @State private var minutes = amSilenceDurations[0]
+    @State private var minutes: Int
     @State private var custom = ""
     @State private var matchers: [AMMatcher] = []
-    @State private var comment = ""
+    @State private var comment: String
+
+    init(alert: AMAlert, minutes: Int = amSilenceDurations[0], comment: String = "",
+         silence: @escaping (_ matchers: [AMMatcher], _ minutes: Int, _ comment: String) async -> String?,
+         done: @escaping () -> Void) {
+        self.alert = alert
+        self.silence = silence
+        self.done = done
+        _minutes = State(initialValue: minutes)
+        _comment = State(initialValue: comment)
+    }
     @State private var busy = false
     @State private var failure: String?
 

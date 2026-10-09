@@ -175,6 +175,11 @@
             android:name=".monitor.FreezeExtendReceiver"
             android:exported="false" />
 
+        <!-- Snooze and Wake on an alert's notification. -->
+        <receiver
+            android:name=".monitor.AlertActionReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".widget.ClusterWidgetReceiver"
             android:exported="true">

@@ -11,6 +11,8 @@ import name.levis.ichor.data.sourceFor
 import name.levis.ichor.model.Feature
 import name.levis.ichor.model.allows
 import name.levis.ichor.model.needsEndpoint
+import name.levis.ichor.model.wakeTargets
+import name.levis.ichor.model.wolKey
 import name.levis.ichor.widget.ClusterWidget
 
 /**
@@ -122,11 +124,25 @@ class MonitorWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         if (store.alertsEnabled.value) {
             val hide = app.appLock.enabled.value
             val clusterId = stored.activeSummary?.clusterId
-            evaluation.alerts.forEach { postAlert(applicationContext, it, hideOnLockScreen = hide, clusterId = clusterId) }
+            val fingerprint = active?.fingerprint.orEmpty()
+            // Snoozed from their notification: nothing, problem or resolved, until it is over.
+            app.alertSnoozes.prune(now)
+            val canReboot = active?.allows(Feature.POWER) == true
+            app.alertSnoozes.unsnoozed(evaluation.alerts, fingerprint, now).forEach { alert ->
+                val actions = alert.actions(canWake = canWake(app, fingerprint, alert), canReboot = canReboot)
+                postAlert(applicationContext, alert, hideOnLockScreen = hide, clusterId = clusterId, actions = actions, fingerprint = fingerprint)
+            }
         }
         ClusterWidget().updateAll(applicationContext)
         return Result.success()
     }
+}
+
+/** Whether Wake-on-LAN knows where to wake the node of a node [alert]: a saved target or a MAC it was seen with. */
+private fun canWake(app: TalosApp, fingerprint: String, alert: Alert): Boolean {
+    if (fingerprint.isBlank() || !alert.key.startsWith("node:")) return false
+    val key = wolKey(fingerprint, alert.key.substringAfter(':'))
+    return wakeTargets(app.wakeOnLan.targets.value[key], app.wakeOnLan.seen.value[key].orEmpty()).isNotEmpty()
 }
 
 /** Redraws the widget from the stored snapshot, without any network call. */

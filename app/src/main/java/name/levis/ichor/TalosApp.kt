@@ -45,6 +45,8 @@ import androidx.glance.appwidget.updateAll
 import name.levis.ichor.widget.ClusterWidget
 import name.levis.ichor.ui.apps.AppIconLoader
 import name.levis.ichor.i18n.AppLocale
+import name.levis.ichor.monitor.AlertActionToken
+import name.levis.ichor.monitor.AlertSnoozes
 import name.levis.ichor.monitor.MonitorStore
 import name.levis.ichor.monitor.canPostNotifications
 import name.levis.ichor.monitor.syncMonitoring
@@ -209,6 +211,12 @@ class TalosApp : Application() {
             KeystoreValue(java.io.File(noBackupFilesDir, "monitor-snapshot.enc"), "ichor-monitor-snapshot"),
         )
     }
+
+    /** The alerts snoozed from their notification. */
+    val alertSnoozes by lazy { AlertSnoozes(getSharedPreferences(AlertSnoozes.FILE, Context.MODE_PRIVATE)) }
+
+    /** The secret an alert's in-app button carries, so no other app can ask for its confirmation. */
+    val alertActionToken by lazy { AlertActionToken(getSharedPreferences(AlertSnoozes.FILE, Context.MODE_PRIVATE)) }
 
     /** The optional AI diagnosis: off until enabled in Settings. API keys get their own Keystore keys. */
     val diagnosisRepository by lazy { DiagnosisRepository(configRepository, kubeServers) }

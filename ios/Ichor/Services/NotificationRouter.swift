@@ -1,4 +1,5 @@
 import Foundation
+import IchorCore
 import Observation
 import UserNotifications
 
@@ -27,6 +28,13 @@ final class NotificationRouter {
     /// A share link (ichor://open?…) was opened: the screen it names, once unlocked.
     var pendingShareLink: URL?
 
+    /// Reboot, Sync, Reconcile or Silence on an alert: asked of its screen once the alert's link
+    /// (pendingShareLink, set with it) has opened it on its cluster.
+    var pendingAlertAction: AlertActionRequest?
+
+    /// The same, once that screen is on its way: the screen takes it and shows its confirmation.
+    var alertActionRequest: AlertActionRequest?
+
     /// A config file opened with Ichor (IncomingConfig): its text, for the import preview.
     var pendingImportText: String?
 }
@@ -54,7 +62,9 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     /// A freeze reminder shows while the app is open too (it is the likely moment); the alerts
     /// keep today's behaviour.
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        notification.request.content.categoryIdentifier == FreezeReminders.category ? [.banner, .list, .sound] : []
+        if notification.request.content.categoryIdentifier == FreezeReminders.category { return [.banner, .list, .sound] }
+        // How a Wake chosen on an alert went: the app may be open by then.
+        return notification.request.identifier.hasPrefix(AlertNotificationActions.wakePrefix) ? [.banner, .list] : []
     }
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
@@ -67,9 +77,28 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             }
             return
         }
-        // The screen the alert is about, on its cluster (BackgroundMonitor.post).
+        let identifier = response.notification.request.identifier
+        let action = response.actionIdentifier
+        let cluster = content.userInfo[AlertNotificationActions.clusterKey] as? String ?? ""
+        let alertKey = content.userInfo[AlertNotificationActions.alertKey] as? String ?? identifier
+        // Snooze and Wake: in the background, the app stays closed.
+        if let hours = snoozeHours(actionID: action) {
+            AlertNotificationActions.snooze(hours: hours, cluster: cluster, alertKey: alertKey, notification: identifier)
+            return
+        }
+        if action == AlertAction.wake.rawValue {
+            let host = content.userInfo[AlertNotificationActions.hostKey] as? String ?? ""
+            await AlertNotificationActions.wake(cluster: cluster, alertKey: alertKey, hostname: host)
+            return
+        }
+        // The screen the alert is about, on its cluster (BackgroundMonitor.post); Reboot, Sync,
+        // Reconcile and Silence then show that screen's confirmation, nothing runs before it.
         if let link = (content.userInfo["link"] as? String).flatMap(URL.init(string:)) {
-            await MainActor.run { NotificationRouter.shared.pendingShareLink = link }
+            let request = AlertAction(rawValue: action).flatMap { $0.changesCluster ? AlertActionRequest(action: $0, alertKey: alertKey) : nil }
+            await MainActor.run {
+                NotificationRouter.shared.pendingAlertAction = request
+                NotificationRouter.shared.pendingShareLink = link
+            }
             return
         }
         // Posted by an older version, without a link: alert keys are the request identifiers;
