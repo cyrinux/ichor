@@ -46,6 +46,7 @@ final class KubeAuthTests: XCTestCase {
 
         let single = KubeSignInInfo(method: "gke", kind: "credentials", fields: ["gcpServiceAccountJson"])
         XCTAssertEqual(single.fieldSets, [["gcpServiceAccountJson"]])
+        XCTAssertEqual(kubeFieldInput("gcpUserCredentialsJson"), .json)
 
         XCTAssertNil(try KubeSignInInfo.decode(""))
     }

@@ -41,6 +41,13 @@ class KubeSignInTest {
         assertEquals(R.string.kube_signin_option_aws_sso, fieldSetLabel(info.fieldSets[0]))
         assertEquals(R.string.kube_signin_option_aws_keys, fieldSetLabel(info.fieldSets[1]))
 
+        val gke = TalosJson.decodeFromString(
+            KubeSignInInfo.serializer(),
+            """{"method":"gke","kind":"credentials","fields":["gcpServiceAccountJson"],"options":[["gcpServiceAccountJson"],["gcpUserCredentialsJson"]],"signedIn":false}""",
+        )
+        assertEquals(R.string.kube_signin_option_gcp_service_account, fieldSetLabel(gke.fieldSets[0]))
+        assertEquals(R.string.kube_signin_option_gcp_user, fieldSetLabel(gke.fieldSets[1]))
+
         val oidc = TalosJson.decodeFromString(KubeSignInInfo.serializer(), """{"method":"oidc","kind":"browser","signedIn":true,"user":"me@example.com","sessionExpires":1700000000}""")
         assertEquals(listOf(emptyList<String>()), oidc.fieldSets)
         assertTrue(oidc.signedIn)
@@ -82,6 +89,7 @@ class KubeSignInTest {
     @Test
     fun fieldsHaveKinds() {
         assertEquals(FieldKind.JSON, credentialField("gcpServiceAccountJson")?.kind)
+        assertEquals(FieldKind.JSON, credentialField("gcpUserCredentialsJson")?.kind)
         assertEquals(FieldKind.SECRET, credentialField("doApiToken")?.kind)
         assertEquals(FieldKind.TEXT, credentialField("awsRegion")?.kind)
         assertEquals(FieldKind.SECRET, credentialField("serviceAccountKey")?.kind)

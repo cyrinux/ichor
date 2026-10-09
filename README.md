@@ -439,7 +439,7 @@ when no such label is set, as on bare metal.
 | Client certificate, token (ServiceAccount) | Uses it as is |
 | `kubectl oidc-login` / kubelogin, `auth-provider: oidc` | Signs in in the browser (kubelogin's own `localhost` redirect, so nothing changes on the identity provider) or with a device code; renews the token with the refresh token |
 | `aws eks get-token`, aws-iam-authenticator | IAM Identity Center (device code, like `aws sso login`) or access keys; `--role-arn` through AssumeRole |
-| `gke-gcloud-auth-plugin` | A service account key |
+| `gke-gcloud-auth-plugin` | A service account key, or the user credentials `gcloud auth application-default login` writes (`application_default_credentials.json`) |
 | Azure `kubelogin` (AKS with Entra ID) | Device code or browser, or a service principal |
 | `doctl … exec-credential` | A DigitalOcean API token (short-lived cluster credentials from it) |
 | `rancher token` | A Rancher API key |
